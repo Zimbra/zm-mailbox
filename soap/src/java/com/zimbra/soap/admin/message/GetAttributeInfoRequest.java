@@ -17,7 +17,7 @@
 
 package com.zimbra.soap.admin.message;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -56,7 +56,7 @@ public class GetAttributeInfoRequest {
      * <pre>
      *     account,alias,distributionList,cos,globalConfig,domain,server,mimeEntry,zimletEntry,
      *     calendarResource,identity,dataSource,pop3DataSource,imapDataSource,rssDataSource,
-     *     liveDataSource,galDataSource,signature,xmppComponent,aclTarget
+     *     liveDataSource,galDataSource,signature,xmppComponent,aclTarget.oauth2DataSource
      * </pre>
      */
     @XmlAttribute(name=AdminConstants.A_ENTRY_TYPES /* entryTypes */, required=false)
@@ -72,8 +72,8 @@ public class GetAttributeInfoRequest {
     public String getAttrs() { return attrs; }
     public String getEntryTypes() { return entryTypes; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(
+                MoreObjects.ToStringHelper helper) {
         return helper
             .add("attrs", attrs)
             .add("entryTypes", entryTypes);
@@ -81,7 +81,7 @@ public class GetAttributeInfoRequest {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
+        return addToStringInfo(MoreObjects.toStringHelper(this))
                 .toString();
     }
 }

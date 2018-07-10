@@ -107,7 +107,7 @@ import java.util.regex.Pattern;
 
 import org.apache.lucene.analysis.Analyzer;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.zimbra.common.service.ServiceException;
@@ -724,7 +724,7 @@ public final class QueryParser {
     private Query createFieldQuery(String field, Token term, String text) throws ServiceException, ParseException {
         Matcher matcher = FIELD_REGEX.matcher(field);
         if (matcher.matches()) {
-            String name = Objects.firstNonNull(matcher.group(1), matcher.group(2));
+            String name = MoreObjects.firstNonNull(matcher.group(1), matcher.group(2));
             return FieldQuery.create(mailbox, name, text);
         } else {
             throw exception("INVALID_FIELD_FORMAT", term);

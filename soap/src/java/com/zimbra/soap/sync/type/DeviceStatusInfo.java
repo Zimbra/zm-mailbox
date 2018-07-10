@@ -17,7 +17,7 @@
 
 package com.zimbra.soap.sync.type;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -248,7 +248,7 @@ public class DeviceStatusInfo {
     public String getRecoveryPassword() { return recoveryPassword; }
     public String getLastUsedDate() { return lastUsedDate; }
 
-    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         return helper
             .add("id", id)
             .add("type", type)
@@ -272,6 +272,6 @@ public class DeviceStatusInfo {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this)).toString();
+        return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
     }
 }

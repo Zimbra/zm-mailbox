@@ -17,7 +17,7 @@
 
 package com.zimbra.soap.admin.type;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
@@ -70,8 +70,8 @@ public class CurrentAccounts {
         return Collections.unmodifiableList(accounts);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(
+                MoreObjects.ToStringHelper helper) {
         return helper
             .add("totalCount", totalCount)
             .add("accounts", accounts);
@@ -79,7 +79,7 @@ public class CurrentAccounts {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
+        return addToStringInfo(MoreObjects.toStringHelper(this))
                 .toString();
     }
 }

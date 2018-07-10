@@ -17,7 +17,7 @@
 
 package com.zimbra.soap.mail.type;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -119,7 +119,7 @@ public class AccountACEinfo {
     public String getPassword() { return password; }
     public Boolean getDeny() { return ZmBoolean.toBool(deny); }
 
-    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         return helper
             .add("zimbraId", zimbraId)
             .add("granteeType", granteeType)
@@ -132,6 +132,6 @@ public class AccountACEinfo {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this)).toString();
+        return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
     }
 }

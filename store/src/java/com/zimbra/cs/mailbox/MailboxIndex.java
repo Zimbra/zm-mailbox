@@ -37,12 +37,11 @@ import java.util.regex.Pattern;
 import org.apache.lucene.analysis.Analyzer;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
-import com.google.common.io.Closeables;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.InternetAddress;
@@ -267,29 +266,24 @@ public final class MailboxIndex {
             }
         }
 
-        ZimbraIndexSearcher searcher = indexStore.openSearcher();
-        try {
+        try (ZimbraIndexSearcher searcher = indexStore.openSearcher()) {
             for (InternetAddress addr : addrs) {
                 if (!Strings.isNullOrEmpty(addr.getAddress())) {
                     String lcAddr = addr.getAddress().toLowerCase();
-                    TermFieldEnumeration values = null;
-                    try {
-                        values = searcher.getIndexReader().getTermsForField(LuceneFields.L_CONTACT_DATA, lcAddr);
+                    try (TermFieldEnumeration values = searcher.getIndexReader()
+                        .getTermsForField(LuceneFields.L_CONTACT_DATA, lcAddr)) {
                         if (values.hasMoreElements()) {
                             BrowseTerm term = values.nextElement();
                             if (term != null && lcAddr.equals(term.getText())) {
-                                ZimbraLog.index.debug("Contact = %s present in indexed items", lcAddr);
+                                ZimbraLog.index.debug("Contact = %s present in indexed items",
+                                    lcAddr);
                                 return true;
                             }
                         }
-                    } finally {
-                        Closeables.closeQuietly(values);
                     }
                 }
             }
             return false;
-        } finally {
-            Closeables.closeQuietly(searcher);
         }
     }
 
@@ -1039,11 +1033,8 @@ public final class MailboxIndex {
      */
     public int numDeletedDocs() throws ServiceException {
         try {
-            ZimbraIndexSearcher searcher = indexStore.openSearcher();
-            try {
+            try (ZimbraIndexSearcher searcher = indexStore.openSearcher()) {
                 return searcher.getIndexReader().numDeletedDocs();
-            } finally {
-                Closeables.closeQuietly(searcher);
             }
         } catch (IOException e) {
             throw ServiceException.FAILURE("Failed to open Searcher", e);
@@ -1112,26 +1103,22 @@ public final class MailboxIndex {
         Pattern pattern = Strings.isNullOrEmpty(regex) ? null : Pattern.compile(
                 regex.startsWith("@") ? regex : "@" + regex);
         List<BrowseTerm> result = new ArrayList<BrowseTerm>();
-        ZimbraIndexSearcher searcher = indexStore.openSearcher();
-        TermFieldEnumeration values = null;
-        try {
-            values = searcher.getIndexReader().getTermsForField(field, "");
-            while (values.hasMoreElements()) {
-                BrowseTerm term = values.nextElement();
-                if (term == null) {
-                    break;
-                }
-                String text = term.getText();
-                // Domains are tokenized with '@' prefix. Exclude partial domain tokens.
-                if (text.startsWith("@") && text.contains(".")) {
-                    if (pattern == null || AccessBoundedRegex.matches(text, pattern, MAX_REGEX_ACCESSES)) {
+        try (ZimbraIndexSearcher searcher = indexStore.openSearcher()) {
+            try (TermFieldEnumeration values = searcher.getIndexReader().getTermsForField(field,
+                "")) {
+                while (values.hasMoreElements()) {
+                    BrowseTerm term = values.nextElement();
+                    if (term == null) {
+                        break;
+                    }
+                    String text = term.getText();
+                    // Domains are tokenized with '@' prefix. Exclude partial domain tokens.
+                    if ((text.startsWith("@") && text.contains(".")) && (pattern == null
+                        || AccessBoundedRegex.matches(text, pattern, MAX_REGEX_ACCESSES))) {
                         result.add(new BrowseTerm(text.substring(1), term.getFreq()));
                     }
                 }
             }
-        } finally {
-            Closeables.closeQuietly(values);
-            Closeables.closeQuietly(searcher);
         }
         return result;
     }
@@ -1145,19 +1132,17 @@ public final class MailboxIndex {
     public List<BrowseTerm> getAttachmentTypes(String regex) throws IOException, ServiceException {
         Pattern pattern = Strings.isNullOrEmpty(regex) ? null : Pattern.compile(regex);
         List<BrowseTerm> result = new ArrayList<BrowseTerm>();
-        ZimbraIndexSearcher searcher = indexStore.openSearcher();
-        TermFieldEnumeration values = null;
-        try {
-            values = searcher.getIndexReader().getTermsForField(LuceneFields.L_ATTACHMENTS, "");
-            while (values.hasMoreElements()) {
-                BrowseTerm term = values.nextElement();
-                if (pattern == null || AccessBoundedRegex.matches(term.getText(), pattern, MAX_REGEX_ACCESSES)) {
-                    result.add(term);
+        try (ZimbraIndexSearcher searcher = indexStore.openSearcher()) {
+            try (TermFieldEnumeration values = searcher.getIndexReader()
+                .getTermsForField(LuceneFields.L_ATTACHMENTS, "")) {
+                while (values.hasMoreElements()) {
+                    BrowseTerm term = values.nextElement();
+                    if (pattern == null || AccessBoundedRegex.matches(term.getText(), pattern,
+                        MAX_REGEX_ACCESSES)) {
+                        result.add(term);
+                    }
                 }
             }
-        } finally {
-            Closeables.closeQuietly(values);
-            Closeables.closeQuietly(searcher);
         }
         return result;
     }
@@ -1171,22 +1156,20 @@ public final class MailboxIndex {
     public List<BrowseTerm> getObjects(String regex) throws IOException, ServiceException {
         Pattern pattern = Strings.isNullOrEmpty(regex) ? null : Pattern.compile(regex);
         List<BrowseTerm> result = new ArrayList<BrowseTerm>();
-        ZimbraIndexSearcher searcher = indexStore.openSearcher();
-        TermFieldEnumeration values = null;
-        try {
-            values = searcher.getIndexReader().getTermsForField(LuceneFields.L_OBJECTS, "");
-            while (values.hasMoreElements()) {
-                BrowseTerm term = values.nextElement();
-                if (term == null) {
-                    break;
-                }
-                if (pattern == null || AccessBoundedRegex.matches(term.getText(), pattern, MAX_REGEX_ACCESSES)) {
-                    result.add(term);
+        try (ZimbraIndexSearcher searcher = indexStore.openSearcher()) {
+            try (TermFieldEnumeration values = searcher.getIndexReader()
+                .getTermsForField(LuceneFields.L_OBJECTS, "")) {
+                while (values.hasMoreElements()) {
+                    BrowseTerm term = values.nextElement();
+                    if (term == null) {
+                        break;
+                    }
+                    if (pattern == null || AccessBoundedRegex.matches(term.getText(), pattern,
+                        MAX_REGEX_ACCESSES)) {
+                        result.add(term);
+                    }
                 }
             }
-        } finally {
-            Closeables.closeQuietly(values);
-            Closeables.closeQuietly(searcher);
         }
         return result;
     }
@@ -1343,7 +1326,7 @@ public final class MailboxIndex {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this)
+            return MoreObjects.toStringHelper(this)
                 .add("total", getTotal())
                 .add("processed", getProcessed())
                 .add("failed", getFailed())

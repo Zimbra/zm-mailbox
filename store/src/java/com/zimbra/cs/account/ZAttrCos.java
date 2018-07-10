@@ -12355,6 +12355,249 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * status of password reset feature
+     *
+     * <p>Valid values: [enabled, suspended, disabled]
+     *
+     * @return zimbraFeatureResetPasswordStatus, or ZAttrProvisioning.FeatureResetPasswordStatus.disabled if unset and/or has invalid value
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=2134)
+    public ZAttrProvisioning.FeatureResetPasswordStatus getFeatureResetPasswordStatus() {
+        try { String v = getAttr(Provisioning.A_zimbraFeatureResetPasswordStatus, true, true); return v == null ? ZAttrProvisioning.FeatureResetPasswordStatus.disabled : ZAttrProvisioning.FeatureResetPasswordStatus.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.FeatureResetPasswordStatus.disabled; }
+    }
+
+    /**
+     * status of password reset feature
+     *
+     * <p>Valid values: [enabled, suspended, disabled]
+     *
+     * @return zimbraFeatureResetPasswordStatus, or "disabled" if unset
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=2134)
+    public String getFeatureResetPasswordStatusAsString() {
+        return getAttr(Provisioning.A_zimbraFeatureResetPasswordStatus, "disabled", true);
+    }
+
+    /**
+     * status of password reset feature
+     *
+     * <p>Valid values: [enabled, suspended, disabled]
+     *
+     * @param zimbraFeatureResetPasswordStatus new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=2134)
+    public void setFeatureResetPasswordStatus(ZAttrProvisioning.FeatureResetPasswordStatus zimbraFeatureResetPasswordStatus) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureResetPasswordStatus, zimbraFeatureResetPasswordStatus.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * status of password reset feature
+     *
+     * <p>Valid values: [enabled, suspended, disabled]
+     *
+     * @param zimbraFeatureResetPasswordStatus new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=2134)
+    public Map<String,Object> setFeatureResetPasswordStatus(ZAttrProvisioning.FeatureResetPasswordStatus zimbraFeatureResetPasswordStatus, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureResetPasswordStatus, zimbraFeatureResetPasswordStatus.toString());
+        return attrs;
+    }
+
+    /**
+     * status of password reset feature
+     *
+     * <p>Valid values: [enabled, suspended, disabled]
+     *
+     * @param zimbraFeatureResetPasswordStatus new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=2134)
+    public void setFeatureResetPasswordStatusAsString(String zimbraFeatureResetPasswordStatus) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureResetPasswordStatus, zimbraFeatureResetPasswordStatus);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * status of password reset feature
+     *
+     * <p>Valid values: [enabled, suspended, disabled]
+     *
+     * @param zimbraFeatureResetPasswordStatus new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=2134)
+    public Map<String,Object> setFeatureResetPasswordStatusAsString(String zimbraFeatureResetPasswordStatus, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureResetPasswordStatus, zimbraFeatureResetPasswordStatus);
+        return attrs;
+    }
+
+    /**
+     * status of password reset feature
+     *
+     * <p>Valid values: [enabled, suspended, disabled]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=2134)
+    public void unsetFeatureResetPasswordStatus() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureResetPasswordStatus, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * status of password reset feature
+     *
+     * <p>Valid values: [enabled, suspended, disabled]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=2134)
+    public Map<String,Object> unsetFeatureResetPasswordStatus(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureResetPasswordStatus, "");
+        return attrs;
+    }
+
+    /**
+     * time for which reset password feature is suspended. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * <p>Use getFeatureResetPasswordSuspensionTimeAsString to access value as a string.
+     *
+     * @see #getFeatureResetPasswordSuspensionTimeAsString()
+     *
+     * @return zimbraFeatureResetPasswordSuspensionTime in millseconds, or 86400000 (1d)  if unset
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=2142)
+    public long getFeatureResetPasswordSuspensionTime() {
+        return getTimeInterval(Provisioning.A_zimbraFeatureResetPasswordSuspensionTime, 86400000L, true);
+    }
+
+    /**
+     * time for which reset password feature is suspended. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @return zimbraFeatureResetPasswordSuspensionTime, or "1d" if unset
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=2142)
+    public String getFeatureResetPasswordSuspensionTimeAsString() {
+        return getAttr(Provisioning.A_zimbraFeatureResetPasswordSuspensionTime, "1d", true);
+    }
+
+    /**
+     * time for which reset password feature is suspended. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param zimbraFeatureResetPasswordSuspensionTime new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=2142)
+    public void setFeatureResetPasswordSuspensionTime(String zimbraFeatureResetPasswordSuspensionTime) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureResetPasswordSuspensionTime, zimbraFeatureResetPasswordSuspensionTime);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * time for which reset password feature is suspended. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param zimbraFeatureResetPasswordSuspensionTime new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=2142)
+    public Map<String,Object> setFeatureResetPasswordSuspensionTime(String zimbraFeatureResetPasswordSuspensionTime, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureResetPasswordSuspensionTime, zimbraFeatureResetPasswordSuspensionTime);
+        return attrs;
+    }
+
+    /**
+     * time for which reset password feature is suspended. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=2142)
+    public void unsetFeatureResetPasswordSuspensionTime() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureResetPasswordSuspensionTime, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * time for which reset password feature is suspended. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=2142)
+    public Map<String,Object> unsetFeatureResetPasswordSuspensionTime(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureResetPasswordSuspensionTime, "");
+        return attrs;
+    }
+
+    /**
      * whether S/MIME feature is enabled. Note: SMIME is a Network feature,
      * this attribute is effective only if SMIME is permitted by license.
      *
@@ -27972,6 +28215,78 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * Maximum attempts for password recovery resend
+     *
+     * @return zimbraPasswordRecoveryMaxAttempts, or 10 if unset
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=2141)
+    public int getPasswordRecoveryMaxAttempts() {
+        return getIntAttr(Provisioning.A_zimbraPasswordRecoveryMaxAttempts, 10, true);
+    }
+
+    /**
+     * Maximum attempts for password recovery resend
+     *
+     * @param zimbraPasswordRecoveryMaxAttempts new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=2141)
+    public void setPasswordRecoveryMaxAttempts(int zimbraPasswordRecoveryMaxAttempts) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordRecoveryMaxAttempts, Integer.toString(zimbraPasswordRecoveryMaxAttempts));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum attempts for password recovery resend
+     *
+     * @param zimbraPasswordRecoveryMaxAttempts new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=2141)
+    public Map<String,Object> setPasswordRecoveryMaxAttempts(int zimbraPasswordRecoveryMaxAttempts, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordRecoveryMaxAttempts, Integer.toString(zimbraPasswordRecoveryMaxAttempts));
+        return attrs;
+    }
+
+    /**
+     * Maximum attempts for password recovery resend
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=2141)
+    public void unsetPasswordRecoveryMaxAttempts() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordRecoveryMaxAttempts, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum attempts for password recovery resend
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=2141)
+    public Map<String,Object> unsetPasswordRecoveryMaxAttempts(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordRecoveryMaxAttempts, "");
+        return attrs;
+    }
+
+    /**
      * whether POP3 is enabled for an account
      *
      * @return zimbraPop3Enabled, or true if unset
@@ -43199,6 +43514,230 @@ public abstract class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetQuotaWarnPercent(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraQuotaWarnPercent, "");
+        return attrs;
+    }
+
+    /**
+     * Expiry time for recovery email code verification. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * <p>Use getRecoveryAccountCodeValidityAsString to access value as a string.
+     *
+     * @see #getRecoveryAccountCodeValidityAsString()
+     *
+     * @return zimbraRecoveryAccountCodeValidity in millseconds, or 86400000 (1d)  if unset
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=2140)
+    public long getRecoveryAccountCodeValidity() {
+        return getTimeInterval(Provisioning.A_zimbraRecoveryAccountCodeValidity, 86400000L, true);
+    }
+
+    /**
+     * Expiry time for recovery email code verification. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @return zimbraRecoveryAccountCodeValidity, or "1d" if unset
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=2140)
+    public String getRecoveryAccountCodeValidityAsString() {
+        return getAttr(Provisioning.A_zimbraRecoveryAccountCodeValidity, "1d", true);
+    }
+
+    /**
+     * Expiry time for recovery email code verification. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param zimbraRecoveryAccountCodeValidity new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=2140)
+    public void setRecoveryAccountCodeValidity(String zimbraRecoveryAccountCodeValidity) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRecoveryAccountCodeValidity, zimbraRecoveryAccountCodeValidity);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Expiry time for recovery email code verification. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param zimbraRecoveryAccountCodeValidity new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=2140)
+    public Map<String,Object> setRecoveryAccountCodeValidity(String zimbraRecoveryAccountCodeValidity, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRecoveryAccountCodeValidity, zimbraRecoveryAccountCodeValidity);
+        return attrs;
+    }
+
+    /**
+     * Expiry time for recovery email code verification. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=2140)
+    public void unsetRecoveryAccountCodeValidity() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRecoveryAccountCodeValidity, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Expiry time for recovery email code verification. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=2140)
+    public Map<String,Object> unsetRecoveryAccountCodeValidity(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRecoveryAccountCodeValidity, "");
+        return attrs;
+    }
+
+    /**
+     * Expiry time for password reset recovery code. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * <p>Use getResetPasswordRecoveryCodeExpiryAsString to access value as a string.
+     *
+     * @see #getResetPasswordRecoveryCodeExpiryAsString()
+     *
+     * @return zimbraResetPasswordRecoveryCodeExpiry in millseconds, or 600000 (10m)  if unset
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=2138)
+    public long getResetPasswordRecoveryCodeExpiry() {
+        return getTimeInterval(Provisioning.A_zimbraResetPasswordRecoveryCodeExpiry, 600000L, true);
+    }
+
+    /**
+     * Expiry time for password reset recovery code. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @return zimbraResetPasswordRecoveryCodeExpiry, or "10m" if unset
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=2138)
+    public String getResetPasswordRecoveryCodeExpiryAsString() {
+        return getAttr(Provisioning.A_zimbraResetPasswordRecoveryCodeExpiry, "10m", true);
+    }
+
+    /**
+     * Expiry time for password reset recovery code. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param zimbraResetPasswordRecoveryCodeExpiry new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=2138)
+    public void setResetPasswordRecoveryCodeExpiry(String zimbraResetPasswordRecoveryCodeExpiry) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraResetPasswordRecoveryCodeExpiry, zimbraResetPasswordRecoveryCodeExpiry);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Expiry time for password reset recovery code. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param zimbraResetPasswordRecoveryCodeExpiry new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=2138)
+    public Map<String,Object> setResetPasswordRecoveryCodeExpiry(String zimbraResetPasswordRecoveryCodeExpiry, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraResetPasswordRecoveryCodeExpiry, zimbraResetPasswordRecoveryCodeExpiry);
+        return attrs;
+    }
+
+    /**
+     * Expiry time for password reset recovery code. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=2138)
+    public void unsetResetPasswordRecoveryCodeExpiry() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraResetPasswordRecoveryCodeExpiry, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Expiry time for password reset recovery code. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=2138)
+    public Map<String,Object> unsetResetPasswordRecoveryCodeExpiry(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraResetPasswordRecoveryCodeExpiry, "");
         return attrs;
     }
 

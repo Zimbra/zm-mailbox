@@ -52,7 +52,8 @@ public class FormatterFactory {
             VCF("vcf", MimeConstants.CT_TEXT_VCARD),
             XML("xml", MimeConstants.CT_TEXT_XML),
             ZIP("zip", MimeConstants.CT_APPLICATION_ZIP),
-            OPATCH("opatch", MimeConstants.CT_APPLICATION_OCTET_STREAM);
+            OPATCH("opatch", MimeConstants.CT_APPLICATION_OCTET_STREAM),
+            MOBILE_CONFIG("mobileconfig", MimeConstants.CT_TEXT_XML);
 
             /**
              * cache of available format types
@@ -142,6 +143,7 @@ public class FormatterFactory {
         addFormatter(new ZipFormatter());
         addFormatter(new ContactFolderFormatter());
         addFormatter(new OctopusPatchFormatter());
+        addFormatter(new MobileConfigFormatter());
     }
 
     /**

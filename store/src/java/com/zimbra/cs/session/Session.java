@@ -20,6 +20,7 @@ package com.zimbra.cs.session;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.MailboxStore;
@@ -361,7 +362,7 @@ public abstract class Session {
         return !mAuthenticatedAccountId.equalsIgnoreCase(mTargetAccountId);
     }
 
-    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         helper.add("id", mSessionId)
             .add("authAcct", mAuthenticatedAccountId);
         if (!Objects.equal(mAuthenticatedAccountId, mTargetAccountId)) {
@@ -385,6 +386,6 @@ public abstract class Session {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this)).toString();
+        return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
     }
 }

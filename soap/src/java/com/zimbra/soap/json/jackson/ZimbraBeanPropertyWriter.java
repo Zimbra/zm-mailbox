@@ -22,18 +22,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javax.xml.namespace.QName;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlElementRef;
 import javax.xml.bind.annotation.XmlElementWrapper;
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.JsonGenerator;
-import org.codehaus.jackson.map.JsonSerializer;
-import org.codehaus.jackson.map.SerializerProvider;
-import org.codehaus.jackson.map.ser.BeanPropertyWriter;
-import org.codehaus.jackson.map.ser.impl.PropertySerializerMap;
+import javax.xml.bind.annotation.XmlElements;
+import javax.xml.namespace.QName;
 
+import com.fasterxml.jackson.core.JsonGenerationException;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.ser.BeanPropertyWriter;
+import com.fasterxml.jackson.databind.ser.impl.PropertySerializerMap;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.JSONElement;
 import com.zimbra.common.util.Log;
@@ -75,37 +75,38 @@ import com.zimbra.soap.util.JaxbInfo;
 public class ZimbraBeanPropertyWriter
     extends BeanPropertyWriter
 {
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 7679426432153926727L;
+
     private static final Log LOG = ZimbraLog.soap;
 
     protected final NameInfo nameInfo;
     protected QName wrapperName = null;
     protected QName wrappedName = null;
 
+
     public ZimbraBeanPropertyWriter(BeanPropertyWriter wrapped, NameInfo nameInfo) {
         super(wrapped);
         this.nameInfo = nameInfo;
-        // super-class SHOULD copy this, but just in case it didn't (as was the case with 1.8.0 and 1.8.1):
-        if (_includeInViews == null) {
-            _includeInViews = wrapped.getViews();
-        }
+
     }
 
     public ZimbraBeanPropertyWriter(BeanPropertyWriter wrapped, NameInfo nameInfo, JsonSerializer<Object> serializer) {
-        super(wrapped, serializer);
+        super(wrapped);
+        _serializer = serializer;
         this.nameInfo = nameInfo;
-        // super-class SHOULD copy this, but just in case it didn't (as was the case with 1.8.0 and 1.8.1):
-        if (_includeInViews == null) {
-            _includeInViews = wrapped.getViews();
-        }
     }
 
+    
     @Override
-    public BeanPropertyWriter withSerializer(JsonSerializer<Object> ser) {
+    public void assignSerializer(JsonSerializer<Object> ser) {
         // sanity check to ensure sub-classes override...
         if (getClass() != ZimbraBeanPropertyWriter.class) {
             throw new IllegalStateException("Sub-class does not override 'withSerializer()'; needs to!");
         }
-        return new ZimbraBeanPropertyWriter(this, nameInfo, ser);
+        _serializer = ser;
     }
 
     /**
@@ -122,14 +123,6 @@ public class ZimbraBeanPropertyWriter
             }
             return;
         }
-        // For non-nulls, first: simple check for direct cycles
-        if (value == bean) {
-            _reportSelfReference(bean);
-        }
-        if (_suppressableValue != null && _suppressableValue.equals(value)) {
-            return;
-        }
-
         JsonSerializer<Object> ser = _serializer;
         if (ser == null) {
             Class<?> cls = value.getClass();
@@ -138,6 +131,14 @@ public class ZimbraBeanPropertyWriter
             if (ser == null) {
                 ser = _findAndAddDynamic(map, cls, prov);
             }
+        }
+        // For non-nulls, first: simple check for direct cycles
+        if ((value == bean) && (_handleSelfReference(bean, jgen, prov, ser))) {
+                return;
+        }
+        
+        if (_suppressableValue != null && _suppressableValue.equals(value)) {
+            return;
         }
 
         if (_typeSerializer != null) {

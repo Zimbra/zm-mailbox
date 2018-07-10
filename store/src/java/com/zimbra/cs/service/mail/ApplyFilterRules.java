@@ -112,10 +112,8 @@ public class ApplyFilterRules extends MailDocumentHandler {
                 messageIds.add(Integer.valueOf(id));
             }
         } else if (query != null) {
-            ZimbraQueryResults results = null;
-            try {
-                results = mbox.index.search(octxt, query,
-                        EnumSet.of(MailItem.Type.MESSAGE), SortBy.NONE, Integer.MAX_VALUE);
+            try (ZimbraQueryResults results = mbox.index.search(octxt, query,
+                EnumSet.of(MailItem.Type.MESSAGE), SortBy.NONE, Integer.MAX_VALUE)) {
                 while (results.hasNext()) {
                     ZimbraHit hit = results.getNext();
                     messageIds.add(hit.getItemId());
@@ -123,8 +121,6 @@ public class ApplyFilterRules extends MailDocumentHandler {
             } catch (Exception e) {
                 String msg = String.format("Unable to run search for query: '%s'", query);
                 throw ServiceException.INVALID_REQUEST(msg, e);
-            } finally {
-                Closeables.closeQuietly(results);
             }
         } else {
             String msg = String.format("Must specify either the %s or %s element.",

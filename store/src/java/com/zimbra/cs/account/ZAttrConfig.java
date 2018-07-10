@@ -15790,11 +15790,12 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Sleep time between subsequent contact backups. 0 means that contact
-     * backup is disabled. . Must be in valid duration format:
-     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
-     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
-     * specified, the default is s(seconds).
+     * Deprecated since: 8.8.6. No longer used by ContactBackupRequest SOAP
+     * handler. Orig desc: Sleep time between subsequent contact backups. 0
+     * means that contact backup is disabled. . Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * <p>Use getFeatureContactBackupFrequencyAsString to access value as a string.
      *
@@ -15810,11 +15811,12 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Sleep time between subsequent contact backups. 0 means that contact
-     * backup is disabled. . Must be in valid duration format:
-     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
-     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
-     * specified, the default is s(seconds).
+     * Deprecated since: 8.8.6. No longer used by ContactBackupRequest SOAP
+     * handler. Orig desc: Sleep time between subsequent contact backups. 0
+     * means that contact backup is disabled. . Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @return zimbraFeatureContactBackupFrequency, or "0" if unset
      *
@@ -15826,11 +15828,12 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Sleep time between subsequent contact backups. 0 means that contact
-     * backup is disabled. . Must be in valid duration format:
-     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
-     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
-     * specified, the default is s(seconds).
+     * Deprecated since: 8.8.6. No longer used by ContactBackupRequest SOAP
+     * handler. Orig desc: Sleep time between subsequent contact backups. 0
+     * means that contact backup is disabled. . Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @param zimbraFeatureContactBackupFrequency new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -15845,11 +15848,12 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Sleep time between subsequent contact backups. 0 means that contact
-     * backup is disabled. . Must be in valid duration format:
-     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
-     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
-     * specified, the default is s(seconds).
+     * Deprecated since: 8.8.6. No longer used by ContactBackupRequest SOAP
+     * handler. Orig desc: Sleep time between subsequent contact backups. 0
+     * means that contact backup is disabled. . Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @param zimbraFeatureContactBackupFrequency new value
      * @param attrs existing map to populate, or null to create a new map
@@ -15865,11 +15869,12 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Sleep time between subsequent contact backups. 0 means that contact
-     * backup is disabled. . Must be in valid duration format:
-     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
-     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
-     * specified, the default is s(seconds).
+     * Deprecated since: 8.8.6. No longer used by ContactBackupRequest SOAP
+     * handler. Orig desc: Sleep time between subsequent contact backups. 0
+     * means that contact backup is disabled. . Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -15883,11 +15888,12 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Sleep time between subsequent contact backups. 0 means that contact
-     * backup is disabled. . Must be in valid duration format:
-     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
-     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
-     * specified, the default is s(seconds).
+     * Deprecated since: 8.8.6. No longer used by ContactBackupRequest SOAP
+     * handler. Orig desc: Sleep time between subsequent contact backups. 0
+     * means that contact backup is disabled. . Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -48677,6 +48683,158 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * OAuth consumer API scope. It is in the format of apiscope1{separator
+     * character}apiscope2:consumer-app-name. The separator between apiscope1
+     * and apiscope2 is consumer-app specific
+     *
+     * @return zimbraOAuthConsumerAPIScope, or empty array if unset
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3026)
+    public String[] getOAuthConsumerAPIScope() {
+        return getMultiAttr(Provisioning.A_zimbraOAuthConsumerAPIScope, true, true);
+    }
+
+    /**
+     * OAuth consumer API scope. It is in the format of apiscope1{separator
+     * character}apiscope2:consumer-app-name. The separator between apiscope1
+     * and apiscope2 is consumer-app specific
+     *
+     * @param zimbraOAuthConsumerAPIScope new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3026)
+    public void setOAuthConsumerAPIScope(String[] zimbraOAuthConsumerAPIScope) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOAuthConsumerAPIScope, zimbraOAuthConsumerAPIScope);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * OAuth consumer API scope. It is in the format of apiscope1{separator
+     * character}apiscope2:consumer-app-name. The separator between apiscope1
+     * and apiscope2 is consumer-app specific
+     *
+     * @param zimbraOAuthConsumerAPIScope new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3026)
+    public Map<String,Object> setOAuthConsumerAPIScope(String[] zimbraOAuthConsumerAPIScope, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOAuthConsumerAPIScope, zimbraOAuthConsumerAPIScope);
+        return attrs;
+    }
+
+    /**
+     * OAuth consumer API scope. It is in the format of apiscope1{separator
+     * character}apiscope2:consumer-app-name. The separator between apiscope1
+     * and apiscope2 is consumer-app specific
+     *
+     * @param zimbraOAuthConsumerAPIScope new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3026)
+    public void addOAuthConsumerAPIScope(String zimbraOAuthConsumerAPIScope) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraOAuthConsumerAPIScope, zimbraOAuthConsumerAPIScope);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * OAuth consumer API scope. It is in the format of apiscope1{separator
+     * character}apiscope2:consumer-app-name. The separator between apiscope1
+     * and apiscope2 is consumer-app specific
+     *
+     * @param zimbraOAuthConsumerAPIScope new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3026)
+    public Map<String,Object> addOAuthConsumerAPIScope(String zimbraOAuthConsumerAPIScope, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraOAuthConsumerAPIScope, zimbraOAuthConsumerAPIScope);
+        return attrs;
+    }
+
+    /**
+     * OAuth consumer API scope. It is in the format of apiscope1{separator
+     * character}apiscope2:consumer-app-name. The separator between apiscope1
+     * and apiscope2 is consumer-app specific
+     *
+     * @param zimbraOAuthConsumerAPIScope existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3026)
+    public void removeOAuthConsumerAPIScope(String zimbraOAuthConsumerAPIScope) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraOAuthConsumerAPIScope, zimbraOAuthConsumerAPIScope);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * OAuth consumer API scope. It is in the format of apiscope1{separator
+     * character}apiscope2:consumer-app-name. The separator between apiscope1
+     * and apiscope2 is consumer-app specific
+     *
+     * @param zimbraOAuthConsumerAPIScope existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3026)
+    public Map<String,Object> removeOAuthConsumerAPIScope(String zimbraOAuthConsumerAPIScope, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraOAuthConsumerAPIScope, zimbraOAuthConsumerAPIScope);
+        return attrs;
+    }
+
+    /**
+     * OAuth consumer API scope. It is in the format of apiscope1{separator
+     * character}apiscope2:consumer-app-name. The separator between apiscope1
+     * and apiscope2 is consumer-app specific
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3026)
+    public void unsetOAuthConsumerAPIScope() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOAuthConsumerAPIScope, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * OAuth consumer API scope. It is in the format of apiscope1{separator
+     * character}apiscope2:consumer-app-name. The separator between apiscope1
+     * and apiscope2 is consumer-app specific
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3026)
+    public Map<String,Object> unsetOAuthConsumerAPIScope(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOAuthConsumerAPIScope, "");
+        return attrs;
+    }
+
+    /**
      * OAuth Consumer id, secret, and application name. It is in the format
      * of {consumer-id}:{secret}:{consumer-app-name}
      *
@@ -48816,6 +48974,149 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetOAuthConsumerCredentials(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraOAuthConsumerCredentials, "");
+        return attrs;
+    }
+
+    /**
+     * OAuth redirectURI. It is in the format of
+     * redirectURI:consumer-app-name
+     *
+     * @return zimbraOAuthConsumerRedirectUri, or empty array if unset
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3025)
+    public String[] getOAuthConsumerRedirectUri() {
+        return getMultiAttr(Provisioning.A_zimbraOAuthConsumerRedirectUri, true, true);
+    }
+
+    /**
+     * OAuth redirectURI. It is in the format of
+     * redirectURI:consumer-app-name
+     *
+     * @param zimbraOAuthConsumerRedirectUri new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3025)
+    public void setOAuthConsumerRedirectUri(String[] zimbraOAuthConsumerRedirectUri) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOAuthConsumerRedirectUri, zimbraOAuthConsumerRedirectUri);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * OAuth redirectURI. It is in the format of
+     * redirectURI:consumer-app-name
+     *
+     * @param zimbraOAuthConsumerRedirectUri new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3025)
+    public Map<String,Object> setOAuthConsumerRedirectUri(String[] zimbraOAuthConsumerRedirectUri, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOAuthConsumerRedirectUri, zimbraOAuthConsumerRedirectUri);
+        return attrs;
+    }
+
+    /**
+     * OAuth redirectURI. It is in the format of
+     * redirectURI:consumer-app-name
+     *
+     * @param zimbraOAuthConsumerRedirectUri new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3025)
+    public void addOAuthConsumerRedirectUri(String zimbraOAuthConsumerRedirectUri) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraOAuthConsumerRedirectUri, zimbraOAuthConsumerRedirectUri);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * OAuth redirectURI. It is in the format of
+     * redirectURI:consumer-app-name
+     *
+     * @param zimbraOAuthConsumerRedirectUri new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3025)
+    public Map<String,Object> addOAuthConsumerRedirectUri(String zimbraOAuthConsumerRedirectUri, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraOAuthConsumerRedirectUri, zimbraOAuthConsumerRedirectUri);
+        return attrs;
+    }
+
+    /**
+     * OAuth redirectURI. It is in the format of
+     * redirectURI:consumer-app-name
+     *
+     * @param zimbraOAuthConsumerRedirectUri existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3025)
+    public void removeOAuthConsumerRedirectUri(String zimbraOAuthConsumerRedirectUri) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraOAuthConsumerRedirectUri, zimbraOAuthConsumerRedirectUri);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * OAuth redirectURI. It is in the format of
+     * redirectURI:consumer-app-name
+     *
+     * @param zimbraOAuthConsumerRedirectUri existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3025)
+    public Map<String,Object> removeOAuthConsumerRedirectUri(String zimbraOAuthConsumerRedirectUri, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraOAuthConsumerRedirectUri, zimbraOAuthConsumerRedirectUri);
+        return attrs;
+    }
+
+    /**
+     * OAuth redirectURI. It is in the format of
+     * redirectURI:consumer-app-name
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3025)
+    public void unsetOAuthConsumerRedirectUri() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOAuthConsumerRedirectUri, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * OAuth redirectURI. It is in the format of
+     * redirectURI:consumer-app-name
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3025)
+    public Map<String,Object> unsetOAuthConsumerRedirectUri(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOAuthConsumerRedirectUri, "");
         return attrs;
     }
 

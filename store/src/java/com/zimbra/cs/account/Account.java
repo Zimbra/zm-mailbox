@@ -516,6 +516,10 @@ public class Account extends ZAttrAccount implements GroupedEntry, AliasedEntry 
         purgeAuthTokens();
     }
 
+    public void cleanExpiredJWTokens() throws ServiceException {
+        purgeInvalidJWTokens();
+    }
+
     /**
      * Updates the values of the following attributes:
      * - userPassword

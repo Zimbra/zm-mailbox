@@ -32,7 +32,6 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.index.Term;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.io.Closeables;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.db.Db;
@@ -47,6 +46,7 @@ import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.util.IOUtil;
 
 /**
  * {@link QueryOperation} which goes to the SQL DB. It might have a "child" Lucene operation attached to it.
@@ -445,7 +445,7 @@ public class DBQueryOperation extends QueryOperation {
 
     @Override
     public void close() {
-        Closeables.closeQuietly(luceneOp);
+        IOUtil.closeQuietly(luceneOp);
     }
 
     @Override

@@ -57,8 +57,8 @@ public class ZAuthToken {
     private static final String YAHOO_QP_HOSTACCOUNTID = "h";
 
     private String mType;
-    private String mValue;
-    private String mProxyAuthToken;
+    protected String mValue;
+    protected String mProxyAuthToken;
     private Map<String, String> mAttrs;
     
 

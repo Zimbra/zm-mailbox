@@ -22,9 +22,10 @@ import java.io.StringWriter;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlSchema;
 
-import org.codehaus.jackson.map.AnnotationIntrospector;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.SerializationConfig;
+import com.fasterxml.jackson.databind.AnnotationIntrospector;
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.common.base.Strings;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -168,7 +169,8 @@ public final class JacksonUtil {
     public static ObjectMapper getObjectMapper() {
         ObjectMapper mapper = new ObjectMapper();
         mapper.setAnnotationIntrospector(getZimbraIntrospector());
-        mapper.enable(SerializationConfig.Feature.INDENT_OUTPUT);
+        mapper.enable(SerializationFeature.INDENT_OUTPUT);
+        mapper.enable(MapperFeature.USE_WRAPPER_NAME_AS_PROPERTY_NAME);
         ZimbraJsonModule zimbraModule = new ZimbraJsonModule();
         // Doesn't appear to work. ZimbraBeanPropertyWriter uses this directly instead.
         // zimbraModule.addSerializer(org.w3c.dom.Element.class, new ZmDomElementJsonSerializer());
@@ -179,7 +181,7 @@ public final class JacksonUtil {
     public static ObjectMapper getWrapRootObjectMapper() {
         ObjectMapper mapper = getObjectMapper();
         // Enable this next line to get everything wrapped with the name of the root element.
-        mapper.enable(SerializationConfig.Feature.WRAP_ROOT_VALUE);
+        mapper.enable(SerializationFeature.WRAP_ROOT_VALUE);
         return mapper;
     }
 }

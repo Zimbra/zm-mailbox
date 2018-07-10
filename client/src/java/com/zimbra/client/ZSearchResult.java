@@ -23,7 +23,7 @@ import java.util.TimeZone;
 
 import org.json.JSONException;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.zimbra.client.event.ZModifyConversationEvent;
 import com.zimbra.client.event.ZModifyEvent;
 import com.zimbra.common.service.ServiceException;
@@ -144,7 +144,7 @@ public class ZSearchResult implements ToZJSONObject {
 
     @Override
     public String toString() {
-       return Objects.toStringHelper(this).add("size", hits.size()).add("more", hasMore).toString();
+       return MoreObjects.toStringHelper(this).add("size", hits.size()).add("more", hasMore).toString();
     }
 
     public String dump() {

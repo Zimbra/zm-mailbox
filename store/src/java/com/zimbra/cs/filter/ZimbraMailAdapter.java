@@ -281,9 +281,11 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
 
             // If the Sieve script has no actions, JSieve generates an implicit keep.  If
             // the script contains a single discard action, JSieve returns an empty list.
-            if (getActions().size() == 0) {
+            if (this.discardActionPresent) {
                 ZimbraLog.filter.info("Discarding message with Message-ID %s from %s",
                     messageId, Mime.getSender(handler.getMimeMessage()));
+            }
+            if (getActions().size() == 0) {
                 handler.discard();
                 return;
             }

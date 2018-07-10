@@ -27,7 +27,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlType;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.zimbra.common.soap.MailConstants;
@@ -290,7 +290,7 @@ public class CommonDocumentInfo {
     public void setFolderUuid(String folderUuid) { this.folderUuid = folderUuid; }
     public Integer getMetadataVersion() { return metadataVersion; }
     public void setMetadataVersion(Integer metadataVersion) { this.metadataVersion = metadataVersion; }
-    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
 
         return helper
             .add("id", id)
@@ -321,6 +321,6 @@ public class CommonDocumentInfo {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this)).toString();
+        return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
     }
 }

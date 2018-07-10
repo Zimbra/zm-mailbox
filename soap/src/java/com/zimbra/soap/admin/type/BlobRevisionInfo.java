@@ -17,7 +17,7 @@
 
 package com.zimbra.soap.admin.type;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -76,7 +76,7 @@ public class BlobRevisionInfo {
     public int getRevision() { return revision; }
     public boolean getExternal() { return ZmBoolean.toBool(external); }
 
-    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         return helper
             .add("path", path)
             .add("fileSize", fileSize)
@@ -86,6 +86,6 @@ public class BlobRevisionInfo {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this)).toString();
+        return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
     }
 }

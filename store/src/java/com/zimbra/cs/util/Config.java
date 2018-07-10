@@ -36,7 +36,6 @@ public final class Config {
 
     public static final String KEY_PURGE_LAST_MAILBOX_ID = "purge.lastMailboxId";
     public static final String CONTACT_BACKUP_LAST_MAILBOX_ID = "contactBackup.lastMailboxId";
-    public static final String CONTACT_BACKUP_NEXT_ITR_START_TIME = "contactBackup.nextIterationStartTime";
 
     public static final int D_LMTP_THREADS = 10;
 
