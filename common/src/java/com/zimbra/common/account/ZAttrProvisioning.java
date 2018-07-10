@@ -6026,6 +6026,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraEmailPrintoutHeaderEnabled = "zimbraEmailPrintoutHeaderEnabled";
 
     /**
+     * This attribute stores the email templates service API url
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5014)
+    public static final String A_zimbraEmailTemplateApiUrl = "zimbraEmailTemplateApiUrl";
+
+    /**
      * EmptyFolderOpTimeout is the time in seconds for which empty folder
      * operation will wait for the current empty folder operation to complete
      *
