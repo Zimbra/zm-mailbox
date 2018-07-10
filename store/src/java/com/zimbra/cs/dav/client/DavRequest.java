@@ -132,10 +132,12 @@ public class DavRequest {
     public static class DocumentRequestEntity implements HttpEntity {
         private final Document doc;
         private byte[] buffer;
-        public DocumentRequestEntity(Document d) { doc = d; buffer = null; }
         protected Header contentType;
         protected Header contentEncoding;
         protected boolean chunked;
+        
+        public DocumentRequestEntity(Document d) { doc = d; buffer = null; }
+        
         @Override
         public boolean isRepeatable() { return true; }
         @Override
@@ -171,8 +173,11 @@ public class DavRequest {
             buffer = out.toByteArray();
         }
         
-        /* (non-Javadoc)
-         * @see org.apache.http.HttpEntity#consumeContent()
+        /**
+         * The default implementation does not consume anything.
+         *
+         * @deprecated (4.1) Either use {@link #getContent()} and call {@link java.io.InputStream#close()} on that;
+         * otherwise call {@link #writeTo(OutputStream)} which is required to free the resources.
          */
         @Override
         public void consumeContent() throws IOException {

@@ -162,8 +162,7 @@ public class RawAuth implements Auth {
     private static Response doGet(String action, List<NameValuePair> paramsList)
         throws AuthenticationException, IOException, HttpException {
         String uri = LC.yauth_baseuri.value() + '/' + action;
-        HttpGet method = new HttpGet(uri);
-        
+
         HttpGet httpget = new HttpGet(uri+"?"+ URLEncodedUtils.format(paramsList, "utf-8"));
         HttpResponse httpResp = HttpClientUtil.executeMethod(httpget);
         int rc = httpResp.getStatusLine().getStatusCode();

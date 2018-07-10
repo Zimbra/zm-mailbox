@@ -125,7 +125,7 @@ public class LmcSendMsgRequest extends LmcSoapRequest {
                 ZimbraHttpConnectionManager.getInternalHttpConnMgr().getZimbraConnMgrParams().getReqConfig())
                 .setCookieSpec(CookieSpecs.BROWSER_COMPATIBILITY).build();
 
-            clientBuilder.setDefaultRequestConfig(reqConfig);;
+            clientBuilder.setDefaultRequestConfig(reqConfig);
         }
         SocketConfig config = SocketConfig.custom().setSoTimeout(msTimeout).build();
         clientBuilder.setDefaultSocketConfig(config);

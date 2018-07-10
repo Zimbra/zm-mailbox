@@ -70,7 +70,6 @@ import com.zimbra.cs.util.JMSession;
 import net.fortuna.ical4j.data.CalendarOutputter;
 import net.fortuna.ical4j.model.Date;
 import net.fortuna.ical4j.model.Property;
-import net.fortuna.ical4j.model.ValidationException;
 import net.fortuna.ical4j.model.component.VEvent;
 import net.fortuna.ical4j.model.parameter.FmtType;
 import net.fortuna.ical4j.model.parameter.Value;

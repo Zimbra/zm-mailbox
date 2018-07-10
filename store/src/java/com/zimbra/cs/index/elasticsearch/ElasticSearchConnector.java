@@ -50,7 +50,6 @@ public class ElasticSearchConnector {
             HttpEntityEnclosingRequestBase eem = (HttpEntityEnclosingRequestBase) method;
             HttpEntity re = eem.getEntity();
             if (re instanceof StringEntity) {
-                StringEntity sre = (StringEntity) re;
                 reqBody = Strings.nullToEmpty(EntityUtils.toString(re));
                 if (reqBody.length() > 0) {
                     reqBody = String.format("\nREQUEST BODY=%s", reqBody);
