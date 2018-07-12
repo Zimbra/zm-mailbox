@@ -9503,6 +9503,14 @@ TODO: delete them permanently from here
   <desc>time for which reset password feature is suspended</desc>
 </attr>
 
+<attr id="2143" name="zimbraOldMailAddress" type="email" max="256" immutable="1" cardinality="single" optionalIn="mailRecipient" flags="accountInfo" since="8.8.10">
+  <desc>temporary RFC822 email address of this recipient for accepting mail during account rename</desc>
+</attr>
+
+<attr id="2144" name="zimbraPrimaryEmailChangeHistory" type="string" cardinality="multi" optionalIn="account" flags="accountInfo" since="8.8.10">
+  <desc>timestamp of account rename and previous name of the account</desc>
+</attr>
+
 <attr id="2994" name="zimbraPrefDefaultCalendarId" type="integer" cardinality="single" optionalIn="account,cos" flags="accountInherited" callback="DefaultCalendarIdCallback" since="8.8.10">
   <defaultCOSValue>10</defaultCOSValue>
   <desc>Default calendar folder id. Current default calendar id is 10, as calendar folder with id 10, is created for all users.

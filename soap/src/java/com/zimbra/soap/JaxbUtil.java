@@ -658,6 +658,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.RemoveStaleDeviceMetadataResponse.class,
             com.zimbra.soap.admin.message.RenameAccountRequest.class,
             com.zimbra.soap.admin.message.RenameAccountResponse.class,
+            com.zimbra.soap.admin.message.ChangePrimaryEmailRequest.class,
+            com.zimbra.soap.admin.message.ChangePrimaryEmailResponse.class,
             com.zimbra.soap.admin.message.RenameCalendarResourceRequest.class,
             com.zimbra.soap.admin.message.RenameCalendarResourceResponse.class,
             com.zimbra.soap.admin.message.RenameCosRequest.class,
