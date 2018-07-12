@@ -11908,6 +11908,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraObjectType = "zimbraObjectType";
 
     /**
+     * temporary RFC822 email address of this recipient for accepting mail
+     * during account rename
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=2143)
+    public static final String A_zimbraOldMailAddress = "zimbraOldMailAddress";
+
+    /**
      * allowed OpenID Provider Endpoint URLs for authentication
      *
      * @since ZCS 7.1.0
@@ -14120,6 +14129,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=3018)
     public static final String A_zimbraPreviousEphemeralBackendURL = "zimbraPreviousEphemeralBackendURL";
+
+    /**
+     * timestamp of account rename and previous name of the account
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=2144)
+    public static final String A_zimbraPrimaryEmailChangeHistory = "zimbraPrimaryEmailChangeHistory";
 
     /**
      * whether this instance of Zimbra is running ZCS or some other
