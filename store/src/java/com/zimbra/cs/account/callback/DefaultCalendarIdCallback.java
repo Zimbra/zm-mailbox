@@ -100,7 +100,7 @@ public class DefaultCalendarIdCallback extends AttributeCallback {
            }
        } else if (entry instanceof Cos) {
            throw ServiceException.INVALID_REQUEST("Changing value for " + attrName + " on COS is not allowed.", null);
-       } else {
+       } else if (entry != null) {
            throw ServiceException.INVALID_REQUEST("Invalid entry received.", null);
        }
    }
