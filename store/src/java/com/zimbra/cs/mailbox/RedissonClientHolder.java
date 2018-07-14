@@ -19,6 +19,7 @@ package com.zimbra.cs.mailbox;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
+import org.redisson.config.ClusterServersConfig;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
@@ -34,10 +35,13 @@ public final class RedissonClientHolder {
         String uri = null;
         try {
             uri = LC.redis_service_uri.value();
+            ZimbraLog.system.info("redis_service_uri=%s", uri);
             Config config = new Config();
-            config.useSingleServer().setAddress(uri);
+            ClusterServersConfig clusterServersConfig = config.useClusterServers();
+            // FIXME- make configurable.  Scan time in milliseconds.
+            clusterServersConfig.setScanInterval(2000);
+            clusterServersConfig.addNodeAddress(uri.split(" "));
             this.redisson = Redisson.create(config);
-            ZimbraLog.system.info("RedissonClient URL=%s", uri);
         } catch (Exception ex) {
             ZimbraLog.system.fatal("Cannot setup RedissonClient to connect to %s", uri, ex);
             throw ex;
