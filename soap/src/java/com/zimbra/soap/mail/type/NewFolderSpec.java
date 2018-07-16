@@ -31,7 +31,12 @@ import com.google.common.collect.Lists;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.ZmBoolean;
 
+import io.leangen.graphql.annotations.GraphQLNonNull;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name="NewFolderSpec", description="Input for creating a new folder")
 public class NewFolderSpec {
 
     /**
@@ -40,6 +45,8 @@ public class NewFolderSpec {
      * contain the folder separator '/'
      */
     @XmlAttribute(name=MailConstants.A_NAME /* name */, required=true)
+    @GraphQLNonNull
+    @GraphQLQuery(name="name", description="If parentFolderId is unset, name is the full path of the new folder; otherwise, name may not contain the folder separator '/'")
     private final String name;
 
     /**
@@ -49,6 +56,7 @@ public class NewFolderSpec {
      * possible values are the same as <b>&lt;SearchRequest></b>'s {types}: <b>conversation|message|contact|etc</b>
      */
     @XmlAttribute(name=MailConstants.A_DEFAULT_VIEW /* view */, required=false)
+    @GraphQLQuery(name="view", description="Default type for the folder; used by web client to decide which view to use;")
     private String defaultView;
 
     /**
@@ -56,6 +64,7 @@ public class NewFolderSpec {
      * @zm-api-field-description Flags
      */
     @XmlAttribute(name=MailConstants.A_FLAGS /* f */, required=false)
+    @GraphQLQuery(name="flags", description="Folder flags")
     private String flags;
 
     /**
@@ -63,6 +72,7 @@ public class NewFolderSpec {
      * @zm-api-field-description color numeric; range 0-127; defaults to 0 if not present; client can display only 0-7
      */
     @XmlAttribute(name=MailConstants.A_COLOR /* color */, required=false)
+    @GraphQLQuery(name="color", description="color numeric; range 0-127; defaults to 0 if not present; client can display only 0-7")
     private Byte color;
 
     /**
@@ -70,6 +80,7 @@ public class NewFolderSpec {
      * @zm-api-field-description RGB color in format #rrggbb where r,g and b are hex digits
      */
     @XmlAttribute(name=MailConstants.A_RGB /* rgb */, required=false)
+    @GraphQLQuery(name="rgb", description="RGB color in format #rrggbb where r,g and b are hex digits")
     private String rgb;
 
     /**
@@ -77,6 +88,7 @@ public class NewFolderSpec {
      * @zm-api-field-description URL (RSS, iCal, etc.) this folder syncs its contents to
      */
     @XmlAttribute(name=MailConstants.A_URL /* url */, required=false)
+    @GraphQLQuery(name="url", description="URL (RSS, iCal, etc.) this folder syncs its contents to")
     private String url;
 
     /**
@@ -84,6 +96,7 @@ public class NewFolderSpec {
      * @zm-api-field-description Parent folder ID
      */
     @XmlAttribute(name=MailConstants.A_FOLDER /* l */, required=false)
+    @GraphQLQuery(name="parentFolderId", description="Parent folder Id")
     private String parentFolderId;
 
     /**
@@ -92,6 +105,7 @@ public class NewFolderSpec {
      * mail.ALREADY_EXISTS
      */
     @XmlAttribute(name=MailConstants.A_FETCH_IF_EXISTS /* fie */, required=false)
+    @GraphQLQuery(name="fetchIfExists", description="If set, the server will fetch the folder if it already exists rather than throwing mail.ALREADY_EXISTS")
     private ZmBoolean fetchIfExists;
 
     /**
@@ -99,6 +113,7 @@ public class NewFolderSpec {
      * @zm-api-field-description If set (default) then if "url" is set, synchronize folder content on folder creation
      */
     @XmlAttribute(name=MailConstants.A_SYNC /* sync */, required=false)
+    @GraphQLQuery(name="syncToUrl", description="If set (default) then if url is set, synchronize folder content on folder creation")
     private ZmBoolean syncToUrl;
 
     /**
@@ -106,6 +121,7 @@ public class NewFolderSpec {
      */
     @XmlElementWrapper(name=MailConstants.E_ACL /* acl */, required=false)
     @XmlElement(name=MailConstants.E_GRANT /* grant */, required=false)
+    @GraphQLQuery(name="grants", description="Grant specification")
     private final List<ActionGrantSelector> grants = Lists.newArrayList();
 
     /**
@@ -121,7 +137,7 @@ public class NewFolderSpec {
     }
 
     public static NewFolderSpec createForNameAndParentFolderId(String name, String parentFolderId) {
-        NewFolderSpec nfs = new NewFolderSpec(name);
+        final NewFolderSpec nfs = new NewFolderSpec(name);
         nfs.setParentFolderId(parentFolderId);
         return nfs;
     }
