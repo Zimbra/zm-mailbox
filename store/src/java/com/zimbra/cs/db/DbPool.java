@@ -24,6 +24,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Iterator;
 import java.util.Properties;
+import java.util.concurrent.ThreadLocalRandom;
 
 import org.apache.commons.dbcp.ConnectionFactory;
 import org.apache.commons.dbcp.PoolableConnectionFactory;
@@ -59,9 +60,11 @@ public class DbPool {
         private final Connection connection;
         private Throwable mStackTrace;
         Integer mboxId;
+        final long startTime;
 
         DbConnection(Connection conn) {
             connection = conn;
+            startTime = System.currentTimeMillis();
         }
 
         DbConnection(Connection conn, Integer mboxId) {
@@ -140,13 +143,16 @@ public class DbPool {
             try {
                 Db.getInstance().preClose(this);
             } catch (SQLException e) {
-                ZimbraLog.sqltrace.warn("DB connection pre-close processing caught exception", e);
+                ZimbraLog.sqltrace.warn("DB connection pre-close processing caught exception. Connection %s",
+                        ZimbraLog.elapsedSince(startTime), e);
             }
 
             // then actually close the connection
             try {
                 connection.close();
             } catch (SQLException e) {
+                ZimbraLog.sqltrace.warn("problem closing database connection processing. Connection %s",
+                        ZimbraLog.elapsedSince(startTime), e);
                 throw ServiceException.FAILURE("closing database connection", e);
             } finally {
                 // Connection is being returned to the pool.  Decrement its stack
@@ -161,6 +167,7 @@ public class DbPool {
                     }
                 }
             }
+            ZimbraLog.sqltrace.debug("DbConnection %s", ZimbraLog.elapsedSince(startTime));
         }
 
         /** Sets the stack trace used for detecting connection leaks. */
@@ -338,7 +345,7 @@ public class DbPool {
             Connection dbconn = null;
             DbConnection conn = null;
             try {
-                dbconn = pool.getConnection();
+                dbconn = getConn(pool);
 
                 if (dbconn.getAutoCommit() != false)
                     dbconn.setAutoCommit(false);
@@ -400,7 +407,7 @@ public class DbPool {
             Connection dbconn = null;
             DbConnection conn = null;
             try {
-                dbconn = pool.getConnection();
+                dbconn = getConn(pool);
 
                 if (dbconn.getAutoCommit() != false)
                     dbconn.setAutoCommit(false);
@@ -449,6 +456,38 @@ public class DbPool {
             Db.getInstance().abortOpen(mboxId);
             throw se;
         }
+    }
+
+    /**
+     * Gets a DB connection from the pool.  Allows for retries if there is currently a storm of requests
+     * for connections.  This assumes that connections are not held onto for very long.
+     */
+    private static Connection getConn(PoolingDataSource pool) throws SQLException {
+        int tries = 0;
+        int maxTries = 20;
+        Connection connection = null;
+        while (tries < maxTries)
+            try {
+                tries++;
+                connection = pool.getConnection();
+                ZimbraLog.sqltrace.debug("Got db connection from pool on attempt %d", tries);
+                return connection;
+            } catch (SQLException e) {
+                if (tries >= maxTries) {
+                    ZimbraLog.sqltrace.info("Failed to get db connection from pool after %d attempts, giving up",
+                            tries);
+                    throw e;
+                }
+                /* wait for a random small amount of time before retrying */
+                try {
+                    int sleepMillis = ThreadLocalRandom.current().nextInt(2, 200);
+                    ZimbraLog.sqltrace.debug("Failed to get db connection from pool on attempt %d, sleeping %dms",
+                            tries, sleepMillis);
+                    Thread.sleep(sleepMillis);
+                } catch (InterruptedException e1) {
+                }
+            }
+        return connection;
     }
 
     private static void checkPoolUsage() {
