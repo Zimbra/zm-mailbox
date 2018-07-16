@@ -782,6 +782,8 @@ public class ProvUtil implements HttpDebugListener {
                "name|id configName", Category.DOMAIN, 2, 2),
         RENAME_ACCOUNT("renameAccount", "ra",
                "{name@domain|id} {newName@domain}", Category.ACCOUNT, 2, 2),
+        CHANGE_PRIMARY_EMAIL("changePrimaryEmail", "cpe",
+                "{name@domain|id} {newName@domain}", Category.ACCOUNT, 2, 2),
         RENAME_CALENDAR_RESOURCE(
                "renameCalendarResource", "rcr", "{name@domain|id} {newName@domain}", Category.CALENDAR, 2, 2),
         RENAME_COS(
@@ -1071,6 +1073,9 @@ public class ProvUtil implements HttpDebugListener {
             break;
         case AUTO_PROV_CONTROL:
             prov.autoProvControl(args[1]);
+            break;
+        case CHANGE_PRIMARY_EMAIL:
+            doChangePrimaryEmail(args);
             break;
         case COPY_COS:
             console.println(prov.copyCos(lookupCos(args[1]).getId(), args[2]).getId());
@@ -2119,6 +2124,13 @@ public class ProvUtil implements HttpDebugListener {
         }
 
         prov.renameAccount(lookupAccount(args[1]).getId(), args[2]);
+    }
+
+    private void doChangePrimaryEmail(String[] args) throws ServiceException {
+        if (!(prov instanceof SoapProvisioning)) {
+            throwSoapOnly();
+        }
+        ((SoapProvisioning) prov).changePrimaryEmail(lookupAccount(args[1]).getId(), args[2]);
     }
 
     private void doGetAccountIdentities(String[] args) throws ServiceException {

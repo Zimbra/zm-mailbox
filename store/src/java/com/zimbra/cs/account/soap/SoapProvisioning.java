@@ -1628,6 +1628,12 @@ public class SoapProvisioning extends Provisioning {
         invokeJaxb(new RenameAccountRequest(zimbraId, newName));
     }
 
+    public void changePrimaryEmail(String zimbraId, String newName)
+            throws ServiceException {
+        AccountSelector acctSel = new AccountSelector(com.zimbra.soap.type.AccountBy.id, zimbraId);
+        invokeJaxb(new ChangePrimaryEmailRequest(acctSel, newName));
+    }
+
     @Override
     public void renameCalendarResource(String zimbraId, String newName)
             throws ServiceException {
