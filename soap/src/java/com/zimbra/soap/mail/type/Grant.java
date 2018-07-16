@@ -25,6 +25,10 @@ import com.google.common.base.MoreObjects;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.GrantGranteeType;
 
+import io.leangen.graphql.annotations.GraphQLNonNull;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 /*
  * Delete this class in bug 66989
  */
@@ -33,6 +37,7 @@ import com.zimbra.soap.type.GrantGranteeType;
 <grant perm="{rights}" gt="{grantee-type}" zid="{zimbra-id}" [expiry="{millis-since-epoch}"] [d="{grantee-name}"] [pw="{password-for-guest}"] [key=="{access-key}"]/>*
  */
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name="Grant", description="A grant")
 public class Grant {
 
     /**
@@ -41,6 +46,8 @@ public class Grant {
      * workflow action (x), view (p)rivate, view (f)reebusy, (c)reate subfolder
      */
     @XmlAttribute(name=MailConstants.A_RIGHTS /* perm */, required=true)
+    @GraphQLNonNull
+    @GraphQLQuery(name="permissions", description="Rights - Some combination of (r)ead, (w)rite, (i)nsert, (d)elete, (a)dminister, workflow action (x), view (p)rivate, view (f)reebusy, (c)reate subfolder")
     private String perm;
 
     /**
@@ -57,6 +64,8 @@ public class Grant {
      * </pre>
      */
     @XmlAttribute(name=MailConstants.A_GRANT_TYPE /* gt */, required=true)
+    @GraphQLNonNull
+    @GraphQLQuery(name="granteeType", description="The type of grantee")
     private GrantGranteeType granteeType;
 
     /**
@@ -64,6 +73,8 @@ public class Grant {
      * @zm-api-field-description Grantee ID
      */
     @XmlAttribute(name=MailConstants.A_ZIMBRA_ID /* zid */, required=true)
+    @GraphQLNonNull
+    @GraphQLQuery(name="granteeId", description="The grantee id")
     private String granteeId;
 
     /**
@@ -78,6 +89,7 @@ public class Grant {
      * grant never expires.
      */
     @XmlAttribute(name=MailConstants.A_EXPIRY /* expiry */, required=false)
+    @GraphQLQuery(name="expiry", description="Time when this grant expires")
     private Long expiry;
 
     /**
@@ -87,6 +99,7 @@ public class Grant {
      * the address in the default domain.
      */
     @XmlAttribute(name=MailConstants.A_DISPLAY /* d */, required=false)
+    @GraphQLQuery(name="granteeName", description="Name or email address of the principal being granted rights.")
     private String granteeName;
 
     /**
@@ -94,6 +107,7 @@ public class Grant {
      * @zm-api-field-description Optional argument.  password when {grantee-type} is "guest"
      */
     @XmlAttribute(name=MailConstants.A_PASSWORD /* pw */, required=false)
+    @GraphQLQuery(name="password", description="Password for when granteeType is guest")
     private String guestPassword;
 
     /**
@@ -101,6 +115,7 @@ public class Grant {
      * @zm-api-field-description Optional argument.  Access key when {grantee-type} is "key"
      */
     @XmlAttribute(name=MailConstants.A_ACCESSKEY /* key */, required=false)
+    @GraphQLQuery(name="accessKey", description="Access key when granteeType is key")
     private String accessKey;
 
     public Grant() {
@@ -113,12 +128,22 @@ public class Grant {
     public void setGranteeName(String granteeName) { this.granteeName = granteeName; }
     public void setGuestPassword(String guestPassword) { this.guestPassword = guestPassword; }
     public void setAccessKey(String accessKey) { this.accessKey = accessKey; }
+    @GraphQLNonNull
+    @GraphQLQuery(name="permissions", description="Rights - Some combination of (r)ead, (w)rite, (i)nsert, (d)elete, (a)dminister, workflow action (x), view (p)rivate, view (f)reebusy, (c)reate subfolder")
     public String getPerm() { return perm; }
+    @GraphQLNonNull
+    @GraphQLQuery(name="granteeType", description="The type of grantee")
     public GrantGranteeType getGranteeType() { return granteeType; }
+    @GraphQLNonNull
+    @GraphQLQuery(name="granteeId", description="The grantee id")
     public String getGranteeId() { return granteeId; }
+    @GraphQLQuery(name="expiry", description="Time when this grant expires")
     public Long getExpiry() { return expiry; }
+    @GraphQLQuery(name="granteeName", description="Name or email address of the principal being granted rights.")
     public String getGranteeName() { return granteeName; }
+    @GraphQLQuery(name="password", description="Password for when granteeType is guest")
     public String getGuestPassword() { return guestPassword; }
+    @GraphQLQuery(name="accessKey", description="Access key when granteeType is key")
     public String getAccessKey() { return accessKey; }
 
     public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
