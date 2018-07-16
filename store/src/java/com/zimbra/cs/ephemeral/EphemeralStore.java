@@ -300,12 +300,10 @@ public abstract class EphemeralStore {
     public static Factory getFactory(FailureMode onFailure) throws ServiceException {
         if (factory == null) {
             String factoryClass = null;
-            String url = Provisioning.getInstance().getConfig().getEphemeralBackendURL();
-            if (url != null) {
-                String[] tokens = url.split(":");
-                if (tokens != null && tokens.length > 0) {
-                    factoryClass = getFactoryClassName(tokens[0], false);
-                }
+            // In Zimbra X, ephemeral data is stored in the existing redis deployment.
+            // To this end, we use SSDBEphemeralBackend if it is registered, and fall back to LDAP otherwise.
+            if (factories.containsKey("ssdb")) {
+                factoryClass = getFactoryClassName("ssdb", false);
             } else {
                 factoryClass = factories.get("ldap");
             }
