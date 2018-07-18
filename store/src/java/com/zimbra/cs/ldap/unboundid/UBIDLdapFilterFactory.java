@@ -457,7 +457,8 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                 Filter.createANDFilter(
                         Filter.createORFilter(
                                 Filter.createEqualityFilter(Provisioning.A_zimbraMailDeliveryAddress, name),
-                                Filter.createEqualityFilter(Provisioning.A_zimbraMailAlias, name)),
+                                Filter.createEqualityFilter(Provisioning.A_zimbraMailAlias, name),
+                                Filter.createEqualityFilter(Provisioning.A_zimbraOldMailAddress, name)),
                         FILTER_ALL_ACCOUNTS));
     }
 
