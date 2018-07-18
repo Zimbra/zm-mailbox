@@ -15125,7 +15125,10 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * URL of ephemeral storage backend
+     * Deprecated since: 10.0.0. Deprecated in Zimbra X in favor of ephemeral
+     * data being stored in the existing redis deployment, governed by the
+     * redis_service_uri LC attribute. Orig desc: URL of ephemeral storage
+     * backend
      *
      * @return zimbraEphemeralBackendURL, or "ldap://default" if unset
      *
@@ -15137,7 +15140,10 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * URL of ephemeral storage backend
+     * Deprecated since: 10.0.0. Deprecated in Zimbra X in favor of ephemeral
+     * data being stored in the existing redis deployment, governed by the
+     * redis_service_uri LC attribute. Orig desc: URL of ephemeral storage
+     * backend
      *
      * @param zimbraEphemeralBackendURL new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -15152,7 +15158,10 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * URL of ephemeral storage backend
+     * Deprecated since: 10.0.0. Deprecated in Zimbra X in favor of ephemeral
+     * data being stored in the existing redis deployment, governed by the
+     * redis_service_uri LC attribute. Orig desc: URL of ephemeral storage
+     * backend
      *
      * @param zimbraEphemeralBackendURL new value
      * @param attrs existing map to populate, or null to create a new map
@@ -15168,7 +15177,10 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * URL of ephemeral storage backend
+     * Deprecated since: 10.0.0. Deprecated in Zimbra X in favor of ephemeral
+     * data being stored in the existing redis deployment, governed by the
+     * redis_service_uri LC attribute. Orig desc: URL of ephemeral storage
+     * backend
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -15182,7 +15194,10 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * URL of ephemeral storage backend
+     * Deprecated since: 10.0.0. Deprecated in Zimbra X in favor of ephemeral
+     * data being stored in the existing redis deployment, governed by the
+     * redis_service_uri LC attribute. Orig desc: URL of ephemeral storage
+     * backend
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -52986,7 +53001,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * URL of the previous ephemeral storage backend
+     * Deprecated since: 10.0.0. Deprecated in Zimbra X; the ephemeral
+     * backend is no longer governed by an LDAP attribute. Orig desc: URL of
+     * the previous ephemeral storage backend
      *
      * @return zimbraPreviousEphemeralBackendURL, or null if unset
      *
@@ -52998,7 +53015,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * URL of the previous ephemeral storage backend
+     * Deprecated since: 10.0.0. Deprecated in Zimbra X; the ephemeral
+     * backend is no longer governed by an LDAP attribute. Orig desc: URL of
+     * the previous ephemeral storage backend
      *
      * @param zimbraPreviousEphemeralBackendURL new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -53013,7 +53032,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * URL of the previous ephemeral storage backend
+     * Deprecated since: 10.0.0. Deprecated in Zimbra X; the ephemeral
+     * backend is no longer governed by an LDAP attribute. Orig desc: URL of
+     * the previous ephemeral storage backend
      *
      * @param zimbraPreviousEphemeralBackendURL new value
      * @param attrs existing map to populate, or null to create a new map
@@ -53029,7 +53050,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * URL of the previous ephemeral storage backend
+     * Deprecated since: 10.0.0. Deprecated in Zimbra X; the ephemeral
+     * backend is no longer governed by an LDAP attribute. Orig desc: URL of
+     * the previous ephemeral storage backend
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -53043,7 +53066,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * URL of the previous ephemeral storage backend
+     * Deprecated since: 10.0.0. Deprecated in Zimbra X; the ephemeral
+     * backend is no longer governed by an LDAP attribute. Orig desc: URL of
+     * the previous ephemeral storage backend
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -66705,9 +66730,11 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Specifies the JedisPool size used by SSDBEphemeralStore. Higher pool
-     * sizes allow for more simultaneous connections to SSDB. A value of 0
-     * will cause the pool size to be unlimited.
+     * Deprecated since: 10.0.0. As of Zimbra X, SSDBEphemeralStore no longer
+     * uses the Jedis libary. Orig desc: Specifies the JedisPool size used by
+     * SSDBEphemeralStore. Higher pool sizes allow for more simultaneous
+     * connections to SSDB. A value of 0 will cause the pool size to be
+     * unlimited.
      *
      * @return zimbraSSDBResourcePoolSize, or 0 if unset
      *
@@ -66719,9 +66746,11 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Specifies the JedisPool size used by SSDBEphemeralStore. Higher pool
-     * sizes allow for more simultaneous connections to SSDB. A value of 0
-     * will cause the pool size to be unlimited.
+     * Deprecated since: 10.0.0. As of Zimbra X, SSDBEphemeralStore no longer
+     * uses the Jedis libary. Orig desc: Specifies the JedisPool size used by
+     * SSDBEphemeralStore. Higher pool sizes allow for more simultaneous
+     * connections to SSDB. A value of 0 will cause the pool size to be
+     * unlimited.
      *
      * @param zimbraSSDBResourcePoolSize new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -66736,9 +66765,11 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Specifies the JedisPool size used by SSDBEphemeralStore. Higher pool
-     * sizes allow for more simultaneous connections to SSDB. A value of 0
-     * will cause the pool size to be unlimited.
+     * Deprecated since: 10.0.0. As of Zimbra X, SSDBEphemeralStore no longer
+     * uses the Jedis libary. Orig desc: Specifies the JedisPool size used by
+     * SSDBEphemeralStore. Higher pool sizes allow for more simultaneous
+     * connections to SSDB. A value of 0 will cause the pool size to be
+     * unlimited.
      *
      * @param zimbraSSDBResourcePoolSize new value
      * @param attrs existing map to populate, or null to create a new map
@@ -66754,9 +66785,11 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Specifies the JedisPool size used by SSDBEphemeralStore. Higher pool
-     * sizes allow for more simultaneous connections to SSDB. A value of 0
-     * will cause the pool size to be unlimited.
+     * Deprecated since: 10.0.0. As of Zimbra X, SSDBEphemeralStore no longer
+     * uses the Jedis libary. Orig desc: Specifies the JedisPool size used by
+     * SSDBEphemeralStore. Higher pool sizes allow for more simultaneous
+     * connections to SSDB. A value of 0 will cause the pool size to be
+     * unlimited.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -66770,9 +66803,11 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Specifies the JedisPool size used by SSDBEphemeralStore. Higher pool
-     * sizes allow for more simultaneous connections to SSDB. A value of 0
-     * will cause the pool size to be unlimited.
+     * Deprecated since: 10.0.0. As of Zimbra X, SSDBEphemeralStore no longer
+     * uses the Jedis libary. Orig desc: Specifies the JedisPool size used by
+     * SSDBEphemeralStore. Higher pool sizes allow for more simultaneous
+     * connections to SSDB. A value of 0 will cause the pool size to be
+     * unlimited.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -66787,12 +66822,13 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Specifies the amount of time a thread will wait for a JedisPool
-     * resource. A value of 0 will cause the thread to block indefinitely..
-     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
-     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
-     * ms - milliseconds. If time unit is not specified, the default is
-     * s(seconds).
+     * Deprecated since: 10.0.0. As of Zimbra X, SSDBEphemeralStore no longer
+     * uses the Jedis libary. Orig desc: Specifies the amount of time a
+     * thread will wait for a JedisPool resource. A value of 0 will cause the
+     * thread to block indefinitely.. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * <p>Use getSSDBResourcePoolTimeoutAsString to access value as a string.
      *
@@ -66808,12 +66844,13 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Specifies the amount of time a thread will wait for a JedisPool
-     * resource. A value of 0 will cause the thread to block indefinitely..
-     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
-     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
-     * ms - milliseconds. If time unit is not specified, the default is
-     * s(seconds).
+     * Deprecated since: 10.0.0. As of Zimbra X, SSDBEphemeralStore no longer
+     * uses the Jedis libary. Orig desc: Specifies the amount of time a
+     * thread will wait for a JedisPool resource. A value of 0 will cause the
+     * thread to block indefinitely.. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @return zimbraSSDBResourcePoolTimeout, or "0" if unset
      *
@@ -66825,12 +66862,13 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Specifies the amount of time a thread will wait for a JedisPool
-     * resource. A value of 0 will cause the thread to block indefinitely..
-     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
-     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
-     * ms - milliseconds. If time unit is not specified, the default is
-     * s(seconds).
+     * Deprecated since: 10.0.0. As of Zimbra X, SSDBEphemeralStore no longer
+     * uses the Jedis libary. Orig desc: Specifies the amount of time a
+     * thread will wait for a JedisPool resource. A value of 0 will cause the
+     * thread to block indefinitely.. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraSSDBResourcePoolTimeout new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -66845,12 +66883,13 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Specifies the amount of time a thread will wait for a JedisPool
-     * resource. A value of 0 will cause the thread to block indefinitely..
-     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
-     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
-     * ms - milliseconds. If time unit is not specified, the default is
-     * s(seconds).
+     * Deprecated since: 10.0.0. As of Zimbra X, SSDBEphemeralStore no longer
+     * uses the Jedis libary. Orig desc: Specifies the amount of time a
+     * thread will wait for a JedisPool resource. A value of 0 will cause the
+     * thread to block indefinitely.. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraSSDBResourcePoolTimeout new value
      * @param attrs existing map to populate, or null to create a new map
@@ -66866,12 +66905,13 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Specifies the amount of time a thread will wait for a JedisPool
-     * resource. A value of 0 will cause the thread to block indefinitely..
-     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
-     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
-     * ms - milliseconds. If time unit is not specified, the default is
-     * s(seconds).
+     * Deprecated since: 10.0.0. As of Zimbra X, SSDBEphemeralStore no longer
+     * uses the Jedis libary. Orig desc: Specifies the amount of time a
+     * thread will wait for a JedisPool resource. A value of 0 will cause the
+     * thread to block indefinitely.. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -66885,12 +66925,13 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Specifies the amount of time a thread will wait for a JedisPool
-     * resource. A value of 0 will cause the thread to block indefinitely..
-     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
-     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
-     * ms - milliseconds. If time unit is not specified, the default is
-     * s(seconds).
+     * Deprecated since: 10.0.0. As of Zimbra X, SSDBEphemeralStore no longer
+     * uses the Jedis libary. Orig desc: Specifies the amount of time a
+     * thread will wait for a JedisPool resource. A value of 0 will cause the
+     * thread to block indefinitely.. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
