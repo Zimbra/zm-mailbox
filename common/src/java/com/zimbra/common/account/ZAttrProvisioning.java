@@ -5953,7 +5953,10 @@ public class ZAttrProvisioning {
     public static final String A_zimbraEmptyFolderOpTimeout = "zimbraEmptyFolderOpTimeout";
 
     /**
-     * URL of ephemeral storage backend
+     * Deprecated since: 10.0.0. Deprecated in Zimbra X in favor of ephemeral
+     * data being stored in the existing redis deployment, governed by the
+     * redis_service_uri LC attribute. Orig desc: URL of ephemeral storage
+     * backend
      *
      * @since ZCS 8.7.6
      */
@@ -14432,7 +14435,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrevFoldersToTrackMax = "zimbraPrevFoldersToTrackMax";
 
     /**
-     * URL of the previous ephemeral storage backend
+     * Deprecated since: 10.0.0. Deprecated in Zimbra X; the ephemeral
+     * backend is no longer governed by an LDAP attribute. Orig desc: URL of
+     * the previous ephemeral storage backend
      *
      * @since ZCS 8.8.1
      */
@@ -16755,9 +16760,11 @@ public class ZAttrProvisioning {
     public static final String A_zimbraSpnegoAuthTargetName = "zimbraSpnegoAuthTargetName";
 
     /**
-     * Specifies the JedisPool size used by SSDBEphemeralStore. Higher pool
-     * sizes allow for more simultaneous connections to SSDB. A value of 0
-     * will cause the pool size to be unlimited.
+     * Deprecated since: 10.0.0. As of Zimbra X, SSDBEphemeralStore no longer
+     * uses the Jedis libary. Orig desc: Specifies the JedisPool size used by
+     * SSDBEphemeralStore. Higher pool sizes allow for more simultaneous
+     * connections to SSDB. A value of 0 will cause the pool size to be
+     * unlimited.
      *
      * @since ZCS 8.7.6
      */
@@ -16765,12 +16772,13 @@ public class ZAttrProvisioning {
     public static final String A_zimbraSSDBResourcePoolSize = "zimbraSSDBResourcePoolSize";
 
     /**
-     * Specifies the amount of time a thread will wait for a JedisPool
-     * resource. A value of 0 will cause the thread to block indefinitely..
-     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
-     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
-     * ms - milliseconds. If time unit is not specified, the default is
-     * s(seconds).
+     * Deprecated since: 10.0.0. As of Zimbra X, SSDBEphemeralStore no longer
+     * uses the Jedis libary. Orig desc: Specifies the amount of time a
+     * thread will wait for a JedisPool resource. A value of 0 will cause the
+     * thread to block indefinitely.. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @since ZCS 8.7.6
      */
