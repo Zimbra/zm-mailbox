@@ -340,6 +340,11 @@ public final class DebugConfig {
      */
     public static final String restrictedServerLDAPAttributes = value ("restricted_server_ldap_attributes", "zimbraSSLPrivateKey");
 
+    /**
+     * sleep time between account rename and alias creation for testing mail delivery during change of primary email
+     */
+    public static final int sleepTimeForTestingChangePrimaryEmail = value ("change_primary_email_sleep_time", 0);
+
     private static boolean value(String key, boolean defaultValue) {
         String value = LC.get(key);
         return value.isEmpty() ? defaultValue : Boolean.parseBoolean(value);

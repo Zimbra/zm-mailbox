@@ -23,6 +23,7 @@ import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -97,30 +98,41 @@ public class ChangePrimaryEmail extends AdminDocumentHandler {
         checkDomainRightByEmail(zsc, oldName, Admin.R_createAlias);
 
         account.setOldMailAddress(oldName);
-        ZimbraLog.security.debug("old mail address set to %s for account %s", oldName, accountId);
 
-        Mailbox mbox = Provisioning.onLocalServer(account) ? MailboxManager.getInstance().getMailboxByAccount(account) : null;
-        if (mbox == null) {
-            throw ServiceException.FAILURE("unable to get mailbox for rename: " + accountId, null);
+        try {
+            ZimbraLog.security.debug("old mail address set to %s for account %s", oldName, accountId);
+            Mailbox mbox = Provisioning.onLocalServer(account) ? MailboxManager.getInstance().getMailboxByAccount(account) : null;
+            if (mbox == null) {
+                throw ServiceException.FAILURE("unable to get mailbox for rename: " + accountId, null);
+            }
+            prov.renameAccount(accountId, newName);
+            mbox.renameMailbox(oldName, newName);
+            ZimbraLog.security.info(ZimbraLog
+                    .encodeAttrs(new String[] { "cmd", "ChangePrimaryEmail account renamed", "name", oldName, "newName", newName }));
+
+            // get account again after rename
+            account = prov.get(AccountBy.id, accountId, true, zsc.getAuthToken());
+            if (account == null) {
+                throw ServiceException.FAILURE("unable to get account after rename: " + accountId, null);
+            }
+
+            int sleepTime = DebugConfig.sleepTimeForTestingChangePrimaryEmail;
+            try {
+                ZimbraLog.security.debug("ChangePrimaryEmail thread sleeping for %d milliseconds", sleepTime);
+                Thread.sleep(sleepTime);
+            } catch (InterruptedException e) {
+                ZimbraLog.security.debug("ChangePrimaryEmail sleep was interrupted", e);
+            }
+
+            prov.addAlias(account, oldName);
+            ZimbraLog.security.info(ZimbraLog.encodeAttrs(new String[] { "cmd", "ChangePrimaryEmail added alias",
+                    "name", account.getName(), "alias", oldName }));
+
+            Date renameTime = new Date();
+            account.addPrimaryEmailChangeHistory(String.format("%s|%d", oldName, renameTime.getTime()));
+        } finally {
+            account.unsetOldMailAddress();
         }
-        prov.renameAccount(accountId, newName);
-        mbox.renameMailbox(oldName, newName);
-        ZimbraLog.security.info(ZimbraLog
-                .encodeAttrs(new String[] { "cmd", "ChangePrimaryEmail", "name", oldName, "newName", newName }));
-
-        // get account again after rename
-        account = prov.get(AccountBy.id, accountId, true, zsc.getAuthToken());
-        if (account == null) {
-            throw ServiceException.FAILURE("unable to get account after rename: " + accountId, null);
-        }
-
-        prov.addAlias(account, oldName);
-        ZimbraLog.security.info(ZimbraLog.encodeAttrs(new String[] { "cmd", "ChangePrimaryEmail added alias",
-                "name", account.getName(), "alias", oldName }));
-
-        Date renameTime = new Date();
-        account.addPrimaryEmailChangeHistory(String.format("%s|%d", oldName, renameTime.getTime()));
-        account.unsetOldMailAddress();
 
         Element response = zsc.createElement(AdminConstants.CHANGE_PRIMARY_EMAIL_RESPONSE);
         ToXML.encodeAccount(response, account);
