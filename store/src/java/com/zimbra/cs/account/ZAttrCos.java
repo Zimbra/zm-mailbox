@@ -4011,6 +4011,150 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * This attribute stores legacy DA Admin/User Domain list
+     *
+     * @return zimbraDAAdminDomainList, or null if unset
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5015)
+    public String getDAAdminDomainList() {
+        return getAttr(Provisioning.A_zimbraDAAdminDomainList, null, true);
+    }
+
+    /**
+     * This attribute stores legacy DA Admin/User Domain list
+     *
+     * @param zimbraDAAdminDomainList new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5015)
+    public void setDAAdminDomainList(String zimbraDAAdminDomainList) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDAAdminDomainList, zimbraDAAdminDomainList);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute stores legacy DA Admin/User Domain list
+     *
+     * @param zimbraDAAdminDomainList new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5015)
+    public Map<String,Object> setDAAdminDomainList(String zimbraDAAdminDomainList, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDAAdminDomainList, zimbraDAAdminDomainList);
+        return attrs;
+    }
+
+    /**
+     * This attribute stores legacy DA Admin/User Domain list
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5015)
+    public void unsetDAAdminDomainList() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDAAdminDomainList, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute stores legacy DA Admin/User Domain list
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5015)
+    public Map<String,Object> unsetDAAdminDomainList(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDAAdminDomainList, "");
+        return attrs;
+    }
+
+    /**
+     * This attribute stores DA admin/user registered IP
+     *
+     * @return zimbraDAAdminIP, or null if unset
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5018)
+    public String getDAAdminIP() {
+        return getAttr(Provisioning.A_zimbraDAAdminIP, null, true);
+    }
+
+    /**
+     * This attribute stores DA admin/user registered IP
+     *
+     * @param zimbraDAAdminIP new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5018)
+    public void setDAAdminIP(String zimbraDAAdminIP) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDAAdminIP, zimbraDAAdminIP);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute stores DA admin/user registered IP
+     *
+     * @param zimbraDAAdminIP new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5018)
+    public Map<String,Object> setDAAdminIP(String zimbraDAAdminIP, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDAAdminIP, zimbraDAAdminIP);
+        return attrs;
+    }
+
+    /**
+     * This attribute stores DA admin/user registered IP
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5018)
+    public void unsetDAAdminIP() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDAAdminIP, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute stores DA admin/user registered IP
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5018)
+    public Map<String,Object> unsetDAAdminIP(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDAAdminIP, "");
+        return attrs;
+    }
+
+    /**
      * The time interval between automated data imports for a Caldav data
      * source. If unset or 0, the data source will not be scheduled for
      * automated polling. . Must be in valid duration format:
@@ -6791,6 +6935,353 @@ public abstract class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetEmailPrintoutHeaderEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEmailPrintoutHeaderEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * This attribute stores Employee/user Department name
+     *
+     * @return zimbraEmployeeDeptName, or null if unset
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5020)
+    public String getEmployeeDeptName() {
+        return getAttr(Provisioning.A_zimbraEmployeeDeptName, null, true);
+    }
+
+    /**
+     * This attribute stores Employee/user Department name
+     *
+     * @param zimbraEmployeeDeptName new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5020)
+    public void setEmployeeDeptName(String zimbraEmployeeDeptName) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEmployeeDeptName, zimbraEmployeeDeptName);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute stores Employee/user Department name
+     *
+     * @param zimbraEmployeeDeptName new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5020)
+    public Map<String,Object> setEmployeeDeptName(String zimbraEmployeeDeptName, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEmployeeDeptName, zimbraEmployeeDeptName);
+        return attrs;
+    }
+
+    /**
+     * This attribute stores Employee/user Department name
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5020)
+    public void unsetEmployeeDeptName() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEmployeeDeptName, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute stores Employee/user Department name
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5020)
+    public Map<String,Object> unsetEmployeeDeptName(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEmployeeDeptName, "");
+        return attrs;
+    }
+
+    /**
+     * This attribute stores Employee/user number
+     *
+     * @return zimbraEmployeeNum, or null if unset
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5019)
+    public String getEmployeeNum() {
+        return getAttr(Provisioning.A_zimbraEmployeeNum, null, true);
+    }
+
+    /**
+     * This attribute stores Employee/user number
+     *
+     * @param zimbraEmployeeNum new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5019)
+    public void setEmployeeNum(String zimbraEmployeeNum) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEmployeeNum, zimbraEmployeeNum);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute stores Employee/user number
+     *
+     * @param zimbraEmployeeNum new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5019)
+    public Map<String,Object> setEmployeeNum(String zimbraEmployeeNum, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEmployeeNum, zimbraEmployeeNum);
+        return attrs;
+    }
+
+    /**
+     * This attribute stores Employee/user number
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5019)
+    public void unsetEmployeeNum() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEmployeeNum, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute stores Employee/user number
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5019)
+    public Map<String,Object> unsetEmployeeNum(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEmployeeNum, "");
+        return attrs;
+    }
+
+    /**
+     * This attribute stores legacy Employee/user protocol name
+     *
+     * <p>Valid values: [pop, imap, smtp, smime]
+     *
+     * @return zimbraEmployeeProtocolName, or null if unset and/or has invalid value
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5016)
+    public ZAttrProvisioning.EmployeeProtocolName getEmployeeProtocolName() {
+        try { String v = getAttr(Provisioning.A_zimbraEmployeeProtocolName, true, true); return v == null ? null : ZAttrProvisioning.EmployeeProtocolName.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+    }
+
+    /**
+     * This attribute stores legacy Employee/user protocol name
+     *
+     * <p>Valid values: [pop, imap, smtp, smime]
+     *
+     * @return zimbraEmployeeProtocolName, or null if unset
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5016)
+    public String getEmployeeProtocolNameAsString() {
+        return getAttr(Provisioning.A_zimbraEmployeeProtocolName, null, true);
+    }
+
+    /**
+     * This attribute stores legacy Employee/user protocol name
+     *
+     * <p>Valid values: [pop, imap, smtp, smime]
+     *
+     * @param zimbraEmployeeProtocolName new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5016)
+    public void setEmployeeProtocolName(ZAttrProvisioning.EmployeeProtocolName zimbraEmployeeProtocolName) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEmployeeProtocolName, zimbraEmployeeProtocolName.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute stores legacy Employee/user protocol name
+     *
+     * <p>Valid values: [pop, imap, smtp, smime]
+     *
+     * @param zimbraEmployeeProtocolName new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5016)
+    public Map<String,Object> setEmployeeProtocolName(ZAttrProvisioning.EmployeeProtocolName zimbraEmployeeProtocolName, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEmployeeProtocolName, zimbraEmployeeProtocolName.toString());
+        return attrs;
+    }
+
+    /**
+     * This attribute stores legacy Employee/user protocol name
+     *
+     * <p>Valid values: [pop, imap, smtp, smime]
+     *
+     * @param zimbraEmployeeProtocolName new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5016)
+    public void setEmployeeProtocolNameAsString(String zimbraEmployeeProtocolName) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEmployeeProtocolName, zimbraEmployeeProtocolName);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute stores legacy Employee/user protocol name
+     *
+     * <p>Valid values: [pop, imap, smtp, smime]
+     *
+     * @param zimbraEmployeeProtocolName new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5016)
+    public Map<String,Object> setEmployeeProtocolNameAsString(String zimbraEmployeeProtocolName, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEmployeeProtocolName, zimbraEmployeeProtocolName);
+        return attrs;
+    }
+
+    /**
+     * This attribute stores legacy Employee/user protocol name
+     *
+     * <p>Valid values: [pop, imap, smtp, smime]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5016)
+    public void unsetEmployeeProtocolName() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEmployeeProtocolName, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute stores legacy Employee/user protocol name
+     *
+     * <p>Valid values: [pop, imap, smtp, smime]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5016)
+    public Map<String,Object> unsetEmployeeProtocolName(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEmployeeProtocolName, "");
+        return attrs;
+    }
+
+    /**
+     * This attribute stores legacy Employee/user protocol templates
+     *
+     * @return zimbraEmployeeProtocolTemplate, or null if unset
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5017)
+    public String getEmployeeProtocolTemplate() {
+        return getAttr(Provisioning.A_zimbraEmployeeProtocolTemplate, null, true);
+    }
+
+    /**
+     * This attribute stores legacy Employee/user protocol templates
+     *
+     * @param zimbraEmployeeProtocolTemplate new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5017)
+    public void setEmployeeProtocolTemplate(String zimbraEmployeeProtocolTemplate) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEmployeeProtocolTemplate, zimbraEmployeeProtocolTemplate);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute stores legacy Employee/user protocol templates
+     *
+     * @param zimbraEmployeeProtocolTemplate new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5017)
+    public Map<String,Object> setEmployeeProtocolTemplate(String zimbraEmployeeProtocolTemplate, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEmployeeProtocolTemplate, zimbraEmployeeProtocolTemplate);
+        return attrs;
+    }
+
+    /**
+     * This attribute stores legacy Employee/user protocol templates
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5017)
+    public void unsetEmployeeProtocolTemplate() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEmployeeProtocolTemplate, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute stores legacy Employee/user protocol templates
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5017)
+    public Map<String,Object> unsetEmployeeProtocolTemplate(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEmployeeProtocolTemplate, "");
         return attrs;
     }
 
