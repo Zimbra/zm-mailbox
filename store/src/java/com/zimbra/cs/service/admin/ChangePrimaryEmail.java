@@ -43,7 +43,7 @@ public class ChangePrimaryEmail extends AdminDocumentHandler {
     private static final String[] TARGET_ACCOUNT_PATH = new String[] { AdminConstants.E_ACCOUNT };
 
     @Override
-    protected String[] getProxiedAccountPath() {
+    protected String[] getProxiedAccountElementPath() {
         return TARGET_ACCOUNT_PATH;
     }
 
