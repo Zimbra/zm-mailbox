@@ -656,7 +656,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="74" name="zimbraRedoLogEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox">
-  <globalConfigValue>TRUE</globalConfigValue>
+  <globalConfigValue>FALSE</globalConfigValue>
   <desc>whether redo logging is enabled</desc>
 </attr>
 
