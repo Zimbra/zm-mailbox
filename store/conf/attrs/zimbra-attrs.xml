@@ -9518,9 +9518,10 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
-<attr id="2995" name="zimbraEphemeralBackendURL" type="string" cardinality="single" optionalIn="globalConfig" callback="EphemeralBackendCheck" since="8.7.6">
+<attr id="2995" name="zimbraEphemeralBackendURL" type="string" cardinality="single" optionalIn="globalConfig" since="8.7.6" deprecatedSince="10.0.0">
   <desc>URL of ephemeral storage backend</desc>
   <globalConfigValue>ldap://default</globalConfigValue>
+  <deprecateDesc>Deprecated in Zimbra X in favor of ephemeral data being stored in the existing redis deployment, governed by the redis_service_uri LC attribute</deprecateDesc>
 </attr>
 
 <attr id="2996" name="zimbraReverseProxyIPLoginImapLimit" type="integer" min="0" cardinality="single" optionalIn="globalConfig" since="8.7.0">
@@ -9633,14 +9634,17 @@ TODO: delete them permanently from here
   <desc>Determines the load-balancing algorithm used to select an IMAP server from the pool of available zimbraReverseProxyUpstreamImapServers. Valid values are AccountIdHash, custom:{handler-algorithm} [arg1 arg2 ...]</desc>
 </attr>
 
-<attr id="3010" name="zimbraSSDBResourcePoolSize" type="integer" min="0" cardinality="single" optionalIn="globalConfig" callback="EphemeralBackendCheck" since="8.7.6">
+<attr id="3010" name="zimbraSSDBResourcePoolSize" type="integer" min="0" cardinality="single" optionalIn="globalConfig" since="8.7.6" deprecatedSince="10.0.0">
   <globalConfigValue>0</globalConfigValue>
-  <desc>Specifies the JedisPool size used by SSDBEphemeralStore. Higher pool sizes allow for more simultaneous connections to SSDB. A value of 0 will cause the pool size to be unlimited.</desc>
+  <desc>Specifies the JedisPool size used by SSDBEphemeralStore. Higher pool sizes allow for more simultaneous connections to SSDB. A value of 0 will cause the pool size to 
+    be unlimited.</desc>
+  <deprecateDesc>As of Zimbra X, SSDBEphemeralStore no longer uses the Jedis libary</deprecateDesc>
 </attr>
 
-<attr id="3011" name="zimbraSSDBResourcePoolTimeout" type="duration" cardinality="single" optionalIn="globalConfig" callback="EphemeralBackendCheck" since="8.7.6">
+<attr id="3011" name="zimbraSSDBResourcePoolTimeout" type="duration" cardinality="single" optionalIn="globalConfig" since="8.7.6" deprecatedSince="10.0.0">
   <globalConfigValue>0</globalConfigValue>
   <desc>Specifies the amount of time a thread will wait for a JedisPool resource. A value of 0 will cause the thread to block indefinitely.</desc>
+  <deprecateDesc>As of Zimbra X, SSDBEphemeralStore no longer uses the Jedis libary</deprecateDesc>
 </attr>
 
 <attr id="3012" name="zimbraOpenImapFolderRequestChunkSize" type="integer" cardinality="single" optionalIn="server,globalConfig" flags="serverInherited" since="8.8.1">
@@ -9673,8 +9677,9 @@ TODO: delete them permanently from here
   <desc>Configures the 'upstream_fair_shm_size' value used by Nginx to set the size of shared memory for storing information about the busy-ness of backends. Values are in kilobytes.</desc>
 </attr>
 
-<attr id="3018" name="zimbraPreviousEphemeralBackendURL" type="string" cardinality="single" optionalIn="globalConfig" immutable="1" since="8.8.1">
+<attr id="3018" name="zimbraPreviousEphemeralBackendURL" type="string" cardinality="single" optionalIn="globalConfig" immutable="1" since="8.8.1" deprecatedSince="10.0.0">
   <desc>URL of the previous ephemeral storage backend</desc>
+  <deprecateDesc>Deprecated in Zimbra X; the ephemeral backend is no longer governed by an LDAP attribute</deprecateDesc>
 </attr>
 
 <attr id="3019" name="zimbraAttributeMigrationInfo" type="string" cardinality="single" optionalIn="globalConfig" immutable="1" since="8.8.1">
