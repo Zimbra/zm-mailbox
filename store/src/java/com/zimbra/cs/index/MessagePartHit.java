@@ -21,8 +21,8 @@ import org.apache.lucene.document.Document;
 
 import com.google.common.base.MoreObjects;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Message;
 
 /**
