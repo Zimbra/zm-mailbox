@@ -3,7 +3,6 @@ package com.zimbra.cs.index.solr;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -178,16 +177,18 @@ public class SolrUtils {
         return aliasName + "_data";
     }
 
-    public static boolean createCloudIndex(CloudSolrClient client, String collectionAliasName, String configSet, int numShards) throws ServiceException {
+    public static boolean createCloudIndex(CloudSolrClient client, String collectionAliasName, InitialCollectionSpec spec) throws ServiceException {
         boolean solrCollectionProvisioned = false;
         Server server = Provisioning.getInstance().getLocalServer();
-        int replicationFactor = server.getSolrReplicationFactor();
         String collectionName = getInitialCollectionName(collectionAliasName);
+        String configSet = spec.getConfigSetName();
+        int numShards = spec.getNumShards();
+        int numReplicas = spec.getNumReplicas();
         try {
-            Create createCollectionRequest = CollectionAdminRequest.createCollection(collectionName, configSet, numShards, replicationFactor);
+            Create createCollectionRequest = CollectionAdminRequest.createCollection(collectionName, configSet, numShards, numReplicas);
             createCollectionRequest.setRouterField(LuceneFields.SOLR_ID);
             createCollectionRequest.process(client);
-            ZimbraLog.index.info("created collection %s with configset '%s', numShards=%d, replicationFactor=%d", collectionName, configSet, numShards, replicationFactor);
+            ZimbraLog.index.info("created collection %s with configset '%s', numShards=%d, numReplicas=%d", collectionName, configSet, numShards, numReplicas);
             CollectionAdminRequest.createAlias(collectionAliasName, collectionName).process(client);
             ZimbraLog.index.info("created alias %s for collection %s", collectionAliasName, collectionName);
         } catch (SolrServerException e) {
@@ -216,7 +217,7 @@ public class SolrUtils {
         //
         int timeout = (int) server.getIndexReplicationTimeout() / 1000;
         solrCollectionProvisioned = ClusterStateUtil.waitForLiveAndActiveReplicaCount(client.getZkStateReader(),
-                collectionName, replicationFactor, timeout);
+                collectionName, numReplicas, timeout);
         if(!solrCollectionProvisioned) {
             ZimbraLog.index.error("Could not confirm that all nodes for collection '%s' are provisioned", collectionName);
         }
@@ -298,7 +299,7 @@ public class SolrUtils {
 
             @Override
             public void run() throws ServiceException {
-                createCloudIndex(client, collectionName, getConfigSetName(indexType), getInitialNumShards(accountId, indexType));
+                createCloudIndex(client, collectionName, getInitialCollectionSpec(accountId, indexType));
             }
         };
 
@@ -365,10 +366,11 @@ public class SolrUtils {
         }
     }
 
-    private static int getInitialNumShards(String accountId, IndexType indexType) throws ServiceException {
+    private static InitialCollectionSpec getInitialCollectionSpec(String accountId, IndexType indexType) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         Account account = prov.getAccountById(accountId);
         int numShards = 0;
+        int numReplicas = 0;
         switch (indexType) {
         case EVENTS:
             numShards = account.getEventIndexInitialNumShards();
@@ -378,7 +380,8 @@ public class SolrUtils {
                     throw ServiceException.FAILURE("number of event index shards is not set on account, cos, domain or globalConfig", null);
                 }
             }
-            return numShards;
+            numReplicas = prov.getConfig().getEventIndexReplicationFactor();
+            return new InitialCollectionSpec(SolrConstants.CONFIGSET_EVENTS, numShards, numReplicas);
         case MAILBOX:
         default:
             numShards = account.getMailboxIndexInitialNumShards();
@@ -388,7 +391,8 @@ public class SolrUtils {
                     throw ServiceException.FAILURE("number of mailbox index shards is not set on account, cos, domain or globalConfig", null);
                 }
             }
-            return numShards;
+            numReplicas = prov.getConfig().getSolrReplicationFactor();
+            return new InitialCollectionSpec(SolrConstants.CONFIGSET_INDEX, numShards, numReplicas);
         }
     }
 
@@ -425,5 +429,30 @@ public class SolrUtils {
     public static TermQuery getMatchAllTokensNestedQuery(String field, String fieldValue) {
         String value = String.format("\"{!edismax mm=100%% qf=%s}%s\"", field, ClientUtils.escapeQueryChars(fieldValue));
         return new TermQuery(new Term("_query_", value));
+    }
+
+    private static class InitialCollectionSpec {
+        private final String configSetName;
+        private final int numShards;
+        private final int numReplicas;
+
+        public InitialCollectionSpec(String configSetName, int numShards, int numReplicas) {
+            this.configSetName = configSetName;
+            this.numShards = numShards;
+            this.numReplicas = numReplicas;
+        }
+
+        public String getConfigSetName() {
+            return configSetName;
+        }
+
+        public int getNumShards() {
+            return numShards;
+        }
+
+        public int getNumReplicas() {
+            return numReplicas;
+        }
+
     }
 }
