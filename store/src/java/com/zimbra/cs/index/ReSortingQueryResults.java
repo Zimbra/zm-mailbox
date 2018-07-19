@@ -155,12 +155,8 @@ public final class ReSortingQueryResults implements ZimbraQueryResults {
                     public int compare(ZimbraHit lhs, ZimbraHit rhs) {
                         if (lhs  instanceof TaskHit) {
                             return TaskHit.compareByDueDate(true, lhs, rhs);
-                        } else if (lhs  instanceof ConversationHit) {
-                            return ConversationHit.compareByReadFlag(true, lhs, rhs);
-                        } else if (lhs  instanceof MessagePartHit) {
-                            return MessagePartHit.compareByReadFlag(true, lhs, rhs);
                         } else{
-                            return MessageHit.compareByReadFlag(true, lhs, rhs);
+                            return ZimbraHit.compareByReadFlag(true, lhs, rhs);
                         } 
                     }
                 };
@@ -169,13 +165,7 @@ public final class ReSortingQueryResults implements ZimbraQueryResults {
                 comp = new Comparator<ZimbraHit>() {
                     @Override
                     public int compare(ZimbraHit lhs, ZimbraHit rhs) {
-                        if (lhs  instanceof ConversationHit) {
-                            return ConversationHit.compareByReadFlag(true, lhs, rhs);
-                        }  else if (lhs  instanceof MessagePartHit) {
-                            return MessagePartHit.compareByReadFlag(true, lhs, rhs);
-                        } else {
-                            return MessageHit.compareByReadFlag(true, lhs, rhs);
-                        }
+                        return ZimbraHit.compareByReadFlag(true, lhs, rhs);
                     }
                 };
                 break;
@@ -183,13 +173,7 @@ public final class ReSortingQueryResults implements ZimbraQueryResults {
                 comp = new Comparator<ZimbraHit>() {
                     @Override
                     public int compare(ZimbraHit lhs, ZimbraHit rhs) {
-                        if (lhs  instanceof ConversationHit) {
-                            return ConversationHit.compareByReadFlag(false, lhs, rhs);
-                        }  else if (lhs  instanceof MessagePartHit) {
-                            return MessagePartHit.compareByReadFlag(false, lhs, rhs);
-                        } else {
-                            return MessageHit.compareByReadFlag(false, lhs, rhs);
-                        }
+                        return ZimbraHit.compareByReadFlag(true, lhs, rhs);
                     }
                 };
                 break;
