@@ -136,42 +136,5 @@ public final class MessagePartHit extends ZimbraHit {
     public MailItem getMailItem() throws ServiceException {
         return getMessageResult().getMailItem();
     }
-    
-    static final int compareByReadFlag(boolean ascending, ZimbraHit lhs, ZimbraHit rhs) {
-        int retVal = 0;
-        try {
-            long left = getReadStatus(lhs);
-            long right = getReadStatus(rhs);
-            long result = right - left;
-            if (result > 0)
-                retVal = 1;
-            else if (result < 0)
-                retVal = -1;
-            else
-                retVal = 0;
-        } catch (ServiceException e) {
-            ZimbraLog.index.info("Caught ServiceException trying to compare MsgPartHit %s to MsgPartHit %s",
-                lhs, rhs, e);
-        }
-        if (ascending)
-            return -1 * retVal;
-        else
-            return retVal;
-    }
-
-    /**
-     * @param lhs
-     * @return
-     * @throws ServiceException 
-     */
-    private static int getReadStatus(ZimbraHit zh) throws ServiceException {
-        if (zh instanceof ProxiedHit) {
-            return ((ProxiedHit) zh).getElement().getAttributeInt(MailConstants.A_UNREAD);
-        }
-        else {
-            boolean unread = ((ConversationHit) zh).getMailItem().isUnread();
-            return unread == true ? 1 : 0;
-        }
-    }
 
 }

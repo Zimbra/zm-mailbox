@@ -265,8 +265,8 @@ public final class ReSortingQueryResults implements ZimbraQueryResults {
             }
             
             if (isReadSort()) {
-                if (!(cur instanceof ConversationHit) && !(cur instanceof ProxiedHit)
-                     && !(cur instanceof MessageHit) && !(cur instanceof MessagePartHit)) {
+                if (!(cur instanceof ConversationHit  || cur instanceof ProxiedHit || cur instanceof MessageHit
+                   || cur instanceof MessagePartHit)) {
                     throw ServiceException.FAILURE("Invalid hit type, can only read sort message, "
                         + "conversation, message part", null);
                 }

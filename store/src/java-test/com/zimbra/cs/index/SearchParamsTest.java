@@ -39,6 +39,7 @@ public final class SearchParamsTest {
     
     public void testIsSortByReadFlag() {
         Assert.assertFalse(SearchParams.isSortByReadFlag(SortBy.DATE_ASC));
+        Assert.assertFalse(SearchParams.isSortByReadFlag(SortBy.DATE_DESC));
         Assert.assertTrue(SearchParams.isSortByReadFlag(SortBy.READ_ASC));
         Assert.assertTrue(SearchParams.isSortByReadFlag(SortBy.READ_DESC));
     }
