@@ -641,12 +641,8 @@ public final class SearchParams implements Cloneable, ZimbraSearchParams {
      * @return
      */
     public static boolean isSortByReadFlag(SortBy sortBy) {
-        if (sortBy.getKey() == SortBy.READ_ASC.getKey() 
-            || sortBy.getKey() == SortBy.READ_DESC.getKey()) {
-            return true;
-        } else {
-            return false;
-        }
+        return (sortBy.getKey() == SortBy.READ_ASC.getKey() 
+            || sortBy.getKey() == SortBy.READ_DESC.getKey());
     }
 
     /**

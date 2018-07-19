@@ -382,8 +382,7 @@ public abstract class ZimbraHit implements ZimbraQueryHit {
             return ((ProxiedHit) zh).getElement().getAttributeInt(MailConstants.A_UNREAD);
         }
         else {
-            boolean unread = zh.getMailItem().isUnread();
-            return unread == true ? 1 : 0;
+            return zh.getMailItem().isUnread() ? 1 : 0;
         }
     }
 }
