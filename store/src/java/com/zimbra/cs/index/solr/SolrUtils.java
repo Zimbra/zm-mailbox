@@ -174,14 +174,22 @@ public class SolrUtils {
         return coreProvisioned;
     }
 
-    public static boolean createCloudIndex(CloudSolrClient client, String collectionName, String configSet, int numShards) throws ServiceException {
+    private static String getInitialCollectionName(String aliasName) {
+        return aliasName + "_data";
+    }
+
+    public static boolean createCloudIndex(CloudSolrClient client, String collectionAliasName, String configSet, int numShards) throws ServiceException {
         boolean solrCollectionProvisioned = false;
         Server server = Provisioning.getInstance().getLocalServer();
         int replicationFactor = server.getSolrReplicationFactor();
+        String collectionName = getInitialCollectionName(collectionAliasName);
         try {
             Create createCollectionRequest = CollectionAdminRequest.createCollection(collectionName, configSet, numShards, replicationFactor);
             createCollectionRequest.setRouterField(LuceneFields.SOLR_ID);
             createCollectionRequest.process(client);
+            ZimbraLog.index.info("created collection %s with configset '%s', numShards=%d, replicationFactor=%d", collectionName, configSet, numShards, replicationFactor);
+            CollectionAdminRequest.createAlias(collectionAliasName, collectionName).process(client);
+            ZimbraLog.index.info("created alias %s for collection %s", collectionAliasName, collectionName);
         } catch (SolrServerException e) {
             if(e != null && e.getMessage() != null && e.getMessage().toLowerCase().indexOf("could not find collection") > -1) {
                 solrCollectionProvisioned = false;
