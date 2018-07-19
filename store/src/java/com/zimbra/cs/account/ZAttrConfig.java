@@ -53760,11 +53760,11 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * whether redo logging is enabled
      *
-     * @return zimbraRedoLogEnabled, or true if unset
+     * @return zimbraRedoLogEnabled, or false if unset
      */
     @ZAttr(id=74)
     public boolean isRedoLogEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraRedoLogEnabled, true, true);
+        return getBooleanAttr(Provisioning.A_zimbraRedoLogEnabled, false, true);
     }
 
     /**
