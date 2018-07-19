@@ -173,7 +173,7 @@ public final class ReSortingQueryResults implements ZimbraQueryResults {
                 comp = new Comparator<ZimbraHit>() {
                     @Override
                     public int compare(ZimbraHit lhs, ZimbraHit rhs) {
-                        return ZimbraHit.compareByReadFlag(true, lhs, rhs);
+                        return ZimbraHit.compareByReadFlag(false, lhs, rhs);
                     }
                 };
                 break;
