@@ -9756,7 +9756,7 @@ TODO: delete them permanently from here
 
 <attr id="3032" name="zimbraSolrReplicationFactor" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.8.6">
   <globalConfigValue>2</globalConfigValue>
-  <desc>Number of instances of a Solr Collection that will be created for each mailbox. This value is used in replicationFactor parameter when creating Solr Collections in SolrCloud with via Collections API.</desc>
+  <desc>Replication factor for the mailbox index</desc>
 </attr>
 
 <attr id="3033" name= "zimbraZKClientTimeout" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.8.6">
@@ -9892,6 +9892,11 @@ TODO: delete them permanently from here
 <attr id="3059" name="zimbraEventIndexInitialNumShards" type="integer" min="1" cardinality="single" optionalIn="account,cos,domain,globalConfig" flags="accountCosDomainInherited" since="8.8.6">
     <globalConfigValue>1</globalConfigValue>
     <desc>The initial number of shards that the event index is created with</desc>
+</attr>
+
+<attr id="3060" name="zimbraEventIndexReplicationFactor" type="integer" cardinality="single" optionalIn="globalConfig" since="10.0.0">
+  <globalConfigValue>2</globalConfigValue>
+  <desc>Replication factor for the event index</desc>
 </attr>
 
 <attr id="3071" name="zimbraHABSeniorityIndex" type="integer" cardinality="single" optionalIn="habGroup,account" since="8.8.10">
