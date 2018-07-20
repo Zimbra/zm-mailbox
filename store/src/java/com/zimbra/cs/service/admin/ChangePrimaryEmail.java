@@ -22,6 +22,7 @@ import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 
+import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
@@ -30,6 +31,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.CacheEntry;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -37,6 +39,7 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.ChangePrimaryEmailRequest;
+import com.zimbra.soap.admin.type.CacheEntryType;
 import com.zimbra.soap.type.AccountSelector;
 
 public class ChangePrimaryEmail extends AdminDocumentHandler {
@@ -131,7 +134,10 @@ public class ChangePrimaryEmail extends AdminDocumentHandler {
             Date renameTime = new Date();
             account.addPrimaryEmailChangeHistory(String.format("%s|%d", oldName, renameTime.getTime()));
         } finally {
-            account.unsetOldMailAddress();
+            if (account != null) {
+                prov.flushCache(CacheEntryType.account, new CacheEntry[]{new CacheEntry(Key.CacheEntryBy.id, account.getId())});
+                account.unsetOldMailAddress();
+            }
         }
 
         Element response = zsc.createElement(AdminConstants.CHANGE_PRIMARY_EMAIL_RESPONSE);
