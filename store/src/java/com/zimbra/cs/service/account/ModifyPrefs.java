@@ -85,11 +85,6 @@ public class ModifyPrefs extends AccountDocumentHandler {
             if (!name.startsWith(PREF_PREFIX, offset))
                 throw ServiceException.INVALID_REQUEST("pref name must start with " + PREF_PREFIX,
                     null);
-
-            if (Provisioning.A_zimbraPrefAccountProfileImage.equals(name)) {
-                value = FileUploadServletUtil.getImageBase64(zsc, value);
-            }
-
             AttributeInfo attrInfo = AttributeManager.getInstance()
                 .getAttributeInfo(name.substring(offset));
             if (attrInfo == null) {
