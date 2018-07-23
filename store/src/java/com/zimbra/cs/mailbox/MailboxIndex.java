@@ -240,7 +240,7 @@ public final class MailboxIndex {
                 break;
             case READ_ASC:
                 isReadSort = true;
-                params.setSortBy(SortBy.DATE_DESC);
+                params.setSortBy(SortBy.READ_ASC);
                 break;
             case READ_DESC:
                 isReadSort = true;
