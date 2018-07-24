@@ -85,7 +85,6 @@ public class CreateCalendarItemExceptionTest {
         Assert.assertFalse("empty".equals(uid));
         Assert.assertFalse("empty".equals(ms));
         Assert.assertFalse("empty".equals(rev));
-
         // Change color from None to Blue
         Element createAppointmentExceptionRequest = generateCreateAppointmentExceptionRequest(invId, ms, rev, uid, "1", null);
         CreateCalendarItemException ccie = new CreateCalendarItemException() {

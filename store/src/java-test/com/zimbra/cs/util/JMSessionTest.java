@@ -241,7 +241,6 @@ public class JMSessionTest {
         server.setSmtpStartTlsModeAsString("only");
         server.setSmtpStartTlsTrustedHosts("*");
         domain.setSmtpStartTlsModeAsString("only");
-
         smtpSession = JMSession.getSmtpSession(account);
         Assert.assertEquals("zimbraSmtpStartTlsMode=only/only: mail.smtp.starttls.enable", "true", smtpSession.getProperty("mail.smtp.starttls.enable"));
         Assert.assertEquals("zimbraSmtpStartTlsMode=only/only: mail.smtp.starttls.required", "true", smtpSession.getProperty("mail.smtp.starttls.required"));
