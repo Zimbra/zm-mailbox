@@ -17,6 +17,7 @@
 
 package com.zimbra.soap.mail.type;
 
+import com.google.common.base.MoreObjects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -73,7 +74,6 @@ extends Msg {
     public void setDataSourceId(String dsId) { this.dataSourceId = dsId; }
     public String getDataSourceId() { return dataSourceId; }
 
-    @Override
     public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);
         return helper

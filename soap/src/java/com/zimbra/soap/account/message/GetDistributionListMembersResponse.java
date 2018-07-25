@@ -17,6 +17,10 @@
 
 package com.zimbra.soap.account.message;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+
 import java.util.Collections;
 import java.util.List;
 

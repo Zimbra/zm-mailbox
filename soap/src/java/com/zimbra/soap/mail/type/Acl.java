@@ -17,9 +17,9 @@
 
 package com.zimbra.soap.mail.type;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import com.google.common.base.MoreObjects;
+import com.google.common.collect.Lists;
+import com.zimbra.common.soap.MailConstants;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
