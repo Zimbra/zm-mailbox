@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.redisson.client.RedisException;
 
+import com.google.common.base.Objects;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.zimbra.common.mailbox.Color;
@@ -25,7 +26,7 @@ import com.zimbra.soap.mail.type.RetentionPolicy;
  */
 public class MailItemState {
 
-    protected UnderlyingData data;
+    protected final UnderlyingData data;
     private ACL rights;
     private Color color;
     private int metadataVersion = 1;
@@ -33,7 +34,7 @@ public class MailItemState {
     private RetentionPolicy retentionPolicy;
     private SharedStateAccessor sharedState;
 
-    private Map<String, ItemField<?>> fields;
+    private final Map<String, ItemField<?>> fields;
 
     public static final String F_NAME = "name";
     public static final String F_TYPE = "type";
@@ -101,35 +102,25 @@ public class MailItemState {
         getField(F_SUBJECT).set(subject);
     }
 
-    public int getParentId() {
-        return getIntField(F_PARENT_ID).get();
-    }
-
+    public int getParentId() { return getIntFieldValue(F_PARENT_ID); }
     public void setParentId(int parentId) {
         getField(F_PARENT_ID).set(parentId);
     }
 
-    public int getFolderId() {
-        return getIntField(F_FOLDER_ID).get();
-    }
-
+    public int getFolderId() { return getIntFieldValue(F_FOLDER_ID); }
     public void setFolderId(int folderId) {
         getField(F_FOLDER_ID).set(folderId);
     }
 
 
     public int getIndexId() {
-        return getIntField(F_INDEX_ID).get();
+        return getIntFieldValue(F_INDEX_ID);
     }
-
     public void setIndexId(int indexId) {
         getField(F_INDEX_ID).set(indexId);
     }
 
-    public int getImapId() {
-        return getIntField(F_IMAP_ID).get();
-    }
-
+    public int getImapId() { return getIntFieldValue(F_IMAP_ID); }
     public void setImapId(int imapId) {
         getField(F_IMAP_ID).set(imapId);
     }
@@ -158,34 +149,22 @@ public class MailItemState {
         getField(F_BLOB_DIGEST).set(digest);
     }
 
-    public int getModMetadata() {
-        return getIntField(F_MOD_METADATA).get();
-    }
-
+    public int getModMetadata() { return getIntFieldValue(F_MOD_METADATA); }
     public void setModMetadata(int modMetadata) {
         getField(F_MOD_METADATA).set(modMetadata);
     }
 
-    public int getModContent() {
-        return getIntField(F_MOD_CONTENT).get();
-    }
-
+    public int getModContent() { return getIntFieldValue(F_MOD_CONTENT); }
     public void setModContent(int modContent) {
         getField(F_MOD_CONTENT).set(modContent);
     }
 
-    public int getDate() {
-        return getIntField(F_DATE).get();
-    }
-
+    public int getDate() { return getIntFieldValue(F_DATE); }
     public void setDate(int date) {
         getField(F_DATE).set(date);
     }
 
-    public int getDateChanged() {
-        return getIntField(F_DATE_CHANGED).get();
-    }
-
+    public int getDateChanged() { return getIntFieldValue(F_DATE_CHANGED); }
     public void setDateChanged(int dateChanged) {
         getField(F_DATE_CHANGED).set(dateChanged);
     }
@@ -254,18 +233,15 @@ public class MailItemState {
         getField(F_SMARTFOLDERS).set(smartFolders);
     }
 
-    public long getSize() {
-        return getLongField(F_SIZE).get();
-    }
+    public long getSize() { return getLongFieldValue(F_SIZE); }
 
     public void setSize(long size) {
         getField(F_SIZE).set(size);
     }
 
     public int getUnreadCount() {
-        return getIntField(F_UNREAD_COUNT).get();
+        return getIntFieldValue(F_UNREAD_COUNT);
     }
-
     public void setUnreadCount(int unreadCount) {
         getField(F_UNREAD_COUNT).set(unreadCount);
     }
@@ -298,9 +274,8 @@ public class MailItemState {
     }
 
     public int getVersion() {
-        return getIntField(F_VERSION).get();
+        return getIntFieldValue(F_VERSION);
     }
-
     public void setVersion(int version) {
         setVersion(version, AccessMode.DEFAULT);
     }
@@ -314,7 +289,7 @@ public class MailItemState {
     }
 
     public int getMetadataVersion() {
-        return getIntField(F_METADATA_VERSION).get();
+        return getIntFieldValue(F_METADATA_VERSION);
     }
 
     public void setMetadataVersion(int metadataVersion) {
@@ -368,7 +343,7 @@ public class MailItemState {
 
     protected abstract class ItemField<T> {
 
-        protected String name;
+        protected final String name;
 
         public ItemField(String name) {
             this.name = name;
@@ -392,11 +367,22 @@ public class MailItemState {
         }
 
         protected void setSharedState(T value) {
+            if (sharedState == null) {
+                ZimbraLog.cache.info("setSharedState(%s) (name=%s) - NULL sharedState, so ignoring!%s",
+                        value, name, MailItemState.this);
+                return;
+            }
             sharedState.set(name, value);
         }
 
         protected T getSharedState() {
-            return sharedState.get(name);
+            if (sharedState == null) {
+                ZimbraLog.cache.info("getSharedState() (name=%s) - NULL sharedState, so returning null!%s",
+                        name, MailItemState.this);
+                return null;
+            }
+            T retVal = sharedState.get(name);
+            return retVal;
         }
 
         public T get() {
@@ -407,7 +393,8 @@ public class MailItemState {
                     setLocal(sharedValue);
                     return sharedValue;
                 } catch (RedisException e) {
-                    ZimbraLog.mailbox.error("unable to get value for field '%s' from redis, using local value", name, e);
+                    ZimbraLog.cache.error("unable to get value for field '%s' from redis, using local value %s",
+                            name, MailItemState.this, e);
                 }
             }
             return getLocal();
@@ -446,6 +433,30 @@ public class MailItemState {
         return getField(fieldName);
     }
 
+    /**
+     * Wrapper round getIntField(fieldName).get() which logs if going to end up throwing an NPE so
+     * that have more context for the cause of the NPE.  Of course, should never end up with a null...
+     */
+    protected int getIntFieldValue(String fieldName) {
+        Integer retVal = getIntField(fieldName).get();
+        if (retVal == null) {
+            ZimbraLog.cache.info("getIntFieldName(%s) returning null! %s", fieldName, this);
+        }
+        return retVal;
+    }
+
+    /**
+     * Wrapper round getIntField(fieldName).get() which logs if going to end up throwing an NPE so
+     * that have more context for the cause of the NPE.  Of course, should never end up with a null...
+     */
+    protected long getLongFieldValue(String fieldName) {
+        Long retVal = getLongField(fieldName).get();
+        if (retVal == null) {
+            ZimbraLog.cache.info("getLongFieldName(%s) returning null! %s", fieldName, this);
+        }
+        return retVal;
+    }
+
     protected ItemField<Integer> getIntField(String fieldName) {
         return getField(fieldName);
     }
@@ -464,7 +475,11 @@ public class MailItemState {
 
     @SuppressWarnings("unchecked")
     protected <T> ItemField<T> getField(String fieldName) {
-        return (ItemField<T>) fields.get(fieldName);
+        ItemField<T> field = (ItemField<T>) fields.get(fieldName);
+        if (field == null) {
+            ZimbraLog.cache.info("getField(%s) returning null! %s", fieldName, MailItemState.this);
+        }
+        return field;
     }
 
     public void syncWithSharedState(MailItem item) {
@@ -491,6 +506,34 @@ public class MailItemState {
         }
     }
 
+    /**
+     * Used to set an Integer value where the target is an int.  Logs if the value would be null and tries to choose
+     * an appropriate value instead.
+     */
+    protected int newIntLocalValue(ItemField<Integer>field, Integer value) {
+        if (value == null) {
+            Integer currVal = field.getLocal();
+            ZimbraLog.cache.info("newIntLocalValue(%s, %s) - attempting to keep current value=%s! %s",
+                    field.name, value, currVal, MailItemState.this);
+            return currVal == null ? 0 : currVal;
+        }
+        return value;
+    }
+
+    /**
+     * Used to set a Long value where the target is a long.  Logs if the value would be null and tries to choose
+     * an appropriate value instead.
+     */
+    protected long newLongLocalValue(ItemField<Long>field, Long value) {
+        if (value == null) {
+            Long currVal = field.getLocal();
+            ZimbraLog.cache.info("newLongLocalValue(%s, %s) - attempting to keep current value=%s! %s",
+                    field.name, value, currVal, MailItemState.this);
+            return currVal == null ? 0 : currVal;
+        }
+        return value;
+    }
+
     protected void initFields() {
         addField(new ItemField<String>(F_NAME) {
 
@@ -504,7 +547,7 @@ public class MailItemState {
         addField(new ItemField<String>(F_TYPE) {
 
             @Override
-            protected void setLocal(String value) { data.type = Type.of(value).toByte(); }
+            protected void setLocal(String value) { if (value != null) data.type = Type.of(value).toByte(); }
 
             @Override
             protected String getLocal() { return Type.of(data.type).toString(); }
@@ -531,7 +574,9 @@ public class MailItemState {
         addField(new ItemField<Integer>(F_PARENT_ID) {
 
             @Override
-            protected void setLocal(Integer value) { data.parentId = value; }
+            protected void setLocal(Integer value) {
+                data.parentId = newIntLocalValue(this, value);
+            }
 
             @Override
             protected Integer getLocal() { return data.parentId; }
@@ -540,7 +585,9 @@ public class MailItemState {
         addField(new ItemField<Integer>(F_FOLDER_ID) {
 
             @Override
-            protected void setLocal(Integer value) { data.folderId = value; }
+            protected void setLocal(Integer value) {
+                data.folderId = newIntLocalValue(this, value);
+            }
 
             @Override
             protected Integer getLocal() { return data.folderId; }
@@ -549,7 +596,9 @@ public class MailItemState {
         addField(new ItemField<Integer>(F_INDEX_ID) {
 
             @Override
-            protected void setLocal(Integer value) { data.indexId = value; }
+            protected void setLocal(Integer value) {
+                data.indexId = newIntLocalValue(this, value);
+            }
 
             @Override
             protected Integer getLocal() { return data.indexId; }
@@ -558,7 +607,9 @@ public class MailItemState {
         addField(new ItemField<Integer>(F_IMAP_ID) {
 
             @Override
-            protected void setLocal(Integer value) { data.imapId = value; }
+            protected void setLocal(Integer value) {
+                data.imapId = newIntLocalValue(this, value);
+            }
 
             @Override
             protected Integer getLocal() { return data.imapId; }
@@ -594,7 +645,9 @@ public class MailItemState {
         addField(new ItemField<Integer>(F_MOD_METADATA) {
 
             @Override
-            protected void setLocal(Integer value) { data.modMetadata = value; }
+            protected void setLocal(Integer value) {
+                data.modMetadata = newIntLocalValue(this, value);
+            }
 
             @Override
             protected Integer getLocal() { return data.modMetadata; }
@@ -603,7 +656,9 @@ public class MailItemState {
         addField(new ItemField<Integer>(F_MOD_CONTENT) {
 
             @Override
-            protected void setLocal(Integer value) { data.modContent = value; }
+            protected void setLocal(Integer value) {
+                data.modContent = newIntLocalValue(this, value);
+            }
 
             @Override
             protected Integer getLocal() { return data.modContent; }
@@ -612,7 +667,9 @@ public class MailItemState {
         addField(new ItemField<Integer>(F_DATE) {
 
             @Override
-            protected void setLocal(Integer value) { data.date = value; }
+            protected void setLocal(Integer value) {
+                data.date = newIntLocalValue(this, value);
+            }
 
             @Override
             protected Integer getLocal() { return data.date; }
@@ -621,7 +678,9 @@ public class MailItemState {
         addField(new ItemField<Integer>(F_DATE_CHANGED) {
 
             @Override
-            protected void setLocal(Integer value) { data.dateChanged = value; }
+            protected void setLocal(Integer value) {
+                data.dateChanged = newIntLocalValue(this, value);
+            }
 
             @Override
             protected Integer getLocal() { return data.dateChanged; }
@@ -630,7 +689,14 @@ public class MailItemState {
         addField(new ItemField<Integer>(F_FLAGS) {
 
             @Override
-            protected void setLocal(Integer value) { data.setFlags(value); }
+            protected void setLocal(Integer value) {
+                if (value == null) {
+                    ZimbraLog.cache.info("setLocal(%s) (name=%s) - ignoring! %s",
+                            value, name, MailItemState.this);
+                    return;
+                }
+                data.setFlags(value);
+            }
 
             @Override
             protected Integer getLocal() { return data.getFlags(); }
@@ -656,11 +722,21 @@ public class MailItemState {
 
             @Override
             protected void setSharedState(String[] tags) {
+                if (sharedState == null) {
+                    ZimbraLog.cache.info("setSharedState(%s) (name=%s) - NULL sharedState, so ignoring!%s",
+                            tags, name, MailItemState.this);
+                    return;
+                }
                 sharedState.set(name, Joiner.on(",").join(tags));
             }
 
             @Override
             protected String[] getSharedState() {
+                if (sharedState == null) {
+                    ZimbraLog.cache.info("getSharedState() (name=%s) - sharedState=null! return empty array. %s",
+                            name, MailItemState.this);
+                    return new String[0];
+                }
                 String tags = sharedState.get(name);
                 return tags == null ? new String[0] : tags.split(",");
             }
@@ -681,11 +757,21 @@ public class MailItemState {
 
             @Override
             protected void setSharedState(String[] smartFolders) {
+                if (sharedState == null) {
+                    ZimbraLog.cache.info("setSharedState(%s) (name=%s) - NULL sharedState, so ignoring!%s",
+                            smartFolders, name, MailItemState.this);
+                    return;
+                }
                 sharedState.set(name, Joiner.on(",").join(smartFolders));
             }
 
             @Override
             protected String[] getSharedState() {
+                if (sharedState == null) {
+                    ZimbraLog.cache.info("getSharedState() (name=%s) - sharedState=null! return empty array. %s",
+                            name, MailItemState.this);
+                    return new String[0];
+                }
                 String smartFolders = sharedState.get(name);
                 return smartFolders == null ? new String[0] : smartFolders.split(",");
             }
@@ -699,7 +785,9 @@ public class MailItemState {
         addField(new ItemField<Long>(F_SIZE) {
 
             @Override
-            protected void setLocal(Long value) { data.size = value; }
+            protected void setLocal(Long value) {
+                data.size = newLongLocalValue(this, value);
+            }
 
             @Override
             protected Long getLocal() { return data.size; }
@@ -708,7 +796,9 @@ public class MailItemState {
         addField(new ItemField<Integer>(F_UNREAD_COUNT) {
 
             @Override
-            protected void setLocal(Integer value) { data.unreadCount = value; }
+            protected void setLocal(Integer value) {
+                data.unreadCount = newIntLocalValue(this, value);
+            }
 
             @Override
             protected Integer getLocal() { return data.unreadCount; }
@@ -726,7 +816,9 @@ public class MailItemState {
         addField(new ItemField<Integer>(F_METADATA_VERSION) {
 
             @Override
-            protected void setLocal(Integer value) { metadataVersion = value; }
+            protected void setLocal(Integer value) {
+                metadataVersion = newIntLocalValue(this, value);
+            }
 
             @Override
             protected Integer getLocal() { return metadataVersion; }
@@ -735,7 +827,9 @@ public class MailItemState {
         addField(new ItemField<Integer>(F_VERSION) {
 
             @Override
-            protected void setLocal(Integer value) { version = value; }
+            protected void setLocal(Integer value) {
+                version = newIntLocalValue(this, value);
+            }
 
             @Override
             protected Integer getLocal() { return MailItemState.this.version; }
@@ -751,12 +845,27 @@ public class MailItemState {
 
             @Override
             protected void setSharedState(Color color) {
-                sharedState.set(name, color.toMetadata());
+                if (sharedState == null) {
+                    ZimbraLog.cache.info("setSharedState(%s) (name=%s) - NULL sharedState, so ignoring!%s",
+                            color, name, MailItemState.this);
+                    return;
+                }
+                sharedState.set(name, color == null ? 0L : color.toMetadata());
             }
 
             @Override
             protected Color getSharedState() {
-                long colorValue = sharedState.get(name);
+                if (sharedState == null) {
+                    ZimbraLog.cache.info("getSharedState() (name=%s) - NULL sharedState, so returning null!%s",
+                            name, MailItemState.this);
+                    return null;
+                }
+                Long colorValue = sharedState.get(name);
+                if (colorValue == null) {
+                    ZimbraLog.cache.info("getSharedState() (name=%s) - returning null!%s",
+                            name, MailItemState.this);
+                    return null;
+                }
                 return Color.fromMetadata(colorValue);
             }
         });
@@ -771,6 +880,11 @@ public class MailItemState {
 
             @Override
             protected void setSharedState(ACL rights) {
+                if (sharedState == null) {
+                    ZimbraLog.cache.info("setSharedState(%s) (name=%s) - NULL sharedState, so ignoring!%s",
+                            rights, name, MailItemState.this);
+                    return;
+                }
                 if (rights == null) {
                     sharedState.set(name, "");
                 } else {
@@ -780,6 +894,11 @@ public class MailItemState {
 
             @Override
             protected ACL getSharedState() {
+                if (sharedState == null) {
+                    ZimbraLog.cache.info("getSharedState() (name=%s) - NULL sharedState, so returning null!%s",
+                            name, MailItemState.this);
+                    return null;
+                }
                 String rightsMetaStr = sharedState.get(name);
                 if (Strings.isNullOrEmpty(rightsMetaStr)) {
                     return null;
@@ -804,11 +923,21 @@ public class MailItemState {
 
             @Override
             protected void setSharedState(RetentionPolicy policy) {
+                if (sharedState == null) {
+                    ZimbraLog.cache.info("setSharedState(%s) (name=%s) - NULL sharedState, so ignoring!%s",
+                            policy, name, MailItemState.this);
+                    return;
+                }
                 sharedState.set(name, policy == null ? "" : RetentionPolicyManager.toMetadata(policy, true).toString());
             }
 
             @Override
             protected RetentionPolicy getSharedState() {
+                if (sharedState == null) {
+                    ZimbraLog.cache.info("getSharedState() (name=%s) - NULL sharedState, so returning null!%s",
+                            name, MailItemState.this);
+                    return null;
+                }
                 String policyMetaStr = sharedState.get(name);
                 if (Strings.isNullOrEmpty(policyMetaStr)) {
                     return new RetentionPolicy();
@@ -822,5 +951,21 @@ public class MailItemState {
                 }
             }
         });
+    }
+
+    protected Objects.ToStringHelper toStringHelper() {
+        return Objects.toStringHelper(this).omitNullValues()
+                .add("version", version)
+                .add("metadataVersion", metadataVersion)
+                .add("data", data)
+                .add("color", color)
+                .add("retentionPolicy", retentionPolicy)
+                .add("sharedState", sharedState)
+                .add("hashCode", System.identityHashCode(this));
+    }
+
+    @Override
+    public final String toString() {
+        return toStringHelper().toString();
     }
 }

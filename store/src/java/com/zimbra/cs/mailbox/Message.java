@@ -1836,8 +1836,8 @@ public class Message extends MailItem implements Classifiable {
     }
 
     @Override
-    protected void initFieldCache(UnderlyingData data) {
-        state = new MessageState(data);
+    protected MailItemState initFieldCache(UnderlyingData data) {
+        return new MessageState(data);
     }
 
     protected MessageState getState() {

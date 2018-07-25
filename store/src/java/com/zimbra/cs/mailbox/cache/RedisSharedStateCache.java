@@ -1,5 +1,7 @@
 package com.zimbra.cs.mailbox.cache;
 
+import com.google.common.base.Objects;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -205,6 +207,13 @@ public abstract class RedisSharedStateCache<M extends MailItem & SharedState> im
         @Override
         public void unset(String fieldName) {
             map.fastRemove(fieldName);
+        }
+
+        @Override
+        public String toString() {
+            return Objects.toStringHelper(this)
+                    .add("map", map)
+                    .toString();
         }
     }
 }
