@@ -7973,7 +7973,7 @@ TODO: delete them permanently from here
   <desc>For zimbra dnscache, whether or not to use UDP. Defaults to yes</desc>
 </attr>
 
-<attr id="1587" name="zimbraDefaultAnalyzerStopWords" type="string" cardinality="multi" optionalIn="globalConfig" since="8.5.0">
+<attr id="1587" name="zimbraDefaultAnalyzerStopWords" type="string" cardinality="multi" optionalIn="globalConfig" since="8.5.0" callback="SolrSchemaCallback">
   <desc>stop words for lucene text analyzer. This setting takes effect only for default analyzer. This setting affects only accounts that do not have custom text analyzers. See zimbraTextAnalyzer for information on custom text analyzers.</desc>
   <globalConfigValue>a</globalConfigValue>
   <globalConfigValue>an</globalConfigValue>
