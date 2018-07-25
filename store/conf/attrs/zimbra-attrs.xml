@@ -9703,6 +9703,18 @@ TODO: delete them permanently from here
   <globalConfigValue>1518163473</globalConfigValue>
 </attr>
 
+<attr id="3024" name="zimbraXZimletCompatibleSemVer" type="string" max="256" cardinality="single" optionalIn="zimletEntry" since="8.8.9">
+  <desc>ZimbraX compatible semantic version expression</desc>
+</attr>
+
+<attr id="3025" name="zimbraOAuthConsumerRedirectUri" type="string" cardinality="multi" optionalIn="globalConfig,domain" flags="domainInherited" since="8.8.9">
+  <desc>OAuth redirectURI. It is in the format of redirectURI:consumer-app-name</desc>
+</attr>
+
+<attr id="3026" name="zimbraOAuthConsumerAPIScope" type="string" cardinality="multi" optionalIn="globalConfig,domain" flags="domainInherited" since="8.8.9">
+  <desc>OAuth consumer API scope. It is in the format of apiscope1{separator character}apiscope2:consumer-app-name. The separator between apiscope1 and apiscope2 is consumer-app specific</desc>
+</attr>
+
 <attr id="5002" name="zimbraSmtpStartTlsMode" type="enum" value="on,off,only" cardinality="single" optionalIn="globalConfig,server,domain" flags="serverInherited" since="8.8.6">
   <globalConfigValue>only</globalConfigValue>
   <globalConfigValueUpgrade>off</globalConfigValueUpgrade>
