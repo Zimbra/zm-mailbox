@@ -799,7 +799,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
     protected MailboxBlob    mBlob;
     protected List<MailItem> mRevisions;
     protected CustomMetadataList mExtendedData;
-    protected MailItemState state;
+    protected final MailItemState state;
 
     MailItem(Mailbox mbox, UnderlyingData data) throws ServiceException {
         this(mbox, data, false);
@@ -817,7 +817,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             mAccount = mbox.getAccount();
             mMailbox = mbox;
         }
-        initFieldCache(data);
+        state = initFieldCache(data);
         decodeMetadata(data.metadata);
         checkItemCreationAllowed(); // this check may rely on decoded metadata
         data.metadata = null;
@@ -838,7 +838,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         mId      = data.id;
         uuid     = data.uuid;
         type     = data.type;
-        initFieldCache(data);
+        state = initFieldCache(data);
         decodeMetadata(data.metadata);
         checkItemCreationAllowed(); // this check may rely on decoded metadata
         data.metadata = null;
@@ -4088,7 +4088,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         return mMailboxData.accountId;
     }
 
-    protected void initFieldCache(UnderlyingData data) {
-        state = new MailItemState(data);
+    protected MailItemState initFieldCache(UnderlyingData data) {
+        return new MailItemState(data);
     }
 }
