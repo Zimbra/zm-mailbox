@@ -178,7 +178,7 @@ public class WebDavClient {
         return method;
     }
 
-    private void logRequestInfo(HttpMethod method, String body) throws IOException {
+    protected void logRequestInfo(HttpMethod method, String body) throws IOException {
         if (!mDebugEnabled) {
             return;
         }
@@ -204,7 +204,7 @@ public class WebDavClient {
         }
     }
 
-    private void logResponseInfo(HttpMethod method) throws IOException {
+    protected void logResponseInfo(HttpMethod method) throws IOException {
         if (!mDebugEnabled) {
             return;
         }
@@ -318,10 +318,10 @@ public class WebDavClient {
         mUserAgent = "Zimbra " + app + "/" + BuildInfo.VERSION + " (" + BuildInfo.DATE + ")";
     }
 
-    private String mUserAgent;
+    protected String mUserAgent;
     private final String mBaseUrl;
     private String mUsername;
     private String mPassword;
-    private final HttpClient mClient;
+    protected final HttpClient mClient;
     private boolean mDebugEnabled = false;
 }

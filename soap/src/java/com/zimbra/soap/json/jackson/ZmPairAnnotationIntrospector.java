@@ -16,79 +16,82 @@
  */
 package com.zimbra.soap.json.jackson;
 
+import java.lang.reflect.Field;
+import java.util.HashMap;
+
+import javax.xml.bind.annotation.XmlEnumValue;
 import javax.xml.bind.annotation.XmlValue;
 
-import org.codehaus.jackson.map.AnnotationIntrospector;
-import org.codehaus.jackson.map.introspect.Annotated;
-import org.codehaus.jackson.map.introspect.AnnotatedField;
-import org.codehaus.jackson.map.introspect.AnnotatedMethod;
-import org.codehaus.jackson.map.introspect.JacksonAnnotationIntrospector;
-
-import org.codehaus.jackson.xc.JaxbAnnotationIntrospector;
-
+import com.fasterxml.jackson.databind.PropertyName;
+import com.fasterxml.jackson.databind.introspect.Annotated;
+import com.fasterxml.jackson.databind.introspect.AnnotationIntrospectorPair;
+import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
+import com.fasterxml.jackson.databind.type.TypeFactory;
+import com.fasterxml.jackson.databind.util.ClassUtil;
 import com.zimbra.common.soap.Element;
 
     /**
      * Zimbra specific annotation introspector.  Mostly based on a pair of annotation introspectors
-     * (JacksonAnnotationIntrospector/JaxbAnnotationIntrospector)
-     * 
+     * (JacksonAnnotationIntrospector/ZimbraJaxbAnnotationIntrospector)
+     * ZimbraJaxbAnnotationIntrospector is a hopefully temporary wrapper round JaxbAnnotationIntrospector
+     * to get around a bug.
+     *
      * @XmlValue handling - Zimbra uses the property name "_content" (JaxbAnnotationIntrospector uses "value")
-     * 
+     *
      * Enum value handling - Use JaxbAnnotationIntrospector's handling in preference to JacksonAnnotationIntrospector's
      */
-public final class ZmPairAnnotationIntrospector
-extends AnnotationIntrospector.Pair {
+public final class ZmPairAnnotationIntrospector extends AnnotationIntrospectorPair {
+        private static final long serialVersionUID = -3110570221665228877L;
+
     public ZmPairAnnotationIntrospector() {
-        super(new JacksonAnnotationIntrospector(), new JaxbAnnotationIntrospector());
+        super(new JacksonAnnotationIntrospector(),
+            new ZimbraJaxbAnnotationIntrospector(TypeFactory.defaultInstance()));
     }
 
-    /**
-     * Pair's findEnumValue won't try for the secondary's results if the primary's results are non-null, but
-     * we need the XmlEnumValue values if available - which only the JaxbAnnotationIntrospector can provide
-     */
-    @Override
-    public String findEnumValue(Enum<?> e) {
-        return super._secondary.findEnumValue(e);
+    @Override // since 2.7
+    public String[] findEnumValues(Class<?> enumType, Enum<?>[] enumValues, String[] names) {
+        HashMap<String,String> expl = null;
+        for (Field f : ClassUtil.getDeclaredFields(enumType)) {
+            if (!f.isEnumConstant()) {
+                continue;
+            }
+            XmlEnumValue enumValue = f.getAnnotation(XmlEnumValue.class);
+            if (enumValue == null) {
+                continue;
+            }
+            String n = enumValue.value();
+            if (expl == null) {
+                expl = new HashMap<String,String>();
+            }
+            expl.put(f.getName(), n);
+        }
+        // and then stitch them together if and as necessary
+        if (expl != null) {
+            int end = enumValues.length;
+            for (int i = 0; i < end; ++i) {
+                String defName = enumValues[i].name();
+                String explValue = expl.get(defName);
+                if (explValue != null) {
+                    names[i] = explValue;
+                }
+            }
+        }
+        return names;
     }
 
-    /**
-     * We use "_content" for @XmlValue, so need to over-ride JaxbAnnotationIntrospector default "value"
-     * Note: We skip any visibility check if the @XmlValue annotation is present - but that should be safe.
-     */
     @Override
-    public String findGettablePropertyName(AnnotatedMethod am) {
+    public PropertyName findNameForSerialization(Annotated am) {
         String name = findJaxbValueName(am);
-        return (name != null) ? name : super.findGettablePropertyName(am);
+        PropertyName propName = new PropertyName(name);
+        propName = (!propName.isEmpty()) ? propName : super.findNameForSerialization(am);
+        return propName;
     }
 
-    /**
-     * We use "_content" for @XmlValue, so need to over-ride JaxbAnnotationIntrospector default "value"
-     * Note: We skip any visibility check if the @XmlValue annotation is present - but that should be safe.
-     */
     @Override
-    public String findSerializablePropertyName(AnnotatedField af) {
+    public PropertyName findNameForDeserialization(Annotated af) {
         String name = findJaxbValueName(af);
-        return (name != null) ? name : super.findSerializablePropertyName(af);
-    }
-
-    /**
-     * We use "_content" for @XmlValue, so need to over-ride JaxbAnnotationIntrospector default "value"
-     * Note: We skip any visibility check if the @XmlValue annotation is present - but that should be safe.
-     */
-    @Override
-    public String findSettablePropertyName(AnnotatedMethod am) {
-        String name = findJaxbValueName(am);
-        return (name != null) ? name : super.findSettablePropertyName(am);
-    }
-
-    /**
-     * We use "_content" for @XmlValue, so need to over-ride JaxbAnnotationIntrospector default "value"
-     * Note: We skip any visibility check if the @XmlValue annotation is present - but that should be safe.
-     */
-    @Override
-    public String findDeserializablePropertyName(AnnotatedField af) {
-        String name = findJaxbValueName(af);
-        return (name != null) ? name : super.findDeserializablePropertyName(af);
+        PropertyName propName = new PropertyName(name);
+        return (!propName.isEmpty()) ? propName : super.findNameForDeserialization(af);
     }
 
     /**
@@ -99,4 +102,9 @@ extends AnnotationIntrospector.Pair {
         return (valueInfo != null) ? Element.JSONElement.A_CONTENT : null;
     }
 
+    @Override
+    public String findPropertyDefaultValue(Annotated ann) {
+        String name = findJaxbValueName(ann);
+      return (name != null) ? name : super.findPropertyDefaultValue(ann);
+    }
 }

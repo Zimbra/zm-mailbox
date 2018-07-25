@@ -23,8 +23,8 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
-import com.google.common.io.Closeables;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.util.IOUtil;
 import com.zimbra.common.service.ServiceException;
 
 import com.zimbra.common.util.ZimbraLog;
@@ -721,7 +721,7 @@ public final class IntersectionQueryOperation extends CombiningQueryOperation {
 
                 // first, we need to be DONE with all unused query operations..
                 for (int j = 0; j <= i; j++) {
-                    Closeables.closeQuietly(operations.get(j));
+                    IOUtil.closeQuietly(operations.get(j));
                 }
 
                 operations.clear();

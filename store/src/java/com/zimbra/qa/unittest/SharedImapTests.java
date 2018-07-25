@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -1389,6 +1390,61 @@ public abstract class SharedImapTests extends ImapTestBase {
                 doCatenateSimple(connection);
             }
         });
+    }
+
+    private class ImapClientThread
+    implements Runnable {
+        private final String folderName;
+        private Random rand = new Random();
+
+        private ImapClientThread(String fldr) {
+            folderName = fldr;
+        }
+
+        @Override
+        public void run() {
+            for (int i = 0; i < 1000; i++) {
+                try {
+                    ImapConnection imapConn = connectAndLogin(USER);
+                    imapConn.select(folderName);
+                    imapConn.store("1:*", "+FLAGS", new String[] { "\\Seen" });
+                    try {
+                        Thread.sleep(rand.nextInt(1000));
+                    } catch (InterruptedException e) {
+                    }
+                    imapConn.select("INBOX");
+                    imapConn.select(folderName);
+                    imapConn.store("1:*", "-FLAGS", new String[] { "\\Seen" });
+                    imapConn.select("INBOX");
+                    imapConn.logout();
+                    imapConn.close();
+                } catch (Exception e) {
+                    ZimbraLog.test.error("Problem connecting and selecting %s in thread", folderName, e);
+                }
+            }
+        }
+    }
+
+    /** Test created to attempt to repro ZBUG-446 */
+    @Test(timeout=1000000)
+    @Ignore("Takes a while to run.")
+    public void imapFolderReload() throws Exception {
+        connection = connectAndLogin(USER);
+        String folderName = "INBOX/exercise";
+        connection.create(folderName);
+        assertTrue(connection.exists(folderName));
+        String msg1 = simpleMessage("message to exercise ImapURL");
+        connection.append(folderName, null, null, literal(msg1));
+        Thread[] threads = new Thread[14];
+        for (int i = 0; i < threads.length; i++) {
+            threads[i] = new Thread(new ImapClientThread(folderName));
+        }
+        for (Thread thread : threads) {
+            thread.start();
+        }
+        for (Thread thread : threads) {
+            thread.join();
+        }
     }
 
     private void doAppendThenOtherAppendReferencingFirst(

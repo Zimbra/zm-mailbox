@@ -33,7 +33,6 @@ import javax.mail.MessagingException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
-import com.google.common.io.Closeables;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
@@ -52,6 +51,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.UserServletContext;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.formatter.FormatterFactory.FormatType;
+import com.zimbra.cs.util.IOUtil;
 
 public abstract class Formatter {
 
@@ -303,7 +303,7 @@ public abstract class Formatter {
         }
 
         public void finished() {
-            Closeables.closeQuietly(results);
+            IOUtil.closeQuietly(results);
             results = null;
         }
     }

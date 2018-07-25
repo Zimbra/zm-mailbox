@@ -34,7 +34,7 @@ import org.apache.commons.fileupload.FileItemStream;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 
 import com.google.common.base.Charsets;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.ContentType;
@@ -70,6 +70,7 @@ public class UserServletContext {
     public FormatType format;
     public Formatter formatter;
     public boolean cookieAuthHappened;
+    public boolean jwtAuthHappened;
     public boolean basicAuthHappened;
     public boolean qpAuthHappened;
     public String accountPath;
@@ -413,6 +414,10 @@ public class UserServletContext {
         return getAuth().indexOf(UserServlet.AUTH_COOKIE) != -1;
     }
 
+    public boolean jwtAuthAllowed() {
+        return getAuth().indexOf(UserServlet.AUTH_JWT) != -1;
+    }
+
     public boolean isAuthedAcctGuest() {
         return authAccount != null && authAccount instanceof GuestAccount;
     }
@@ -731,7 +736,7 @@ public class UserServletContext {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
             .add("account", accountPath)
             .add("item", itemPath)
             .add("format", format)

@@ -3,7 +3,7 @@ package com.zimbra.soap.mail.message;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.soap.MailConstants;
 
 @XmlRootElement(name=MailConstants.E_RECORD_IMAP_SESSION_RESPONSE)
@@ -43,7 +43,7 @@ public class RecordIMAPSessionResponse {
         this.lastItemId = lastItemId;
     }
 
-    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         return helper
                 .add(MailConstants.A_ID, getLastItemId())
                 .add(MailConstants.A_FOLDER_UUID, getFolderUuid());
@@ -52,6 +52,6 @@ public class RecordIMAPSessionResponse {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this)).toString();
+        return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
     }
 }

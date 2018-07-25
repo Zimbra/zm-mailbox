@@ -21,12 +21,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import com.google.common.io.Closeables;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.util.IOUtil;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -118,7 +118,7 @@ final class RemoteQueryOperation extends FilterQueryOperation {
 
     @Override
     public void close() throws IOException {
-        Closeables.closeQuietly(results);
+        IOUtil.closeQuietly(results);
         super.close();
     }
 

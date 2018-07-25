@@ -18,9 +18,13 @@ package com.zimbra.cs.service.account;
 
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.session.Session;
 import com.zimbra.soap.SoapServlet;
@@ -44,10 +48,14 @@ public class EndSession extends AccountDocumentHandler {
         if (clearCookies || getAuthenticatedAccount(zsc).isForceClearCookies()) {
             context.put(SoapServlet.INVALIDATE_COOKIES, true);
             try {
-				zsc.getAuthToken().deRegister();
-			} catch (AuthTokenException e) {
-				throw ServiceException.FAILURE("Failed to de-register an auth token", e);
-			}
+                AuthToken at = zsc.getAuthToken();
+                HttpServletRequest httpReq = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
+                HttpServletResponse httpResp = (HttpServletResponse) context.get(SoapServlet.SERVLET_RESPONSE);
+                at.encode(httpReq, httpResp, true);
+                at.deRegister();
+            } catch (AuthTokenException e) {
+                throw ServiceException.FAILURE("Failed to de-register an auth token", e);
+            }
         }
         Element response = zsc.createElement(AccountConstants.END_SESSION_RESPONSE);
         return response;

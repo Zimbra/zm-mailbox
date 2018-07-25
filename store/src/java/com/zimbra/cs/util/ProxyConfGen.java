@@ -1757,6 +1757,30 @@ class WebXmppBoshEnablerVar extends ProxyConfVar {
 }
 
 /**
+ * Simplified container object for a server
+ * @author Davide Baldo
+ */
+class ServerAttrItem {
+    public String zimbraId;
+    public String hostname;
+    public String[] services;
+
+    public ServerAttrItem(String zimbraId, String hostname, String[] services) {
+        this.zimbraId = zimbraId;
+        this.hostname = hostname;
+        this.services = services;
+    }
+
+    public boolean hasService(String service)
+    {
+        for( String current : services ) {
+            if( service.equals(current) ) return true;
+        }
+        return false;
+    }
+}
+
+/**
  * A simple class of Triple<VirtualHostName, VirtualIPAddress, DomainName>. Uses
  * this only for convenient and HashMap can't guarantee order
  * @author jiankuan
@@ -1977,6 +2001,7 @@ public class ProxyConfGen
     private static Map<String, String> mVars = new HashMap<String, String>();
     private static Map<String, ProxyConfVar> mDomainConfVars = new HashMap<String, ProxyConfVar>();
     static List<DomainAttrItem> mDomainReverseProxyAttrs;
+    static List<ServerAttrItem> mServerAttrs;
     static Set<String> mListenAddresses = new HashSet<String>();
 
     static final String ZIMBRA_UPSTREAM_NAME = "zimbra";
@@ -2037,6 +2062,35 @@ public class ProxyConfGen
         }
 
         return cl;
+    }
+
+    /**
+     * Retrieve all server and store only few attrs
+     *
+     * @return a list of <code>ServerAttrItem</code>
+     * @throws ServiceException
+     *              this method can work only when LDAP is available
+     * @author Davide Baldo
+     */
+
+    private static List<ServerAttrItem> loadServerAttrs() throws ServiceException {
+        if (!(mProv instanceof LdapProv))
+            throw ServiceException.INVALID_REQUEST(
+                    "The method can work only when LDAP is available", null);
+
+        final List<ServerAttrItem> serverAttrItems = new ArrayList<ServerAttrItem>();
+        for (Server server : mProv.getAllServers()) {
+            String zimbraId = server
+                    .getAttr(Provisioning.A_zimbraId);
+            String serviceHostname = server
+                    .getAttr(Provisioning.A_zimbraServiceHostname);
+            String[] services = server
+                    .getMultiAttr(Provisioning.A_zimbraServiceEnabled);
+
+            serverAttrItems.add(new ServerAttrItem(zimbraId, serviceHostname, services));
+        }
+
+        return serverAttrItems;
     }
 
     /**
@@ -2298,7 +2352,15 @@ public class ProxyConfGen
                         }
                         expandTemplateByExplodeDomain(r, w, args);
                     } else {
-                        throw new ProxyConfException("Illegal custom header command: " + cmdMatcher.group(2));
+                        if( cmd_arg[1].startsWith("server(") && cmd_arg[1].endsWith(")")) {
+                            String serviceName = cmd_arg[1].substring("server(".length(), cmd_arg[1].length() - 1);
+                            if( serviceName.isEmpty() ) {
+                                throw new ProxyConfException("Missing service parameter in custom header command: " + cmdMatcher.group(2));
+                            }
+                            expandTemplateByExplodeServer(r, w, serviceName);
+                        } else {
+                            throw new ProxyConfException("Illegal custom header command: " + cmdMatcher.group(2));
+                        }
                     }
                 } else {
                     throw new ProxyConfException("Illegal custom header command: " + cmdMatcher.group(2));
@@ -2405,6 +2467,44 @@ public class ProxyConfGen
                 fillVarsWithDomainAttrs(item);
                 expandTempateFromCache(cache, conf);
                 conf.newLine();
+            }
+        }
+    }
+
+    /**
+     * Iterate all server of type `serviceName` and populate server_id and server_hostname when exploding
+     * with !{explode server(docs)}
+     * initially created for zimbra-docs.
+     *
+     * @param temp Reader of the file which will be exploded per server
+     * @param conf Target buffer where generated configuration will be written
+     * @param serviceName Filter only servers which contains `serviceName`
+     * @throws IOException
+     * @author Davide Baldo
+     */
+    private static void expandTemplateByExplodeServer(
+            BufferedReader temp, BufferedWriter conf, String serviceName ) throws IOException {
+
+        List<ServerAttrItem> filteredServers = new ArrayList<>();
+        for( ServerAttrItem serverAttrItem : mServerAttrs ) {
+            if (serverAttrItem.hasService(serviceName)) {
+                filteredServers.add(serverAttrItem);
+            }
+        }
+        if( !filteredServers.isEmpty() ) {
+            ArrayList<String> cache = new ArrayList<String>(50);
+            String line;
+            while ((line = temp.readLine()) != null) {
+                if (!line.startsWith("#"))
+                    cache.add(line); // cache only non-comment lines
+            }
+
+            for (ServerAttrItem server : filteredServers) {
+                mVars.put("server_id", server.zimbraId);
+                mVars.put("server_hostname", server.hostname);
+                expandTempateFromCache(cache, conf);
+                mVars.remove("server_id");
+                mVars.remove("server_hostname");
             }
         }
     }
@@ -2976,6 +3076,7 @@ public class ProxyConfGen
         /* upgrade the variable map from the config in force */
             mLog.debug("Loading Attrs in Domain Level");
             mDomainReverseProxyAttrs = loadDomainReverseProxyAttrs();
+            mServerAttrs = loadServerAttrs();
             updateListenAddresses();
 
             mLog.debug("Updating Default Variable Map");
@@ -3062,6 +3163,8 @@ public class ProxyConfGen
             expandTemplate(new File(mTemplateDir, getWebHttpSModeConfTemplate("both")), new File(mConfIncludesDir, getWebHttpSModeConf("both")));
             expandTemplate(new File(mTemplateDir, getWebHttpSModeConfTemplate("redirect")), new File(mConfIncludesDir, getWebHttpSModeConf("redirect")));
             expandTemplate(new File(mTemplateDir, getWebHttpSModeConfTemplate("mixed")), new File(mConfIncludesDir, getWebHttpSModeConf("mixed")));
+            expandTemplate(new File(mTemplateDir, getConfTemplateFileName("docs.common")), new File(mConfIncludesDir, getConfFileName("docs.common")));
+            expandTemplate(new File(mTemplateDir, getConfTemplateFileName("docs.upstream")), new File(mConfIncludesDir, getConfFileName("docs.upstream")));
         } catch (ProxyConfException pe) {
             handleException(pe);
             exitCode = 1;

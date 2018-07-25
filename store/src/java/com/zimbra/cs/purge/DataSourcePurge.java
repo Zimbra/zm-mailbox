@@ -27,7 +27,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.DataSource;
@@ -222,7 +222,7 @@ public abstract class DataSourcePurge {
 
         @Override
         public String toString() {
-            Objects.ToStringHelper helper = Objects.toStringHelper(this);
+            MoreObjects.ToStringHelper helper = MoreObjects.toStringHelper(this);
             helper.add("id", id);
             helper.add("size", size);
             helper.add("date", date);

@@ -18,8 +18,10 @@
 package com.zimbra.common.util;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+
+import com.google.common.cache.LoadingCache;
 
 import static org.junit.Assert.*;
 
@@ -28,8 +30,8 @@ import org.junit.Test;
 public class MapUtilTest {
 
     @Test
-    public void newValueListMap() {
-        Map<Integer, List<String>> map = MapUtil.newValueListMap();
+    public void newValueListMap() throws ExecutionException {
+        LoadingCache<Integer, List<String>> map = MapUtil.newValueListMap();
         map.get(1).add("a");
         map.get(1).add("b");
         map.get(2).add("c");
@@ -47,8 +49,8 @@ public class MapUtilTest {
     }
     
     @Test
-    public void newValueSetMap() {
-        Map<Integer, Set<String>> map = MapUtil.newValueSetMap();
+    public void newValueSetMap() throws ExecutionException {
+        LoadingCache<Integer, Set<String>> map = MapUtil.newValueSetMap();
         map.get(1).add("a");
         map.get(1).add("b");
         map.get(2).add("c");

@@ -22,6 +22,7 @@ package com.zimbra.cs.account;
 
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.httpclient.HttpClient;
@@ -210,6 +211,27 @@ public abstract class AuthToken {
             boolean secureCookie, boolean rememberMe)
     throws ServiceException;
 
+    /**
+     *  It's overridden in ZimbraJWToken class where actions specific to jwt flow have been implemented.
+     *  For other implementations of AuthToken, this method calls an already existing abstract method.
+     */
+    public void encode(HttpServletRequest reqst, HttpServletResponse resp, boolean isAdminReq, boolean secureCookie, boolean rememberMe)
+    throws ServiceException {
+        encode(resp, isAdminReq, secureCookie, rememberMe);
+    }
+
+    /**
+     * This method is needed for ZimbraJWToken class which overrides this method.
+     * At present, it has no significance for other implementations of AuthToken class.
+     * If any implementation want to use this method, they can override it.
+     * Can't keep this method abstract in AuthToken as that would force all existing implementations
+     * of AuthToken to implement this method and it would break code of other people who have overridden
+     * AuthToken class.
+     */
+    public void encode(HttpServletRequest reqst, HttpServletResponse resp, boolean deregister) throws ServiceException {
+        //do nothing
+    }
+
     public abstract void encodeAuthResp(Element parent, boolean isAdmin) throws ServiceException;
 
     public abstract ZAuthToken toZAuthToken() throws ServiceException;
@@ -253,6 +275,27 @@ public abstract class AuthToken {
                 }
             }
             throw ServiceException.FAILURE("unknown auth token usage value: " + code, null);
+        }
+    }
+
+    public static enum TokenType {
+        AUTH("auth"), JWT("jwt");
+        private String code;
+
+        private TokenType(String code) {
+            this.code = code;
+        }
+
+        public String getCode() {
+            return code;
+        }
+
+        public static TokenType fromCode(String code) throws ServiceException {
+             if ("jwt".equalsIgnoreCase(code)) {
+                 return TokenType.JWT;
+             } else {
+                 return TokenType.AUTH;
+             }
         }
     }
 }

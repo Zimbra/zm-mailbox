@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.servlet.ServletException;
 import javax.servlet.UnavailableException;
@@ -34,7 +33,9 @@ import org.apache.commons.httpclient.ProtocolException;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
-import com.google.common.collect.MapMaker;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -42,6 +43,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.BufferStream;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.LoadingCacheUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.RemoteIP;
@@ -73,6 +75,14 @@ public class SoapServlet extends ZimbraServlet {
     /** Flag for requests that want to force invalidation of client cookies */
     public static final String INVALIDATE_COOKIES = "zimbra.invalidateCookies";
 
+    /**
+     * Keeps track of extra services added by extensions.
+     */
+    private static LoadingCache<String, List<DocumentService>> sExtraServices = CacheBuilder.newBuilder()
+        .build(CacheLoader.from(new ArrayListFactory()));
+
+    private static Log sLog = LogFactory.getLog(SoapServlet.class);
+    private SoapEngine mEngine;
 
     // Used by sExtraServices
     private static class ArrayListFactory implements Function<String, List<DocumentService>> {
@@ -81,15 +91,6 @@ public class SoapServlet extends ZimbraServlet {
             return new ArrayList<DocumentService>();
         }
     }
-
-    /**
-     * Keeps track of extra services added by extensions.
-     */
-    private static Map<String, List<DocumentService>> sExtraServices =
-        new MapMaker().makeComputingMap(new ArrayListFactory());
-
-    private static Log sLog = LogFactory.getLog(SoapServlet.class);
-    private SoapEngine mEngine;
 
     @Override
     public void init() throws ServletException {
@@ -110,7 +111,7 @@ public class SoapServlet extends ZimbraServlet {
 
         // See if any extra services were previously added by extensions
         synchronized (sExtraServices) {
-            List<DocumentService> services = sExtraServices.get(getServletName());
+            List<DocumentService> services = LoadingCacheUtil.get(sExtraServices, getServletName());
             for (DocumentService service : services) {
                 addService(service);
                 i++;
@@ -194,7 +195,7 @@ public class SoapServlet extends ZimbraServlet {
             } else {
                 sLog.debug("addService(%s, %s): servlet has not been initialized",
                         servletName, service.getClass().getSimpleName());
-                List<DocumentService> services = sExtraServices.get(servletName);
+                List<DocumentService> services = LoadingCacheUtil.get(sExtraServices, servletName);
                 services.add(service);
             }
         }

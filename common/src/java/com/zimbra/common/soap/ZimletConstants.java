@@ -24,6 +24,7 @@ public final class ZimletConstants {
     /* first level */
     public static final String ZIMLET_ATTR_VERSION         = "version";
     public static final String ZIMLET_ATTR_DESCRIPTION     = "description";
+    public static final String ZIMLET_ATTR_ZIMBRAX_SEMVER  = "zimbraXZimletCompatibleSemVer";
     public static final String ZIMLET_ATTR_NAME            = "name";
     public static final String ZIMLET_ATTR_EXTENSION       = "extension";
 

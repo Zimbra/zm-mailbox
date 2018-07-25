@@ -24,7 +24,7 @@ import java.util.Properties;
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLSocketFactory;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.zimbra.common.util.Log;
 import com.zimbra.cs.mailclient.auth.AuthenticatorFactory;
@@ -370,7 +370,7 @@ public abstract class MailConfig {
         Config.saveProperties(file, toProperties());
     }
 
-    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         helper
             .add("host", host)
             .add("port", port)
@@ -394,6 +394,6 @@ public abstract class MailConfig {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this)).toString();
+        return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
     }
 }

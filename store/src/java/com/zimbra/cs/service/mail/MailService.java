@@ -239,5 +239,9 @@ public final class MailService implements DocumentService {
 
         // Profile Image API
         dispatcher.registerHandler(MailConstants.MODIFY_PROFILE_IMAGE_REQUEST, new ModifyProfileImage());
+
+        // Password reset API
+        dispatcher.registerHandler(MailConstants.RECOVER_ACCOUNT_REQUEST, new RecoverAccount());
+        dispatcher.registerHandler(MailConstants.SET_RECOVERY_EMAIL_REQUEST, new SetRecoveryAccount());
     }
 }

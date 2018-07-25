@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ListUtil;
@@ -1286,7 +1286,7 @@ public class DbDataSource {
 
         @Override
         public String toString() {
-            Objects.ToStringHelper helper = Objects.toStringHelper(this);
+            MoreObjects.ToStringHelper helper = MoreObjects.toStringHelper(this);
             helper.add("id", msgId);
             helper.add("remote id", remoteId);
             helper.add("folder", remoteFolder);

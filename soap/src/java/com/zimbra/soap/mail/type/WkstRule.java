@@ -17,7 +17,7 @@
 
 package com.zimbra.soap.mail.type;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -58,6 +58,6 @@ implements WkstRuleInterface {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this).add("day", day).toString();
+        return MoreObjects.toStringHelper(this).add("day", day).toString();
     }
 }

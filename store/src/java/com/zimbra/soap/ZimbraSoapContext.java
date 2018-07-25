@@ -286,6 +286,9 @@ public final class ZimbraSoapContext {
 
         try {
             mAuthToken = AuthProvider.getAuthToken(ctxt, context);
+            if (mAuthToken == null) {
+                mAuthToken = AuthProvider.getJWToken(ctxt, context);
+            }
             if (mAuthToken != null) {
                 boolean isRegistered = mAuthToken.isRegistered();
                 boolean isExpired = mAuthToken.isExpired();

@@ -49,7 +49,7 @@ import javax.mail.Address;
 import javax.mail.internet.MimeMessage;
 
 import com.google.common.base.CharMatcher;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
@@ -361,7 +361,7 @@ public class Mailbox implements MailboxStore {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this).add("id", item.getId()).toString();
+            return MoreObjects.toStringHelper(this).add("id", item.getId()).toString();
         }
     }
 
@@ -1293,6 +1293,23 @@ public class Mailbox implements MailboxStore {
             currentChange().itemId = nextId;
         }
         return nextId;
+    }
+
+    public interface ItemIdGetter {
+        public int get();
+    }
+
+    /** Wrapper for getNextItemId method - should only be used within a transaction */
+    private class NextItemIdGetter implements ItemIdGetter {
+        @Override
+        public int get() {
+            if (!currentChange().isActive()) {
+                ZimbraLog.mailbox.info("NextItemIdGetter used when not in transaction! %s",
+                        ZimbraLog.getStackTrace(10));
+                return 0;
+            }
+            return getNextItemId(ID_AUTO_INCREMENT);
+        }
     }
 
     TargetConstraint getOperationTargetConstraint() {
@@ -3996,6 +4013,44 @@ public class Mailbox implements MailboxStore {
     }
 
     /**
+     * Returns count of the modified items since a given change number
+     * @param octxt     The context for this request.
+     * @param lastSync  We return items with change ID larger than this value.
+     * @param sinceDate We return items with date larger than this value.
+     * @param type      The type of MailItems to return.
+     * @param folderIds folders from which add/change items are returned
+     * @return
+     * @throws ServiceException
+     */
+    public int getModifiedItemsCount(OperationContext octxt, int lastSync, int sinceDate,
+            MailItem.Type type, Set<Integer> folderIds) throws ServiceException {
+        lock.lock(false);
+        try {
+            if (lastSync >= getLastChangeID()) {
+                return 0;
+            }
+            boolean success = false;
+            try {
+                beginReadTransaction("getModifiedItems", octxt);
+
+                Set<Integer> visible = Folder.toId(getAccessibleFolders(ACL.RIGHT_READ));
+                if (folderIds == null) {
+                    folderIds = visible;
+                } else if (visible != null) {
+                    folderIds = SetUtil.intersect(folderIds, visible);
+                }
+                int count = DbMailItem.getModifiedItemsCount(this, type, lastSync, sinceDate, folderIds);
+                success = true;
+                return count;
+            } finally {
+                endTransaction(success);
+            }
+        } finally {
+            lock.release();
+        }
+    }
+
+    /**
      * Returns a list of all {@link Folder}s the authenticated user has {@link ACL#RIGHT_READ} access to. Returns
      * {@code null} if the authenticated user has read access to the entire Mailbox.
      *
@@ -5175,7 +5230,7 @@ public class Mailbox implements MailboxStore {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this).add("inv", invite).add("hasBody", message != null).toString();
+            return MoreObjects.toStringHelper(this).add("inv", invite).add("hasBody", message != null).toString();
         }
     }
 
@@ -5336,7 +5391,9 @@ public class Mailbox implements MailboxStore {
                     }
 
                     calItem.setTags(flags, ntags);
-                    calItem.processNewInvite(scid.message, scid.invite, folderId, nextAlarm, false, true);
+                    calItem.processNewInvite(scid.message, scid.invite, folderId, nextAlarm,
+                            false /* preserveAlarms */, true /* replaceExistingInvites */,
+                            false /* updatePrevFolders */);
                 }
                 redoRecorder.setCalendarItemAttrs(calItem.getId(), calItem.getFolderId());
             }
@@ -5806,7 +5863,8 @@ public class Mailbox implements MailboxStore {
                 return;
             }
             calItem.snapshotRevision();
-            calItem.processNewInviteReply(inv, sender);
+            calItem.processNewInviteReply(inv, sender, false /* don't update prev folders */,
+                    new NextItemIdGetter());
             success = true;
         } finally {
             endTransaction(success);
@@ -10179,7 +10237,7 @@ public class Mailbox implements MailboxStore {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
             .add("id", mId)
             .add("account", mData.accountId)
             .add("lastItemId", mData.lastItemId)

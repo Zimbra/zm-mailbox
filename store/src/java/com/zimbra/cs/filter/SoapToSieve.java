@@ -27,7 +27,7 @@ import java.util.TreeMap;
 import org.apache.commons.lang.StringUtils;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
 import com.zimbra.common.filter.Sieve;
 import com.zimbra.common.service.ServiceException;
@@ -340,7 +340,7 @@ public final class SoapToSieve {
             snippet = "current_day_of_week :is [" + Joiner.on(',').join(daysOfWeek) + "]";
         } else if (test instanceof FilterTest.ConversationTest) {
             FilterTest.ConversationTest convTest = (FilterTest.ConversationTest) test;
-            String where = Objects.firstNonNull(convTest.getWhere(), "started");
+            String where = MoreObjects.firstNonNull(convTest.getWhere(), "started");
             snippet = String.format("conversation :where \"%s\"", FilterUtil.escape(where));
         } else if (test instanceof FilterTest.FacebookTest) {
             snippet = "facebook";
@@ -596,7 +596,7 @@ public final class SoapToSieve {
             }
             String subjectTemplate = Strings.nullToEmpty(notify.getSubject());
             String bodyTemplate = Strings.nullToEmpty(notify.getContent());
-            int maxBodyBytes = Objects.firstNonNull(notify.getMaxBodySize(), -1);
+            int maxBodyBytes = MoreObjects.firstNonNull(notify.getMaxBodySize(), -1);
             String origHeaders = Strings.nullToEmpty(notify.getOrigHeaders());
             if (!subjectTemplate.isEmpty() && containsSubjectHeader(origHeaders)) {
                 throw ServiceException.INVALID_REQUEST("subject conflict", null);

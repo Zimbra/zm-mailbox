@@ -35,6 +35,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.AuthToken.TokenType;
 import com.zimbra.cs.account.AuthToken.Usage;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
@@ -153,6 +154,15 @@ public abstract class AuthProvider {
     protected abstract AuthToken authToken(Element soapCtxt, Map engineCtxt)
     throws AuthProviderException, AuthTokenException;
 
+    protected AuthToken jwToken(Element soapCtxt, Map engineCtxt)
+    throws AuthProviderException, AuthTokenException {
+        throw AuthProviderException.NOT_SUPPORTED();
+    }
+
+    protected AuthToken jwToken(String encoded, String currentSalt)
+    throws AuthProviderException, AuthTokenException {
+        throw AuthProviderException.NOT_SUPPORTED();
+    }
 
     /**
      * Returns an AuthToken by auth data in the <authToken> element.
@@ -211,6 +221,19 @@ public abstract class AuthProvider {
     }
 
     /**
+     * Returns an AuthToken from the account object of type tokenType
+     * Should never return null.
+     *
+     * Throws AuthProviderException.NO_SUPPORTED if this API is not supported by the auth provider
+     * @param acct
+     * @return
+     * @throws AuthProviderException
+     */
+    protected AuthToken authToken(Account acct, TokenType tokenType) throws AuthProviderException {
+        throw AuthProviderException.NOT_SUPPORTED();
+    }
+
+    /**
      * Returns an AuthToken from the account object.
      * Should never return null.
      *
@@ -244,6 +267,10 @@ public abstract class AuthProvider {
      * @throws AuthProviderException
      */
     protected AuthToken authToken(Account acct, long expires) throws AuthProviderException {
+        throw AuthProviderException.NOT_SUPPORTED();
+    }
+
+    protected AuthToken authToken(Account acct, long expires, TokenType tokenType) throws AuthProviderException {
         throw AuthProviderException.NOT_SUPPORTED();
     }
 
@@ -406,6 +433,45 @@ public abstract class AuthProvider {
         return null;
     }
 
+    public static AuthToken getJWToken(Element soapCtxt, Map engineCtxt)
+    throws AuthTokenException {
+        AuthToken at = null;
+        List<AuthProvider> providers = getProviders();
+
+        AuthTokenException authTokenExp = null;
+
+        for (AuthProvider ap : providers) {
+            try {
+                at = ap.jwToken(soapCtxt, engineCtxt);
+                if (at == null) {
+                    authTokenExp = new AuthTokenException(String.format("auth provider %s returned null", ap.getName()));
+                } else {
+                    return at;
+                }
+            } catch (AuthProviderException e) {
+                // if there is no auth data for this provider, log and continue with next provider
+                if (e.canIgnore()) {
+                    logger().debug("auth provider failure %s : %s", ap.getName(), e.getMessage());
+                } else {
+                    authTokenExp = new AuthTokenException("auth provider error", e);
+                }
+            } catch (AuthTokenException e) {
+                //log and store exception reference
+                authTokenExp = e;
+                logger().debug("getJWToken error: provider= %s, err= %s", ap.getName(), e.getMessage(), e);
+            }
+        }
+
+        //If AuthTokenException has occurred while traversing Auth providers then it should be thrown.
+        //If multiple auth providers caused AuthTokenException, then last exception is rethrown from here.
+        if (null != authTokenExp) {
+            throw authTokenExp;
+        }
+
+        // there is no auth data for any of the enabled providers
+        return null;
+    }
+
     public static AuthToken getAuthToken(Element authTokenElem, Account acct)
     throws AuthTokenException {
         AuthToken at = null;
@@ -490,6 +556,44 @@ public abstract class AuthProvider {
         return null;
     }
 
+    public static AuthToken getJWToken(String encoded, String currentSalt) throws AuthTokenException {
+        AuthToken at = null;
+        List<AuthProvider> providers = getProviders();
+
+        AuthTokenException authTokenExp = null;
+
+        for (AuthProvider ap : providers) {
+            try {
+                at = ap.jwToken(encoded, currentSalt);
+                if (at == null) {
+                    authTokenExp = new AuthTokenException(String.format("auth provider %s returned null", ap.getName()));
+                } else {
+                    return at;
+                }
+            } catch (AuthProviderException e) {
+                // if there is no auth data for this provider, log and continue with next provider
+                if (e.canIgnore()) {
+                    logger().debug("auth provider failure %s : %s", ap.getName(), e.getMessage());
+                } else {
+                    authTokenExp = new AuthTokenException("auth provider error", e);
+                }
+            } catch (AuthTokenException e) {
+                //log and store exception reference
+                authTokenExp = e;
+                logger().debug("getJWToken error: provider= %s, err= %s", ap.getName(), e.getMessage(), e);
+            }
+        }
+
+        //If AuthTokenException has occurred while traversing Auth providers then it should be thrown.
+        //If multiple auth providers caused AuthTokenException, then last exception is rethrown from here.
+        if (null != authTokenExp) {
+            throw authTokenExp;
+        }
+
+        // there is no auth data for any of the enabled providers
+        return null;
+    }
+
     public static AuthToken getAuthToken(Account acct) throws AuthProviderException {
         List<AuthProvider> providers = getProviders();
         AuthProviderException authProviderExp = null;
@@ -514,6 +618,32 @@ public abstract class AuthProvider {
             throw authProviderExp;
         }
         throw AuthProviderException.FAILURE("cannot get authtoken from account " + acct.getName());
+    }
+
+    public static AuthToken getAuthToken(Account acct, TokenType tokenType) throws AuthProviderException {
+        List<AuthProvider> providers = getProviders();
+        AuthProviderException authProviderExp = null;
+
+        for (AuthProvider ap : providers) {
+            try {
+                AuthToken at = ap.authToken(acct, tokenType);
+                if (at == null) {
+                    authProviderExp = AuthProviderException.FAILURE(String.format("auth provider %s returned null", ap.getName()));
+                } else {
+                    return at;
+                }
+            } catch (AuthProviderException e) {
+                if (e.canIgnore()) {
+                    logger().debug("auth provider failure %s : %s", ap.getName(), e.getMessage());
+                } else {
+                    authProviderExp = e;
+                }
+            }
+        }
+        if (null != authProviderExp) {
+            throw authProviderExp;
+        }
+        throw AuthProviderException.FAILURE(String.format("cannot get authtoken from account ", acct.getName()));
     }
 
     public static AuthToken getAuthToken(Account acct, boolean isAdmin)
@@ -581,6 +711,32 @@ public abstract class AuthProvider {
         throw AuthProviderException.FAILURE("cannot get authtoken from account " + acct.getName());
     }
 
+    public static AuthToken getAuthToken(Account acct, long expires, TokenType tokenType) throws AuthProviderException {
+        List<AuthProvider> providers = getProviders();
+        AuthProviderException authProviderExp = null;
+
+        for (AuthProvider ap : providers) {
+            try {
+                AuthToken at = ap.authToken(acct, expires, tokenType);
+                if (at == null) {
+                    authProviderExp = AuthProviderException.FAILURE(String.format("auth provider %s returned null", ap.getName()));
+                } else {
+                    return at;
+                }
+            } catch (AuthProviderException e) {
+                if (e.canIgnore()) {
+                    logger().debug("auth provider failure %s : %s", ap.getName(), e.getMessage());
+                } else {
+                    authProviderExp = e;
+                }
+            }
+        }
+        if (null != authProviderExp) {
+            throw authProviderExp;
+        }
+        throw AuthProviderException.FAILURE(String.format("cannot get authtoken from account ", acct.getName()));
+    }
+
     public static AuthToken getAuthToken(Account acct, long expires, boolean isAdmin, Account adminAcct)
     throws AuthProviderException {
         List<AuthProvider> providers = getProviders();
@@ -636,7 +792,38 @@ public abstract class AuthProvider {
         throw AuthProviderException.FAILURE("cannot get authtoken from account " + account.getName());
     }
 
+    public static AuthToken getAuthToken(Account account, Usage usage, TokenType tokenType) throws AuthProviderException {
+        List<AuthProvider> providers = getProviders();
+        AuthProviderException authProviderExp = null;
+
+        for (AuthProvider ap : providers) {
+            try {
+                AuthToken at = ap.authToken(account, usage, tokenType);
+                if (at == null) {
+                    authProviderExp = AuthProviderException.FAILURE(String.format("auth provider %s returned null", ap.getName()));
+                } else {
+                    return at;
+                }
+            } catch (AuthProviderException e) {
+                if (e.canIgnore()) {
+                    logger().debug("auth provider failure %s : %s", ap.getName(), e.getMessage());
+                } else {
+                    authProviderExp = e;
+                }
+            }
+        }
+
+        if (null != authProviderExp) {
+            throw authProviderExp;
+        }
+        throw AuthProviderException.FAILURE(String.format("cannot get authtoken from account ", account.getName()));
+    }
+
     protected AuthToken authToken(Account acct, Usage usage) throws AuthProviderException {
+        throw AuthProviderException.NOT_SUPPORTED();
+    }
+
+    protected AuthToken authToken(Account acct, Usage usage, TokenType tokenType) throws AuthProviderException {
         throw AuthProviderException.NOT_SUPPORTED();
     }
 
@@ -691,13 +878,14 @@ public abstract class AuthProvider {
         if (at.getUsage() != usage) {
             throw ServiceException.AUTH_EXPIRED("invalid usage value");
         }
+
         if (at.isExpired()) {
             if(at.isRegistered()) {
-            	try {
-    				at.deRegister();
-    			} catch (AuthTokenException e) {
-    				ZimbraLog.account.error(e);
-    			}
+                try {
+                     at.deRegister();
+                } catch (AuthTokenException e) {
+                     ZimbraLog.account.error(e);
+                }
             }
             throw ServiceException.AUTH_EXPIRED();
         }
@@ -705,6 +893,7 @@ public abstract class AuthProvider {
         if(!at.isRegistered()) {
             throw ServiceException.AUTH_EXPIRED();
         }
+
         // make sure that the authenticated account is still active and has not been deleted since the last request
         String acctId = at.getAccountId();
         Account acct = prov.get(AccountBy.id, acctId, at);
