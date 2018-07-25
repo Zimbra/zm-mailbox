@@ -470,7 +470,6 @@ public class AccountConstants {
     public static final String A_GET_COUNT = "getCount";
     public static final String A_TOKEN_TYPE = "tokenType";
     public static final String E_JWT_TOKEN = "jwtToken";
-    public static final String A_OFFSET = "offset";
 
     // account ACLs
     public static final String A_ACCESSKEY = "key";
@@ -599,18 +598,4 @@ public class AccountConstants {
     public static final String E_RESET_PASSWORD_REQUEST = "ResetPasswordRequest";
     public static final String E_RESET_PASSWORD_RESPONSE = "ResetPasswordResponse";
     public static final QName RESET_PASSWORD_REQUEST = QName.get(E_RESET_PASSWORD_REQUEST, NAMESPACE);
-
-    //Hab
-    public static final String A_HAB_ROOT_GROUP_ID = "habRootGroupId";
-    public static final String E_HAB_GROUP = "habGroup";
-    public static final String E_HAB_GROUPS = "habGroups";
-    public static final String A_ROOT_HAB_GROUP = "rootHabGroup";
-    public static final String A_PARENT_HAB_GROUP_ID = "parentHabGroupId";
-    public static final String A_HAB_GROUPS= "habGroups";
-    public static final String A_HAB_SENIORITY_INDEX = "seniorityIndex";
-    public static final String E_HAB_GROUP_MEMBERS = "groupMembers";
-    public static final String E_HAB_GROUP_MEMBER = "groupMember";
-
-    // Session activity feature
-    public static final String A_SESSION_ID = "sessionId";
 }

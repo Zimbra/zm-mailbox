@@ -308,27 +308,19 @@
   	<ivy:install organisation="com.sun.jersey.contribs" module="jersey-multipart" revision="1.12" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
   	<ivy:install organisation="javax.jws" module="jsr181-api" revision="2.2.6" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
 
-  <ivy:install organisation="org.ehcache" module="ehcache" revision="3.1.2" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-  <ivy:install organisation="javax.ws.rs" module="jsr311-api" revision="1.1.1" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-  <ivy:install organisation="com.fasterxml.jackson.core" module="jackson-core" revision="2.9.2" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-  <ivy:install organisation="com.fasterxml.jackson.core" module="jackson-annotations" revision="2.9.2" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/> 
-  <ivy:install organisation="com.fasterxml.jackson.core" module="jackson-databind" revision="2.9.2" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-  <ivy:install organisation="com.fasterxml.jackson.dataformat" module="jackson-dataformat-smile" revision="2.9.2" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-  <ivy:install organisation="com.fasterxml.jackson.module" module="jackson-module-jaxb-annotations" revision="2.8.9" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-  <ivy:install organisation="io.jsonwebtoken" module="jjwt" revision="0.7.0" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-  <ivy:install organisation="org.apache.commons" module="commons-text" revision="1.1" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-  <ivy:install organisation="org.apache.commons" module="commons-lang3" revision="3.7" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-  <ivy:install organisation="org.apache.commons" module="commons-rng-client-api" revision="1.0" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-  <ivy:install organisation="org.apache.commons" module="commons-rng-core" revision="1.0" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-  <ivy:install organisation="org.apache.commons" module="commons-rng-simple" revision="1.0" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-    
-  <ivy:install organisation="io.leangen.graphql" module="spqr" revision="0.9.7" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-  <ivy:install organisation="io.leangen.geantyref" module="geantyref" revision="1.3.4" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-  <ivy:install organisation="com.graphql-java" module="graphql-java" revision="9.0" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-  <ivy:install organisation="org.reactivestreams" module="reactive-streams" revision="1.0.2" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-  <ivy:install organisation="org.antlr" module="antlr4-runtime" revision="4.7.1" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-    
-    
+    <ivy:install organisation="org.ehcache" module="ehcache" revision="3.1.2" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+    <ivy:install organisation="javax.ws.rs" module="jsr311-api" revision="1.1.1" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+    <ivy:install organisation="com.fasterxml.jackson.core" module="jackson-core" revision="2.9.2" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+    <ivy:install organisation="com.fasterxml.jackson.core" module="jackson-annotations" revision="2.9.2" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/> 
+    <ivy:install organisation="com.fasterxml.jackson.core" module="jackson-databind" revision="2.9.2" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+    <ivy:install organisation="com.fasterxml.jackson.dataformat" module="jackson-dataformat-smile" revision="2.9.2" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+    <ivy:install organisation="com.fasterxml.jackson.module" module="jackson-module-jaxb-annotations" revision="2.8.9" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+    <ivy:install organisation="io.jsonwebtoken" module="jjwt" revision="0.7.0" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+    <ivy:install organisation="org.apache.commons" module="commons-text" revision="1.1" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+    <ivy:install organisation="org.apache.commons" module="commons-lang3" revision="3.7" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+    <ivy:install organisation="org.apache.commons" module="commons-rng-client-api" revision="1.0" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+    <ivy:install organisation="org.apache.commons" module="commons-rng-core" revision="1.0" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+    <ivy:install organisation="org.apache.commons" module="commons-rng-simple" revision="1.0" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
     <war warfile="${warfile}" webxml="${war.web.xml}">
       <fileset dir="WebRoot"/>
       <lib dir="${build.tmp.dir}" includes="*.jar"/>

@@ -17,6 +17,9 @@
 
 package com.zimbra.soap.account.type;
 
+import com.google.common.base.MoreObjects;
+import com.zimbra.common.soap.HeaderConstants;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;

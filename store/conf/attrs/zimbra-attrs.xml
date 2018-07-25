@@ -9504,21 +9504,6 @@ TODO: delete them permanently from here
   <desc>time for which reset password feature is suspended</desc>
 </attr>
 
-<attr id="2143" name="zimbraOldMailAddress" type="email" max="256" immutable="1" cardinality="single" optionalIn="mailRecipient" flags="accountInfo" since="8.8.10">
-  <desc>temporary RFC822 email address of this recipient for accepting mail during account rename</desc>
-</attr>
-
-<attr id="2144" name="zimbraPrimaryEmailChangeHistory" type="string" cardinality="multi" optionalIn="account" flags="accountInfo" since="8.8.10">
-  <desc>timestamp of account rename and previous name of the account</desc>
-</attr>
-
-<attr id="2994" name="zimbraPrefDefaultCalendarId" type="integer" cardinality="single" optionalIn="account,cos" flags="accountInherited" callback="DefaultCalendarIdCallback" since="8.8.10">
-  <defaultCOSValue>10</defaultCOSValue>
-  <desc>Default calendar folder id. Current default calendar id is 10, as calendar folder with id 10, is created for all users.
-    Cos level change is blocked. So admin can not change value of this attribute on cos level.
-  </desc>
-</attr>
-
 <attr id="2995" name="zimbraEphemeralBackendURL" type="string" cardinality="single" optionalIn="globalConfig" callback="EphemeralBackendCheck" since="8.7.6">
   <desc>URL of ephemeral storage backend</desc>
   <globalConfigValue>ldap://default</globalConfigValue>
@@ -9701,6 +9686,18 @@ TODO: delete them permanently from here
 <attr id="3023" name="zimbraLDAPSchemaVersion" type="string" cardinality="single" requiredIn="globalConfig" since="8.8.8">
   <desc>LDAP schema version for the system.</desc>
   <globalConfigValue>1518163473</globalConfigValue>
+</attr>
+
+<attr id="3024" name="zimbraXZimletCompatibleSemVer" type="string" max="256" cardinality="single" optionalIn="zimletEntry" since="8.8.9">
+  <desc>ZimbraX compatible semantic version expression</desc>
+</attr>
+
+<attr id="3025" name="zimbraOAuthConsumerRedirectUri" type="string" cardinality="multi" optionalIn="globalConfig,domain" flags="domainInherited" since="8.8.9">
+  <desc>OAuth redirectURI. It is in the format of redirectURI:consumer-app-name</desc>
+</attr>
+
+<attr id="3026" name="zimbraOAuthConsumerAPIScope" type="string" cardinality="multi" optionalIn="globalConfig,domain" flags="domainInherited" since="8.8.9">
+  <desc>OAuth consumer API scope. It is in the format of apiscope1{separator character}apiscope2:consumer-app-name. The separator between apiscope1 and apiscope2 is consumer-app specific</desc>
 </attr>
 
 <attr id="5002" name="zimbraSmtpStartTlsMode" type="enum" value="on,off,only" cardinality="single" optionalIn="globalConfig,server,domain" flags="serverInherited" since="8.8.6">

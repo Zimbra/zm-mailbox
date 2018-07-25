@@ -41,7 +41,6 @@ import io.leangen.graphql.annotations.types.GraphQLType;
  */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"name", "id"})
-@GraphQLType(name=GqlConstants.IDENTITY, description="Identity")
 public class Identity extends AttrsImpl {
 
     // TODO:Want constructor for old style Identity

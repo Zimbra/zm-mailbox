@@ -118,41 +118,11 @@ public class FreeBusySlot {
     public long getStartTime() { return startTime; }
     public long getEndTime() { return endTime; }
 
-	public String getId() {
-		return id;
-	}
-
-	public void setId(String id) {
-		this.id = id;
-	}
-
-	public String getSubject() {
-		return subject;
-	}
-
-	public void setSubject(String subject) {
-		this.subject = subject;
-	}
-
-	public String getLocation() {
-		return location;
-	}
-
-	public void setLocation(String location) {
-		this.location = location;
-	}
-
-	public boolean isMeeting() {
-		return isMeeting;
-	}
-
-	public void setMeeting(boolean isMeeting) {
-		this.isMeeting = isMeeting;
-	}
-
-	public boolean isRecurring() {
-		return isRecurring;
-	}
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
+        return helper
+            .add("startTime", startTime)
+            .add("endTime", endTime);
+    }
 
 	public void setRecurring(boolean isRecurring) {
 		this.isRecurring = isRecurring;

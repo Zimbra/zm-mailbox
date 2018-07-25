@@ -17,6 +17,10 @@
 
 package com.zimbra.soap.mail.type;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+
 import java.util.Collections;
 import java.util.List;
 
@@ -98,7 +102,6 @@ implements SearchHit {
         return Collections.unmodifiableList(messagePartHits);
     }
 
-    @Override
     public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);
         return helper

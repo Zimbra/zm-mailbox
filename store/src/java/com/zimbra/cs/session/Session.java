@@ -365,14 +365,6 @@ public abstract class Session {
         return !mAuthenticatedAccountId.equalsIgnoreCase(mTargetAccountId);
     }
 
-    public String getUserAgent() {
-        return userAgent;
-    }
-
-    public String getRequestIPAddress() {
-        return requestIPAddress;
-    }
-
     public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         helper.add("id", mSessionId)
             .add("authAcct", mAuthenticatedAccountId);

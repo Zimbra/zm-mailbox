@@ -33,7 +33,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.ZimletConstants;
 import com.zimbra.soap.base.ZimletDesc;
 

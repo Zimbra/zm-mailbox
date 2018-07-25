@@ -22,7 +22,6 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
 import com.google.common.base.MoreObjects;
-import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 

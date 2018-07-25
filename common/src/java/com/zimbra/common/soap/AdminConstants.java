@@ -1057,34 +1057,6 @@ public final class AdminConstants {
     public static final QName MODIFY_OUTGOING_FILTER_RULES_RESPONSE = QName.get(E_MODIFY_OUTGOING_FILTER_RULES_RESPONSE, NAMESPACE);
     public static final QName CONTACT_BACKUP_REQUEST = QName.get(E_CONTACT_BACKUP_REQUEST, NAMESPACE);
     public static final QName CONTACT_BACKUP_RESPONSE = QName.get(E_CONTACT_BACKUP_RESPONSE, NAMESPACE);
-    
-    //HAB
-    public static final String E_HAB_ORG_UNIT_REQUEST = "HABOrgUnitRequest";
-    public static final String E_HAB_ORG_UNIT_RESPONSE = "HABOrgUnitResponse";
-    public static final QName HAB_ORG_UNIT_REQUEST = QName.get(E_HAB_ORG_UNIT_REQUEST, NAMESPACE);
-    public static final QName HAB_ORG_UNIT_RESPONSE = QName.get(E_HAB_ORG_UNIT_RESPONSE, NAMESPACE);
-    public static final String E_HAB_ORG_UNIT_NAME = "habOrgUnitName";
-    public static final String E_HAB_PARENT_GROUP = "parentHABGroup";
-    public static final String E_MEMBER = "member";
-
-    //AddressList
-    public static final String E_GET_ALL_ADDRESS_LISTS_REQUEST = "GetAllAddressListsRequest";
-    public static final String E_GET_ALL_ADDRESS_LISTS_RESPONSE = "GetAllAddressListsResponse";
-    public static final QName GET_ALL_ADDRESS_LISTS_REQUEST = QName.get(E_GET_ALL_ADDRESS_LISTS_REQUEST, NAMESPACE);
-    public static final QName GET_ALL_ADDRESS_LISTS_RESPONSE = QName.get(E_GET_ALL_ADDRESS_LISTS_RESPONSE, NAMESPACE);
-    public static final String E_DELETE_ADDRESS_LIST_REQUEST = "DeleteAddressListRequest";
-    public static final String E_DELETE_ADDRESS_LIST_RESPONSE = "DeleteAddressListResponse";
-    public static final QName DELETE_ADDRESS_LIST_REQUEST = QName.get(E_DELETE_ADDRESS_LIST_REQUEST, NAMESPACE);
-    public static final QName DELETE_ADDRESS_LIST_RESPONSE = QName.get(E_DELETE_ADDRESS_LIST_RESPONSE, NAMESPACE);
-    public static final String E_MODIFY_ADDRESS_LIST_REQUEST = "ModifyAddressListRequest";
-    public static final String E_MODIFY_ADDRESS_LIST_RESPONSE = "ModifyAddressListResponse";
-    public static final QName MODIFY_ADDRESS_LIST_REQUEST = QName.get(E_MODIFY_ADDRESS_LIST_REQUEST, NAMESPACE);
-    public static final QName MODIFY_ADDRESS_LIST_RESPONSE = QName.get(E_MODIFY_ADDRESS_LIST_RESPONSE, NAMESPACE);
-    public static final String E_GET_ADDRESS_LIST_INFO_REQUEST = "GetAddressListInfoRequest";
-    public static final String E_GET_ADDRESS_LIST_INFO_RESPONSE = "GetAddressListInfoResponse";
-    public static final QName GET_ADDRESS_LIST_INFO_REQUEST = QName.get(E_GET_ADDRESS_LIST_INFO_REQUEST, NAMESPACE);
-    public static final QName GET_ADDRESS_LIST_INFO_RESPONSE = QName.get(E_GET_ADDRESS_LIST_INFO_RESPONSE, NAMESPACE);
-
 
     // DumpSessions
     public static final String E_SESSION = "session";
@@ -1535,20 +1507,4 @@ public final class AdminConstants {
 
     // contact backup feature
     public static final String E_SERVERS = "servers";
-
-    //HAB
-    public static final String A_NEW_NAME = "newName";
-    public static final String A_FORCE_DELETE = "forceDelete";
-    public static final String E_MEMBERS = "members";
-    public static final String A_CASCADE_DELETE = "cascadeDelete";
-    
-    // address list
-    public static final String E_CREATE_ADDRESS_LIST_REQUEST = "CreateAddressListRequest";
-    public static final String E_CREATE_ADDRESS_LIST_RESPONSE = "CreateAddressListResponse";
-    public static final QName GET_CREATE_ADDRESS_LIST_REQUEST = QName.get(E_CREATE_ADDRESS_LIST_REQUEST, NAMESPACE);
-    public static final QName GET_CREATE_ADDRESS_LIST_RESPONSE = QName.get(E_CREATE_ADDRESS_LIST_RESPONSE, NAMESPACE);
-    public static final String E_SEARCH_FILTER = "searchFilter";
-    public static final String E_GAL_FILTER = "galFilter";
-    public static final String E_LDAP_FILTER = "ldapFilter";
-    public static final String A_CLEAR_FILTER = "clearFilter";
 }

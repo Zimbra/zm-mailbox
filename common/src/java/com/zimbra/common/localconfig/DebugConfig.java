@@ -234,7 +234,7 @@ public final class DebugConfig {
         "a,abbr,acronym,blockquote,div,font,h1,h2,h3,h4,h5,h6,img,li,ol,p,span,table,td,th,tr,ul");
 
     public static final String xhtmlWhitelistedAttributes = value("defang_xhtml_whitelisted_attributes",
-        "abbr,align,alt,border,cellpadding,cellspacing,cite,class,color,colspan,height,href,id,name,rel,rev,rowspan,size,src,style,title,target,valign,width");
+        "abbr,align,alt,border,cellpadding,cellspacing,cite,class,color,colspan,height,href,id,,name,rel,rev,rowspan,size,src,style,title,target,valign,width");
 
     public static boolean defang_block_form_same_host_post_req = value("defang_block_form_same_host_post_req", true);
 
@@ -265,8 +265,6 @@ public final class DebugConfig {
     public static final String defangImgSkipOwaspSanitize = value("defang_img_skip_owasp_sanitize", "^cid:.*@");
     public static final String defangOwaspValidImgTag = value("owasp_valid_img_tag", "<\\s*img");
     public static final String defangStyleUnwantedStrgPattern = value("defang_style_unwanted_strg_pattern", "\\s*(('){2,})");
-    public static final String defangOwaspAlert = value("defang_owasp_alert_tag", "alert\\((.*)\\)");
-    public static final String defangOwaspJavaScript = value("defang_owasp_javascript_tag", ".*javascript\\s*");
 
     /*
      * Default maximum size of convertd response. This reduces OOME in case of

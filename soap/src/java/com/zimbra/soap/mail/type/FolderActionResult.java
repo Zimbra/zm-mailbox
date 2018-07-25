@@ -17,6 +17,7 @@
 
 package com.zimbra.soap.mail.type;
 
+import com.google.common.base.MoreObjects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -78,7 +79,6 @@ public class FolderActionResult extends ActionResult {
     @GraphQLQuery(name="accessKey", description="Access key (password)")
     public String getAccessKey() { return accessKey; }
 
-    @Override
     public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);
         return helper
