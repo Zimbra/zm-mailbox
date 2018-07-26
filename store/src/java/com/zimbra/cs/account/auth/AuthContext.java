@@ -85,7 +85,7 @@ public class AuthContext {
         defaultUserAgentMap.put(AuthContext.Protocol.soap, "soap");
         defaultUserAgentMap.put(AuthContext.Protocol.spnego, "spnego");
         defaultUserAgentMap.put(AuthContext.Protocol.zsync, "zsync");
-        // 'mta' value in case of 'smpt'
+        // 'mta' value in case of 'smtp'
         defaultUserAgentMap.put(AuthContext.Protocol.smtp, "mta");    
     }
 
