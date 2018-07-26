@@ -55,7 +55,6 @@ public class CalendarItemTest {
         octxt = PowerMockito.mock(OperationContext.class);
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         calItem = PowerMockito.mock(CalendarItem.class);
-        calItem.state = new MailItemState(new UnderlyingData());
         calItem.mMailbox = mbox;
     }
 
