@@ -321,12 +321,12 @@ public class Auth extends AccountDocumentHandler {
                         AppSpecificPasswords appPasswords = TwoFactorAuth.getFactory().getAppSpecificPasswords(acct, acctValuePassedIn);
                         appPasswords.authenticate(password);
                     } else {
-                        prov.authAccount(acct, code, AuthContext.Protocol.soap, authCtxt);
+                        prov.authAccount(acct, code, context.get(SoapEngine.REQUEST_PROTO), authCtxt);
                         return needTwoFactorAuth(acct, twoFactorManager, zsc, tokenType);
                     }
                 } else {
                     if (password != null || recoveryCode != null) {
-                        prov.authAccount(acct, code, AuthContext.Protocol.soap, authCtxt);
+                        prov.authAccount(acct, code, context.get(SoapEngine.REQUEST_PROTO), authCtxt);
                     } else {
                         // it's ok to not have a password if the client is using a 2FA auth token for the 2nd step of 2FA
                         if (!twoFactorAuthWithToken) {
