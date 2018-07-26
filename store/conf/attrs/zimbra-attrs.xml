@@ -9764,5 +9764,29 @@ TODO: delete them permanently from here
 <attr id="5014" name="zimbraEmailTemplateApiUrl" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.8.8">
 	<desc>This attribute stores the email templates service API url </desc>
 </attr>
+
+<attr id="5015" name="zimbraDAAdminDomainList" type="string" cardinality="single" optionalIn="account,cos,domain" flags="domainInfo,accountInfo" since="8.8.8">
+	<desc>This attribute stores legacy DA Admin/User Domain list</desc>
+</attr>
+
+<attr id="5016" name="zimbraEmployeeProtocolName" type="enum" value="pop,imap,smtp,smime" cardinality="single" optionalIn="account,cos,domain" flags="domainInfo,accountInfo" since="8.8.8">
+	<desc>This attribute stores legacy Employee/user protocol name </desc>
+</attr>
+
+<attr id="5017" name="zimbraEmployeeProtocolTemplate" type="string" cardinality="single" optionalIn="account,cos,domain" flags="domainInfo,accountInfo" since="8.8.8">
+	<desc>This attribute stores legacy Employee/user protocol templates</desc>
+</attr>
+
+<attr id="5018" name="zimbraDAAdminIP" type="string" cardinality="single" optionalIn="account,cos,domain" flags="domainInfo,accountInfo" since="8.8.8">
+	<desc>This attribute stores DA admin/user registered IP</desc>
+</attr>
+
+<attr id="5019" name="zimbraEmployeeNum" type="string" cardinality="single" optionalIn="account,cos,domain" flags="domainInfo,accountInfo,accountCosDomainInherited,domainAdminModifiable" since="8.8.8">
+	<desc>This attribute stores Employee/user number</desc>
+</attr>
+
+<attr id="5020" name="zimbraEmployeeDeptName" type="string" cardinality="single" optionalIn="account,cos,domain" flags="domainInfo,accountInfo" since="8.8.8">
+	<desc>This attribute stores Employee/user Department name</desc>
+</attr>
 </attrs>
 

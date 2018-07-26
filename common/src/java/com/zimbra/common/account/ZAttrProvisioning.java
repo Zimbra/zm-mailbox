@@ -440,6 +440,26 @@ public class ZAttrProvisioning {
         public boolean isAlias() { return this == alias;}
     }
 
+    public static enum EmployeeProtocolName {
+        pop("pop"),
+        imap("imap"),
+        smtp("smtp"),
+        smime("smime");
+        private String mValue;
+        private EmployeeProtocolName(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static EmployeeProtocolName fromString(String s) throws ServiceException {
+            for (EmployeeProtocolName value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isPop() { return this == pop;}
+        public boolean isImap() { return this == imap;}
+        public boolean isSmtp() { return this == smtp;}
+        public boolean isSmime() { return this == smime;}
+    }
+
     public static enum FeatureAddressVerificationStatus {
         verified("verified"),
         pending("pending"),
@@ -5064,6 +5084,22 @@ public class ZAttrProvisioning {
     public static final String A_zimbraCustomTemplateUserSignature = "zimbraCustomTemplateUserSignature";
 
     /**
+     * This attribute stores legacy DA Admin/User Domain list
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5015)
+    public static final String A_zimbraDAAdminDomainList = "zimbraDAAdminDomainList";
+
+    /**
+     * This attribute stores DA admin/user registered IP
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5018)
+    public static final String A_zimbraDAAdminIP = "zimbraDAAdminIP";
+
+    /**
      * SQL statements that take longer than this duration to execute will be
      * logged to the sqltrace category in mailbox.log.. Must be in valid
      * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
@@ -6016,6 +6052,38 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=5014)
     public static final String A_zimbraEmailTemplateApiUrl = "zimbraEmailTemplateApiUrl";
+
+    /**
+     * This attribute stores Employee/user Department name
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5020)
+    public static final String A_zimbraEmployeeDeptName = "zimbraEmployeeDeptName";
+
+    /**
+     * This attribute stores Employee/user number
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5019)
+    public static final String A_zimbraEmployeeNum = "zimbraEmployeeNum";
+
+    /**
+     * This attribute stores legacy Employee/user protocol name
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5016)
+    public static final String A_zimbraEmployeeProtocolName = "zimbraEmployeeProtocolName";
+
+    /**
+     * This attribute stores legacy Employee/user protocol templates
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5017)
+    public static final String A_zimbraEmployeeProtocolTemplate = "zimbraEmployeeProtocolTemplate";
 
     /**
      * EmptyFolderOpTimeout is the time in seconds for which empty folder
