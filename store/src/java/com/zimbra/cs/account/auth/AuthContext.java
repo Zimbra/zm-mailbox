@@ -83,6 +83,7 @@ public class AuthContext {
         soap,
         spnego,
         zsync,
+        smtp,
 
         //for internal use only
         test;

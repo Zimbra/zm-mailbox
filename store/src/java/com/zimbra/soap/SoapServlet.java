@@ -298,6 +298,7 @@ public class SoapServlet extends ZimbraServlet {
         context.put(SoapEngine.SOAP_REQUEST_IP, remoteIp.getClientIP());
         context.put(SoapEngine.ORIG_REQUEST_IP, remoteIp.getOrigIP());
         context.put(SoapEngine.REQUEST_IP, remoteIp.getRequestIP());
+        context.put(SoapEngine.REQUEST_PROTO, remoteIp.getOrigProto());
         remoteIp.addToLoggingContext();
 
         //checkAuthToken(req.getCookies(), context);
