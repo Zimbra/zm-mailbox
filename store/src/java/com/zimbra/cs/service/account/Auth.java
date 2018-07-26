@@ -214,7 +214,13 @@ public class Auth extends AccountDocumentHandler {
         authCtxt.put(AuthContext.AC_ORIGINATING_CLIENT_IP, context.get(SoapEngine.ORIG_REQUEST_IP));
         authCtxt.put(AuthContext.AC_REMOTE_IP, context.get(SoapEngine.SOAP_REQUEST_IP));
         authCtxt.put(AuthContext.AC_ACCOUNT_NAME_PASSEDIN, acctValuePassedIn);
-        authCtxt.put(AuthContext.AC_USER_AGENT, zsc.getUserAgent());
+
+        if(zsc.getUserAgent() == null || zsc.getUserAgent() == ""){
+            authCtxt.put(AuthContext.AC_USER_AGENT, AuthContext.getDefaultUserAgent(context.get(SoapEngine.REQUEST_PROTO)));
+        }
+        else{
+            authCtxt.put(AuthContext.AC_USER_AGENT, zsc.getUserAgent());
+        }        
 
         AuthMode mode = AuthMode.PASSWORD;
         String code = password;
@@ -321,12 +327,12 @@ public class Auth extends AccountDocumentHandler {
                         AppSpecificPasswords appPasswords = TwoFactorAuth.getFactory().getAppSpecificPasswords(acct, acctValuePassedIn);
                         appPasswords.authenticate(password);
                     } else {
-                        prov.authAccount(acct, code, context.get(SoapEngine.REQUEST_PROTO), authCtxt);
+                        prov.authAccount(acct, code, context.get(SoapEngine.REQUEST_PROTO, AuthContext.Protocol.soap), authCtxt);
                         return needTwoFactorAuth(acct, twoFactorManager, zsc, tokenType);
                     }
                 } else {
                     if (password != null || recoveryCode != null) {
-                        prov.authAccount(acct, code, context.get(SoapEngine.REQUEST_PROTO), authCtxt);
+                        prov.authAccount(acct, code, context.get(SoapEngine.REQUEST_PROTO, AuthContext.Protocol.soap), authCtxt);
                     } else {
                         // it's ok to not have a password if the client is using a 2FA auth token for the 2nd step of 2FA
                         if (!twoFactorAuthWithToken) {
