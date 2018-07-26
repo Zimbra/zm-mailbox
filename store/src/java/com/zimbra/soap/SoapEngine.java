@@ -108,8 +108,8 @@ public class SoapEngine {
     /** context name of request port */
     public static final String REQUEST_PORT = "request.port";
 
-    /** context name of the original user agent */
-    public static final String ORIG_REQUEST_USER_AGENT = "orig.request.user.agent";
+    /** context name of request protocol */
+    public static final String REQUEST_PROTO = "request.protocol";
 
     private final DocumentDispatcher dispatcher = new DocumentDispatcher();
 
