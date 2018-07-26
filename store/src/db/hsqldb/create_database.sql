@@ -80,7 +80,7 @@ CREATE TABLE *{DATABASE_NAME}.mail_item_dumpster (
    change_date   INTEGER,
    mod_content   INTEGER NOT NULL,
    uuid          VARCHAR(127),               -- e.g. "d94e42c4-1636-11d9-b904-4dd689d02402"
-   event_flag    TINYINT UNSIGNED,
+   event_flag    TINYINT,
 
    CONSTRAINT pk_mail_item_dumpster PRIMARY KEY (mailbox_id, id),
    CONSTRAINT fk_mail_item_dumpster_mailbox_id FOREIGN KEY (mailbox_id) REFERENCES zimbra.mailbox(id)
