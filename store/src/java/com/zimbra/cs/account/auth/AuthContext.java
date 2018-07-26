@@ -73,6 +73,26 @@ public class AuthContext {
      */
     public static final String AC_DEVICE_ID = "did";
 
+    private static final Map<String, String> defaultUserAgentMap = new HashMap<String, String>();
+    static  
+    {
+        defaultUserAgentMap.put(AuthContext.Protocol.client_certificate, "client_certificate");
+        defaultUserAgentMap.put(AuthContext.Protocol.http_basic, "http_basic");
+        defaultUserAgentMap.put(AuthContext.Protocol.http_dav, "http_dav");
+        defaultUserAgentMap.put(AuthContext.Protocol.im, "im");
+        defaultUserAgentMap.put(AuthContext.Protocol.imap, "imap");
+        defaultUserAgentMap.put(AuthContext.Protocol.pop3, "pop3");
+        defaultUserAgentMap.put(AuthContext.Protocol.soap, "soap");
+        defaultUserAgentMap.put(AuthContext.Protocol.spnego, "spnego");
+        defaultUserAgentMap.put(AuthContext.Protocol.zsync, "zsync");
+        // 'mta' value in case of 'smpt'
+        defaultUserAgentMap.put(AuthContext.Protocol.smtp, "mta");    
+    }
+
+    public static String getDefaultUserAgent(AuthContext.Protocol protocol){
+        return AuthContext.defaultUserAgentMap.get(protocol, "");  
+    };
+
     public enum Protocol {
         client_certificate,
         http_basic,
