@@ -27,6 +27,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.HeaderConstants;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.Pair;
@@ -133,7 +134,10 @@ public final class ProxyTarget {
          * was supplied.  The server handler rejects a context which has account information but no authentication
          * info - see ZimbraSoapContext constructor - solution is to exclude the account info from the context.
          */
-        boolean excludeAccountDetails = AccountConstants.CHANGE_PASSWORD_REQUEST.equals(request.getQName());
+        boolean excludeAccountDetails = false;
+        if (AccountConstants.CHANGE_PASSWORD_REQUEST.equals(request.getQName()) || MailConstants.RECOVER_ACCOUNT_REQUEST.equals(request.getQName())) {
+            excludeAccountDetails = true;
+        }
         Element envelope = proto.soapEnvelope(request, zsc.toProxyContext(proto, excludeAccountDetails));
 
         SoapHttpTransport transport = null;
