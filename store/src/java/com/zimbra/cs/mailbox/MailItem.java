@@ -39,6 +39,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.zimbra.common.mailbox.Color;
@@ -532,7 +533,30 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
 
         @Override
         public String toString() {
-            return MoreObjects.toStringHelper(this).add("id", id).add("type", Type.of(type)).toString();
+            MoreObjects.ToStringHelper helper = MoreObjects.toStringHelper(this)
+                    .add("id", id)
+                    .add("type", Type.of(type))
+                    .add("size", size)
+                    .add("date", date)
+                    .add("dateChanged", dateChanged)
+                    .add("subject", subject)
+                    .add("name", name)
+                    .add("unreadCount", unreadCount)
+                    .add("flags", flags)
+                    .add("prevFolders", prevFolders)
+                    .add("locator", locator)
+                    .add("modMetadata", modMetadata)
+                    .add("modContent", modContent)
+                    .add("uuid", uuid)
+                    .add("eventFlag", eventFlag);
+            if (imapId != -1) { helper.add("imapId", imapId); }
+            if (parentId != -1) { helper.add("parentId", parentId); }
+            if (folderId != -1) { helper.add("folderId", folderId); }
+            if (indexId != IndexStatus.NO.id()) { helper.add("indexId", indexId); }
+            if (tags != null && tags != NO_TAGS) { helper.add("tags", Lists.newArrayList(tags)); }
+            if (smartFolders != null && smartFolders != NO_TAGS) { helper.add("smartFolders",
+                    Lists.newArrayList(smartFolders)); }
+            return helper.omitNullValues().toString();
         }
     }
 
