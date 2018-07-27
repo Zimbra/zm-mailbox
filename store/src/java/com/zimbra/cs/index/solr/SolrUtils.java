@@ -3,6 +3,7 @@ package com.zimbra.cs.index.solr;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -32,6 +33,7 @@ import org.apache.solr.common.params.ModifiableSolrParams;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.zimbra.common.httpclient.ZimbraHttpClientManager;
 import com.zimbra.common.service.ServiceException;
@@ -40,6 +42,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.index.LuceneFields;
+import com.zimbra.cs.index.SolrStopwordManager;
 import com.zimbra.cs.index.solr.SolrIndex.IndexType;
 import com.zimbra.cs.util.ProvisioningUtil;
 import com.zimbra.cs.util.RetryUtil;
@@ -221,6 +224,8 @@ public class SolrUtils {
         if(!solrCollectionProvisioned) {
             ZimbraLog.index.error("Could not confirm that all nodes for collection '%s' are provisioned", collectionName);
         }
+        spec.postCreate();
+
         return solrCollectionProvisioned;
     }
 
@@ -381,7 +386,7 @@ public class SolrUtils {
                 }
             }
             numReplicas = prov.getConfig().getEventIndexReplicationFactor();
-            return new InitialCollectionSpec(SolrConstants.CONFIGSET_EVENTS, numShards, numReplicas);
+            return new EventCollectionSpec(numShards, numReplicas);
         case MAILBOX:
         default:
             numShards = account.getMailboxIndexInitialNumShards();
@@ -392,7 +397,7 @@ public class SolrUtils {
                 }
             }
             numReplicas = prov.getConfig().getSolrReplicationFactor();
-            return new InitialCollectionSpec(SolrConstants.CONFIGSET_INDEX, numShards, numReplicas);
+            return new MailboxCollectionSpec(numShards, numReplicas);
         }
     }
 
@@ -431,7 +436,7 @@ public class SolrUtils {
         return new TermQuery(new Term("_query_", value));
     }
 
-    private static class InitialCollectionSpec {
+    private static abstract class InitialCollectionSpec {
         private final String configSetName;
         private final int numShards;
         private final int numReplicas;
@@ -454,5 +459,29 @@ public class SolrUtils {
             return numReplicas;
         }
 
+        public void postCreate() throws ServiceException {}
+    }
+
+    private static class MailboxCollectionSpec extends InitialCollectionSpec {
+
+        public MailboxCollectionSpec(int numShards, int numReplicas) {
+            super(SolrConstants.CONFIGSET_INDEX, numShards, numReplicas);
+        }
+
+        @Override
+        public void postCreate() throws ServiceException {
+            ZimbraLog.index.info("configuring stopword list");
+            SolrStopwordManager stopwordManager = new SolrStopwordManager();
+            List<String> stopwords = Lists.newArrayList(Provisioning.getInstance().getConfig().getDefaultAnalyzerStopWords());
+            stopwordManager.addStopwords(stopwords);
+            stopwordManager.reloadCollection();
+        }
+    }
+
+    private static class EventCollectionSpec extends InitialCollectionSpec {
+
+        public EventCollectionSpec(int numShards, int numReplicas) {
+            super(SolrConstants.CONFIGSET_EVENTS, numShards, numReplicas);
+        }
     }
 }
