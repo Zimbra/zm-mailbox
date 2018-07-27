@@ -74,66 +74,80 @@ public final class RecoverAccount extends MailDocumentHandler {
             throw ForgetPasswordException.CONTACT_ADMIN("Something went wrong. Please contact your administrator.");
         }
 
-        RecoverAccountResponse resp = new RecoverAccountResponse();
-        switch (op) {
-        case GET_RECOVERY_ACCOUNT:
-            recoveryAccount = StringUtil.maskEmail(recoveryAccount);
-            ZimbraLog.passwordreset.debug("%s Recovery account: %s", LOG_OPERATION, recoveryAccount);
-            resp.setRecoveryAccount(recoveryAccount);
-            break;
-        case SEND_RECOVERY_CODE:
-            ZonedDateTime currentDate = ZonedDateTime.now(ZoneId.systemDefault());
-            int maxAttempts = user.getPasswordRecoveryMaxAttempts();
-            int resendCount = 0;
-            Map<String, String> recoveryCodeMap = provider.getResetPasswordRecoveryCodeMap(user);
-            if (recoveryCodeMap != null && !recoveryCodeMap.isEmpty()) {
-                resendCount = Integer.valueOf(recoveryCodeMap.get(CodeConstants.RESEND_COUNT.toString()));
-                if (resendCount >= maxAttempts) {
-                    user.setFeatureResetPasswordStatus(FeatureResetPasswordStatus.suspended);
-                    long suspension = user.getFeatureResetPasswordSuspensionTime();
-                    Date now = new Date();
-                    long suspensionTime = now.getTime() + suspension;
-                    recoveryCodeMap.put(CodeConstants.SUSPENSION_TIME.toString(), String.valueOf(suspensionTime));
-                    HashMap<String, Object> prefs = new HashMap<String, Object>();
-                    prefs.put(Provisioning.A_zimbraResetPasswordRecoveryCode, JWEUtil.getJWE(recoveryCodeMap));
-                    Provisioning.getInstance().modifyAttrs(user, prefs, true, zsc.getAuthToken());
-                    throw ForgetPasswordException.MAX_ATTEMPTS_REACHED_SUSPEND_FEATURE("Max re-send attempts reached, feature is suspended.");
-                } else {
-                    ZonedDateTime storedDate = Instant
-                            .ofEpochMilli(Long.valueOf(recoveryCodeMap.get(CodeConstants.EXPIRY_TIME.toString())))
-                            .atZone(ZoneId.systemDefault());
-                    if (ChronoUnit.MILLIS.between(currentDate, storedDate) <= 0L) {
-                        ZimbraLog.passwordreset.debug("%s Recovery code expired, so generating new one.", LOG_OPERATION);
-                        recoveryCodeMap.put(CodeConstants.CODE.toString(), RandomStringUtils.random(8, true, true));
-                        // add expiry duration in current time.
-                        currentDate = currentDate.plus(user.getResetPasswordRecoveryCodeExpiry(), ChronoUnit.MILLIS);
-                        Long val = currentDate.toInstant().toEpochMilli();
-                        recoveryCodeMap.put(CodeConstants.EXPIRY_TIME.toString(), String.valueOf(val));
+        Element response = proxyIfNecessary(request, context, user);
+        if (response == null) {
+            RecoverAccountResponse resp = new RecoverAccountResponse();
+            switch (op) {
+            case GET_RECOVERY_ACCOUNT:
+                recoveryAccount = StringUtil.maskEmail(recoveryAccount);
+                ZimbraLog.passwordreset.debug("%s Recovery account: %s", LOG_OPERATION, recoveryAccount);
+                resp.setRecoveryAccount(recoveryAccount);
+                break;
+            case SEND_RECOVERY_CODE:
+                ZonedDateTime currentDate = ZonedDateTime.now(ZoneId.systemDefault());
+                int maxAttempts = user.getPasswordRecoveryMaxAttempts();
+                int resendCount = 0;
+                Map<String, String> recoveryCodeMap = provider.getResetPasswordRecoveryCodeMap(user);
+                if (recoveryCodeMap != null && !recoveryCodeMap.isEmpty()) {
+                    resendCount = Integer.valueOf(recoveryCodeMap.get(CodeConstants.RESEND_COUNT.toString()));
+                    if (resendCount >= maxAttempts) {
+                        user.setFeatureResetPasswordStatus(FeatureResetPasswordStatus.suspended);
+                        long suspension = user.getFeatureResetPasswordSuspensionTime();
+                        Date now = new Date();
+                        long suspensionTime = now.getTime() + suspension;
+                        recoveryCodeMap.put(CodeConstants.SUSPENSION_TIME.toString(), String.valueOf(suspensionTime));
+                        HashMap<String, Object> prefs = new HashMap<String, Object>();
+                        prefs.put(Provisioning.A_zimbraResetPasswordRecoveryCode, JWEUtil.getJWE(recoveryCodeMap));
+                        Provisioning.getInstance().modifyAttrs(user, prefs, true, zsc.getAuthToken());
+                        throw ForgetPasswordException.MAX_ATTEMPTS_REACHED_SUSPEND_FEATURE("Max re-send attempts reached, feature is suspended.");
                     } else {
-                        ZimbraLog.passwordreset.debug("%s Recovery code not expired yet, so using the same code.",
-                                LOG_OPERATION);
+                        ZonedDateTime storedDate = Instant
+                                .ofEpochMilli(Long.valueOf(recoveryCodeMap.get(CodeConstants.EXPIRY_TIME.toString())))
+                                .atZone(ZoneId.systemDefault());
+                        if (ChronoUnit.MILLIS.between(currentDate, storedDate) <= 0L) {
+                            ZimbraLog.passwordreset.debug("%s Recovery code expired, so generating new one.", LOG_OPERATION);
+                            recoveryCodeMap.put(CodeConstants.CODE.toString(), RandomStringUtils.random(8, true, true));
+                            // add expiry duration in current time.
+                            currentDate = currentDate.plus(user.getResetPasswordRecoveryCodeExpiry(), ChronoUnit.MILLIS);
+                            Long val = currentDate.toInstant().toEpochMilli();
+                            recoveryCodeMap.put(CodeConstants.EXPIRY_TIME.toString(), String.valueOf(val));
+                        } else {
+                            ZimbraLog.passwordreset.debug("%s Recovery code not expired yet, so using the same code.",
+                                    LOG_OPERATION);
+                        }
+                        resendCount++;
+                        recoveryCodeMap.put(CodeConstants.RESEND_COUNT.toString(), String.valueOf(resendCount));
                     }
-                    resendCount++;
+                } else {
+                    ZimbraLog.passwordreset.debug("%s Recovery code not found for %s, creating new one", LOG_OPERATION, email);
+                    recoveryCodeMap = new HashMap<String, String>();
+                    recoveryCodeMap.put(CodeConstants.EMAIL.toString(), recoveryAccount);
+                    recoveryCodeMap.put(CodeConstants.CODE.toString(), RandomStringUtils.random(8, true, true));
+                    // add expiry duration in current time.
+                    currentDate = currentDate.plus(user.getResetPasswordRecoveryCodeExpiry(), ChronoUnit.MILLIS);
+                    Long val = currentDate.toInstant().toEpochMilli();
+                    recoveryCodeMap.put(CodeConstants.EXPIRY_TIME.toString(), String.valueOf(val));
                     recoveryCodeMap.put(CodeConstants.RESEND_COUNT.toString(), String.valueOf(resendCount));
                 }
-            } else {
-                ZimbraLog.passwordreset.debug("%s Recovery code not found for %s, creating new one", LOG_OPERATION, email);
-                recoveryCodeMap = new HashMap<String, String>();
-                recoveryCodeMap.put(CodeConstants.EMAIL.toString(), recoveryAccount);
-                recoveryCodeMap.put(CodeConstants.CODE.toString(), RandomStringUtils.random(8, true, true));
-                // add expiry duration in current time.
-                currentDate = currentDate.plus(user.getResetPasswordRecoveryCodeExpiry(), ChronoUnit.MILLIS);
-                Long val = currentDate.toInstant().toEpochMilli();
-                recoveryCodeMap.put(CodeConstants.EXPIRY_TIME.toString(), String.valueOf(val));
-                recoveryCodeMap.put(CodeConstants.RESEND_COUNT.toString(), String.valueOf(resendCount));
+                resp.setRecoveryAttemptsLeft(maxAttempts - resendCount);
+                provider.sendAndStoreResetPasswordRecoveryCode(zsc, user, recoveryCodeMap);
+                break;
+            default:
+                throw ServiceException.INVALID_REQUEST("Invalid op received", null);
             }
-            resp.setRecoveryAttemptsLeft(maxAttempts - resendCount);
-            provider.sendAndStoreResetPasswordRecoveryCode(zsc, user, recoveryCodeMap);
-            break;
-        default:
-            throw ServiceException.INVALID_REQUEST("Invalid op received", null);
+            response = zsc.jaxbToElement(resp);
         }
-        return zsc.jaxbToElement(resp);
+        return response;
+    }
+
+    private Element proxyIfNecessary(Element request, Map<String, Object> context, Account acct)
+            throws ServiceException {
+        Provisioning.Reasons reasons = new Provisioning.Reasons();
+        if (acct != null && !Provisioning.onLocalServer(acct, reasons)) {
+            ZimbraLog.passwordreset.debug("Proxying RecoverAccount request: requestedAccountId=%s", acct.getId());
+            return proxyRequest(request, context, acct.getId());
+        }
+        return null;
     }
 
     // no auth required for this request, so return false for both needsAuth and needsAdminAuth
