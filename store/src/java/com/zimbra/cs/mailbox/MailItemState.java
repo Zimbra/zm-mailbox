@@ -389,9 +389,11 @@ public class MailItemState {
             if (sharedState != null) {
                 try {
                     T sharedValue = getSharedState();
-                    //update the local value in case it's stale
-                    setLocal(sharedValue);
-                    return sharedValue;
+                    if ((sharedValue != null) || sharedState.isInUse()) {
+                        //update the local value in case it's stale
+                        setLocal(sharedValue);
+                        return sharedValue;
+                    }
                 } catch (RedisException e) {
                     ZimbraLog.cache.error("unable to get value for field '%s' from redis, using local value %s",
                             name, MailItemState.this, e);

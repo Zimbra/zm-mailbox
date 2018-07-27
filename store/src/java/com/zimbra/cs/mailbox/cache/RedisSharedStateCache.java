@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import com.zimbra.common.util.ZimbraLog;
 import org.redisson.api.RMap;
 import org.redisson.api.RedissonClient;
 
@@ -182,7 +183,7 @@ public abstract class RedisSharedStateCache<M extends MailItem & SharedState> im
 
     protected class RedisSharedState implements SharedStateAccessor {
 
-        private RMap<String, Object> map;
+        private final RMap<String, Object> map;
 
         public RedisSharedState(RMap<String, Object> map) {
             this.map = map;
@@ -201,6 +202,7 @@ public abstract class RedisSharedStateCache<M extends MailItem & SharedState> im
 
         @Override
         public void delete() {
+            ZimbraLog.cache.debug("RedisSharedState.delete called. %s", this);
             map.delete();
         }
 
@@ -209,10 +211,21 @@ public abstract class RedisSharedStateCache<M extends MailItem & SharedState> im
             map.fastRemove(fieldName);
         }
 
+        /** When we do an uncache and hence a delete, the map is cleared, even for objects still using it.
+         * This can be used by objects to detect this, so that they know to use the local values.
+         * Should only affect objects that are still in use after obtained from the cache earlier.
+         */
+        public boolean isInUse() {
+            return !map.isEmpty();
+        }
+
         @Override
         public String toString() {
-            return Objects.toStringHelper(this)
-                    .add("map", map)
+            map.isEmpty();
+            return Objects.toStringHelper(this).omitNullValues()
+                    .add("map", map == null ? null : map.entrySet())
+                    .add("map.name", map == null ? null : map.getName())
+                    .add("map.hashCode", System.identityHashCode(map))
                     .toString();
         }
     }
