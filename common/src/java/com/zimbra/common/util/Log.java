@@ -288,6 +288,14 @@ public class Log {
         getLogger().warn(o, t);
     }
 
+    public void warnQuietly(Object o, Throwable t) {
+        if (isDebugEnabled()) {
+            getLogger().warn(o, t);
+        } else {
+            getLogger().warn(String.format("%s : %s", o, t.getMessage()));
+        }
+    }
+
     public void warn(String format, Object ... objects) {
         if (isWarnEnabled()) {
             getLogger().warn(String.format(format, objects));
@@ -297,6 +305,15 @@ public class Log {
     public void warn(String format, Object o, Throwable t) {
         if (isWarnEnabled()) {
             getLogger().warn(String.format(format, o), t);
+        }
+    }
+
+    public void warnQuietly(String format, Object o, Throwable t) {
+        if (isDebugEnabled()) {
+            getLogger().warn(String.format(format, o), t);
+        } else {
+            String msg = String.format(format, o);
+            getLogger().warn(String.format("%s : %s", msg, t.getMessage()));
         }
     }
 

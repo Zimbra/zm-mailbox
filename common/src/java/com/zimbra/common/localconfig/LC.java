@@ -1247,6 +1247,7 @@ public final class LC {
     public static final KnownKey external_store_delete_max_ioexceptions = KnownKey.newKey(25);
 
     public enum PUBLIC_SHARE_VISIBILITY { samePrimaryDomain, all, none };
+    
 
     /**
      * Added for Bug 99825 which relates to the security implications of public shares being visible to users
@@ -1289,6 +1290,7 @@ public final class LC {
     public static final KnownKey octopus_public_static_folder = KnownKey.newKey("${zimbra_home}/jetty/static");
 
     public static final KnownKey conversation_ignore_maillist_prefix = KnownKey.newKey(true);
+    public static final KnownKey activesync_return_sync_exception_as_service_exception = KnownKey.newKey(false);
 
 
 
