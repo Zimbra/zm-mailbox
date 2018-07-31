@@ -471,8 +471,8 @@ public class Tag extends MailItem implements ZimbraTag, SharedState {
     }
 
     @Override
-    protected void initFieldCache(UnderlyingData data) {
-        state = new TagState(data);
+    protected MailItemState initFieldCache(UnderlyingData data) {
+        return new TagState(data);
     }
 
     protected TagState getState() {

@@ -159,8 +159,8 @@ public class RedisPubSub extends NotificationPubSub {
                 subscriber.notifyListeners(mods, msg.changeId, msg.source, msg.sourceMailboxHash, true);
             } catch (ServiceException e) {
                 ZimbraLog.mailbox.error(
-                                "unable to deserialize notifications for accountId=%d, changeId=%s, channel=%s",
-                        notificationAcctId, msg.changeId, channel);
+                                "unable to deserialize notifications for accountId=%s, changeId=%s, channel=%s",
+                        notificationAcctId, msg.changeId, channel, e);
             }
         }
 
