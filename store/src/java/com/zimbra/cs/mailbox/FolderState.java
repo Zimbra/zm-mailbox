@@ -2,6 +2,7 @@ package com.zimbra.cs.mailbox;
 
 import java.util.Map;
 
+import com.google.common.base.Objects;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 
 public class FolderState extends MailItemState {
@@ -30,9 +31,7 @@ public class FolderState extends MailItemState {
         super(data);
     }
 
-    public long getTotalSize() {
-        return getLongField(F_TOTAL_SIZE).get();
-    }
+    public long getTotalSize() { return getLongFieldValue(F_TOTAL_SIZE); }
 
     public void setTotalSize(long totalSize) {
         setTotalSize(totalSize, AccessMode.DEFAULT);
@@ -43,7 +42,7 @@ public class FolderState extends MailItemState {
     }
 
     public int getDeletedCount() {
-        return getIntField(F_DELETED_COUNT).get();
+        return getIntFieldValue(F_DELETED_COUNT);
     }
 
     public void setDeletedCount(int deletedCount) {
@@ -55,7 +54,7 @@ public class FolderState extends MailItemState {
     }
 
     public int getDeletedUnreadCount() {
-        return getIntField(F_DELETED_UNREAD_COUNT).get();
+        return getIntFieldValue(F_DELETED_UNREAD_COUNT);
     }
 
     public void setDeletedUnreadCount(int deletedUnreadCount) {
@@ -67,7 +66,7 @@ public class FolderState extends MailItemState {
     }
 
     public int getImapUIDNEXT() {
-        return getIntField(F_IMAP_UID_NEXT).get();
+        return getIntFieldValue(F_IMAP_UID_NEXT);
     }
 
     public void setImapUIDNEXT(int imapUIDNEXT) {
@@ -79,7 +78,7 @@ public class FolderState extends MailItemState {
     }
 
     public int getImapMODSEQ() {
-        return getIntField(F_IMAP_MODSEQ).get();
+        return getIntFieldValue(F_IMAP_MODSEQ);
     }
 
     public void setImapMODSEQ(int imapMODSEQ) {
@@ -91,7 +90,7 @@ public class FolderState extends MailItemState {
     }
 
     public int getImapRECENT() {
-        return getIntField(F_IMAP_RECENT).get();
+        return getIntFieldValue(F_IMAP_RECENT);
     }
 
     public void setImapRECENT(int imapRECENT) {
@@ -103,7 +102,7 @@ public class FolderState extends MailItemState {
     }
 
     public int getImapRECENTCutoff() {
-        return getIntField(F_IMAP_RECENT_CUTOFF).get();
+        return getIntFieldValue(F_IMAP_RECENT_CUTOFF);
     }
 
     public void setImapRECENTCutoff(int imapRECENTCutoff) {
@@ -128,7 +127,7 @@ public class FolderState extends MailItemState {
     }
 
     public Integer getParentFolder() {
-        return getIntField(F_PARENT_FOLDER).get();
+        return getIntField(F_PARENT_FOLDER).get();  /* note: can be null */
     }
 
     public void setParentFolder(Folder folder) {
@@ -155,7 +154,9 @@ public class FolderState extends MailItemState {
         addField(new ItemField<Long>(F_TOTAL_SIZE) {
 
             @Override
-            protected void setLocal(Long value) { totalSize = value; }
+            protected void setLocal(Long value) {
+                totalSize = newLongLocalValue(this, value);
+            }
 
             @Override
             protected Long getLocal() { return totalSize; }
@@ -164,7 +165,9 @@ public class FolderState extends MailItemState {
         addField(new ItemField<Integer>(F_DELETED_COUNT) {
 
             @Override
-            protected void setLocal(Integer value) { deletedCount = value; }
+            protected void setLocal(Integer value) {
+                deletedCount = newIntLocalValue(this, value);
+            }
 
             @Override
             protected Integer getLocal() { return deletedCount; }
@@ -173,7 +176,9 @@ public class FolderState extends MailItemState {
         addField(new ItemField<Integer>(F_DELETED_UNREAD_COUNT) {
 
             @Override
-            protected void setLocal(Integer value) { deletedUnreadCount = value; }
+            protected void setLocal(Integer value) {
+                deletedUnreadCount = newIntLocalValue(this, value);
+            }
 
             @Override
             protected Integer getLocal() { return deletedUnreadCount; }
@@ -182,7 +187,9 @@ public class FolderState extends MailItemState {
         addField(new ItemField<Integer>(F_IMAP_UID_NEXT) {
 
             @Override
-            protected void setLocal(Integer value) { imapUIDNEXT = value; }
+            protected void setLocal(Integer value) {
+                imapUIDNEXT = newIntLocalValue(this, value);
+            }
 
             @Override
             protected Integer getLocal() { return imapUIDNEXT; }
@@ -191,7 +198,9 @@ public class FolderState extends MailItemState {
         addField(new ItemField<Integer>(F_IMAP_MODSEQ) {
 
             @Override
-            protected void setLocal(Integer value) { imapMODSEQ = value; }
+            protected void setLocal(Integer value) {
+                imapMODSEQ = newIntLocalValue(this, value);
+            }
 
             @Override
             protected Integer getLocal() { return imapMODSEQ; }
@@ -200,7 +209,9 @@ public class FolderState extends MailItemState {
         addField(new ItemField<Integer>(F_IMAP_RECENT) {
 
             @Override
-            protected void setLocal(Integer value) { imapRECENT = value; }
+            protected void setLocal(Integer value) {
+                imapRECENT = newIntLocalValue(this, value);
+            }
 
             @Override
             protected Integer getLocal() { return imapRECENT; }
@@ -209,7 +220,9 @@ public class FolderState extends MailItemState {
         addField(new ItemField<Integer>(F_IMAP_RECENT_CUTOFF) {
 
             @Override
-            protected void setLocal(Integer value) { imapRECENTCutoff = value; }
+            protected void setLocal(Integer value) {
+                imapRECENTCutoff = newIntLocalValue(this, value);
+            }
 
             @Override
             protected Integer getLocal() { return imapRECENTCutoff; }
@@ -232,5 +245,17 @@ public class FolderState extends MailItemState {
             @Override
             protected Integer getLocal() { return parentFolder; }
         });
+    }
+
+    @Override
+    protected Objects.ToStringHelper toStringHelper() {
+        return super.toStringHelper()
+                .add("totalSize", totalSize)
+                .add("deletedCount", deletedCount)
+                .add("deletedUnreadCount", deletedUnreadCount)
+                .add("imapUIDNEXT", imapUIDNEXT)
+                .add("imapMODSEQ", imapMODSEQ)
+                .add("imapRECENT", imapRECENT)
+                .add("imapRECENTCutoff", imapRECENTCutoff);
     }
 }

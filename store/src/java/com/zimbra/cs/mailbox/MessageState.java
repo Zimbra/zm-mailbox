@@ -30,7 +30,7 @@ public class MessageState extends MailItemState {
         addField(new ItemField<EventFlag>(F_EVENT_FLAG) {
 
             @Override
-            protected void setLocal(EventFlag value) { data.eventFlag = value.getId(); }
+            protected void setLocal(EventFlag value) { if (value != null) data.eventFlag = value.getId(); }
 
             @Override
             protected EventFlag getLocal() { return EventFlag.of(data.eventFlag); }

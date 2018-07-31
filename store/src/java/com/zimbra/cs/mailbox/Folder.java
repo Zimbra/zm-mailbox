@@ -1831,8 +1831,8 @@ public class Folder extends MailItem implements FolderStore, SharedState {
     }
 
     @Override
-    protected void initFieldCache(UnderlyingData data) {
-        state = new FolderState(data);
+    protected MailItemState initFieldCache(UnderlyingData data) {
+        return new FolderState(data);
     }
 
     protected FolderState getState() {

@@ -1,11 +1,14 @@
 package com.zimbra.cs.mailbox;
 
+import com.google.common.base.Objects;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 
 public class TagState extends MailItemState {
 
-    private boolean imapVisible;
-    private boolean listed;
+    private Boolean imapVisible = null;
+    private Boolean listed = null;
 
     public static final String F_IMAP_VISIBLE = "imapVisible";
     public static final String F_LISTED = "listed";
@@ -15,7 +18,13 @@ public class TagState extends MailItemState {
     }
 
     public boolean isImapVisible() {
-        return getBoolField(F_IMAP_VISIBLE).get();
+        Boolean val = getBoolField(F_IMAP_VISIBLE).get();
+        if (val != null) {
+            return val;
+        }
+        ZimbraLog.cache.info("isImapVisible() would have returned null (imapVisible=%s) %s",
+                imapVisible, this);
+        return (imapVisible != null) ? imapVisible : false;
     }
 
     public void setImapVisible(boolean imapVisible) {
@@ -27,7 +36,12 @@ public class TagState extends MailItemState {
     }
 
     public boolean isListed() {
-        return getBoolField(F_LISTED).get();
+        Boolean val =  getBoolField(F_LISTED).get();
+        if (val != null) {
+            return val;
+        }
+        ZimbraLog.cache.info("isListed() would have returned null (listed=%s) %s", listed, this);
+        return (listed != null) ? listed : false;
     }
 
     public void setListed(boolean listed) {
@@ -48,20 +62,56 @@ public class TagState extends MailItemState {
         addField(new ItemField<Boolean>(F_IMAP_VISIBLE) {
 
             @Override
-            protected void setLocal(Boolean value) { imapVisible = value; }
+            protected void setLocal(Boolean value) {
+                if (value == null) {
+                    ZimbraLog.cache.info("setLocal(%s) (name=%s) %s", value, name, this);
+                    imapVisible = false;
+                } else {
+                    imapVisible = value;
+                }
+            }
 
             @Override
-            protected Boolean getLocal() { return imapVisible; }
+            protected Boolean getLocal() {
+                return (imapVisible == null) ? false : imapVisible;
+            }
         });
 
         addField(new ItemField<Boolean>(F_LISTED) {
 
             @Override
-            protected void setLocal(Boolean value) { listed = value; }
+            protected void setLocal(Boolean value) {
+                listed = value;
+            }
 
             @Override
-            protected Boolean getLocal() { return listed; }
+            protected Boolean getLocal() {
+                if (listed != null) {
+                    return listed;
+                }
+                String encMetadata = getUnderlyingData().metadata;
+                if (encMetadata == null) {
+                    ZimbraLog.cache.info("getLocal() (name=%s) no metadata %s", name, this);
+                    return false;
+                }
+                try {
+                    Metadata metadata = new Metadata(encMetadata);
+                    listed = metadata.getBool(Metadata.FN_LISTED, false);
+                } catch (ServiceException e) {
+                    ZimbraLog.cache.error("getLocal() (name=%s) problem decoding metadata %s",
+                            name, this, e);
+                    return false;
+                }
+                return listed;
+            }
         });
+    }
+
+    @Override
+    protected Objects.ToStringHelper toStringHelper() {
+        return super.toStringHelper()
+                .add("listed", listed)
+                .add("imapVisible", imapVisible);
     }
 }
 
