@@ -16,6 +16,9 @@
  */
 package com.zimbra.cs.account.auth;
 
+import java.util.Map;
+import java.util.HashMap;
+
 public class AuthContext {
     /*
      * Originating client IP address.
@@ -73,7 +76,7 @@ public class AuthContext {
      */
     public static final String AC_DEVICE_ID = "did";
 
-    private static final Map<String, String> defaultUserAgentMap = new HashMap<String, String>();
+    private static final Map<Protocol, String> defaultUserAgentMap = new HashMap<Protocol, String>();
     static  
     {
         defaultUserAgentMap.put(AuthContext.Protocol.client_certificate, "client_certificate");
@@ -90,7 +93,8 @@ public class AuthContext {
     }
 
     public static String getDefaultUserAgent(AuthContext.Protocol protocol){
-        return AuthContext.defaultUserAgentMap.get(protocol, "");  
+        String userAgent = AuthContext.defaultUserAgentMap.get(protocol);
+        return userAgent != null ? userAgent : "";
     };
 
     public enum Protocol {
