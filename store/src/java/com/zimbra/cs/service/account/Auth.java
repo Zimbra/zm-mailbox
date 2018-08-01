@@ -40,6 +40,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.UUIDUtil;
 import com.zimbra.common.util.ZimbraCookie;
 import com.zimbra.common.util.ZimbraLog;
@@ -215,7 +216,8 @@ public class Auth extends AccountDocumentHandler {
         authCtxt.put(AuthContext.AC_REMOTE_IP, context.get(SoapEngine.SOAP_REQUEST_IP));
         authCtxt.put(AuthContext.AC_ACCOUNT_NAME_PASSEDIN, acctValuePassedIn);
 
-        if(zsc.getUserAgent() == null || zsc.getUserAgent() == ""){
+
+        if(StringUtil.isNullOrEmpty(zsc.getUserAgent())){
             authCtxt.put(AuthContext.AC_USER_AGENT, AuthContext.getDefaultUserAgent((AuthContext.Protocol)context.get(SoapEngine.REQUEST_PROTO)));
         }
         else{
