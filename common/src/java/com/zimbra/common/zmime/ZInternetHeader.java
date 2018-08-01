@@ -583,13 +583,9 @@ public class ZInternetHeader {
         return fields.getAll();
     }
     
-    static boolean allowInvalidEncoding(String charset) {
+    public static boolean allowInvalidEncoding(String charset) {
         
-        if ("iso-8859-1".equalsIgnoreCase(charset) || "us-ascii".equalsIgnoreCase(charset)) {
-            return true;
-        } else {
-            return false;
-        }
+        return ("iso-8859-1".equalsIgnoreCase(charset) || "us-ascii".equalsIgnoreCase(charset)) ;
     }
 
     static String unfold(final String folded) {
