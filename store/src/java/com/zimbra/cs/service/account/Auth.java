@@ -215,8 +215,6 @@ public class Auth extends AccountDocumentHandler {
         authCtxt.put(AuthContext.AC_ORIGINATING_CLIENT_IP, context.get(SoapEngine.ORIG_REQUEST_IP));
         authCtxt.put(AuthContext.AC_REMOTE_IP, context.get(SoapEngine.SOAP_REQUEST_IP));
         authCtxt.put(AuthContext.AC_ACCOUNT_NAME_PASSEDIN, acctValuePassedIn);
-
-
         if(StringUtil.isNullOrEmpty(zsc.getUserAgent())){
             authCtxt.put(AuthContext.AC_USER_AGENT, AuthContext.getDefaultUserAgent((AuthContext.Protocol)context.get(SoapEngine.REQUEST_PROTO)));
         }
