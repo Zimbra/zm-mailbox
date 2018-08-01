@@ -113,12 +113,6 @@ public class AuthContext {
         return userAgent != null ? userAgent : "";
     };
 
-    public static Protocol getProtocol(String protocol){
-        AuthContext.Protocol proto = AuthContext.stringProtocolMap.get(protocol);
-        // By default, we are setting 'soap' as protocol 
-        return proto != null ? proto : AuthContext.Protocol.soap;
-    };
-
     public enum Protocol {
         client_certificate,
         http_basic,
