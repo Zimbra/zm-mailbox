@@ -125,7 +125,7 @@ public class SolrUtils {
         return coreProvisioned;
     }
 
-    public static boolean createStandaloneIndex(SolrClient client, String baseUrl, String coreName, String configSet) throws ServiceException {
+    public static synchronized boolean createStandaloneIndex(SolrClient client, String baseUrl, String coreName, String configSet) throws ServiceException {
         boolean coreProvisioned = false;
         try {
             ((HttpSolrClient)client).setBaseURL(baseUrl);
@@ -180,7 +180,7 @@ public class SolrUtils {
         return aliasName + "_data";
     }
 
-    public static boolean createCloudIndex(CloudSolrClient client, String collectionAliasName, InitialCollectionSpec spec) throws ServiceException {
+    public static synchronized boolean createCloudIndex(CloudSolrClient client, String collectionAliasName, InitialCollectionSpec spec) throws ServiceException {
         boolean solrCollectionProvisioned = false;
         Server server = Provisioning.getInstance().getLocalServer();
         String collectionName = getInitialCollectionName(collectionAliasName);
