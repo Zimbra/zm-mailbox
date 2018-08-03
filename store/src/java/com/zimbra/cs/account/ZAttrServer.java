@@ -49928,6 +49928,83 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * This attribute is used to set time delay to show login history on
+     * splash screen page
+     *
+     * @return zimbraSplashScreenTimeOut, or 10 if unset
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5015)
+    public int getSplashScreenTimeOut() {
+        return getIntAttr(Provisioning.A_zimbraSplashScreenTimeOut, 10, true);
+    }
+
+    /**
+     * This attribute is used to set time delay to show login history on
+     * splash screen page
+     *
+     * @param zimbraSplashScreenTimeOut new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5015)
+    public void setSplashScreenTimeOut(int zimbraSplashScreenTimeOut) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSplashScreenTimeOut, Integer.toString(zimbraSplashScreenTimeOut));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute is used to set time delay to show login history on
+     * splash screen page
+     *
+     * @param zimbraSplashScreenTimeOut new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5015)
+    public Map<String,Object> setSplashScreenTimeOut(int zimbraSplashScreenTimeOut, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSplashScreenTimeOut, Integer.toString(zimbraSplashScreenTimeOut));
+        return attrs;
+    }
+
+    /**
+     * This attribute is used to set time delay to show login history on
+     * splash screen page
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5015)
+    public void unsetSplashScreenTimeOut() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSplashScreenTimeOut, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute is used to set time delay to show login history on
+     * splash screen page
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5015)
+    public Map<String,Object> unsetSplashScreenTimeOut(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSplashScreenTimeOut, "");
+        return attrs;
+    }
+
+    /**
      * spnego auth principal
      *
      * @return zimbraSpnegoAuthPrincipal, or null if unset
