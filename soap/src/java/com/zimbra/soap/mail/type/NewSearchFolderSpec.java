@@ -25,6 +25,7 @@ import com.google.common.base.MoreObjects;
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name="NewFolderSpec", description="Input for searching a folder")
 public class NewSearchFolderSpec {
 
     /**
@@ -32,6 +33,8 @@ public class NewSearchFolderSpec {
      * @zm-api-field-description Name
      */
     @XmlAttribute(name=MailConstants.A_NAME /* name */, required=true)
+    @GraphQLNonNull
+    @GraphQLQuery(name="name", description="If parentFolderId is unset, name is the full path of the new folder; otherwise, name may not contain the folder separator '/'")
     private final String name;
 
     /**
@@ -39,6 +42,8 @@ public class NewSearchFolderSpec {
      * @zm-api-field-description query
      */
     @XmlAttribute(name=MailConstants.A_QUERY /* query */, required=true)
+    @GraphQLNonNull
+    @GraphQLQuery(name="query", description="The string to query")
     private final String query;
 
     /**
@@ -46,6 +51,7 @@ public class NewSearchFolderSpec {
      * @zm-api-field-description Search types
      */
     @XmlAttribute(name=MailConstants.A_SEARCH_TYPES /* types */, required=false)
+    @GraphQLQuery(name="searchTypes", description="The type of the search")
     private String searchTypes;
 
     /**
@@ -53,6 +59,7 @@ public class NewSearchFolderSpec {
      * @zm-api-field-description Sort by
      */
     @XmlAttribute(name=MailConstants.A_SORTBY /* sortBy */, required=false)
+    @GraphQLQuery(name="sortBy", description="The item to sort by")
     private String sortBy;
 
     /**
@@ -60,6 +67,7 @@ public class NewSearchFolderSpec {
      * @zm-api-field-description Flags
      */
     @XmlAttribute(name=MailConstants.A_FLAGS /* f */, required=false)
+    @GraphQLQuery(name="flags", description="Folder flags")
     private String flags;
 
     /**
@@ -67,6 +75,7 @@ public class NewSearchFolderSpec {
      * @zm-api-field-description color numeric; range 0-127; defaults to 0 if not present; client can display only 0-7
      */
     @XmlAttribute(name=MailConstants.A_COLOR /* color */, required=false)
+    @GraphQLQuery(name="color", description="color numeric; range 0-127; defaults to 0 if not present; client can display only 0-7")
     private Byte color;
 
     /**
@@ -74,6 +83,7 @@ public class NewSearchFolderSpec {
      * @zm-api-field-description RGB color in format #rrggbb where r,g and b are hex digits
      */
     @XmlAttribute(name=MailConstants.A_RGB /* rgb */, required=false)
+    @GraphQLQuery(name="rgb", description="RGB color in format #rrggbb where r,g and b are hex digits")
     private String rgb;
 
     /**
@@ -81,6 +91,7 @@ public class NewSearchFolderSpec {
      * @zm-api-field-description Parent folder ID
      */
     @XmlAttribute(name=MailConstants.A_FOLDER /* l */, required=false)
+    @GraphQLQuery(name="parentFolderId", description="Parent folder Id")
     private String parentFolderId;
 
     /**
