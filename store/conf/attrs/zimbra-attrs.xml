@@ -9764,5 +9764,10 @@ TODO: delete them permanently from here
 <attr id="5014" name="zimbraEmailTemplateApiUrl" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.8.8">
 	<desc>This attribute stores the email templates service API url </desc>
 </attr>
+
+<attr id="5015" name="zimbraSplashScreenTimeOut" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.8.8">
+	<globalConfigValue>10</globalConfigValue>
+	<desc>This attribute is used to set time delay to show login history on splash screen page</desc>
+</attr>
 </attrs>
 

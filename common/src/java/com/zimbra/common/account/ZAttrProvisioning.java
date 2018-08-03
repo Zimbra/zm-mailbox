@@ -16457,6 +16457,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraSpellCheckURL = "zimbraSpellCheckURL";
 
     /**
+     * This attribute is used to set time delay to show login history on
+     * splash screen page
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5015)
+    public static final String A_zimbraSplashScreenTimeOut = "zimbraSplashScreenTimeOut";
+
+    /**
      * whether spnego SSO is enabled
      *
      * @since ZCS 7.0.0
