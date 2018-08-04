@@ -17,15 +17,15 @@
 
 package com.zimbra.soap.mail.message;
 
-import com.google.common.base.MoreObjects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.mail.type.NewSearchFolderSpec;
 import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
+import com.zimbra.soap.mail.type.NewSearchFolderSpec;
 
 /**
  * @zm-api-command-auth-required true

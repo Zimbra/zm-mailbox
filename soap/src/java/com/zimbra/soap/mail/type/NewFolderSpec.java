@@ -95,7 +95,8 @@ public class NewFolderSpec {
      * @zm-api-field-tag parent-folder-id
      * @zm-api-field-description Parent folder ID
      */
-    @XmlAttribute(name=MailConstants.A_FOLDER /* l */, required=false)
+    @XmlAttribute(name=MailConstants.A_FOLDER /* l */, required=true)
+    @GraphQLNonNull
     @GraphQLQuery(name="parentFolderId", description="Parent folder Id")
     private String parentFolderId;
 
