@@ -8843,6 +8843,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMailBlacklistMaxNumEntries = "zimbraMailBlacklistMaxNumEntries";
 
     /**
+     * This attribute will specify an account have mailbox or not
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5016)
+    public static final String A_zimbraMailboxAccount = "zimbraMailboxAccount";
+
+    /**
      * List of SSL/TLS protocols (as documented by SunJSSE Provider Protocols
      * and used in setEnabledProtocols) to be enabled in Jetty for HTTPS,
      * IMAPS, POP3S, and STARTTLS (including LMTP)

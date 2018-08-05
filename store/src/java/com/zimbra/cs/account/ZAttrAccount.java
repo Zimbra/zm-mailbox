@@ -28390,6 +28390,78 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * This attribute will specify an account have mailbox or not
+     *
+     * @return zimbraMailboxAccount, or true if unset
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5016)
+    public boolean isMailboxAccount() {
+        return getBooleanAttr(Provisioning.A_zimbraMailboxAccount, true, true);
+    }
+
+    /**
+     * This attribute will specify an account have mailbox or not
+     *
+     * @param zimbraMailboxAccount new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5016)
+    public void setMailboxAccount(boolean zimbraMailboxAccount) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxAccount, zimbraMailboxAccount ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute will specify an account have mailbox or not
+     *
+     * @param zimbraMailboxAccount new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5016)
+    public Map<String,Object> setMailboxAccount(boolean zimbraMailboxAccount, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxAccount, zimbraMailboxAccount ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * This attribute will specify an account have mailbox or not
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5016)
+    public void unsetMailboxAccount() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxAccount, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute will specify an account have mailbox or not
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5016)
+    public Map<String,Object> unsetMailboxAccount(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxAccount, "");
+        return attrs;
+    }
+
+    /**
      * serverId:mboxId of mailbox before being moved
      *
      * @return zimbraMailboxLocationBeforeMove, or null if unset
