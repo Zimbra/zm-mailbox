@@ -92,11 +92,6 @@ public class AuthContext {
         defaultUserAgentMap.put(AuthContext.Protocol.smtp, "mta");    
     }
 
-    public static String getDefaultUserAgent(AuthContext.Protocol protocol){
-        String userAgent = AuthContext.defaultUserAgentMap.get(protocol);
-        return userAgent != null ? userAgent : "";
-    };
-
     private static final Map<String, Protocol> stringProtocolMap = new HashMap<String, Protocol>();
     static  
     {
@@ -112,6 +107,11 @@ public class AuthContext {
         stringProtocolMap.put("smtp", AuthContext.Protocol.smtp);
   
     }
+
+    public static String getDefaultUserAgent(AuthContext.Protocol protocol){
+        String userAgent = AuthContext.defaultUserAgentMap.get(protocol);
+        return userAgent != null ? userAgent : "";
+    };
 
     public static Protocol getProtocol(String protocol){
         AuthContext.Protocol proto = AuthContext.stringProtocolMap.get(protocol);
