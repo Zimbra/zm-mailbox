@@ -7730,6 +7730,31 @@ public class ZAttrProvisioning {
     public static final String A_zimbraGroupId = "zimbraGroupId";
 
     /**
+     * members in the hierarchical address book group
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=3027)
+    public static final String A_zimbraHABGroupMember = "zimbraHABGroupMember";
+
+    /**
+     * parent of the hierarchical address book group
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=3028)
+    public static final String A_zimbraHABGroupParent = "zimbraHABGroupParent";
+
+    /**
+     * seniority index of the group which will determine the sorting order in
+     * the hierarchical address book
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=3029)
+    public static final String A_zimbraHABGroupSeniorityIndex = "zimbraHABGroupSeniorityIndex";
+
+    /**
      * help URL for admin
      *
      * @since ZCS 5.0.7
