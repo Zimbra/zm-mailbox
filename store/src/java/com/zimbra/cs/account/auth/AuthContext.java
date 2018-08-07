@@ -97,6 +97,27 @@ public class AuthContext {
         return userAgent != null ? userAgent : "";
     };
 
+    private static final Map<String, Protocol> stringProtocolMap = new HashMap<String, Protocol>();
+    static  
+    {
+        stringProtocolMap.put("client_certificate", AuthContext.Protocol.client_certificate);
+        stringProtocolMap.put("http_basic", AuthContext.Protocol.http_basic);
+        stringProtocolMap.put("http_dav", AuthContext.Protocol.http_dav);
+        stringProtocolMap.put("im", AuthContext.Protocol.im);
+        stringProtocolMap.put("imap", AuthContext.Protocol.imap);
+        stringProtocolMap.put("pop3", AuthContext.Protocol.pop3);
+        stringProtocolMap.put("soap", AuthContext.Protocol.soap);
+        stringProtocolMap.put("spnego", AuthContext.Protocol.spnego);
+        stringProtocolMap.put("zsync", AuthContext.Protocol.zsync);
+        stringProtocolMap.put("smtp", AuthContext.Protocol.smtp);
+  
+    }
+
+    public static Protocol getProtocol(String protocol){
+        AuthContext.Protocol proto = AuthContext.stringProtocolMap.get(protocol);
+        return proto;
+    };
+
     public enum Protocol {
         client_certificate,
         http_basic,
