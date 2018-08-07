@@ -115,7 +115,8 @@ public class AuthContext {
 
     public static Protocol getProtocol(String protocol){
         AuthContext.Protocol proto = AuthContext.stringProtocolMap.get(protocol);
-        return proto;
+        // By default, we are setting 'soap' as protocol 
+        return proto != null ? proto : AuthContext.Protocol.soap;
     };
 
     public enum Protocol {
