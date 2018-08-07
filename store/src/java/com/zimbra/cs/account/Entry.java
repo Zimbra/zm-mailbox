@@ -82,6 +82,7 @@ public abstract class Entry implements ToZJSONObject {
         UCSERVICE,
         SIGNATURE,
         XMPPCOMPONENT,
+        HABGROUP,
         ZIMLET;
 
         public String getName() {

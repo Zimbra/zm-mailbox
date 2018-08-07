@@ -51,6 +51,7 @@ public enum AttributeClass {
     galDataSource("zimbraGalDataSource",        true),
     signature("zimbraSignature",                true, EntryType.SIGNATURE),
     xmppComponent("zimbraXMPPComponent",        true, EntryType.XMPPCOMPONENT),
+    habGroup("zimbraHabGroup",                  true, EntryType.HABGROUP),
     aclTarget("zimbraAclTarget",                true),
     group("zimbraGroup",                        true),
     groupDynamicUnit("zimbraGroupDynamicUnit",  false, EntryType.DYNAMICGROUP_DYNAMIC_UNIT),
@@ -85,6 +86,7 @@ public enum AttributeClass {
     public static final String OC_zimbraZimletEntry = zimletEntry.getOCName();
     public static final String OC_zimbraShareLocator = shareLocator.getOCName();
     public static final String OC_zimbraOauth2DataSource = oauth2DataSource.getOCName();
+    public static final String OC_zimbraHabGroup = habGroup.getOCName();
 
     private static class TM {
         static Map<String, AttributeClass> sOCMap = new HashMap<String, AttributeClass>();
