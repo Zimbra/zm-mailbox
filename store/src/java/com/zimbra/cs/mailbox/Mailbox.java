@@ -575,7 +575,7 @@ public class Mailbox implements MailboxStore {
 
         @Override
         public String toString() {
-            ToStringHelper helper = MoreObjects.toStringHelper(this);
+            MoreObjects.ToStringHelper helper = MoreObjects.toStringHelper(this);
             helper.add("depth", depth);
             if (changeId != MailboxChange.NO_CHANGE) {
                 helper.add("changeId", changeId);
@@ -8874,9 +8874,9 @@ public class Mailbox implements MailboxStore {
         }
     }
 
-    private void commitCache(MailboxChange change, MailboxLock l) {
+    private ChangeNotification commitCache(MailboxChange change, MailboxLock l) {
         if (change == null) {
-            return;
+            return null;
         }
         ChangeNotification notification = null;
 
@@ -8889,7 +8889,6 @@ public class Mailbox implements MailboxStore {
             change.dirty = new PendingLocalModifications();
         }
 
-        Session source = change.octxt == null ? null : change.octxt.getSession();
         assert (!change.hasChanges() || l.isWriteLockedByCurrentThread());
 
         try {
@@ -8968,11 +8967,46 @@ public class Mailbox implements MailboxStore {
             // make sure we're ready for the next change
             change.reset();
         }
+        return notification;
+    }
 
-        if (notification != null) {
+    private void doNotifyListeners(MailboxChange change, ChangeNotification notification) {
+        long start = System.currentTimeMillis();
+        try {
+            Session source = change.octxt == null ? null : change.octxt.getSession();
             SourceSessionInfo sourceInfo = source != null ? source.toSessionInfo() : null;
             publisher.publish(notification.mods, notification.lastChangeId, sourceInfo, this.hashCode());
             MailboxListener.notifyListeners(notification);
+            ZimbraLog.mailbox.trace("Mailbox.notifyListeners %s %s %s",
+                    notification, publisher, ZimbraLog.elapsedSince(start));
+        } catch (Exception ex) {
+            ZimbraLog.mailbox.error("Problem in Mailbox.notifyListeners - swallowing exception. %s %s %s",
+                    notification, publisher, ZimbraLog.elapsedSince(start), ex);
+        }
+    }
+
+    /**
+     * Notifying listeners can involve network chatter and therefore be slow, hence don't delay releasing
+     * mailbox locks for it.
+     */
+    private void notifyListeners(MailboxChange change, ChangeNotification notification, MailboxLock lock) {
+        if (notification == null) {
+            return;
+        }
+        /* Interrogating the lock to see if current thread has lock has some cost, hence why only do it if
+         * have notifications. */
+        if (lock.isLockedByCurrentThread()) {
+            /* Still locked, even though we've probably just released a lock.  Use a separate thread
+             * to avoid delaying the outer lock.
+             */
+            new Thread(new Runnable() {
+                @Override public void run() {
+                    doNotifyListeners(change, notification);
+                }
+            }, "notifyMboxListeners-" + Thread.currentThread().getId()).start();
+        } else {
+            /* we're not holding a lock any more. no need to use a separate thread */
+            doNotifyListeners(change, notification);
         }
     }
 
@@ -9850,6 +9884,7 @@ public class Mailbox implements MailboxStore {
             }
             PendingDelete deletes = null; // blob and index to delete
             List<Object> rollbackDeletes = null; // blob to delete for failure cases
+            ChangeNotification changeNotification = null;
             try {
                 if (!currentChange().isActive()) {
                     // would like to throw here, but it might cover another
@@ -9954,11 +9989,14 @@ public class Mailbox implements MailboxStore {
                 deletes = currentChange().deletes; // keep a reference for cleanup
                                                    // deletes outside the lock
 
-                // We are finally done with database and redo commits. Cache update
-                // comes last.
-                commitCache(currentChange(), lock);
+                // We are finally done with database and redo commits. Cache update comes last.
+                changeNotification = commitCache(currentChange(), lock);
             } finally {
                 lock.close();
+                // notify listeners outside lock as can take significant time
+                if (changeNotification != null) {
+                    notifyListeners(currentChange(), changeNotification, lock);
+                }
                 // process cleanup deletes outside the lock as we support alternative blob stores for which a delete may
                 // entail a blocking network operation
                 if (deletes != null) {
@@ -9989,7 +10027,7 @@ public class Mailbox implements MailboxStore {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this)
+            return MoreObjects.toStringHelper(this)
                 .add("caller", myCaller)
                 .add("startTime", new SimpleDateFormat("HH:mm:ss.SSS").format(new Date(startTime)))
                 .add("success", success)
