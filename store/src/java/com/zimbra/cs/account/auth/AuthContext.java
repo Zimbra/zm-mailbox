@@ -16,6 +16,9 @@
  */
 package com.zimbra.cs.account.auth;
 
+import java.util.Map;
+import java.util.HashMap;
+
 public class AuthContext {
     /*
      * Originating client IP address.
@@ -73,6 +76,49 @@ public class AuthContext {
      */
     public static final String AC_DEVICE_ID = "did";
 
+    private static final Map<Protocol, String> defaultUserAgentMap = new HashMap<Protocol, String>();
+    static  
+    {
+        defaultUserAgentMap.put(AuthContext.Protocol.client_certificate, "client_certificate");
+        defaultUserAgentMap.put(AuthContext.Protocol.http_basic, "http_basic");
+        defaultUserAgentMap.put(AuthContext.Protocol.http_dav, "http_dav");
+        defaultUserAgentMap.put(AuthContext.Protocol.im, "im");
+        defaultUserAgentMap.put(AuthContext.Protocol.imap, "imap");
+        defaultUserAgentMap.put(AuthContext.Protocol.pop3, "pop3");
+        defaultUserAgentMap.put(AuthContext.Protocol.soap, "soap");
+        defaultUserAgentMap.put(AuthContext.Protocol.spnego, "spnego");
+        defaultUserAgentMap.put(AuthContext.Protocol.zsync, "zsync");
+        // 'mta' value in case of 'smtp'
+        defaultUserAgentMap.put(AuthContext.Protocol.smtp, "mta");    
+    }
+
+    private static final Map<String, Protocol> stringProtocolMap = new HashMap<String, Protocol>();
+    static  
+    {
+        stringProtocolMap.put("client_certificate", AuthContext.Protocol.client_certificate);
+        stringProtocolMap.put("http_basic", AuthContext.Protocol.http_basic);
+        stringProtocolMap.put("http_dav", AuthContext.Protocol.http_dav);
+        stringProtocolMap.put("im", AuthContext.Protocol.im);
+        stringProtocolMap.put("imap", AuthContext.Protocol.imap);
+        stringProtocolMap.put("pop3", AuthContext.Protocol.pop3);
+        stringProtocolMap.put("soap", AuthContext.Protocol.soap);
+        stringProtocolMap.put("spnego", AuthContext.Protocol.spnego);
+        stringProtocolMap.put("zsync", AuthContext.Protocol.zsync);
+        stringProtocolMap.put("smtp", AuthContext.Protocol.smtp);
+  
+    }
+
+    public static String getDefaultUserAgent(AuthContext.Protocol protocol){
+        String userAgent = AuthContext.defaultUserAgentMap.get(protocol);
+        return userAgent != null ? userAgent : "";
+    };
+
+    public static Protocol getProtocol(String protocol){
+        AuthContext.Protocol proto = AuthContext.stringProtocolMap.get(protocol);
+        // By default, we are setting 'soap' as protocol 
+        return proto != null ? proto : AuthContext.Protocol.soap;
+    };
+
     public enum Protocol {
         client_certificate,
         http_basic,
@@ -83,6 +129,7 @@ public class AuthContext {
         soap,
         spnego,
         zsync,
+        smtp,
 
         //for internal use only
         test;
