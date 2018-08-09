@@ -38,8 +38,7 @@ public final class RedissonClientHolder {
             ZimbraLog.system.info("redis_service_uri=%s", uri);
             Config config = new Config();
             ClusterServersConfig clusterServersConfig = config.useClusterServers();
-            // FIXME- make configurable.  Scan time in milliseconds.
-            clusterServersConfig.setScanInterval(2000);
+            clusterServersConfig.setScanInterval(LC.redis_cluster_scan_interval.intValue());
             clusterServersConfig.addNodeAddress(uri.split(" "));
             this.redisson = Redisson.create(config);
         } catch (Exception ex) {
