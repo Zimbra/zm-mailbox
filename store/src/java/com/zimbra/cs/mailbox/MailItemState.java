@@ -368,7 +368,12 @@ public class MailItemState {
 
         protected void setSharedState(T value) {
             if (sharedState == null) {
-                ZimbraLog.cache.info("setSharedState(%s) (name=%s) - NULL sharedState, so ignoring!%s",
+                ZimbraLog.cache.debug("setSharedState(%s) (name=%s) - NULL sharedState, so ignoring!%s",
+                        value, name, MailItemState.this);
+                return;
+            }
+            if (value == null) {
+                ZimbraLog.cache.debug("setSharedState(%s) (name=%s) - NULL values not supported, so ignoring!%s",
                         value, name, MailItemState.this);
                 return;
             }
@@ -377,7 +382,7 @@ public class MailItemState {
 
         protected T getSharedState() {
             if (sharedState == null) {
-                ZimbraLog.cache.info("getSharedState() (name=%s) - NULL sharedState, so returning null!%s",
+                ZimbraLog.cache.debug("getSharedState() (name=%s) - NULL sharedState, so returning null!%s",
                         name, MailItemState.this);
                 return null;
             }
@@ -389,7 +394,11 @@ public class MailItemState {
             if (sharedState != null) {
                 try {
                     T sharedValue = getSharedState();
-                    if ((sharedValue != null) || sharedState.isInUse()) {
+                    // Note that, at least in the case of Redis, the maps used to store key/value pairs cannot have
+                    // null values, so if the value is null here, that means shared state did not have a value for it
+                    // the most probable cause for this is the shared object being uncached, which at that point
+                    // causes the map to be emptied.
+                    if (sharedValue != null) {
                         //update the local value in case it's stale
                         setLocal(sharedValue);
                         return sharedValue;
@@ -709,7 +718,7 @@ public class MailItemState {
                     return this;
                 }
                 Integer flags = sharedState.get(F_FLAGS);
-                data.setFlags(flags);
+                setLocal(flags);
                 return this;
             }
         });
