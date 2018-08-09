@@ -6374,6 +6374,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureAppSpecificPasswordsEnabled = "zimbraFeatureAppSpecificPasswordsEnabled";
 
     /**
+     * This attribute stores all allowed file extensions that can be uploaded
+     * in Briefcase, extensions values will be comma separated
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5016)
+    public static final String A_zimbraFeatureBriefcaseAllowedFileExtensions = "zimbraFeatureBriefcaseAllowedFileExtensions";
+
+    /**
      * Docs features enabled in briefcase
      *
      * @since ZCS 6.0.2

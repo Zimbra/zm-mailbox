@@ -13719,6 +13719,83 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * This attribute stores all allowed file extensions that can be uploaded
+     * in Briefcase, extensions values will be comma separated
+     *
+     * @return zimbraFeatureBriefcaseAllowedFileExtensions, or null if unset
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5016)
+    public String getFeatureBriefcaseAllowedFileExtensions() {
+        return getAttr(Provisioning.A_zimbraFeatureBriefcaseAllowedFileExtensions, null, true);
+    }
+
+    /**
+     * This attribute stores all allowed file extensions that can be uploaded
+     * in Briefcase, extensions values will be comma separated
+     *
+     * @param zimbraFeatureBriefcaseAllowedFileExtensions new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5016)
+    public void setFeatureBriefcaseAllowedFileExtensions(String zimbraFeatureBriefcaseAllowedFileExtensions) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureBriefcaseAllowedFileExtensions, zimbraFeatureBriefcaseAllowedFileExtensions);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute stores all allowed file extensions that can be uploaded
+     * in Briefcase, extensions values will be comma separated
+     *
+     * @param zimbraFeatureBriefcaseAllowedFileExtensions new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5016)
+    public Map<String,Object> setFeatureBriefcaseAllowedFileExtensions(String zimbraFeatureBriefcaseAllowedFileExtensions, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureBriefcaseAllowedFileExtensions, zimbraFeatureBriefcaseAllowedFileExtensions);
+        return attrs;
+    }
+
+    /**
+     * This attribute stores all allowed file extensions that can be uploaded
+     * in Briefcase, extensions values will be comma separated
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5016)
+    public void unsetFeatureBriefcaseAllowedFileExtensions() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureBriefcaseAllowedFileExtensions, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute stores all allowed file extensions that can be uploaded
+     * in Briefcase, extensions values will be comma separated
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5016)
+    public Map<String,Object> unsetFeatureBriefcaseAllowedFileExtensions(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureBriefcaseAllowedFileExtensions, "");
+        return attrs;
+    }
+
+    /**
      * Docs features enabled in briefcase
      *
      * @return zimbraFeatureBriefcaseDocsEnabled, or true if unset
