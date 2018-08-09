@@ -45,8 +45,16 @@
         <ant dir="./store"  target="dist" inheritAll="false"/>
       </target>
 
+  <property name="package.revision" value="1" />
+  <property name="package.version"
+      value="${zimbra.buildinfo.majorversion}.${zimbra.buildinfo.minorversion}.${zimbra.buildinfo.microversion}"/>
+
    <target name="pkg" depends="clean-pkg,all,dist">
       <exec dir="." executable="./pkg-builder.pl" failonerror="true"/>
+      <arg value="-v"/>
+      <arg value="${package.version}"/>
+      <arg value="-r"/>
+      <arg value="${package.revision}"/>
    </target>
 
    <target name="pkg-after-plough-through-tests" depends="test-all-plough-through,pkg"/>
