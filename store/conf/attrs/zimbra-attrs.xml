@@ -9769,5 +9769,10 @@ TODO: delete them permanently from here
 	<globalConfigValue>10</globalConfigValue>
 	<desc>This attribute is used to set time delay to show login history on splash screen page</desc>
 </attr>
+
+<attr id="5016" name="zimbraFeatureBriefcaseAllowedFileExtensions" type="string" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.8.9">
+	<desc>This attribute stores all allowed file extensions that can be uploaded in Briefcase, extensions values will be comma separated</desc>
+</attr>
+
 </attrs>
 
