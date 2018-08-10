@@ -269,8 +269,11 @@ public final class ZimbraSoapContext {
     public ZimbraSoapContext(Element ctxt, QName requestName, DocumentHandler handler, Map<String, Object> context,
             SoapProtocol requestProtocol) throws ServiceException {
 
-        if (ctxt != null && !ctxt.getQName().equals(HeaderConstants.CONTEXT))
-            throw new IllegalArgumentException("expected ctxt, got: " + ctxt.getQualifiedName());
+        if (ctxt != null && !ctxt.getQName().equals(HeaderConstants.CONTEXT)) {
+            IllegalArgumentException e = new IllegalArgumentException("expected ctxt, got: " + ctxt.getQualifiedName());
+            sLog.warn(e.toString() + " " + e);
+            throw ServiceException.FAILURE(ServiceException.FAILURE_MESSAGE, null);
+        }
 
         Provisioning prov = Provisioning.getInstance();
 
