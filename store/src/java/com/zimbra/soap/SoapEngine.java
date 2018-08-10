@@ -516,7 +516,7 @@ public class SoapEngine {
                 responseBody = responseProto.soapFault(e);
                 LOG.info("proxy handler exception", e);
             } catch (Throwable e) {
-                logFault(e.toString(), ServiceException.FAILURE(e.toString(), e));
+                LOG.warnQuietly("proxy handler throwable", e);
                 responseBody = responseProto.soapFault(ServiceException.FAILURE(ServiceException.FAILURE_MESSAGE, null));
                 if (e instanceof OutOfMemoryError) {
                     Zimbra.halt("proxy handler exception", e);
@@ -654,11 +654,8 @@ public class SoapEngine {
                 }
             }
         } catch (SoapFaultException e) {
-            logFault(e.toString(), e);
             response = e.getFault() != null ? e.getFault().detach() : soapProto.soapFault(ServiceException.FAILURE(ServiceException.FAILURE_MESSAGE, null));
-            if (!e.isSourceLocal()) {
-                LOG.debug("handler exception", e);
-            }
+            LOG.warnQuietly("handler exception", e);
         } catch (AuthFailedServiceException e) {
             HttpServletRequest httpReq = (HttpServletRequest) context
                 .get(SoapServlet.SERVLET_REQUEST);
