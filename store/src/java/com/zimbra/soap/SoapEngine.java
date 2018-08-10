@@ -516,7 +516,7 @@ public class SoapEngine {
                 responseBody = responseProto.soapFault(e);
                 LOG.info("proxy handler exception", e);
             } catch (Throwable e) {
-                logFault(e.toString(), ServiceException.FAILURE(ServiceException.FAILURE(e.toString(), e)));
+                logFault(e.toString(), ServiceException.FAILURE(e.toString(), e));
                 responseBody = responseProto.soapFault(ServiceException.FAILURE(ServiceException.FAILURE_MESSAGE, null));
                 if (e instanceof OutOfMemoryError) {
                     Zimbra.halt("proxy handler exception", e);
@@ -682,7 +682,7 @@ public class SoapEngine {
             if (e.getClass().getName().equals("org.eclipse.jetty.continuation.ContinuationThrowable")) {
                 throw (Error) e;
             }
-            logFault(e.toString(), ServiceException.FAILURE(ServiceException.FAILURE(e.toString(), e)));
+            logFault(e.toString(), ServiceException.FAILURE(e.toString(), e));
             // TODO: better exception stack traces during develope?
             response = soapProto.soapFault(ServiceException.FAILURE(ServiceException.FAILURE_MESSAGE, null));
             if (e instanceof OutOfMemoryError) {
