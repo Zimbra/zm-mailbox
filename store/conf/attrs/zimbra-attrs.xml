@@ -9726,5 +9726,13 @@ TODO: delete them permanently from here
   <desc>seniority index of the group which will determine the sorting order in the hierarchical address book</desc>
 </attr>
 
+<attr id="3030" name="zimbraAccountSeniorityIndex" type="integer" cardinality="single" optionalIn="account" since="8.8.10">
+  <desc>seniority index of the account which will determine the sorting order in the hierarchical address book</desc>
+</attr>
+
+<attr id="3031" name="zimbraHierarchicalAddressBookRoot" type="string" cardinality="multi" optionalIn="domain" flags="domainInfo" since="8.8.10">
+  <desc>domain level root of hierarchical address book</desc>
+</attr>
+
 </attrs>
 
