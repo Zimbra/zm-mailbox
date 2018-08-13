@@ -1046,6 +1046,12 @@ public final class AdminConstants {
     public static final QName MODIFY_OUTGOING_FILTER_RULES_RESPONSE = QName.get(E_MODIFY_OUTGOING_FILTER_RULES_RESPONSE, NAMESPACE);
     public static final QName CONTACT_BACKUP_REQUEST = QName.get(E_CONTACT_BACKUP_REQUEST, NAMESPACE);
     public static final QName CONTACT_BACKUP_RESPONSE = QName.get(E_CONTACT_BACKUP_RESPONSE, NAMESPACE);
+    
+    //HAB
+    public static final String E_HAB_ORG_UNIT_REQUEST = "HabOrgUnitRequest";
+    public static final String E_HAB_ORG_UNIT_RESPONSE = "HabOrgUnitResponse";
+    public static final QName HAB_ORG_UNIT_REQUEST = QName.get(E_HAB_ORG_UNIT_REQUEST, NAMESPACE);
+    public static final QName HAB_ORG_UNIT_RESPONSE = QName.get(E_HAB_ORG_UNIT_RESPONSE, NAMESPACE);
 
     // DumpSessions
     public static final String E_SESSION = "session";
@@ -1486,4 +1492,7 @@ public final class AdminConstants {
 
     // contact backup feature
     public static final String E_SERVERS = "servers";
+    
+    //HAB
+    public static final String A_NEW_NAME = "newName";
 }

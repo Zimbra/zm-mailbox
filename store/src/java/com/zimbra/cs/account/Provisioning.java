@@ -2359,6 +2359,10 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public abstract List<XMPPComponent> getAllXMPPComponents() throws ServiceException;
 
     public abstract void deleteXMPPComponent(XMPPComponent comp) throws ServiceException;
+    
+    public abstract void createHabOrgUnit(Domain domain, String habOrgUnitName) throws ServiceException;
+    public abstract void renameHabOrgUnit(Domain domain, String habOrgUnitName, String newHabOrgUnitName) throws ServiceException;
+    public abstract void deleteHabOrgUnit(Domain domain, String habOrgUnitName) throws ServiceException;
 
     public static class RightsDoc {
         private final String mCmd;

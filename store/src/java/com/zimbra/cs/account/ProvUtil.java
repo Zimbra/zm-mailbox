@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2018 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -42,8 +42,6 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
-
-import net.spy.memcached.DefaultHashAlgorithm;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -137,6 +135,8 @@ import com.zimbra.soap.admin.type.MailboxMoveSpec;
 import com.zimbra.soap.type.AccountNameSelector;
 import com.zimbra.soap.type.GalSearchType;
 import com.zimbra.soap.type.TargetBy;
+
+import net.spy.memcached.DefaultHashAlgorithm;
 
 /**
  * @author schemers
@@ -849,7 +849,13 @@ public class ProvUtil implements HttpDebugListener {
                Category.MISC, 3, 3, Via.soap),
         RESET_ALL_LOGGERS("resetAllLoggers", "rlog", "[-s/--server hostname]",
                Category.LOG, 0, 2),
-        UNLOCK_MAILBOX("unlockMailbox", "ulm", "{name@domain|id} [hostname (When unlocking a mailbox after a failed move attempt provide the hostname of the server that was the target for the failed move. Otherwise, do not include hostname parameter)]", Category.MAILBOX, 1, 2, Via.soap);
+        UNLOCK_MAILBOX("unlockMailbox", "ulm", "{name@domain|id} [hostname (When unlocking a mailbox after a failed move attempt provide the hostname of the server that was the target for the failed move. Otherwise, do not include hostname parameter)]", Category.MAILBOX, 1, 2, Via.soap),
+        CREATE_HAB_OU("createHABOrgUnit", "chou",
+            "{domain} {ouName}", Category.MISC , 2, 2),
+        RENAME_HAB_OU("renameHABOrgUnit", "rhou",
+            "{domain} {ouName} {newName}", Category.MISC , 3, 3),
+        DELETE_HAB_OU("deleteHABOrgUnit", "dhou",
+            "{domain} {ouName}", Category.MISC , 2, 2);
 
         private String mName;
         private String mAlias;
@@ -1589,6 +1595,14 @@ public class ProvUtil implements HttpDebugListener {
         case UNLOCK_MAILBOX:
             doUnlockMailbox(args);
             break;
+        case CREATE_HAB_OU:
+            doCreateHabOrgUnit(args);
+        case RENAME_HAB_OU:
+            doRenameHabOrgUnit(args);
+            break;
+        case DELETE_HAB_OU:
+            doDeleteHabOrgUnit(args);
+            break;
         default:
             return false;
         }
@@ -1683,6 +1697,54 @@ public class ProvUtil implements HttpDebugListener {
                 }
             }
         }
+    }
+    
+    private void doCreateHabOrgUnit(String[] args)   {
+        try {
+        if(args.length != 3) { 
+            usage();
+            return;
+        }
+        Domain domain = lookupDomain(args[1], prov, Boolean.FALSE);
+        
+        if (!(prov instanceof SoapProvisioning)) {
+            throwSoapOnly();
+        }
+        ((SoapProvisioning) prov).createHabOrgUnit(domain, args[2]);
+        ZimbraLog.misc.info("3");
+        } catch (Exception e) {
+            ZimbraLog.misc.info(e.getMessage());
+            e.printStackTrace();
+        }
+        
+    }
+    
+    private void doRenameHabOrgUnit(String[] args)  throws ServiceException {
+        if(args.length != 4) { 
+            usage();
+            return;
+        }
+        Domain domain = lookupDomain(args[1], prov, Boolean.FALSE);
+        
+        if (!(prov instanceof SoapProvisioning)) {
+            throwSoapOnly();
+        }
+        ((SoapProvisioning) prov).renameHabOrgUnit(domain, args[2], args[3]);
+        
+    }
+    
+    private void doDeleteHabOrgUnit(String[] args)  throws ServiceException {
+        if(args.length != 3) { 
+            usage();
+            return;
+        }
+        Domain domain = lookupDomain(args[1], prov, Boolean.FALSE);
+        
+        if (!(prov instanceof SoapProvisioning)) {
+            throwSoapOnly();
+        }
+        ((SoapProvisioning) prov).deleteHabOrgUnit(domain, args[2]);
+        
     }
 
     private void doGetDomain(String[] args) throws ServiceException {

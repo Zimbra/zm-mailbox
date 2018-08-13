@@ -209,6 +209,7 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mime.MimeTypeInfo;
+import com.zimbra.cs.service.admin.HabOrgUnit;
 import com.zimbra.cs.service.util.JWEUtil;
 import com.zimbra.cs.service.util.ResetPasswordUtil;
 import com.zimbra.cs.util.Zimbra;
@@ -10807,4 +10808,52 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             LdapClient.closeContext(zlc);
         }
     }
+
+    @Override
+    public void createHabOrgUnit(Domain domain, String habOrgUnitName) throws ServiceException {
+        ZLdapContext zlc = null;
+        try {
+            String domainDn = ((LdapEntry)domain).getDN();
+            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.CREATE_OU);
+            String[] objClass = (String[]) LdapObjectClass.getOrganizationUnitObjectClasses()
+                .toArray();
+            String[] ldapAttrs = { Provisioning.A_ou, habOrgUnitName };
+            zlc.createEntry(HabOrgUnit.createOuDn(habOrgUnitName, domainDn), objClass, ldapAttrs);
+        } catch (ServiceException e) {
+            throw ServiceException.FAILURE(String.format("Unable to create HAb org unit: %s for domain=%s",habOrgUnitName, domain.getName()), e);
+        } finally {
+            LdapClient.closeContext(zlc);
+        }
+    }
+
+    @Override
+    public void renameHabOrgUnit(Domain domain, String habOrgUnitName, String newHabOrgUnitName) throws ServiceException {
+        ZLdapContext zlc = null;
+        try {
+            String domainDn = ((LdapEntry)domain).getDN();
+            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.CREATE_OU);
+            zlc.renameEntry(HabOrgUnit.createOuDn(habOrgUnitName, domainDn),
+                HabOrgUnit.createOuDn(newHabOrgUnitName, domainDn));
+        } catch (ServiceException e) {
+            throw ServiceException.FAILURE(String.format("Unable to rename HAB org unit: %s for domain=%s",habOrgUnitName, domain.getName()), e);
+        } finally {
+            LdapClient.closeContext(zlc);
+        }
+    }
+
+    @Override
+    public void deleteHabOrgUnit(Domain domain, String habOrgUnitName) throws ServiceException {
+        ZLdapContext zlc = null;
+        try {
+            String domainDn = ((LdapEntry)domain).getDN();
+            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.CREATE_OU);
+            zlc.deleteEntry(HabOrgUnit.createOuDn(habOrgUnitName, domainDn));
+        } catch (ServiceException e) {
+            throw ServiceException.FAILURE(String.format("Unable to delete HAB org unit: %s for domain=%s",habOrgUnitName, domain.getName()), e);
+        } finally {
+            LdapClient.closeContext(zlc);
+        }
+    }
+
+  
 }

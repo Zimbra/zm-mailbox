@@ -113,6 +113,7 @@ import com.zimbra.soap.account.message.ModifyIdentityRequest;
 import com.zimbra.soap.account.type.NameId;
 import com.zimbra.soap.admin.message.*;
 import com.zimbra.soap.admin.message.AutoProvTaskControlRequest.Action;
+import com.zimbra.soap.admin.message.HabOrgUnitRequest.HabOp;
 import com.zimbra.soap.admin.type.AccountInfo;
 import com.zimbra.soap.admin.type.AccountLoggerInfo;
 import com.zimbra.soap.admin.type.AccountQuotaInfo;
@@ -2947,6 +2948,27 @@ public class SoapProvisioning extends Provisioning {
     @Override
     public void refreshUserCredentials(Account account) {
         throw new UnsupportedOperationException("Currently no way to refresh required attributes over SOAP");
+    }
+
+    @Override
+    public void createHabOrgUnit(Domain domain, String habOrgUnitName) throws ServiceException {
+        DomainSelector domSel =
+            new DomainSelector(toJaxb(DomainBy.name), domain.getName());
+        invokeJaxb(new HabOrgUnitRequest(domSel, habOrgUnitName, HabOp.create));
+    }
+
+    @Override
+    public void renameHabOrgUnit(Domain domain, String habOrgUnitName, String newHabOrgUnitName) throws ServiceException {
+        DomainSelector domSel =
+            new DomainSelector(toJaxb(DomainBy.name), domain.getName());
+        invokeJaxb(new HabOrgUnitRequest(domSel, habOrgUnitName, newHabOrgUnitName, HabOp.rename));
+    }
+
+    @Override
+    public void deleteHabOrgUnit(Domain domain, String habOrgUnitName) throws ServiceException {
+        DomainSelector domSel =
+            new DomainSelector(toJaxb(DomainBy.name), domain.getName());
+        invokeJaxb(new HabOrgUnitRequest(domSel, habOrgUnitName, HabOp.delete));
     }
 
 }
