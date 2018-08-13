@@ -231,6 +231,9 @@ public final class AdminConstants {
     public static final String E_RENAME_DISTRIBUTION_LIST_REQUEST = "RenameDistributionListRequest";
     public static final String E_RENAME_DISTRIBUTION_LIST_RESPONSE = "RenameDistributionListResponse";
 
+    public static final String E_CREATE_HAB_GROUP_REQUEST = "CreateHABGroupRequest";
+    public static final String E_CREATE_HAB_GROUP_RESPONSE = "CreateHABGroupResponse";
+
     public static final String E_GET_VERSION_INFO_REQUEST = "GetVersionInfoRequest";
     public static final String E_GET_VERSION_INFO_RESPONSE = "GetVersionInfoResponse";
 
@@ -733,6 +736,9 @@ public final class AdminConstants {
     public static final QName RENAME_DISTRIBUTION_LIST_REQUEST = QName.get(E_RENAME_DISTRIBUTION_LIST_REQUEST, NAMESPACE);
     public static final QName RENAME_DISTRIBUTION_LIST_RESPONSE = QName.get(E_RENAME_DISTRIBUTION_LIST_RESPONSE, NAMESPACE);
 
+    public static final QName CREATE_HAB_GROUP_REQUEST = QName.get(E_CREATE_HAB_GROUP_REQUEST, NAMESPACE);
+    public static final QName CREATE_HAB_GROUP_RESPONSE = QName.get(E_CREATE_HAB_GROUP_RESPONSE, NAMESPACE);
+
     public static final QName GET_VERSION_INFO_REQUEST = QName.get(E_GET_VERSION_INFO_REQUEST, NAMESPACE);
     public static final QName GET_VERSION_INFO_RESPONSE = QName.get(E_GET_VERSION_INFO_RESPONSE, NAMESPACE);
 
@@ -1143,6 +1149,9 @@ public final class AdminConstants {
     public static final String E_PRINCIPAL = "principal";
     public static final String E_SKIN = "skin";
     public static final String E_TOKEN = "token";
+
+    public static final String A_HAB_GROUP_NAME = "habGroupName";
+    public static final String A_HAB_ORG_UNIT = "habOrgUnit";
 
     public static final String A_ACCOUNT = "account";
     public static final String A_CALENDAR_RESOURCE = "calresource";
