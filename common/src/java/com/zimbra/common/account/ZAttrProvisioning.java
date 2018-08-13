@@ -2902,6 +2902,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraAccountExtraObjectClass = "zimbraAccountExtraObjectClass";
 
     /**
+     * seniority index of the account which will determine the sorting order
+     * in the hierarchical address book
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=3030)
+    public static final String A_zimbraAccountSeniorityIndex = "zimbraAccountSeniorityIndex";
+
+    /**
      * account status. active - active lockout - no login until lockout
      * duration is over, mail delivery OK. locked - no login, mail delivery
      * OK. maintenance - no login, no delivery(lmtp server returns 4.x.x
@@ -7791,6 +7800,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=353)
     public static final String A_zimbraHideInGal = "zimbraHideInGal";
+
+    /**
+     * domain level root of hierarchical address book
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=3031)
+    public static final String A_zimbraHierarchicalAddressBookRoot = "zimbraHierarchicalAddressBookRoot";
 
     /**
      * Deprecated since: 6.0.0_BETA2. deprecated in favor for
