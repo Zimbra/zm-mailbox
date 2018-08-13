@@ -46,6 +46,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.unboundid.ldap.sdk.Filter;
 import com.zimbra.common.account.ForgetPasswordEnums.CodeConstants;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
@@ -55,6 +56,7 @@ import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.service.ServiceException.Argument;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.EmailUtil;
@@ -2778,6 +2780,19 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         return null;
     }
 
+    private String getOrgUnitDNByName(String name, Domain domain, ZLdapContext initZlc)
+    throws ServiceException {
+        try {
+            ZSearchResultEntry sr = helper.searchForEntry(mDIT.domainNameToDN(domain.getDomainName()), filterFactory.habOrgUnitByName(name), initZlc, false);
+            if (sr != null) {
+                return sr.getDN();
+            }
+        } catch (ServiceException e) {
+            throw ServiceException.FAILURE("unable to lookup org unit by name", e);
+        }
+        return null;
+    }
+
     @Override
     public Domain get(Key.DomainBy keyType, String key) throws ServiceException {
         return getDomain(keyType, key, false);
@@ -4505,7 +4520,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     private DistributionList createDistributionList(String listAddress,
             Map<String, Object> listAttrs, Account creator)
     throws ServiceException {
-
+        boolean isHabGroup = false;
         SpecialAttrs specialAttrs = mDIT.handleSpecialAttrs(listAttrs);
         String baseDn = specialAttrs.getLdapBaseDn();
 
@@ -4539,9 +4554,10 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             }
 
             ZMutableEntry entry = LdapClient.createMutableEntry();
+            isHabGroup = populateEntryForHABGroup(entry, listAttrs, localPart, d, zlc);
             entry.mapToAttrs(listAttrs);
 
-            Set<String> ocs = LdapObjectClass.getDistributionListObjectClasses(this);
+            Set<String> ocs = LdapObjectClass.getDistributionListObjectClasses(this, isHabGroup);
             entry.addAttr(A_objectClass, ocs);
 
             String zimbraIdStr = LdapUtil.generateUUID();
@@ -4561,7 +4577,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             }
 
             String displayName = entry.getAttrString(Provisioning.A_displayName);
-            if (displayName != null) {
+            if (displayName != null && !isHabGroup) {
                 entry.setAttr(A_cn, displayName);
             }
 
@@ -4569,8 +4585,9 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
             setGroupHomeServer(entry, creator);
 
-            String dn = mDIT.distributionListDNCreate(baseDn, entry.getAttributes(), localPart, domain);
-            entry.setDN(dn);
+            if (!isHabGroup) {
+                entry.setDN(mDIT.distributionListDNCreate(baseDn, entry.getAttributes(), localPart, domain));
+            }
 
             zlc.createEntry(entry);
 
@@ -4597,6 +4614,31 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         } finally {
             LdapClient.closeContext(zlc);
         }
+    }
+
+    private boolean populateEntryForHABGroup(ZMutableEntry entry, Map<String, Object> listAttrs, String localPart,
+            Domain domain, ZLdapContext zlc) throws ServiceException {
+        String habGroupName = null, habOrgUnit = null;
+        boolean isHabGroup = false;
+        if (listAttrs.get(AdminConstants.A_HAB_ORG_UNIT) != null) {
+            habOrgUnit = (String) listAttrs.get(AdminConstants.A_HAB_ORG_UNIT);
+            isHabGroup = true;
+            if (listAttrs.get(AdminConstants.A_HAB_GROUP_NAME) != null) {
+                habGroupName = (String) listAttrs.get(AdminConstants.A_HAB_GROUP_NAME);
+            }
+            listAttrs.remove(AdminConstants.A_HAB_ORG_UNIT);
+            listAttrs.remove(AdminConstants.A_HAB_GROUP_NAME);
+            String orgUnitDN = getOrgUnitDNByName(habOrgUnit, domain, zlc);
+            if (StringUtils.isEmpty(orgUnitDN)) {
+                throw AccountServiceException.NO_SUCH_ORG_UNIT(habOrgUnit);
+            }
+            if (!StringUtils.isEmpty(habGroupName)) {
+                entry.setAttr(A_displayName, habGroupName);
+            }
+            String dn = mDIT.habGroupDNCreate(orgUnitDN, localPart);
+            entry.setDN(dn);
+        }
+        return isHabGroup;
     }
 
     @Override
@@ -9682,7 +9724,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     private DynamicGroup createDynamicGroup(String groupAddress,
             Map<String, Object> groupAttrs, Account creator)
     throws ServiceException {
-
+        boolean isHabGroup = false;
         SpecialAttrs specialAttrs = mDIT.handleSpecialAttrs(groupAttrs);
         String baseDn = specialAttrs.getLdapBaseDn();
 
@@ -9733,9 +9775,10 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
              * ====================================
              */
             ZMutableEntry entry = LdapClient.createMutableEntry();
+            isHabGroup = populateEntryForHABGroup(entry, groupAttrs, localPart, domain, zlc);
             entry.mapToAttrs(groupAttrs);
 
-            Set<String> ocs = LdapObjectClass.getGroupObjectClasses(this);
+            Set<String> ocs = LdapObjectClass.getGroupObjectClasses(this, isHabGroup);
             entry.addAttr(A_objectClass, ocs);
 
             String zimbraId = LdapUtil.generateUUID();
@@ -9795,9 +9838,11 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
             setGroupHomeServer(entry, creator);
 
-            String dn = mDIT.dynamicGroupNameLocalPartToDN(localPart, domainDN);
-            entry.setDN(dn);
-
+            String dn = null;
+            if (!isHabGroup) {
+                dn = mDIT.dynamicGroupNameLocalPartToDN(localPart, domainDN);
+                entry.setDN(dn);
+            }
             zlc.createEntry(entry);
 
             if (isACLGroup) {

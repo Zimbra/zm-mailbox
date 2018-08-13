@@ -94,6 +94,7 @@ public class AccountServiceException extends ServiceException {
     public static final String INVALID_TRUSTED_DEVICE_TOKEN = "account.INVALID_TRUSTED_DEVICE_TOKEN";
     public static final String TWO_FACTOR_AUTH_FAILED = "account.TWO_FACTOR_AUTH_FAILED";
     public static final String TWO_FACTOR_AUTH_REQUIRED = "account.TWO_FACTOR_AUTH_REQUIRED";
+    public static final String NO_SUCH_ORG_UNIT = "account.NO_SUCH_ORG_UNIT";
 
     private AccountServiceException(String message, String code, boolean isReceiversFault) {
         super(message, code, isReceiversFault);
@@ -218,6 +219,10 @@ public class AccountServiceException extends ServiceException {
 
     public static AccountServiceException NO_SUCH_DOMAIN(String name) {
         return new AccountServiceException("no such domain: "+name, Constants.ERROR_CODE_NO_SUCH_DOMAIN, SENDERS_FAULT, null);
+    }
+
+    public static AccountServiceException NO_SUCH_ORG_UNIT(String name) {
+        return new AccountServiceException("no such organizational unit: " + name, NO_SUCH_ORG_UNIT, SENDERS_FAULT, null);
     }
 
     public static AccountServiceException DOMAIN_NOT_EMPTY(String name, Exception e) {
