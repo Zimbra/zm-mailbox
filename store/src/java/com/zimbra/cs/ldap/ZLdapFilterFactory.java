@@ -150,6 +150,8 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
         VELODROME_ALL_DISTRIBUTION_LISTS_BY_DOMAIN(SINGLETON.velodromeAllDistributionListsByDomain("{DOMAIN-NAME}")),
         VELODROME_ALL_GROUPS_BY_DOMAIN(SINGLETON.velodromeAllGroupsByDomain("{DOMAIN-NAME}")),
 
+        HAB_ORG_UNIT_BY_NAME(SINGLETON.habOrgUnitByName("{ORG-UNIT-NAME}")),
+
         //
         // =====================================
         // FilterId for fromFilterString() calls
@@ -506,4 +508,9 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
      * util
      */
     public abstract ZLdapFilter dnSubtreeMatch(String... dns);
+
+    /**
+     * HAB
+     */
+    public abstract ZLdapFilter habOrgUnitByName(String name);
 }
