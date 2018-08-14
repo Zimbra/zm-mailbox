@@ -170,6 +170,14 @@ public class LdapObjectClass {
         ocs.add(AttributeClass.OC_zimbraShareLocator);
         return ocs;
     }
+    
+    public static Set<String> getOrganizationUnitObjectClasses()
+        throws ServiceException {
+        Set<String> ocs = new LinkedHashSet<String>();
+        ocs.add("top");
+        ocs.add("organizationalUnit");
+        return ocs;
+    }
 
     /**
      * @param args

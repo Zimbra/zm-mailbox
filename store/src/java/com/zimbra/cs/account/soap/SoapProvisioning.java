@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2018 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -111,8 +111,151 @@ import com.zimbra.soap.account.message.GetIdentitiesRequest;
 import com.zimbra.soap.account.message.GetIdentitiesResponse;
 import com.zimbra.soap.account.message.ModifyIdentityRequest;
 import com.zimbra.soap.account.type.NameId;
-import com.zimbra.soap.admin.message.*;
+import com.zimbra.soap.admin.message.AddAccountAliasRequest;
+import com.zimbra.soap.admin.message.AddAccountLoggerRequest;
+import com.zimbra.soap.admin.message.AddAccountLoggerResponse;
+import com.zimbra.soap.admin.message.AddDistributionListAliasRequest;
+import com.zimbra.soap.admin.message.AddDistributionListMemberRequest;
+import com.zimbra.soap.admin.message.AutoProvTaskControlRequest;
 import com.zimbra.soap.admin.message.AutoProvTaskControlRequest.Action;
+import com.zimbra.soap.admin.message.ChangePrimaryEmailRequest;
+import com.zimbra.soap.admin.message.CheckHealthRequest;
+import com.zimbra.soap.admin.message.CheckHealthResponse;
+import com.zimbra.soap.admin.message.CheckPasswordStrengthRequest;
+import com.zimbra.soap.admin.message.CompactIndexRequest;
+import com.zimbra.soap.admin.message.CompactIndexResponse;
+import com.zimbra.soap.admin.message.CopyCosRequest;
+import com.zimbra.soap.admin.message.CopyCosResponse;
+import com.zimbra.soap.admin.message.CountAccountRequest;
+import com.zimbra.soap.admin.message.CountAccountResponse;
+import com.zimbra.soap.admin.message.CountObjectsRequest;
+import com.zimbra.soap.admin.message.CountObjectsResponse;
+import com.zimbra.soap.admin.message.CreateAccountRequest;
+import com.zimbra.soap.admin.message.CreateAccountResponse;
+import com.zimbra.soap.admin.message.CreateAlwaysOnClusterRequest;
+import com.zimbra.soap.admin.message.CreateAlwaysOnClusterResponse;
+import com.zimbra.soap.admin.message.CreateCalendarResourceRequest;
+import com.zimbra.soap.admin.message.CreateCalendarResourceResponse;
+import com.zimbra.soap.admin.message.CreateCosRequest;
+import com.zimbra.soap.admin.message.CreateCosResponse;
+import com.zimbra.soap.admin.message.CreateDistributionListRequest;
+import com.zimbra.soap.admin.message.CreateDistributionListResponse;
+import com.zimbra.soap.admin.message.CreateDomainRequest;
+import com.zimbra.soap.admin.message.CreateDomainResponse;
+import com.zimbra.soap.admin.message.CreateServerRequest;
+import com.zimbra.soap.admin.message.CreateServerResponse;
+import com.zimbra.soap.admin.message.CreateUCServiceRequest;
+import com.zimbra.soap.admin.message.CreateUCServiceResponse;
+import com.zimbra.soap.admin.message.DeleteAccountRequest;
+import com.zimbra.soap.admin.message.DeleteAlwaysOnClusterRequest;
+import com.zimbra.soap.admin.message.DeleteCalendarResourceRequest;
+import com.zimbra.soap.admin.message.DeleteCosRequest;
+import com.zimbra.soap.admin.message.DeleteDistributionListRequest;
+import com.zimbra.soap.admin.message.DeleteDomainRequest;
+import com.zimbra.soap.admin.message.DeleteMailboxRequest;
+import com.zimbra.soap.admin.message.DeleteServerRequest;
+import com.zimbra.soap.admin.message.DeleteUCServiceRequest;
+import com.zimbra.soap.admin.message.FlushCacheRequest;
+import com.zimbra.soap.admin.message.GetAccountInfoRequest;
+import com.zimbra.soap.admin.message.GetAccountInfoResponse;
+import com.zimbra.soap.admin.message.GetAccountLoggersRequest;
+import com.zimbra.soap.admin.message.GetAccountLoggersResponse;
+import com.zimbra.soap.admin.message.GetAccountMembershipRequest;
+import com.zimbra.soap.admin.message.GetAccountMembershipResponse;
+import com.zimbra.soap.admin.message.GetAccountRequest;
+import com.zimbra.soap.admin.message.GetAccountResponse;
+import com.zimbra.soap.admin.message.GetAllAccountLoggersRequest;
+import com.zimbra.soap.admin.message.GetAllAccountLoggersResponse;
+import com.zimbra.soap.admin.message.GetAllAccountsRequest;
+import com.zimbra.soap.admin.message.GetAllAccountsResponse;
+import com.zimbra.soap.admin.message.GetAllActiveServersRequest;
+import com.zimbra.soap.admin.message.GetAllActiveServersResponse;
+import com.zimbra.soap.admin.message.GetAllAdminAccountsRequest;
+import com.zimbra.soap.admin.message.GetAllAdminAccountsResponse;
+import com.zimbra.soap.admin.message.GetAllAlwaysOnClustersRequest;
+import com.zimbra.soap.admin.message.GetAllAlwaysOnClustersResponse;
+import com.zimbra.soap.admin.message.GetAllCalendarResourcesRequest;
+import com.zimbra.soap.admin.message.GetAllCalendarResourcesResponse;
+import com.zimbra.soap.admin.message.GetAllConfigRequest;
+import com.zimbra.soap.admin.message.GetAllConfigResponse;
+import com.zimbra.soap.admin.message.GetAllCosRequest;
+import com.zimbra.soap.admin.message.GetAllCosResponse;
+import com.zimbra.soap.admin.message.GetAllDistributionListsRequest;
+import com.zimbra.soap.admin.message.GetAllDistributionListsResponse;
+import com.zimbra.soap.admin.message.GetAllDomainsRequest;
+import com.zimbra.soap.admin.message.GetAllDomainsResponse;
+import com.zimbra.soap.admin.message.GetAllEffectiveRightsRequest;
+import com.zimbra.soap.admin.message.GetAllEffectiveRightsResponse;
+import com.zimbra.soap.admin.message.GetAllRightsRequest;
+import com.zimbra.soap.admin.message.GetAllRightsResponse;
+import com.zimbra.soap.admin.message.GetAllServersRequest;
+import com.zimbra.soap.admin.message.GetAllServersResponse;
+import com.zimbra.soap.admin.message.GetAllUCServicesRequest;
+import com.zimbra.soap.admin.message.GetAllUCServicesResponse;
+import com.zimbra.soap.admin.message.GetAlwaysOnClusterRequest;
+import com.zimbra.soap.admin.message.GetAlwaysOnClusterResponse;
+import com.zimbra.soap.admin.message.GetCalendarResourceRequest;
+import com.zimbra.soap.admin.message.GetCalendarResourceResponse;
+import com.zimbra.soap.admin.message.GetConfigRequest;
+import com.zimbra.soap.admin.message.GetConfigResponse;
+import com.zimbra.soap.admin.message.GetCosRequest;
+import com.zimbra.soap.admin.message.GetCosResponse;
+import com.zimbra.soap.admin.message.GetDistributionListMembershipRequest;
+import com.zimbra.soap.admin.message.GetDistributionListMembershipResponse;
+import com.zimbra.soap.admin.message.GetDistributionListRequest;
+import com.zimbra.soap.admin.message.GetDistributionListResponse;
+import com.zimbra.soap.admin.message.GetDomainInfoRequest;
+import com.zimbra.soap.admin.message.GetDomainInfoResponse;
+import com.zimbra.soap.admin.message.GetDomainRequest;
+import com.zimbra.soap.admin.message.GetDomainResponse;
+import com.zimbra.soap.admin.message.GetEffectiveRightsRequest;
+import com.zimbra.soap.admin.message.GetEffectiveRightsResponse;
+import com.zimbra.soap.admin.message.GetIndexStatsRequest;
+import com.zimbra.soap.admin.message.GetIndexStatsResponse;
+import com.zimbra.soap.admin.message.GetMailboxRequest;
+import com.zimbra.soap.admin.message.GetMailboxResponse;
+import com.zimbra.soap.admin.message.GetQuotaUsageRequest;
+import com.zimbra.soap.admin.message.GetQuotaUsageResponse;
+import com.zimbra.soap.admin.message.GetRightRequest;
+import com.zimbra.soap.admin.message.GetRightResponse;
+import com.zimbra.soap.admin.message.GetRightsDocRequest;
+import com.zimbra.soap.admin.message.GetRightsDocResponse;
+import com.zimbra.soap.admin.message.GetServerRequest;
+import com.zimbra.soap.admin.message.GetServerResponse;
+import com.zimbra.soap.admin.message.GetShareInfoRequest;
+import com.zimbra.soap.admin.message.GetShareInfoResponse;
+import com.zimbra.soap.admin.message.GetUCServiceRequest;
+import com.zimbra.soap.admin.message.GetUCServiceResponse;
+import com.zimbra.soap.admin.message.HABOrgUnitRequest;
+import com.zimbra.soap.admin.message.HABOrgUnitRequest.HabOp;
+import com.zimbra.soap.admin.message.HABOrgUnitResponse;
+import com.zimbra.soap.admin.message.PurgeMessagesRequest;
+import com.zimbra.soap.admin.message.PurgeMessagesResponse;
+import com.zimbra.soap.admin.message.ReIndexRequest;
+import com.zimbra.soap.admin.message.ReIndexResponse;
+import com.zimbra.soap.admin.message.RecalculateMailboxCountsRequest;
+import com.zimbra.soap.admin.message.RecalculateMailboxCountsResponse;
+import com.zimbra.soap.admin.message.RemoveAccountAliasRequest;
+import com.zimbra.soap.admin.message.RemoveAccountLoggerRequest;
+import com.zimbra.soap.admin.message.RemoveAccountLoggerResponse;
+import com.zimbra.soap.admin.message.RemoveDistributionListAliasRequest;
+import com.zimbra.soap.admin.message.RemoveDistributionListMemberRequest;
+import com.zimbra.soap.admin.message.RenameAccountRequest;
+import com.zimbra.soap.admin.message.RenameCalendarResourceRequest;
+import com.zimbra.soap.admin.message.RenameCosRequest;
+import com.zimbra.soap.admin.message.RenameDistributionListRequest;
+import com.zimbra.soap.admin.message.RenameUCServiceRequest;
+import com.zimbra.soap.admin.message.ResetAllLoggersRequest;
+import com.zimbra.soap.admin.message.SearchDirectoryRequest;
+import com.zimbra.soap.admin.message.SearchDirectoryResponse;
+import com.zimbra.soap.admin.message.SetLocalServerOnlineRequest;
+import com.zimbra.soap.admin.message.SetPasswordRequest;
+import com.zimbra.soap.admin.message.SetPasswordResponse;
+import com.zimbra.soap.admin.message.SetServerOfflineRequest;
+import com.zimbra.soap.admin.message.UpdatePresenceSessionIdRequest;
+import com.zimbra.soap.admin.message.UpdatePresenceSessionIdResponse;
+import com.zimbra.soap.admin.message.VerifyIndexRequest;
+import com.zimbra.soap.admin.message.VerifyIndexResponse;
 import com.zimbra.soap.admin.type.AccountInfo;
 import com.zimbra.soap.admin.type.AccountLoggerInfo;
 import com.zimbra.soap.admin.type.AccountQuotaInfo;
@@ -2947,6 +3090,33 @@ public class SoapProvisioning extends Provisioning {
     @Override
     public void refreshUserCredentials(Account account) {
         throw new UnsupportedOperationException("Currently no way to refresh required attributes over SOAP");
+    }
+
+    @Override
+    public Set<String> createHabOrgUnit(Domain domain, String habOrgUnitName) throws ServiceException {
+        DomainSelector domSel =
+            new DomainSelector(toJaxb(DomainBy.name), domain.getName());
+        HABOrgUnitResponse resp = invokeJaxb(new HABOrgUnitRequest(domSel, habOrgUnitName, HabOp.create));
+        Set<String> habOrgList = new HashSet<String>();
+        habOrgList.addAll(resp.getHabOrgList());
+        return habOrgList;
+    }
+
+    @Override
+    public  Set<String> renameHabOrgUnit(Domain domain, String habOrgUnitName, String newHabOrgUnitName) throws ServiceException {
+        DomainSelector domSel =
+            new DomainSelector(toJaxb(DomainBy.name), domain.getName());
+        HABOrgUnitResponse resp = invokeJaxb(new HABOrgUnitRequest(domSel, habOrgUnitName, newHabOrgUnitName, HabOp.rename));
+        Set<String> habOrgList = new HashSet<String>();
+        habOrgList.addAll(resp.getHabOrgList());
+        return habOrgList;
+    }
+
+    @Override
+    public void deleteHabOrgUnit(Domain domain, String habOrgUnitName) throws ServiceException {
+        DomainSelector domSel =
+            new DomainSelector(toJaxb(DomainBy.name), domain.getName());
+        invokeJaxb(new HABOrgUnitRequest(domSel, habOrgUnitName, HabOp.delete));
     }
 
 }
