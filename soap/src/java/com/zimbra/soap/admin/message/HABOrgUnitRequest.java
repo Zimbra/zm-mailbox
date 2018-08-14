@@ -28,6 +28,7 @@ import com.google.common.base.MoreObjects;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.DomainSelector;
+import com.zimbra.soap.type.ZmBoolean;
 
 /**
  * @author zimbra
@@ -41,7 +42,7 @@ import com.zimbra.soap.admin.type.DomainSelector;
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name = AdminConstants.E_HAB_ORG_UNIT_REQUEST)
 @XmlType(propOrder = {})
-public class HabOrgUnitRequest {
+public class HABOrgUnitRequest {
 
     @XmlEnum
     public enum HabOp {
@@ -66,9 +67,10 @@ public class HabOrgUnitRequest {
     private DomainSelector domainSelector;
 
     /**
+     * @zm-api-field-tag name
      * @zm-api-field-description HAB org unit name
      */
-    @XmlAttribute(name = AdminConstants.A_NAME /* op */, required = true)
+    @XmlAttribute(name = AdminConstants.A_NAME /* name */, required = true)
     private String name;
 
     /**
@@ -79,16 +81,24 @@ public class HabOrgUnitRequest {
     private HabOp op;
 
     /**
-     * @zm-api-field-description  new HAB org unit name
+     * @zm-api-field-tag newName
+     * @zm-api-field-description new HAB org unit name
      */
-   @XmlAttribute(name = AdminConstants.A_NEW_NAME /* op */, required = false)
+    @XmlAttribute(name = AdminConstants.A_NEW_NAME /* newName */, required = false)
     private String newName;
+    /**
+     * @zm-api-field-tag forceDelete
+     * @zm-api-field-description indicates whether a HAB org unit should be
+     *                           deleted when it has groups.
+     */
+    @XmlAttribute(name = AdminConstants.A_FORCE_DELETE /* forceDelete */, required = false)
+    private ZmBoolean forceDelete;
    
-   public HabOrgUnitRequest() {
+   public HABOrgUnitRequest() {
        
    }
 
-    public HabOrgUnitRequest(DomainSelector domainSelector, String habOrgUnitName, 
+    public HABOrgUnitRequest(DomainSelector domainSelector, String habOrgUnitName, 
         String newHabOrgUnitName, HabOp op) {
         this.domainSelector = domainSelector;
         this.name = habOrgUnitName;
@@ -96,7 +106,7 @@ public class HabOrgUnitRequest {
         this.op = op;
     }
 
-    public HabOrgUnitRequest(DomainSelector domainSelector, String habOrgUnitName, HabOp op) {
+    public HABOrgUnitRequest(DomainSelector domainSelector, String habOrgUnitName, HabOp op) {
         this.domainSelector = domainSelector;
         this.name = habOrgUnitName;
         this.op = op;
@@ -138,6 +148,17 @@ public class HabOrgUnitRequest {
     
     public void setNewName(String newName) {
         this.newName = newName;
+    }
+
+
+    
+    public ZmBoolean getForceDelete() {
+        return forceDelete;
+    }
+
+    
+    public void setForceDelete(ZmBoolean forceDelete) {
+        this.forceDelete = forceDelete;
     }
 
     @Override

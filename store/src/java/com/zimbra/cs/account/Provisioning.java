@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2018 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -2360,8 +2360,8 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     public abstract void deleteXMPPComponent(XMPPComponent comp) throws ServiceException;
     
-    public abstract void createHabOrgUnit(Domain domain, String habOrgUnitName) throws ServiceException;
-    public abstract void renameHabOrgUnit(Domain domain, String habOrgUnitName, String newHabOrgUnitName) throws ServiceException;
+    public abstract Set<String> createHabOrgUnit(Domain domain, String habOrgUnitName) throws ServiceException;
+    public abstract Set<String> renameHabOrgUnit(Domain domain, String habOrgUnitName, String newHabOrgUnitName) throws ServiceException;
     public abstract void deleteHabOrgUnit(Domain domain, String habOrgUnitName) throws ServiceException;
 
     public static class RightsDoc {

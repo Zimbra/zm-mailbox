@@ -1699,24 +1699,18 @@ public class ProvUtil implements HttpDebugListener {
         }
     }
     
-    private void doCreateHabOrgUnit(String[] args)   {
-        try {
+    private void doCreateHabOrgUnit(String[] args) throws ServiceException {
         if(args.length != 3) { 
             usage();
             return;
         }
         Domain domain = lookupDomain(args[1], prov, Boolean.FALSE);
         
-        if (!(prov instanceof SoapProvisioning)) {
-            throwSoapOnly();
+        if (prov instanceof SoapProvisioning) {
+            ((SoapProvisioning) prov).createHabOrgUnit(domain, args[2]);
+        } else {
+            prov.createHabOrgUnit(domain, args[2]);
         }
-        ((SoapProvisioning) prov).createHabOrgUnit(domain, args[2]);
-        ZimbraLog.misc.info("3");
-        } catch (Exception e) {
-            ZimbraLog.misc.info(e.getMessage());
-            e.printStackTrace();
-        }
-        
     }
     
     private void doRenameHabOrgUnit(String[] args)  throws ServiceException {
@@ -1725,12 +1719,11 @@ public class ProvUtil implements HttpDebugListener {
             return;
         }
         Domain domain = lookupDomain(args[1], prov, Boolean.FALSE);
-        
-        if (!(prov instanceof SoapProvisioning)) {
-            throwSoapOnly();
+        if (prov instanceof SoapProvisioning) {
+            ((SoapProvisioning) prov).renameHabOrgUnit(domain, args[2], args[3]);
+        } else {
+            prov.renameHabOrgUnit(domain, args[2], args[3]);
         }
-        ((SoapProvisioning) prov).renameHabOrgUnit(domain, args[2], args[3]);
-        
     }
     
     private void doDeleteHabOrgUnit(String[] args)  throws ServiceException {
@@ -1739,12 +1732,11 @@ public class ProvUtil implements HttpDebugListener {
             return;
         }
         Domain domain = lookupDomain(args[1], prov, Boolean.FALSE);
-        
-        if (!(prov instanceof SoapProvisioning)) {
-            throwSoapOnly();
+        if (prov instanceof SoapProvisioning) {
+            ((SoapProvisioning) prov).deleteHabOrgUnit(domain, args[2]);
+        } else {
+            prov.deleteHabOrgUnit(domain, args[2]);
         }
-        ((SoapProvisioning) prov).deleteHabOrgUnit(domain, args[2]);
-        
     }
 
     private void doGetDomain(String[] args) throws ServiceException {

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2018 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -10810,35 +10810,42 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     @Override
-    public void createHabOrgUnit(Domain domain, String habOrgUnitName) throws ServiceException {
+    public Set<String> createHabOrgUnit(Domain domain, String habOrgUnitName) throws ServiceException {
         ZLdapContext zlc = null;
+        Set<String> habOrgList = null;
         try {
             String domainDn = ((LdapEntry)domain).getDN();
             zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.CREATE_OU);
-            String[] objClass = (String[]) LdapObjectClass.getOrganizationUnitObjectClasses()
-                .toArray();
+            Set<String> temp = LdapObjectClass.getOrganizationUnitObjectClasses();
+            String[] objClass = Arrays.copyOf(temp.toArray(), temp.size(), String[].class) ;
             String[] ldapAttrs = { Provisioning.A_ou, habOrgUnitName };
             zlc.createEntry(HabOrgUnit.createOuDn(habOrgUnitName, domainDn), objClass, ldapAttrs);
+            habOrgList = getHabOrgUnit(domain);
         } catch (ServiceException e) {
             throw ServiceException.FAILURE(String.format("Unable to create HAb org unit: %s for domain=%s",habOrgUnitName, domain.getName()), e);
         } finally {
             LdapClient.closeContext(zlc);
         }
+        
+        return habOrgList;
     }
 
     @Override
-    public void renameHabOrgUnit(Domain domain, String habOrgUnitName, String newHabOrgUnitName) throws ServiceException {
+    public Set<String> renameHabOrgUnit(Domain domain, String habOrgUnitName, String newHabOrgUnitName) throws ServiceException {
         ZLdapContext zlc = null;
+        Set<String> habOrgList = null;
         try {
             String domainDn = ((LdapEntry)domain).getDN();
             zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.CREATE_OU);
             zlc.renameEntry(HabOrgUnit.createOuDn(habOrgUnitName, domainDn),
                 HabOrgUnit.createOuDn(newHabOrgUnitName, domainDn));
+            habOrgList = getHabOrgUnit(domain);
         } catch (ServiceException e) {
             throw ServiceException.FAILURE(String.format("Unable to rename HAB org unit: %s for domain=%s",habOrgUnitName, domain.getName()), e);
         } finally {
             LdapClient.closeContext(zlc);
         }
+        return habOrgList;
     }
 
     @Override
@@ -10847,12 +10854,85 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         try {
             String domainDn = ((LdapEntry)domain).getDN();
             zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.CREATE_OU);
-            zlc.deleteEntry(HabOrgUnit.createOuDn(habOrgUnitName, domainDn));
+            if (isEmptyOu(habOrgUnitName, domainDn)) {
+                zlc.deleteEntry(HabOrgUnit.createOuDn(habOrgUnitName, domainDn));
+            } else {
+                throw ServiceException.FAILURE(String.format("HabOrgUnit: %s"
+                   + " of doamin:%s  is not empty", habOrgUnitName, domainDn) , null);
+            }
         } catch (ServiceException e) {
             throw ServiceException.FAILURE(String.format("Unable to delete HAB org unit: %s for domain=%s",habOrgUnitName, domain.getName()), e);
         } finally {
             LdapClient.closeContext(zlc);
         }
+    }
+    
+    /**
+     * @param habOrgUnitName  organizational unit name
+     * @param domainDn the domain distinguishedd name
+     * @return true if the ou has groups or false if empty
+     * @throws ServiceException 
+     */
+    private static boolean isEmptyOu(String habOrgUnitName, String domainDn) throws ServiceException {
+        ZLdapContext zlc = null;
+        boolean empty = false;
+        try {
+            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.CREATE_OU);
+            String baseDN = HabOrgUnit.createOuDn(habOrgUnitName, domainDn);
+            String filter = "(objectClass=zimbraDistributionList)";
+            String returnAttrs[] = new String[] { "cn" };
+            ZLdapFilter zFilter = ZLdapFilterFactory.getInstance()
+                .fromFilterString(FilterId.ALL_DISTRIBUTION_LISTS, filter);
+
+            ZSearchControls searchControls = ZSearchControls.createSearchControls(
+                ZSearchScope.SEARCH_SCOPE_SUBTREE, ZSearchControls.SIZE_UNLIMITED, returnAttrs);
+
+            ZSearchResultEnumeration ne = zlc.searchDir(baseDN, zFilter, searchControls);
+            empty = !ne.hasMore();
+        } catch (ServiceException e) {
+            throw ServiceException
+                .FAILURE(String.format("Unable to delete HAB org unit: %s for domain=%s",
+                    habOrgUnitName, domainDn), e);
+        } finally {
+            LdapClient.closeContext(zlc);
+        }
+        return empty;
+    }
+    
+    /**
+     * 
+     * @param domain domain for which HAB org unit list is requested
+     * @return HAB org unit list under the given domain
+     * @throws ServiceException
+     */
+    public Set<String> getHabOrgUnit(Domain domain) throws ServiceException {
+        ZLdapContext zlc = null;
+        Set<String> habList= new HashSet<String>();
+        try {
+            String domainDn = ((LdapEntry)domain).getDN();
+            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.CREATE_OU);
+            String filter = "(objectClass=organizationalUnit)";
+            String returnAttrs[] = new String[]{"ou"};
+            ZLdapFilter zFilter = ZLdapFilterFactory.getInstance().fromFilterString(FilterId.ANY_ENTRY, filter);
+            
+            ZSearchControls searchControls = ZSearchControls.createSearchControls(
+                    ZSearchScope.SEARCH_SCOPE_SUBTREE, ZSearchControls.SIZE_UNLIMITED, 
+                    returnAttrs);
+            
+            ZSearchResultEnumeration ne = zlc.searchDir(domainDn, zFilter, searchControls);
+            
+            while(ne.hasMore()) {
+                habList.add(ne.next().getAttributes().getAttrString("ou"));
+               
+            }
+            ZimbraLog.misc.debug("The HAB orgunits under:%s, are: (%s)", domain.getName(), habList);
+           
+        } catch (ServiceException e) {
+            throw ServiceException.FAILURE(String.format("Unable to delete HAB org unit: %s for domain=%s",domain.getName(), domain.getName()), e);
+        } finally {
+            LdapClient.closeContext(zlc);
+        }
+        return habList;
     }
 
   

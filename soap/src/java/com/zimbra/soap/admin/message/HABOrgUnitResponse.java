@@ -16,8 +16,12 @@
  */
 package com.zimbra.soap.admin.message;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
@@ -35,10 +39,31 @@ import com.zimbra.common.soap.AdminConstants;
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_HAB_ORG_UNIT_RESPONSE)
 @XmlType(propOrder = {})
-public class HabOrgUnitResponse {
+public class HABOrgUnitResponse {
 
-    public HabOrgUnitResponse() {
+    /**
+     * @zm-api-field-description List of HabOrg units under a domain
+     */
+    @XmlElement(name=AdminConstants.E_HAB_ORG_UNIT_NAME, required=false)
+    private List<String> habOrgList = new ArrayList<String>();
+    
+    public HABOrgUnitResponse() {
         
     }
+
+    public HABOrgUnitResponse(List<String> habOrgList) {
+        this.habOrgList = habOrgList;
+    }
+    
+    public List<String> getHabOrgList() {
+        return habOrgList;
+    }
+
+    
+    public void setHabOrgList(List<String> habOrgList) {
+        this.habOrgList = habOrgList;
+    }
+    
+    
 }
 

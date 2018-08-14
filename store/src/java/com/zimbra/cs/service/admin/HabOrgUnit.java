@@ -17,8 +17,7 @@
 package com.zimbra.cs.service.admin;
 
 import java.util.Map;
-
-import org.apache.commons.lang3.ArrayUtils;
+import java.util.Set;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
@@ -29,21 +28,10 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
-import com.zimbra.cs.account.ldap.LdapObjectClass;
-import com.zimbra.cs.account.ldap.entry.LdapEntry;
 import com.zimbra.cs.ldap.LdapClient;
-import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.LdapServerType;
 import com.zimbra.cs.ldap.LdapUsage;
-import com.zimbra.cs.ldap.ZAttributes;
 import com.zimbra.cs.ldap.ZLdapContext;
-import com.zimbra.cs.ldap.ZLdapFilter;
-import com.zimbra.cs.ldap.ZLdapFilterFactory;
-import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
-import com.zimbra.cs.ldap.ZSearchControls;
-import com.zimbra.cs.ldap.ZSearchResultEnumeration;
-import com.zimbra.cs.ldap.ZSearchScope;
-import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.soap.ZimbraSoapContext;
 
 
@@ -73,9 +61,10 @@ public class HabOrgUnit extends AdminDocumentHandler {
             throw AccountServiceException.NO_SUCH_DOMAIN(domainValue);
         }
         checkDomainRight(zsc, domain, AdminRight.PR_ALWAYS_ALLOW);
-        String domainDn = ((LdapEntry)domain).getDN();
-        
-        
+        if (!domain.isLocal()) {
+            throw ServiceException.INVALID_REQUEST("domain type must be local", null);
+        }
+
         String habOrgUnitName = request.getAttribute(AdminConstants.A_NAME);
         if (StringUtil.isNullOrEmpty(habOrgUnitName) ) {
             throw ServiceException.INVALID_REQUEST(
@@ -90,17 +79,14 @@ public class HabOrgUnit extends AdminDocumentHandler {
         
         ZLdapContext zlc = null;
         Element response = zsc.createElement(AdminConstants.HAB_ORG_UNIT_RESPONSE);
+        
         try {
             zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.CREATE_OU);
 
-            ZAttributes ouAttrs = null;
+            Set<String> habOrgUnitList = null;
             switch (operation) {
             case "create":
-                
-                String[] objClass = ArrayUtils.toStringArray(LdapObjectClass.getOrganizationUnitObjectClasses().toArray());
-                String[] ldapAttrs = { Provisioning.A_ou, habOrgUnitName };
-                zlc.createEntry(createOuDn(habOrgUnitName, domainDn), objClass, ldapAttrs);
-                ouAttrs = zlc.getAttributes(createOuDn(habOrgUnitName, domainDn), null);
+                habOrgUnitList = prov.createHabOrgUnit(domain, habOrgUnitName);
                 break;
             case "rename":
                 String newHabOrgUnitName = request.getAttribute("newName");
@@ -110,16 +96,15 @@ public class HabOrgUnit extends AdminDocumentHandler {
                             newHabOrgUnitName),
                         null);
                 }
-                zlc.renameEntry(createOuDn(habOrgUnitName, domainDn),
-                    createOuDn(newHabOrgUnitName, domainDn));
-                ouAttrs = zlc.getAttributes(createOuDn(newHabOrgUnitName, domainDn), null);
+                habOrgUnitList = prov.renameHabOrgUnit(domain, habOrgUnitName, newHabOrgUnitName);
                 break;
             case "delete":
-                if (isEmptyOu(habOrgUnitName, domainDn, zlc)) {
-                    zlc.deleteEntry(createOuDn(habOrgUnitName, domainDn));
+                boolean forceDelete = request.getAttributeBool(AdminConstants.A_FORCE_DELETE, false);
+                if (forceDelete) {
+                    throw ServiceException.INVALID_REQUEST(
+                        String.format("Force delete is not supported"), null);
                 } else {
-                    throw ServiceException.FAILURE(String.format("HabOrgUnit: %s"
-                       + " of doamin:%s  is not empty", habOrgUnitName, domainDn) , null);
+                    prov.deleteHabOrgUnit(domain, habOrgUnitName);
                 }
                 break;
             default:
@@ -127,10 +112,9 @@ public class HabOrgUnit extends AdminDocumentHandler {
                     String.format("Invalid operatio name, requested name:%s", operation), null);
             }
            
-            if (ouAttrs != null) {
-                Map<String, Object> attrMap = ouAttrs.getAttrs();
-                for (String key:  attrMap.keySet()) {
-                    ToXML.encodeAttr(response, key,attrMap.get(key));
+            if (habOrgUnitList != null) {
+                for (String habOrgUnit:  habOrgUnitList) {
+                    response.addElement(AdminConstants.E_HAB_ORG_UNIT_NAME).setText(habOrgUnit);
                 }
             }
         } finally {
@@ -139,26 +123,7 @@ public class HabOrgUnit extends AdminDocumentHandler {
 
         return response;
     }
-    
-    /**
-     * @param habOrgUnitName  organizational unit name
-     * @param domainDn the domain distinguishedd name
-     * @param zlc ldap context
-     * @return true if the ou has groups or false if empty
-     */
-    private static boolean isEmptyOu(String habOrgUnitName, String domainDn, ZLdapContext zlc) throws LdapException{
-        String baseDN = createOuDn(habOrgUnitName, domainDn);
-        String filter = "(objectClass=zimbraDistributionList)";
-        String returnAttrs[] = new String[]{"cn"};
-        ZLdapFilter zFilter = ZLdapFilterFactory.getInstance().fromFilterString(FilterId.ALL_DISTRIBUTION_LISTS, filter);
-        
-        ZSearchControls searchControls = ZSearchControls.createSearchControls(
-                ZSearchScope.SEARCH_SCOPE_SUBTREE, ZSearchControls.SIZE_UNLIMITED, 
-                returnAttrs);
-        
-        ZSearchResultEnumeration ne = zlc.searchDir(baseDN, zFilter, searchControls);
-        return !ne.hasMore();
-    }
+
 
     /**
      * 

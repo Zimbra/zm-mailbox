@@ -1048,10 +1048,11 @@ public final class AdminConstants {
     public static final QName CONTACT_BACKUP_RESPONSE = QName.get(E_CONTACT_BACKUP_RESPONSE, NAMESPACE);
     
     //HAB
-    public static final String E_HAB_ORG_UNIT_REQUEST = "HabOrgUnitRequest";
-    public static final String E_HAB_ORG_UNIT_RESPONSE = "HabOrgUnitResponse";
+    public static final String E_HAB_ORG_UNIT_REQUEST = "HABOrgUnitRequest";
+    public static final String E_HAB_ORG_UNIT_RESPONSE = "HABOrgUnitResponse";
     public static final QName HAB_ORG_UNIT_REQUEST = QName.get(E_HAB_ORG_UNIT_REQUEST, NAMESPACE);
     public static final QName HAB_ORG_UNIT_RESPONSE = QName.get(E_HAB_ORG_UNIT_RESPONSE, NAMESPACE);
+    public static final String E_HAB_ORG_UNIT_NAME = "habOrgUnitName";
 
     // DumpSessions
     public static final String E_SESSION = "session";
@@ -1495,4 +1496,5 @@ public final class AdminConstants {
     
     //HAB
     public static final String A_NEW_NAME = "newName";
+    public static final String A_FORCE_DELETE = "forceDelete";
 }
