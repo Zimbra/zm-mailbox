@@ -10820,7 +10820,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             String[] objClass = Arrays.copyOf(temp.toArray(), temp.size(), String[].class) ;
             String[] ldapAttrs = { Provisioning.A_ou, habOrgUnitName };
             zlc.createEntry(HabOrgUnit.createOuDn(habOrgUnitName, domainDn), objClass, ldapAttrs);
-            habOrgList = getHabOrgUnit(domain);
+            habOrgList = getAllHabOrgUnitInADomain(domain);
         } catch (ServiceException e) {
             throw ServiceException.FAILURE(String.format("Unable to create HAb org unit: %s for domain=%s",habOrgUnitName, domain.getName()), e);
         } finally {
@@ -10839,7 +10839,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.CREATE_OU);
             zlc.renameEntry(HabOrgUnit.createOuDn(habOrgUnitName, domainDn),
                 HabOrgUnit.createOuDn(newHabOrgUnitName, domainDn));
-            habOrgList = getHabOrgUnit(domain);
+            habOrgList = getAllHabOrgUnitInADomain(domain);
         } catch (ServiceException e) {
             throw ServiceException.FAILURE(String.format("Unable to rename HAB org unit: %s for domain=%s",habOrgUnitName, domain.getName()), e);
         } finally {
@@ -10905,7 +10905,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
      * @return HAB org unit list under the given domain
      * @throws ServiceException
      */
-    public Set<String> getHabOrgUnit(Domain domain) throws ServiceException {
+    public Set<String> getAllHabOrgUnitInADomain(Domain domain) throws ServiceException {
         ZLdapContext zlc = null;
         Set<String> habList= new HashSet<String>();
         try {

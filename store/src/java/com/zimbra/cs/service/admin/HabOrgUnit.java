@@ -76,50 +76,45 @@ public class HabOrgUnit extends AdminDocumentHandler {
             throw ServiceException.INVALID_REQUEST(
                 String.format("Operation is required, requested name:%s",operation), null);
         }
-        
-        ZLdapContext zlc = null;
+
         Element response = zsc.createElement(AdminConstants.HAB_ORG_UNIT_RESPONSE);
         
-        try {
-            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.CREATE_OU);
-
-            Set<String> habOrgUnitList = null;
-            switch (operation) {
-            case "create":
-                habOrgUnitList = prov.createHabOrgUnit(domain, habOrgUnitName);
-                break;
-            case "rename":
-                String newHabOrgUnitName = request.getAttribute("newName");
-                if (StringUtil.isNullOrEmpty(habOrgUnitName)) {
-                    throw ServiceException.INVALID_REQUEST(
-                        String.format("New Hab Org unit name is required, requested rename:%s",
-                            newHabOrgUnitName),
-                        null);
-                }
-                habOrgUnitList = prov.renameHabOrgUnit(domain, habOrgUnitName, newHabOrgUnitName);
-                break;
-            case "delete":
-                boolean forceDelete = request.getAttributeBool(AdminConstants.A_FORCE_DELETE, false);
-                if (forceDelete) {
-                    throw ServiceException.INVALID_REQUEST(
-                        String.format("Force delete is not supported"), null);
-                } else {
-                    prov.deleteHabOrgUnit(domain, habOrgUnitName);
-                }
-                break;
-            default:
+       
+        Set<String> habOrgUnitList = null;
+        switch (operation) {
+        case "create":
+            habOrgUnitList = prov.createHabOrgUnit(domain, habOrgUnitName);
+            break;
+        case "rename":
+            String newHabOrgUnitName = request.getAttribute("newName");
+            if (StringUtil.isNullOrEmpty(habOrgUnitName)) {
                 throw ServiceException.INVALID_REQUEST(
-                    String.format("Invalid operatio name, requested name:%s", operation), null);
+                    String.format("New Hab Org unit name is required, requested rename:%s",
+                        newHabOrgUnitName),
+                    null);
             }
-           
-            if (habOrgUnitList != null) {
-                for (String habOrgUnit:  habOrgUnitList) {
-                    response.addElement(AdminConstants.E_HAB_ORG_UNIT_NAME).setText(habOrgUnit);
-                }
+            habOrgUnitList = prov.renameHabOrgUnit(domain, habOrgUnitName, newHabOrgUnitName);
+            break;
+        case "delete":
+            boolean forceDelete = request.getAttributeBool(AdminConstants.A_FORCE_DELETE, false);
+            if (forceDelete) {
+                throw ServiceException.INVALID_REQUEST(
+                    String.format("Force delete is not supported"), null);
+            } else {
+                prov.deleteHabOrgUnit(domain, habOrgUnitName);
             }
-        } finally {
-            LdapClient.closeContext(zlc);
+            break;
+        default:
+            throw ServiceException.INVALID_REQUEST(
+                String.format("Invalid operatio name, requested name:%s", operation), null);
         }
+       
+        if (habOrgUnitList != null) {
+            for (String habOrgUnit:  habOrgUnitList) {
+                response.addElement(AdminConstants.E_HAB_ORG_UNIT_NAME).setText(habOrgUnit);
+            }
+        }
+
 
         return response;
     }
