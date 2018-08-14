@@ -23,10 +23,11 @@ import org.redisson.config.ClusterServersConfig;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.mailbox.redis.RedissonRetryClient;
 
 public final class RedissonClientHolder {
 
-    private final RedissonClient redisson;
+    private final RedissonRetryClient client;
     private static class InstanceHolder {
         public static RedissonClientHolder instance = new RedissonClientHolder();
     }
@@ -40,7 +41,7 @@ public final class RedissonClientHolder {
             ClusterServersConfig clusterServersConfig = config.useClusterServers();
             clusterServersConfig.setScanInterval(LC.redis_cluster_scan_interval.intValue());
             clusterServersConfig.addNodeAddress(uri.split(" "));
-            this.redisson = Redisson.create(config);
+            client = new RedissonRetryClient(Redisson.create(config));
         } catch (Exception ex) {
             ZimbraLog.system.fatal("Cannot setup RedissonClient to connect to %s", uri, ex);
             throw ex;
@@ -52,6 +53,6 @@ public final class RedissonClientHolder {
     }
 
     public RedissonClient getRedissonClient() {
-        return redisson;
+        return client;
     }
 }
