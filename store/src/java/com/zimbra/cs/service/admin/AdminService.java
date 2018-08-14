@@ -308,6 +308,10 @@ public class AdminService implements DocumentService {
 
         // ContactBackup API
         dispatcher.registerHandler(AdminConstants.CONTACT_BACKUP_REQUEST, new ContactBackup());
+        
+        // CreateHabOrgUnit
+        dispatcher.registerHandler(AdminConstants.HAB_ORG_UNIT_REQUEST, new HabOrgUnit());
+        
     }
 
     /**
