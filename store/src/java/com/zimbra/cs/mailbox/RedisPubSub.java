@@ -68,7 +68,7 @@ public class RedisPubSub extends NotificationPubSub {
                 }
                 PendingModificationSnapshot snapshot = pns.toSnapshot();
                 long received = getChannel().publish(new NotificationMsg(accountId, snapshot, changeId, source, sourceMailboxHash));
-                ZimbraLog.mailbox.info("published notifications for changeId=%d, received by %d", changeId, received);
+                ZimbraLog.mailbox.debug("published notifications for changeId=%d, received by %d", changeId, received);
             } catch (IOException | ServiceException e) {
                 ZimbraLog.mailbox.error("unable to serialize notifications for changeId=%d, accountId=%s", changeId, mbox.getAccountId(), e);
             }
