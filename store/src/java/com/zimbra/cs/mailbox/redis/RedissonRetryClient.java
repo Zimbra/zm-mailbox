@@ -81,7 +81,7 @@ public class RedissonRetryClient implements RedissonClient {
     }
 
     private boolean waitForCluster(Config redissonConfig, int maxWaitMillis) {
-        int waitMillis = 500;
+        int waitMillis = 250;
         int waited = 0;
         while (waited <= maxWaitMillis) {
             try {
