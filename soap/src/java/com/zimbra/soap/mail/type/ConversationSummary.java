@@ -34,8 +34,12 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.ZmBoolean;
 import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
 
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"metadatas", "subject", "fragment", "emails"})
+@GraphQLType(name="ConversationSummary", description="Conversation search result information")
 public class ConversationSummary {
 
     /**
@@ -194,22 +198,37 @@ public class ConversationSummary {
         this.emails.add(email);
     }
 
+    @GraphQLQuery(name="id", description="Conversation ID")
     public String getId() { return id; }
+    @GraphQLQuery(name="num", description="Number of messages in conversation without IMAP \\Deleted flag set")
     public Integer getNum() { return num; }
+    @GraphQLQuery(name="numUnread", description="Number of unread messages in conversation")
     public Integer getNumUnread() { return numUnread; }
+    @GraphQLQuery(name="totalSize", description="Total number of messages in conversation including those with the IMAP \\Deleted flag")
     public Integer getTotalSize() { return totalSize; }
+    @GraphQLQuery(name="flags", description="Flags set on the conversation. (u)nread, (f)lagged, has (a)ttachment, (r)eplied, (s)ent by me, for(w)arded, calendar in(v)ite, (d)raft, IMAP-\\Deleted (x), (n)otification sent, urgent (!), low-priority (?), priority (+)")
     public String getFlags() { return flags; }
+    @GraphQLQuery(name="tags", description="Tags - Comma separated list of integers.  DEPRECATED - use \"tagNames\" instead")
     public String getTags() { return tags; }
+    @GraphQLQuery(name="tagNames", description="Comma-separated list of tag names")
     public String getTagNames() { return tagNames; }
+    @GraphQLQuery(name="date", description="Date (secs since epoch) of most recent message in the converstation")
     public Long getDate() { return date; }
+    @GraphQLQuery(name="elided", description="If elided is set, some participants are missing before the first returned")
     public Boolean getElided() { return ZmBoolean.toBool(elided); }
+    @GraphQLQuery(name="changeDate", description="Date metadata changed")
     public Long getChangeDate() { return changeDate; }
+    @GraphQLQuery(name="modifiedSequence", description="Modified sequence")
     public Integer getModifiedSequence() { return modifiedSequence; }
+    @GraphQLQuery(name="metadatas", description="Custom metadata information")
     public List<MailCustomMetadata> getMetadatas() {
         return Collections.unmodifiableList(metadatas);
     }
+    @GraphQLQuery(name="subject", description="Subject of conversation")
     public String getSubject() { return subject; }
+    @GraphQLQuery(name="fragment", description="First few bytes of the message (probably between 40 and 100 bytes)")
     public String getFragment() { return fragment; }
+    @GraphQLQuery(name="emails", description="Email information for conversation participants, if available")
     public List<EmailInfo> getEmails() {
         return Collections.unmodifiableList(emails);
     }
