@@ -150,14 +150,21 @@ jobs:
             cd "$BUILD"; python -m SimpleHTTPServer &
             docker build -t zmc-mailbox --build-arg "DOCKER_REPO_NS=$DOCKER_REPO_NS" --build-arg "DOCKER_BUILD_TAG=latest-$SANITIZED_BRANCH" --build-arg "DOCKER_CACHE_TAG=$DOCKER_CACHE_TAG" --build-arg "LOCAL_SRC_DIR=." http://$(hostname):8000/docker-context.tgz
       - run:
-          name: Building zmc-mysql container image
+          name: Building zmc-mysql-proxy container image
           command: |
             docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
-            cd "$BUILD"/zm-docker
-            cp mysql/Dockerfile .
-            tar zcvf "$BUILD/docker-context.tgz" *
+            cp mysql-proxy/Dockerfile "$CHECKOUT"
+            tar zcvf "$BUILD/docker-context.tgz" -C "$CHECKOUT" *
             cd "$BUILD"; python -m SimpleHTTPServer &
-            docker build -t zmc-mysql --build-arg "DOCKER_REPO_NS=$DOCKER_REPO_NS" --build-arg "DOCKER_BUILD_TAG=latest-$SANITIZED_BRANCH" --build-arg "DOCKER_CACHE_TAG=$DOCKER_CACHE_TAG" --build-arg "LOCAL_SRC_DIR=." http://$(hostname):8000/docker-context.tgz
+            docker build -t zmc-mysql-proxy --build-arg "DOCKER_REPO_NS=$DOCKER_REPO_NS" --build-arg "DOCKER_BUILD_TAG=latest-$SANITIZED_BRANCH" --build-arg "DOCKER_CACHE_TAG=$DOCKER_CACHE_TAG" --build-arg "LOCAL_SRC_DIR=." http://$(hostname):8000/docker-context.tgz
+      - run:
+          name: Building zmc-mysql-local container image
+          command: |
+            docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
+            cp mysql-local/Dockerfile "$CHECKOUT"
+            tar zcvf "$BUILD/docker-context.tgz" -C "$CHECKOUT" *
+            cd "$BUILD"; python -m SimpleHTTPServer &
+            docker build -t zmc-mysql-local --build-arg "DOCKER_REPO_NS=$DOCKER_REPO_NS" --build-arg "DOCKER_BUILD_TAG=latest-$SANITIZED_BRANCH" --build-arg "DOCKER_CACHE_TAG=$DOCKER_CACHE_TAG" --build-arg "LOCAL_SRC_DIR=." http://$(hostname):8000/docker-context.tgz
       - run:
           name: Building zmc-proxy container image
           command: |
@@ -201,7 +208,7 @@ jobs:
             export DATE=$(date +"%Y%m%d-%H%M")
             export SHORTHASH=$(git rev-parse --short "$CIRCLE_SHA1")
             export TAG="${DATE}_${SANITIZED_BRANCH}_${SHORTHASH}"
-            for CONTAINERNAME in ldap mta mailbox mysql proxy zookeeper solr redismaster; do
+            for CONTAINERNAME in ldap mta mailbox mysql-proxy mysql-local proxy zookeeper solr redismaster; do
               docker tag "zmc-${CONTAINERNAME}" "${DOCKER_REPO_NS}/zmc-${CONTAINERNAME}:${TAG}"
               docker tag "zmc-${CONTAINERNAME}" "${DOCKER_REPO_NS}/zmc-${CONTAINERNAME}:latest-${SANITIZED_BRANCH}"
               docker push "${DOCKER_REPO_NS}/zmc-${CONTAINERNAME}:${TAG}"
