@@ -197,31 +197,24 @@ public abstract class RedisSharedStateCache<M extends MailItem & SharedState> im
 
         @Override
         public <T> void set(String fieldName, T value) {
+            ZimbraLog.cache.trace("RedisSharedState.set(%s,%s). %s", fieldName, value, this);
             map.put(fieldName, value);
         }
 
         @Override
         public void delete() {
-            ZimbraLog.cache.debug("RedisSharedState.delete called. %s", this);
+            ZimbraLog.cache.trace("RedisSharedState.delete() %s", this);
             map.delete();
         }
 
         @Override
         public void unset(String fieldName) {
+            ZimbraLog.cache.trace("RedisSharedState.unset(%s) %s", fieldName, this);
             map.fastRemove(fieldName);
-        }
-
-        /** When we do an uncache and hence a delete, the map is cleared, even for objects still using it.
-         * This can be used by objects to detect this, so that they know to use the local values.
-         * Should only affect objects that are still in use after obtained from the cache earlier.
-         */
-        public boolean isInUse() {
-            return !map.isEmpty();
         }
 
         @Override
         public String toString() {
-            map.isEmpty();
             return Objects.toStringHelper(this).omitNullValues()
                     .add("map", map == null ? null : map.entrySet())
                     .add("map.name", map == null ? null : map.getName())

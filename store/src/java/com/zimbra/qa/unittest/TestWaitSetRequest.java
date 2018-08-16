@@ -264,9 +264,7 @@ public class TestWaitSetRequest {
         ZMailbox mbox = TestUtil.getZMailbox(user1Name);
         String acctId = mbox.getAccountId();
         String authToken = mbox.getAuthToken().getValue();
-        ZimbraLog.test.info("GREN 1");
         String adminAuthToken = TestUtil.getAdminSoapTransport().getAuthToken().getValue();
-        ZimbraLog.test.info("GREN 2");
         ZFolder myFolder = TestUtil.createFolder(mbox, "funFolder");
         Set<Integer> folderInterest = Sets.newHashSet();
         folderInterest.add(myFolder.getFolderIdInOwnerMailbox());

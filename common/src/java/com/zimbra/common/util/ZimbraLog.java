@@ -833,6 +833,9 @@ public final class ZimbraLog {
             if (count == 0) {
                 continue; // Skip element for this method.
             }
+            if (!stElem.getClassName().contains("zimbra")) {
+                break;
+            }
             sb.append(stElem.toString()).append('\n');
             if (count >= maxDepth) {
                 break;
