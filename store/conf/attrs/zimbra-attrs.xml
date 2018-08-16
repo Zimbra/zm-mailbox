@@ -9769,5 +9769,10 @@ TODO: delete them permanently from here
 	<globalConfigValue>10</globalConfigValue>
 	<desc>This attribute is used to set time delay to show login history on splash screen page</desc>
 </attr>
+
+<attr id="5016" name="zimbraMailboxAccount" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="8.8.9">
+	<defaultCOSValue>TRUE</defaultCOSValue>
+	<desc>This attribute will specify an account have mailbox or not</desc>
+</attr>
 </attrs>
 
