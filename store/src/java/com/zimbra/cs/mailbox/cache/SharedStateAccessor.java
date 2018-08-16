@@ -9,6 +9,4 @@ public interface SharedStateAccessor {
     public void unset(String fieldName);
 
     public void delete();
-
-    public boolean isInUse();
 }
