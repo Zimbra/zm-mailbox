@@ -32,7 +32,11 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.CalTZInfoInterface;
 import com.zimbra.soap.type.TzOnsetInfo;
 
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name="CalTZInfo", description="Timezone specification")
 public class CalTZInfo implements CalTZInfoInterface {
 
     /**
@@ -42,6 +46,7 @@ public class CalTZInfo implements CalTZInfoInterface {
      * Otherwise, it must be present, although it will be ignored by the server
      */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=true)
+    @GraphQLQuery(name="id", description="Timezone ID.")
     private final String id;
 
     /**
@@ -49,6 +54,7 @@ public class CalTZInfo implements CalTZInfoInterface {
      * @zm-api-field-description Standard Time's offset in minutes from UTC; local = UTC + offset
      */
     @XmlAttribute(name=MailConstants.A_CAL_TZ_STDOFFSET /* stdoff */, required=true)
+    @GraphQLQuery(name="tzStdOffset", description="Standard Time's offset in minutes from UTC; local = UTC + offset")
     private final Integer tzStdOffset;
 
     /**
@@ -56,6 +62,7 @@ public class CalTZInfo implements CalTZInfoInterface {
      * @zm-api-field-description Daylight Saving Time's offset in minutes from UTC; present only if DST is used
      */
     @XmlAttribute(name=MailConstants.A_CAL_TZ_DAYOFFSET /* dayoff */, required=true)
+    @GraphQLQuery(name="tzDayOffset", description="Daylight Saving Time's offset in minutes from UTC; present only if DST is used")
     private final Integer tzDayOffset;
 
     /**
@@ -63,24 +70,28 @@ public class CalTZInfo implements CalTZInfoInterface {
      * Either specify week/wkday combo, or mday.
      */
     @XmlElement(name=MailConstants.E_CAL_TZ_STANDARD /* standard */, required=false)
+    @GraphQLQuery(name="standardTzOnset", description="Time/rule for transitioning from daylight time to standard time. Either specify week/wkday combo, or mday.")
     private TzOnsetInfo standardTzOnset;
 
     /**
      * @zm-api-field-description Time/rule for transitioning from standard time to daylight time
      */
     @XmlElement(name=MailConstants.E_CAL_TZ_DAYLIGHT /* daylight */, required=false)
+    @GraphQLQuery(name="daylightTzOnset", description="Time/rule for transitioning from standard time to daylight time. See `standardTzOnset` for more details.")
     private TzOnsetInfo daylightTzOnset;
 
     /**
      * @zm-api-field-description Standard Time component's timezone name
      */
     @XmlAttribute(name=MailConstants.A_CAL_TZ_STDNAME /* stdname */, required=false)
+    @GraphQLQuery(name="standardTZName", description="Standard Time component's timezone name")
     private String standardTZName;
 
     /**
      * @zm-api-field-description Daylight Saving Time component's timezone name
      */
     @XmlAttribute(name=MailConstants.A_CAL_TZ_DAYNAME /* dayname */, required=false)
+    @GraphQLQuery(name="daylightTZName", description="Daylight Saving Time component's timezone name")
     private String daylightTZName;
 
     /**
@@ -124,6 +135,7 @@ public class CalTZInfo implements CalTZInfoInterface {
     }
 
     @Override
+    @GraphQLQuery(name="id", description="Timezone ID.")
     public String getId() { return id; }
     @Override
     public Integer getTzStdOffset() { return tzStdOffset; }

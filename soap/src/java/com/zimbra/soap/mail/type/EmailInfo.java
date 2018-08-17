@@ -31,7 +31,11 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.EmailInfoInterface;
 import com.zimbra.soap.type.ZmBoolean;
 
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name="EmailInfo", description="Email information")
 public class EmailInfo
 implements EmailInfoInterface {
 
@@ -124,16 +128,22 @@ implements EmailInfoInterface {
     }
 
     @Override
+    @GraphQLQuery(name="address", description="The email address")
     public String getAddress() { return address; }
     @Override
+    @GraphQLQuery(name="display", description="The email addresses display name. Example: \"Jane Doe\" <local@domain.com>")
     public String getDisplay() { return display; }
     @Override
+    @GraphQLQuery(name="personal", description="The comment/name part of an address")
     public String getPersonal() { return personal; }
     @Override
+    @GraphQLQuery(name="addressType", description="Address type. Example: (f)rom, (t)o, (c)c, (b)cc, (r)eply-to, (s)ender, read-receipt (n)otification, (rf) resent-from")
     public String getAddressType() { return addressType; }
     @Override
+    @GraphQLQuery(name="group", description="Set if the email address is a group")
     public Boolean getGroup() { return ZmBoolean.toBool(group); }
     @Override
+    @GraphQLQuery(name="canExpandGroupMembers", description="Denotes that the group can be expanded showing its members")
     public Boolean getCanExpandGroupMembers() { return ZmBoolean.toBool(canExpandGroupMembers); }
 
     public static Iterable <EmailInfo> fromInterfaces(Iterable <EmailInfoInterface> ifs) {
