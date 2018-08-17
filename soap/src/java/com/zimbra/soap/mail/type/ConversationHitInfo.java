@@ -29,10 +29,15 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.SearchHit;
 
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name="ConversationHitInfo", description="Conversation search result information")
 public class ConversationHitInfo
 extends ConversationSummary
 implements SearchHit {
@@ -71,7 +76,10 @@ implements SearchHit {
         return this;
     }
 
+    @GraphQLQuery(name="sortField", description="The sort field")
     public String getSortField() { return sortField; }
+
+    @GraphQLQuery(name="messageHits", description="List of messages in the conversation")
     public List<ConversationMsgHitInfo> getMessageHits() {
         return Collections.unmodifiableList(messageHits);
     }

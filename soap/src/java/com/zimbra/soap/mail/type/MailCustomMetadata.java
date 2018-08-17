@@ -51,7 +51,6 @@ implements CustomMetadataInterface {
      * report on.
      */
     @XmlAttribute(name=MailConstants.A_SECTION /* section */, required=false)
-    @GraphQLQuery(name="section", description="Section")
     private String section;
 
     public MailCustomMetadata() {
@@ -60,6 +59,7 @@ implements CustomMetadataInterface {
     @Override
     public void setSection(String section) { this.section = section; }
     @Override
+    @GraphQLQuery(name="section", description="Section. If absent this indicates that CustomMetadata info is present but there are no sections to report on.")
     public String getSection() { return section; }
 
     public static List <MailCustomMetadata> fromInterfaces(Iterable <CustomMetadataInterface> params) {

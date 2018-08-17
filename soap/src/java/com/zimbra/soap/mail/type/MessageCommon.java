@@ -34,6 +34,10 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.CustomMetadataInterface;
 import com.zimbra.soap.base.MessageCommonInterface;
 
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+import io.leangen.graphql.annotations.GraphQLNonNull;
+
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"metadatas"})
 public class MessageCommon
@@ -158,25 +162,37 @@ implements MessageCommonInterface {
     }
 
     @Override
+    @GraphQLQuery(name="size", description="Size in bytes")
     public Long getSize() { return size; }
     @Override
+    @GraphQLQuery(name="date", description="Date Seconds since the epoch, from the date header in the message")
     public Long getDate() { return date; }
     @Override
+    @GraphQLQuery(name="folder", description="Folder ID")
     public String getFolder() { return folder; }
     @Override
+    @GraphQLQuery(name="conversationId", description="Converstation ID")
     public String getConversationId() { return conversationId; }
     @Override
+    @GraphQLQuery(name="flags", description="Flags set on the conversation. (u)nread, (f)lagged, has (a)ttachment, (r)eplied, (s)ent by me, for(w)arded, calendar in(v)ite, (d)raft, IMAP-Deleted (x), (n)otification sent, urgent (!), low-priority (?), priority (+)")
     public String getFlags() { return flags; }
     @Override
+    @GraphQLQuery(name="tags", description="Tags - Comma separated list of integers. DEPRECATED - use \"tagNames\" instead")
     public String getTags() { return tags; }
     @Override
+    @GraphQLQuery(name="tagNames", description="Comma-separated list of tag names")
     public String getTagNames() { return tagNames; }
     @Override
+    @GraphQLQuery(name="revision", description="Revision increment")
     public Integer getRevision() { return revision; }
     @Override
+    @GraphQLQuery(name="changeDate", description="Date metadata changed")
     public Long getChangeDate() { return changeDate; }
     @Override
+    @GraphQLQuery(name="modifiedSequence", description="Change sequence")
     public Integer getModifiedSequence() { return modifiedSequence; }
+
+    @GraphQLQuery(name="metadatas", description="Custom metadata information")
     public List<MailCustomMetadata> getMetadatas() {
         return Collections.unmodifiableList(metadatas);
     }

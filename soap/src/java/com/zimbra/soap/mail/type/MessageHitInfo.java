@@ -33,7 +33,12 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.SearchHit;
 import com.zimbra.soap.type.ZmBoolean;
 
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+import io.leangen.graphql.annotations.GraphQLNonNull;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name="MessageHitInfo", description="Message search result information containing a list of messages")
 public class MessageHitInfo
 extends MessageInfo
 implements SearchHit {
@@ -83,8 +88,11 @@ implements SearchHit {
         return this;
     }
 
+    @GraphQLQuery(name="sortField", description="The sort field value")
     public String getSortField() { return sortField; }
+    @GraphQLQuery(name="contentMatched", description="If the message matched the specified query string")
     public Boolean getContentMatched() { return ZmBoolean.toBool(contentMatched); }
+    @GraphQLQuery(name="messagePartHits", description="Hit Parts, indicators that the named parts matched the search string")
     public List<Part> getMessagePartHits() {
         return Collections.unmodifiableList(messagePartHits);
     }
