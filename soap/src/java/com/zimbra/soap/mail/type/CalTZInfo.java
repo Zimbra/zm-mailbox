@@ -139,6 +139,7 @@ public class CalTZInfo implements CalTZInfoInterface {
     }
 
     @Override
+    @GraphQLQuery(name="id", description="Timezone ID.")
     public String getId() { return id; }
     @Override
     public Integer getTzStdOffset() { return tzStdOffset; }
