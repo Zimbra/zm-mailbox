@@ -40,6 +40,8 @@ import com.zimbra.cs.account.accesscontrol.ZimbraACE;
  */
 public abstract class Group extends MailTarget implements AliasedEntry {
 
+    private boolean isHABGroup = Boolean.FALSE;
+
     public static final DistributionListSubscriptionPolicy
             DEFAULT_SUBSCRIPTION_POLICY = DistributionListSubscriptionPolicy.REJECT;
 
@@ -128,6 +130,13 @@ public abstract class Group extends MailTarget implements AliasedEntry {
         return Collections.unmodifiableSet(addrs);
     }
 
+    public boolean isHABGroup() {
+        return isHABGroup;
+    }
+
+    public void setHABGroup(boolean isHabGroup) {
+        this.isHABGroup = isHabGroup;
+    }
 
     public static class GroupOwner {
         /*
