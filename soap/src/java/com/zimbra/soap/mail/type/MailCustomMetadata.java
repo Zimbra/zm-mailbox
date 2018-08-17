@@ -52,7 +52,6 @@ implements CustomMetadataInterface {
      * report on.
      */
     @XmlAttribute(name=MailConstants.A_SECTION /* section */, required=false)
-    @GraphQLQuery(name="section", description="Section")
     private String section;
 
     public MailCustomMetadata() {
