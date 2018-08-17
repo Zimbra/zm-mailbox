@@ -18,6 +18,7 @@
 package com.zimbra.soap;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
@@ -113,8 +114,20 @@ public class SoapEngine {
 
     private final DocumentDispatcher dispatcher = new DocumentDispatcher();
 
+    private File healthcheckFile;
+
     SoapEngine() {
         SoapTransport.setDefaultUserAgent(SoapTransport.DEFAULT_USER_AGENT_NAME, BuildInfo.VERSION);
+        initHeathcheckFile();
+    }
+
+    private void initHeathcheckFile() {
+        healthcheckFile = new File(LC.mailbox_healthcheck_touchpoint_file.value());
+        if (!healthcheckFile.exists()) {
+            ZimbraLog.mailbox.warn("healthcheck touchpoint file %s does not exist!", healthcheckFile.getAbsolutePath());
+        } else {
+            ZimbraLog.mailbox.info("found touchpoint healthcheck file %s", healthcheckFile.getAbsolutePath());
+        }
     }
 
     /**
@@ -644,6 +657,7 @@ public class SoapEngine {
                     handler.logAuditAccess(at.getAdminAccountId(), acctId, acctId);
                 }
                 response = handler.handle(soapReqElem, context);
+                updateHealthcheckFileTimestamp(startTime);
                 ZimbraPerf.SOAP_TRACKER.addStat(getStatName(soapReqElem), startTime);
                 long duration = System.currentTimeMillis() - startTime;
                 if (LC.zimbra_slow_logging_enabled.booleanValue() && duration > LC.zimbra_slow_logging_threshold.longValue() &&
@@ -691,6 +705,12 @@ public class SoapEngine {
             SoapTransport.clearVia();
         }
         return response;
+    }
+
+    private void updateHealthcheckFileTimestamp(long timestamp) {
+        if (healthcheckFile.exists()) {
+            healthcheckFile.setLastModified(timestamp);
+        }
     }
 
     /**
