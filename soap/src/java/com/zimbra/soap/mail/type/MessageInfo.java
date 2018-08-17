@@ -37,9 +37,16 @@ import com.zimbra.soap.base.MessageInfoInterface;
 import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
 import com.zimbra.soap.type.KeyValuePair;
 
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+import io.leangen.graphql.annotations.GraphQLNonNull;
+import io.leangen.graphql.annotations.GraphQLIgnore;
+
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = { "fragment", "emails", "subject",
     "messageIdHeader", "inReplyTo", "invite", "headers", "contentElems" })
+
+@GraphQLType(name="MessageInfo", description="Message information")
 public class MessageInfo
 extends MessageCommon
 implements MessageInfoInterface {
@@ -199,6 +206,7 @@ implements MessageInfoInterface {
     public void setId(String id) { this.id = id; }
 
     public void setImapUid(Integer imapUid) { this.imapUid = imapUid; }
+    @GraphQLQuery(name="imapUid", description="The imap UID")
     public Integer getImapUid() { return imapUid; }
 
     @Override
@@ -286,42 +294,60 @@ implements MessageInfoInterface {
     }
 
     @Override
+    @GraphQLQuery(name="id", description="The message ID")
     public String getId() { return id; }
     @Override
+    @GraphQLQuery(name="calendarIntendedFor", description="X-Zimbra-Calendar-Intended-For header")
     public String getCalendarIntendedFor() { return calendarIntendedFor; }
     @Override
+    @GraphQLQuery(name="origId", description="Message id of the message being replied to/forwarded (outbound messages only)")
     public String getOrigId() { return origId; }
     @Override
+    @GraphQLQuery(name="draftReplyType", description="Reply type - r|w")
     public String getDraftReplyType() { return draftReplyType; }
     @Override
+    @GraphQLQuery(name="identityId", description="Specifies the identity being used to compose the message")
     public String getIdentityId() { return identityId; }
     @Override
+    @GraphQLQuery(name="draftAccountId", description="Draft account ID")
     public String getDraftAccountId() { return draftAccountId; }
     @Override
+    @GraphQLQuery(name="draftAutoSendTime", description="Specifies the time at which the draft should be automatically sent by the server")
     public Long getDraftAutoSendTime() { return draftAutoSendTime; }
     @Override
+    @GraphQLQuery(name="sentDate", description="The sent date in the header")
     public Long getSentDate() { return sentDate; }
     @Override
+    @GraphQLQuery(name="resentDate", description="The re-sent date in the header")
     public Long getResentDate() { return resentDate; }
     @Override
+    @GraphQLQuery(name="part", description="Part")
     public String getPart() { return part; }
     @Override
+    @GraphQLQuery(name="fragment", description="First few bytes of the message (probably between 40 and 100 bytes)")
     public String getFragment() { return fragment; }
+    @GraphQLQuery(name="emails", description="Email information")
     public List<EmailInfo> getEmails() {
         return Collections.unmodifiableList(emails);
     }
     @Override
+    @GraphQLQuery(name="subject", description="The email subject")
     public String getSubject() { return subject; }
     @Override
+    @GraphQLQuery(name="messageIdHeader", description="The message ID")
     public String getMessageIdHeader() { return messageIdHeader; }
     @Override
+    @GraphQLQuery(name="inReplyTo", description="Message-ID header for message being replied to")
     public String getInReplyTo() { return inReplyTo; }
+    @GraphQLQuery(name="invite", description="Parsed out iCalendar invite")
     public InviteInfo getInvite() { return invite; }
     @Override
+    @GraphQLQuery(name="headers", description="List of headers")
     public List<KeyValuePair> getHeaders() {
         return Collections.unmodifiableList(headers);
     }
     @Override
+    @GraphQLQuery(name="contentElems", description="List of content elements")
     public List<Object> getContentElems() {
         return Collections.unmodifiableList(contentElems);
     }
@@ -371,11 +397,13 @@ implements MessageInfoInterface {
     }
 
     @Override
+    @GraphQLIgnore
     public List<EmailInfoInterface> getEmailInterfaces() {
         return EmailInfo.toInterfaces(emails);
     }
 
     @Override
+    @GraphQLIgnore
     public InviteInfoInterface getInvitInterfacee() {
         return invite;
     }

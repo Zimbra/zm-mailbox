@@ -25,7 +25,12 @@ import com.google.common.base.MoreObjects;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+import io.leangen.graphql.annotations.GraphQLNonNull;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name="ConversationMsgHitInfo", description="Conversation search result information containing messages")
 public class ConversationMsgHitInfo {
 
     /**
@@ -96,11 +101,18 @@ public class ConversationMsgHitInfo {
         this.autoSendTime = autoSendTime;
     }
     public void setDate(Long date) { this.date = date; }
+    @GraphQLNonNull
+    @GraphQLQuery(name="id", description="The message ID")
     public String getId() { return id; }
+    @GraphQLQuery(name="size", description="The message size")
     public Long getSize() { return size; }
+    @GraphQLQuery(name="folderId", description="The folder ID")
     public String getFolderId() { return folderId; }
+    @GraphQLQuery(name="flags", description="Flags Example: Flags. (u)nread, (f)lagged, has (a)ttachment, (r)eplied, (s)ent by me, for(w)arded, calendar in(v)ite, (d)raft, IMAP-\\Deleted (x), (n)otification sent, urgent (!), low-priority (?), priority (+)")
     public String getFlags() { return flags; }
+    @GraphQLQuery(name="autoSendTime", description="The time at which the draft should be automatically sent by the server")
     public Long getAutoSendTime() { return autoSendTime; }
+    @GraphQLQuery(name="date", description="Date Seconds since the epoch, from the date header in the message")
     public Long getDate() { return date; }
 
     /** Done like this rather than using JAXB for performance reasons */

@@ -25,7 +25,11 @@ import javax.xml.bind.annotation.XmlAttribute;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.ZmBoolean;
 
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name="CursorInfo", description="Cursor specification")
 public final class CursorInfo {
 
     /**
@@ -86,9 +90,13 @@ public final class CursorInfo {
 
     public void setIncludeOffset(Boolean includeOffset) { this.includeOffset = ZmBoolean.fromBool(includeOffset); }
 
+    @GraphQLQuery(name="id", description="Previous ID. cursor-prev-id and cursor-sort-value and correspond to the last hit on the current page (assuming you're going forward, if you're backing up then they should be the first hit on the current page) or the selected item before changing the sort order. cursor-sort-value should be set to the value of the 'sf' (SortField) attribute. If you are changing the sort field, don't specify sortVal because 'sf' is sort field dependent. (In this case, the server supplements sortVal using the specified item ID. If the item no longer exist, the cursor gets cleared.) The server uses those attributes to find the spot in the new results that corresponds to your old position: even if some entries have been removed or added to the search results (e.g. if you are searching is:unread and you read some).")
     public String getId() { return id; }
+    @GraphQLQuery(name="sortVal", description="Should be set to the value of the `sortField` (SortField) attribute.")
     public String getSortVal() { return sortVal; }
+    @GraphQLQuery(name="endSortVal", description="Used for ranges to tell the cursor where to stop (non-inclusive) returning values")
     public String getEndSortVal() { return endSortVal; }
+    @GraphQLQuery(name="includeOffset", description="f true, the response will include the cursor position (starting from 0) in the entire hits. This can't be used with text queries. Don't abuse this option because this operation is relatively expensive")
     public Boolean getIncludeOffset() { return ZmBoolean.toBool(includeOffset); }
 
     public MoreObjects.ToStringHelper addToStringInfo(
