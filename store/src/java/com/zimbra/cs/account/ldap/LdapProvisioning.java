@@ -7298,8 +7298,15 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                 throw ServiceException.INVALID_REQUEST("Cannot add self as a member: " + memberName, null);
 
             // cannot add a dynamic group as member
-            if (getDynamicGroupBasic(Key.DistributionListBy.name, memberName, null) != null) {
-                throw ServiceException.INVALID_REQUEST("Cannot add dynamic group as a member: " + memberName, null);
+            DynamicGroup dynMember = getDynamicGroup(Key.DistributionListBy.name, memberName, null, Boolean.FALSE);
+            if (dynMember != null) {
+                if (dl.isHABGroup()) {
+                    if (dlIsInDynamicHABGroup(dynMember, addrsOfDL.getAll())) {
+                        throw ServiceException.INVALID_REQUEST("Cannot add dynamic group as a member, since it contains the parent: " + memberName, null);
+                    }
+                } else {
+                    throw ServiceException.INVALID_REQUEST("Cannot add dynamic group as a member: " + memberName, null);
+                }
             }
 
             if (!existing.contains(memberName)) {
@@ -9667,11 +9674,16 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                 List<String> objectclass =
                     attrs.getMultiAttrStringAsList(Provisioning.A_objectClass, CheckBinary.NOCHECK);
 
+                Group grp = null;
                 if (objectclass.contains(AttributeClass.OC_zimbraDistributionList)) {
-                    return makeDistributionList(sr.getDN(), attrs, basicAttrsOnly);
+                    grp = makeDistributionList(sr.getDN(), attrs, basicAttrsOnly);
                 } else if (objectclass.contains(AttributeClass.OC_zimbraGroup)) {
-                    return makeDynamicGroup(initZlc, sr.getDN(), attrs);
+                    grp = makeDynamicGroup(initZlc, sr.getDN(), attrs);
                 }
+                if (grp != null && objectclass.contains(AttributeClass.OC_zimbraHabGroup)) {
+                    grp.setHABGroup(Boolean.TRUE);
+                }
+                return grp;
             }
         } catch (LdapMultipleEntriesMatchedException e) {
             throw AccountServiceException.MULTIPLE_ENTRIES_MATCHED("getGroupByQuery", e);
@@ -9900,7 +9912,12 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             /*
              * all is well, get the group by id
              */
-            DynamicGroup group = getDynamicGroupBasic(DistributionListBy.id, zimbraId, zlc);
+            DynamicGroup group = null;
+            if (isHabGroup) {
+                group = getDynamicGroup(DistributionListBy.id, zimbraId, zlc, Boolean.FALSE);
+            } else {
+                group = getDynamicGroupBasic(DistributionListBy.id, zimbraId, zlc);
+            }
 
             if (group != null) {
                 AttributeManager.getInstance().postModify(groupAttrs, group, callbackContext);
@@ -10189,6 +10206,11 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     private DynamicGroup getDynamicGroupBasic(Key.DistributionListBy keyType, String key,
             ZLdapContext zlc) throws ServiceException {
+        return getDynamicGroup(keyType, key, zlc, Boolean.TRUE);
+    }
+
+    private DynamicGroup getDynamicGroup(Key.DistributionListBy keyType, String key,
+            ZLdapContext zlc, boolean basicAttrsOnly) throws ServiceException {
         DynamicGroup dynGroup = getDynamicGroupFromCache(keyType, key);
         if (dynGroup != null) {
             return dynGroup;
@@ -10196,10 +10218,10 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
         switch(keyType) {
         case id:
-            dynGroup = getDynamicGroupById(key, zlc, true);
+            dynGroup = getDynamicGroupById(key, zlc, basicAttrsOnly);
             break;
         case name:
-            dynGroup = getDynamicGroupByName(key, zlc, true);
+            dynGroup = getDynamicGroupByName(key, zlc, basicAttrsOnly);
             break;
         }
 
@@ -10632,6 +10654,31 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         }
 
         return members.toArray(new String[members.size()]);
+    }
+
+    public boolean dlIsInDynamicHABGroup(DynamicGroup group, List<String> dlsToCheck) {
+        ZLdapContext zlc = null;
+        try {
+            zlc = LdapClient.getContext(LdapServerType.REPLICA, LdapUsage.GET_GROUP_MEMBER);
+            String[] memberDNs = group.getMultiAttr(Provisioning.A_member);
+            final String[] attrsToGet = new String[] { Provisioning.A_mail, Provisioning.A_zimbraMailAlias };
+            for (String memberDN : memberDNs) {
+                ZAttributes memberAttrs = zlc.getAttributes(memberDN, attrsToGet);
+                if (memberAttrs != null && dlsToCheck != null) {
+                    for (String dlToCheck : dlsToCheck) {
+                        if (memberAttrs.hasAttributeValue(Provisioning.A_mail, dlToCheck)
+                                || memberAttrs.hasAttributeValue(Provisioning.A_zimbraMailAlias, dlToCheck)) {
+                            return Boolean.TRUE;
+                        }
+                    }
+                }
+            }
+        } catch (ServiceException e) {
+            ZimbraLog.account.warn("unable to get dynamic group members", e);
+        } finally {
+            LdapClient.closeContext(zlc);
+        }
+        return Boolean.FALSE;
     }
 
     public String[] getDynamicGroupMembers(DynamicGroup group) throws ServiceException {
