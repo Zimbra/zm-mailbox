@@ -1262,6 +1262,9 @@ public final class LC {
     @Supported
     public static final KnownKey search_put_hits_chunk_size = KnownKey.newKey(100);
 
+    @Supported
+    public static final KnownKey mailbox_healthcheck_touchpoint_file = KnownKey.newKey("/opt/zimbra/healthcheck_touchpoint");
+
     public enum PUBLIC_SHARE_VISIBILITY { samePrimaryDomain, all, none };
 
     /**
