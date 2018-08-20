@@ -35,4 +35,21 @@ public class GqlConstants {
 
     // search folder constants
     public static final String SEARCH_FOLDER = "SearchFolder";
+
+    // account info constants
+    public static final String ACCOUNT_INFO = "AccountInfo";
+    public static final String ATTRS = "attrs";
+    public static final String SOAP_URL = "soapURL";
+    public static final String PUBLIC_URL = "publicURL";
+    public static final String CHANGE_PASSWORD_URL = "changePasswordURL";
+    public static final String COMMUNITY_URL = "communityURL";
+    public static final String ADMIN_URL = "adminURL";
+    public static final String BOSH_URL = "boshURL";
+
+    // named value constants
+    public static final String NAMED_VALUE = "NamedValue";
+    public static final String VALUE = "value";
+
+    // end session constants
+    public static final String CLEAR_COOKIES= "clearCookies";
 }
