@@ -48,6 +48,7 @@ import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.gal.GalOp;
+import com.zimbra.cs.account.ldap.entry.LdapDistributionList;
 import com.zimbra.cs.account.names.NameUtil;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.gal.GalSearchParams;
@@ -276,6 +277,9 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     /** do not fixup return attrs for searchObject, onlt used from LdapUpgrade */
     public static final int SO_NO_FIXUP_RETURNATTRS = 0x400;
+    
+    /** return distribution lists from searchAccounts/searchDirectory */
+    public static final int SD_HAB_FLAG = 0x12;
 
     /**
      *  do not set account defaults in makeAccount
@@ -2717,5 +2721,13 @@ public abstract class Provisioning extends ZAttrProvisioning {
         for (ProvisioningValidator validator : validators) {
             validator.refresh();
         }
+    }
+
+    /**
+     * @param domain
+     * @return
+     */
+    public List<LdapDistributionList> getAllHabGroups(Domain domain) throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
     }
 }

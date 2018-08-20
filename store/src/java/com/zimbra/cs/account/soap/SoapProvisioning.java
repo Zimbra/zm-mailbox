@@ -3119,4 +3119,13 @@ public class SoapProvisioning extends Provisioning {
         invokeJaxb(new HABOrgUnitRequest(domSel, habOrgUnitName, HabOp.delete));
     }
 
+    /**
+     * @param string
+     */
+    public void getHab(String rootHabGroupId, Account account) throws ServiceException{
+        XMLElement req = new XMLElement(AccountConstants.GET_HAB_REQUEST);
+        req.addAttribute(AccountConstants.A_HAB_ROOT_GROUP_ID, rootHabGroupId);
+        invokeOnTargetAccount(req, account.getId());
+    }
+
 }

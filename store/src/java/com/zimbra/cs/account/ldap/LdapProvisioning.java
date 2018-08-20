@@ -380,7 +380,6 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
         Set<String> attrs = Sets.newHashSet(dlAttrs);
         attrs.add(Provisioning.A_objectClass);
-        attrs.remove(Provisioning.A_zimbraMailForwardingAddress);  // the member attr
         attrs.remove(Provisioning.A_zimbraMailTransport);          // does not apply to DL
 
         // remove deprecated attrs
@@ -1779,7 +1778,8 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                 types.contains(ObjectType.resources)) {
                 peopleTree = true;
             }
-            if (types.contains(ObjectType.domains)) {
+            if (types.contains(ObjectType.domains) ||
+                types.contains(ObjectType.habgroups)) {
                 domainsTree = true;
             }
 
@@ -1958,6 +1958,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         boolean calendarResources = (flags & Provisioning.SD_CALENDAR_RESOURCE_FLAG) != 0;
         boolean domains = (flags & Provisioning.SD_DOMAIN_FLAG) != 0;
         boolean coses = (flags & Provisioning.SD_COS_FLAG) != 0;
+        boolean habgroups = (flags & Provisioning.SD_HAB_FLAG) != 0;
 
         int num = (accounts ? 1 : 0) +
                   (aliases ? 1 : 0) +
@@ -1965,6 +1966,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                   (groups ? 1 : 0) +
                   (domains ? 1 : 0) +
                   (coses ? 1 : 0) +
+                  (habgroups ? 1 : 0) +
                   (calendarResources ? 1 : 0);
         if (num == 0) {
             accounts = true;
@@ -1998,6 +2000,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         if (domains) oc.append("(objectclass=zimbraDomain)");
         if (coses) oc.append("(objectclass=zimbraCos)");
         if (calendarResources) oc.append("(objectclass=zimbraCalendarResource)");
+        if (habgroups) oc.append("(objectclass=zimbraHabGroup)");
 
         if (num > 1) {
             oc.append(")");
@@ -9420,6 +9423,15 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         searchOpts.setSortOpt(SortOpt.SORT_ASCENDING);
         List<NamedEntry> groups = (List<NamedEntry>) searchDirectoryInternal(searchOpts);
 
+        return groups;
+    }
+    
+    public List getAllHabGroups(Domain domain) throws ServiceException {
+        SearchDirectoryOptions searchOpts = new SearchDirectoryOptions(domain);
+        searchOpts.setFilter(mDIT.filterHabGroupsByDomain(domain));
+        searchOpts.setTypes(ObjectType.habgroups);
+        searchOpts.setSortOpt(SortOpt.SORT_ASCENDING);
+        List<NamedEntry> groups = (List<NamedEntry>) searchDirectoryInternal(searchOpts);
         return groups;
     }
 

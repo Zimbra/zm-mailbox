@@ -56,6 +56,8 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     private static Filter FILTER_ALL_DYNAMIC_GROUP_DYNAMIC_UNITS;
     private static Filter FILTER_ALL_DYNAMIC_GROUP_STATIC_UNITS;
     private static Filter FILTER_ALL_GROUPS;
+    private static Filter FILTER_HAB_GROUPS;
+    private static Filter FILTER_ALL_HAB_GROUPS;
     private static Filter FILTER_ALL_IDENTITIES;
     private static Filter FILTER_ALL_MIME_ENTRIES;
     private static Filter FILTER_ALL_NON_SYSTEM_ACCOUNTS;
@@ -134,6 +136,9 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
         FILTER_ALL_DYNAMIC_GROUPS =
                 Filter.createEqualityFilter(
                 LdapConstants.ATTR_objectClass, AttributeClass.OC_zimbraGroup);
+        FILTER_ALL_HAB_GROUPS =
+            Filter.createEqualityFilter(
+            LdapConstants.ATTR_objectClass, AttributeClass.OC_zimbraHabGroup);
 
         FILTER_ALL_DYNAMIC_GROUP_DYNAMIC_UNITS =
             Filter.createEqualityFilter(
@@ -259,6 +264,10 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                 Filter.createORFilter(
                         FILTER_ALL_DYNAMIC_GROUPS,
                         FILTER_ALL_DISTRIBUTION_LISTS);
+        FILTER_HAB_GROUPS =
+            Filter.createORFilter(
+                    FILTER_ALL_HAB_GROUPS,
+                    FILTER_ALL_DISTRIBUTION_LISTS);
 
         FILTER_ALL_INTERNAL_ACCOUNTS = Filter.createANDFilter(
             FILTER_ALL_ACCOUNTS,
@@ -813,6 +822,13 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
         return new UBIDLdapFilter(
                 FilterId.ALL_GROUPS,
                 FILTER_ALL_GROUPS);
+    }
+
+    @Override
+    public ZLdapFilter allHabGroups() {
+        return new UBIDLdapFilter(
+                FilterId.ALL_GROUPS,
+                FILTER_ALL_HAB_GROUPS);
     }
 
     @Override
