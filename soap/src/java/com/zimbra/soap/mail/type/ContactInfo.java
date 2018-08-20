@@ -42,10 +42,15 @@ import com.zimbra.soap.type.ContactAttr;
 import com.zimbra.soap.type.SearchHit;
 import com.zimbra.soap.type.ZmBoolean;
 
+import io.leangen.graphql.annotations.GraphQLIgnore;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 /**
  * {@link SearchHit} is used in {@link SearchResponse} as the element type for a List
  */
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name="ContactInfo", description="Contact information")
 public class ContactInfo
 implements ContactInterface, SearchHit {
 
@@ -331,57 +336,80 @@ implements ContactInterface, SearchHit {
         this.memberOf = groups;
     }
 
+    @GraphQLQuery(name="memberOf", description="Comma separated list of IDs of contact groups this contact is a member of")
     public Collection<String> getMemberOf() {
         return Lists.newArrayList(COMMA_SPLITTER.split(Strings.nullToEmpty(memberOf)));
     }
 
     @Override
+    @GraphQLQuery(name="sortField", description="Sort field value")
     public String getSortField() { return sortField; }
     @Override
+    @GraphQLQuery(name="isExpandable", description="Denotes whether user can expand group members")
     public Boolean getCanExpand() { return ZmBoolean.toBool(canExpand); }
     @Override
+    @GraphQLQuery(name="id", description="Unique contact ID")
     public String getId() { return id; }
     @Override
+    @GraphQLQuery(name="folder", description="The containing Folder ID")
     public String getFolder() { return folder; }
     @Override
+    @GraphQLQuery(name="flags", description="(f)lagged, has (a)ttachment")
     public String getFlags() { return flags; }
     @Override
+    @GraphQLIgnore
     public String getTags() { return tags; }
     @Override
+    @GraphQLQuery(name="tagNames", description="Comma-separated list of tag names")
     public String getTagNames() { return tagNames; }
     @Override
+    @GraphQLQuery(name="lastModified", description="Modified date in seconds")
     public Long getChangeDate() { return changeDate; }
     @Override
+    @GraphQLQuery(name="modifiedSequenceId", description="Modified sequence")
     public Integer getModifiedSequenceId() { return modifiedSequenceId; }
     @Override
+    @GraphQLQuery(name="date", description="Date in milliseconds")
     public Long getDate() { return date; }
     @Override
+    @GraphQLQuery(name="revisionId", description="Saved sequence number")
     public Integer getRevisionId() { return revisionId; }
     @Override
+    @GraphQLQuery(name="fileAs", description="Current fileAs string for display/sorting purposes")
     public String getFileAs() { return fileAs; }
     @Override
+    @GraphQLQuery(name="email", description="Contact email address")
     public String getEmail() { return email; }
     @Override
+    @GraphQLQuery(name="email2", description="Contact email address 2")
     public String getEmail2() { return email2; }
     @Override
+    @GraphQLQuery(name="email3", description="Contact email address 3")
     public String getEmail3() { return email3; }
     @Override
+    @GraphQLQuery(name="type", description="Contact type")
     public String getType() { return type; }
     @Override
+    @GraphQLQuery(name="dlist", description="Contact dlist")
     public String getDlist() { return dlist; }
     @Override
+    @GraphQLQuery(name="reference", description="Global Address List entry reference")
     public String getReference() { return reference; }
     @Override
+    @GraphQLQuery(name="isTooManyMembers", description="Denotes whether the number of entries on a GAL group exceeds the specified max")
     public Boolean getTooManyMembers() { return ZmBoolean.toBool(tooManyMembers); }
 
+    @GraphQLQuery(name="metadatas", description="Custom metadata information")
     public List<MailCustomMetadata> getMetadatas() {
         return metadatas;
     }
     @Override
+    @GraphQLQuery(name="attrs", description="Attributes")
     public List<ContactAttr> getAttrs() {
         return attrs;
     }
 
+    @GraphQLQuery(name="contactGroupMembers", description="Contact group members")
     public List<ContactGroupMember> getContactGroupMembers() {
         return Collections.unmodifiableList(contactGroupMembers);
     }
@@ -401,6 +429,7 @@ implements ContactInterface, SearchHit {
 
     // non-JAXB method
     @Override
+    @GraphQLIgnore
     public List<CustomMetadataInterface> getMetadataInterfaces() {
         return MailCustomMetadata.toInterfaces(metadatas);
     }
@@ -408,8 +437,8 @@ implements ContactInterface, SearchHit {
     public static Iterable <ContactInfo> fromInterfaces(Iterable <ContactInterface> params) {
         if (params == null)
             return null;
-        List <ContactInfo> newList = Lists.newArrayList();
-        for (ContactInterface param : params) {
+        final List <ContactInfo> newList = Lists.newArrayList();
+        for (final ContactInterface param : params) {
             newList.add((ContactInfo) param);
         }
         return newList;
@@ -418,12 +447,13 @@ implements ContactInterface, SearchHit {
     public static List <ContactInterface> toInterfaces(Iterable <ContactInfo> params) {
         if (params == null)
             return null;
-        List <ContactInterface> newList = Lists.newArrayList();
+        final List <ContactInterface> newList = Lists.newArrayList();
         Iterables.addAll(newList, params);
         return newList;
     }
 
     public void setImapUid(Integer imapUid) { this.imapUid = imapUid; }
+    @GraphQLQuery(name="imapUid", description="Imap UID")
     public Integer getImapUid() { return imapUid; }
 
     public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
@@ -468,6 +498,7 @@ implements ContactInterface, SearchHit {
     }
 
     @Override
+    @GraphQLIgnore
     public List<ContactGroupMemberInterface> getContactGroupMemberInterfaces() {
         return ContactGroupMember.toInterfaces(contactGroupMembers);
     }

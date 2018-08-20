@@ -23,7 +23,11 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.MailConstants;
 
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name="ContactAttr", description="Contact attribute")
 public class ContactAttr extends KeyValuePair {
 
     // part/contentType/size/contentFilename are required when
@@ -72,8 +76,12 @@ public class ContactAttr extends KeyValuePair {
         this.contentFilename = contentFilename;
     }
 
+    @GraphQLQuery(name="part", description="Part ID")
     public String getPart() { return part; }
+    @GraphQLQuery(name="contentType", description="Content type")
     public String getContentType() { return contentType; }
+    @GraphQLQuery(name="size", description="Size")
     public Integer getSize() { return size; }
+    @GraphQLQuery(name="contentFilename", description="Content filename")
     public String getContentFilename() { return contentFilename; }
 }
