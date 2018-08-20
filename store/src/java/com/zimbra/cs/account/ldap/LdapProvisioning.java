@@ -9912,7 +9912,12 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             /*
              * all is well, get the group by id
              */
-            DynamicGroup group = getDynamicGroupBasic(DistributionListBy.id, zimbraId, zlc);
+            DynamicGroup group = null;
+            if (isHabGroup) {
+                group = getDynamicGroup(DistributionListBy.id, zimbraId, zlc, Boolean.FALSE);
+            } else {
+                group = getDynamicGroupBasic(DistributionListBy.id, zimbraId, zlc);
+            }
 
             if (group != null) {
                 AttributeManager.getInstance().postModify(groupAttrs, group, callbackContext);
