@@ -182,6 +182,8 @@ public class SearchDirectoryOptions {
     private boolean convertIDNToAscii;
     private boolean isUseControl = true;
     private boolean isManageDSAit = false;
+    
+    private String habRootGroupDn;
 
     public SearchDirectoryOptions() {
     }
@@ -474,4 +476,14 @@ public class SearchDirectoryOptions {
     public void setManageDSAit(boolean isManageDSAit) {
         this.isManageDSAit = isManageDSAit;
     }
+
+    
+    public String getHabRootGroupDn() {
+        return habRootGroupDn;
+    }
+
+    public void setHabRootGroupDn(String baseDn) {
+        this.habRootGroupDn = baseDn;
+    }
+
 }

@@ -51,6 +51,7 @@ import com.zimbra.cs.account.Signature.SignatureContent;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 import com.zimbra.soap.account.message.HABGroup;
+import com.zimbra.soap.account.type.Attr;
 
 public class ToXML {
 
@@ -295,14 +296,17 @@ public class ToXML {
     }
     
     /**
-     * @param response
-     * @param grp1
      * 
+     * @param parent parent element of XML response
+     * @param grp the group to encode
+     * @param parentId id of the parent group
      */
     public static void encodeHabGroup(Element parent, HABGroup grp, String parentId) {
         Element habGroup = parent.addNonUniqueElement(AccountConstants.E_HAB_GROUP);
         habGroup.addAttribute(AccountConstants.A_NAME, grp.getName());
-        com.zimbra.cs.service.admin.ToXML.encodeAttrs(habGroup, grp.getAttrs(), null, null);
+        for (Attr attr : grp.getAttrs()) {
+            ToXML.encodeAttr(habGroup, attr.getKey(), attr.getValue());
+        }
         if (parentId != null) {
             habGroup.addAttribute(AccountConstants.A_PARENT_HAB_GROUP_ID, parentId);
         }
@@ -310,11 +314,11 @@ public class ToXML {
             habGroup.addAttribute(AccountConstants.A_ROOT_HAB_GROUP, grp.getRootGroup().toString());
         }
         habGroup.addAttribute(AdminConstants.A_ID, grp.getId());
-        if (grp.getChildGroups().size() != 0) {
-            for (HABGroup habGrp: grp.getChildGroups()) {
-                encodeHabGroup(habGroup, habGrp, grp.getId() );
-            }
+        habGroup.addAttribute(AccountConstants.A_HAB_SENIORITY_INDEX, grp.getSeniorityIndex());
+        for (HABGroup habGrp : grp.getChildGroups()) {
+            encodeHabGroup(habGroup, habGrp, grp.getId());
         }
+
     }
 
 }

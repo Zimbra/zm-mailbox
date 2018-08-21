@@ -380,6 +380,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
         Set<String> attrs = Sets.newHashSet(dlAttrs);
         attrs.add(Provisioning.A_objectClass);
+        attrs.remove(Provisioning.A_zimbraMailForwardingAddress);  // the member attr
         attrs.remove(Provisioning.A_zimbraMailTransport);          // does not apply to DL
 
         // remove deprecated attrs
@@ -1883,6 +1884,10 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
          */
         Domain domain = options.getDomain();
         String[] bases = getSearchBases(domain, types);
+        if (options.getTypes().contains(ObjectType.habgroups)) {
+            bases = new String[1];
+            bases[0] = options.getHabRootGroupDn();
+        } 
 
         /*
          * filter
@@ -9426,11 +9431,12 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         return groups;
     }
     
-    public List getAllHabGroups(Domain domain) throws ServiceException {
+    public List getAllHabGroups(Domain domain,  String rootDn) throws ServiceException {
         SearchDirectoryOptions searchOpts = new SearchDirectoryOptions(domain);
-        searchOpts.setFilter(mDIT.filterHabGroupsByDomain(domain));
+        searchOpts.setFilter(mDIT.filterHabGroupsByDn());
         searchOpts.setTypes(ObjectType.habgroups);
         searchOpts.setSortOpt(SortOpt.SORT_ASCENDING);
+        searchOpts.setHabRootGroupDn(rootDn);
         List<NamedEntry> groups = (List<NamedEntry>) searchDirectoryInternal(searchOpts);
         return groups;
     }
@@ -9590,6 +9596,11 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
         // also always clean it on the modified instance
         group.removeCachedData(EntryCacheDataKey.GROUP_MEMBERS);
+    }
+    
+    public Group getGroupWithAllAttrs(Key.DistributionListBy keyType, String key) 
+        throws ServiceException {
+        return getGroupInternal(keyType, key, Boolean.FALSE, Boolean.FALSE);
     }
 
     private Group getGroupInternal(Key.DistributionListBy keyType, String key,

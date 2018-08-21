@@ -35,6 +35,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.entry.LdapDistributionList;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.account.message.HABGroup;
+import com.zimbra.soap.account.type.Attr;
 import com.zimbra.soap.type.ZmBoolean;
 
 /**
@@ -62,15 +63,16 @@ public class GetHAB extends AccountDocumentHandler {
 
         Map<String, HABGroup> groups = new HashMap<String, HABGroup>();
         List<HABGroup> childGrpList = new ArrayList<HABGroup>();
-        LdapDistributionList group = (LdapDistributionList) prov.getGroupBasic(Key.DistributionListBy.id, rootGrpId);
+        LdapDistributionList group = (LdapDistributionList) prov
+            .getGroupWithAllAttrs(Key.DistributionListBy.id, rootGrpId);
         Set<String> members = group.getAllMembersSet();
-        
+
         HABGroup grp = new HABGroup();
         grp.setId(group.getId());
         grp.setName(group.getName());
         grp.setRootGroup(ZmBoolean.TRUE);
         groups.put(group.getMail(), grp);
-        grp.setAttrs(group.getAttrs());
+        grp.setAttrs(Attr.fromMap(group.getAttrs()));
 
         for (String member : members) {
             HABGroup grpChild = new HABGroup();
@@ -78,39 +80,37 @@ public class GetHAB extends AccountDocumentHandler {
             groups.put(member, grpChild);
             childGrpList.add(grpChild);
         }
-        Collections.sort(childGrpList , new SortByName());
+        Collections.sort(childGrpList, new SortBySeniorityIndexName());
         grp.setChildGroups(childGrpList);
 
         List<LdapDistributionList> lists = prov
-            .getAllHabGroups(prov.get(DomainBy.name, acct.getDomainName()));
+            .getAllHabGroups(prov.get(DomainBy.name, acct.getDomainName()), group.getDN());
 
         for (LdapDistributionList list : lists) {
             String key = list.getAttr(Provisioning.A_mail);
             HABGroup habGrp = groups.get(key);
-            if (isUnderRoot(group.getDN(), list.getDN())) {
-                if (habGrp == null) {
-                    habGrp = new HABGroup();
-                }
-                if (habGrp.getRootGroup().compareTo(ZmBoolean.TRUE) == 0) {
-                    continue;
-                }
-                habGrp.setId(list.getId());
-                habGrp.setName(list.getName());
-                habGrp.setAttrs(list.getAttrs());
-                groups.put(key, habGrp);
-                List<HABGroup> children = new ArrayList<HABGroup>();
-                for (String member : list.getAllMembersSet()) {
-                    HABGroup grpChild = groups.get(member);
-                    if (grpChild == null) {
-                        grpChild = new HABGroup();
-                    }
-                    grpChild.setParentGroupId(list.getId());
-                    groups.put(member, grpChild);
-                    children.add(grpChild);
-                }
-                Collections.sort(children , new SortByName());
-                habGrp.setChildGroups(children);
+            if (habGrp == null) {
+                habGrp = new HABGroup();
             }
+            if (habGrp.getRootGroup().compareTo(ZmBoolean.TRUE) == 0) {
+                continue;
+            }
+            habGrp.setId(list.getId());
+            habGrp.setName(list.getName());
+            habGrp.setAttrs(Attr.fromMap(list.getAttrs()));
+            groups.put(key, habGrp);
+            List<HABGroup> children = new ArrayList<HABGroup>();
+            for (String member : list.getAllMembersSet()) {
+                HABGroup grpChild = groups.get(member);
+                if (grpChild == null) {
+                    grpChild = new HABGroup();
+                }
+                grpChild.setParentGroupId(list.getId());
+                groups.put(member, grpChild);
+                children.add(grpChild);
+            }
+            Collections.sort(children, new SortBySeniorityIndexName());
+            habGrp.setChildGroups(children);
         }
 
         Element response = zsc.createElement(AccountConstants.E_GET_HAB_RESPONSE);
@@ -118,35 +118,28 @@ public class GetHAB extends AccountDocumentHandler {
 
         return response;
     }
-    
-    /**
-     * @param attr
-     * @param dn
-     * @return
-     */
-    private boolean isUnderRoot(String rootGroupDn, String targetGroupDn) {
-       return targetGroupDn.contains(rootGroupDn);
-    }
-    
-    class SortByName implements Comparator<HABGroup> {
+
+    class SortBySeniorityIndexName implements Comparator<HABGroup> {
+
         @Override
         public int compare(HABGroup a, HABGroup b) {
             if (a == null || b == null) {
                 return 0;
             }
-            String name1 = a.getName();
-            String name2 = b.getName();
-            
-            if(name1 == null && name2 == null) {
-                return 0;               
-            }else if(name1 != null && name2 == null) {
-                return -1;
-            } else if (name1 == null && name2 != null) {
-                return 1;
-            } else {                
+
+            int s1 = a.getSeniorityIndex();
+            int s2 = b.getSeniorityIndex();
+
+            if (s1 == 0 && s2 == 0) {
+                String name1 = a.getName();
+                String name2 = b.getName();
+
                 return name1.compareTo(name2);
+
+            } else {
+                return new Integer(s2).compareTo(new Integer(s1));
             }
+
         }
     }
-
 }

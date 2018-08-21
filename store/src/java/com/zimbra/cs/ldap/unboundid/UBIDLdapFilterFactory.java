@@ -265,9 +265,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                         FILTER_ALL_DYNAMIC_GROUPS,
                         FILTER_ALL_DISTRIBUTION_LISTS);
         FILTER_HAB_GROUPS =
-            Filter.createORFilter(
-                    FILTER_ALL_HAB_GROUPS,
-                    FILTER_ALL_DISTRIBUTION_LISTS);
+            Filter.createANDFilter(FILTER_ALL_HAB_GROUPS);
 
         FILTER_ALL_INTERNAL_ACCOUNTS = Filter.createANDFilter(
             FILTER_ALL_ACCOUNTS,

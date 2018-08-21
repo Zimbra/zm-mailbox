@@ -33,6 +33,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.common.account.Key.UCServiceBy;
 import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.account.ZAttrProvisioning;
@@ -2725,9 +2726,20 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     /**
      * @param domain
+     * @param rootDn 
      * @return
      */
-    public List<LdapDistributionList> getAllHabGroups(Domain domain) throws ServiceException {
+    public List<LdapDistributionList> getAllHabGroups(Domain domain, String rootDn) throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
+
+    /**
+     * @param id
+     * @param rootGrpId
+     * @return
+     * @throws ServiceException 
+     */
+    public Group getGroupWithAllAttrs(DistributionListBy id, String rootGrpId) throws ServiceException {
         throw ServiceException.UNSUPPORTED();
     }
 }

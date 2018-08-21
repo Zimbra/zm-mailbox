@@ -17,9 +17,7 @@
 package com.zimbra.soap.account.message;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -27,7 +25,10 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.google.common.collect.Lists;
 import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.soap.account.type.Attr;
+import com.zimbra.soap.json.jackson.annotate.ZimbraKeyValuePairs;
 import com.zimbra.soap.type.ZmBoolean;
 
 /**
@@ -42,40 +43,52 @@ import com.zimbra.soap.type.ZmBoolean;
 @XmlRootElement(name = AccountConstants.E_GET_HAB_RESPONSE)
 public class HABGroup {
     /**
-     * @zm-api-field-description List of HabGroups under the root group
+     * @zm-api-field-description name of the HAB Group
      */
-    @XmlElement(name="name", required=false)
+    @XmlElement(name=AccountConstants.A_NAME, required=false)
     private String name;
     
     /**
-     * @zm-api-field-description List of HabGroups under the root group
+     * @zm-api-field-description id of the HAB group
      */
-    @XmlElement(name="id", required=false)
+    @XmlElement(name=AccountConstants.A_ID, required=false)
     private String id;
     
     /**
-     * @zm-api-field-description List of HabGroups under the root group
+     * @zm-api-field-description List of HabGroups under this HAB group
      */
-    @XmlElement(name="habGroups", required=false)
+    @XmlElement(name=AccountConstants.A_HAB_GROUPS, required=false)
     private List<HABGroup> childGroups = new ArrayList<HABGroup>();
     
 
-    private Map<String, Object>attrs = new HashMap<String,Object>();
+    /**
+     * @zm-api-field-description Attributes of the HAB group
+     */
+    @ZimbraKeyValuePairs
+    @XmlElement(name=AccountConstants.E_ATTR /* attr */, required=true)
+    private List<Attr> attrs = Lists.newArrayList();
     
     /**
      * @zm-api-field-tag rootGroup indicator
      * @zm-api-field-description indicates whether a HAB group is the parent group in the Hierarchy
      */
-    @XmlAttribute(name = AccountConstants.A_ROOT_HAB_GROUP /* forceDelete */, required = false)
+    @XmlAttribute(name = AccountConstants.A_ROOT_HAB_GROUP /* rootHabGroup */, required = false)
     private ZmBoolean rootGroup;
 
     
     /**
      * @zm-api-field-tag parentGroupId
-     * @zm-api-field-description indicates whether a HAB group is the parent group in the Hierarchy
+     * @zm-api-field-description id of the parent group
      */
-    @XmlAttribute(name = AccountConstants.A_PARENT_HAB_GROUP_ID /* forceDelete */, required = false)
+    @XmlAttribute(name = AccountConstants.A_PARENT_HAB_GROUP_ID /* parentHabGroupId */, required = false)
     private String parentGroupId;
+    
+    /**
+     * @zm-api-field-tag seniorityIndex
+     * @zm-api-field-description seniorityIndexOfTheHAB group
+     */
+    @XmlAttribute(name = AccountConstants.A_HAB_SENIORITY_INDEX /* seniorityIndex */, required = false)
+    private int seniorityIndex;
     
     
     public String getName() {
@@ -128,16 +141,26 @@ public class HABGroup {
         this.parentGroupId = parentGroupId;
     }
 
+    public List<Attr> getAttrs() {
+        return attrs;
+    }
 
     
-    public Map<String, Object> getAttrs() {
-        return attrs;
+    public void setAttrs(List<Attr> attrs) {
+        this.attrs = attrs;
+    }
+
+
+
+    
+    public int getSeniorityIndex() {
+        return seniorityIndex;
     }
 
 
     
-    public void setAttrs(Map<String, Object> attrs) {
-        this.attrs = attrs;
+    public void setSeniorityIndex(int seniorityIndex) {
+        this.seniorityIndex = seniorityIndex;
     }
 
 
@@ -160,6 +183,11 @@ public class HABGroup {
             builder.append(childGroups);
             builder.append(", ");
         }
+        if (attrs != null) {
+            builder.append("attrs=");
+            builder.append(attrs);
+            builder.append(", ");
+        }
         if (rootGroup != null) {
             builder.append("rootGroup=");
             builder.append(rootGroup);
@@ -168,10 +196,13 @@ public class HABGroup {
         if (parentGroupId != null) {
             builder.append("parentGroupId=");
             builder.append(parentGroupId);
+            builder.append(", ");
         }
-        builder.append("]");
+        builder.append("seniorityIndex=");
+        builder.append(seniorityIndex);
+        builder.append("]\n");
         return builder.toString();
     }
 
-    
+
 }

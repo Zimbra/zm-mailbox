@@ -696,7 +696,7 @@ public class LdapDIT {
         return ZLdapFilterFactory.getInstance().allGroups();
     }
     
-    public ZLdapFilter filterHabGroupsByDomain(Domain domain) {
+    public ZLdapFilter filterHabGroupsByDn() {
         return ZLdapFilterFactory.getInstance().allHabGroups();
     }
 

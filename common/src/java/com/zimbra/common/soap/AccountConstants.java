@@ -585,4 +585,6 @@ public class AccountConstants {
     public static final String E_HAB_GROUP = "habGroup";
     public static final String A_ROOT_HAB_GROUP = "rootHabGroup";
     public static final String A_PARENT_HAB_GROUP_ID = "parentHabGroupId";
+    public static final String A_HAB_GROUPS= "habGroups";
+    public static final String A_HAB_SENIORITY_INDEX = "seniorityIndex";
 }
