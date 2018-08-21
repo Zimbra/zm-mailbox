@@ -170,7 +170,7 @@ public class Auth extends AdminDocumentHandler {
                 authCtxt.put(AuthContext.AC_ACCOUNT_NAME_PASSEDIN, valuePassedIn);
                 authCtxt.put(AuthContext.AC_USER_AGENT, zsc.getUserAgent());
                 authCtxt.put(AuthContext.AC_AS_ADMIN, Boolean.TRUE);
-                prov.authAccount(acct, password, AuthContext.Protocol.soap, authCtxt);
+                prov.authAccount(acct, password, AuthContext.getProtocol((String)context.get(SoapEngine.REQUEST_PROTO)), authCtxt);
                 TwoFactorAuth twoFactorAuth = TwoFactorAuth.getFactory().getTwoFactorAuth(acct);
                 boolean usingTwoFactorAuth = twoFactorAuth.twoFactorAuthEnabled();
                 if (usingTwoFactorAuth) {
