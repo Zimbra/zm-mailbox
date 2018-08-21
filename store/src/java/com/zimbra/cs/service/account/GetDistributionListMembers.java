@@ -209,7 +209,7 @@ public class GetDistributionListMembers extends GalDocumentHandler {
         if (group.hideInGal()) {
             allow = GroupOwner.isOwner(account, group);
         } else {
-            allow = GroupOwner.isOwner(account, group) || group.isMemberOf(account);
+            allow = GroupOwner.isOwner(account, group) || group.isMemberOf(account) || group.isHABGroup();
         }
 
         if (allow) {
