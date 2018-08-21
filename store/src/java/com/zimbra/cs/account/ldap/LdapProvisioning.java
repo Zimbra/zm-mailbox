@@ -9574,18 +9574,24 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     @Override
     public String[] getGroupMembers(Group group) throws ServiceException {
         EntryCacheDataKey cacheKey = EntryCacheDataKey.GROUP_MEMBERS;
+        String[] members = null;
+        if (group.isHABGroup() && group instanceof DynamicGroup) {
+            DynamicGroup dynGroup = getDynamicGroup(Key.DistributionListBy.name, group.getName(), null, Boolean.FALSE);
+            members = dynGroup.getAllMembers(true);
+            Arrays.sort(members);
+        } else {
+            members = (String[])group.getCachedData(cacheKey);
+            if (members != null) {
+                return members;
+            }
 
-        String[] members = (String[])group.getCachedData(cacheKey);
-        if (members != null) {
-            return members;
+            members = group.getAllMembers();  // should never be null
+            assert(members != null);
+            Arrays.sort(members);
+
+            // catch it
+            group.setCachedData(cacheKey, members);
         }
-
-        members = group.getAllMembers();  // should never be null
-        assert(members != null);
-        Arrays.sort(members);
-
-        // catch it
-        group.setCachedData(cacheKey, members);
 
         return members;
     }
