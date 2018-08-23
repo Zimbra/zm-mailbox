@@ -77,8 +77,13 @@ public abstract class RedissonRetryDecorator<R> {
         try {
             return withRetry.execute();
         } catch (ServiceException e) {
-            //re-throw underlying exception, since RedisException is unchecked
-            throw (RedisException) e.getCause();
+            if (e.getCause() instanceof RedisException) {
+                //re-throw underlying exception, since RedisException is unchecked
+                throw (RedisException) e.getCause();
+            } else {
+                //wrap in a redis exception, since we need an unchecked exception
+                throw new RedisException("non-redis exception encountered running a redis request with retry", e.getCause());
+            }
         }
     }
 
