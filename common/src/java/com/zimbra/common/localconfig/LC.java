@@ -1254,6 +1254,12 @@ public final class LC {
     public static final KnownKey redis_cluster_reconnect_timeout = KnownKey.newKey(15000);
 
     @Supported
+    public static final KnownKey redis_subscription_connection_pool_size = KnownKey.newKey(100);
+
+    @Supported
+    public static final KnownKey redis_subscriptions_per_connection = KnownKey.newKey(10);
+
+    @Supported
     public static final KnownKey search_put_hits_chunk_size = KnownKey.newKey(100);
 
     public enum PUBLIC_SHARE_VISIBILITY { samePrimaryDomain, all, none };

@@ -3,6 +3,7 @@ package com.zimbra.cs.mailbox.redis;
 import org.redisson.RedissonShutdownException;
 import org.redisson.api.RedissonClient;
 import org.redisson.client.RedisException;
+import org.redisson.client.RedisTimeoutException;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -37,7 +38,7 @@ public abstract class RedissonRetryDecorator<R> {
             @Override
             public synchronized boolean exceptionMatches(Exception e) {
                 boolean isRedisException = false;
-                if (e instanceof RedisException && !(e instanceof RedissonShutdownException)) {
+                if (e instanceof RedisException && !(e instanceof RedissonShutdownException) && !(e instanceof RedisTimeoutException)) {
                     ZimbraLog.mailbox.warn("caught %s in ExceptionHandler, will attempt to re-initialize redisson client", e.getClass().getName(), e);
                     isRedisException = true;
                 } else {
@@ -76,8 +77,13 @@ public abstract class RedissonRetryDecorator<R> {
         try {
             return withRetry.execute();
         } catch (ServiceException e) {
-            ZimbraLog.mailbox.error("unable to issue redis request after re-initializing redisson client, returning null");
-            return null;
+            if (e.getCause() instanceof RedisException) {
+                //re-throw underlying exception, since RedisException is unchecked
+                throw (RedisException) e.getCause();
+            } else {
+                //wrap in a redis exception, since we need an unchecked exception
+                throw new RedisException("non-redis exception encountered running a redis request with retry", e.getCause());
+            }
         }
     }
 
