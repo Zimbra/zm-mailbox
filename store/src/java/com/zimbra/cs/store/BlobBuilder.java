@@ -235,27 +235,6 @@ public class BlobBuilder {
         if (digest != null) {
             blob.setDigest(ByteUtil.encodeFSSafeBase64(digest.digest()));
             blob.setRawSize(totalBytes);
-            File file = blob.getFile();
-            File uncompresedFile = null;
-            if (blob.isCompressed() && totalBytes == file.length())
-            {
-              ZimbraLog.store.info("Blob compression is useless avoid it");
-              GZIPInputStream in = null;
-              try {
-                uncompresedFile = File.createTempFile("blob","",file.getParentFile());
-                in = new GZIPInputStream(new FileInputStream(file));
-                out = createOutputStream(uncompresedFile);
-                IOUtils.copy(in,out);
-                blob.setCompressed(false);
-              } finally {
-                IOUtils.closeQuietly(in);
-                IOUtils.closeQuietly(out);
-                file.delete();
-                if (uncompresedFile != null) {
-                  uncompresedFile.renameTo(file);
-                }
-              }
-            }
         }
         if (ZimbraLog.store.isDebugEnabled())
             ZimbraLog.store.debug("stored " + this);
