@@ -42,7 +42,7 @@ public class GetHABResponse {
     /**
      * @zm-api-field-description List of HabGroups under the root group
      */
-    @XmlElement(name="habGroups", required=false)
+    @XmlElement(name=AccountConstants.E_HAB_GROUPS, required=false)
     private List<HABGroup> habGroupList = new ArrayList<HABGroup>();
     
     public GetHABResponse() {

@@ -9352,7 +9352,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public void deleteGroup(String zimbraId) throws ServiceException {
-        Group group = getGroup(Key.DistributionListBy.id, zimbraId, true);
+        Group group = getGroup(Key.DistributionListBy.id, zimbraId, true, false);
         if (group == null) {
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(zimbraId);
         }
@@ -9366,7 +9366,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public void renameGroup(String zimbraId, String newName) throws ServiceException {
-        Group group = getGroup(Key.DistributionListBy.id, zimbraId, true);
+        Group group = getGroup(Key.DistributionListBy.id, zimbraId, true, false);
         if (group == null) {
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(zimbraId);
         }
@@ -9380,13 +9380,13 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public Group getGroup(Key.DistributionListBy keyType, String key) throws ServiceException {
-        return getGroup(keyType, key, false);
+        return getGroup(keyType, key, false, false);
     }
 
     @Override
-    public Group getGroup(Key.DistributionListBy keyType, String key, boolean loadFromMaster)
+    public Group getGroup(Key.DistributionListBy keyType, String key, boolean loadFromMaster, boolean basicAttrsOnly)
     throws ServiceException {
-        return getGroupInternal(keyType, key, false, loadFromMaster);
+        return getGroupInternal(keyType, key, basicAttrsOnly, loadFromMaster);
     }
 
     /*
@@ -9596,11 +9596,6 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
         // also always clean it on the modified instance
         group.removeCachedData(EntryCacheDataKey.GROUP_MEMBERS);
-    }
-    
-    public Group getGroupWithAllAttrs(Key.DistributionListBy keyType, String key) 
-        throws ServiceException {
-        return getGroupInternal(keyType, key, Boolean.FALSE, Boolean.FALSE);
     }
 
     private Group getGroupInternal(Key.DistributionListBy keyType, String key,

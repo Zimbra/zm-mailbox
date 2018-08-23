@@ -33,7 +33,6 @@ import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.common.account.Key.UCServiceBy;
 import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.account.ZAttrProvisioning;
@@ -1811,7 +1810,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
         throw ServiceException.UNSUPPORTED();
     }
 
-    public Group getGroup(Key.DistributionListBy keyType, String key, boolean loadFromMaster)
+    public Group getGroup(Key.DistributionListBy keyType, String key, boolean loadFromMaster, boolean basicAttrsOnly)
     throws ServiceException {
         throw ServiceException.UNSUPPORTED();
     }
@@ -2730,16 +2729,6 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * @return
      */
     public List<LdapDistributionList> getAllHabGroups(Domain domain, String rootDn) throws ServiceException {
-        throw ServiceException.UNSUPPORTED();
-    }
-
-    /**
-     * @param id
-     * @param rootGrpId
-     * @return
-     * @throws ServiceException 
-     */
-    public Group getGroupWithAllAttrs(DistributionListBy id, String rootGrpId) throws ServiceException {
         throw ServiceException.UNSUPPORTED();
     }
 }

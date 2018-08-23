@@ -18,7 +18,6 @@ package com.zimbra.cs.service.account;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +32,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.entry.LdapDistributionList;
+import com.zimbra.cs.service.util.SortBySeniorityIndexThenName;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.account.message.HABGroup;
 import com.zimbra.soap.account.type.Attr;
@@ -44,14 +44,7 @@ import com.zimbra.soap.type.ZmBoolean;
  */
 public class GetHAB extends AccountDocumentHandler {
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * com.zimbra.soap.DocumentHandler#handle(com.zimbra.common.soap.Element,
-     * java.util.Map)
-     * 
-     */
+
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
@@ -64,23 +57,25 @@ public class GetHAB extends AccountDocumentHandler {
         Map<String, HABGroup> groups = new HashMap<String, HABGroup>();
         List<HABGroup> childGrpList = new ArrayList<HABGroup>();
         LdapDistributionList group = (LdapDistributionList) prov
-            .getGroupWithAllAttrs(Key.DistributionListBy.id, rootGrpId);
+            .getGroup(Key.DistributionListBy.id, rootGrpId, true, false);
         Set<String> members = group.getAllMembersSet();
 
         HABGroup grp = new HABGroup();
         grp.setId(group.getId());
         grp.setName(group.getName());
         grp.setRootGroup(ZmBoolean.TRUE);
+        grp.setSeniorityIndex(group.getIntAttr(Provisioning.A_zimbraHABGroupSeniorityIndex, 0));
         groups.put(group.getMail(), grp);
         grp.setAttrs(Attr.fromMap(group.getAttrs()));
 
         for (String member : members) {
             HABGroup grpChild = new HABGroup();
             grpChild.setParentGroupId(group.getId());
+            grpChild.setName(member);
             groups.put(member, grpChild);
             childGrpList.add(grpChild);
         }
-        Collections.sort(childGrpList, new SortBySeniorityIndexName());
+        Collections.sort(childGrpList, new SortBySeniorityIndexThenName());
         grp.setChildGroups(childGrpList);
 
         List<LdapDistributionList> lists = prov
@@ -98,18 +93,20 @@ public class GetHAB extends AccountDocumentHandler {
             habGrp.setId(list.getId());
             habGrp.setName(list.getName());
             habGrp.setAttrs(Attr.fromMap(list.getAttrs()));
+            habGrp.setSeniorityIndex(list.getIntAttr(Provisioning.A_zimbraHABGroupSeniorityIndex, 0));
             groups.put(key, habGrp);
             List<HABGroup> children = new ArrayList<HABGroup>();
             for (String member : list.getAllMembersSet()) {
                 HABGroup grpChild = groups.get(member);
                 if (grpChild == null) {
                     grpChild = new HABGroup();
+                    grpChild.setName(member);
                 }
                 grpChild.setParentGroupId(list.getId());
                 groups.put(member, grpChild);
                 children.add(grpChild);
             }
-            Collections.sort(children, new SortBySeniorityIndexName());
+            Collections.sort(children, new SortBySeniorityIndexThenName());
             habGrp.setChildGroups(children);
         }
 
@@ -119,27 +116,4 @@ public class GetHAB extends AccountDocumentHandler {
         return response;
     }
 
-    class SortBySeniorityIndexName implements Comparator<HABGroup> {
-
-        @Override
-        public int compare(HABGroup a, HABGroup b) {
-            if (a == null || b == null) {
-                return 0;
-            }
-
-            int s1 = a.getSeniorityIndex();
-            int s2 = b.getSeniorityIndex();
-
-            if (s1 == 0 && s2 == 0) {
-                String name1 = a.getName();
-                String name2 = b.getName();
-
-                return name1.compareTo(name2);
-
-            } else {
-                return new Integer(s2).compareTo(new Integer(s1));
-            }
-
-        }
-    }
 }
