@@ -116,6 +116,9 @@ public class AccountService implements DocumentService {
 
         // misc
         dispatcher.registerHandler(AccountConstants.GET_VERSION_INFO_REQUEST, new GetVersionInfo());
+
+        // reset password
+        dispatcher.registerHandler(AccountConstants.RESET_PASSWORD_REQUEST, new ResetPassword());
     }
 
     /**

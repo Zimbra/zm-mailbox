@@ -16,7 +16,7 @@
  */
 package com.zimbra.cs.mailclient.imap;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.util.ZimbraLog;
 
 import java.io.IOException;
@@ -174,7 +174,7 @@ public final class MailboxInfo implements ResponseHandler {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
             .add("name", name != null ? new MailboxName(name).encode() : null)
             .add("exists", exists)
             .add("recent", recent)

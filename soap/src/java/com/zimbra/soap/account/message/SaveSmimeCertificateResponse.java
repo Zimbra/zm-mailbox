@@ -20,7 +20,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.soap.SmimeConstants;
 import com.zimbra.soap.account.type.CertificateInfo;
 
@@ -48,7 +48,7 @@ public class SaveSmimeCertificateResponse {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this).add("certificate", certificate).toString();
+        return MoreObjects.toStringHelper(this).add("certificate", certificate).toString();
     }
     
 }

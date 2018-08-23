@@ -19,7 +19,7 @@ package com.zimbra.soap.admin.type;
 
 import java.util.List;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
@@ -72,7 +72,7 @@ public class XParam implements XParamInterface {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
             .add("name", name)
             .add("value", value)
             .toString();

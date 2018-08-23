@@ -17,7 +17,7 @@
 
 package com.zimbra.cs.index;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
@@ -212,7 +212,7 @@ public final class ProxiedQueryResults extends ZimbraQueryResultsImpl {
         } catch (ServiceException ex) {
             url = server;
         }
-        return Objects.toStringHelper(this).add("url", url).add("acctId", targetAcctId).toString();
+        return MoreObjects.toStringHelper(this).add("url", url).add("acctId", targetAcctId).toString();
     }
 
     /**

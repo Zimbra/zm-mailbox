@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -111,7 +111,7 @@ public final class ACLUtil {
         for (Entry entry : rights.get(UserRights.R_sendOnBehalfOf)) {
             Account grantor = (Account) entry;
             String mail = grantor.getName();
-            String name = Objects.firstNonNull(grantor.getDisplayName(), mail);
+            String name = MoreObjects.firstNonNull(grantor.getDisplayName(), mail);
             Map<String, Object> attrs = ImmutableMap.<String, Object>builder()
                 .put(Provisioning.A_zimbraPrefIdentityId, grantor.getId())
                 .put(Provisioning.A_zimbraPrefIdentityName, name)

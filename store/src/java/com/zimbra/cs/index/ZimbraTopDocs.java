@@ -20,7 +20,7 @@ import java.util.List;
 
 import org.apache.lucene.search.TopDocs;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 
 /**
  * Used for results of Zimbra Index searches.
@@ -85,7 +85,7 @@ public class ZimbraTopDocs {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
                 .add("totalHits", totalHits)
                 .add("maxScore", maxScore)
                 .add("scoreDocs", scoreDocs).toString();

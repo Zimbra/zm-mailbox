@@ -331,7 +331,7 @@ public final class MockProvisioning extends Provisioning {
 
     @Override
     public void renameAccount(String zimbraId, String newName) {
-        throw new UnsupportedOperationException();
+        //do nothing
     }
 
     @Override
@@ -791,7 +791,7 @@ public final class MockProvisioning extends Provisioning {
 
     @Override
     public void flushCache(CacheEntryType type, CacheEntry[] entries) {
-        throw new UnsupportedOperationException();
+        //do nothing
     }
 
     @Override

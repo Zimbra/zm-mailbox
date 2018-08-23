@@ -19,7 +19,7 @@ package com.zimbra.cs.mailbox;
 import java.util.List;
 import java.util.Set;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Sets;
 
@@ -57,6 +57,6 @@ public final class VCardParamsAndValue {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this).add("params", params).add("value",value).toString();
+        return MoreObjects.toStringHelper(this).add("params", params).add("value",value).toString();
     }
 }

@@ -25,7 +25,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.zimbra.common.soap.AdminConstants;
@@ -632,7 +632,7 @@ public class SearchMultiMailboxRequest implements SearchParameters {
         return mailboxes;
     }
 
-    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         return helper.add("includeTagDeleted", includeTagDeleted).add("includeTagMuted", includeTagMuted)
                 .add("allowableTaskStatus", allowableTaskStatus).add("calItemExpandStart", calItemExpandStart)
                 .add("calItemExpandEnd", calItemExpandEnd).add("query", query).add("inDumpster", inDumpster)
@@ -646,7 +646,7 @@ public class SearchMultiMailboxRequest implements SearchParameters {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this)).toString();
+        return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
     }
 
 }

@@ -74,6 +74,8 @@ public final class AdminConstants {
     public static final String E_SEARCH_ACCOUNTS_RESPONSE = "SearchAccountsResponse";
     public static final String E_RENAME_ACCOUNT_REQUEST = "RenameAccountRequest";
     public static final String E_RENAME_ACCOUNT_RESPONSE = "RenameAccountResponse";
+    public static final String E_CHANGE_PRIMARY_EMAIL_REQUEST = "ChangePrimaryEmailRequest";
+    public static final String E_CHANGE_PRIMARY_EMAIL_RESPONSE = "ChangePrimaryEmailResponse";
 
     public static final String E_CREATE_DOMAIN_REQUEST = "CreateDomainRequest";
     public static final String E_CREATE_DOMAIN_RESPONSE = "CreateDomainResponse";
@@ -573,6 +575,8 @@ public final class AdminConstants {
     public static final QName SEARCH_ACCOUNTS_RESPONSE = QName.get(E_SEARCH_ACCOUNTS_RESPONSE, NAMESPACE);
     public static final QName RENAME_ACCOUNT_REQUEST = QName.get(E_RENAME_ACCOUNT_REQUEST, NAMESPACE);
     public static final QName RENAME_ACCOUNT_RESPONSE = QName.get(E_RENAME_ACCOUNT_RESPONSE, NAMESPACE);
+    public static final QName CHANGE_PRIMARY_EMAIL_REQUEST = QName.get(E_CHANGE_PRIMARY_EMAIL_REQUEST, NAMESPACE);
+    public static final QName CHANGE_PRIMARY_EMAIL_RESPONSE = QName.get(E_CHANGE_PRIMARY_EMAIL_RESPONSE, NAMESPACE);
 
     public static final QName CREATE_DOMAIN_REQUEST = QName.get(E_CREATE_DOMAIN_REQUEST, NAMESPACE);
     public static final QName CREATE_DOMAIN_RESPONSE = QName.get(E_CREATE_DOMAIN_RESPONSE, NAMESPACE);

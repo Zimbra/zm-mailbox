@@ -1045,4 +1045,31 @@ public class StringUtil {
         }
         return null;
     }
+
+    public static String maskEmail(String recoveryEmail) {
+        if (isNullOrEmpty(recoveryEmail)) {
+            return null;
+        }
+        StringBuilder maskedEmail = new StringBuilder();
+        String[] parts = EmailUtil.getLocalPartAndDomain(recoveryEmail);
+        String local = parts[0];
+        int len = local.length();
+        switch (len) {
+            case 1:
+                maskedEmail.append("*");
+                break;
+            case 2:
+                maskedEmail.append(local.charAt(0)).append("*");
+                break;
+            case 3:
+                maskedEmail.append(local.charAt(0)).append("**");
+                break;
+            default:
+                int maskLen = len - 3;
+                maskedEmail.append(local.substring(0, 3)).append(new String(new char[maskLen]).replace("\0", "*"));
+                break;
+        }
+        maskedEmail.append("@").append(parts[1]);
+        return maskedEmail.toString();
+    }
 }

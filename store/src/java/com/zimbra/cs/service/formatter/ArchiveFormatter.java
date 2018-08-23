@@ -52,13 +52,14 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimePart;
 import javax.servlet.http.HttpServletResponse;
 
+import com.zimbra.cs.util.IOUtil;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.google.common.io.Closeables;
 import com.zimbra.common.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.common.calendar.ZCalendar.ZICalendarParseHandler;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
@@ -362,12 +363,12 @@ public abstract class ArchiveFormatter extends Formatter {
                             }
                             aos = saveItem(context, results.getNext().getMailItem(), fldrs, cnts, false, aos, encoder, names);
                         }
-                        Closeables.closeQuietly(results);
+                        IOUtil.closeQuietly(results);
                         results = null;
                     } catch (Exception e) {
                         warn(e);
                     } finally {
-                        Closeables.closeQuietly(results);
+                        IOUtil.closeQuietly(results);
                     }
                 }
             }

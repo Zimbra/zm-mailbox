@@ -29,7 +29,7 @@ import java.util.zip.GZIPInputStream;
 
 import org.apache.commons.io.FileUtils;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.zmime.ZSharedFileInputStream;
@@ -193,7 +193,7 @@ public class Blob {
     }
 
     @Override public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
             .add("path", path)
             .add("size", rawSize)
             .add("compressed", compressed).toString();

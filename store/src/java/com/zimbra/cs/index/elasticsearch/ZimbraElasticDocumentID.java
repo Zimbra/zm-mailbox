@@ -16,7 +16,7 @@
  */
 package com.zimbra.cs.index.elasticsearch;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.zimbra.cs.index.ZimbraIndexDocumentID;
 
 public final class ZimbraElasticDocumentID
@@ -34,7 +34,7 @@ implements Comparable <ZimbraElasticDocumentID>, ZimbraIndexDocumentID {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this).add("docID", docID).toString();
+        return MoreObjects.toStringHelper(this).add("docID", docID).toString();
     }
 
     @Override

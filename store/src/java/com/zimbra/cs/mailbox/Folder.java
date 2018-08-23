@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 import com.zimbra.common.mailbox.ACLGrant;
 import com.zimbra.common.mailbox.Color;
@@ -1588,7 +1588,7 @@ public class Folder extends MailItem implements FolderStore {
 
     @Override
     public String toString() {
-        Objects.ToStringHelper helper = Objects.toStringHelper(this);
+        MoreObjects.ToStringHelper helper = MoreObjects.toStringHelper(this);
         helper.add(CN_NAME, getName());
         appendCommonMembers(helper);
         helper.add(CN_DELETED, deletedCount);

@@ -32,13 +32,13 @@ import javax.activation.DataSource;
 import javax.mail.internet.MimeMessage;
 import javax.mail.util.ByteArrayDataSource;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.google.common.base.Objects;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableSet;
@@ -863,7 +863,7 @@ public class Contact extends MailItem {
 
     @Override
     public String toString() {
-        Objects.ToStringHelper helper = Objects.toStringHelper(this);
+        MoreObjects.ToStringHelper helper = MoreObjects.toStringHelper(this);
         appendCommonMembers(helper);
         for (Map.Entry<String, String> entry : fields.entrySet()) {
             helper.add(entry.getKey(), entry.getValue());
@@ -928,7 +928,7 @@ public class Contact extends MailItem {
         ObjectMapper mapper = new ObjectMapper();
         try {
             JsonNode node = mapper.readTree(xpropStr);
-            Iterator<String> fieldNames = node.getFieldNames();
+            Iterator<String> fieldNames = node.fieldNames();
             while (fieldNames.hasNext()) {
                 String fieldName = fieldNames.next();
                 String fieldValue = node.get(fieldName).asText();

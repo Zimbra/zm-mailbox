@@ -464,34 +464,35 @@ public class GalSearchControl {
     }
 
     private boolean doLocalGalAccountSearch(Account galAcct) {
-        ZimbraQueryResults zqr = null;
         try {
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(galAcct);
             SearchParams searchParams = mParams.getSearchParams();
-            zqr = mbox.index.search(SoapProtocol.Soap12, new OperationContext(mbox), searchParams);
-            ResultsPager pager = ResultsPager.create(zqr, searchParams);
-            GalSearchResultCallback callback = mParams.getResultCallback();
-            int num = 0;
-            while (pager.hasNext()) {
-                ZimbraHit hit = pager.getNextHit();
-                if (hit instanceof ContactHit) {
-                    Element contactElem = callback.handleContact(((ContactHit)hit).getContact());
-                    if (contactElem != null)
-                        contactElem.addAttribute(MailConstants.A_SORT_FIELD, hit.getSortField(pager.getSortOrder()).toString());
+            try (ZimbraQueryResults zqr = mbox.index.search(SoapProtocol.Soap12,
+                new OperationContext(mbox), searchParams)) {
+                ResultsPager pager = ResultsPager.create(zqr, searchParams);
+                GalSearchResultCallback callback = mParams.getResultCallback();
+                int num = 0;
+                while (pager.hasNext()) {
+                    ZimbraHit hit = pager.getNextHit();
+                    if (hit instanceof ContactHit) {
+                        Element contactElem = callback
+                            .handleContact(((ContactHit) hit).getContact());
+                        if (contactElem != null)
+                            contactElem.addAttribute(MailConstants.A_SORT_FIELD,
+                                hit.getSortField(pager.getSortOrder()).toString());
+                    }
+                    num++;
+                    if (num == mParams.getLimit())
+                        break;
                 }
-                num++;
-                if (num == mParams.getLimit())
-                    break;
+                callback.setSortBy(zqr.getSortBy().toString());
+                callback.setQueryOffset(searchParams.getOffset());
+                callback.setHasMoreResult(pager.hasNext());
             }
-            callback.setSortBy(zqr.getSortBy().toString());
-            callback.setQueryOffset(searchParams.getOffset());
-            callback.setHasMoreResult(pager.hasNext());
         } catch (Exception e) {
             ZimbraLog.gal.warn("search on GalSync account failed for %s", galAcct.getId(), e);
             return false;
-        } finally {
-            Closeables.closeQuietly(zqr);
-        }
+        } 
         return true;
     }
 

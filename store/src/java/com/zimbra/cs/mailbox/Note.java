@@ -19,7 +19,7 @@ package com.zimbra.cs.mailbox;
 import java.util.Collections;
 import java.util.List;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
@@ -255,7 +255,7 @@ public class Note extends MailItem {
 
     @Override
     public String toString() {
-        Objects.ToStringHelper helper = Objects.toStringHelper(this);
+        MoreObjects.ToStringHelper helper = MoreObjects.toStringHelper(this);
         appendCommonMembers(helper);
         helper.add(CN_BOUNDS, mBounds);
         return helper.toString();

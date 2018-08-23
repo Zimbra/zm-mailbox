@@ -11,8 +11,6 @@ import org.junit.Test;
 
 import com.google.common.collect.Maps;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.ContactBackupServer;
-import com.zimbra.common.soap.ContactBackupServer.Status;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -24,6 +22,8 @@ import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.ContactBackupRequest;
 import com.zimbra.soap.admin.message.ContactBackupRequest.Operation;
 import com.zimbra.soap.admin.message.ContactBackupResponse;
+import com.zimbra.soap.admin.type.ContactBackupServer;
+import com.zimbra.soap.admin.type.ContactBackupServer.ContactBackupStatus;
 import com.zimbra.soap.admin.type.ServerSelector;
 import com.zimbra.soap.admin.type.ServerSelector.ServerBy;
 
@@ -76,7 +76,7 @@ public class ContactBackupApiTest {
         Assert.assertNotNull(cbResp.getServers());
         List<ContactBackupServer> servers = cbResp.getServers();
         for (ContactBackupServer server : servers) {
-            Assert.assertEquals(server.getStatus(), Status.started);
+            Assert.assertEquals(server.getStatus(), ContactBackupStatus.started);
         }
     }
 
@@ -102,7 +102,7 @@ public class ContactBackupApiTest {
         Assert.assertNotNull(cbResp.getServers());
         List<ContactBackupServer> servers = cbResp.getServers();
         for (ContactBackupServer server : servers) {
-            Assert.assertEquals(server.getStatus(), Status.stopped);
+            Assert.assertEquals(server.getStatus(), ContactBackupStatus.stopped);
         }
     }
 
@@ -111,7 +111,7 @@ public class ContactBackupApiTest {
         protected List<ContactBackupServer> startContactBackup(List<ServerSelector> selectors, Map<String, Object> context, ZimbraSoapContext zsc) throws ServiceException {
             List<ContactBackupServer> servers = new ArrayList<ContactBackupServer>();
             for (ServerSelector serverSelector : selectors) {
-                servers.add(new ContactBackupServer(serverSelector.getKey(), Status.started));
+                servers.add(new ContactBackupServer(serverSelector.getKey(), ContactBackupStatus.started));
             }
             return servers;
         }
@@ -120,7 +120,7 @@ public class ContactBackupApiTest {
         protected List<ContactBackupServer> stopContactBackup(List<ServerSelector> selectors, Map<String, Object> context, ZimbraSoapContext zsc) throws ServiceException {
             List<ContactBackupServer> servers = new ArrayList<ContactBackupServer>();
             for (ServerSelector serverSelector : selectors) {
-                servers.add(new ContactBackupServer(serverSelector.getKey(), Status.stopped));
+                servers.add(new ContactBackupServer(serverSelector.getKey(), ContactBackupStatus.stopped));
             }
             return servers;
         }

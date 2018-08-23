@@ -17,7 +17,7 @@
 
 package com.zimbra.soap.admin.message;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
@@ -145,8 +145,8 @@ public class GetCSRResponse {
         return Collections.unmodifiableList(subjectAltNames);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(
+                MoreObjects.ToStringHelper helper) {
         return helper
             .add("csrExists", csrExists)
             .add("isComm", isComm)
@@ -162,7 +162,7 @@ public class GetCSRResponse {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
+        return addToStringInfo(MoreObjects.toStringHelper(this))
                 .toString();
     }
 }

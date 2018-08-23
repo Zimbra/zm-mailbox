@@ -225,6 +225,21 @@ Access: domain admin sufficient
    note: this request is by default proxied to the account's home server
 
 -----------------------------
+<ChangePrimaryEmailRequest>
+  <account by="id|name|foreignPrincipal">{account-to-be-renamed}</account>
+  <newName>{new-account-name}</newName>
+</ChangePrimaryEmailRequest>
+
+<ChangePrimaryEmailResponse>
+  <account name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </account>
+</ChangePrimaryEmailResponse>
+
+Access: domain admin sufficient
+This api renames an account and adds old account name as an alias to the account.
+note: this request is by default proxied to the account's home server
+-----------------------------
 
 <SetPasswordRequest>
   <id>{value-of-zimbraId}</id>

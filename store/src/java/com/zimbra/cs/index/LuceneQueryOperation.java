@@ -40,7 +40,6 @@ import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
-import com.google.common.io.Closeables;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -48,6 +47,7 @@ import com.zimbra.cs.index.ZimbraIndexReader.TermFieldEnumeration;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.util.IOUtil;
 
 /**
  * {@link QueryOperation} which queries Lucene.
@@ -283,7 +283,7 @@ public final class LuceneQueryOperation extends QueryOperation {
 
     @Override
     public void close() {
-        Closeables.closeQuietly(searcher);
+        IOUtil.closeQuietly(searcher);
         searcher = null;
     }
 
@@ -404,7 +404,7 @@ public final class LuceneQueryOperation extends QueryOperation {
                     luceneQuery, topDocsLen, hits.getTotalHits(), System.currentTimeMillis() - start);
         } catch (IOException e) {
             ZimbraLog.search.error("Failed to search query=%s", luceneQuery, e);
-            Closeables.closeQuietly(searcher);
+            IOUtil.closeQuietly(searcher);
             searcher = null;
             hits = null;
         }
@@ -426,12 +426,13 @@ public final class LuceneQueryOperation extends QueryOperation {
                     continue;
                 }
                 List<Term> expanded = Lists.newArrayList();
-                TermFieldEnumeration itr = searcher.getIndexReader().getTermsForField(base.field(), base.text());
-                try {
+                try (TermFieldEnumeration itr = searcher.getIndexReader()
+                    .getTermsForField(base.field(), base.text())) {
                     while (itr.hasMoreElements()) {
                         BrowseTerm term = itr.nextElement();
                         if (term != null && term.getText().startsWith(base.text())) {
-                            if (expanded.size() >= max) { // too many terms expanded
+                            if (expanded.size() >= max) { // too many terms
+                                                          // expanded
                                 break;
                             }
                             expanded.add(new Term(base.field(), term.getText()));
@@ -439,8 +440,6 @@ public final class LuceneQueryOperation extends QueryOperation {
                             break;
                         }
                     }
-                } finally {
-                    Closeables.closeQuietly(itr);
                 }
                 if (expanded.isEmpty()) {
                     return null;

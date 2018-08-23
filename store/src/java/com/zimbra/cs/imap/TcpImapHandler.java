@@ -26,7 +26,6 @@ import java.net.SocketException;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
-import com.google.common.io.Closeables;
 import com.zimbra.common.io.TcpServerInputStream;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.Constants;
@@ -34,6 +33,7 @@ import com.zimbra.common.util.NetUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.server.ProtocolHandler;
 import com.zimbra.cs.stats.ZimbraPerf;
+import com.zimbra.cs.util.IOUtil;
 
 final class TcpImapHandler extends ProtocolHandler {
     private TcpServerInputStream input;
@@ -252,7 +252,7 @@ final class TcpImapHandler extends ProtocolHandler {
                         sleep(10 * Constants.MILLIS_PER_SECOND);
                     } catch (InterruptedException e) {
                     }
-                    Closeables.closeQuietly(output);
+                    IOUtil.closeQuietly(output);
                 }
             }.start();
 

@@ -22,8 +22,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.ContactBackupServer;
-import com.zimbra.common.soap.ContactBackupServer.Status;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
@@ -35,6 +33,8 @@ import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.ContactBackupRequest;
 import com.zimbra.soap.admin.message.ContactBackupRequest.Operation;
 import com.zimbra.soap.admin.message.ContactBackupResponse;
+import com.zimbra.soap.admin.type.ContactBackupServer;
+import com.zimbra.soap.admin.type.ContactBackupServer.ContactBackupStatus;
 import com.zimbra.soap.admin.type.ServerSelector;
 import com.zimbra.soap.admin.type.ServerSelector.ServerBy;
 
@@ -81,17 +81,17 @@ public class ContactBackup extends AdminDocumentHandler {
                 server = verifyServerPerms(serverSelector, zsc);
             } catch (ServiceException se) {
                 ZimbraLog.contactbackup.debug("Could not find server or no permission on %s", serverSelector.getKey());
-                servers.add(new ContactBackupServer(serverSelector.getKey(), Status.error));
+                servers.add(new ContactBackupServer(serverSelector.getKey(), ContactBackupStatus.error));
                 continue;
             }
             boolean local = CallbackUtil.isLocalServer(server);
             if (local) {
                 if (!ContactBackupThread.isRunning()) {
                     ZimbraLog.contactbackup.debug("ContactBackup is not running on %s", server.getServiceHostname());
-                    servers.add(new ContactBackupServer(server.getName(), Status.error));
+                    servers.add(new ContactBackupServer(server.getName(), ContactBackupStatus.error));
                 } else {
                     ContactBackupThread.shutdown();
-                    servers.add(new ContactBackupServer(server.getName(), Status.stopped));
+                    servers.add(new ContactBackupServer(server.getName(), ContactBackupStatus.stopped));
                 }
             } else {
                 List<ServerSelector> list = new ArrayList<ServerSelector>();
@@ -115,16 +115,16 @@ public class ContactBackup extends AdminDocumentHandler {
                 server = verifyServerPerms(serverSelector, zsc);
             } catch (ServiceException se) {
                 ZimbraLog.contactbackup.debug("Could not find server or no permission on %s", serverSelector.getKey());
-                servers.add(new ContactBackupServer(serverSelector.getKey(), Status.error));
+                servers.add(new ContactBackupServer(serverSelector.getKey(), ContactBackupStatus.error));
                 continue;
             }
             boolean local = CallbackUtil.isLocalServer(server);
             if (local) {
                 if (!ContactBackupThread.isRunning()) {
                     ContactBackupThread.startup();
-                    servers.add(new ContactBackupServer(server.getName(), Status.started));
+                    servers.add(new ContactBackupServer(server.getName(), ContactBackupStatus.started));
                 } else {
-                    servers.add(new ContactBackupServer(server.getName(), Status.error));
+                    servers.add(new ContactBackupServer(server.getName(), ContactBackupStatus.error));
                 }
             } else {
                 List<ServerSelector> list = new ArrayList<ServerSelector>();

@@ -84,6 +84,7 @@ import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.service.util.JWTUtil;
 import com.zimbra.cs.servlet.CsrfFilter;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.servlet.util.CsrfUtil;
@@ -474,6 +475,10 @@ public class FileUploadServlet extends ZimbraServlet {
         boolean csrfCheckComplete = false;
         if (req.getAttribute(CsrfFilter.CSRF_TOKEN_CHECK) != null) {
             doCsrfCheck =  (Boolean) req.getAttribute(CsrfFilter.CSRF_TOKEN_CHECK);
+        }
+
+        if (JWTUtil.isJWT(at)) {
+            doCsrfCheck = false;
         }
 
         if (doCsrfCheck) {
