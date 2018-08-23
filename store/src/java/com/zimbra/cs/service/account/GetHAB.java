@@ -77,6 +77,7 @@ public class GetHAB extends AccountDocumentHandler {
         }
         Collections.sort(childGrpList, new SortBySeniorityIndexThenName());
         grp.setChildGroups(childGrpList);
+        ZimbraLog.account.debug("The root group :%s has children:%s", grp.getName(), childGrpList);
 
         List<LdapDistributionList> lists = prov
             .getAllHabGroups(prov.get(DomainBy.name, acct.getDomainName()), group.getDN());
@@ -96,6 +97,8 @@ public class GetHAB extends AccountDocumentHandler {
             habGrp.setSeniorityIndex(list.getIntAttr(Provisioning.A_zimbraHABGroupSeniorityIndex, 0));
             groups.put(key, habGrp);
             List<HABGroup> children = new ArrayList<HABGroup>();
+            
+            ZimbraLog.account.debug("The HAB group: %s has children:%s", list.getName(), list.getAllMembersSet());
             for (String member : list.getAllMembersSet()) {
                 HABGroup grpChild = groups.get(member);
                 if (grpChild == null) {

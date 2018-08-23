@@ -40,7 +40,6 @@ import com.zimbra.soap.type.ZmBoolean;
  * @zm-api-command-description Returns a list of HABGroup and its children
  */
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name = AccountConstants.E_GET_HAB_RESPONSE)
 public class HABGroup {
     /**
      * @zm-api-field-description name of the HAB Group
