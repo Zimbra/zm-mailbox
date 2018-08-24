@@ -709,6 +709,10 @@ public class LdapDIT {
     public ZLdapFilter filterGroupsByDomain(Domain domain) {
         return ZLdapFilterFactory.getInstance().allGroups();
     }
+    
+    public ZLdapFilter filterHabGroupsByDn() {
+        return ZLdapFilterFactory.getInstance().allHabGroups();
+    }
 
 
 
@@ -802,6 +806,7 @@ public class LdapDIT {
         boolean coses = (flags & Provisioning.SD_COS_FLAG) != 0;
         boolean servers = (flags & Provisioning.SD_SERVER_FLAG) != 0;
         boolean ucservices = (flags & Provisioning.SD_UC_SERVICE_FLAG) != 0;
+        boolean habgroups = (flags & Provisioning.SD_HAB_FLAG) != 0;
 
         if (accounts || aliases || lists || dynamicgroups || calendarResources) {
             addBase(bases, mailBranchBaseDN());
@@ -811,7 +816,7 @@ public class LdapDIT {
             addBase(bases, adminBaseDN());
         }
 
-        if (domains) {
+        if (domains || habgroups) {
             addBase(bases, domainBaseDN());
         }
 

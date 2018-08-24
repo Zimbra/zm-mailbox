@@ -855,8 +855,9 @@ public class ProvUtil implements HttpDebugListener {
         RENAME_HAB_OU("renameHABOrgUnit", "rhou",
             "{domain} {ouName} {newName}", Category.MISC , 3, 3),
         DELETE_HAB_OU("deleteHABOrgUnit", "dhou",
-            "{domain} {ouName}", Category.MISC , 2, 2);
-
+            "{domain} {ouName}", Category.MISC , 2, 2),
+        GET_HAB("getHab", "ghab",
+            "{name@domain|id} {habRootGrpId} ", Category.ACCOUNT , 2, 2);
         private String mName;
         private String mAlias;
         private String mHelp;
@@ -1597,11 +1598,15 @@ public class ProvUtil implements HttpDebugListener {
             break;
         case CREATE_HAB_OU:
             doCreateHabOrgUnit(args);
+            break;
         case RENAME_HAB_OU:
             doRenameHabOrgUnit(args);
             break;
         case DELETE_HAB_OU:
             doDeleteHabOrgUnit(args);
+            break;
+        case GET_HAB:
+            doGetHab(args);
             break;
         default:
             return false;
@@ -1737,6 +1742,20 @@ public class ProvUtil implements HttpDebugListener {
         } else {
             prov.deleteHabOrgUnit(domain, args[2]);
         }
+    }
+
+    private void doGetHab(String[] args)  throws ServiceException {
+        if(args.length != 3) { 
+            usage();
+            return;
+        }
+        if (!(prov instanceof SoapProvisioning)) {
+            throwSoapOnly();
+        }
+        SoapProvisioning sp = (SoapProvisioning) prov;
+        Account acct = lookupAccount(args[1]);
+        sp.accountAuthed(acct);
+        sp.getHab(args[2], acct);
     }
 
     private void doGetDomain(String[] args) throws ServiceException {
