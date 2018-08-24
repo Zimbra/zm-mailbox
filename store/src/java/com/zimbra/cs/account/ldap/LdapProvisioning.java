@@ -38,6 +38,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+import java.util.stream.Collectors;
 
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang.StringUtils;
@@ -46,7 +47,6 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.unboundid.ldap.sdk.Filter;
 import com.zimbra.common.account.ForgetPasswordEnums.CodeConstants;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
@@ -214,15 +214,18 @@ import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.service.admin.HabOrgUnit;
 import com.zimbra.cs.service.util.JWEUtil;
 import com.zimbra.cs.service.util.ResetPasswordUtil;
+import com.zimbra.cs.service.util.SortBySeniorityIndexThenName;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.zimlet.ZimletException;
 import com.zimbra.cs.zimlet.ZimletUtil;
+import com.zimbra.soap.account.type.HABGroupMember;
 import com.zimbra.soap.admin.type.CacheEntryType;
 import com.zimbra.soap.admin.type.CountObjectsType;
 import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.soap.admin.type.GranteeSelector.GranteeBy;
 import com.zimbra.soap.type.AutoProvPrincipalBy;
 import com.zimbra.soap.type.GalSearchType;
+import com.zimbra.soap.type.NamedValue;
 import com.zimbra.soap.type.TargetBy;
 
 
@@ -4672,6 +4675,11 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             if (ne.hasMore()) {
                 ZSearchResultEntry sr = ne.next();
                 dl = makeDistributionList(sr.getDN(), sr.getAttributes(), basicAttrsOnly);
+                List<String> objectclass = sr.getAttributes().getMultiAttrStringAsList(Provisioning.A_objectClass,
+                        CheckBinary.NOCHECK);
+                if (dl != null && objectclass!= null && objectclass.contains(AttributeClass.OC_zimbraHabGroup)) {
+                    dl.setHABGroup(Boolean.TRUE);
+                }
             }
             ne.close();
         } catch (ServiceException e) {
@@ -9597,6 +9605,30 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     @Override
+    public List<HABGroupMember> getHABGroupMembers(Group group) throws ServiceException {
+        EntryCacheDataKey cacheKey = EntryCacheDataKey.HAB_GROUP_MEMBERS;
+        List<HABGroupMember> members = null;
+        if (group.isHABGroup()) {
+            if (group instanceof DynamicGroup) {
+                DynamicGroup dynGroup = getDynamicGroup(Key.DistributionListBy.name, group.getName(), null, Boolean.FALSE);
+                members = getHABDynamicGroupMemberDetails(dynGroup);
+            } else {
+                members = (List<HABGroupMember>) group.getCachedData(cacheKey);
+                if (members != null) {
+                    return members;
+                }
+                members = getHABGroupMemberDetails(group);  // should never be null
+                assert(members != null);
+                group.setCachedData(cacheKey, members);
+            }
+        } else {
+            //throw error
+        }
+
+        return members;
+    }
+
+    @Override
     public GroupMemberEmailAddrs getMemberAddrs(Group group) throws ServiceException {
         // this is for mail delivery, always relaod the full group from LDAP
         group = getGroup(DistributionListBy.id, group.getId());
@@ -9718,7 +9750,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                 } else if (objectclass.contains(AttributeClass.OC_zimbraGroup)) {
                     grp = makeDynamicGroup(initZlc, sr.getDN(), attrs);
                 }
-                if (grp != null && objectclass.contains(AttributeClass.OC_zimbraHabGroup)) {
+                if (grp != null && objectclass != null && objectclass.contains(AttributeClass.OC_zimbraHabGroup)) {
                     grp.setHABGroup(Boolean.TRUE);
                 }
                 return grp;
@@ -10285,7 +10317,13 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             String[] returnAttrs = basicAttrsOnly ? BASIC_DYNAMIC_GROUP_ATTRS : null;
             ZSearchResultEntry sr = helper.searchForEntry(mDIT.mailBranchBaseDN(), filter, initZlc, false, returnAttrs);
             if (sr != null) {
-                return makeDynamicGroup(initZlc, sr.getDN(), sr.getAttributes());
+                DynamicGroup grp = makeDynamicGroup(initZlc, sr.getDN(), sr.getAttributes());
+                List<String> objectclass = sr.getAttributes().getMultiAttrStringAsList(Provisioning.A_objectClass,
+                        CheckBinary.NOCHECK);
+                if (grp != null && objectclass != null && objectclass.contains(AttributeClass.OC_zimbraHabGroup)) {
+                    grp.setHABGroup(Boolean.TRUE);
+                }
+                return grp;
             }
         } catch (LdapMultipleEntriesMatchedException e) {
             throw AccountServiceException.MULTIPLE_ENTRIES_MATCHED("getDynamicGroupByQuery", e);
@@ -10690,6 +10728,123 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         }
 
         return members.toArray(new String[members.size()]);
+    }
+
+    /**
+     * get members of dynamic group and member details
+     * @param group
+     * @return
+     */
+    public List<HABGroupMember> getHABDynamicGroupMemberDetails(Group group) {
+        final List<HABGroupMember> members = Lists.newArrayList();
+
+        ZLdapContext zlc = null;
+        try {
+            zlc = LdapClient.getContext(LdapServerType.REPLICA, LdapUsage.GET_GROUP_MEMBER);
+            String[] memberDNs = group.getMultiAttr(Provisioning.A_member);
+
+            String[] memberAttrMap = getConfig().getMultiAttr(Provisioning.A_zimbraHABMemberLdapAttrMap);
+            Map<String, String> habMemberAttrMap = Arrays.stream(memberAttrMap)
+                    .collect(Collectors.toMap(e -> e.split("=")[0], e -> e.split("=")[1]));
+            List<String> ldapAttrList = new ArrayList<String>(habMemberAttrMap.values());
+            ldapAttrList.add(Provisioning.A_objectClass);
+            ldapAttrList.add(Provisioning.A_zimbraMailDeliveryAddress);
+            ldapAttrList.add(Provisioning.A_zimbraHABSeniorityIndex);
+
+            final String[] attrsToGet = ldapAttrList.toArray(new String[] {});
+
+            for (String memberDN : memberDNs) {
+                ZAttributes memberAttrs = zlc.getAttributes(memberDN, attrsToGet);
+                boolean isHABGroup = memberAttrs.hasAttributeValue(Provisioning.A_objectClass,
+                        AttributeClass.OC_zimbraHabGroup);
+                if (!isHABGroup) {
+                    HABGroupMember habMember = new HABGroupMember(memberAttrs.getAttrString(Provisioning.A_mail));
+                    for (String key : habMemberAttrMap.keySet()) {
+                        if (Provisioning.A_zimbraMailAlias.equals(habMemberAttrMap.get(key))) {
+                            String[] aliases = memberAttrs.getMultiAttrString(habMemberAttrMap.get(key));
+                            for (String alias : aliases) {
+                                habMember.addAttr(new NamedValue(key, alias));
+                            }
+                        } else {
+                            String val = memberAttrs.getAttrString(habMemberAttrMap.get(key));
+                            if (StringUtils.isNotEmpty(val)) {
+                                habMember.addAttr(new NamedValue(key, val));
+                            }
+                        }
+                    }
+                    String seniorityIndex = memberAttrs.getAttrString(Provisioning.A_zimbraHABSeniorityIndex);
+                    if (seniorityIndex == null) {
+                        seniorityIndex = "0";
+                    }
+                    habMember.setSeniorityIndex(Integer.parseInt(seniorityIndex));
+                    members.add(habMember);
+                }
+            }
+            Collections.sort(members, new SortBySeniorityIndexThenName());
+        } catch (ServiceException e) {
+            ZimbraLog.account.debug("unable to get hab dynamic group members", e);
+        } finally {
+            LdapClient.closeContext(zlc);
+        }
+        return members;
+    }
+
+    /**
+     * get members of static group and member details
+     * @param group
+     * @return
+     */
+    public List<HABGroupMember> getHABGroupMemberDetails(Group group) {
+        final List<HABGroupMember> members = Lists.newArrayList();
+
+        ZLdapContext zlc = null;
+        try {
+            zlc = LdapClient.getContext(LdapServerType.REPLICA, LdapUsage.GET_GROUP_MEMBER);
+            String[] memberEmails = null; 
+            DistributionList dl = get(DistributionListBy.id, group.getId());
+            memberEmails =  dl.getMultiAttr(Provisioning.A_zimbraMailForwardingAddress);
+
+            String[] memberAttrMap = getConfig().getMultiAttr(Provisioning.A_zimbraHABMemberLdapAttrMap);
+            Map<String, String> habMemberAttrMap = Arrays.stream(memberAttrMap)
+                    .collect(Collectors.toMap(e -> e.split("=")[0], e -> e.split("=")[1]));
+
+            for (String memberEmail : memberEmails) {
+                Account memberAcc = null;
+                try {
+                    memberAcc = get(AccountBy.name, memberEmail);
+                } catch (ServiceException e) {
+                    ZimbraLog.account.debug("not a direct member of hab group %s", memberEmail, e);
+                }
+                if (memberAcc != null) {
+                    HABGroupMember habMember = new HABGroupMember(memberEmail);
+                    for (String key : habMemberAttrMap.keySet()) {
+                        if (Provisioning.A_zimbraMailAlias.equals(habMemberAttrMap.get(key))) {
+                            String[] aliases = memberAcc.getAliases();
+                            for (String alias : aliases) {
+                                habMember.addAttr(new NamedValue(key, alias));
+                            }
+                        } else {
+                            String val = memberAcc.getAttr(habMemberAttrMap.get(key));
+                            if (StringUtils.isNotEmpty(val)) {
+                                habMember.addAttr(new NamedValue(key, val));
+                            }
+                        }
+                    }
+                    int seniorityIndex = memberAcc.getHABSeniorityIndex();
+                    if (seniorityIndex == -1) {
+                        seniorityIndex = 0;
+                    }
+                    habMember.setSeniorityIndex(seniorityIndex);
+                    members.add(habMember);
+                }
+            }
+            Collections.sort(members, new SortBySeniorityIndexThenName());
+        } catch (ServiceException e) {
+            ZimbraLog.account.debug("unable to get hab group members", e);
+        } finally {
+            LdapClient.closeContext(zlc);
+        }
+        return members;
     }
 
     public boolean dlIsInDynamicHABGroup(DynamicGroup group, List<String> dlsToCheck) {

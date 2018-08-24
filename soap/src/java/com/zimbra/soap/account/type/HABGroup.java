@@ -23,11 +23,9 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
 
 import com.google.common.collect.Lists;
 import com.zimbra.common.soap.AccountConstants;
-import com.zimbra.soap.account.type.Attr;
 import com.zimbra.soap.json.jackson.annotate.ZimbraKeyValuePairs;
 import com.zimbra.soap.type.ZmBoolean;
 
@@ -40,25 +38,19 @@ import com.zimbra.soap.type.ZmBoolean;
  * @zm-api-command-description Returns a list of HABGroup and its children
  */
 @XmlAccessorType(XmlAccessType.NONE)
-public class HABGroup {
-    /**
-     * @zm-api-field-description name of the HAB Group
-     */
-    @XmlElement(name=AccountConstants.A_NAME, required=false)
-    private String name;
-    
+public class HABGroup extends HABMember {
+
     /**
      * @zm-api-field-description id of the HAB group
      */
     @XmlElement(name=AccountConstants.A_ID, required=false)
     private String id;
-    
+
     /**
      * @zm-api-field-description List of HabGroups under this HAB group
      */
     @XmlElement(name=AccountConstants.A_HAB_GROUPS, required=false)
     private List<HABGroup> childGroups = new ArrayList<HABGroup>();
-    
 
     /**
      * @zm-api-field-description Attributes of the HAB group
@@ -66,7 +58,7 @@ public class HABGroup {
     @ZimbraKeyValuePairs
     @XmlElement(name=AccountConstants.E_ATTR /* attr */, required=true)
     private List<Attr> attrs = Lists.newArrayList();
-    
+
     /**
      * @zm-api-field-tag rootGroup indicator
      * @zm-api-field-description indicates whether a HAB group is the parent group in the Hierarchy
@@ -74,37 +66,17 @@ public class HABGroup {
     @XmlAttribute(name = AccountConstants.A_ROOT_HAB_GROUP /* rootHabGroup */, required = false)
     private ZmBoolean rootGroup;
 
-    
     /**
      * @zm-api-field-tag parentGroupId
      * @zm-api-field-description id of the parent group
      */
     @XmlAttribute(name = AccountConstants.A_PARENT_HAB_GROUP_ID /* parentHabGroupId */, required = false)
     private String parentGroupId;
-    
-    /**
-     * @zm-api-field-tag seniorityIndex
-     * @zm-api-field-description seniorityIndexOfTheHAB group
-     */
-    @XmlAttribute(name = AccountConstants.A_HAB_SENIORITY_INDEX /* seniorityIndex */, required = false)
-    private int seniorityIndex;
-    
-    
-    public String getName() {
-        return name;
-    }
 
-    
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    
     public String getId() {
         return id;
     }
 
-    
     public void setId(String id) {
         this.id = id;
     }
@@ -149,27 +121,13 @@ public class HABGroup {
         this.attrs = attrs;
     }
 
-
-
-    
-    public int getSeniorityIndex() {
-        return seniorityIndex;
-    }
-
-
-    
-    public void setSeniorityIndex(int seniorityIndex) {
-        this.seniorityIndex = seniorityIndex;
-    }
-
-
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
         builder.append("HABGroup [");
-        if (name != null) {
+        if (getName() != null) {
             builder.append("name=");
-            builder.append(name);
+            builder.append(getName());
             builder.append(", ");
         }
         if (id != null) {
@@ -198,10 +156,9 @@ public class HABGroup {
             builder.append(", ");
         }
         builder.append("seniorityIndex=");
-        builder.append(seniorityIndex);
+        builder.append(getSeniorityIndex());
         builder.append("]\n");
         return builder.toString();
     }
-
 
 }

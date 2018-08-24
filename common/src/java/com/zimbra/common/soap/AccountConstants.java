@@ -580,6 +580,7 @@ public class AccountConstants {
     public static final String E_RESET_PASSWORD_REQUEST = "ResetPasswordRequest";
     public static final String E_RESET_PASSWORD_RESPONSE = "ResetPasswordResponse";
     public static final QName RESET_PASSWORD_REQUEST = QName.get(E_RESET_PASSWORD_REQUEST, NAMESPACE);
+
     //Hab
     public static final String A_HAB_ROOT_GROUP_ID = "habRootGroupId";
     public static final String E_HAB_GROUP = "habGroup";
@@ -588,4 +589,7 @@ public class AccountConstants {
     public static final String A_PARENT_HAB_GROUP_ID = "parentHabGroupId";
     public static final String A_HAB_GROUPS= "habGroups";
     public static final String A_HAB_SENIORITY_INDEX = "seniorityIndex";
+    public static final String E_HAB_GROUP_MEMBERS = "groupMembers";
+    public static final String E_HAB_GROUP_MEMBER = "groupMember";
+
 }
