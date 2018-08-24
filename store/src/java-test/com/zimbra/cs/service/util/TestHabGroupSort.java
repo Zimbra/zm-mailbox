@@ -8,7 +8,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.zimbra.soap.account.message.HABGroup;
+import com.zimbra.soap.account.type.HABGroup;
 import com.zimbra.soap.type.ZmBoolean;
 
 import junit.framework.Assert;
