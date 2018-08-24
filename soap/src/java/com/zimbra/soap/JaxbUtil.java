@@ -290,6 +290,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.CreateDataSourceResponse.class,
             com.zimbra.soap.admin.message.CreateDistributionListRequest.class,
             com.zimbra.soap.admin.message.CreateDistributionListResponse.class,
+            com.zimbra.soap.admin.message.CreateHABGroupRequest.class,
+            com.zimbra.soap.admin.message.CreateHABGroupResponse.class,
             com.zimbra.soap.admin.message.CreateDomainRequest.class,
             com.zimbra.soap.admin.message.CreateDomainResponse.class,
             com.zimbra.soap.admin.message.CreateGalSyncAccountRequest.class,

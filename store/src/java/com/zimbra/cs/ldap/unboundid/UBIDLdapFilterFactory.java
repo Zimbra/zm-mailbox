@@ -1291,4 +1291,14 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                 FilterId.DN_SUBTREE_MATCH,
                 Filter.createORFilter(filters));
     }
+
+    @Override
+    public ZLdapFilter habOrgUnitByName(String name) {
+        return new UBIDLdapFilter(
+                FilterId.HAB_ORG_UNIT_BY_NAME,
+                Filter.createANDFilter(
+                        Filter.createEqualityFilter(Provisioning.A_ou, name),
+                        Filter.createEqualityFilter(LdapConstants.ATTR_objectClass, "organizationalUnit"))
+                );
+    }
 }
