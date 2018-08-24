@@ -2786,83 +2786,6 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * seniority index of the account which will determine the sorting order
-     * in the hierarchical address book
-     *
-     * @return zimbraAccountSeniorityIndex, or -1 if unset
-     *
-     * @since ZCS 8.8.10
-     */
-    @ZAttr(id=3030)
-    public int getAccountSeniorityIndex() {
-        return getIntAttr(Provisioning.A_zimbraAccountSeniorityIndex, -1, true);
-    }
-
-    /**
-     * seniority index of the account which will determine the sorting order
-     * in the hierarchical address book
-     *
-     * @param zimbraAccountSeniorityIndex new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.8.10
-     */
-    @ZAttr(id=3030)
-    public void setAccountSeniorityIndex(int zimbraAccountSeniorityIndex) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraAccountSeniorityIndex, Integer.toString(zimbraAccountSeniorityIndex));
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * seniority index of the account which will determine the sorting order
-     * in the hierarchical address book
-     *
-     * @param zimbraAccountSeniorityIndex new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.8.10
-     */
-    @ZAttr(id=3030)
-    public Map<String,Object> setAccountSeniorityIndex(int zimbraAccountSeniorityIndex, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraAccountSeniorityIndex, Integer.toString(zimbraAccountSeniorityIndex));
-        return attrs;
-    }
-
-    /**
-     * seniority index of the account which will determine the sorting order
-     * in the hierarchical address book
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.8.10
-     */
-    @ZAttr(id=3030)
-    public void unsetAccountSeniorityIndex() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraAccountSeniorityIndex, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * seniority index of the account which will determine the sorting order
-     * in the hierarchical address book
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.8.10
-     */
-    @ZAttr(id=3030)
-    public Map<String,Object> unsetAccountSeniorityIndex(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraAccountSeniorityIndex, "");
-        return attrs;
-    }
-
-    /**
      * account status. active - active lockout - no login until lockout
      * duration is over, mail delivery OK. locked - no login, mail delivery
      * OK. maintenance - no login, no delivery(lmtp server returns 4.x.x
@@ -22405,6 +22328,83 @@ public abstract class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetGalSyncAccountBasedAutoCompleteEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraGalSyncAccountBasedAutoCompleteEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * seniority index of the group or group member which will determine the
+     * sorting order in the hierarchical address book
+     *
+     * @return zimbraHABSeniorityIndex, or -1 if unset
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=3027)
+    public int getHABSeniorityIndex() {
+        return getIntAttr(Provisioning.A_zimbraHABSeniorityIndex, -1, true);
+    }
+
+    /**
+     * seniority index of the group or group member which will determine the
+     * sorting order in the hierarchical address book
+     *
+     * @param zimbraHABSeniorityIndex new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=3027)
+    public void setHABSeniorityIndex(int zimbraHABSeniorityIndex) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHABSeniorityIndex, Integer.toString(zimbraHABSeniorityIndex));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * seniority index of the group or group member which will determine the
+     * sorting order in the hierarchical address book
+     *
+     * @param zimbraHABSeniorityIndex new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=3027)
+    public Map<String,Object> setHABSeniorityIndex(int zimbraHABSeniorityIndex, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHABSeniorityIndex, Integer.toString(zimbraHABSeniorityIndex));
+        return attrs;
+    }
+
+    /**
+     * seniority index of the group or group member which will determine the
+     * sorting order in the hierarchical address book
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=3027)
+    public void unsetHABSeniorityIndex() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHABSeniorityIndex, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * seniority index of the group or group member which will determine the
+     * sorting order in the hierarchical address book
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=3027)
+    public Map<String,Object> unsetHABSeniorityIndex(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHABSeniorityIndex, "");
         return attrs;
     }
 

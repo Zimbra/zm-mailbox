@@ -34,6 +34,7 @@ import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE;
+import com.zimbra.soap.account.type.HABGroupMember;
 
 /**
  * @author pshao
@@ -61,6 +62,10 @@ public abstract class Group extends MailTarget implements AliasedEntry {
      * Use Provisioning.getGroupMembers() to get cached results.
      */
     public abstract String[] getAllMembers() throws ServiceException;
+
+    public List<HABGroupMember> getHABMembers() throws ServiceException {
+        throw ServiceException.UNSUPPORTED(); 
+    }
 
     /**
      * Ldap implementation of Group will cost a LDAP search.
