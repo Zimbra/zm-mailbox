@@ -3215,3 +3215,24 @@ status : response status from the server requested
 started : contact backup started on this server
 error : error occurred while starting or stopping contact backup on this server
 stopped : stopped contact backup on this server.
+
+
+-----------------------
+Create HAB OU API
+-----------------------
+
+ <HABOrgUnitRequest op="create|rename|delete" name="zimbraHAB41" xmlns="urn:zimbraAdmin">
+    <domain by="{id|name}">{domain-id | domain-name}</domain>
+</HABOrgUnitRequest>
+
+For create and rename operation the response is
+<HABOrgUnitResponse>
+  [<habOrgUnitName>{habOrgunitname1}</habOrgUnitName>
+  <habOrgUnitName>{habOrgunitname2}</habOrgUnitName>
+    ......
+  ]
+</HABOrgUnitResponse>
+
+For delete operation
+<HABOrgUnitResponse >
+</HABOrgUnitResponse>

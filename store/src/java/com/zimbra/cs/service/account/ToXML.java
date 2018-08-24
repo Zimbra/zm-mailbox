@@ -50,7 +50,7 @@ import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.Signature.SignatureContent;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE;
-import com.zimbra.soap.account.message.HABGroup;
+import com.zimbra.soap.account.type.HABGroup;
 import com.zimbra.soap.account.type.Attr;
 
 public class ToXML {

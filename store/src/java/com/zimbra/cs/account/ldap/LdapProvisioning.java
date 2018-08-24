@@ -1883,11 +1883,13 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
          * base
          */
         Domain domain = options.getDomain();
-        String[] bases = getSearchBases(domain, types);
+        String[] bases = null;
         if (options.getTypes().contains(ObjectType.habgroups)) {
             bases = new String[1];
             bases[0] = options.getHabRootGroupDn();
-        } 
+        } else {
+	    bases = getSearchBases(domain, types);
+	} 
 
         /*
          * filter

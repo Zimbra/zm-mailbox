@@ -34,7 +34,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.entry.LdapDistributionList;
 import com.zimbra.cs.service.util.SortBySeniorityIndexThenName;
 import com.zimbra.soap.ZimbraSoapContext;
-import com.zimbra.soap.account.message.HABGroup;
+import com.zimbra.soap.account.type.HABGroup;
 import com.zimbra.soap.account.type.Attr;
 import com.zimbra.soap.type.ZmBoolean;
 

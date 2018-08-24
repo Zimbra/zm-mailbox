@@ -25,7 +25,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AccountConstants;
-
+import com.zimbra.soap.account.type.HABGroup;
 /**
  * @author zimbra
  *

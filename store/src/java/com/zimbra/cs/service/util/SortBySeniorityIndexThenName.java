@@ -18,7 +18,7 @@ package com.zimbra.cs.service.util;
 
 import java.util.Comparator;
 
-import com.zimbra.soap.account.message.HABGroup;
+import com.zimbra.soap.account.type.HABGroup;
 
 /**
  * @author zimbra

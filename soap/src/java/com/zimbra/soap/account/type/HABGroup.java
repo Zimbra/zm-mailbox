@@ -14,7 +14,7 @@
  * If not, see <https://www.gnu.org/licenses/>.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.soap.account.message;
+package com.zimbra.soap.account.type;
 
 import java.util.ArrayList;
 import java.util.List;
