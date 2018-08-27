@@ -28,9 +28,6 @@ import com.zimbra.common.soap.MailConstants;
 import io.leangen.graphql.annotations.GraphQLQuery;
 import io.leangen.graphql.annotations.types.GraphQLType;
 
-import io.leangen.graphql.annotations.GraphQLQuery;
-import io.leangen.graphql.annotations.types.GraphQLType;
-
 @XmlAccessorType(XmlAccessType.NONE)
 @GraphQLType(name=GqlConstants.CLASS_CURSOR_INFO, description="Cursor specification")
 public final class CursorInfo {
