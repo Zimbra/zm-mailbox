@@ -229,6 +229,7 @@ import com.zimbra.soap.admin.message.GetUCServiceResponse;
 import com.zimbra.soap.admin.message.HABOrgUnitRequest;
 import com.zimbra.soap.admin.message.HABOrgUnitRequest.HabOp;
 import com.zimbra.soap.admin.message.HABOrgUnitResponse;
+import com.zimbra.soap.admin.message.ModifyHABGroupRequest;
 import com.zimbra.soap.admin.message.PurgeMessagesRequest;
 import com.zimbra.soap.admin.message.PurgeMessagesResponse;
 import com.zimbra.soap.admin.message.ReIndexRequest;
@@ -284,6 +285,8 @@ import com.zimbra.soap.admin.type.DomainSelector;
 import com.zimbra.soap.admin.type.EffectiveRightsTargetSelector;
 import com.zimbra.soap.admin.type.GranteeSelector;
 import com.zimbra.soap.admin.type.GranteeSelector.GranteeBy;
+import com.zimbra.soap.admin.type.HABGroupOperation;
+import com.zimbra.soap.admin.type.HABGroupOperation.HabGroupOp;
 import com.zimbra.soap.admin.type.LoggerInfo;
 import com.zimbra.soap.admin.type.MailboxByAccountIdSelector;
 import com.zimbra.soap.admin.type.MailboxWithMailboxId;
@@ -3129,6 +3132,17 @@ public class SoapProvisioning extends Provisioning {
         XMLElement req = new XMLElement(AccountConstants.GET_HAB_REQUEST);
         req.addAttribute(AccountConstants.A_HAB_ROOT_GROUP_ID, rootHabGroupId);
         invokeOnTargetAccount(req, account.getId());
+    }
+
+    /**
+     * @param string
+     * @param string2
+     * @param string3
+     * @throws ServiceException
+     */
+    public void modifyHabGroup(String habGroupId, String currentParentGroupId, String targetParentGroupId) throws ServiceException {
+        HABGroupOperation operation = new HABGroupOperation(habGroupId, currentParentGroupId, targetParentGroupId, HabGroupOp.move);
+        HABOrgUnitResponse resp = invokeJaxb(new ModifyHABGroupRequest(operation));
     }
 
 }

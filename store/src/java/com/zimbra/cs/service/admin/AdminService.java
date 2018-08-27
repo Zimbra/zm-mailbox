@@ -312,6 +312,7 @@ public class AdminService implements DocumentService {
         //HAB
         dispatcher.registerHandler(AdminConstants.HAB_ORG_UNIT_REQUEST, new HabOrgUnit());
         dispatcher.registerHandler(AdminConstants.CREATE_HAB_GROUP_REQUEST, new CreateHABGroup());
+        dispatcher.registerHandler(AdminConstants.MODIFY_HAB_GROUP_REQUEST, new ModifyHABGroup());
     }
 
     /**

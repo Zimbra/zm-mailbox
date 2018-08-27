@@ -2731,4 +2731,12 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public List<LdapDistributionList> getAllHabGroups(Domain domain, String rootDn) throws ServiceException {
         throw ServiceException.UNSUPPORTED();
     }
+
+    /**
+     * @param oldDn
+     * @param parentDn
+     */
+    public void changeHABGroupParent(String oldDn, String parentDn) throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
 }
