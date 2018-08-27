@@ -32,6 +32,7 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.CalTZInfoInterface;
 import com.zimbra.soap.type.TzOnsetInfo;
 
+import io.leangen.graphql.annotations.GraphQLNonNull;
 import io.leangen.graphql.annotations.GraphQLQuery;
 import io.leangen.graphql.annotations.types.GraphQLType;
 
@@ -47,7 +48,7 @@ public class CalTZInfo implements CalTZInfoInterface {
      */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=true)
     @GraphQLQuery(name=GqlConstants.ID, description="Timezone ID.")
-    private final String id;
+    private final @GraphQLNonNull String id;
 
     /**
      * @zm-api-field-tag timezone-std-offset
@@ -55,7 +56,7 @@ public class CalTZInfo implements CalTZInfoInterface {
      */
     @XmlAttribute(name=MailConstants.A_CAL_TZ_STDOFFSET /* stdoff */, required=true)
     @GraphQLQuery(name=GqlConstants.TIME_ZONE_STANDARD_OFFSET, description="Standard Time's offset in minutes from UTC; local = UTC + offset")
-    private final Integer tzStdOffset;
+    private final @GraphQLNonNull Integer tzStdOffset;
 
     /**
      * @zm-api-field-tag timezone-daylight-offset
@@ -63,7 +64,7 @@ public class CalTZInfo implements CalTZInfoInterface {
      */
     @XmlAttribute(name=MailConstants.A_CAL_TZ_DAYOFFSET /* dayoff */, required=true)
     @GraphQLQuery(name=GqlConstants.TIME_ZONE_DAY_OFFSET, description="Daylight Saving Time's offset in minutes from UTC; present only if DST is used")
-    private final Integer tzDayOffset;
+    private final @GraphQLNonNull Integer tzDayOffset;
 
     /**
      * @zm-api-field-description Time/rule for transitioning from daylight time to standard time.

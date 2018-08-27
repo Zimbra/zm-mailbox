@@ -24,6 +24,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 
+import io.leangen.graphql.annotations.GraphQLNonNull;
 import io.leangen.graphql.annotations.GraphQLQuery;
 import io.leangen.graphql.annotations.types.GraphQLType;
 
@@ -53,7 +54,7 @@ public class TzOnsetInfo {
      */
     @XmlAttribute(name=MailConstants.A_CAL_TZ_MONTH /* mon */, required=true)
     @GraphQLQuery(name=GqlConstants.MONTH, description="Month; 1=January, 2=February, etc.")
-    private Integer month;
+    private @GraphQLNonNull Integer month;
 
     /**
      * @zm-api-field-tag tzonset-day-of-month
@@ -69,7 +70,7 @@ public class TzOnsetInfo {
      */
     @XmlAttribute(name=MailConstants.A_CAL_TZ_HOUR /* hour */, required=true)
     @GraphQLQuery(name=GqlConstants.HOUR, description="Transition hour (0..23)")
-    private Integer hour;
+    private @GraphQLNonNull Integer hour;
 
     /**
      * @zm-api-field-tag tzonset-minute
@@ -77,7 +78,7 @@ public class TzOnsetInfo {
      */
     @XmlAttribute(name=MailConstants.A_CAL_TZ_MINUTE /* min */, required=true)
     @GraphQLQuery(name=GqlConstants.MINUTE, description="Transition minute (0..59)")
-    private Integer minute;
+    private @GraphQLNonNull Integer minute;
 
     /**
      * @zm-api-field-tag tzonset-second
@@ -85,7 +86,7 @@ public class TzOnsetInfo {
      */
     @XmlAttribute(name=MailConstants.A_CAL_TZ_SECOND /* sec */, required=true)
     @GraphQLQuery(name=GqlConstants.SECOND, description="Transition second; 0..59, usually 0")
-    private Integer second;
+    private @GraphQLNonNull Integer second;
 
     public TzOnsetInfo() {
     }
