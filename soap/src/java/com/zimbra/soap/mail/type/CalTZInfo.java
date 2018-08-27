@@ -37,7 +37,7 @@ import io.leangen.graphql.annotations.GraphQLQuery;
 import io.leangen.graphql.annotations.types.GraphQLType;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@GraphQLType(name=GqlConstants.CALENDAR_TIME_ZONE_INFO, description="Timezone specification")
+@GraphQLType(name=GqlConstants.CLASS_CALENDAR_TIME_ZONE_INFO, description="Timezone specification")
 public class CalTZInfo implements CalTZInfoInterface {
 
     /**

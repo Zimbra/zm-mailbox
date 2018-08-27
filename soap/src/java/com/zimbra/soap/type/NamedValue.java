@@ -30,7 +30,7 @@ import io.leangen.graphql.annotations.GraphQLQuery;
 import io.leangen.graphql.annotations.types.GraphQLType;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@GraphQLType(name=GqlConstants.NAMED_VALUE, description="attribute names and values")
+@GraphQLType(name=GqlConstants.CLASS_NAMED_VALUE, description="attribute names and values")
 public class NamedValue {
 
     /**

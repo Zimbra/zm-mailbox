@@ -29,7 +29,7 @@ import io.leangen.graphql.annotations.GraphQLQuery;
 import io.leangen.graphql.annotations.types.GraphQLType;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@GraphQLType(name=GqlConstants.TZ_ONSET_INFO, description="Time/rule for transitioning from daylight time to standard time. Either specify week/wkday combo, or mday.")
+@GraphQLType(name=GqlConstants.CLASS_TZ_ONSET_INFO, description="Time/rule for transitioning from daylight time to standard time. Either specify week/wkday combo, or mday.")
 public class TzOnsetInfo {
 
     /**

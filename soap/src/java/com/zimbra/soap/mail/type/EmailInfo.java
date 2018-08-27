@@ -35,7 +35,7 @@ import io.leangen.graphql.annotations.GraphQLQuery;
 import io.leangen.graphql.annotations.types.GraphQLType;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@GraphQLType(name=GqlConstants.EMAIL_INFO, description="Email information")
+@GraphQLType(name=GqlConstants.CLASS_EMAIL_INFO, description="Email information")
 public class EmailInfo
 implements EmailInfoInterface {
 
