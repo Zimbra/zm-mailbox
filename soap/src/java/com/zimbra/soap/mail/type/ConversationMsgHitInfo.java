@@ -22,15 +22,16 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
 import com.google.common.base.MoreObjects;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 
+import io.leangen.graphql.annotations.GraphQLNonNull;
 import io.leangen.graphql.annotations.GraphQLQuery;
 import io.leangen.graphql.annotations.types.GraphQLType;
-import io.leangen.graphql.annotations.GraphQLNonNull;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@GraphQLType(name="ConversationMsgHitInfo", description="Conversation search result information containing messages")
+@GraphQLType(name=GqlConstants.CONVERSATION_MESSAGE_HIT_INFO, description="Conversation search result information containing messages")
 public class ConversationMsgHitInfo {
 
     /**
@@ -89,11 +90,11 @@ public class ConversationMsgHitInfo {
     }
 
     public static ConversationMsgHitInfo fromIdAndFolderId(String id, String fId) {
-        ConversationMsgHitInfo hit = new ConversationMsgHitInfo(id);
+        final ConversationMsgHitInfo hit = new ConversationMsgHitInfo(id);
         hit.setFolderId(fId);
         return hit;
     }
- 
+
     public void setSize(Long size) { this.size = size; }
     public void setFolderId(String folderId) { this.folderId = folderId; }
     public void setFlags(String flags) { this.flags = flags; }
@@ -102,22 +103,22 @@ public class ConversationMsgHitInfo {
     }
     public void setDate(Long date) { this.date = date; }
     @GraphQLNonNull
-    @GraphQLQuery(name="id", description="The message ID")
+    @GraphQLQuery(name=GqlConstants.ID, description="The message ID")
     public String getId() { return id; }
-    @GraphQLQuery(name="size", description="The message size")
+    @GraphQLQuery(name=GqlConstants.SIZE, description="The message size")
     public Long getSize() { return size; }
-    @GraphQLQuery(name="folderId", description="The folder ID")
+    @GraphQLQuery(name=GqlConstants.FOLDER_ID, description="The folder ID")
     public String getFolderId() { return folderId; }
-    @GraphQLQuery(name="flags", description="Flags Example: Flags. (u)nread, (f)lagged, has (a)ttachment, (r)eplied, (s)ent by me, for(w)arded, calendar in(v)ite, (d)raft, IMAP-\\Deleted (x), (n)otification sent, urgent (!), low-priority (?), priority (+)")
+    @GraphQLQuery(name=GqlConstants.FLAGS, description="Flags Example: Flags. (u)nread, (f)lagged, has (a)ttachment, (r)eplied, (s)ent by me, for(w)arded, calendar in(v)ite, (d)raft, IMAP-\\Deleted (x), (n)otification sent, urgent (!), low-priority (?), priority (+)")
     public String getFlags() { return flags; }
-    @GraphQLQuery(name="autoSendTime", description="The time at which the draft should be automatically sent by the server")
+    @GraphQLQuery(name=GqlConstants.AUTO_SEND_TIME, description="The time at which the draft should be automatically sent by the server")
     public Long getAutoSendTime() { return autoSendTime; }
-    @GraphQLQuery(name="date", description="Date Seconds since the epoch, from the date header in the message")
+    @GraphQLQuery(name=GqlConstants.DATE, description="Date Seconds since the epoch, from the date header in the message")
     public Long getDate() { return date; }
 
     /** Done like this rather than using JAXB for performance reasons */
     public Element toElement(Element parent) {
-        Element mel = parent.addNonUniqueElement(MailConstants.E_MSG).addAttribute(MailConstants.A_ID, id);
+        final Element mel = parent.addNonUniqueElement(MailConstants.E_MSG).addAttribute(MailConstants.A_ID, id);
         if (size != null) {
             mel.addAttribute(MailConstants.A_SIZE, size);
         }
