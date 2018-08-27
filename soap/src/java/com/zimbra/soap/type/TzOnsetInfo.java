@@ -53,8 +53,9 @@ public class TzOnsetInfo {
      * @zm-api-field-description Month; 1=January, 2=February, etc.
      */
     @XmlAttribute(name=MailConstants.A_CAL_TZ_MONTH /* mon */, required=true)
+    @GraphQLNonNull
     @GraphQLQuery(name=GqlConstants.MONTH, description="Month; 1=January, 2=February, etc.")
-    private @GraphQLNonNull Integer month;
+    private Integer month;
 
     /**
      * @zm-api-field-tag tzonset-day-of-month
@@ -69,38 +70,41 @@ public class TzOnsetInfo {
      * @zm-api-field-description Transition hour (0..23)
      */
     @XmlAttribute(name=MailConstants.A_CAL_TZ_HOUR /* hour */, required=true)
+    @GraphQLNonNull
     @GraphQLQuery(name=GqlConstants.HOUR, description="Transition hour (0..23)")
-    private @GraphQLNonNull Integer hour;
+    private Integer hour;
 
     /**
      * @zm-api-field-tag tzonset-minute
      * @zm-api-field-description Transition minute (0..59)
      */
     @XmlAttribute(name=MailConstants.A_CAL_TZ_MINUTE /* min */, required=true)
+    @GraphQLNonNull
     @GraphQLQuery(name=GqlConstants.MINUTE, description="Transition minute (0..59)")
-    private @GraphQLNonNull Integer minute;
+    private Integer minute;
 
     /**
      * @zm-api-field-tag tzonset-second
      * @zm-api-field-description Transition second; 0..59, usually 0
      */
     @XmlAttribute(name=MailConstants.A_CAL_TZ_SECOND /* sec */, required=true)
+    @GraphQLNonNull
     @GraphQLQuery(name=GqlConstants.SECOND, description="Transition second; 0..59, usually 0")
-    private @GraphQLNonNull Integer second;
+    private Integer second;
 
     public TzOnsetInfo() {
     }
 
     public void setWeek(Integer week) { this.week = week; }
     public void setDayOfWeek(Integer dayOfWeek) { this.dayOfWeek = dayOfWeek; }
-    public void setMonth(Integer month) { this.month = month; }
+    public void setMonth(@GraphQLNonNull Integer month) { this.month = month; }
     public void setDayOfMonth(Integer dayOfMonth) {
         this.dayOfMonth = dayOfMonth;
     }
 
-    public void setHour(Integer hour) { this.hour = hour; }
-    public void setMinute(Integer minute) { this.minute = minute; }
-    public void setSecond(Integer second) { this.second = second; }
+    public void setHour(@GraphQLNonNull Integer hour) { this.hour = hour; }
+    public void setMinute(@GraphQLNonNull Integer minute) { this.minute = minute; }
+    public void setSecond(@GraphQLNonNull Integer second) { this.second = second; }
     public Integer getWeek() { return week; }
     public Integer getDayOfWeek() { return dayOfWeek; }
     public Integer getMonth() { return month; }

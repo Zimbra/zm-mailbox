@@ -47,24 +47,27 @@ public class CalTZInfo implements CalTZInfoInterface {
      * Otherwise, it must be present, although it will be ignored by the server
      */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=true)
+    @GraphQLNonNull
     @GraphQLQuery(name=GqlConstants.ID, description="Timezone ID.")
-    private final @GraphQLNonNull String id;
+    private final String id;
 
     /**
      * @zm-api-field-tag timezone-std-offset
      * @zm-api-field-description Standard Time's offset in minutes from UTC; local = UTC + offset
      */
     @XmlAttribute(name=MailConstants.A_CAL_TZ_STDOFFSET /* stdoff */, required=true)
+    @GraphQLNonNull
     @GraphQLQuery(name=GqlConstants.TIME_ZONE_STANDARD_OFFSET, description="Standard Time's offset in minutes from UTC; local = UTC + offset")
-    private final @GraphQLNonNull Integer tzStdOffset;
+    private final Integer tzStdOffset;
 
     /**
      * @zm-api-field-tag timezone-daylight-offset
      * @zm-api-field-description Daylight Saving Time's offset in minutes from UTC; present only if DST is used
      */
     @XmlAttribute(name=MailConstants.A_CAL_TZ_DAYOFFSET /* dayoff */, required=true)
+    @GraphQLNonNull
     @GraphQLQuery(name=GqlConstants.TIME_ZONE_DAY_OFFSET, description="Daylight Saving Time's offset in minutes from UTC; present only if DST is used")
-    private final @GraphQLNonNull Integer tzDayOffset;
+    private final Integer tzDayOffset;
 
     /**
      * @zm-api-field-description Time/rule for transitioning from daylight time to standard time.
@@ -136,7 +139,6 @@ public class CalTZInfo implements CalTZInfoInterface {
     }
 
     @Override
-    @GraphQLQuery(name=GqlConstants.ID, description="Timezone ID.")
     public String getId() { return id; }
     @Override
     public Integer getTzStdOffset() { return tzStdOffset; }
