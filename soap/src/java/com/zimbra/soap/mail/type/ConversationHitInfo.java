@@ -17,10 +17,6 @@
 
 package com.zimbra.soap.mail.type;
 
-import com.google.common.base.MoreObjects;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -29,6 +25,9 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.SearchHit;
@@ -37,7 +36,7 @@ import io.leangen.graphql.annotations.GraphQLQuery;
 import io.leangen.graphql.annotations.types.GraphQLType;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@GraphQLType(name="ConversationHitInfo", description="Conversation search result information")
+@GraphQLType(name=GqlConstants.CONVERSATION_HIT_INFO, description="Conversation search result information")
 public class ConversationHitInfo
 extends ConversationSummary
 implements SearchHit {
@@ -53,7 +52,7 @@ implements SearchHit {
      * @zm-api-field-description Hits
      */
     @XmlElement(name=MailConstants.E_MSG /* m */, required=false)
-    private List<ConversationMsgHitInfo> messageHits = Lists.newArrayList();
+    private final List<ConversationMsgHitInfo> messageHits = Lists.newArrayList();
 
     public ConversationHitInfo() {
         this((String) null);
@@ -63,6 +62,7 @@ implements SearchHit {
         super(id);
     }
 
+    @Override
     public void setSortField(String sortField) { this.sortField = sortField; }
     public void setMessageHits(Iterable <ConversationMsgHitInfo> messageHits) {
         this.messageHits.clear();
@@ -76,14 +76,16 @@ implements SearchHit {
         return this;
     }
 
-    @GraphQLQuery(name="sortField", description="The sort field")
+    @Override
+    @GraphQLQuery(name=GqlConstants.SORT_FIELD, description="The sort field")
     public String getSortField() { return sortField; }
 
-    @GraphQLQuery(name="messageHits", description="List of messages in the conversation")
+    @GraphQLQuery(name=GqlConstants.MESSAGE_HITS, description="List of messages in the conversation")
     public List<ConversationMsgHitInfo> getMessageHits() {
         return Collections.unmodifiableList(messageHits);
     }
 
+    @Override
     public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);
         return helper

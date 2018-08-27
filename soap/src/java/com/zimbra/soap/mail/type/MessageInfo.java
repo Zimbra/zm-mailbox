@@ -30,6 +30,7 @@ import javax.xml.bind.annotation.XmlType;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.EmailInfoInterface;
 import com.zimbra.soap.base.InviteInfoInterface;
@@ -37,16 +38,15 @@ import com.zimbra.soap.base.MessageInfoInterface;
 import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
 import com.zimbra.soap.type.KeyValuePair;
 
+import io.leangen.graphql.annotations.GraphQLIgnore;
 import io.leangen.graphql.annotations.GraphQLQuery;
 import io.leangen.graphql.annotations.types.GraphQLType;
-import io.leangen.graphql.annotations.GraphQLNonNull;
-import io.leangen.graphql.annotations.GraphQLIgnore;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = { "fragment", "emails", "subject",
     "messageIdHeader", "inReplyTo", "invite", "headers", "contentElems" })
 
-@GraphQLType(name="MessageInfo", description="Message information")
+@GraphQLType(name=GqlConstants.MESSAGE_INFO, description="Message information")
 public class MessageInfo
 extends MessageCommon
 implements MessageInfoInterface {
@@ -206,7 +206,7 @@ implements MessageInfoInterface {
     public void setId(String id) { this.id = id; }
 
     public void setImapUid(Integer imapUid) { this.imapUid = imapUid; }
-    @GraphQLQuery(name="imapUid", description="The imap UID")
+    @GraphQLQuery(name=GqlConstants.IMAP_UID, description="The imap UID")
     public Integer getImapUid() { return imapUid; }
 
     @Override
@@ -294,60 +294,60 @@ implements MessageInfoInterface {
     }
 
     @Override
-    @GraphQLQuery(name="id", description="The message ID")
+    @GraphQLQuery(name=GqlConstants.ID, description="The message ID")
     public String getId() { return id; }
     @Override
-    @GraphQLQuery(name="calendarIntendedFor", description="X-Zimbra-Calendar-Intended-For header")
+    @GraphQLQuery(name=GqlConstants.CALENDAR_INTENDED_FOR, description="X-Zimbra-Calendar-Intended-For header")
     public String getCalendarIntendedFor() { return calendarIntendedFor; }
     @Override
-    @GraphQLQuery(name="origId", description="Message id of the message being replied to/forwarded (outbound messages only)")
+    @GraphQLQuery(name=GqlConstants.ORIG_ID, description="Message id of the message being replied to/forwarded (outbound messages only)")
     public String getOrigId() { return origId; }
     @Override
-    @GraphQLQuery(name="draftReplyType", description="Reply type - r|w")
+    @GraphQLQuery(name=GqlConstants.DRAFT_REPLY_TYPE, description="Reply type - r|w")
     public String getDraftReplyType() { return draftReplyType; }
     @Override
-    @GraphQLQuery(name="identityId", description="Specifies the identity being used to compose the message")
+    @GraphQLQuery(name=GqlConstants.IDENTITY_ID, description="Specifies the identity being used to compose the message")
     public String getIdentityId() { return identityId; }
     @Override
-    @GraphQLQuery(name="draftAccountId", description="Draft account ID")
+    @GraphQLQuery(name=GqlConstants.DRAFT_ACCOUNT_ID, description="Draft account ID")
     public String getDraftAccountId() { return draftAccountId; }
     @Override
-    @GraphQLQuery(name="draftAutoSendTime", description="Specifies the time at which the draft should be automatically sent by the server")
+    @GraphQLQuery(name=GqlConstants.DRAFT_AUTO_SEND_TIME, description="Specifies the time at which the draft should be automatically sent by the server")
     public Long getDraftAutoSendTime() { return draftAutoSendTime; }
     @Override
-    @GraphQLQuery(name="sentDate", description="The sent date in the header")
+    @GraphQLQuery(name=GqlConstants.SENT_DATE, description="The sent date in the header")
     public Long getSentDate() { return sentDate; }
     @Override
-    @GraphQLQuery(name="resentDate", description="The re-sent date in the header")
+    @GraphQLQuery(name=GqlConstants.RESENT_DATE, description="The re-sent date in the header")
     public Long getResentDate() { return resentDate; }
     @Override
-    @GraphQLQuery(name="part", description="Part")
+    @GraphQLQuery(name=GqlConstants.PART, description="Part")
     public String getPart() { return part; }
     @Override
-    @GraphQLQuery(name="fragment", description="First few bytes of the message (probably between 40 and 100 bytes)")
+    @GraphQLQuery(name=GqlConstants.FRAGMENT, description="First few bytes of the message (probably between 40 and 100 bytes)")
     public String getFragment() { return fragment; }
-    @GraphQLQuery(name="emails", description="Email information")
+    @GraphQLQuery(name=GqlConstants.EMAILS, description="Email information")
     public List<EmailInfo> getEmails() {
         return Collections.unmodifiableList(emails);
     }
     @Override
-    @GraphQLQuery(name="subject", description="The email subject")
+    @GraphQLQuery(name=GqlConstants.SUBJECT, description="The email subject")
     public String getSubject() { return subject; }
     @Override
-    @GraphQLQuery(name="messageIdHeader", description="The message ID")
+    @GraphQLQuery(name=GqlConstants.MESSAGE_ID_HEADER, description="The message ID")
     public String getMessageIdHeader() { return messageIdHeader; }
     @Override
-    @GraphQLQuery(name="inReplyTo", description="Message-ID header for message being replied to")
+    @GraphQLQuery(name=GqlConstants.IN_REPLY_TO, description="Message-ID header for message being replied to")
     public String getInReplyTo() { return inReplyTo; }
-    @GraphQLQuery(name="invite", description="Parsed out iCalendar invite")
+    @GraphQLQuery(name=GqlConstants.INVITE, description="Parsed out iCalendar invite")
     public InviteInfo getInvite() { return invite; }
     @Override
-    @GraphQLQuery(name="headers", description="List of headers")
+    @GraphQLQuery(name=GqlConstants.HEADERS, description="List of headers")
     public List<KeyValuePair> getHeaders() {
         return Collections.unmodifiableList(headers);
     }
     @Override
-    @GraphQLQuery(name="contentElems", description="List of content elements")
+    @GraphQLQuery(name=GqlConstants.CONTENT_ELEMS, description="List of content elements")
     public List<Object> getContentElems() {
         return Collections.unmodifiableList(contentElems);
     }
