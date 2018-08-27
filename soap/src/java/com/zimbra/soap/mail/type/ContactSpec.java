@@ -96,7 +96,7 @@ public class ContactSpec implements SpecifyContact<NewContactAttr,NewContactGrou
     @Override
     @GraphQLInputField(name="id", description="ID - specified when modifying a contact")
     public void setId(Integer id) { this.id = id; }
-    @GraphQLInputField(name="folder", description="ID of folder to create contact in. Un-specified means use the default Contacts folder.")
+    @GraphQLInputField(name="folderId", description="ID of folder to create contact in. Un-specified means use the default Contacts folder.")
     public void setFolder(String folder) { this.folder = folder; }
     @Deprecated
     @GraphQLIgnore

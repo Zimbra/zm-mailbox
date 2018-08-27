@@ -47,6 +47,10 @@ public class ContactActionSelector extends ActionSelector {
     public ContactActionSelector() {
     }
 
+    public ContactActionSelector(String ids, String operation) {
+        super(ids, operation);
+    }
+
     @GraphQLInputField(name="attrs", description="Contact attributes")
     public void setAttrs(Iterable <NewContactAttr> attrs) {
         this.attrs.clear();

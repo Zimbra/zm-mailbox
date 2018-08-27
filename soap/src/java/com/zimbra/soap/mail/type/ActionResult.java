@@ -53,8 +53,7 @@ public class ActionResult {
      * @zm-api-field-description Operation
      */
     @XmlAttribute(name=MailConstants.A_OPERATION /* op */, required=true)
-    @GraphQLNonNull
-    @GraphQLQuery(name="operation", description="Operation")
+    @GraphQLIgnore
     private final String operation;
 
     /**
@@ -88,8 +87,7 @@ public class ActionResult {
     @GraphQLNonNull
     @GraphQLQuery(name="ids", description="Comma-separated list of ids which have been successfully processed")
     public String getId() { return id; }
-    @GraphQLNonNull
-    @GraphQLQuery(name="operation", description="Operation")
+    @GraphQLIgnore
     public String getOperation() { return operation; }
 
     public void setNonExistentIds(String ids) { this.nonExistentIds = ids; };
