@@ -28,6 +28,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.CustomMetadataInterface;
 
@@ -36,7 +37,7 @@ import io.leangen.graphql.annotations.types.GraphQLType;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_METADATA)
-@GraphQLType(name="MailCustomMetadata", description="Custom metadatas")
+@GraphQLType(name=GqlConstants.MAIL_CUSTOM_METADATA, description="Custom metadatas")
 public class MailCustomMetadata
 extends MailKeyValuePairs
 implements CustomMetadataInterface {
@@ -59,12 +60,13 @@ implements CustomMetadataInterface {
     @Override
     public void setSection(String section) { this.section = section; }
     @Override
-    @GraphQLQuery(name="section", description="Section. If absent this indicates that CustomMetadata info is present but there are no sections to report on.")
+    @GraphQLQuery(name=GqlConstants.SECTION, description="Section. If absent this indicates that CustomMetadata info is present but there are no sections to report on.")
     public String getSection() { return section; }
 
     public static List <MailCustomMetadata> fromInterfaces(Iterable <CustomMetadataInterface> params) {
-        if (params == null)
+        if (params == null) {
             return null;
+        }
         final List <MailCustomMetadata> newList = Lists.newArrayList();
         for (final CustomMetadataInterface param : params) {
             newList.add((MailCustomMetadata) param);
@@ -73,8 +75,9 @@ implements CustomMetadataInterface {
     }
 
     public static List <CustomMetadataInterface> toInterfaces(Iterable <MailCustomMetadata> params) {
-        if (params == null)
+        if (params == null) {
             return null;
+        }
         final List <CustomMetadataInterface> newList = Lists.newArrayList();
         Iterables.addAll(newList, params);
         return Collections.unmodifiableList(newList);
