@@ -27,6 +27,7 @@ import javax.xml.bind.annotation.XmlElement;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.SpecifyContact;
 
@@ -35,7 +36,7 @@ import io.leangen.graphql.annotations.GraphQLInputField;
 import io.leangen.graphql.annotations.types.GraphQLType;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@GraphQLType(name="ContactSpec", description="Input for creating a new contact")
+@GraphQLType(name=GqlConstants.CLASS_CONTACT_SPEC, description="Input for creating a new contact")
 public class ContactSpec implements SpecifyContact<NewContactAttr,NewContactGroupMember> {
 
     // Used when modifying a contact
@@ -79,7 +80,7 @@ public class ContactSpec implements SpecifyContact<NewContactAttr,NewContactGrou
      * @zm-api-field-description Contact attributes.  Cannot specify <b>&lt;vcard></b> as well as these
      */
     @XmlElement(name=MailConstants.E_ATTRIBUTE /* a */, required=false)
-    @GraphQLInputField(name="attrs", description="Contact attributes.")
+    @GraphQLInputField(name=GqlConstants.ATTRIBUTES, description="Contact attributes.")
     private final List<NewContactAttr> attrs = Lists.newArrayList();
 
     /**
@@ -87,27 +88,27 @@ public class ContactSpec implements SpecifyContact<NewContactAttr,NewContactGrou
      * (has attribute type="group")
      */
     @XmlElement(name=MailConstants.E_CONTACT_GROUP_MEMBER /* m */, required=false)
-    @GraphQLInputField(name="contactGroupMembers", description="Valid only if the contact being created is a contact group")
+    @GraphQLInputField(name=GqlConstants.CONTACT_GROUP_MEMBERS, description="Valid only if the contact being created is a contact group")
     private final List<NewContactGroupMember> contactGroupMembers = Lists.newArrayList();
 
     public ContactSpec() {
     }
 
     @Override
-    @GraphQLInputField(name="id", description="ID - specified when modifying a contact")
+    @GraphQLInputField(name=GqlConstants.ID, description="ID - specified when modifying a contact")
     public void setId(Integer id) { this.id = id; }
-    @GraphQLInputField(name="folderId", description="ID of folder to create contact in. Un-specified means use the default Contacts folder.")
+    @GraphQLInputField(name=GqlConstants.FOLDER_ID, description="ID of folder to create contact in. Un-specified means use the default Contacts folder.")
     public void setFolder(String folder) { this.folder = folder; }
     @Deprecated
     @GraphQLIgnore
     public void setTags(String tags) { this.tags = tags; }
     @Override
-    @GraphQLInputField(name="tagNames", description="Comma-separated list of tag names")
+    @GraphQLInputField(name=GqlConstants.TAG_NAMES, description="Comma-separated list of tag names")
     public void setTagNames(String tagNames) { this.tagNames = tagNames; }
-    @GraphQLInputField(name="vcard", description="Either a vcard or attributes can be specified but not both")
+    @GraphQLInputField(name=GqlConstants.VCARD, description="Either a vcard or attributes can be specified but not both")
     public void setVcard(VCardInfo vcard) { this.vcard = vcard; }
     @Override
-    @GraphQLInputField(name="attrs", description="Contact attributes")
+    @GraphQLInputField(name=GqlConstants.ATTRIBUTES, description="Contact attributes")
     public void setAttrs(Iterable <NewContactAttr> attrs) {
         this.attrs.clear();
         if (attrs != null) {
@@ -138,7 +139,7 @@ public class ContactSpec implements SpecifyContact<NewContactAttr,NewContactGrou
     }
 
     @Override
-    @GraphQLInputField(name="contactGroupMembers", description="Valid only if the contact being created is a contact group")
+    @GraphQLInputField(name=GqlConstants.CONTACT_GROUP_MEMBERS, description="Valid only if the contact being created is a contact group")
     public void setContactGroupMembers(Iterable <NewContactGroupMember> contactGroupMembers) {
         this.contactGroupMembers.clear();
         if (contactGroupMembers != null) {

@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlValue;
 
 import com.google.common.base.MoreObjects;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 
 import io.leangen.graphql.annotations.GraphQLIgnore;
@@ -31,7 +32,7 @@ import io.leangen.graphql.annotations.GraphQLNonNull;
 import io.leangen.graphql.annotations.types.GraphQLType;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@GraphQLType(name="NewContactAttr", description="Input for creating a new contact attribute")
+@GraphQLType(name=GqlConstants.CLASS_NEW_CONTACT_ATTRIBUTE, description="Input for creating a new contact attribute")
 public class NewContactAttr {
 
     /**
@@ -39,7 +40,7 @@ public class NewContactAttr {
      * @zm-api-field-description Attribute name
      */
     @XmlAttribute(name=MailConstants.A_ATTRIBUTE_NAME /* n */, required=true)
-    @GraphQLInputField(name="name", description="Attribute name")
+    @GraphQLInputField(name=GqlConstants.NAME, description="Attribute name")
     private String name;
 
     /**
@@ -47,7 +48,7 @@ public class NewContactAttr {
      * @zm-api-field-description Upload ID
      */
     @XmlAttribute(name=MailConstants.A_ATTACHMENT_ID /* aid */, required=false)
-    @GraphQLInputField(name="attachId", description ="Upload ID")
+    @GraphQLInputField(name=GqlConstants.ATTACHMENT_ID, description ="Upload ID")
     private String attachId;
 
     /**
@@ -55,7 +56,7 @@ public class NewContactAttr {
      * @zm-api-field-description Item ID.  Used in combination with <b>subpart-name</b>
      */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=false)
-    @GraphQLInputField(name="id", description ="Item ID. Used in combination with part")
+    @GraphQLInputField(name=GqlConstants.ID, description ="Item ID. Used in combination with part")
     private Integer id;
 
     /**
@@ -63,7 +64,7 @@ public class NewContactAttr {
      * @zm-api-field-description Subpart Name
      */
     @XmlAttribute(name=MailConstants.A_PART /* part */, required=false)
-    @GraphQLInputField(name="part", description ="Subpart name")
+    @GraphQLInputField(name=GqlConstants.PART, description ="Subpart name")
     private String part;
 
     /**
@@ -73,7 +74,7 @@ public class NewContactAttr {
      * if the year isn't specified <b>"--MM-dd"</b> format
      */
     @XmlValue
-    @GraphQLInputField(name="value", description ="Attribute value")
+    @GraphQLInputField(name=GqlConstants.VALUE, description ="Attribute value")
     private String value;
 
     /**
@@ -96,13 +97,13 @@ public class NewContactAttr {
 
     @GraphQLIgnore
     public NewContactAttr setName(String name) { this.name = name; return this; }
-    @GraphQLInputField(name="attachId", description ="Upload ID")
+    @GraphQLInputField(name=GqlConstants.ATTACHMENT_ID, description ="Upload ID")
     public NewContactAttr setAttachId(String attachId) { this.attachId = attachId; return this; }
-    @GraphQLInputField(name="id", description ="Item ID. Used in combination with part")
+    @GraphQLInputField(name=GqlConstants.ID, description ="Item ID. Used in combination with part")
     public NewContactAttr setId(Integer id) { this.id = id; return this; }
-    @GraphQLInputField(name="part", description ="Subpart name")
+    @GraphQLInputField(name=GqlConstants.PART, description ="Subpart name")
     public NewContactAttr setPart(String part) { this.part = part; return this; }
-    @GraphQLInputField(name="value", description ="Attribute value")
+    @GraphQLInputField(name=GqlConstants.VALUE, description ="Attribute value")
     public NewContactAttr setValue(String value) { this.value = value; return this; }
 
     public String getName() { return name; }

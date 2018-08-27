@@ -38,7 +38,7 @@ public class GqlConstants {
 
     // account info constants
     public static final String CLASS_ACCOUNT_INFO = "AccountInfo";
-    public static final String ATTRS = "attrs";
+    public static final String ATTRIBUTES = "attributes";
     public static final String SOAP_URL = "soapURL";
     public static final String PUBLIC_URL = "publicURL";
     public static final String CHANGE_PASSWORD_URL = "changePasswordURL";
@@ -68,10 +68,10 @@ public class GqlConstants {
     public static final String FULL_CONVERSATION = "fullConversation";
     public static final String RESULT_MODE = "resultMode";
     public static final String PREFETCH = "prefetch";
-    public static final String WANT_RECEPIENTS = "wantRecipients";
+    public static final String INCLUDE_RECEPIENTS = "includeRecipients";
     public static final String NEUTER_IMAGES = "neuterImages";
-    public static final String NEED_CAN_EXPAND = "needCanExpand";
-    public static final String WANT_HTML = "wantHtml";
+    public static final String INCLUDE_IS_EXPANDABLE = "includeIsExpandable";
+    public static final String INCLUDE_HTML = "includeHtml";
     public static final String MAX_INLINED_LENGTH = "maxInlinedLength";
     public static final String MARK_READ = "markRead";
     public static final String FETCH = "fetch";
@@ -93,6 +93,7 @@ public class GqlConstants {
     public static final String QUERY_OFFSET = "queryOffset";
     public static final String CLASS_CALENDAR_TIME_ZONE_INFO = "CalTZInfo";
     public static final String ID = "id";
+    public static final String IDS = "ids";
     public static final String TIME_ZONE_STANDARD_OFFSET = "tzStdOffset";
     public static final String TIME_ZONE_DAY_OFFSET = "tzDayOffset";
     public static final String STANDARD_TIME_ZONE_ONSET = "standardTzOnset";
@@ -114,18 +115,18 @@ public class GqlConstants {
     public static final String TAG_NAMES = "tagNames";
     public static final String ELIDED = "elided";
     public static final String CHANGE_DATE = "changeDate";
-    public static final String MODIFIED_FIELD_SEQUENCE = "modifiedSequence";
     public static final String METADATAS = "metadatas";
     public static final String SUBJECT = "subject";
     public static final String FRAGMENT = "fragment";
     public static final String EMAILS = "emails";
     public static final String CLASS_EMAIL_INFO = "EmailInfo";
+    public static final String MODIFIED_FIELD_SEQUENCE = "modifiedSequence";
     public static final String ADDRESS = "address";
     public static final String DISPLAY = "display";
     public static final String PERSONAL = "personal";
     public static final String ADDRESS_TYPE = "addressType";
     public static final String GROUP = "group";
-    public static final String CAN_EXPAND_GROUP_MEMBERS = "canExpandGroupMembers";
+    public static final String IS_GROUP_MEMBERS_EXPANDABLE = "isGroupMembersExpandable";
     public static final String CLASS_MAIL_CUSTOM_METADATA = "MailCustomMetadata";
     public static final String SECTION = "section";
     public static final String FOLDER = "folder";
@@ -147,6 +148,7 @@ public class GqlConstants {
     public static final String RESENT_DATE = "resentDate";
     public static final String PART = "part";
     public static final String MESSAGE_ID_HEADER = "messageIdHeader";
+    public static final String MESSAGE_ID = "messageId";
     public static final String IN_REPLY_TO = "inReplyTo";
     public static final String INVITE = "invite";
     public static final String CONTENT_ELEMS = "contentElems";
@@ -162,6 +164,32 @@ public class GqlConstants {
     public static final String HOUR = "hour";
     public static final String MINUTE = "minute";
     public static final String SECOND = "second";
+    public static final String CLASS_INCLUDE_RECIPS_SETTING = "IncludeRecipsSettings";
 
+    // contacts constants
+    public static final String CLASS_ACTION_RESULT = "ActionResult";
+    public static final String CLASS_NEW_CONTACT_GROUP_MEMBER = "NewContactGroupMember";
+    public static final String CLASS_VCARD_INFO = "VCardInfo";
+    public static final String CLASS_CONTACT_SPEC = "ContactSpec";
+    public static final String CLASS_NEW_CONTACT_ATTRIBUTE = "NewContactAttribute";
+    public static final String CLASS_GET_CONTACTS_REQUEST = "GetContactsRequest";
+    public static final String MEMBER_ATTRIBUTES = "memberAttributes";
+    public static final String CONTACT = "contact";
+    public static final String CONTACTS = "contacts";
+    public static final String CONTACT_GROUP_MEMBERS = "contactGroupMembers";
+    public static final String DO_SYNC = "doSync";
+    public static final String DO_DEREF_GROUP_MEMBER = "doDerefGroupMember";
+    public static final String INCLUDE_HIDDEN_ATTRS = "includeHiddenAttrs";
+    public static final String INCLUDE_CERT_INFO = "includeCertInfo";
+    public static final String INCLUDE_IMAP_UID = "includeImapUid";
+    public static final String INCLUDE_MODIFIED_SEQUENCE = "includeModifiedSequence";
+    public static final String MAX_MEMBERS = "maxMembers";
+    public static final String VCARD = "vcard";
+    public static final String ATTACHMENT_ID = "attachmentId";
+    public static final String TYPE = "type";
+    public static final String NON_EXISTENT_IDS = "nonExistentIds";
+    public static final String DO_VERBOSE = "doVerbose";
+    public static final String CONSTRAINT = "constraint";
+    public static final String INPUT = "input";
 
 }

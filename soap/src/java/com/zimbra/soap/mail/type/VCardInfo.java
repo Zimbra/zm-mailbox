@@ -23,13 +23,14 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlValue;
 
 import com.google.common.base.MoreObjects;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 
 import io.leangen.graphql.annotations.GraphQLInputField;
 import io.leangen.graphql.annotations.types.GraphQLType;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@GraphQLType(name="VCardInfo", description="Input for creating a new contact VCard")
+@GraphQLType(name=GqlConstants.CLASS_VCARD_INFO, description="Input for creating a new contact VCard")
 public class VCardInfo {
 
     /**
@@ -63,13 +64,13 @@ public class VCardInfo {
     public VCardInfo() {
     }
 
-    @GraphQLInputField(name="messageId", description="Message ID. Use in conjuction with part")
+    @GraphQLInputField(name=GqlConstants.MESSAGE_ID, description="Message ID. Use in conjuction with part")
     public void setMessageId(String messageId) { this.messageId = messageId; }
-    @GraphQLInputField(name="attachId", description="Uploaded attachment ID")
+    @GraphQLInputField(name=GqlConstants.ATTACHMENT_ID, description="Uploaded attachment ID")
     public void setAttachId(String attachId) { this.attachId = attachId; }
-    @GraphQLInputField(name="part", description="Part identifier. Use in conjunction with message id")
+    @GraphQLInputField(name=GqlConstants.PART, description="Part identifier. Use in conjunction with message id")
     public void setPart(String part) { this.part = part; }
-    @GraphQLInputField(name="value", description="VCARD data")
+    @GraphQLInputField(name=GqlConstants.VALUE, description="VCARD data")
     public void setValue(String value) { this.value = value; }
     public String getMessageId() { return messageId; }
     public String getAttachId() { return attachId; }

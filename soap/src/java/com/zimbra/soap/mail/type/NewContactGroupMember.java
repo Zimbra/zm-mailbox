@@ -22,6 +22,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
 import com.google.common.base.MoreObjects;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 
 import io.leangen.graphql.annotations.GraphQLInputField;
@@ -29,7 +30,7 @@ import io.leangen.graphql.annotations.GraphQLNonNull;
 import io.leangen.graphql.annotations.types.GraphQLType;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@GraphQLType(name="NewContactGroupMember", description="Input for creating a new contact group member")
+@GraphQLType(name=GqlConstants.CLASS_NEW_CONTACT_GROUP_MEMBER, description="Input for creating a new contact group member")
 public class NewContactGroupMember {
 
     /**
@@ -72,9 +73,9 @@ public class NewContactGroupMember {
         return new NewContactGroupMember(type, value);
     }
 
-    @GraphQLInputField(name="type", description="Member type. C|G|I")
+    @GraphQLInputField(name=GqlConstants.TYPE, description="Member type. C|G|I")
     public void setType(@GraphQLNonNull String type) { this.type = type; }
-    @GraphQLInputField(name="value", description="Member value")
+    @GraphQLInputField(name=GqlConstants.VALUE, description="Member value")
     public void setValue(@GraphQLNonNull String value) { this.value = value; }
     public String getType() { return type; }
     public String getValue() { return value; }
