@@ -302,4 +302,44 @@ public class RedissonRetryMap<K, V> extends RedissonRetryExpirable<RMap<K, V>> i
     public Set<java.util.Map.Entry<K, V>> entrySet(String keyPattern) {
         return runCommand(() -> redissonObject.entrySet(keyPattern));
     }
+
+    @Override
+    public RFuture<Boolean> fastReplaceAsync(K key, V value) {
+        return runCommand(() -> redissonObject.fastReplaceAsync(key, value));
+    }
+
+    @Override
+    public boolean fastReplace(K key, V value) {
+        return runCommand(() -> redissonObject.fastReplace(key, value));
+    }
+
+    @Override
+    public Set<K> keySet(int count) {
+        return runCommand(() -> redissonObject.keySet(count));
+    }
+
+    @Override
+    public Set<K> keySet(String pattern, int count) {
+        return runCommand(() -> redissonObject.keySet(pattern, count));
+    }
+
+    @Override
+    public Collection<V> values(String keyPattern, int count) {
+        return runCommand(() -> redissonObject.values(keyPattern, count));
+    }
+
+    @Override
+    public Collection<V> values(int count) {
+        return runCommand(() -> redissonObject.values(count));
+    }
+
+    @Override
+    public Set<java.util.Map.Entry<K, V>> entrySet(String keyPattern, int count) {
+        return runCommand(() -> redissonObject.entrySet(keyPattern, count));
+    }
+
+    @Override
+    public Set<java.util.Map.Entry<K, V>> entrySet(int count) {
+        return runCommand(() -> redissonObject.entrySet(count));
+    }
 }

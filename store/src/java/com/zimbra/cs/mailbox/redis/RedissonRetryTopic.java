@@ -54,4 +54,9 @@ public class RedissonRetryTopic<M> extends RedissonRetryDecorator<RTopic<M>> imp
     public void removeAllListeners() {
         runCommand(() -> { redissonObject.removeAllListeners(); return null; });
     }
+
+    @Override
+    public RFuture<Integer> addListenerAsync(MessageListener<M> listener) {
+        return runCommand(() -> redissonObject.addListenerAsync(listener));
+    }
 }

@@ -178,4 +178,58 @@ public abstract class RedissonRetryExpirable<R extends RExpirable> extends Redis
     public RFuture<Long> remainTimeToLiveAsync() {
         return runCommand(() -> redissonObject.remainTimeToLiveAsync());
     }
+
+    @Override
+    public byte[] dump() {
+        return runCommand(() -> redissonObject.dump());
+    }
+
+    @Override
+    public void restore(byte[] arg0) {
+        runCommand(() -> { redissonObject.restore(arg0); return null; });
+
+    }
+
+    @Override
+    public void restore(byte[] arg0, long arg1, TimeUnit arg2) {
+        runCommand(() -> { redissonObject.restore(arg0, arg1, arg2); return null; });
+
+    }
+
+    @Override
+    public void restoreAndReplace(byte[] arg0) {
+        runCommand(() -> { redissonObject.restoreAndReplace(arg0); return null; });
+
+    }
+
+    @Override
+    public void restoreAndReplace(byte[] arg0, long arg1, TimeUnit arg2) {
+        runCommand(() -> { redissonObject.restoreAndReplace(arg0, arg1, arg2); return null; });
+
+    }
+
+    @Override
+    public RFuture<byte[]> dumpAsync() {
+        return runCommand(() -> redissonObject.dumpAsync());
+    }
+
+    @Override
+    public RFuture<Void> restoreAndReplaceAsync(byte[] arg0) {
+        return runCommand(() -> redissonObject.restoreAndReplaceAsync(arg0));
+    }
+
+    @Override
+    public RFuture<Void> restoreAndReplaceAsync(byte[] arg0, long arg1, TimeUnit arg2) {
+        return runCommand(() -> redissonObject.restoreAndReplaceAsync(arg0, arg1, arg2));
+    }
+
+    @Override
+    public RFuture<Void> restoreAsync(byte[] arg0) {
+        return runCommand(() -> redissonObject.restoreAsync(arg0));
+    }
+
+    @Override
+    public RFuture<Void> restoreAsync(byte[] arg0, long arg1, TimeUnit arg2) {
+        return runCommand(() -> redissonObject.restoreAsync(arg0, arg1, arg2));
+    }
 }
