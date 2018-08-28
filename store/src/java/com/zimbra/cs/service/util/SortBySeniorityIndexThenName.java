@@ -18,16 +18,16 @@ package com.zimbra.cs.service.util;
 
 import java.util.Comparator;
 
-import com.zimbra.soap.account.type.HABGroup;
+import com.zimbra.soap.account.type.HABMember;
 
 /**
  * @author zimbra
  *
  */
-public class SortBySeniorityIndexThenName implements Comparator<HABGroup> {
+public class SortBySeniorityIndexThenName implements Comparator<HABMember> {
 
     @Override
-    public int compare(HABGroup a, HABGroup b) {
+    public int compare(HABMember a, HABMember b) {
         if (a == null || b == null) {
             return 0;
         }

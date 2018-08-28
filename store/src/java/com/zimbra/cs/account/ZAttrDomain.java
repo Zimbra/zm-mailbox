@@ -14408,7 +14408,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.8.10
      */
-    @ZAttr(id=3031)
+    @ZAttr(id=3028)
     public String[] getHierarchicalAddressBookRoot() {
         return getMultiAttr(Provisioning.A_zimbraHierarchicalAddressBookRoot, true, true);
     }
@@ -14421,7 +14421,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.8.10
      */
-    @ZAttr(id=3031)
+    @ZAttr(id=3028)
     public void setHierarchicalAddressBookRoot(String[] zimbraHierarchicalAddressBookRoot) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraHierarchicalAddressBookRoot, zimbraHierarchicalAddressBookRoot);
@@ -14437,7 +14437,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.8.10
      */
-    @ZAttr(id=3031)
+    @ZAttr(id=3028)
     public Map<String,Object> setHierarchicalAddressBookRoot(String[] zimbraHierarchicalAddressBookRoot, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraHierarchicalAddressBookRoot, zimbraHierarchicalAddressBookRoot);
@@ -14452,7 +14452,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.8.10
      */
-    @ZAttr(id=3031)
+    @ZAttr(id=3028)
     public void addHierarchicalAddressBookRoot(String zimbraHierarchicalAddressBookRoot) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraHierarchicalAddressBookRoot, zimbraHierarchicalAddressBookRoot);
@@ -14468,7 +14468,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.8.10
      */
-    @ZAttr(id=3031)
+    @ZAttr(id=3028)
     public Map<String,Object> addHierarchicalAddressBookRoot(String zimbraHierarchicalAddressBookRoot, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraHierarchicalAddressBookRoot, zimbraHierarchicalAddressBookRoot);
@@ -14483,7 +14483,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.8.10
      */
-    @ZAttr(id=3031)
+    @ZAttr(id=3028)
     public void removeHierarchicalAddressBookRoot(String zimbraHierarchicalAddressBookRoot) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraHierarchicalAddressBookRoot, zimbraHierarchicalAddressBookRoot);
@@ -14499,7 +14499,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.8.10
      */
-    @ZAttr(id=3031)
+    @ZAttr(id=3028)
     public Map<String,Object> removeHierarchicalAddressBookRoot(String zimbraHierarchicalAddressBookRoot, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraHierarchicalAddressBookRoot, zimbraHierarchicalAddressBookRoot);
@@ -14513,7 +14513,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.8.10
      */
-    @ZAttr(id=3031)
+    @ZAttr(id=3028)
     public void unsetHierarchicalAddressBookRoot() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraHierarchicalAddressBookRoot, "");
@@ -14528,7 +14528,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.8.10
      */
-    @ZAttr(id=3031)
+    @ZAttr(id=3028)
     public Map<String,Object> unsetHierarchicalAddressBookRoot(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraHierarchicalAddressBookRoot, "");

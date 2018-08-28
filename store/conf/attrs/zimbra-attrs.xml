@@ -9714,24 +9714,31 @@ TODO: delete them permanently from here
   <desc>OAuth consumer API scope. It is in the format of apiscope1{separator character}apiscope2:consumer-app-name. The separator between apiscope1 and apiscope2 is consumer-app specific</desc>
 </attr>
 
-<attr id="3027" name="zimbraHABGroupMember" type="string" cardinality="multi" optionalIn="habGroup" since="8.8.10">
-  <desc>members in the hierarchical address book group</desc>
+<attr id="3027" name="zimbraHABSeniorityIndex" type="integer" cardinality="single" optionalIn="habGroup,account" since="8.8.10">
+  <desc>seniority index of the group or group member which will determine the sorting order in the hierarchical address book</desc>
 </attr>
 
-<attr id="3028" name="zimbraHABGroupParent" type="string" cardinality="single" optionalIn="habGroup" since="8.8.10">
-  <desc>parent of the hierarchical address book group</desc>
-</attr>
-
-<attr id="3029" name="zimbraHABGroupSeniorityIndex" type="integer" cardinality="single" optionalIn="habGroup" since="8.8.10">
-  <desc>seniority index of the group which will determine the sorting order in the hierarchical address book</desc>
-</attr>
-
-<attr id="3030" name="zimbraAccountSeniorityIndex" type="integer" cardinality="single" optionalIn="account" since="8.8.10">
-  <desc>seniority index of the account which will determine the sorting order in the hierarchical address book</desc>
-</attr>
-
-<attr id="3031" name="zimbraHierarchicalAddressBookRoot" type="string" cardinality="multi" optionalIn="domain" flags="domainInfo" since="8.8.10">
+<attr id="3028" name="zimbraHierarchicalAddressBookRoot" type="string" cardinality="multi" optionalIn="domain" flags="domainInfo" since="8.8.10">
   <desc>domain level root of hierarchical address book</desc>
+</attr>
+
+<attr id="3029" name="zimbraHABMemberLdapAttrMap" type="string" max="4096" cardinality="multi" optionalIn="globalConfig" since="8.8.10">
+  <globalConfigValue>firstName=givenName</globalConfigValue>
+  <globalConfigValue>lastName=sn</globalConfigValue>
+  <globalConfigValue>displayName=displayName</globalConfigValue>
+  <globalConfigValue>commonName=cn</globalConfigValue>
+  <globalConfigValue>initials=initials</globalConfigValue>
+  <globalConfigValue>company=company</globalConfigValue>
+  <globalConfigValue>department=ou</globalConfigValue>
+  <globalConfigValue>jobTitle=title</globalConfigValue>
+  <globalConfigValue>workStreet=streetAddress</globalConfigValue>
+  <globalConfigValue>workPhone=telephoneNumber</globalConfigValue>
+  <globalConfigValue>workState=st</globalConfigValue>
+  <globalConfigValue>workCity=l</globalConfigValue>
+  <globalConfigValue>country=co</globalConfigValue>
+  <globalConfigValue>office=physicalDeliveryOfficeName</globalConfigValue>
+  <globalConfigValue>alias=zimbraMailAlias</globalConfigValue>
+  <desc>LDAP attribute to HAB Group Member attribute mapping</desc>
 </attr>
 
 </attrs>

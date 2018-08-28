@@ -56,6 +56,7 @@ import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.Zimbra;
+import com.zimbra.soap.account.type.HABGroupMember;
 import com.zimbra.soap.admin.type.CacheEntryType;
 import com.zimbra.soap.admin.type.CmdRightsInfo;
 import com.zimbra.soap.admin.type.CountObjectsType;
@@ -1848,6 +1849,10 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     public String[] getGroupMembers(Group group) throws ServiceException {
         return group.getAllMembers();
+    }
+
+    public List<HABGroupMember> getHABGroupMembers(Group group) throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
     }
 
     /**
