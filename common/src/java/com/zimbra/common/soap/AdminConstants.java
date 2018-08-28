@@ -1516,8 +1516,9 @@ public final class AdminConstants {
 
     // contact backup feature
     public static final String E_SERVERS = "servers";
-    
+
     //HAB
     public static final String A_NEW_NAME = "newName";
     public static final String A_FORCE_DELETE = "forceDelete";
+    public static final String A_CASCADE_DELETE = "cascadeDelete";
 }

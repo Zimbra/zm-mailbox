@@ -900,5 +900,8 @@ public final class MockProvisioning extends Provisioning {
         
     }
 
-    
+    @Override
+    public void deleteGroup(String zimbraId, boolean cascadeDelete) throws ServiceException {
+        // do nothing
+    }
 }

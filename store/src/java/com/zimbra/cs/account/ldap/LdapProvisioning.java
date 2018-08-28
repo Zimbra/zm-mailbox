@@ -4868,6 +4868,21 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     private void deleteDistributionList(LdapDistributionList dl) throws ServiceException {
+        deleteDistributionList(dl, false);
+    }
+
+    private void deleteDistributionList(LdapDistributionList dl, boolean cascadeDelete) throws ServiceException {
+        // check if cascadeDelete is true. If it's true, delete all subgroups.
+        if (cascadeDelete) {
+            Set<String> members = dl.getAllMembersSet();
+            for (String member : members) {
+                LdapDistributionList subDl = (LdapDistributionList) getDistributionListByNameInternal(member);
+                if (subDl != null) {
+                    deleteDistributionList(subDl, cascadeDelete);
+                }
+            }
+        }
+
         String zimbraId = dl.getId();
 
         // make a copy of all addrs of this DL, after the delete all aliases on this dl
@@ -9423,6 +9438,11 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public void deleteGroup(String zimbraId) throws ServiceException {
+        deleteGroup(zimbraId, false);
+    }
+
+    @Override
+    public void deleteGroup(String zimbraId, boolean cascadeDelete) throws ServiceException {
         Group group = getGroup(Key.DistributionListBy.id, zimbraId, true, false);
         if (group == null) {
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(zimbraId);
@@ -9431,7 +9451,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         if (group.isDynamic()) {
             deleteDynamicGroup((LdapDynamicGroup) group);
         } else {
-            deleteDistributionList((LdapDistributionList) group);
+            deleteDistributionList((LdapDistributionList) group, cascadeDelete);
         }
     }
 
