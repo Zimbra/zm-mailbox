@@ -151,7 +151,7 @@ public class RedisPubSub extends NotificationPubSub {
                 /* Not a listener for this account, not unusual, there should be another thread listening though. */
                 return;
             }
-            ZimbraLog.mailbox.info("handling notification.  accountId=%s, changeId=%d, channel=%s",
+            ZimbraLog.mailbox.debug("handling notification.  accountId=%s, changeId=%d, channel=%s",
                     notificationAcctId, msg.changeId, channel);
             PendingLocalModifications mods;
             try {
