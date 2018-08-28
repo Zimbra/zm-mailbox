@@ -218,4 +218,5 @@ public class GqlConstants {
     public static final String ACCOUNT_PREF_INPUT = "AccountPref";
     public static final String SET_NAME = "setName";
     public static final String SET_VALUE = "setValue";
+    public static final String SET_MODIFIED_TIMESTAMP = "setModifiedTimestamp";
 }
