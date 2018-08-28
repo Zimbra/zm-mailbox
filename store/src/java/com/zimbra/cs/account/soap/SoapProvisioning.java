@@ -3135,14 +3135,17 @@ public class SoapProvisioning extends Provisioning {
     }
 
     /**
-     * @param string
-     * @param string2
-     * @param string3
+     * 
+     * @param habGroupId HAB group to be moved
+     * @param currentParentGroupId current HAB parent id
+     * @param targetParentGroupId target parent id
      * @throws ServiceException
      */
-    public void modifyHabGroup(String habGroupId, String currentParentGroupId, String targetParentGroupId) throws ServiceException {
-        HABGroupOperation operation = new HABGroupOperation(habGroupId, currentParentGroupId, targetParentGroupId, HabGroupOp.move);
-        HABOrgUnitResponse resp = invokeJaxb(new ModifyHABGroupRequest(operation));
+    public void modifyHabGroup(String habGroupId, String currentParentGroupId,
+        String targetParentGroupId) throws ServiceException {
+        HABGroupOperation operation = new HABGroupOperation(habGroupId, currentParentGroupId,
+            targetParentGroupId, HabGroupOp.move);
+        invokeJaxb(new ModifyHABGroupRequest(operation));
     }
 
 }
