@@ -167,6 +167,9 @@ public class GqlConstants {
     public static final String CLASS_INCLUDE_RECIPS_SETTING = "IncludeRecipsSettings";
 
     // contacts constants
+    public static final String CLASS_CONTACT_GROUP_MEMBER = "ContactGroupMember";
+    public static final String CLASS_CONTACT_ATTRIBUTE = "ContactAttribute";
+    public static final String CLASS_CONTACT_INFO = "ContactInfo";
     public static final String CLASS_ACTION_RESULT = "ActionResult";
     public static final String CLASS_NEW_CONTACT_GROUP_MEMBER = "NewContactGroupMember";
     public static final String CLASS_VCARD_INFO = "VCardInfo";
@@ -191,5 +194,17 @@ public class GqlConstants {
     public static final String DO_VERBOSE = "doVerbose";
     public static final String CONSTRAINT = "constraint";
     public static final String INPUT = "input";
+    public static final String DO_REPLACE = "doReplace";
+    public static final String IS_EXPANDABLE = "isExpandable";
+    public static final String LAST_MODIFIED = "lastModified";
+    public static final String FILE_AS = "fileAs";
+    public static final String EMAIL = "email";
+    public static final String EMAIL2 = "email2";
+    public static final String EMAIL3 = "email3";
+    public static final String DLIST = "dlist";
+    public static final String REFERENCE = "reference";
+    public static final String IS_TOO_MANY_MEMBERS = "isTooManyMembers";
+    public static final String CONTENT_TYPE = "contentType";
+    public static final String CONTENT_FILENAME = "contentFilename";
 
 }
