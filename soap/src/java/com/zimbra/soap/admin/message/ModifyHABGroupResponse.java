@@ -21,6 +21,7 @@ import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
@@ -33,5 +34,22 @@ import com.zimbra.common.soap.AdminConstants;
 @XmlRootElement(name = AdminConstants.E_MODIFY_HAB_GROUP_RESPONSE)
 public class ModifyHABGroupResponse {
 
+    /**
+     * @zm-api-field-description List of HabOrggroups under the target parent group
+     */
+    @XmlElement(name=AdminConstants.E_MEMBER, required=false)
     List<String> members = new ArrayList<String>();
+
+    public ModifyHABGroupResponse() {
+        
+    }
+    /**
+     * @param members
+     */
+    public ModifyHABGroupResponse(List<String> members) {
+        super();
+        this.members = members;
+    }
+    
+    
 }

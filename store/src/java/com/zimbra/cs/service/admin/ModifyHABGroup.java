@@ -54,7 +54,7 @@ public class ModifyHABGroup extends AdminDocumentHandler{
             throw ServiceException.INVALID_REQUEST(
                 String.format("Operation is required, requested op:%s",operation), null);
         }
-        Element response = zsc.createElement(AdminConstants.E_MODIFY_HAB_GROUP_RESPONSE);
+        Element response = zsc.createElement(AdminConstants.MODIFY_HAB_GROUP_RESPONSE);
         if (operationType.equals("move")) {
             handleHABGroupMove(prov, operation, response);
         } else {

@@ -1764,7 +1764,7 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     private void modifyHabGroup(String[] args)  throws ServiceException {
-        if(args.length != 3) {
+        if(args.length != 4) {
             usage();
             return;
         }
