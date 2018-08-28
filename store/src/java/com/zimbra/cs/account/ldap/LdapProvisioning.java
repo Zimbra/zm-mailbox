@@ -8022,6 +8022,18 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         }
     }
 
+    public void changeHABGroupParent(String oldDn, String newParentDn) throws ServiceException {
+        ZLdapContext zlc = null;
+        try {
+            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.MODIFY_DISTRIBUTIONLIST);
+            zlc.renameEntry(oldDn, newParentDn);
+        } catch (ServiceException e) {
+            throw ServiceException.FAILURE(String.format("Unable to move HAB group: %s", oldDn), e);
+        } finally {
+            LdapClient.closeContext(zlc);
+        }
+    }
+
     @Override
     public void deleteSignature(Account account, String signatureId) throws ServiceException {
         LdapEntry ldapEntry = (LdapEntry) (account instanceof LdapEntry ? account : getAccountById(account.getId()));

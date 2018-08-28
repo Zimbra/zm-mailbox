@@ -594,6 +594,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.ModifyDistributionListResponse.class,
             com.zimbra.soap.admin.message.ModifyDomainRequest.class,
             com.zimbra.soap.admin.message.ModifyDomainResponse.class,
+            com.zimbra.soap.admin.message.ModifyHABGroupRequest.class,
+            com.zimbra.soap.admin.message.ModifyHABGroupResponse.class,
             com.zimbra.soap.admin.message.ModifyFilterRulesRequest.class,
             com.zimbra.soap.admin.message.ModifyFilterRulesResponse.class,
             com.zimbra.soap.admin.message.ModifyLDAPEntryRequest.class,
