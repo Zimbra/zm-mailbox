@@ -34,8 +34,9 @@ public class SortBySeniorityIndexThenName implements Comparator<HABMember> {
 
         int s1 = a.getSeniorityIndex();
         int s2 = b.getSeniorityIndex();
-
-        if (s1 == 0 && s2 == 0) {
+        int result = Integer.compare(s2, s1);
+        //if seniority index is same, compare by name
+        if (result == 0) {
             String name1 = a.getName();
             String name2 = b.getName();
 
@@ -48,10 +49,8 @@ public class SortBySeniorityIndexThenName implements Comparator<HABMember> {
             } else {
                 return name1.compareTo(name2);
             }
-
         } else {
-            return new Integer(s2).compareTo(new Integer(s1));
+            return result;
         }
-
     }
 }
