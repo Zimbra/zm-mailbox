@@ -142,6 +142,8 @@ import com.zimbra.soap.admin.message.CreateDistributionListRequest;
 import com.zimbra.soap.admin.message.CreateDistributionListResponse;
 import com.zimbra.soap.admin.message.CreateDomainRequest;
 import com.zimbra.soap.admin.message.CreateDomainResponse;
+import com.zimbra.soap.admin.message.CreateHABGroupRequest;
+import com.zimbra.soap.admin.message.CreateHABGroupResponse;
 import com.zimbra.soap.admin.message.CreateServerRequest;
 import com.zimbra.soap.admin.message.CreateServerResponse;
 import com.zimbra.soap.admin.message.CreateUCServiceRequest;
@@ -3119,4 +3121,11 @@ public class SoapProvisioning extends Provisioning {
         invokeJaxb(new HABOrgUnitRequest(domSel, habOrgUnitName, HabOp.delete));
     }
 
+    public DistributionList createHabGroup(String habGroupName, String ouName, String aName, String dynamic,  Map<String, Object> listAttrs) throws ServiceException {
+        Boolean isDynamic = Boolean.valueOf(dynamic);
+        CreateHABGroupRequest req = new CreateHABGroupRequest(
+            habGroupName, ouName, aName, Attr.mapToList(listAttrs), isDynamic);
+        CreateHABGroupResponse resp = invokeJaxb(req);
+        return new SoapDistributionList(resp.getDl(), this);
+    }
 }

@@ -855,7 +855,9 @@ public class ProvUtil implements HttpDebugListener {
         RENAME_HAB_OU("renameHABOrgUnit", "rhou",
             "{domain} {ouName} {newName}", Category.MISC , 3, 3),
         DELETE_HAB_OU("deleteHABOrgUnit", "dhou",
-            "{domain} {ouName}", Category.MISC , 2, 2);
+            "{domain} {ouName}", Category.MISC , 2, 2),
+        CREATE_HAB_GROUP("createHabGroup", "chabg",
+            "{groupName} {ouName} {name@domain} {TRUE|FALSE} [attr1 value1 [attr2 value2...]]", Category.MISC , 3, Integer.MAX_VALUE);
 
         private String mName;
         private String mAlias;
@@ -1602,6 +1604,20 @@ public class ProvUtil implements HttpDebugListener {
             break;
         case DELETE_HAB_OU:
             doDeleteHabOrgUnit(args);
+            break;
+        case CREATE_HAB_GROUP:
+            if (!(prov instanceof SoapProvisioning)) {
+                throwSoapOnly();
+            }
+            if(args.length < 4) {
+                usage();
+                return true;
+            }
+            String isDynamic = "false";
+            if (args.length > 4) {
+                isDynamic = args[4];
+            }
+            ((SoapProvisioning) prov).createHabGroup(args[1],args[2],args[3], isDynamic, getMapAndCheck(args, 5, false));
             break;
         default:
             return false;
