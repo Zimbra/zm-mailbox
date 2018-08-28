@@ -990,6 +990,11 @@ public class SoapProvisioning extends Provisioning {
     }
 
     @Override
+    public void deleteGroup(String zimbraId, boolean cascadeDelete) throws ServiceException {
+        invokeJaxb(new DeleteDistributionListRequest(zimbraId, cascadeDelete));
+    }
+
+    @Override
     public void deleteDomain(String zimbraId) throws ServiceException {
         invokeJaxb( new DeleteDomainRequest(zimbraId));
     }
