@@ -4338,6 +4338,9 @@ Ajax client can use this request to ask the server for help in generating a prop
 
 <GetDistributionListMembersResponse more="{more-flag}" [total="{total}"]>
     <dlm>{member email}</dlm>+
+    <groupMember name={member email}>
+      <attr name={attribute-name}>{attribute-value}</attr>+
+    </groupMember>+
 </GetDistributionListMembersResponse>
 
 Notes:
@@ -4347,7 +4350,8 @@ Notes:
     more-flag = true if more members left to return
     total = total number of distribution lists (not affected by limit/offset)
     
-    returns group members sorted ascendingly by email address.
+    returns group members in <dlm> element, sorted ascendingly by email address for non-hab distribution lists
+    For HAB Groups, it returns group members with their details in groupMember element, sorted by seniorityIndex and then by name.
 
 -----------------------------
 

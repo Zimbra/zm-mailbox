@@ -64,7 +64,7 @@ public class GetHAB extends AccountDocumentHandler {
         grp.setId(group.getId());
         grp.setName(group.getName());
         grp.setRootGroup(ZmBoolean.TRUE);
-        grp.setSeniorityIndex(group.getIntAttr(Provisioning.A_zimbraHABGroupSeniorityIndex, 0));
+        grp.setSeniorityIndex(group.getIntAttr(Provisioning.A_zimbraHABSeniorityIndex, 0));
         groups.put(group.getMail(), grp);
         grp.setAttrs(Attr.fromMap(group.getAttrs()));
 
@@ -94,7 +94,7 @@ public class GetHAB extends AccountDocumentHandler {
             habGrp.setId(list.getId());
             habGrp.setName(list.getName());
             habGrp.setAttrs(Attr.fromMap(list.getAttrs()));
-            habGrp.setSeniorityIndex(list.getIntAttr(Provisioning.A_zimbraHABGroupSeniorityIndex, 0));
+            habGrp.setSeniorityIndex(list.getIntAttr(Provisioning.A_zimbraHABSeniorityIndex, 0));
             groups.put(key, habGrp);
             List<HABGroup> children = new ArrayList<HABGroup>();
             
