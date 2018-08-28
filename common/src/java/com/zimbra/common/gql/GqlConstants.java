@@ -167,6 +167,9 @@ public class GqlConstants {
     public static final String CLASS_INCLUDE_RECIPS_SETTING = "IncludeRecipsSettings";
 
     // contacts constants
+    public static final String CLASS_MODIFY_CONTACT_GROUP_MEMBER = "ModifyContactGroupMember";
+    public static final String CLASS_MODIFY_CONTACT_ATTRIBUTE = "ModifyContactAttribute";
+    public static final String CLASS_MODIFY_CONTACT_SPEC = "ModifyContactSpec";
     public static final String CLASS_CONTACT_GROUP_MEMBER = "ContactGroupMember";
     public static final String CLASS_CONTACT_ATTRIBUTE = "ContactAttribute";
     public static final String CLASS_CONTACT_INFO = "ContactInfo";
@@ -206,5 +209,6 @@ public class GqlConstants {
     public static final String IS_TOO_MANY_MEMBERS = "isTooManyMembers";
     public static final String CONTENT_TYPE = "contentType";
     public static final String CONTENT_FILENAME = "contentFilename";
+    public static final String OPERATION = "operation";
 
 }
