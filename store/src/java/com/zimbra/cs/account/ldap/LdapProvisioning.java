@@ -1781,7 +1781,8 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                 types.contains(ObjectType.resources)) {
                 peopleTree = true;
             }
-            if (types.contains(ObjectType.domains)) {
+            if (types.contains(ObjectType.domains) ||
+                types.contains(ObjectType.habgroups)) {
                 domainsTree = true;
             }
 
@@ -1884,7 +1885,13 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
          * base
          */
         Domain domain = options.getDomain();
-        String[] bases = getSearchBases(domain, types);
+        String[] bases = null;
+        if (options.getTypes().contains(ObjectType.habgroups)) {
+            bases = new String[1];
+            bases[0] = options.getHabRootGroupDn();
+        } else {
+	    bases = getSearchBases(domain, types);
+	} 
 
         /*
          * filter
@@ -1960,6 +1967,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         boolean calendarResources = (flags & Provisioning.SD_CALENDAR_RESOURCE_FLAG) != 0;
         boolean domains = (flags & Provisioning.SD_DOMAIN_FLAG) != 0;
         boolean coses = (flags & Provisioning.SD_COS_FLAG) != 0;
+        boolean habgroups = (flags & Provisioning.SD_HAB_FLAG) != 0;
 
         int num = (accounts ? 1 : 0) +
                   (aliases ? 1 : 0) +
@@ -1967,6 +1975,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                   (groups ? 1 : 0) +
                   (domains ? 1 : 0) +
                   (coses ? 1 : 0) +
+                  (habgroups ? 1 : 0) +
                   (calendarResources ? 1 : 0);
         if (num == 0) {
             accounts = true;
@@ -2000,6 +2009,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         if (domains) oc.append("(objectclass=zimbraDomain)");
         if (coses) oc.append("(objectclass=zimbraCos)");
         if (calendarResources) oc.append("(objectclass=zimbraCalendarResource)");
+        if (habgroups) oc.append("(objectclass=zimbraHabGroup)");
 
         if (num > 1) {
             oc.append(")");
@@ -8012,6 +8022,18 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         }
     }
 
+    public void changeHABGroupParent(String oldDn, String newParentDn) throws ServiceException {
+        ZLdapContext zlc = null;
+        try {
+            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.MODIFY_DISTRIBUTIONLIST);
+            zlc.renameEntry(oldDn, newParentDn);
+        } catch (ServiceException e) {
+            throw ServiceException.FAILURE(String.format("Unable to move HAB group: %s", oldDn), e);
+        } finally {
+            LdapClient.closeContext(zlc);
+        }
+    }
+
     @Override
     public void deleteSignature(Account account, String signatureId) throws ServiceException {
         LdapEntry ldapEntry = (LdapEntry) (account instanceof LdapEntry ? account : getAccountById(account.getId()));
@@ -9393,7 +9415,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public void deleteGroup(String zimbraId) throws ServiceException {
-        Group group = getGroup(Key.DistributionListBy.id, zimbraId, true);
+        Group group = getGroup(Key.DistributionListBy.id, zimbraId, true, false);
         if (group == null) {
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(zimbraId);
         }
@@ -9407,7 +9429,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public void renameGroup(String zimbraId, String newName) throws ServiceException {
-        Group group = getGroup(Key.DistributionListBy.id, zimbraId, true);
+        Group group = getGroup(Key.DistributionListBy.id, zimbraId, true, false);
         if (group == null) {
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(zimbraId);
         }
@@ -9421,13 +9443,13 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public Group getGroup(Key.DistributionListBy keyType, String key) throws ServiceException {
-        return getGroup(keyType, key, false);
+        return getGroup(keyType, key, false, false);
     }
 
     @Override
-    public Group getGroup(Key.DistributionListBy keyType, String key, boolean loadFromMaster)
+    public Group getGroup(Key.DistributionListBy keyType, String key, boolean loadFromMaster, boolean basicAttrsOnly)
     throws ServiceException {
-        return getGroupInternal(keyType, key, false, loadFromMaster);
+        return getGroupInternal(keyType, key, basicAttrsOnly, loadFromMaster);
     }
 
     /*
@@ -9469,6 +9491,16 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         searchOpts.setSortOpt(SortOpt.SORT_ASCENDING);
         List<NamedEntry> groups = (List<NamedEntry>) searchDirectoryInternal(searchOpts);
 
+        return groups;
+    }
+    
+    public List getAllHabGroups(Domain domain,  String rootDn) throws ServiceException {
+        SearchDirectoryOptions searchOpts = new SearchDirectoryOptions(domain);
+        searchOpts.setFilter(mDIT.filterHabGroupsByDn());
+        searchOpts.setTypes(ObjectType.habgroups);
+        searchOpts.setSortOpt(SortOpt.SORT_ASCENDING);
+        searchOpts.setHabRootGroupDn(rootDn);
+        List<NamedEntry> groups = (List<NamedEntry>) searchDirectoryInternal(searchOpts);
         return groups;
     }
 
