@@ -139,7 +139,6 @@ public class GqlConstants {
     // search constants
     public static final String CLASS_SEARCH_REQUEST = "SearchRequest";
     public static final String SEARCH_PARAMS = "params";
-    public static final String SEARCH_REQUEST = "SearchRequest";
     public static final String INCLUDE_MEMBER_OF = "includeMemberOf";
     public static final String MSG_CONTENT = "msgContent";
     public static final String CURSOR = "cursor";
