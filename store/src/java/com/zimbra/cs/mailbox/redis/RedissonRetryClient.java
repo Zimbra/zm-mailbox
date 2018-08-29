@@ -232,6 +232,16 @@ public class RedissonRetryClient implements RedissonClient {
         return client.isShuttingDown();
     }
 
+    @Override
+    public RBatch createBatch() {
+        return new RedissonRetryBatch(client -> client.createBatch(), this);
+    }
+
+    @Override
+    public RBatch createBatch(BatchOptions options) {
+        return new RedissonRetryBatch(client -> client.createBatch(options), this);
+    }
+
     //RedissonClient interface methods below are not currently used anywhere in the codebase,
     //and therefore do not have corresponding retry-capable implementations subclassing {@link RedissonRetryDecorator}.
 
@@ -590,22 +600,12 @@ public class RedissonRetryClient implements RedissonClient {
     }
 
     @Override
-    public RBatch createBatch() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public RKeys getKeys() {
         throw new UnsupportedOperationException();
     }
 
     @Override
     public RLiveObjectService getLiveObjectService() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public RBatch createBatch(BatchOptions arg0) {
         throw new UnsupportedOperationException();
     }
 
