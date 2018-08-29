@@ -856,6 +856,8 @@ public class ProvUtil implements HttpDebugListener {
             "{domain} {ouName} {newName}", Category.MISC , 3, 3),
         DELETE_HAB_OU("deleteHABOrgUnit", "dhou",
             "{domain} {ouName}", Category.MISC , 2, 2),
+        CREATE_HAB_GROUP("createHabGroup", "chabg",
+            "{groupName} {ouName} {name@domain} {TRUE|FALSE} [attr1 value1 [attr2 value2...]]", Category.MISC , 3, Integer.MAX_VALUE),
         GET_HAB("getHab", "ghab",
             "{name@domain|id} {habRootGrpId} ", Category.ACCOUNT , 2, 2),
         MODIFY_HAB_GROUP("modify HAB group", "mhab",
@@ -1607,6 +1609,9 @@ public class ProvUtil implements HttpDebugListener {
         case DELETE_HAB_OU:
             doDeleteHabOrgUnit(args);
             break;
+        case CREATE_HAB_GROUP:
+           doCreateHabGroup(args);
+           break;
         case GET_HAB:
             doGetHab(args);
             break;
@@ -1774,6 +1779,20 @@ public class ProvUtil implements HttpDebugListener {
         ((SoapProvisioning) prov).modifyHabGroup(args[1], args[2], args[3]);
     }
 
+    private void doCreateHabGroup(String args[]) throws ServiceException {
+        if (!(prov instanceof SoapProvisioning)) {
+            throwSoapOnly();
+        }
+        if(args.length < 4) {
+            usage();
+            return true;
+        }
+        String isDynamic = "false";
+        if (args.length > 4) {
+            isDynamic = args[4];
+        }
+        ((SoapProvisioning) prov).createHabGroup(args[1],args[2],args[3], isDynamic, getMapAndCheck(args, 5, false));
+    }
     private void doGetDomain(String[] args) throws ServiceException {
         boolean applyDefault = true;
 
