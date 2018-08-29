@@ -26,6 +26,7 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Splitter;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 
 import io.leangen.graphql.annotations.GraphQLIgnore;
@@ -34,7 +35,7 @@ import io.leangen.graphql.annotations.GraphQLQuery;
 import io.leangen.graphql.annotations.types.GraphQLType;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@GraphQLType(name="ActionResult", description="Action response")
+@GraphQLType(name=GqlConstants.CLASS_ACTION_RESULT, description="Action response")
 public class ActionResult {
 
     private final static Splitter COMMA_SPLITTER = Splitter.on(",");
@@ -45,7 +46,7 @@ public class ActionResult {
      */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=true)
     @GraphQLNonNull
-    @GraphQLQuery(name="ids", description="Comma-separated list of ids which have been successfully processed")
+    @GraphQLQuery(name=GqlConstants.IDS, description="Comma-separated list of ids which have been successfully processed")
     private final String id;
 
     /**
@@ -53,8 +54,7 @@ public class ActionResult {
      * @zm-api-field-description Operation
      */
     @XmlAttribute(name=MailConstants.A_OPERATION /* op */, required=true)
-    @GraphQLNonNull
-    @GraphQLQuery(name="operation", description="Operation")
+    @GraphQLIgnore
     private final String operation;
 
     /**
@@ -62,7 +62,7 @@ public class ActionResult {
      * @zm-api-field-description Comma-separated list of non-existent ids (if requested)
      */
     @XmlAttribute(name=MailConstants.A_NON_EXISTENT_IDS /* nei */, required=false)
-    @GraphQLQuery(name="nonExistentIds", description="Comma-separated list of non-existent ids (if requested)")
+    @GraphQLQuery(name=GqlConstants.NON_EXISTENT_IDS, description="Comma-separated list of non-existent ids (if requested)")
     protected String nonExistentIds;
 
     /**
@@ -86,14 +86,13 @@ public class ActionResult {
     }
 
     @GraphQLNonNull
-    @GraphQLQuery(name="ids", description="Comma-separated list of ids which have been successfully processed")
+    @GraphQLQuery(name=GqlConstants.IDS, description="Comma-separated list of ids which have been successfully processed")
     public String getId() { return id; }
-    @GraphQLNonNull
-    @GraphQLQuery(name="operation", description="Operation")
+    @GraphQLIgnore
     public String getOperation() { return operation; }
 
     public void setNonExistentIds(String ids) { this.nonExistentIds = ids; };
-    @GraphQLQuery(name="nonExistentIds", description="Comma-separated list of non-existent ids (if requested)")
+    @GraphQLQuery(name=GqlConstants.NON_EXISTENT_IDS, description="Comma-separated list of non-existent ids (if requested)")
     public String getNonExistentIds() { return nonExistentIds; };
     public void setNewlyCreatedIds(String newlyCreatedIds) { this.newlyCreatedIds = newlyCreatedIds; }
     @XmlTransient

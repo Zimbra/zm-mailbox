@@ -46,7 +46,7 @@ import io.leangen.graphql.annotations.types.GraphQLType;
 @XmlType(propOrder = { "fragment", "emails", "subject",
     "messageIdHeader", "inReplyTo", "invite", "headers", "contentElems" })
 
-@GraphQLType(name=GqlConstants.MESSAGE_INFO, description="Message information")
+@GraphQLType(name=GqlConstants.CLASS_MESSAGE_INFO, description="Message information")
 public class MessageInfo
 extends MessageCommon
 implements MessageInfoInterface {

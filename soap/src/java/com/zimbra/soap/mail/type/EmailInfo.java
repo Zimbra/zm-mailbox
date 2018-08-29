@@ -35,7 +35,7 @@ import io.leangen.graphql.annotations.GraphQLQuery;
 import io.leangen.graphql.annotations.types.GraphQLType;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@GraphQLType(name=GqlConstants.EMAIL_INFO, description="Email information")
+@GraphQLType(name=GqlConstants.CLASS_EMAIL_INFO, description="Email information")
 public class EmailInfo
 implements EmailInfoInterface {
 
@@ -143,7 +143,7 @@ implements EmailInfoInterface {
     @GraphQLQuery(name=GqlConstants.GROUP, description="Set if the email address is a group")
     public Boolean getGroup() { return ZmBoolean.toBool(group); }
     @Override
-    @GraphQLQuery(name=GqlConstants.CAN_EXPAND_GROUP_MEMBERS, description="Denotes that the group can be expanded showing its members")
+    @GraphQLQuery(name=GqlConstants.IS_GROUP_MEMBERS_EXPANDABLE, description="Denotes whether the group can be expanded showing its members")
     public Boolean getCanExpandGroupMembers() { return ZmBoolean.toBool(canExpandGroupMembers); }
 
     public static Iterable <EmailInfo> fromInterfaces(Iterable <EmailInfoInterface> ifs) {
