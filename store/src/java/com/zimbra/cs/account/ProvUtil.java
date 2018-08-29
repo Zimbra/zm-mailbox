@@ -83,6 +83,7 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.Version;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zclient.ZClientException;
+import com.zimbra.cs.account.ProvUtil.ArgException;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
 import com.zimbra.cs.account.Provisioning.CountAccountResult;
 import com.zimbra.cs.account.Provisioning.MailMode;
@@ -1779,13 +1780,13 @@ public class ProvUtil implements HttpDebugListener {
         ((SoapProvisioning) prov).modifyHabGroup(args[1], args[2], args[3]);
     }
 
-    private void doCreateHabGroup(String args[]) throws ServiceException {
+    private void doCreateHabGroup(String args[]) throws ServiceException, ArgException {
         if (!(prov instanceof SoapProvisioning)) {
             throwSoapOnly();
         }
         if(args.length < 4) {
             usage();
-            return true;
+            return;
         }
         String isDynamic = "false";
         if (args.length > 4) {
