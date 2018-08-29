@@ -694,6 +694,7 @@ public class SolrIndex extends IndexStore {
                     return new BrowseTerm(facetValue.getName(), (int)facetValue.getCount());
                 }
                 try {
+                    offset += FACET_RESULTS_CHUNK_SIZE;
                     getNextFacetChunk();
                     facetValue = facetChunk.poll();
                     if(facetValue != null) {
