@@ -10768,6 +10768,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                     .collect(Collectors.toMap(e -> e.split("=")[0], e -> e.split("=")[1]));
             List<String> ldapAttrList = new ArrayList<String>(habMemberAttrMap.values());
             ldapAttrList.add(Provisioning.A_objectClass);
+            ldapAttrList.add(Provisioning.A_mail);
             ldapAttrList.add(Provisioning.A_zimbraMailDeliveryAddress);
             ldapAttrList.add(Provisioning.A_zimbraHABSeniorityIndex);
 
