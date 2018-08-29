@@ -30,7 +30,7 @@ import io.leangen.graphql.annotations.GraphQLNonNull;
 import io.leangen.graphql.annotations.types.GraphQLType;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@GraphQLType(name=GqlConstants.MODIFY_SEARCH_FOLDER_SPEC, description="Input for modifying an existing search folder")
+@GraphQLType(name=GqlConstants.CLASS_MODIFY_SEARCH_FOLDER_SPEC, description="Input for modifying an existing search folder")
 public class ModifySearchFolderSpec {
 
     /**

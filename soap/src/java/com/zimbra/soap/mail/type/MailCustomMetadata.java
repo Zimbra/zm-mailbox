@@ -37,7 +37,7 @@ import io.leangen.graphql.annotations.types.GraphQLType;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_METADATA)
-@GraphQLType(name=GqlConstants.MAIL_CUSTOM_METADATA, description="Custom metadatas")
+@GraphQLType(name=GqlConstants.CLASS_MAIL_CUSTOM_METADATA, description="Custom metadatas")
 public class MailCustomMetadata
 extends MailKeyValuePairs
 implements CustomMetadataInterface {

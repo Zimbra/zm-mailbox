@@ -39,7 +39,7 @@ import io.leangen.graphql.annotations.types.GraphQLType;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"metadatas", "subject", "fragment", "emails"})
-@GraphQLType(name=GqlConstants.CONVERSATION_SUMMARY, description="Conversation search result information")
+@GraphQLType(name=GqlConstants.CLASS_CONVERSATION_SUMMARY, description="Conversation search result information")
 public class ConversationSummary {
 
     /**
