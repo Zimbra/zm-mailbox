@@ -43,7 +43,7 @@ import io.leangen.graphql.annotations.types.GraphQLType;
  */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AccountConstants.E_GET_PREFS_REQUEST)
-@GraphQLType(name=GqlConstants.GET_PREFS_REQUEST, description="Get preferences for the authenticated account")
+@GraphQLType(name=GqlConstants.CLASS_GET_PREFS_REQUEST, description="Get preferences for the authenticated account")
 public class GetPrefsRequest {
     /**
      * @zm-api-field-description If any of these are specified then only get these preferences
