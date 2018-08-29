@@ -49,7 +49,6 @@ import javax.mail.internet.MimeMessage;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -9992,7 +9991,16 @@ public class Mailbox implements MailboxStore {
                 // We are finally done with database and redo commits. Cache update comes last.
                 changeNotification = commitCache(currentChange(), lock);
             } finally {
-                lock.close();
+                //some listeners need to be notified prior to the lock
+                try {
+                    if (changeNotification != null) {
+                        MailboxListener.notifyListenersBeforeLockRelease(changeNotification);
+                    } else {
+                        MailboxListener.notifyListenersNoChange();
+                    }
+                } finally {
+                    lock.close();
+                }
                 // notify listeners outside lock as can take significant time
                 if (changeNotification != null) {
                     notifyListeners(currentChange(), changeNotification, lock);
