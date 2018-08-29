@@ -43,7 +43,7 @@ import io.leangen.graphql.annotations.types.GraphQLType;
 // MailConstants.E_SEARCH == "search"
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_SEARCH)
-@GraphQLType(name=GqlConstants.SEARCH_FOLDER, description="Search folder details")
+@GraphQLType(name=GqlConstants.CLASS_SEARCH_FOLDER, description="Search folder details")
 public final class SearchFolder extends Folder {
 
     /**
