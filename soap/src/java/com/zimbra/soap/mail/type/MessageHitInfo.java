@@ -37,7 +37,7 @@ import io.leangen.graphql.annotations.GraphQLQuery;
 import io.leangen.graphql.annotations.types.GraphQLType;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@GraphQLType(name=GqlConstants.MESSAGE_HIT_INFO, description="Message search result information containing a list of messages")
+@GraphQLType(name=GqlConstants.CLASS_MESSAGE_HIT_INFO, description="Message search result information containing a list of messages")
 public class MessageHitInfo
 extends MessageInfo
 implements SearchHit {

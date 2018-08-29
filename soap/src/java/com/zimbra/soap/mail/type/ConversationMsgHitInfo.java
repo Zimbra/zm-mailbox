@@ -31,7 +31,7 @@ import io.leangen.graphql.annotations.GraphQLQuery;
 import io.leangen.graphql.annotations.types.GraphQLType;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@GraphQLType(name=GqlConstants.CONVERSATION_MESSAGE_HIT_INFO, description="Conversation search result information containing messages")
+@GraphQLType(name=GqlConstants.CLASS_CONVERSATION_MESSAGE_HIT_INFO, description="Conversation search result information containing messages")
 public class ConversationMsgHitInfo {
 
     /**
