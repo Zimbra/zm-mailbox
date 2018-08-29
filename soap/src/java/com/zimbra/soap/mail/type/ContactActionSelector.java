@@ -29,19 +29,13 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.zimbra.common.soap.MailConstants;
 
-import io.leangen.graphql.annotations.GraphQLIgnore;
-import io.leangen.graphql.annotations.GraphQLInputField;
-import io.leangen.graphql.annotations.types.GraphQLType;
-
 @XmlAccessorType(XmlAccessType.NONE)
-@GraphQLType(name="ContactActionSelector", description="Input for contact actions")
 public class ContactActionSelector extends ActionSelector {
 
     /**
      * @zm-api-field-description New Contact attributes
      */
     @XmlElement(name=MailConstants.E_ATTRIBUTE, required=false)
-    @GraphQLInputField(name="attrs", description="Contact attributes")
     private final List<NewContactAttr> attrs = Lists.newArrayList();
 
     public ContactActionSelector() {
@@ -51,7 +45,6 @@ public class ContactActionSelector extends ActionSelector {
         super(ids, operation);
     }
 
-    @GraphQLInputField(name="attrs", description="Contact attributes")
     public void setAttrs(Iterable <NewContactAttr> attrs) {
         this.attrs.clear();
         if (attrs != null) {
@@ -59,7 +52,6 @@ public class ContactActionSelector extends ActionSelector {
         }
     }
 
-    @GraphQLIgnore
     public ContactActionSelector addAttr(NewContactAttr attr) {
         this.attrs.add(attr);
         return this;
