@@ -19,6 +19,8 @@ package com.zimbra.cs.service.admin;
 import java.util.Map;
 import java.util.Set;
 
+import com.unboundid.ldap.sdk.DN;
+import com.unboundid.ldap.sdk.LDAPException;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
@@ -26,18 +28,26 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.DistributionList;
+import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.entry.LdapDistributionList;
+import com.zimbra.cs.account.ldap.entry.LdapDynamicGroup;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * @author zimbra
  *
  */
-public class ModifyHABGroup extends AdminDocumentHandler{
+public class ModifyHABGroup extends AdminDocumentHandler {
 
-    /* (non-Javadoc)
-     * @see com.zimbra.soap.DocumentHandler#handle(com.zimbra.common.soap.Element, java.util.Map)
+    private final static String CN = Provisioning.A_cn + "=";
+    private final static String OU = Provisioning.A_ou + "=";
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * com.zimbra.soap.DocumentHandler#handle(com.zimbra.common.soap.Element,
+     * java.util.Map)
      */
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
@@ -52,7 +62,7 @@ public class ModifyHABGroup extends AdminDocumentHandler{
         String operationType = operation.getAttribute(AdminConstants.A_OPERATION);
         if (StringUtil.isNullOrEmpty(operationType)) {
             throw ServiceException.INVALID_REQUEST(
-                String.format("Operation is required, requested op:%s",operation), null);
+                String.format("Operation is required, requested op:%s", operation), null);
         }
         Element response = zsc.createElement(AdminConstants.MODIFY_HAB_GROUP_RESPONSE);
         if (operationType.equals("move")) {
@@ -61,7 +71,7 @@ public class ModifyHABGroup extends AdminDocumentHandler{
             throw ServiceException.INVALID_REQUEST(
                 String.format("Only move HAB group operation is supported"), null);
         }
-        
+
         return response;
     }
 
@@ -93,39 +103,64 @@ public class ModifyHABGroup extends AdminDocumentHandler{
         
         ZimbraLog.misc.debug("Modify HAB req for: %s, from parent: %s to new parent:%s", habGroupId,
             habCurrentParentId, habTargetParentId);
-        
-        LdapDistributionList group = (LdapDistributionList) prov
-            .getGroup(Key.DistributionListBy.id, habGroupId, true, false);
-        LdapDistributionList targetGroup = (LdapDistributionList) prov
-            .getGroup(Key.DistributionListBy.id, habTargetParentId, true, false);
-        LdapDistributionList currentGroup = (LdapDistributionList) prov
+
+        Group group = prov.getGroup(Key.DistributionListBy.id, habGroupId, true, false);
+        Group targetGroup = prov.getGroup(Key.DistributionListBy.id, habTargetParentId, true,
+            false);
+        LdapDistributionList currentList = (LdapDistributionList) prov
             .getGroup(Key.DistributionListBy.id, habCurrentParentId, true, false);
-        
-        
-        if (!group.isHABGroup() || !currentGroup.isHABGroup() || !targetGroup.isHABGroup()) {
-            throw ServiceException.INVALID_REQUEST(
-                String.format("Operation only supported for HAB group"), null);
+
+        if (null == group || null == currentList || null == targetGroup) {
+            throw ServiceException.INVALID_REQUEST(String.format("Invalid groupId provided."),
+                null);
         }
-        
-        String groupDn = group.getDN();
-        String parentDn = targetGroup.getDN();
-        ZimbraLog.misc.debug("HAB group dn:%s", groupDn);
-        ZimbraLog.misc.info("Target parent dn:%s",parentDn);
-        
-       
-        String targetDn = "cn="+group.getCn() + "," + parentDn;
+
+        if (targetGroup.isDynamic()) {
+            throw ServiceException.INVALID_REQUEST(String.format("Target group cannot be dynamic."),
+                null);
+        }
+
+        if (!group.isHABGroup() || !currentList.isHABGroup() || !targetGroup.isHABGroup()) {
+            throw ServiceException
+                .INVALID_REQUEST(String.format("Operation only supported for HAB group"), null);
+        }
+        String cn = null;
+        String groupDn = null;
+        if (group instanceof LdapDistributionList) {
+            cn = ((LdapDistributionList) group).getCn();
+            groupDn = ((LdapDistributionList) group).getDN();
+        } else if (group instanceof LdapDynamicGroup) {
+            groupDn = ((LdapDynamicGroup) group).getDN();
+            try {
+                DN newDN = new DN(groupDn);
+                cn = newDN.getRDNString();
+                if (cn.indexOf(CN) == -1) {
+                    throw ServiceException.NOT_FOUND(String.format("Error finding dn for group:%s", group.getName()));
+                } else {
+                    cn = cn.substring(cn.indexOf(CN) + CN.length());
+                }
+            } catch (LDAPException e) {
+                throw ServiceException.NOT_FOUND(String.format("Error finding dn for group:%s", group.getName()));
+            }
+        }
+
+        LdapDistributionList targetList = (LdapDistributionList) targetGroup;
+        String parentDn = targetList.getDN();
+        parentDn = parentDn.substring(parentDn.indexOf(OU));
+        String targetDn = CN + cn + "," + parentDn;
+        ZimbraLog.misc.info("Target parent dn:%s and group dn:%s", targetDn, groupDn);
         prov.changeHABGroupParent(groupDn, targetDn);
-        
-        String [] members = {group.getMail()};
-        ((DistributionList)(currentGroup)).removeMembers(members);
-        ((DistributionList)(targetGroup)).addMembers(members);
-        
-      
-        Element parent  = response.addElement(AdminConstants.E_HAB_PARENT_GROUP);
+
+        String[] members = { group.getMail() };
+        ((DistributionList) (currentList)).removeMembers(members);
+        ((DistributionList) (targetList)).addMembers(members);
+
+        Element parent = response.addElement(AdminConstants.E_HAB_PARENT_GROUP);
         parent.addAttribute(AdminConstants.A_ID, targetGroup.getId());
-        Set<String> membersL = targetGroup.getAllMembersSet();
-        for (String s: membersL) {
-            parent.addElement(AdminConstants.E_MEMBER).addText(s);
+        Element membersEl = parent.addElement(AdminConstants.E_MEMBERS);
+        Set<String> membersSet = targetGroup.getAllMembersSet();
+        for (String s : membersSet) {
+            membersEl.addElement(AdminConstants.E_MEMBER).addText(s);
         }
     }
 
