@@ -49,7 +49,7 @@ public class GetPrefsRequest {
      * @zm-api-field-description If any of these are specified then only get these preferences
      */
     @XmlElement(name=AccountConstants.E_PREF)
-    @GraphQLQuery(name=GqlConstants.PREF, description="List of prefs that is wanted in the response")
+    @GraphQLQuery(name=GqlConstants.PREFERENCES, description="List of prefs that is wanted in the response")
     private List<Pref> pref;
 
     public void setPref(List<Pref> pref) {

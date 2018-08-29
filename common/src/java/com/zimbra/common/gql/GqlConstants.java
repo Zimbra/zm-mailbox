@@ -214,7 +214,5 @@ public class GqlConstants {
     // account preference constants
     public static final String CLASS_GET_PREFS_REQUEST= "GetPrefsRequest";
     public static final String CLASS_ACCOUNT_PREF_INPUT = "AccountPref";
-    public static final String PREF = "pref";
-    public static final String SET_NAME = "setName";
-    public static final String SET_VALUE = "setValue";
+    public static final String PREFERENCES = "preferences";
 }
