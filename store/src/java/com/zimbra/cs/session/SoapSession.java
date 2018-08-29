@@ -46,6 +46,7 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.httpclient.URLUtil;
@@ -479,6 +480,7 @@ public class SoapSession extends Session {
     private boolean isOffline = false;
     private final SoapProtocol responseProtocol;
     private String curWaitSetID;
+    protected AuthToken authToken;
 
     /** Creates a <tt>SoapSession</tt> owned by the given account and
      *  listening on its {@link Mailbox}.
@@ -488,6 +490,9 @@ public class SoapSession extends Session {
         this.asAdmin = zsc.isUsingAdminPrivileges();
         responseProtocol = zsc.getResponseProtocol();
         curWaitSetID = zsc.getCurWaitSetID();
+        userAgent = zsc.getUserAgent();
+        requestIPAddress = zsc.getRequestIP();
+        authToken = zsc.getAuthToken();
     }
 
     @Override
@@ -1663,5 +1668,9 @@ public class SoapSession extends Session {
 
     public String getCurWaitSetID() {
         return curWaitSetID;
+    }
+
+    public AuthToken getAuthToken() {
+        return authToken;
     }
 }
