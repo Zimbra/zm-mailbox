@@ -3217,7 +3217,7 @@ error : error occurred while starting or stopping contact backup on this server
 stopped : stopped contact backup on this server.
 
 ----------------------------
-<CreateHABGroupRequest [habGroupName={habGroupName}] habOrgUnit={habOrgUnit}>
+<CreateHABGroupRequest [habDispalyName={habDisplayName}] habOrgUnit={habOrgUnit}>
 </CreateHABGroupRequest>
 
 <CreateHABGroupResponse>

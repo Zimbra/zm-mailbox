@@ -4637,11 +4637,11 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         if (listAttrs.get(AdminConstants.A_HAB_ORG_UNIT) != null) {
             habOrgUnit = (String) listAttrs.get(AdminConstants.A_HAB_ORG_UNIT);
             isHabGroup = true;
-            if (listAttrs.get(AdminConstants.A_HAB_GROUP_NAME) != null) {
-                habGroupName = (String) listAttrs.get(AdminConstants.A_HAB_GROUP_NAME);
+            if (listAttrs.get(AdminConstants.A_HAB_DISPLAY_NAME) != null) {
+                habGroupName = (String) listAttrs.get(AdminConstants.A_HAB_DISPLAY_NAME);
             }
             listAttrs.remove(AdminConstants.A_HAB_ORG_UNIT);
-            listAttrs.remove(AdminConstants.A_HAB_GROUP_NAME);
+            listAttrs.remove(AdminConstants.A_HAB_DISPLAY_NAME);
             String orgUnitDN = getOrgUnitDNByName(habOrgUnit, domain, zlc);
             if (StringUtils.isEmpty(orgUnitDN)) {
                 throw AccountServiceException.NO_SUCH_ORG_UNIT(habOrgUnit);
