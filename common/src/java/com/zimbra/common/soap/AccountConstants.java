@@ -592,4 +592,6 @@ public class AccountConstants {
     public static final String E_HAB_GROUP_MEMBERS = "groupMembers";
     public static final String E_HAB_GROUP_MEMBER = "groupMember";
 
+    // Session activity feature
+    public static final String A_SESSION_ID = "sessionId";
 }

@@ -24,11 +24,16 @@ import javax.servlet.http.HttpServletResponse;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.session.Session;
+import com.zimbra.cs.session.SessionCache;
+import com.zimbra.cs.session.SoapSession;
+import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.account.message.EndSessionRequest;
 
 /**
  * End the current session immediately cleaning up all resources used by the session
@@ -39,25 +44,49 @@ public class EndSession extends AccountDocumentHandler {
     @Override
     public Element handle(Element request, Map<String, Object> context)
     throws ServiceException {
+        EndSessionRequest req = JaxbUtil.elementToJaxb(request);
+        String sessionId = req.getSessionId();
+        boolean clearCookies = req.isLogOff();
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        if (zsc.hasSession()) {
-            Session s = getSession(zsc);
-            endSession(s);
-        }
-        boolean clearCookies = request.getAttributeBool(AccountConstants.A_LOG_OFF, false);
-        if (clearCookies || getAuthenticatedAccount(zsc).isForceClearCookies()) {
-            context.put(SoapServlet.INVALIDATE_COOKIES, true);
-            try {
-                AuthToken at = zsc.getAuthToken();
-                HttpServletRequest httpReq = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
-                HttpServletResponse httpResp = (HttpServletResponse) context.get(SoapServlet.SERVLET_RESPONSE);
-                at.encode(httpReq, httpResp, true);
-                at.deRegister();
-            } catch (AuthTokenException e) {
-                throw ServiceException.FAILURE("Failed to de-register an auth token", e);
+        if (StringUtil.isNullOrEmpty(sessionId)) {
+            if (zsc.hasSession()) {
+                Session s = getSession(zsc);
+                endSession(s);
+                if (clearCookies || getAuthenticatedAccount(zsc).isForceClearCookies()) {
+                    AuthToken at = zsc.getAuthToken();
+                    clearCookies(context, zsc, at);
+                }
+            }
+        } else {
+            Session s = SessionCache.lookup(sessionId, zsc.getAuthtokenAccountId());
+            if (s == null) {
+                throw ServiceException.FAILURE("Failed to find session with given sessionId", null);
+            } else {
+                endSession(s);
+            }
+            if (clearCookies || getAuthenticatedAccount(zsc).isForceClearCookies()) {
+                if (s instanceof SoapSession) {
+                    SoapSession ss = (SoapSession) s;
+                    AuthToken at = ss.getAuthToken();
+                    if (at != null) {
+                        clearCookies(context, zsc, at);
+                    }
+                }
             }
         }
         Element response = zsc.createElement(AccountConstants.END_SESSION_RESPONSE);
         return response;
+    }
+
+    private void clearCookies(Map<String, Object> context, ZimbraSoapContext zsc, AuthToken at) throws ServiceException {
+        context.put(SoapServlet.INVALIDATE_COOKIES, true);
+        try {
+            HttpServletRequest httpReq = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
+            HttpServletResponse httpResp = (HttpServletResponse) context.get(SoapServlet.SERVLET_RESPONSE);
+            at.encode(httpReq, httpResp, true);
+            at.deRegister();
+        } catch (AuthTokenException e) {
+            throw ServiceException.FAILURE("Failed to de-register an auth token", e);
+        }
     }
 }
