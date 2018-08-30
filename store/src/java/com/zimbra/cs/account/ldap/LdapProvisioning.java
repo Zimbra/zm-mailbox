@@ -4873,12 +4873,24 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     private void deleteDistributionList(LdapDistributionList dl, boolean cascadeDelete) throws ServiceException {
         // check if cascadeDelete is true. If it's true, delete all subgroups.
-        if (cascadeDelete) {
-            Set<String> members = dl.getAllMembersSet();
-            for (String member : members) {
-                LdapDistributionList subDl = (LdapDistributionList) getDistributionListByNameInternal(member);
-                if (subDl != null) {
-                    deleteDistributionList(subDl, cascadeDelete);
+        if (dl.isHABGroup()) {
+            if (cascadeDelete) {
+                Set<String> members = dl.getAllMembersSet();
+                for (String member : members) {
+                    LdapDistributionList subDl = (LdapDistributionList) getDistributionListByNameInternal(member);
+                    if (subDl != null && subDl.isHABGroup()) {
+                        deleteDistributionList(subDl, cascadeDelete);
+                    } else {
+                        DynamicGroup dg = getDynamicGroupBasic(DistributionListBy.name,
+                                member, LdapClient.getContext(LdapServerType.MASTER, LdapUsage.DELETE_DYNAMICGROUP));
+                        if (dg != null && dg.isHABGroup()) {
+                            deleteDynamicGroup((LdapDynamicGroup) dg);
+                        }
+                    }
+                }
+            } else {
+                if (dl.getAllMembers().length > 0) {
+                    throw ServiceException.INVALID_REQUEST("Can not delete hab group when memebers are present in group.", null);
                 }
             }
         }
@@ -4886,7 +4898,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         String zimbraId = dl.getId();
 
         // make a copy of all addrs of this DL, after the delete all aliases on this dl
-        // object will be gone, but we need to remove them from the allgroups cache after the DL is deleted
+        // object will be gone, but we need to remove them from the all groups cache after the DL is deleted
         Set<String> addrs = new HashSet<String>(dl.getMultiAttrSet(Provisioning.A_mail));
 
         // remove the DL from all DLs
