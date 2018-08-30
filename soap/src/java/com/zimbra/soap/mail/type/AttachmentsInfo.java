@@ -17,10 +17,6 @@
 
 package com.zimbra.soap.mail.type;
 
-import com.google.common.base.MoreObjects;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -32,10 +28,19 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlType;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
+
+import io.leangen.graphql.annotations.GraphQLIgnore;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"attachments", "extraElements"})
+@GraphQLType(name=GqlConstants.CLASS_ATTACHMENTS_INFO, description="Attachments Information")
 public class AttachmentsInfo {
 
     /**
@@ -54,13 +59,13 @@ public class AttachmentsInfo {
         @XmlElement(name=MailConstants.E_CONTACT /* cn */, type=ContactAttachSpec.class),
         @XmlElement(name=MailConstants.E_DOC /* doc */, type=DocAttachSpec.class)
     })
-    private List<AttachSpec> attachments = Lists.newArrayList();
+    private final List<AttachSpec> attachments = Lists.newArrayList();
 
     /**
      * @zm-api-field-description Other elements
      */
     @XmlAnyElement
-    private List<org.w3c.dom.Element> extraElements = Lists.newArrayList();
+    private final List<org.w3c.dom.Element> extraElements = Lists.newArrayList();
 
     public AttachmentsInfo() {
     }
@@ -92,10 +97,13 @@ public class AttachmentsInfo {
         return this;
     }
 
+    @GraphQLQuery(name=GqlConstants.ATTACHMENT_ID, description="Attachment upload ID")
     public String getAttachmentId() { return attachmentId; }
+    @GraphQLQuery(name=GqlConstants.ATTACHMENTS, description="Attachment details")
     public List<AttachSpec> getAttachments() {
         return Collections.unmodifiableList(attachments);
     }
+    @GraphQLIgnore
     public List<org.w3c.dom.Element> getExtraElements() {
         return Collections.unmodifiableList(extraElements);
     }

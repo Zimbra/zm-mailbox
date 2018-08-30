@@ -52,11 +52,94 @@ public class GqlConstants {
 
     // end session constants
     public static final String CLEAR_COOKIES= "clearCookies";
+    
+    // shared class constants
+    public static final String ATTACHMENTS = "attachments";
+    public static final String ATTACHMENT_ID = "attachmentId";
+    public static final String CONTENT = "content";
+    public static final String CONTENT_ID = "contentId";
+    public static final String FOLDER_ID = "folderId";
+    public static final String FRAGMENT = "fragment";
+    public static final String HEADERS = "headers";
+    public static final String IDENTITY_ID = "identityId";
+    public static final String IN_REPLY_TO = "inReplyTo";
+    public static final String INVITE = "invite";
+    public static final String MIME_PARTS = "mimeParts";
+    
+    // message constants
+    public static final String CLASS_MESSAGE = "Message";
+    public static final String EMAILADDRESSES = "emailAddresses";
+    public static final String MESSAGE = "message";
+    public static final String MIME_PART = "mimePart";
+    public static final String ORIGINAL_ID = "originalId";
+    public static final String REPLY_TYPE = "replyType";
+    public static final String SUBJECT = "subject";
+    public static final String TIMEZONES = "timezones";
+
+    // message specification constants
+    public static final String CLASS_MESSAGE_SPECIFICATION = "MsgSpec";
+    public static final String GQL_MESSAGE_SPECIFICATIONS = "messageSpecifications";
+    public static final String HIDE_IMAGES = "hideImages";
+    public static final String INLINED_TEXT_LENGTH = "inlinedTextLength";
+    public static final String MARK_MESSAGE_AS_READ = "markMessageAsRead";
+    public static final String MESSAGE_PART = "messagePart";
+    public static final String RECURRENCE_DATE_ID = "recurrenceDateId";
+    public static final String INCLUDE_GROUP_INFO = "includeGroupInfo";
+    public static final String INCLUDE_RAW_MESSAGE = "includeRawMessage";
+    public static final String INCLUDE_URL_CONTENT = "includeUrlContent";
+
+    // invitation info constants
+    public static final String CLASS_INVITATION_INFO = "InvitationInfo";
+    public static final String INVITE_ID = "id";
+
+    // invite component constants
+    public static final String CLASS_INVITE_COMPONENT = "InviteComponent";
+
+    // mime part info constants
+    public static final String CLASS_MIME_PART_INFO = "MimePartInfo";
+
+    // attribute name constants
+    public static final String CLASS_ATTRIBUTE_NAME = "AttributeName";
+
+    // message content constants
+    public static final String CLASS_MESSAGE_CONTENT = "MsgContent";
+
+    // attachments info constants
+    public static final String CLASS_ATTACHMENTS_INFO = "AttachmentsInfo";
+
+    // attachment specification constants
+    public static final String CLASS_ATTACHMENT_SPECIFICATIONS = "AttachSpec";
+    public static final String OPTIONAL = "optional";
+
+    // email address info constants
+    public static final String CLASS_EMAIL_ADDRESS_INFO = "EmailAddrInfo";
+    public static final String ADDRESS = "address";
+    public static final String ADDRESS_TYPE = "addressType";
+    public static final String PERSONAL = "personal";
+
+    // send message constants
+    public static final String ADD_SENT_BY = "addSentBy";
+    public static final String IS_CALENDAR_FORWARD = "isCalendarForward";
+    public static final String DO_SKIP_SAVED = "doSkipSave";
+    public static final String DO_FETCH_SAVED = "doFetchSaved";
+    public static final String SEND_UID = "sendUid";
+
+    // message to send constants
+    public static final String CLASS_MESSAGE_TO_SEND = "MessageToSend";
+    public static final String DRAFT_ID = "draftId";
+    public static final String DO_SEND_DRAFT = "doSendDraft";
+    public static final String DATA_SOURCE_ID = "dataSourceId";
+
+    // message info constants
+    public static final String CLASS_MESSAGE_INFO = "MessageInfo";
+
+    // message with group info constants
+    public static final String CLASS_MESSAGE_WITH_GROUP_INFO = "MsgWithGroupInfo";
 
     // search constants
     public static final String CLASS_SEARCH_REQUEST = "SearchRequest";
     public static final String SEARCH_PARAMS = "params";
-    public static final String HEADERS = "headers";
+    public static final String SEARCH_REQUEST = "SearchRequest";
     public static final String INCLUDE_MEMBER_OF = "includeMemberOf";
     public static final String MSG_CONTENT = "msgContent";
     public static final String CURSOR = "cursor";
@@ -105,7 +188,6 @@ public class GqlConstants {
     public static final String MESSAGE_HITS = "messageHits";
     public static final String CLASS_CONVERSATION_MESSAGE_HIT_INFO = "ConversationMsgHitInfo";
     public static final String SIZE = "size";
-    public static final String FOLDER_ID = "folderId";
     public static final String AUTO_SEND_TIME = "autoSendTime";
     public static final String DATE = "date";
     public static final String CLASS_CONVERSATION_SUMMARY = "ConversationSummary";
@@ -116,15 +198,10 @@ public class GqlConstants {
     public static final String ELIDED = "elided";
     public static final String CHANGE_DATE = "changeDate";
     public static final String METADATAS = "metadatas";
-    public static final String SUBJECT = "subject";
-    public static final String FRAGMENT = "fragment";
     public static final String EMAILS = "emails";
     public static final String CLASS_EMAIL_INFO = "EmailInfo";
     public static final String MODIFIED_FIELD_SEQUENCE = "modifiedSequence";
-    public static final String ADDRESS = "address";
     public static final String DISPLAY = "display";
-    public static final String PERSONAL = "personal";
-    public static final String ADDRESS_TYPE = "addressType";
     public static final String GROUP = "group";
     public static final String IS_GROUP_MEMBERS_EXPANDABLE = "isGroupMembersExpandable";
     public static final String CLASS_MAIL_CUSTOM_METADATA = "MailCustomMetadata";
@@ -136,12 +213,10 @@ public class GqlConstants {
     public static final String CLASS_MESSAGE_HIT_INFO = "MessageHitInfo";
     public static final String CONTENT_MATCHED = "contentMatched";
     public static final String MESSAGE_PART_HITS = "messagePartHits";
-    public static final String CLASS_MESSAGE_INFO = "MessageInfo";
     public static final String IMAP_UID = "imapUid";
     public static final String CALENDAR_INTENDED_FOR = "calendarIntendedFor";
     public static final String ORIG_ID = "origId";
     public static final String DRAFT_REPLY_TYPE = "draftReplyType";
-    public static final String IDENTITY_ID = "identityId";
     public static final String DRAFT_ACCOUNT_ID = "draftAccountId";
     public static final String DRAFT_AUTO_SEND_TIME = "draftAutoSendTime";
     public static final String SENT_DATE = "sentDate";
@@ -149,8 +224,6 @@ public class GqlConstants {
     public static final String PART = "part";
     public static final String MESSAGE_ID_HEADER = "messageIdHeader";
     public static final String MESSAGE_ID = "messageId";
-    public static final String IN_REPLY_TO = "inReplyTo";
-    public static final String INVITE = "invite";
     public static final String CONTENT_ELEMS = "contentElems";
     public static final String CLASS_CURSOR_INFO = "CursorInfo";
     public static final String SORT_VAL = "sortVal";
@@ -191,7 +264,6 @@ public class GqlConstants {
     public static final String INCLUDE_MODIFIED_SEQUENCE = "includeModifiedSequence";
     public static final String MAX_MEMBERS = "maxMembers";
     public static final String VCARD = "vcard";
-    public static final String ATTACHMENT_ID = "attachmentId";
     public static final String TYPE = "type";
     public static final String NON_EXISTENT_IDS = "nonExistentIds";
     public static final String DO_VERBOSE = "doVerbose";

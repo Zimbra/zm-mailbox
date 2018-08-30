@@ -28,10 +28,15 @@ import javax.xml.bind.annotation.XmlType;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
+
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"mimeParts", "attachments"})
+@GraphQLType(name=GqlConstants.CLASS_MIME_PART_INFO, description="The mime part information")
 public class MimePartInfo {
 
     /**
@@ -71,13 +76,13 @@ public class MimePartInfo {
     }
 
     public static MimePartInfo createForContentType(String ct) {
-        MimePartInfo mp = new MimePartInfo();
+        final MimePartInfo mp = new MimePartInfo();
         mp.setContentType(ct);
         return mp;
     }
 
     public static MimePartInfo createForContentTypeAndContent(String ct, String text) {
-        MimePartInfo mp = createForContentType(ct);
+        final MimePartInfo mp = createForContentType(ct);
         mp.setContent(text);
         return mp;
     }
@@ -97,12 +102,17 @@ public class MimePartInfo {
     }
 
     public void setAttachments(AttachmentsInfo attachments) { this.attachments = attachments; }
+    @GraphQLQuery(name=GqlConstants.CONTENT_TYPE, description="Content Type")
     public String getContentType() { return contentType; }
+    @GraphQLQuery(name=GqlConstants.CONTENT, description="Content")
     public String getContent() { return content; }
+    @GraphQLQuery(name=GqlConstants.CONTENT_ID, description="Content ID")
     public String getContentId() { return contentId; }
+    @GraphQLQuery(name=GqlConstants.MIME_PARTS, description="Mime Parts")
     public List<MimePartInfo> getMimeParts() {
         return mimeParts;
     }
+    @GraphQLQuery(name=GqlConstants.ATTACHMENTS, description="Attachments")
     public AttachmentsInfo getAttachments() { return attachments; }
 
     public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
