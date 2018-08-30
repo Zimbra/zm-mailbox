@@ -10,6 +10,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
+import com.zimbra.cs.mailbox.redis.RedisUtils;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.RedissonClientHolder;
 import com.zimbra.cs.mailbox.Tag;
@@ -22,7 +23,8 @@ public class RedisTagCache extends RedisSharedStateCache<Tag> implements TagCach
     public RedisTagCache(Mailbox mbox) {
         super(mbox, new LocalTagCache());
         RedissonClient client = RedissonClientHolder.getInstance().getRedissonClient();
-        name2Id = client.getMap(String.format("TAG_NAME2ID:%s", mbox.getAccountId()));
+        String name2IdMapName = RedisUtils.createAccountRoutedKey(mbox.getAccountId(), "TAG_NAME2ID");
+        name2Id = client.getMap(name2IdMapName);
     }
 
     private LocalTagCache getLocalCache() {
@@ -78,7 +80,7 @@ public class RedisTagCache extends RedisSharedStateCache<Tag> implements TagCach
 
     @Override
     protected String getMapName(String accountId, int itemId) {
-        return String.format("%s:TAG:%d", accountId, itemId);
+        return RedisUtils.createAccountRoutedKey(accountId, String.format("TAG:%d", itemId));
     }
 
     @Override

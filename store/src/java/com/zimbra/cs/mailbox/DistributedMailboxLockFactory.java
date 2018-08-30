@@ -17,6 +17,7 @@ import com.zimbra.common.mailbox.LockFailedException;
 import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.mailbox.MailboxLockFactory;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.mailbox.redis.RedisUtils;
 
 public class DistributedMailboxLockFactory implements MailboxLockFactory {
     private static AtomicInteger lockIdBase = new AtomicInteger();
@@ -30,7 +31,8 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
         this.redisson = RedissonClientHolder.getInstance().getRedissonClient();
 
         try {
-            this.readWriteLock = this.redisson.getReadWriteLock("mailbox:" + this.mailbox.getAccountId());
+            String lockName = RedisUtils.createAccountRoutedKey(this.mailbox.getAccountId(), "LOCK");
+            this.readWriteLock = this.redisson.getReadWriteLock(lockName);
             this.waiters = new ArrayList<>();
         } catch (Exception e) {
             ZimbraLog.system.fatal("Can't instantiate Redisson server", e);

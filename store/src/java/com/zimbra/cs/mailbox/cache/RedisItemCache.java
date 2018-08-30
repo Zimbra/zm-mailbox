@@ -13,6 +13,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
+import com.zimbra.cs.mailbox.redis.RedisUtils;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.RedissonClientHolder;
@@ -33,7 +34,7 @@ public class RedisItemCache extends MapItemCache<String> {
 
     private void initFolderTagBucket() {
         RedissonClient client = RedissonClientHolder.getInstance().getRedissonClient();
-        folderTagBucket = client.getBucket(String.format("FOLDERS_TAGS:%s", mbox.getAccountId()));
+        folderTagBucket = client.getBucket(RedisUtils.createAccountRoutedKey(mbox.getAccountId(), "FOLDERS_TAGS"));
     }
 
     @Override
@@ -110,8 +111,9 @@ public class RedisItemCache extends MapItemCache<String> {
         @Override
         public ItemCache getItemCache(Mailbox mbox) {
             RedissonClient client = RedissonClientHolder.getInstance().getRedissonClient();
-            String itemMapName = String.format("ITEMS_BY_ID:%s", mbox.getAccountId());
-            String uuidMapName = String.format("ITEMS_BY_UUID:%s", mbox.getAccountId());
+            String accountId = mbox.getAccountId();
+            String itemMapName = RedisUtils.createAccountRoutedKey(accountId, String.format("ITEMS_BY_ID"));
+            String uuidMapName = RedisUtils.createAccountRoutedKey(accountId, String.format("ITEMS_BY_UUID"));
             RMap<Integer, String> itemMap = client.getMap(itemMapName);
             RMap<String, Integer> uuidMap = client.getMap(uuidMapName);
             return new RedisItemCache(mbox, itemMap, uuidMap);
