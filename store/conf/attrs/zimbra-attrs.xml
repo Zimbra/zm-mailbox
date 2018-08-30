@@ -9719,7 +9719,7 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="3028" name="zimbraHierarchicalAddressBookRoot" type="string" cardinality="multi" optionalIn="domain" flags="domainInfo" since="8.8.10">
-  <desc>domain level root of hierarchical address book</desc>
+  <desc>root group id of hierarchical address book</desc>
 </attr>
 
 <attr id="3029" name="zimbraHABMemberLdapAttrMap" type="string" max="4096" cardinality="multi" optionalIn="globalConfig" since="8.8.10">
