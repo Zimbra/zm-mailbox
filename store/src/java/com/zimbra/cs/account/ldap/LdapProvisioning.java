@@ -4636,11 +4636,11 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         if (listAttrs.get(AdminConstants.A_HAB_ORG_UNIT) != null) {
             habOrgUnit = (String) listAttrs.get(AdminConstants.A_HAB_ORG_UNIT);
             isHabGroup = true;
-            if (listAttrs.get(AdminConstants.A_HAB_GROUP_NAME) != null) {
-                habGroupName = (String) listAttrs.get(AdminConstants.A_HAB_GROUP_NAME);
+            if (listAttrs.get(AdminConstants.A_HAB_DISPLAY_NAME) != null) {
+                habGroupName = (String) listAttrs.get(AdminConstants.A_HAB_DISPLAY_NAME);
             }
             listAttrs.remove(AdminConstants.A_HAB_ORG_UNIT);
-            listAttrs.remove(AdminConstants.A_HAB_GROUP_NAME);
+            listAttrs.remove(AdminConstants.A_HAB_DISPLAY_NAME);
             String orgUnitDN = getOrgUnitDNByName(habOrgUnit, domain, zlc);
             if (StringUtils.isEmpty(orgUnitDN)) {
                 throw AccountServiceException.NO_SUCH_ORG_UNIT(habOrgUnit);
@@ -7322,6 +7322,10 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
         // all addrs of this DL
         AddrsOfEntry addrsOfDL = getAllAddressesOfEntry(dl.getName());
+        String dlOU = null;
+        if (dl.isHABGroup() && dl instanceof LdapDistributionList) {
+            dlOU = getGroupOU(((LdapDistributionList) dl).getDN());
+        }
 
         for (int i = 0; i < members.length; i++) {
             String memberName = members[i].toLowerCase();
@@ -7330,12 +7334,23 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             if (addrsOfDL.isIn(memberName))
                 throw ServiceException.INVALID_REQUEST("Cannot add self as a member: " + memberName, null);
 
-            // cannot add a dynamic group as member
+            if (dl.isHABGroup()) {
+                Group memberGroup = getGroup(Key.DistributionListBy.name, memberName);
+                if (memberGroup != null) {
+                    if (!memberGroup.isHABGroup()) {
+                        throw ServiceException.INVALID_REQUEST(String.format("Cannot add non-hab group: %s as a member in hab group ", memberName), null);
+                    } else if (!isGroupInOU(memberGroup, dlOU)) {
+                        throw ServiceException.INVALID_REQUEST(String.format("Cannot add group: %s as a member, since it belongs to different OU", memberName), null);
+                    }
+                }
+            }
+
+            // cannot add a dynamic group as member in non-hab group
             DynamicGroup dynMember = getDynamicGroup(Key.DistributionListBy.name, memberName, null, Boolean.FALSE);
             if (dynMember != null) {
                 if (dl.isHABGroup()) {
                     if (dlIsInDynamicHABGroup(dynMember, addrsOfDL.getAll())) {
-                        throw ServiceException.INVALID_REQUEST("Cannot add dynamic group as a member, since it contains the parent: " + memberName, null);
+                        throw ServiceException.INVALID_REQUEST(String.format("Cannot add dynamic group: %s as a member, since it contains the parent", memberName), null);
                     }
                 } else {
                     throw ServiceException.INVALID_REQUEST("Cannot add dynamic group as a member: " + memberName, null);
@@ -7379,6 +7394,40 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         Map<String,String[]> modmap = new HashMap<String,String[]>();
         modmap.put("+" + Provisioning.A_zimbraMailForwardingAddress, mods.toArray(new String[0]));
         modifyAttrs(dl, modmap, true);
+    }
+
+    /**
+     * returns true if group belongs to the org unit given in input
+     * @param group
+     * @param orgUnit
+     * @return
+     */
+    public static boolean isGroupInOU(Group group, String orgUnit) {
+        boolean result = Boolean.FALSE;
+        String groupDN = null;
+        if (group instanceof LdapDistributionList) {
+            groupDN = ((LdapDistributionList) group).getDN();
+        } else if (group instanceof LdapDynamicGroup) {
+            groupDN = ((LdapDynamicGroup) group).getDN();
+        }
+        String groupOU = getGroupOU(groupDN);
+        if (StringUtils.isNotEmpty(orgUnit) && orgUnit.equalsIgnoreCase(groupOU)) {
+            result = Boolean.TRUE;
+        }
+        return result;
+    }
+
+    /**
+     * returns dn of org unit in which group belongs
+     * @param groupDN
+     * @return
+     */
+    public static String getGroupOU(String groupDN) {
+        if (StringUtils.isNotEmpty(groupDN) && groupDN.indexOf("ou=") != -1) {
+            return groupDN.substring(groupDN.indexOf("ou=") + 3);
+        } else {
+            return null;
+        }
     }
 
     private void removeDistributionListMembers(DistributionList dl, String[] members)

@@ -1160,7 +1160,7 @@ public final class AdminConstants {
     //HAB
     public static final String E_HAB_GROUP_OPERATION ="habGroupOperation";
 
-    public static final String A_HAB_GROUP_NAME = "habGroupName";
+    public static final String A_HAB_DISPLAY_NAME = "habDisplayName";
     public static final String A_HAB_ORG_UNIT = "habOrgUnit";
     public static final String A_HAB_GROUP_ID ="habGroupId";
     public static final String A_CURRENT_PARENT_HAB_GROUP_ID = "currentParentHabGroupId";
