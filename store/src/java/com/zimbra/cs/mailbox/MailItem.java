@@ -80,6 +80,8 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
 
     public enum Type {
         UNKNOWN(-1, MailItemType.UNKNOWN),
+        /** Item type is unknown, but cannot be a folder or tag */
+        UNKNOWN_SEARCHABLE(-2, MailItemType.UNKNOWN),
         /** Item is a standard {@link Folder}. */
         FOLDER(1, MailItemType.FOLDER),
         /** Item is a saved search {@link SearchFolder}. */
@@ -1938,7 +1940,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
      */
     public static boolean isAcceptableType(Type desired, Type actual) {
         // standard case: exactly what we're asking for
-        if (desired == actual || desired == Type.UNKNOWN) {
+        if (desired == actual || desired == Type.UNKNOWN || desired == Type.UNKNOWN_SEARCHABLE) {
             return true;
         // exceptions: ask for Tag and get Flag, ask for Folder and get SearchFolder or Mountpoint,
         //             ask for Conversation and get VirtualConversation, ask for Document and get Wiki
