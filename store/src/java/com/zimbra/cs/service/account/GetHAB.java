@@ -19,23 +19,26 @@ package com.zimbra.cs.service.account;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.entry.LdapDistributionList;
+import com.zimbra.cs.account.ldap.entry.LdapDynamicGroup;
+import com.zimbra.cs.account.ldap.entry.LdapEntry;
 import com.zimbra.cs.service.util.SortBySeniorityIndexThenName;
 import com.zimbra.soap.ZimbraSoapContext;
-import com.zimbra.soap.account.type.HABGroup;
 import com.zimbra.soap.account.type.Attr;
+import com.zimbra.soap.account.type.HABGroup;
 import com.zimbra.soap.type.ZmBoolean;
 
 /**
@@ -44,6 +47,7 @@ import com.zimbra.soap.type.ZmBoolean;
  */
 public class GetHAB extends AccountDocumentHandler {
 
+    private final static String OU = Provisioning.A_ou + "=";
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
@@ -52,12 +56,16 @@ public class GetHAB extends AccountDocumentHandler {
         String rootGrpId = request.getAttribute(AccountConstants.A_HAB_ROOT_GROUP_ID);
         Account acct = getAuthenticatedAccount(zsc);
 
-        ZimbraLog.account.info("Request for HAB group:%s by: ", rootGrpId, acct);
+        ZimbraLog.account.info("Request for HAB group:%s by: ", rootGrpId, acct.getName());
 
         Map<String, HABGroup> groups = new HashMap<String, HABGroup>();
         List<HABGroup> childGrpList = new ArrayList<HABGroup>();
         LdapDistributionList group = (LdapDistributionList) prov
             .getGroup(Key.DistributionListBy.id, rootGrpId, true, false);
+        if (group == null || !group.isHABGroup()) {
+            throw ServiceException.INVALID_REQUEST(
+                String.format("HABGroupId:%s is invalid or is not an HAB group", rootGrpId), null);
+        }
         Set<String> members = group.getAllMembersSet();
 
         HABGroup grp = new HABGroup();
@@ -75,15 +83,48 @@ public class GetHAB extends AccountDocumentHandler {
             groups.put(member, grpChild);
             childGrpList.add(grpChild);
         }
-        Collections.sort(childGrpList, new SortBySeniorityIndexThenName());
         grp.setChildGroups(childGrpList);
         ZimbraLog.account.debug("The root group :%s has children:%s", grp.getName(), childGrpList);
 
-        List<LdapDistributionList> lists = prov
-            .getAllHabGroups(prov.get(DomainBy.name, acct.getDomainName()), group.getDN());
+        String rootDn = group.getDN();
+        int ouIndex = rootDn.indexOf(OU );
+        rootDn = rootDn.substring(ouIndex);
+        
+        ZimbraLog.misc.info("Searching under dn:%s", rootDn);
+        Domain domain = group.getDomain();
+        List<LdapDistributionList> lists = prov.getAllHabGroups(domain, rootDn);
 
-        for (LdapDistributionList list : lists) {
-            String key = list.getAttr(Provisioning.A_mail);
+        for (LdapEntry entry : lists) {
+            String id = null;
+            String name = null;
+            Map<String, Object> attrs = null;
+            int seniorityIndex = 0;
+            String key = null;
+            Set<String> memberSet = null;
+            if (entry instanceof LdapDistributionList) {
+                LdapDistributionList list = (LdapDistributionList)entry;
+                if (!list.isHABGroup() ) {
+                    continue;
+                }
+                id = list.getId();
+                name = list.getName();
+                attrs = list.getAttrs();
+                memberSet = list.getAllMembersSet();
+                key = list.getAttr(Provisioning.A_mail);
+                seniorityIndex = list.getIntAttr(Provisioning.A_zimbraHABSeniorityIndex, 0);
+            } else if (entry instanceof LdapDynamicGroup) {
+                LdapDynamicGroup dyGrp = (LdapDynamicGroup)entry;
+                if (!dyGrp.isHABGroup()) {
+                    continue;
+                }
+                id = dyGrp.getId();
+                name = dyGrp.getName();
+                memberSet= new HashSet<String>();
+                attrs = dyGrp.getAttrs();
+                key = dyGrp.getAttr(Provisioning.A_mail);
+                seniorityIndex = dyGrp.getIntAttr(Provisioning.A_zimbraHABSeniorityIndex, 0);
+            }
+            
             HABGroup habGrp = groups.get(key);
             if (habGrp == null) {
                 habGrp = new HABGroup();
@@ -91,32 +132,60 @@ public class GetHAB extends AccountDocumentHandler {
             if (habGrp.getRootGroup().compareTo(ZmBoolean.TRUE) == 0) {
                 continue;
             }
-            habGrp.setId(list.getId());
-            habGrp.setName(list.getName());
-            habGrp.setAttrs(Attr.fromMap(list.getAttrs()));
-            habGrp.setSeniorityIndex(list.getIntAttr(Provisioning.A_zimbraHABSeniorityIndex, 0));
+            habGrp.setId(id);
+            habGrp.setName(name);
+            habGrp.setAttrs(Attr.fromMap(attrs));
+            habGrp.setSeniorityIndex(seniorityIndex);
             groups.put(key, habGrp);
             List<HABGroup> children = new ArrayList<HABGroup>();
             
-            ZimbraLog.account.debug("The HAB group: %s has children:%s", list.getName(), list.getAllMembersSet());
-            for (String member : list.getAllMembersSet()) {
+            ZimbraLog.account.debug("The HAB group: %s has children:%s", name, memberSet);
+            for (String member : memberSet) {
                 HABGroup grpChild = groups.get(member);
                 if (grpChild == null) {
                     grpChild = new HABGroup();
                     grpChild.setName(member);
                 }
-                grpChild.setParentGroupId(list.getId());
+                grpChild.setParentGroupId(id);
                 groups.put(member, grpChild);
                 children.add(grpChild);
             }
-            Collections.sort(children, new SortBySeniorityIndexThenName());
             habGrp.setChildGroups(children);
         }
-
-        Element response = zsc.createElement(AccountConstants.E_GET_HAB_RESPONSE);
-        ToXML.encodeHabGroup(response, grp, null);
+        sortChildren(grp);
+        Element response = zsc.createElement(AccountConstants.GET_HAB_RESPONSE);
+        Element ou = zsc.createElement(Provisioning.A_ou);
+        response.addElement(ou);
+        String ouName = extractOuName(rootDn);
+        if (ouName == null) {
+            throw ServiceException.NOT_FOUND("ou name cannot be found, cannot generate a response");
+        }
+        ou.addAttribute(AccountConstants.A_NAME, ouName);
+        ToXML.encodeHabGroup(ou, grp, null);
 
         return response;
     }
+
+    private void sortChildren(HABGroup grp) {
+        List<HABGroup> children = grp.getChildGroups();
+        Collections.sort(children, new SortBySeniorityIndexThenName());
+        for (HABGroup grpChild: children) {
+            sortChildren(grpChild);
+        }
+    }
+    /**
+     * @param rootDn
+     * @return the name of ou
+     */
+    private String extractOuName(String rootDn) {
+        if (rootDn.contains(OU)) {
+            int index = rootDn.indexOf(OU);
+            int endIndex = rootDn.indexOf(",", index + OU.length());
+            return rootDn.substring(index + OU.length(), endIndex);
+        } else {
+            return null;
+        }
+    }
+ 
 
 }

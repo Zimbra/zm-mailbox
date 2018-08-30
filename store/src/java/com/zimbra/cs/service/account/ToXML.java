@@ -305,18 +305,20 @@ public class ToXML {
         Element habGroup = parent.addNonUniqueElement(AccountConstants.E_HAB_GROUP);
         habGroup.addAttribute(AccountConstants.A_NAME, grp.getName());
         for (Attr attr : grp.getAttrs()) {
-            ToXML.encodeAttr(habGroup, attr.getKey(), attr.getValue());
+            if (!attr.getKey().equalsIgnoreCase(Provisioning.A_member)) {
+                ToXML.encodeAttr(habGroup, attr.getKey(), attr.getValue());
+            }
         }
         if (parentId != null) {
             habGroup.addAttribute(AccountConstants.A_PARENT_HAB_GROUP_ID, parentId);
         }
-        if (grp.getRootGroup() != null) {
-            habGroup.addAttribute(AccountConstants.A_ROOT_HAB_GROUP, grp.getRootGroup().toString());
-        }
+
         habGroup.addAttribute(AdminConstants.A_ID, grp.getId());
         habGroup.addAttribute(AccountConstants.A_HAB_SENIORITY_INDEX, grp.getSeniorityIndex());
         for (HABGroup habGrp : grp.getChildGroups()) {
-            encodeHabGroup(habGroup, habGrp, grp.getId());
+            if (habGrp.getId() != null) {
+                encodeHabGroup(habGroup, habGrp, grp.getId());
+            }
         }
 
     }

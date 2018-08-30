@@ -1758,9 +1758,7 @@ public class ProvUtil implements HttpDebugListener {
             throwSoapOnly();
         }
         SoapProvisioning sp = (SoapProvisioning) prov;
-        Account acct = lookupAccount(args[1]);
-        sp.accountAuthed(acct);
-        sp.getHab(args[2], acct);
+        sp.getHab(args[2]);
     }
 
     private void modifyHabGroup(String[] args)  throws ServiceException {
