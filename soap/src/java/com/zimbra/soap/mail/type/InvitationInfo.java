@@ -29,10 +29,15 @@ import javax.xml.bind.annotation.XmlType;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
+
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"content", "inviteComponent", "timezones", "mimeParts", "attachments"})
+@GraphQLType(name=GqlConstants.CLASS_INVITATION_INFO, description="Invitation Information")
 public class InvitationInfo extends InviteComponent {
 
     /**
@@ -96,7 +101,7 @@ public class InvitationInfo extends InviteComponent {
     }
 
     public static InvitationInfo create(InviteComponent comp) {
-        InvitationInfo ii = new InvitationInfo();
+        final InvitationInfo ii = new InvitationInfo();
         ii.setInviteComponent(comp);
         return ii;
     }
@@ -137,17 +142,25 @@ public class InvitationInfo extends InviteComponent {
     public void setAttachments(AttachmentsInfo attachments) {
         this.attachments = attachments;
     }
+    @GraphQLQuery(name=GqlConstants.INVITE_ID, description="ID")
     public String getId() { return id; }
+    @GraphQLQuery(name=GqlConstants.CONTENT_TYPE, description="MIME Content-Type")
     public String getContentType() { return contentType; }
+    @GraphQLQuery(name=GqlConstants.CONTENT_ID, description="MIME Content-Id")
     public String getContentId() { return contentId; }
+    @GraphQLQuery(name=GqlConstants.CONTENT, description="RAW RFC822 MESSAGE (XML-encoded) MUST CONTAIN A text/calendar PART")
     public RawInvite getContent() { return content; }
+    @GraphQLQuery(name=GqlConstants.CLASS_INVITE_COMPONENT, description="Invite component")
     public InviteComponent getInviteComponent() { return inviteComponent; }
+    @GraphQLQuery(name=GqlConstants.TIMEZONES, description="Timezones")
     public List<CalTZInfo> getTimezones() {
         return Collections.unmodifiableList(timezones);
     }
+    @GraphQLQuery(name=GqlConstants.MIME_PARTS, description="Meeting notes parts")
     public List<MimePartInfo> getMimeParts() {
         return Collections.unmodifiableList(mimeParts);
     }
+    @GraphQLQuery(name=GqlConstants.ATTACHMENTS, description="Attachments")
     public AttachmentsInfo getAttachments() { return attachments; }
 
     @Override
