@@ -8,6 +8,7 @@ import org.redisson.client.RedisException;
 
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Mailbox.MailboxData;
+import com.zimbra.cs.mailbox.redis.RedisUtils;
 
 public class RedisMailboxState extends MailboxState {
 
@@ -21,7 +22,7 @@ public class RedisMailboxState extends MailboxState {
     @Override
     protected void init() {
         client = RedissonClientHolder.getInstance().getRedissonClient();
-        redisHash = client.getMap(String.format("MAILBOX:%s", data.accountId));
+        redisHash = client.getMap(RedisUtils.createAccountRoutedKey(data.accountId, "MAILBOX"));
         super.init();
     }
     @Override
