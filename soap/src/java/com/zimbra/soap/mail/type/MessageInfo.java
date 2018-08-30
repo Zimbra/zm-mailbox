@@ -297,7 +297,7 @@ implements MessageInfoInterface {
     @GraphQLQuery(name=GqlConstants.ID, description="The message ID")
     public String getId() { return id; }
     @Override
-    @GraphQLQuery(name=GqlConstants.CALENDAR_INTENDED_FOR, description="X-Zimbra-Calendar-Intended-For header")
+    @GraphQLIgnore
     public String getCalendarIntendedFor() { return calendarIntendedFor; }
     @Override
     @GraphQLQuery(name=GqlConstants.ORIG_ID, description="Message id of the message being replied to/forwarded (outbound messages only)")
@@ -339,7 +339,7 @@ implements MessageInfoInterface {
     @Override
     @GraphQLQuery(name=GqlConstants.IN_REPLY_TO, description="Message-ID header for message being replied to")
     public String getInReplyTo() { return inReplyTo; }
-    @GraphQLQuery(name=GqlConstants.INVITE, description="Parsed out iCalendar invite")
+    @GraphQLIgnore
     public InviteInfo getInvite() { return invite; }
     @Override
     @GraphQLQuery(name=GqlConstants.HEADERS, description="List of headers")
