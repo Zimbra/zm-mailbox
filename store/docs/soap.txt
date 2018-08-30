@@ -534,13 +534,14 @@ See ZimbraTwoFactorAuth server extension docs for more details on two-factor aut
 
 ---------------------------
 
-<EndSessionRequest xmlns="urn:zimbraAccount" [logoff="1"]/>
+<EndSessionRequest xmlns="urn:zimbraAccount" [logoff="1"] [sessionId="session_id"]/>
 
 Ends the current session, removing it from all caches.  Called when
 the browser app (or other session-using app) shuts down.  Has no
 effect if called in a <nosession> context.
 
 Setting logoff to "1" will prevent the cookie from being re-used.
+Setting sessionId will end session for given session id and not current session.
 
 ---------
  <GetPrefsRequest>

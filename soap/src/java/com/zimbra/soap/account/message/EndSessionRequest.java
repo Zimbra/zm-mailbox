@@ -39,6 +39,34 @@ public class EndSessionRequest {
      */
     @XmlAttribute(name=AccountConstants.A_LOG_OFF /* logoff */, required=false)
     private ZmBoolean logoff;
+
+    /**
+     * @zm-api-field-tag sessionId
+     * @zm-api-field-description end session for given session id
+     */
+    @XmlAttribute(name=AccountConstants.A_SESSION_ID /* sessionId */, required=false)
+    private String sessionId;
+
+    public void setLogOff (boolean logoff) {
+        this.logoff = ZmBoolean.fromBool(logoff);
+    }
+
+    public boolean isLogOff() {
+        return ZmBoolean.toBool(this.logoff, false);
+    }
+    /**
+     * @return the sessionId
+     */
+    public String getSessionId() {
+        return sessionId;
+    }
+
+    /**
+     * @param sessionId the sessionId to set
+     */
+    public void setSessionId(String sessionId) {
+        this.sessionId = sessionId;
+    }
+
     
-    public void setLogOff (boolean logoff) {this.logoff = ZmBoolean.fromBool(logoff);} 
 }

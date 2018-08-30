@@ -574,4 +574,7 @@ public class AccountConstants {
     public static final String E_RESET_PASSWORD_REQUEST = "ResetPasswordRequest";
     public static final String E_RESET_PASSWORD_RESPONSE = "ResetPasswordResponse";
     public static final QName RESET_PASSWORD_REQUEST = QName.get(E_RESET_PASSWORD_REQUEST, NAMESPACE);
+
+    // Session activity feature
+    public static final String A_SESSION_ID = "sessionId";
 }
