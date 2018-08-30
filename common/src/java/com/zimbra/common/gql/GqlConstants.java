@@ -211,4 +211,8 @@ public class GqlConstants {
     public static final String CONTENT_FILENAME = "contentFilename";
     public static final String OPERATION = "operation";
 
+    // account preference constants
+    public static final String CLASS_GET_PREFS_REQUEST= "GetPrefsRequest";
+    public static final String CLASS_ACCOUNT_PREF_INPUT = "AccountPref";
+    public static final String PREFERENCES = "preferences";
 }
