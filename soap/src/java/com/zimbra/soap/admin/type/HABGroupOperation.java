@@ -60,7 +60,7 @@ public class HABGroupOperation {
      */
     @XmlAttribute(name = AdminConstants.A_CURRENT_PARENT_HAB_GROUP_ID /*
                                                                        * habCurretParentGroupId
-                                                                       */, required = true)
+                                                                       */, required = false)
     private String currentHabGroupId;
 
     /**

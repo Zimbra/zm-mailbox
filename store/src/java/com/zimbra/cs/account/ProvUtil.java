@@ -1764,14 +1764,18 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     private void modifyHabGroup(String[] args)  throws ServiceException {
-        if(args.length != 4) {
-            usage();
-            return;
-        }
         if (!(prov instanceof SoapProvisioning)) {
             throwSoapOnly();
         }
-        ((SoapProvisioning) prov).modifyHabGroup(args[1], args[2], args[3]);
+        //{habRootGrpId} {habParentGrpId} {targetHabParentGrpId} 
+        if (args.length == 4) {
+            ((SoapProvisioning) prov).modifyHabGroup(args[1], args[2], args[3]);
+        } else if (args.length == 3) {
+            ((SoapProvisioning) prov).modifyHabGroup(args[1], null, args[2]);
+        } else {
+            usage();
+            return;
+        }
     }
 
     private void doGetDomain(String[] args) throws ServiceException {
