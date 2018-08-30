@@ -2818,14 +2818,15 @@ public class Mailbox implements MailboxStore {
         if (key < 0) {
             item = Flag.of(this, key);
         }
+        //check the item cache first, since folder/tag caches require a network operation
+        if (item == null) {
+            item = getItemCache().get(key);
+        }
         if (item == null && mTagCache != null) {
             item = mTagCache.get(key);
         }
         if (item == null && mFolderCache != null) {
             item = mFolderCache.get(key);
-        }
-        if (item == null) {
-            item = getItemCache().get(key);
         }
         logCacheActivity(key, item == null ? MailItem.Type.UNKNOWN : item.getType(), item);
         return item;
@@ -2868,11 +2869,9 @@ public class Mailbox implements MailboxStore {
     /** retrieve an item from the Mailbox's caches; return null if no item found */
     MailItem getCachedItemByUuid(String uuid) throws ServiceException {
         MailItem item = null;
+        item = getItemCache().get(uuid);
         if (item == null && mFolderCache != null) {
             item = mFolderCache.get(uuid);
-        }
-        if (item == null) {
-            item = getItemCache().get(uuid);
         }
         logCacheActivity(uuid, item == null ? MailItem.Type.UNKNOWN : item.getType(), item);
         return item;
