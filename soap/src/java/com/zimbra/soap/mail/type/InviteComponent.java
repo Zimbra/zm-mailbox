@@ -28,6 +28,7 @@ import javax.xml.bind.annotation.XmlType;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.AlarmInfoInterface;
 import com.zimbra.soap.base.CalOrganizerInterface;
@@ -41,11 +42,14 @@ import com.zimbra.soap.base.RecurrenceInfoInterface;
 import com.zimbra.soap.base.XPropInterface;
 import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
 
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = { "categories", "comments", "contacts", "geo",
     "attendees", "alarms", "xProps", "fragment",
     "description", "htmlDescription", "organizer",
     "recurrence", "exceptionId", "dtStart", "dtEnd", "duration" })
+@GraphQLType(name=GqlConstants.CLASS_INVITE_COMPONENT, description="Invitation Component")
 public class InviteComponent
 extends InviteComponentCommon
 implements InviteComponentInterface

@@ -34,6 +34,7 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.CustomMetadataInterface;
 import com.zimbra.soap.base.MessageCommonInterface;
 
+import io.leangen.graphql.annotations.GraphQLIgnore;
 import io.leangen.graphql.annotations.GraphQLQuery;
 
 @XmlAccessorType(XmlAccessType.NONE)
@@ -229,6 +230,7 @@ implements MessageCommonInterface {
     }
 
     @Override
+    @GraphQLIgnore
     public List<CustomMetadataInterface> getMetadataInterfaces() {
         final List<CustomMetadataInterface> metas = Lists.newArrayList();
         metas.addAll(metadatas);
