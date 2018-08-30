@@ -588,8 +588,8 @@ public class ProvUtil implements HttpDebugListener {
                 1, 1),
         DELETE_DATA_SOURCE("deleteDataSource", "dds", "{name@domain|id} {ds-name|ds-id}",
                 Category.ACCOUNT, 2, 2),
-        DELETE_DISTRIBUTION_LIST("deleteDistributionList", "ddl", "{list@domain|id}",
-                Category.LIST, 1, 1),
+        DELETE_DISTRIBUTION_LIST("deleteDistributionList", "ddl", "{list@domain|id} [true|false]",
+                Category.LIST, 1, 2),
         DELETE_DOMAIN("deleteDomain", "dd", "{domain|id}", Category.DOMAIN, 1, 1),
         DELETE_IDENTITY(
                "deleteIdentity", "did", "{name@domain|id} {identity-name}", Category.ACCOUNT, 2, 2),
@@ -1447,7 +1447,7 @@ public class ProvUtil implements HttpDebugListener {
             prov.modifyAttrs(lookupGroup(args[1]), getMapAndCheck(args, 2, false), true);
             break;
         case DELETE_DISTRIBUTION_LIST:
-            prov.deleteGroup(lookupGroup(args[1]).getId());
+            doDeleteDistributionList(args);
             break;
         case ADD_DISTRIBUTION_LIST_MEMBER:
             members = new String[args.length - 2];
@@ -5640,5 +5640,14 @@ public class ProvUtil implements HttpDebugListener {
             }
         }
         return newArgs.toArray(new String[newArgs.size()]);
+    }
+
+    private void doDeleteDistributionList(String[] args) throws ServiceException {
+        String groupId = lookupGroup(args[1]).getId();
+        Boolean cascadeDelete = false;
+        if (args.length > 2) {
+            cascadeDelete = Boolean.valueOf(args[2]) != null ? Boolean.valueOf(args[2]) : false;
+        }
+        prov.deleteGroup(groupId, cascadeDelete);
     }
 }

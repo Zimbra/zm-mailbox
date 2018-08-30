@@ -1478,9 +1478,7 @@ Access: domain admin sufficient
 
 -----------------------------
 
-<DeleteDistributionListRequest>
-  <id>{value-of-zimbraId}</id>
-</DeleteDistributionListRequest>
+<DeleteDistributionListRequest id={zimbraId_of_dl} [cascadeDelete="true|false"] />
 
 <DeleteDistributionListResponse/>
 
