@@ -516,7 +516,7 @@ public class SoapEngine {
                 responseBody = responseProto.soapFault(e);
                 LOG.info("proxy handler exception", e);
             } catch (Throwable e) {
-                responseBody = responseProto.soapFault(ServiceException.FAILURE(e.toString(), e));
+                responseBody = responseProto.soapFault(ServiceException.FAILURE("Error in processing request", null));
                 if (e instanceof OutOfMemoryError) {
                     Zimbra.halt("proxy handler exception", e);
                 }
@@ -653,7 +653,7 @@ public class SoapEngine {
                 }
             }
         } catch (SoapFaultException e) {
-            response = e.getFault() != null ? e.getFault().detach() : soapProto.soapFault(ServiceException.FAILURE(e.toString(), e));
+            response = e.getFault() != null ? e.getFault().detach() : soapProto.soapFault(ServiceException.FAILURE("Error in processing request", null));
             if (!e.isSourceLocal()) {
                 LOG.debug("handler exception", e);
             }
@@ -681,7 +681,7 @@ public class SoapEngine {
                 throw (Error) e;
             }
             // TODO: better exception stack traces during develope?
-            response = soapProto.soapFault(ServiceException.FAILURE(e.toString(), e));
+            response = soapProto.soapFault(ServiceException.FAILURE("Error in processing request", null));
             if (e instanceof OutOfMemoryError) {
                 Zimbra.halt("handler exception", e);
             }
