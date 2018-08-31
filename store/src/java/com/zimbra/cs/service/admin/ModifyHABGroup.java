@@ -21,10 +21,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.naming.InvalidNameException;
-import javax.naming.ldap.LdapName;
-import javax.naming.ldap.Rdn;
-
 import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
@@ -36,8 +32,8 @@ import com.zimbra.cs.account.DynamicGroup;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.GroupMembership;
+import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.entry.LdapDistributionList;
-import com.zimbra.cs.account.ldap.entry.LdapDynamicGroup;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -46,8 +42,6 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class ModifyHABGroup extends AdminDocumentHandler {
 
-    private final static String CN = Provisioning.A_cn + "=";
-    private final static String OU = Provisioning.A_ou + "=";
     /*
      * (non-Javadoc)
      * 
@@ -136,19 +130,11 @@ public class ModifyHABGroup extends AdminDocumentHandler {
             currentList = (LdapDistributionList) currentGroup;
         }
 
-        String cn = null;
-        String groupDn = null;
-        if (group instanceof LdapDistributionList) {
-            cn = ((LdapDistributionList) group).getCn();
-            groupDn = ((LdapDistributionList) group).getDN();
-        } else if (group instanceof LdapDynamicGroup) {
-            groupDn = ((LdapDynamicGroup) group).getDN();
-        }
-
         LdapDistributionList targetList = (LdapDistributionList) targetGroup;
         String targetDn = targetList.getDN();
 
-        if (!isGroupMovedtoSameOu(groupDn, targetDn)) {
+        String targetOu =  LdapProvisioning.getGroupOU(targetDn);
+        if (!LdapProvisioning.isGroupInOU(group, targetOu)) {
             throw ServiceException.INVALID_REQUEST(String.format("Target group is in a different ou:%s", targetDn),
                 null);
         }
@@ -168,43 +154,6 @@ public class ModifyHABGroup extends AdminDocumentHandler {
         }
     }
 
-    /**
-     * 
-     * @param groupDn
-     * @param targetDn
-     * @return true if groupDn and targetDn have same ou
-     */
-    public static boolean isGroupMovedtoSameOu(String groupDn, String targetDn) {
-        String groupOu = null;
-        String targetOu = null;
-        try {
-            LdapName grpDnObj = new LdapName(groupDn);
-            LdapName targetParentDnObj = new LdapName(targetDn);
-            for (Rdn rdn : grpDnObj.getRdns()) {
-                if (rdn.getType().equals("ou")) {
-                    groupOu = rdn.getValue().toString();
-                    break;
-                }
-            }
-
-            for (Rdn rdn : targetParentDnObj.getRdns()) {
-                if (rdn.getType().equals("ou")) {
-                    targetOu = rdn.getValue().toString();
-                    break;
-                }
-            }
-
-        } catch (InvalidNameException e) {
-            return false;
-        }
-
-        if (!StringUtil.isNullOrEmpty(groupOu) && !StringUtil.isNullOrEmpty(targetOu)
-            && groupOu.equalsIgnoreCase(targetOu)) {
-            return true;
-        } else {
-            return false;
-        }
-    }
 
     /**
      * 
