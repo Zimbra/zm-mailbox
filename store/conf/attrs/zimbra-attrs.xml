@@ -9774,5 +9774,9 @@ TODO: delete them permanently from here
 	<desc>This attribute stores all allowed file extensions that can be uploaded in Briefcase, extensions values will be comma separated</desc>
 </attr>
 
+<attr id="5017" name="zimbraLoginHistoryApiUrl" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.8.9">
+	<desc>This attribute is used to store the login history API url</desc>
+</attr>
+
 </attrs>
 
