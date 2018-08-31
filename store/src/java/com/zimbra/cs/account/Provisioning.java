@@ -2748,4 +2748,16 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public void changeHABGroupParent(String oldDn, String parentDn) throws ServiceException {
         throw ServiceException.UNSUPPORTED();
     }
+
+   /**
+    *
+    * @param group Dynamic group
+    * @param dlsToCheck list of dl to be checked for membership of dynamic group
+    * @return true if one of the dl is a member of dynamic group
+    * @throws ServiceException
+    */
+    public boolean  dlIsInDynamicHABGroup(DynamicGroup group, List<String> dlsToCheck)
+        throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
 }
