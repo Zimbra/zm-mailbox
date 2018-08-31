@@ -312,7 +312,7 @@ public class AccountConstants {
     public static final String E_GET_HAB_REQUEST = "GetHABRequest";
     public static final String E_GET_HAB_RESPONSE = "GetHABResponse";
     public static final QName GET_HAB_REQUEST = QName.get( E_GET_HAB_REQUEST, NAMESPACE);
-    public static final QName GET_HAB__RESPONSE = QName.get(E_GET_HAB_RESPONSE, NAMESPACE);
+    public static final QName GET_HAB_RESPONSE = QName.get(E_GET_HAB_RESPONSE, NAMESPACE);
 
     public static final String E_ACTION = "action";
     public static final String E_ALIAS = "alias";

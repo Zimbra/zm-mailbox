@@ -83,6 +83,7 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.Version;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zclient.ZClientException;
+import com.zimbra.cs.account.ProvUtil.ArgException;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
 import com.zimbra.cs.account.Provisioning.CountAccountResult;
 import com.zimbra.cs.account.Provisioning.MailMode;
@@ -587,8 +588,8 @@ public class ProvUtil implements HttpDebugListener {
                 1, 1),
         DELETE_DATA_SOURCE("deleteDataSource", "dds", "{name@domain|id} {ds-name|ds-id}",
                 Category.ACCOUNT, 2, 2),
-        DELETE_DISTRIBUTION_LIST("deleteDistributionList", "ddl", "{list@domain|id}",
-                Category.LIST, 1, 1),
+        DELETE_DISTRIBUTION_LIST("deleteDistributionList", "ddl", "{list@domain|id} [true|false]",
+                Category.LIST, 1, 2),
         DELETE_DOMAIN("deleteDomain", "dd", "{domain|id}", Category.DOMAIN, 1, 1),
         DELETE_IDENTITY(
                "deleteIdentity", "did", "{name@domain|id} {identity-name}", Category.ACCOUNT, 2, 2),
@@ -856,8 +857,10 @@ public class ProvUtil implements HttpDebugListener {
             "{domain} {ouName} {newName}", Category.MISC , 3, 3),
         DELETE_HAB_OU("deleteHABOrgUnit", "dhou",
             "{domain} {ouName}", Category.MISC , 2, 2),
+        CREATE_HAB_GROUP("createHabGroup", "chabg",
+            "{groupName} {ouName} {name@domain} {TRUE|FALSE} [attr1 value1 [attr2 value2...]]", Category.MISC , 3, Integer.MAX_VALUE),
         GET_HAB("getHab", "ghab",
-            "{name@domain|id} {habRootGrpId} ", Category.ACCOUNT , 2, 2),
+            "{habRootGrpId} ", Category.ACCOUNT , 1, 1),
         MODIFY_HAB_GROUP("modify HAB group", "mhab",
             "{habRootGrpId} {habParentGrpId} {targetHabParentGrpId} ", Category.MISC , 3, 3);
         private String mName;
@@ -1444,7 +1447,7 @@ public class ProvUtil implements HttpDebugListener {
             prov.modifyAttrs(lookupGroup(args[1]), getMapAndCheck(args, 2, false), true);
             break;
         case DELETE_DISTRIBUTION_LIST:
-            prov.deleteGroup(lookupGroup(args[1]).getId());
+            doDeleteDistributionList(args);
             break;
         case ADD_DISTRIBUTION_LIST_MEMBER:
             members = new String[args.length - 2];
@@ -1607,6 +1610,9 @@ public class ProvUtil implements HttpDebugListener {
         case DELETE_HAB_OU:
             doDeleteHabOrgUnit(args);
             break;
+        case CREATE_HAB_GROUP:
+           doCreateHabGroup(args);
+           break;
         case GET_HAB:
             doGetHab(args);
             break;
@@ -1750,7 +1756,7 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     private void doGetHab(String[] args)  throws ServiceException {
-        if(args.length != 3) { 
+        if(args.length != 2) { 
             usage();
             return;
         }
@@ -1758,9 +1764,7 @@ public class ProvUtil implements HttpDebugListener {
             throwSoapOnly();
         }
         SoapProvisioning sp = (SoapProvisioning) prov;
-        Account acct = lookupAccount(args[1]);
-        sp.accountAuthed(acct);
-        sp.getHab(args[2], acct);
+        sp.getHab(args[1]);
     }
 
     private void modifyHabGroup(String[] args)  throws ServiceException {
@@ -1778,6 +1782,20 @@ public class ProvUtil implements HttpDebugListener {
         }
     }
 
+    private void doCreateHabGroup(String args[]) throws ServiceException, ArgException {
+        if (!(prov instanceof SoapProvisioning)) {
+            throwSoapOnly();
+        }
+        if(args.length < 4) {
+            usage();
+            return;
+        }
+        String isDynamic = "false";
+        if (args.length > 4) {
+            isDynamic = args[4];
+        }
+        ((SoapProvisioning) prov).createHabGroup(args[1],args[2],args[3], isDynamic, getMapAndCheck(args, 5, false));
+    }
     private void doGetDomain(String[] args) throws ServiceException {
         boolean applyDefault = true;
 
@@ -5626,5 +5644,14 @@ public class ProvUtil implements HttpDebugListener {
             }
         }
         return newArgs.toArray(new String[newArgs.size()]);
+    }
+
+    private void doDeleteDistributionList(String[] args) throws ServiceException {
+        String groupId = lookupGroup(args[1]).getId();
+        Boolean cascadeDelete = false;
+        if (args.length > 2) {
+            cascadeDelete = Boolean.valueOf(args[2]) != null ? Boolean.valueOf(args[2]) : false;
+        }
+        prov.deleteGroup(groupId, cascadeDelete);
     }
 }

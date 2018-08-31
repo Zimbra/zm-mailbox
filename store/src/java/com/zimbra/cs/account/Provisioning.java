@@ -1803,6 +1803,10 @@ public abstract class Provisioning extends ZAttrProvisioning {
         throw ServiceException.UNSUPPORTED();
     }
 
+    public void deleteGroup(String zimbraId, boolean cascadeDelete) throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
+
     public void renameGroup(String zimbraId, String newName) throws ServiceException {
         throw ServiceException.UNSUPPORTED();
     }

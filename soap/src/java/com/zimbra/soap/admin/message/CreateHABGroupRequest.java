@@ -36,14 +36,14 @@ import com.zimbra.soap.admin.type.Attr;
 @XmlRootElement(name=AdminConstants.E_CREATE_HAB_GROUP_REQUEST)
 public class CreateHABGroupRequest extends CreateDistributionListRequest {
      /**
-      * @zm-api-field-tag hab-group-name
-      * @zm-api-field-description Name for group in HAB
+      * @zm-api-field-tag hab-display-name
+      * @zm-api-field-description Display Name for group in HAB
       */
-     @XmlAttribute(name=AdminConstants.A_HAB_GROUP_NAME /* habGroupName */, required=false)
-     private String habGroupName;
+     @XmlAttribute(name=AdminConstants.A_HAB_DISPLAY_NAME /* habDisplayName */, required=false)
+     private String habDisplayName;
 
      /**
-      * @zm-api-field-tag hab-group-name
+      * @zm-api-field-tag hab-orgunit-name
       * @zm-api-field-description organizational unit of the HAB Group
       */
      @XmlAttribute(name=AdminConstants.A_HAB_ORG_UNIT /* habOrgUnit */, required=true)
@@ -63,20 +63,20 @@ public class CreateHABGroupRequest extends CreateDistributionListRequest {
 
      public CreateHABGroupRequest(String habGroupName, String habOrgUnit, String name, Collection<Attr> attrs, boolean dynamic) {
          super(name, attrs, dynamic);
-         this.habGroupName = habGroupName;
+         this.habDisplayName = habGroupName;
          this.habOrgUnit = habOrgUnit;
      }
 
-     public String getHabGroupName() {
-         return habGroupName;
+     public String getHabDisplayName() {
+         return habDisplayName;
      }
 
      public String getHabOrgUnit() {
          return habOrgUnit;
      }
 
-     public void setHabGroupName(String habGroupName) {
-         this.habGroupName = habGroupName;
+     public void setHabDisplayName(String habGroupName) {
+         this.habDisplayName = habGroupName;
      }
 
      public void setHabOrgUnit(String habOrgUnit) {
