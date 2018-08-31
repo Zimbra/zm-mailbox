@@ -15427,6 +15427,78 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * This attribute is used to store the login history API url
+     *
+     * @return zimbraLoginHistoryApiUrl, or null if unset
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5017)
+    public String getLoginHistoryApiUrl() {
+        return getAttr(Provisioning.A_zimbraLoginHistoryApiUrl, null, true);
+    }
+
+    /**
+     * This attribute is used to store the login history API url
+     *
+     * @param zimbraLoginHistoryApiUrl new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5017)
+    public void setLoginHistoryApiUrl(String zimbraLoginHistoryApiUrl) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLoginHistoryApiUrl, zimbraLoginHistoryApiUrl);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute is used to store the login history API url
+     *
+     * @param zimbraLoginHistoryApiUrl new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5017)
+    public Map<String,Object> setLoginHistoryApiUrl(String zimbraLoginHistoryApiUrl, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLoginHistoryApiUrl, zimbraLoginHistoryApiUrl);
+        return attrs;
+    }
+
+    /**
+     * This attribute is used to store the login history API url
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5017)
+    public void unsetLoginHistoryApiUrl() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLoginHistoryApiUrl, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute is used to store the login history API url
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5017)
+    public Map<String,Object> unsetLoginHistoryApiUrl(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLoginHistoryApiUrl, "");
+        return attrs;
+    }
+
+    /**
      * version of lowest supported authentication protocol
      *
      * @return zimbraLowestSupportedAuthVersion, or 2 if unset
