@@ -83,11 +83,12 @@ public class GetHAB extends AccountDocumentHandler {
             groups.put(member, grpChild);
             childGrpList.add(grpChild);
         }
+        
         grp.setChildGroups(childGrpList);
         ZimbraLog.account.debug("The root group :%s has children:%s", grp.getName(), childGrpList);
 
         String rootDn = group.getDN();
-        int ouIndex = rootDn.indexOf(OU );
+        int ouIndex = rootDn.indexOf(OU);
         rootDn = rootDn.substring(ouIndex);
         
         ZimbraLog.misc.info("Searching under dn:%s", rootDn);
@@ -176,9 +177,8 @@ public class GetHAB extends AccountDocumentHandler {
             int index = rootDn.indexOf(OU);
             int endIndex = rootDn.indexOf(",", index + OU.length());
             return rootDn.substring(index + OU.length(), endIndex);
-        } else {
-            return null;
-        }
+        } 
+        return null;
     }
  
 

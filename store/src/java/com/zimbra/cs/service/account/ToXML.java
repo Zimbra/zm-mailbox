@@ -17,6 +17,7 @@
 
 package com.zimbra.cs.service.account;
 
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
@@ -50,11 +51,17 @@ import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.Signature.SignatureContent;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE;
-import com.zimbra.soap.account.type.HABGroup;
 import com.zimbra.soap.account.type.Attr;
+import com.zimbra.soap.account.type.HABGroup;
 
 public class ToXML {
 
+    public static Set<String> skipAttrs = new HashSet<String>();
+    static {
+        skipAttrs.add(Provisioning.A_member);
+        skipAttrs.add(Provisioning.A_zimbraMailForwardingAddress);
+        };
+    
     static Element encodeAccount(Element parent, Account account) {
         return encodeAccount(parent, account, true, null, null);
     }
@@ -305,7 +312,7 @@ public class ToXML {
         Element habGroup = parent.addNonUniqueElement(AccountConstants.E_HAB_GROUP);
         habGroup.addAttribute(AccountConstants.A_NAME, grp.getName());
         for (Attr attr : grp.getAttrs()) {
-            if (!attr.getKey().equalsIgnoreCase(Provisioning.A_member)) {
+            if (!skipAttrs.contains(attr.getKey())) {
                 ToXML.encodeAttr(habGroup, attr.getKey(), attr.getValue());
             }
         }

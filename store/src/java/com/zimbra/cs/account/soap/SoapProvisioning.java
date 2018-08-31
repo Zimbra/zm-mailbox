@@ -3126,9 +3126,9 @@ public class SoapProvisioning extends Provisioning {
 
     /**
      * 
-     * @param rootHabGroupId id of root HAB group
-     * @param account account on which request is made
-     * @throws ServiceException if an error occurs while fetching hierarchy from ldap
+     * @param rootHabGroupId the group for which HAB is required
+     * @return GetHabResponse object
+     * @throws ServiceException
      */
     public GetHABResponse getHab(String rootHabGroupId) throws ServiceException {
         XMLElement req = new XMLElement(AccountConstants.GET_HAB_REQUEST);
