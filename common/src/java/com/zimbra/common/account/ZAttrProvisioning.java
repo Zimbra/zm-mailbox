@@ -8710,6 +8710,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraLogHostname = "zimbraLogHostname";
 
     /**
+     * This attribute is used to store the login history API url
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5017)
+    public static final String A_zimbraLoginHistoryApiUrl = "zimbraLoginHistoryApiUrl";
+
+    /**
      * Flag to control how authtokens are invalidated in multi-server
      * environment. If set to TRUE: when this account logs out on a server,
      * the server will notify other servers that this account&#039;s
