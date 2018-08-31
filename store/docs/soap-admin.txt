@@ -1482,6 +1482,8 @@ Access: domain admin sufficient
 
 <DeleteDistributionListResponse/>
 
+cascadeDelete: is used only for hab groups. when false, group deletion is prohibited if group has members.
+    when true, group hierarchy is deleted.
 Access: domain admin sufficient
 
 -----------------------------
