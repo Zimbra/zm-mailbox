@@ -199,7 +199,9 @@ public class ModifyHABGroup extends AdminDocumentHandler {
             Set<String> members = group.getAllMembersSet();
             for (String member : members) {
                 if (member.equalsIgnoreCase(targetGroup.getMail())) {
-                    throw ServiceException.INVALID_REQUEST(String.format("Group to be moved is a member of the target group"),
+                    throw ServiceException.INVALID_REQUEST(
+                        String.format("Target group:%s is a member of the group:%s being moved",
+                            targetGroup.getName(), group.getName()),
                         null);
                 }
             }
