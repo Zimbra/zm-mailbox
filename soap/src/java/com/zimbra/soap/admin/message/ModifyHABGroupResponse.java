@@ -41,7 +41,7 @@ public class ModifyHABGroupResponse {
      * @zm-api-field-description List of HabOrggroups under the target parent group
      */
     @ZimbraJsonArrayForWrapper
-    @XmlElementWrapper(name=AdminConstants.E_MEMBERS /* groupMembers */, required=false)
+    @XmlElementWrapper(name=AdminConstants.E_MEMBERS /* members */, required=false)
     @XmlElement(name = AdminConstants.E_MEMBER /*group child member*/, required = false)
     List<String> members = new ArrayList<String>();
 
@@ -53,7 +53,6 @@ public class ModifyHABGroupResponse {
      * @param members
      */
     public ModifyHABGroupResponse(List<String> members) {
-        super();
         this.members = members;
     }
 

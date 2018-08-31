@@ -21,8 +21,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.unboundid.ldap.sdk.DN;
-import com.unboundid.ldap.sdk.LDAPException;
+import javax.naming.InvalidNameException;
+import javax.naming.ldap.LdapName;
+import javax.naming.ldap.Rdn;
+
 import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
@@ -141,25 +143,15 @@ public class ModifyHABGroup extends AdminDocumentHandler {
             groupDn = ((LdapDistributionList) group).getDN();
         } else if (group instanceof LdapDynamicGroup) {
             groupDn = ((LdapDynamicGroup) group).getDN();
-            try {
-                DN newDN = new DN(groupDn);
-                cn = newDN.getRDNString();
-                if (cn.indexOf(CN) == -1) {
-                    throw ServiceException.NOT_FOUND(String.format("Error finding dn for group:%s", group.getName()));
-                } else {
-                    cn = cn.substring(cn.indexOf(CN) + CN.length());
-                }
-            } catch (LDAPException e) {
-                throw ServiceException.NOT_FOUND(String.format("Error finding dn for group:%s", group.getName()));
-            }
         }
 
         LdapDistributionList targetList = (LdapDistributionList) targetGroup;
-        String parentDn = targetList.getDN();
-        parentDn = parentDn.substring(parentDn.indexOf(OU));
-        String targetDn = CN + cn + "," + parentDn;
-        ZimbraLog.misc.info("Target parent dn:%s and group dn:%s", targetDn, groupDn);
-        prov.changeHABGroupParent(groupDn, targetDn);
+        String targetDn = targetList.getDN();
+
+        if (!isGroupMovedtoSameOu(groupDn, targetDn)) {
+            throw ServiceException.INVALID_REQUEST(String.format("Target group is in a different ou:%s", targetDn),
+                null);
+        }
 
         String[] members = { group.getMail() };
         if (null != currentList) {
@@ -177,9 +169,51 @@ public class ModifyHABGroup extends AdminDocumentHandler {
     }
 
     /**
+     * 
+     * @param groupDn
+     * @param targetDn
+     * @return true if groupDn and targetDn have same ou
+     */
+    public static boolean isGroupMovedtoSameOu(String groupDn, String targetDn) {
+        String groupOu = null;
+        String targetOu = null;
+        try {
+            LdapName grpDnObj = new LdapName(groupDn);
+            LdapName targetParentDnObj = new LdapName(targetDn);
+            for (Rdn rdn : grpDnObj.getRdns()) {
+                if (rdn.getType().equals("ou")) {
+                    groupOu = rdn.getValue().toString();
+                    break;
+                }
+            }
+
+            for (Rdn rdn : targetParentDnObj.getRdns()) {
+                if (rdn.getType().equals("ou")) {
+                    targetOu = rdn.getValue().toString();
+                    break;
+                }
+            }
+
+        } catch (InvalidNameException e) {
+            return false;
+        }
+
+        if (!StringUtil.isNullOrEmpty(groupOu) && !StringUtil.isNullOrEmpty(targetOu)
+            && groupOu.equalsIgnoreCase(targetOu)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * 
      * @param targetGroup
      * @param group
      * @param currentGroup
+     * @param moveRoot
+     * @param prov
+     * @throws ServiceException
      */
     private void checkGroupsInMoveReqAreValid(Group targetGroup, Group group, Group currentGroup, boolean moveRoot, Provisioning prov) throws ServiceException{
         if (!group.isHABGroup() ||  !targetGroup.isHABGroup()) {
@@ -197,6 +231,11 @@ public class ModifyHABGroup extends AdminDocumentHandler {
         
         if (currentGroup != null && currentGroup.isDynamic()) {
             throw ServiceException.INVALID_REQUEST(String.format("Current group cannot be dynamic."),
+                null);
+        }
+        
+        if (!currentGroup.getDomainId().equalsIgnoreCase(targetGroup.getDomainId())) {
+            throw ServiceException.INVALID_REQUEST(String.format("Current group and target group domain should be same."),
                 null);
         }
         
