@@ -857,7 +857,7 @@ public class ProvUtil implements HttpDebugListener {
         DELETE_HAB_OU("deleteHABOrgUnit", "dhou",
             "{domain} {ouName}", Category.MISC , 2, 2),
         GET_HAB("getHab", "ghab",
-            "{name@domain|id} {habRootGrpId} ", Category.ACCOUNT , 2, 2),
+            "{habRootGrpId} ", Category.ACCOUNT , 1, 1),
         MODIFY_HAB_GROUP("modify HAB group", "mhab",
             "{habRootGrpId} {habParentGrpId} {targetHabParentGrpId} ", Category.MISC , 3, 3);
         private String mName;
@@ -1750,7 +1750,7 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     private void doGetHab(String[] args)  throws ServiceException {
-        if(args.length != 3) { 
+        if(args.length != 2) { 
             usage();
             return;
         }
@@ -1758,7 +1758,7 @@ public class ProvUtil implements HttpDebugListener {
             throwSoapOnly();
         }
         SoapProvisioning sp = (SoapProvisioning) prov;
-        sp.getHab(args[2]);
+        sp.getHab(args[1]);
     }
 
     private void modifyHabGroup(String[] args)  throws ServiceException {

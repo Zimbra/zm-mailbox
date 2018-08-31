@@ -103,9 +103,6 @@ public class GetHAB extends AccountDocumentHandler {
             Set<String> memberSet = null;
             if (entry instanceof LdapDistributionList) {
                 LdapDistributionList list = (LdapDistributionList)entry;
-                if (!list.isHABGroup() ) {
-                    continue;
-                }
                 id = list.getId();
                 name = list.getName();
                 attrs = list.getAttrs();
@@ -114,9 +111,6 @@ public class GetHAB extends AccountDocumentHandler {
                 seniorityIndex = list.getIntAttr(Provisioning.A_zimbraHABSeniorityIndex, 0);
             } else if (entry instanceof LdapDynamicGroup) {
                 LdapDynamicGroup dyGrp = (LdapDynamicGroup)entry;
-                if (!dyGrp.isHABGroup()) {
-                    continue;
-                }
                 id = dyGrp.getId();
                 name = dyGrp.getName();
                 memberSet= new HashSet<String>();
