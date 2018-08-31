@@ -107,6 +107,8 @@ import com.zimbra.soap.account.message.CreateIdentityRequest;
 import com.zimbra.soap.account.message.CreateIdentityResponse;
 import com.zimbra.soap.account.message.DeleteIdentityRequest;
 import com.zimbra.soap.account.message.EndSessionRequest;
+import com.zimbra.soap.account.message.GetHABRequest;
+import com.zimbra.soap.account.message.GetHABResponse;
 import com.zimbra.soap.account.message.GetIdentitiesRequest;
 import com.zimbra.soap.account.message.GetIdentitiesResponse;
 import com.zimbra.soap.account.message.ModifyIdentityRequest;
@@ -3130,7 +3132,6 @@ public class SoapProvisioning extends Provisioning {
     }
 
     /**
-     * 
      * @param habGroupName name of HAB group
      * @param ouName name of HAB Org Unit
      * @param aName HAB account name
@@ -3148,14 +3149,15 @@ public class SoapProvisioning extends Provisioning {
 
     /**
      * 
-     * @param rootHabGroupId id of root HAB group
-     * @param account account on which request is made
+     * @param rootHabGroupId the group for which HAB is required
+     * @return GetHabResponse object
      * @throws ServiceException if an error occurs while fetching hierarchy from ldap
      */
-    public void getHab(String rootHabGroupId, Account account) throws ServiceException{
+    public GetHABResponse getHab(String rootHabGroupId) throws ServiceException {
         XMLElement req = new XMLElement(AccountConstants.GET_HAB_REQUEST);
         req.addAttribute(AccountConstants.A_HAB_ROOT_GROUP_ID, rootHabGroupId);
-        invokeOnTargetAccount(req, account.getId());
+        GetHABResponse resp = invokeJaxb(new GetHABRequest(rootHabGroupId));
+        return resp;
     }
 
     /**
