@@ -48,7 +48,7 @@ public class CreateHABGroup extends CreateDistributionList {
         }
 
         attrs.put(AdminConstants.A_HAB_ORG_UNIT, orgUnitRDN);
-        attrs.put(AdminConstants.A_HAB_GROUP_NAME, req.getHabGroupName());
+        attrs.put(AdminConstants.A_HAB_DISPLAY_NAME, req.getHabDisplayName());
     }
 
     @Override

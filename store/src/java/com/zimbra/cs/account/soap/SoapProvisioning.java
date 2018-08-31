@@ -144,6 +144,8 @@ import com.zimbra.soap.admin.message.CreateDistributionListRequest;
 import com.zimbra.soap.admin.message.CreateDistributionListResponse;
 import com.zimbra.soap.admin.message.CreateDomainRequest;
 import com.zimbra.soap.admin.message.CreateDomainResponse;
+import com.zimbra.soap.admin.message.CreateHABGroupRequest;
+import com.zimbra.soap.admin.message.CreateHABGroupResponse;
 import com.zimbra.soap.admin.message.CreateServerRequest;
 import com.zimbra.soap.admin.message.CreateServerResponse;
 import com.zimbra.soap.admin.message.CreateUCServiceRequest;
@@ -987,6 +989,11 @@ public class SoapProvisioning extends Provisioning {
     @Override
     public void deleteGroup(String zimbraId) throws ServiceException {
         invokeJaxb(new DeleteDistributionListRequest(zimbraId));
+    }
+
+    @Override
+    public void deleteGroup(String zimbraId, boolean cascadeDelete) throws ServiceException {
+        invokeJaxb(new DeleteDistributionListRequest(zimbraId, cascadeDelete));
     }
 
     @Override
@@ -3125,10 +3132,26 @@ public class SoapProvisioning extends Provisioning {
     }
 
     /**
+     * @param habGroupName name of HAB group
+     * @param ouName name of HAB Org Unit
+     * @param aName HAB account name
+     * @param dynamic set as dynamic or not
+     * @param listAttrs distributionListInfo Attrbutes
+     * @throws ServiceException if an error occurs while fetching hierarchy from ldap
+     */
+    public DistributionList createHabGroup(String habGroupName, String ouName, String aName, String dynamic,  Map<String, Object> listAttrs) throws ServiceException {
+        Boolean isDynamic = Boolean.valueOf(dynamic);
+        CreateHABGroupRequest req = new CreateHABGroupRequest(
+            habGroupName, ouName, aName, Attr.mapToList(listAttrs), isDynamic);
+        CreateHABGroupResponse resp = invokeJaxb(req);
+        return new SoapDistributionList(resp.getDl(), this);
+    }
+
+    /**
      * 
      * @param rootHabGroupId the group for which HAB is required
      * @return GetHabResponse object
-     * @throws ServiceException
+     * @throws ServiceException if an error occurs while fetching hierarchy from ldap
      */
     public GetHABResponse getHab(String rootHabGroupId) throws ServiceException {
         XMLElement req = new XMLElement(AccountConstants.GET_HAB_REQUEST);
