@@ -16,6 +16,8 @@
  */
 package com.zimbra.cs.service.admin;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -26,7 +28,11 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.DistributionList;
+import com.zimbra.cs.account.DynamicGroup;
+import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.GroupMembership;
+import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.entry.LdapDistributionList;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -34,10 +40,14 @@ import com.zimbra.soap.ZimbraSoapContext;
  * @author zimbra
  *
  */
-public class ModifyHABGroup extends AdminDocumentHandler{
+public class ModifyHABGroup extends AdminDocumentHandler {
 
-    /* (non-Javadoc)
-     * @see com.zimbra.soap.DocumentHandler#handle(com.zimbra.common.soap.Element, java.util.Map)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * com.zimbra.soap.DocumentHandler#handle(com.zimbra.common.soap.Element,
+     * java.util.Map)
      */
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
@@ -52,7 +62,7 @@ public class ModifyHABGroup extends AdminDocumentHandler{
         String operationType = operation.getAttribute(AdminConstants.A_OPERATION);
         if (StringUtil.isNullOrEmpty(operationType)) {
             throw ServiceException.INVALID_REQUEST(
-                String.format("Operation is required, requested op:%s",operation), null);
+                String.format("Operation is required, requested op:%s", operation), null);
         }
         Element response = zsc.createElement(AdminConstants.MODIFY_HAB_GROUP_RESPONSE);
         if (operationType.equals("move")) {
@@ -61,7 +71,7 @@ public class ModifyHABGroup extends AdminDocumentHandler{
             throw ServiceException.INVALID_REQUEST(
                 String.format("Only move HAB group operation is supported"), null);
         }
-        
+
         return response;
     }
 
@@ -78,11 +88,18 @@ public class ModifyHABGroup extends AdminDocumentHandler{
             throw ServiceException.INVALID_REQUEST(
                 String.format("HABGroupId is required attribute"), null);
         }
-        
-        String habCurrentParentId = operation.getAttribute(AdminConstants.A_CURRENT_PARENT_HAB_GROUP_ID);
+        Group group = prov.getGroup(Key.DistributionListBy.id, habGroupId, true, false);
+
+        String habCurrentParentId = operation.getAttribute(AdminConstants.A_CURRENT_PARENT_HAB_GROUP_ID, null);
+        boolean moveRoot = false;
         if (StringUtil.isNullOrEmpty(habCurrentParentId)) {
-            throw ServiceException.INVALID_REQUEST(
-                String.format("Current HAB parent id is required"), null);
+            GroupMembership membership = prov.getGroupMembership(group, false);
+            List<String> ids = membership.groupIds();
+            if (ids.size() != 0) {
+                throw ServiceException.INVALID_REQUEST(
+                    String.format("Current HAB parent id is required"), null);
+            }
+            moveRoot = true;
         }
         
         String habTargetParentId = operation.getAttribute(AdminConstants.A_TARGET_PARENT_HAB_GROUP_ID);
@@ -93,40 +110,103 @@ public class ModifyHABGroup extends AdminDocumentHandler{
         
         ZimbraLog.misc.debug("Modify HAB req for: %s, from parent: %s to new parent:%s", habGroupId,
             habCurrentParentId, habTargetParentId);
-        
-        LdapDistributionList group = (LdapDistributionList) prov
-            .getGroup(Key.DistributionListBy.id, habGroupId, true, false);
-        LdapDistributionList targetGroup = (LdapDistributionList) prov
-            .getGroup(Key.DistributionListBy.id, habTargetParentId, true, false);
-        LdapDistributionList currentGroup = (LdapDistributionList) prov
-            .getGroup(Key.DistributionListBy.id, habCurrentParentId, true, false);
-        
-        
-        if (!group.isHABGroup() || !currentGroup.isHABGroup() || !targetGroup.isHABGroup()) {
-            throw ServiceException.INVALID_REQUEST(
-                String.format("Operation only supported for HAB group"), null);
+
+        Group targetGroup = prov.getGroup(Key.DistributionListBy.id, habTargetParentId, true,
+            false);
+        Group currentGroup = null;
+        if (habCurrentParentId != null) {
+            currentGroup = prov.getGroup(Key.DistributionListBy.id, habCurrentParentId, true,
+                false);
         }
+
+        if (null == group || (null == currentGroup && !moveRoot) || null == targetGroup) {
+            throw ServiceException.INVALID_REQUEST(String.format("Invalid groupId provided."),
+                null);
+        }
+        checkGroupsInMoveReqAreValid(targetGroup, group, currentGroup, moveRoot, prov);
         
-        String groupDn = group.getDN();
-        String parentDn = targetGroup.getDN();
-        ZimbraLog.misc.debug("HAB group dn:%s", groupDn);
-        ZimbraLog.misc.info("Target parent dn:%s",parentDn);
-        
-       
-        String targetDn = "cn="+group.getCn() + "," + parentDn;
-        prov.changeHABGroupParent(groupDn, targetDn);
-        
-        String [] members = {group.getMail()};
-        ((DistributionList)(currentGroup)).removeMembers(members);
-        ((DistributionList)(targetGroup)).addMembers(members);
-        
-      
-        Element parent  = response.addElement(AdminConstants.E_HAB_PARENT_GROUP);
+        LdapDistributionList currentList = null;
+        if (currentGroup != null) {
+            currentList = (LdapDistributionList) currentGroup;
+        }
+
+        LdapDistributionList targetList = (LdapDistributionList) targetGroup;
+        String targetDn = targetList.getDN();
+
+        String targetOu =  LdapProvisioning.getGroupOU(targetDn);
+        if (!LdapProvisioning.isGroupInOU(group, targetOu)) {
+            throw ServiceException.INVALID_REQUEST(String.format("Target group is in a different ou:%s", targetDn),
+                null);
+        }
+
+        String[] members = { group.getMail() };
+        if (null != currentList) {
+            ((DistributionList) (currentList)).removeMembers(members);
+        }
+        ((DistributionList) (targetList)).addMembers(members);
+
+        Element parent = response.addElement(AdminConstants.E_HAB_PARENT_GROUP);
         parent.addAttribute(AdminConstants.A_ID, targetGroup.getId());
-        Set<String> membersL = targetGroup.getAllMembersSet();
-        for (String s: membersL) {
-            parent.addElement(AdminConstants.E_MEMBER).addText(s);
+        Element membersEl = parent.addElement(AdminConstants.E_MEMBERS);
+        Set<String> membersSet = targetGroup.getAllMembersSet();
+        for (String s : membersSet) {
+            membersEl.addElement(AdminConstants.E_MEMBER).addText(s);
         }
     }
+
+
+    /**
+     * 
+     * @param targetGroup
+     * @param group
+     * @param currentGroup
+     * @param moveRoot
+     * @param prov
+     * @throws ServiceException
+     */
+    private void checkGroupsInMoveReqAreValid(Group targetGroup, Group group, Group currentGroup, boolean moveRoot, Provisioning prov) throws ServiceException{
+        if (!group.isHABGroup() ||  !targetGroup.isHABGroup()) {
+            throw ServiceException
+                .INVALID_REQUEST(String.format("Operation only supported for HAB group"), null);
+        }
+        if (!moveRoot && !currentGroup.isHABGroup()) {
+            throw ServiceException
+            .INVALID_REQUEST(String.format("Operation only supported for HAB group"), null);
+        }
+        if (targetGroup.isDynamic()) {
+            throw ServiceException.INVALID_REQUEST(String.format("Target group cannot be dynamic."),
+                null);
+        }
+        
+        if (currentGroup != null && currentGroup.isDynamic()) {
+            throw ServiceException.INVALID_REQUEST(String.format("Current group cannot be dynamic."),
+                null);
+        }
+        
+        if (!currentGroup.getDomainId().equalsIgnoreCase(targetGroup.getDomainId())) {
+            throw ServiceException.INVALID_REQUEST(String.format("Current group and target group domain should be same."),
+                null);
+        }
+        
+        if (group.isDynamic()) {
+            List<String> dlsToCheck = new ArrayList<String>();
+            dlsToCheck.add(targetGroup.getMail());
+           if (prov.dlIsInDynamicHABGroup((DynamicGroup)group, dlsToCheck)) {
+               throw ServiceException.INVALID_REQUEST
+               (String.format("Target group:%s is a member of the group:%s being moved", targetGroup.getName(), group.getName()), null);
+           }
+        } else {
+            Set<String> members = group.getAllMembersSet();
+            for (String member : members) {
+                if (member.equalsIgnoreCase(targetGroup.getMail())) {
+                    throw ServiceException.INVALID_REQUEST(
+                        String.format("Target group:%s is a member of the group:%s being moved",
+                            targetGroup.getName(), group.getName()),
+                        null);
+                }
+            }
+        }
+    }
+
 
 }
