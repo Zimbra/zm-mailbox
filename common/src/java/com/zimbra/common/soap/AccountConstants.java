@@ -520,8 +520,10 @@ public class AccountConstants {
     public static final String A_ATTACHMENT_SIZE_LIMIT = "attSizeLimit";
     public static final String A_DOCUMENT_SIZE_LIMIT = "docSizeLimit";
 
-    //auth
+    //end session
     public static final String A_LOG_OFF = "logoff";
+    public static final String A_CLEAR_ALL_SOAP_SESSIONS = "all";
+    public static final String A_EXCLUDE_CURRENT_SESSION = "excludeCurrent";
 
     // Zimbra Mobile Gateway
     public static final String E_APP_ID = "appId";
