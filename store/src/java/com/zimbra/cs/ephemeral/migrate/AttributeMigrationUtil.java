@@ -60,7 +60,7 @@ public class AttributeMigrationUtil {
         boolean clear = cl.hasOption('c');
         List<String> clArgs = cl.getArgList();
         if (clArgs.isEmpty() && !help && !clear && !showStatus) {
-            ZimbraLog.ephemeral.error("must specify URL of destionation ephemeral store");
+            ZimbraLog.ephemeral.error("must specify URL of destination ephemeral store");
             return;
         }
         if (help || (clear && showStatus)) {
@@ -137,19 +137,23 @@ public class AttributeMigrationUtil {
             callback = new DryRunMigrationCallback();
             MigrationInfo.setFactory(InMemoryMigrationInfo.Factory.class);
         }
-        AttributeMigration migration = new AttributeMigration(attrsToMigrate, numThreads);
-        AttributeMigration.setCallback(callback);
-        EntrySource source;
-        if (useAccount) {
-            String[] acctValues = cl.getOptionValue('a').split(",");
-            source = new SomeAccountsSource(acctValues);
-        } else {
-            source = new AllAccountsSource();
-        }
-        migration.setSource(source);
         try {
+            AttributeMigration migration = new AttributeMigration(destURL, attrsToMigrate, numThreads);
+            AttributeMigration.setCallback(callback);
+            EntrySource source;
+            if (useAccount) {
+                String[] acctValues = cl.getOptionValue('a').split(",");
+                source = new SomeAccountsSource(acctValues);
+            } else {
+                source = new AllAccountsSource();
+            }
+            migration.setSource(source);
             migration.migrateAllAccounts();
-        } catch (ServiceException e) {
+        } catch (InvalidAttributeException e) {
+            Zimbra.halt(String.format("Migration can't proceed: %s", e.getMessage()));
+            return;
+        }
+        catch (ServiceException e) {
             Zimbra.halt(String.format("error encountered during migration to ephemeral backend at %s; migration cannot proceed", destURL), e);
             return;
         }
@@ -187,7 +191,8 @@ public class AttributeMigrationUtil {
     private static void usage() {
         HelpFormatter format = new HelpFormatter();
         format.printHelp(new PrintWriter(System.err, true), 80,
-            "zmmigrateattrs [options] [URL] [attr1 attr2 attr3 ...]", null, OPTIONS, 2, 2, null);
+            "zmmigrateattrs [options] [URL] [attr1 attr2 attr3 ...]", null, OPTIONS, 2, 2,
+            "\n'URL' MUST be provided for all options except for:\n '--clear' (-c) and '--status' (-s)");
             System.exit(0);
     }
 }

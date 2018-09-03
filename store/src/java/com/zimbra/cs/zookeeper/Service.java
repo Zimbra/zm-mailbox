@@ -17,7 +17,7 @@
 
 package com.zimbra.cs.zookeeper;
 
-import org.codehaus.jackson.map.annotate.JsonRootName;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
 @JsonRootName("details")
 public class Service {

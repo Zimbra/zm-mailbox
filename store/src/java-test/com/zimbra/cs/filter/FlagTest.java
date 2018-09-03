@@ -19,10 +19,14 @@ package com.zimbra.cs.filter;
 import java.util.HashMap;
 import java.util.List;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.MethodRule;
+import org.junit.rules.TestName;
 
 import com.zimbra.common.filter.Sieve.Flag;
 import com.zimbra.cs.account.Account;
@@ -37,6 +41,7 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.util.ZTestWatchman;
 
 /**
  * Unit test for {@link Flag}.
@@ -45,6 +50,9 @@ import com.zimbra.cs.service.util.ItemId;
  */
 public final class FlagTest {
 
+    @Rule public TestName testName = new TestName();
+    @Rule public MethodRule watchman = new ZTestWatchman();
+    
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
@@ -54,7 +62,7 @@ public final class FlagTest {
 
     @Before
     public void setUp() throws Exception {
-        MailboxTestUtil.clearData();
+       System.out.println(testName.getMethodName());
     }
 
     @Test
@@ -71,6 +79,15 @@ public final class FlagTest {
         Assert.assertEquals(1, ids.size());
         Message msg = mbox.getMessageById(null, ids.get(0).getId());
         Assert.assertTrue(msg.isTagged(FlagInfo.PRIORITY));
+    }
+    
+    @After
+    public void tearDown() {
+        try {
+            MailboxTestUtil.clearData();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 }

@@ -515,5 +515,20 @@ public class Account extends ZAttrAccount implements GroupedEntry, AliasedEntry 
     public void cleanExpiredTokens() throws ServiceException {
         purgeAuthTokens();
     }
-}
 
+    public void cleanExpiredJWTokens() throws ServiceException {
+        purgeInvalidJWTokens();
+    }
+
+    /**
+     * Updates the values of the following attributes:
+     * - userPassword
+     * - zimbraAuthTokens
+     * - zimbraAuthTokenValidityValue
+     *
+     * @throws ServiceException
+     */
+    public void refreshUserCredentials() throws ServiceException {
+        getProvisioning().refreshUserCredentials(this);
+    }
+}

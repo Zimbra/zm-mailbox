@@ -202,9 +202,9 @@ public class PreAuthServlet extends ZimbraServlet {
                                 acctAutoProvisioned = true;
                             }
                         } catch (AuthFailedServiceException e) {
-                            ZimbraLog.account.debug("auth failed, unable to auto provisioing acct " + account, e);
+                            ZimbraLog.account.debug("auth failed, unable to auto provision acct " + account, e);
                         } catch (ServiceException e) {
-                            ZimbraLog.account.info("unable to auto provisioing acct " + account, e);
+                            ZimbraLog.account.info("unable to auto provision acct " + account, e);
                         }
                     }
                 }

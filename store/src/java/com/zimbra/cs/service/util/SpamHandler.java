@@ -31,7 +31,7 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.sun.mail.smtp.SMTPMessage;
@@ -176,7 +176,7 @@ public class SpamHandler {
         }
 
         @Override public String toString() {
-            return Objects.toStringHelper(this).
+            return MoreObjects.toStringHelper(this).
                 add("account", accountName).
                 add("mbox", mailboxId).
                 add("msgId", messageId).

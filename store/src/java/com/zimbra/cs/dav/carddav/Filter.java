@@ -26,7 +26,6 @@ import java.util.HashSet;
 import org.dom4j.Element;
 import org.dom4j.QName;
 
-import com.google.common.io.Closeables;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -285,26 +284,24 @@ public abstract class Filter {
             search.append(")");
             String filter = search.toString();
             ZimbraLog.dav.debug("Search Filter: %s", filter);
-            ZimbraQueryResults zqr = null;
             try {
                 Mailbox mbox = ctxt.getTargetMailbox();
                 if (mbox == null) {
                     ZimbraLog.dav.debug("Can't get target mailbox for %s", ctxt.getUser());
                     return result;
                 }
-                zqr = mbox.index.search(ctxt.getOperationContext(), filter,
-                        EnumSet.of(MailItem.Type.CONTACT), SortBy.NAME_ASC, 100);
-                while (zqr.hasNext()) {
-                    ZimbraHit hit = zqr.getNext();
-                    if (hit instanceof ContactHit) {
-                        result.add(new AddressObject(ctxt, ((ContactHit) hit).getContact()));
+                try (ZimbraQueryResults zqr = mbox.index.search(ctxt.getOperationContext(), filter,
+                    EnumSet.of(MailItem.Type.CONTACT), SortBy.NAME_ASC, 100)) {
+                    while (zqr.hasNext()) {
+                        ZimbraHit hit = zqr.getNext();
+                        if (hit instanceof ContactHit) {
+                            result.add(new AddressObject(ctxt, ((ContactHit) hit).getContact()));
+                        }
                     }
                 }
             } catch (Exception e) {
                 ZimbraLog.dav.warn("can't get target mailbox", e);
                 return result;
-            } finally {
-                Closeables.closeQuietly(zqr);
             }
             boolean includeGal = true;
             if (includeGal) {

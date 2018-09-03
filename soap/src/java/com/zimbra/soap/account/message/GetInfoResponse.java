@@ -29,9 +29,8 @@ import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
-import org.codehaus.jackson.annotate.JsonPropertyOrder;
-
-import com.google.common.base.Objects;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
@@ -68,13 +67,13 @@ import com.zimbra.soap.type.ZmBoolean;
  */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AccountConstants.E_GET_INFO_RESPONSE)
-@XmlType(propOrder = {"version", "accountId", "accountName", "crumb", "lifetime", "adminDelegated", "restUrl",
+@XmlType(propOrder = {"version", "accountId", "profileImageId", "accountName", "crumb", "lifetime", "adminDelegated", "restUrl",
         "quotaUsed", "isTrackingIMAP", "previousSessionTime", "lastWriteAccessTime", "recentMessageCount", "cos", "prefs", "attrs",
         "zimlets", "props", "identities", "signatures", "dataSources", "childAccounts", "discoveredRights",
         "soapURL", "publicURL", "changePasswordURL", "license", "adminURL", "boshURL"})
-@JsonPropertyOrder({"version", "id", "name", "crumb", "lifetime", "adminDelegated", "docSizeLimit", "attSizeLimit",
+@JsonPropertyOrder({"version", "id", "profileImageId", "name", "crumb", "lifetime", "adminDelegated", "docSizeLimit", "attSizeLimit",
         "rest", "used", "isTrackingIMAP", "prevSession", "accessed", "recent", "cos", "prefs", "attrs", "zimlets", "props", "identities",
-        "signatures", "dataSources", "childAccounts", "rights", "soapURL", "publicURL", "license", "adminURL", "boshURL"})
+        "signatures", "dataSources", "childAccounts", "discoveredRights", "soapURL", "publicURL", "license", "adminURL", "boshURL"})
 public final class GetInfoResponse {
 
     /**
@@ -106,6 +105,14 @@ public final class GetInfoResponse {
     @XmlElement(name=AccountConstants.E_ID /* id */, required=true)
     @ZimbraJsonAttribute
     private String accountId;
+
+    /**
+     * @zm-api-field-tag profile-image-id
+     * @zm-api-field-description Profile image ID
+     */
+    @XmlElement(name=AccountConstants.E_PROFILE_IMAGE_ID /* profileImageId */, required=false)
+    @ZimbraJsonAttribute
+    private int profileImageId;
 
     /**
      * @zm-api-field-tag account-email-address
@@ -249,7 +256,6 @@ public final class GetInfoResponse {
         @XmlElement(name=MailConstants.E_DS_RSS /* rss */, type=AccountRssDataSource.class),
         @XmlElement(name=MailConstants.E_DS_GAL /* gal */, type=AccountGalDataSource.class),
         @XmlElement(name=MailConstants.E_DS_CAL /* cal */, type=AccountCalDataSource.class),
-        @XmlElement(name=MailConstants.E_DS /* dsrc */, type=AccountDataSource.class),
         @XmlElement(name=MailConstants.E_DS_UNKNOWN /* unknown */, type=AccountUnknownDataSource.class)
     })
     private List<AccountDataSource> dataSources = Lists.newArrayList();
@@ -334,6 +340,7 @@ public final class GetInfoResponse {
     public void setDocumentSizeLimit(Long documentSizeLimit) { this.documentSizeLimit = documentSizeLimit; }
     public void setVersion(String version) { this.version = version; }
     public void setAccountId(String accountId) { this.accountId = accountId; }
+    public void setProfileImageId(int profileImageId) { this.profileImageId = profileImageId; }
     public void setAccountName(String accountName) { this.accountName = accountName; }
     public void setCrumb(String crumb) { this.crumb = crumb; }
     public void setLifetime(long lifetime) { this.lifetime = lifetime; }
@@ -454,6 +461,7 @@ public final class GetInfoResponse {
     public Long getDocumentSizeLimit() { return documentSizeLimit; }
     public String getVersion() { return version; }
     public String getAccountId() { return accountId; }
+    public int getProfileImageId() { return profileImageId; }
     public String getAccountName() { return accountName; }
     public String getCrumb() { return crumb; }
     public long getLifetime() { return lifetime; }
@@ -521,8 +529,8 @@ public final class GetInfoResponse {
         this.isTrackingIMAP = ZmBoolean.fromBool(trackingEnabled);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(
+                MoreObjects.ToStringHelper helper) {
         return helper
             .add("attachmentSizeLimit", attachmentSizeLimit)
             .add("documentSizeLimit", documentSizeLimit)
@@ -557,7 +565,7 @@ public final class GetInfoResponse {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
+        return addToStringInfo(MoreObjects.toStringHelper(this))
                 .toString();
     }
 }

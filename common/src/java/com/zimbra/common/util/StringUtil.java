@@ -28,7 +28,6 @@ import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -1008,5 +1007,69 @@ public class StringUtil {
             ZimbraLog.filter.error("Error while truncating body", e);
         }
         return body;
+    }
+
+    /**
+     * Removes all occurrences of "Other, Control", "Other, Private Use",
+     * "Other, Unassigned", "Other, Format" and "Other, Surrogate"
+     * Replaces all "Separator, *" characters with a simple space (U+0020)
+     *
+     * @param string string to sanitize
+     * @return sanitized string
+     */
+    public static String sanitizeString(String string) {
+        if (string != null) {
+            StringBuilder sanitizedString = new StringBuilder(string.length());
+            for (int offset = 0; offset < string.length();) {
+                int codePoint = string.codePointAt(offset);
+                offset += Character.charCount(codePoint);
+                // Remove invisible control characters and unused code points
+                switch (Character.getType(codePoint)) {
+                    case Character.CONTROL: // \p{Cc}
+                    case Character.FORMAT: // \p{Cf}
+                    case Character.PRIVATE_USE: // \p{Co}
+                    case Character.SURROGATE: // \p{Cs}
+                    case Character.UNASSIGNED: // \p{Cn}
+                        break;
+                    case Character.LINE_SEPARATOR:
+                    case Character.PARAGRAPH_SEPARATOR:
+                    case Character.SPACE_SEPARATOR:
+                        sanitizedString.append(" ");
+                        break;
+                    default:
+                        sanitizedString.append(Character.toChars(codePoint));
+                        break;
+                }
+            }
+            return sanitizedString.toString();
+        }
+        return null;
+    }
+
+    public static String maskEmail(String recoveryEmail) {
+        if (isNullOrEmpty(recoveryEmail)) {
+            return null;
+        }
+        StringBuilder maskedEmail = new StringBuilder();
+        String[] parts = EmailUtil.getLocalPartAndDomain(recoveryEmail);
+        String local = parts[0];
+        int len = local.length();
+        switch (len) {
+            case 1:
+                maskedEmail.append("*");
+                break;
+            case 2:
+                maskedEmail.append(local.charAt(0)).append("*");
+                break;
+            case 3:
+                maskedEmail.append(local.charAt(0)).append("**");
+                break;
+            default:
+                int maskLen = len - 3;
+                maskedEmail.append(local.substring(0, 3)).append(new String(new char[maskLen]).replace("\0", "*"));
+                break;
+        }
+        maskedEmail.append("@").append(parts[1]);
+        return maskedEmail.toString();
     }
 }

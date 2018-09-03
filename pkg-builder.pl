@@ -61,11 +61,12 @@ sub git_timestamp_from_dirs($)
 my %PKG_GRAPH = (
    "zimbra-mbox-service" => {
       summary   => "Zimbra Mailbox Service",
-      version   => "1.0.0",
+      version   => "3.0.0",
       revision  => 1,
       hard_deps => [
          "zimbra-mbox-war",
          "zimbra-mbox-conf",
+         "zimbra-common-core-jar"
       ],
       soft_deps => [
          "zimbra-common-mbox-conf",
@@ -83,7 +84,7 @@ my %PKG_GRAPH = (
 
    "zimbra-mbox-war" => {
       summary    => "Zimbra Mailbox Service War",
-      version    => "1.0.0",
+      version    => "3.0.0",
       revision   => 1,
       hard_deps  => [],
       soft_deps  => [],
@@ -95,7 +96,7 @@ my %PKG_GRAPH = (
 
    "zimbra-mbox-conf" => {
       summary    => "Zimbra Mailbox Service Configuration",
-      version    => "1.0.0",
+      version    => "3.0.0",
       revision   => 1,
       hard_deps  => [],
       soft_deps  => [],
@@ -107,7 +108,7 @@ my %PKG_GRAPH = (
 
    "zimbra-common-mbox-conf" => {
       summary    => "Zimbra Core Mailbox Configuration",
-      version    => "1.0.0",
+      version    => "3.0.0",
       revision   => 1,
       hard_deps  => [],
       soft_deps  => [],
@@ -119,7 +120,7 @@ my %PKG_GRAPH = (
 
    "zimbra-common-mbox-db" => {
       summary    => "Zimbra Core Mailbox DB Files",
-      version    => "1.0.0",
+      version    => "3.0.0",
       revision   => 1,
       hard_deps  => [],
       soft_deps  => [],
@@ -131,7 +132,7 @@ my %PKG_GRAPH = (
 
    "zimbra-common-mbox-native-lib" => {
       summary    => "Zimbra Core Mailbox Native Libs",
-      version    => "1.0.0",
+      version    => "3.0.0",
       revision   => 1,
       hard_deps  => [],
       soft_deps  => [],
@@ -143,7 +144,7 @@ my %PKG_GRAPH = (
 
    "zimbra-common-mbox-conf-msgs" => {
       summary    => "Zimbra Core Mailbox Message Locale Files",
-      version    => "1.0.0",
+      version    => "3.0.0",
       revision   => 1,
       hard_deps  => [],
       soft_deps  => [],
@@ -155,7 +156,7 @@ my %PKG_GRAPH = (
 
    "zimbra-common-mbox-conf-rights" => {
       summary    => "Zimbra Core Mailbox Rights Configuration",
-      version    => "1.0.0",
+      version    => "3.0.0",
       revision   => 1,
       hard_deps  => [],
       soft_deps  => [],
@@ -167,7 +168,7 @@ my %PKG_GRAPH = (
 
    "zimbra-common-mbox-conf-attrs" => {
       summary    => "Zimbra Core Mailbox Attributes Configuration",
-      version    => "1.0.0",
+      version    => "3.0.0",
       revision   => 1,
       hard_deps  => [],
       soft_deps  => [],
@@ -179,7 +180,7 @@ my %PKG_GRAPH = (
 
    "zimbra-common-mbox-docs" => {
       summary    => "Zimbra Core Mailbox Docs",
-      version    => "1.0.0",
+      version    => "3.0.0",
       revision   => 1,
       hard_deps  => [],
       soft_deps  => [],
@@ -187,6 +188,18 @@ my %PKG_GRAPH = (
       replaces   => ["zimbra-core"],
       file_list  => ['/opt/zimbra/*'],
       stage_fun  => sub { &stage_zimbra_common_mbox_docs(@_); },
+   },
+   
+   "zimbra-common-core-jar" => {
+      summary    => "Zimbra Core Jars",
+      version    => "3.0.0",
+      revision   => 1,
+      hard_deps  => [],
+      soft_deps  => [],
+      other_deps => ["zimbra-core-components"],
+      replaces   => ["zimbra-core"],
+      file_list  => ['/opt/zimbra/*'],
+      stage_fun  => sub { &stage_zimbra_common_core_jars(@_); },
    },
 );
 
@@ -350,6 +363,7 @@ sub stage_zimbra_common_mbox_conf_attrs()
    cpy_file( "store/conf/attrs/amavisd-new-attrs.xml", "$stage_base_dir/opt/zimbra/conf/attrs/amavisd-new-attrs.xml" );
    cpy_file( "store/conf/attrs/zimbra-attrs.xml",      "$stage_base_dir/opt/zimbra/conf/attrs/zimbra-attrs.xml" );
    cpy_file( "store/conf/attrs/zimbra-ocs.xml",        "$stage_base_dir/opt/zimbra/conf/attrs/zimbra-ocs.xml" );
+   cpy_file( "store/build/dist/conf/attrs/zimbra-attrs-schema",   "$stage_base_dir/opt/zimbra/conf/zimbra-attrs-schema" );
 
    return ["store/conf/attrs"];
 }
@@ -436,6 +450,18 @@ sub stage_zimbra_common_mbox_docs()
    return ["store/docs"];
 }
 
+sub stage_zimbra_common_core_jars()
+{
+   my $stage_base_dir = shift;
+
+   cpy_file( "store/build/dist/zm-store.jar",                    "$stage_base_dir/opt/zimbra/lib/jars/zimbrastore.jar");
+   cpy_file( "soap/build/dist/zm-soap.jar",                      "$stage_base_dir/opt/zimbra/lib/jars/zimbrasoap.jar");
+   cpy_file( "client/build/dist/zm-client.jar",                  "$stage_base_dir/opt/zimbra/lib/jars/zimbraclient.jar");
+   cpy_file( "common/build/dist/zm-common.jar",                  "$stage_base_dir/opt/zimbra/lib/jars/zimbracommon.jar");
+   cpy_file( "native/build/dist/zm-native.jar",                  "$stage_base_dir/opt/zimbra/lib/jars/zimbra-native.jar");
+   return ["."];
+}
+
 sub stage_zimbra_mbox_service(%)
 {
    my $stage_base_dir = shift;
@@ -459,7 +485,7 @@ sub make_package($)
 
    my $timestamp = git_timestamp_from_dirs( &$stage_fun($stage_base_dir) );
 
-   $pkg_info->{_version_ts} = $pkg_info->{version} . ( $timestamp ? ( "+" . $timestamp ) : "" );
+   $pkg_info->{_version_ts} = $pkg_info->{version} . ( $timestamp ? ( "." . $timestamp ) : "" );
 
    my @cmd = (
       "../zm-pkg-tool/pkg-build.pl",
@@ -492,7 +518,7 @@ sub make_package($)
    push( @cmd, @{ [ map { "--pkg-replaces=$_"; } @{ $pkg_info->{replaces} } ] } )                                                              if ( $pkg_info->{replaces} );
    push( @cmd, @{ [ map { "--pkg-depends=$_"; } @{ $pkg_info->{other_deps} } ] } )                                                             if ( $pkg_info->{other_deps} );
    push( @cmd, @{ [ map { "--pkg-depends=$_ (>= $PKG_GRAPH{$_}->{version})"; } @{ $pkg_info->{soft_deps} } ] } )                               if ( $pkg_info->{soft_deps} );
-   push( @cmd, @{ [ map { "--pkg-depends=$_ (= $PKG_GRAPH{$_}->{_version_ts}-$PKG_GRAPH{$_}->{revision})"; } @{ $pkg_info->{hard_deps} } ] } ) if ( $pkg_info->{hard_deps} );
+   push( @cmd, @{ [ map { "--pkg-depends=$_ (>= $PKG_GRAPH{$_}->{_version_ts}-$PKG_GRAPH{$_}->{revision})"; } @{ $pkg_info->{hard_deps} } ] } ) if ( $pkg_info->{hard_deps} );
 
    System(@cmd);
 }

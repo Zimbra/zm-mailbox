@@ -274,7 +274,20 @@ public class L10nUtil {
         
         //sieve
         seiveRejectMDNSubject,
-        seiveRejectMDNErrorMsg
+        seiveRejectMDNErrorMsg,
+
+        //forwarding email address verification
+        verifyEmailSubject,
+        verifyEmailBodyText,
+        verifyEmailBodyHtml,
+
+        // recovery email address verification
+        verifyRecoveryEmailSubject,
+        verifyRecoveryEmailBodyText,
+        verifyRecoveryEmailBodyHtml,
+        sendPasswordRecoveryEmailSubject,
+        sendPasswordRecoveryEmailBodyText,
+        sendPasswordRecoveryEmailBodyHtml
 
         // add other messages in the future...
     }

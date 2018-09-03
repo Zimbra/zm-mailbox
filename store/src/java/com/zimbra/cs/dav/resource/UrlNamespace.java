@@ -60,6 +60,18 @@ import com.zimbra.cs.mailbox.calendar.Invite;
  */
 public class UrlNamespace {
     public static final String ATTACHMENTS_PREFIX = "/attachments";
+    public static final String PRINCIPALS      = "principals";
+    public static final String PRINCIPAL_USERS = "users";
+    public static final String PRINCIPALS_PATH = "/" + PRINCIPALS + "/" + PRINCIPAL_USERS + "/";
+
+    public static final String ACL_USER   = PRINCIPALS_PATH;
+    public static final String ACL_GUEST  = "/" + PRINCIPALS + "/" + "guests" + "/";
+    public static final String ACL_GROUP  = "/" + PRINCIPALS + "/" + "groups" + "/";
+    public static final String ACL_COS    = "/" + PRINCIPALS + "/" + "cos" + "/";
+    public static final String ACL_DOMAIN = "/" + PRINCIPALS + "/" + "domain" + "/";
+
+    private static Map <Pair<String,String>,Pair<DavResource,Long>>sRenamedResourceMap =
+            MapUtil.newLruMap(100);
 
     public static class UrlComponents {
         public String user;
@@ -72,7 +84,8 @@ public class UrlNamespace {
      * @return user and path info as UrlComponents
      */
 
-    public static UrlComponents parseUrl(String url) {
+    public static UrlComponents parseUrl(String urlToParse) {
+        String url = urlToParse;
         UrlComponents uc = new UrlComponents();
 
         int index = url.indexOf(DavServlet.DAV_PATH);
@@ -200,7 +213,7 @@ public class UrlNamespace {
             DavContext ctxt, String user, String path, boolean includeChildren)
     throws DavException {
         ArrayList<DavResource> rss = new ArrayList<DavResource>();
-        if (user.equals("")) {
+        if ("".equals(user)) {
             try {
                 rss.add(new Principal(ctxt.getAuthAccount(), DavServlet.DAV_PATH));
                 return rss;
@@ -254,16 +267,6 @@ public class UrlNamespace {
         return getResourceFromMailItem(ctxt, item);
     }
 
-    public static final String PRINCIPALS      = "principals";
-    public static final String PRINCIPAL_USERS = "users";
-    public static final String PRINCIPALS_PATH = "/" + PRINCIPALS + "/" + PRINCIPAL_USERS + "/";
-
-    public static final String ACL_USER   = PRINCIPALS_PATH;
-    public static final String ACL_GUEST  = "/" + PRINCIPALS + "/" + "guests" + "/";
-    public static final String ACL_GROUP  = "/" + PRINCIPALS + "/" + "groups" + "/";
-    public static final String ACL_COS    = "/" + PRINCIPALS + "/" + "cos" + "/";
-    public static final String ACL_DOMAIN = "/" + PRINCIPALS + "/" + "domain" + "/";
-
     /* RFC 3744 */
     public static String getAclUrl(String principal, String type) throws DavException {
         Account account = null;
@@ -276,7 +279,7 @@ public class UrlNamespace {
                 buf.append(account.getName());
             else
                 buf.append(principal);
-            return getAbsoluteUrl(null, buf.toString());
+            return getAbsoluteUrl(null, buf.toString().replaceAll("@", "%40"));
         } catch (ServiceException e) {
             throw new DavException("cannot create ACL URL for principal "+principal, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e);
         }
@@ -337,11 +340,19 @@ public class UrlNamespace {
     }
 
     public static String getPrincipalUrl(String user) {
-        return HttpUtil.urlEscape(PRINCIPALS_PATH + user + "/");
+        return HttpUtil.urlEscape(PRINCIPALS_PATH + user + "/").replaceAll("@", "%40");
     }
 
     public static String getPrincipalCollectionUrl(Account acct) throws ServiceException {
         return HttpUtil.urlEscape(PRINCIPALS_PATH);
+    }
+
+    public static String getCalendarHomeSetUrl(String authUser) {
+        return DavServlet.DAV_PATH + "/" + authUser.replaceAll("@", "%40");
+    }
+
+    public static String getAddressbookHomeSetUrl(String authUser) {
+        return getCalendarHomeSetUrl(authUser);
     }
 
     public static String getSchedulingInboxUrl(String authUser, String user) {
@@ -387,8 +398,6 @@ public class UrlNamespace {
         }
         return DavServlet.getServiceUrl(server, domain, path);
     }
-
-    private static Map <Pair<String,String>,Pair<DavResource,Long>>sRenamedResourceMap = MapUtil.newLruMap(100);
 
     public static void addToRenamedResource(String user, String path, DavResource rsc) {
         synchronized (sRenamedResourceMap) {
@@ -456,7 +465,7 @@ public class UrlNamespace {
         MailItem item = null;
 
         // simple case.  root folder or if id is specified.
-        if (path.equals("/")) {
+        if ("/".equals(path)) {
             item = mbox.getFolderByPath(octxt, "/");
         } else if (id > 0) {
             item = mbox.getItemById(octxt, id, MailItem.Type.UNKNOWN);
@@ -599,8 +608,11 @@ public class UrlNamespace {
                 Mountpoint mp = (Mountpoint) item;
                 viewType = mp.getDefaultView();
                 // don't expose mounted calendars when using iCal style delegation model.
-                if (!ctxt.useIcalDelegation() && (viewType == MailItem.Type.APPOINTMENT || viewType == MailItem.Type.TASK)) {
+                if (!ctxt.useIcalDelegation() &&
+                        (viewType == MailItem.Type.APPOINTMENT || viewType == MailItem.Type.TASK)) {
                     resource = new RemoteCalendarCollection(ctxt, mp);
+                } else if (viewType == MailItem.Type.CONTACT) {
+                    resource = new RemoteAddressbookCollection(ctxt, mp);
                 } else {
                     resource = new RemoteCollection(ctxt, mp);
                 }
@@ -633,9 +645,10 @@ public class UrlNamespace {
             case CONTACT :
                 resource = new AddressObject(ctxt, (Contact)item);
                 break;
+            default:
+                break;
             }
         } catch (ServiceException e) {
-            resource = null;
             ZimbraLog.dav.info("cannot create DavResource", e);
         }
         return resource;
@@ -714,6 +727,7 @@ public class UrlNamespace {
             break;
         default:
             resource = null;
+            break;
         }
 
         return resource;

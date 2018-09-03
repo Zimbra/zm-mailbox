@@ -1617,8 +1617,7 @@ public final class ToXML {
                 ZimbraLog.mailbox.debug(
                     "The message is signed. Forwarding it to SmimeHandler for signature verification.");
                 if (SmimeHandler.getHandler() != null) {
-                    SmimeHandler.getHandler().verifyMessageSignature(msg.getMailbox().getAccount(), m,
-                        mm, octxt.getmResponseProtocol());
+                    SmimeHandler.getHandler().verifyMessageSignature(msg, m, mm, octxt);
                 }
             } else {
                 // if the original mime message was PKCS7-signed and it was
@@ -2184,7 +2183,9 @@ public final class ToXML {
         Element e = parent.addNonUniqueElement(MailConstants.E_INVITE_COMPONENT);
         e.addAttribute(MailConstants.A_CAL_METHOD, invite.getMethod());
         e.addAttribute(MailConstants.A_CAL_COMPONENT_NUM, invite.getComponentNum());
-        e.addAttribute(MailConstants.A_CAL_RSVP, invite.getRsvp());
+        if (invite.hasRsvp()) {
+            e.addAttribute(MailConstants.A_CAL_RSVP, invite.getRsvp());
+        }
 
         boolean allowPrivateAccess = calItem != null ? allowPrivateAccess(octxt, calItem) : true;
         if (allFields) {
@@ -2951,14 +2952,17 @@ throws ServiceException {
         Element el = parent.addNonUniqueElement(MailConstants.E_EMAIL);
         if(!StringUtil.isNullOrEmpty(pa.emailPart)) {
             pa.emailPart = ZInternetHeader.decode(pa.emailPart);
+            pa.emailPart = StringUtil.sanitizeString(pa.emailPart);
         }
         el.addAttribute(MailConstants.A_ADDRESS, IDNUtil.toUnicode(pa.emailPart));
         if(!StringUtil.isNullOrEmpty(pa.firstName)) {
             pa.firstName = ZInternetHeader.decode(pa.firstName);
+            pa.firstName = StringUtil.sanitizeString(pa.firstName);
         }
         el.addAttribute(MailConstants.A_DISPLAY, pa.firstName);
         if (!StringUtil.isNullOrEmpty(pa.personalPart)) {
             pa.personalPart = ZInternetHeader.decode(pa.personalPart);
+            pa.personalPart = StringUtil.sanitizeString(pa.personalPart);
         }
         el.addAttribute(MailConstants.A_PERSONAL, pa.personalPart);
         el.addAttribute(MailConstants.A_ADDRESS_TYPE, type.toString());
@@ -3126,7 +3130,15 @@ throws ServiceException {
         if (ds.getSmtpUsername() != null) {
             m.addAttribute(MailConstants.A_DS_SMTP_USERNAME, ds.getSmtpUsername());
         }
-
+        if(ds.getDataSourceImportClassName() != null) {
+            m.addAttribute(MailConstants.A_DS_IMPORT_CLASS, ds.getDataSourceImportClassName());
+        }
+        if(ds.getOauthRefreshToken() != null) {
+            m.addAttribute(MailConstants.A_DS_REFRESH_TOKEN, ds.getOauthRefreshToken());
+        }
+        if(ds.getOauthRefreshTokenUrl() != null) {
+            m.addAttribute(MailConstants.A_DS_REFRESH_TOKEN_URL, ds.getOauthRefreshTokenUrl());
+        }
         m.addAttribute(MailConstants.A_DS_EMAIL_ADDRESS, ds.getEmailAddress());
         m.addAttribute(MailConstants.A_DS_USE_ADDRESS_FOR_FORWARD_REPLY, ds.useAddressForForwardReply());
         m.addAttribute(MailConstants.A_DS_DEFAULT_SIGNATURE, ds.getDefaultSignature());

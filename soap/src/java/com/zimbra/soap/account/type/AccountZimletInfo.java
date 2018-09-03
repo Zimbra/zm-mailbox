@@ -19,7 +19,7 @@ package com.zimbra.soap.account.type;
 
 import org.w3c.dom.Element;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAnyElement;
@@ -89,8 +89,8 @@ implements ZimletInterface {
         setZimletConfig((AccountZimletConfigInfo) zimletConfig);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(
+                MoreObjects.ToStringHelper helper) {
         return helper
             .add("zimletContext", zimletContext)
             .add("zimlet", getZimlet())
@@ -100,7 +100,7 @@ implements ZimletInterface {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
+        return addToStringInfo(MoreObjects.toStringHelper(this))
                 .toString();
     }
 }

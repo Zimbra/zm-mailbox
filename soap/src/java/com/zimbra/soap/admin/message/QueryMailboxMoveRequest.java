@@ -17,7 +17,7 @@
 
 package com.zimbra.soap.admin.message;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
@@ -82,8 +82,8 @@ public class QueryMailboxMoveRequest {
         return Collections.unmodifiableList(accounts);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(
+                MoreObjects.ToStringHelper helper) {
         return helper
             .add("checkPeer", checkPeer)
             .add("accounts", accounts);
@@ -91,7 +91,7 @@ public class QueryMailboxMoveRequest {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
+        return addToStringInfo(MoreObjects.toStringHelper(this))
                 .toString();
     }
 }

@@ -17,57 +17,65 @@
 
 package com.zimbra.soap.mail.message;
 
-import com.google.common.base.Objects;
+import java.util.Collections;
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.type.ZmBoolean;
+import com.zimbra.soap.mail.type.TestDataSource;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_TEST_DATA_SOURCE_RESPONSE)
 public class TestDataSourceResponse {
-
     /**
-     * @zm-api-field-tag success
-     * @zm-api-field-description Flags whether the test was successful
+     * @zm-api-field-description Data source information
      */
-    @XmlAttribute(name=MailConstants.A_DS_SUCCESS /* success */, required=true)
-    private final ZmBoolean success;
+    @XmlElements({
+        @XmlElement(name=MailConstants.E_DS_IMAP /* imap */, type=TestDataSource.class),
+        @XmlElement(name=MailConstants.E_DS_POP3 /* pop3 */, type=TestDataSource.class),
+        @XmlElement(name=MailConstants.E_DS_CALDAV /* caldav */, type=TestDataSource.class),
+        @XmlElement(name=MailConstants.E_DS_YAB /* yab */, type=TestDataSource.class),
+        @XmlElement(name=MailConstants.E_DS_RSS /* rss */, type=TestDataSource.class),
+        @XmlElement(name=MailConstants.E_DS_GAL /* gal */, type=TestDataSource.class),
+        @XmlElement(name=MailConstants.E_DS_CAL /* cal */, type=TestDataSource.class),
+        @XmlElement(name=MailConstants.E_DS_UNKNOWN /* unknown */, type=TestDataSource.class)
+    })
+    private List<TestDataSource> dataSources = Lists.newArrayList();
 
-    /**
-     * @zm-api-field-tag error-message
-     * @zm-api-field-description Error message
-     */
-    @XmlAttribute(name=MailConstants.A_DS_ERROR /* error */, required=false)
-    private String error;
+    public void setDataSources(Iterable <TestDataSource> dataSources) {
+        this.dataSources.clear();
+        if (dataSources != null) {
+            Iterables.addAll(this.dataSources,dataSources);
+        }
+    }
 
-    /**
-     * no-argument constructor wanted by JAXB
-     */
-    @SuppressWarnings("unused")
     private TestDataSourceResponse() {
-        this(false);
     }
 
-    public TestDataSourceResponse(boolean success) {
-        this.success = ZmBoolean.fromBool(success);
+    public TestDataSourceResponse addDataSource(TestDataSource dataSource) {
+        this.dataSources.add(dataSource);
+        return this;
     }
 
-    public void setError(String error) { this.error = error; }
-    public boolean getSuccess() { return ZmBoolean.toBool(success); }
-    public String getError() { return error; }
+    public List<TestDataSource> getDataSources() {
+        return Collections.unmodifiableList(dataSources);
+    }
 
-    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         return helper
-            .add("success", success)
-            .add("error", error);
+            .add("dataSources", dataSources);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this)).toString();
+        return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
     }
 }

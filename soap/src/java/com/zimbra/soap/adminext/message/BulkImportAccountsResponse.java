@@ -17,7 +17,7 @@
 
 package com.zimbra.soap.adminext.message;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -114,7 +114,7 @@ public class BulkImportAccountsResponse {
     public Integer getErrorCount() { return errorCount; }
     public String getReportFileToken() { return reportFileToken; }
 
-    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         return helper
             .add("totalCount", totalCount)
             .add("skippedAccountCount", skippedAccountCount)
@@ -129,6 +129,6 @@ public class BulkImportAccountsResponse {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this)).toString();
+        return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
     }
 }

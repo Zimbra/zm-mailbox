@@ -19,10 +19,10 @@ package com.zimbra.cs.session;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -41,6 +41,7 @@ public class WaitSetCallback {
     public IWaitSet ws;
     public List<WaitSetError> errors = Lists.newArrayList();
     public ResumeContinuationListener continuationResume;
+    public CountDownLatch completedLatch;
 
     public void dataReady(IWaitSet wset, String seqNum, boolean setCanceled, List<WaitSetError> inErrors,
             Set<WaitSetSession> signalledSessions, Set<String> signalledAccounts, Map<String /*accountId*/, PendingModifications> pms) {
@@ -52,14 +53,14 @@ public class WaitSetCallback {
             this.waitSet = wset;
             this.canceled = setCanceled;
             if(signalledSessions == null) {
-                this.signalledSessions =  Maps.newHashMapWithExpectedSize(0);   
+                this.signalledSessions =  Maps.newHashMapWithExpectedSize(0);
             } else {
                 this.signalledSessions = Maps.newHashMapWithExpectedSize(signalledSessions.size());
                 for(WaitSetSession s : signalledSessions) {
                     this.signalledSessions.put(s.getTargetAccountId(), s);
                 }
             }
-            
+
             this.signalledAccounts = (signalledAccounts == null) ? Sets.newHashSetWithExpectedSize(0)
                     : Sets.newCopyOnWriteArraySet(signalledAccounts);
             if(pms != null) {
@@ -70,6 +71,9 @@ public class WaitSetCallback {
             }
             this.seqNo = seqNum;
             this.completed = true;
+            if (completedLatch != null) {
+                completedLatch.countDown();
+            }
             ZimbraLog.session.debug("dataReady called. %s", this);
             if (continuationResume != null) {
                 if (trace) {
@@ -88,7 +92,7 @@ public class WaitSetCallback {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
                 .add("seqNo", seqNo)
                 .add("completed", completed)
                 .add("canceled", canceled)

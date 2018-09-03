@@ -226,6 +226,14 @@ public abstract class AuthMechanism {
             super(authMech);
         }
 
+        protected boolean isEncodedPassword(String encodedPassword) {
+            return PasswordUtil.SSHA512.isSSHA512(encodedPassword) || PasswordUtil.SSHA.isSSHA(encodedPassword);
+        }
+
+        protected boolean isValidEncodedPassword(String encodedPassword, String password) {
+            return PasswordUtil.SSHA512.verifySSHA512(encodedPassword, password) || PasswordUtil.SSHA.verifySSHA(encodedPassword, password);
+        }
+
         @Override
         public boolean isZimbraAuth() {
             return true;
@@ -235,30 +243,32 @@ public abstract class AuthMechanism {
         public void doAuth(LdapProv prov, Domain domain, Account acct, String password,
                 Map<String, Object> authCtxt) throws ServiceException {
 
-            String encodedPassword = acct.getAttr(Provisioning.A_userPassword);
             if (AuthMechanism.doTwoFactorAuth(acct, password, authCtxt)) {
                 return;
             }
 
+            String encodedPassword = acct.getAttr(Provisioning.A_userPassword);
             if (encodedPassword == null) {
                 throw AuthFailedServiceException.AUTH_FAILED(acct.getName(),
                         namePassedIn(authCtxt), "missing "+Provisioning.A_userPassword);
             }
 
-            if (PasswordUtil.SSHA512.isSSHA512(encodedPassword)) {
-                if (PasswordUtil.SSHA512.verifySSHA512(encodedPassword, password)) {
-                    return; // good password, RETURN
-                }  else {
-                    throw AuthFailedServiceException.AUTH_FAILED(acct.getName(),
-                            namePassedIn(authCtxt), "invalid password");
-                }
-            } else if (PasswordUtil.SSHA.isSSHA(encodedPassword)) {
-                    if (PasswordUtil.SSHA.verifySSHA(encodedPassword, password)) {
-                        return; // good password, RETURN
-                    }  else {
+            if (isEncodedPassword(encodedPassword)) {
+                if (isValidEncodedPassword(encodedPassword, password)) {
+                    return;
+                } else {
+                    acct.refreshUserCredentials();
+                    String refreshedPassword = acct.getAttr(Provisioning.A_userPassword);
+                    if (!isEncodedPassword(refreshedPassword)) {
+                        doAuth(prov, domain, acct, password, authCtxt);
+                    }
+                    if (!isValidEncodedPassword(encodedPassword, refreshedPassword)) {
                         throw AuthFailedServiceException.AUTH_FAILED(acct.getName(),
                                 namePassedIn(authCtxt), "invalid password");
                     }
+                    return;
+                }
+
             } else if (acct instanceof LdapEntry) {
                 // not SSHA/SSHA512, authenticate to Zimbra LDAP
                 prov.zimbraLdapAuthenticate(acct, password, authCtxt);
@@ -437,4 +447,3 @@ public abstract class AuthMechanism {
 
     }
 }
-

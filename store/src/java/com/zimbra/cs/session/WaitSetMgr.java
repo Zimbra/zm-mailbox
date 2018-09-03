@@ -39,8 +39,8 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.service.admin.AdminDocumentHandler;
-import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.cs.util.Zimbra;
+import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  *
@@ -335,6 +335,20 @@ public class WaitSetMgr {
             ZimbraLog.session.info("WaitSet sweeper: %d active WaitSets (%d accounts) - %d sets with blocked callbacks",
                 activeSets, activeSessions, withCallback);
         }
+    }
+
+    public static boolean isMonitoringFolderForImap(String accountId, int folderId) {
+        synchronized(sWaitSets) {
+            for (IWaitSet ws : sWaitSets.values()) {
+                if (ws instanceof SomeAccountsWaitSet) {
+                    SomeAccountsWaitSet saWs = (SomeAccountsWaitSet) ws;
+                    if (saWs.isMonitoringFolder(accountId, folderId)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     /*

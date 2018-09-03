@@ -616,6 +616,7 @@ public class ItemActionHelper {
         zoptions.setTargetAccount(target.getId());
         zoptions.setTargetAccountBy(Key.AccountBy.id);
         ZMailbox zmbx = ZMailbox.getMailbox(zoptions);
+        zmbx.setName(target.getName()); /* need this when logging in using another user's auth */
 
         // check for mountpoints before going any further...
         ZFolder zfolder = zmbx.getFolderById(mIidFolder.toString(mAuthenticatedAccount));

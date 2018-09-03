@@ -16,6 +16,13 @@
  */
 package com.zimbra.qa.unittest;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -26,13 +33,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
 
 import com.google.common.collect.Lists;
 import com.zimbra.client.ZCalDataSource;
@@ -438,12 +438,33 @@ public class TestDataSource {
     }
 
     /**
+     * Tests {@link ZMailbox#testDataSource}.
+     */
+    @Test
+    public void testBadDataSource() throws Exception {
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        // Create data source
+        Provisioning prov = Provisioning.getInstance();
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceEnabled, LdapConstants.LDAP_FALSE);
+        attrs.put(Provisioning.A_zimbraDataSourceHost, "testhost");
+        attrs.put(Provisioning.A_zimbraDataSourcePort, "0");
+        attrs.put(Provisioning.A_zimbraDataSourceUsername, "testuser");
+        attrs.put(Provisioning.A_zimbraDataSourcePassword, "testpass");
+        attrs.put(Provisioning.A_zimbraDataSourceFolderId, "1");
+        attrs.put(Provisioning.A_zimbraDataSourceConnectionType, ConnectionType.cleartext.toString());
+        prov.createDataSource(account, DataSourceType.pop3, NAME_PREFIX + DS_NAME, attrs);
+        ZDataSource zds = TestUtil.getDataSource(mbox, NAME_PREFIX + DS_NAME);
+        String testVal = mbox.testDataSource(zds);
+        assertNotNull("ZMailbox::testDataSource should return an error", testVal);
+    }
+
+    /**
      * Creates a folder that syncs to another folder via RSS, and verifies that an
      * RSS data source was implicitly created.
      */
     @Test
-    public void testRss()
-    throws Exception {
+    public void testRss() throws Exception {
         // Create source folder, make it publicly readable, and add a message to it.
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         String parentId = Integer.toString(Mailbox.ID_FOLDER_USER_ROOT);

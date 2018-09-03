@@ -25,7 +25,7 @@ import java.util.Map.Entry;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlValue;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
@@ -140,8 +140,8 @@ public class KeyValuePair implements KeyAndValue {
         return newKeyValuePairs;
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(
+                MoreObjects.ToStringHelper helper) {
         return helper
             .add("key", key)
             .add("value", value);
@@ -149,7 +149,7 @@ public class KeyValuePair implements KeyAndValue {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
+        return addToStringInfo(MoreObjects.toStringHelper(this))
                 .toString();
     }
 }

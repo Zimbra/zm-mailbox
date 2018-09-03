@@ -49,7 +49,7 @@ import javax.mail.Address;
 import javax.mail.internet.MimeMessage;
 
 import com.google.common.base.CharMatcher;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
@@ -361,7 +361,7 @@ public class Mailbox implements MailboxStore {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this).add("id", item.getId()).toString();
+            return MoreObjects.toStringHelper(this).add("id", item.getId()).toString();
         }
     }
 
@@ -763,7 +763,7 @@ public class Mailbox implements MailboxStore {
         // index init done in open()
         lock = new MailboxLock(data.accountId, this);
     }
-    
+
     public void setGalSyncMailbox(boolean galSyncMailbox) {
         this.galSyncMailbox = galSyncMailbox;
     }
@@ -1293,6 +1293,23 @@ public class Mailbox implements MailboxStore {
             currentChange().itemId = nextId;
         }
         return nextId;
+    }
+
+    public interface ItemIdGetter {
+        public int get();
+    }
+
+    /** Wrapper for getNextItemId method - should only be used within a transaction */
+    private class NextItemIdGetter implements ItemIdGetter {
+        @Override
+        public int get() {
+            if (!currentChange().isActive()) {
+                ZimbraLog.mailbox.info("NextItemIdGetter used when not in transaction! %s",
+                        ZimbraLog.getStackTrace(10));
+                return 0;
+            }
+            return getNextItemId(ID_AUTO_INCREMENT);
+        }
     }
 
     TargetConstraint getOperationTargetConstraint() {
@@ -1878,7 +1895,7 @@ public class Mailbox implements MailboxStore {
             SortedSet<String> clientIds= new TreeSet<String>(mData.configKeys);
             for (String key : clientIds) {
                 if (pattern.matcher(key).matches()) {
-                   
+
                     previousDeviceId = key;
                     if (previousDeviceId.indexOf(":") != -1) {
                         int index = previousDeviceId.indexOf(":");
@@ -1888,7 +1905,7 @@ public class Mailbox implements MailboxStore {
                     if (!tmp.contains("build")) {
                         break;
                     }
-                    
+
                 }
             }
         }
@@ -3641,11 +3658,24 @@ public class Mailbox implements MailboxStore {
     public int getImapRecent(OperationContext octxt, int folderId) throws ServiceException {
         boolean success = false;
         try {
-            beginTransaction("openImapFolder", octxt);
+            beginTransaction("getImapRecent", octxt);
             Folder folder = checkAccess(getFolderById(folderId));
             int recent = folder.getImapRECENT();
             success = true;
             return recent;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    public int getImapRecentCutoff(OperationContext octxt, int folderId) throws ServiceException {
+        boolean success = false;
+        try {
+            beginTransaction("getImapRecentCutoff", octxt);
+            Folder folder = checkAccess(getFolderById(folderId));
+            int cutoff = folder.getImapRECENTCutoff();
+            success = true;
+            return cutoff;
         } finally {
             endTransaction(success);
         }
@@ -3701,6 +3731,10 @@ public class Mailbox implements MailboxStore {
         }
     }
 
+    /**
+     * Record that an IMAP client has seen all the messages in this folder as they are at this time.
+     * This is used to determine which messages are considered by IMAP to be RECENT
+     */
     public void recordImapSession(int folderId) throws ServiceException {
         boolean success = false;
         try {
@@ -3970,6 +4004,44 @@ public class Mailbox implements MailboxStore {
                 }
                 success = true;
                 return dataList;
+            } finally {
+                endTransaction(success);
+            }
+        } finally {
+            lock.release();
+        }
+    }
+
+    /**
+     * Returns count of the modified items since a given change number
+     * @param octxt     The context for this request.
+     * @param lastSync  We return items with change ID larger than this value.
+     * @param sinceDate We return items with date larger than this value.
+     * @param type      The type of MailItems to return.
+     * @param folderIds folders from which add/change items are returned
+     * @return
+     * @throws ServiceException
+     */
+    public int getModifiedItemsCount(OperationContext octxt, int lastSync, int sinceDate,
+            MailItem.Type type, Set<Integer> folderIds) throws ServiceException {
+        lock.lock(false);
+        try {
+            if (lastSync >= getLastChangeID()) {
+                return 0;
+            }
+            boolean success = false;
+            try {
+                beginReadTransaction("getModifiedItems", octxt);
+
+                Set<Integer> visible = Folder.toId(getAccessibleFolders(ACL.RIGHT_READ));
+                if (folderIds == null) {
+                    folderIds = visible;
+                } else if (visible != null) {
+                    folderIds = SetUtil.intersect(folderIds, visible);
+                }
+                int count = DbMailItem.getModifiedItemsCount(this, type, lastSync, sinceDate, folderIds);
+                success = true;
+                return count;
             } finally {
                 endTransaction(success);
             }
@@ -5158,7 +5230,7 @@ public class Mailbox implements MailboxStore {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this).add("inv", invite).add("hasBody", message != null).toString();
+            return MoreObjects.toStringHelper(this).add("inv", invite).add("hasBody", message != null).toString();
         }
     }
 
@@ -5319,7 +5391,9 @@ public class Mailbox implements MailboxStore {
                     }
 
                     calItem.setTags(flags, ntags);
-                    calItem.processNewInvite(scid.message, scid.invite, folderId, nextAlarm, false, true);
+                    calItem.processNewInvite(scid.message, scid.invite, folderId, nextAlarm,
+                            false /* preserveAlarms */, true /* replaceExistingInvites */,
+                            false /* updatePrevFolders */);
                 }
                 redoRecorder.setCalendarItemAttrs(calItem.getId(), calItem.getFolderId());
             }
@@ -5789,7 +5863,8 @@ public class Mailbox implements MailboxStore {
                 return;
             }
             calItem.snapshotRevision();
-            calItem.processNewInviteReply(inv, sender);
+            calItem.processNewInviteReply(inv, sender, false /* don't update prev folders */,
+                    new NextItemIdGetter());
             success = true;
         } finally {
             endTransaction(success);
@@ -5899,6 +5974,7 @@ public class Mailbox implements MailboxStore {
                         options.setUri(uri);
                         options.setNoSession(true);
                         ZMailbox zmbox = ZMailbox.getMailbox(options);
+                        zmbox.setAccountId(orgAccount.getId());
                         zmbox.iCalReply(ical, sender);
                     } catch (IOException e) {
                         throw ServiceException.FAILURE("Error while posting REPLY to organizer mailbox host", e);
@@ -6055,16 +6131,16 @@ public class Mailbox implements MailboxStore {
         }
 
         StagedBlob staged = sm.stage(blob, this);
-        
+
         Account account = this.getAccount();
         boolean localMsgMarkedRead = false;
-        if (account.getPrefMailForwardingAddress() != null && account.isFeatureMailForwardingEnabled() 
+        if (account.getPrefMailForwardingAddress() != null && account.isFeatureMailForwardingEnabled()
             && account.isFeatureMarkMailForwardedAsRead()) {
             ZimbraLog.mailbox.debug("Marking forwarded message as read.");
             flags = flags & ~Flag.BITMASK_UNREAD;
             localMsgMarkedRead = true;
-        } 
-       
+        }
+
 
         lock.lock();
         try {
@@ -6073,7 +6149,7 @@ public class Mailbox implements MailboxStore {
                         rcptEmail, dinfo, customData, dctxt, staged);
                 if (localMsgMarkedRead && account.getPrefMailSendReadReceipts().isAlways()) {
                     SendDeliveryReport.sendReport(account, message, true, null, null);
-                } 
+                }
                 return message;
             } finally {
                 if (deleteIncoming) {
@@ -8760,6 +8836,7 @@ public class Mailbox implements MailboxStore {
         zoptions.setTargetAccount(shareOwner.getId());
         zoptions.setTargetAccountBy(Key.AccountBy.id);
         ZMailbox zmbx = ZMailbox.getMailbox(zoptions);
+        zmbx.setName(shareOwner.getName()); /* need this when logging in using another user's auth */
         ZFolder zfolder = zmbx.getFolderByUuid(shloc.getUuid());
 
         if (zfolder != null) {
@@ -10160,7 +10237,7 @@ public class Mailbox implements MailboxStore {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
             .add("id", mId)
             .add("account", mData.accountId)
             .add("lastItemId", mData.lastItemId)
@@ -10436,4 +10513,10 @@ public class Mailbox implements MailboxStore {
         // do nothing
     }
 
+    /*
+     * This method resets defalult calendar id to ID_FOLDER_CALENDAR in pref
+     */
+    public void resetDefaultCalendarId() throws ServiceException {
+        getAccount().setPrefDefaultCalendarId(ID_FOLDER_CALENDAR);
+    }
 }

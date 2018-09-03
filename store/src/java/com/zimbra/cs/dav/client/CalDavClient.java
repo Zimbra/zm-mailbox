@@ -260,4 +260,9 @@ public class CalDavClient extends WebDavClient {
     private boolean mSchedulingEnabled;
     private String mScheduleInbox;
     private String mScheduleOutbox;
+
+    protected String accessToken;
+    public void setAccessToken(String accessToken) {
+        this.accessToken = accessToken;
+    }
 }

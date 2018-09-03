@@ -57,6 +57,7 @@ import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.IDNUtil;
@@ -280,9 +281,11 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
 
             // If the Sieve script has no actions, JSieve generates an implicit keep.  If
             // the script contains a single discard action, JSieve returns an empty list.
-            if (getActions().size() == 0) {
+            if (this.discardActionPresent) {
                 ZimbraLog.filter.info("Discarding message with Message-ID %s from %s",
                     messageId, Mime.getSender(handler.getMimeMessage()));
+            }
+            if (getActions().size() == 0) {
                 handler.discard();
                 return;
             }
@@ -546,6 +549,8 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
     }
 
     private boolean isPathContainedInFiledIntoPaths(String folderPath) {
+        folderPath = StringUtil.trimTrailingSpaces(folderPath);
+
         // 1. Check folder name case-sensitively if it has already been registered in folderIntoPaths list
         if (filedIntoPaths.contains(folderPath)) {
             return true;
@@ -930,18 +935,30 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
                 ByteUtil.closeStream(in);
             }
 
-            Blob prevBlob = ctxt.getMailBoxSpecificBlob(mailbox.getId());
-            if (prevBlob != null) {
-                sm.quietDelete(prevBlob);
-                ctxt.clearMailBoxSpecificBlob(mailbox.getId());
+            if (!parsedMessageCloned) {
+                Blob prevBlob = ctxt.getIncomingBlob();
+                if (prevBlob != null) {
+                    sm.quietDelete(prevBlob);
+                }
+            } else {
+                Blob prevBlob = ctxt.getMailBoxSpecificBlob(mailbox.getId());
+                if (prevBlob != null) {
+                    sm.quietDelete(prevBlob);
+                    ctxt.clearMailBoxSpecificBlob(mailbox.getId());
+                }
             }
 
             if (ctxt.getShared()) {
                 ctxt.setMailBoxSpecificBlob(mailbox.getId(), blob);
                 ZimbraLog.filter.debug("setting mailbox specific blob for mailbox %d", mailbox.getId());
             } else {
-                ctxt.setIncomingBlob(blob);
-                ZimbraLog.filter.debug("Updated incoming blob");
+                try {
+                    ctxt.deepsetIncomingBlob(blob);
+                    ZimbraLog.filter.debug("Updated incoming blob");
+                } catch (IOException e) {
+                    ZimbraLog.filter.error("Unable to update incomimg blob.", e);
+                    return;
+                }
             }
         }
     }

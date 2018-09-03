@@ -17,7 +17,7 @@
 
 package com.zimbra.soap.account.message;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -64,6 +64,14 @@ public class SyncGalRequest {
     private ZmBoolean idOnly;
 
     /**
+     * @zm-api-field-tag getCount.
+     * @zm-api-field-description Flag whether count of remaining records should be returned in response or not.
+     * Note: <b>getCount</b> works only when idOnly is set to true and GAL sync account is configured/enabled.
+     */
+    @XmlAttribute(name=AccountConstants.A_GET_COUNT /* getCount */, required=false)
+    private ZmBoolean getCount;
+
+    /**
      * @zm-api-field-tag limit
      * @zm-api-field-description Page size control for SyncGalRequest. The maximum entries that can be returned for
  every SyncGal Request can be controlled by specifying this limit.
@@ -83,18 +91,19 @@ public class SyncGalRequest {
     public Boolean getIdOnly() { return ZmBoolean.toBool(idOnly); }
     public Integer getLimit() { return (limit != null ? limit : 0); }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(
+                MoreObjects.ToStringHelper helper) {
         return helper
             .add("token", token)
             .add("galAccountId", galAccountId)
             .add("idOnly", idOnly)
+            .add("getCount", getCount)
             .add("limit", limit);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
+        return addToStringInfo(MoreObjects.toStringHelper(this))
                 .toString();
     }
 }

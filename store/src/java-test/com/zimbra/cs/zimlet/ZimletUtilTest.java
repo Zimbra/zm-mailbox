@@ -38,19 +38,19 @@ public class ZimletUtilTest {
         }
 
         try {
-            assertEquals(LC.zimlet_directory.value() + "/org_my_zimlet", ZimletUtil.getZimletRootDir("org_my_zimlet").getAbsolutePath());
+            assertEquals(LC.zimlet_directory.value() + "/org_my_zimlet", ZimletUtil.getZimletRootDir("org_my_zimlet").getPath());
         } catch (ZimletException e) {
             fail("Should not throw ZimletException for good zimlet name");
         }
 
         try {
-            assertEquals(LC.zimlet_directory.value() + "/myzimlet", ZimletUtil.getZimletRootDir("myzimlet").getAbsolutePath());
+            assertEquals(LC.zimlet_directory.value() + "/myzimlet", ZimletUtil.getZimletRootDir("myzimlet").getPath());
         } catch (ZimletException e) {
             fail("Should not throw ZimletException for good zimlet name");
         }
 
         try {
-            assertEquals(LC.zimlet_directory.value() + "/my.zimlet", ZimletUtil.getZimletRootDir("my.zimlet").getAbsolutePath());
+            assertEquals(LC.zimlet_directory.value() + "/my.zimlet", ZimletUtil.getZimletRootDir("my.zimlet").getPath());
         } catch (ZimletException e) {
             fail("Should not throw ZimletException for good zimlet name");
         }

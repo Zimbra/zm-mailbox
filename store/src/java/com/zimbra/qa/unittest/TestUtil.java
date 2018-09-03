@@ -44,7 +44,6 @@ import org.junit.runner.JUnitCore;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
-import com.google.common.io.Closeables;
 import com.zimbra.client.ZAuthResult;
 import com.zimbra.client.ZContact;
 import com.zimbra.client.ZDataSource;
@@ -187,6 +186,7 @@ public class TestUtil extends Assert {
     public static int DEFAULT_WAIT = 200;
     public static final String DEFAULT_PASSWORD = "test123";
     public static boolean fromRunUnitTests = false; /* set if run from within RunUnitTestsRequest */
+    private static boolean sIsCliInitialized = false;
 
     public static boolean accountExists(String userName) throws ServiceException {
         return AccountTestUtil.accountExists(userName);
@@ -289,7 +289,11 @@ public class TestUtil extends Assert {
     }
 
     public static Message addMessage(Mailbox mbox, String subject) throws Exception {
-        return addMessage(mbox, Mailbox.ID_FOLDER_INBOX, subject, System.currentTimeMillis());
+        return addMessage(mbox, Mailbox.ID_FOLDER_INBOX, subject);
+    }
+
+    public static Message addMessage(Mailbox mbox, int folderId, String subject) throws Exception {
+        return addMessage(mbox, folderId, subject, System.currentTimeMillis());
     }
 
     public static Message addMessage(Mailbox mbox, int folderId, String subject, long timestamp) throws Exception {
@@ -336,7 +340,7 @@ public class TestUtil extends Assert {
         return createContact(mbox, Mailbox.ID_FOLDER_CONTACTS, emailAddr);
     }
 
-    static String addDomainIfNecessary(String user) throws ServiceException {
+    protected static String addDomainIfNecessary(String user) throws ServiceException {
         if (StringUtil.isNullOrEmpty(user) || user.contains("@")) {
             return user;
         }
@@ -451,12 +455,14 @@ public class TestUtil extends Assert {
      */
     public static List<Integer> search(Mailbox mbox, String query, Set<MailItem.Type> types) throws ServiceException {
         List<Integer> ids = new ArrayList<Integer>();
-        ZimbraQueryResults r = mbox.index.search(new OperationContext(mbox), query, types, SortBy.DATE_DESC, 100);
-        while (r.hasNext()) {
-            ZimbraHit hit = r.getNext();
-            ids.add(new Integer(hit.getItemId()));
+        try (ZimbraQueryResults r = mbox.index.search(new OperationContext(mbox), query, types,
+            SortBy.DATE_DESC, 100)) {
+            while (r.hasNext()) {
+                ZimbraHit hit = r.getNext();
+                ids.add(new Integer(hit.getItemId()));
+            }
+        } catch (IOException e) {
         }
-        Closeables.closeQuietly(r);
         return ids;
     }
 
@@ -466,11 +472,12 @@ public class TestUtil extends Assert {
 
     public static List<ZimbraHit> searchForHits(Mailbox mbox, String query, Set<MailItem.Type> types) throws Exception {
         List<ZimbraHit> hits = Lists.newArrayList();
-        ZimbraQueryResults r = mbox.index.search(new OperationContext(mbox), query, types, SortBy.DATE_DESC, 100);
-        while (r.hasNext()) {
-            hits.add(r.getNext());
+        try (ZimbraQueryResults r = mbox.index.search(new OperationContext(mbox), query, types,
+            SortBy.DATE_DESC, 100)) {
+            while (r.hasNext()) {
+                hits.add(r.getNext());
+            }
         }
-        Closeables.closeQuietly(r);
         return hits;
     }
 
@@ -679,7 +686,9 @@ public class TestUtil extends Assert {
     }
 
     public static ZMessage waitForMessage(ZMailbox mbox, String query) throws Exception {
-        List<ZMessage> msgs = waitForMessages(mbox, query, 1, 10000);
+        // Used to wait up to 10 secs but due to the way postfix sometimes works, can get longer delays
+        // so increased the max wait time.
+        List<ZMessage> msgs = waitForMessages(mbox, query, 1, 31000);
         return msgs.get(0);
     }
 
@@ -804,7 +813,7 @@ public class TestUtil extends Assert {
         adminMbox.emptyDumpster();
     }
 
-    static void deleteMessages(ZMailbox mbox, String query) throws ServiceException {
+    protected static void deleteMessages(ZMailbox mbox, String query) throws ServiceException {
         // Delete messages
         ZSearchParams params = new ZSearchParams(query);
         params.setTypes(ZSearchParams.TYPE_MESSAGE);
@@ -817,8 +826,6 @@ public class TestUtil extends Assert {
             mbox.deleteMessage(StringUtil.join(",", ids));
         }
     }
-
-    private static boolean sIsCliInitialized = false;
 
     /**
      * Sets up the environment for command-line unit tests.
@@ -1218,61 +1225,43 @@ public class TestUtil extends Assert {
         }
     }
 
-    /**
-     * Returns an authenticated transport for the <tt>zimbra</tt> account.
-     */
-    public static SoapTransport getAdminSoapTransport(Server targetServer) throws SoapFaultException, IOException, ServiceException {
-        SoapHttpTransport transport = new SoapHttpTransport(URLUtil.getAdminURL(targetServer));
-
-        // Create auth element
-        Element auth = new XMLElement(AdminConstants.AUTH_REQUEST);
-        auth.addElement(AdminConstants.E_NAME).setText(LC.zimbra_ldap_user.value());
-        auth.addElement(AdminConstants.E_PASSWORD).setText(LC.zimbra_ldap_password.value());
-
-        // Authenticate and get auth token
-        Element response = transport.invoke(auth);
-        String authToken = response.getElement(AccountConstants.E_AUTH_TOKEN).getText();
-        transport.setAuthToken(authToken);
-        transport.setAdmin(true);
-        return transport;
-    }
-
-    /**
-     * Returns an authenticated transport for the <tt>zimbra</tt> account.
-     */
-    public static SoapTransport getAdminSoapTransport() throws SoapFaultException, IOException, ServiceException {
-        SoapHttpTransport transport = new SoapHttpTransport(getAdminSoapUrl());
-
-        // Create auth element
-        Element auth = new XMLElement(AdminConstants.AUTH_REQUEST);
-        auth.addNonUniqueElement(AdminConstants.E_NAME).setText(LC.zimbra_ldap_user.value());
-        auth.addNonUniqueElement(AdminConstants.E_PASSWORD).setText(LC.zimbra_ldap_password.value());
-
-        // Authenticate and get auth token
-        Element response = transport.invoke(auth);
-        String authToken = response.getElement(AccountConstants.E_AUTH_TOKEN).getText();
-        transport.setAuthToken(authToken);
-        transport.setAdmin(true);
-        return transport;
-    }
-
-    /**
-     * Returns an authenticated transport for the <tt>zimbra</tt> account.
-     */
-    public static SoapTransport getAdminSoapTransport(String adminName, String adminPassword)
-            throws SoapFaultException, IOException, ServiceException {
-        SoapHttpTransport transport = new SoapHttpTransport(getAdminSoapUrl());
-
+    private static SoapTransport getAdminSoapTransport(SoapHttpTransport transport,
+            String adminName, String adminPassword)
+                    throws SoapFaultException, IOException, ServiceException {
         // Create auth element
         Element auth = new XMLElement(AdminConstants.AUTH_REQUEST);
         auth.addNonUniqueElement(AdminConstants.E_NAME).setText(adminName);
         auth.addNonUniqueElement(AdminConstants.E_PASSWORD).setText(adminPassword);
 
         // Authenticate and get auth token
-        Element response = transport.invoke(auth);
+        Element response =  transport.invoke(auth, false /* raw */, true /* noSession value */,
+                null /* requestedAccountId */);
         String authToken = response.getElement(AccountConstants.E_AUTH_TOKEN).getText();
         transport.setAuthToken(authToken);
+        transport.setAdmin(true);
         return transport;
+    }
+
+    /** Returns an authenticated transport for the <tt>zimbra</tt> account. */
+    public static SoapTransport getAdminSoapTransport()
+            throws SoapFaultException, IOException, ServiceException {
+        return getAdminSoapTransport(new SoapHttpTransport(getAdminSoapUrl()),
+                LC.zimbra_ldap_user.value(), LC.zimbra_ldap_password.value());
+    }
+
+    /** Returns an authenticated transport for the <tt>zimbra</tt> account on the target server. */
+    public static SoapTransport getAdminSoapTransport(Server targetServer)
+            throws SoapFaultException, IOException, ServiceException {
+        return getAdminSoapTransport(new SoapHttpTransport(URLUtil.getAdminURL(targetServer)),
+                LC.zimbra_ldap_user.value(), LC.zimbra_ldap_password.value());
+    }
+
+    /**
+     * Returns an authenticated transport for the <tt>adminName</tt> account.
+     */
+    public static SoapTransport getAdminSoapTransport(String adminName, String adminPassword)
+            throws SoapFaultException, IOException, ServiceException {
+        return getAdminSoapTransport(new SoapHttpTransport(getAdminSoapUrl()), adminName, adminPassword);
     }
 
     /**
@@ -1508,7 +1497,6 @@ public class TestUtil extends Assert {
     public static void updateMailItemChangeDateAndFlag(Mailbox mbox, int itemId, long changeDate, int flagValue)
             throws ServiceException {
         DbConnection conn = DbPool.getConnection(mbox);
-        ;
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("UPDATE ").append(DbMailItem.getMailItemTableName(mbox)).append(" SET change_date = ")
@@ -1552,8 +1540,7 @@ public class TestUtil extends Assert {
     }
 
     public static SoapTransport authUser(String acctName, String password) throws Exception {
-        com.zimbra.soap.type.AccountSelector acct =
-            new com.zimbra.soap.type.AccountSelector(com.zimbra.soap.type.AccountBy.name, acctName);
+        AccountSelector acct = new AccountSelector(com.zimbra.soap.type.AccountBy.name, acctName);
         SoapHttpTransport transport = new SoapHttpTransport(TestUtil.getSoapUrl());
         AuthRequest req = new AuthRequest(acct, password);
         AuthResponse resp = SoapTest.invokeJaxb(transport, req);
@@ -1577,9 +1564,9 @@ public class TestUtil extends Assert {
     }
 
     public static class UserInfo {
-        final String name;
-        Account acct;
-        UserInfo(String acctName) {
+        private final String name;
+        private Account acct;
+        private UserInfo(String acctName) {
             try {
                 acctName = AccountTestUtil.getAddress(acctName);
             } catch (ServiceException e) {
@@ -1588,12 +1575,12 @@ public class TestUtil extends Assert {
             acct = null;
         }
 
-        Mailbox getMailbox() throws ServiceException {
+        protected Mailbox getMailbox() throws ServiceException {
             ensureAcctExists();
             return TestUtil.getMailbox(name);
         }
 
-        ZMailbox getZMailbox() throws ServiceException {
+        protected ZMailbox getZMailbox() throws ServiceException {
             ensureAcctExists();
             return TestUtil.getZMailbox(name);
         }

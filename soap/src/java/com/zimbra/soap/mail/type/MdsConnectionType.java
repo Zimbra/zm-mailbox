@@ -32,7 +32,7 @@ public enum MdsConnectionType {
     @XmlEnumValue("cleartext") cleartext,
     @XmlEnumValue("ssl") ssl,
     @XmlEnumValue("tls") tls,
-    @XmlEnumValue("tls_is_available") tls_if_available;
+    @XmlEnumValue("tls_if_available") tls_if_available;
 
     public static MdsConnectionType fromString(String s) throws ServiceException {
         try {

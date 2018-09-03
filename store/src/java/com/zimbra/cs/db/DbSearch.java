@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
@@ -40,6 +40,7 @@ import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.imap.ImapMessage;
 import com.zimbra.cs.index.DbSearchConstraints;
 import com.zimbra.cs.index.SortBy;
+import com.zimbra.cs.index.SortBy.Key;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Flag.FlagInfo;
 import com.zimbra.cs.mailbox.Folder;
@@ -140,6 +141,8 @@ public final class DbSearch {
                 return db.concat("(1 + " + db.sign(db.bitAND("mi.flags", String.valueOf(Flag.BITMASK_HIGH_PRIORITY))) +
                         " - " + db.sign(db.bitAND("mi.flags", String.valueOf(Flag.BITMASK_LOW_PRIORITY))) + ")",
                         db.lpad("mi.id", 10, "0"));
+            case UNREAD: // 0 or 1 or 2
+                return "mi.unread";
             case DATE:
             default:
                return "mi.date";
@@ -168,13 +171,29 @@ public final class DbSearch {
 
     /**
      * Generate the ORDER BY part that goes at the end of the SELECT.
+     * Note: Assumes that <b>mi.id</b> is something defined in the SELECT which can be ordered by.
      */
-    static String orderBy(SortBy sort, boolean alias) {
+    static protected String orderBy(SortBy sort, boolean alias) {
         if (sort.getKey() == SortBy.Key.NONE) { // no ORDER BY for NONE
             return "";
         }
-        return " ORDER BY " + (alias ? SORT_COLUMN_ALIAS : toSortField(sort)) +
-            (sort.getDirection() == SortBy.Direction.DESC ? " DESC" : "");
+        StringBuilder orderBy = new StringBuilder(" ORDER BY ");
+        orderBy.append(alias ? SORT_COLUMN_ALIAS : toSortField(sort));
+        if (sort.getDirection() == SortBy.Direction.DESC) {
+            orderBy.append(" DESC");
+        }
+
+        if (sort.getDirection() == SortBy.Direction.ASC && sort.getKey() == SortBy.Key.UNREAD) {
+            orderBy.append(" DESC");
+        }
+        if (sort.getKey() == SortBy.Key.UNREAD) {
+            return orderBy.append(", mi.id DESC").toString();
+        }
+        /* Successive searches using cursors need a predictable order, so add additional search column. */
+        if (Key.ID != sort.getKey()) {
+            return orderBy.append(", mi.id").toString();
+        } 
+        return orderBy.toString();
     }
 
     public int countResults(DbConnection conn, DbSearchConstraints node) throws ServiceException {
@@ -389,6 +408,9 @@ public final class DbSearch {
 
         for (Map.Entry<DbSearchConstraints.RangeType, DbSearchConstraints.Range> entry : constraint.ranges.entries()) {
             switch (entry.getKey()) {
+                case ITEMID:
+                    needAnd = needAnd | encodeIntRange("mi.id", (DbSearchConstraints.NumericRange) entry.getValue(), 1, needAnd);
+                    break;
                 case DATE:
                     needAnd = needAnd | encodeDateRange("mi.date", (DbSearchConstraints.NumericRange) entry.getValue(), needAnd);
                     break;
@@ -842,14 +864,20 @@ public final class DbSearch {
             case RCPT:
             case NAME:
             case NAME_NATURAL_ORDER:
+            case UNREAD:
             case ATTACHMENT:
             case FLAG:
             case PRIORITY:
                 return Strings.nullToEmpty(rs.getString(SORT_COLUMN_ALIAS));
             case SIZE:
                 return Long.valueOf(rs.getInt(SORT_COLUMN_ALIAS));
+            case ID:
+                return Integer.valueOf(rs.getInt(SORT_COLUMN_ALIAS));
             case DATE:
             default:
+                // Assuming this multiplication by 1000 is intended for DATE in order to convert from a
+                // UNIX time in seconds to milliseconds since epoc
+                // seems odd to also do this for the default case though...
                 return Long.valueOf(rs.getInt(SORT_COLUMN_ALIAS) * 1000L);
         }
     }
@@ -1188,7 +1216,7 @@ public final class DbSearch {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this)
+            return MoreObjects.toStringHelper(this)
                 .add("id", getId())
                 .add("type", getType())
                 .add("sort", sortValue)

@@ -1,0 +1,12 @@
+<GetDataSourcesResponse xmlns="urn:zimbraMail">
+      <unknown importClass="com.synacor.zimbra.OAuthDataImport" isEnabled="1" smtpPort="-1" name="blablah@yahoo.com" host="yahoo.com" id="8d17e182-fdc6-4f6c-b83f-d478c9b04bfd" importOnly="0" useAddressForForwardReply="0" l="257" connectionType="cleartext" refreshToken="AAbbcdd22wkBVsVdNHR.l0_jzuWvPNiAt0DBOcRm7w9zLorEM"/>
+      <imap port="143" isEnabled="0" smtpPort="-1" name="myIMAPSource" host="imap.zimbra.com" id="d96e9a7d-6af9-4625-ba68-37bcd73fce6d" importOnly="0" useAddressForForwardReply="0" l="1" connectionType="cleartext"/>
+      <pop3 port="23" isEnabled="1" smtpPort="-1" name="myPop3Mail" host="pop.zimbra.com" leaveOnServer="1" id="b5e98a1f-5f93-4e19-a1a4-956c4c95af1b" importOnly="0" useAddressForForwardReply="0" l="2" connectionType="cleartext"/>
+      <rss port="443" isEnabled="1" smtpPort="-1" name="myRssFeed" host="rss.zimbra.com" pollingInterval="43200000" id="89bca37f-9096-419d-9471-62149a58cbdc" importOnly="0" useAddressForForwardReply="0" l="260" connectionType="cleartext"/>
+      <cal isEnabled="1" smtpPort="-1" name="GCal" host="calendar.zimbra.com" pollingInterval="63100000" id="112da07b-43e3-41ab-a0b3-5c109169ee49" importOnly="0" useAddressForForwardReply="0" l="261" connectionType="cleartext"/>
+      <gal isEnabled="0" smtpPort="-1" name="corpAddressBook" host="ldap.somehost.local" id="ed408f4d-f8d5-4597-bf49-563ed62b64de" importOnly="0" useAddressForForwardReply="0" l="7" connectionType="cleartext"/>
+      <caldav isEnabled="1" smtpPort="-1" name="externalDAV" host="dav.zimbra.com" id="95c066a8-5ad6-40fa-a094-06f8b3531878" importOnly="0" useAddressForForwardReply="0" l="9" connectionType="cleartext"/>
+      <rss isEnabled="1" smtpPort="-1" name="myYahoo" host="news.yahoo.com" pollingInterval="43200000" id="f32349af-9a78-4c26-80a1-338203378930" importOnly="0" useAddressForForwardReply="0" l="261" connectionType="cleartext"/>
+      <imap port="193" isEnabled="0" smtpPort="-1" name="forgottenMail" host="imap3.zimbra.com" id="b2e929f5-e124-47a0-b1b4-a7fbcd14fb31" importOnly="0" useAddressForForwardReply="0" l="1" connectionType="tls_if_available"/>
+      <unknown importClass="com.synacor.zimbra.OAuthDataImport" isEnabled="0" smtpPort="-1" host="abook.gmail.com" name="someone@gmail.com" id="82e3b467-5a0f-4cff-ad8d-533ed6fc4992" importOnly="0" useAddressForForwardReply="0" l="345" connectionType="cleartext"/>
+    </GetDataSourcesResponse>

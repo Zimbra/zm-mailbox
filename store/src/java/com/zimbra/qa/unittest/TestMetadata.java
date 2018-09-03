@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2009, 2010, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2007, 2009, 2010, 2013, 2014, 2016, 2017 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -16,61 +16,67 @@
  */
 package com.zimbra.qa.unittest;
 
-import com.zimbra.common.util.ZimbraLog;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TestName;
+
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Metadata;
 
-import junit.framework.TestCase;
+public class TestMetadata {
 
-
-public class TestMetadata 
-extends TestCase {
-
-    private static final String USER_NAME = "user1";
+    @Rule
+    public TestName testInfo = new TestName();
+    private static String USER_NAME = null;
     private static final String METADATA_SECTION = TestMetadata.class.getSimpleName();
-    
+
+    @Before
     public void setUp()
     throws Exception {
+        USER_NAME = testInfo.getMethodName();
         cleanUp();
     }
-    
+
+    @After
+    public void cleanUp()
+    throws Exception {
+        TestUtil.deleteAccountIfExists(USER_NAME);
+    }
+
     /**
      * Tests insert, update and delete operations for mailbox metadata.
      */
-    public void testMetadata()
+    @Test
+    public void insertUpdateDelete()
     throws Exception {
-        ZimbraLog.test.info("Starting testMetadata");
-        
+        TestUtil.createAccount(USER_NAME);
         Mailbox mbox = TestUtil.getMailbox(USER_NAME);
-        assertNull(mbox.getConfig(null, METADATA_SECTION));
+        assertNull("No metadata section should exist at start", mbox.getConfig(null, METADATA_SECTION));
 
         // Insert
         Metadata config = new Metadata();
         config.put("string", "mystring");
         mbox.setConfig(null, METADATA_SECTION, config);
         config = mbox.getConfig(null, METADATA_SECTION);
-        assertEquals("mystring", config.get("string"));
-        
+        assertEquals("Expected value for requested key after insert and get",
+                "mystring", config.get("string"));
+
         // Update
         config.put("long", 87);
         mbox.setConfig(null, METADATA_SECTION, config);
         config = mbox.getConfig(null, METADATA_SECTION);
-        assertEquals(87, config.getLong("long"));
-        assertEquals("mystring", config.get("string"));
-        
+        assertEquals("Expected value for requested key after update and get", 87, config.getLong("long"));
+        assertEquals("Expected value for original requested key after update",
+                "mystring", config.get("string"));
+
         // Delete
         mbox.setConfig(null, METADATA_SECTION, null);
-        assertNull(mbox.getConfig(null, METADATA_SECTION));
-    }
-    
-    public void tearDown()
-    throws Exception {
-        cleanUp();
-    }
-    
-    private void cleanUp()
-    throws Exception {
-        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
-        mbox.setConfig(null, METADATA_SECTION, null);
+        assertNull("No metadata section should exist after it has been deleted",
+                mbox.getConfig(null, METADATA_SECTION));
     }
 }

@@ -64,6 +64,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ZimbraAuthTokenEncoded;
@@ -115,6 +116,7 @@ import com.zimbra.cs.util.AccountUtil;
  *
  *             {auth-types} = comma-separated list. Legal values are:
  *                            co     cookie
+ *                            jwt    JWT based auth
  *                            ba     basic auth
  *                            nsc    do not set a cookie when using basic auth
  *                            (default is &quot;co,ba&quot;, i.e. check both)
@@ -236,10 +238,12 @@ public class UserServlet extends ZimbraServlet {
     public static final String AUTH_NO_SET_COOKIE = "nsc"; // don't set auth token cookie after basic auth
                                                            // same as ba after bug 42782
 
+    public static final String AUTH_JWT = "jwt"; // auth by jwt
+
     // see https://bugzilla.zimbra.com/show_bug.cgi?id=42782#c11
     public static final String AUTH_SET_COOKIE = "sc"; // set auth token cookie after basic auth
 
-    public static final String AUTH_DEFAULT = "co,nsc,qp"; // all three
+    public static final String AUTH_DEFAULT = "co,jwt,nsc,qp"; // all four
 
     public static final String HTTP_URL = "http_url";
     public static final String HTTP_STATUS_CODE = "http_code";
@@ -272,14 +276,15 @@ public class UserServlet extends ZimbraServlet {
             return;
         }
         if (ctxt != null &&!ctxt.cookieAuthHappened && ctxt.basicAuthAllowed() && !ctxt.basicAuthHappened) {
-            resp.addHeader(AuthUtil.WWW_AUTHENTICATE_HEADER, getRealmHeader(req, null));
             resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, L10nUtil.getMessage(MsgKey.errMustAuthenticate, req));
         } else if (ctxt != null && ctxt.cookieAuthHappened && !ctxt.isCsrfAuthSucceeded()
             && (req.getMethod().equalsIgnoreCase("POST") || req.getMethod().equalsIgnoreCase("PUT"))) {
             resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, L10nUtil.getMessage(MsgKey.errMustAuthenticate, req));
-        } else {
-            resp.sendError(HttpServletResponse.SC_NOT_FOUND, message);
-        }
+        } else if (ctxt != null && ctxt.getAuthAccount() instanceof GuestAccount && ctxt.basicAuthAllowed() ) {
+                resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, L10nUtil.getMessage(MsgKey.errMustAuthenticate, req));
+         } else {
+                resp.sendError(HttpServletResponse.SC_NOT_FOUND, message);
+         }
     }
 
     protected UserServletContext createContext(HttpServletRequest req, HttpServletResponse resp, UserServlet servlet)
@@ -505,6 +510,7 @@ public class UserServlet extends ZimbraServlet {
                     // if the target is a mountpoint, the request was already proxied to the resolved target
                     return;
                 }
+                context.target = item;  /* imap_id resolution needs this. */
             }
         }
 

@@ -84,7 +84,10 @@ public abstract class ImapMailboxStore {
     public abstract void resetImapUid(List<Integer> renumber) throws ServiceException;
     public abstract void beginTrackingImap() throws ServiceException;
     public abstract void deleteMessages(OperationContext octxt, List<Integer> ids);
-    /** @return List of IMAP UIDs */
+    /**
+     * MUST only be called when the source items and target folder are in the same mailbox
+     * @return List of IMAP UIDs
+     */
     public abstract List<Integer> imapCopy(OperationContext octxt, int[] itemIds, MailItemType type, int folderId)
             throws IOException, ServiceException;
     public abstract InputStreamWithSize getByImapId(OperationContext octxt, int imapId, String folderId, String resolvedPath)
@@ -108,19 +111,7 @@ public abstract class ImapMailboxStore {
             throws ServiceException;
     public abstract void registerWithImapServerListener(ImapListener listener);
     public abstract void unregisterWithImapServerListener(ImapListener listener);
-
-    public abstract List<ImapListener> getListeners(int folderId);
-    public List<ImapListener> getListeners(ItemIdentifier ident) {
-        String acctId = ident.accountId != null ? ident.accountId : getAccountId();
-        try {
-            ImapServerListener listener = ImapServerListenerPool.getInstance().getForAccountId(acctId);
-            return Lists.newArrayList(listener.getListeners(acctId, ident.id));
-        } catch (ServiceException se) {
-            ZimbraLog.imap.debug("Problem getting listeners for folder=%s acct=%s from ImapServerListener",
-                    ident, acctId, se);
-            return Collections.emptyList();
-        }
-    }
+    public abstract List<ImapListener> getListeners(ItemIdentifier ident);
 
     public List<ImapListener> getListeners(FolderStore folder) {
         try {
@@ -129,6 +120,17 @@ public abstract class ImapMailboxStore {
             ZimbraLog.imap.debug("Problem getting listeners for folder=%s acct=%s from ImapServerListener",
                     folder, getAccountId(), se);
             return Collections.emptyList();
+        }
+    }
+
+    public ImapServerListener getServerListener(ItemIdentifier ident) {
+        String acctId = ident.accountId != null ? ident.accountId : getAccountId();
+        try {
+            return ImapServerListenerPool.getInstance().getForAccountId(acctId);
+        } catch (ServiceException se) {
+            ZimbraLog.imap.debug("Problem getting ImapServerListener for folder=%s acct=%s from pool",
+                    ident, acctId, se);
+            return null;
         }
     }
 

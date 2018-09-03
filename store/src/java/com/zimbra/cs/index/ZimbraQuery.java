@@ -27,7 +27,6 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.search.TermQuery;
 
 import com.google.common.base.Joiner;
-import com.google.common.io.Closeables;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.ZimbraLog;
@@ -46,6 +45,7 @@ import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.util.IOUtil;
 
 /**
  * Executes a search query.
@@ -444,6 +444,12 @@ public final class ZimbraQuery {
                         case ATTACHMENT:
                             cursor.setSortValue(LuceneFields.valueForBooleanField(item.hasAttachment()));
                             break;
+                        case ID:
+                            cursor.setSortValue(String.valueOf(item.getId()));
+                            break;
+                        case UNREAD:
+                            cursor.setSortValue(LuceneFields.valueForBooleanField(item.isUnread()));
+                            break;
                         case DATE:
                         default:
                             cursor.setSortValue(String.valueOf(item.getDate()));
@@ -782,8 +788,8 @@ public final class ZimbraQuery {
             }
             return results;
         } catch (RuntimeException e) {
-            Closeables.closeQuietly(results);
-            Closeables.closeQuietly(operation);
+            IOUtil.closeQuietly(results);
+            IOUtil.closeQuietly(operation);
             throw e;
         }
     }

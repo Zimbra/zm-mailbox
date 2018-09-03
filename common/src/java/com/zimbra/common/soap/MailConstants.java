@@ -294,6 +294,8 @@ public final class MailConstants {
     public static final String E_RECORD_IMAP_SESSION_RESPONSE = "RecordIMAPSessionResponse";
     public static final String E_GET_IMAP_RECENT_REQUEST = "GetIMAPRecentRequest";
     public static final String E_GET_IMAP_RECENT_RESPONSE = "GetIMAPRecentResponse";
+    public static final String E_GET_IMAP_RECENT_CUTOFF_REQUEST = "GetIMAPRecentCutoffRequest";
+    public static final String E_GET_IMAP_RECENT_CUTOFF_RESPONSE = "GetIMAPRecentCutoffResponse";
     public static final String E_IMAP_COPY_REQUEST = "IMAPCopyRequest";
     public static final String E_IMAP_COPY_RESPONSE = "IMAPCopyResponse";
 
@@ -588,6 +590,8 @@ public final class MailConstants {
     public static final QName BEGIN_TRACKING_IMAP_RESPONSE = QName.get(E_BEGIN_TRACKING_IMAP_RESPONSE, NAMESPACE);
     public static final QName GET_IMAP_RECENT_REQUEST = QName.get(E_GET_IMAP_RECENT_REQUEST, NAMESPACE);
     public static final QName GET_IMAP_RECENT_RESPONSE = QName.get(E_GET_IMAP_RECENT_RESPONSE, NAMESPACE);
+    public static final QName GET_IMAP_RECENT_CUTOFF_REQUEST = QName.get(E_GET_IMAP_RECENT_CUTOFF_REQUEST, NAMESPACE);
+    public static final QName GET_IMAP_RECENT_CUTOFF_RESPONSE = QName.get(E_GET_IMAP_RECENT_CUTOFF_RESPONSE, NAMESPACE);
     public static final QName RECORD_IMAP_SESSION_REQUEST = QName.get(E_RECORD_IMAP_SESSION_REQUEST, NAMESPACE);
     public static final QName RECORD_IMAP_SESSION_RESPONSE = QName.get(E_RECORD_IMAP_SESSION_RESPONSE, NAMESPACE);
     public static final QName IMAP_COPY_REQUEST = QName.get(E_IMAP_COPY_REQUEST, NAMESPACE);
@@ -782,6 +786,7 @@ public final class MailConstants {
     public static final String A_IMAP_NUM = "i4n";
     public static final String A_IMAP_MODSEQ = "i4ms";
     public static final String A_IMAP_UIDNEXT = "i4next";
+    public static final String A_IMAP_RECENT_CUTOFF = "cutoff";
     public static final String A_TOTAL_SIZE = "total";
     public static final String A_OPERATION = "op";
     public static final String A_RECURSIVE = "recursive";
@@ -943,6 +948,7 @@ public final class MailConstants {
     public static final String A_GALSYNC_FULLSYNC_RECOMMENDED = "fullSyncRecommended";
     public static final String A_DELETE_LIMIT = "deleteLimit";
     public static final String A_CHANGE_LIMIT = "changeLimit";
+    public static final String A_REMAIN = "remain";
 
     // filter rules
     public static final String A_LHS = "k0";
@@ -1348,4 +1354,31 @@ public final class MailConstants {
     public static final String A_CONTACTS_BACKUP_FILE_NAME = "contactsBackupFileName";
     public static final String A_CONTACTS_RESTORE_RESOLVE = "resolve";
     public static final String A_CONTACTS_BACKUP_FOLDER_NAME = "ContactsBackup";
+
+    // SearchAction API
+    public static final String E_SEARCH_ACTION_REQUEST = "SearchActionRequest";
+    public static final String E_SEARCH_ACTION_RESPONSE = "SearchActionResponse";
+    public static final String E_BULK_ACTION = "BulkAction";
+    public static final QName SEARCH_ACTION_REQUEST = QName.get(E_SEARCH_ACTION_REQUEST, NAMESPACE);
+    public static final QName SEARCH_ACTION_RESPONSE = QName.get(E_SEARCH_ACTION_RESPONSE, NAMESPACE);
+
+    // Profile image API
+    public static final String E_MODIFY_PROFILE_IMAGE_REQUEST = "ModifyProfileImageRequest";
+    public static final String E_MODIFY_PROFILE_IMAGE_RESPONSE = "ModifyProfileImageResponse";
+    public static final QName MODIFY_PROFILE_IMAGE_REQUEST = QName.get(E_MODIFY_PROFILE_IMAGE_REQUEST, NAMESPACE);
+    public static final QName MODIFY_PROFILE_IMAGE_RESPONSE = QName.get(E_MODIFY_PROFILE_IMAGE_RESPONSE, NAMESPACE);
+    
+    // Password reset API
+    public static final String E_SET_RECOVERY_ACCOUNT_REQUEST = "SetRecoveryAccountRequest";
+    public static final String E_SET_RECOVERY_ACCOUNT_RESPONSE = "SetRecoveryAccountResponse";
+    public static final QName SET_RECOVERY_EMAIL_REQUEST = QName.get(E_SET_RECOVERY_ACCOUNT_REQUEST, NAMESPACE);
+    public static final QName SET_RECOVERY_EMAIL_RESPONSE = QName.get(E_SET_RECOVERY_ACCOUNT_RESPONSE, NAMESPACE);
+    public static final String A_RECOVERY_ATTEMPTS_LEFT = "recoveryAttemptsLeft";
+    public static final String A_RECOVERY_ACCOUNT_VERIFICATION_CODE = "recoveryAccountVerificationCode";
+    public static final String E_RECOVER_ACCOUNT_REQUEST = "RecoverAccountRequest";
+    public static final String E_RECOVER_ACCOUNT_RESPONSE = "RecoverAccountResponse";
+    public static final QName RECOVER_ACCOUNT_REQUEST = QName.get(E_RECOVER_ACCOUNT_REQUEST, NAMESPACE);
+    public static final QName RECOVER_ACCOUNT_RESPONSE = QName.get(E_RECOVER_ACCOUNT_RESPONSE, NAMESPACE);
+    public static final String A_RECOVERY_ACCOUNT = "recoveryAccount";
+    public static final String A_CHANNEL = "channel";
 }

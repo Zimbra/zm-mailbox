@@ -230,6 +230,12 @@ public final class DebugConfig {
             "defang_style_unwanted_import",
             "@import(\\s)*((\'|\")?(\\s)*(http://|https://)?([^\\s;]*)(\\s)*(\'|\")?(\\s)*;?)");
 
+    public static final String xhtmlWhitelistedTags = value("defang_xhtml_whitelisted_tags",
+        "a,abbr,acronym,blockquote,div,font,h1,h2,h3,h4,h5,h6,img,li,ol,p,span,table,td,th,tr,ul");
+
+    public static final String xhtmlWhitelistedAttributes = value("defang_xhtml_whitelisted_attributes",
+        "abbr,align,alt,border,cellpadding,cellspacing,cite,class,color,colspan,height,href,id,name,rel,rev,rowspan,size,src,style,title,target,valign,width");
+
     public static boolean defang_block_form_same_host_post_req = value("defang_block_form_same_host_post_req", true);
 
 
@@ -258,6 +264,7 @@ public final class DebugConfig {
 
     public static final String defangImgSkipOwaspSanitize = value("defang_img_skip_owasp_sanitize", "^cid:.*@");
     public static final String defangOwaspValidImgTag = value("owasp_valid_img_tag", "<\\s*img");
+    public static final String defangStyleUnwantedStrgPattern = value("defang_style_unwanted_strg_pattern", "\\s*(('){2,})");
 
     /*
      * Default maximum size of convertd response. This reduces OOME in case of
@@ -317,6 +324,26 @@ public final class DebugConfig {
     //default 2 days.
     public static int invalidPasswordCacheExpirationInMinutes =
         value("debug_invalid_password_cache_expiration_in_minutes", 2880);
+
+    /**
+     * "profile_image_max_size" maximum image size allowed for account profile.
+     */
+    public static final int profileImageMaxSize = value ("profile_image_max_size", 2*1024*1024);
+
+    /**
+     * "profile_thumbnail_image_dimension" profile ldap thumbnail image dimesion.
+     */
+    public static final int profileThumbnailImageDimension = value ("profile_thumbnail_image_dimension", 50);
+
+    /**
+     * "restricted_server_ldap_attributes" comma separated list of restricted server ldap attributes
+     */
+    public static final String restrictedServerLDAPAttributes = value ("restricted_server_ldap_attributes", "zimbraSSLPrivateKey");
+
+    /**
+     * sleep time between account rename and alias creation for testing mail delivery during change of primary email
+     */
+    public static final int sleepTimeForTestingChangePrimaryEmail = value ("change_primary_email_sleep_time", 0);
 
     private static boolean value(String key, boolean defaultValue) {
         String value = LC.get(key);

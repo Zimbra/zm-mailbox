@@ -16,26 +16,37 @@
  */
 package com.zimbra.cs.filter;
 
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.MockProvisioning;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.extension.*;
-import org.apache.jsieve.SieveFactory;
-import org.apache.jsieve.commands.AbstractActionCommand;
-import com.zimbra.cs.mailbox.*;
-import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.cs.service.util.ItemId;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.AfterClass;
-import org.junit.Test;
-
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
 
-import java.lang.reflect.Method;
-import java.lang.reflect.Field;
+import org.apache.jsieve.SieveFactory;
+import org.apache.jsieve.commands.AbstractActionCommand;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.MethodRule;
+import org.junit.rules.TestName;
+
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.MockProvisioning;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.extension.ExtensionTestUtil;
+import com.zimbra.cs.extension.ExtensionUtil;
+import com.zimbra.cs.mailbox.DeliveryContext;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxTestUtil;
+import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.util.ZTestWatchman;
 
 /**
  * Unit test for {@link com.zimbra.cs.filter.RuleManager}
@@ -43,7 +54,11 @@ import java.lang.reflect.Field;
  */
 public final class RuleManagerWithCustomActionFilterTest {
 
+    @Rule public TestName testName = new TestName();
+    @Rule public MethodRule watchman = new ZTestWatchman();
+    
     private static SieveFactory original_sf;
+    
 
     @BeforeClass
     public static void init() throws Exception {
@@ -104,7 +119,7 @@ public final class RuleManagerWithCustomActionFilterTest {
 
     @Before
     public void setUp() throws Exception {
-        MailboxTestUtil.clearData();
+        System.out.println(testName.getMethodName());
     }
 
     @Test
@@ -194,6 +209,15 @@ public final class RuleManagerWithCustomActionFilterTest {
         //ZimbraExtension tag_ext2 = ExtensionUtil.getExtension("tag");
         //tag_ext2.destroy();
 
+    }
+    
+    @After
+    public void tearDown() {
+        try {
+            MailboxTestUtil.clearData();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 }

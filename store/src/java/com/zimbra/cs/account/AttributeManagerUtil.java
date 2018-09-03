@@ -1255,7 +1255,7 @@ public class AttributeManagerUtil {
        switch (type) {
            case TYPE_BOOLEAN:
                javaType = "boolean";
-               putParam = String.format("%s ? Provisioning.TRUE : Provisioning.FALSE", name);
+               putParam = String.format("%s ? TRUE : FALSE", name);
                break;
            case TYPE_BINARY:
            case TYPE_CERTIFICATE:

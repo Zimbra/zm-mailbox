@@ -86,6 +86,7 @@
     <mkdir dir="${base.dir}/${slapd.conf.dir}"/>
     <mkdir dir="${base.dir}/${slapd.etc.dir}/schema"/>
     <mkdir dir="${base.dir}/bin"/>
+    <mkdir dir="${base.dir}/conf/attrs"/>
     <mkdir dir="${base.dir}/conf/msgs"/>
     <mkdir dir="${base.dir}/db"/>
     <mkdir dir="${base.dir}/lib/ext"/>
@@ -113,7 +114,6 @@
                 public static final String RELNUM = "${zimbra.buildinfo.relnum}";
                 public static final String BUILDNUM = "${zimbra.buildinfo.buildnum}";
                 public static final String VERSION = "${zimbra.buildinfo.version}";
-                public static final String TYPE = "${zimbra.buildinfo.type}";
                 public static final String RELEASE = "${zimbra.buildinfo.release}";
                 public static final String DATE = "${DSTAMP}-${TSTAMP}";
                 public static final String HOST = "${zimbra.buildinfo.host}";
@@ -280,10 +280,6 @@
     <ivy:install organisation="org.apache.curator" module="curator-client" revision="2.0.1-incubating" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
     <ivy:install organisation="org.apache.curator" module="curator-x-discovery" revision="2.0.1-incubating" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
     <ivy:install organisation="org.apache.curator" module="curator-framework" revision="2.0.1-incubating" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-    <ivy:install organisation="org.codehaus.jackson" module="jackson-core-asl" revision="1.9.2" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-    <ivy:install organisation="org.codehaus.jackson" module="jackson-smile" revision="1.9.2" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-    <ivy:install organisation="org.codehaus.jackson" module="jackson-mapper-asl" revision="1.9.2" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-    <ivy:install organisation="org.codehaus.jackson" module="jackson-xc" revision="1.9.2" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
     <ivy:install organisation="asm" module="asm" revision="3.3.1" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
     <ivy:install organisation="oauth" module="oauth" revision="1.4" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
     <ivy:install organisation="com.googlecode.owasp-java-html-sanitizer" module="owasp-java-html-sanitizer" revision="r239" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
@@ -311,13 +307,22 @@
   	<ivy:install organisation="com.sun.jersey" module="jersey-server" revision="1.11" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
   	<ivy:install organisation="com.sun.jersey.contribs" module="jersey-multipart" revision="1.12" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
   	<ivy:install organisation="javax.jws" module="jsr181-api" revision="2.2.6" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-        <ivy:install organisation="org.ehcache" module="ehcache" revision="3.1.2" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-  	<ivy:install organisation="javax.ws.rs" module="jsr311-api" revision="1.1.1" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-  	<ivy:install organisation="zimbra" module="zm-soap" revision="latest.integration" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-    <ivy:install organisation="zimbra" module="zm-client" revision="latest.integration" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-  	<war warfile="${warfile}" webxml="${war.web.xml}">
+
+    <ivy:install organisation="org.ehcache" module="ehcache" revision="3.1.2" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+    <ivy:install organisation="javax.ws.rs" module="jsr311-api" revision="1.1.1" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+    <ivy:install organisation="com.fasterxml.jackson.core" module="jackson-core" revision="2.9.2" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+    <ivy:install organisation="com.fasterxml.jackson.core" module="jackson-annotations" revision="2.9.2" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/> 
+    <ivy:install organisation="com.fasterxml.jackson.core" module="jackson-databind" revision="2.9.2" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+    <ivy:install organisation="com.fasterxml.jackson.dataformat" module="jackson-dataformat-smile" revision="2.9.2" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+    <ivy:install organisation="com.fasterxml.jackson.module" module="jackson-module-jaxb-annotations" revision="2.8.9" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+    <ivy:install organisation="io.jsonwebtoken" module="jjwt" revision="0.7.0" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+    <ivy:install organisation="org.apache.commons" module="commons-text" revision="1.1" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+    <ivy:install organisation="org.apache.commons" module="commons-lang3" revision="3.7" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+    <ivy:install organisation="org.apache.commons" module="commons-rng-client-api" revision="1.0" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+    <ivy:install organisation="org.apache.commons" module="commons-rng-core" revision="1.0" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+    <ivy:install organisation="org.apache.commons" module="commons-rng-simple" revision="1.0" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+    <war warfile="${warfile}" webxml="${war.web.xml}">
       <fileset dir="WebRoot"/>
-      <lib file="${build.dir}/${jar.file}"/>
       <lib dir="${build.tmp.dir}" includes="*.jar"/>
       <!-- /lib -->
       <classes dir="${config.dir}" includes="sieveConfig.xml"/>
@@ -393,6 +398,14 @@
        <arg line="-o ${dist.dir}"/>
     </java>
   </target>
+  <target name="create-version-ldap" depends="build-init" description="Creates ldap schema version: zimbra-attrs-schema">
+    <exec executable="git" failonerror="false" output="${dist.dir}/conf/attrs/zimbra-attrs-schema">
+      <arg value="log"/>
+      <arg value="-1"/>
+      <arg value="--pretty=format:%at"/>
+      <arg value="conf/attrs/zimbra-attrs.xml"/>
+    </exec>
+  </target>
   <target name="setup-for-soap-tests" description="Does necessary setup for RunUnitTestsRequests">
     <exec executable="sudo" failonerror="false">
       <arg value="mkdir"/>
@@ -407,4 +420,11 @@
       <fileset dir="data/unittest" includes="**"/>
     </copy>
   </target>
+  
+  <target name="dist" depends="jar" description="Copies jar to dist dir">
+       <copy todir="${dist.dir}">
+         <fileset dir="${build.dir}" />
+         <globmapper from="zm-store-*.jar" to="zm-store.jar" />
+       </copy>
+     </target>
 </project>

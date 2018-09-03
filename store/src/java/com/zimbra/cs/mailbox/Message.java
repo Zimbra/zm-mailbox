@@ -27,7 +27,7 @@ import java.util.Set;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ZAttrProvisioning.PrefCalendarApptVisibility;
@@ -596,8 +596,10 @@ public class Message extends MailItem {
         data.unreadCount = unread ? 1 : 0;
         data.contentChanged(mbox);
 
-        ZimbraLog.mailop.info("Adding Message: id=%d, Message-ID=%s, parentId=%d, folderId=%d, folderName=%s.",
-                              data.id, pm.getMessageID(), data.parentId, folder.getId(), folder.getName());
+        ZimbraLog.mailop.debug(
+                "Adding Message: id=%d, Message-ID=%s, parentId=%d, folderId=%d, folderName=%s acct=%s.",
+                data.id, pm.getMessageID(), data.parentId, folder.getId(), folder.getName(),
+                mbox.getAccountId());
         new DbMailItem(mbox)
             .setSender(pm.getParsedSender().getSortString())
             .setRecipients(ParsedAddress.getSortString(pm.getParsedRecipients()))
@@ -1248,7 +1250,10 @@ public class Message extends MailItem {
                                 invChanges = new InviteChanges(prev, cur);
                         }
 
-                        modifiedCalItem = status.calItem.processNewInvite(pm, cur, calFolderId, discardExistingInvites);
+                        modifiedCalItem = status.calItem.processNewInvite(
+                                pm, cur, calFolderId, CalendarItem.NEXT_ALARM_KEEP_CURRENT,
+                                true /* preserveAlarms */, discardExistingInvites,
+                                false /* updatePrevFolders */);
                         status.calItemFolderId = calFolderId;
                         status.calItem.getFolder().updateHighestMODSEQ();
                     }
@@ -1610,7 +1615,7 @@ public class Message extends MailItem {
 
     @Override
     public String toString() {
-        Objects.ToStringHelper helper = Objects.toStringHelper(this);
+        MoreObjects.ToStringHelper helper = MoreObjects.toStringHelper(this);
         appendCommonMembers(helper);
         helper.add("sender", sender);
         if (recipients != null) {

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011, 2012, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2011, 2012, 2013, 2014, 2015, 2016, 2017 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -17,6 +17,7 @@
 package com.zimbra.common.zmime;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
@@ -33,7 +34,6 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CharsetUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.zmime.ZMimeUtility.ByteBuilder;
 
 public class ZInternetHeader {
     final HeaderInfo hinfo;
@@ -347,54 +347,245 @@ public class ZInternetHeader {
             return unfold(createString(content, start, length, charset));
         }
 
-        ByteBuilder builder = new ByteBuilder(length, decodingCharset(charset));
-        List<ZByteString> byteStrings = new ArrayList<ZByteString>();
-        boolean encoded = false;
-        int questions = 0;
+        List<FieldElement> results = parse(content, start, length);
+        if (null == results) {
+            // Failed to parse the content.  Just unfold the content and return.
+            return unfold(createString(content, start, length, charset));
+        }
 
-        for (int pos = start; pos < end; pos++) {
-            byte c = content[pos];
-            if (c == '\r' || c == '\n') {
-                // ignore folding
-            } else if ((c == ' ' || c == '\t') && pos < end - 3 &&
-                    content[pos + 1] == '='  && content[pos + 2] == '?' &&
-                    (!encoded || content[pos + 3] != '=')) {
-                // omit one linear whitespace before beginning of encoded word (RFC's 2047, 822)
-            } else if (c == '=' && pos < end - 2 && content[pos + 1] == '?' && (!encoded || content[pos + 2] != '=')) {
-                // "=?" marks the beginning of an encoded-word
-                if (!builder.isEmpty()) {
-                    byteStrings.add(new ZByteString(builder));
+        FieldElement prev    = null;
+        FieldElement current = null;
+
+        int last = results.size();
+        StringBuilder text = new StringBuilder();
+        StringBuilder decodeMe = new StringBuilder();
+        for (int i = 0; i < last; i++) {
+            prev = current;
+            current = results.get(i);
+
+            if (current.getSeqType() == SequenceType.LWS) {
+                if (prev != null && prev.getSeqType() == SequenceType.EW) {
+                    decodeAndAppend(decodeMe, text);
+                    decodeMe.setLength(0);
                 }
-                builder.reset();  builder.write('=');
-                encoded = true;  questions = 0;
-            } else if (c == '?' && encoded && ++questions > 3 && pos < end - 1 && content[pos + 1] == '=') {
-                // "?=" may mean the end of an encoded-word, so see if it decodes correctly
-                builder.write('?');  builder.write('=');
-                ZByteString decoded = ZMimeUtility.decodeWordBytes(builder.toByteArray());
-                boolean valid = decoded != null;
-                if (valid) {
-                    pos++;
-                    // consume one linear whitespace after end of encoded word (RFC's 2047, 822)
-                    while (pos < end - 1 && (content[pos + 1] == '\r' || content[pos + 1] == '\n')) {
-                        pos+=1;
+                text.append(current.getText());
+            } else if (current.getSeqType() == SequenceType.EW) {
+                if (prev != null && prev.getSeqType() == SequenceType.EW &&
+                        prev.getCharset().equalsIgnoreCase(current.getCharset()) &&
+                        prev.getDecodeType().equalsIgnoreCase(current.getDecodeType())) {
+                    int endIdx = decodeMe.length() - 1;
+                    if ("B".equalsIgnoreCase(current.getDecodeType()) && endIdx > 1 &&
+                            decodeMe.charAt(endIdx) == '=') {
+                        // This chunk is correctly padded
+                        decodeAndAppend(decodeMe, text);
+                        setupNewNeedDecode(decodeMe, current);
+                    } else if ("Q".equalsIgnoreCase(current.getDecodeType()) && endIdx > 1 &&
+                            decodeMe.charAt(endIdx) == '=') {
+                        /* RFC 2047 Section 5. (3)
+                         * ```
+                         * The 'encoded-text' in each 'encoded-word' must be well-formed according
+                         * to the encoding specified; the 'encoded-text' may not be continued in
+                         * the next 'encoded-word'.  (For example, "=?charset?Q?=?=
+                         * =?charset?Q?AB?=" would be illegal, because the two hex digits "AB"
+                         * must follow the "=" in the same 'encoded-word'.)
+                         * ```
+                        */
+                        text.append(decodeMe);
+                        setupNewNeedDecode(decodeMe, current);
+                    } else {
+                        decodeMe.append(current.getText());
                     }
-                    if (pos < end - 1 && (content[pos + 1] == ' ' || content[pos + 1] == '\t')) {
-                        pos++;
-                    }
+                } else if (prev != null && prev.getSeqType() == SequenceType.EW) {
+                    decodeAndAppend(decodeMe, text);
+                    setupNewNeedDecode(decodeMe, current);
                 } else {
-                    decoded = new ZByteString(builder.pop());
+                    setupNewNeedDecode(decodeMe, current);
                 }
-                byteStrings.add(decoded);
-                encoded = false;  builder.reset();
-            } else {
-                builder.write(c);
+            } else if (current.getSeqType() == SequenceType.COMMENT) {
+                if (prev != null && prev.getSeqType() == SequenceType.EW) {
+                    decodeAndAppend(decodeMe, text);
+                    decodeMe.setLength(0);
+                }
+                text.append(current.getText());
             }
         }
-
-        if (!builder.isEmpty()) {
-            byteStrings.add(new ZByteString(builder));
+        if (decodeMe.length() > 0) {
+            decodeAndAppend(decodeMe, text);
         }
-        return ZByteString.makeString(byteStrings);
+        return text.toString();
+    }
+
+    static private void setupNewNeedDecode(StringBuilder needDecode, FieldElement current) {
+        needDecode.setLength(0);
+        needDecode.append("=?")
+                  .append(current.getCharset())
+                  .append("?")
+                  .append(current.getDecodeType())
+                  .append("?")
+                  .append(current.getText());
+    }
+
+    static private void decodeAndAppend(StringBuilder needDecode, StringBuilder text) {
+        needDecode.append("?=");
+        ZByteString decoded = ZMimeUtility.decodeWordBytes(needDecode.toString().getBytes());
+        if (null != decoded) {
+            text.append(decoded);
+        } else {
+            text.append(needDecode.toString());
+        }
+    }
+
+    public enum SequenceType {UNDEFINED, ERROR, COMMENT /* comment */, EW /* encoded-word */, LWS /* linear-white-space */};
+    public enum EncodeSequenceState {CHARSET, ENCODEMETHOD, TEXT, UNDEFINED};
+    static public class FieldElement {
+        private SequenceType seqType;
+        private ByteArrayOutputStream bytes;
+        private ByteArrayOutputStream charset;
+        private ByteArrayOutputStream decodeType;
+
+        public FieldElement(SequenceType type) {
+            seqType = type;
+            bytes = new ByteArrayOutputStream();
+            charset = new ByteArrayOutputStream();
+            decodeType = new ByteArrayOutputStream();
+        }
+        public SequenceType getSeqType()             { return seqType; }
+        public String getText()                      { return bytes.toString(); }
+        public String getCharset()                   { return charset.toString(); }
+        public String getDecodeType()                { return decodeType.toString(); }
+        public void setSeqType(SequenceType seqType) { this.seqType = seqType;}
+        public void appendBody(byte b)               { this.bytes.write(b); }
+        public void appendCharset(byte b)            { this.charset.write(b); }
+        public void appendDecodeType(byte b)         { this.decodeType.write(b); }
+        public boolean isPadding(int index)          { return (bytes.toByteArray()[index] == '='); }
+        public void reset() {
+            seqType = SequenceType.UNDEFINED;
+            bytes.reset();
+            charset.reset();
+            decodeType.reset();
+        }
+    }
+
+    /**
+     * Wrapper for the List of FieldElement
+     *
+     */
+    static class Fields {
+        private List<FieldElement> fields = new ArrayList<FieldElement>();
+        public void add(FieldElement element) {
+            int end = fields.size() - 1;
+            if (element.getSeqType() != SequenceType.EW && element.getText().isEmpty()) {
+                return;
+            }
+
+            if (end > 0 && element.getSeqType() == SequenceType.EW &&
+                       fields.get(end).getSeqType() == SequenceType.LWS &&
+                       fields.get(end - 1).getSeqType() == SequenceType.EW) {
+                // LWS between the EWs will be ignored
+                fields.remove(end);
+                fields.add(element);
+            } else {
+                fields.add(element);
+            }
+        }
+        public List<FieldElement> getAll() {
+            return fields;
+        }
+    }
+
+    /**
+     * Parse the text into tokens with the state and content
+     * @param content target text
+     * @param start index of start point
+     * @param length length
+     * @return a list of parsed FieldElement.  If the content text is mal-formatted, return null.
+     */
+    static private List<FieldElement> parse(final byte[] content, final int start, final int length) {
+        Fields fields = new Fields();
+        final int end = start + length;
+
+        SequenceType currStat = SequenceType.COMMENT;
+        EncodeSequenceState encodeStat = EncodeSequenceState.UNDEFINED;
+        FieldElement currElement = new FieldElement(SequenceType.COMMENT);
+        for (int pos = start; pos < end; pos++) {
+            if (content[pos] == '\r' || content[pos] == '\n') {
+                continue;
+            }
+            if (currStat == SequenceType.COMMENT) {
+                if (content[pos] == ' ' || content[pos] == '\t') {
+                    fields.add(currElement);
+                    currStat = SequenceType.LWS;
+                    currElement = new FieldElement(currStat);
+                    currElement.appendBody(content[pos]);
+                } else if ((pos < (end - 1)) && content[pos] == '=' && content[pos + 1] == '?' ) {
+                    int hasCharset = 0;
+                    for (int subpos = pos + 2; subpos < end && hasCharset < 3; subpos++) {
+                        if (content[subpos] == '?') {
+                            hasCharset++;
+                        }
+                    }
+                    if (hasCharset == 3) {
+                        fields.add(currElement);
+                        currStat = SequenceType.EW;
+                        currElement = new FieldElement(currStat);
+                    } else {
+                        currStat = SequenceType.ERROR;
+                    }
+                } else {
+                    currElement.appendBody(content[pos]);
+                }
+            } else if (currStat == SequenceType.EW) {
+                if ((content[pos] == ' ' || content[pos] == '\t') && !allowInvalidEncoding(currElement.getCharset())) {
+                    return null;
+                } else if (encodeStat == EncodeSequenceState.TEXT && (pos < (end - 1)) && content[pos] == '?' && content[pos + 1] == '=' ) {
+                    pos++;
+                    fields.add(currElement);
+                    encodeStat = EncodeSequenceState.UNDEFINED;
+                    currStat = SequenceType.COMMENT;
+                    currElement = new FieldElement(currStat);
+                } else if (content[pos] == '?') {
+                    if (encodeStat == EncodeSequenceState.UNDEFINED) {
+                        encodeStat = EncodeSequenceState.CHARSET;
+                    } else if (encodeStat == EncodeSequenceState.CHARSET) {
+                        encodeStat = EncodeSequenceState.ENCODEMETHOD;
+                    } else if (encodeStat == EncodeSequenceState.ENCODEMETHOD) {
+                        encodeStat = EncodeSequenceState.TEXT;
+                    } else {
+                        encodeStat = EncodeSequenceState.UNDEFINED;
+                    }
+                } else {
+                    if (encodeStat == EncodeSequenceState.CHARSET) {
+                        currElement.appendCharset(content[pos]);
+                    } else if (encodeStat == EncodeSequenceState.ENCODEMETHOD) {
+                        currElement.appendDecodeType(content[pos]);
+                    } else {
+                        currElement.appendBody(content[pos]);
+                    }
+                }
+            } else if (currStat == SequenceType.LWS) {
+                if (content[pos] == ' ' || content[pos] == '\t') {
+                    currElement.appendBody(content[pos]);
+                } else if ((pos < (end - 1)) && content[pos] == '=' && content[pos + 1] == '?' ) {
+                    fields.add(currElement);
+                    currStat = SequenceType.EW;
+                    currElement = new FieldElement(currStat);
+                } else {
+                    fields.add(currElement);
+                    currStat = SequenceType.COMMENT;
+                    currElement = new FieldElement(currStat);
+                    currElement.appendBody(content[pos]);
+                }
+            } else {
+                return null;
+            }
+        }
+        fields.add(currElement);
+        return fields.getAll();
+    }
+    
+    public static boolean allowInvalidEncoding(String charset) {
+        
+        return ("iso-8859-1".equalsIgnoreCase(charset) || "us-ascii".equalsIgnoreCase(charset)) ;
     }
 
     static String unfold(final String folded) {

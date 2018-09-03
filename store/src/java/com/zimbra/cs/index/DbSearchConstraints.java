@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
 import com.google.common.base.Supplier;
@@ -809,6 +810,13 @@ public interface DbSearchConstraints extends Cloneable {
             cursorRange = new CursorRange(min, minInclusive, max, maxInclusive, sort);
         }
 
+        public void addItemIdRange(int min, boolean minInclusive, int max, boolean maxInclusive, boolean bool) {
+            if (min < 0 && max < 0) {
+                return;
+            }
+            ranges.put(RangeType.ITEMID, new NumericRange(min, minInclusive, max, maxInclusive, bool));
+        }
+
         void addConvId(int cid, boolean truth) {
 
             if (truth) {
@@ -1427,7 +1435,7 @@ public interface DbSearchConstraints extends Cloneable {
 
     enum RangeType {
         DATE("DATE"), MDATE("MDATE"), MODSEQ("MODSEQ"), SIZE("SIZE"), CONV_COUNT("CONV-COUNT"),
-        CAL_START_DATE("APPT-START"), CAL_END_DATE("APPT-END"), SUBJECT("SUBJECT"), SENDER("FROM");
+        CAL_START_DATE("APPT-START"), CAL_END_DATE("APPT-END"), SUBJECT("SUBJECT"), SENDER("FROM"), ITEMID("ITEMID");
 
         private final String query;
 
@@ -1528,7 +1536,7 @@ public interface DbSearchConstraints extends Cloneable {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this).add("min", min).add("max", max).add("sort", sortBy).toString();
+            return MoreObjects.toStringHelper(this).add("min", min).add("max", max).add("sort", sortBy).toString();
         }
     }
 

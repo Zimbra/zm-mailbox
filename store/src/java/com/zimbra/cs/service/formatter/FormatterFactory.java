@@ -38,6 +38,7 @@ public class FormatterFactory {
             CONTACT_FOLDER("cf", "text/x-zimbra-delimitted-fields"),
             CSV("csv", "text/csv"),
             LDIF("ldif", MimeConstants.CT_TEXT_LDIF),
+            NETSCAPELDIF("netscapeldif", MimeConstants.CT_TEXT_LDIF),
             FREE_BUSY("freebusy", MimeConstants.CT_TEXT_HTML),
             HTML("html", MimeConstants.CT_TEXT_HTML),
             HTML_CONVERTED("native", MimeConstants.CT_TEXT_HTML),
@@ -51,7 +52,8 @@ public class FormatterFactory {
             VCF("vcf", MimeConstants.CT_TEXT_VCARD),
             XML("xml", MimeConstants.CT_TEXT_XML),
             ZIP("zip", MimeConstants.CT_APPLICATION_ZIP),
-            OPATCH("opatch", MimeConstants.CT_APPLICATION_OCTET_STREAM);
+            OPATCH("opatch", MimeConstants.CT_APPLICATION_OCTET_STREAM),
+            MOBILE_CONFIG("mobileconfig", MimeConstants.CT_TEXT_XML);
 
             /**
              * cache of available format types
@@ -124,6 +126,7 @@ public class FormatterFactory {
 
         addFormatter(new CsvFormatter());
         addFormatter(new LdifFormatter());
+        addFormatter(new NetscapeLdifFormatter());
         addFormatter(new VcfFormatter());
         addFormatter(new IcsFormatter());
         addFormatter(new RssFormatter());
@@ -140,6 +143,7 @@ public class FormatterFactory {
         addFormatter(new ZipFormatter());
         addFormatter(new ContactFolderFormatter());
         addFormatter(new OctopusPatchFormatter());
+        addFormatter(new MobileConfigFormatter());
     }
 
     /**

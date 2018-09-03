@@ -333,7 +333,9 @@ public class AccountConstants {
     public static final String E_NAME = "name";
     public static final String E_NEW_NAME = "newName";
     public static final String E_ID = "id";
+    public static final String E_PROFILE_IMAGE_ID = "profileImageId";
     public static final String E_PASSWORD = "password";
+    public static final String E_RECOVERY_CODE = "recoveryCode";
     public static final String E_OLD_PASSWORD = "oldPassword";
     public static final String A_SECTIONS = "sections";
     public static final String E_PREF = "pref";
@@ -443,7 +445,9 @@ public class AccountConstants {
     public static final String A_VIA = "via";
     public static final String A_VERIFY_ACCOUNT = "verifyAccount";
     public static final String A_CSRF_SUPPORT = "csrfTokenSecured";
-
+    public static final String A_GET_COUNT = "getCount";
+    public static final String A_TOKEN_TYPE = "tokenType";
+    public static final String E_JWT_TOKEN = "jwtToken";
 
     // account ACLs
     public static final String A_ACCESSKEY = "key";
@@ -558,4 +562,16 @@ public class AccountConstants {
     public static final String A_CONSUMER_APP_NAME = "appName";
     public static final String A_APPROVED_ON = "approvedOn";
     public static final String A_CONSUMER_DEVICE = "device";
+    
+    //ext user prov URL metadata constants
+    public static final String P_ACCOUNT_ID = "aid";
+    public static final String P_FOLDER_ID = "fid";
+    public static final String P_LINK_EXPIRY = "exp";
+    public static final String P_EMAIL = "email";
+    public static final String P_ADDRESS_VERIFICATION = "address-verification";
+
+    // Password reset feature
+    public static final String E_RESET_PASSWORD_REQUEST = "ResetPasswordRequest";
+    public static final String E_RESET_PASSWORD_RESPONSE = "ResetPasswordResponse";
+    public static final QName RESET_PASSWORD_REQUEST = QName.get(E_RESET_PASSWORD_REQUEST, NAMESPACE);
 }

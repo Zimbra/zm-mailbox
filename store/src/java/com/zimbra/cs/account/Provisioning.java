@@ -29,7 +29,7 @@ import java.util.Set;
 import javax.mail.internet.InternetAddress;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
@@ -75,12 +75,6 @@ import com.zimbra.soap.type.TargetBy;
  * @author schemers
  */
 public abstract class Provisioning extends ZAttrProvisioning {
-
-
-    // The public versions of TRUE and FALSE were moved to ProvisioningConstants.
-    // These are used by ZAttr*.
-    static final String TRUE  = "TRUE";
-    static final String FALSE = "FALSE";
 
     public static final String DEFAULT_COS_NAME = "default";
     public static final String DEFAULT_EXTERNAL_COS_NAME = "defaultExternal";
@@ -242,6 +236,70 @@ public abstract class Provisioning extends ZAttrProvisioning {
         OFF
     }
 
+    public static enum AuthMode {
+        PASSWORD,
+        RECOVERY_CODE
+    }
+
+    public static final String AUTH_MODE_KEY = "authMode";
+
+    /**
+     * return regular accounts from searchAccounts/searchDirectory;
+     * calendar resource accounts are excluded
+     */
+    public static final int SD_ACCOUNT_FLAG = 0x1;
+
+    /** return aliases from searchAccounts/searchDirectory */
+    public static final int SD_ALIAS_FLAG = 0x2;
+
+    /** return distribution lists from searchAccounts/searchDirectory */
+    public static final int SD_DISTRIBUTION_LIST_FLAG = 0x4;
+
+    /** return calendar resource accounts from searchAccounts/searchDirectory */
+    public static final int SD_CALENDAR_RESOURCE_FLAG = 0x8;
+
+    /** return domains from searchAccounts/searchDirectory. only valid with Provisioning.searchAccounts. */
+    public static final int SD_DOMAIN_FLAG = 0x10;
+
+    /** return coses from searchDirectory */
+    public static final int SD_COS_FLAG = 0x20;
+
+    public static final int SD_SERVER_FLAG = 0x40;
+
+    public static final int SD_UC_SERVICE_FLAG = 0x80;
+
+    /** return coses from searchDirectory */
+    public static final int SD_DYNAMIC_GROUP_FLAG = 0x100;
+
+    /** do not fixup objectclass in query for searchObject, only used from LdapUpgrade */
+    public static final int SO_NO_FIXUP_OBJECTCLASS = 0x200;
+
+    /** do not fixup return attrs for searchObject, onlt used from LdapUpgrade */
+    public static final int SO_NO_FIXUP_RETURNATTRS = 0x400;
+
+    /**
+     *  do not set account defaults in makeAccount
+     *
+     *  bug 36017, 41533
+     *
+     *  only used from the admin SearchDirectory and GetQuotaUsage SOAPs, where large number of accounts are
+     *  returned from Provisioning.searchDirectory.  In the extreme case where the accounts
+     *  span many different domains, the admin console UI/zmprov would seem to be be unresponsive.
+     *
+     *  Domain is needed for:
+     *    - determine the cos if cos is not set on the account
+     *    - account secondary default
+     *
+     *  Caller is responsible for setting the defaults when it needs them.
+     */
+    public static final int SO_NO_ACCOUNT_DEFAULTS = 0x200;            // do not set defaults and secondary defaults in makeAccount
+    public static final int SO_NO_ACCOUNT_SECONDARY_DEFAULTS = 0x400;  // do not set secondary defaults in makeAccount
+    public static final String SERVICE_WEBCLIENT = "zimbra";
+    public static final String SERVICE_ADMINCLIENT = "zimbraAdmin";
+    public static final String SERVICE_ZIMLET = "zimlet";
+    public static final String SERVICE_MAILCLIENT = "service";
+    public static final String SERVICE_IMAP = "imapd";
+
     public static Provisioning getInstance() {
         return getInstance(CacheMode.DEFAULT);
     }
@@ -257,7 +315,8 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * @param useCache
      * @return
      */
-    public static Provisioning getInstance(CacheMode cacheMode) {
+    public static Provisioning getInstance(CacheMode origCacheMode) {
+        CacheMode cacheMode = origCacheMode;
         if (singleton == null) {
             synchronized (Provisioning.class) {
                 if (singleton == null) {
@@ -308,6 +367,15 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public synchronized static void setInstance(Provisioning prov) {
         singleton = prov;
     }
+
+    /**
+     * Updates the values of the following attributes in the provided account argument:
+     * - userPassword
+     * - zimbraAuthTokens
+     * - zimbraAuthTokenValidityValue
+     * @param account Account instance who's credentials are to be refreshed
+     */
+    public abstract void refreshUserCredentials(Account account) throws ServiceException;
 
     public boolean idIsUUID() {
         return true;
@@ -549,14 +617,12 @@ public abstract class Provisioning extends ZAttrProvisioning {
         String parts[] = emailAddress.split("@");
         if (parts.length == 2) {
             Domain domain = getDomain(Key.DomainBy.name, parts[1], true);
-            if (domain != null) {
-                if (!domain.isLocal()) {
-                    String targetDomainId = domain.getAttr(A_zimbraDomainAliasTargetId);
-                    if (targetDomainId != null) {
-                        domain = getDomainById(targetDomainId);
-                        if (domain != null) {
-                            addr = parts[0] + "@" + domain.getName();
-                        }
+            if ((domain != null) && (!domain.isLocal())) {
+                String targetDomainId = domain.getAttr(A_zimbraDomainAliasTargetId);
+                if (targetDomainId != null) {
+                    domain = getDomainById(targetDomainId);
+                    if (domain != null) {
+                        addr = parts[0] + "@" + domain.getName();
                     }
                 }
             }
@@ -731,7 +797,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this)
+            return MoreObjects.toStringHelper(this)
                         .add("mId", mId)
                         .add("mIsAdminGroup", mIsAdminGroup)
                         .add("mIsDynamicGroup", mIsDynamicGroup)
@@ -746,8 +812,8 @@ public abstract class Provisioning extends ZAttrProvisioning {
      *
      */
     public static class GroupMembershipAtTime {
-        final GroupMembership membership;
-        final long correctAtTime;
+        private final GroupMembership membership;
+        private final long correctAtTime;
         public GroupMembershipAtTime(GroupMembership members, long accurateAtTime) {
             membership = members;
             correctAtTime = accurateAtTime;
@@ -761,8 +827,8 @@ public abstract class Provisioning extends ZAttrProvisioning {
     }
 
     public static class GroupMembership {
-        List<MemberOf> mMemberOf;  // list of MemberOf
-        List<String> mGroupIds;    // list of group ids
+        private final List<MemberOf> mMemberOf;  // list of MemberOf
+        private final List<String> mGroupIds;    // list of group ids
 
         public GroupMembership(List<MemberOf> memberOf, List<String> groupIds) {
             mMemberOf = memberOf;
@@ -821,7 +887,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this)
+            return MoreObjects.toStringHelper(this)
                         .add("mMemberOf", mMemberOf)
                         .add("mGroupIds", mGroupIds)
                         .toString();
@@ -1164,63 +1230,6 @@ public abstract class Provisioning extends ZAttrProvisioning {
         return acct;
     }
 
-    /**
-     * return regular accounts from searchAccounts/searchDirectory;
-     * calendar resource accounts are excluded
-     */
-    public static final int SD_ACCOUNT_FLAG = 0x1;
-
-    /** return aliases from searchAccounts/searchDirectory */
-    public static final int SD_ALIAS_FLAG = 0x2;
-
-    /** return distribution lists from searchAccounts/searchDirectory */
-    public static final int SD_DISTRIBUTION_LIST_FLAG = 0x4;
-
-    /** return calendar resource accounts from searchAccounts/searchDirectory */
-    public static final int SD_CALENDAR_RESOURCE_FLAG = 0x8;
-
-    /** return domains from searchAccounts/searchDirectory. only valid with Provisioning.searchAccounts. */
-    public static final int SD_DOMAIN_FLAG = 0x10;
-
-    /** return coses from searchDirectory */
-    public static final int SD_COS_FLAG = 0x20;
-
-    public static final int SD_SERVER_FLAG = 0x40;
-
-    public static final int SD_UC_SERVICE_FLAG = 0x80;
-
-    /** return coses from searchDirectory */
-    public static final int SD_DYNAMIC_GROUP_FLAG = 0x100;
-
-    /** do not fixup objectclass in query for searchObject, only used from LdapUpgrade */
-    public static final int SO_NO_FIXUP_OBJECTCLASS = 0x200;
-
-    /** do not fixup return attrs for searchObject, onlt used from LdapUpgrade */
-    public static final int SO_NO_FIXUP_RETURNATTRS = 0x400;
-
-    /**
-     *  do not set account defaults in makeAccount
-     *
-     *  bug 36017, 41533
-     *
-     *  only used from the admin SearchDirectory and GetQuotaUsage SOAPs, where large number of accounts are
-     *  returned from Provisioning.searchDirectory.  In the extreme case where the accounts
-     *  span many different domains, the admin console UI/zmprov would seem to be be unresponsive.
-     *
-     *  Domain is needed for:
-     *    - determine the cos if cos is not set on the account
-     *    - account secondary default
-     *
-     *  Caller is responsible for setting the defaults when it needs them.
-     */
-    public static final int SO_NO_ACCOUNT_DEFAULTS = 0x200;            // do not set defaults and secondary defaults in makeAccount
-    public static final int SO_NO_ACCOUNT_SECONDARY_DEFAULTS = 0x400;  // do not set secondary defaults in makeAccount
-    public static final String SERVICE_WEBCLIENT = "zimbra";
-    public static final String SERVICE_ADMINCLIENT = "zimbraAdmin";
-    public static final String SERVICE_ZIMLET = "zimlet";
-    public static final String SERVICE_MAILCLIENT = "service";
-    public static final String SERVICE_IMAP = "imapd";
-
     public abstract List<Account> getAllAdminAccounts()  throws ServiceException;
 
     public abstract void setCOS(Account acct, Cos cos) throws ServiceException;
@@ -1265,7 +1274,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public abstract void changePassword(Account acct, String currentPassword, String newPassword) throws ServiceException;
 
     public static class SetPasswordResult {
-        String msg;
+        private String msg;
 
         public SetPasswordResult() {
         }
@@ -1470,7 +1479,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public abstract Server getLocalServerIfDefined();
 
     public static final class Reasons {
-        StringBuilder sb = new StringBuilder();
+        private final StringBuilder sb = new StringBuilder();
         public void addReason(String reason) {
             if (0 < sb.length()) {
                 sb.append('\n');
@@ -1515,33 +1524,42 @@ public abstract class Provisioning extends ZAttrProvisioning {
     }
 
     public static List<Server> getPreferredIMAPServers(Account account) throws ServiceException {
-        Provisioning prov = getInstance();
-
         Server homeServer = account.getServer();
-        if(homeServer == null) {
+        if (homeServer == null) {
             return Collections.emptyList();
         }
-        String[] upstreamIMAPServers = homeServer.getReverseProxyUpstreamImapServers();
-        List<Server> imapServers = new ArrayList<Server>();
-        if(upstreamIMAPServers != null && upstreamIMAPServers.length > 0) {
-            for (String server: upstreamIMAPServers) {
-                imapServers.add(prov.getServerByServiceHostname(server));
-            }
-        } else {
-            imapServers.add(prov.getServerByServiceHostname(account.getMailHost()));
+        List<Server> imapDaemonServers = getIMAPDaemonServers(homeServer);
+        if (!imapDaemonServers.isEmpty()) {
+            return imapDaemonServers;
         }
+        return Lists.newArrayList(getInstance().getServerByServiceHostname(account.getMailHost()));
+    }
 
+    public static List<Server> getIMAPDaemonServers(Account account) throws ServiceException {
+        Server homeServer = account.getServer();
+        if (homeServer == null) {
+            return Collections.emptyList();
+        }
+        return getIMAPDaemonServers(homeServer);
+    }
+
+    public static List<Server> getIMAPDaemonServers(Server server) throws ServiceException {
+        String[] upstreamIMAPServers = server.getReverseProxyUpstreamImapServers();
+        Provisioning prov = getInstance();
+        List<Server> imapServers = new ArrayList<>(upstreamIMAPServers.length);
+        for (String serverName : upstreamIMAPServers) {
+            Server svr = prov.getServerByServiceHostname(serverName);
+            if (svr == null) {
+                ZimbraLog.imap.warn("cannot find imap server by service hostname for '%s'", serverName);
+                continue;
+            }
+            imapServers.add(svr);
+        }
         return imapServers;
     }
 
     public static List<Server> getIMAPDaemonServersForLocalServer() throws ServiceException {
-        Provisioning prov = getInstance();
-        String[] servers = prov.getLocalServer().getReverseProxyUpstreamImapServers();
-        List<Server> imapServers = new ArrayList<Server>();
-        for (String server: servers) {
-            imapServers.add(prov.getServerByServiceHostname(server));
-        }
-        return imapServers;
+        return getIMAPDaemonServers(getInstance().getLocalServer());
     }
 
     private static boolean isAlwaysOn(Account account) throws ServiceException {
@@ -2072,24 +2090,8 @@ public abstract class Provisioning extends ZAttrProvisioning {
          private String ldapTimeStamp = "";
          private String maxLdapTimeStamp = "";
 
-         public String getMaxLdapTimeStamp() {
-            return maxLdapTimeStamp;
-         }
-
-         public void setMaxLdapTimeStamp(String maxLdapTimeStamp) {
-           this.maxLdapTimeStamp = maxLdapTimeStamp;
-         }
-
          private int ldapMatchCount = 0;
          private int limit = 0;
-
-        public int getLimit() {
-            return limit;
-        }
-
-        public void setLimit(int limit) {
-            this.limit = limit;
-        }
 
         /*
          * for auto-complete and search only
@@ -2099,7 +2101,23 @@ public abstract class Provisioning extends ZAttrProvisioning {
          * results instead of issuing another SOAP request to the server.
          * If search key was tokenized with AND or OR, this cannot be assumed.
          */
-        private String mTokenizeKey;
+         private String mTokenizeKey;
+
+         public String getMaxLdapTimeStamp() {
+            return maxLdapTimeStamp;
+         }
+
+         public void setMaxLdapTimeStamp(String maxLdapTimeStamp) {
+           this.maxLdapTimeStamp = maxLdapTimeStamp;
+         }
+
+        public int getLimit() {
+            return limit;
+        }
+
+        public void setLimit(int limit) {
+            this.limit = limit;
+        }
 
         public static SearchGalResult newSearchGalResult(GalContact.Visitor visitor) {
             if (visitor == null)
@@ -2343,9 +2361,9 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public abstract void deleteXMPPComponent(XMPPComponent comp) throws ServiceException;
 
     public static class RightsDoc {
-        String mCmd;
-        List<String> mRights;
-        List<String> mNotes;
+        private final String mCmd;
+        private final List<String> mRights;
+        private final List<String> mNotes;
 
         public RightsDoc(String cmd) {
             mCmd = cmd;
@@ -2456,14 +2474,13 @@ public abstract class Provisioning extends ZAttrProvisioning {
         return createShareLocator(id, attrs);
     }
 
-
     public static class CacheEntry {
+        public Key.CacheEntryBy mEntryBy;
+        public String mEntryIdentity;
         public CacheEntry(Key.CacheEntryBy entryBy, String entryIdentity) {
             mEntryBy = entryBy;
             mEntryIdentity = entryIdentity;
         }
-        public Key.CacheEntryBy mEntryBy;
-        public String mEntryIdentity;
     }
 
     /**
@@ -2476,7 +2493,12 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public abstract void flushCache(CacheEntryType type, CacheEntry[] entries) throws ServiceException;
 
     public static class CountAccountResult {
+        private final List<CountAccountByCos> mCountAccountByCos = new ArrayList<CountAccountByCos>();
+
         public static class CountAccountByCos {
+            private final String mCosId;
+            private final String mCosName;
+            private final long mCount;
 
             CountAccountByCos(String cosId, String cosName, long count) {
                 mCosId = cosId;
@@ -2484,16 +2506,10 @@ public abstract class Provisioning extends ZAttrProvisioning {
                 mCount = count;
             }
 
-            private final String mCosId;
-            private final String mCosName;
-            private final long mCount;
-
             public String getCosId()   { return mCosId;}
             public String getCosName() { return mCosName; }
             public long getCount()        { return mCount; }
         }
-
-        private final List<CountAccountByCos> mCountAccountByCos = new ArrayList<CountAccountByCos>();
 
         public void addCountAccountByCosResult(String cosId, String cosName, long count) {
             CountAccountByCos r = new CountAccountByCos(cosId, cosName, count);
@@ -2595,9 +2611,9 @@ public abstract class Provisioning extends ZAttrProvisioning {
     }
 
     public static class Result {
-        String code;
-        String message;
-        String detail;
+        private final String code;
+        private final String message;
+        private final String detail;
 
         public String getCode() { return code; }
         public String getMessage() { return message; }

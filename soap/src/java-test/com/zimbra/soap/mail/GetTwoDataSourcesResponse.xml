@@ -1,0 +1,4 @@
+<GetDataSourcesResponse xmlns="urn:zimbraMail">
+  <unknown importClass="com.synacor.zimbra.OAuthDataImport" isEnabled="1" smtpPort="-1" name="blablah@yahoo.com" host="yahoo.com" id="8d17e182-fdc6-4f6c-b83f-d478c9b04bfd" importOnly="0" useAddressForForwardReply="0" l="257" connectionType="cleartext" refreshToken="AAbbcdd22wkBVsVdNHR.l0_jzuWvPNiAt0DBOcRm7w9zLorEM"/>
+  <imap port="143" isEnabled="0" smtpPort="-1" name="myIMAPSource" host="imap.zimbra.com" id="d96e9a7d-6af9-4625-ba68-37bcd73fce6d" importOnly="0" useAddressForForwardReply="0" l="1" connectionType="cleartext"/>
+</GetDataSourcesResponse>

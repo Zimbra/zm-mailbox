@@ -1,0 +1,3 @@
+ <ModifyDataSourceRequest xmlns="urn:zimbraMail">
+      <rss id="21e1c69c-bbb3-4f5d-8903-14ef8bdacbcc" pollingInterval="2d" isEnabled="0"/>
+   </ModifyDataSourceRequest>

@@ -21,7 +21,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
-import com.google.common.io.Closeables;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -119,7 +118,6 @@ public class SearchWrapper extends PhantomResource {
         ArrayList<DavResource> children = new ArrayList<DavResource>();
         String user = ctxt.getUser();
         Provisioning prov = Provisioning.getInstance();
-        ZimbraQueryResults zqr = null;
         try {
             Account account = prov.get(AccountBy.name, user);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
@@ -130,16 +128,16 @@ public class SearchWrapper extends PhantomResource {
             params.setFetchMode(SearchParams.Fetch.NORMAL);
             params.setPrefetch(true);
             params.setChunkSize(SEARCH_LIMIT);
-            zqr = mbox.index.search(SoapProtocol.Soap12, ctxt.getOperationContext(), params);
-            while (zqr.hasNext()) {
-                ZimbraHit hit = zqr.getNext();
-                if (hit instanceof MessageHit)
-                    addAttachmentResources((MessageHit) hit, children);
+            try (ZimbraQueryResults zqr = mbox.index.search(SoapProtocol.Soap12,
+                ctxt.getOperationContext(), params)) {
+                while (zqr.hasNext()) {
+                    ZimbraHit hit = zqr.getNext();
+                    if (hit instanceof MessageHit)
+                        addAttachmentResources((MessageHit) hit, children);
+                }
             }
         } catch (Exception e) {
             ZimbraLog.dav.error("can't search: uri="+getUri(), e);
-        } finally {
-            Closeables.closeQuietly(zqr);
         }
         return children;
     }

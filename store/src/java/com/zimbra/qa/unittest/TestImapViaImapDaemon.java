@@ -5,23 +5,18 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.mail.MessagingException;
-
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key.CacheEntryBy;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.localconfig.LocalConfig;
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -51,11 +46,15 @@ import com.zimbra.soap.admin.type.CacheEntryType;
       public void setUp() throws Exception  {
           getLocalServer();
           TestUtil.assumeTrue("remoteImapServerEnabled false for this server", imapServer.isRemoteImapServerEnabled());
-          saveImapConfigSettings();
           TestUtil.setLCValue(LC.imap_always_use_remote_store, String.valueOf(false));
           imapServer.setReverseProxyUpstreamImapServers(new String[] {imapServer.getServiceHostname()});
-          imapServer.setImapServerEnabled(false);
-          imapServer.setImapSSLServerEnabled(false);
+          // As we're connecting to the IMAP daemon's port directly, there is no harm
+          // in having the other IMAP daemon running.  Also, currently, changing the value of these
+          // settings may result in zmconfigd restarting mailboxd (due to attrs having
+          // requiresRestart="mailbox" in zimbra-attrs.xml).  Obviously, that results in RunUnitTestsRequest
+          // failing because the process it was talking to has disappeared!
+          // imapServer.setImapServerEnabled(false);
+          // imapServer.setImapSSLServerEnabled(false);
           super.sharedSetUp();
           TestUtil.flushImapDaemonCache(imapServer);
       }
@@ -63,7 +62,6 @@ import com.zimbra.soap.admin.type.CacheEntryType;
       @After
       public void tearDown() throws Exception {
           super.sharedTearDown();
-          restoreImapConfigSettings();
           if (imapHostname != null) {
               TestUtil.flushImapDaemonCache(imapServer);
               getAdminConnection().reloadLocalConfig();
@@ -294,9 +292,8 @@ import com.zimbra.soap.admin.type.CacheEntryType;
                   testFile.length()>0);
       }
 
-
       @Test
-      public void testFlushNonImapCacheTypes() throws Exception {
+      public void flushNonImapCacheTypes() throws Exception {
           //Flushing these cache types won't do anything on the imapd server, but
           //we want to make sure that this does not fail;
           ImapConnection adminConn = getAdminConnection();
@@ -310,12 +307,4 @@ import com.zimbra.soap.admin.type.CacheEntryType;
               }
           }
       }
-
-    @Override
-    @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")  // checking done in called methods
-    @Ignore("ZCS-1856 - fetch immediately after append doesn't find the item")
-    @Test
-    public void statusOnMountpoint() throws ServiceException, IOException, MessagingException {
-        super.statusOnMountpoint();
-    }
   }

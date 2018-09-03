@@ -220,6 +220,7 @@ public final class MailService implements DocumentService {
 
         // IMAP
         dispatcher.registerHandler(MailConstants.GET_IMAP_RECENT_REQUEST, new GetIMAPRecent());
+        dispatcher.registerHandler(MailConstants.GET_IMAP_RECENT_CUTOFF_REQUEST, new GetIMAPRecentCutoff());
         dispatcher.registerHandler(MailConstants.RECORD_IMAP_SESSION_REQUEST, new RecordIMAPSession());
         dispatcher.registerHandler(MailConstants.IMAP_COPY_REQUEST, new ImapCopy());
         dispatcher.registerHandler(MailConstants.SAVE_IMAP_SUBSCRIPTIONS_REQUEST, new SaveIMAPSubscriptions());
@@ -232,5 +233,15 @@ public final class MailService implements DocumentService {
 
         // Contacts API
         dispatcher.registerHandler(MailConstants.RESTORE_CONTACTS_REQUEST, new RestoreContacts());
+
+        // SearchAction API
+        dispatcher.registerHandler(MailConstants.SEARCH_ACTION_REQUEST, new SearchAction());
+
+        // Profile Image API
+        dispatcher.registerHandler(MailConstants.MODIFY_PROFILE_IMAGE_REQUEST, new ModifyProfileImage());
+
+        // Password reset API
+        dispatcher.registerHandler(MailConstants.RECOVER_ACCOUNT_REQUEST, new RecoverAccount());
+        dispatcher.registerHandler(MailConstants.SET_RECOVERY_EMAIL_REQUEST, new SetRecoveryAccount());
     }
 }

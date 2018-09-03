@@ -89,7 +89,12 @@ public class GetDomain extends AdminDocumentHandler {
         domain.addAttribute(AdminConstants.A_NAME,d.getUnicodeName());
         domain.addAttribute(AdminConstants.A_ID,d.getId());
         Map attrs = d.getUnicodeAttrs(applyConfig);
-        
+        Object value = attrs.get(Provisioning.A_zimbraAuthLdapURL);
+		if (value != null && value instanceof String[]) {
+			String sv[] = (String[]) value;
+			String joinedValue = String.join(" ", sv);
+			attrs.put(Provisioning.A_zimbraAuthLdapURL, joinedValue);
+		}
         ToXML.encodeAttrs(domain, attrs, reqAttrs, attrRightChecker);
     }
     

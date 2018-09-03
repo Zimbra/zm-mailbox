@@ -69,6 +69,8 @@ import com.zimbra.soap.admin.type.CacheEntryType;
  *
  */
 public class AttributeMigration {
+    private ShutdownHook hook;
+    private String destUrl;
     private EntrySource source;
     private final Collection<String> attrsToMigrate;
     private int numThreads;
@@ -82,6 +84,7 @@ public class AttributeMigration {
     private static Map<String, AttributeConverter> converterMap = new HashMap<String, AttributeConverter>();
     static {
         registerConverter(Provisioning.A_zimbraAuthTokens, new AuthTokenConverter());
+        registerConverter(Provisioning.A_zimbraInvalidJWTokens, new AuthTokenConverter());
         registerConverter(Provisioning.A_zimbraCsrfTokenData, new CsrfTokenConverter());
         registerConverter(Provisioning.A_zimbraLastLogonTimestamp, new StringAttributeConverter());
     }
@@ -89,18 +92,26 @@ public class AttributeMigration {
     //map of converters to be used in a particular migration
     private Map<String, AttributeConverter> activeConverterMap;
 
-    public AttributeMigration(Collection<String> attrsToMigrate, Integer numThreads) throws ServiceException {
-        this(attrsToMigrate, null, numThreads);
+    /**
+     * @param destUrl - ephemeral storage url to which data is transferred
+     * @param attrsToMigrate - collection of attribute names to migrate
+     * @param numThreads - number of threads to use during migration. If null, the migration happens synchronously.
+     * @throws ServiceException
+     */
+    public AttributeMigration(String destUrl, Collection<String> attrsToMigrate, Integer numThreads) throws ServiceException {
+        this(destUrl, attrsToMigrate, null, numThreads);
     }
 
     /**
+     * @param destUrl - ephemeral storage url to which data is transferred
      * @param attrsToMigrate - collection of attribute names to migrate
      * @param source - EntrySource implementation
      * @param callback - MigrationCallback implementation that handles generated EphemeralInputs
      * @param numThreads - number of threads to use during migration. If null, the migration happens synchronously.
      * @throws ServiceException
      */
-    public AttributeMigration(Collection<String> attrsToMigrate, EntrySource source, Integer numThreads) throws ServiceException {
+    public AttributeMigration(String destUrl, Collection<String> attrsToMigrate, EntrySource source, Integer numThreads) throws ServiceException {
+        this.destUrl = destUrl;
         this.attrsToMigrate = attrsToMigrate;
         initConverters();
         setSource(source);
@@ -110,6 +121,8 @@ public class AttributeMigration {
             this.numThreads = numThreads;
         }
         exceptionWhileMigrating = null; // reset for later unit tests
+        this.hook = new ShutdownHook();
+        Runtime.getRuntime().addShutdownHook(this.hook);
     }
 
     public static void registerConverter(String attribute, AttributeConverter converter) {
@@ -135,8 +148,7 @@ public class AttributeMigration {
         for (String attr: attrsToMigrate) {
             AttributeConverter converter = converterMap.get(attr);
             if (converter == null) {
-                throw ServiceException.FAILURE(
-                        String.format("no AttributeConverter registered for attribute %s; migration not possible", attr), null);
+                throw new InvalidAttributeException(attr);
             } else {
                 activeConverterMap.put(attr,  converter);
             }
@@ -340,6 +352,10 @@ public class AttributeMigration {
         getMigrationInfo().endMigration();
         ZimbraLog.ephemeral.info("migration of attributes %s to ephemeral storage completed",
                 Joiner.on(", ").join(attrsToMigrate));
+        ZimbraLog.ephemeral.info("Note: This utility does not delete the migrated ephemeral data from LDAP.");
+        ZimbraLog.ephemeral.info("      Once testing shows that the migration was successful `zimbraEphemeralBackendUrl` needs to be updated to point to the new backend.");
+        ZimbraLog.ephemeral.info(String.format("      Example: zmprov mcf zimbraEphemeralBackendUrl %s", this.destUrl));
+
         callback.flushCache();
     }
 
@@ -382,6 +398,7 @@ public class AttributeMigration {
         try {
             beginMigration();
             csvReports = new CSVReports(callback.disableCreatingReports());
+            this.hook.setCSVReports(csvReports);
             ConsumableQueue<NamedEntry> queue = new ConsumableQueue<NamedEntry>(source.getEntries());
             int numEntries = queue.size();
             if ((numThreads > 1) && (numEntries > 1)) {
@@ -410,14 +427,15 @@ public class AttributeMigration {
                 worker.run();
             }
             if (exceptionWhileMigrating != null) {
-                csvReports.zimbraLogFinalSummary(false);
+                this.hook.setFinished(false);
+                this.hook.setException(exceptionWhileMigrating);
                 getMigrationInfo().migrationFailed();
                 callback.flushCache();
                 throw ServiceException.FAILURE("Failure during migration", exceptionWhileMigrating);
             } else {
+                this.hook.setFinished(true);
                 endMigration();
             }
-            csvReports.zimbraLogFinalSummary(true);
         } finally {
             closeReports();
         }

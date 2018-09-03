@@ -41,7 +41,7 @@ import com.zimbra.soap.admin.type.DataSourceType;
 
 public class DataSourceManagerTest {
     private Account testAccount = null;
-    private String CUSTOM_DS_ID = "testCustomDS";
+    private String OAUTH_DS_ID = "testOAuthDS";
     private String POP3_DS_ID = "testPop3DS";
     private String IMAP_DS_ID = "testImap3DS";
     private String CALDAV_DS_ID = "CalDavDS";
@@ -49,7 +49,7 @@ public class DataSourceManagerTest {
     private String CAL_DS_ID = "CalDataSource";
     private String GAL_DS_ID = "GALDataSource";
 
-    private String CUSTOM_DS_NAME = "TestCustomDataSource";
+    private String OAUTH_DS_NAME = "TestOAuthDataSource";
     private String POP3_DS_NAME = "TestPop3DataSource";
     private String IMAP_DS_NAME = "TestImapDataSource";
     private String CALDAV_DS_NAME = "TestCalDavDataSource";
@@ -115,20 +115,20 @@ public class DataSourceManagerTest {
     }
 
     @Test
-    public void testGetDataImportCustomClass() throws ServiceException {
+    public void testGetDataImportClass() throws ServiceException {
         Map<String, Object> testAttrs = new HashMap<String, Object>();
         testAttrs.put(Provisioning.A_zimbraDataSourceDomain, "zimbra.com");
         testAttrs.put(Provisioning.A_zimbraDataSourceImportClassName, "com.zimbra.cs.datasource.DataSourceManagerTest.TestDSImport");
-        DataSource ds = new DataSource(testAccount, DataSourceType.custom, CUSTOM_DS_NAME, CUSTOM_DS_ID, testAttrs, null);
+        DataSource ds = new DataSource(testAccount, DataSourceType.unknown, OAUTH_DS_NAME, OAUTH_DS_ID, testAttrs, null);
         assertNotNull("DataSource should not be NULL", ds);
         DataImport di = DataSourceManager.getInstance().getDataImport(ds);
         assertNull("should not be able to instantiate non existent DataImport class", di);
 
         testAttrs.put(Provisioning.A_zimbraDataSourceImportClassName, "com.zimbra.cs.gal.GalImport");
-        ds = new DataSource(testAccount, DataSourceType.custom, CUSTOM_DS_NAME, CUSTOM_DS_ID, testAttrs, null);
+        ds = new DataSource(testAccount, DataSourceType.unknown, OAUTH_DS_NAME, OAUTH_DS_ID, testAttrs, null);
         assertNotNull("DataSource should not be NULL", ds);
         di = DataSourceManager.getInstance().getDataImport(ds);
         assertNotNull("DataImport should not be NULL", di);
-        assertTrue("DataImport for 'custom' should be GalImport", di instanceof GalImport);
+        assertTrue("DataImport for 'unknown' should be GalImport", di instanceof GalImport);
     }
  }

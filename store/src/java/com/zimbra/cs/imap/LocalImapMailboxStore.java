@@ -17,12 +17,13 @@
 package com.zimbra.cs.imap;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.zimbra.common.mailbox.FolderStore;
@@ -98,6 +99,24 @@ public class LocalImapMailboxStore extends ImapMailboxStore {
     }
 
     @Override
+    public List<ImapListener> getListeners(ItemIdentifier ident) {
+        List<ImapListener> listeners = new ArrayList<ImapListener>();
+        if (ident == null) {
+            ZimbraLog.imap.warnQuietlyFmt("Attempted to getListeners for null item ID on mailbox %s", this);
+            return listeners;
+        }
+        for (Session listener : mailbox.getListeners(Session.Type.IMAP)) {
+            if (listener instanceof ImapSession) {
+                ImapSession iListener = (ImapSession)listener;
+                if (iListener.getFolderId() == ident.id) {
+                    listeners.add(iListener);
+                }
+            }
+        }
+        return listeners;
+    }
+
+    @Override
     public void deleteMessages(OperationContext octxt, List<Integer> ids) {
         for (int id : ids) {
             try {
@@ -108,7 +127,10 @@ public class LocalImapMailboxStore extends ImapMailboxStore {
         }
     }
 
-    /** @return List of IMAP UIDs */
+    /**
+     * MUST only be called when the source items and target folder are in the same mailbox
+     * @return List of IMAP UIDs
+     */
     @Override
     public List<Integer> imapCopy(OperationContext octxt, int[] itemIds, MailItemType type, int folderId)
             throws IOException, ServiceException {
@@ -178,21 +200,6 @@ public class LocalImapMailboxStore extends ImapMailboxStore {
         return fStores;
     }
 
-    @Override
-    public List<ImapListener> getListeners(int folderId) {
-        List<Session> sessions = mailbox.getListeners(Session.Type.IMAP);
-        List<ImapListener> listeners = Lists.newArrayListWithCapacity(sessions.size());
-        for (Session sess : sessions) {
-            if (sess instanceof ImapSession) {
-                ImapSession imapSess = (ImapSession) sess;
-                if (folderId == imapSess.getFolderId()) {
-                    listeners.add((ImapSession)sess);
-                }
-            }
-        }
-        return listeners;
-    }
-
     public boolean attachmentsIndexingEnabled() throws ServiceException {
         return mailbox.attachmentsIndexingEnabled();
     }
@@ -255,6 +262,6 @@ public class LocalImapMailboxStore extends ImapMailboxStore {
         } catch (Exception e) {
             acctName = "unknown";
         }
-        return Objects.toStringHelper(this).add("acctName", acctName).toString();
+        return MoreObjects.toStringHelper(this).add("acctName", acctName).toString();
     }
 }

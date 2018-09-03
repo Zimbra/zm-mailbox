@@ -21,7 +21,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.DtTimeInfoInterface;
 
@@ -102,7 +102,7 @@ implements DtTimeInfoInterface {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
             .add("dateTime", dateTime)
             .add("timezone", timezone)
             .add("utcTime", utcTime)

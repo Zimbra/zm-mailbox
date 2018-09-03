@@ -17,6 +17,9 @@
 
 package com.zimbra.cs.account;
 
+import static com.zimbra.common.account.ProvisioningConstants.FALSE;
+import static com.zimbra.common.account.ProvisioningConstants.TRUE;
+
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -1391,7 +1394,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
     @ZAttr(id=2018)
     public void setLdapGentimeFractionalSecondsEnabled(boolean zimbraLdapGentimeFractionalSecondsEnabled) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraLdapGentimeFractionalSecondsEnabled, zimbraLdapGentimeFractionalSecondsEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        attrs.put(Provisioning.A_zimbraLdapGentimeFractionalSecondsEnabled, zimbraLdapGentimeFractionalSecondsEnabled ? TRUE : FALSE);
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -1413,7 +1416,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
     @ZAttr(id=2018)
     public Map<String,Object> setLdapGentimeFractionalSecondsEnabled(boolean zimbraLdapGentimeFractionalSecondsEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraLdapGentimeFractionalSecondsEnabled, zimbraLdapGentimeFractionalSecondsEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        attrs.put(Provisioning.A_zimbraLdapGentimeFractionalSecondsEnabled, zimbraLdapGentimeFractionalSecondsEnabled ? TRUE : FALSE);
         return attrs;
     }
 
@@ -1740,7 +1743,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
     @ZAttr(id=1818)
     public void setReverseProxySNIEnabled(boolean zimbraReverseProxySNIEnabled) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraReverseProxySNIEnabled, zimbraReverseProxySNIEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        attrs.put(Provisioning.A_zimbraReverseProxySNIEnabled, zimbraReverseProxySNIEnabled ? TRUE : FALSE);
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -1758,7 +1761,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
     @ZAttr(id=1818)
     public Map<String,Object> setReverseProxySNIEnabled(boolean zimbraReverseProxySNIEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraReverseProxySNIEnabled, zimbraReverseProxySNIEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        attrs.put(Provisioning.A_zimbraReverseProxySNIEnabled, zimbraReverseProxySNIEnabled ? TRUE : FALSE);
         return attrs;
     }
 

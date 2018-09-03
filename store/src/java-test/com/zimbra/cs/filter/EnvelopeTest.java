@@ -23,16 +23,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.MethodRule;
+import org.junit.rules.TestName;
 
 import com.google.common.collect.Maps;
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.lmtpserver.LmtpAddress;
 import com.zimbra.cs.lmtpserver.LmtpEnvelope;
@@ -44,24 +47,31 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.util.ZTestWatchman;
 
 public class EnvelopeTest {
     private static String sampleMsg =
               "from: tim@example.com\n"
-            + "to: test@zimbra.com\n"
+            + "to: testEnv@zimbra.com\n"
             + "Subject: Example\n";
 
+    @Rule public TestName testName = new TestName();
+    @Rule public MethodRule watchman = new ZTestWatchman();
+    
+    
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
-        Provisioning prov = Provisioning.getInstance();
-        prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
-        prov.createAccount("original@zimbra.com", "secret", new HashMap<String, Object>());
+        
     }
 
     @Before
     public void setUp() throws Exception {
-        MailboxTestUtil.clearData();
+       System.out.println(testName.getMethodName());
+       Provisioning prov = Provisioning.getInstance();
+       HashMap<String, Object> attrs = new HashMap<String, Object>();
+       prov.createAccount("testEnv@zimbra.com", "secret", attrs);
+       prov.createAccount("original@zimbra.com", "secret", attrs);
     }
 
     @Test
@@ -74,13 +84,12 @@ public class EnvelopeTest {
 
         LmtpEnvelope env = new LmtpEnvelope();
         LmtpAddress sender = new LmtpAddress("<tim@example.com>", new String[] { "BODY", "SIZE" }, null);
-        LmtpAddress recipient = new LmtpAddress("<test@zimbra.com>", null, null);
+        LmtpAddress recipient = new LmtpAddress("<testEnv@zimbra.com>", null, null);
         env.setSender(sender);
         env.addLocalRecipient(recipient);
 
         try {
-            Account account = Provisioning.getInstance().getAccount(
-                    MockProvisioning.DEFAULT_ACCOUNT_ID);
+            Account account = Provisioning.getInstance().getAccountByName("testEnv@zimbra.com");
             RuleManager.clearCachedRules(account);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(
                     account);
@@ -94,6 +103,7 @@ public class EnvelopeTest {
                     Mailbox.ID_FOLDER_INBOX, true);
             Assert.assertEquals(0, ids.size());
         } catch (Exception e) {
+            e.printStackTrace();
             fail("No exception should be thrown");
         }
     }
@@ -101,25 +111,24 @@ public class EnvelopeTest {
     @Test
     public void testTo() {
         String filterScript = "require \"envelope\";\n"
-                + "if envelope :all :is \"to\" \"test@zimbra.com\" {\n"
+                + "if envelope :all :is \"to\" \"testEnv@zimbra.com\" {\n"
                 + "  tag \"To\";\n"
                 + "}";
 
         LmtpEnvelope env = new LmtpEnvelope();
         LmtpAddress sender = new LmtpAddress("<tim@example.com>", new String[] { "BODY", "SIZE" }, null);
-        LmtpAddress recipient = new LmtpAddress("<test@zimbra.com>", null, null);
+        LmtpAddress recipient = new LmtpAddress("<testEnv@zimbra.com>", null, null);
         env.setSender(sender);
         env.addLocalRecipient(recipient);
 
         try {
-            Account account = Provisioning.getInstance().getAccount(
-                    MockProvisioning.DEFAULT_ACCOUNT_ID);
+            Account account = Provisioning.getInstance().getAccountByName("testEnv@zimbra.com");
             RuleManager.clearCachedRules(account);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(
                     account);
 
             account.setMailSieveScript(filterScript);
-            account.setMail("test@zimbra.com");
+            account.setMail("testEnv@zimbra.com");
             List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox), mbox,
                     new ParsedMessage(sampleMsg.getBytes(), false), 0,
@@ -156,15 +165,14 @@ public class EnvelopeTest {
         env.setSender(sender);
 
         // To address
-        LmtpAddress recipient = new LmtpAddress("<test@zimbra.com>", null, null);
+        LmtpAddress recipient = new LmtpAddress("<testEnv@zimbra.com>", null, null);
         env.addLocalRecipient(recipient);
         // Bcc address
         recipient = new LmtpAddress("<bccTo@zimbra.com>", null, null);
         env.addLocalRecipient(recipient);
 
         try {
-            Account account = Provisioning.getInstance().getAccount(
-                    MockProvisioning.DEFAULT_ACCOUNT_ID);
+            Account account = Provisioning.getInstance().getAccountByName("testEnv@zimbra.com");
             RuleManager.clearCachedRules(account);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(
                     account);
@@ -201,8 +209,7 @@ public class EnvelopeTest {
         env.addLocalRecipient(recipient);
 
         try {
-            Account account = Provisioning.getInstance().getAccount(
-                    MockProvisioning.DEFAULT_ACCOUNT_ID);
+            Account account = Provisioning.getInstance().getAccountByName("testEnv@zimbra.com");
             RuleManager.clearCachedRules(account);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(
                     account);
@@ -236,8 +243,7 @@ public class EnvelopeTest {
         env.addLocalRecipient(recipient);
 
         try {
-            Account account = Provisioning.getInstance().getAccount(
-                    MockProvisioning.DEFAULT_ACCOUNT_ID);
+            Account account = Provisioning.getInstance().getAccountByName("testEnv@zimbra.com");
             RuleManager.clearCachedRules(account);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(
                     account);
@@ -271,8 +277,7 @@ public class EnvelopeTest {
         env.addLocalRecipient(recipient);
 
         try {
-            Account account = Provisioning.getInstance().getAccount(
-                    MockProvisioning.DEFAULT_ACCOUNT_ID);
+            Account account = Provisioning.getInstance().getAccountByName("testEnv@zimbra.com");
             RuleManager.clearCachedRules(account);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(
                     account);
@@ -306,8 +311,7 @@ public class EnvelopeTest {
         env.addLocalRecipient(recipient);
 
         try {
-            Account account = Provisioning.getInstance().getAccount(
-                    MockProvisioning.DEFAULT_ACCOUNT_ID);
+            Account account = Provisioning.getInstance().getAccountByName("testEnv@zimbra.com");
             RuleManager.clearCachedRules(account);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(
                     account);
@@ -341,8 +345,7 @@ public class EnvelopeTest {
         env.addLocalRecipient(recipient);
 
         try {
-            Account account = Provisioning.getInstance().getAccount(
-                    MockProvisioning.DEFAULT_ACCOUNT_ID);
+            Account account = Provisioning.getInstance().getAccountByName("testEnv@zimbra.com");
             RuleManager.clearCachedRules(account);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(
                     account);
@@ -376,8 +379,7 @@ public class EnvelopeTest {
         env.addLocalRecipient(recipient);
 
         try {
-            Account account = Provisioning.getInstance().getAccount(
-                    MockProvisioning.DEFAULT_ACCOUNT_ID);
+            Account account = Provisioning.getInstance().getAccountByName("testEnv@zimbra.com");
             RuleManager.clearCachedRules(account);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(
                     account);
@@ -411,8 +413,7 @@ public class EnvelopeTest {
         env.addLocalRecipient(recipient);
 
         try {
-            Account account = Provisioning.getInstance().getAccount(
-                    MockProvisioning.DEFAULT_ACCOUNT_ID);
+            Account account = Provisioning.getInstance().getAccountByName("testEnv@zimbra.com");
             RuleManager.clearCachedRules(account);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(
                     account);
@@ -493,7 +494,7 @@ public class EnvelopeTest {
               + "Subject: Example\n";
 
         String[] expectedTagName = {"env_envelope_from@example.com",
-                                    "env_test@zimbra.com",
+                                    "env_testEnv@zimbra.com",
                                     "adr_message_header_from@example.com",
                                     "adr_message_header_to@zimbra.com",
                                     "hdr_message_header_from@example.com",
@@ -501,13 +502,12 @@ public class EnvelopeTest {
 
         LmtpEnvelope env = new LmtpEnvelope();
         LmtpAddress sender = new LmtpAddress("<envelope_from@example.com>", new String[] { "BODY", "SIZE" }, null);
-        LmtpAddress recipient = new LmtpAddress("<test@zimbra.com>", null, null);
+        LmtpAddress recipient = new LmtpAddress("<testEnv@zimbra.com>", null, null);
         env.setSender(sender);
         env.addLocalRecipient(recipient);
 
         try {
-            Account account = Provisioning.getInstance().getAccount(
-                    MockProvisioning.DEFAULT_ACCOUNT_ID);
+            Account account = Provisioning.getInstance().getAccountByName("testEnv@zimbra.com");
             Map<String, Object> attrs = Maps.newHashMap();
             attrs = Maps.newHashMap();
             Provisioning.getInstance().getServer(account).modify(attrs);
@@ -556,8 +556,7 @@ public class EnvelopeTest {
         env.addLocalRecipient(recipient);
 
         try {
-            Account account = Provisioning.getInstance().getAccount(
-                    MockProvisioning.DEFAULT_ACCOUNT_ID);
+            Account account = Provisioning.getInstance().getAccountByName("testEnv@zimbra.com");
             RuleManager.clearCachedRules(account);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(
                     account);
@@ -589,8 +588,7 @@ public class EnvelopeTest {
                 + "}";
 
         try {
-            Account account = Provisioning.getInstance().getAccount(
-                    MockProvisioning.DEFAULT_ACCOUNT_ID);
+            Account account = Provisioning.getInstance().getAccountByName("testEnv@zimbra.com");
             RuleManager.clearCachedRules(account);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(
                     account);
@@ -621,12 +619,12 @@ public class EnvelopeTest {
 
         LmtpEnvelope env = new LmtpEnvelope();
         LmtpAddress sender = new LmtpAddress("<tim@example.com>", new String[] { "BODY", "SIZE" }, null);
-        LmtpAddress recipient = new LmtpAddress("<test@zimbra.com>", null, null);
+        LmtpAddress recipient = new LmtpAddress("<testEnv@zimbra.com>", null, null);
         env.setSender(sender);
         env.addLocalRecipient(recipient);
 
         try {
-            Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+            Account account = Provisioning.getInstance().getAccountByName("testEnv@zimbra.com");
             RuleManager.clearCachedRules(account);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 
@@ -757,19 +755,18 @@ public class EnvelopeTest {
 
         LmtpEnvelope env = new LmtpEnvelope();
         LmtpAddress sender = new LmtpAddress("<tim@example.com>", new String[] { "BODY", "SIZE" }, null);
-        LmtpAddress recipient = new LmtpAddress("<test@zimbra.com>", null, null);
+        LmtpAddress recipient = new LmtpAddress("<testEnv@zimbra.com>", null, null);
         env.setSender(sender);
         env.addLocalRecipient(recipient);
 
         try {
-            Account account = Provisioning.getInstance().getAccount(
-                    MockProvisioning.DEFAULT_ACCOUNT_ID);
+            Account account = Provisioning.getInstance().getAccountByName("testEnv@zimbra.com");
             RuleManager.clearCachedRules(account);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(
                     account);
 
             account.setMailSieveScript(filterScript);
-            account.setMail("test@zimbra.com");
+            account.setMail("testEnv@zimbra.com");
             List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox), mbox,
                     new ParsedMessage(sampleMsg.getBytes(), false), 0,
@@ -1028,8 +1025,7 @@ public class EnvelopeTest {
         env.addLocalRecipient(recipient);
 
         try {
-            Account account = Provisioning.getInstance().getAccount(
-                    MockProvisioning.DEFAULT_ACCOUNT_ID);
+            Account account = Provisioning.getInstance().getAccountByName("testEnv@zimbra.com");
             RuleManager.clearCachedRules(account);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 
@@ -1048,6 +1044,15 @@ public class EnvelopeTest {
             Assert.assertEquals(null, ArrayUtil.getFirstElement(msg.getTags()));
         } catch (Exception e) {
             fail("No exception should be thrown" + e);
+        }
+    }
+    
+    @After
+    public void tearDown() {
+        try {
+            MailboxTestUtil.clearData();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }

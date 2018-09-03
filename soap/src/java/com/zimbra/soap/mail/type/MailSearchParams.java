@@ -25,7 +25,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.zimbra.common.soap.MailConstants;
@@ -147,7 +147,7 @@ public class MailSearchParams implements SearchParameters {
      * <br />
      * Possible values:
      * <b>none|dateAsc|dateDesc|subjAsc|subjDesc|nameAsc|nameDesc|rcptAsc|rcptDesc|attachAsc|attachDesc|flagAsc|flagDesc|
-      priorityAsc|priorityDesc</b>
+      priorityAsc|priorityDesc|idAsc|idDesc|readAsc|readDesc</b>
      * If <b>{sort-by}</b> is "none" then cursors MUST NOT be used, and some searches are impossible (searches that
      * require intersection of complex sub-ops). Server will throw an IllegalArgumentException if the search is
      * invalid.
@@ -535,7 +535,7 @@ public class MailSearchParams implements SearchParameters {
     }
     public boolean getIncludeMemberOf() { return ZmBoolean.toBool(includeMemberOf, false); }
 
-    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         return helper
             .add("includeTagDeleted", includeTagDeleted)
             .add("includeTagMuted", includeTagMuted)
@@ -571,7 +571,7 @@ public class MailSearchParams implements SearchParameters {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this)).toString();
+        return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
     }
 
     @Override

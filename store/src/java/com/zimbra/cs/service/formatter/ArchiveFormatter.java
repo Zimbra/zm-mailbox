@@ -26,6 +26,7 @@ import java.io.StringWriter;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
 import java.text.DateFormat;
+import java.text.Normalizer;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -51,13 +52,14 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimePart;
 import javax.servlet.http.HttpServletResponse;
 
+import com.zimbra.cs.util.IOUtil;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.google.common.io.Closeables;
 import com.zimbra.common.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.common.calendar.ZCalendar.ZICalendarParseHandler;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
@@ -361,12 +363,12 @@ public abstract class ArchiveFormatter extends Formatter {
                             }
                             aos = saveItem(context, results.getNext().getMailItem(), fldrs, cnts, false, aos, encoder, names);
                         }
-                        Closeables.closeQuietly(results);
+                        IOUtil.closeQuietly(results);
                         results = null;
                     } catch (Exception e) {
                         warn(e);
                     } finally {
-                        Closeables.closeQuietly(results);
+                        IOUtil.closeQuietly(results);
                     }
                 }
             }
@@ -635,6 +637,9 @@ public abstract class ArchiveFormatter extends Formatter {
                             throw MailServiceException.NO_SUCH_PART(part);
                         }
                         name = Mime.getFilename(mp);
+                        if (!Normalizer.isNormalized(name, Normalizer.Form.NFC)) {
+                            name = Normalizer.normalize(name, Normalizer.Form.NFC);
+                        }
                         ext = null;
                         sz = mp.getSize();
                         if (sz == -1) {
@@ -957,6 +962,8 @@ public abstract class ArchiveFormatter extends Formatter {
                         }
                         try {
                             id = new ItemData(readArchiveEntry(ais, aie));
+                        } catch (IOException e) {
+                            throw ServiceException.FAILURE("Error reading file", e);
                         } catch (Exception e) {
                             addError(errs, FormatterServiceException.INVALID_FORMAT(aie.getName()));
                         }
@@ -1058,7 +1065,7 @@ public abstract class ArchiveFormatter extends Formatter {
         return ItemData.getTagNames(id.tags);
     }
 
-    private static byte[] readArchiveEntry(ArchiveInputStream ais, ArchiveInputEntry aie)
+    public static byte[] readArchiveEntry(ArchiveInputStream ais, ArchiveInputEntry aie)
     throws IOException {
         if (aie == null) {
             return null;

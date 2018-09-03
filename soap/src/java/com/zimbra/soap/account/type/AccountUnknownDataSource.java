@@ -20,11 +20,14 @@ package com.zimbra.soap.account.type;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 
+import com.zimbra.soap.type.DataSource;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class AccountUnknownDataSource extends AccountDataSource {
+    public AccountUnknownDataSource(DataSource from) {
+        copy(from);
+    }
 
     public AccountUnknownDataSource() {
     }
-
 }

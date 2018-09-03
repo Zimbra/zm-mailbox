@@ -4,7 +4,9 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -14,6 +16,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -22,7 +25,10 @@ import java.util.concurrent.atomic.AtomicReference;
 import javax.mail.MessagingException;
 
 import org.apache.commons.lang.StringUtils;
+import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ErrorCollector;
 
 import com.google.common.collect.Lists;
 import com.zimbra.client.ZFolder;
@@ -32,11 +38,15 @@ import com.zimbra.client.ZSearchParams;
 import com.zimbra.client.ZTag;
 import com.zimbra.client.ZTag.Color;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mailbox.FolderStore;
+import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.imap.ImapCredentials;
+import com.zimbra.cs.imap.ImapPath;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailclient.imap.AppendMessage;
@@ -64,6 +74,90 @@ import com.zimbra.soap.type.SearchSortBy;
  */
 @SuppressWarnings("PMD.ExcessiveClassLength")
 public abstract class SharedImapTests extends ImapTestBase {
+
+    /* useful mechanism for reporting multiple errors for a single test */
+    @Rule
+    public ErrorCollector collector= new ErrorCollector();
+
+    @Test(timeout=100000)
+    public void imapPath() throws IOException, ServiceException, MessagingException {
+        Account userAcct = TestUtil.getAccount(USER);
+        assertNotNull("Account object for user", userAcct); // Shuts up PMD complaint about missing asserts
+        Account shareeAcct = TestUtil.createAccount(SHAREE);
+        ZMailbox shareeZmbox = TestUtil.getZMailbox(SHAREE);
+        ZMailbox zmbox = TestUtil.getZMailbox(USER);
+        /* create a few folders to ensure that the sharee account won't have the same folder IDs
+         * present as are used in the shared folders.
+         */
+        for (int cnt = 0;cnt < 10;cnt++) {
+            TestUtil.createFolder(zmbox, "/toplevel-" + cnt);
+        }
+        String remFolder = String.format("/INBOX/%s-shared", testInfo.getMethodName());
+        String underRemFolder = String.format("%s/subFolder", remFolder);
+        String otherUserFolder = String.format("/home/%s%s", USER, remFolder);
+        String otherUserSubFolder = String.format("/home/%s%s", USER, underRemFolder);
+        ZFolder zfolder = TestUtil.createFolder(zmbox, remFolder);
+        ZFolder underZfolder = TestUtil.createFolder(zmbox, underRemFolder);
+        String mp = String.format("%s's %s-shared", USER, testInfo.getMethodName());
+        String subMp = String.format("%s/subFolder", mp);
+        TestUtil.createMountpoint(zmbox, remFolder, shareeZmbox, mp);
+        ImapCredentials creds = new ImapCredentials(shareeAcct);
+
+        checkImapPath("inbox", creds, "INBOX", false /* usingReferent */,
+                Integer.parseInt(ZFolder.ID_INBOX), shareeAcct.getId());
+        checkImapPath(mp, creds, mp, true /* usingReferent */,
+                zfolder.getFolderItemIdentifier().id, userAcct.getId());
+        checkImapPath(subMp, creds, subMp, true /* usingReferent */,
+                underZfolder.getFolderItemIdentifier().id, userAcct.getId());
+        checkImapPath(otherUserFolder, creds, otherUserFolder, false /* usingReferent */,
+                zfolder.getFolderItemIdentifier().id, userAcct.getId());
+        checkImapPath(otherUserSubFolder, creds, otherUserSubFolder, false /* usingReferent */,
+                underZfolder.getFolderItemIdentifier().id, userAcct.getId());
+    }
+
+    private void checkImapPath(String mboxName, ImapCredentials creds, String expectedPathToString,
+            boolean usingReferent, int expectedReferentFolderId, String expectedReferentFolderAcct)
+    throws ServiceException {
+        ImapPath path = new ImapPath(mboxName, creds);
+        path.canonicalize();
+        ImapPath referent = path.getReferent();
+        assertEquals(String.format("toString() for ImapPath for mailbox '%s'", mboxName),
+                expectedPathToString, path.toString());
+        if (usingReferent) {
+            assertNotSame(
+                    String.format("ImapPath=%s and it's getReferent() for mailbox '%s'", path, mboxName),
+                    path, referent);
+        } else {
+            assertSame(
+                    String.format("ImapPath=%s and it's getReferent() for mailbox '%s'", path, mboxName),
+                    path, referent);
+        }
+        FolderStore folderForPath = path.getFolder();
+        assertEquals(String.format(
+                "Folder ID for path.getReferent().getFolder() for mailbox '%s'", mboxName),
+                expectedReferentFolderId, folderIdForFolder(folderForPath));
+        assertEquals(String.format(
+                "Account ID for path.getReferent().getFolder() for mailbox '%s'", mboxName),
+                expectedReferentFolderAcct,
+                acctIdForFolder(folderForPath));
+    }
+
+    private String acctIdForFolder(FolderStore folder) {
+        MailboxStore mbox = folder.getMailboxStore();
+        String acctId;
+        try {
+            acctId = mbox.getAccountId();
+        } catch (ServiceException e) {
+            acctId = "<unknown>";
+        }
+        ZimbraLog.test.debug("Account ID = %s for folder %s", acctId, folder);
+        return acctId;
+    }
+
+    private int folderIdForFolder(FolderStore folder) {
+        ZimbraLog.test.debug("Folder ID = %s for folder %s", folder.getFolderIdInOwnerMailbox(), folder);
+        return folder.getFolderIdInOwnerMailbox();
+    }
 
     @Test(timeout=100000)
     public void testListFolderContents() throws IOException, ServiceException, MessagingException {
@@ -219,6 +313,7 @@ public abstract class SharedImapTests extends ImapTestBase {
         otherConnection = connectAndLogin(USER);
         String subject = "SharedImapTest-testIdleNotification";
         ZMailbox zmbox = TestUtil.getZMailbox(USER);
+        assertNotNull("ZMailbox for USER", zmbox);
         TestUtil.addMessage(zmbox, subject, "1", null);
         doIdleNotificationCheck(connection, otherConnection, "INBOX");
     }
@@ -228,6 +323,7 @@ public abstract class SharedImapTests extends ImapTestBase {
         TestUtil.createAccount(SHAREE);
         ZMailbox shareeZmbox = TestUtil.getZMailbox(SHAREE);
         ZMailbox zmbox = TestUtil.getZMailbox(USER);
+        assertNotNull("ZMailbox for USER", zmbox);
         String sharedFolderName = String.format("INBOX/%s-shared", testId);
         String remoteFolderPath = "/" + sharedFolderName;
         TestUtil.createFolder(zmbox, remoteFolderPath);
@@ -241,7 +337,8 @@ public abstract class SharedImapTests extends ImapTestBase {
 
     @Test(timeout=100000)
     public void idleOnFolderViaHome() throws ServiceException, IOException, MessagingException {
-        TestUtil.createAccount(SHAREE);
+        Account shareeAcct = TestUtil.createAccount(SHAREE);
+        assertNotNull("Account for SHAREE", shareeAcct);
         connection = connectAndSelectInbox(USER);
         String sharedFolderName = String.format("INBOX/%s-shared", testId);
         connection.create(sharedFolderName);
@@ -257,56 +354,69 @@ public abstract class SharedImapTests extends ImapTestBase {
         doIdleNotificationCheck(connection, otherConnection, remFolder);
     }
 
-    @Test(timeout=100000)
-    public void statusOnInbox() throws ServiceException, IOException, MessagingException {
-        connection = connectAndLogin(USER);
+    private void statusChecker(String user, String folderName, ZMailbox ownerZmbox, String folderId)
+            throws ServiceException, IOException, MessagingException {
+        connection = connectAndLogin(user);
         new StatusExecutor(connection).setExists(0).setRecent(0)
                 .execShouldSucceed("INBOX", "UIDNEXT", "MESSAGES", "RECENT");
-        otherConnection = connectAndLogin(USER);
+        otherConnection = connectAndLogin(user);
         /* note doAppend does a SELECT of the folder/FETCH of the message to verify that it worked
          * which means that an IMAP session is watching the folder, so the recent count remains
          * 0 for other IMAP sessions until the folder is de-selected or that session closes.
          * At that point, the mailbox is updated to make the RECENT value 0.
          */
-        doAppend(otherConnection, "INBOX", 1, null);
-        doAppend(otherConnection, "INBOX", 1, null);
+        doAppend(otherConnection, folderName, 1, null);
+        /* at this point, will definitely be watching the folder, which may not have been the case
+         * before the first append - so will execute other code paths.
+         */
+        doAppend(otherConnection, folderName, 1, null);
         otherConnection.logout();
         otherConnection.close();
         otherConnection = null;
-        ZMailbox zmbox = TestUtil.getZMailbox(USER);
         new StatusExecutor(connection).setExists(2).setRecent(0)
-                .execShouldSucceed("INBOX", "UIDNEXT", "MESSAGES", "RECENT");
+                .execShouldSucceed(folderName, "UIDNEXT", "MESSAGES", "RECENT");
         /* Add a message so that the RECENT count will be > 0 */
-        TestUtil.addMessage(zmbox, "Created using ZClient", ZFolder.ID_INBOX);
+        TestUtil.addMessage(ownerZmbox, "Created using ZClient", folderId);
         new StatusExecutor(connection).setExists(3).setRecent(1)
-                .execShouldSucceed("INBOX", "UIDNEXT", "MESSAGES", "RECENT");
+                .execShouldSucceed(folderName, "UIDNEXT", "MESSAGES", "RECENT");
     }
 
-    @Test(timeout=100000)
+    @Test(timeout=1000000)
+    public void statusOnInbox() throws ServiceException, IOException, MessagingException {
+        ZMailbox zmbox = TestUtil.getZMailbox(USER);
+        assertNotNull("ZMailbox for USER", zmbox);
+        statusChecker(USER, "INBOX", zmbox, ZFolder.ID_INBOX);
+    }
+
+    @Test(timeout=1000000)
     public void statusOnMountpoint() throws ServiceException, IOException, MessagingException {
         TestUtil.createAccount(SHAREE);
         ZMailbox shareeZmbox = TestUtil.getZMailbox(SHAREE);
         ZMailbox zmbox = TestUtil.getZMailbox(USER);
+        assertNotNull("ZMailbox for USER", zmbox);
         String sharedFolderName = String.format("INBOX/%s", testInfo.getMethodName());
         String remoteFolderPath = "/" + sharedFolderName;
         ZFolder zfolder = TestUtil.createFolder(zmbox, remoteFolderPath);
         String mountpointName = String.format("%s's %s", USER, testId);
         TestUtil.createMountpoint(zmbox, remoteFolderPath, shareeZmbox, mountpointName);
-        connection = connectAndLogin(SHAREE);
-        new StatusExecutor(connection).setExists(0).setRecent(0)
-                .execShouldSucceed(mountpointName, "UIDNEXT", "MESSAGES", "RECENT");
-        otherConnection = connectAndLogin(SHAREE);
-        doAppend(otherConnection, mountpointName, 10, null);
-        doAppend(otherConnection, mountpointName, 10, null);
-        otherConnection.logout();
-        otherConnection.close();
-        otherConnection = null;
-        new StatusExecutor(connection).setExists(2).setRecent(0)
-                .execShouldSucceed(mountpointName, "UIDNEXT", "MESSAGES", "RECENT");
-        /* Add a message so that the RECENT count will be > 0 */
-        TestUtil.addMessage(zmbox, "Created using ZClient by owner", zfolder.getId());
-        new StatusExecutor(connection).setExists(3).setRecent(1)
-                .execShouldSucceed(mountpointName, "UIDNEXT", "MESSAGES", "RECENT");
+        statusChecker(SHAREE, mountpointName, zmbox, zfolder.getId());
+    }
+
+    @Test(timeout=1000000)
+    public void statusOnFolderViaHome() throws ServiceException, IOException, MessagingException {
+        Account shareeAcct = TestUtil.createAccount(SHAREE);
+        assertNotNull("Account for SHAREE", shareeAcct);
+        ZMailbox zmbox = TestUtil.getZMailbox(USER);
+        assertNotNull("ZMailbox for USER", zmbox);
+        String sharedFolderName = String.format("INBOX/%s", testInfo.getMethodName());
+        String remoteFolderPath = "/" + sharedFolderName;
+        ZFolder zfolder = TestUtil.createFolder(zmbox, remoteFolderPath);
+        connection = connectAndSelectInbox(USER);
+        connection.setacl(sharedFolderName, SHAREE, "lrswickxteda");
+        connection.logout();
+        connection = null;
+        String remFolder = String.format("/home/%s/%s", USER, sharedFolderName);
+        statusChecker(SHAREE, remFolder, zmbox, zfolder.getId());
     }
 
     @Test(timeout=100000)
@@ -843,7 +953,6 @@ public abstract class SharedImapTests extends ImapTestBase {
         assertTrue(tags != null && tags.size() == 1);
         assertEquals("T1", tags.get(0).getName());
 
-
         connection.store(seq+"", "-FLAGS", tagName3);
         data = connection.fetch(seq+"", "FLAGS");
         assertEquals(1, data.size());
@@ -1266,14 +1375,14 @@ public abstract class SharedImapTests extends ImapTestBase {
 
     @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")  // checking done in called methods
     @Test(timeout=100000)
-    public void testCatenateSimple() throws Exception {
+    public void catenateSimple() throws Exception {
         connection = connectAndSelectInbox();
         doCatenateSimple(connection);
     }
 
     @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")  // checking done in called methods
     @Test(timeout=100000)
-    public void testCatenateSimpleNoLiteralPlus() throws Exception {
+    public void catenateSimpleNoLiteralPlus() throws Exception {
         connection = connectAndSelectInbox();
         withLiteralPlus(false, new RunnableTest() {
             @Override
@@ -1283,31 +1392,138 @@ public abstract class SharedImapTests extends ImapTestBase {
         });
     }
 
-    @Test(timeout=100000)
-    public void testCatenateUrl() throws Exception {
-        connection = connectAndSelectInbox();
-        assertTrue(connection.hasCapability("CATENATE"));
-        assertTrue(connection.hasCapability("UIDPLUS"));
-        String msg1 = simpleMessage("test message");
-        AppendResult res1 = connection.append("INBOX", null, null, literal(msg1));
+    private class ImapClientThread
+    implements Runnable {
+        private final String folderName;
+        private Random rand = new Random();
+
+        private ImapClientThread(String fldr) {
+            folderName = fldr;
+        }
+
+        @Override
+        public void run() {
+            for (int i = 0; i < 1000; i++) {
+                try {
+                    ImapConnection imapConn = connectAndLogin(USER);
+                    imapConn.select(folderName);
+                    imapConn.store("1:*", "+FLAGS", new String[] { "\\Seen" });
+                    try {
+                        Thread.sleep(rand.nextInt(1000));
+                    } catch (InterruptedException e) {
+                    }
+                    imapConn.select("INBOX");
+                    imapConn.select(folderName);
+                    imapConn.store("1:*", "-FLAGS", new String[] { "\\Seen" });
+                    imapConn.select("INBOX");
+                    imapConn.logout();
+                    imapConn.close();
+                } catch (Exception e) {
+                    ZimbraLog.test.error("Problem connecting and selecting %s in thread", folderName, e);
+                }
+            }
+        }
+    }
+
+    /** Test created to attempt to repro ZBUG-446 */
+    @Test(timeout=1000000)
+    @Ignore("Takes a while to run.")
+    public void imapFolderReload() throws Exception {
+        connection = connectAndLogin(USER);
+        String folderName = "INBOX/exercise";
+        connection.create(folderName);
+        assertTrue(connection.exists(folderName));
+        String msg1 = simpleMessage("message to exercise ImapURL");
+        connection.append(folderName, null, null, literal(msg1));
+        Thread[] threads = new Thread[14];
+        for (int i = 0; i < threads.length; i++) {
+            threads[i] = new Thread(new ImapClientThread(folderName));
+        }
+        for (Thread thread : threads) {
+            thread.start();
+        }
+        for (Thread thread : threads) {
+            thread.join();
+        }
+    }
+
+    private void doAppendThenOtherAppendReferencingFirst(
+            ImapConnection conn, String folder1, String folder2) throws IOException {
+        assertTrue(conn.hasCapability("CATENATE"));
+        assertTrue(conn.hasCapability("UIDPLUS"));
+        String msg1 = simpleMessage("message to exercise ImapURL");
+        AppendResult res1 = conn.append(folder1, null, null, literal(msg1));
         String s1 = "first part\r\n";
         String s2 = "second part\r\n";
         String msg2 = msg1 + s1 + s2;
-        AppendMessage am = new AppendMessage(
-            null, null, url("INBOX", res1), literal(s1), literal(s2));
-        AppendResult res2 = connection.append("INBOX", am);
-        connection.select("INBOX");
-        byte[] b2 = getBody(fetchMessage(connection, res2.getUid()));
-        assertArrayEquals("content mismatch", bytes(msg2), b2);
+        AppendMessage am = new AppendMessage(null, null, url(folder1, res1), literal(s1), literal(s2));
+        /* This append command expands into the following (most of the work being done inside AppendMessage)
+         *     APPEND INBOX CATENATE (URL "/INBOX;UIDVALIDITY=1/;UID=257" TEXT {12+}
+         *     first part
+         *      TEXT {13+}
+         *     second part
+         *     )
+         *
+         * The URL in the above ends up being processed by the ImapURL class server side.
+         */
+        AppendResult res2 = conn.append(folder2, am);
+        conn.select(folder2);
+        byte[] b2 = getBody(fetchMessage(conn, res2.getUid()));
+        String newMsg = new String(b2, "UTF-8");
+        assertEquals("Content of message not as expected", msg2, newMsg);
     }
 
-    private void doMultiappend(ImapConnection connection) throws Exception {
-        assertTrue(connection.hasCapability("MULTIAPPEND"));
-        assertTrue(connection.hasCapability("UIDPLUS"));
+    @Test(timeout=100000)
+    public void catenateUrl() throws Exception {
+        connection = connectAndSelectInbox();
+        assertTrue(connection.hasCapability("CATENATE"));  /* stop PMD warnings about no asserts */
+        // Note that with INBOX selected, the server uses the folder cache to provide data
+        // from the message identified by the source URL in the catenate.  The next 2 tests
+        // exercise the other code path
+        doAppendThenOtherAppendReferencingFirst(connection, "INBOX", "INBOX");
+    }
+
+    @Test(timeout=100000)
+    public void catenateUrlReferencingMP() throws Exception {
+        String sharedFolder = "share";
+        String mountpoint = "Mountpoint";
+        TestUtil.createAccount(SHAREE);
+        ZMailbox userZmbox = TestUtil.getZMailbox(USER);
+        ZMailbox shareeZmbox = TestUtil.getZMailbox(SHAREE);
+        TestUtil.createMountpoint(userZmbox, "/" + sharedFolder, shareeZmbox, mountpoint);
+        connection = connectAndLogin(SHAREE);
+        assertTrue(connection.hasCapability("CATENATE"));  /* stop PMD warnings about no asserts */
+        // deliberately NOT got either of the involved folders selected to ensure
+        // that content is not retrieved from the folder cache - in the remote case, UserServlet
+        // is used instead.
+        doAppendThenOtherAppendReferencingFirst(connection, mountpoint, "INBOX");
+    }
+
+    @Test(timeout=100000)
+    public void catenateUrlReferencingOtherUserFolder() throws Exception {
+        String sharedFolder = "shared";
+        String remFolder = String.format("/home/%s/%s", USER, sharedFolder);
+        TestUtil.createAccount(SHAREE);
+        TestUtil.createFolder(TestUtil.getZMailbox(USER), sharedFolder);
+        connection = connectAndLogin(USER);
+        connection.setacl(sharedFolder, SHAREE, "lrswickxteda");
+        connection.logout();
+        connection = connectAndLogin(SHAREE);
+        // deliberately NOT got either of the involved folders selected to ensure
+        // that content is not retrieved from the folder cache - in the remote case, UserServlet
+        // is used instead.
+        doSelectShouldSucceed(connection, "Drafts");
+        assertTrue(connection.hasCapability("CATENATE"));  /* stop PMD warnings about no asserts */
+        doAppendThenOtherAppendReferencingFirst(connection, remFolder, "INBOX");
+    }
+
+    private void doMultiappend(ImapConnection conn) throws Exception {
+        assertTrue(conn.hasCapability("MULTIAPPEND"));
+        assertTrue(conn.hasCapability("UIDPLUS"));
         AppendMessage msg1 = new AppendMessage(null, null, literal("test 1"));
         AppendMessage msg2 = new AppendMessage(null, null, literal("test 2"));
-        AppendResult res = connection.append("INBOX", msg1, msg2);
-        assertNotNull(res);
+        AppendResult res = conn.append("INBOX", msg1, msg2);
+        assertNotNull("Result of multi-append", res);
         assertEquals("expecting 2 uids", 2, res.getUids().length);
     }
 
@@ -1798,13 +2014,19 @@ public abstract class SharedImapTests extends ImapTestBase {
     }
 
     private String url(String mbox, AppendResult res) {
-        return String.format("/%s;UIDVALIDITY=%d/;UID=%d",
-                             mbox, res.getUidValidity(), res.getUid());
+        String mboxname = mbox;
+        if (mbox.startsWith("/")) {
+            /* other user namespace starts with "/home" c.f. e.g. "INBOX".  Strip any leading
+             * '/' to avoid '//'. */
+            mboxname = mboxname.substring(1);
+        }
+        return String.format("/%s;UIDVALIDITY=%d/;UID=%d", mboxname, res.getUidValidity(), res.getUid());
     }
 
     @Test(timeout=100000)
     public void listSharedFolderViaHome() throws ServiceException, IOException {
-        TestUtil.createAccount(SHAREE);
+        Account shareeAcct = TestUtil.createAccount(SHAREE);
+        assertNotNull("Account for SHAREE", shareeAcct);
         connection = connectAndSelectInbox();
         String sharedFolderName = String.format("INBOX/%s-shared", testId);
         connection.create(sharedFolderName);
@@ -1931,6 +2153,7 @@ public abstract class SharedImapTests extends ImapTestBase {
 
         SubFolderEnv subFolderEnv = new SubFolderEnv(sharedFolderName, subFolder);
         ZMailbox userZmbox = TestUtil.getZMailbox(USER);
+        assertNotNull("ZMailbox for USER", userZmbox);
         ZMailbox shareeZmbox = TestUtil.getZMailbox(SHAREE);
 
         String mountpointName = String.format("%s's %s-shared", USER, testId);
@@ -1973,12 +2196,12 @@ public abstract class SharedImapTests extends ImapTestBase {
         otherConnection = null;
     }
 
-    @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")  // checking done in called methods
     @Test(timeout=100000)
     public void homeNameSpaceWithSubFolder() throws ServiceException, IOException, MessagingException {
         String sharedFolderName = String.format("INBOX/%s-shared", testId);
         String subFolder = sharedFolderName + "/subFolder";
-        TestUtil.createAccount(SHAREE);
+        Account shareeAcct = TestUtil.createAccount(SHAREE);
+        assertNotNull("Account for SHAREE", shareeAcct);
         SubFolderEnv subFolderEnv = new SubFolderEnv(sharedFolderName, subFolder);
         connection = connectAndLogin(USER);
         connection.setacl(sharedFolderName, SHAREE, "lrswickxteda");
@@ -2297,7 +2520,337 @@ public abstract class SharedImapTests extends ImapTestBase {
         otherConnection = null;
     }
 
+    @Test(timeout=100000)
+    public void copyToMountpoint() throws Exception {
+        TestUtil.createAccount(SHAREE);
+        ZMailbox userZmbox = TestUtil.getZMailbox(USER);
+        ZMailbox shareeZmbox = TestUtil.getZMailbox(SHAREE);
+        String sharedFolder = "INBOX/share";
+        String mountpoint = String.format("shared-", testInfo.getMethodName());
+        String subject = "SharedImapTests-testMessage";
+        TestUtil.createMountpoint(userZmbox, "/" + sharedFolder, shareeZmbox, mountpoint);
+        TestUtil.addMessage(shareeZmbox, subject, Integer.toString(Mailbox.ID_FOLDER_INBOX), null);
+        connection = connectAndSelectInbox(SHAREE);
+        CopyResult copyResult = connection.copy("1", mountpoint);
+        assertNotNull("copyResult.getFromUids()", copyResult.getFromUids());
+        assertNotNull("copyResult.getToUids()", copyResult.getToUids());
+        assertEquals("Number of fromUIDs", 1, copyResult.getFromUids().length);
+        assertEquals("Number of toUIDs", 1, copyResult.getToUids().length);
+        MailboxInfo selectMboxInfo = connection.select(mountpoint);
+        assertNotNull(String.format("Select result for folder=%s", mountpoint), selectMboxInfo);
+        assertEquals("Select result Folder Name folder", mountpoint, selectMboxInfo.getName());
+        assertEquals(String.format("Number of exists for folder=%s after copy", mountpoint),
+                1, selectMboxInfo.getExists());
+        Map<Long, MessageData> mdMap = this.doFetchShouldSucceed(connection, "1:*", "(ENVELOPE)",
+                Lists.newArrayList(subject));
+        MessageData md = mdMap.values().iterator().next();
+        assertNull("Internal date was NOT requested and should be NULL", md.getInternalDate());
+        BodyStructure bs = md.getBodyStructure();
+        assertNull("Body Structure was not requested and should be NULL", bs);
+        Body[] body = md.getBodySections();
+        assertNull("body sections were not requested and should be null", body);
+    }
+
+    @Test(timeout=100000)
+    public void recentWithSelectAndExamine() throws Exception {
+        connection = connectAndLogin(USER);
+        String folderName = "INBOX/recent";
+        connection.create(folderName);
+        for (int cnt = 0;cnt < 4;cnt++) {
+            doAppend(connection, folderName, 5 /* size */, Flags.fromSpec("afs"),
+                    false /* don't do fetch as affects recent */);
+        }
+        connection.logout();
+        connection = connectAndLogin(USER);
+        for (int cnt = 0;cnt < 3;cnt++) {
+            doAppend(connection, folderName, 8 /* size */, Flags.fromSpec("afs"),
+                    false /* don't do fetch as affects recent */);
+        }
+        MailboxInfo selectInfo = doSelectShouldSucceed(connection, folderName);
+        assertEquals("SELECT after several appends - RECENT count", 7, selectInfo.getRecent());
+        List<Long> searchResult;
+        searchResult = connection.search((Object[]) new String[] { "RECENT" } );
+        assertEquals("number of 'SEARCH RECENT' hits after first SELECT", 7, searchResult.size());
+        searchResult = connection.search((Object[]) new String[] { "NOT RECENT" } );
+        assertEquals("number of 'SEARCH NOT RECENT' hits after first SELECT", 0, searchResult.size());
+        searchResult = connection.search((Object[]) new String[] { "NOT NOT RECENT" } );
+        assertEquals("number of 'SEARCH NOT NOT RECENT' hits after first SELECT", 7, searchResult.size());
+        MailboxInfo examineInfo = doExamineShouldSucceed(connection, folderName);
+        assertEquals("EXAMINE when have folder selected - RECENT count", 0, examineInfo.getRecent());
+
+        otherConnection = connectAndLogin(USER);
+        selectInfo = doSelectShouldSucceed(otherConnection, folderName);
+        assertEquals("SELECT when selected by other session - RECENT count", 0, selectInfo.getRecent());
+        otherConnection.logout();
+        otherConnection = null;
+        otherConnection = connectAndLogin(USER);
+
+        /* switch folders in original session, so that it is no longer monitoring the target folder */
+        selectInfo = doSelectShouldSucceed(connection, "INBOX");
+        doAppend(connection, folderName, 5 /* size */, Flags.fromSpec("afs"),
+                false /* don't do fetch as affects recent */);
+        otherConnection = connectAndLogin(USER);
+        selectInfo = doSelectShouldSucceed(otherConnection, folderName);
+        assertEquals("SELECT when no other session has selected + append since last select - RECENT count",
+                1, selectInfo.getRecent());
+        selectInfo = doSelectShouldSucceed(otherConnection, "INBOX");
+        selectInfo = doSelectShouldSucceed(otherConnection, folderName);
+        assertEquals("SELECT when switched folder and back - RECENT count",
+                0, selectInfo.getRecent());
+        selectInfo = doSelectShouldSucceed(otherConnection, "INBOX");
+        doAppend(connection, folderName, 5 /* size */, Flags.fromSpec("afs"),
+                false /* don't do fetch as affects recent */);
+        examineInfo = doExamineShouldSucceed(otherConnection, folderName);
+        assertEquals("EXAMINE folder not selected, recent append elsewhere - RECENT count",
+                1, examineInfo.getRecent());
+        selectInfo = doSelectShouldSucceed(otherConnection, folderName);
+        assertEquals("SELECT after EXAMINE, should remain same - RECENT count", 1, selectInfo.getRecent());
+        otherConnection.logout();
+        otherConnection = null;
+    }
+
+    @Test
+    public void appendTooLarge() throws Exception {
+        TestUtil.setConfigAttr(Provisioning.A_zimbraMtaMaxMessageSize, "100");
+        connection = super.connectAndLogin(USER);
+        try {
+            doAppend(connection, "INBOX", 120, Flags.fromSpec("afs"),
+                    false /* don't do fetch as affects recent */);
+            fail("APPEND succeeded - should have failed because content is too big");
+        } catch (CommandFailedException cfe) {
+            String msg = "maximum message size exceeded";
+            assertTrue(String.format(
+                    "APPEND threw CommandFailedException with message '%s' which does not contain '%s'",
+                    cfe.getMessage(), msg), cfe.getMessage().contains(msg));
+        }
+    }
+
     protected void flushCacheIfNecessary() throws Exception {
         // overridden by tests running against imapd
+    }
+
+    private void createMsgsInFolder(Mailbox mbox, int folderId, int numMessages) throws Exception {
+        assertNotNull("Mailbox for USER", mbox);
+        String subject = "testUidRangeSearch-%d";
+        for (int i=0;i<numMessages;i++) {
+            TestUtil.addMessage(mbox, folderId, String.format(subject, i));
+        }
+    }
+
+    private class SearchInfo {
+        private String folder;
+        private String search;
+        private int numHits;
+        private int expected;
+        private String firstToLast;
+
+        private SearchInfo(String selectedFolder, String srchSpec, int expectedHits) {
+            folder = selectedFolder;
+            search = srchSpec;
+            expected = expectedHits;
+        }
+
+        private void assertPassed(String template) {
+            assertEquals("Folder=" + folder + ":" +
+                String.format(template, search + " UNDELETED"), expected, numHits);
+        }
+
+        private void assertPassed() {
+            assertPassed("WrongNumber of results for 'UID SEARCH %s'");
+        }
+
+        private List<Long> uidSearch(ImapConnection conn) throws IOException {
+            List<Long> results = conn.uidSearch((Object[]) new String[] {search + " UNDELETED"});
+            numHits = results.size();
+            if (numHits > 0) {
+                firstToLast = String.format("%s:%s", results.get(0), results.get(results.size() - 1));
+            } else {
+                firstToLast = null;
+            }
+            return results;
+        }
+
+        private void uidSearchExpectingFailure(ImapConnection conn) throws IOException {
+            try {
+                conn.uidSearch((Object[]) new String[] {search + " UNDELETED"});
+                fail("Folder=" + folder + ":Expected 'UID SEARCH %s' to fail but it succeeded.");
+            } catch (CommandFailedException cfe) {
+            }
+        }
+
+        @Override
+        public String toString() {
+            return String.format("'%s':%d", search, numHits);
+        }
+    }
+
+    private void doRangeSearch(String user, String folderName, int numMessages) throws Exception {
+        connection = connect(user);
+        connection.login(PASS);
+
+        doListShouldSucceed(connection, "", folderName, Lists.newArrayList(folderName),
+                "List just single folder");
+        if (!folderName.startsWith("/home")) {
+            List<ListData> listResult = connection.list("", "*");
+            assertNotNull("list result 'list \"\" \"*\"' should not be null", listResult);
+            boolean seenIt = false;
+            for (ListData listEnt : listResult) {
+                if (folderName.equals(listEnt.getMailbox())) {
+                    seenIt = true;
+                    break;
+                }
+            }
+            assertTrue(String.format("'%s' mailbox not in result of 'list \"\" \"*\"'", folderName), seenIt);
+        }
+        connection.select(folderName);
+
+        /* on remote IMAP this used to result in a search request with 9 item IDs (see ZCS-3557)
+         * Now should make use of ranges.  This is true of later searches too. */
+        SearchInfo ten18 = new SearchInfo(folderName, "10:18", 9);
+        ten18.uidSearch(connection);
+
+        SearchInfo twenty = new SearchInfo(folderName, "20", 1);
+        twenty.uidSearch(connection);
+
+        SearchInfo ten18uidRange = new SearchInfo(folderName, "UID " + ten18.firstToLast, 9);
+        ten18uidRange.uidSearch(connection);
+
+        SearchInfo twenty23 = new SearchInfo(folderName, "20:23", 4);
+        twenty23.uidSearch(connection);
+
+        SearchInfo ten18twenty23uidRange = new SearchInfo(folderName,
+                String.format("UID %s,%s", ten18.firstToLast, twenty23.firstToLast), 9 + 4);
+        ten18twenty23uidRange.uidSearch(connection);
+
+        SearchInfo ten800 = new SearchInfo(folderName, "10:800", 791);
+        ten800.uidSearch(connection);
+
+        SearchInfo oneThousand1999 = new SearchInfo(folderName, "1000:1999", 1000);
+        oneThousand1999.uidSearch(connection);
+
+        SearchInfo one2000 = new SearchInfo(folderName, "1:2000", 2000);
+        one2000.uidSearch(connection);
+
+        SearchInfo oneThousand2100 = new SearchInfo(folderName, "1000:2100", 1101);
+        oneThousand2100.uidSearch(connection);
+
+        SearchInfo oneStar = new SearchInfo(folderName, "1:*", numMessages);
+        oneStar.uidSearch(connection);
+
+        /*
+         * The reason for performing all assertions together and reporting all numbers in each
+         * assertion message is to get a more complete picture when tests fail.
+         */
+        String assertTemplate = "Wrong number of results for 'UID SEARCH %s'. Results are: " +
+             String.format("%s, %s, %s, %s, %s, %s, %s, %s, %s",
+                ten18, twenty, twenty23, ten18uidRange, ten18twenty23uidRange, ten800,
+                one2000, oneThousand1999, oneThousand2100, oneStar
+                );
+        ten18.assertPassed(assertTemplate);
+        ten18uidRange.assertPassed(assertTemplate);
+        twenty.assertPassed(assertTemplate);
+        twenty23.assertPassed(assertTemplate);
+        ten18twenty23uidRange.assertPassed(assertTemplate);
+        /* Once ZCS-3810 has been fixed, can delete associated small range tests and always do this */
+        if (numMessages >= 800) {
+            ten800.assertPassed(assertTemplate);
+            oneThousand1999.assertPassed(assertTemplate);
+            one2000.assertPassed(assertTemplate);
+            oneThousand2100.assertPassed(assertTemplate);
+            oneStar.assertPassed(assertTemplate);
+        }
+        //  Test out some odd searches
+        SearchInfo same = new SearchInfo(folderName, "20:20", 1);
+        same.uidSearch(connection);
+        same.assertPassed();
+        SearchInfo negMin = new SearchInfo(folderName, "-20:23", 0);
+        negMin.uidSearchExpectingFailure(connection);
+        SearchInfo negMax = new SearchInfo(folderName, "20:-23", 0);
+        negMax.uidSearchExpectingFailure(connection);
+        SearchInfo negs = new SearchInfo(folderName, "-26:-23", 0);
+        negs.uidSearchExpectingFailure(connection);
+        /* Code seems to assume range given wrong way round and adjusts accordingly.
+         * Doesn't seem particularly harmful, so left like that.
+         */
+        SearchInfo rangeWrongWayRound = new SearchInfo(folderName, "23:20", 4);
+        rangeWrongWayRound.uidSearch(connection);
+        rangeWrongWayRound.assertPassed();
+        connection.logout();
+        connection.close();
+        connection = null;
+    }
+
+    private void rangeSearchPopulateCollector(String user, String folderName, int numMessages)
+            throws Exception {
+        try {
+            doRangeSearch(user, folderName, numMessages);
+        } catch (Throwable t) {
+            collector.addError(t);
+        }
+    }
+
+    @Test(timeout=240000)
+    public void uidSearchRangeUndeleted() throws Exception {
+        TestUtil.createAccount(SHAREE);
+        ZMailbox userZmbox = TestUtil.getZMailbox(USER);
+        ZMailbox shareeZmbox = TestUtil.getZMailbox(SHAREE);
+        Mailbox userMbox = TestUtil.getMailbox(USER);
+        Mailbox shareeMbox = TestUtil.getMailbox(SHAREE);
+
+        /* create a mountpoint */
+        String sharedFolder = "INBOX";
+        String mountpoint = String.format("sharedINBOX-%s", testInfo.getMethodName());
+        TestUtil.createMountpoint(userZmbox, "/" + sharedFolder, shareeZmbox, mountpoint);
+        assertNotNull("Mailbox for SHAREE", shareeMbox); // Keep PMD happy that doing asserts
+
+        String virtualFolderInInboxIsUnread = "InInboxUnread";
+        userMbox.createSearchFolder(null, Mailbox.ID_FOLDER_USER_ROOT, virtualFolderInInboxIsUnread,
+                "IN:INBOX IS:UNREAD", "message", "none", 0, (byte)9);
+
+        String otherUsersInboxUnderHome = String.format("/home/%s/INBOX", USER);
+
+        int numMessages = 2200;
+        createMsgsInFolder(userMbox, Mailbox.ID_FOLDER_INBOX, numMessages);
+        rangeSearchPopulateCollector(USER, "INBOX", numMessages);
+        rangeSearchPopulateCollector(USER, virtualFolderInInboxIsUnread, numMessages);
+        rangeSearchPopulateCollector(SHAREE, mountpoint, numMessages);
+        rangeSearchPopulateCollector(SHAREE, otherUsersInboxUnderHome, numMessages);
+    }
+
+    private void doSimpleRangeSearch(String user, String folderName) throws Exception {
+        connection = connect(user);
+        connection.login(PASS);
+        connection.select(folderName);
+        SearchInfo same = new SearchInfo(folderName, "11:46", 36);
+        same.uidSearch(connection);
+        same.assertPassed();
+    }
+
+    /** The idea of this test was to have a search folder based on items in 2 mailboxes.
+     *  As we use the item ID as the UID most of the time, then there is a danger of UID collisions.
+     */
+    @Test(timeout=160000)
+    @Ignore("ZCS-4110 Need to support underlying folders from different mailboxes which have same [U]ID")
+    public void cursorOnComplexVirtualFolder() throws Exception {
+        TestUtil.createAccount(SHAREE);
+        ZMailbox userZmbox = TestUtil.getZMailbox(USER);
+        ZMailbox shareeZmbox = TestUtil.getZMailbox(SHAREE);
+        Mailbox userMbox = TestUtil.getMailbox(USER);
+        Mailbox shareeMbox = TestUtil.getMailbox(SHAREE);
+        String sharedFolder = "INBOX";
+        String mountpoint = String.format("sharedINBOX-%s", testInfo.getMethodName());
+        TestUtil.createMountpoint(userZmbox, "/" + sharedFolder, shareeZmbox, mountpoint);
+        assertNotNull("Mailbox for SHAREE", shareeMbox); // Keep PMD happy that doing asserts
+        int numMessages = 24;
+        /* If add in this to avoid UID name clashes, then local IMAP works but remote doesn't.
+         * However, don't think it is worth more effort until we can cope with UID clashes
+         */
+        // createMsgsInFolder(userMbox, Mailbox.ID_FOLDER_DRAFTS, 30);  // avoid clashing UIDs
+        createMsgsInFolder(userMbox, Mailbox.ID_FOLDER_INBOX, numMessages);
+        createMsgsInFolder(shareeMbox, Mailbox.ID_FOLDER_INBOX, numMessages);
+        String folderName = "InInboxesUnread";
+        shareeMbox.createSearchFolder(null, Mailbox.ID_FOLDER_USER_ROOT, folderName,
+                String.format("(IN:INBOX OR IN:%s) IS:UNREAD", mountpoint), "message", "none", 0, (byte)9);
+        doSimpleRangeSearch(SHAREE, folderName);
     }
 }

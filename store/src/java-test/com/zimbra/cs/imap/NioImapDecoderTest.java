@@ -28,7 +28,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
-import com.zimbra.cs.imap.NioImapDecoder.InvalidLiteralFormatException;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.imap.NioImapDecoder.TooBigLiteralException;
 import com.zimbra.cs.imap.NioImapDecoder.TooLongLineException;
 
@@ -41,12 +41,41 @@ public final class NioImapDecoderTest {
     private static final CharsetEncoder CHARSET = Charsets.ISO_8859_1.newEncoder();
     private static final IoBuffer IN = IoBuffer.allocate(1024).setAutoExpand(true);
 
+    private TestImapConfig imapConfig;
     private NioImapDecoder decoder;
     private ProtocolCodecSession session;
 
+    private static final class TestImapConfig extends ImapConfig {
+        private long maxMessageSize;
+        TestImapConfig(boolean ssl) throws ServiceException {
+            super(ssl);
+            maxMessageSize = -1L; /* means "no limit" */
+        }
+
+        public void setMaxMessageSize(long l) {
+            maxMessageSize = l;
+        }
+
+        @Override
+        public long getMaxMessageSize() {
+            return maxMessageSize;
+        }
+
+        @Override
+        public int getMaxRequestSize() {
+            return 1024;
+        }
+
+        @Override
+        public int getWriteChunkSize() {
+            return 1024;
+        }
+    }
+
     @Before
-    public void setUp() {
-        decoder = new NioImapDecoder();
+    public void setUp() throws ServiceException {
+        imapConfig = new TestImapConfig(false);
+        decoder = new NioImapDecoder(imapConfig);
         session = new ProtocolCodecSession();
         session.setTransportMetadata(new DefaultTransportMetadata("test", "test", false, true, // Enable fragmentation
                 SocketAddress.class, IoSessionConfig.class, Object.class));
@@ -109,7 +138,7 @@ public final class NioImapDecoderTest {
         IN.clear().fill(1024).putString("\r\nrecover\r\n", CHARSET).flip();
         try {
             decoder.decode(session, IN, session.getDecoderOutput());
-            Assert.fail();
+            Assert.fail("decoder.decode did NOT throw TooLongLineException as expected");
         } catch (TooLongLineException expected) {
         }
         Assert.assertEquals(0, session.getDecoderOutputQueue().size());
@@ -139,7 +168,7 @@ public final class NioImapDecoderTest {
 
     @Test
     public void maxLiteralSize() throws Exception {
-        decoder.setMaxLiteralSize(1024L);
+        imapConfig.setMaxMessageSize(1024L);
         IN.clear().putString("XXX {1025}\r\nrecover\r\n", CHARSET).flip();
         try {
             decoder.decode(session, IN, session.getDecoderOutput());
@@ -171,5 +200,4 @@ public final class NioImapDecoderTest {
         Assert.assertEquals("A003 APPEND Drafts {0}", session.getDecoderOutputQueue().poll());
         Assert.assertEquals(0, session.getDecoderOutputQueue().size());
     }
-
 }

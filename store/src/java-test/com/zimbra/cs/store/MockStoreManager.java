@@ -196,6 +196,16 @@ public final class MockStoreManager extends StoreManager {
             content = new byte[0];
         }
 
+        @Override
+        public void copy(Blob blob) throws IOException {
+            super.copy(blob);
+            if (blob instanceof MockBlob) {
+                setContent(((MockBlob)blob).getContent());
+            } else {
+                setContent(null);
+            }
+        }
+
         void setContent(byte[] content) {
             this.content = content;
         }
@@ -213,6 +223,15 @@ public final class MockStoreManager extends StoreManager {
         @Override
         public long getRawSize() {
             return content.length;
+        }
+
+        @Override
+        public boolean isCompressed() throws IOException {
+            return false;
+        }
+
+        public byte[] getContent() {
+            return content;
         }
     }
 

@@ -171,7 +171,7 @@ public class ResourceProperty {
 
     protected Element createHref(String path) {
         Element e = org.dom4j.DocumentHelper.createElement(DavElements.E_HREF);
-        e.setText(HttpUtil.urlEscape(path));
+        e.setText(HttpUtil.urlEscape(path).replaceAll("@", "%40"));
         return e;
     }
 

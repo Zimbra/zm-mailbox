@@ -233,6 +233,10 @@ public class GalSearchResultCallback implements GalContact.Visitor {
         mResponse.addAttribute(MailConstants.A_GAL_DEFINITION_LAST_MODIFIED, timestamp);
     }
 
+    public void setRemain(int value) {
+        mResponse.addAttribute(MailConstants.A_REMAIN, value);
+    }
+
     private boolean isOwner(String groupZimbraId) throws ServiceException {
         if (mAuthAcct == null || groupZimbraId == null) {
             return false;

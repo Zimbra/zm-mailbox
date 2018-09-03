@@ -46,39 +46,6 @@ import com.zimbra.cs.servlet.ETagHeaderFilter;
 
 public class AddressbookCollection extends Collection {
 
-    public AddressbookCollection(DavContext ctxt, Folder f) throws DavException, ServiceException {
-        super(ctxt, f);
-        Account acct = f.getAccount();
-        Locale lc = acct.getLocale();
-        String description = L10nUtil.getMessage(MsgKey.carddavAddressbookDescription, lc, acct.getAttr(Provisioning.A_displayName), f.getName());
-        ResourceProperty rp = new ResourceProperty(DavElements.CardDav.E_ADDRESSBOOK_DESCRIPTION);
-        rp.setMessageLocale(lc);
-        rp.setStringValue(description);
-        rp.setProtected(false);
-        addProperty(rp);
-        addProperty(ResourceProperty.AddMember.create(UrlNamespace.getFolderUrl(ctxt.getUser(), f.getName())));
-        rp = new ResourceProperty(DavElements.CardDav.E_SUPPORTED_ADDRESS_DATA);
-        Element vcard = rp.addChild(DavElements.CardDav.E_ADDRESS_DATA);
-        vcard.addAttribute(DavElements.P_CONTENT_TYPE, DavProtocol.VCARD_CONTENT_TYPE);
-        vcard.addAttribute(DavElements.P_VERSION, DavProtocol.VCARD_VERSION);
-        rp.setProtected(true);
-        addProperty(rp);
-        long maxSize = Provisioning.getInstance().getLocalServer().getLongAttr(Provisioning.A_zimbraFileUploadMaxSize, -1);
-        if (maxSize > 0) {
-            rp = new ResourceProperty(DavElements.CardDav.E_MAX_RESOURCE_SIZE_ADDRESSBOOK);
-            rp.setStringValue(Long.toString(maxSize));
-            rp.setProtected(true);
-            addProperty(rp);
-        }
-        if (f.getDefaultView() == MailItem.Type.CONTACT) {
-            addResourceType(DavElements.CardDav.E_ADDRESSBOOK);
-        }
-        mCtag = CtagInfo.makeCtag(f);
-        setProperty(DavElements.E_GETCTAG, mCtag);
-    }
-
-    private final String mCtag;
-
     private static QName[] SUPPORTED_REPORTS = {
             DavElements.CardDav.E_ADDRESSBOOK_MULTIGET,
             DavElements.CardDav.E_ADDRESSBOOK_QUERY,
@@ -88,6 +55,44 @@ public class AddressbookCollection extends Collection {
             DavElements.E_PRINCIPAL_SEARCH_PROPERTY_SET,
             DavElements.E_EXPAND_PROPERTY
     };
+
+    public AddressbookCollection(DavContext ctxt, Folder f) throws DavException, ServiceException {
+        super(ctxt, f);
+        setupAddressbookCollection(this, ctxt, f);
+    }
+
+    protected static void setupAddressbookCollection(Collection coll, DavContext ctxt, Folder f)
+            throws ServiceException {
+        Account acct = f.getAccount();
+        Locale lc = acct.getLocale();
+        String description = L10nUtil.getMessage(MsgKey.carddavAddressbookDescription,
+                lc, acct.getAttr(Provisioning.A_displayName), f.getName());
+        ResourceProperty rp = new ResourceProperty(DavElements.CardDav.E_ADDRESSBOOK_DESCRIPTION);
+        rp.setMessageLocale(lc);
+        rp.setStringValue(description);
+        rp.setProtected(false);
+        coll.addProperty(rp);
+        coll.addProperty(ResourceProperty.AddMember.create(UrlNamespace.getFolderUrl(ctxt.getUser(),
+                f.getName())));
+        rp = new ResourceProperty(DavElements.CardDav.E_SUPPORTED_ADDRESS_DATA);
+        Element vcard = rp.addChild(DavElements.CardDav.E_ADDRESS_DATA);
+        vcard.addAttribute(DavElements.P_CONTENT_TYPE, DavProtocol.VCARD_CONTENT_TYPE);
+        vcard.addAttribute(DavElements.P_VERSION, DavProtocol.VCARD_VERSION);
+        rp.setProtected(true);
+        coll.addProperty(rp);
+        long maxSize = Provisioning.getInstance().getLocalServer().getLongAttr(
+                Provisioning.A_zimbraFileUploadMaxSize, -1);
+        if (maxSize > 0) {
+            rp = new ResourceProperty(DavElements.CardDav.E_MAX_RESOURCE_SIZE_ADDRESSBOOK);
+            rp.setStringValue(Long.toString(maxSize));
+            rp.setProtected(true);
+            coll.addProperty(rp);
+        }
+        if (f.getDefaultView() == MailItem.Type.CONTACT) {
+            coll.addResourceType(DavElements.CardDav.E_ADDRESSBOOK);
+        }
+        coll.setProperty(DavElements.E_GETCTAG, CtagInfo.makeCtag(f));
+    }
 
     @Override
     protected QName[] getSupportedReports() {

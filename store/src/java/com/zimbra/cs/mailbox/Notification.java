@@ -325,14 +325,11 @@ public class Notification implements LmtpCallback {
 
             // Body
             // check whether to send "external" OOO reply
-            if (account.isPrefOutOfOfficeSuppressExternalReply() && isOfExternalSenderType(destination, account, mbox)
-            		&&  !isInternalSender(destination, account)) {
-            	ZimbraLog.mailbox.info(destination
-        				+ " is external user and no external reply option is set, so no OOO will be sent. ");
-        		return;
+            if (skipOutOfOfficeMsg(destination, account, mbox)) {
+                ZimbraLog.mailbox.info("%s is external user and no external reply option is set, so no OOO will be sent.", destination);
+                return;
             }
-            boolean sendExternalReply = account.isPrefOutOfOfficeExternalReplyEnabled()
-                   && !isInternalSender(destination, account) && isOfExternalSenderType(destination, account, mbox);
+            boolean sendExternalReply = sendOutOfOfficeExternalReply(destination, account, mbox);
             String body = account.getAttr(sendExternalReply ?
                     Provisioning.A_zimbraPrefOutOfOfficeExternalReply : Provisioning.A_zimbraPrefOutOfOfficeReply, "");
             charset = getCharset(account, body);
@@ -361,6 +358,28 @@ public class Notification implements LmtpCallback {
         } catch (MessagingException me) {
             ofailed("send failed", destination, rcpt, msgId, me);
         }
+    }
+
+    /**
+     * whether OutOfOffice message has to be sent to external sender or not
+     * @return   true  - message should  not be sent
+     *           false - message should be sent
+     */
+    public static boolean skipOutOfOfficeMsg(String senderAddr, Account account, Mailbox mbox) {
+        return account.isPrefOutOfOfficeSuppressExternalReply() && isOfExternalSenderType(senderAddr, account, mbox)
+                &&  !isInternalSender(senderAddr, account) && !isOfSpecificDomainSenderType(senderAddr, account);
+    }
+
+    /**
+     * standard Out of Office standard message should be sent or custom message
+     * @return    true - custom message should be sent
+     *            false - standard message should be sent
+     */
+    public static boolean sendOutOfOfficeExternalReply(String senderAddr, Account account, Mailbox mbox) {
+        boolean sendExternalReply = account.isPrefOutOfOfficeExternalReplyEnabled()
+                && !isInternalSender(senderAddr, account) && isOfExternalSenderType(senderAddr, account, mbox);
+         sendExternalReply = sendExternalReply || isOfSpecificDomainSenderType(senderAddr, account);
+         return sendExternalReply;
     }
 
     private static boolean isInternalSender(String senderAddr, Account account) {
@@ -400,6 +419,19 @@ public class Notification implements LmtpCallback {
             default:
                 return true;
         }
+    }
+
+    private static boolean isOfSpecificDomainSenderType(String senderAddr, Account account) {
+        if (account.getPrefExternalSendersType().isINSD()) {
+            String[] senderAddrParts = EmailUtil.getLocalPartAndDomain(senderAddr);
+            String senderDomain = senderAddrParts[1];
+            for (String specificDom : account.getPrefOutOfOfficeSpecificDomains()) {
+                if (specificDom.equalsIgnoreCase(senderDomain)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private String getCharset(Account account, String data) {
@@ -493,7 +525,9 @@ public class Notification implements LmtpCallback {
             smtpSession.getProperties().setProperty("mail.smtp.from", envFrom);
 
             Transport.send(out);
-            ZimbraLog.mailbox.info("notification sent dest='" + destination + "' rcpt='" + rcpt + "' mid=" + msg.getId());
+
+            MailSender.logMessage(out, out.getAllRecipients(), envFrom,
+                smtpSession.getProperties().getProperty("mail.smtp.host"), String.valueOf(msg.getId()), null, null, "notify");
         } catch (MessagingException me) {
             nfailed("send failed", destination, rcpt, msg, me);
         }

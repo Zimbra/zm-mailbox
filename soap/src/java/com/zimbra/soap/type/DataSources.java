@@ -22,6 +22,7 @@ import com.zimbra.soap.account.type.AccountDataSource;
 import com.zimbra.soap.account.type.AccountImapDataSource;
 import com.zimbra.soap.account.type.AccountPop3DataSource;
 import com.zimbra.soap.account.type.AccountRssDataSource;
+import com.zimbra.soap.account.type.AccountUnknownDataSource;
 
 public class DataSources {
 
@@ -30,7 +31,7 @@ public class DataSources {
     }
 
     public static AccountDataSource newDataSource() {
-        return new AccountDataSource();
+        return new AccountUnknownDataSource();
     }
 
     public static Pop3DataSource newPop3DataSource() {

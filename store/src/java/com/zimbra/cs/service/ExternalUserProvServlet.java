@@ -38,8 +38,10 @@ import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMountpoint;
 import com.zimbra.common.account.ProvisioningConstants;
+import com.zimbra.common.account.ZAttrProvisioning.FeatureAddressVerificationStatus;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.util.BlobMetaData;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.Log;
@@ -78,9 +80,12 @@ public class ExternalUserProvServlet extends ZimbraServlet {
     private static final String EXT_USER_PROV_ON_UI_NODE = "/fromservice/extuserprov";
     private static final String PUBLIC_LOGIN_ON_UI_NODE = "/fromservice/publiclogin";
     public static final String PUBLIC_EXTUSERPROV_JSP = "/public/extuserprov.jsp";
+    public static final String PUBLIC_ADDRESS_VERIFICATION_JSP = "/public/addressVerification.jsp";
     public static final String PUBLIC_LOGIN_JSP = "/public/login.jsp";
     public static final String ERROR_CODE = "errorCode";
+    public static final String MESSAGE_KEY = "messageKey";
     public static final String ERROR_MESSAGE = "errorMessage";
+    public static final String EXPIRED = "expired";
 
     @Override
     public void init() throws ServletException {
@@ -104,123 +109,156 @@ public class ExternalUserProvServlet extends ZimbraServlet {
         }
         Map<Object, Object> tokenMap = validatePrelimToken(param);
         Map<String, String> reqHeaders = new HashMap<String, String>();
-        String ownerId = (String) tokenMap.get("aid");
-        String folderId = (String) tokenMap.get("fid");
-        String extUserEmail = (String) tokenMap.get("email");
-
-        Provisioning prov = Provisioning.getInstance();
-        Account grantee;
-        try {
-            Account owner = prov.getAccountById(ownerId);
-            Domain domain = prov.getDomain(owner);
-            grantee = prov.getAccountByName(mapExtEmailToAcctName(extUserEmail, domain));
-            if (grantee == null) {
-                // external virtual account not created yet
-                if (prov.isOctopus() && DebugConfig.skipVirtualAccountRegistrationPage) {
-                    // provision using 'null' password and display name
-                    // UI will ask the user to set these post provisioning
-                    provisionVirtualAccountAndRedirect(req, resp, null, null, ownerId, extUserEmail);
+        String ownerId = (String) tokenMap.get(AccountConstants.P_ACCOUNT_ID);
+        String folderId = (String) tokenMap.get(AccountConstants.P_FOLDER_ID);
+        String extUserEmail = (String) tokenMap.get(AccountConstants.P_EMAIL);
+        String addressVerification = (String) tokenMap.get(AccountConstants.P_ADDRESS_VERIFICATION);
+        if ("1".equals(addressVerification)) {
+            Boolean expired = false;
+            if (tokenMap.get(EXPIRED) != null) {
+                expired = (Boolean) tokenMap.get(EXPIRED);
+            }
+            Map<String, String> attributes = handleAddressVerification(req, resp, ownerId, extUserEmail, expired);
+            redirectRequest(req, resp, attributes, EXT_USER_PROV_ON_UI_NODE, PUBLIC_ADDRESS_VERIFICATION_JSP);
+        } else {
+            Provisioning prov = Provisioning.getInstance();
+            Account grantee;
+            try {
+                Account owner = prov.getAccountById(ownerId);
+                Domain domain = prov.getDomain(owner);
+                grantee = prov.getAccountByName(mapExtEmailToAcctName(extUserEmail, domain));
+                if (grantee == null) {
+                    // external virtual account not created yet
+                    if (prov.isOctopus() && DebugConfig.skipVirtualAccountRegistrationPage) {
+                        // provision using 'null' password and display name
+                        // UI will ask the user to set these post provisioning
+                        provisionVirtualAccountAndRedirect(req, resp, null, null, ownerId, extUserEmail);
+                    } else {
+                        resp.addCookie(new Cookie("ZM_PRELIM_AUTH_TOKEN", param));
+                        Map<String, String> attrs = new HashMap<String, String>();
+                        attrs.put("extuseremail", extUserEmail);
+                        reqHeaders.put("ZM_PRELIM_AUTH_TOKEN", param);
+                        redirectRequest(req, resp, attrs, reqHeaders, EXT_USER_PROV_ON_UI_NODE, PUBLIC_EXTUSERPROV_JSP);
+                    }
                 } else {
-                    resp.addCookie(new Cookie("ZM_PRELIM_AUTH_TOKEN", param));
-                    Map<String, String> attrs = new HashMap<String, String>();
-                    attrs.put("extuseremail", extUserEmail);
-                    reqHeaders.put("ZM_PRELIM_AUTH_TOKEN", param);
-                    redirectRequest(req, resp, attrs, reqHeaders, EXT_USER_PROV_ON_UI_NODE, PUBLIC_EXTUSERPROV_JSP);
-                }
-            } else {
-                // create a new mountpoint in the external user's mailbox if not already created
+                    // create a new mountpoint in the external user's mailbox if not already created
 
-                String[] sharedItems = owner.getSharedItem();
-                int sharedFolderId = Integer.valueOf(folderId);
-                String sharedFolderPath = null;
-                MailItem.Type sharedFolderView = null;
-                for (String sharedItem : sharedItems) {
-                    ShareInfoData sid = AclPushSerializer.deserialize(sharedItem);
-                    if (sid.getItemId() == sharedFolderId && extUserEmail.equalsIgnoreCase(sid.getGranteeId())) {
-                        sharedFolderPath = sid.getPath();
-                        sharedFolderView = sid.getFolderDefaultViewCode();
-                        break;
-                    }
-                }
-                if (sharedFolderPath == null) {
-                    throw new ServletException("share not found");
-                }
-                String mountpointName = getMountpointName(owner, grantee, sharedFolderPath);
-
-                ZMailbox.Options options = new ZMailbox.Options();
-                options.setNoSession(true);
-                options.setAuthToken(AuthProvider.getAuthToken(grantee).toZAuthToken());
-                options.setUri(AccountUtil.getSoapUri(grantee));
-                ZMailbox zMailbox = new ZMailbox(options);
-                ZMountpoint zMtpt = null;
-                try {
-                    zMtpt = zMailbox.createMountpoint(
-                            String.valueOf(getMptParentFolderId(sharedFolderView, prov)), mountpointName,
-                            ZFolder.View.fromString(sharedFolderView.toString()), ZFolder.Color.DEFAULTCOLOR, null,
-                            ZMailbox.OwnerBy.BY_ID, ownerId, ZMailbox.SharedItemBy.BY_ID, folderId, false);
-                } catch (ServiceException e) {
-                    logger.debug("Error in attempting to create mountpoint. Probably it already exists.", e);
-                }
-                if (zMtpt != null) {
-                    if (sharedFolderView == MailItem.Type.APPOINTMENT) {
-                        // make sure that the mountpoint is checked in the UI by default
-                        FolderActionSelector actionSelector = new FolderActionSelector(zMtpt.getId(), "check");
-                        FolderActionRequest actionRequest = new FolderActionRequest(actionSelector);
-                        try {
-                            zMailbox.invokeJaxb(actionRequest);
-                        } catch (ServiceException e) {
-                            logger.warn("Error in invoking check action on calendar mountpoint", e);
-                        }
-                    }
-                    HashSet<MailItem.Type> types = new HashSet<MailItem.Type>();
-                    types.add(sharedFolderView);
-                    enableAppFeatures(grantee, types);
-                }
-
-                // check if the external user is already logged-in
-                String zAuthTokenCookie = null;
-                javax.servlet.http.Cookie cookies[] = req.getCookies();
-                if (cookies != null) {
-                    for (Cookie cookie : cookies) {
-                        if (cookie.getName().equals("ZM_AUTH_TOKEN")) {
-                            zAuthTokenCookie = cookie.getValue();
+                    String[] sharedItems = owner.getSharedItem();
+                    int sharedFolderId = Integer.valueOf(folderId);
+                    String sharedFolderPath = null;
+                    MailItem.Type sharedFolderView = null;
+                    for (String sharedItem : sharedItems) {
+                        ShareInfoData sid = AclPushSerializer.deserialize(sharedItem);
+                        if (sid.getItemId() == sharedFolderId && extUserEmail.equalsIgnoreCase(sid.getGranteeId())) {
+                            sharedFolderPath = sid.getPath();
+                            sharedFolderView = sid.getFolderDefaultViewCode();
                             break;
                         }
                     }
-                }
-                AuthToken zAuthToken = null;
-                if (zAuthTokenCookie != null) {
+                    if (sharedFolderPath == null) {
+                        throw new ServletException("share not found");
+                    }
+                    String mountpointName = getMountpointName(owner, grantee, sharedFolderPath);
+
+                    ZMailbox.Options options = new ZMailbox.Options();
+                    options.setNoSession(true);
+                    options.setAuthToken(AuthProvider.getAuthToken(grantee).toZAuthToken());
+                    options.setUri(AccountUtil.getSoapUri(grantee));
+                    ZMailbox zMailbox = new ZMailbox(options);
+                    ZMountpoint zMtpt = null;
                     try {
-                        zAuthToken = AuthProvider.getAuthToken(zAuthTokenCookie);
-                    } catch (AuthTokenException ignored) {
-                        // auth token is not valid
+                        zMtpt = zMailbox.createMountpoint(
+                                String.valueOf(getMptParentFolderId(sharedFolderView, prov)), mountpointName,
+                                ZFolder.View.fromString(sharedFolderView.toString()), ZFolder.Color.DEFAULTCOLOR, null,
+                                ZMailbox.OwnerBy.BY_ID, ownerId, ZMailbox.SharedItemBy.BY_ID, folderId, false);
+                    } catch (ServiceException e) {
+                        logger.debug("Error in attempting to create mountpoint. Probably it already exists.", e);
+                    }
+                    if (zMtpt != null) {
+                        if (sharedFolderView == MailItem.Type.APPOINTMENT) {
+                            // make sure that the mountpoint is checked in the UI by default
+                            FolderActionSelector actionSelector = new FolderActionSelector(zMtpt.getId(), "check");
+                            FolderActionRequest actionRequest = new FolderActionRequest(actionSelector);
+                            try {
+                                zMailbox.invokeJaxb(actionRequest);
+                            } catch (ServiceException e) {
+                                logger.warn("Error in invoking check action on calendar mountpoint", e);
+                            }
+                        }
+                        HashSet<MailItem.Type> types = new HashSet<MailItem.Type>();
+                        types.add(sharedFolderView);
+                        enableAppFeatures(grantee, types);
+                    }
+
+                    // check if the external user is already logged-in
+                    String zAuthTokenCookie = null;
+                    javax.servlet.http.Cookie cookies[] = req.getCookies();
+                    if (cookies != null) {
+                        for (Cookie cookie : cookies) {
+                            if (cookie.getName().equals("ZM_AUTH_TOKEN")) {
+                                zAuthTokenCookie = cookie.getValue();
+                                break;
+                            }
+                        }
+                    }
+                    AuthToken zAuthToken = null;
+                    if (zAuthTokenCookie != null) {
+                        try {
+                            zAuthToken = AuthProvider.getAuthToken(zAuthTokenCookie);
+                        } catch (AuthTokenException ignored) {
+                            // auth token is not valid
+                        }
+                    }
+                    if (zAuthToken != null && !zAuthToken.isExpired() && zAuthToken.isRegistered() && grantee.getId().equals(zAuthToken.getAccountId())) {
+                        // external virtual account already logged-in
+                        resp.sendRedirect("/");
+                    } else if (prov.isOctopus() && !grantee.isVirtualAccountInitialPasswordSet() &&
+                            DebugConfig.skipVirtualAccountRegistrationPage) {
+                        // seems like the virtual user did not set his password during his last visit, after an account was
+                        // provisioned for him
+                        setCookieAndRedirect(req, resp, grantee);
+                    } else {
+                        Map<String, String> attrs = new HashMap<String, String>();
+                        attrs.put("virtualacctdomain", domain.getName());
+                        redirectRequest(req, resp, attrs, PUBLIC_LOGIN_ON_UI_NODE, PUBLIC_LOGIN_JSP);
                     }
                 }
-                if (zAuthToken != null && !zAuthToken.isExpired() && zAuthToken.isRegistered() && grantee.getId().equals(zAuthToken.getAccountId())) {
-                    // external virtual account already logged-in
-                    resp.sendRedirect("/");
-                } else if (prov.isOctopus() && !grantee.isVirtualAccountInitialPasswordSet() &&
-                        DebugConfig.skipVirtualAccountRegistrationPage) {
-                    // seems like the virtual user did not set his password during his last visit, after an account was
-                    // provisioned for him
-                    setCookieAndRedirect(req, resp, grantee);
-                } else {
-                    Map<String, String> attrs = new HashMap<String, String>();
-                    attrs.put("virtualacctdomain", domain.getName());
-                    redirectRequest(req, resp, attrs, PUBLIC_LOGIN_ON_UI_NODE, PUBLIC_LOGIN_JSP);
-                }
+            } catch (ServiceException e) {
+                Map<String, String> errorAttrs = new HashMap<String, String>();
+                errorAttrs.put(ERROR_CODE, e.getCode());
+                errorAttrs.put(ERROR_MESSAGE, e.getMessage());
+                redirectRequest(req, resp, errorAttrs, EXT_USER_PROV_ON_UI_NODE, PUBLIC_EXTUSERPROV_JSP);
+            } catch (Exception e) {
+                Map<String, String> errorAttrs = new HashMap<String, String>();
+                errorAttrs.put(ERROR_CODE, ServiceException.FAILURE);
+                errorAttrs.put(ERROR_MESSAGE, e.getMessage());
+                redirectRequest(req, resp, errorAttrs, EXT_USER_PROV_ON_UI_NODE, PUBLIC_EXTUSERPROV_JSP);
             }
+        }
+    }
+
+    public Map<String, String> handleAddressVerification(HttpServletRequest req, HttpServletResponse resp, String accountId, String emailVerified, Boolean expired) throws ServletException, IOException {
+        Map<String, String> attrs = new HashMap<String, String>();
+        HashMap<String, String> prefs = new HashMap<String, String>();
+        Provisioning prov = Provisioning.getInstance();
+        try {
+            Account acct = prov.getAccountById(accountId);
+            if (expired) {
+                prefs.put(Provisioning.A_zimbraFeatureAddressVerificationStatus, FeatureAddressVerificationStatus.expired.toString());
+                attrs.put(MESSAGE_KEY, "Expired");
+            } else {
+                prefs.put(Provisioning.A_zimbraPrefMailForwardingAddress, emailVerified);
+                prefs.put(Provisioning.A_zimbraFeatureAddressVerificationStatus, FeatureAddressVerificationStatus.verified.toString());
+                acct.unsetFeatureAddressUnderVerification();
+                attrs.put(MESSAGE_KEY, "Success");
+            }
+            prov.modifyAttrs(acct, prefs, true, null);
         } catch (ServiceException e) {
             Map<String, String> errorAttrs = new HashMap<String, String>();
-            errorAttrs.put(ERROR_CODE, e.getCode());
-            errorAttrs.put(ERROR_MESSAGE, e.getMessage());
-            redirectRequest(req, resp, errorAttrs, EXT_USER_PROV_ON_UI_NODE, PUBLIC_EXTUSERPROV_JSP);
-        } catch (Exception e) {
-            Map<String, String> errorAttrs = new HashMap<String, String>();
-            errorAttrs.put(ERROR_CODE, ServiceException.FAILURE);
-            errorAttrs.put(ERROR_MESSAGE, e.getMessage());
-            redirectRequest(req, resp, errorAttrs, EXT_USER_PROV_ON_UI_NODE, PUBLIC_EXTUSERPROV_JSP);
+            errorAttrs.put(MESSAGE_KEY, "Failure");
+            redirectRequest(req, resp, errorAttrs, EXT_USER_PROV_ON_UI_NODE, PUBLIC_ADDRESS_VERIFICATION_JSP);
         }
+        return attrs;
     }
 
     private static String getMountpointName(Account owner, Account grantee, String sharedFolderPath)
@@ -501,11 +539,16 @@ public class ExternalUserProvServlet extends ZimbraServlet {
         } catch (Exception e) {
             throw new ServletException(e);
         }
-        Object expiry = map.get("exp");
+        Object expiry = map.get(AccountConstants.P_LINK_EXPIRY);
         if (expiry != null) {
             // check validity
             if (System.currentTimeMillis() > Long.parseLong((String) expiry)) {
-                throw new ServletException("url no longer valid");
+                String addressVerification = (String) map.get(AccountConstants.P_ADDRESS_VERIFICATION);
+                if ("1".equals(addressVerification)) {
+                    map.put(EXPIRED, true);
+                } else {
+                    throw new ServletException("url no longer valid");
+                }
             }
         }
         return map;

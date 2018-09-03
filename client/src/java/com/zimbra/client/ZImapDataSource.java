@@ -33,8 +33,6 @@ import com.zimbra.soap.type.ImapDataSource;
 
 public class ZImapDataSource extends ZDataSource implements ToZJSONObject {
 
-    private ImapDataSource data;
-
     public ZImapDataSource(ImapDataSource data) {
         this.data = DataSources.newImapDataSource(data);
     }
@@ -111,16 +109,8 @@ public class ZImapDataSource extends ZDataSource implements ToZJSONObject {
         return jaxbObject;
     }
 
+    @Override
     public DataSourceType getType() { return DataSourceType.imap; }
-
-    public String getId() { return data.getId(); }
-
-    public String getName() { return data.getName(); }
-    public void setName(String name) { data.setName(name); }
-
-    public boolean isEnabled() { return SystemUtil.coalesce(data.isEnabled(), Boolean.FALSE); }
-    
-    public void setEnabled(boolean enabled) { data.setEnabled(enabled); }
 
     public String getHost() { return data.getHost(); }
     public void setHost(String host) { data.setHost(host); }
@@ -130,7 +120,7 @@ public class ZImapDataSource extends ZDataSource implements ToZJSONObject {
 
     public String getUsername() { return data.getUsername(); }
     public void setUsername(String username) { data.setUsername(username); }
-
+    
     public String getFolderId() { return data.getFolderId(); }
     public void setFolderId(String folderid) { data.setFolderId(folderid); }
 

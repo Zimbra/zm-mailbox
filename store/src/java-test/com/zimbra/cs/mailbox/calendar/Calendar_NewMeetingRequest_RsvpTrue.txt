@@ -1,0 +1,97 @@
+To: attendee1 <attendee1@testdomain.com>
+Message-ID: <2103105317.2993.1513012884769.JavaMail.zimbra@testdomain.com>
+Subject: Party
+MIME-Version: 1.0
+Content-Type: multipart/alternative;
+       boundary="=_2eb7dab5-3168-43b0-ba14-80504c7e08da"
+
+--=_2eb7dab5-3168-43b0-ba14-80504c7e08da
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+
+The following is a new meeting request:
+
+Subject: Party
+Organizer: org@testdomain.com
+
+Time: Tuesday, December 12, 2017, 10:00:00 AM - 10:30:00 AM GMT +09:00 Japan
+
+Invitees: attendee1@testdomain.com
+
+
+*~*~*~*~*~*~*~*~*~*
+
+
+
+--=_2eb7dab5-3168-43b0-ba14-80504c7e08da
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: 7bit
+
+<html><body id='htmlmode'><h3>The following is a new meeting request:</h3>
+
+<p>
+<table border='0'>
+<tr><th align=left>Subject:</th><td>Party </td></tr>
+<tr><th align=left>Organizer:</th><td>org@testdomain.com </td></tr>
+</table>
+<p>
+<table border='0'>
+<tr><th align=left>Time:</th><td>Tuesday, December 12, 2017, 10:00:00 AM - 10:30:00 AM GMT +09:00 Japan
+ </td></tr></table>
+<p>
+<table border='0'>
+<tr><th align=left>Invitees:</th><td>attendee1@testdomain.com </td></tr>
+</table>
+<div>*~*~*~*~*~*~*~*~*~*</div><br></body></html>
+--=_2eb7dab5-3168-43b0-ba14-80504c7e08da
+Content-Type: text/calendar; charset=utf-8; method=REQUEST; name=meeting.ics
+Content-Transfer-Encoding: 7bit
+
+BEGIN:VCALENDAR
+PRODID:Zimbra-Calendar-Provider
+VERSION:2.0
+METHOD:REQUEST
+BEGIN:VTIMEZONE
+TZID:Asia/Tokyo
+BEGIN:STANDARD
+DTSTART:16010101T000000
+TZOFFSETTO:+0900
+TZOFFSETFROM:+0900
+END:STANDARD
+END:VTIMEZONE
+BEGIN:VEVENT
+UID:8282cdfc-a5a6-4ed4-84e2-be12c2bc4af8
+SUMMARY:Party
+ATTENDEE;CN=attendee1;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:mailto
+ :attendee1@testdomain.com
+ORGANIZER:mailto:org@testdomain.com
+DTSTART;TZID="Asia/Tokyo":20171212T100000
+DTEND;TZID="Asia/Tokyo":20171212T103000
+STATUS:CONFIRMED
+CLASS:PUBLIC
+X-MICROSOFT-CDO-INTENDEDSTATUS:BUSY
+TRANSP:OPAQUE
+LAST-MODIFIED:20171211T172124Z
+DTSTAMP:20171211T172124Z
+SEQUENCE:0
+DESCRIPTION:The following is a new meeting request:\n\nSubject: Party \nOrg
+ anizer: org@testdomain.com \n\nTime: Tuesday\, December 12\, 2017\, 10:00:
+ 00 AM - 10:30:00 AM GMT +09:00 Japan\n \nInvitees: attendee1@testdomain.com \n\
+ n\n*~*~*~*~*~*~*~*~*~*\n\n\n
+X-ALT-DESC;FMTTYPE=text/html:<html><body id='htmlmode'><h3>The following is
+ a new meeting request:</h3>\n\n<p>\n<table border='0'>\n<tr><th align=left>S
+ ubject:</th><td>Party </td></tr>\n<tr><th align=left>Organizer:</th><td>org
+ @testdomain.com </td></tr>\n</table>\n<p>\n<table border='0'>\n<tr><th ali
+ gn=left>Time:</th><td>Tuesday\, December 12\, 2017\, 10:00:00 AM - 10:30:00
+ AM GMT +09:00 Japan\n </td></tr></table>\n<p>\n<table border='0'>\n<tr><th a
+ lign=left>Invitees:</th><td>attendee1@testdomain.com </td></tr>\n</table>\n<div
+ >*~*~*~*~*~*~*~*~*~*</div><br></body></html>
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER;RELATED=START:-PT5M
+DESCRIPTION:Reminder
+END:VALARM
+END:VEVENT
+END:VCALENDAR
+--=_2eb7dab5-3168-43b0-ba14-80504c7e08da--
+

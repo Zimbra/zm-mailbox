@@ -289,6 +289,7 @@
     </target>
 
     <target name="test" depends="test-compile" description="Run unit tests">
+      <property name="test-results-file" value="${zm-mailbox.basedir}/build/test-results.txt"/>
       <antcontrib:if>
         <available file="${test.src.dir}" type="dir"/>
         <then>
@@ -312,13 +313,8 @@
             <batchtest todir="${test.dir}/output">
                 <fileset dir="${test.src.dir}">
                     <include name="${test.pattern}"/>
-                    <exclude name="**/*ITest.java"/>
                     <exclude name="**/Abstract*Test.java"/>
-                    <exclude name="**/ZimletUtilTest.java"/>
-                    <exclude name="**/RuleManagerWithCustomActionFilterTest.java"/>
-                    <exclude name="**/cs/mailbox/ContactTest.java"/>
-                    <exclude name="**/cs/imap/ImapHandlerTest.java"/>
-                    <exclude name="**/cs/filter/FileIntoCopyTest.java"/>
+                    <exclude name="**/mailbox/ContactTest.java"/>
                 </fileset>
             </batchtest>
           </junit>
@@ -327,11 +323,11 @@
             <report todir="${test.dir}/report"/>
           </junitreport>
           <echo>Test Report: ${test.dir}/report/index.html</echo>
-	  <antcontrib:if>
-	    <isset property="junit.failure"/>
-	    <then><echo append="true" file="${test-results-file}" message="${test.dir} - FAILED&#xD;&#xA;"/></then>
-	    <else><echo append="true" file="${test-results-file}" message="${test.dir} - PASSED&#xD;&#xA;"/></else>
-	  </antcontrib:if>
+      <antcontrib:if>
+        <isset property="junit.failure"/>
+        <then><echo append="true" file="${test-results-file}" message="${test.dir} - FAILED&#xD;&#xA;"/></then>
+        <else><echo append="true" file="${test-results-file}" message="${test.dir} - PASSED&#xD;&#xA;"/></else>
+      </antcontrib:if>
         </then>
         <else>
           <echo>${test.src.dir} not found. Will not run unit tests</echo>

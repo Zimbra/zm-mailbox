@@ -28,7 +28,7 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.lang.RandomStringUtils;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -73,7 +73,7 @@ public class VerifyStoreManager extends AdminDocumentHandler {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this).add("num blobs", numBlobs).add("storeIncoming",incomingTime)
+            return MoreObjects.toStringHelper(this).add("num blobs", numBlobs).add("storeIncoming",incomingTime)
                             .add("stage",stageTime).add("link", linkTime).add("fetch", fetchTime)
                             .add("delete", deleteTime).toString();
         }

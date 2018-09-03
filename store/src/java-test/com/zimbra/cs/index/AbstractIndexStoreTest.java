@@ -45,7 +45,6 @@ import org.junit.Test;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.google.common.io.Closeables;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -567,9 +566,8 @@ public abstract class AbstractIndexStoreTest {
         IndexStore index = mbox.index.getIndexStore();
         ZimbraIndexSearcher searcher = index.openSearcher();
         // Note that TermFieldEnumeration order is defined to be sorted
-        TermFieldEnumeration fields = null;
-        try {
-            fields = searcher.getIndexReader().getTermsForField(LuceneFields.L_CONTACT_DATA, "");
+        try (TermFieldEnumeration fields = searcher.getIndexReader()
+            .getTermsForField(LuceneFields.L_CONTACT_DATA, "")) {
             checkNextTerm(fields, new Term(LuceneFields.L_CONTACT_DATA, "@zimbra"));
             checkNextTerm(fields, new Term(LuceneFields.L_CONTACT_DATA, "@zimbra.com"));
             checkNextTerm(fields, new Term(LuceneFields.L_CONTACT_DATA, "test1"));
@@ -579,15 +577,13 @@ public abstract class AbstractIndexStoreTest {
             checkNextTerm(fields, new Term(LuceneFields.L_CONTACT_DATA, "zimbra"));
             checkNextTerm(fields, new Term(LuceneFields.L_CONTACT_DATA, "zimbra.com"));
             checkAtEnd(fields, LuceneFields.L_CONTACT_DATA);
-        } finally {
-            Closeables.closeQuietly(fields);
-        }
-        fields = null;
-        try {
+        } 
+        try (TermFieldEnumeration fields = searcher.getIndexReader()
+            .getTermsForField(LuceneFields.L_CONTENT, "")) {
             // l.content values:
             // "test1@zimbra.com test1 @zimbra.com zimbra.com zimbra @zimbra  "
             // "test2@zimbra.com test2 @zimbra.com zimbra.com zimbra @zimbra  "
-            fields = searcher.getIndexReader().getTermsForField(LuceneFields.L_CONTENT, "");
+            
             checkNextTerm(fields, new Term(LuceneFields.L_CONTENT, "test1"));
             checkNextTerm(fields, new Term(LuceneFields.L_CONTENT, "test1@zimbra.com"));
             checkNextTerm(fields, new Term(LuceneFields.L_CONTENT, "test2"));
@@ -595,29 +591,20 @@ public abstract class AbstractIndexStoreTest {
             checkNextTerm(fields, new Term(LuceneFields.L_CONTENT, "zimbra"));
             checkNextTerm(fields, new Term(LuceneFields.L_CONTENT, "zimbra.com"));
             checkAtEnd(fields, LuceneFields.L_CONTENT);
-        } finally {
-            Closeables.closeQuietly(fields);
-        }
-        fields = null;
-        try {
-            fields = searcher.getIndexReader().getTermsForField(LuceneFields.L_FIELD, "");
+        } 
+        try (TermFieldEnumeration fields = searcher.getIndexReader()
+            .getTermsForField(LuceneFields.L_FIELD, "")) {
             checkNextTerm(fields, new Term(LuceneFields.L_FIELD, "email:test1@zimbra.com"));
             checkNextTerm(fields, new Term(LuceneFields.L_FIELD, "email:test2@zimbra.com"));
             checkAtEnd(fields, LuceneFields.L_FIELD);
-        } finally {
-            Closeables.closeQuietly(fields);
-        }
-        fields = null;
-        try {
-            fields = searcher.getIndexReader().getTermsForField(LuceneFields.L_PARTNAME, "");
+        } 
+        try (TermFieldEnumeration fields = searcher.getIndexReader()
+            .getTermsForField(LuceneFields.L_PARTNAME, "")) {
             checkNextTerm(fields, new Term(LuceneFields.L_PARTNAME, "CONTACT"));
             checkAtEnd(fields, LuceneFields.L_PARTNAME);
-        } finally {
-            Closeables.closeQuietly(fields);
-        }
-        fields = null;
-        try {
-            fields = searcher.getIndexReader().getTermsForField(LuceneFields.L_H_TO, "");
+        } 
+        try (TermFieldEnumeration fields = searcher.getIndexReader()
+            .getTermsForField(LuceneFields.L_H_TO, "")) {
             checkNextTerm(fields, new Term(LuceneFields.L_H_TO, "@zimbra"));
             checkNextTerm(fields, new Term(LuceneFields.L_H_TO, "@zimbra.com"));
             checkNextTerm(fields, new Term(LuceneFields.L_H_TO, "test1"));
@@ -627,12 +614,9 @@ public abstract class AbstractIndexStoreTest {
             checkNextTerm(fields, new Term(LuceneFields.L_H_TO, "zimbra"));
             checkNextTerm(fields, new Term(LuceneFields.L_H_TO, "zimbra.com"));
             checkAtEnd(fields, LuceneFields.L_H_TO);
-        } finally {
-            Closeables.closeQuietly(fields);
-        }
-        fields = null;
-        try {
-            fields = searcher.getIndexReader().getTermsForField(LuceneFields.L_H_TO, "tess");
+        } 
+        try (TermFieldEnumeration fields = searcher.getIndexReader()
+            .getTermsForField(LuceneFields.L_H_TO, "tess")) {
             checkNextTerm(fields, new Term(LuceneFields.L_H_TO, "test1"));
             checkNextTerm(fields, new Term(LuceneFields.L_H_TO, "test1@zimbra.com"));
             checkNextTerm(fields, new Term(LuceneFields.L_H_TO, "test2"));
@@ -640,30 +624,22 @@ public abstract class AbstractIndexStoreTest {
             checkNextTerm(fields, new Term(LuceneFields.L_H_TO, "zimbra"));
             checkNextTerm(fields, new Term(LuceneFields.L_H_TO, "zimbra.com"));
             checkAtEnd(fields, LuceneFields.L_H_TO + "(sublist)");
-        } finally {
-            Closeables.closeQuietly(fields);
         }
-        fields = null;
-        try {
-            fields = searcher.getIndexReader().getTermsForField(LuceneFields.L_SORT_DATE, "");
+        try (TermFieldEnumeration fields = searcher.getIndexReader()
+            .getTermsForField(LuceneFields.L_SORT_DATE, "")) {
             checkNextTermFieldType(fields, LuceneFields.L_SORT_DATE);
             // TODO:  ElasticSearch has more.  Not sure why and not sure it matters
             // checkAtEnd(fields, LuceneFields.L_SORT_DATE);
-        } finally {
-            Closeables.closeQuietly(fields);
         }
-        fields = null;
-        try {
-            fields = searcher.getIndexReader().getTermsForField(LuceneFields.L_MAILBOX_BLOB_ID, "");
+        try (TermFieldEnumeration fields = searcher.getIndexReader()
+            .getTermsForField(LuceneFields.L_MAILBOX_BLOB_ID, "")) {
             checkNextTermFieldType(fields, LuceneFields.L_MAILBOX_BLOB_ID);
             checkNextTermFieldType(fields, LuceneFields.L_MAILBOX_BLOB_ID);
             // TODO:  ElasticSearch has more.  Investigate?  Believe it relates to fact that is a number field
             // Numbers have an associated precision step (number of terms generated for each number value)
             // which defaults to 4.
             // checkAtEnd(fields, LuceneFields.L_MAILBOX_BLOB_ID);
-        } finally {
-            Closeables.closeQuietly(fields);
-        }
+        } 
         searcher.close();
     }
 

@@ -27,7 +27,7 @@ import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.google.common.base.Function;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.mailbox.BaseFolderInfo;
 import com.zimbra.common.mailbox.BaseItemInfo;
@@ -629,13 +629,20 @@ public abstract class ImapListener extends Session {
         return mFolder.getSize();
     }
 
+    protected void updateLastChangeId(int changeId) {
+        ZimbraLog.imap.debug("ImapListener.updateLastChangeId %d->%d %s %s", lastChangeId, changeId, this, hashCode());
+        if (changeId > lastChangeId) {
+            lastChangeId = changeId;
+        }
+    }
+
     @SuppressWarnings("rawtypes")
     @Override
     public void notifyPendingChanges(PendingModifications pnsIn, int changeId, Session source) {
         if (!pnsIn.hasNotifications()) {
             return;
         }
-        if(changeId < lastChangeId) {
+        if (changeId < lastChangeId) {
             ZimbraLog.imap.debug("ImapListener :: change %d is not higher than last change %d. Ignoring", changeId, lastChangeId);
             return;
         }
@@ -690,12 +697,14 @@ public abstract class ImapListener extends Session {
             int changeId, AddedItems added);
 
     protected ImapFolder reload() throws ImapSessionClosedException {
-        if (mailbox == null) {
+        // ZESC-460, ZCS-4004: Ensure mailbox was not modified by another thread
+        MailboxStore mbox = mailbox;
+        if (mbox == null) {
             throw new ImapSessionClosedException();
         }
         // Mailbox.endTransaction() -> ImapSession.notifyPendingChanges() locks in the order of Mailbox -> ImapSession.
         // Need to lock in the same order here, otherwise can result in deadlock.
-        mailbox.lock(true); // PagedFolderData.replay() locks Mailbox deep inside of it.
+        mbox.lock(true); // PagedFolderData.replay() locks Mailbox deep inside of it.
         try {
             synchronized (this) {
                 // if the data's already paged in, we can short-circuit
@@ -733,7 +742,7 @@ public abstract class ImapListener extends Session {
                 return (ImapFolder) mFolder;
             }
         } finally {
-            mailbox.unlock();
+            mbox.unlock();
         }
     }
 
@@ -798,10 +807,12 @@ public abstract class ImapListener extends Session {
     @Override
     public void updateAccessTime() {
         super.updateAccessTime();
-        if (mailbox == null) {
+        // ZESC-460, ZCS-4004: Ensure mailbox was not modified by another thread
+        MailboxStore mbox = mailbox;
+        if (mbox == null) {
             return;
         }
-        mailbox.lock(true);
+        mbox.lock(true);
         try {
             synchronized (this) {
                 PagedFolderData paged = mFolder instanceof PagedFolderData ? (PagedFolderData) mFolder : null;
@@ -810,12 +821,12 @@ public abstract class ImapListener extends Session {
                 }
             }
         } finally {
-            mailbox.unlock();
+            mbox.unlock();
         }
     }
 
     @Override
-    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);
         helper.add("path", mPath).add("folderId", folderId);
         if ((mFolder == null) || ((mPath != null) && (!mPath.toString().equals(mFolder.toString())))) {

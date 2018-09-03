@@ -17,15 +17,29 @@
 
 package com.zimbra.cs.util;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
+import java.util.Collection;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.activation.DataHandler;
 import javax.mail.Address;
 import javax.mail.MessagingException;
+import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
+
+import org.apache.commons.codec.binary.Hex;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.DomainBy;
@@ -34,23 +48,31 @@ import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.util.BlobMetaData;
+import com.zimbra.common.util.CharsetUtil;
 import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.zmime.ZMimeBodyPart;
+import com.zimbra.common.zmime.ZMimeMultipart;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.ExtAuthTokenKey;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.TokenUtil;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.MetadataList;
+import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.soap.admin.type.DataSourceType;
 
 public class AccountUtil {
@@ -635,5 +657,178 @@ public class AccountUtil {
             subscriptions.add(slist.get(i));
         }
         return subscriptions;
+    }
+
+    public static MimeMessage generateMimeMessage(Account authAccount, Account ownerAccount,
+        String subject, String charset, Collection<String> internalRecipients,
+        String externalRecipient, String recipient, MimeMultipart mmp) throws MessagingException {
+        MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSmtpSession(authAccount));
+        mm.setSubject(subject, CharsetUtil.checkCharset(subject, charset));
+        mm.setSentDate(new Date());
+        // from the owner
+        mm.setFrom(AccountUtil.getFriendlyEmailAddress(ownerAccount));
+        // sent by auth account
+        mm.setSender(AccountUtil.getFriendlyEmailAddress(authAccount));
+        if (internalRecipients != null) {
+            assert (externalRecipient == null);
+            for (String iRecipient : internalRecipients) {
+                try {
+                    mm.addRecipient(javax.mail.Message.RecipientType.TO,
+                        new JavaMailInternetAddress(iRecipient));
+                } catch (AddressException e) {
+                    ZimbraLog.account.warn(
+                        "Ignoring error while sending notification to " + iRecipient, e);
+                }
+            }
+        } else if (externalRecipient != null) {
+            mm.setRecipient(javax.mail.Message.RecipientType.TO,
+                new JavaMailInternetAddress(externalRecipient));
+        } else {
+            mm.setRecipient(javax.mail.Message.RecipientType.TO,
+                new JavaMailInternetAddress(recipient));
+        }
+        mm.setContent(mmp);
+        mm.saveChanges();
+
+        if (ZimbraLog.account.isDebugEnabled()) {
+            try {
+                ByteArrayOutputStream buf = new ByteArrayOutputStream();
+                mm.writeTo(buf);
+                String mmDump = new String(buf.toByteArray());
+                ZimbraLog.account.debug("********\n" + mmDump);
+            } catch (MessagingException e) {
+                ZimbraLog.account.debug("failed log debug share notification message", e);
+            } catch (IOException e) {
+                ZimbraLog.account.debug("failed log debug share notification message", e);
+            }
+        }
+        return mm;
+    }
+
+    public static MimeMultipart generateMimeMultipart(String mimePartText, String mimePartHtml,
+        String mimePartXml) throws MessagingException {
+        MimeMultipart mmp = new ZMimeMultipart("alternative");
+
+        if (mimePartText != null) {
+            MimeBodyPart textPart = new ZMimeBodyPart();
+            textPart.setText(mimePartText, MimeConstants.P_CHARSET_UTF8);
+            mmp.addBodyPart(textPart);
+        }
+        if (mimePartHtml != null) {
+            MimeBodyPart htmlPart = new ZMimeBodyPart();
+            htmlPart.setDataHandler(new DataHandler(new HtmlPartDataSource(mimePartHtml)));
+            mmp.addBodyPart(htmlPart);
+        }
+        if (mimePartXml != null) {
+            MimeBodyPart xmlPart = new ZMimeBodyPart();
+            xmlPart.setDataHandler(new DataHandler(new XmlPartDataSource(mimePartXml)));
+            mmp.addBodyPart(xmlPart);
+        }
+        return mmp;
+    }
+
+    private static abstract class MimePartDataSource implements javax.activation.DataSource {
+
+        private final String mText;
+        private byte[] mBuf = null;
+
+        public MimePartDataSource(String text) {
+            mText = text;
+        }
+
+        @Override
+        public InputStream getInputStream() throws IOException {
+            synchronized(this) {
+                if (mBuf == null) {
+                    ByteArrayOutputStream buf = new ByteArrayOutputStream();
+                    OutputStreamWriter wout =
+                        new OutputStreamWriter(buf, MimeConstants.P_CHARSET_UTF8);
+                    String text = mText;
+                    wout.write(text);
+                    wout.flush();
+                    mBuf = buf.toByteArray();
+                }
+            }
+            return new ByteArrayInputStream(mBuf);
+        }
+
+        @Override
+        public OutputStream getOutputStream() {
+            throw new UnsupportedOperationException();
+        }
+    }
+
+    public static class HtmlPartDataSource extends MimePartDataSource {
+        private static final String CONTENT_TYPE =
+            MimeConstants.CT_TEXT_HTML + "; " + MimeConstants.P_CHARSET + "=" + MimeConstants.P_CHARSET_UTF8;
+        private static final String NAME = "HtmlDataSource";
+
+        public HtmlPartDataSource(String text) {
+            super(text);
+        }
+
+        @Override
+        public String getContentType() {
+            return CONTENT_TYPE;
+        }
+
+        @Override
+        public String getName() {
+            return NAME;
+        }
+    }
+
+    public static class XmlPartDataSource extends MimePartDataSource {
+        private static final String CONTENT_TYPE =
+            MimeConstants.CT_XML_ZIMBRA_SHARE + "; " + MimeConstants.P_CHARSET + "=" + MimeConstants.P_CHARSET_UTF8;
+        private static final String NAME = "XmlDataSource";
+
+        public XmlPartDataSource(String text) {
+            super(text);
+        }
+
+        @Override
+        public String getContentType() {
+            return CONTENT_TYPE;
+        }
+
+        @Override
+        public String getName() {
+            return NAME;
+        }
+    }
+
+    public static String getExtUserLoginURL(Account owner) throws ServiceException {
+        return ZimbraServlet.getServiceUrl(owner.getServer(),
+            Provisioning.getInstance().getDomain(owner),
+            "?virtualacctdomain=" + owner.getDomainName());
+    }
+
+    public static String getShareAcceptURL(Account account, int folderId, String externalUserEmail)
+        throws ServiceException {
+        StringBuilder encodedBuff = new StringBuilder();
+        BlobMetaData.encodeMetaData(AccountConstants.P_ACCOUNT_ID, account.getId(), encodedBuff);
+        BlobMetaData.encodeMetaData(AccountConstants.P_FOLDER_ID, folderId, encodedBuff);
+        BlobMetaData.encodeMetaData(AccountConstants.P_EMAIL, externalUserEmail, encodedBuff);
+        Domain domain = Provisioning.getInstance().getDomain(account);
+        if (domain != null) {
+            long urlExpiration = domain.getExternalShareInvitationUrlExpiration();
+            if (urlExpiration != 0) {
+                BlobMetaData.encodeMetaData(AccountConstants.P_LINK_EXPIRY, System.currentTimeMillis() + urlExpiration,
+                    encodedBuff);
+            }
+        }
+        String data = new String(Hex.encodeHex(encodedBuff.toString().getBytes()));
+        return AccountUtil.generateExtUserProvURL(account, data);
+    }
+
+    public static String generateExtUserProvURL(Account account, String data)
+        throws ServiceException {
+        ExtAuthTokenKey key = ExtAuthTokenKey.getCurrentKey();
+        String hmac = TokenUtil.getHmac(data, key.getKey());
+        String encoded = key.getVersion() + "_" + hmac + "_" + data;
+        String path = "/service/extuserprov/?p=" + encoded;
+        return ZimbraServlet.getServiceUrl(account.getServer(),
+            Provisioning.getInstance().getDomain(account), path);
     }
 }

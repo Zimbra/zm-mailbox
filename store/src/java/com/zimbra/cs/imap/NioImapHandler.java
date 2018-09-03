@@ -83,16 +83,12 @@ final class NioImapHandler extends ImapHandler implements NioHandler {
                 ZimbraLog.imap.error("Error detected by SSL subsystem, dropping connection:" + e);
                 dropConnection(false);  // Bug 79904 prevent using SSL port in plain text
             } else if (e instanceof NioImapDecoder.TooBigLiteralException) {
-                String tag;
-                if (request != null) {
-                    tag = request.getTag();
-                } else {
-                    try {
-                        tag = ImapRequest.parseTag(((NioImapDecoder.TooBigLiteralException) e).getRequest());
-                    } catch (ImapParseException e1) {
-                        tag = "*";
-                    }
-                }
+                NioImapDecoder.TooBigLiteralException tble = (NioImapDecoder.TooBigLiteralException) e;
+                /* 'tble' has access to the buffer of the IMAP command read so far, which may
+                 * be useful if better, context sensitive error reporting is desired.  See its getMessage()
+                 * method for an example of special handling for APPEND
+                 */
+                String tag = (request != null) ? tag = request.getTag() : tble.getRequestTag();
                 sendBAD(tag, e.getMessage());
             } else if (e instanceof RecoverableProtocolDecoderException) {
                 sendBAD("*", e.getMessage());
@@ -185,6 +181,7 @@ final class NioImapHandler extends ImapHandler implements NioHandler {
     @Override
     public void setLoggingContext() {
         super.setLoggingContext();
+        ZimbraLog.addConnectionIdToContext(String.valueOf(connection.getId()));
     }
 
     @Override

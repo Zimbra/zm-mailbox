@@ -74,6 +74,8 @@ public final class AdminConstants {
     public static final String E_SEARCH_ACCOUNTS_RESPONSE = "SearchAccountsResponse";
     public static final String E_RENAME_ACCOUNT_REQUEST = "RenameAccountRequest";
     public static final String E_RENAME_ACCOUNT_RESPONSE = "RenameAccountResponse";
+    public static final String E_CHANGE_PRIMARY_EMAIL_REQUEST = "ChangePrimaryEmailRequest";
+    public static final String E_CHANGE_PRIMARY_EMAIL_RESPONSE = "ChangePrimaryEmailResponse";
 
     public static final String E_CREATE_DOMAIN_REQUEST = "CreateDomainRequest";
     public static final String E_CREATE_DOMAIN_RESPONSE = "CreateDomainResponse";
@@ -573,6 +575,8 @@ public final class AdminConstants {
     public static final QName SEARCH_ACCOUNTS_RESPONSE = QName.get(E_SEARCH_ACCOUNTS_RESPONSE, NAMESPACE);
     public static final QName RENAME_ACCOUNT_REQUEST = QName.get(E_RENAME_ACCOUNT_REQUEST, NAMESPACE);
     public static final QName RENAME_ACCOUNT_RESPONSE = QName.get(E_RENAME_ACCOUNT_RESPONSE, NAMESPACE);
+    public static final QName CHANGE_PRIMARY_EMAIL_REQUEST = QName.get(E_CHANGE_PRIMARY_EMAIL_REQUEST, NAMESPACE);
+    public static final QName CHANGE_PRIMARY_EMAIL_RESPONSE = QName.get(E_CHANGE_PRIMARY_EMAIL_RESPONSE, NAMESPACE);
 
     public static final QName CREATE_DOMAIN_REQUEST = QName.get(E_CREATE_DOMAIN_REQUEST, NAMESPACE);
     public static final QName CREATE_DOMAIN_RESPONSE = QName.get(E_CREATE_DOMAIN_RESPONSE, NAMESPACE);
@@ -1030,6 +1034,8 @@ public final class AdminConstants {
     public static final String E_GET_OUTGOING_FILTER_RULES_RESPONSE = "GetOutgoingFilterRulesResponse";
     public static final String E_MODIFY_OUTGOING_FILTER_RULES_REQUEST = "ModifyOutgoingFilterRulesRequest";
     public static final String E_MODIFY_OUTGOING_FILTER_RULES_RESPONSE = "ModifyOutgoingFilterRulesResponse";
+    public static final String E_CONTACT_BACKUP_REQUEST = "ContactBackupRequest";
+    public static final String E_CONTACT_BACKUP_RESPONSE = "ContactBackupResponse";
     public static final QName GET_FILTER_RULES_REQUEST = QName.get(E_GET_FILTER_RULES_REQUEST, NAMESPACE);
     public static final QName GET_FILTER_RULES_RESPONSE = QName.get(E_GET_FILTER_RULES_RESPONSE, NAMESPACE);
     public static final QName MODIFY_FILTER_RULES_REQUEST = QName.get(E_MODIFY_FILTER_RULES_REQUEST, NAMESPACE);
@@ -1038,6 +1044,8 @@ public final class AdminConstants {
     public static final QName GET_OUTGOING_FILTER_RULES_RESPONSE = QName.get(E_GET_OUTGOING_FILTER_RULES_RESPONSE, NAMESPACE);
     public static final QName MODIFY_OUTGOING_FILTER_RULES_REQUEST = QName.get(E_MODIFY_OUTGOING_FILTER_RULES_REQUEST, NAMESPACE);
     public static final QName MODIFY_OUTGOING_FILTER_RULES_RESPONSE = QName.get(E_MODIFY_OUTGOING_FILTER_RULES_RESPONSE, NAMESPACE);
+    public static final QName CONTACT_BACKUP_REQUEST = QName.get(E_CONTACT_BACKUP_REQUEST, NAMESPACE);
+    public static final QName CONTACT_BACKUP_RESPONSE = QName.get(E_CONTACT_BACKUP_RESPONSE, NAMESPACE);
 
     // DumpSessions
     public static final String E_SESSION = "session";
@@ -1476,4 +1484,7 @@ public final class AdminConstants {
     public static final String A_VALUE_COMPARATOR = "valueComparator";
     public static final String A_RELATIONAL_COMPARATOR = "relationalComparator";
     public static final String E_NEW_VALUE = "newValue";
+
+    // contact backup feature
+    public static final String E_SERVERS = "servers";
 }

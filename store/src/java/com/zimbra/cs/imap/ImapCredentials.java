@@ -24,11 +24,12 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Sets;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.event.ZEventHandler;
 import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.service.ServiceException;
@@ -71,7 +72,7 @@ public class ImapCredentials implements java.io.Serializable {
     private final ZEventHandler zMailboxEventHandler = new ZEventHandler() {
         @Override
         public void handlePendingModification(int changeId, AccountWithModifications info) throws ServiceException {
-            ZimbraLog.imap.debug("Handling modification from ZMailbox");
+            ZimbraLog.imap.debug("Handling ZMailbox modification changeId=%s info=%s", changeId, info);
             MailboxStore store = getMailbox();
             if(store != null && store instanceof ZMailbox) {
                 ImapServerListenerPool.getInstance().get((ZMailbox)store).notifyAccountChange(info);
@@ -140,15 +141,21 @@ public class ImapCredentials implements java.io.Serializable {
             Account acct = getAccount();
             ZMailbox.Options options =
                     new ZMailbox.Options(AuthProvider.getAuthToken(acct).getEncoded(), AccountUtil.getSoapUri(acct));
-            options.setTargetAccount(acct.getName());
+            /* getting by ID avoids failed GetInfo SOAP requests trying to determine ID before auth setup. */
+            options.setTargetAccountBy(AccountBy.id);
+            options.setTargetAccount(acct.getId());
             options.setNoSession(false);
             options.setUserAgent("zclient-imap", SystemUtil.getProductVersion());
             options.setNotificationFormat(NotificationFormat.IMAP);
             options.setAlwaysRefreshFolders(true);
-            MailboxStore store =  ZMailbox.getMailbox(options);
+            ZMailbox store =  ZMailbox.getMailbox(options);
+            store.setAccountId(acct.getId());
+            store.setName(acct.getName());
+            store.setAuthName(acct.getName());
             mStore = ImapMailboxStore.get(store, mAccountId);
-            ZimbraLog.imap.debug("Registering listener with ZMailbox");
-            ((ZMailbox)store).addEventHandler(zMailboxEventHandler);
+            ZimbraLog.imap.debug("Registering listener with ZMailbox for '%s' [id=%s]",
+                    acct.getName(), mAccountId);
+            store.addEventHandler(zMailboxEventHandler);
             return mStore;
         } catch (AuthTokenException ate) {
             throw ServiceException.FAILURE("error generating auth token", ate);
@@ -211,7 +218,7 @@ public class ImapCredentials implements java.io.Serializable {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
                 .add("name", mUsername)
                 .add("acctId", mAccountId)
                 .add("hiddenFolders", mHiddenFolders)

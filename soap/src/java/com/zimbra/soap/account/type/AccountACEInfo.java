@@ -17,7 +17,7 @@
 
 package com.zimbra.soap.account.type;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -147,8 +147,8 @@ public class AccountACEInfo {
     public Boolean getDeny() { return ZmBoolean.toBool(deny); }
     public Boolean getCheckGranteeType() { return ZmBoolean.toBool(checkGranteeType); }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(
+                MoreObjects.ToStringHelper helper) {
         return helper
             .add("zimbraId", zimbraId)
             .add("granteeType", granteeType)
@@ -162,7 +162,7 @@ public class AccountACEInfo {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
+        return addToStringInfo(MoreObjects.toStringHelper(this))
                 .toString();
     }
 }

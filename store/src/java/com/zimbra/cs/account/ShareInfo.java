@@ -16,12 +16,6 @@
  */
 package com.zimbra.cs.account;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -33,7 +27,6 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.activation.DataHandler;
-import javax.activation.DataSource;
 import javax.mail.Address;
 import javax.mail.MessagingException;
 import javax.mail.Transport;
@@ -42,7 +35,6 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMultipart;
 
-import org.apache.commons.codec.binary.Hex;
 
 import com.google.common.base.Strings;
 import com.sun.mail.smtp.SMTPMessage;
@@ -55,7 +47,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants.ShareConstants;
 import com.zimbra.common.soap.SoapProtocol;
-import com.zimbra.common.util.BlobMetaData;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.common.util.Pair;
@@ -76,10 +67,11 @@ import com.zimbra.cs.mailbox.MetadataList;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.acl.AclPushSerializer;
-import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.soap.mail.message.SendShareNotificationRequest.Action;
+import com.zimbra.cs.util.AccountUtil.HtmlPartDataSource;
+import com.zimbra.cs.util.AccountUtil.XmlPartDataSource;
 
 
 public class ShareInfo {
@@ -555,10 +547,9 @@ public class ShareInfo {
 
         private static final String HTML_LINE_BREAK = "<br>";
         private static final String NEWLINE = "\n";
-
-
+        
         public static MimeMultipart genNotifBody(ShareInfoData sid, String notes,
-                Locale locale, Action action, String externalGroupMember)
+            Locale locale, Action action, String externalGroupMember)
         throws MessagingException, ServiceException {
 
             // Body
@@ -576,8 +567,8 @@ public class ShareInfo {
             boolean goesToExternalAddr = (externalGranteeName != null);
             if (action == null && goesToExternalAddr) {
                 Account owner = Provisioning.getInstance().getAccountById(sid.getOwnerAcctId());
-                extUserShareAcceptUrl = getShareAcceptURL(owner, sid.getItemId(), externalGranteeName);
-                extUserLoginUrl = getExtUserLoginURL(owner);
+                extUserShareAcceptUrl = AccountUtil.getShareAcceptURL(owner, sid.getItemId(), externalGranteeName);
+                extUserLoginUrl = AccountUtil.getExtUserLoginURL(owner);
             }
 
             // TEXT part (add me first!)
@@ -618,35 +609,37 @@ public class ShareInfo {
             return mmp;
         }
 
-        private static String getExtUserLoginURL(Account owner) throws ServiceException {
-            return ZimbraServlet.getServiceUrl(
-                    owner.getServer(),
-                    Provisioning.getInstance().getDomain(owner),
-                    "?virtualacctdomain=" + owner.getDomainName());
-        }
+        public static String getMimePartHtml(ShareInfoData sid, String notes, Locale locale,
+            Action action, String extUserShareAcceptUrl, String extUserLoginUrl) throws MessagingException, ServiceException {
 
-        private static String getShareAcceptURL(Account account, int folderId, String externalUserEmail)
-                throws ServiceException {
-            StringBuilder encodedBuff = new StringBuilder();
-            BlobMetaData.encodeMetaData("aid", account.getId(), encodedBuff);
-            BlobMetaData.encodeMetaData("fid", folderId, encodedBuff);
-            BlobMetaData.encodeMetaData("email", externalUserEmail, encodedBuff);
-            Domain domain = Provisioning.getInstance().getDomain(account);
-            if (domain != null) {
-                long urlExpiration = domain.getExternalShareInvitationUrlExpiration();
-                if (urlExpiration != 0) {
-                    BlobMetaData.encodeMetaData("exp", System.currentTimeMillis() + urlExpiration, encodedBuff);
-                }
+            String mimePartHtml;
+            if (action == Action.revoke) {
+                mimePartHtml = genRevokePart(sid, locale, true);
+            } else if (action == Action.expire) {
+                mimePartHtml = genExpirePart(sid, locale, true);
+            } else {
+                mimePartHtml = genPart(sid, action == Action.edit, notes, extUserShareAcceptUrl,
+                    extUserLoginUrl, locale, null, true);
             }
-            String data = new String(Hex.encodeHex(encodedBuff.toString().getBytes()));
-            ExtAuthTokenKey key = ExtAuthTokenKey.getCurrentKey();
-            String hmac = TokenUtil.getHmac(data, key.getKey());
-            String encoded = key.getVersion() + "_" + hmac + "_" + data;
-            String path = "/service/extuserprov/?p=" + encoded;
-            return ZimbraServlet.getServiceUrl(
-                    account.getServer(), Provisioning.getInstance().getDomain(account), path);
-        }
 
+            return mimePartHtml;
+        }
+        
+        
+        
+        public static String getMimePartText(ShareInfoData sid, String notes, Locale locale,
+            Action action, String extUserShareAcceptUrl, String extUserLoginUrl) throws MessagingException, ServiceException {
+            String mimePartText;
+            if (action == Action.revoke) {
+                mimePartText = genRevokePart(sid, locale, false);
+            } else if (action == Action.expire) {
+                mimePartText = genExpirePart(sid, locale, false);
+            } else {
+                mimePartText = genPart(sid, action == Action.edit, notes, extUserShareAcceptUrl,
+                    extUserLoginUrl, locale, null, false);
+            }
+            return mimePartText;
+        }
 
         private static String genPart(ShareInfoData sid, boolean shareModified, String senderNotes,
                 String extUserShareAcceptUrl, String extUserLoginUrl, Locale locale, StringBuilder sb, boolean html) {
@@ -703,7 +696,7 @@ public class ShareInfo {
                     sid.getOwnerNotifName());
         }
 
-        private static String genXmlPart(ShareInfoData sid, String senderNotes, StringBuilder sb, Action action)
+        public static String genXmlPart(ShareInfoData sid, String senderNotes, StringBuilder sb, Action action)
                 throws ServiceException {
             if (sb == null) {
                 sb = new StringBuilder();
@@ -1063,78 +1056,6 @@ public class ShareInfo {
                 buildContentAndSend(out, dl, visitor, locale, null);
             }
         }
-
-        private static abstract class MimePartDataSource implements DataSource {
-
-            private final String mText;
-            private byte[] mBuf = null;
-
-            public MimePartDataSource(String text) {
-                mText = text;
-            }
-
-            @Override
-            public InputStream getInputStream() throws IOException {
-                synchronized(this) {
-                    if (mBuf == null) {
-                        ByteArrayOutputStream buf = new ByteArrayOutputStream();
-                        OutputStreamWriter wout =
-                            new OutputStreamWriter(buf, MimeConstants.P_CHARSET_UTF8);
-                        String text = mText;
-                        wout.write(text);
-                        wout.flush();
-                        mBuf = buf.toByteArray();
-                    }
-                }
-                return new ByteArrayInputStream(mBuf);
-            }
-
-            @Override
-            public OutputStream getOutputStream() {
-                throw new UnsupportedOperationException();
-            }
-        }
-
-        private static class HtmlPartDataSource extends MimePartDataSource {
-            private static final String CONTENT_TYPE =
-                MimeConstants.CT_TEXT_HTML + "; " + MimeConstants.P_CHARSET + "=" + MimeConstants.P_CHARSET_UTF8;
-            private static final String NAME = "HtmlDataSource";
-
-            HtmlPartDataSource(String text) {
-                super(text);
-            }
-
-            @Override
-            public String getContentType() {
-                return CONTENT_TYPE;
-            }
-
-            @Override
-            public String getName() {
-                return NAME;
-            }
-        }
-
-        private static class XmlPartDataSource extends MimePartDataSource {
-            private static final String CONTENT_TYPE =
-                MimeConstants.CT_XML_ZIMBRA_SHARE + "; " + MimeConstants.P_CHARSET + "=" + MimeConstants.P_CHARSET_UTF8;
-            private static final String NAME = "XmlDataSource";
-
-            XmlPartDataSource(String text) {
-                super(text);
-            }
-
-            @Override
-            public String getContentType() {
-                return CONTENT_TYPE;
-            }
-
-            @Override
-            public String getName() {
-                return NAME;
-            }
-        }
-
     }
 }
 

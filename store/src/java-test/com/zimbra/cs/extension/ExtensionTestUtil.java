@@ -30,7 +30,7 @@ public class ExtensionTestUtil {
     private static URL classpath;
 
     public static void init() throws Exception {
-        classpath = new File("build/test/extensions").toURI().toURL();
+        classpath = new File("store/build/test/extensions").toURI().toURL();
         LC.zimbra_extension_common_directory.setDefault(null);
         LC.zimbra_extension_directory.setDefault(null);
     }

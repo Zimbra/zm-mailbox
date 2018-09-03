@@ -121,7 +121,8 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
               mailRecipient, account, alias, distributionList, cos,
               globalConfig, domain, securityGroup, server, mimeEntry,
               objectEntry, zimletEntry, calendarResource;
-              attribute, alwaysOnCluster
+              attribute, alwaysOnCluster, dataSource, pop3DataSource,
+              rssDataSource, imapDataSource, galDataSource, oauth2DataSource
 
   flags:
     accountInfo............returned as part of the GetInfo call
@@ -983,6 +984,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <globalConfigValue>msExchResourceSearchProperties=zimbraAccountCalendarUserType</globalConfigValue>
   <globalConfigValue>(certificate) userCertificate=userCertificate</globalConfigValue>
   <globalConfigValue>(binary) userSMIMECertificate=userSMIMECertificate</globalConfigValue>
+  <globalConfigValue>(binary) thumbnailPhoto=thumbnailPhoto</globalConfigValue>
   <desc>LDAP Gal attribute to contact attr mapping</desc>
 </attr>
 
@@ -1403,7 +1405,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Data for class that scans attachments during compose</desc>
 </attr>
 
-<attr id="240" name="zimbraPrefCalendarInitialView" type="enum" value="day,week,workWeek,month,list" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="240" name="zimbraPrefCalendarInitialView" type="enum" value="day,week,workWeek,month,list,year" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
   <defaultCOSValue>workWeek</defaultCOSValue>
   <desc>initial calendar view to use</desc>
 </attr>
@@ -5526,7 +5528,7 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="1173" name="zimbraPrefShortEmailAddress" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since ="7.0.1">
-  <defaultCOSValue>TRUE</defaultCOSValue>
+  <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>show just the display name of email addresses in the message header area and compose pane</desc>
 </attr>
 
@@ -6623,10 +6625,11 @@ TODO: delete them permanently from here
   <desc>additional domains considered as internal w.r.t. recipient</desc>
 </attr>
 
-<attr id="1320" name="zimbraPrefExternalSendersType" type="enum" value="ALL,ALLNOTINAB,INAB" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.0.0">
+<attr id="1320" name="zimbraPrefExternalSendersType" type="enum" value="ALL,ALLNOTINAB,INAB,INSD" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.0.0">
   <defaultCOSValue>ALL</defaultCOSValue>
   <desc>Specifies the meaning of an external sender.  "ALL" means users whose domain doesn't match the recipient's or zimbraInternalSendersDomain.  "ALLNOTINAB" means "ALL" minus users who are in the recipient's address book.
-  "INAB" Users/Addresses whose domain doesn't match the recipient's domain or zimbraInternalSendersDomain and which are present in recipient's address book.</desc>
+  "INAB" Users/Addresses whose domain doesn't match the recipient's domain or zimbraInternalSendersDomain and which are present in recipient's address book.
+  "INSD" means users whose domain matches the specific domain</desc>
 </attr>
 
 <attr id="1321" name="zimbraReverseProxyAdminEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.0.0">
@@ -8944,19 +8947,19 @@ TODO: delete them permanently from here
   <desc>Subject prefix for the spam training messages used to sent to the zimbraSpamIsSpamAccount/zimbraSpamIsNotSpamAccount account.</desc>
 </attr>
 
-<attr id="2021" name="zimbraDataSourceOAuthClientId" type="string" cardinality="single" optionalIn="imapDataSource" since="8.7.0,9.0.0">
+<attr id="2021" name="zimbraDataSourceOAuthClientId" type="string" cardinality="single" optionalIn="dataSource,imapDataSource" since="8.7.0,9.0.0">
   <desc>Client Id for OAuth token</desc>
 </attr>
 
-<attr id="2022" name="zimbraDataSourceOAuthClientSecret" type="string" cardinality="single" optionalIn="imapDataSource" since="8.7.0,9.0.0">
+<attr id="2022" name="zimbraDataSourceOAuthClientSecret" type="string" cardinality="single" optionalIn="dataSource,imapDataSource" since="8.7.0,9.0.0">
   <desc>Client Secret for OAuth token</desc>
 </attr>
 
-<attr id="2023" name="zimbraDataSourceOAuthRefreshToken" type="string" cardinality="single" optionalIn="imapDataSource" since="8.7.0,9.0.0">
+<attr id="2023" name="zimbraDataSourceOAuthRefreshToken" type="string" cardinality="single" optionalIn="dataSource,imapDataSource" since="8.7.0,9.0.0">
   <desc>Refresh token for authentication using OAuth</desc>
 </attr>
 
-<attr id="2024" name="zimbraDataSourceOAuthRefreshTokenUrl" type="string" cardinality="single" optionalIn="imapDataSource" since="8.7.0,9.0.0">
+<attr id="2024" name="zimbraDataSourceOAuthRefreshTokenUrl" type="string" cardinality="single" optionalIn="dataSource,imapDataSource" since="8.7.0,9.0.0">
   <desc>Url for refreshing OAuth Token</desc>
 </attr>
 
@@ -9376,14 +9379,143 @@ TODO: delete them permanently from here
   <desc>Whether to enable zimbra network new generation modules.</desc>
 </attr>
 
-<attr id="2118" name="zimbraNetworkMobileNGEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.8.0">
-  <globalConfigValue>TRUE</globalConfigValue>
+<attr id="2118" name="zimbraNetworkMobileNGEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.8.0" >
+  <globalConfigValue>FALSE</globalConfigValue>
   <desc>Whether to enable zimbra network new generation mobile sync module.</desc>
 </attr>
 
-<attr id="2119" name="zimbraNetworkAdminEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.8.2">
+<attr id="2119" name="zimbraNetworkAdminEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.8.2" deprecatedSince="8.8.5">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>Whether to enable old zimbra network admin module.</desc>
+   <deprecateDesc>This attribute has been renamed to zimbraNetworkAdminNGEnabled</deprecateDesc>
+</attr>
+
+<attr id="2120" name="zimbraSieveRequireControlEnabled" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited" since="8.8.4">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>Whether the declaration of the Sieve extension feature is mandatory by the 'require' control. If TRUE, before ZCS evaluates a Sieve extension test or action, it checks the corresponding capability string at 'require' control; and if the capability string is not declared in the 'require', the entire Sieve filter execution will be failed. If FALSE, any Sieve extensions can be used without declaring the capability string in the 'require' control.</desc>
+</attr>
+
+<attr id="2121" name="zimbraSieveEditHeaderEnabled" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited" since="8.8.4">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>Whether edit header commands in admin sieve scripts are enabled or disabled. If TRUE, the addheader, deleteheader and replaceheader commands will be executed during admin sieve script execution.</desc>
+</attr>
+
+<attr id="2122" name="zimbraSieveImmutableHeaders" type="string" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited" since="8.8.4">
+  <defaultCOSValue>Received,DKIM-Signature,Authentication-Results,Received-SPF,Message-ID,Content-Type,Content-Disposition,Content-Transfer-Encoding,MIME-Version,Auto-Submitted</defaultCOSValue>
+  <desc>Comma separated list of sieve immutable headers</desc>
+</attr>
+
+<attr id="2123" name="zimbraFeatureMarkMailForwardedAsRead" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="8.8.5">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>Mark messages sent to a forwarding address as read</desc>
+</attr>
+
+<attr id="2124" name="zimbraFeatureContactBackupFrequency" type="duration" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.8.5" deprecatedSince="8.8.6">
+  <globalConfigValue>0</globalConfigValue>
+  <deprecateDesc>No longer used by ContactBackupRequest SOAP handler</deprecateDesc>
+  <desc>
+    Sleep time between subsequent contact backups. 0 means that contact
+    backup is disabled.
+  </desc>
+</attr>
+
+<attr id="2125" name="zimbraFeatureContactBackupLifeTime" type="duration" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.8.5">
+  <globalConfigValue>15d</globalConfigValue>
+  <desc>
+    Duration for which the backups should be preserved.
+  </desc>
+</attr>
+
+<attr id="2126" name="zimbraFeatureAddressVerificationEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.8.5">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>Enable end-user email address verification</desc>
+</attr>
+
+<attr id="2127" name="zimbraFeatureAddressVerificationExpiry" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.8.5">
+  <defaultCOSValue>1d</defaultCOSValue>
+  <desc>Expiry time for end-user email address verification</desc>
+</attr>
+
+<attr id="2128" name="zimbraFeatureAddressUnderVerification" type="cs_emailp" cardinality="single" optionalIn="account" callback="PrefMailForwardingAddress" since="8.8.5">
+  <desc>RFC822 email address under verification for an account</desc>
+</attr>
+
+<attr id="2129" name="zimbraFeatureAddressVerificationStatus" type="enum" value="verified,pending,failed,expired" cardinality="single" optionalIn="account" since="8.8.5">
+  <desc>End-user email address verification status</desc>
+</attr>
+
+<attr id="2130" name="zimbraNetworkAdminNGEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.8.5" >
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>Whether to enable zimbra network new generation admin module.</desc>
+</attr>
+
+<attr id="2131" name="zimbraFeatureContactBackupEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.8.5">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>Enable contact backup feature</desc>
+</attr>
+
+<attr id="2132" name="zimbraPrefOutOfOfficeSpecificDomains" type="string" cardinality="multi" optionalIn="account,cos" flags="accountInherited" since="8.8.5">
+  <desc>Specific domains to which custom out of office message is to be sent</desc>
+</attr>
+
+<attr id="2133" name="zimbraInvalidJWTokens" type="string" cardinality="multi" optionalIn="account" since="8.8.6" flags="ephemeral,dynamic,expirable">
+  <desc>list of invalid jwt</desc>
+</attr>
+
+<attr id="2134" name="zimbraFeatureResetPasswordStatus" type="enum" value="enabled,suspended,disabled" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited,accountInfo,domainInfo" callback="RecoveryEmailCallback" since="8.8.9">
+  <defaultCOSValue>disabled</defaultCOSValue>
+  <desc>status of password reset feature</desc>
+</attr>
+
+<attr id="2135" name="zimbraPrefPasswordRecoveryAddress" type="cs_emailp" cardinality="single" optionalIn="account" flags="accountInfo" callback="RecoveryEmailCallback" since="8.8.9">
+  <desc>RFC822 recovery email address for an account</desc>
+</attr>
+
+<attr id="2136" name="zimbraPrefPasswordRecoveryAddressStatus" type="enum" value="verified,pending" cardinality="single" optionalIn="account" flags="accountInfo" since="8.8.9">
+  <desc>End-user recovery email address verification status</desc>
+</attr>
+
+<attr id="2137" name="zimbraResetPasswordRecoveryCode" type="string" cardinality="single" optionalIn="account" since="8.8.9">
+  <desc>Recovery code sent to recovery email address</desc>
+</attr>
+
+<attr id="2138" name="zimbraResetPasswordRecoveryCodeExpiry" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.8.9">
+  <defaultCOSValue>10m</defaultCOSValue>
+  <desc>Expiry time for password reset recovery code</desc>
+</attr>
+
+<attr id="2139" name="zimbraRecoveryAccountVerificationData" type="string" cardinality="single" optionalIn="account" since="8.8.9">
+  <desc>Recovery email verification data</desc>
+</attr>
+
+<attr id="2140" name="zimbraRecoveryAccountCodeValidity" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.8.9">
+  <defaultCOSValue>1d</defaultCOSValue>
+  <desc>Expiry time for recovery email code verification</desc>
+</attr>
+
+<attr id="2141" name="zimbraPasswordRecoveryMaxAttempts" type="integer" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.8.9">
+  <defaultCOSValue>10</defaultCOSValue>
+  <desc>Maximum attempts for password recovery resend</desc>
+</attr>
+
+<attr id="2142" name="zimbraFeatureResetPasswordSuspensionTime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.8.9">
+  <defaultCOSValue>1d</defaultCOSValue>
+  <desc>time for which reset password feature is suspended</desc>
+</attr>
+
+<attr id="2143" name="zimbraOldMailAddress" type="email" max="256" immutable="1" cardinality="single" optionalIn="mailRecipient" flags="accountInfo" since="8.8.10">
+  <desc>temporary RFC822 email address of this recipient for accepting mail during account rename</desc>
+</attr>
+
+<attr id="2144" name="zimbraPrimaryEmailChangeHistory" type="string" cardinality="multi" optionalIn="account" flags="accountInfo" since="8.8.10">
+  <desc>timestamp of account rename and previous name of the account</desc>
+</attr>
+
+<attr id="2994" name="zimbraPrefDefaultCalendarId" type="integer" cardinality="single" optionalIn="account,cos" flags="accountInherited" callback="DefaultCalendarIdCallback" since="8.8.10">
+  <defaultCOSValue>10</defaultCOSValue>
+  <desc>Default calendar folder id. Current default calendar id is 10, as calendar folder with id 10, is created for all users.
+    Cos level change is blocked. So admin can not change value of this attribute on cos level.
+  </desc>
 </attr>
 
 <attr id="2995" name="zimbraEphemeralBackendURL" type="string" cardinality="single" optionalIn="globalConfig" callback="EphemeralBackendCheck" since="8.7.6">
@@ -9497,8 +9629,8 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="3009" name="zimbraImapLoadBalancingAlgorithm" type="string" max="512" cardinality="single" optionalIn="server,globalConfig" flags="serverInherited" callback="ImapLBMech" since="8.7.6">
-  <globalConfigValue>ClientIpHash</globalConfigValue>
-  <desc>Determines the load-balancing algorithm used to select an IMAP server from the pool of available zimbraReverseProxyUpstreamImapServers. Valid values are ClientIpHash, custom:{handler-algorithm} [arg1 arg2 ...]</desc>
+  <globalConfigValue>AccountIdHash</globalConfigValue>
+  <desc>Determines the load-balancing algorithm used to select an IMAP server from the pool of available zimbraReverseProxyUpstreamImapServers. Valid values are AccountIdHash, custom:{handler-algorithm} [arg1 arg2 ...]</desc>
 </attr>
 
 <attr id="3010" name="zimbraSSDBResourcePoolSize" type="integer" min="0" cardinality="single" optionalIn="globalConfig" callback="EphemeralBackendCheck" since="8.7.6">
@@ -9549,39 +9681,38 @@ TODO: delete them permanently from here
   <desc>Information about the latest run of zmmigrateattrs. Includes the URL of the destination ephemeral store and the state of the migration (in progress, completed, failed)</desc>
 </attr>
 
-<attr id="2120" name="zimbraSieveRequireControlEnabled" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited" since="8.8.4">
-  <defaultCOSValue>TRUE</defaultCOSValue>
-  <desc>Whether the declaration of the Sieve extension feature is mandatory by the 'require' control. If TRUE, before ZCS evaluates a Sieve extension test or action, it checks the corresponding capability string at 'require' control; and if the capability string is not declared in the 'require', the entire Sieve filter execution will be failed. If FALSE, any Sieve extensions can be used without declaring the capability string in the 'require' control.</desc>
-</attr>
-
-<attr id="2121" name="zimbraSieveEditHeaderEnabled" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited" since="8.8.4">
-  <defaultCOSValue>FALSE</defaultCOSValue>
-  <desc>Whether edit header commands in admin sieve scripts are enabled or disabled. If TRUE, the addheader, deleteheader and replaceheader commands will be executed during admin sieve script execution.</desc>
-</attr>
-
-<attr id="2122" name="zimbraSieveImmutableHeaders" type="string" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited" since="8.8.4">
-  <defaultCOSValue>Received,DKIM-Signature,Authentication-Results,Received-SPF,Message-ID,Content-Type,Content-Disposition,Content-Transfer-Encoding,MIME-Version,Auto-Submitted</defaultCOSValue>
-  <desc>Comma separated list of sieve immutable headers</desc>
-</attr>
-
-<attr id="2123" name="zimbraFeatureMarkMailForwardedAsRead" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="8.8.5">
-  <defaultCOSValue>FALSE</defaultCOSValue>
-  <desc>Mark messages sent to a forwarding address as read</desc>
-</attr>
-
-<attr id="2124" name="zimbraFeatureContactBackupFrequency" type="duration" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="ContactBackupFeature" since="8.8.5">
-  <globalConfigValue>1d</globalConfigValue>
-  <desc>
-    Sleep time between subsequent contact backups. 0 means that contact
-    backup is disabled.
+<attr id="3020" name="zimbraReverseProxyStrictServerNameEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.8.6" requiresRestart="nginxproxy">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>Configure the default server block in 'nginx.conf.web.https?.default.template' to return a default HTTP response
+    for all unconfigured host names. See also related attributes 'zimbraVirtualHostname' and 'zimbraVirtualIPAddress'.
   </desc>
 </attr>
 
-<attr id="2125" name="zimbraFeatureContactBackupLifeTime" type="duration" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.8.5">
-  <globalConfigValue>15d</globalConfigValue>
-  <desc>
-    Duration for which the backups should be preserved.
-  </desc>
+<attr id="3021" name="thumbnailPhoto" type="binary" cardinality="single" optionalIn="account" since="8.8.7">
+    <desc>Account thumbnail photo</desc>
+</attr>
+
+<attr id="3022" name="zimbraPrefDisplayTimeInMailList" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.8.8">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>Display received/sent time in mail list</desc>
+</attr>
+
+<attr id="3023" name="zimbraLDAPSchemaVersion" type="string" cardinality="single" requiredIn="globalConfig" since="8.8.8">
+  <desc>LDAP schema version for the system.</desc>
+  <globalConfigValue>1518163473</globalConfigValue>
+</attr>
+
+<attr id="3024" name="zimbraXZimletCompatibleSemVer" type="string" max="256" cardinality="single" optionalIn="zimletEntry" since="8.8.9">
+  <desc>ZimbraX compatible semantic version expression</desc>
+</attr>
+
+<attr id="3025" name="zimbraOAuthConsumerRedirectUri" type="string" cardinality="multi" optionalIn="globalConfig,domain" flags="domainInherited" since="8.8.9">
+  <desc>OAuth redirectURI. It is in the format of redirectURI:consumer-app-name</desc>
+</attr>
+
+<attr id="3026" name="zimbraOAuthConsumerAPIScope" type="string" cardinality="multi" optionalIn="globalConfig,domain" flags="domainInherited" since="8.8.9">
+  <desc>OAuth consumer API scope. It is in the format of apiscope1{separator character}apiscope2:consumer-app-name. The separator between apiscope1 and apiscope2 is consumer-app specific</desc>
 </attr>
 
 </attrs>
+

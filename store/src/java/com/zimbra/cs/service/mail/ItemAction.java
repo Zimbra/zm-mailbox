@@ -264,6 +264,14 @@ public class ItemAction extends MailDocumentHandler {
             proxyRequest(zsc.createElement(MailConstants.NO_OP_REQUEST), context, remoteNotify.getId());
         }
 
+        // check if default calendar is deleted, if yes, reset default calendar id
+        Integer defaultCalId = mbox.getAccount().getPrefDefaultCalendarId();
+        if (defaultCalId != null
+                && (opStr.equals(MailConstants.OP_TRASH) || opStr.equals(MailConstants.OP_HARD_DELETE))
+                && result.mSuccessIds.contains(defaultCalId.toString())) {
+            ZimbraLog.mailbox.info("Default calendar deleted, so setting default calendar back to \"Calendar\"");
+            mbox.resetDefaultCalendarId();
+        }
         return result;
     }
 
@@ -503,6 +511,7 @@ public class ItemAction extends MailDocumentHandler {
                 zoptions.setTargetAccount(owner.getId());
                 zoptions.setTargetAccountBy(Key.AccountBy.id);
                 ZMailbox zmbx = ZMailbox.getMailbox(zoptions);
+                zmbx.setName(owner.getName()); /* need this when logging in using another user's auth */
                 ZFolder zfolder = zmbx.getFolderById(iidFolder.toString(zsc.getAuthtokenAccountId()));
                 if (!(zfolder instanceof ZMountpoint))
                     break;

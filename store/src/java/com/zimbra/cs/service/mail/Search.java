@@ -17,6 +17,7 @@
 
 package com.zimbra.cs.service.mail;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -24,10 +25,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
-import com.google.common.io.Closeables;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
@@ -80,7 +80,7 @@ public class Search extends MailDocumentHandler  {
         OperationContext octxt = getOperationContext(zsc, context);
         fixBooleanRecipients(request);
         SearchRequest req = zsc.elementToJaxb(request);
-        if (Objects.firstNonNull(req.getWarmup(), false)) {
+        if (MoreObjects.firstNonNull(req.getWarmup(), false)) {
             mbox.index.getIndexStore().warmup();
             return zsc.createElement(MailConstants.SEARCH_RESPONSE);
         }
@@ -107,19 +107,17 @@ public class Search extends MailDocumentHandler  {
             memberOfMap = ContactMemberOfMap.getMemberOfMap(mbox, octxt);
         }
 
-
-        ZimbraQueryResults results = mbox.index.search(zsc.getResponseProtocol(), octxt, params);
-        try {
-            // create the XML response Element
-            Element response = zsc.createElement(MailConstants.SEARCH_RESPONSE);
+        // create the XML response Element
+        Element response = zsc.createElement(MailConstants.SEARCH_RESPONSE);
+        try (ZimbraQueryResults results = mbox.index.search(zsc.getResponseProtocol(), octxt,
+            params)) {
             // must use results.getSortBy() because the results might have ignored our sortBy
             // request and used something else...
             response.addAttribute(MailConstants.A_SORTBY, results.getSortBy().toString());
             putHits(zsc, octxt, response, results, params, memberOfMap);
-            return response;
-        } finally {
-            Closeables.closeQuietly(results);
-        }
+        } catch (IOException e) {
+        } 
+        return response;
     }
 
     protected static void putInfo(Element response, ZimbraQueryResults results) {
@@ -451,6 +449,7 @@ public class Search extends MailDocumentHandler  {
         zoptions.setTargetAccountBy(AccountBy.id);
         zoptions.setNoSession(true);
         ZMailbox zmbx = ZMailbox.getMailbox(zoptions);
+        zmbx.setName(target.getName()); /* need this when logging in using another user's auth */
 
         Element resp = zmbx.invoke(req);
         for (Element hit : resp.listElements()) {

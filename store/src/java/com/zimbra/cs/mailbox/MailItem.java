@@ -33,7 +33,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -504,7 +504,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this).add("id", id).add("type", Type.of(type)).toString();
+            return MoreObjects.toStringHelper(this).add("id", id).add("type", Type.of(type)).toString();
         }
     }
 
@@ -3635,7 +3635,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
     private static final String CN_VERSION      = "version";
     private static final String CN_IMAP_ID      = "imap_id";
 
-    protected Objects.ToStringHelper appendCommonMembers(Objects.ToStringHelper helper) {
+    protected MoreObjects.ToStringHelper appendCommonMembers(MoreObjects.ToStringHelper helper) {
         helper.add(CN_ID, mId);
         helper.add(CN_TYPE, mData.type);
         if (mData.name != null) {

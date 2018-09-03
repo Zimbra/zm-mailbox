@@ -27,7 +27,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.callback.CallbackUtil;
 import com.zimbra.cs.util.Config;
 import com.zimbra.cs.util.Zimbra;
 
@@ -65,14 +65,7 @@ extends Thread {
                 return;
             }
 
-            // Log status
-            try {
-                String displayInterval = Provisioning.getInstance().getLocalServer().getAttr(
-                    Provisioning.A_zimbraMailPurgeSleepInterval, null);
-                ZimbraLog.purge.info("Starting purge thread with sleep interval %s.", displayInterval);
-            } catch (ServiceException e) {
-                ZimbraLog.purge.warn("Unable to get %s.  Aborting thread startup.",
-                    Provisioning.A_zimbraMailPurgeSleepInterval, e);
+            if (!CallbackUtil.logStartup(Provisioning.A_zimbraMailPurgeSleepInterval)) {
                 return;
             }
 
@@ -239,15 +232,7 @@ extends Thread {
      * or <tt>0</tt> if it cannot be determined.
      */
     private static long getSleepInterval() {
-        try {
-            Provisioning prov = Provisioning.getInstance();
-            Server server = prov.getLocalServer();
-            sSleepInterval = server.getTimeInterval(Provisioning.A_zimbraMailPurgeSleepInterval, 0);
-        } catch (ServiceException e) {
-            ZimbraLog.purge.warn("Unable to determine value of %s.  Using previous value: %d.",
-                Provisioning.A_zimbraMailPurgeSleepInterval, sSleepInterval, e);
-        }
-
+        sSleepInterval = CallbackUtil.getTimeInterval(Provisioning.A_zimbraMailPurgeSleepInterval, sSleepInterval);
         return sSleepInterval;
     }
 
@@ -259,12 +244,7 @@ extends Thread {
         List<Integer> mailboxIds = new ArrayList<Integer>();
 
         try {
-            // Get sorted list of id's
-            for (int id : MailboxManager.getInstance().getMailboxIds()) {
-                mailboxIds.add(id);
-            }
-            Collections.sort(mailboxIds);
-
+            mailboxIds = CallbackUtil.getSortedMailboxIdList();
             // Reorder id's so that we start with the one after the last purged
             int lastId = Config.getInt(Config.KEY_PURGE_LAST_MAILBOX_ID, 0);
             for (int i = 0; i < mailboxIds.size(); i++) {

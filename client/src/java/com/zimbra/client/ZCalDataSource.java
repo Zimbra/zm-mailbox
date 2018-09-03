@@ -20,7 +20,6 @@ import org.json.JSONException;
 
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.util.SystemUtil;
 import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.soap.mail.type.CalDataSourceNameOrId;
 import com.zimbra.soap.mail.type.DataSourceNameOrId;
@@ -31,8 +30,6 @@ import com.zimbra.soap.type.DataSources;
 
 public class ZCalDataSource extends ZDataSource implements ToZJSONObject {
 
-    private CalDataSource data;
-    
     public ZCalDataSource(String name, String folderId, boolean enabled) {
         data = DataSources.newCalDataSource();
         data.setName(name);
@@ -44,24 +41,13 @@ public class ZCalDataSource extends ZDataSource implements ToZJSONObject {
         this.data = DataSources.newCalDataSource(data);
     }
     
-    public String getId() {
-        return data.getId();
-    }
-
-    public String getName() {
-        return data.getName();
-    }
-
+    @Override
     public DataSourceType getType() {
         return DataSourceType.cal;
     }
     
     public String getFolderId() {
         return data.getFolderId();
-    }
-    
-    public boolean isEnabled() {
-        return SystemUtil.coalesce(data.isEnabled(), Boolean.FALSE);
     }
 
     @Deprecated

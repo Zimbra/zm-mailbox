@@ -109,6 +109,7 @@ public class ZimbraSuite  {
         sClasses.add(TestJaxbProvisioning.class);
         sClasses.add(TestAclPush.class);
         sClasses.add(TestCalDav.class);
+        sClasses.add(TestCardDav.class);
         sClasses.add(TestCalDavImportServer.class);
         sClasses.add(TestContactCSV.class);
         sClasses.add(TestStoreManager.class);
@@ -158,6 +159,7 @@ public class ZimbraSuite  {
         sClasses.add(TestImapOneWayImport.class);
         sClasses.add(TestGetContactsRequest.class);
         sClasses.add(TestRemoteImapSoapSessions.class);
+        sClasses.add(TestMetadataDump.class);
     }
 
     /**

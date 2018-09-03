@@ -29,6 +29,8 @@ import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang.StringUtils;
+
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ZAttrProvisioning.AutoProvAuthMech;
@@ -47,10 +49,12 @@ import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.AttributeFlag;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.AuthToken.TokenType;
 import com.zimbra.cs.account.AuthToken.Usage;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AuthMode;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.TrustedDevice;
 import com.zimbra.cs.account.TrustedDeviceToken;
@@ -61,6 +65,7 @@ import com.zimbra.cs.account.auth.twofactor.TwoFactorAuth;
 import com.zimbra.cs.account.krb5.Krb5Principal;
 import com.zimbra.cs.account.names.NameUtil.EmailAddress;
 import com.zimbra.cs.service.AuthProvider;
+import com.zimbra.cs.service.util.JWTUtil;
 import com.zimbra.cs.servlet.CsrfFilter;
 import com.zimbra.cs.servlet.util.CsrfUtil;
 import com.zimbra.cs.session.Session;
@@ -69,6 +74,8 @@ import com.zimbra.cs.util.SkinUtil;
 import com.zimbra.soap.SoapEngine;
 import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
+
+import io.jsonwebtoken.Claims;
 
 /**
  * @author schemers
@@ -86,6 +93,13 @@ public class Auth extends AccountDocumentHandler {
         Account acct = null;
         Element acctEl = request.getOptionalElement(AccountConstants.E_ACCOUNT);
         boolean csrfSupport = request.getAttributeBool(AccountConstants.A_CSRF_SUPPORT, false);
+        String reqTokenType = request.getAttribute(AccountConstants.A_TOKEN_TYPE, "");
+        TokenType tokenType = TokenType.fromCode(reqTokenType);
+        if (TokenType.JWT.equals(tokenType)) {
+            //in case of jwt, csrfSupport has no significance
+            csrfSupport = false;
+        }
+        ZimbraLog.account.debug("auth: reqTokenType: %s, tokenType: %s", reqTokenType, tokenType);
         if (acctEl != null) {
             acctValuePassedIn = acctEl.getText();
             acctValue = acctValuePassedIn;
@@ -118,11 +132,31 @@ public class Auth extends AccountDocumentHandler {
         }
 
         String password = request.getAttribute(AccountConstants.E_PASSWORD, null);
+        String recoveryCode = request.getAttribute(AccountConstants.E_RECOVERY_CODE, null);
         boolean generateDeviceId = request.getAttributeBool(AccountConstants.A_GENERATE_DEVICE_ID, false);
         String twoFactorCode = request.getAttribute(AccountConstants.E_TWO_FACTOR_CODE, null);
         String newDeviceId = generateDeviceId? UUIDUtil.generateUUID(): null;
 
         Element authTokenEl = request.getOptionalElement(AccountConstants.E_AUTH_TOKEN);
+        Element jwtTokenElement = request.getOptionalElement(AccountConstants.E_JWT_TOKEN);
+        boolean validationSuccess = tokenTypeAndElementValidation(tokenType, authTokenEl, jwtTokenElement);
+        if (!validationSuccess) {
+            throw AuthFailedServiceException.AUTH_FAILED("auth: incorrect tokenType and Element combination");
+        }
+        boolean acctAutoProvisioned = false;
+        Claims claims = null;
+        // if jwtToken is present in request then use it
+        if (jwtTokenElement != null && authTokenEl == null) {
+            String jwt = jwtTokenElement.getText();
+            String salt = JWTUtil.getSalt(null, context);
+            claims = JWTUtil.validateJWT(jwt, salt);
+            acct = prov.getAccountById(claims.getSubject());
+            if (acct == null ) {
+                throw AccountServiceException.NO_SUCH_ACCOUNT(claims.getSubject());
+            }
+            acctAutoProvisioned = true;
+        }
+        // if authToken is present in request then use it
         if (authTokenEl != null) {
             boolean verifyAccount = authTokenEl.getAttributeBool(AccountConstants.A_VERIFY_ACCOUNT, false);
             if (verifyAccount && acctEl == null) {
@@ -182,7 +216,13 @@ public class Auth extends AccountDocumentHandler {
         authCtxt.put(AuthContext.AC_ACCOUNT_NAME_PASSEDIN, acctValuePassedIn);
         authCtxt.put(AuthContext.AC_USER_AGENT, zsc.getUserAgent());
 
-        boolean acctAutoProvisioned = false;
+        AuthMode mode = AuthMode.PASSWORD;
+        String code = password;
+        if (StringUtils.isEmpty(password) && StringUtils.isNotEmpty(recoveryCode)) {
+            mode = AuthMode.RECOVERY_CODE;
+            code = recoveryCode;
+        }
+        authCtxt.put(Provisioning.AUTH_MODE_KEY, mode);
 
         if (acct == null) {
             // try LAZY auto provision if it is enabled
@@ -269,9 +309,9 @@ public class Auth extends AccountDocumentHandler {
             }
             boolean usingTwoFactorAuth = acct != null && twoFactorManager.twoFactorAuthRequired() && !trustedDeviceOverride;
             boolean twoFactorAuthWithToken = usingTwoFactorAuth && authTokenEl != null;
-            if (password != null || twoFactorAuthWithToken) {
+            if (password != null || recoveryCode != null || twoFactorAuthWithToken) {
                 // authentication logic can be reached with either a password, or a 2FA auth token
-                if (usingTwoFactorAuth && twoFactorCode == null && password != null) {
+                if (usingTwoFactorAuth && twoFactorCode == null && (password != null || recoveryCode != null)) {
                     int mtaAuthPort = acct.getServer().getMtaAuthPort();
                     boolean supportsAppSpecificPaswords =  acct.isFeatureAppSpecificPasswordsEnabled() && zsc.getPort() == mtaAuthPort;
                     if (supportsAppSpecificPaswords && password != null) {
@@ -281,12 +321,12 @@ public class Auth extends AccountDocumentHandler {
                         AppSpecificPasswords appPasswords = TwoFactorAuth.getFactory().getAppSpecificPasswords(acct, acctValuePassedIn);
                         appPasswords.authenticate(password);
                     } else {
-                        prov.authAccount(acct, password, AuthContext.Protocol.soap, authCtxt);
-                        return needTwoFactorAuth(acct, twoFactorManager, zsc);
+                        prov.authAccount(acct, code, AuthContext.Protocol.soap, authCtxt);
+                        return needTwoFactorAuth(acct, twoFactorManager, zsc, tokenType);
                     }
                 } else {
-                    if (password != null) {
-                        prov.authAccount(acct, password, AuthContext.Protocol.soap, authCtxt);
+                    if (password != null || recoveryCode != null) {
+                        prov.authAccount(acct, code, AuthContext.Protocol.soap, authCtxt);
                     } else {
                         // it's ok to not have a password if the client is using a 2FA auth token for the 2nd step of 2FA
                         if (!twoFactorAuthWithToken) {
@@ -336,12 +376,14 @@ public class Auth extends AccountDocumentHandler {
             }
         }
 
-        AuthToken at = expires ==  0 ? AuthProvider.getAuthToken(acct) : AuthProvider.getAuthToken(acct, expires);
+        AuthToken at = expires ==  0 ? AuthProvider.getAuthToken(acct, tokenType) : AuthProvider.getAuthToken(acct, expires, tokenType);
         if (registerTrustedDevice && (trustedToken == null || trustedToken.isExpired())) {
             //generate a new trusted device token if there is no existing one or if the current one is no longer valid
             Map<String, Object> attrs = getTrustedDeviceAttrs(zsc, newDeviceId == null? deviceId: newDeviceId);
             TrustedDevices trustedDeviceManager = TwoFactorAuth.getFactory().getTrustedDevices(acct);
-            trustedToken = trustedDeviceManager.registerTrustedDevice(attrs);
+            if (trustedDeviceManager != null) {
+                trustedToken = trustedDeviceManager.registerTrustedDevice(attrs);
+            }
         }
         ServletRequest httpReq = (ServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
         // For CSRF filter so that token generation can happen
@@ -362,12 +404,28 @@ public class Auth extends AccountDocumentHandler {
         return deviceAttrs;
     }
 
+    private boolean tokenTypeAndElementValidation(TokenType tokenType, Element authElem, Element jwtElem) throws AuthFailedServiceException {
+        if (jwtElem != null && authElem != null) {
+            ZimbraLog.account.debug("both jwt and auth element can not be present in auth request");
+            return Boolean.FALSE;
+        } 
+        if (jwtElem == null && authElem != null && TokenType.JWT.equals(tokenType)) {
+            ZimbraLog.account.debug("jwt token type not supported with auth element");
+            return Boolean.FALSE;
+        }
+        if (jwtElem != null && authElem == null && !TokenType.JWT.equals(tokenType)) {
+            ZimbraLog.account.debug("auth token type not supported with jwt element");
+            return Boolean.FALSE;
+        }
+        return Boolean.TRUE;
+    }
+
     private void verifyTrustedDevice(Account account, TrustedDeviceToken td, Map<String, Object> attrs) throws ServiceException {
         TrustedDevices trustedDeviceManager = TwoFactorAuth.getFactory().getTrustedDevices(account);
         trustedDeviceManager.verifyTrustedDevice(td, attrs);
     }
 
-    private Element needTwoFactorAuth(Account account, TwoFactorAuth auth, ZimbraSoapContext zsc) throws ServiceException {
+    private Element needTwoFactorAuth(Account account, TwoFactorAuth auth, ZimbraSoapContext zsc, TokenType tokenType) throws ServiceException {
         /* two cases here:
          * 1) the user needs to provide a two-factor code.
          *    in this case, the server returns a two-factor auth token in the response header that the client
@@ -379,7 +437,7 @@ public class Auth extends AccountDocumentHandler {
             throw AccountServiceException.TWO_FACTOR_SETUP_REQUIRED();
         } else {
             Element response = zsc.createElement(AccountConstants.AUTH_RESPONSE);
-            AuthToken twoFactorToken = AuthProvider.getAuthToken(account, Usage.TWO_FACTOR_AUTH);
+            AuthToken twoFactorToken = AuthProvider.getAuthToken(account, Usage.TWO_FACTOR_AUTH, tokenType);
             response.addUniqueElement(AccountConstants.E_TWO_FACTOR_AUTH_REQUIRED).setText("true");
             response.addAttribute(AccountConstants.E_LIFETIME, twoFactorToken.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);
             twoFactorToken.encodeAuthResp(response, false);
@@ -401,7 +459,7 @@ public class Auth extends AccountDocumentHandler {
         HttpServletRequest httpReq = (HttpServletRequest)context.get(SoapServlet.SERVLET_REQUEST);
         HttpServletResponse httpResp = (HttpServletResponse)context.get(SoapServlet.SERVLET_RESPONSE);
         boolean rememberMe = request.getAttributeBool(AccountConstants.A_PERSIST_AUTH_TOKEN_COOKIE, false);
-        at.encode(httpResp, false, ZimbraCookie.secureCookie(httpReq), rememberMe);
+        at.encode(httpReq, httpResp, false, ZimbraCookie.secureCookie(httpReq), rememberMe);
 
         response.addAttribute(AccountConstants.E_LIFETIME, at.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);
         boolean isCorrectHost = Provisioning.onLocalServer(acct);
@@ -446,11 +504,11 @@ public class Auth extends AccountDocumentHandler {
         String skin = SkinUtil.chooseSkin(acct, requestedSkin);
         ZimbraLog.webclient.debug("chooseSkin() returned "+skin );
         if (skin != null) {
-            response.addElement(AccountConstants.E_SKIN).setText(skin);
+            response.addNonUniqueElement(AccountConstants.E_SKIN).setText(skin);
         }
 
         boolean csrfCheckEnabled = false;
-        if ( httpReq.getAttribute(Provisioning.A_zimbraCsrfTokenCheckEnabled) != null) {
+        if (httpReq.getAttribute(Provisioning.A_zimbraCsrfTokenCheckEnabled) != null) {
             csrfCheckEnabled = (Boolean) httpReq.getAttribute(Provisioning.A_zimbraCsrfTokenCheckEnabled);
         }
 
@@ -490,4 +548,5 @@ public class Auth extends AccountDocumentHandler {
         if (aid != null && !aid.equals(id))
             AccountUtil.addAccountToLogContext(prov, aid, ZimbraLog.C_ANAME, ZimbraLog.C_AID, null);
     }
+
 }

@@ -1,4 +1,4 @@
-require ["fileinto", "reject", "tag", "flag"];
+require ["fileinto", "copy", "reject", "tag", "flag", "variables", "log", "enotify", "envelope", "body", "ereject", "reject", "relational", "comparator-i;ascii-numeric"];
 
 # Negative and positive
 if allof (not header :contains ["to"] "band@who.com",

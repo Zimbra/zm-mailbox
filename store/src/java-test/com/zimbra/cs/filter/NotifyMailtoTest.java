@@ -18,11 +18,13 @@ package com.zimbra.cs.filter;
 
 import static org.junit.Assert.fail;
 
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import javax.mail.Header;
 import javax.mail.internet.MimeMessage;
 
 import org.junit.Assert;
@@ -107,7 +109,7 @@ public class NotifyMailtoTest {
           + "  notify :message \"${subject}\"\n"
           + "    :from \"test1@zimbra.com\"\n"
           + "    :importance \"3\"\n"
-          + "    \"mailto:test2@zimbra.com?to=test3@zimbra.com&Importance=High&X-Priority=1&From=notifyfrom@example.com&body=${contents}\";"
+          + "    \"mailto:test2@zimbra.com?to=test3@zimbra.com&Importance=High&X-Priority=1&X-HEADER1=value1&x-header2=value2&x-HeAdEr3=value3&x-hEader4=value4A&x-heAder4=value4B&From=notifyfrom@example.com&body=${contents}\";"
           + "  keep;\n"
           + "}\n";
 
@@ -286,6 +288,30 @@ public class NotifyMailtoTest {
             headers = notifyMsg.getMimeMessage().getHeader("from");
             Assert.assertFalse(notifyMsg.getSender() == null);
             Assert.assertEquals("test1@zimbra.com", notifyMsg.getSender());
+
+            boolean header1 = false;
+            boolean header2 = false;
+            boolean header3 = false;
+            boolean header4 = false;
+            for (Enumeration<Header> e = notifyMsg.getMimeMessage().getAllHeaders(); e.hasMoreElements();) {
+                Header temp = e.nextElement();
+                if ("X-HEADER1".equals(temp.getName())) {
+                    header1 = true;
+                }
+                if ("X-header2".equals(temp.getName())) {
+                    header2 = true;
+                }
+                if ("X-HeAdEr3".equals(temp.getName())) {
+                    header3 = true;
+                }
+                if ("X-hEader4".equals(temp.getName())) {
+                    header4 = true;
+                }
+            }
+            Assert.assertTrue(header1);
+            Assert.assertTrue(header2);
+            Assert.assertTrue(header3);
+            Assert.assertTrue(header4);
 
             notifyMsg = mbox3.getMessageById(null, item);
             Assert.assertEquals("おしらせ", notifyMsg.getSubject());
@@ -942,10 +968,10 @@ public class NotifyMailtoTest {
     public void testNotifyMethodCapability_OnlineYes() {
         String filterScript =
                 "require [\"enotify\", \"tag\"];\n"
-              + "if not notify_method_capability\n"
+              + "if notify_method_capability\n"
               + "     \"mailto:test2@zimbra.com\"\n"
               + "     \"Online\"\n"
-              + "     \"YES\"] { \n"
+              + "     [\"YES\"] { \n"
               + "  tag \"notify_method_capability\";\n"
               + "}";
 
@@ -962,7 +988,7 @@ public class NotifyMailtoTest {
                     Mailbox.ID_FOLDER_INBOX, true);
 
             // ZCS implements the RFC 5436 so that it returns true when 'notify_method_capability'
-            // checkes whether the "Online" status is "maybe". Otherwise it returns false.
+            // checks whether the "Online" status is "maybe". Otherwise it returns false.
             Assert.assertEquals(1, ids.size());
             Message msg = mbox1.getMessageById(null, ids.get(0).getId());
             Assert.assertEquals(null, ArrayUtil.getFirstElement(msg.getTags()));

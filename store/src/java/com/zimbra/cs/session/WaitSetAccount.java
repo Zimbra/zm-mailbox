@@ -18,7 +18,7 @@ package com.zimbra.cs.session;
 
 import java.util.Set;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccountServiceException;
@@ -116,7 +116,7 @@ public class WaitSetAccount {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
                 .add("account", accountId)
                 .add("sessionId", sessionId)
                 .add("lastKnownSyncToken", lastKnownSyncToken)

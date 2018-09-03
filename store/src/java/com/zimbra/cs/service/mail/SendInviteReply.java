@@ -246,7 +246,9 @@ public class SendInviteReply extends CalendarRequest {
             }
 
             // check if invite organizer requested rsvp or not
-            updateOrg = updateOrg && oldInv.getRsvp();
+            if (oldInv.hasRsvp()) {
+                updateOrg = updateOrg && oldInv.getRsvp();
+            }
 
             // Don't allow creating/editing a private appointment on behalf of another user,
             // unless that other user is a calendar resource.
@@ -476,7 +478,11 @@ public class SendInviteReply extends CalendarRequest {
         zoptions.setNoSession(true);
         zoptions.setTargetAccount(targetAcct.getId());
         zoptions.setTargetAccountBy(Key.AccountBy.id);
-        return ZMailbox.getMailbox(zoptions);
+        ZMailbox zmbx = ZMailbox.getMailbox(zoptions);
+        if (zmbx != null) {
+            zmbx.setName(targetAcct.getName()); /* need this when logging in using another user's auth */
+        }
+        return zmbx;
     }
 
     private static AddInviteResult sendAddInvite(ZMailbox zmbx, OperationContext octxt, Message msg)

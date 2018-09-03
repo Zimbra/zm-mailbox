@@ -17,21 +17,21 @@
 
 package com.zimbra.soap.mail.message;
 
-import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.MailCalDataSource;
 import com.zimbra.soap.mail.type.MailCaldavDataSource;
+import com.zimbra.soap.mail.type.MailDataSource;
 import com.zimbra.soap.mail.type.MailGalDataSource;
 import com.zimbra.soap.mail.type.MailImapDataSource;
 import com.zimbra.soap.mail.type.MailPop3DataSource;
 import com.zimbra.soap.mail.type.MailRssDataSource;
-import com.zimbra.soap.mail.type.MailUnknownDataSource;
 import com.zimbra.soap.mail.type.MailYabDataSource;
 import com.zimbra.soap.type.DataSource;
 
@@ -57,7 +57,7 @@ public class TestDataSourceRequest {
         @XmlElement(name=MailConstants.E_DS_RSS /* rss */, type=MailRssDataSource.class),
         @XmlElement(name=MailConstants.E_DS_GAL /* gal */, type=MailGalDataSource.class),
         @XmlElement(name=MailConstants.E_DS_CAL /* cal */, type=MailCalDataSource.class),
-        @XmlElement(name=MailConstants.E_DS_UNKNOWN /* unknown */, type=MailUnknownDataSource.class)
+        @XmlElement(name=MailConstants.E_DS_UNKNOWN /* unknown */, type=MailDataSource.class)
     })
     private DataSource dataSource;
 
@@ -69,13 +69,13 @@ public class TestDataSourceRequest {
     }
     public DataSource getDataSource() { return dataSource; }
 
-    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         return helper
             .add("dataSource", dataSource);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this)).toString();
+        return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
     }
 }

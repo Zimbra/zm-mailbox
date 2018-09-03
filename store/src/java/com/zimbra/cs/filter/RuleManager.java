@@ -406,10 +406,10 @@ public final class RuleManager {
         };
 
         try {
+            boolean applyRules = true;
             Account account = mailbox.getAccount();
             for (String filter : filters) {
                 // Determine whether to apply rules
-                boolean applyRules = true;
                 Node node = getRulesNode(account, filter);
 
                 if (null == node) {
@@ -419,6 +419,7 @@ public final class RuleManager {
                         !account.getBooleanAttr(Provisioning.A_zimbraSpamApplyUserFilters, false)) {
                     // Don't apply user filters to spam by default
                     applyRules = false;
+                    break;
                 }
                 if (applyRules) {
                     if (filter.equals(FILTER_RULES_CACHE_KEY)) {
@@ -435,8 +436,10 @@ public final class RuleManager {
                     mailAdapter.resetCapabilities();
                 }
             }
-            mailAdapter.executeAllActions();
-            addedMessageIds = mailAdapter.getAddedMessageIds();
+            if (applyRules) {
+                mailAdapter.executeAllActions();
+                addedMessageIds = mailAdapter.getAddedMessageIds();
+            }
         } catch (ErejectException ex) {
             throw DeliveryServiceException.DELIVERY_REJECTED(ex.getMessage(), ex);
         } catch (Exception e) {

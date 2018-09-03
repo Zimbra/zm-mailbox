@@ -29,7 +29,7 @@ import java.util.zip.GZIPInputStream;
 
 import org.apache.commons.io.FileUtils;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.zmime.ZSharedFileInputStream;
@@ -61,6 +61,14 @@ public class Blob {
         this(file);
         this.rawSize = rawSize;
         this.digest = digest;
+    }
+
+    public void copy(Blob blob) throws IOException {
+        setFile(blob.getFile());
+        setPath(blob.getPath());
+        setCompressed(blob.isCompressed());
+        setDigest(blob.getDigest());
+        setRawSize(blob.getRawSize());
     }
 
     public File getFile() {
@@ -152,6 +160,16 @@ public class Blob {
         return this;
     }
 
+    public Blob setFile(File file) {
+        this.file = file;
+        return this;
+    }
+
+    public Blob setPath(String path) {
+        this.path = path;
+        return this;
+    }
+
     public Blob copyCachedDataFrom(final Blob other) {
         if (compressed == null && other.compressed != null) {
             this.compressed = other.compressed;
@@ -175,7 +193,7 @@ public class Blob {
     }
 
     @Override public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
             .add("path", path)
             .add("size", rawSize)
             .add("compressed", compressed).toString();

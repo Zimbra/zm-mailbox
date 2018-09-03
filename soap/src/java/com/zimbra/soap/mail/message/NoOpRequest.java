@@ -17,12 +17,12 @@
 
 package com.zimbra.soap.mail.message;
 
-import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.ZmBoolean;
 
@@ -96,6 +96,13 @@ public class NoOpRequest {
     public NoOpRequest() {
     }
 
+    public static NoOpRequest createWithWaitAndTimeout(boolean waitVal, long timeoutVal) {
+        NoOpRequest req = new NoOpRequest();
+        req.setWait(waitVal);
+        req.setTimeout(timeoutVal);
+        return req;
+    }
+
     public void setWait(Boolean wait) { this.wait = ZmBoolean.fromBool(wait); }
     public void setIncludeDelegates(Boolean includeDelegates) { this.includeDelegates = ZmBoolean.fromBool(includeDelegates); }
     public void setEnforceLimit(Boolean enforceLimit) { this.enforceLimit = ZmBoolean.fromBool(enforceLimit); }
@@ -105,7 +112,7 @@ public class NoOpRequest {
     public Boolean getEnforceLimit() { return ZmBoolean.toBool(enforceLimit); }
     public Long getTimeout() { return timeout; }
 
-    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         return helper
             .add("wait", wait)
             .add("includeDelegates", includeDelegates)
@@ -115,6 +122,6 @@ public class NoOpRequest {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this)).toString();
+        return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
     }
 }

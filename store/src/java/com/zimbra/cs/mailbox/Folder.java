@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 import com.zimbra.common.mailbox.ACLGrant;
 import com.zimbra.common.mailbox.Color;
@@ -295,16 +295,43 @@ public class Folder extends MailItem implements FolderStore {
         return syncData == null ? 0 : syncData.lastDate;
     }
 
+    private boolean writableImapSessionActive() {
+        for (Session s : mMailbox.getListeners(Session.Type.IMAP)) {
+            ImapSession i4session = (ImapSession) s;
+            if (i4session.getFolderItemIdentifier().id == mId && i4session.isWritable()) {
+                return true;
+            }
+        }
+        /*
+         * For performance reasons, IMAP sessions and therefore WaitSets are not completely discarded when a
+         * folder is no longer selected (in case it is re-selected soon) unless
+         * <b>DebugConfig.imapTerminateSessionOnClose</b> is true (default value is false)
+         * Therefore this code potentially returns false positives for selected folders:
+         *
+         *     if (WaitSetMgr.isMonitoringFolderForImap(mMailbox.getAccountId(), mId)) {
+         *         return true;
+         *     }
+         *
+         * Note that in the local case, isWriteable() returns false for such sessions which is why
+         * this code works in the local case.
+         *
+         * In practice, each upstream IMAP server knows which folders are selected for the clients it
+         * serves.
+         * Therefore, this shortcoming doesn't matter as long as that server is the only one
+         * which serves a particular mailbox.  If there are more IMAP servers, then ZCS-3248 will need fixing,
+         * perhaps by enhancing the WaitSet code to know which folders are actually selected for IMAP.
+         */
+        return false;
+    }
+
     /** Returns the last assigned item ID in the enclosing Mailbox the last
      *  time the folder was accessed via a read/write IMAP session.  If there
      *  is such a session already active, returns the last item ID in the
      *  Mailbox.  This value is used to calculate the \Recent flag when it
      *  has not already been cached. */
     public int getImapRECENTCutoff() {
-        for (Session s : mMailbox.getListeners(Session.Type.IMAP)) {
-            ImapSession i4session = (ImapSession) s;
-            if (i4session.getFolderItemIdentifier().id == mId && i4session.isWritable())
-                return mMailbox.getLastItemId();
+        if (writableImapSessionActive()) {
+            return mMailbox.getLastItemId();
         }
         return imapRECENTCutoff;
     }
@@ -323,11 +350,8 @@ public class Folder extends MailItem implements FolderStore {
             return 0;
         }
         // if there's a READ-WRITE IMAP session active on the folder, by definition there are no \Recent messages
-        for (Session s : mMailbox.getListeners(Session.Type.IMAP)) {
-            ImapSession i4session = (ImapSession) s;
-            if (i4session.getFolderItemIdentifier().id == mId && i4session.isWritable()) {
-                return 0;
-            }
+        if (writableImapSessionActive()) {
+            return 0;
         }
         // if no active sessions, use a cached value if possible
         if (imapRECENT >= 0) {
@@ -874,7 +898,7 @@ public class Folder extends MailItem implements FolderStore {
         data.metadata = encodeMetadata(color, 1, 1, custom, attributes, view, null, new SyncData(url), id + 1, 0,
                 mbox.getOperationChangeID(), -1, 0, 0, 0, null, false, -1);
         data.contentChanged(mbox);
-        ZimbraLog.mailop.info("adding folder %s: id=%d, parentId=%d.", name, data.id, data.parentId);
+        ZimbraLog.mailop.debug("adding folder %s: id=%d, parentId=%d.", name, data.id, data.parentId);
         new DbMailItem(mbox).create(data);
 
         Folder folder = new Folder(mbox, data);
@@ -1564,7 +1588,7 @@ public class Folder extends MailItem implements FolderStore {
 
     @Override
     public String toString() {
-        Objects.ToStringHelper helper = Objects.toStringHelper(this);
+        MoreObjects.ToStringHelper helper = MoreObjects.toStringHelper(this);
         helper.add(CN_NAME, getName());
         appendCommonMembers(helper);
         helper.add(CN_DELETED, deletedCount);

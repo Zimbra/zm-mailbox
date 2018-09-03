@@ -54,7 +54,7 @@ public class ZClientException extends ServiceException {
     }
 
     public static ZClientException UPLOAD_SIZE_LIMIT_EXCEEDED(String msg, Throwable cause) {
-        return new ZClientException(msg, UPLOAD_SIZE_LIMIT_EXCEEDED, SENDERS_FAULT, cause);
+        return new ZClientUploadSizeLimitExceededException(msg, cause);
     }
 
     public static ZClientException UPLOAD_FAILED(String msg, Throwable cause) {
@@ -78,6 +78,13 @@ public class ZClientException extends ServiceException {
 
         public ZClientNoSuchItemException(int id) {
             this(id, null);
+        }
+    }
+
+    public static class ZClientUploadSizeLimitExceededException extends ZClientException {
+        private static final long serialVersionUID = 1728995252512138761L;
+        public ZClientUploadSizeLimitExceededException(String msg, Throwable cause) {
+            super(msg, UPLOAD_SIZE_LIMIT_EXCEEDED, SENDERS_FAULT, cause);
         }
     }
 

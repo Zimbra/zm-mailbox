@@ -25,7 +25,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.zimbra.common.soap.AdminConstants;
@@ -152,16 +152,16 @@ public class SearchMultiMailboxRequest implements SearchParameters {
     /**
      * @zm-api-field-tag sort-by
      * @zm-api-field-description SortBy setting. <br />
-     *                           Default value is <b>"dateDesc"</b> <br />
-     *                           Possible values:
-     *                           <b>none|dateAsc|dateDesc|subjAsc|subjDesc|nameAsc|nameDesc|rcptAsc|rcptDesc
-     *                           |attachAsc|attachDesc|flagAsc|flagDesc| priorityAsc|priorityDesc</b> If
-     *                           <b>{sort-by}</b> is "none" then cursors MUST NOT be used, and some searches are
-     *                           impossible (searches that require intersection of complex sub-ops). Server will throw
-     *                           an IllegalArgumentException if the search is invalid. <br />
-     *                           ADDITIONAL SORT MODES FOR TASKS: valid only if <b>types="task"</b> (and task alone): <br />
-     *                           <b>taskDueAsc|taskDueDesc|taskStatusAsc|taskStatusDesc|taskPercCompletedAsc|
-     *                           taskPercCompletedDesc</b>
+     *  Default value is <b>"dateDesc"</b> <br />
+     *  Possible values:
+     *      <b>none|dateAsc|dateDesc|subjAsc|subjDesc|nameAsc|nameDesc|rcptAsc|rcptDesc
+     *      |attachAsc|attachDesc|flagAsc|flagDesc|priorityAsc|priorityDesc|idAsc|idDesc|readAsc|readDesc</b> If
+     *      <b>{sort-by}</b> is "none" then cursors MUST NOT be used, and some searches are
+     *      impossible (searches that require intersection of complex sub-ops). Server will throw
+     *      an IllegalArgumentException if the search is invalid. <br />
+     *      ADDITIONAL SORT MODES FOR TASKS: valid only if <b>types="task"</b> (and task alone): <br />
+     *      <b>taskDueAsc|taskDueDesc|taskStatusAsc|taskStatusDesc|taskPercCompletedAsc|
+     *      taskPercCompletedDesc</b>
      */
     @XmlAttribute(name = MailConstants.A_SORTBY /* sortBy */, required = false)
     private String sortBy;
@@ -632,7 +632,7 @@ public class SearchMultiMailboxRequest implements SearchParameters {
         return mailboxes;
     }
 
-    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         return helper.add("includeTagDeleted", includeTagDeleted).add("includeTagMuted", includeTagMuted)
                 .add("allowableTaskStatus", allowableTaskStatus).add("calItemExpandStart", calItemExpandStart)
                 .add("calItemExpandEnd", calItemExpandEnd).add("query", query).add("inDumpster", inDumpster)
@@ -646,7 +646,7 @@ public class SearchMultiMailboxRequest implements SearchParameters {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this)).toString();
+        return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
     }
 
 }

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -30,6 +30,7 @@ import javax.xml.stream.XMLStreamReader;
 
 import org.eclipse.jetty.continuation.ContinuationSupport;
 
+import com.google.common.base.Strings;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -84,6 +85,7 @@ public class SoapEngine {
     public static final String ZIMBRA_CONTEXT = "zimbra.context";
     public static final String ZIMBRA_ENGINE  = "zimbra.engine";
     public static final String ZIMBRA_SESSION = "zimbra.session";
+    public static final String JWT_SALT = "jwt.salt";
 
     /** context name of request IP
      *
@@ -338,13 +340,29 @@ public class SoapEngine {
             if (!doc.getName().equals("BatchRequest")) {
                 doCsrfCheck =  false;
             } else {
-                LOG.info("Only BatchRequest does not have a handler mapped to it. Request: %s, does not have a "
-                    + "handler, log for future handling.", path);
+                StringBuilder sb = new StringBuilder();
+                for (Element req : doc.listElements()) {
+                    if (sb.length() > 0) {
+                        sb.append(",");
+                    }
+                    sb.append(req.getName());
+                }
+                LOG.info("BatchRequest [%s] contains %d sub-request(s): %s",
+                        path, doc.listElements().size(), sb.toString());
             }
         } else {
             if (doc.getName().equals("AuthRequest")) {
                 // this is a Auth request, no CSRF validation happens
                 doCsrfCheck = false;
+                try {
+                        Element contextElmt = getSoapContextElement(soapProto, envelope);
+                        if (contextElmt != null) {
+                            String jwtSalt = contextElmt.getAttribute(HeaderConstants.E_JWT_SALT);
+                            context.put(JWT_SALT, jwtSalt);
+                        }
+                } catch (ServiceException e) {
+                    //was trying to get the jwt salt from soap context, if any issue occurred ignore.
+                }
             } else {
                 doCsrfCheck = doCsrfCheck && handler.needsAuth(context);
             }
@@ -356,8 +374,10 @@ public class SoapEngine {
                 // Bug: 96167 SoapEngine should be able to read CSRF token from HTTP headers
                 String csrfToken = httpReq.getHeader(Constants.CSRF_TOKEN);
                 if (StringUtil.isNullOrEmpty(csrfToken)) {
-                    Element contextElmt = soapProto.getHeader(envelope).getElement(HeaderConstants.E_CONTEXT);
-                    csrfToken = contextElmt.getAttribute(HeaderConstants.E_CSRFTOKEN);
+                    Element contextElmt = getSoapContextElement(soapProto, envelope);
+                    if (contextElmt != null) {
+                        csrfToken = contextElmt.getAttribute(HeaderConstants.E_CSRFTOKEN);
+                    }
                 }
                 AuthToken authToken = zsc.getAuthToken();
                 if (!CsrfUtil.isValidCsrfToken(csrfToken, authToken)) {
@@ -411,17 +431,25 @@ public class SoapEngine {
         if (zsc.getVia() != null) {
             ZimbraLog.addViaToContext(zsc.getVia());
         }
+
+        HttpServletRequest servletRequest = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
+        boolean isResumed = !ContinuationSupport.getContinuation(servletRequest).isInitial();
+
         if (zsc.getSoapRequestId() != null) {
             ZimbraLog.addSoapIdToContext(zsc.getSoapRequestId());
+        } else {
+            String soapRequestId = (String) servletRequest.getAttribute(ZimbraSoapContext.soapRequestIdAttr);
+            if (Strings.isNullOrEmpty(soapRequestId)) {
+                zsc.setNewSoapRequestId();
+            } else {
+                zsc.setSoapRequestId(soapRequestId);
+            }
         }
 
         logRequest(context, envelope);
 
         context.put(ZIMBRA_CONTEXT, zsc);
         context.put(ZIMBRA_ENGINE, this);
-
-        HttpServletRequest servletRequest = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
-        boolean isResumed = !ContinuationSupport.getContinuation(servletRequest).isInitial();
 
         Element responseBody = null;
         if (!zsc.isProxyRequest()) {
@@ -497,6 +525,14 @@ public class SoapEngine {
         Element responseHeader = generateResponseHeader(zsc);
         // ... and return the composed response
         return responseProto.soapEnvelope(responseBody, responseHeader);
+    }
+
+    private Element getSoapContextElement(SoapProtocol soapProto, Element envelope) throws ServiceException {
+        Element contextElmt = null;
+        if (soapProto != null && soapProto.getHeader(envelope) != null) {
+            contextElmt = soapProto.getHeader(envelope).getElement(HeaderConstants.E_CONTEXT);
+        }
+        return contextElmt;
     }
 
     /**

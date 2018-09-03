@@ -41,34 +41,6 @@ import com.zimbra.common.util.ZimbraLog;
  */
 public final class LC {
 
-    public static String get(String key) {
-        try {
-            return Strings.nullToEmpty(LocalConfig.getInstance().get(key));
-        } catch (ConfigException never) {
-            assert false : never;
-            return "";
-        }
-    }
-
-    public static String[] getAllKeys() {
-        return LocalConfig.getInstance().allKeys();
-    }
-
-    /**
-     * Reloads the local config file.
-     *
-     * @throws DocumentException if the config file was syntactically invalid
-     * @throws ConfigException if the config file was semantically invalid
-     */
-    public static void reload() throws DocumentException, ConfigException {
-        LocalConfig.load(null);
-    }
-
-    static void init() {
-        // This method is there to guarantee static initializer of this
-        // class is run.
-    }
-
 
     public static final KnownKey zimbra_minimize_resources = KnownKey.newKey(false);
 
@@ -574,7 +546,7 @@ public final class LC {
     public static final KnownKey cbpolicyd_pid_file = KnownKey.newKey("${zimbra_log_directory}/cbpolicyd.pid");
     public static final KnownKey cbpolicyd_log_file = KnownKey.newKey("${zimbra_log_directory}/cbpolicyd.log");
     public static final KnownKey cbpolicyd_db_file = KnownKey.newKey("${zimbra_home}/data/cbpolicyd/db/cbpolicyd.sqlitedb");
-    public static final KnownKey cbpolicyd_cache_file = KnownKey.newKey("${zimbra_home}/data/cache");
+    public static final KnownKey cbpolicyd_cache_file = KnownKey.newKey("${zimbra_home}/data/cbpolicyd/cbpolicyd.cache");
     public static final KnownKey cbpolicyd_log_mail = KnownKey.newKey("main");
     public static final KnownKey cbpolicyd_log_detail = KnownKey.newKey("modules");
 
@@ -605,15 +577,15 @@ public final class LC {
             " -Dorg.apache.jasper.compiler.disablejsr199=true" +
             " -XX:+UseConcMarkSweepGC" +
             " -XX:SoftRefLRUPolicyMSPerMB=1" +
+            " -XX:-OmitStackTraceInFastThrow" +
             " -verbose:gc" +
             " -XX:+PrintGCDetails" +
             " -XX:+PrintGCDateStamps" +
             " -XX:+PrintGCApplicationStoppedTime" +
-            " -XX:-OmitStackTraceInFastThrow" +
             " -Xloggc:/opt/zimbra/log/gc.log" +
-            " -XX:-UseGCLogFileRotation" +
+            " -XX:+UseGCLogFileRotation" +
             " -XX:NumberOfGCLogFiles=20" +
-            " -XX:GCLogFileSize=4096K");
+            " -XX:GCLogFileSize=10M");
     @Supported
     public static final KnownKey mailboxd_pidfile = KnownKey.newKey("${zimbra_log_directory}/mailboxd.pid");
 
@@ -886,6 +858,7 @@ public final class LC {
     public static final KnownKey zimbra_auth_provider = KnownKey.newKey("");
     public static final KnownKey zimbra_authtoken_cache_size = KnownKey.newKey(5000);
     public static final KnownKey zimbra_deregistered_authtoken_queue_size = KnownKey.newKey(5000);
+    public static final KnownKey zimbra_jwt_cookie_size_limit = KnownKey.newKey(4096);
     public static final KnownKey zimbra_authtoken_cookie_domain = KnownKey.newKey("");
     public static final KnownKey zimbra_zmjava_options = KnownKey.newKey("-Xmx256m" +
             " -Dhttps.protocols=TLSv1,TLSv1.1,TLSv1.2" +
@@ -1280,18 +1253,6 @@ public final class LC {
     public static final KnownKey public_share_advertising_scope =
         KnownKey.newKey(PUBLIC_SHARE_VISIBILITY.samePrimaryDomain.toString());
 
-    public static PUBLIC_SHARE_VISIBILITY getPublicShareAdvertisingScope() {
-        String value = LC.public_share_advertising_scope.value();
-        try {
-            return PUBLIC_SHARE_VISIBILITY.valueOf(value);
-        } catch (Exception ex) {
-            ZimbraLog.misc.warn("Bad LC setting %s=%s causing exception '%s'.  Using '%s' as value.",
-                    LC.public_share_advertising_scope.key(), LC.public_share_advertising_scope.value(),
-                    ex.getMessage(), PUBLIC_SHARE_VISIBILITY.none);
-            return PUBLIC_SHARE_VISIBILITY.none;
-        }
-    }
-
     //Triton integration
     public static final KnownKey triton_store_url = KnownKey.newKey("");
     public static final KnownKey triton_hash_type = KnownKey.newKey("SHA0");
@@ -1322,10 +1283,21 @@ public final class LC {
     @Supported
     public static final KnownKey smime_truststore_password = KnownKey.newKey("${mailboxd_truststore_password}");
 
+    @Supported
+    @Reloadable
+    public static final KnownKey imap_max_time_to_wait_for_catchup_millis = KnownKey.newKey(30000);
+
     //Remote IMAP
     @Reloadable
     public static final KnownKey imap_always_use_remote_store = KnownKey.newKey(false);
 
+    
+    // OAuth2 Social
+    public static final KnownKey zm_oauth_classes_handlers_yahoo = KnownKey.newKey("com.zimbra.oauth.handlers.impl.YahooOAuth2Handler");
+    public static final KnownKey zm_oauth_classes_handlers_google = KnownKey.newKey("com.zimbra.oauth.handlers.impl.GoogleOAuth2Handler");
+    public static final KnownKey zm_oauth_classes_handlers_facebook = KnownKey.newKey("com.zimbra.oauth.handlers.impl.FacebookOAuth2Handler");
+    
+    
     static {
         // Automatically set the key name with the variable name.
         for (Field field : LC.class.getFields()) {
@@ -1375,4 +1347,45 @@ public final class LC {
     public @interface Supported {
 
     }
+
+    public static PUBLIC_SHARE_VISIBILITY getPublicShareAdvertisingScope() {
+        String value = LC.public_share_advertising_scope.value();
+        try {
+            return PUBLIC_SHARE_VISIBILITY.valueOf(value);
+        } catch (Exception ex) {
+            ZimbraLog.misc.warn("Bad LC setting %s=%s causing exception '%s'.  Using '%s' as value.",
+                    LC.public_share_advertising_scope.key(), LC.public_share_advertising_scope.value(),
+                    ex.getMessage(), PUBLIC_SHARE_VISIBILITY.none);
+            return PUBLIC_SHARE_VISIBILITY.none;
+        }
+    }
+
+    public static String get(String key) {
+        try {
+            return Strings.nullToEmpty(LocalConfig.getInstance().get(key));
+        } catch (ConfigException never) {
+            assert false : never;
+            return "";
+        }
+    }
+
+    public static String[] getAllKeys() {
+        return LocalConfig.getInstance().allKeys();
+    }
+
+    /**
+     * Reloads the local config file.
+     *
+     * @throws DocumentException if the config file was syntactically invalid
+     * @throws ConfigException if the config file was semantically invalid
+     */
+    public static void reload() throws DocumentException, ConfigException {
+        LocalConfig.load(null);
+    }
+
+    protected static void init() {
+        // This method is there to guarantee static initializer of this
+        // class is run.
+    }
+
 }

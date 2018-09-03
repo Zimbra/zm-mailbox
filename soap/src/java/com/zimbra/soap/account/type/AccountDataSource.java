@@ -17,7 +17,7 @@
 
 package com.zimbra.soap.account.type;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
@@ -38,8 +38,7 @@ import com.zimbra.soap.type.ZmBoolean;
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"lastError", "attributes"})
 @XmlRootElement
-public class AccountDataSource
-implements DataSource {
+public class AccountDataSource implements DataSource {
 
     /**
      * @zm-api-field-tag data-source-id
@@ -254,6 +253,8 @@ implements DataSource {
         importClass = from.getImportClass();
         failingSince = from.getFailingSince();
         lastError = from.getLastError();
+        refreshToken = from.getRefreshToken();
+        refreshTokenUrl = from.getRefreshTokenUrl();
         setAttributes(from.getAttributes());
     }
 
@@ -360,24 +361,25 @@ implements DataSource {
     public List<String> getAttributes() {
         return Collections.unmodifiableList(attributes);
     }
-
+    @Override
+    public void setRefreshToken(String refreshToken) { this.refreshToken = refreshToken; }
+    @Override
+    public String getRefreshToken() { return refreshToken; }
+    @Override
+    public void setRefreshTokenUrl(String refreshTokenUrl) { this.refreshTokenUrl = refreshTokenUrl; }
+    @Override
+    public String getRefreshTokenUrl() { return refreshTokenUrl; }
     @Override
     public ConnectionType getConnectionType() {
         return AdsConnectionType.ACT_TO_CT.apply(adsConnectionType);
     }
-
     @Override
     public void setConnectionType(ConnectionType connectionType) {
         this.adsConnectionType = AdsConnectionType.CT_TO_ACT.apply(connectionType);
     }
-    public void setRefreshToken(String refreshToken) { this.refreshToken = refreshToken; }
-    public String getRefreshToken() { return refreshToken; }
 
-    public void setRefreshTokenUrl(String refreshTokenUrl) { this.refreshTokenUrl = refreshTokenUrl; }
-    public String getRefreshTokenUrl() { return refreshTokenUrl; }
-
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(
+                MoreObjects.ToStringHelper helper) {
         return helper
             .add("id", id)
             .add("name", name)
@@ -407,7 +409,7 @@ implements DataSource {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
+        return addToStringInfo(MoreObjects.toStringHelper(this))
                 .toString();
     }
 }

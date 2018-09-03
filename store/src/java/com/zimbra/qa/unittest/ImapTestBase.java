@@ -20,11 +20,14 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 import org.dom4j.DocumentException;
+import org.junit.After;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.rules.TestName;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
+import com.zimbra.common.account.Key.CacheEntryBy;
 import com.zimbra.common.localconfig.ConfigException;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -33,6 +36,7 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.CacheEntry;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.imap.ImapProxy.ZimbraClientAuthenticator;
 import com.zimbra.cs.mailclient.CommandFailedException;
@@ -51,6 +55,7 @@ import com.zimbra.cs.mailclient.imap.MailboxInfo;
 import com.zimbra.cs.mailclient.imap.MessageData;
 import com.zimbra.cs.security.sasl.ZimbraAuthenticator;
 import com.zimbra.cs.service.AuthProvider;
+import com.zimbra.soap.admin.type.CacheEntryType;
 
 public abstract class ImapTestBase {
 
@@ -73,6 +78,7 @@ public abstract class ImapTestBase {
     private static boolean saved_imap_server_enabled;
     private static boolean saved_imap_ssl_server_enabled;
     private static String[] saved_imap_servers = null;
+    private static String saved_max_message_size = null;
 
     protected abstract int getImapPort();
 
@@ -129,22 +135,36 @@ public abstract class ImapTestBase {
         return imapServer;
     }
 
-    /** expect this to be called by subclass @Before method */
+    /** Only need to do this once for each class - the corresponding restore needs to
+     *  be done after every test though.
+     */
+    @BeforeClass
     public static void saveImapConfigSettings()
     throws ServiceException, DocumentException, ConfigException, IOException {
         getLocalServer();
+        if (imapServer != null) {
+            Provisioning.getInstance().flushCache(CacheEntryType.server,
+                    new CacheEntry[]{new CacheEntry(CacheEntryBy.id, imapServer.getId())});
+            imapServer = null;
+            getLocalServer();
+        }
         saved_imap_always_use_remote_store = LC.imap_always_use_remote_store.booleanValue();
-        saved_imap_servers = imapServer.getReverseProxyUpstreamImapServers();
-        saved_imap_server_enabled = imapServer.isImapServerEnabled();
-        saved_imap_ssl_server_enabled = imapServer.isImapSSLServerEnabled();
+        if (imapServer != null) {
+            saved_imap_servers = imapServer.getReverseProxyUpstreamImapServers();
+            saved_imap_server_enabled = imapServer.isImapServerEnabled();
+            saved_imap_ssl_server_enabled = imapServer.isImapSSLServerEnabled();
+        }
         ZimbraLog.test.debug("Saved ImapConfigSettings %s=%s %s=%s %s=%s",
                 LC.imap_always_use_remote_store.key(), saved_imap_always_use_remote_store,
                 Provisioning.A_zimbraImapServerEnabled, saved_imap_server_enabled,
                 Provisioning.A_zimbraImapSSLServerEnabled, saved_imap_ssl_server_enabled);
+        Provisioning prov = Provisioning.getInstance();
+        saved_max_message_size = prov.getConfig().getAttr(Provisioning.A_zimbraMtaMaxMessageSize, null);
     }
 
-    /** expect this to be called by subclass @After method */
-    public static void restoreImapConfigSettings()
+    /** restore settings after every test */
+    @After
+    public void restoreImapConfigSettings()
     throws ServiceException, DocumentException, ConfigException, IOException {
         getLocalServer();
         if (imapServer != null) {
@@ -155,8 +175,12 @@ public abstract class ImapTestBase {
             imapServer.setReverseProxyUpstreamImapServers(saved_imap_servers);
             imapServer.setImapServerEnabled(saved_imap_server_enabled);
             imapServer.setImapSSLServerEnabled(saved_imap_ssl_server_enabled);
+            Provisioning.getInstance().flushCache(CacheEntryType.server,
+                    new CacheEntry[]{new CacheEntry(CacheEntryBy.id, imapServer.getId())});
         }
-        TestUtil.setLCValue(LC.imap_always_use_remote_store, String.valueOf(saved_imap_always_use_remote_store));
+        TestUtil.setLCValue(LC.imap_always_use_remote_store,
+                String.valueOf(saved_imap_always_use_remote_store));
+        TestUtil.setConfigAttr(Provisioning.A_zimbraMtaMaxMessageSize, saved_max_message_size);
     }
 
     public static void checkConnection(ImapConnection conn) {
@@ -243,6 +267,20 @@ public abstract class ImapTestBase {
 
     protected MailboxInfo doSelectShouldSucceed(String folderName) throws IOException {
         return doSelectShouldSucceed(connection, folderName);
+    }
+
+    protected MailboxInfo doExamineShouldSucceed(ImapConnection conn, String folderName) throws IOException {
+        checkConnection(conn);
+        MailboxInfo mbInfo = null;
+        try {
+            mbInfo = conn.examine(folderName);
+            assertNotNull(String.format("return MailboxInfo for 'EXAMINE %s'", folderName), mbInfo);
+            ZimbraLog.test.debug("return MailboxInfo for 'EXAMINE %s' - %s", folderName, mbInfo);
+        } catch (CommandFailedException cfe) {
+            ZimbraLog.test.debug("'EXAMINE %s' failed", folderName, cfe);
+            fail(String.format("'EXAMINE %s' failed with '%s'", folderName, cfe.getError()));
+        }
+        return mbInfo;
     }
 
     protected static class StatusExecutor {
@@ -583,8 +621,8 @@ public abstract class ImapTestBase {
         return null;
     }
 
-    protected void doAppend(ImapConnection conn, String folderName, int size, Flags flags, boolean fetchResult)
-            throws IOException {
+    protected AppendResult doAppend(ImapConnection conn, String folderName, int size, Flags flags,
+            boolean fetchResult) throws IOException {
         checkConnection(conn);
         assertTrue("expecting UIDPLUS capability", conn.hasCapability("UIDPLUS"));
         Date date = new Date(System.currentTimeMillis());
@@ -598,13 +636,15 @@ public abstract class ImapTestBase {
                 byte[] b = getBody(md);
                 assertArrayEquals("content mismatch", msg.getBytes(), b);
             }
+            return res;
         } finally {
             msg.dispose();
         }
     }
 
-    protected void doAppend(ImapConnection conn, String folderName, int size, Flags flags) throws IOException {
-        doAppend(conn, folderName, size, flags, true);
+    protected AppendResult doAppend(ImapConnection conn, String folderName, int size, Flags flags)
+            throws IOException {
+        return doAppend(conn, folderName, size, flags, true);
     }
 
     public static void verifyFolderList(List<ListData> listResult) {

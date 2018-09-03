@@ -1,0 +1,3 @@
+<CreateDataSourceRequest xmlns="urn:zimbraMail">
+      <gal name="zimbraGAL" l="7" isEnabled="1" host="ldap.zimbra.com" pollingInterval="24h" />
+    </CreateDataSourceRequest>

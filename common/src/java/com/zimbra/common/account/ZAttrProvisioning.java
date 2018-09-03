@@ -440,6 +440,44 @@ public class ZAttrProvisioning {
         public boolean isAlias() { return this == alias;}
     }
 
+    public static enum FeatureAddressVerificationStatus {
+        verified("verified"),
+        pending("pending"),
+        failed("failed"),
+        expired("expired");
+        private String mValue;
+        private FeatureAddressVerificationStatus(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static FeatureAddressVerificationStatus fromString(String s) throws ServiceException {
+            for (FeatureAddressVerificationStatus value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isVerified() { return this == verified;}
+        public boolean isPending() { return this == pending;}
+        public boolean isFailed() { return this == failed;}
+        public boolean isExpired() { return this == expired;}
+    }
+
+    public static enum FeatureResetPasswordStatus {
+        enabled("enabled"),
+        suspended("suspended"),
+        disabled("disabled");
+        private String mValue;
+        private FeatureResetPasswordStatus(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static FeatureResetPasswordStatus fromString(String s) throws ServiceException {
+            for (FeatureResetPasswordStatus value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isEnabled() { return this == enabled;}
+        public boolean isSuspended() { return this == suspended;}
+        public boolean isDisabled() { return this == disabled;}
+    }
+
     public static enum FeatureSocialFiltersEnabled {
         SocialCast("SocialCast"),
         LinkedIn("LinkedIn"),
@@ -1607,7 +1645,8 @@ public class ZAttrProvisioning {
         week("week"),
         workWeek("workWeek"),
         month("month"),
-        list("list");
+        list("list"),
+        year("year");
         private String mValue;
         private PrefCalendarInitialView(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -1622,6 +1661,7 @@ public class ZAttrProvisioning {
         public boolean isWorkWeek() { return this == workWeek;}
         public boolean isMonth() { return this == month;}
         public boolean isList() { return this == list;}
+        public boolean isYear() { return this == year;}
     }
 
     public static enum PrefClientType {
@@ -1763,7 +1803,8 @@ public class ZAttrProvisioning {
     public static enum PrefExternalSendersType {
         ALL("ALL"),
         ALLNOTINAB("ALLNOTINAB"),
-        INAB("INAB");
+        INAB("INAB"),
+        INSD("INSD");
         private String mValue;
         private PrefExternalSendersType(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -1776,6 +1817,7 @@ public class ZAttrProvisioning {
         public boolean isALL() { return this == ALL;}
         public boolean isALLNOTINAB() { return this == ALLNOTINAB;}
         public boolean isINAB() { return this == INAB;}
+        public boolean isINSD() { return this == INSD;}
     }
 
     public static enum PrefFileSharingApplication {
@@ -1968,6 +2010,22 @@ public class ZAttrProvisioning {
         }
         public boolean isBUSY() { return this == BUSY;}
         public boolean isOUTOFOFFICE() { return this == OUTOFOFFICE;}
+    }
+
+    public static enum PrefPasswordRecoveryAddressStatus {
+        verified("verified"),
+        pending("pending");
+        private String mValue;
+        private PrefPasswordRecoveryAddressStatus(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static PrefPasswordRecoveryAddressStatus fromString(String s) throws ServiceException {
+            for (PrefPasswordRecoveryAddressStatus value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isVerified() { return this == verified;}
+        public boolean isPending() { return this == pending;}
     }
 
     public static enum PrefPop3DeleteOption {
@@ -2778,6 +2836,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=-1)
     public static final String A_telexNumber = "telexNumber";
+
+    /**
+     * Account thumbnail photo
+     *
+     * @since ZCS 8.8.7
+     */
+    @ZAttr(id=3021)
+    public static final String A_thumbnailPhoto = "thumbnailPhoto";
 
     /**
      * RFC2256: title associated with the entity
@@ -6093,6 +6159,42 @@ public class ZAttrProvisioning {
     public static final String A_zimbraExternalUserMailAddress = "zimbraExternalUserMailAddress";
 
     /**
+     * RFC822 email address under verification for an account
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2128)
+    public static final String A_zimbraFeatureAddressUnderVerification = "zimbraFeatureAddressUnderVerification";
+
+    /**
+     * Enable end-user email address verification
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2126)
+    public static final String A_zimbraFeatureAddressVerificationEnabled = "zimbraFeatureAddressVerificationEnabled";
+
+    /**
+     * Expiry time for end-user email address verification. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2127)
+    public static final String A_zimbraFeatureAddressVerificationExpiry = "zimbraFeatureAddressVerificationExpiry";
+
+    /**
+     * End-user email address verification status
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2129)
+    public static final String A_zimbraFeatureAddressVerificationStatus = "zimbraFeatureAddressVerificationStatus";
+
+    /**
      * whether email features and tabs are enabled in the web client if
      * accessed from the admin console
      *
@@ -6233,11 +6335,20 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureConfirmationPageEnabled = "zimbraFeatureConfirmationPageEnabled";
 
     /**
-     * Sleep time between subsequent contact backups. 0 means that contact
-     * backup is disabled. . Must be in valid duration format:
-     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
-     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
-     * specified, the default is s(seconds).
+     * Enable contact backup feature
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2131)
+    public static final String A_zimbraFeatureContactBackupEnabled = "zimbraFeatureContactBackupEnabled";
+
+    /**
+     * Deprecated since: 8.8.6. No longer used by ContactBackupRequest SOAP
+     * handler. Orig desc: Sleep time between subsequent contact backups. 0
+     * means that contact backup is disabled. . Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @since ZCS 8.8.5
      */
@@ -6666,6 +6777,26 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=821)
     public static final String A_zimbraFeatureReadReceiptsEnabled = "zimbraFeatureReadReceiptsEnabled";
+
+    /**
+     * status of password reset feature
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=2134)
+    public static final String A_zimbraFeatureResetPasswordStatus = "zimbraFeatureResetPasswordStatus";
+
+    /**
+     * time for which reset password feature is suspended. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=2142)
+    public static final String A_zimbraFeatureResetPasswordSuspensionTime = "zimbraFeatureResetPasswordSuspensionTime";
 
     /**
      * saved search feature
@@ -7936,7 +8067,7 @@ public class ZAttrProvisioning {
     /**
      * Determines the load-balancing algorithm used to select an IMAP server
      * from the pool of available zimbraReverseProxyUpstreamImapServers.
-     * Valid values are ClientIpHash, custom:{handler-algorithm} [arg1 arg2
+     * Valid values are AccountIdHash, custom:{handler-algorithm} [arg1 arg2
      * ...]
      *
      * @since ZCS 8.7.6
@@ -8141,6 +8272,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1387)
     public static final String A_zimbraInternalSharingDomain = "zimbraInternalSharingDomain";
+
+    /**
+     * list of invalid jwt
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=2133)
+    public static final String A_zimbraInvalidJWTokens = "zimbraInvalidJWTokens";
 
     /**
      * This attribute is used for failed authentication requests. It
@@ -8349,6 +8488,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=2018)
     public static final String A_zimbraLdapGentimeFractionalSecondsEnabled = "zimbraLdapGentimeFractionalSecondsEnabled";
+
+    /**
+     * LDAP schema version for the system.
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=3023)
+    public static final String A_zimbraLDAPSchemaVersion = "zimbraLDAPSchemaVersion";
 
     /**
      * name to use in greeting and sign-off; if empty, uses hostname
@@ -11517,12 +11664,22 @@ public class ZAttrProvisioning {
     public static final String A_zimbraNetworkActivation = "zimbraNetworkActivation";
 
     /**
-     * Whether to enable old zimbra network admin module.
+     * Deprecated since: 8.8.5. This attribute has been renamed to
+     * zimbraNetworkAdminNGEnabled. Orig desc: Whether to enable old zimbra
+     * network admin module.
      *
      * @since ZCS 8.8.2
      */
     @ZAttr(id=2119)
     public static final String A_zimbraNetworkAdminEnabled = "zimbraNetworkAdminEnabled";
+
+    /**
+     * Whether to enable zimbra network new generation admin module.
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2130)
+    public static final String A_zimbraNetworkAdminNGEnabled = "zimbraNetworkAdminNGEnabled";
 
     /**
      * Contents of a signed Zimbra license key - an XML string.
@@ -11693,6 +11850,16 @@ public class ZAttrProvisioning {
     public static final String A_zimbraOAuthAccessor = "zimbraOAuthAccessor";
 
     /**
+     * OAuth consumer API scope. It is in the format of apiscope1{separator
+     * character}apiscope2:consumer-app-name. The separator between apiscope1
+     * and apiscope2 is consumer-app specific
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3026)
+    public static final String A_zimbraOAuthConsumerAPIScope = "zimbraOAuthConsumerAPIScope";
+
+    /**
      * OAuth Consumer id, secret, and application name. It is in the format
      * of {consumer-id}:{secret}:{consumer-app-name}
      *
@@ -11700,6 +11867,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1131)
     public static final String A_zimbraOAuthConsumerCredentials = "zimbraOAuthConsumerCredentials";
+
+    /**
+     * OAuth redirectURI. It is in the format of
+     * redirectURI:consumer-app-name
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3025)
+    public static final String A_zimbraOAuthConsumerRedirectUri = "zimbraOAuthConsumerRedirectUri";
 
     /**
      * the handler class for the object type
@@ -11730,6 +11906,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=161)
     public static final String A_zimbraObjectType = "zimbraObjectType";
+
+    /**
+     * temporary RFC822 email address of this recipient for accepting mail
+     * during account rename
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=2143)
+    public static final String A_zimbraOldMailAddress = "zimbraOldMailAddress";
 
     /**
      * allowed OpenID Provider Endpoint URLs for authentication
@@ -11956,6 +12141,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=41)
     public static final String A_zimbraPasswordMustChange = "zimbraPasswordMustChange";
+
+    /**
+     * Maximum attempts for password recovery resend
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=2141)
+    public static final String A_zimbraPasswordRecoveryMaxAttempts = "zimbraPasswordRecoveryMaxAttempts";
 
     /**
      * phonetic company name
@@ -12672,6 +12865,17 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefDedupeMessagesSentToSelf = "zimbraPrefDedupeMessagesSentToSelf";
 
     /**
+     * Default calendar folder id. Current default calendar id is 10, as
+     * calendar folder with id 10, is created for all users. Cos level change
+     * is blocked. So admin can not change value of this attribute on cos
+     * level.
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=2994)
+    public static final String A_zimbraPrefDefaultCalendarId = "zimbraPrefDefaultCalendarId";
+
+    /**
      * default font size
      *
      * @since ZCS 6.0.8
@@ -12716,13 +12920,22 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefDisplayExternalImages = "zimbraPrefDisplayExternalImages";
 
     /**
+     * Display received/sent time in mail list
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=3022)
+    public static final String A_zimbraPrefDisplayTimeInMailList = "zimbraPrefDisplayTimeInMailList";
+
+    /**
      * Specifies the meaning of an external sender. &quot;ALL&quot; means
      * users whose domain doesn&#039;t match the recipient&#039;s or
      * zimbraInternalSendersDomain. &quot;ALLNOTINAB&quot; means
      * &quot;ALL&quot; minus users who are in the recipient&#039;s address
      * book. &quot;INAB&quot; Users/Addresses whose domain doesn&#039;t match
      * the recipient&#039;s domain or zimbraInternalSendersDomain and which
-     * are present in recipient&#039;s address book.
+     * are present in recipient&#039;s address book. &quot;INSD&quot; means
+     * users whose domain matches the specific domain
      *
      * @since ZCS 8.0.0
      */
@@ -13432,6 +13645,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefOutOfOfficeReplyEnabled = "zimbraPrefOutOfOfficeReplyEnabled";
 
     /**
+     * Specific domains to which custom out of office message is to be sent
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2132)
+    public static final String A_zimbraPrefOutOfOfficeSpecificDomains = "zimbraPrefOutOfOfficeSpecificDomains";
+
+    /**
      * when user has OOO message enabled, when they login into web client,
      * whether to alert the user that the OOO message is turned on and
      * provide the ability to turn it off
@@ -13456,6 +13677,22 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=385)
     public static final String A_zimbraPrefOutOfOfficeUntilDate = "zimbraPrefOutOfOfficeUntilDate";
+
+    /**
+     * RFC822 recovery email address for an account
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=2135)
+    public static final String A_zimbraPrefPasswordRecoveryAddress = "zimbraPrefPasswordRecoveryAddress";
+
+    /**
+     * End-user recovery email address verification status
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=2136)
+    public static final String A_zimbraPrefPasswordRecoveryAddressStatus = "zimbraPrefPasswordRecoveryAddressStatus";
 
     /**
      * When messages are accessed via POP3: - keep: Leave DELE&#039;ed
@@ -13894,6 +14131,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPreviousEphemeralBackendURL = "zimbraPreviousEphemeralBackendURL";
 
     /**
+     * timestamp of account rename and previous name of the account
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=2144)
+    public static final String A_zimbraPrimaryEmailChangeHistory = "zimbraPrimaryEmailChangeHistory";
+
+    /**
      * whether this instance of Zimbra is running ZCS or some other
      * derivative product
      *
@@ -13994,6 +14239,26 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=483)
     public static final String A_zimbraQuotaWarnPercent = "zimbraQuotaWarnPercent";
+
+    /**
+     * Expiry time for recovery email code verification. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=2140)
+    public static final String A_zimbraRecoveryAccountCodeValidity = "zimbraRecoveryAccountCodeValidity";
+
+    /**
+     * Recovery email verification data
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=2139)
+    public static final String A_zimbraRecoveryAccountVerificationData = "zimbraRecoveryAccountVerificationData";
 
     /**
      * redolog rollover destination
@@ -14136,6 +14401,26 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=337)
     public static final String A_zimbraRemoteManagementUser = "zimbraRemoteManagementUser";
+
+    /**
+     * Recovery code sent to recovery email address
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=2137)
+    public static final String A_zimbraResetPasswordRecoveryCode = "zimbraResetPasswordRecoveryCode";
+
+    /**
+     * Expiry time for password reset recovery code. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=2138)
+    public static final String A_zimbraResetPasswordRecoveryCodeExpiry = "zimbraResetPasswordRecoveryCodeExpiry";
 
     /**
      * Custom response headers. For example, can be used to add a P3P header
@@ -14872,6 +15157,18 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1360)
     public static final String A_zimbraReverseProxySSLToUpstreamEnabled = "zimbraReverseProxySSLToUpstreamEnabled";
+
+    /**
+     * Configure the default server block in
+     * &#039;nginx.conf.web.https?.default.template&#039; to return a default
+     * HTTP response for all unconfigured host names. See also related
+     * attributes &#039;zimbraVirtualHostname&#039; and
+     * &#039;zimbraVirtualIPAddress&#039;.
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3020)
+    public static final String A_zimbraReverseProxyStrictServerNameEnabled = "zimbraReverseProxyStrictServerNameEnabled";
 
     /**
      * The connect timeout is the time interval after which NGINX will
@@ -16975,6 +17272,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=695)
     public static final String A_zimbraXMPPServerDialbackKey = "zimbraXMPPServerDialbackKey";
+
+    /**
+     * ZimbraX compatible semantic version expression
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3024)
+    public static final String A_zimbraXZimletCompatibleSemVer = "zimbraXZimletCompatibleSemVer";
 
     /**
      * Yahoo ID
