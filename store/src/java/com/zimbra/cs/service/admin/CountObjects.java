@@ -16,7 +16,11 @@
  */
 package com.zimbra.cs.service.admin;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.google.common.collect.Lists;
@@ -30,8 +34,10 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.UCService;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.CountObjectsRequest;
@@ -146,14 +152,14 @@ public class CountObjects extends AdminDocumentHandler {
             }
         } else if (countObjectsType.equals(CountObjectsType.domain) && (zsc.getAuthToken().isDelegatedAdmin() || zsc.getAuthToken().isDomainAdmin() ) && req.getOnlyRelated())
         {
-            RightCommand.Grants grants = prov.getGrants(null, null, null, "usr", GranteeSelector.GranteeBy.id, zsc.getAuthtokenAccountId(), false);
+            RightCommand.Grants grants = prov.getGrants(null, null, null, GranteeType.GT_USER.getCode(), GranteeSelector.GranteeBy.id, zsc.getAuthtokenAccountId(), false);
             if (grants != null)
             {
                 Set<RightCommand.ACE> acEs      = grants.getACEs();
                 Set<String>           domainIds = new HashSet<String>();
                 for (RightCommand.ACE acE : acEs)
                 {
-                    if (acE.targetType().equals("domain") && !domainIds.contains(acE.targetId()))
+                    if (acE.targetType().equals(TargetType.domain.getCode()) && !domainIds.contains(acE.targetId()))
                     {
                         count++;
                         domainIds.add(acE.targetId());
