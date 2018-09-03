@@ -83,6 +83,7 @@ public class ServiceException extends Exception {
     public static final String TWO_FACTOR_AUTH_TOKEN = "twoFactorAuthToken";
 
     public static final String PROXIED_FROM_ACCT  = "proxiedFromAcct"; // exception proxied from remote account
+    public static final Stirng FAILURE_MESSAGE = "Sorry, your request could not be processed at this time. Please try again later.";
 
     // to ensure that exception id is unique across multiple servers.
     private static String ID_KEY = null;
