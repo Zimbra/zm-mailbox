@@ -4890,7 +4890,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                 }
             } else {
                 if (dl.getAllMembers().length > 0) {
-                    throw ServiceException.INVALID_REQUEST("Can not delete hab group when memebers are present in group.", null);
+                    throw ServiceException.INVALID_REQUEST("Can not delete hab group when members are present in group.", null);
                 }
             }
         }
