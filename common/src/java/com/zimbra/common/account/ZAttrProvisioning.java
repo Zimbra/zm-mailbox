@@ -2961,6 +2961,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraActiveSyncEhcacheMaxDiskSize = "zimbraActiveSyncEhcacheMaxDiskSize";
 
     /**
+     * filter to decide members of the address list
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=3074)
+    public static final String A_zimbraAddressListMemberFilter = "zimbraAddressListMemberFilter";
+
+    /**
      * access control mechanism for admin access acl: ACL based access
      * control (a.k.a. delegated admin). global: allows only global admins.
      *
@@ -8337,6 +8345,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1242)
     public static final String A_zimbraIsACLGroup = "zimbraIsACLGroup";
+
+    /**
+     * whether address list is active or not
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=3075)
+    public static final String A_zimbraIsAddressListActive = "zimbraIsAddressListActive";
 
     /**
      * set to true for admin accounts
