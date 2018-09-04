@@ -92,18 +92,6 @@
 	               select="\3"
 	               casesensitive="false" />
 
-        <propertyregex property="zimbra.buildinfo.relclass"
-                                    defaultValue="GA"
-                                    input="${zimbra.buildinfo.version}"
-                                    regexp="([0-9]+)\.([0-9]+)\.([0-9]+)_([A-Z]+)"
-                                    select="\4"
-                                    casesensitive="false" />
-
-        <propertyregex property="zimbra.buildinfo.buildnum"
-                                    input="${zimbra.buildinfo.version}"
-                                    regexp="([0-9]+)\.([0-9]+)\.([0-9]+)_([A-Z]+)_([0-9]+)"
-                                    select="\5"
-                                    casesensitive="false" />
 
 
   <property name="store.ext.patch.revision" value="1" />
