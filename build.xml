@@ -47,33 +47,13 @@
         <ant dir="./client" target="dist" inheritAll="false"/>
         <ant dir="./store"  target="dist" inheritAll="false"/>
       </target>
+
+<!-- Code added to parse regex provided in version zimbra.buildinfo.version -->
     <taskdef resource="net/sf/antcontrib/antlib.xml">
         <classpath>
 		<pathelement location="${user.home}/.zcs-deps/ant-contrib-1.0b1.jar"/>
         </classpath>
     </taskdef>
-    <!--
-      <condition property="zimbra.version.dir" value="../zm-build/RE" else="../zimbra-package-stub/version">
-	        <available file="${zimbra.root.dir}/zm-build/RE" type="dir"/>
-	    </condition>
-	<loadfile property="zimbra.buildinfo.majorversion" srcFile="${zimbra.version.dir}/MAJOR">
-  	 <filterchain>
-    	  <striplinebreaks/>
-  	 </filterchain>
-	</loadfile>
-
-	<loadfile property="zimbra.buildinfo.minorversion" srcFile="${zimbra.version.dir}/MINOR">
-	   <filterchain>
-	    <striplinebreaks/>
-	  </filterchain>
-	</loadfile>
-
-	<loadfile property="zimbra.buildinfo.microtag" srcFile="${zimbra.version.dir}/MICRO">
-	  <filterchain>
-	    <striplinebreaks/>
-	  </filterchain>
-	</loadfile>
--->
 	<propertyregex property="zimbra.buildinfo.majorversion"
 	               input="${zimbra.buildinfo.version}"
 	               regexp="([0-9]+)\.([0-9]+)\.([0-9]+)"
@@ -92,12 +72,13 @@
 	               select="\3"
 	               casesensitive="false" />
 
-
+<!-- Property defined to accept the version -->
 
   <property name="store.ext.patch.revision" value="1" />
   <property name="store.ext.patch.version"
       value="${zimbra.buildinfo.majorversion}.${zimbra.buildinfo.minorversion}.${zimbra.buildinfo.microversion}"/>
 
+<!--Package building starts here from the war files -->
    <target name="pkg" depends="clean-pkg,all,dist">
       <exec dir="." executable="./pkg-builder.pl" failonerror="true">
       <arg value="-v"/>
