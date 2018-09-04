@@ -52,7 +52,7 @@ public class GqlConstants {
 
     // end session constants
     public static final String CLEAR_COOKIES= "clearCookies";
-    
+
     // shared class constants
     public static final String ATTACHMENTS = "attachments";
     public static final String ATTACHMENT_ID = "attachmentId";
@@ -65,7 +65,7 @@ public class GqlConstants {
     public static final String IN_REPLY_TO = "inReplyTo";
     public static final String INVITE = "invite";
     public static final String MIME_PARTS = "mimeParts";
-    
+
     // message constants
     public static final String CLASS_MESSAGE = "Message";
     public static final String EMAILADDRESSES = "emailAddresses";
@@ -287,4 +287,36 @@ public class GqlConstants {
     public static final String CLASS_GET_PREFS_REQUEST= "GetPrefsRequest";
     public static final String CLASS_ACCOUNT_PREF_INPUT = "AccountPref";
     public static final String PREFERENCES = "preferences";
+
+    // filter rules constants
+    public static final String CLASS_FILTERS_REQUEST = "FiltersRequest";
+    public static final String ACTIVE = "active";
+    public static final String FILTER_VARIABLES = "filterVariables";
+    public static final String TESTS = "tests";
+    public static final String CHILD = "child";
+    public static final String NEGATIVE = "negative";
+    public static final String PARAMETERS = "parameters";
+    public static final String FILTER_RULES = "Filter rules";
+    public static final String CLASS_GET_FILTER_RULES_RESPONSE = "GetFilterRulesResponse";
+    public static final String CLASS_FILTER_RULE = "FilterRule";
+    public static final String ACTIONS = "actions";
+    public static final String CLASS_FILTER_VARIABLES = "FilterVariables";
+    public static final String CLASS_FILTER_VARIABLE = "FilterVariable";
+    public static final String VARIABLES = "variables";
+    public static final String ADD_FILTER_ACTION = "addFilterAction";
+    public static final String GET_FILTER_ACTION_COUNT = "getActionCount";
+    public static final String CLASS_FILTER_TESTS = "FilterTests";
+    public static final String ADD_FILTER_TEST = "addTest";
+    public static final String FILTER_TEST_CONDITION = "condition";
+    public static final String FILTER_TESTS = "filterTests";
+    public static final String FILTER_TESTS_COUNT = "testCount";
+    public static final String CLASS_FILTER_TEST = "FilterTest";
+    public static final String CLASS_ADDRESS_TEST = "AddressTest";
+    public static final String HEADER = "header";
+    public static final String COMPARISON = "comparison";
+    public static final String CASE_SENSITIVE = "caseSensitive";
+    public static final String VALUE_COMPARISON = "valueComparison";
+    public static final String COUNT_COMPARISON = "countComparison";
+    public static final String VALUE_COMPARISON_COMPARATOR = "valueComparisonComparator";
+
 }

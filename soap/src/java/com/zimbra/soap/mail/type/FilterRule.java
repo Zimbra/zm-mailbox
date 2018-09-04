@@ -32,14 +32,19 @@ import javax.xml.bind.annotation.XmlType;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.json.jackson.annotate.ZimbraJsonArrayForWrapper;
 import com.zimbra.soap.type.ZmBoolean;
+
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
 
 // JsonPropertyOrder added to make sure JaxbToJsonTest.bug65572_BooleanAndXmlElements passes
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"filterVariables", "tests", "actions", "child"})
 @JsonPropertyOrder({ "name", "active", "filterVariables", "tests", "actions","child" })
+@GraphQLType(name=GqlConstants.CLASS_FILTER_RULE, description="Filter Rule class")
 public final class FilterRule {
 
     /**
@@ -164,6 +169,7 @@ public final class FilterRule {
         return this;
     }
 
+    @GraphQLQuery(name=GqlConstants.ACTIONS, description="The filter actions")
     public List<FilterAction> getFilterActions() {
         // there must be no actions.size()==0 case. This is for just in case.
         if(actions == null || actions.size() == 0) {
@@ -172,6 +178,7 @@ public final class FilterRule {
         return Collections.unmodifiableList(actions);
     }
 
+    @GraphQLQuery(name=GqlConstants.GET_FILTER_ACTION_COUNT, description="Get filter action count")
     public int getActionCount() {
         if(actions == null){
             return 0;
@@ -179,6 +186,7 @@ public final class FilterRule {
         return actions.size();
     }
 
+    @GraphQLQuery(name=GqlConstants.NAME, description="The rule name")
     public String getName() {
         return name;
     }
@@ -187,6 +195,7 @@ public final class FilterRule {
         this.name = name;
     }
 
+    @GraphQLQuery(name=GqlConstants.ACTIVE, description="The rules active flag")
     public boolean isActive() {
         return ZmBoolean.toBool(active);
     }
@@ -195,15 +204,17 @@ public final class FilterRule {
         this.active = active;
     }
 
+    @GraphQLQuery(name=GqlConstants.TESTS, description="The rule filter tests")
     public FilterTests getFilterTests() {
         return tests;
     }
 
     // For Nested Rule
+    @GraphQLQuery(name=GqlConstants.CHILD, description="Nested rule")
     public NestedRule getChild() {
         return child;
     }
-    
+
     // For Nested Rule
     public void setChild(NestedRule nestedRule) {
         child = nestedRule;
@@ -219,6 +230,8 @@ public final class FilterRule {
     /**
      * @return variables
      */
+
+    @GraphQLQuery(name=GqlConstants.FILTER_VARIABLES, description="The rules filter variables")
     public FilterVariables getFilterVariables() {
         return this.filterVariables;
     }

@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -24,11 +24,16 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.google.common.base.MoreObjects;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
+
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {})
 @JsonPropertyOrder({ "name", "value" })
+@GraphQLType(name=GqlConstants.CLASS_FILTER_VARIABLE, description="FilterVariable class")
 public final class FilterVariable {
 
     /**
@@ -61,6 +66,7 @@ public final class FilterVariable {
         return new FilterVariable(name, value);
     }
 
+    @GraphQLQuery(name=GqlConstants.NAME, description="Rule name")
     public String getName() {
         return this.name;
     }
@@ -69,6 +75,7 @@ public final class FilterVariable {
         this.name = name;
     }
 
+    @GraphQLQuery(name=GqlConstants.VALUE, description="Rule value")
     public String getValue() {
         return this.value;
     }

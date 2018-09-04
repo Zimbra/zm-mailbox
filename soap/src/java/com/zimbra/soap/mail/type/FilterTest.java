@@ -31,11 +31,17 @@ import javax.xml.bind.annotation.XmlEnum;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.ZmBoolean;
 
+import io.leangen.graphql.annotations.GraphQLIgnore;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name=GqlConstants.CLASS_FILTER_TEST, description="Filter test")
 public class FilterTest {
 
     /**
@@ -50,6 +56,7 @@ public class FilterTest {
      * @zm-api-field-description Specifies a "not" condition for the test
      */
     @XmlAttribute(name=MailConstants.A_NEGATIVE /* negative */, required=false)
+
     private ZmBoolean negative;
 
     protected FilterTest() {
@@ -68,10 +75,12 @@ public class FilterTest {
         this.index = index;
     }
 
+    @GraphQLQuery(name=GqlConstants.NEGATIVE, description="Specifies a `not` condition for the test")
     public Boolean getNegative() {
         return ZmBoolean.toBool(negative);
     }
 
+    @GraphQLIgnore
     public boolean isNegative() {
         return ZmBoolean.toBool(negative, false);
     }
@@ -86,6 +95,8 @@ public class FilterTest {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
+
+    @GraphQLType(name=GqlConstants.CLASS_ADDRESS_TEST, description="The AddressTest test")
     public static class AddressTest extends FilterTest {
 
         /**
@@ -144,6 +155,7 @@ public class FilterTest {
         @XmlAttribute(name=MailConstants.A_VALUE_COMPARISON_COMPARATOR /* valueComparisonComparator */, required=false)
         private String valueComparisonComparator;
 
+        @GraphQLQuery(name=GqlConstants.HEADER, description="Comma separated list of header names")
         public String getHeader() {
             return header;
         }
@@ -152,6 +164,7 @@ public class FilterTest {
             header = val;
         }
 
+        @GraphQLQuery(name=GqlConstants.PART, description="Part of address to affect - `all`,`localpart`,`domain`")
         public String getPart() {
             return part;
         }
@@ -160,6 +173,7 @@ public class FilterTest {
             part = val;
         }
 
+        @GraphQLQuery(name=GqlConstants.COMPARISON, description="String comparison type - `is`,`contains`,`matches`")
         public String getStringComparison() {
             return comparison;
         }
@@ -168,6 +182,7 @@ public class FilterTest {
             comparison = val;
         }
 
+        @GraphQLQuery(name=GqlConstants.CASE_SENSITIVE, description="Case sensitive setting")
         public Boolean getCaseSensitive() {
             return ZmBoolean.toBool(caseSensitive);
         }
@@ -180,6 +195,7 @@ public class FilterTest {
             caseSensitive = ZmBoolean.fromBool(val);
         }
 
+        @GraphQLQuery(name=GqlConstants.VALUE, description="Value")
         public String getValue() {
             return value;
         }
@@ -187,6 +203,8 @@ public class FilterTest {
         public void setValue(String val) {
             value = val;
         }
+
+        @GraphQLQuery(name=GqlConstants.VALUE_COMPARISON, description="Value comparison type - `gt`,`,ge`,`lt`,`le`,`eq`,`n`")
         public String getValueComparison() {
             return valueComparison;
         }
@@ -195,6 +213,7 @@ public class FilterTest {
             this.valueComparison = valueComparison;
         }
 
+        @GraphQLQuery(name=GqlConstants.COUNT_COMPARISON, description="Count comparison type - `gt`,`ge`,`lt`,`le`,`eq`,`ne`")
         public String getCountComparison() {
             return countComparison;
         }
@@ -203,6 +222,7 @@ public class FilterTest {
             this.countComparison = countComparison;
         }
 
+        @GraphQLQuery(name=GqlConstants.VALUE_COMPARISON_COMPARATOR, description="value comparison comparator - `ascii-numeric`,`ascii-casemap`,`octet`")
         public String getValueComparisonComparator() {
             return valueComparisonComparator;
         }
@@ -264,6 +284,8 @@ public class FilterTest {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
+
+    @GraphQLType(name="BodyTest", description="Body Test class")
     public static final class BodyTest extends FilterTest {
 
         /**
@@ -531,6 +553,8 @@ public class FilterTest {
 
     @XmlAccessorType(XmlAccessType.NONE)
     @JsonPropertyOrder({ "index", "negative", "header", "caseSensitive", "stringComparison", "valueComparison","valueComparisonComparator", "countComparison", "value" })
+
+    @GraphQLType(name="HeaderTest", description="Header Test class")
     public static final class HeaderTest extends FilterTest {
 
         // Comma separated list
@@ -594,6 +618,7 @@ public class FilterTest {
             return new HeaderTest(index, negative);
         }
 
+        @GraphQLQuery(name="headers", description="CSV list of header names")
         public String getHeaders() {
             return headers;
         }
@@ -602,6 +627,7 @@ public class FilterTest {
             this.headers = headers;
         }
 
+        @GraphQLQuery(name="stringComparison", description="Comparison type. List of `is`, `contains`, `matches`")
         public String getStringComparison() {
             return stringComparison;
         }
@@ -609,7 +635,7 @@ public class FilterTest {
         public void setStringComparison(String stringComparison) {
             this.stringComparison = stringComparison;
         }
-
+        @GraphQLQuery(name="valueComparison", description="CSV list of a vlue comparison type - gt|ge|lt|le|eq|ne")
         public String getValueComparison() {
             return valueComparison;
         }
@@ -617,7 +643,7 @@ public class FilterTest {
         public void setValueComparison(String valueComparison) {
             this.valueComparison = valueComparison;
         }
-
+        @GraphQLQuery(name="countComparison", description="CSV list of count comparison type - gt|ge|lt|le|eq|ne")
         public String getCountComparison() {
             return countComparison;
         }
@@ -625,7 +651,7 @@ public class FilterTest {
         public void setCountComparison(String countComparison) {
             this.countComparison = countComparison;
         }
-
+        @GraphQLQuery(name="caseSensitive", description="Case sensitive setting")
         public Boolean getCaseSensitive() {
             return ZmBoolean.toBool(caseSensitive);
         }
@@ -637,7 +663,7 @@ public class FilterTest {
         public void setCaseSensitive(Boolean caseSensitive) {
             this.caseSensitive = ZmBoolean.fromBool(caseSensitive);
         }
-
+        @GraphQLQuery(name="value", description="Value")
         public String getValue() {
             return value;
         }
@@ -645,7 +671,7 @@ public class FilterTest {
         public void setValue(String value) {
             this.value = value;
         }
-
+        @GraphQLQuery(name="valueComparisonComparator", description="value comparison comparator - ascii-numeric|ascii-casemap|octet")
         public String getValueComparisonComparator() {
             return valueComparisonComparator;
         }
@@ -678,7 +704,7 @@ public class FilterTest {
             }
             try {
                 return Importance.valueOf(value);
-            } catch (IllegalArgumentException e) {
+            } catch (final IllegalArgumentException e) {
                 throw ServiceException.INVALID_REQUEST(
                         "Invalid value: " + value + ", valid values: " + Arrays.asList(Importance.values()), null);
             }

@@ -17,9 +17,6 @@
 
 package com.zimbra.soap.mail.message;
 
-import com.google.common.base.MoreObjects;
-import com.google.common.collect.Lists;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -30,13 +27,20 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.collect.Lists;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.json.jackson.annotate.ZimbraJsonArrayForWrapper;
 import com.zimbra.soap.mail.type.FilterRule;
 
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_GET_FILTER_RULES_RESPONSE)
-public final class GetFilterRulesResponse {
+@GraphQLType(name=GqlConstants.CLASS_GET_FILTER_RULES_RESPONSE, description="GetFilterRulesResponse class")
+public class GetFilterRulesResponse {
 
     /**
      * @zm-api-field-description Filter rules
@@ -64,6 +68,7 @@ public final class GetFilterRulesResponse {
         rules.addAll(list);
     }
 
+    @GraphQLQuery(name=GqlConstants.FILTER_RULES, description="The filter rules")
     public List<FilterRule> getFilterRules() {
         return Collections.unmodifiableList(rules);
     }

@@ -30,10 +30,15 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
+
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder={"condition", "tests"})
+@GraphQLType(name=GqlConstants.CLASS_FILTER_TESTS, description="Filter Test class")
 public final class FilterTests {
 
     /**
@@ -76,6 +81,7 @@ public final class FilterTests {
         @XmlElement(name=MailConstants.E_COMMUNITY_CONTENT_TEST, type=FilterTest.CommunityContentTest.class),
         @XmlElement(name=MailConstants.E_COMMUNITY_CONNECTIONS_TEST, type=FilterTest.CommunityConnectionsTest.class),
     })
+
     private final List<FilterTest> tests = Lists.newArrayList();
 
     /**
@@ -105,6 +111,7 @@ public final class FilterTests {
         tests.add(test);
     }
 
+    @GraphQLQuery(name=GqlConstants.FILTER_TEST_CONDITION, description="Filter test condition")
     public String getCondition() {
         return condition;
     }
@@ -113,10 +120,12 @@ public final class FilterTests {
         this.condition = condition;
     }
 
+    @GraphQLQuery(name=GqlConstants.FILTER_TESTS, description="List of filter tests")
     public List<FilterTest> getTests() {
         return Collections.unmodifiableList(tests);
     }
 
+    @GraphQLQuery(name=GqlConstants.FILTER_TESTS_COUNT, description="Count of filter tests")
     public int size() {
         return tests.size();
     }

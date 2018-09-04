@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -29,12 +29,17 @@ import javax.xml.bind.annotation.XmlType;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.json.jackson.annotate.ZimbraJsonArrayForWrapper;
+
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"variables"})
 @JsonPropertyOrder({ "variables" })
+@GraphQLType(name=GqlConstants.CLASS_FILTER_VARIABLES, description="FilterVariables class")
 public final class FilterVariables extends FilterAction {
 
     @XmlElement(name=MailConstants.E_FILTER_VARIABLE /* filterVariable */, required=true)
@@ -44,6 +49,7 @@ public final class FilterVariables extends FilterAction {
      * @return the variables
      */
     @ZimbraJsonArrayForWrapper
+    @GraphQLQuery(name=GqlConstants.VARIABLES, description="The filter variables")
     public List<FilterVariable> getVariables() {
         return variables;
     }
@@ -56,7 +62,7 @@ public final class FilterVariables extends FilterAction {
             if(this.variables == null) {
                 this.variables = Lists.newArrayList();
             }
-            for (FilterVariable filterVariable : variables) {
+            for (final FilterVariable filterVariable : variables) {
                 if(filterVariable != null) {
                     this.variables.add(filterVariable);
                 }
