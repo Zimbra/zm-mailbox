@@ -212,7 +212,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
     <desc>RFC2256: destination indicator</desc>
 </attr>
 
-<attr name="displayName" type="string" optionalIn="account,distributionList,group,groupDynamicUnit" requiredIn="calendarResource" flags="accountInfo,domainAdminModifiable" callback="DisplayName">
+<attr name="displayName" type="string" optionalIn="account,distributionList,group,groupDynamicUnit,addressList" requiredIn="calendarResource" flags="accountInfo,domainAdminModifiable" callback="DisplayName">
     <desc>RFC2798: preferred name to be used when displaying entries</desc>
 </attr>
 
@@ -328,7 +328,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
     <desc>RFC2256: title associated with the entity</desc>
 </attr>
 
-<attr name="uid" type="string" immutable="1" optionalIn="alias" requiredIn="account,distributionList" flags="accountInfo">
+<attr name="uid" type="string" immutable="1" optionalIn="alias" requiredIn="account,distributionList,addressList" flags="accountInfo">
     <desc>RFC1274: user identifier</desc>
 </attr>
 
@@ -349,7 +349,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 
-<attr id="1" name="zimbraId" type="id" immutable="1" cardinality="single" requiredIn="account,alias,distributionList,cos,domain,server,alwaysOnCluster,ucService,calendarResource,xmppComponent,group,groupDynamicUnit,groupStaticUnit" flags="accountInfo">
+<attr id="1" name="zimbraId" type="id" immutable="1" cardinality="single" requiredIn="account,alias,distributionList,cos,domain,server,alwaysOnCluster,ucService,calendarResource,xmppComponent,group,groupDynamicUnit,groupStaticUnit,addressList" flags="accountInfo">
   <desc>Zimbra Systems Unique ID</desc>
 </attr>
 
@@ -9739,6 +9739,12 @@ TODO: delete them permanently from here
   <globalConfigValue>office=physicalDeliveryOfficeName</globalConfigValue>
   <globalConfigValue>alias=zimbraMailAlias</globalConfigValue>
   <desc>LDAP attribute to HAB Group Member attribute mapping</desc>
+<attr id="3074" name="zimbraAddressListMemberFilter" type="string" cardinality="single" requiredIn="addressList" since="8.8.10">
+  <desc>filter to decide members of the address list</desc>
+</attr>
+
+<attr id="3075" name="zimbraIsAddressListActive" type="boolean" cardinality="single" requiredIn="addressList" since="8.8.10">
+  <desc>whether address list is active or not</desc>
 </attr>
 
 </attrs>
