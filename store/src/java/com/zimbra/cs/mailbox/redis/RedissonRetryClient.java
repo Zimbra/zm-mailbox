@@ -5,7 +5,9 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.redisson.Redisson;
+import org.redisson.api.BatchOptions;
 import org.redisson.api.ClusterNodesGroup;
+import org.redisson.api.ExecutorOptions;
 import org.redisson.api.LocalCachedMapOptions;
 import org.redisson.api.MapOptions;
 import org.redisson.api.Node;
@@ -45,6 +47,7 @@ import org.redisson.api.RPriorityBlockingQueue;
 import org.redisson.api.RPriorityDeque;
 import org.redisson.api.RPriorityQueue;
 import org.redisson.api.RQueue;
+import org.redisson.api.RRateLimiter;
 import org.redisson.api.RReadWriteLock;
 import org.redisson.api.RRemoteService;
 import org.redisson.api.RScheduledExecutorService;
@@ -56,8 +59,11 @@ import org.redisson.api.RSetCache;
 import org.redisson.api.RSetMultimap;
 import org.redisson.api.RSetMultimapCache;
 import org.redisson.api.RSortedSet;
+import org.redisson.api.RStream;
 import org.redisson.api.RTopic;
+import org.redisson.api.RTransaction;
 import org.redisson.api.RedissonClient;
+import org.redisson.api.TransactionOptions;
 import org.redisson.client.RedisException;
 import org.redisson.client.codec.Codec;
 import org.redisson.config.Config;
@@ -224,6 +230,16 @@ public class RedissonRetryClient implements RedissonClient {
     @Override
     public boolean isShuttingDown() {
         return client.isShuttingDown();
+    }
+
+    @Override
+    public RBatch createBatch() {
+        return new RedissonRetryBatch(client -> client.createBatch(), this);
+    }
+
+    @Override
+    public RBatch createBatch(BatchOptions options) {
+        return new RedissonRetryBatch(client -> client.createBatch(options), this);
     }
 
     //RedissonClient interface methods below are not currently used anywhere in the codebase,
@@ -584,17 +600,42 @@ public class RedissonRetryClient implements RedissonClient {
     }
 
     @Override
-    public RBatch createBatch() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public RKeys getKeys() {
         throw new UnsupportedOperationException();
     }
 
     @Override
     public RLiveObjectService getLiveObjectService() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public RTransaction createTransaction(TransactionOptions arg0) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public RScheduledExecutorService getExecutorService(String arg0, ExecutorOptions arg1) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public RScheduledExecutorService getExecutorService(String arg0, Codec arg1, ExecutorOptions arg2) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public RRateLimiter getRateLimiter(String arg0) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public <K, V> RStream<K, V> getStream(String arg0) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public <K, V> RStream<K, V> getStream(String arg0, Codec arg1) {
         throw new UnsupportedOperationException();
     }
 }

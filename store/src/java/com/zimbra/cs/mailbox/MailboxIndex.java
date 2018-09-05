@@ -259,7 +259,7 @@ public final class MailboxIndex {
     public synchronized boolean startReIndexById(Collection<Integer> itemIds) throws ServiceException {
         boolean success = false;
         //Step 1: get items (does not matter whether we get these from cache or DB at this step
-        MailItem[] items = mailbox.getItemById(null, itemIds, MailItem.Type.UNKNOWN);
+        MailItem[] items = mailbox.getItemById(null, itemIds, MailItem.Type.UNKNOWN_SEARCHABLE);
 
         //Step 2: set task counters for reporting
         IndexingQueueAdapter queueAdapter = IndexingQueueAdapter.getFactory().getAdapter();

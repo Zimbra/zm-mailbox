@@ -19,6 +19,7 @@ package com.zimbra.common.mailbox;
 
 public enum MailItemType {
         UNKNOWN,
+        UNKNOWN_SEARCHABLE,
         FOLDER, /** Item is a standard Folder. */
         SEARCHFOLDER, /** Item is a saved search - SearchFolder. */
         TAG, /** Item is a user-created Tag. */

@@ -21,6 +21,8 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.ehcache.impl.internal.concurrent.ConcurrentHashMap;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.cs.account.Account;
@@ -64,7 +66,7 @@ public abstract class MailboxListener {
      *
      * @param notification
      */
-    public abstract void notify(ChangeNotification notification);
+    public void notify(ChangeNotification notification) {}
 
     protected static final Set<Type> ALL_ITEM_TYPES = EnumSet.allOf(Type.class);
 
@@ -78,10 +80,10 @@ public abstract class MailboxListener {
         return ALL_ITEM_TYPES;
     }
 
-    private static final HashSet<MailboxListener> sListeners;
+    private static final Set<MailboxListener> sListeners;
 
     static {
-        sListeners = new HashSet<MailboxListener>();
+        sListeners = ConcurrentHashMap.newKeySet();
         reset();
     }
 
@@ -105,16 +107,12 @@ public abstract class MailboxListener {
     }
 
     public static void register(MailboxListener listener) {
-        synchronized (sListeners) {
-            sListeners.add(listener);
-        }
+        sListeners.add(listener);
     }
 
     @VisibleForTesting
     static void unregister(MailboxListener listener) {
-        synchronized (sListeners) {
-            sListeners.remove(listener);
-        }
+        sListeners.remove(listener);
     }
 
     public static void notifyListeners(ChangeNotification notification) {
@@ -125,4 +123,30 @@ public abstract class MailboxListener {
             }
         }
     }
+
+    public static void notifyListenersBeforeLockRelease(ChangeNotification notification) {
+        for (MailboxListener l : sListeners) {
+            if (!Collections.disjoint(notification.mods.changedTypes, l.registerForItemTypes())) {
+                l.notifyBeforeLockRelease(notification);
+            }
+        }
+    }
+
+
+    /**
+     * Listeners will be notified of this *before* a lock is released, if no changes have been performed over the course
+     * of the transaction.
+     */
+    public static void notifyListenersNoChange() {
+        for (MailboxListener l : sListeners) {
+            l.notifyNoChange();
+        }
+    }
+
+    /**
+     * Listeners will be notified of this *before* a lock is released
+     */
+    public void notifyBeforeLockRelease(ChangeNotification notification) {}
+
+    public void notifyNoChange() {}
 }
