@@ -261,8 +261,9 @@ public abstract class AuthMechanism {
                     String refreshedPassword = acct.getAttr(Provisioning.A_userPassword);
                     if (!isEncodedPassword(refreshedPassword)) {
                         doAuth(prov, domain, acct, password, authCtxt);
+                        return;
                     }
-                    if (!isValidEncodedPassword(encodedPassword, refreshedPassword)) {
+                    if (!isValidEncodedPassword(refreshedPassword, password)) {
                         throw AuthFailedServiceException.AUTH_FAILED(acct.getName(),
                                 namePassedIn(authCtxt), "invalid password");
                     }
