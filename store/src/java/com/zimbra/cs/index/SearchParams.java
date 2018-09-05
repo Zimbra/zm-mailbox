@@ -557,7 +557,7 @@ public final class SearchParams implements Cloneable, ZimbraSearchParams {
             params.setTypes(types);
         }
         params.setSortBy(soapParams.getSortBy());
-        if (query.toLowerCase().contains("is:unread") && isSortByReadFlag(SortBy.of(soapParams.getSortBy()))) {
+        if (query.toLowerCase().contains("is:unread") && soapParams.getSortBy() != null && isSortByReadFlag(SortBy.of(soapParams.getSortBy()))) {
             params.setSortBy(SortBy.DATE_DESC);
         } else {
             params.setSortBy(soapParams.getSortBy());
