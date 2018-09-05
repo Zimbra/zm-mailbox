@@ -11,6 +11,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
+import com.zimbra.cs.mailbox.redis.RedisUtils;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.RedissonClientHolder;
 
@@ -21,7 +22,8 @@ public class RedisFolderCache extends RedisSharedStateCache<Folder> implements F
     public RedisFolderCache(Mailbox mbox) {
         super(mbox, new LocalFolderCache());
         RedissonClient client = RedissonClientHolder.getInstance().getRedissonClient();
-        uuid2IdMap = client.getMap(String.format("FOLDER_UUID2ID:%s", mbox.getAccountId()));
+        String uuid2IdMapName = RedisUtils.createAccountRoutedKey(mbox.getAccountId(), "FOLDER_UUID2ID");
+        uuid2IdMap = client.getMap(uuid2IdMapName);
     }
 
     @Override
@@ -64,7 +66,7 @@ public class RedisFolderCache extends RedisSharedStateCache<Folder> implements F
 
     @Override
     protected String getMapName(String accountId, int itemId) {
-        return String.format("%s:FOLDER:%d", accountId, itemId);
+        return RedisUtils.createAccountRoutedKey(accountId, String.format("FOLDER:%d", itemId));
     }
 
     @Override

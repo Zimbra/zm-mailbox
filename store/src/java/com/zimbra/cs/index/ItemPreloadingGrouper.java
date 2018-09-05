@@ -95,7 +95,7 @@ final class ItemPreloadingGrouper extends BufferingResultsGrouper {
         }
 
         if (numToLoad > 0) {
-            MailItem[] items = mbox.getItemById(opContext, unloadedIds, MailItem.Type.UNKNOWN, inDumpster);
+            MailItem[] items = mbox.getItemById(opContext, unloadedIds, MailItem.Type.UNKNOWN_SEARCHABLE, inDumpster);
             for (int i = 0; i < hits.size(); ++i) {
                 if (items[i] != null) {
                     hits.get(i).setItem(items[i]);

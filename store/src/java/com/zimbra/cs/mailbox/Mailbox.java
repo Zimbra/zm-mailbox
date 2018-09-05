@@ -49,7 +49,6 @@ import javax.mail.internet.MimeMessage;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -2819,14 +2818,15 @@ public class Mailbox implements MailboxStore {
         if (key < 0) {
             item = Flag.of(this, key);
         }
+        //check the item cache first, since folder/tag caches require a network operation
+        if (item == null) {
+            item = getItemCache().get(key);
+        }
         if (item == null && mTagCache != null) {
             item = mTagCache.get(key);
         }
         if (item == null && mFolderCache != null) {
             item = mFolderCache.get(key);
-        }
-        if (item == null) {
-            item = getItemCache().get(key);
         }
         logCacheActivity(key, item == null ? MailItem.Type.UNKNOWN : item.getType(), item);
         return item;
@@ -2869,11 +2869,9 @@ public class Mailbox implements MailboxStore {
     /** retrieve an item from the Mailbox's caches; return null if no item found */
     MailItem getCachedItemByUuid(String uuid) throws ServiceException {
         MailItem item = null;
+        item = getItemCache().get(uuid);
         if (item == null && mFolderCache != null) {
             item = mFolderCache.get(uuid);
-        }
-        if (item == null) {
-            item = getItemCache().get(uuid);
         }
         logCacheActivity(uuid, item == null ? MailItem.Type.UNKNOWN : item.getType(), item);
         return item;
@@ -9992,7 +9990,16 @@ public class Mailbox implements MailboxStore {
                 // We are finally done with database and redo commits. Cache update comes last.
                 changeNotification = commitCache(currentChange(), lock);
             } finally {
-                lock.close();
+                //some listeners need to be notified prior to the lock
+                try {
+                    if (changeNotification != null) {
+                        MailboxListener.notifyListenersBeforeLockRelease(changeNotification);
+                    } else {
+                        MailboxListener.notifyListenersNoChange();
+                    }
+                } finally {
+                    lock.close();
+                }
                 // notify listeners outside lock as can take significant time
                 if (changeNotification != null) {
                     notifyListeners(currentChange(), changeNotification, lock);
