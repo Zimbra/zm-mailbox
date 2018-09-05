@@ -7734,7 +7734,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.10
      */
-    @ZAttr(id=3029)
+    @ZAttr(id=3073)
     public static final String A_zimbraHABMemberLdapAttrMap = "zimbraHABMemberLdapAttrMap";
 
     /**
@@ -7743,7 +7743,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.10
      */
-    @ZAttr(id=3027)
+    @ZAttr(id=3071)
     public static final String A_zimbraHABSeniorityIndex = "zimbraHABSeniorityIndex";
 
     /**
@@ -7785,11 +7785,11 @@ public class ZAttrProvisioning {
     public static final String A_zimbraHideInGal = "zimbraHideInGal";
 
     /**
-     * domain level root of hierarchical address book
+     * root group id of hierarchical address book
      *
      * @since ZCS 8.8.10
      */
-    @ZAttr(id=3028)
+    @ZAttr(id=3072)
     public static final String A_zimbraHierarchicalAddressBookRoot = "zimbraHierarchicalAddressBookRoot";
 
     /**

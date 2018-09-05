@@ -112,8 +112,7 @@ public class AccountService implements DocumentService {
 
         // reset password
         dispatcher.registerHandler(AccountConstants.RESET_PASSWORD_REQUEST, new ResetPassword());
-        //HAB
-        dispatcher.registerHandler(AccountConstants.GET_HAB_REQUEST, new GetHAB());
+
     }
 
     /**

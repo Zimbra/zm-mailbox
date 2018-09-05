@@ -211,7 +211,6 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mime.MimeTypeInfo;
-import com.zimbra.cs.service.admin.HabOrgUnit;
 import com.zimbra.cs.service.util.JWEUtil;
 import com.zimbra.cs.service.util.ResetPasswordUtil;
 import com.zimbra.cs.service.util.SortBySeniorityIndexThenName;
@@ -11184,7 +11183,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             Set<String> temp = LdapObjectClass.getOrganizationUnitObjectClasses();
             String[] objClass = Arrays.copyOf(temp.toArray(), temp.size(), String[].class) ;
             String[] ldapAttrs = { Provisioning.A_ou, habOrgUnitName };
-            zlc.createEntry(HabOrgUnit.createOuDn(habOrgUnitName, domainDn), objClass, ldapAttrs);
+            zlc.createEntry(createOuDn(habOrgUnitName, domainDn), objClass, ldapAttrs);
             habOrgList = getAllHabOrgUnitInADomain(domain);
         } catch (ServiceException e) {
             throw ServiceException.FAILURE(String.format("Unable to create HAb org unit: %s for domain=%s",habOrgUnitName, domain.getName()), e);
@@ -11202,8 +11201,8 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         try {
             String domainDn = ((LdapEntry)domain).getDN();
             zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.CREATE_OU);
-            zlc.renameEntry(HabOrgUnit.createOuDn(habOrgUnitName, domainDn),
-                HabOrgUnit.createOuDn(newHabOrgUnitName, domainDn));
+            zlc.renameEntry(createOuDn(habOrgUnitName, domainDn),
+                createOuDn(newHabOrgUnitName, domainDn));
             habOrgList = getAllHabOrgUnitInADomain(domain);
         } catch (ServiceException e) {
             throw ServiceException.FAILURE(String.format("Unable to rename HAB org unit: %s for domain=%s",habOrgUnitName, domain.getName()), e);
@@ -11220,7 +11219,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             String domainDn = ((LdapEntry)domain).getDN();
             zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.CREATE_OU);
             if (isEmptyOu(habOrgUnitName, domainDn)) {
-                zlc.deleteEntry(HabOrgUnit.createOuDn(habOrgUnitName, domainDn));
+                zlc.deleteEntry(createOuDn(habOrgUnitName, domainDn));
             } else {
                 throw ServiceException.FAILURE(String.format("HabOrgUnit: %s"
                    + " of doamin:%s  is not empty", habOrgUnitName, domainDn) , null);
@@ -11243,7 +11242,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         boolean empty = false;
         try {
             zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.CREATE_OU);
-            String baseDN = HabOrgUnit.createOuDn(habOrgUnitName, domainDn);
+            String baseDN = createOuDn(habOrgUnitName, domainDn);
             String filter = "(objectClass=zimbraDistributionList)";
             String returnAttrs[] = new String[] { "cn" };
             ZLdapFilter zFilter = ZLdapFilterFactory.getInstance()
@@ -11298,6 +11297,22 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             LdapClient.closeContext(zlc);
         }
         return habList;
+    }
+    
+    /**
+     * 
+     * @param ouName organizational unit name
+     * @param baseDn distinguishedd name
+     * @return the dn with ou
+     */
+    public static String createOuDn(String ouName, String baseDn) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("ou=");
+        sb.append(ouName);
+        sb.append(",");
+        sb.append(baseDn);
+        
+        return sb.toString();
     }
 
   

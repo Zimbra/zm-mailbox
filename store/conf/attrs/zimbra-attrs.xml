@@ -9714,15 +9714,15 @@ TODO: delete them permanently from here
   <desc>OAuth consumer API scope. It is in the format of apiscope1{separator character}apiscope2:consumer-app-name. The separator between apiscope1 and apiscope2 is consumer-app specific</desc>
 </attr>
 
-<attr id="3027" name="zimbraHABSeniorityIndex" type="integer" cardinality="single" optionalIn="habGroup,account" since="8.8.10">
+<attr id="3071" name="zimbraHABSeniorityIndex" type="integer" cardinality="single" optionalIn="habGroup,account" since="8.8.10">
   <desc>seniority index of the group or group member which will determine the sorting order in the hierarchical address book</desc>
 </attr>
 
-<attr id="3028" name="zimbraHierarchicalAddressBookRoot" type="string" cardinality="multi" optionalIn="domain" flags="domainInfo" since="8.8.10">
+<attr id="3072" name="zimbraHierarchicalAddressBookRoot" type="string" cardinality="multi" optionalIn="domain" flags="domainInfo" since="8.8.10">
   <desc>root group id of hierarchical address book</desc>
 </attr>
 
-<attr id="3029" name="zimbraHABMemberLdapAttrMap" type="string" max="4096" cardinality="multi" optionalIn="globalConfig" since="8.8.10">
+<attr id="3073" name="zimbraHABMemberLdapAttrMap" type="string" max="4096" cardinality="multi" optionalIn="globalConfig" since="8.8.10">
   <globalConfigValue>firstName=givenName</globalConfigValue>
   <globalConfigValue>lastName=sn</globalConfigValue>
   <globalConfigValue>displayName=displayName</globalConfigValue>

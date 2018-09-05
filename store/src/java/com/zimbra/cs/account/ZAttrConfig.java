@@ -19310,9 +19310,9 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.8.10
      */
-    @ZAttr(id=3029)
+    @ZAttr(id=3073)
     public String[] getHABMemberLdapAttrMap() {
-        String[] value = getMultiAttr(Provisioning.A_zimbraHABMemberLdapAttrMap, true, true); return value.length > 0 ? value : new String[] {"firstName=givenName","lastName=sn","displayName=displayName","initials=initials","company=company","department=ou","jobTitle=title","workStreet=streetAddress","workPhone=telephoneNumber","workState=st","workCity=l","country=co","office=physicalDeliveryOfficeName","email=zimbraMailDeliveryAddress","alias=zimbraMailAlias"};
+        String[] value = getMultiAttr(Provisioning.A_zimbraHABMemberLdapAttrMap, true, true); return value.length > 0 ? value : new String[] {"firstName=givenName","lastName=sn","displayName=displayName","commonName=cn","initials=initials","company=company","department=ou","jobTitle=title","workStreet=streetAddress","workPhone=telephoneNumber","workState=st","workCity=l","country=co","office=physicalDeliveryOfficeName","alias=zimbraMailAlias"};
     }
 
     /**
@@ -19323,7 +19323,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.8.10
      */
-    @ZAttr(id=3029)
+    @ZAttr(id=3073)
     public void setHABMemberLdapAttrMap(String[] zimbraHABMemberLdapAttrMap) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraHABMemberLdapAttrMap, zimbraHABMemberLdapAttrMap);
@@ -19339,7 +19339,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.8.10
      */
-    @ZAttr(id=3029)
+    @ZAttr(id=3073)
     public Map<String,Object> setHABMemberLdapAttrMap(String[] zimbraHABMemberLdapAttrMap, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraHABMemberLdapAttrMap, zimbraHABMemberLdapAttrMap);
@@ -19354,7 +19354,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.8.10
      */
-    @ZAttr(id=3029)
+    @ZAttr(id=3073)
     public void addHABMemberLdapAttrMap(String zimbraHABMemberLdapAttrMap) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraHABMemberLdapAttrMap, zimbraHABMemberLdapAttrMap);
@@ -19370,7 +19370,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.8.10
      */
-    @ZAttr(id=3029)
+    @ZAttr(id=3073)
     public Map<String,Object> addHABMemberLdapAttrMap(String zimbraHABMemberLdapAttrMap, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraHABMemberLdapAttrMap, zimbraHABMemberLdapAttrMap);
@@ -19385,7 +19385,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.8.10
      */
-    @ZAttr(id=3029)
+    @ZAttr(id=3073)
     public void removeHABMemberLdapAttrMap(String zimbraHABMemberLdapAttrMap) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraHABMemberLdapAttrMap, zimbraHABMemberLdapAttrMap);
@@ -19401,7 +19401,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.8.10
      */
-    @ZAttr(id=3029)
+    @ZAttr(id=3073)
     public Map<String,Object> removeHABMemberLdapAttrMap(String zimbraHABMemberLdapAttrMap, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraHABMemberLdapAttrMap, zimbraHABMemberLdapAttrMap);
@@ -19415,7 +19415,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.8.10
      */
-    @ZAttr(id=3029)
+    @ZAttr(id=3073)
     public void unsetHABMemberLdapAttrMap() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraHABMemberLdapAttrMap, "");
@@ -19430,7 +19430,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.8.10
      */
-    @ZAttr(id=3029)
+    @ZAttr(id=3073)
     public Map<String,Object> unsetHABMemberLdapAttrMap(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraHABMemberLdapAttrMap, "");
