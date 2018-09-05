@@ -22339,7 +22339,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.8.10
      */
-    @ZAttr(id=3027)
+    @ZAttr(id=3071)
     public int getHABSeniorityIndex() {
         return getIntAttr(Provisioning.A_zimbraHABSeniorityIndex, -1, true);
     }
@@ -22353,7 +22353,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.8.10
      */
-    @ZAttr(id=3027)
+    @ZAttr(id=3071)
     public void setHABSeniorityIndex(int zimbraHABSeniorityIndex) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraHABSeniorityIndex, Integer.toString(zimbraHABSeniorityIndex));
@@ -22370,7 +22370,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.8.10
      */
-    @ZAttr(id=3027)
+    @ZAttr(id=3071)
     public Map<String,Object> setHABSeniorityIndex(int zimbraHABSeniorityIndex, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraHABSeniorityIndex, Integer.toString(zimbraHABSeniorityIndex));
@@ -22385,7 +22385,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.8.10
      */
-    @ZAttr(id=3027)
+    @ZAttr(id=3071)
     public void unsetHABSeniorityIndex() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraHABSeniorityIndex, "");
@@ -22401,7 +22401,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.8.10
      */
-    @ZAttr(id=3027)
+    @ZAttr(id=3071)
     public Map<String,Object> unsetHABSeniorityIndex(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraHABSeniorityIndex, "");
