@@ -18,10 +18,8 @@ package com.zimbra.cs.mailbox;
 
 import java.util.Collections;
 import java.util.EnumSet;
-import java.util.HashSet;
 import java.util.Set;
-
-import org.ehcache.impl.internal.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.zimbra.common.localconfig.DebugConfig;
