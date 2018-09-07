@@ -54,7 +54,6 @@ import com.google.common.cache.RemovalNotification;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
-import com.google.common.io.Closeables;
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.googlecode.concurrentlinkedhashmap.EvictionListener;
 import com.zimbra.common.httpclient.ZimbraHttpClientManager;
@@ -76,6 +75,7 @@ import com.zimbra.cs.index.ZimbraTopDocs;
 import com.zimbra.cs.index.solr.JointCollectionLocator.IndexNameFunc;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox.IndexItemEntry;
+import com.zimbra.cs.util.IOUtil;
 
 /**
  * IndexStore implementation for standalone Solr or SolrCloud backends
@@ -108,7 +108,7 @@ public class SolrIndex extends IndexStore {
             .removalListener(new RemovalListener<Integer, SolrIndexSearcher>() {
                 @Override
                 public void onRemoval(RemovalNotification<Integer, SolrIndexSearcher> notification) {
-                    Closeables.closeQuietly(notification.getValue());
+                    IOUtil.closeQuietly(notification.getValue());
                 }
             })
             .build();
@@ -121,7 +121,7 @@ public class SolrIndex extends IndexStore {
         .listener(new EvictionListener<Integer, SolrIndexSearcher>() {
             @Override
             public void onEviction(Integer mboxId, SolrIndexSearcher searcher) {
-                Closeables.closeQuietly(searcher);
+                IOUtil.closeQuietly(searcher);
             }
         })
         .build();
