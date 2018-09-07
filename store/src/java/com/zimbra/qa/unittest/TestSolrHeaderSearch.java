@@ -14,7 +14,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.io.Closeables;
 import com.zimbra.common.httpclient.ZimbraHttpClientManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -67,13 +66,14 @@ public class TestSolrHeaderSearch {
     }
 
     private void search(String query, boolean shouldReturn) throws Exception {
-        ZimbraQueryResults results = mbox.index.search(new OperationContext(mbox), query, Collections.singleton(Type.MESSAGE), SortBy.DATE_DESC, 100);
-        if (shouldReturn) {
-            assertTrue("should see result for " + query, results.hasNext());
-        } else {
-            assertFalse("should not see result for " + query, results.hasNext());
+        try (ZimbraQueryResults results = mbox.index.search(
+                    new OperationContext(mbox), query, Collections.singleton(Type.MESSAGE), SortBy.DATE_DESC, 100)) {
+            if (shouldReturn) {
+                assertTrue("should see result for " + query, results.hasNext());
+            } else {
+                assertFalse("should not see result for " + query, results.hasNext());
+            }
         }
-        Closeables.closeQuietly(results);
     }
 
     private ParsedMessage generateMessage() throws Exception {
