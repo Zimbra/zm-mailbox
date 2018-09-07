@@ -218,6 +218,7 @@ import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.zimlet.ZimletException;
 import com.zimbra.cs.zimlet.ZimletUtil;
 import com.zimbra.soap.account.type.HABGroupMember;
+import com.zimbra.soap.account.type.AddressListInfo;
 import com.zimbra.soap.admin.type.CacheEntryType;
 import com.zimbra.soap.admin.type.CountObjectsType;
 import com.zimbra.soap.admin.type.DataSourceType;
@@ -6986,6 +6987,51 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         searchOpts.setTypes(ObjectType.distributionlists);
         searchOpts.setSortOpt(SortOpt.SORT_ASCENDING);
         return searchDirectoryInternal(searchOpts);
+    }
+
+    @Override
+    public List<AddressListInfo> getAllAddressLists(Domain domain, boolean activeOnly) throws ServiceException {
+        LdapEntry ldapEntry = (LdapEntry) (domain instanceof LdapEntry ? domain : getDomainById(domain.getId()));
+        if (ldapEntry == null) {
+            throw AccountServiceException.NO_SUCH_DOMAIN(domain.getName());
+        }
+
+        List<AddressListInfo> result = getAddressListByQuery(ldapEntry, filterFactory.allAddressLists(), activeOnly);
+        result = Collections.unmodifiableList(result);
+        return result;
+    }
+
+    private List<AddressListInfo> getAddressListByQuery(LdapEntry entry, ZLdapFilter filter, boolean activeOnly)
+            throws ServiceException {
+        List<AddressListInfo> result = new ArrayList<AddressListInfo>();
+        try {
+            String base = entry.getDN();
+            ZSearchResultEnumeration ne = helper.searchDir(base, filter, ZSearchControls.SEARCH_CTLS_SUBTREE(), null,
+                    LdapServerType.REPLICA);
+            while (ne.hasMore()) {
+                ZSearchResultEntry sr = ne.next();
+                ZAttributes attrs = sr.getAttributes();
+                if (attrs != null) {
+                    boolean active = Boolean
+                            .parseBoolean(attrs.getAttrString(Provisioning.A_zimbraIsAddressListActive));
+                    boolean addToRes = activeOnly ? active : Boolean.TRUE;
+                    if (addToRes) {
+                        AddressListInfo adl = new AddressListInfo(attrs.getAttrString(Provisioning.A_zimbraId),
+                                attrs.getAttrString(Provisioning.A_uid),
+                                attrs.getAttrString(Provisioning.A_description));
+                        if (!activeOnly) {
+                            adl.setActive(active);
+                        }
+                        result.add(adl);
+                    }
+                }
+            }
+            ne.close();
+        } catch (ServiceException e) {
+            throw ServiceException.FAILURE("unable to lookup address lists via query: " + filter.toFilterString()
+                    + " message: " + e.getMessage(), e);
+        }
+        return result;
     }
 
     @Override

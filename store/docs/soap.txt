@@ -4844,3 +4844,14 @@ Get HAB API
     </habGroup>+
  </GetHABResponse>
    
+----------------------------
+API to get all active address lists in the user's domain
+<GetAllAddressListsRequest xmlns="urn:zimbraAccount"/>
+
+Returns list of address lists.
+      <GetAllAddressListsResponse xmlns="urn:zimbraAccount">
+         <AddressLists>
+            <AddressList name={name_of_address_list} [description={description}] id={zimbraId}/>
+            ...
+         </AddressLists>
+      </GetAllAddressListsResponse>
