@@ -8,22 +8,20 @@ import java.util.Map;
 import java.util.Set;
 
 import org.redisson.api.BatchOptions;
-import org.redisson.api.BatchResult;
 import org.redisson.api.RBatch;
 import org.redisson.api.RMap;
 import org.redisson.api.RedissonClient;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
-import com.google.common.collect.Sets;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailItemState;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailboxListener;
 import com.zimbra.cs.mailbox.RedissonClientHolder;
+import com.zimbra.cs.mailbox.TransactionListener;
 
 public abstract class RedisSharedStateCache<M extends MailItem & SharedState> implements AbstractItemCache<M> {
 
@@ -37,7 +35,7 @@ public abstract class RedisSharedStateCache<M extends MailItem & SharedState> im
         this.localCache = localCache;
         this.client = RedissonClientHolder.getInstance().getRedissonClient();
         this.tracker = new RedisCacheTracker(mbox);
-        MailboxListener.register(tracker);
+        mbox.addTransactionListener(tracker);
     }
 
     protected abstract M construct(int id, Map<String, Object> map);
@@ -285,14 +283,10 @@ public abstract class RedisSharedStateCache<M extends MailItem & SharedState> im
         }
     }
 
-    private static class RedisCacheTracker extends MailboxListener {
+    private static class RedisCacheTracker implements TransactionListener {
 
         private Mailbox mbox;
         private ThreadLocal<Set<RedisSharedState>> touchedItems;
-        private static final Set<Type> itemTypes;
-        static {
-            itemTypes = Sets.newHashSet(Type.FOLDER, Type.TAG);
-        }
 
         public RedisCacheTracker(Mailbox mbox) {
             this.mbox = mbox;
@@ -310,12 +304,12 @@ public abstract class RedisSharedStateCache<M extends MailItem & SharedState> im
         }
 
         @Override
-        public void notifyBeforeLockRelease(ChangeNotification notification) {
+        public void transactionEnd(boolean success) {
             Set<RedisSharedState> touchedByThisThread = touchedItems.get();
             if (touchedByThisThread.isEmpty()) {
                 return;
             }
-            ZimbraLog.cache.trace("flushing changes to %s redis folder/tag maps for account %s", touchedByThisThread.size(), mbox.getAccountId());
+            ZimbraLog.cache.trace("end transaction: flushing changes to %s redis folder/tag maps for account %s", touchedByThisThread.size(), mbox.getAccountId());
             RBatch batch = createBatch();
             for (RedisSharedState state: touchedByThisThread) {
                 state.addChangesToBatch(batch);
@@ -326,19 +320,14 @@ public abstract class RedisSharedStateCache<M extends MailItem & SharedState> im
         }
 
         @Override
-        public void notifyNoChange() {
+        public void transactionBegin() {
             Set<RedisSharedState> touchedByThisThread = touchedItems.get();
             if (touchedByThisThread.isEmpty()) {
                 return;
             }
-            ZimbraLog.cache.trace("clearing local caches of %s redis folder/tag maps for account %s", touchedItems.get().size(), mbox.getAccountId());
+            ZimbraLog.cache.trace("new transaction: clearing caches of %s redis folder/tag maps for account %s", touchedItems.get().size(), mbox.getAccountId());
             touchedByThisThread.stream().forEach(item -> item.clearLocalCache());
             touchedByThisThread.clear();
-        }
-
-        @Override
-        public Set<MailItem.Type> registerForItemTypes() {
-            return itemTypes;
         }
     }
 }
