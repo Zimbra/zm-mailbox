@@ -128,11 +128,10 @@ public class Search extends MailDocumentHandler  {
             if (addToSearchHistory(octxt, account, mbox, addToHistory, params, defaultSearch)) {
                 response.addAttribute(MailConstants.A_SAVE_SEARCH_PROMPT, true);
             }
-        } catch (IOException e) {
             if (!results.isRelevanceSortSupported()) {
                 response.addAttribute(MailConstants.A_RELEVANCE_SORT_SUPPORTED, false);
             }
-            return response;
+        } catch (IOException e) {
         }
         return response;
     }
