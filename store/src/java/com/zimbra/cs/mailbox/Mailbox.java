@@ -642,6 +642,7 @@ public class Mailbox implements MailboxStore {
     private volatile boolean requiresWriteLock = true;
     private MailboxState state;
     private NotificationPubSub.Publisher publisher;
+    private Set<TransactionListener> transactionListeners;
 
     protected Mailbox(MailboxData data) {
         mId = data.id;
@@ -657,6 +658,7 @@ public class Mailbox implements MailboxStore {
         state = MailboxState.getFactory().getMailboxState(mData);
         state.setLastChangeDate(System.currentTimeMillis());
         publisher = getNotificationPubSub().getPublisher();
+        transactionListeners = new HashSet<>();
     }
 
     public void setGalSyncMailbox(boolean galSyncMailbox) {
@@ -9785,6 +9787,7 @@ public class Mailbox implements MailboxStore {
             assert recorder == null || write;
             this.lock.lock();
             try {
+                Mailbox.this.transactionListeners.forEach(listener -> listener.transactionBegin());
                 if (!write && requiresWriteLock()) {
                     //another call must have purged the cache.
                     //the lock.lock() call should have resulted in write lock already
@@ -9990,6 +9993,7 @@ public class Mailbox implements MailboxStore {
                 // We are finally done with database and redo commits. Cache update comes last.
                 changeNotification = commitCache(currentChange(), lock);
             } finally {
+                Mailbox.this.transactionListeners.forEach(listener -> listener.transactionEnd(success));
                 lock.close();
                 // notify listeners outside lock as can take significant time
                 if (changeNotification != null) {
@@ -10061,5 +10065,9 @@ public class Mailbox implements MailboxStore {
      */
     public void resetDefaultCalendarId() throws ServiceException {
         getAccount().setPrefDefaultCalendarId(ID_FOLDER_CALENDAR);
+    }
+
+    public void addTransactionListener(TransactionListener listener) {
+        transactionListeners.add(listener);
     }
 }
