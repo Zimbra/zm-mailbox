@@ -652,8 +652,8 @@ public final class MailboxIndex {
     public List<BrowseTerm> getObjects(String regex) throws IOException, ServiceException {
         Pattern pattern = Strings.isNullOrEmpty(regex) ? null : Pattern.compile(regex);
         List<BrowseTerm> result = new ArrayList<BrowseTerm>();
-        try (ZimbraIndexSearcher searcher = indexStore.openSearcher()) {
-            values = searcher.getIndexReader().getTermsForField(LuceneFields.L_OBJECTS);
+        try (ZimbraIndexSearcher searcher = indexStore.openSearcher();
+             TermFieldEnumeration values = searcher.getIndexReader().getTermsForField(LuceneFields.L_OBJECTS)) {
             while (values.hasMoreElements()) {
                 BrowseTerm term = values.nextElement();
                 if (term == null) {
