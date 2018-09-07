@@ -9990,16 +9990,7 @@ public class Mailbox implements MailboxStore {
                 // We are finally done with database and redo commits. Cache update comes last.
                 changeNotification = commitCache(currentChange(), lock);
             } finally {
-                //some listeners need to be notified prior to the lock
-                try {
-                    if (changeNotification != null) {
-                        MailboxListener.notifyListenersBeforeLockRelease(changeNotification);
-                    } else {
-                        MailboxListener.notifyListenersNoChange();
-                    }
-                } finally {
-                    lock.close();
-                }
+                lock.close();
                 // notify listeners outside lock as can take significant time
                 if (changeNotification != null) {
                     notifyListeners(currentChange(), changeNotification, lock);
