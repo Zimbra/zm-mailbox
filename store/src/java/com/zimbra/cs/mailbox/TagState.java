@@ -1,6 +1,6 @@
 package com.zimbra.cs.mailbox;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
@@ -108,7 +108,7 @@ public class TagState extends MailItemState {
     }
 
     @Override
-    protected Objects.ToStringHelper toStringHelper() {
+    protected MoreObjects.ToStringHelper toStringHelper() {
         return super.toStringHelper()
                 .add("listed", listed)
                 .add("imapVisible", imapVisible);

@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.BEncoding;
 import com.zimbra.common.util.BEncoding.BEncodingException;
@@ -190,7 +191,7 @@ public class FeatureSpec<T extends Classifiable> {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
                 .add("feature", feature)
                 .add("params", otherParams).toString();
     }

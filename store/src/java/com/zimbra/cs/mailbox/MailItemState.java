@@ -5,7 +5,7 @@ import java.util.Map;
 
 import org.redisson.client.RedisException;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.zimbra.common.mailbox.Color;
@@ -964,8 +964,8 @@ public class MailItemState {
         });
     }
 
-    protected Objects.ToStringHelper toStringHelper() {
-        return Objects.toStringHelper(this).omitNullValues()
+    protected MoreObjects.ToStringHelper toStringHelper() {
+        return MoreObjects.toStringHelper(this).omitNullValues()
                 .add("version", version)
                 .add("metadataVersion", metadataVersion)
                 .add("data", data)

@@ -13,7 +13,7 @@ import org.redisson.api.RMap;
 import org.redisson.api.RedissonClient;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Sets;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem;
@@ -291,7 +291,7 @@ public abstract class RedisSharedStateCache<M extends MailItem & SharedState> im
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this).omitNullValues()
+            return MoreObjects.toStringHelper(this).omitNullValues()
                     .add("map", localCache == null ? null : getLocalCache().entrySet())
                     .add("map.name", map == null ? null : map.getName())
                     .add("map.hashCode", System.identityHashCode(map))

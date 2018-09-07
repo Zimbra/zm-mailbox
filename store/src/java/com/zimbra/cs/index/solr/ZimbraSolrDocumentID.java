@@ -1,6 +1,6 @@
 package com.zimbra.cs.index.solr;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.zimbra.cs.index.ZimbraIndexDocumentID;
 
 public class ZimbraSolrDocumentID implements Comparable<ZimbraSolrDocumentID>,
@@ -23,7 +23,7 @@ public class ZimbraSolrDocumentID implements Comparable<ZimbraSolrDocumentID>,
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this).add("docID", docID).toString();
+        return MoreObjects.toStringHelper(this).add("docID", docID).toString();
     }
 
     @Override

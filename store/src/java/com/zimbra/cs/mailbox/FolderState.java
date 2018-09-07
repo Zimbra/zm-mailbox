@@ -2,7 +2,7 @@ package com.zimbra.cs.mailbox;
 
 import java.util.Map;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 
 public class FolderState extends MailItemState {
@@ -248,7 +248,7 @@ public class FolderState extends MailItemState {
     }
 
     @Override
-    protected Objects.ToStringHelper toStringHelper() {
+    protected MoreObjects.ToStringHelper toStringHelper() {
         return super.toStringHelper()
                 .add("totalSize", totalSize)
                 .add("deletedCount", deletedCount)

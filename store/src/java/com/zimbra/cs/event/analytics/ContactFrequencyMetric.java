@@ -3,6 +3,7 @@ package com.zimbra.cs.event.analytics;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.event.Event;
@@ -63,7 +64,7 @@ public class ContactFrequencyMetric extends EventMetric<ValueMetric, Integer, In
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
                 .add("acctId", accountId)
                 .add("metricType", type)
                 .add("contact", contactEmail)
@@ -151,7 +152,7 @@ public class ContactFrequencyMetric extends EventMetric<ValueMetric, Integer, In
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this)
+            return MoreObjects.toStringHelper(this)
                     .add("contact", contactEmail)
                     .add("timeRange", freqTimeRange)
                     .add("eventType", freqEventType).toString();

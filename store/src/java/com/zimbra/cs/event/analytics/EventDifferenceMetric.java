@@ -1,6 +1,7 @@
 package com.zimbra.cs.event.analytics;
 
 import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.event.Event;
 import com.zimbra.cs.event.Event.EventContextField;
@@ -38,7 +39,7 @@ public abstract class EventDifferenceMetric extends EventMetric<RatioMetric, Dou
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
                 .add("acctId", accountId)
                 .add("metricType", type)
                 .add("firstEvent", firstEventType)
@@ -95,7 +96,7 @@ public abstract class EventDifferenceMetric extends EventMetric<RatioMetric, Dou
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this)
+            return MoreObjects.toStringHelper(this)
                     .add("contact", contactEmail)
                     .add("eventType1", firstEventType)
                     .add("eventType2", secondEventType).toString();
