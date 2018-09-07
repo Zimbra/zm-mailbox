@@ -9460,13 +9460,6 @@ public class Mailbox implements MailboxStore {
         // do nothing
     }
 
-    /*
-     * This method resets defalult calendar id to ID_FOLDER_CALENDAR in pref
-     */
-    public void resetDefaultCalendarId() throws ServiceException {
-        getAccount().setPrefDefaultCalendarId(ID_FOLDER_CALENDAR);
-    }
-
     private SearchHistory getSearchHistory() throws ServiceException {
         return SearchHistory.getFactory().getSearchHistory(getAccount());
     }
@@ -10045,9 +10038,7 @@ public class Mailbox implements MailboxStore {
         return copy;
     }
 
-    /*
-	 * This method resets defalult calendar id to ID_FOLDER_CALENDAR in pref
-     */
+    /** This method resets default calendar id to ID_FOLDER_CALENDAR in pref */
     public void resetDefaultCalendarId() throws ServiceException {
         getAccount().setPrefDefaultCalendarId(ID_FOLDER_CALENDAR);
     }
