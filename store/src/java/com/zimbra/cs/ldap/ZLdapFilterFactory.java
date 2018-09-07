@@ -150,6 +150,9 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
         VELODROME_ALL_DISTRIBUTION_LISTS_BY_DOMAIN(SINGLETON.velodromeAllDistributionListsByDomain("{DOMAIN-NAME}")),
         VELODROME_ALL_GROUPS_BY_DOMAIN(SINGLETON.velodromeAllGroupsByDomain("{DOMAIN-NAME}")),
 
+        //address lists
+        ALL_ADDRESS_LISTS(SINGLETON.allAddressLists()),
+
         //
         // =====================================
         // FilterId for fromFilterString() calls
@@ -501,7 +504,10 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
     public abstract ZLdapFilter velodromeAllDistributionListsByDomain(String domainName);
     public abstract ZLdapFilter velodromeAllGroupsByDomain(String domainName);
 
-
+    /*
+     * Address Lists
+     */
+    public abstract ZLdapFilter allAddressLists();
     /*
      * util
      */

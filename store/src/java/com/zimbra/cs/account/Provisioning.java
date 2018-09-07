@@ -55,6 +55,7 @@ import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.Zimbra;
+import com.zimbra.soap.account.type.AddressListInfo;
 import com.zimbra.soap.admin.type.CacheEntryType;
 import com.zimbra.soap.admin.type.CmdRightsInfo;
 import com.zimbra.soap.admin.type.CountObjectsType;
@@ -2691,6 +2692,9 @@ public abstract class Provisioning extends ZAttrProvisioning {
         throw ServiceException.UNSUPPORTED();
     }
 
+    public List<AddressListInfo> getAllAddressLists(Domain domain, boolean activeOnly) throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
 
     //
     //

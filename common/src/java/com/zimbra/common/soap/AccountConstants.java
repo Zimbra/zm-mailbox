@@ -167,6 +167,14 @@ public class AccountConstants {
     public static final String E_REVOKE_OAUTH_CONSUMER_REQUEST = "RevokeOAuthConsumerRequest";
     public static final String E_REVOKE_OAUTH_CONSUMER_RESPONSE = "RevokeOAuthConsumerResponse";
 
+    //AddressList
+    public static final String E_GET_ALL_ADDRESS_LISTS_REQUEST = "GetAllAddressListsRequest";
+    public static final String E_GET_ALL_ADDRESS_LISTS_RESPONSE = "GetAllAddressListsResponse";
+    public static final String E_ADDRESS_LISTS = "addressLists";
+    public static final String E_ADDRESS_LIST = "addressList";
+    public static final String A_DESCRIPTION = "description";
+    public static final QName GET_ALL_ADDRESS_LISTS_REQUEST = QName.get(E_GET_ALL_ADDRESS_LISTS_REQUEST, NAMESPACE);
+    public static final QName GET_ALL_ADDRESS_LISTS_RESPONSE = QName.get(E_GET_ALL_ADDRESS_LISTS_RESPONSE, NAMESPACE);
 
     // auth
     public static final QName AUTH_REQUEST = QName.get(E_AUTH_REQUEST, NAMESPACE);

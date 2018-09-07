@@ -204,7 +204,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
     <desc>RFC2256: common name(s) for which the entity is known by</desc>
 </attr>
 
-<attr name="description" type="string" cardinality="multi" optionalIn="account,distributionList,group,groupDynamicUnit,groupStaticUnit,cos,domain,server,alwaysOnCluster,ucService,mimeEntry,objectEntry,aclTarget,globalConfig,xmppComponent,zimletEntry" flags="domainAdminModifiable">
+<attr name="description" type="string" cardinality="multi" optionalIn="account,distributionList,group,groupDynamicUnit,groupStaticUnit,cos,domain,server,alwaysOnCluster,ucService,mimeEntry,objectEntry,aclTarget,globalConfig,xmppComponent,zimletEntry,addressList" flags="domainAdminModifiable">
     <desc>RFC2256: descriptive information</desc>
 </attr>
 
@@ -212,7 +212,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
     <desc>RFC2256: destination indicator</desc>
 </attr>
 
-<attr name="displayName" type="string" optionalIn="account,distributionList,group,groupDynamicUnit,addressList" requiredIn="calendarResource" flags="accountInfo,domainAdminModifiable" callback="DisplayName">
+<attr name="displayName" type="string" optionalIn="account,distributionList,group,groupDynamicUnit" requiredIn="calendarResource" flags="accountInfo,domainAdminModifiable" callback="DisplayName">
     <desc>RFC2798: preferred name to be used when displaying entries</desc>
 </attr>
 
@@ -9714,11 +9714,11 @@ TODO: delete them permanently from here
   <desc>OAuth consumer API scope. It is in the format of apiscope1{separator character}apiscope2:consumer-app-name. The separator between apiscope1 and apiscope2 is consumer-app specific</desc>
 </attr>
 
-<attr id="3074" name="zimbraAddressListMemberFilter" type="string" cardinality="single" requiredIn="addressList" since="8.8.10">
+<attr id="3074" name="zimbraAddressListMemberFilter" type="string" cardinality="single" requiredIn="addressList" flags="domainAdminModifiable" since="8.8.10">
   <desc>filter to decide members of the address list</desc>
 </attr>
 
-<attr id="3075" name="zimbraIsAddressListActive" type="boolean" cardinality="single" requiredIn="addressList" since="8.8.10">
+<attr id="3075" name="zimbraIsAddressListActive" type="boolean" cardinality="single" requiredIn="addressList" flags="domainAdminModifiable" since="8.8.10">
   <desc>whether address list is active or not</desc>
 </attr>
 
