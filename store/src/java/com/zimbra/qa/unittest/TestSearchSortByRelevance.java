@@ -33,7 +33,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.io.Closeables;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZSearchParams;
 import com.zimbra.client.ZSearchResult;
@@ -135,15 +134,15 @@ public class TestSearchSortByRelevance {
             Collections.reverse(expected);
         }
 
-        ZimbraQueryResults results = searchByRelevance("foo bar", asc);
-        assertTrue("relevanceSortSupported should be true", results.isRelevanceSortSupported());
-        int resultNum = 0;
-        while (results.hasNext()) {
-            ZimbraHit hit = results.getNext();
-            assertEquals("wrong result", expected.get(resultNum), (Integer)hit.getItemId());
-            resultNum++;
+        try (ZimbraQueryResults results = searchByRelevance("foo bar", asc)) {
+            assertTrue("relevanceSortSupported should be true", results.isRelevanceSortSupported());
+            int resultNum = 0;
+            while (results.hasNext()) {
+                ZimbraHit hit = results.getNext();
+                assertEquals("wrong result", expected.get(resultNum), (Integer)hit.getItemId());
+                resultNum++;
+            }
         }
-        Closeables.closeQuietly(results);
     }
 
     @Test
