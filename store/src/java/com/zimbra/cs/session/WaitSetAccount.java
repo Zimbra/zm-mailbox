@@ -19,6 +19,7 @@ package com.zimbra.cs.session;
 import java.util.Set;
 
 import com.google.common.base.MoreObjects;
+import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccountServiceException;
