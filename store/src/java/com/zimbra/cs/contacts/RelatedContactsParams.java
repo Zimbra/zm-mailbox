@@ -3,8 +3,7 @@ package com.zimbra.cs.contacts;
 import java.util.List;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Objects;
-import com.google.common.base.Objects.ToStringHelper;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.zimbra.common.service.ServiceException;
@@ -164,7 +163,7 @@ public class RelatedContactsParams {
 
     @Override
     public String toString() {
-        ToStringHelper helper = Objects.toStringHelper(this)
+        MoreObjects.ToStringHelper helper = MoreObjects.toStringHelper(this)
         .add("acctId", accountId)
         .add("targets", Joiner.on(",").join(targets))
         .add("affinityType", requestedAffinityType)

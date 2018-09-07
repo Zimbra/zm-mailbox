@@ -10,8 +10,7 @@ import org.redisson.api.RReadWriteLock;
 import org.redisson.api.RedissonClient;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Objects;
-import com.google.common.base.Objects.ToStringHelper;
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.LockFailedException;
 import com.zimbra.common.mailbox.MailboxLock;
@@ -333,13 +332,13 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
             this.lock = rwLock.writeLock();
         }
 
-        private void addIfNot(ToStringHelper helper, String desc, int test, int actual) {
+        private void addIfNot(MoreObjects.ToStringHelper helper, String desc, int test, int actual) {
             if (actual != test) {
                 helper.add(desc, actual);
             }
         }
 
-        private void addTimingInfo(ToStringHelper helper) {
+        private void addTimingInfo(MoreObjects.ToStringHelper helper) {
             if (time_got_lock == null) {
                 helper.add("sinceConstruction", ZimbraLog.elapsedSince(construct_start));
                 return;
@@ -349,7 +348,7 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
         }
 
         private String toString(RLock lck) {
-            ToStringHelper helper = Objects.toStringHelper(lck);
+            MoreObjects.ToStringHelper helper = MoreObjects.toStringHelper(lck);
             if (lck.isLocked()) {
                 helper.add("locked", lck.isLocked());
             }
@@ -368,7 +367,7 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
         }
 
         private String toString(RReadWriteLock lck) {
-            ToStringHelper helper = Objects.toStringHelper(lck)
+            MoreObjects.ToStringHelper helper = MoreObjects.toStringHelper(lck)
                 .add("name", lck.getName());
             if (lck.remainTimeToLive() == -1) {
                 helper.add("ttl", "forever");
@@ -382,7 +381,7 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
 
         @Override
         public String toString() {
-            ToStringHelper helper = Objects.toStringHelper(this)
+            MoreObjects.ToStringHelper helper = MoreObjects.toStringHelper(this)
                 .add("id", Integer.toHexString(id))
                 .add("write", write)
                 .add("rwLock", toString(rwLock));

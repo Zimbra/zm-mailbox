@@ -21,7 +21,7 @@ import java.util.Set;
 
 import org.apache.lucene.index.Term;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Sets;
 
 /**
@@ -47,7 +47,7 @@ public class ZimbraTermsFilter {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
                 .add("terms", terms).toString();
     }
 }

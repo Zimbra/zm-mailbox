@@ -1,6 +1,6 @@
 package com.zimbra.cs.ml.feature;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.ml.feature.FeatureSpec.KnownFeature;
 
@@ -24,7 +24,7 @@ public abstract class Feature<T> {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
                 .add("type", featureType)
                 .add("class", this.getClass().getSimpleName()).toString();
     }

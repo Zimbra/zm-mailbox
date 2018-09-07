@@ -14,8 +14,7 @@ import javax.mail.Message.RecipientType;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import com.google.common.base.Objects;
-import com.google.common.base.Objects.ToStringHelper;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -363,7 +362,7 @@ public class Event {
 
     @Override
     public String toString() {
-        ToStringHelper helper = Objects.toStringHelper(this)
+        MoreObjects.ToStringHelper helper = MoreObjects.toStringHelper(this)
                 .add("acctId", accountId)
                 .add("type", eventType)
                 .add("timestamp", timestamp);
