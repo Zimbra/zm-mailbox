@@ -471,6 +471,11 @@ public final class ZimbraLog {
     public static final Log passwordreset = LogFactory.getLog("zimbra.passwordreset");
 
     /**
+     * the "zimbra.addresslist" logger. For address list logs.
+     */
+    public static final Log addresslist = LogFactory.getLog("zimbra.addresslist");
+
+    /**
      * Maps the log category name to its description.
      */
     public static final Map<String, String> CATEGORY_DESCRIPTIONS;
@@ -560,6 +565,7 @@ public final class ZimbraLog {
         descriptions.put(ews.getCategory(), "EWS operations");
         descriptions.put(contactbackup.getCategory(), "Contact Backup and restore");
         descriptions.put(passwordreset.getCategory(), "Password Reset operations");
+        descriptions.put(addresslist.getCategory(), "Addresslist operations");
         CATEGORY_DESCRIPTIONS = Collections.unmodifiableMap(descriptions);
     }
 

@@ -2763,5 +2763,8 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public boolean  dlIsInDynamicHABGroup(DynamicGroup group, List<String> dlsToCheck)
         throws ServiceException {
         throw ServiceException.UNSUPPORTED();
+    // address list
+    public String createAddressList(Domain domain, String name, String desc, Map<String, Object> attrs) throws ServiceException {
+        throw new UnsupportedOperationException("Currently address list is not supported.");
     }
 }

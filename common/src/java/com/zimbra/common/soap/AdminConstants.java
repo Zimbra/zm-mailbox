@@ -1528,4 +1528,10 @@ public final class AdminConstants {
     public static final String A_FORCE_DELETE = "forceDelete";
     public static final String E_MEMBERS = "members";
     public static final String A_CASCADE_DELETE = "cascadeDelete";
+    // address list
+    public static final String E_CREATE_ADDRESS_LIST_REQUEST = "CreateAddressListRequest";
+    public static final String E_CREATE_ADDRESS_LIST_RESPONSE = "CreateAddressListResponse";
+    public static final QName GET_CREATE_ADDRESS_LIST_REQUEST = QName.get(E_CREATE_ADDRESS_LIST_REQUEST, NAMESPACE);
+    public static final QName GET_CREATE_ADDRESS_LIST_RESPONSE = QName.get(E_CREATE_ADDRESS_LIST_RESPONSE, NAMESPACE);
+    public static final String E_SEARCH_FILTER = "searchFilter";
 }

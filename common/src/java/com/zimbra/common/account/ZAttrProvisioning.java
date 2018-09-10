@@ -2961,12 +2961,20 @@ public class ZAttrProvisioning {
     public static final String A_zimbraActiveSyncEhcacheMaxDiskSize = "zimbraActiveSyncEhcacheMaxDiskSize";
 
     /**
-     * filter to decide members of the address list
+     * filter to decide members of the address list using gal
      *
      * @since ZCS 8.8.10
      */
     @ZAttr(id=3074)
-    public static final String A_zimbraAddressListMemberFilter = "zimbraAddressListMemberFilter";
+    public static final String A_zimbraAddressListGalFilter = "zimbraAddressListGalFilter";
+
+    /**
+     * filter to decide members of the address list using ldap
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=3076)
+    public static final String A_zimbraAddressListLdapFilter = "zimbraAddressListLdapFilter";
 
     /**
      * access control mechanism for admin access acl: ACL based access
