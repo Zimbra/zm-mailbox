@@ -238,7 +238,7 @@ public class SoapHttpTransport extends SoapTransport {
             // Set the original user agent if it's specified.
             String originalUserAgent = getOriginalUserAgent();
             if (originalUserAgent != null) {
-                method.setRequestHeader(new Header("Original-User-Agent", originalUserAgent));
+                method.setRequestHeader(new Header(HeaderConstants.HTTP_HEADER_ORIG_USER_AGENT, originalUserAgent));
             }
 
             // the content-type charset will determine encoding used
