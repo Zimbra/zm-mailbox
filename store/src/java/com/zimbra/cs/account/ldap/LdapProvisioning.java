@@ -10853,4 +10853,40 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             LdapClient.closeContext(zlc);
         }
     }
+
+    @Override
+    public String createAddressList(Domain domain, String name, String desc, Map<String, Object> attrs) throws ServiceException {
+        String domainDn = ((LdapEntry)domain).getDN();
+        Set<String> oc = new HashSet<String>();
+        oc.add(AttributeClass.OC_zimbraAddressList);
+        ZMutableEntry entry = LdapClient.createMutableEntry();
+        if (attrs != null && attrs.size() > 0) {
+            entry.mapToAttrs(attrs);
+        }
+        entry.addAttr(A_objectClass, oc);
+        String zimbraIdStr = LdapUtil.generateUUID();
+        entry.setAttr(A_zimbraId, zimbraIdStr);
+        entry.setAttr(Provisioning.A_uid, name);
+        if (!StringUtil.isNullOrEmpty(desc)) {
+            entry.setAttr(Provisioning.A_description, desc);
+        }
+        entry.setAttr(Provisioning.A_zimbraIsAddressListActive, "TRUE");
+        String dn = LdapConstants.ATTR_uid + "=" + name + ","
+                + LdapConstants.ATTR_ou + "=" + LdapConstants.PEOPLE + "," + domainDn;
+        ZimbraLog.addresslist.debug("Entry DN: %s", dn);
+        entry.setDN(dn);
+
+        ZLdapContext zlc = null;
+        try {
+            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.CREATE_ADDRESS_LIST);
+            zlc.createEntry(entry);
+        } catch(ServiceException se) {
+            ZimbraLog.addresslist.debug("Exception occured while creating addresslist in ldap: %s", se.getMessage());
+            throw se;
+        } finally {
+            LdapClient.closeContext(zlc);
+        }
+
+        return zimbraIdStr;
+    }
 }

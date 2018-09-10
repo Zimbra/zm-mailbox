@@ -26,7 +26,6 @@ import org.apache.commons.lang.BooleanUtils;
 import org.apache.commons.lang.StringUtils;
 
 import com.google.common.base.Strings;
-import com.google.common.io.Closeables;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ZAttrProvisioning.GalMode;
@@ -337,6 +336,11 @@ public class GalSearchControl {
     }
 
     private void generateSearchQuery(Account galAcct) throws ServiceException {
+        String searchQuery = getSearchQuery(galAcct, true);
+        mParams.parseSearchParams(mParams.getRequest(), searchQuery);
+    }
+
+    private String getSearchQuery(Account galAcct, boolean addInId) throws ServiceException {
         String query = mParams.getQuery();
         String searchByDn = mParams.getSearchEntryByDn();
 
@@ -372,7 +376,9 @@ public class GalSearchControl {
                 continue;
             if (first) searchQuery.append("("); else searchQuery.append(" OR");
             first = false;
-            searchQuery.append(" inid:").append(ds.getFolderId());
+            if (addInId) {
+                searchQuery.append(" inid:").append(ds.getFolderId());
+            }
         }
         if (!first)
             searchQuery.append(")");
@@ -390,7 +396,7 @@ public class GalSearchControl {
             break;
         }
         ZimbraLog.gal.debug("query: %s", searchQuery);
-        mParams.parseSearchParams(mParams.getRequest(), searchQuery.toString());
+        return searchQuery.toString();
     }
 
     private boolean generateLocalResourceSearchQuery(Account galAcct) throws ServiceException {
@@ -902,4 +908,16 @@ public class GalSearchControl {
         return buf.toString();
     }
 
+    public String getGalQuery() throws ServiceException {
+        Account galAcct = mParams.getGalSyncAccount();
+        if (galAcct == null) {
+            try {
+                galAcct = getGalSyncAccount();
+            } catch (GalAccountNotConfiguredException e) {
+                ZimbraLog.addresslist.info("Gal sync account not found");
+                return null;
+            }
+        }
+        return getSearchQuery(galAcct, false);
+    }
 }

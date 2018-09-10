@@ -282,6 +282,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.CountObjectsResponse.class,
             com.zimbra.soap.admin.message.CreateAccountRequest.class,
             com.zimbra.soap.admin.message.CreateAccountResponse.class,
+            com.zimbra.soap.admin.message.CreateAddressListRequest.class,
+            com.zimbra.soap.admin.message.CreateAddressListResponse.class,
             com.zimbra.soap.admin.message.CreateAlwaysOnClusterRequest.class,
             com.zimbra.soap.admin.message.CreateAlwaysOnClusterResponse.class,
             com.zimbra.soap.admin.message.CreateArchiveRequest.class,

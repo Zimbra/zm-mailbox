@@ -2718,4 +2718,9 @@ public abstract class Provisioning extends ZAttrProvisioning {
             validator.refresh();
         }
     }
+
+    // address list
+    public String createAddressList(Domain domain, String name, String desc, Map<String, Object> attrs) throws ServiceException {
+        throw new UnsupportedOperationException("Currently address list is not supported.");
+    }
 }

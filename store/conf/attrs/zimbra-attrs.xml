@@ -9714,12 +9714,16 @@ TODO: delete them permanently from here
   <desc>OAuth consumer API scope. It is in the format of apiscope1{separator character}apiscope2:consumer-app-name. The separator between apiscope1 and apiscope2 is consumer-app specific</desc>
 </attr>
 
-<attr id="3074" name="zimbraAddressListMemberFilter" type="string" cardinality="single" requiredIn="addressList" flags="domainAdminModifiable" since="8.8.10">
-  <desc>filter to decide members of the address list</desc>
+<attr id="3074" name="zimbraAddressListGalFilter" type="string" cardinality="single" requiredIn="addressList" flags="domainAdminModifiable" since="8.8.10">
+  <desc>filter to decide members of the address list using gal</desc>
 </attr>
 
 <attr id="3075" name="zimbraIsAddressListActive" type="boolean" cardinality="single" requiredIn="addressList" flags="domainAdminModifiable" since="8.8.10">
   <desc>whether address list is active or not</desc>
+</attr>
+
+<attr id="3076" name="zimbraAddressListLdapFilter" type="string" cardinality="single" requiredIn="addressList" flags="domainAdminModifiable" since="8.8.10">
+  <desc>filter to decide members of the address list using ldap</desc>
 </attr>
 
 </attrs>
