@@ -3215,3 +3215,16 @@ status : response status from the server requested
 started : contact backup started on this server
 error : error occurred while starting or stopping contact backup on this server
 stopped : stopped contact backup on this server.
+------------------------
+API to get all address lists in the given domain
+<GetAllAddressListsRequest xmlns="urn:zimbraAdmin">
+      [<domain by="id|name">...</domain>]
+</GetAllAddressListsRequest>
+
+Returns list of address lists.
+      <GetAllAddressListsResponse xmlns="urn:zimbraAdmin">
+         <AddressLists>
+            <AddressList name={name_of_address_list} [description={description}] id={zimbraId} active={0|1}/>
+            ...
+         </AddressLists>
+      </GetAllAddressListsResponse>
