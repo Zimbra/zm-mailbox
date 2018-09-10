@@ -235,6 +235,12 @@ public class SoapHttpTransport extends SoapTransport {
                 method.setRequestHeader(new Header("User-Agent", agentName));
             }
 
+            // Set the original user agent if it's specified.
+            String originalUserAgent = getOriginalUserAgent();
+            if (originalUserAgent != null) {
+                method.setRequestHeader(new Header("Original-User-Agent", originalUserAgent));
+            }
+
             // the content-type charset will determine encoding used
             // when we set the request body
             method.setRequestHeader("Content-Type", getRequestProtocol().getContentType());
@@ -431,4 +437,5 @@ public class SoapHttpTransport extends SoapTransport {
         CloseableHttpAsyncClient httpClient = ZimbraHttpClientManager.getInstance().getInternalAsyncHttpClient();
         return httpClient.execute(post, context, cb);
     }
+
 }

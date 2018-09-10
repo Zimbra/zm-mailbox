@@ -413,6 +413,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         private String mClientIp;
         private String mUserAgentName;
         private String mUserAgentVersion;
+        private String mOriginalUserAgent;
         private int mTimeout = -1;
         private int mRetryCount = -1;
         private SoapTransport.DebugListener mDebugListener;
@@ -526,6 +527,12 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         public Options setUserAgent(String name, String version) {
             mUserAgentName = name;
             mUserAgentVersion = version;
+            return this;
+        }
+
+        public String getOriginalUserAgent() { return mOriginalUserAgent; }
+        public Options setOriginalUserAgent(String userAgent) {
+            this.mOriginalUserAgent = userAgent;
             return this;
         }
 
@@ -923,6 +930,9 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             mTransport.setUserAgent("zclient", SystemUtil.getProductVersion());
         } else {
             mTransport.setUserAgent(options.getUserAgentName(), options.getUserAgentVersion());
+        }
+        if (options.getOriginalUserAgent() != null) {
+            mTransport.setOriginalUserAgent(options.getOriginalUserAgent());
         }
         mTransport.setMaxNotifySeq(0);
         mTransport.setClientIp(mClientIp);

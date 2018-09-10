@@ -481,6 +481,7 @@ public class SoapSession extends Session {
     private final SoapProtocol responseProtocol;
     private String curWaitSetID;
     protected AuthToken authToken;
+    protected String originalUserAgent;
 
     /** Creates a <tt>SoapSession</tt> owned by the given account and
      *  listening on its {@link Mailbox}.
@@ -493,6 +494,7 @@ public class SoapSession extends Session {
         userAgent = zsc.getUserAgent();
         requestIPAddress = zsc.getRequestIP();
         authToken = zsc.getAuthToken();
+        originalUserAgent = zsc.getOriginalUserAgent();
     }
 
     @Override
@@ -1672,5 +1674,9 @@ public class SoapSession extends Session {
 
     public AuthToken getAuthToken() {
         return authToken;
+    }
+
+    public String getOriginalUserAgent() {
+        return originalUserAgent;
     }
 }

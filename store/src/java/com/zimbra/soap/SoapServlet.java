@@ -30,6 +30,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.httpclient.HttpVersion;
 import org.apache.commons.httpclient.ProtocolException;
+import org.apache.http.HttpHeaders;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
@@ -299,6 +300,7 @@ public class SoapServlet extends ZimbraServlet {
 
         //checkAuthToken(req.getCookies(), context);
         context.put(SoapEngine.REQUEST_PORT, req.getServerPort());
+        context.put(SoapEngine.ORIG_REQUEST_USER_AGENT, req.getHeader("Original-User-Agent"));
         Element envelope = null;
         try {
             envelope = mEngine.dispatch(req.getRequestURI(), buffer, context);
