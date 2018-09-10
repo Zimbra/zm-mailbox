@@ -293,4 +293,12 @@
   </comment>
 </objectclass>
 
+<objectclass id="33" name="zimbraHabGroup" type="AUXILIARY">
+  <sup>top</sup>
+  <desc>hold attributes for the group in hierarchical address book</desc>
+  <comment>
+    zimbraHABGroup represents a group in organization hierarchical address book.
+  </comment>
+</objectclass>
+
 </objectclasses>

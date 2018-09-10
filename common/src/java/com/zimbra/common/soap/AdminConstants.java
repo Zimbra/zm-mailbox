@@ -231,6 +231,12 @@ public final class AdminConstants {
     public static final String E_RENAME_DISTRIBUTION_LIST_REQUEST = "RenameDistributionListRequest";
     public static final String E_RENAME_DISTRIBUTION_LIST_RESPONSE = "RenameDistributionListResponse";
 
+    public static final String E_CREATE_HAB_GROUP_REQUEST = "CreateHABGroupRequest";
+    public static final String E_CREATE_HAB_GROUP_RESPONSE = "CreateHABGroupResponse";
+    public static final String E_MODIFY_HAB_GROUP_REQUEST = "ModifyHABGroupRequest";
+    public static final String E_MODIFY_HAB_GROUP_RESPONSE = "ModifyHABGroupResponse";
+
+
     public static final String E_GET_VERSION_INFO_REQUEST = "GetVersionInfoRequest";
     public static final String E_GET_VERSION_INFO_RESPONSE = "GetVersionInfoResponse";
 
@@ -733,6 +739,11 @@ public final class AdminConstants {
     public static final QName RENAME_DISTRIBUTION_LIST_REQUEST = QName.get(E_RENAME_DISTRIBUTION_LIST_REQUEST, NAMESPACE);
     public static final QName RENAME_DISTRIBUTION_LIST_RESPONSE = QName.get(E_RENAME_DISTRIBUTION_LIST_RESPONSE, NAMESPACE);
 
+    public static final QName CREATE_HAB_GROUP_REQUEST = QName.get(E_CREATE_HAB_GROUP_REQUEST, NAMESPACE);
+    public static final QName CREATE_HAB_GROUP_RESPONSE = QName.get(E_CREATE_HAB_GROUP_RESPONSE, NAMESPACE);
+    public static final QName MODIFY_HAB_GROUP_REQUEST = QName.get(E_MODIFY_HAB_GROUP_REQUEST, NAMESPACE);
+    public static final QName MODIFY_HAB_GROUP_RESPONSE = QName.get(E_MODIFY_HAB_GROUP_RESPONSE, NAMESPACE);
+
     public static final QName GET_VERSION_INFO_REQUEST = QName.get(E_GET_VERSION_INFO_REQUEST, NAMESPACE);
     public static final QName GET_VERSION_INFO_RESPONSE = QName.get(E_GET_VERSION_INFO_RESPONSE, NAMESPACE);
 
@@ -1046,6 +1057,15 @@ public final class AdminConstants {
     public static final QName MODIFY_OUTGOING_FILTER_RULES_RESPONSE = QName.get(E_MODIFY_OUTGOING_FILTER_RULES_RESPONSE, NAMESPACE);
     public static final QName CONTACT_BACKUP_REQUEST = QName.get(E_CONTACT_BACKUP_REQUEST, NAMESPACE);
     public static final QName CONTACT_BACKUP_RESPONSE = QName.get(E_CONTACT_BACKUP_RESPONSE, NAMESPACE);
+    
+    //HAB
+    public static final String E_HAB_ORG_UNIT_REQUEST = "HABOrgUnitRequest";
+    public static final String E_HAB_ORG_UNIT_RESPONSE = "HABOrgUnitResponse";
+    public static final QName HAB_ORG_UNIT_REQUEST = QName.get(E_HAB_ORG_UNIT_REQUEST, NAMESPACE);
+    public static final QName HAB_ORG_UNIT_RESPONSE = QName.get(E_HAB_ORG_UNIT_RESPONSE, NAMESPACE);
+    public static final String E_HAB_ORG_UNIT_NAME = "habOrgUnitName";
+    public static final String E_HAB_PARENT_GROUP = "parentHABGroup";
+    public static final String E_MEMBER = "member";
 
     // DumpSessions
     public static final String E_SESSION = "session";
@@ -1136,6 +1156,15 @@ public final class AdminConstants {
     public static final String E_PRINCIPAL = "principal";
     public static final String E_SKIN = "skin";
     public static final String E_TOKEN = "token";
+
+    //HAB
+    public static final String E_HAB_GROUP_OPERATION ="habGroupOperation";
+
+    public static final String A_HAB_DISPLAY_NAME = "habDisplayName";
+    public static final String A_HAB_ORG_UNIT = "habOrgUnit";
+    public static final String A_HAB_GROUP_ID ="habGroupId";
+    public static final String A_CURRENT_PARENT_HAB_GROUP_ID = "currentParentHabGroupId";
+    public static final String A_TARGET_PARENT_HAB_GROUP_ID = "targetParentHabGroupId";
 
     public static final String A_ACCOUNT = "account";
     public static final String A_CALENDAR_RESOURCE = "calresource";
@@ -1487,4 +1516,10 @@ public final class AdminConstants {
 
     // contact backup feature
     public static final String E_SERVERS = "servers";
+
+    //HAB
+    public static final String A_NEW_NAME = "newName";
+    public static final String A_FORCE_DELETE = "forceDelete";
+    public static final String E_MEMBERS = "members";
+    public static final String A_CASCADE_DELETE = "cascadeDelete";
 }

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2018 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -43,8 +43,6 @@ import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import net.spy.memcached.DefaultHashAlgorithm;
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.Options;
@@ -85,6 +83,7 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.Version;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zclient.ZClientException;
+import com.zimbra.cs.account.ProvUtil.ArgException;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
 import com.zimbra.cs.account.Provisioning.CountAccountResult;
 import com.zimbra.cs.account.Provisioning.MailMode;
@@ -137,6 +136,8 @@ import com.zimbra.soap.admin.type.MailboxMoveSpec;
 import com.zimbra.soap.type.AccountNameSelector;
 import com.zimbra.soap.type.GalSearchType;
 import com.zimbra.soap.type.TargetBy;
+
+import net.spy.memcached.DefaultHashAlgorithm;
 
 /**
  * @author schemers
@@ -587,8 +588,8 @@ public class ProvUtil implements HttpDebugListener {
                 1, 1),
         DELETE_DATA_SOURCE("deleteDataSource", "dds", "{name@domain|id} {ds-name|ds-id}",
                 Category.ACCOUNT, 2, 2),
-        DELETE_DISTRIBUTION_LIST("deleteDistributionList", "ddl", "{list@domain|id}",
-                Category.LIST, 1, 1),
+        DELETE_DISTRIBUTION_LIST("deleteDistributionList", "ddl", "{list@domain|id} [true|false]",
+                Category.LIST, 1, 2),
         DELETE_DOMAIN("deleteDomain", "dd", "{domain|id}", Category.DOMAIN, 1, 1),
         DELETE_IDENTITY(
                "deleteIdentity", "did", "{name@domain|id} {identity-name}", Category.ACCOUNT, 2, 2),
@@ -849,8 +850,19 @@ public class ProvUtil implements HttpDebugListener {
                Category.MISC, 3, 3, Via.soap),
         RESET_ALL_LOGGERS("resetAllLoggers", "rlog", "[-s/--server hostname]",
                Category.LOG, 0, 2),
-        UNLOCK_MAILBOX("unlockMailbox", "ulm", "{name@domain|id} [hostname (When unlocking a mailbox after a failed move attempt provide the hostname of the server that was the target for the failed move. Otherwise, do not include hostname parameter)]", Category.MAILBOX, 1, 2, Via.soap);
-
+        UNLOCK_MAILBOX("unlockMailbox", "ulm", "{name@domain|id} [hostname (When unlocking a mailbox after a failed move attempt provide the hostname of the server that was the target for the failed move. Otherwise, do not include hostname parameter)]", Category.MAILBOX, 1, 2, Via.soap),
+        CREATE_HAB_OU("createHABOrgUnit", "chou",
+            "{domain} {ouName}", Category.MISC , 2, 2),
+        RENAME_HAB_OU("renameHABOrgUnit", "rhou",
+            "{domain} {ouName} {newName}", Category.MISC , 3, 3),
+        DELETE_HAB_OU("deleteHABOrgUnit", "dhou",
+            "{domain} {ouName}", Category.MISC , 2, 2),
+        CREATE_HAB_GROUP("createHabGroup", "chabg",
+            "{groupName} {ouName} {name@domain} {TRUE|FALSE} [attr1 value1 [attr2 value2...]]", Category.MISC , 3, Integer.MAX_VALUE),
+        GET_HAB("getHab", "ghab",
+            "{habRootGrpId} ", Category.ACCOUNT , 1, 1),
+        MODIFY_HAB_GROUP("modify HAB group", "mhab",
+            "{habRootGrpId} {habParentGrpId} {targetHabParentGrpId} ", Category.MISC , 3, 3);
         private String mName;
         private String mAlias;
         private String mHelp;
@@ -1435,7 +1447,7 @@ public class ProvUtil implements HttpDebugListener {
             prov.modifyAttrs(lookupGroup(args[1]), getMapAndCheck(args, 2, false), true);
             break;
         case DELETE_DISTRIBUTION_LIST:
-            prov.deleteGroup(lookupGroup(args[1]).getId());
+            doDeleteDistributionList(args);
             break;
         case ADD_DISTRIBUTION_LIST_MEMBER:
             members = new String[args.length - 2];
@@ -1589,6 +1601,24 @@ public class ProvUtil implements HttpDebugListener {
         case UNLOCK_MAILBOX:
             doUnlockMailbox(args);
             break;
+        case CREATE_HAB_OU:
+            doCreateHabOrgUnit(args);
+            break;
+        case RENAME_HAB_OU:
+            doRenameHabOrgUnit(args);
+            break;
+        case DELETE_HAB_OU:
+            doDeleteHabOrgUnit(args);
+            break;
+        case CREATE_HAB_GROUP:
+           doCreateHabGroup(args);
+           break;
+        case GET_HAB:
+            doGetHab(args);
+            break;
+        case MODIFY_HAB_GROUP:
+            modifyHabGroup(args);
+            break;
         default:
             return false;
         }
@@ -1684,7 +1714,88 @@ public class ProvUtil implements HttpDebugListener {
             }
         }
     }
+    
+    private void doCreateHabOrgUnit(String[] args) throws ServiceException {
+        if(args.length != 3) { 
+            usage();
+            return;
+        }
+        Domain domain = lookupDomain(args[1], prov, Boolean.FALSE);
+        
+        if (prov instanceof SoapProvisioning) {
+            ((SoapProvisioning) prov).createHabOrgUnit(domain, args[2]);
+        } else {
+            prov.createHabOrgUnit(domain, args[2]);
+        }
+    }
+    
+    private void doRenameHabOrgUnit(String[] args)  throws ServiceException {
+        if(args.length != 4) { 
+            usage();
+            return;
+        }
+        Domain domain = lookupDomain(args[1], prov, Boolean.FALSE);
+        if (prov instanceof SoapProvisioning) {
+            ((SoapProvisioning) prov).renameHabOrgUnit(domain, args[2], args[3]);
+        } else {
+            prov.renameHabOrgUnit(domain, args[2], args[3]);
+        }
+    }
+    
+    private void doDeleteHabOrgUnit(String[] args)  throws ServiceException {
+        if(args.length != 3) { 
+            usage();
+            return;
+        }
+        Domain domain = lookupDomain(args[1], prov, Boolean.FALSE);
+        if (prov instanceof SoapProvisioning) {
+            ((SoapProvisioning) prov).deleteHabOrgUnit(domain, args[2]);
+        } else {
+            prov.deleteHabOrgUnit(domain, args[2]);
+        }
+    }
 
+    private void doGetHab(String[] args)  throws ServiceException {
+        if(args.length != 2) { 
+            usage();
+            return;
+        }
+        if (!(prov instanceof SoapProvisioning)) {
+            throwSoapOnly();
+        }
+        SoapProvisioning sp = (SoapProvisioning) prov;
+        sp.getHab(args[1]);
+    }
+
+    private void modifyHabGroup(String[] args)  throws ServiceException {
+        if (!(prov instanceof SoapProvisioning)) {
+            throwSoapOnly();
+        }
+        //{habRootGrpId} {habParentGrpId} {targetHabParentGrpId} 
+        if (args.length == 4) {
+            ((SoapProvisioning) prov).modifyHabGroup(args[1], args[2], args[3]);
+        } else if (args.length == 3) {
+            ((SoapProvisioning) prov).modifyHabGroup(args[1], null, args[2]);
+        } else {
+            usage();
+            return;
+        }
+    }
+
+    private void doCreateHabGroup(String args[]) throws ServiceException, ArgException {
+        if (!(prov instanceof SoapProvisioning)) {
+            throwSoapOnly();
+        }
+        if(args.length < 4) {
+            usage();
+            return;
+        }
+        String isDynamic = "false";
+        if (args.length > 4) {
+            isDynamic = args[4];
+        }
+        ((SoapProvisioning) prov).createHabGroup(args[1],args[2],args[3], isDynamic, getMapAndCheck(args, 5, false));
+    }
     private void doGetDomain(String[] args) throws ServiceException {
         boolean applyDefault = true;
 
@@ -5533,5 +5644,14 @@ public class ProvUtil implements HttpDebugListener {
             }
         }
         return newArgs.toArray(new String[newArgs.size()]);
+    }
+
+    private void doDeleteDistributionList(String[] args) throws ServiceException {
+        String groupId = lookupGroup(args[1]).getId();
+        Boolean cascadeDelete = false;
+        if (args.length > 2) {
+            cascadeDelete = Boolean.valueOf(args[2]) != null ? Boolean.valueOf(args[2]) : false;
+        }
+        prov.deleteGroup(groupId, cascadeDelete);
     }
 }

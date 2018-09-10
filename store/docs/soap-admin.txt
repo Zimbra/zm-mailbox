@@ -1478,12 +1478,12 @@ Access: domain admin sufficient
 
 -----------------------------
 
-<DeleteDistributionListRequest>
-  <id>{value-of-zimbraId}</id>
-</DeleteDistributionListRequest>
+<DeleteDistributionListRequest id={zimbraId_of_dl} [cascadeDelete="true|false"] />
 
 <DeleteDistributionListResponse/>
 
+cascadeDelete: is used only for hab groups. when false, group deletion is prohibited if group has members.
+    when true, group hierarchy is deleted.
 Access: domain admin sufficient
 
 -----------------------------
@@ -3215,3 +3215,39 @@ status : response status from the server requested
 started : contact backup started on this server
 error : error occurred while starting or stopping contact backup on this server
 stopped : stopped contact backup on this server.
+
+----------------------------
+<CreateHABGroupRequest [habDispalyName={habDisplayName}] habOrgUnit={habOrgUnit}>
+</CreateHABGroupRequest>
+
+<CreateHABGroupResponse>
+  <dl name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </dl>
+</CreateHABGroupResponse>
+
+Note: CreateHABGroupRequest extends CreateDistributionListRequest.
+
+Access: domain admin sufficient
+-------------------------------
+
+
+-----------------------
+Create HAB OU API
+-----------------------
+
+ <HABOrgUnitRequest op="create|rename|delete" name="zimbraHAB41" xmlns="urn:zimbraAdmin">
+    <domain by="{id|name}">{domain-id | domain-name}</domain>
+</HABOrgUnitRequest>
+
+For create and rename operation the response is
+<HABOrgUnitResponse>
+  [<habOrgUnitName>{habOrgunitname1}</habOrgUnitName>
+  <habOrgUnitName>{habOrgunitname2}</habOrgUnitName>
+    ......
+  ]
+</HABOrgUnitResponse>
+
+For delete operation
+<HABOrgUnitResponse >
+</HABOrgUnitResponse>

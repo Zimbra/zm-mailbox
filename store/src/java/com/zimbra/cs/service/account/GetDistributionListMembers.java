@@ -35,6 +35,7 @@ import com.zimbra.cs.gal.GalGroupMembers;
 import com.zimbra.cs.gal.GalGroupMembers.DLMembers;
 import com.zimbra.cs.gal.GalGroupMembers.DLMembersResult;
 import com.zimbra.cs.gal.GalGroupMembers.LdapDLMembers;
+import com.zimbra.cs.gal.GalGroupMembers.LdapHABMembers;
 import com.zimbra.cs.gal.GalGroupMembers.ProxiedDLMembers;
 import com.zimbra.cs.gal.GalSearchControl;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -205,20 +206,24 @@ public class GetDistributionListMembers extends GalDocumentHandler {
 
     private DLMembersResult getMembersFromLdap(Account account, Group group)
     throws ServiceException {
-        boolean allow = false;
-        if (group.hideInGal()) {
-            allow = GroupOwner.isOwner(account, group);
+        if (group.isHABGroup()) {
+            ZimbraLog.account.debug("Retrieving hab group members from LDAP for group %s", group.getName());
+            return new LdapHABMembers(group);
         } else {
-            allow = GroupOwner.isOwner(account, group) || group.isMemberOf(account);
-        }
-
-        if (allow) {
-            ZimbraLog.account.debug("Retrieving group members from LDAP for group %s", group.getName());
-            return new LdapDLMembers(group);
-        } else {
-            ZimbraLog.account.debug("account %s is not allowed to get members from ldap for group %s",
-                    account.getName(), group.getName());
-            return null;
+            boolean allow = false;
+            if (group.hideInGal()) {
+                allow = GroupOwner.isOwner(account, group);
+            } else {
+                allow = GroupOwner.isOwner(account, group) || group.isMemberOf(account);
+            }
+            if (allow) {
+                ZimbraLog.account.debug("Retrieving group members from LDAP for group %s", group.getName());
+                return new LdapDLMembers(group);
+            } else {
+                ZimbraLog.account.debug("account %s is not allowed to get members from ldap for group %s",
+                        account.getName(), group.getName());
+                return null;
+            }
         }
     }
 

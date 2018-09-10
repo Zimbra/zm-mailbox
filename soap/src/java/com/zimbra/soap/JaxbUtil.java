@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010, 2011, 2012, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2018 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -290,6 +290,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.CreateDataSourceResponse.class,
             com.zimbra.soap.admin.message.CreateDistributionListRequest.class,
             com.zimbra.soap.admin.message.CreateDistributionListResponse.class,
+            com.zimbra.soap.admin.message.CreateHABGroupRequest.class,
+            com.zimbra.soap.admin.message.CreateHABGroupResponse.class,
             com.zimbra.soap.admin.message.CreateDomainRequest.class,
             com.zimbra.soap.admin.message.CreateDomainResponse.class,
             com.zimbra.soap.admin.message.CreateGalSyncAccountRequest.class,
@@ -486,6 +488,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.GetFreeBusyQueueInfoResponse.class,
             com.zimbra.soap.admin.message.GetGrantsRequest.class,
             com.zimbra.soap.admin.message.GetGrantsResponse.class,
+            com.zimbra.soap.account.message.GetHABRequest.class,
+            com.zimbra.soap.account.message.GetHABResponse.class,
             com.zimbra.soap.admin.message.GetHsmStatusRequest.class,
             com.zimbra.soap.admin.message.GetHsmStatusResponse.class,
             com.zimbra.soap.admin.message.GetIndexStatsRequest.class,
@@ -554,6 +558,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.GetZimletStatusResponse.class,
             com.zimbra.soap.admin.message.GrantRightRequest.class,
             com.zimbra.soap.admin.message.GrantRightResponse.class,
+            com.zimbra.soap.admin.message.HABOrgUnitRequest.class,
+            com.zimbra.soap.admin.message.HABOrgUnitResponse.class,
             com.zimbra.soap.admin.message.HsmRequest.class,
             com.zimbra.soap.admin.message.HsmResponse.class,
             com.zimbra.soap.admin.message.InstallCertRequest.class,
@@ -588,6 +594,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.ModifyDistributionListResponse.class,
             com.zimbra.soap.admin.message.ModifyDomainRequest.class,
             com.zimbra.soap.admin.message.ModifyDomainResponse.class,
+            com.zimbra.soap.admin.message.ModifyHABGroupRequest.class,
+            com.zimbra.soap.admin.message.ModifyHABGroupResponse.class,
             com.zimbra.soap.admin.message.ModifyFilterRulesRequest.class,
             com.zimbra.soap.admin.message.ModifyFilterRulesResponse.class,
             com.zimbra.soap.admin.message.ModifyLDAPEntryRequest.class,

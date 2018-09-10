@@ -7730,6 +7730,23 @@ public class ZAttrProvisioning {
     public static final String A_zimbraGroupId = "zimbraGroupId";
 
     /**
+     * LDAP attribute to HAB Group Member attribute mapping
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=3073)
+    public static final String A_zimbraHABMemberLdapAttrMap = "zimbraHABMemberLdapAttrMap";
+
+    /**
+     * seniority index of the group or group member which will determine the
+     * sorting order in the hierarchical address book
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=3071)
+    public static final String A_zimbraHABSeniorityIndex = "zimbraHABSeniorityIndex";
+
+    /**
      * help URL for admin
      *
      * @since ZCS 5.0.7
@@ -7766,6 +7783,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=353)
     public static final String A_zimbraHideInGal = "zimbraHideInGal";
+
+    /**
+     * root group id of hierarchical address book
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=3072)
+    public static final String A_zimbraHierarchicalAddressBookRoot = "zimbraHierarchicalAddressBookRoot";
 
     /**
      * Deprecated since: 6.0.0_BETA2. deprecated in favor for

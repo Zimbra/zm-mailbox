@@ -307,6 +307,12 @@ public class AccountConstants {
     public static final QName GET_OAUTH_CONSUMERS_RESPONSE = QName.get(E_GET_OAUTH_CONSUMERS_RESPONSE, NAMESPACE);
     public static final QName REVOKE_OAUTH_CONSUMER_REQUEST = QName.get(E_REVOKE_OAUTH_CONSUMER_REQUEST, NAMESPACE);
     public static final QName REVOKE_OAUTH_CONSUMER_RESPONSE = QName.get(E_REVOKE_OAUTH_CONSUMER_RESPONSE, NAMESPACE);
+    
+    //HAB
+    public static final String E_GET_HAB_REQUEST = "GetHABRequest";
+    public static final String E_GET_HAB_RESPONSE = "GetHABResponse";
+    public static final QName GET_HAB_REQUEST = QName.get( E_GET_HAB_REQUEST, NAMESPACE);
+    public static final QName GET_HAB_RESPONSE = QName.get(E_GET_HAB_RESPONSE, NAMESPACE);
 
     public static final String E_ACTION = "action";
     public static final String E_ALIAS = "alias";
@@ -574,4 +580,16 @@ public class AccountConstants {
     public static final String E_RESET_PASSWORD_REQUEST = "ResetPasswordRequest";
     public static final String E_RESET_PASSWORD_RESPONSE = "ResetPasswordResponse";
     public static final QName RESET_PASSWORD_REQUEST = QName.get(E_RESET_PASSWORD_REQUEST, NAMESPACE);
+
+    //Hab
+    public static final String A_HAB_ROOT_GROUP_ID = "habRootGroupId";
+    public static final String E_HAB_GROUP = "habGroup";
+    public static final String E_HAB_GROUPS = "habGroups";
+    public static final String A_ROOT_HAB_GROUP = "rootHabGroup";
+    public static final String A_PARENT_HAB_GROUP_ID = "parentHabGroupId";
+    public static final String A_HAB_GROUPS= "habGroups";
+    public static final String A_HAB_SENIORITY_INDEX = "seniorityIndex";
+    public static final String E_HAB_GROUP_MEMBERS = "groupMembers";
+    public static final String E_HAB_GROUP_MEMBER = "groupMember";
+
 }
