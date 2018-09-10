@@ -290,7 +290,8 @@ public class GqlConstants {
 
     // session constants
     public static final String CLASS_SESSION_INFO = "SessionInfo";
-    public static final String AUTH_TOKEN = "authToken";
+    public static final String SESSION_ID = "sessionId";
+    public static final String BROWSER_INFO = "browserInfo";
     public static final String CREATED_DATE = "createdDate";
     public static final String LAST_ACCESSED = "lastAccessed";
     public static final String USER_AGENT = "userAgent";
