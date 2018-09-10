@@ -77,6 +77,19 @@ public class RemoteImapMailboxStore extends ImapMailboxStore {
         irs.updateLastChangeId(irs.getMailbox().getLastChangeID());
         return irs;
     }
+    
+    @Override
+    public List<ImapListener> getListeners(ItemIdentifier ident) {
+        String acctId = ident.accountId != null ? ident.accountId : getAccountId();
+        try {
+            ImapServerListener listener = ImapServerListenerPool.getInstance().getForAccountId(acctId);
+            return Lists.newArrayList(listener.getListeners(acctId, ident.id));
+        } catch (ServiceException se) {
+            ZimbraLog.imap.debug("Problem getting listeners for folder=%s acct=%s from ImapServerListener",
+                    ident, acctId, se);
+            return Collections.emptyList();
+        }
+    }
 
     @Override
     public ImapFlag getTagByName(String tag) throws ServiceException {
