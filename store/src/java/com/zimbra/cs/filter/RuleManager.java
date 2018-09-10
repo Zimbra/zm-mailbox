@@ -52,6 +52,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -136,7 +137,7 @@ public final class RuleManager {
         if (entry instanceof Account) {
             ZimbraLog.filter.debug("Setting filter rules for account %s:\n%s", ((Account)entry).getName(), script);
         } else if (entry instanceof Domain) {
-            ZimbraLog.filter.debug("Setting filter rules for domian %s:\n%s", ((Domain)entry).getName(), script);
+            ZimbraLog.filter.debug("Setting filter rules for domain %s:\n%s", ((Domain)entry).getName(), script);
         } else if (entry instanceof Cos) {
             ZimbraLog.filter.debug("Setting filter rules for cos %s:\n%s", ((Cos)entry).getName(), script);
         } else if (entry instanceof Server) {
@@ -144,6 +145,20 @@ public final class RuleManager {
         }
         if (script == null) {
             script = "";
+        }
+        String zimbraMailSieveScriptMaxSize = entry.getAttr(Provisioning.A_zimbraMailSieveScriptMaxSize);
+        if (zimbraMailSieveScriptMaxSize != null && entry instanceof Account) {
+            long sieveScriptMaxSize = Long.parseLong(zimbraMailSieveScriptMaxSize);
+            long sieveScriptSize = script.getBytes(StandardCharsets.UTF_8).length;
+            if (sieveScriptMaxSize < sieveScriptSize) {
+                StringBuilder msg = new StringBuilder();
+                msg.append("Sieve script too large: ")
+                    .append(sieveScriptSize)
+                    .append(" bytes exceeds the limit of ")
+                    .append(sieveScriptMaxSize)
+                    .append(" bytes");
+                throw ServiceException.INVALID_REQUEST(msg.toString(), null);
+            }
         }
         try {
             Node node = parse(script);
