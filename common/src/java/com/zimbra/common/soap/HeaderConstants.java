@@ -84,6 +84,9 @@ public final class HeaderConstants {
     public static final String EQ_OP = "eq";
     public static final String NE_OP = "ne";
 
+    // http request headers
+    public static final String HTTP_HEADER_ORIG_USER_AGENT = "Original-User-Agent";
+
     private HeaderConstants() {
     }
 }
