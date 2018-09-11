@@ -237,7 +237,7 @@ public class SearchTest {
         Element response = new Search().handle(request, ServiceTestUtil.getRequestContext(account));
         return response;
     }
-}
+
     /**
      * @throws java.lang.Exception
      */
