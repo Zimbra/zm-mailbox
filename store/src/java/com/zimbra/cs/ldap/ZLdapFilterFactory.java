@@ -22,7 +22,9 @@ import java.util.Collection;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.unboundid.ldap.sdk.Filter;
 import com.zimbra.common.util.CsvWriter;
+import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.ldap.unboundid.UBIDLdapFilterFactory;
 
@@ -118,6 +120,7 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
         DYNAMIC_GROUP_BY_NAME(SINGLETON.dynamicGroupByName("{DYNAMIC-GROUP-NAME}")),
         DYNAMIC_GROUP_DYNAMIC_UNIT_BY_MAIL_ADDR(SINGLETON.dynamicGroupDynamicUnitByMailAddr("{ADDR}")),
         DYNAMIC_GROUPS_STATIC_UNIT_BY_MEMBER_ADDR(SINGLETON.dynamicGroupsStaticUnitByMemberAddr("{ADDR}")),
+        ADDRESS_LIST_BY_ID(SINGLETON.addressListById("{ADDRESS_LIST_ID}")),
 
         EXTERNAL_ACCOUNTS_HOMED_ON_SERVER(SINGLETON.externalAccountsHomedOnServer("{SERVER-SERVICE-HOSTNAME}")),
         GLOBAL_CONFIG(SINGLETON.globalConfig()),
@@ -181,6 +184,7 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
         UNITTEST("UNITTEST"),
         LDAP_UPGRADE("LDAP_UPGRADE"),
         ZMCONFIGD("ZMCONFIGD"),
+
 
         TODO("TODO");
 
@@ -406,6 +410,11 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
     public abstract ZLdapFilter allGroups();
     public abstract ZLdapFilter groupById(String id);
     public abstract ZLdapFilter groupByName(String name);
+    
+    /*
+     * address list
+     */
+    public abstract ZLdapFilter addressListById(String id);
 
 
     /*

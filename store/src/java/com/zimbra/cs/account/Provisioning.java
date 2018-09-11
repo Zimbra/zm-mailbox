@@ -2691,6 +2691,12 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public void removeConfigSMIMEConfig(String configName) throws ServiceException {
         throw ServiceException.UNSUPPORTED();
     }
+    
+    
+    public AddressList getAddressList(String id) throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
+    
 
     public List<AddressListInfo> getAllAddressLists(Domain domain, boolean activeOnly) throws ServiceException {
         throw ServiceException.UNSUPPORTED();
