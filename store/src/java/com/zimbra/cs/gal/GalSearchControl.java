@@ -17,6 +17,7 @@
 package com.zimbra.cs.gal;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -298,7 +299,7 @@ public class GalSearchControl {
         return ret;
     }
 
-    private Account getGalSyncAccount() throws GalAccountNotConfiguredException, ServiceException {
+   public Account getGalSyncAccount() throws GalAccountNotConfiguredException, ServiceException {
         Domain d = mParams.getDomain();
         String[] accts = d.getGalAccountId();
         if (accts.length == 0)
@@ -469,7 +470,7 @@ public class GalSearchControl {
         }
     }
 
-    private boolean doLocalGalAccountSearch(Account galAcct) {
+    public boolean doLocalGalAccountSearch(Account galAcct) {
         try {
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(galAcct);
             SearchParams searchParams = mParams.getSearchParams();
@@ -501,7 +502,40 @@ public class GalSearchControl {
         } 
         return true;
     }
+    
+    public List<String> getAddressListMembersFromGal(Account galAcct) {
+        List<String> l = new ArrayList<String> ();
+        try {
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(galAcct);
+            SearchParams searchParams = mParams.getSearchParams();
+            try (ZimbraQueryResults zqr = mbox.index.search(SoapProtocol.Soap12,
+                new OperationContext(mbox), searchParams)) {
+                int size = zqr.getResultInfo().size();
+                ResultsPager pager = ResultsPager.create(zqr, searchParams);
+                int num = 0;
+                while (pager.hasNext()) {
+                    ZimbraHit hit = pager.getNextHit();
+                    if (hit instanceof ContactHit) {
+                        ContactHit chit = (ContactHit)hit;
+                        l.add(chit.getContact().getEmailAddresses().get(0));
+                       
+                    }
+                    num++;
+                    if (num == mParams.getLimit())
+                        break;
+                }
+//                callback.setSortBy(zqr.getSortBy().toString());
+//                callback.setQueryOffset(searchParams.getOffset());
+//                callback.setHasMoreResult(pager.hasNext());
+            }
+        } catch (Exception e) {
+            ZimbraLog.gal.warn("search on GalSync account failed for %s", galAcct.getId(), e);
 
+        } 
+        return l;
+    }
+
+    
     private void doLocalGalAccountSync(Account galAcct) throws ServiceException {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(galAcct);
         OperationContext octxt = new OperationContext(mbox);
@@ -845,7 +879,7 @@ public class GalSearchControl {
                 domain.isGalAlwaysIncludeLocalCalendarResources());
     }
 
-    private static class GalAccountNotConfiguredException extends Exception {
+    public static class GalAccountNotConfiguredException extends Exception {
         private static final long serialVersionUID = 679221874958248740L;
 
         public GalAccountNotConfiguredException() {

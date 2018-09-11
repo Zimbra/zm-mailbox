@@ -739,6 +739,15 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                         Filter.createEqualityFilter(Provisioning.A_zimbraMailAlias, name),
                         FILTER_ALL_DISTRIBUTION_LISTS));
     }
+    
+    @Override
+    public ZLdapFilter addressListById(String id) {
+        return new UBIDLdapFilter(
+                FilterId.ADDRESS_LIST_BY_ID,
+                Filter.createANDFilter(
+                        Filter.createEqualityFilter(Provisioning.A_zimbraId, id),
+                        FILTER_ALL_ADDRESS_LISTS));
+    }
 
     @Override
     public ZLdapFilter distributionListsByMemberAddrs(String[] memberAddrs) {
