@@ -31,13 +31,18 @@ import javax.xml.bind.annotation.XmlType;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.json.jackson.annotate.ZimbraJsonArrayForWrapper;
+
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLInterface;
 
 // JsonPropertyOrder added to make sure JaxbToJsonTest.bug65572_BooleanAndXmlElements passes
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"filterVariables", "tests", "actions","child"})
 @JsonPropertyOrder({"filterVariables", "tests", "actions","child"})
+@GraphQLInterface(name=GqlConstants.CLASS_NESTED_RULE, description="Nested Rule class", implementationAutoDiscovery=true)
 public final class NestedRule {
 
     /**
@@ -95,7 +100,7 @@ public final class NestedRule {
     private NestedRule() {
         this(null);
     }
-    
+
     public NestedRule(FilterTests tests) {
         this.tests = tests;
         this.actions = null;
@@ -126,10 +131,12 @@ public final class NestedRule {
         return this;
     }
 
+    @GraphQLQuery(name=GqlConstants.TESTS, description="The rule filter tests")
     public FilterTests getFilterTests() {
         return tests;
     }
 
+    @GraphQLQuery(name=GqlConstants.ACTIONS, description="The filter actions")
     public List<FilterAction> getFilterActions() {
         // there must be no actions.size()==0 case. This is for just in case.
         if(actions == null || actions.size() == 0) {
@@ -148,10 +155,12 @@ public final class NestedRule {
     /**
      * @return variables
      */
+    @GraphQLQuery(name=GqlConstants.FILTER_VARIABLES, description="The rules filter variables")
     public FilterVariables getFilterVariables() {
         return this.filterVariables;
     }
 
+    @GraphQLQuery(name=GqlConstants.GET_FILTER_ACTION_COUNT, description="Get filter action count")
     public int getActionCount() {
         if(actions == null){
             return 0;
@@ -160,10 +169,11 @@ public final class NestedRule {
     }
 
     // For Nested Rule
+    @GraphQLQuery(name=GqlConstants.CHILD, description="Child rule")
     public NestedRule getChild() {
         return child;
     }
-    
+
     // For Nested Rule
     public void setChild(NestedRule nestedRule) {
         child = nestedRule;

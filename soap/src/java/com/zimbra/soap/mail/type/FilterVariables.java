@@ -39,7 +39,7 @@ import io.leangen.graphql.annotations.types.GraphQLType;
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"variables"})
 @JsonPropertyOrder({ "variables" })
-@GraphQLType(name=GqlConstants.CLASS_FILTER_VARIABLES, description="FilterVariables class")
+@GraphQLType(name=GqlConstants.CLASS_FILTER_VARIABLES, description="Filter variables")
 public final class FilterVariables extends FilterAction {
 
     @XmlElement(name=MailConstants.E_FILTER_VARIABLE /* filterVariable */, required=true)

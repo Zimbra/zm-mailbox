@@ -195,7 +195,6 @@ public final class FilterRule {
         this.name = name;
     }
 
-    @GraphQLQuery(name=GqlConstants.ACTIVE, description="The rules active flag")
     public boolean isActive() {
         return ZmBoolean.toBool(active);
     }

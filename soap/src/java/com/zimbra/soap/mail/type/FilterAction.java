@@ -26,16 +26,22 @@ import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlValue;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-
 import com.google.common.base.MoreObjects;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.soap.type.ZmBoolean;
 
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLInterface;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
+
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlTransient
+@GraphQLInterface(name=GqlConstants.CLASS_FILTER_ACTION, description="FilterAction class", implementationAutoDiscovery=true)
 public class FilterAction {
 
     /**
@@ -49,6 +55,7 @@ public class FilterAction {
         this.index = index;
     }
 
+    @GraphQLQuery(name=GqlConstants.INDEX, description="Index used to order filter actions")
     public int getIndex() {
         return index;
     }
@@ -59,18 +66,22 @@ public class FilterAction {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
+    @GraphQLType(name=GqlConstants.CLASS_DISCARD_ACTION, description="DiscardAction class")
     public static final class DiscardAction extends FilterAction {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
+    @GraphQLType(name=GqlConstants.CLASS_KEEP_ACTION, description="KeepAction class")
     public static final class KeepAction extends FilterAction {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
+    @GraphQLType(name=GqlConstants.CLASS_STOP_ACTION, description="StopAction class")
     public static final class StopAction extends FilterAction {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
+    @GraphQLType(name=GqlConstants.CLASS_FILE_INTO_ACTION, description="FileIntoAction class")
     public static final class FileIntoAction extends FilterAction {
 
         /**
@@ -87,7 +98,7 @@ public class FilterAction {
          *                           "Sieve Extension: Copying Without Side Effects"
          */
         @XmlAttribute(name=MailConstants.A_COPY /* copy */, required=false)
-        private ZmBoolean copy;
+        private final ZmBoolean copy;
 
         @SuppressWarnings("unused")
         private FileIntoAction() {
@@ -104,6 +115,7 @@ public class FilterAction {
             this.copy = ZmBoolean.fromBool(copy, false);
         }
 
+        @GraphQLQuery(name=GqlConstants.FOLDER, description="Folder path")
         public String getFolder() {
             return folder;
         }
@@ -120,6 +132,7 @@ public class FilterAction {
 
     @XmlAccessorType(XmlAccessType.NONE)
     @JsonPropertyOrder({ "flagName", "index" })
+    @GraphQLType(name=GqlConstants.CLASS_FLAG_ACTION, description="FlagAction class")
     public static final class FlagAction extends FilterAction {
 
         /**
@@ -138,6 +151,7 @@ public class FilterAction {
             this.flag = flag;
         }
 
+        @GraphQLQuery(name=GqlConstants.FLAG, description="Flag name")
         public String getFlag() {
             return flag;
         }
@@ -149,6 +163,7 @@ public class FilterAction {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
+    @GraphQLType(name=GqlConstants.CLASS_REDIRECT_ACTION, description="RedirectAction class")
     public static final class RedirectAction extends FilterAction {
 
         /**
@@ -165,7 +180,7 @@ public class FilterAction {
          *                           "Sieve Extension: Copying Without Side Effects"
          */
         @XmlAttribute(name=MailConstants.A_COPY /* copy */, required=false)
-        private ZmBoolean copy;
+        private final ZmBoolean copy;
 
         @SuppressWarnings("unused")
         private RedirectAction() {
@@ -182,6 +197,7 @@ public class FilterAction {
             this.copy = ZmBoolean.fromBool(copy, false);
         }
 
+        @GraphQLQuery(name=GqlConstants.ADDRESS, description="Email address")
         public String getAddress() {
             return address;
         }
@@ -197,6 +213,7 @@ public class FilterAction {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
+    @GraphQLType(name=GqlConstants.CLASS_NOTIFY_ACTION, description="NotifyAction class")
     public static final class NotifyAction extends FilterAction {
 
         /**
@@ -260,22 +277,27 @@ public class FilterAction {
             this.origHeaders = origHeaders;
         }
 
+        @GraphQLQuery(name=GqlConstants.ADDRESS, description="Email address")
         public String getAddress() {
             return address;
         }
 
+        @GraphQLQuery(name=GqlConstants.SUBJECT, description="Subject template")
         public String getSubject() {
             return subject;
         }
 
+        @GraphQLQuery(name=GqlConstants.MAX_BODY_SIZE, description="Maximum body size in bytes")
         public int getMaxBodySize() {
             return maxBodySize != null ? maxBodySize : -1;
         }
 
+        @GraphQLQuery(name=GqlConstants.CONTENT, description="Body template")
         public String getContent() {
             return content;
         }
 
+        @GraphQLQuery(name=GqlConstants.ORIGINAL_HEADERS, description="Optional - Either \"*\" or a comma-separated list of header names.")
         public String getOrigHeaders() {
             return origHeaders;
         }
@@ -293,6 +315,7 @@ public class FilterAction {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
+    @GraphQLType(name=GqlConstants.CLASS_RFC_COMPLIANT_NOTIFY_ACTION, description="RFCCompliantNotifyAction class")
     public static final class RFCCompliantNotifyAction extends FilterAction {
 
         /**
@@ -350,22 +373,27 @@ public class FilterAction {
             this.method = method;
         }
 
+        @GraphQLQuery(name=GqlConstants.FROM, description="Notify Tag \":from\"")
         public String getFrom() {
             return from;
         }
 
+        @GraphQLQuery(name=GqlConstants.IMPORTANCE, description="Notify Tag \":importance\"")
         public String getImportance() {
             return importance;
         }
 
+        @GraphQLQuery(name=GqlConstants.OPTIONS, description="Notify Tag \":options\"")
         public String getOptions() {
             return options;
         }
 
+        @GraphQLQuery(name=GqlConstants.MESSAGE, description="Notify Tag \":message\"")
         public String getMessage() {
             return message;
         }
 
+        @GraphQLQuery(name=GqlConstants.METHOD, description="Notify Parameter \"method\"")
         public String getMethod() {
             return method;
         }
@@ -383,6 +411,7 @@ public class FilterAction {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
+    @GraphQLType(name=GqlConstants.CLASS_TAG_ACTION, description="TagAction class")
     public static final class TagAction extends FilterAction {
 
         /**
@@ -401,6 +430,7 @@ public class FilterAction {
             this.tag = tag;
         }
 
+        @GraphQLQuery(name=GqlConstants.TAG, description="Tag name")
         public String getTag() {
             return tag;
         }
@@ -412,6 +442,7 @@ public class FilterAction {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
+    @GraphQLType(name=GqlConstants.CLASS_REPLY_ACTION, description="ReplyAction class")
     public static final class ReplyAction extends FilterAction {
 
         /**
@@ -433,6 +464,7 @@ public class FilterAction {
             this.content = content;
         }
 
+        @GraphQLQuery(name=GqlConstants.CONTENT, description="Body template")
         public String getContent() {
             return content;
         }
@@ -444,6 +476,7 @@ public class FilterAction {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
+    @GraphQLType(name=GqlConstants.CLASS_REJECT_ACTION, description="RejectAction class")
     public static class RejectAction extends FilterAction {
         public static final String TEXT_TEMPLATE = "text:";
 
@@ -463,6 +496,7 @@ public class FilterAction {
             this.content = content;
         }
 
+        @GraphQLQuery(name=GqlConstants.CONTENT, description="Message text")
         public String getContent() {
             return content;
         }
@@ -474,6 +508,7 @@ public class FilterAction {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
+    @GraphQLType(name=GqlConstants.CLASS_EREJECT_ACTION, description="ErejectAction class")
     public static final class ErejectAction extends RejectAction {
         @SuppressWarnings("unused")
         private ErejectAction() {
@@ -487,6 +522,7 @@ public class FilterAction {
 
     @XmlAccessorType(XmlAccessType.NONE)
     @JsonPropertyOrder({ "index", "level" })
+    @GraphQLType(name=GqlConstants.CLASS_LOG_ACTION, description="LogAction class")
     public static class LogAction extends FilterAction {
         @XmlEnum
         public enum LogLevel {
@@ -500,7 +536,7 @@ public class FilterAction {
             public static LogLevel fromString(String s) throws ServiceException {
                 try {
                     return LogLevel.valueOf(s);
-                } catch (IllegalArgumentException e) {
+                } catch (final IllegalArgumentException e) {
                     throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
                 }
             }
@@ -538,6 +574,7 @@ public class FilterAction {
         /**
          * @return the level
          */
+        @GraphQLQuery(name=GqlConstants.LEVEL, description="Log level")
         public LogLevel getLevel() {
             return level;
         }
@@ -552,6 +589,7 @@ public class FilterAction {
         /**
          * @return the content
          */
+        @GraphQLQuery(name=GqlConstants.CONTENT, description="Message text")
         public String getContent() {
             return content;
         }
@@ -564,6 +602,7 @@ public class FilterAction {
 
     @XmlAccessorType(XmlAccessType.NONE)
     @JsonPropertyOrder({ "index", "last", "headerName", "headerValue" })
+    @GraphQLType(name=GqlConstants.CLASS_ADD_HEADER_ACTION, description="AddheaderAction class")
     public static class AddheaderAction extends FilterAction {
         /**
          * @zm-api-field-tag headerName
@@ -614,6 +653,7 @@ public class FilterAction {
         /**
          * @return headerName
          */
+        @GraphQLQuery(name=GqlConstants.HEADER_NAME, description="Header name")
         public String getHeaderName() {
             return headerName;
         }
@@ -628,6 +668,7 @@ public class FilterAction {
         /**
          * @return headerValue
          */
+        @GraphQLQuery(name=GqlConstants.HEADER_VALUE, description="Header value")
         public String getHeaderValue() {
             return headerValue;
         }
@@ -642,6 +683,7 @@ public class FilterAction {
         /**
          * @return last
          */
+        @GraphQLQuery(name=GqlConstants.LAST, description="Last index")
         public Boolean getLast() {
             return last;
         }
@@ -665,6 +707,7 @@ public class FilterAction {
 
     @XmlAccessorType(XmlAccessType.NONE)
     @JsonPropertyOrder({ "index", "last", "offset", "test" })
+    @GraphQLType(name=GqlConstants.CLASS_DELETE_HEADER_ACTION, description="DeleteheaderAction class")
     public static class DeleteheaderAction extends FilterAction {
         /**
          * @zm-api-field-tag last
@@ -703,6 +746,7 @@ public class FilterAction {
         /**
          * @return the last
          */
+        @GraphQLQuery(name=GqlConstants.LAST, description="Last index")
         public Boolean getLast() {
             return last;
         }
@@ -717,6 +761,7 @@ public class FilterAction {
         /**
          * @return the offset
          */
+        @GraphQLQuery(name=GqlConstants.OFFSET, description="If true start from last")
         public Integer getOffset() {
             return offset;
         }
@@ -731,6 +776,7 @@ public class FilterAction {
         /**
          * @return the test
          */
+        @GraphQLQuery(name=GqlConstants.TEST, description="Test")
         public EditheaderTest getTest() {
             return test;
         }
@@ -764,6 +810,7 @@ public class FilterAction {
 
     @XmlAccessorType(XmlAccessType.NONE)
     @JsonPropertyOrder({ "index", "last", "offset", "newName", "newValue", "test" })
+    @GraphQLType(name=GqlConstants.CLASS_REPLACE_HEADER_ACTION, description="ReplaceheaderAction class")
     public static class ReplaceheaderAction extends DeleteheaderAction {
         /**
          * @zm-api-field-tag newName
@@ -799,6 +846,7 @@ public class FilterAction {
         /**
          * @return the newName
          */
+        @GraphQLQuery(name=GqlConstants.NEW_NAME, description="New name")
         public String getNewName() {
             return newName;
         }
@@ -813,6 +861,7 @@ public class FilterAction {
         /**
          * @return the newValue
          */
+        @GraphQLQuery(name=GqlConstants.NEW_VALUE, description="New value")
         public String getNewValue() {
             return newValue;
         }
