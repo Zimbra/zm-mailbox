@@ -178,7 +178,7 @@ public class SearchTest {
             e.printStackTrace();
         }
     }
-}
+
     /**
      * @throws java.lang.Exception
      */
