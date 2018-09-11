@@ -602,13 +602,15 @@ public abstract class AbstractIndexStoreTest {
             checkNextTerm(fields, new Term(LuceneFields.L_H_TO, "zimbra.com"));
             checkAtEnd(fields, LuceneFields.L_H_TO);
         }
-        try (fields = searcher.getIndexReader().getTermsForField(LuceneFields.L_SORT_DATE)) {
+        try (TermFieldEnumeration fields = searcher.getIndexReader()
+            .getTermsForField(LuceneFields.L_SORT_DATE)) {
             checkNextTermFieldType(fields, LuceneFields.L_SORT_DATE);
             // Check fails on ES, because ElasticSearch has more.  Not sure why and not sure it matters.
             // Check passes on Solr and on Lucene
             checkAtEnd(fields, LuceneFields.L_SORT_DATE);
         }
-        try (fields = searcher.getIndexReader().getTermsForField(LuceneFields.L_MAILBOX_BLOB_ID)) {
+        try (TermFieldEnumeration fields = searcher.getIndexReader()
+            .getTermsForField(LuceneFields.L_MAILBOX_BLOB_ID)) {
             checkNextTermFieldType(fields, LuceneFields.L_MAILBOX_BLOB_ID);
             checkNextTermFieldType(fields, LuceneFields.L_MAILBOX_BLOB_ID);
             // Check fails on ES, because ElasticSearch has more.  Investigate?  Believe it relates to fact that is a number field
