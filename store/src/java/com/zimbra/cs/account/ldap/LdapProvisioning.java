@@ -6934,6 +6934,8 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                                 attrs.getAttrString(Provisioning.A_description));
                         if (!activeOnly) {
                             adl.setActive(active);
+                            adl.setGalFilter(attrs.getAttrString(Provisioning.A_zimbraAddressListGalFilter));
+                            adl.setLdapFilter(attrs.getAttrString(Provisioning.A_zimbraAddressListLdapFilter));
                         }
                         result.add(adl);
                     }
