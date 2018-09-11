@@ -20,9 +20,11 @@ package com.zimbra.soap.account.type;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
 
 import com.google.common.base.MoreObjects;
 import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
@@ -57,6 +59,20 @@ public class AddressListInfo {
     private ZmBoolean active;
 
     /**
+     * @zm-api-field-tag galFilter
+     * @zm-api-field-description galFilter of the address list
+     */
+    @XmlElement(name = AdminConstants.E_GAL_FILTER /* galFilter */, required = false)
+    private String galFilter;
+
+    /**
+     * @zm-api-field-tag ldapFilter
+     * @zm-api-field-description ldapFilter of address list
+     */
+    @XmlElement(name = AdminConstants.E_LDAP_FILTER /* ldapFilter */, required = false)
+    private String ldapFilter;
+
+    /**
      * no-argument constructor wanted by JAXB
      */
     public AddressListInfo() {
@@ -89,11 +105,29 @@ public class AddressListInfo {
         this.active = ZmBoolean.fromBool(active, Boolean.FALSE);
     }
 
+    public String getGalFilter() {
+        return galFilter;
+    }
+
+    public String getLdapFilter() {
+        return ldapFilter;
+    }
+
+    public void setGalFilter(String galFilter) {
+        this.galFilter = galFilter;
+    }
+
+    public void setLdapFilter(String ldapFilter) {
+        this.ldapFilter = ldapFilter;
+    }
+
     public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         return helper.add("id", id)
                      .add("name", name)
                      .add("description", description)
-                     .add("active", active);
+                     .add("active", active)
+                     .add("galFilter", galFilter)
+                     .add("ldapFilter", ldapFilter);
     }
 
     @Override
