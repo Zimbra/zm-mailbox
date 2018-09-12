@@ -135,6 +135,7 @@ public class EventLogger {
         int numThreads = config.getNumThreads();
         ZimbraLog.event.info("Starting Event Notifier Logger with %s threads; initial event queue size is %s", numThreads, eventQueue.size());
         drainQueueBeforeShutdown.set(false);
+        shutdownExecutor.set(false);
 
         ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("EventLogger-Worker-Thread-%d").build();
         executorService = Executors.newFixedThreadPool(numThreads, namedThreadFactory);
@@ -156,7 +157,8 @@ public class EventLogger {
         }
 
         ZimbraLog.event.warn("Shutdown called for Event Notifier Executor; initiating shutdown sequence...");
-        executorService.shutdownNow();
+        shutdownExecutor.set(true);
+        executorService.shutdown();
         try {
             executorService.awaitTermination(30, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
