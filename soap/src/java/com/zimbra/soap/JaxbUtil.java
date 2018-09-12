@@ -204,6 +204,8 @@ public final class JaxbUtil {
             com.zimbra.soap.account.message.GetAllAddressListsResponse.class,
             com.zimbra.soap.admin.message.GetAllAddressListsRequest.class,
             com.zimbra.soap.admin.message.GetAllAddressListsResponse.class,
+            com.zimbra.soap.admin.message.DeleteAddressListRequest.class,
+            com.zimbra.soap.admin.message.DeleteAddressListResponse.class,
             com.zimbra.soap.admin.message.AbortHsmRequest.class,
             com.zimbra.soap.admin.message.AbortHsmResponse.class,
             com.zimbra.soap.admin.message.AbortXMbxSearchRequest.class,

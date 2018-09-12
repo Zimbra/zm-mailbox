@@ -2696,6 +2696,10 @@ public abstract class Provisioning extends ZAttrProvisioning {
         throw ServiceException.UNSUPPORTED();
     }
 
+    public void deleteAddressList(String addressListId) throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
+
     //
     //
     // Validators

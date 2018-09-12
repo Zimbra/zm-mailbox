@@ -35,21 +35,21 @@ public class AddressListInfo {
      * @zm-api-field-description Id of Address List
      */
     @XmlAttribute(name = AccountConstants.A_ID /* id */, required = true)
-    private final String id;
+    private String id;
 
     /**
      * @zm-api-field-tag name
      * @zm-api-field-description Name of the address list
      */
     @XmlAttribute(name = AccountConstants.A_NAME /* name */, required = true)
-    private final String name;
+    private String name;
 
     /**
      * @zm-api-field-tag description
      * @zm-api-field-description description of the address list
      */
     @XmlAttribute(name = AccountConstants.A_DESCRIPTION /* description */, required = false)
-    private final String description;
+    private String description;
 
     /**
      * @zm-api-field-tag active
@@ -73,6 +73,13 @@ public class AddressListInfo {
     private String ldapFilter;
 
     /**
+     * @zm-api-field-tag address-list-dn
+     * @zm-api-field-description DN of Address List
+     */
+    @XmlAttribute(name = AdminConstants.A_DN /* dn */, required = false)
+    private String dn;
+
+    /**
      * no-argument constructor wanted by JAXB
      */
     public AddressListInfo() {
@@ -85,6 +92,10 @@ public class AddressListInfo {
         this.description = description;
     }
 
+    public AddressListInfo(String dn) {
+        this.dn = dn;
+    }
+
     public String getId() {
         return id;
     }
@@ -95,6 +106,18 @@ public class AddressListInfo {
 
     public String getDescription() {
         return description;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public boolean isActive() {
@@ -121,13 +144,22 @@ public class AddressListInfo {
         this.ldapFilter = ldapFilter;
     }
 
+    public void setDn(String dn) {
+        this.dn = dn;
+    }
+
+    public String getDn() {
+        return dn;
+    }
+
     public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         return helper.add("id", id)
                      .add("name", name)
                      .add("description", description)
                      .add("active", active)
                      .add("galFilter", galFilter)
-                     .add("ldapFilter", ldapFilter);
+                     .add("ldapFilter", ldapFilter)
+                     .add("dn", dn);
     }
 
     @Override
