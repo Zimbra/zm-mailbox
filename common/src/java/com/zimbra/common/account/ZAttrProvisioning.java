@@ -440,22 +440,6 @@ public class ZAttrProvisioning {
         public boolean isAlias() { return this == alias;}
     }
 
-    public static enum EventSolrIndexType {
-        combined("combined"),
-        account("account");
-        private String mValue;
-        private EventSolrIndexType(String value) { mValue = value; }
-        public String toString() { return mValue; }
-        public static EventSolrIndexType fromString(String s) throws ServiceException {
-            for (EventSolrIndexType value : values()) {
-                if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
-        }
-        public boolean isCombined() { return this == combined;}
-        public boolean isAccount() { return this == account;}
-    }
-
     public static enum FeatureAddressVerificationStatus {
         verified("verified"),
         pending("pending"),
@@ -4782,6 +4766,16 @@ public class ZAttrProvisioning {
     public static final String A_zimbraConstraint = "zimbraConstraint";
 
     /**
+     * If TRUE, incoming emails will cause an AFFINITY event to be logged for
+     * each recipient. This allows for more accurate &quot;related
+     * contacts&quot; results, at the cost of higher index usage
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3049)
+    public static final String A_zimbraContactAffinityEventLoggingEnabled = "zimbraContactAffinityEventLoggingEnabled";
+
+    /**
      * Deprecated since: 6.0.7. deprecated in favor of
      * zimbraContactEmailFields, for bug 45475. Orig desc: Comma separates
      * list of attributes in contact object to search for email addresses
@@ -5526,7 +5520,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3050)
+    @ZAttr(id=3053)
     public static final String A_zimbraDefaultSortByRelevance = "zimbraDefaultSortByRelevance";
 
     /**
@@ -5960,7 +5954,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3045)
+    @ZAttr(id=3048)
     public static final String A_zimbraEventBackendURL = "zimbraEventBackendURL";
 
     /**
@@ -5972,7 +5966,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3042)
+    @ZAttr(id=3045)
     public static final String A_zimbraEventBatchLifetime = "zimbraEventBatchLifetime";
 
     /**
@@ -5982,8 +5976,33 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3041)
+    @ZAttr(id=3044)
     public static final String A_zimbraEventBatchMaxSize = "zimbraEventBatchMaxSize";
+
+    /**
+     * The initial number of shards that the event index is created with
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3059)
+    public static final String A_zimbraEventIndexInitialNumShards = "zimbraEventIndexInitialNumShards";
+
+    /**
+     * The name of the Solr collection to be used for indexing mailbox event
+     * data.
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3046)
+    public static final String A_zimbraEventIndexName = "zimbraEventIndexName";
+
+    /**
+     * Replication factor for the event index
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=3060)
+    public static final String A_zimbraEventIndexReplicationFactor = "zimbraEventIndexReplicationFactor";
 
     /**
      * Event logging backends to be used for storing events. The value before
@@ -5994,7 +6013,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3038)
+    @ZAttr(id=3042)
     public static final String A_zimbraEventLoggingBackends = "zimbraEventLoggingBackends";
 
     /**
@@ -6002,7 +6021,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3044)
+    @ZAttr(id=3047)
     public static final String A_zimbraEventLoggingEnabled = "zimbraEventLoggingEnabled";
 
     /**
@@ -6010,18 +6029,8 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3039)
-    public static final String A_zimbraEventLoggingNumThreads = "zimbraEventLoggingNumThreads";
-
-    /**
-     * If &quot;solrcloud&quot; event logging backend is enabled, this
-     * determines whether events are indexed in a single joint index or in
-     * account-level indexes
-     *
-     * @since ZCS 8.8.6
-     */
     @ZAttr(id=3043)
-    public static final String A_zimbraEventSolrIndexType = "zimbraEventSolrIndexType";
+    public static final String A_zimbraEventLoggingNumThreads = "zimbraEventLoggingNumThreads";
 
     /**
      * Indicates the account should be excluded from Crossmailbox searchers.
@@ -6875,6 +6884,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureReadReceiptsEnabled = "zimbraFeatureReadReceiptsEnabled";
 
     /**
+     * Whether the Related Contacts feature is enabled on the account/COS
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3052)
+    public static final String A_zimbraFeatureRelatedContactsEnabled = "zimbraFeatureRelatedContactsEnabled";
+
+    /**
      * status of password reset feature
      *
      * @since ZCS 8.8.9
@@ -6905,7 +6922,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3022)
+    @ZAttr(id=3024)
     public static final String A_zimbraFeatureSearchHistoryEnabled = "zimbraFeatureSearchHistoryEnabled";
 
     /**
@@ -8331,7 +8348,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3030)
+    @ZAttr(id=3034)
     public static final String A_zimbraIndexingQueueMaxSize = "zimbraIndexingQueueMaxSize";
 
     /**
@@ -8343,7 +8360,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3033)
+    @ZAttr(id=3037)
     public static final String A_zimbraIndexingQueuePollingInterval = "zimbraIndexingQueuePollingInterval";
 
     /**
@@ -8356,7 +8373,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3036)
+    @ZAttr(id=3040)
     public static final String A_zimbraIndexingQueueTimeout = "zimbraIndexingQueueTimeout";
 
     /**
@@ -8369,7 +8386,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3027)
+    @ZAttr(id=3031)
     public static final String A_zimbraIndexPollingInterval = "zimbraIndexPollingInterval";
 
     /**
@@ -8378,7 +8395,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3032)
+    @ZAttr(id=3036)
     public static final String A_zimbraIndexReIndexThreads = "zimbraIndexReIndexThreads";
 
     /**
@@ -8393,7 +8410,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3026)
+    @ZAttr(id=3030)
     public static final String A_zimbraIndexReplicationTimeout = "zimbraIndexReplicationTimeout";
 
     /**
@@ -8401,7 +8418,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3024)
+    @ZAttr(id=3028)
     public static final String A_zimbraIndexTermsCacheSize = "zimbraIndexTermsCacheSize";
 
     /**
@@ -8409,7 +8426,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3031)
+    @ZAttr(id=3035)
     public static final String A_zimbraIndexThreads = "zimbraIndexThreads";
 
     /**
@@ -8424,7 +8441,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3023)
+    @ZAttr(id=3027)
     public static final String A_zimbraIndexURL = "zimbraIndexURL";
 
     /**
@@ -8872,7 +8889,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3052)
+    @ZAttr(id=3055)
     public static final String A_zimbraMachineLearningBackendURL = "zimbraMachineLearningBackendURL";
 
     /**
@@ -8880,7 +8897,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3051)
+    @ZAttr(id=3054)
     public static final String A_zimbraMachineLearningClassifierInfo = "zimbraMachineLearningClassifierInfo";
 
     /**
@@ -8889,7 +8906,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3053)
+    @ZAttr(id=3056)
     public static final String A_zimbraMachineLearningTaskConfig = "zimbraMachineLearningTaskConfig";
 
     /**
@@ -9003,6 +9020,22 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1832)
     public static final String A_zimbraMailboxdSSLRenegotiationAllowed = "zimbraMailboxdSSLRenegotiationAllowed";
+
+    /**
+     * The initial number of shards that the mailbox index is created with
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3058)
+    public static final String A_zimbraMailboxIndexInitialNumShards = "zimbraMailboxIndexInitialNumShards";
+
+    /**
+     * The name of the Solr collection to be used for indexing mailbox data.
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3057)
+    public static final String A_zimbraMailboxIndexName = "zimbraMailboxIndexName";
 
     /**
      * serverId:mboxId of mailbox before being moved
@@ -9723,7 +9756,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3034)
+    @ZAttr(id=3038)
     public static final String A_zimbraMaxIndexingRetries = "zimbraMaxIndexingRetries";
 
     /**
@@ -12117,7 +12150,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3023)
+    @ZAttr(id=3025)
     public static final String A_zimbraNumSearchesForSavedSearchPrompt = "zimbraNumSearchesForSavedSearchPrompt";
 
     /**
@@ -12135,7 +12168,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.9
      */
-    @ZAttr(id=3026)
+    @ZAttr(id=3066)
     public static final String A_zimbraOAuthConsumerAPIScope = "zimbraOAuthConsumerAPIScope";
 
     /**
@@ -12153,7 +12186,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.9
      */
-    @ZAttr(id=3025)
+    @ZAttr(id=3065)
     public static final String A_zimbraOAuthConsumerRedirectUri = "zimbraOAuthConsumerRedirectUri";
 
     /**
@@ -14628,8 +14661,30 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3035)
+    @ZAttr(id=3039)
     public static final String A_zimbraReindexBatchSize = "zimbraReindexBatchSize";
+
+    /**
+     * The time window for which related contacts are calculated; emails
+     * older than this will not affect the contact affinity calculation. Must
+     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3050)
+    public static final String A_zimbraRelatedContactsMaxAge = "zimbraRelatedContactsMaxAge";
+
+    /**
+     * The number of times two contacts have to co-occur on an email in order
+     * to be considered related
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3051)
+    public static final String A_zimbraRelatedContactsMinConcurrenceCount = "zimbraRelatedContactsMinConcurrenceCount";
 
     /**
      * port number on which the remote IMAP server should listen
@@ -15799,7 +15854,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3024)
+    @ZAttr(id=3026)
     public static final String A_zimbraSearchHistoryAge = "zimbraSearchHistoryAge";
 
     /**
@@ -16509,26 +16564,15 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3025)
+    @ZAttr(id=3029)
     public static final String A_zimbraSolrMaxRetries = "zimbraSolrMaxRetries";
 
     /**
-     * Limit for how many replicas of the same SOLR Collection are allowed to
-     * be created on each node.
+     * Replication factor for the mailbox index
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3037)
-    public static final String A_zimbraSolrMaxShardsPerNode = "zimbraSolrMaxShardsPerNode";
-
-    /**
-     * Number of instances of a Solr Collection that will be created for each
-     * mailbox. This value is used in replicationFactor parameter when
-     * creating Solr Collections in SolrCloud with via Collections API.
-     *
-     * @since ZCS 8.8.6
-     */
-    @ZAttr(id=3028)
+    @ZAttr(id=3032)
     public static final String A_zimbraSolrReplicationFactor = "zimbraSolrReplicationFactor";
 
     /**
@@ -17614,7 +17658,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.9
      */
-    @ZAttr(id=3024)
+    @ZAttr(id=3064)
     public static final String A_zimbraXZimletCompatibleSemVer = "zimbraXZimletCompatibleSemVer";
 
     /**
@@ -17789,7 +17833,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3029)
+    @ZAttr(id=3033)
     public static final String A_zimbraZKClientTimeout = "zimbraZKClientTimeout";
 
     /**

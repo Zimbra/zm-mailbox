@@ -8452,7 +8452,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3045)
+    @ZAttr(id=3048)
     public String getEventBackendURL() {
         return getAttr(Provisioning.A_zimbraEventBackendURL, null, true);
     }
@@ -8465,7 +8465,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3045)
+    @ZAttr(id=3048)
     public void setEventBackendURL(String zimbraEventBackendURL) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEventBackendURL, zimbraEventBackendURL);
@@ -8481,7 +8481,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3045)
+    @ZAttr(id=3048)
     public Map<String,Object> setEventBackendURL(String zimbraEventBackendURL, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEventBackendURL, zimbraEventBackendURL);
@@ -8495,7 +8495,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3045)
+    @ZAttr(id=3048)
     public void unsetEventBackendURL() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEventBackendURL, "");
@@ -8510,7 +8510,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3045)
+    @ZAttr(id=3048)
     public Map<String,Object> unsetEventBackendURL(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEventBackendURL, "");
@@ -8532,7 +8532,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3042)
+    @ZAttr(id=3045)
     public long getEventBatchLifetime() {
         return getTimeInterval(Provisioning.A_zimbraEventBatchLifetime, 300000L, true);
     }
@@ -8548,7 +8548,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3042)
+    @ZAttr(id=3045)
     public String getEventBatchLifetimeAsString() {
         return getAttr(Provisioning.A_zimbraEventBatchLifetime, "5m", true);
     }
@@ -8565,7 +8565,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3042)
+    @ZAttr(id=3045)
     public void setEventBatchLifetime(String zimbraEventBatchLifetime) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEventBatchLifetime, zimbraEventBatchLifetime);
@@ -8585,7 +8585,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3042)
+    @ZAttr(id=3045)
     public Map<String,Object> setEventBatchLifetime(String zimbraEventBatchLifetime, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEventBatchLifetime, zimbraEventBatchLifetime);
@@ -8603,7 +8603,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3042)
+    @ZAttr(id=3045)
     public void unsetEventBatchLifetime() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEventBatchLifetime, "");
@@ -8622,7 +8622,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3042)
+    @ZAttr(id=3045)
     public Map<String,Object> unsetEventBatchLifetime(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEventBatchLifetime, "");
@@ -8638,7 +8638,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3041)
+    @ZAttr(id=3044)
     public int getEventBatchMaxSize() {
         return getIntAttr(Provisioning.A_zimbraEventBatchMaxSize, 100, true);
     }
@@ -8653,7 +8653,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3041)
+    @ZAttr(id=3044)
     public void setEventBatchMaxSize(int zimbraEventBatchMaxSize) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEventBatchMaxSize, Integer.toString(zimbraEventBatchMaxSize));
@@ -8671,7 +8671,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3041)
+    @ZAttr(id=3044)
     public Map<String,Object> setEventBatchMaxSize(int zimbraEventBatchMaxSize, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEventBatchMaxSize, Integer.toString(zimbraEventBatchMaxSize));
@@ -8687,7 +8687,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3041)
+    @ZAttr(id=3044)
     public void unsetEventBatchMaxSize() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEventBatchMaxSize, "");
@@ -8704,159 +8704,10 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3041)
+    @ZAttr(id=3044)
     public Map<String,Object> unsetEventBatchMaxSize(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEventBatchMaxSize, "");
-        return attrs;
-    }
-
-    /**
-     * The initial number of shards that the event index is created with
-     *
-     * @return zimbraEventIndexInitialNumShards, or -1 if unset
-     *
-     * @since ZCS 8.8.6
-     */
-    @ZAttr(id=3056)
-    public int getEventIndexInitialNumShards() {
-        return getIntAttr(Provisioning.A_zimbraEventIndexInitialNumShards, -1, true);
-    }
-
-    /**
-     * The initial number of shards that the event index is created with
-     *
-     * @param zimbraEventIndexInitialNumShards new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.8.6
-     */
-    @ZAttr(id=3056)
-    public void setEventIndexInitialNumShards(int zimbraEventIndexInitialNumShards) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraEventIndexInitialNumShards, Integer.toString(zimbraEventIndexInitialNumShards));
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * The initial number of shards that the event index is created with
-     *
-     * @param zimbraEventIndexInitialNumShards new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.8.6
-     */
-    @ZAttr(id=3056)
-    public Map<String,Object> setEventIndexInitialNumShards(int zimbraEventIndexInitialNumShards, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraEventIndexInitialNumShards, Integer.toString(zimbraEventIndexInitialNumShards));
-        return attrs;
-    }
-
-    /**
-     * The initial number of shards that the event index is created with
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.8.6
-     */
-    @ZAttr(id=3056)
-    public void unsetEventIndexInitialNumShards() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraEventIndexInitialNumShards, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * The initial number of shards that the event index is created with
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.8.6
-     */
-    @ZAttr(id=3056)
-    public Map<String,Object> unsetEventIndexInitialNumShards(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraEventIndexInitialNumShards, "");
-        return attrs;
-    }
-
-    /**
-     * The name of the Solr collection to be used for indexing mailbox event
-     * data.
-     *
-     * @return zimbraEventIndexName, or null if unset
-     *
-     * @since ZCS 8.8.6
-     */
-    @ZAttr(id=3043)
-    public String getEventIndexName() {
-        return getAttr(Provisioning.A_zimbraEventIndexName, null, true);
-    }
-
-    /**
-     * The name of the Solr collection to be used for indexing mailbox event
-     * data.
-     *
-     * @param zimbraEventIndexName new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.8.6
-     */
-    @ZAttr(id=3043)
-    public void setEventIndexName(String zimbraEventIndexName) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraEventIndexName, zimbraEventIndexName);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * The name of the Solr collection to be used for indexing mailbox event
-     * data.
-     *
-     * @param zimbraEventIndexName new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.8.6
-     */
-    @ZAttr(id=3043)
-    public Map<String,Object> setEventIndexName(String zimbraEventIndexName, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraEventIndexName, zimbraEventIndexName);
-        return attrs;
-    }
-
-    /**
-     * The name of the Solr collection to be used for indexing mailbox event
-     * data.
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.8.6
-     */
-    @ZAttr(id=3043)
-    public void unsetEventIndexName() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraEventIndexName, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * The name of the Solr collection to be used for indexing mailbox event
-     * data.
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.8.6
-     */
-    @ZAttr(id=3043)
-    public Map<String,Object> unsetEventIndexName(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraEventIndexName, "");
         return attrs;
     }
 
@@ -8871,7 +8722,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3038)
+    @ZAttr(id=3042)
     public String[] getEventLoggingBackends() {
         String[] value = getMultiAttr(Provisioning.A_zimbraEventLoggingBackends, true, true); return value.length > 0 ? value : new String[] {"file:"};
     }
@@ -8888,7 +8739,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3038)
+    @ZAttr(id=3042)
     public void setEventLoggingBackends(String[] zimbraEventLoggingBackends) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEventLoggingBackends, zimbraEventLoggingBackends);
@@ -8908,7 +8759,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3038)
+    @ZAttr(id=3042)
     public Map<String,Object> setEventLoggingBackends(String[] zimbraEventLoggingBackends, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEventLoggingBackends, zimbraEventLoggingBackends);
@@ -8927,7 +8778,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3038)
+    @ZAttr(id=3042)
     public void addEventLoggingBackends(String zimbraEventLoggingBackends) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraEventLoggingBackends, zimbraEventLoggingBackends);
@@ -8947,7 +8798,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3038)
+    @ZAttr(id=3042)
     public Map<String,Object> addEventLoggingBackends(String zimbraEventLoggingBackends, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraEventLoggingBackends, zimbraEventLoggingBackends);
@@ -8966,7 +8817,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3038)
+    @ZAttr(id=3042)
     public void removeEventLoggingBackends(String zimbraEventLoggingBackends) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraEventLoggingBackends, zimbraEventLoggingBackends);
@@ -8986,7 +8837,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3038)
+    @ZAttr(id=3042)
     public Map<String,Object> removeEventLoggingBackends(String zimbraEventLoggingBackends, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraEventLoggingBackends, zimbraEventLoggingBackends);
@@ -9004,7 +8855,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3038)
+    @ZAttr(id=3042)
     public void unsetEventLoggingBackends() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEventLoggingBackends, "");
@@ -9023,7 +8874,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3038)
+    @ZAttr(id=3042)
     public Map<String,Object> unsetEventLoggingBackends(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEventLoggingBackends, "");
@@ -9037,7 +8888,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3044)
+    @ZAttr(id=3047)
     public boolean isEventLoggingEnabled() {
         return getBooleanAttr(Provisioning.A_zimbraEventLoggingEnabled, true, true);
     }
@@ -9050,7 +8901,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3044)
+    @ZAttr(id=3047)
     public void setEventLoggingEnabled(boolean zimbraEventLoggingEnabled) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEventLoggingEnabled, zimbraEventLoggingEnabled ? TRUE : FALSE);
@@ -9066,7 +8917,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3044)
+    @ZAttr(id=3047)
     public Map<String,Object> setEventLoggingEnabled(boolean zimbraEventLoggingEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEventLoggingEnabled, zimbraEventLoggingEnabled ? TRUE : FALSE);
@@ -9080,7 +8931,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3044)
+    @ZAttr(id=3047)
     public void unsetEventLoggingEnabled() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEventLoggingEnabled, "");
@@ -9095,7 +8946,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3044)
+    @ZAttr(id=3047)
     public Map<String,Object> unsetEventLoggingEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEventLoggingEnabled, "");
@@ -9109,7 +8960,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3039)
+    @ZAttr(id=3043)
     public int getEventLoggingNumThreads() {
         return getIntAttr(Provisioning.A_zimbraEventLoggingNumThreads, 10, true);
     }
@@ -9122,7 +8973,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3039)
+    @ZAttr(id=3043)
     public void setEventLoggingNumThreads(int zimbraEventLoggingNumThreads) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEventLoggingNumThreads, Integer.toString(zimbraEventLoggingNumThreads));
@@ -9138,7 +8989,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3039)
+    @ZAttr(id=3043)
     public Map<String,Object> setEventLoggingNumThreads(int zimbraEventLoggingNumThreads, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEventLoggingNumThreads, Integer.toString(zimbraEventLoggingNumThreads));
@@ -9152,7 +9003,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3039)
+    @ZAttr(id=3043)
     public void unsetEventLoggingNumThreads() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEventLoggingNumThreads, "");
@@ -9167,7 +9018,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3039)
+    @ZAttr(id=3043)
     public Map<String,Object> unsetEventLoggingNumThreads(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEventLoggingNumThreads, "");
@@ -14340,7 +14191,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3027)
+    @ZAttr(id=3031)
     public long getIndexPollingInterval() {
         return getTimeInterval(Provisioning.A_zimbraIndexPollingInterval, -1L, true);
     }
@@ -14357,7 +14208,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3027)
+    @ZAttr(id=3031)
     public String getIndexPollingIntervalAsString() {
         return getAttr(Provisioning.A_zimbraIndexPollingInterval, null, true);
     }
@@ -14375,7 +14226,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3027)
+    @ZAttr(id=3031)
     public void setIndexPollingInterval(String zimbraIndexPollingInterval) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraIndexPollingInterval, zimbraIndexPollingInterval);
@@ -14396,7 +14247,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3027)
+    @ZAttr(id=3031)
     public Map<String,Object> setIndexPollingInterval(String zimbraIndexPollingInterval, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraIndexPollingInterval, zimbraIndexPollingInterval);
@@ -14415,7 +14266,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3027)
+    @ZAttr(id=3031)
     public void unsetIndexPollingInterval() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraIndexPollingInterval, "");
@@ -14435,7 +14286,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3027)
+    @ZAttr(id=3031)
     public Map<String,Object> unsetIndexPollingInterval(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraIndexPollingInterval, "");
@@ -14450,7 +14301,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3032)
+    @ZAttr(id=3036)
     public int getIndexReIndexThreads() {
         return getIntAttr(Provisioning.A_zimbraIndexReIndexThreads, 10, true);
     }
@@ -14464,7 +14315,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3032)
+    @ZAttr(id=3036)
     public void setIndexReIndexThreads(int zimbraIndexReIndexThreads) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraIndexReIndexThreads, Integer.toString(zimbraIndexReIndexThreads));
@@ -14481,7 +14332,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3032)
+    @ZAttr(id=3036)
     public Map<String,Object> setIndexReIndexThreads(int zimbraIndexReIndexThreads, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraIndexReIndexThreads, Integer.toString(zimbraIndexReIndexThreads));
@@ -14496,7 +14347,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3032)
+    @ZAttr(id=3036)
     public void unsetIndexReIndexThreads() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraIndexReIndexThreads, "");
@@ -14512,7 +14363,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3032)
+    @ZAttr(id=3036)
     public Map<String,Object> unsetIndexReIndexThreads(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraIndexReIndexThreads, "");
@@ -14537,7 +14388,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3026)
+    @ZAttr(id=3030)
     public long getIndexReplicationTimeout() {
         return getTimeInterval(Provisioning.A_zimbraIndexReplicationTimeout, 20000L, true);
     }
@@ -14556,7 +14407,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3026)
+    @ZAttr(id=3030)
     public String getIndexReplicationTimeoutAsString() {
         return getAttr(Provisioning.A_zimbraIndexReplicationTimeout, "20s", true);
     }
@@ -14576,7 +14427,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3026)
+    @ZAttr(id=3030)
     public void setIndexReplicationTimeout(String zimbraIndexReplicationTimeout) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraIndexReplicationTimeout, zimbraIndexReplicationTimeout);
@@ -14599,7 +14450,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3026)
+    @ZAttr(id=3030)
     public Map<String,Object> setIndexReplicationTimeout(String zimbraIndexReplicationTimeout, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraIndexReplicationTimeout, zimbraIndexReplicationTimeout);
@@ -14620,7 +14471,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3026)
+    @ZAttr(id=3030)
     public void unsetIndexReplicationTimeout() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraIndexReplicationTimeout, "");
@@ -14642,7 +14493,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3026)
+    @ZAttr(id=3030)
     public Map<String,Object> unsetIndexReplicationTimeout(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraIndexReplicationTimeout, "");
@@ -14656,7 +14507,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3024)
+    @ZAttr(id=3028)
     public int getIndexTermsCacheSize() {
         return getIntAttr(Provisioning.A_zimbraIndexTermsCacheSize, 1024, true);
     }
@@ -14669,7 +14520,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3024)
+    @ZAttr(id=3028)
     public void setIndexTermsCacheSize(int zimbraIndexTermsCacheSize) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraIndexTermsCacheSize, Integer.toString(zimbraIndexTermsCacheSize));
@@ -14685,7 +14536,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3024)
+    @ZAttr(id=3028)
     public Map<String,Object> setIndexTermsCacheSize(int zimbraIndexTermsCacheSize, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraIndexTermsCacheSize, Integer.toString(zimbraIndexTermsCacheSize));
@@ -14699,7 +14550,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3024)
+    @ZAttr(id=3028)
     public void unsetIndexTermsCacheSize() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraIndexTermsCacheSize, "");
@@ -14714,7 +14565,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3024)
+    @ZAttr(id=3028)
     public Map<String,Object> unsetIndexTermsCacheSize(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraIndexTermsCacheSize, "");
@@ -14728,7 +14579,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3031)
+    @ZAttr(id=3035)
     public int getIndexThreads() {
         return getIntAttr(Provisioning.A_zimbraIndexThreads, 10, true);
     }
@@ -14741,7 +14592,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3031)
+    @ZAttr(id=3035)
     public void setIndexThreads(int zimbraIndexThreads) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraIndexThreads, Integer.toString(zimbraIndexThreads));
@@ -14757,7 +14608,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3031)
+    @ZAttr(id=3035)
     public Map<String,Object> setIndexThreads(int zimbraIndexThreads, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraIndexThreads, Integer.toString(zimbraIndexThreads));
@@ -14771,7 +14622,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3031)
+    @ZAttr(id=3035)
     public void unsetIndexThreads() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraIndexThreads, "");
@@ -14786,7 +14637,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3031)
+    @ZAttr(id=3035)
     public Map<String,Object> unsetIndexThreads(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraIndexThreads, "");
@@ -14807,7 +14658,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3023)
+    @ZAttr(id=3027)
     public String getIndexURL() {
         return getAttr(Provisioning.A_zimbraIndexURL, "solr:http://localhost:7983/solr", true);
     }
@@ -14827,7 +14678,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3023)
+    @ZAttr(id=3027)
     public void setIndexURL(String zimbraIndexURL) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraIndexURL, zimbraIndexURL);
@@ -14850,7 +14701,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3023)
+    @ZAttr(id=3027)
     public Map<String,Object> setIndexURL(String zimbraIndexURL, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraIndexURL, zimbraIndexURL);
@@ -14871,7 +14722,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3023)
+    @ZAttr(id=3027)
     public void unsetIndexURL() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraIndexURL, "");
@@ -14893,7 +14744,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3023)
+    @ZAttr(id=3027)
     public Map<String,Object> unsetIndexURL(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraIndexURL, "");
@@ -14908,7 +14759,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3030)
+    @ZAttr(id=3034)
     public int getIndexingQueueMaxSize() {
         return getIntAttr(Provisioning.A_zimbraIndexingQueueMaxSize, 10000, true);
     }
@@ -14922,7 +14773,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3030)
+    @ZAttr(id=3034)
     public void setIndexingQueueMaxSize(int zimbraIndexingQueueMaxSize) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraIndexingQueueMaxSize, Integer.toString(zimbraIndexingQueueMaxSize));
@@ -14939,7 +14790,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3030)
+    @ZAttr(id=3034)
     public Map<String,Object> setIndexingQueueMaxSize(int zimbraIndexingQueueMaxSize, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraIndexingQueueMaxSize, Integer.toString(zimbraIndexingQueueMaxSize));
@@ -14954,7 +14805,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3030)
+    @ZAttr(id=3034)
     public void unsetIndexingQueueMaxSize() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraIndexingQueueMaxSize, "");
@@ -14970,7 +14821,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3030)
+    @ZAttr(id=3034)
     public Map<String,Object> unsetIndexingQueueMaxSize(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraIndexingQueueMaxSize, "");
@@ -14992,7 +14843,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3033)
+    @ZAttr(id=3037)
     public long getIndexingQueuePollingInterval() {
         return getTimeInterval(Provisioning.A_zimbraIndexingQueuePollingInterval, -1L, true);
     }
@@ -15008,7 +14859,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3033)
+    @ZAttr(id=3037)
     public String getIndexingQueuePollingIntervalAsString() {
         return getAttr(Provisioning.A_zimbraIndexingQueuePollingInterval, null, true);
     }
@@ -15025,7 +14876,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3033)
+    @ZAttr(id=3037)
     public void setIndexingQueuePollingInterval(String zimbraIndexingQueuePollingInterval) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraIndexingQueuePollingInterval, zimbraIndexingQueuePollingInterval);
@@ -15045,7 +14896,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3033)
+    @ZAttr(id=3037)
     public Map<String,Object> setIndexingQueuePollingInterval(String zimbraIndexingQueuePollingInterval, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraIndexingQueuePollingInterval, zimbraIndexingQueuePollingInterval);
@@ -15063,7 +14914,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3033)
+    @ZAttr(id=3037)
     public void unsetIndexingQueuePollingInterval() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraIndexingQueuePollingInterval, "");
@@ -15082,7 +14933,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3033)
+    @ZAttr(id=3037)
     public Map<String,Object> unsetIndexingQueuePollingInterval(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraIndexingQueuePollingInterval, "");
@@ -15105,7 +14956,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3036)
+    @ZAttr(id=3040)
     public long getIndexingQueueTimeout() {
         return getTimeInterval(Provisioning.A_zimbraIndexingQueueTimeout, -1L, true);
     }
@@ -15122,7 +14973,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3036)
+    @ZAttr(id=3040)
     public String getIndexingQueueTimeoutAsString() {
         return getAttr(Provisioning.A_zimbraIndexingQueueTimeout, null, true);
     }
@@ -15140,7 +14991,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3036)
+    @ZAttr(id=3040)
     public void setIndexingQueueTimeout(String zimbraIndexingQueueTimeout) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraIndexingQueueTimeout, zimbraIndexingQueueTimeout);
@@ -15161,7 +15012,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3036)
+    @ZAttr(id=3040)
     public Map<String,Object> setIndexingQueueTimeout(String zimbraIndexingQueueTimeout, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraIndexingQueueTimeout, zimbraIndexingQueueTimeout);
@@ -15180,7 +15031,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3036)
+    @ZAttr(id=3040)
     public void unsetIndexingQueueTimeout() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraIndexingQueueTimeout, "");
@@ -15200,7 +15051,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3036)
+    @ZAttr(id=3040)
     public Map<String,Object> unsetIndexingQueueTimeout(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraIndexingQueueTimeout, "");
@@ -16893,7 +16744,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3052)
+    @ZAttr(id=3055)
     public String getMachineLearningBackendURL() {
         return getAttr(Provisioning.A_zimbraMachineLearningBackendURL, null, true);
     }
@@ -16908,7 +16759,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3052)
+    @ZAttr(id=3055)
     public void setMachineLearningBackendURL(String zimbraMachineLearningBackendURL) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMachineLearningBackendURL, zimbraMachineLearningBackendURL);
@@ -16926,7 +16777,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3052)
+    @ZAttr(id=3055)
     public Map<String,Object> setMachineLearningBackendURL(String zimbraMachineLearningBackendURL, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMachineLearningBackendURL, zimbraMachineLearningBackendURL);
@@ -16942,7 +16793,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3052)
+    @ZAttr(id=3055)
     public void unsetMachineLearningBackendURL() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMachineLearningBackendURL, "");
@@ -16959,7 +16810,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3052)
+    @ZAttr(id=3055)
     public Map<String,Object> unsetMachineLearningBackendURL(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMachineLearningBackendURL, "");
@@ -16974,7 +16825,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3053)
+    @ZAttr(id=3056)
     public String[] getMachineLearningTaskConfig() {
         return getMultiAttr(Provisioning.A_zimbraMachineLearningTaskConfig, true, true);
     }
@@ -16988,7 +16839,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3053)
+    @ZAttr(id=3056)
     public void setMachineLearningTaskConfig(String[] zimbraMachineLearningTaskConfig) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMachineLearningTaskConfig, zimbraMachineLearningTaskConfig);
@@ -17005,7 +16856,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3053)
+    @ZAttr(id=3056)
     public Map<String,Object> setMachineLearningTaskConfig(String[] zimbraMachineLearningTaskConfig, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMachineLearningTaskConfig, zimbraMachineLearningTaskConfig);
@@ -17021,7 +16872,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3053)
+    @ZAttr(id=3056)
     public void addMachineLearningTaskConfig(String zimbraMachineLearningTaskConfig) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMachineLearningTaskConfig, zimbraMachineLearningTaskConfig);
@@ -17038,7 +16889,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3053)
+    @ZAttr(id=3056)
     public Map<String,Object> addMachineLearningTaskConfig(String zimbraMachineLearningTaskConfig, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMachineLearningTaskConfig, zimbraMachineLearningTaskConfig);
@@ -17054,7 +16905,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3053)
+    @ZAttr(id=3056)
     public void removeMachineLearningTaskConfig(String zimbraMachineLearningTaskConfig) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMachineLearningTaskConfig, zimbraMachineLearningTaskConfig);
@@ -17071,7 +16922,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3053)
+    @ZAttr(id=3056)
     public Map<String,Object> removeMachineLearningTaskConfig(String zimbraMachineLearningTaskConfig, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMachineLearningTaskConfig, zimbraMachineLearningTaskConfig);
@@ -17086,7 +16937,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3053)
+    @ZAttr(id=3056)
     public void unsetMachineLearningTaskConfig() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMachineLearningTaskConfig, "");
@@ -17102,7 +16953,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3053)
+    @ZAttr(id=3056)
     public Map<String,Object> unsetMachineLearningTaskConfig(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMachineLearningTaskConfig, "");
@@ -20741,150 +20592,6 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * The initial number of shards that the mailbox index is created with
-     *
-     * @return zimbraMailboxIndexInitialNumShards, or -1 if unset
-     *
-     * @since ZCS 8.8.6
-     */
-    @ZAttr(id=3055)
-    public int getMailboxIndexInitialNumShards() {
-        return getIntAttr(Provisioning.A_zimbraMailboxIndexInitialNumShards, -1, true);
-    }
-
-    /**
-     * The initial number of shards that the mailbox index is created with
-     *
-     * @param zimbraMailboxIndexInitialNumShards new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.8.6
-     */
-    @ZAttr(id=3055)
-    public void setMailboxIndexInitialNumShards(int zimbraMailboxIndexInitialNumShards) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMailboxIndexInitialNumShards, Integer.toString(zimbraMailboxIndexInitialNumShards));
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * The initial number of shards that the mailbox index is created with
-     *
-     * @param zimbraMailboxIndexInitialNumShards new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.8.6
-     */
-    @ZAttr(id=3055)
-    public Map<String,Object> setMailboxIndexInitialNumShards(int zimbraMailboxIndexInitialNumShards, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMailboxIndexInitialNumShards, Integer.toString(zimbraMailboxIndexInitialNumShards));
-        return attrs;
-    }
-
-    /**
-     * The initial number of shards that the mailbox index is created with
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.8.6
-     */
-    @ZAttr(id=3055)
-    public void unsetMailboxIndexInitialNumShards() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMailboxIndexInitialNumShards, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * The initial number of shards that the mailbox index is created with
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.8.6
-     */
-    @ZAttr(id=3055)
-    public Map<String,Object> unsetMailboxIndexInitialNumShards(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMailboxIndexInitialNumShards, "");
-        return attrs;
-    }
-
-    /**
-     * The name of the Solr collection to be used for indexing mailbox data.
-     *
-     * @return zimbraMailboxIndexName, or null if unset
-     *
-     * @since ZCS 8.8.6
-     */
-    @ZAttr(id=3054)
-    public String getMailboxIndexName() {
-        return getAttr(Provisioning.A_zimbraMailboxIndexName, null, true);
-    }
-
-    /**
-     * The name of the Solr collection to be used for indexing mailbox data.
-     *
-     * @param zimbraMailboxIndexName new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.8.6
-     */
-    @ZAttr(id=3054)
-    public void setMailboxIndexName(String zimbraMailboxIndexName) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMailboxIndexName, zimbraMailboxIndexName);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * The name of the Solr collection to be used for indexing mailbox data.
-     *
-     * @param zimbraMailboxIndexName new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.8.6
-     */
-    @ZAttr(id=3054)
-    public Map<String,Object> setMailboxIndexName(String zimbraMailboxIndexName, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMailboxIndexName, zimbraMailboxIndexName);
-        return attrs;
-    }
-
-    /**
-     * The name of the Solr collection to be used for indexing mailbox data.
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.8.6
-     */
-    @ZAttr(id=3054)
-    public void unsetMailboxIndexName() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMailboxIndexName, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * The name of the Solr collection to be used for indexing mailbox data.
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.8.6
-     */
-    @ZAttr(id=3054)
-    public Map<String,Object> unsetMailboxIndexName(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMailboxIndexName, "");
-        return attrs;
-    }
-
-    /**
      * This attribute is used in the case of a failed mailbox move. It
      * indicates the delay before the cleanup task is executed for the first
      * time. It also indicates the time interval at which the cleanup task
@@ -21653,7 +21360,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3034)
+    @ZAttr(id=3038)
     public int getMaxIndexingRetries() {
         return getIntAttr(Provisioning.A_zimbraMaxIndexingRetries, 2, true);
     }
@@ -21669,7 +21376,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3034)
+    @ZAttr(id=3038)
     public void setMaxIndexingRetries(int zimbraMaxIndexingRetries) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMaxIndexingRetries, Integer.toString(zimbraMaxIndexingRetries));
@@ -21688,7 +21395,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3034)
+    @ZAttr(id=3038)
     public Map<String,Object> setMaxIndexingRetries(int zimbraMaxIndexingRetries, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMaxIndexingRetries, Integer.toString(zimbraMaxIndexingRetries));
@@ -21705,7 +21412,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3034)
+    @ZAttr(id=3038)
     public void unsetMaxIndexingRetries() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMaxIndexingRetries, "");
@@ -21723,7 +21430,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3034)
+    @ZAttr(id=3038)
     public Map<String,Object> unsetMaxIndexingRetries(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMaxIndexingRetries, "");
@@ -41010,7 +40717,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3035)
+    @ZAttr(id=3039)
     public int getReindexBatchSize() {
         return getIntAttr(Provisioning.A_zimbraReindexBatchSize, 20, true);
     }
@@ -41023,7 +40730,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3035)
+    @ZAttr(id=3039)
     public void setReindexBatchSize(int zimbraReindexBatchSize) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReindexBatchSize, Integer.toString(zimbraReindexBatchSize));
@@ -41039,7 +40746,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3035)
+    @ZAttr(id=3039)
     public Map<String,Object> setReindexBatchSize(int zimbraReindexBatchSize, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReindexBatchSize, Integer.toString(zimbraReindexBatchSize));
@@ -41053,7 +40760,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3035)
+    @ZAttr(id=3039)
     public void unsetReindexBatchSize() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReindexBatchSize, "");
@@ -41068,7 +40775,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3035)
+    @ZAttr(id=3039)
     public Map<String,Object> unsetReindexBatchSize(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReindexBatchSize, "");
@@ -51314,7 +51021,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3025)
+    @ZAttr(id=3029)
     public int getSolrMaxRetries() {
         return getIntAttr(Provisioning.A_zimbraSolrMaxRetries, 1, true);
     }
@@ -51328,7 +51035,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3025)
+    @ZAttr(id=3029)
     public void setSolrMaxRetries(int zimbraSolrMaxRetries) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSolrMaxRetries, Integer.toString(zimbraSolrMaxRetries));
@@ -51345,7 +51052,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3025)
+    @ZAttr(id=3029)
     public Map<String,Object> setSolrMaxRetries(int zimbraSolrMaxRetries, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSolrMaxRetries, Integer.toString(zimbraSolrMaxRetries));
@@ -51360,7 +51067,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3025)
+    @ZAttr(id=3029)
     public void unsetSolrMaxRetries() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSolrMaxRetries, "");
@@ -51376,7 +51083,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3025)
+    @ZAttr(id=3029)
     public Map<String,Object> unsetSolrMaxRetries(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSolrMaxRetries, "");
@@ -51384,107 +51091,26 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Limit for how many replicas of the same SOLR Collection are allowed to
-     * be created on each node.
-     *
-     * @return zimbraSolrMaxShardsPerNode, or 1 if unset
-     *
-     * @since ZCS 8.8.6
-     */
-    @ZAttr(id=3037)
-    public int getSolrMaxShardsPerNode() {
-        return getIntAttr(Provisioning.A_zimbraSolrMaxShardsPerNode, 1, true);
-    }
-
-    /**
-     * Limit for how many replicas of the same SOLR Collection are allowed to
-     * be created on each node.
-     *
-     * @param zimbraSolrMaxShardsPerNode new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.8.6
-     */
-    @ZAttr(id=3037)
-    public void setSolrMaxShardsPerNode(int zimbraSolrMaxShardsPerNode) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraSolrMaxShardsPerNode, Integer.toString(zimbraSolrMaxShardsPerNode));
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Limit for how many replicas of the same SOLR Collection are allowed to
-     * be created on each node.
-     *
-     * @param zimbraSolrMaxShardsPerNode new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.8.6
-     */
-    @ZAttr(id=3037)
-    public Map<String,Object> setSolrMaxShardsPerNode(int zimbraSolrMaxShardsPerNode, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraSolrMaxShardsPerNode, Integer.toString(zimbraSolrMaxShardsPerNode));
-        return attrs;
-    }
-
-    /**
-     * Limit for how many replicas of the same SOLR Collection are allowed to
-     * be created on each node.
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.8.6
-     */
-    @ZAttr(id=3037)
-    public void unsetSolrMaxShardsPerNode() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraSolrMaxShardsPerNode, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Limit for how many replicas of the same SOLR Collection are allowed to
-     * be created on each node.
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.8.6
-     */
-    @ZAttr(id=3037)
-    public Map<String,Object> unsetSolrMaxShardsPerNode(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraSolrMaxShardsPerNode, "");
-        return attrs;
-    }
-
-    /**
-     * Number of instances of a Solr Collection that will be created for each
-     * mailbox. This value is used in replicationFactor parameter when
-     * creating Solr Collections in SolrCloud with via Collections API.
+     * Replication factor for the mailbox index
      *
      * @return zimbraSolrReplicationFactor, or 2 if unset
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3028)
+    @ZAttr(id=3032)
     public int getSolrReplicationFactor() {
         return getIntAttr(Provisioning.A_zimbraSolrReplicationFactor, 2, true);
     }
 
     /**
-     * Number of instances of a Solr Collection that will be created for each
-     * mailbox. This value is used in replicationFactor parameter when
-     * creating Solr Collections in SolrCloud with via Collections API.
+     * Replication factor for the mailbox index
      *
      * @param zimbraSolrReplicationFactor new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3028)
+    @ZAttr(id=3032)
     public void setSolrReplicationFactor(int zimbraSolrReplicationFactor) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSolrReplicationFactor, Integer.toString(zimbraSolrReplicationFactor));
@@ -51492,9 +51118,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Number of instances of a Solr Collection that will be created for each
-     * mailbox. This value is used in replicationFactor parameter when
-     * creating Solr Collections in SolrCloud with via Collections API.
+     * Replication factor for the mailbox index
      *
      * @param zimbraSolrReplicationFactor new value
      * @param attrs existing map to populate, or null to create a new map
@@ -51502,7 +51126,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3028)
+    @ZAttr(id=3032)
     public Map<String,Object> setSolrReplicationFactor(int zimbraSolrReplicationFactor, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSolrReplicationFactor, Integer.toString(zimbraSolrReplicationFactor));
@@ -51510,15 +51134,13 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Number of instances of a Solr Collection that will be created for each
-     * mailbox. This value is used in replicationFactor parameter when
-     * creating Solr Collections in SolrCloud with via Collections API.
+     * Replication factor for the mailbox index
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3028)
+    @ZAttr(id=3032)
     public void unsetSolrReplicationFactor() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSolrReplicationFactor, "");
@@ -51526,16 +51148,14 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Number of instances of a Solr Collection that will be created for each
-     * mailbox. This value is used in replicationFactor parameter when
-     * creating Solr Collections in SolrCloud with via Collections API.
+     * Replication factor for the mailbox index
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3028)
+    @ZAttr(id=3032)
     public Map<String,Object> unsetSolrReplicationFactor(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSolrReplicationFactor, "");
@@ -53310,7 +52930,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3029)
+    @ZAttr(id=3033)
     public long getZKClientTimeout() {
         return getTimeInterval(Provisioning.A_zimbraZKClientTimeout, 10000L, true);
     }
@@ -53325,7 +52945,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3029)
+    @ZAttr(id=3033)
     public String getZKClientTimeoutAsString() {
         return getAttr(Provisioning.A_zimbraZKClientTimeout, "10s", true);
     }
@@ -53341,7 +52961,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3029)
+    @ZAttr(id=3033)
     public void setZKClientTimeout(String zimbraZKClientTimeout) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraZKClientTimeout, zimbraZKClientTimeout);
@@ -53360,7 +52980,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3029)
+    @ZAttr(id=3033)
     public Map<String,Object> setZKClientTimeout(String zimbraZKClientTimeout, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraZKClientTimeout, zimbraZKClientTimeout);
@@ -53377,7 +52997,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3029)
+    @ZAttr(id=3033)
     public void unsetZKClientTimeout() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraZKClientTimeout, "");
@@ -53395,7 +53015,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3029)
+    @ZAttr(id=3033)
     public Map<String,Object> unsetZKClientTimeout(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraZKClientTimeout, "");
