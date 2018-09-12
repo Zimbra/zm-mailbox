@@ -360,23 +360,23 @@ public class GalSearchControl {
             String extraQuery = queryCallback.getMailboxSearchQuery();
             if (extraQuery != null) {
                 ZimbraLog.gal.debug("extra search query: " + extraQuery);
-                searchQuery.append(" (").append(extraQuery).append(") AND");
+                searchQuery.append(" (").append(extraQuery).append(")");
             }
         }
 
-        GalMode galMode = mParams.getDomain().getGalMode();
         boolean first = true;
-        for (DataSource ds : galAcct.getAllDataSources()) {
-            if (ds.getType() != DataSourceType.gal)
-                continue;
-            String galType = ds.getAttr(Provisioning.A_zimbraGalType);
-            if (galMode == GalMode.ldap && galType.compareTo("zimbra") == 0)
-                continue;
-            if (galMode == GalMode.zimbra && galType.compareTo("ldap") == 0)
-                continue;
-            if (first) searchQuery.append("("); else searchQuery.append(" OR");
-            first = false;
-            if (addInId) {
+        if (addInId && galAcct != null) {
+            GalMode galMode = mParams.getDomain().getGalMode();
+            for (DataSource ds : galAcct.getAllDataSources()) {
+                if (ds.getType() != DataSourceType.gal)
+                    continue;
+                String galType = ds.getAttr(Provisioning.A_zimbraGalType);
+                if (galMode == GalMode.ldap && galType.compareTo("zimbra") == 0)
+                    continue;
+                if (galMode == GalMode.zimbra && galType.compareTo("ldap") == 0)
+                    continue;
+                if (first) searchQuery.append(" AND ("); else searchQuery.append(" OR");
+                first = false;
                 searchQuery.append(" inid:").append(ds.getFolderId());
             }
         }
@@ -909,15 +909,6 @@ public class GalSearchControl {
     }
 
     public String getGalQuery() throws ServiceException {
-        Account galAcct = mParams.getGalSyncAccount();
-        if (galAcct == null) {
-            try {
-                galAcct = getGalSyncAccount();
-            } catch (GalAccountNotConfiguredException e) {
-                ZimbraLog.addresslist.info("Gal sync account not found");
-                return null;
-            }
-        }
-        return getSearchQuery(galAcct, false);
+        return getSearchQuery(null, false);
     }
 }
