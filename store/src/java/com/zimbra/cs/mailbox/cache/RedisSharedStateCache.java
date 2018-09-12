@@ -14,6 +14,7 @@ import org.redisson.api.RedissonClient;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
+import com.google.common.collect.Sets;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailItem.Type;
@@ -121,15 +122,25 @@ public abstract class RedisSharedStateCache<M extends MailItem & SharedState> im
 
     @Override
     public Collection<M> values() {
-        //validate in-memory cache against redis map in case another node has deleted a folder/tag
+        //validate in-memory cache against redis map in case another node has added/deleted a folder/tag
         Set<Integer> allIds = new HashSet<>(getAllIds());
         Collection<M> values = new ArrayList<>();
+        Set<Integer> localIds = new HashSet<>();
         for (M item: localCache.values()) {
             if (allIds.contains(item.getId())) {
                 values.add(item);
+                localIds.add(item.getId());
             } else {
-                //delete from in-memory cache
+                ZimbraLog.cache.trace("deleting remotely-deleted item %s from local cache", item.getId());
                 localCache.remove(item.getId());
+            }
+        }
+        for (Integer id: Sets.difference(allIds, localIds)) {
+            M missingLocally = lookup(mbox.getAccountId(), id);
+            if (missingLocally != null) {
+                values.add(missingLocally);
+                ZimbraLog.cache.trace("adding locally-missing item %s to local cache", id);
+                put(missingLocally, false);
             }
         }
         return values;
