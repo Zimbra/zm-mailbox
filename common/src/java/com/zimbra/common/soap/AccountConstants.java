@@ -166,10 +166,6 @@ public class AccountConstants {
     public static final String E_GET_OAUTH_CONSUMERS_RESPONSE = "GetOAuthConsumersResponse";
     public static final String E_REVOKE_OAUTH_CONSUMER_REQUEST = "RevokeOAuthConsumerRequest";
     public static final String E_REVOKE_OAUTH_CONSUMER_RESPONSE = "RevokeOAuthConsumerResponse";
-    
-    //AddressList
-    public static final String E_GET_ADDRESS_LIST_MEMBERS_REQUEST = "GetAddressListMembersRequest";
-    public static final String E_GET_ADDRESS_LIST_MEMBERS_RESPONSE = "GetAddressListMembersResponse";
 
     //AddressList
     public static final String E_GET_ALL_ADDRESS_LISTS_REQUEST = "GetAllAddressListsRequest";
@@ -179,6 +175,11 @@ public class AccountConstants {
     public static final String A_DESCRIPTION = "description";
     public static final QName GET_ALL_ADDRESS_LISTS_REQUEST = QName.get(E_GET_ALL_ADDRESS_LISTS_REQUEST, NAMESPACE);
     public static final QName GET_ALL_ADDRESS_LISTS_RESPONSE = QName.get(E_GET_ALL_ADDRESS_LISTS_RESPONSE, NAMESPACE);
+    public static final String E_GET_ADDRESS_LIST_MEMBERS_REQUEST = "GetAddressListMembersRequest";
+    public static final String E_GET_ADDRESS_LIST_MEMBERS_RESPONSE = "GetAddressListMembersResponse";
+    public static final String E_ADDRESS_LIST_MEMBERS = "alm";
+    public static final String E_ADDRESS_LIST_MEMBER = "member";
+    public static final String A_COUNT_ONLY = "countOnly";
 
     // auth
     public static final QName AUTH_REQUEST = QName.get(E_AUTH_REQUEST, NAMESPACE);

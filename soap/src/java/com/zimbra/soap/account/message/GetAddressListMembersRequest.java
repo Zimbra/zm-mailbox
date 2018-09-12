@@ -8,6 +8,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.account.type.AttrsImpl;
+import com.zimbra.soap.type.ZmBoolean;
 
 /*
  * ***** BEGIN LICENSE BLOCK *****
@@ -42,31 +43,41 @@ import com.zimbra.soap.account.type.AttrsImpl;
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AccountConstants.E_GET_ADDRESS_LIST_MEMBERS_REQUEST)
 public class GetAddressListMembersRequest {
-    
+
     /**
-     * @zm-api-field-description The number of members to return (0 is default and means all)
+     * @zm-api-field-description The number of members to return (0 is default
+     *                           and means all)
      */
-    @XmlAttribute(name=AccountConstants.A_LIMIT, required=false)
+    @XmlAttribute(name = AccountConstants.A_LIMIT, required = false)
     private int limit;
 
     /**
      * @zm-api-field-description The starting offset (0, 25, etc)
      */
-    @XmlAttribute(name=AccountConstants.A_OFFSET, required=false)
+    @XmlAttribute(name = AccountConstants.A_OFFSET, required = false)
     private int offset;
 
     /**
      * @zm-api-field-description id of the distribution list
      */
-    @XmlAttribute(name=AccountConstants.A_ID, required=true)
-    private  String id;
-    
+    @XmlAttribute(name = AccountConstants.A_ID, required = true)
+    private String id;
+
+    /**
+     * @zm-api-field-tag countOnly
+     * @zm-api-field-description Set to 1 if the response should only contain
+     *                           the count of total number of members. <br />
+     *                           Set to 0 (default)
+     */
+    @XmlAttribute(name = AccountConstants.A_COUNT_ONLY, required = false)
+    private ZmBoolean countOnly;
+
     public GetAddressListMembersRequest() {
-        
+
     }
-    
+
     public GetAddressListMembersRequest(String id) {
-       this(id, 0, 0);
+        this(id, 0, 0);
     }
 
     public GetAddressListMembersRequest(String id, int limit, int offset) {
@@ -75,34 +86,36 @@ public class GetAddressListMembersRequest {
         this.offset = offset;
     }
 
-    
     public int getLimit() {
         return limit;
     }
 
-    
     public void setLimit(int limit) {
         this.limit = limit;
     }
 
-    
     public int getOffset() {
         return offset;
     }
 
-    
     public void setOffset(int offset) {
         this.offset = offset;
     }
 
-    
     public String getId() {
         return id;
     }
 
-    
     public void setId(String id) {
         this.id = id;
+    }
+
+    public ZmBoolean getCountOnly() {
+        return countOnly;
+    }
+
+    public void setCountOnly(ZmBoolean countOnly) {
+        this.countOnly = countOnly;
     }
 
     @Override
@@ -116,10 +129,14 @@ public class GetAddressListMembersRequest {
         if (id != null) {
             builder.append("id=");
             builder.append(id);
+            builder.append(", ");
+        }
+        if (countOnly != null) {
+            builder.append("countOnly=");
+            builder.append(countOnly);
         }
         builder.append("]");
         return builder.toString();
     }
-    
-    
+
 }

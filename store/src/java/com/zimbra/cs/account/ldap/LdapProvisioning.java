@@ -69,8 +69,8 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
-import com.zimbra.cs.account.AddressList;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
+import com.zimbra.cs.account.AddressList;
 import com.zimbra.cs.account.Alias;
 import com.zimbra.cs.account.AliasedEntry;
 import com.zimbra.cs.account.AlwaysOnCluster;
@@ -10890,38 +10890,43 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
         return zimbraIdStr;
    } 
+
+    /**
+     * 
+     * @param id id of the address list
+     * @return AddressList object
+     * @throws ServiceException if an error occurs while querying LDAP.
+     */
+    @Override
     public AddressList getAddressList(String zimbraId) throws ServiceException {
         AddressList list = null;
         try {
             ZimbraLog.ldap.info("Called addresslist");
-            String[] returnAttrs = {"objectClass", Provisioning.A_uid, Provisioning.A_zimbraId,
-                Provisioning.A_zimbraAddressListMemberFilter, Provisioning.A_displayName,
-                Provisioning.A_zimbraIsAddressListActive};
-           
-                ZSearchControls searchControls = ZSearchControls.createSearchControls(
-                        ZSearchScope.SEARCH_SCOPE_SUBTREE, ZSearchControls.SIZE_UNLIMITED, returnAttrs);
-                ZSearchResultEnumeration ne = helper.searchDir(mDIT.mailBranchBaseDN(), 
-                    filterFactory.addressListById(zimbraId), searchControls, null, LdapServerType.REPLICA);
-                if (ne.hasMore()) {
-                    ZSearchResultEntry sr = ne.next();
-                    sr.getDN();
-                    ZimbraLog.ldap.info("Got " +  sr.getDN() + "attr=" + sr.getAttributes());
-                    Map<String, Object>attrs = sr.getAttributes().getAttrs();
-                    Set<String> keys = attrs.keySet();
-                    for (String key : keys) {
-                        ZimbraLog.ldap.info(key + "=" + attrs.get(key));
-                    }
-                    String query = (String) attrs.get(Provisioning.A_zimbraAddressListMemberFilter);
-                    String name = (String) attrs.get(Provisioning.A_displayName);
-                    list = new AddressList(name, zimbraId, attrs, null, this);
-//                    (String name, String id, Map<String, Object> attrs,
-//                        Map<String, Object> defaults, Provisioning prov) {
-                }
-                ne.close();
-          
+            String[] returnAttrs = { "objectClass", Provisioning.A_uid, Provisioning.A_zimbraId,
+                Provisioning.A_zimbraAddressListGalFilter, Provisioning.A_description,
+                Provisioning.A_zimbraIsAddressListActive,
+                Provisioning.A_zimbraAddressListLdapFilter };
+
+            ZSearchControls searchControls = ZSearchControls.createSearchControls(
+                ZSearchScope.SEARCH_SCOPE_SUBTREE, ZSearchControls.SIZE_UNLIMITED, returnAttrs);
+            ZSearchResultEnumeration ne = helper.searchDir(mDIT.mailBranchBaseDN(),
+                filterFactory.addressListById(zimbraId), searchControls, null,
+                LdapServerType.REPLICA);
+            if (ne.hasMore()) {
+                ZSearchResultEntry sr = ne.next();
+                sr.getDN();
+                ZimbraLog.ldap.debug("Got address list: %s with attributes : %s", sr.getDN(),
+                    sr.getAttributes());
+                Map<String, Object> attrs = sr.getAttributes().getAttrs();
+                String name = (String) attrs.get(Provisioning.A_displayName);
+                list = new AddressList(name, zimbraId, attrs, null, this);
+            }
+            ne.close();
+
         } catch (ServiceException e) {
-            throw ServiceException.FAILURE(String.format("Unable to fetch address list '%s'",zimbraId), e);
-        } 
+            throw ServiceException
+                .FAILURE(String.format("Unable to fetch address list '%s'", zimbraId), e);
+        }
         return list;
     }
 }

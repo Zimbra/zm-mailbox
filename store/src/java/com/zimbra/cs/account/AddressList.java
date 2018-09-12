@@ -31,7 +31,10 @@ public class AddressList extends NamedEntry {
     }
 
     public String getGalSearchQuery() {
-        return getAttr(Provisioning.A_zimbraAddressListMemberFilter);
+        return getAttr(Provisioning.A_zimbraAddressListGalFilter);
+    }
+    public String getLdapSearchQuery() {
+        return getAttr(Provisioning.A_zimbraAddressListLdapFilter);
     }
     
     public String getDisplayName() {
