@@ -23,6 +23,7 @@ public class EventLogger {
     private static final LinkedBlockingQueue<Event> eventQueue = new LinkedBlockingQueue<>();
     private static final AtomicBoolean executorServiceRunning = new AtomicBoolean(false);
     private static final AtomicBoolean drainQueueBeforeShutdown = new AtomicBoolean(false);
+    private static final AtomicBoolean shutdownExecutor = new AtomicBoolean(false);
     private ExecutorService executorService;
     private ConfigProvider config;
     private boolean enabled;
