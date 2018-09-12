@@ -1313,4 +1313,13 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                 FILTER_ALL_ADDRESS_LISTS
                 );
     }
+
+    @Override
+    public ZLdapFilter addressListById(String id) {
+        return new UBIDLdapFilter(
+                FilterId.ADDRESS_LIST_BY_ID,
+                Filter.createANDFilter(
+                        Filter.createEqualityFilter(Provisioning.A_zimbraId, id),
+                        FILTER_ALL_ADDRESS_LISTS));
+    }
 }

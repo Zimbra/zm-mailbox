@@ -131,7 +131,8 @@ public enum LdapUsage {
     ADD,
     DELETE,
     MOD,
-    MODRDN;
+    MODRDN,
+    DELETE_ADDRESSLIST;
 
     public static LdapUsage modifyEntryfromEntryType(Entry.EntryType entryType) {
         switch (entryType) {

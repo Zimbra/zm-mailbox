@@ -3265,3 +3265,9 @@ Returns list of address lists.
             ...
          </AddressLists>
       </GetAllAddressListsResponse>
+------------------------
+API to delete address list.
+<DeleteAddressListRequest id={address-list-zimbra-Id} xmlns="urn:zimbraAdmin"/>
+
+Response:
+<DeleteAddressListResponse xmlns="urn:zimbraAdmin"/>

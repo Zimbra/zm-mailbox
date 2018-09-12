@@ -1072,6 +1072,10 @@ public final class AdminConstants {
     public static final String E_GET_ALL_ADDRESS_LISTS_RESPONSE = "GetAllAddressListsResponse";
     public static final QName GET_ALL_ADDRESS_LISTS_REQUEST = QName.get(E_GET_ALL_ADDRESS_LISTS_REQUEST, NAMESPACE);
     public static final QName GET_ALL_ADDRESS_LISTS_RESPONSE = QName.get(E_GET_ALL_ADDRESS_LISTS_RESPONSE, NAMESPACE);
+    public static final String E_DELETE_ADDRESS_LIST_REQUEST = "DeleteAddressListRequest";
+    public static final String E_DELETE_ADDRESS_LIST_RESPONSE = "DeleteAddressListResponse";
+    public static final QName DELETE_ADDRESS_LIST_REQUEST = QName.get(E_DELETE_ADDRESS_LIST_REQUEST, NAMESPACE);
+    public static final QName DELETE_ADDRESS_LIST_RESPONSE = QName.get(E_DELETE_ADDRESS_LIST_RESPONSE, NAMESPACE);
 
     // DumpSessions
     public static final String E_SESSION = "session";
