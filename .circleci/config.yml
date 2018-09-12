@@ -153,16 +153,18 @@ jobs:
           name: Building zmc-mysql-proxy container image
           command: |
             docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
-            cp mysql-proxy/Dockerfile "$CHECKOUT"
-            tar zcvf "$BUILD/docker-context.tgz" -C "$CHECKOUT" *
+            cd "$BUILD"/zm-docker
+            cp mysql-proxy/Dockerfile .
+            tar zcvf "$BUILD/docker-context.tgz" *
             cd "$BUILD"; python -m SimpleHTTPServer &
             docker build -t zmc-mysql-proxy --build-arg "DOCKER_REPO_NS=$DOCKER_REPO_NS" --build-arg "DOCKER_BUILD_TAG=latest-$SANITIZED_BRANCH" --build-arg "DOCKER_CACHE_TAG=$DOCKER_CACHE_TAG" --build-arg "LOCAL_SRC_DIR=." http://$(hostname):8000/docker-context.tgz
       - run:
           name: Building zmc-mysql-local container image
           command: |
             docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
-            cp mysql-local/Dockerfile "$CHECKOUT"
-            tar zcvf "$BUILD/docker-context.tgz" -C "$CHECKOUT" *
+            cd "$BUILD"/zm-docker
+            cp mysql-local/Dockerfile .
+            tar zcvf "$BUILD/docker-context.tgz" *
             cd "$BUILD"; python -m SimpleHTTPServer &
             docker build -t zmc-mysql-local --build-arg "DOCKER_REPO_NS=$DOCKER_REPO_NS" --build-arg "DOCKER_BUILD_TAG=latest-$SANITIZED_BRANCH" --build-arg "DOCKER_CACHE_TAG=$DOCKER_CACHE_TAG" --build-arg "LOCAL_SRC_DIR=." http://$(hostname):8000/docker-context.tgz
       - run:
