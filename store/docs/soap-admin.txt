@@ -3271,3 +3271,15 @@ API to delete address list.
 
 Response:
 <DeleteAddressListResponse xmlns="urn:zimbraAdmin"/>
+------------------------
+API to create address list in given domain
+  <CreateAddressListRequest [type="all|account|resource|group"]>
+     <name>name_of_addresslist</name>
+     [<desc>description_of_addresslist</desc>]
+     [<searchFilter>...</searchFilter>]
+     [<domain by="id|name|virtualHostname">domain-id|name|serviceHostname</domain>]
+  </CreateAddressListRequest>
+
+searchFilter: See SearchCalendarResourcesRequest section in soap.txt.
+domain: domain is optional element, if domain is not provided, admin account's domain is used from admin auth token
+
