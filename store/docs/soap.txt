@@ -4826,3 +4826,18 @@ Returns list of address lists.
             ...
          </AddressLists>
       </GetAllAddressListsResponse>
+
+-----------------------------
+GetAdderssListMembers
+
+API to get the members of an address list
+
+Request:
+<urn1:GetAddressListMembersRequest limit="{max result items}" offset="{offset from which result should be returned}"   id="{address list id}" countOnly="0|1{if only total account is returned}"/>
+
+Response
+<GetAddressListMembersResponse xmlns="urn:zimbraAccount">
+ <alm total="{total members in query result}">
+ <member>{email}</member>+
+</alm>
+</GetAddressListMembersResponse>
