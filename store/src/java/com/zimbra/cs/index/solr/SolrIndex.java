@@ -676,7 +676,9 @@ public class SolrIndex extends IndexStore {
                     hasMore = true;
                 } else {
                     facetChunk = Lists.newLinkedList(facetField.getValues());
+                    hasMore = false;
                 }
+                ZimbraLog.search.debug("got %d facets for field %s (offset=%d, hasMore=%s)", facetChunk.size(), field, offset, hasMore);
             }
 
             @Override
