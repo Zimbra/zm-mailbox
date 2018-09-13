@@ -37,9 +37,6 @@ import com.zimbra.soap.type.ZmBoolean;
 import io.leangen.graphql.annotations.GraphQLQuery;
 import io.leangen.graphql.annotations.types.GraphQLType;
 
-import io.leangen.graphql.annotations.GraphQLQuery;
-import io.leangen.graphql.annotations.types.GraphQLType;
-
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"metadatas", "subject", "fragment", "emails"})
 @GraphQLType(name=GqlConstants.CLASS_CONVERSATION_SUMMARY, description="Conversation search result information")
