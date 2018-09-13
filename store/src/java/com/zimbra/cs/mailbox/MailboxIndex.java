@@ -684,6 +684,7 @@ public final class MailboxIndex {
                 indexer.addDocument(item,  item.generateIndexDataAsync(mailbox.attachmentsIndexingEnabled()));
                 DbMailItem.setIndexId(mailbox.getOperationConnection(), mailbox, item.getId());
                 item.state.setIndexId(item.getId());
+                mailbox.cache(item);
             }  catch (IndexPendingDeleteException e) {
                 ZimbraLog.index.debug("Adding of entries to index aborted as index is pending delete");
             } catch (TemporaryIndexingException | IOException | ServiceException e) {
