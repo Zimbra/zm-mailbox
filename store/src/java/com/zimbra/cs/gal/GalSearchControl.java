@@ -298,7 +298,7 @@ public class GalSearchControl {
         return ret;
     }
 
-    private Account getGalSyncAccount() throws GalAccountNotConfiguredException, ServiceException {
+   public Account getGalSyncAccount() throws GalAccountNotConfiguredException, ServiceException {
         Domain d = mParams.getDomain();
         String[] accts = d.getGalAccountId();
         if (accts.length == 0)
@@ -424,7 +424,7 @@ public class GalSearchControl {
         return false;
     }
 
-    private void accountSearch(Account galAcct) throws ServiceException, GalAccountNotConfiguredException {
+    public void accountSearch(Account galAcct) throws ServiceException, GalAccountNotConfiguredException {
         if (!galAcct.getAccountStatus().isActive()) {
             ZimbraLog.gal.info("GalSync account "+galAcct.getId()+" is in "+galAcct.getAccountStatus().name());
             throw new GalAccountNotConfiguredException();
@@ -845,7 +845,7 @@ public class GalSearchControl {
                 domain.isGalAlwaysIncludeLocalCalendarResources());
     }
 
-    private static class GalAccountNotConfiguredException extends Exception {
+    public static class GalAccountNotConfiguredException extends Exception {
         private static final long serialVersionUID = 679221874958248740L;
 
         public GalAccountNotConfiguredException() {

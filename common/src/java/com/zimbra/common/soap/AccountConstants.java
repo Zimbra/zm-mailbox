@@ -175,6 +175,11 @@ public class AccountConstants {
     public static final String A_DESCRIPTION = "description";
     public static final QName GET_ALL_ADDRESS_LISTS_REQUEST = QName.get(E_GET_ALL_ADDRESS_LISTS_REQUEST, NAMESPACE);
     public static final QName GET_ALL_ADDRESS_LISTS_RESPONSE = QName.get(E_GET_ALL_ADDRESS_LISTS_RESPONSE, NAMESPACE);
+    public static final String E_GET_ADDRESS_LIST_MEMBERS_REQUEST = "GetAddressListMembersRequest";
+    public static final String E_GET_ADDRESS_LIST_MEMBERS_RESPONSE = "GetAddressListMembersResponse";
+    public static final String E_ADDRESS_LIST_MEMBERS = "alm";
+    public static final String E_ADDRESS_LIST_MEMBER = "member";
+    public static final String A_COUNT_ONLY = "countOnly";
 
     // auth
     public static final QName AUTH_REQUEST = QName.get(E_AUTH_REQUEST, NAMESPACE);
@@ -315,6 +320,9 @@ public class AccountConstants {
     public static final QName GET_OAUTH_CONSUMERS_RESPONSE = QName.get(E_GET_OAUTH_CONSUMERS_RESPONSE, NAMESPACE);
     public static final QName REVOKE_OAUTH_CONSUMER_REQUEST = QName.get(E_REVOKE_OAUTH_CONSUMER_REQUEST, NAMESPACE);
     public static final QName REVOKE_OAUTH_CONSUMER_RESPONSE = QName.get(E_REVOKE_OAUTH_CONSUMER_RESPONSE, NAMESPACE);
+    
+    public static final QName GET_ADDRESS_LIST_MEMBERS_REQUEST = QName.get(E_GET_ADDRESS_LIST_MEMBERS_REQUEST, NAMESPACE);
+    public static final QName GET_ADDRESS_LIST_MEMBERS_RESPONSE = QName.get(E_GET_ADDRESS_LIST_MEMBERS_RESPONSE, NAMESPACE);
 
     public static final String E_ACTION = "action";
     public static final String E_ALIAS = "alias";
@@ -456,6 +464,7 @@ public class AccountConstants {
     public static final String A_GET_COUNT = "getCount";
     public static final String A_TOKEN_TYPE = "tokenType";
     public static final String E_JWT_TOKEN = "jwtToken";
+    public static final String A_OFFSET = "offset";
 
     // account ACLs
     public static final String A_ACCESSKEY = "key";
