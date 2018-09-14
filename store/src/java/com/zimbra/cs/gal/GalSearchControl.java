@@ -17,7 +17,6 @@
 package com.zimbra.cs.gal;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -502,39 +501,6 @@ public class GalSearchControl {
         } 
         return true;
     }
-    
-    public List<String> getAddressListMembersFromGal(Account galAcct) {
-        List<String> l = new ArrayList<String> ();
-        try {
-            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(galAcct);
-            SearchParams searchParams = mParams.getSearchParams();
-            try (ZimbraQueryResults zqr = mbox.index.search(SoapProtocol.Soap12,
-                new OperationContext(mbox), searchParams)) {
-                int size = zqr.getResultInfo().size();
-                ResultsPager pager = ResultsPager.create(zqr, searchParams);
-                int num = 0;
-                while (pager.hasNext()) {
-                    ZimbraHit hit = pager.getNextHit();
-                    if (hit instanceof ContactHit) {
-                        ContactHit chit = (ContactHit)hit;
-                        l.add(chit.getContact().getEmailAddresses().get(0));
-                       
-                    }
-                    num++;
-                    if (num == mParams.getLimit())
-                        break;
-                }
-//                callback.setSortBy(zqr.getSortBy().toString());
-//                callback.setQueryOffset(searchParams.getOffset());
-//                callback.setHasMoreResult(pager.hasNext());
-            }
-        } catch (Exception e) {
-            ZimbraLog.gal.warn("search on GalSync account failed for %s", galAcct.getId(), e);
-
-        } 
-        return l;
-    }
-
     
     private void doLocalGalAccountSync(Account galAcct) throws ServiceException {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(galAcct);

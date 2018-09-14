@@ -45,7 +45,7 @@ public class GetAddressListMemberResponse {
      * @zm-api-field-description total number of distribution lists (not
      *                           affected by limit/offset)
      */
-    @XmlAttribute(name = AccountConstants.A_TOTAL /* total */, required = false)
+    @XmlAttribute(name = AccountConstants.A_TOTAL /* total */, required = true)
     private Integer total;
 
     /**
