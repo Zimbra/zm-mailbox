@@ -1105,7 +1105,9 @@ public final class JaxbUtil {
             com.zimbra.soap.voice.message.UploadVoiceMailRequest.class,
             com.zimbra.soap.voice.message.UploadVoiceMailResponse.class,
             com.zimbra.soap.voice.message.VoiceMsgActionRequest.class,
-            com.zimbra.soap.voice.message.VoiceMsgActionResponse.class
+            com.zimbra.soap.voice.message.VoiceMsgActionResponse.class,
+            com.zimbra.soap.account.message.GetAddressListMembersRequest.class,
+            com.zimbra.soap.account.message.GetAddressListMemberResponse.class
         };
 
         try {
