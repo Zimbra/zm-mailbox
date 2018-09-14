@@ -121,7 +121,7 @@ public class GalSearchControl {
                 Account galAcct = mParams.getGalSyncAccount();
                 if (galAcct == null)
                     galAcct = getGalSyncAccount();
-                accountSearch(galAcct);
+                accountSearch(galAcct, true);
                 return;
             } catch (GalAccountNotConfiguredException e) {
             }
@@ -151,7 +151,7 @@ public class GalSearchControl {
             Account galAcct = mParams.getGalSyncAccount();
             if (galAcct == null)
                 galAcct = getGalSyncAccount();
-            accountSearch(galAcct);
+            accountSearch(galAcct, true);
         } catch (GalAccountNotConfiguredException e) {
             query = Strings.nullToEmpty(query);
             // fallback to ldap search
@@ -424,7 +424,11 @@ public class GalSearchControl {
         return false;
     }
 
-    public void accountSearch(Account galAcct) throws ServiceException, GalAccountNotConfiguredException {
+    public void addressListSearch(Account galAcct, boolean genQuery) throws ServiceException, GalAccountNotConfiguredException {
+        accountSearch(galAcct, false);
+    }
+
+    private void accountSearch(Account galAcct, boolean generateQuery) throws ServiceException, GalAccountNotConfiguredException {
         if (!galAcct.getAccountStatus().isActive()) {
             ZimbraLog.gal.info("GalSync account "+galAcct.getId()+" is in "+galAcct.getAccountStatus().name());
             throw new GalAccountNotConfiguredException();
@@ -435,7 +439,10 @@ public class GalSearchControl {
                         !doLocalGalAccountSearch(galAcct))
                     throw new GalAccountNotConfiguredException();
             }
-            generateSearchQuery(galAcct);
+            if (generateQuery) {
+                generateSearchQuery(galAcct);
+            }
+
             if (!doLocalGalAccountSearch(galAcct))
                 throw new GalAccountNotConfiguredException();
         } else {
