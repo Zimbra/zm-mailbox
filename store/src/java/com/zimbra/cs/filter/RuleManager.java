@@ -20,10 +20,13 @@ package com.zimbra.cs.filter;
 import com.zimbra.common.filter.Sieve;
 import com.zimbra.common.service.DeliveryServiceException;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.L10nUtil;
+import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
@@ -56,6 +59,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
@@ -146,20 +150,9 @@ public final class RuleManager {
         if (script == null) {
             script = "";
         }
-        String zimbraMailSieveScriptMaxSize = entry.getAttr(Provisioning.A_zimbraMailSieveScriptMaxSize);
-        if (zimbraMailSieveScriptMaxSize != null && entry instanceof Account) {
-            long sieveScriptMaxSize = Long.parseLong(zimbraMailSieveScriptMaxSize);
-            long sieveScriptSize = script.getBytes(StandardCharsets.UTF_8).length;
-            if (sieveScriptMaxSize < sieveScriptSize) {
-                StringBuilder msg = new StringBuilder();
-                msg.append("Sieve script too large: ")
-                    .append(sieveScriptSize)
-                    .append(" bytes exceeds the limit of ")
-                    .append(sieveScriptMaxSize)
-                    .append(" bytes");
-                throw ServiceException.INVALID_REQUEST(msg.toString(), null);
-            }
-        }
+
+        rejectSieveScriptExceedingMaxSize(entry, script);
+
         try {
             Node node = parse(script);
             // evaluate against dummy mail adapter to catch more errors
@@ -178,6 +171,42 @@ public final class RuleManager {
         } catch (SieveException e) {
             ZimbraLog.filter.error("Unable to evaluate script:\n" + script);
             throw ServiceException.PARSE_ERROR("evaluating Sieve script", e);
+        }
+    }
+
+    /**
+     * Reject the sieve script by throwing a ServiceException if its size exceeds
+     * the limit in the {@code zimbraMailSieveScriptMaxSize} attribute.
+     *
+     * If the value of the attribute is not set, or if the attribute getter is not
+     * defined for the entry type, then the limit defined in the global config is used.
+     *
+     * @param entry the account/domain/cos/server for which the rules are to be saved
+     * @param script the sieve script, or an empty string
+     * @throws ServiceException if the sieve script exceeds the value of the max size attribute
+     */
+    private static void rejectSieveScriptExceedingMaxSize(Entry entry, String script)
+            throws ServiceException {
+        long sieveScriptMaxSize;
+        String zimbraMailSieveScriptMaxSize = entry.getAttr(Provisioning.A_zimbraMailSieveScriptMaxSize);
+        if (zimbraMailSieveScriptMaxSize != null) {
+            sieveScriptMaxSize = Long.parseLong(zimbraMailSieveScriptMaxSize);
+        } else {
+            Config config = Provisioning.getInstance().getConfig();
+            sieveScriptMaxSize = config.getMailSieveScriptMaxSize();
+        }
+
+        long sieveScriptSize = script.getBytes(StandardCharsets.UTF_8).length;
+        if (sieveScriptMaxSize < sieveScriptSize) {
+            Locale locale = entry.getLocale();
+            StringBuilder msg = new StringBuilder();
+            msg.append(L10nUtil.getMessage(MsgKey.sieveScriptMaxSizeErrorMsg, locale))
+                .append(": ")
+                .append(sieveScriptSize)
+                .append(" bytes exceeds the limit of ")
+                .append(sieveScriptMaxSize)
+                .append(" bytes");
+            throw ServiceException.INVALID_REQUEST(msg.toString(), null);
         }
     }
 
