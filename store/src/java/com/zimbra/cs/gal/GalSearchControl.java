@@ -425,7 +425,7 @@ public class GalSearchControl {
         return false;
     }
 
-    private void accountSearch(Account galAcct) throws ServiceException, GalAccountNotConfiguredException {
+    public void accountSearch(Account galAcct) throws ServiceException, GalAccountNotConfiguredException {
         if (!galAcct.getAccountStatus().isActive()) {
             ZimbraLog.gal.info("GalSync account "+galAcct.getId()+" is in "+galAcct.getAccountStatus().name());
             throw new GalAccountNotConfiguredException();
@@ -470,7 +470,7 @@ public class GalSearchControl {
         }
     }
 
-    public boolean doLocalGalAccountSearch(Account galAcct) {
+    private boolean doLocalGalAccountSearch(Account galAcct) {
         try {
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(galAcct);
             SearchParams searchParams = mParams.getSearchParams();
