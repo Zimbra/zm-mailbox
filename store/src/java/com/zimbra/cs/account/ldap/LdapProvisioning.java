@@ -10949,7 +10949,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                 ZSearchScope.SEARCH_SCOPE_SUBTREE, ZSearchControls.SIZE_UNLIMITED, returnAttrs);
             ZSearchResultEnumeration ne = helper.searchDir(mDIT.mailBranchBaseDN(),
                 filterFactory.addressListById(zimbraId), searchControls, null,
-                LdapServerType.REPLICA);
+                LdapServerType.MASTER);
             if (ne.hasMore()) {
                 ZSearchResultEntry sr = ne.next();
                 sr.getDN();

@@ -17,7 +17,6 @@
 package com.zimbra.cs.gal;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -470,7 +469,7 @@ public class GalSearchControl {
         }
     }
 
-    public boolean doLocalGalAccountSearch(Account galAcct) {
+    private boolean doLocalGalAccountSearch(Account galAcct) {
         try {
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(galAcct);
             SearchParams searchParams = mParams.getSearchParams();
