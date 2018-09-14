@@ -183,6 +183,7 @@ public class EventLogger {
     private static class EventNotifier implements Runnable {
 
         private List<EventLogHandler> handlers;
+        private static final Integer POLL_TIMEOUT = 3;
 
         private EventNotifier(Map<String, EventLogHandler.Factory> knownFactories, Map<String, Collection<String>> handlerConfigs) throws ServiceException {
             handlers = new ArrayList<>(handlerConfigs.size());
@@ -200,29 +201,24 @@ public class EventLogger {
 
         @Override
         public void run() {
-            try {
-                while (!Thread.currentThread().isInterrupted()) {
-                    consume(eventQueue);
+        	try {
+                while (!shutdownExecutor.get()) { 
+                    Event event = eventQueue.poll(POLL_TIMEOUT, TimeUnit.SECONDS);
+                    if (event != null) {
+                         notifyEventLogHandlers(event);
+                    }
+                }
+                
+                if (drainQueueBeforeShutdown.get()) {
+                	drainQueue();
                 }
             } catch (InterruptedException e) {
                 ZimbraLog.event.debug("%s was interrupted, Shutting it down", Thread.currentThread().getName(), e);
                 Thread.currentThread().interrupt();
             } finally {
-                if (drainQueueBeforeShutdown.get()) {
-                    try {
-                        drainQueue();
-                    } catch (InterruptedException e) {
-                        ZimbraLog.event.debug("%s was interrupted; unable to drain the event queue", Thread.currentThread().getName(), e);
-                    }
-                }
                 shutdownEventLogHandlers();
             }
-        }
-
-        private void consume(BlockingQueue<Event> events) throws InterruptedException {
-            Event event = events.take();
-            notifyEventLogHandlers(event);
-        }
+}
 
         private void notifyEventLogHandlers(Event event) {
             for (EventLogHandler logHandler: handlers) {
@@ -233,12 +229,11 @@ public class EventLogger {
         }
 
         private void drainQueue() throws InterruptedException {
-            Event event = eventQueue.poll();
-            if (event != null) {
-                do {
-                    notifyEventLogHandlers(event);
-                    event = eventQueue.poll();
-                } while (event != null);
+        	ZimbraLog.event.debug("Draining the queue");
+            Event event = eventQueue.poll(POLL_TIMEOUT, TimeUnit.SECONDS);
+            while (event != null) {
+                notifyEventLogHandlers(event);
+                event = eventQueue.poll(POLL_TIMEOUT, TimeUnit.SECONDS);
             }
         }
 
