@@ -120,6 +120,7 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
         DYNAMIC_GROUP_BY_NAME(SINGLETON.dynamicGroupByName("{DYNAMIC-GROUP-NAME}")),
         DYNAMIC_GROUP_DYNAMIC_UNIT_BY_MAIL_ADDR(SINGLETON.dynamicGroupDynamicUnitByMailAddr("{ADDR}")),
         DYNAMIC_GROUPS_STATIC_UNIT_BY_MEMBER_ADDR(SINGLETON.dynamicGroupsStaticUnitByMemberAddr("{ADDR}")),
+        ADDRESS_LIST_BY_ID(SINGLETON.addressListById("{ADDRESS_LIST_ID}")),
 
         EXTERNAL_ACCOUNTS_HOMED_ON_SERVER(SINGLETON.externalAccountsHomedOnServer("{SERVER-SERVICE-HOSTNAME}")),
         GLOBAL_CONFIG(SINGLETON.globalConfig()),
@@ -154,7 +155,6 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
 
         //address lists
         ALL_ADDRESS_LISTS(SINGLETON.allAddressLists()),
-	ADDRESS_LIST_BY_ID(SINGLETON.addressListById("{ADDRESS-LIST-ID}")),
 
         //
         // =====================================
