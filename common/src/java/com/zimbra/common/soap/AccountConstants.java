@@ -409,7 +409,6 @@ public class AccountConstants {
     public static final String E_BOSH_URL = "boshURL";
     public static final String E_SUBSCRIPTION = "sub";
     public static final String E_IS_TRACKING_IMAP = "isTrackingIMAP";
-    public static final String E_ALM = "alm";
 
     public static final String A_ACTIVE = "active";
     public static final String A_ATTRS = "attrs";
