@@ -276,6 +276,9 @@ public class L10nUtil {
         seiveRejectMDNSubject,
         seiveRejectMDNErrorMsg,
 
+        // sieve script max size
+        sieveScriptMaxSizeErrorMsg,
+
         //forwarding email address verification
         verifyEmailSubject,
         verifyEmailBodyText,
