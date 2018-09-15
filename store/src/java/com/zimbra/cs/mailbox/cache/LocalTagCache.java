@@ -24,7 +24,11 @@ public class LocalTagCache implements TagCache {
 
     @Override
     public Tag remove(int tagId) {
-        return tagIdMap.remove(tagId);
+        Tag removed = tagIdMap.remove(tagId);
+        if (removed != null) {
+            tagNameMap.remove(removed.getName());
+        }
+        return removed;
     }
 
     @Override
