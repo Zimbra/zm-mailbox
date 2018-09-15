@@ -241,6 +241,7 @@ public class SearchGal extends GalDocumentHandler {
 
     public static Map<String, String> getQueries(Domain domain, GalSearchParams params, GalSearchType type, EntrySearchFilter filter, ZimbraSoapContext zsc) throws ServiceException {
         // set default values in params
+        params.setType(type);
         params.setQuery("");
         params.setOp(GalOp.search);
         params.setNeedCanExpand(true);
