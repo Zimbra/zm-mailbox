@@ -39,6 +39,7 @@ import javax.mail.util.SharedByteArrayInputStream;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
+import com.zimbra.common.account.Key;
 import com.google.common.collect.ImmutableSet;
 import com.zimbra.common.calendar.ZCalendar;
 import com.zimbra.common.localconfig.LC;
@@ -874,6 +875,11 @@ public final class ParseMimeMessage {
         public void add(Element elem, String defaultCharset) throws ServiceException, UnsupportedEncodingException {
             String emailAddress = IDNUtil.toAscii(elem.getAttribute(MailConstants.A_ADDRESS));
             String personalName = elem.getAttribute(MailConstants.A_PERSONAL, null);
+            Account acct = Provisioning.getInstance().get(Key.AccountBy.name, emailAddress);
+            if (acct != null) {
+               personalName = acct.getDisplayName();
+            }
+			
             String addressType = elem.getAttribute(MailConstants.A_ADDRESS_TYPE);
 
             InternetAddress addr = new JavaMailInternetAddress(emailAddress, personalName,
