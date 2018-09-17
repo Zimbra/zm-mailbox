@@ -1303,6 +1303,8 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                 Filter.createANDFilter(
                         Filter.createEqualityFilter(Provisioning.A_ou, name),
                         Filter.createEqualityFilter(LdapConstants.ATTR_objectClass, "organizationalUnit"))
+                );
+    }
     /*
      * address lists
      */
