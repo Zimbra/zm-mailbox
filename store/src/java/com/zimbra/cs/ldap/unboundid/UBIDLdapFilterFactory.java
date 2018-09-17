@@ -1305,6 +1305,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                         Filter.createEqualityFilter(LdapConstants.ATTR_objectClass, "organizationalUnit"))
                 );
     }
+
     /*
      * address lists
      */

@@ -9740,6 +9740,8 @@ TODO: delete them permanently from here
   <globalConfigValue>office=physicalDeliveryOfficeName</globalConfigValue>
   <globalConfigValue>alias=zimbraMailAlias</globalConfigValue>
   <desc>LDAP attribute to HAB Group Member attribute mapping</desc>
+</attr>
+
 <attr id="3074" name="zimbraAddressListGalFilter" type="string" cardinality="single" requiredIn="addressList" flags="domainAdminModifiable" since="8.8.10">
   <desc>filter to decide members of the address list using gal</desc>
 </attr>

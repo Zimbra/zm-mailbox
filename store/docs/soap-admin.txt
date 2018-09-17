@@ -3215,7 +3215,6 @@ status : response status from the server requested
 started : contact backup started on this server
 error : error occurred while starting or stopping contact backup on this server
 stopped : stopped contact backup on this server.
-<<<<<<< HEAD
 
 ----------------------------
 <CreateHABGroupRequest [habDispalyName={habDisplayName}] habOrgUnit={habOrgUnit}>

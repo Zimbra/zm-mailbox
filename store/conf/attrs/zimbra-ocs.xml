@@ -298,6 +298,9 @@
   <desc>hold attributes for the group in hierarchical address book</desc>
   <comment>
     zimbraHABGroup represents a group in organization hierarchical address book.
+  </comment>
+</objectclass>
+
 <objectclass id="34" name="zimbraAddressList" type="STRUCTURAL">
   <sup>top</sup>
   <desc>Address List</desc>

@@ -2709,7 +2709,6 @@ public abstract class Provisioning extends ZAttrProvisioning {
         throw ServiceException.UNSUPPORTED();
     }
     
-
     public AddressList getAddressList(String id) throws ServiceException {
         throw ServiceException.UNSUPPORTED();
     }
