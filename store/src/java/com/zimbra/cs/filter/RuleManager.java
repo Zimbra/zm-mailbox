@@ -189,7 +189,7 @@ public final class RuleManager {
             throws ServiceException {
         long sieveScriptMaxSize;
         String zimbraMailSieveScriptMaxSize = entry.getAttr(Provisioning.A_zimbraMailSieveScriptMaxSize);
-        if (zimbraMailSieveScriptMaxSize != null) {
+        if (zimbraMailSieveScriptMaxSize != null && !zimbraMailSieveScriptMaxSize.isEmpty()) {
             sieveScriptMaxSize = Long.parseLong(zimbraMailSieveScriptMaxSize);
         } else {
             Config config = Provisioning.getInstance().getConfig();
