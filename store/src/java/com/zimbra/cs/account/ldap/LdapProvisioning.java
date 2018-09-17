@@ -11259,7 +11259,6 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     @Override
-<<<<<<< HEAD
     public Set<String> createHabOrgUnit(Domain domain, String habOrgUnitName) throws ServiceException {
         ZLdapContext zlc = null;
         Set<String> habOrgList = null;
@@ -11402,8 +11401,6 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
   
-=======
->>>>>>> e8f5356755d51fdd04ca29f11dd95296b45c43cb
     public String createAddressList(Domain domain, String name, String desc, Map<String, Object> attrs) throws ServiceException {
         String domainDn = ((LdapEntry)domain).getDN();
         Set<String> oc = new HashSet<String>();
