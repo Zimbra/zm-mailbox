@@ -30,7 +30,6 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
@@ -47,12 +46,16 @@ import com.zimbra.soap.mail.type.FilterTests;
  */
 public final class RuleManagerSieveScriptMaxSizeTest {
 
+    private static Account account;
+    private static Config config;
+
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
         Provisioning prov = Provisioning.getInstance();
-        prov.createDomain("zimbra.com", new HashMap<String, Object>());
-        prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
+        prov.createDomain("testdomain.biz", new HashMap<String, Object>());
+        account = prov.createAccount("test@testdomain.biz", "secret", new HashMap<String, Object>());
+        config = prov.getConfig();
     }
 
     @Before
@@ -63,43 +66,32 @@ public final class RuleManagerSieveScriptMaxSizeTest {
     @Test
     public void testSieveScriptBelowThreshold() throws Exception {
         try {
-            Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
-            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-
-            RuleManager.clearCachedRules(account);
-
+            config.setMailSieveScriptMaxSize(100000L);
             account.setMailSieveScriptMaxSize(100000L);
+            account.unsetMailSieveScript();
 
-            List<FilterRule> filterRuleList = generateFilterRules();
-            RuleManager.setIncomingXMLRules(account, filterRuleList);
+            RuleManager.setIncomingXMLRules(account, generateFilterRules());
 
-            String sieve = account.getMailSieveScript();
-            Assert.assertNotNull(sieve);
+            Assert.assertNotNull(account.getMailSieveScript());
         } catch (Exception e) {
             Assert.fail("No exception should be thrown: " + e.getMessage());
         }
     }
 
-    @Test
+    @Test(expected = ServiceException.class)
     public void testSieveScriptExceedsThreshold() throws Exception {
-        try {
-            Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
-            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+        config.setMailSieveScriptMaxSize(100000L);
+        account.setMailSieveScriptMaxSize(1L);
 
-            RuleManager.clearCachedRules(account);
+        RuleManager.setIncomingXMLRules(account, generateFilterRules());
+    }
 
-            account.setMailSieveScriptMaxSize(1L);
+    @Test(expected = ServiceException.class)
+    public void testSieveScriptExceedsGlobalThreshold() throws Exception {
+        config.setMailSieveScriptMaxSize(1L);
+        account.unsetMailSieveScriptMaxSize();
 
-            List<FilterRule> filterRuleList = generateFilterRules();
-            RuleManager.setIncomingXMLRules(account, filterRuleList);
-
-            String sieve = account.getMailSieveScript();
-            Assert.assertNull(sieve);
-        } catch (ServiceException e) {
-            Assert.assertEquals(ServiceException.INVALID_REQUEST, e.getCode());
-        } catch (Exception e) {
-            Assert.fail("No exception should be thrown: " + e.getMessage());
-        }
+        RuleManager.setIncomingXMLRules(account, generateFilterRules());
     }
 
     private List<FilterRule> generateFilterRules() {
