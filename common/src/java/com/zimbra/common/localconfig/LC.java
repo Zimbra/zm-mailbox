@@ -1233,6 +1233,10 @@ public final class LC {
     public static final KnownKey external_store_local_cache_max_bytes = KnownKey.newKey(1024 * 1024 * 1024); // 1GB
 
     @Supported
+    public static final KnownKey external_store_local_cache_dir =
+            KnownKey.newKey("${zimbra_home}/data/external-store-cache");
+
+    @Supported
     public static final KnownKey external_store_local_cache_max_files = KnownKey.newKey(10000);
 
     @Supported
