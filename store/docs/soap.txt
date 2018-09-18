@@ -4824,7 +4824,6 @@ API to reset password of authenticated account under zimbraAccount namespace.
 
 <ResetPasswordResponse />
 
-
 -----------------------
 Get HAB API
 -----------------------
@@ -4844,3 +4843,30 @@ Get HAB API
     </habGroup>+
  </GetHABResponse>
    
+
+----------------------------
+API to get all active address lists in the user's domain
+<GetAllAddressListsRequest xmlns="urn:zimbraAccount"/>
+
+Returns list of address lists.
+      <GetAllAddressListsResponse xmlns="urn:zimbraAccount">
+         <AddressLists>
+            <AddressList name={name_of_address_list} [description={description}] id={zimbraId}/>
+            ...
+         </AddressLists>
+      </GetAllAddressListsResponse>
+
+-----------------------------
+GetAddressListMembers
+
+API to get the members of an address list
+
+Request:
+<GetAddressListMembersRequest limit="{max result items}" offset="{offset from which result should be returned}"   id="{address list id}" countOnly="0|1{if only total account is returned}"/>
+
+Response
+<GetAddressListMembersResponse xmlns="urn:zimbraAccount">
+ <alm total="{total members in query result}">
+ <member>{email}</member>+
+</alm>
+</GetAddressListMembersResponse>

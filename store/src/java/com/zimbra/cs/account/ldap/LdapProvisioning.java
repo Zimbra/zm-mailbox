@@ -72,6 +72,7 @@ import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
+import com.zimbra.cs.account.AddressList;
 import com.zimbra.cs.account.Alias;
 import com.zimbra.cs.account.AliasedEntry;
 import com.zimbra.cs.account.AlwaysOnCluster;
@@ -218,6 +219,7 @@ import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.zimlet.ZimletException;
 import com.zimbra.cs.zimlet.ZimletUtil;
 import com.zimbra.soap.account.type.HABGroupMember;
+import com.zimbra.soap.account.type.AddressListInfo;
 import com.zimbra.soap.admin.type.CacheEntryType;
 import com.zimbra.soap.admin.type.CountObjectsType;
 import com.zimbra.soap.admin.type.DataSourceType;
@@ -4939,6 +4941,23 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         PermissionCache.invalidateCache();
     }
 
+    @Override
+    public void deleteAddressList(String addressListId) throws ServiceException {
+        AddressListInfo adl = getAddressListById(addressListId);
+        if (adl == null) {
+            throw AccountServiceException.NO_SUCH_ADDRESS_LIST(addressListId);
+        }
+        ZLdapContext zlc = null;
+        try {
+            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.DELETE_ADDRESSLIST);
+            zlc.deleteEntry(adl.getDn());
+        } catch (ServiceException e) {
+            throw ServiceException.FAILURE(String.format("unable to purge address list: %s", addressListId), e);
+        } finally {
+            LdapClient.closeContext(zlc);
+        }
+    }
+
     private DistributionList getDistributionListByNameInternal(String listAddress)
     throws ServiceException {
         listAddress = IDNUtil.toAsciiEmail(listAddress);
@@ -6986,6 +7005,72 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         searchOpts.setTypes(ObjectType.distributionlists);
         searchOpts.setSortOpt(SortOpt.SORT_ASCENDING);
         return searchDirectoryInternal(searchOpts);
+    }
+
+    @Override
+    public List<AddressListInfo> getAllAddressLists(Domain domain, boolean activeOnly) throws ServiceException {
+        LdapEntry ldapEntry = (LdapEntry) (domain instanceof LdapEntry ? domain : getDomainById(domain.getId()));
+        if (ldapEntry == null) {
+            throw AccountServiceException.NO_SUCH_DOMAIN(domain.getName());
+        }
+
+        List<AddressListInfo> result = getAddressListByQuery(ldapEntry.getDN(), filterFactory.allAddressLists(), activeOnly);
+        result = Collections.unmodifiableList(result);
+        return result;
+    }
+
+    private List<AddressListInfo> getAddressListByQuery(String base, ZLdapFilter filter, boolean activeOnly)
+            throws ServiceException {
+        return getAddressListByQuery(base, filter, activeOnly, Boolean.FALSE);
+    }
+
+    private List<AddressListInfo> getAddressListByQuery(String base, ZLdapFilter filter, boolean activeOnly, boolean getDN)
+            throws ServiceException {
+        List<AddressListInfo> result = new ArrayList<AddressListInfo>();
+        try {
+            ZSearchResultEnumeration ne = helper.searchDir(base, filter, ZSearchControls.SEARCH_CTLS_SUBTREE(), null,
+                    LdapServerType.REPLICA);
+            while (ne.hasMore()) {
+                ZSearchResultEntry sr = ne.next();
+                if (getDN) {
+                    AddressListInfo adl = new AddressListInfo(sr.getDN());
+                    result.add(adl);
+                } else {
+                    ZAttributes attrs = sr.getAttributes();
+                    if (attrs != null) {
+                        boolean active = Boolean
+                                .parseBoolean(attrs.getAttrString(Provisioning.A_zimbraIsAddressListActive));
+                        boolean addToRes = activeOnly ? active : Boolean.TRUE;
+                        if (addToRes) {
+                            AddressListInfo adl = new AddressListInfo(attrs.getAttrString(Provisioning.A_zimbraId),
+                                    attrs.getAttrString(Provisioning.A_uid),
+                                    attrs.getAttrString(Provisioning.A_description));
+                            if (!activeOnly) {
+                                adl.setActive(active);
+                                adl.setGalFilter(attrs.getAttrString(Provisioning.A_zimbraAddressListGalFilter));
+                                adl.setLdapFilter(attrs.getAttrString(Provisioning.A_zimbraAddressListLdapFilter));
+                            }
+                            result.add(adl);
+                        }
+                    }
+                }
+            }
+            ne.close();
+        } catch (ServiceException e) {
+            throw ServiceException.FAILURE("unable to lookup address lists via query: " + filter.toFilterString()
+                    + " message: " + e.getMessage(), e);
+        }
+        return result;
+    }
+
+    private AddressListInfo getAddressListById(String zimbraId) throws ServiceException {
+        AddressListInfo adl = null;
+        List<AddressListInfo> adlList = getAddressListByQuery(mDIT.mailBranchBaseDN(),
+                filterFactory.addressListById(zimbraId), false, true);
+        if (adlList.size() != 0) {
+            adl = adlList.get(0);
+        }
+        return adl;
     }
 
     @Override
@@ -11316,4 +11401,77 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
   
+    public String createAddressList(Domain domain, String name, String desc, Map<String, Object> attrs) throws ServiceException {
+        String domainDn = ((LdapEntry)domain).getDN();
+        Set<String> oc = new HashSet<String>();
+        oc.add(AttributeClass.OC_zimbraAddressList);
+        ZMutableEntry entry = LdapClient.createMutableEntry();
+        if (attrs != null && attrs.size() > 0) {
+            entry.mapToAttrs(attrs);
+        }
+        entry.addAttr(A_objectClass, oc);
+        String zimbraIdStr = LdapUtil.generateUUID();
+        entry.setAttr(A_zimbraId, zimbraIdStr);
+        entry.setAttr(Provisioning.A_uid, name);
+        if (!StringUtil.isNullOrEmpty(desc)) {
+            entry.setAttr(Provisioning.A_description, desc);
+        }
+        entry.setAttr(Provisioning.A_zimbraIsAddressListActive, "TRUE");
+        String dn = LdapConstants.ATTR_uid + "=" + name + ","
+                + LdapConstants.ATTR_ou + "=" + LdapConstants.PEOPLE + "," + domainDn;
+        ZimbraLog.addresslist.debug("Entry DN: %s", dn);
+        entry.setDN(dn);
+
+        ZLdapContext zlc = null;
+        try {
+            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.CREATE_ADDRESS_LIST);
+            zlc.createEntry(entry);
+        } catch(ServiceException se) {
+            ZimbraLog.addresslist.debug("Exception occured while creating addresslist in ldap: %s", se.getMessage());
+            throw se;
+        } finally {
+            LdapClient.closeContext(zlc);
+        }
+
+        return zimbraIdStr;
+   } 
+
+    /**
+     * 
+     * @param id id of the address list
+     * @return AddressList object
+     * @throws ServiceException if an error occurs while querying LDAP.
+     */
+    @Override
+    public AddressList getAddressList(String zimbraId) throws ServiceException {
+        AddressList list = null;
+        try {
+            ZimbraLog.ldap.info("Called addresslist");
+            String[] returnAttrs = { "objectClass", Provisioning.A_uid, Provisioning.A_zimbraId,
+                Provisioning.A_zimbraAddressListGalFilter, Provisioning.A_description,
+                Provisioning.A_zimbraIsAddressListActive,
+                Provisioning.A_zimbraAddressListLdapFilter };
+
+            ZSearchControls searchControls = ZSearchControls.createSearchControls(
+                ZSearchScope.SEARCH_SCOPE_SUBTREE, ZSearchControls.SIZE_UNLIMITED, returnAttrs);
+            ZSearchResultEnumeration ne = helper.searchDir(mDIT.mailBranchBaseDN(),
+                filterFactory.addressListById(zimbraId), searchControls, null,
+                LdapServerType.MASTER);
+            if (ne.hasMore()) {
+                ZSearchResultEntry sr = ne.next();
+                sr.getDN();
+                ZimbraLog.ldap.debug("Got address list: %s with attributes : %s", sr.getDN(),
+                    sr.getAttributes());
+                Map<String, Object> attrs = sr.getAttributes().getAttrs();
+                String name = (String) attrs.get(Provisioning.A_displayName);
+                list = new AddressList(name, zimbraId, attrs, null, this);
+            }
+            ne.close();
+
+        } catch (ServiceException e) {
+            throw ServiceException
+                .FAILURE(String.format("Unable to fetch address list '%s'", zimbraId), e);
+        }
+        return list;
+    }
 }

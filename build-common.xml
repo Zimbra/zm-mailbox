@@ -315,6 +315,7 @@
                     <include name="${test.pattern}"/>
                     <exclude name="**/Abstract*Test.java"/>
                     <exclude name="**/mailbox/ContactTest.java"/>
+                    <exclude name="**/filter/FileIntoCopyTest.java"/>
                 </fileset>
             </batchtest>
           </junit>
