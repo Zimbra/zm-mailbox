@@ -23,6 +23,7 @@ public class EventLogger {
     private static final LinkedBlockingQueue<Event> eventQueue = new LinkedBlockingQueue<>();
     private static final AtomicBoolean executorServiceRunning = new AtomicBoolean(false);
     private static final AtomicBoolean drainQueueBeforeShutdown = new AtomicBoolean(false);
+    private static final AtomicBoolean shutdownExecutor = new AtomicBoolean(false);
     private ExecutorService executorService;
     private ConfigProvider config;
     private boolean enabled;
@@ -134,6 +135,7 @@ public class EventLogger {
         int numThreads = config.getNumThreads();
         ZimbraLog.event.info("Starting Event Notifier Logger with %s threads; initial event queue size is %s", numThreads, eventQueue.size());
         drainQueueBeforeShutdown.set(false);
+        shutdownExecutor.set(false);
 
         ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("EventLogger-Worker-Thread-%d").build();
         executorService = Executors.newFixedThreadPool(numThreads, namedThreadFactory);
@@ -155,7 +157,8 @@ public class EventLogger {
         }
 
         ZimbraLog.event.warn("Shutdown called for Event Notifier Executor; initiating shutdown sequence...");
-        executorService.shutdownNow();
+        shutdownExecutor.set(true);
+        executorService.shutdown();
         try {
             executorService.awaitTermination(30, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
@@ -180,6 +183,7 @@ public class EventLogger {
     private static class EventNotifier implements Runnable {
 
         private List<EventLogHandler> handlers;
+        private static final Integer POLL_TIMEOUT = 3;
 
         private EventNotifier(Map<String, EventLogHandler.Factory> knownFactories, Map<String, Collection<String>> handlerConfigs) throws ServiceException {
             handlers = new ArrayList<>(handlerConfigs.size());
@@ -197,29 +201,24 @@ public class EventLogger {
 
         @Override
         public void run() {
-            try {
-                while (!Thread.currentThread().isInterrupted()) {
-                    consume(eventQueue);
+        	try {
+                while (!shutdownExecutor.get()) { 
+                    Event event = eventQueue.poll(POLL_TIMEOUT, TimeUnit.SECONDS);
+                    if (event != null) {
+                         notifyEventLogHandlers(event);
+                    }
+                }
+                
+                if (drainQueueBeforeShutdown.get()) {
+                	drainQueue();
                 }
             } catch (InterruptedException e) {
                 ZimbraLog.event.debug("%s was interrupted, Shutting it down", Thread.currentThread().getName(), e);
                 Thread.currentThread().interrupt();
             } finally {
-                if (drainQueueBeforeShutdown.get()) {
-                    try {
-                        drainQueue();
-                    } catch (InterruptedException e) {
-                        ZimbraLog.event.debug("%s was interrupted; unable to drain the event queue", Thread.currentThread().getName(), e);
-                    }
-                }
                 shutdownEventLogHandlers();
             }
-        }
-
-        private void consume(BlockingQueue<Event> events) throws InterruptedException {
-            Event event = events.take();
-            notifyEventLogHandlers(event);
-        }
+}
 
         private void notifyEventLogHandlers(Event event) {
             for (EventLogHandler logHandler: handlers) {
@@ -230,12 +229,11 @@ public class EventLogger {
         }
 
         private void drainQueue() throws InterruptedException {
-            Event event = eventQueue.poll();
-            if (event != null) {
-                do {
-                    notifyEventLogHandlers(event);
-                    event = eventQueue.poll();
-                } while (event != null);
+        	ZimbraLog.event.debug("Draining the queue");
+            Event event = eventQueue.poll(POLL_TIMEOUT, TimeUnit.SECONDS);
+            while (event != null) {
+                notifyEventLogHandlers(event);
+                event = eventQueue.poll(POLL_TIMEOUT, TimeUnit.SECONDS);
             }
         }
 
