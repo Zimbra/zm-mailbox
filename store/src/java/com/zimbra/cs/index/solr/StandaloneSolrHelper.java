@@ -6,6 +6,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrResponse;
+import org.apache.solr.client.solrj.SolrRequest.METHOD;
 import org.apache.solr.client.solrj.request.QueryRequest;
 import org.apache.solr.client.solrj.request.UpdateRequest;
 
@@ -42,7 +43,8 @@ public class StandaloneSolrHelper extends SolrRequestHelper {
     public SolrResponse executeQueryRequest(String accountId, SolrQuery query) throws ServiceException {
         String coreName = locator.getIndexName(accountId);
         try(SolrClient solrClient = SolrUtils.getSolrClient(httpClient, baseUrl, coreName)) {
-            return SolrUtils.executeRequestWithRetry(accountId, solrClient, new QueryRequest(query), baseUrl, coreName, indexType);
+            QueryRequest queryRequest = new QueryRequest(query, METHOD.POST);
+            return SolrUtils.executeRequestWithRetry(accountId, solrClient, queryRequest, baseUrl, coreName, indexType);
         } catch (IOException e) {
             throw ServiceException.FAILURE(String.format("unable to execute Solr request for account %s", accountId), e);
         }

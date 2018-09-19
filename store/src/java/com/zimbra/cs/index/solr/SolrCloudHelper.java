@@ -3,6 +3,7 @@ package com.zimbra.cs.index.solr;
 import java.io.IOException;
 
 import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.client.solrj.SolrRequest.METHOD;
 import org.apache.solr.client.solrj.SolrResponse;
 import org.apache.solr.client.solrj.impl.CloudSolrClient;
 import org.apache.solr.client.solrj.io.SolrClientCache;
@@ -44,8 +45,9 @@ public class SolrCloudHelper extends SolrRequestHelper {
 
     @Override
     public SolrResponse executeQueryRequest(String accountId, SolrQuery query) throws ServiceException {
-        query.setParam(CoreAdminParams.COLLECTION, locator.getIndexName(accountId));
-        return SolrUtils.executeCloudRequestWithRetry(accountId, cloudClient, new QueryRequest(query), locator.getIndexName(accountId), indexType);
+        QueryRequest queryRequest = new QueryRequest(query, METHOD.POST);
+        String collectionName = locator.getIndexName(accountId);
+        return SolrUtils.executeCloudRequestWithRetry(accountId, cloudClient, queryRequest, collectionName, indexType);
     }
 
     public String getZkHost() {

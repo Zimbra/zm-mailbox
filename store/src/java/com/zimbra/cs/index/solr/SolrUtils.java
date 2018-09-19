@@ -296,7 +296,7 @@ public class SolrUtils {
 
             @Override
             public SolrResponse execute() throws Exception {
-                return req.process(client);
+                return req.process(client, collectionName);
             }
         };
 
