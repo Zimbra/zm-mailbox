@@ -202,6 +202,7 @@ import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.ZLdapFilterFactory;
 import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 import com.zimbra.cs.ldap.ZLdapSchema;
+import com.zimbra.cs.ldap.ZModificationList;
 import com.zimbra.cs.ldap.ZMutableEntry;
 import com.zimbra.cs.ldap.ZSearchControls;
 import com.zimbra.cs.ldap.ZSearchResultEntry;
@@ -11459,12 +11460,12 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                 LdapServerType.MASTER);
             if (ne.hasMore()) {
                 ZSearchResultEntry sr = ne.next();
-                sr.getDN();
-                ZimbraLog.ldap.debug("Got address list: %s with attributes : %s", sr.getDN(),
+                String dn = sr.getDN();
+                ZimbraLog.ldap.debug("Got address list: %s with attributes : %s", dn,
                     sr.getAttributes());
                 Map<String, Object> attrs = sr.getAttributes().getAttrs();
                 String name = (String) attrs.get(Provisioning.A_displayName);
-                list = new AddressList(name, zimbraId, attrs, null, this);
+                list = new AddressList(dn, name, zimbraId, attrs, null, this);
             }
             ne.close();
 
@@ -11474,4 +11475,43 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         }
         return list;
     }
+
+    @Override
+    public void modifyAddressList(String addressListId, Domain domain, String name, String desc,
+        Map<String, String> attrs) throws ServiceException {
+        AddressList addressListToModify = getAddressList(addressListId);
+        if (addressListToModify == null) {
+            throw AccountServiceException.NO_SUCH_ADDRESS_LIST(addressListId);
+        }
+        String oldDn = addressListToModify.getDN();
+        // fetch uid - note that create address list sets name as the uid
+        String oldName = addressListToModify.getAttr(Provisioning.A_uid);
+        // set desc attr if modifying
+        if (!StringUtil.isNullOrEmpty(desc)) {
+            attrs.put(Provisioning.A_description, desc);
+        }
+        ZLdapContext zlc = null;
+        try {
+            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.MODIFY_ADDRESS_LIST);
+            // replace all given attrs
+            ZModificationList modificationList = zlc.createModificationList();
+            for (java.util.Map.Entry<String, String> attr : attrs.entrySet()) {
+                modificationList.modifyAttr(attr.getKey(), attr.getValue(), addressListToModify, false, false);
+            }
+            zlc.modifyAttributes(oldDn, modificationList);
+            ZimbraLog.addresslist.debug("Modified address list attributes %s", modificationList);
+            // rename the dn if name changed
+            if (!StringUtil.isNullOrEmpty(name) && !StringUtil.equal(name, oldName)) {
+                String domainDn = ((LdapEntry)domain).getDN();
+                String newDn = LdapConstants.ATTR_uid + "=" + name + ","
+                    + LdapConstants.ATTR_ou + "=" + LdapConstants.PEOPLE + "," + domainDn;
+                zlc.renameEntry(oldDn, newDn);
+                ZimbraLog.addresslist.debug("New entry DN: %s", newDn);
+            }
+        } catch (ServiceException e) {
+            throw ServiceException.FAILURE("error modifying address list: " + addressListToModify.getId(), e);
+        } finally {
+            LdapClient.closeContext(zlc);
+        }
+   }
 }

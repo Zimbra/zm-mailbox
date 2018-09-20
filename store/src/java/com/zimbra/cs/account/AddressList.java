@@ -24,6 +24,22 @@ import java.util.Map;
  */
 public class AddressList extends NamedEntry {
 
+    private String mDn;
+
+    /**
+     * @param dn
+     * @param name
+     * @param id
+     * @param attrs
+     * @param defaults
+     * @param prov
+     */
+    public AddressList(String dn, String name, String id, Map<String, Object> attrs,
+        Map<String, Object> defaults, Provisioning prov) {
+        this(name, id, attrs, defaults, prov);
+        this.mDn = dn;
+    }
+
     /**
      * @param name
      * @param id
@@ -55,5 +71,9 @@ public class AddressList extends NamedEntry {
     
     public String getDisplayName() {
         return getAttr(Provisioning.A_displayName);
+    }
+
+    public String getDN() {
+        return mDn;
     }
 }
