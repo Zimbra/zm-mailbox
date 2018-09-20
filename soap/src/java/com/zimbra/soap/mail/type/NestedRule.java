@@ -36,13 +36,13 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.json.jackson.annotate.ZimbraJsonArrayForWrapper;
 
 import io.leangen.graphql.annotations.GraphQLQuery;
-import io.leangen.graphql.annotations.types.GraphQLInterface;
+import io.leangen.graphql.annotations.types.GraphQLType;
 
 // JsonPropertyOrder added to make sure JaxbToJsonTest.bug65572_BooleanAndXmlElements passes
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"filterVariables", "tests", "actions","child"})
 @JsonPropertyOrder({"filterVariables", "tests", "actions","child"})
-@GraphQLInterface(name=GqlConstants.CLASS_NESTED_RULE, description="Nested Rule class", implementationAutoDiscovery=true)
+@GraphQLType(name=GqlConstants.CLASS_NESTED_RULE, description="Nested Rule class")
 public final class NestedRule {
 
     /**

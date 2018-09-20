@@ -37,6 +37,7 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.json.jackson.annotate.ZimbraJsonArrayForWrapper;
 import com.zimbra.soap.type.ZmBoolean;
 
+import io.leangen.graphql.annotations.GraphQLIgnore;
 import io.leangen.graphql.annotations.GraphQLQuery;
 import io.leangen.graphql.annotations.types.GraphQLType;
 
@@ -169,7 +170,7 @@ public final class FilterRule {
         return this;
     }
 
-    @GraphQLQuery(name=GqlConstants.ACTIONS, description="The filter actions")
+    @GraphQLQuery(name=GqlConstants.ACTIONS, description="The list of filter actions")
     public List<FilterAction> getFilterActions() {
         // there must be no actions.size()==0 case. This is for just in case.
         if(actions == null || actions.size() == 0) {
@@ -178,7 +179,7 @@ public final class FilterRule {
         return Collections.unmodifiableList(actions);
     }
 
-    @GraphQLQuery(name=GqlConstants.GET_FILTER_ACTION_COUNT, description="Get filter action count")
+    @GraphQLIgnore
     public int getActionCount() {
         if(actions == null){
             return 0;
@@ -195,6 +196,7 @@ public final class FilterRule {
         this.name = name;
     }
 
+    @GraphQLQuery(name=GqlConstants.ACTIVE, description="active boolean")
     public boolean isActive() {
         return ZmBoolean.toBool(active);
     }
@@ -203,13 +205,15 @@ public final class FilterRule {
         this.active = active;
     }
 
-    @GraphQLQuery(name=GqlConstants.TESTS, description="The rule filter tests")
+    //@GraphQLQuery(name=GqlConstants.TESTS, description="The rule filter tests")
+    @GraphQLIgnore
     public FilterTests getFilterTests() {
         return tests;
     }
 
     // For Nested Rule
-    @GraphQLQuery(name=GqlConstants.CHILD, description="Nested rule")
+    //@GraphQLQuery(name=GqlConstants.CHILD, description="Nested rule")
+    @GraphQLIgnore
     public NestedRule getChild() {
         return child;
     }
@@ -230,7 +234,8 @@ public final class FilterRule {
      * @return variables
      */
 
-    @GraphQLQuery(name=GqlConstants.FILTER_VARIABLES, description="The rules filter variables")
+//    @GraphQLQuery(name=GqlConstants.FILTER_VARIABLES, description="The rules filter variables")
+    @GraphQLIgnore
     public FilterVariables getFilterVariables() {
         return this.filterVariables;
     }

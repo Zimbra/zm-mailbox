@@ -37,11 +37,11 @@ import com.zimbra.soap.type.ZmBoolean;
 import io.leangen.graphql.annotations.GraphQLQuery;
 import io.leangen.graphql.annotations.types.GraphQLInterface;
 import io.leangen.graphql.annotations.types.GraphQLType;
-
+import io.leangen.graphql.annotations.GraphQLIgnore;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlTransient
-@GraphQLInterface(name=GqlConstants.CLASS_FILTER_ACTION, description="FilterAction class", implementationAutoDiscovery=true)
+@GraphQLInterface(name=GqlConstants.CLASS_FILTER_RULE, description="Filter Action class", implementationAutoDiscovery=true)
 public class FilterAction {
 
     /**
@@ -163,7 +163,8 @@ public class FilterAction {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
-    @GraphQLType(name=GqlConstants.CLASS_REDIRECT_ACTION, description="RedirectAction class")
+//    @GraphQLType(name=GqlConstants.CLASS_REDIRECT_ACTION, description="RedirectAction class")
+    @GraphQLIgnore
     public static final class RedirectAction extends FilterAction {
 
         /**
@@ -213,7 +214,8 @@ public class FilterAction {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
-    @GraphQLType(name=GqlConstants.CLASS_NOTIFY_ACTION, description="NotifyAction class")
+//    @GraphQLType(name=GqlConstants.CLASS_NOTIFY_ACTION, description="NotifyAction class")
+    @GraphQLIgnore
     public static final class NotifyAction extends FilterAction {
 
         /**
@@ -315,7 +317,8 @@ public class FilterAction {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
-    @GraphQLType(name=GqlConstants.CLASS_RFC_COMPLIANT_NOTIFY_ACTION, description="RFCCompliantNotifyAction class")
+//    @GraphQLType(name=GqlConstants.CLASS_RFC_COMPLIANT_NOTIFY_ACTION, description="RFCCompliantNotifyAction class")
+    @GraphQLIgnore
     public static final class RFCCompliantNotifyAction extends FilterAction {
 
         /**
@@ -411,7 +414,8 @@ public class FilterAction {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
-    @GraphQLType(name=GqlConstants.CLASS_TAG_ACTION, description="TagAction class")
+//    @GraphQLType(name=GqlConstants.CLASS_TAG_ACTION, description="TagAction class")
+    @GraphQLIgnore
     public static final class TagAction extends FilterAction {
 
         /**
@@ -442,7 +446,8 @@ public class FilterAction {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
-    @GraphQLType(name=GqlConstants.CLASS_REPLY_ACTION, description="ReplyAction class")
+//    @GraphQLType(name=GqlConstants.CLASS_REPLY_ACTION, description="ReplyAction class")
+    @GraphQLIgnore
     public static final class ReplyAction extends FilterAction {
 
         /**
@@ -476,7 +481,8 @@ public class FilterAction {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
-    @GraphQLType(name=GqlConstants.CLASS_REJECT_ACTION, description="RejectAction class")
+//    @GraphQLType(name=GqlConstants.CLASS_REJECT_ACTION, description="RejectAction class")
+    @GraphQLIgnore
     public static class RejectAction extends FilterAction {
         public static final String TEXT_TEMPLATE = "text:";
 
@@ -508,7 +514,8 @@ public class FilterAction {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
-    @GraphQLType(name=GqlConstants.CLASS_EREJECT_ACTION, description="ErejectAction class")
+//    @GraphQLType(name=GqlConstants.CLASS_EREJECT_ACTION, description="ErejectAction class")
+    @GraphQLIgnore
     public static final class ErejectAction extends RejectAction {
         @SuppressWarnings("unused")
         private ErejectAction() {
@@ -522,7 +529,8 @@ public class FilterAction {
 
     @XmlAccessorType(XmlAccessType.NONE)
     @JsonPropertyOrder({ "index", "level" })
-    @GraphQLType(name=GqlConstants.CLASS_LOG_ACTION, description="LogAction class")
+//    @GraphQLType(name=GqlConstants.CLASS_LOG_ACTION, description="LogAction class")
+    @GraphQLIgnore
     public static class LogAction extends FilterAction {
         @XmlEnum
         public enum LogLevel {
@@ -602,7 +610,8 @@ public class FilterAction {
 
     @XmlAccessorType(XmlAccessType.NONE)
     @JsonPropertyOrder({ "index", "last", "headerName", "headerValue" })
-    @GraphQLType(name=GqlConstants.CLASS_ADD_HEADER_ACTION, description="AddheaderAction class")
+//    @GraphQLType(name=GqlConstants.CLASS_ADD_HEADER_ACTION, description="AddheaderAction class")
+    @GraphQLIgnore
     public static class AddheaderAction extends FilterAction {
         /**
          * @zm-api-field-tag headerName
@@ -707,7 +716,8 @@ public class FilterAction {
 
     @XmlAccessorType(XmlAccessType.NONE)
     @JsonPropertyOrder({ "index", "last", "offset", "test" })
-    @GraphQLType(name=GqlConstants.CLASS_DELETE_HEADER_ACTION, description="DeleteheaderAction class")
+//    @GraphQLType(name=GqlConstants.CLASS_DELETE_HEADER_ACTION, description="DeleteheaderAction class")
+    @GraphQLIgnore
     public static class DeleteheaderAction extends FilterAction {
         /**
          * @zm-api-field-tag last
@@ -810,7 +820,8 @@ public class FilterAction {
 
     @XmlAccessorType(XmlAccessType.NONE)
     @JsonPropertyOrder({ "index", "last", "offset", "newName", "newValue", "test" })
-    @GraphQLType(name=GqlConstants.CLASS_REPLACE_HEADER_ACTION, description="ReplaceheaderAction class")
+//    @GraphQLType(name=GqlConstants.CLASS_REPLACE_HEADER_ACTION, description="ReplaceheaderAction class")
+    @GraphQLIgnore
     public static class ReplaceheaderAction extends DeleteheaderAction {
         /**
          * @zm-api-field-tag newName
