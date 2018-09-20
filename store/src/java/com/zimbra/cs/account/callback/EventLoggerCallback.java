@@ -20,25 +20,27 @@ public class EventLoggerCallback extends AttributeCallback {
             MultiValueMod mod = multiValueMod(attrsToModify, Provisioning.A_zimbraEventLoggingBackends);
             if (mod.adding() || mod.replacing()) {
                 if (attrValue instanceof String) {
-                    validateBackend(entry, (String) attrValue);
+                    validateBackend(entry, (String) attrValue, mod.adding());
                 } else if (attrValue instanceof String[]) {
                     for (String backend: (String[]) attrValue) {
-                        validateBackend(entry, backend);
+                        validateBackend(entry, backend, mod.adding());
                     }
                 }
             }
         }
     }
 
-    private void validateBackend(Entry entry, String backend) throws ServiceException {
+    private void validateBackend(Entry entry, String backend, boolean checkExisting) throws ServiceException {
         String[] tokens = backend.split(":", 2);
         if (tokens.length < 2) {
             throw ServiceException.FAILURE("zimbraEventLoggingBackends values must be of the form backend:config", null);
         }
         String newBackendName = tokens[0];
         String newBackendConfig = tokens[1];
-        //check that a handler with the same config is not already registered
-        checkExistingHandlers(entry, newBackendName, newBackendConfig);
+        //if we're adding handlers to an existing list, check that a handler with the same config is not already registered
+        if (checkExisting) {
+            checkExistingHandlers(entry, newBackendName, newBackendConfig);
+        }
     }
 
     private void checkExistingHandlers(Entry entry, String newBackendName, String newBackendConfig) throws ServiceException {
