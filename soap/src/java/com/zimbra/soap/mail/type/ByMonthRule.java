@@ -22,10 +22,17 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.ByMonthRuleInterface;
 
+import io.leangen.graphql.annotations.GraphQLInputField;
+import io.leangen.graphql.annotations.GraphQLNonNull;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name=GqlConstants.CLASS_BY_MONTH_RULE, description="By-month rule")
 public class ByMonthRule implements ByMonthRuleInterface {
 
     /**
@@ -33,6 +40,8 @@ public class ByMonthRule implements ByMonthRuleInterface {
      * @zm-api-field-description Comma separated list of months where month is a number between 1 and 12
      */
     @XmlAttribute(name=MailConstants.A_CAL_RULE_BYMONTH_MOLIST /* molist */, required=true)
+    @GraphQLNonNull
+    @GraphQLQuery(name=GqlConstants.LIST, description="Comma separated list of months where month is a number between 1 and 12")
     private final String list;
 
     /**
@@ -43,7 +52,7 @@ public class ByMonthRule implements ByMonthRuleInterface {
         this((String) null);
     }
 
-    public ByMonthRule(String list) {
+    public ByMonthRule(@GraphQLNonNull @GraphQLInputField String list) {
         this.list = list;
     }
 

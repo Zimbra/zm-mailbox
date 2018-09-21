@@ -53,6 +53,7 @@ public abstract class SoapTransport {
     private String trustedToken;
     private boolean voidOnExpired = false;
     private boolean isAdmin = false;
+    private String originalUserAgent;
     public static final String DEFAULT_USER_AGENT_NAME = "ZCS";
     private static String sDefaultUserAgentName = DEFAULT_USER_AGENT_NAME;
     private static String sDefaultUserAgentVersion;
@@ -508,6 +509,14 @@ public abstract class SoapTransport {
 
     public void setAdmin(boolean isAdmin) {
         this.isAdmin = isAdmin;
+    }
+
+    public String getOriginalUserAgent() {
+        return originalUserAgent;
+    }
+
+    public void setOriginalUserAgent(String originalUserAgent) {
+        this.originalUserAgent = originalUserAgent;
     }
 
 }

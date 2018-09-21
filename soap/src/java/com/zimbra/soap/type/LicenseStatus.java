@@ -21,12 +21,24 @@ import java.util.Arrays;
 
 import javax.xml.bind.annotation.XmlEnum;
 
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.service.ServiceException;
 
+import io.leangen.graphql.annotations.GraphQLEnumValue;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlEnum
+@GraphQLType(name=GqlConstants.ENUM_LICENSE_STATUS, description="License status")
 public enum LicenseStatus {
     // case must match protocol
-    NOT_INSTALLED, NOT_ACTIVATED, IN_FUTURE, EXPIRED, INVALID, LICENSE_GRACE_PERIOD, ACTIVATION_GRACE_PERIOD, OK;
+    @GraphQLEnumValue NOT_INSTALLED,
+    @GraphQLEnumValue NOT_ACTIVATED,
+    @GraphQLEnumValue IN_FUTURE,
+    @GraphQLEnumValue EXPIRED,
+    @GraphQLEnumValue INVALID,
+    @GraphQLEnumValue LICENSE_GRACE_PERIOD,
+    @GraphQLEnumValue ACTIVATION_GRACE_PERIOD,
+    @GraphQLEnumValue OK;
 
     public static LicenseStatus fromString(String s) throws ServiceException {
         try {

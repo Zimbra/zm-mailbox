@@ -1,5 +1,6 @@
 <project name="zm-mailbox" default="all">
-   <target name="all" depends="publish-local-all">
+
+    <target name="all" depends="publish-local-all">
       <ant dir="./native" target="generate-native-headers" inheritAll="true"/>
       <exec dir="./native" executable="make"          failonerror="true"/>
       <ant dir="./store"  target="war"                inheritAll="true"/>
@@ -13,6 +14,8 @@
       <ant dir="./soap"   target="publish-local" inheritAll="true"/>
       <ant dir="./client" target="publish-local" inheritAll="true"/>
       <ant dir="./store"  target="publish-local" inheritAll="true"/>
+      <ant dir="./store"  target="set-dev-version" inheritAll="true"/>
+      <echo>Starting package creation from war </echo>
    </target>
 
    <target name="set-no-halt-on-failure">
@@ -45,8 +48,44 @@
         <ant dir="./store"  target="dist" inheritAll="false"/>
       </target>
 
+<!-- Code added to parse regex provided in version zimbra.buildinfo.version -->
+    <taskdef resource="net/sf/antcontrib/antlib.xml">
+        <classpath>
+		<pathelement location="${user.home}/.zcs-deps/ant-contrib-1.0b1.jar"/>
+        </classpath>
+    </taskdef>
+	<propertyregex property="zimbra.buildinfo.majorversion"
+	               input="${zimbra.buildinfo.version}"
+	               regexp="([0-9]+)\.([0-9]+)\.([0-9]+)"
+	               select="\1"
+	               casesensitive="false" />
+
+	<propertyregex property="zimbra.buildinfo.minorversion"
+	               input="${zimbra.buildinfo.version}"
+	               regexp="([0-9]+)\.([0-9]+)\.([0-9]+)"
+	               select="\2"
+	               casesensitive="false" />
+
+	<propertyregex property="zimbra.buildinfo.microversion"
+	               input="${zimbra.buildinfo.version}"
+	               regexp="([0-9]+)\.([0-9]+)\.([0-9]+)"
+	               select="\3"
+	               casesensitive="false" />
+
+<!-- Property defined to accept the version -->
+
+  <property name="store.ext.patch.revision" value="1" />
+  <property name="store.ext.patch.version"
+      value="${zimbra.buildinfo.majorversion}.${zimbra.buildinfo.minorversion}.${zimbra.buildinfo.microversion}"/>
+
+<!--Package building starts here from the war files -->
    <target name="pkg" depends="clean-pkg,all,dist">
-      <exec dir="." executable="./pkg-builder.pl" failonerror="true"/>
+      <exec dir="." executable="./pkg-builder.pl" failonerror="true">
+      <arg value="-v"/>
+      <arg value="${store.ext.patch.version}"/>
+      <arg value="-r"/>
+      <arg value="${store.ext.patch.revision}"/>
+      </exec>
    </target>
 
    <target name="pkg-after-plough-through-tests" depends="test-all-plough-through,pkg"/>

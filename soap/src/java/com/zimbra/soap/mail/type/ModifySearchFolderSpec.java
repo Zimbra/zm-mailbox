@@ -22,9 +22,15 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 
+import io.leangen.graphql.annotations.GraphQLInputField;
+import io.leangen.graphql.annotations.GraphQLNonNull;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name=GqlConstants.CLASS_MODIFY_SEARCH_FOLDER_SPEC, description="Input for modifying an existing search folder")
 public class ModifySearchFolderSpec {
 
     /**
@@ -32,6 +38,8 @@ public class ModifySearchFolderSpec {
      * @zm-api-field-description ID
      */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=true)
+    @GraphQLNonNull
+    @GraphQLInputField(name=GqlConstants.SEARCH_FOLDER_ID, description="Search folder id to be edited")
     private final String id;
 
     /**
@@ -39,6 +47,8 @@ public class ModifySearchFolderSpec {
      * @zm-api-field-description Query
      */
     @XmlAttribute(name=MailConstants.A_QUERY /* query */, required=true)
+    @GraphQLNonNull
+    @GraphQLInputField(name=GqlConstants.QUERY, description="New search query")
     private final String query;
 
     /**
@@ -46,6 +56,7 @@ public class ModifySearchFolderSpec {
      * @zm-api-field-description Search types
      */
     @XmlAttribute(name=MailConstants.A_SEARCH_TYPES /* types */, required=false)
+    @GraphQLInputField(name=GqlConstants.SEARCH_TYPES, description="New type for the search folder")
     private String searchTypes;
 
     /**
@@ -53,6 +64,7 @@ public class ModifySearchFolderSpec {
      * @zm-api-field-description Sort by
      */
     @XmlAttribute(name=MailConstants.A_SORTBY /* sortBy */, required=false)
+    @GraphQLInputField(name=GqlConstants.SORT_BY, description="New sort order for ")
     private String sortBy;
 
     /**

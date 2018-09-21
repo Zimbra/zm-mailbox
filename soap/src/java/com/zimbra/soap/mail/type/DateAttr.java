@@ -22,10 +22,17 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.DateAttrInterface;
 
+import io.leangen.graphql.annotations.GraphQLInputField;
+import io.leangen.graphql.annotations.GraphQLNonNull;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name=GqlConstants.CLASS_DATE_ATTR, description="Date attr")
 public class DateAttr implements DateAttrInterface {
 
     /**
@@ -33,6 +40,8 @@ public class DateAttr implements DateAttrInterface {
      * @zm-api-field-description Date in format : <b>YYYYMMDDThhmmssZ</b>
      */
     @XmlAttribute(name=MailConstants.A_DATE, required=true)
+    @GraphQLNonNull
+    @GraphQLQuery(name=GqlConstants.DATE, description="Date in format: YYYYMMDDThhmmssZ")
     private final String date;
 
     /**
@@ -43,7 +52,8 @@ public class DateAttr implements DateAttrInterface {
         this((String) null);
     }
 
-    public DateAttr(String date) {
+    public DateAttr(
+        @GraphQLNonNull @GraphQLInputField(name=GqlConstants.DATE) String date) {
         this.date = date;
     }
 

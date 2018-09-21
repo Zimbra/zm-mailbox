@@ -56,6 +56,8 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     private static Filter FILTER_ALL_DYNAMIC_GROUP_DYNAMIC_UNITS;
     private static Filter FILTER_ALL_DYNAMIC_GROUP_STATIC_UNITS;
     private static Filter FILTER_ALL_GROUPS;
+    private static Filter FILTER_HAB_GROUPS;
+    private static Filter FILTER_ALL_HAB_GROUPS;
     private static Filter FILTER_ALL_IDENTITIES;
     private static Filter FILTER_ALL_MIME_ENTRIES;
     private static Filter FILTER_ALL_NON_SYSTEM_ACCOUNTS;
@@ -80,6 +82,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     private static Filter FILTER_NOT_EXCLUDED_FROM_CMB_SEARCH;
     private static Filter FILTER_WITH_ARCHIVE;
     private static Filter FILTER_ALL_INTERNAL_ACCOUNTS;
+    private static Filter FILTER_ALL_ADDRESS_LISTS;
 
 
     private static boolean initialized = false;
@@ -134,6 +137,9 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
         FILTER_ALL_DYNAMIC_GROUPS =
                 Filter.createEqualityFilter(
                 LdapConstants.ATTR_objectClass, AttributeClass.OC_zimbraGroup);
+        FILTER_ALL_HAB_GROUPS =
+            Filter.createEqualityFilter(
+            LdapConstants.ATTR_objectClass, AttributeClass.OC_zimbraHabGroup);
 
         FILTER_ALL_DYNAMIC_GROUP_DYNAMIC_UNITS =
             Filter.createEqualityFilter(
@@ -259,10 +265,15 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                 Filter.createORFilter(
                         FILTER_ALL_DYNAMIC_GROUPS,
                         FILTER_ALL_DISTRIBUTION_LISTS);
+        FILTER_HAB_GROUPS =
+            Filter.createANDFilter(FILTER_ALL_HAB_GROUPS);
 
         FILTER_ALL_INTERNAL_ACCOUNTS = Filter.createANDFilter(
             FILTER_ALL_ACCOUNTS,
             Filter.createNOTFilter(FILTER_IS_EXTERNAL_ACCOUNT));
+
+        FILTER_ALL_ADDRESS_LISTS = Filter.createEqualityFilter(
+                LdapConstants.ATTR_objectClass, AttributeClass.OC_zimbraAddressList);
     }
 
     @Override
@@ -457,7 +468,8 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                 Filter.createANDFilter(
                         Filter.createORFilter(
                                 Filter.createEqualityFilter(Provisioning.A_zimbraMailDeliveryAddress, name),
-                                Filter.createEqualityFilter(Provisioning.A_zimbraMailAlias, name)),
+                                Filter.createEqualityFilter(Provisioning.A_zimbraMailAlias, name),
+                                Filter.createEqualityFilter(Provisioning.A_zimbraOldMailAddress, name)),
                         FILTER_ALL_ACCOUNTS));
     }
 
@@ -812,6 +824,13 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
         return new UBIDLdapFilter(
                 FilterId.ALL_GROUPS,
                 FILTER_ALL_GROUPS);
+    }
+
+    @Override
+    public ZLdapFilter allHabGroups() {
+        return new UBIDLdapFilter(
+                FilterId.ALL_GROUPS,
+                FILTER_ALL_HAB_GROUPS);
     }
 
     @Override
@@ -1275,5 +1294,44 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
         return new UBIDLdapFilter(
                 FilterId.DN_SUBTREE_MATCH,
                 Filter.createORFilter(filters));
+    }
+
+    @Override
+    public ZLdapFilter habOrgUnitByName(String name) {
+        return new UBIDLdapFilter(
+                FilterId.HAB_ORG_UNIT_BY_NAME,
+                Filter.createANDFilter(
+                        Filter.createEqualityFilter(Provisioning.A_ou, name),
+                        Filter.createEqualityFilter(LdapConstants.ATTR_objectClass, "organizationalUnit"))
+                );
+    }
+
+    /*
+     * address lists
+     */
+    @Override
+    public ZLdapFilter allAddressLists() {
+        return new UBIDLdapFilter(
+                FilterId.ALL_ADDRESS_LISTS,
+                FILTER_ALL_ADDRESS_LISTS
+                );
+    }
+
+    @Override
+    public ZLdapFilter addressListById(String id) {
+        return new UBIDLdapFilter(
+                FilterId.ADDRESS_LIST_BY_ID,
+                Filter.createANDFilter(
+                        Filter.createEqualityFilter(Provisioning.A_zimbraId, id),
+                        FILTER_ALL_ADDRESS_LISTS));
+    }
+
+    @Override
+    public ZLdapFilter addressListByName(String name) {
+        return new UBIDLdapFilter(
+                FilterId.ADDRESS_LIST_BY_NAME,
+                Filter.createANDFilter(
+                        Filter.createEqualityFilter(Provisioning.A_uid, name),
+                        FILTER_ALL_ADDRESS_LISTS));
     }
 }

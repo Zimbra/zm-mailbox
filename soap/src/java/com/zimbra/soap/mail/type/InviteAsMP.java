@@ -31,14 +31,22 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlType;
 
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.KeyValuePair;
+
+import io.leangen.graphql.annotations.GraphQLIgnore;
+import io.leangen.graphql.annotations.GraphQLInputField;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
 
 // See mail.ToXML.encodeInviteAsMP
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"emails", "subject", "messageIdHeader", "invite", "headers", "contentElems"})
+@GraphQLType(name=GqlConstants.CLASS_INVITE_AS_MP, description="Invite-As-MP")
 public class InviteAsMP extends MessageCommon {
 
     /**
@@ -106,30 +114,39 @@ public class InviteAsMP extends MessageCommon {
         @XmlElement(name=MailConstants.E_SHARE_NOTIFICATION /* shr */, type=ShareNotification.class),
         @XmlElement(name=MailConstants.E_DL_SUBSCRIPTION_NOTIFICATION /* dlSubs */, type=DLSubscriptionNotification.class)
     })
+    @GraphQLQuery(name=GqlConstants.CONTENT_ELEMS, description="Content elements")
     private List<Object> contentElems = Lists.newArrayList();
 
     public InviteAsMP() {
     }
 
+    @GraphQLInputField(name=GqlConstants.ID, description="Sub-part ID")
     public void setId(String id) { this.id = id; }
+    @GraphQLInputField(name=GqlConstants.PART, description="If non-null, this message/rfc822 subpart of the specified Message is serialized instead of the Message itself.")
     public void setPart(String part) { this.part = part; }
+    @GraphQLInputField(name=GqlConstants.SENT_DATE, description="Sent date")
     public void setSentDate(Long sentDate) { this.sentDate = sentDate; }
+    @GraphQLInputField(name=GqlConstants.EMAILS, description="Email addresses")
     public void setEmails(Iterable <EmailInfo> emails) {
         this.emails.clear();
         if (emails != null) {
             Iterables.addAll(this.emails,emails);
         }
     }
-
+    @GraphQLIgnore
     public void addEmail(EmailInfo email) {
         this.emails.add(email);
     }
-
+    
+    @GraphQLInputField(name=GqlConstants.SUBJECT, description="Subject")
     public void setSubject(String subject) { this.subject = subject; }
+    @GraphQLInputField(name=GqlConstants.MESSAGE_ID_HEADER, description="Message ID header")
     public void setMessageIdHeader(String messageIdHeader) {
         this.messageIdHeader = messageIdHeader;
     }
+    @GraphQLInputField(name=GqlConstants.INVITE, description="Invite")
     public void setInvite(MPInviteInfo invite) { this.invite = invite; }
+    @GraphQLInputField(name=GqlConstants.HEADERS, description="Headers")
     public void setHeaders(Iterable <KeyValuePair> headers) {
         this.headers.clear();
         if (headers != null) {
@@ -137,10 +154,12 @@ public class InviteAsMP extends MessageCommon {
         }
     }
 
+    @GraphQLIgnore
     public void addHeader(KeyValuePair header) {
         this.headers.add(header);
     }
 
+    @GraphQLInputField(name=GqlConstants.CONTENT_ELEMS, description="Content elements")
     public void setContentElems(Iterable <Object> contentElems) {
         this.contentElems.clear();
         if (contentElems != null) {
@@ -148,22 +167,32 @@ public class InviteAsMP extends MessageCommon {
         }
     }
 
+    @GraphQLIgnore
     public void addContentElem(Object contentElem) {
         this.contentElems.add(contentElem);
     }
 
+    @GraphQLQuery(name=GqlConstants.ID, description="Sub-part ID")
     public String getId() { return id; }
+    @GraphQLQuery(name=GqlConstants.PART, description="If non-null, this message/rfc822 subpart of the specified Message is serialized instead of the Message itself.")
     public String getPart() { return part; }
+    @GraphQLQuery(name=GqlConstants.SENT_DATE, description="Sent date")
     public Long getSentDate() { return sentDate; }
+    @GraphQLQuery(name=GqlConstants.EMAILS, description="Email addresses")
     public List<EmailInfo> getEmails() {
         return Collections.unmodifiableList(emails);
     }
+    @GraphQLQuery(name=GqlConstants.SUBJECT, description="Subject")
     public String getSubject() { return subject; }
+    @GraphQLQuery(name=GqlConstants.MESSAGE_ID_HEADER, description="Message ID header")
     public String getMessageIdHeader() { return messageIdHeader; }
+    @GraphQLQuery(name=GqlConstants.INVITE, description="Invite")
     public MPInviteInfo getInvite() { return invite; }
+    @GraphQLQuery(name=GqlConstants.HEADERS, description="Headers")
     public List<KeyValuePair> getHeaders() {
         return Collections.unmodifiableList(headers);
     }
+    @GraphQLQuery(name=GqlConstants.CONTENT_ELEMS, description="Content elements")
     public List<Object> getContentElems() {
         return Collections.unmodifiableList(contentElems);
     }

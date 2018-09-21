@@ -22,10 +22,17 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.ByWeekNoRuleInterface;
 
+import io.leangen.graphql.annotations.GraphQLInputField;
+import io.leangen.graphql.annotations.GraphQLNonNull;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name=GqlConstants.CLASS_BY_WEEK_NO_RULE, description="By-week-no rule")
 public class ByWeekNoRule implements ByWeekNoRuleInterface {
 
     /**
@@ -35,6 +42,8 @@ public class ByWeekNoRule implements ByWeekNoRuleInterface {
      * e.g. <b>&lt;byweekno wklist="1,+2,-1"/></b> means first week, 2nd week, and last week of the year.
      */
     @XmlAttribute(name=MailConstants.A_CAL_RULE_BYWEEKNO_WKLIST /* wklist */, required=true)
+    @GraphQLNonNull
+    @GraphQLQuery(name=GqlConstants.LIST, description="BYWEEKNO Week list.  Format : [[+]|-]num[,...] where num is between 1 and 53")
     private final String list;
 
     /**
@@ -45,7 +54,7 @@ public class ByWeekNoRule implements ByWeekNoRuleInterface {
         this((String) null);
     }
 
-    public ByWeekNoRule(String list) {
+    public ByWeekNoRule(@GraphQLNonNull @GraphQLInputField String list) {
         this.list = list;
     }
 

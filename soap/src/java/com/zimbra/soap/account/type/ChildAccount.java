@@ -28,9 +28,13 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 
 import com.google.common.collect.Iterables;
-
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.type.ZmBoolean;
+
+import io.leangen.graphql.annotations.GraphQLNonNull;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
 
 /*
      <childAccount name="{child-account-name}" visible="0|1" id="{child-account-id}">
@@ -41,6 +45,7 @@ import com.zimbra.soap.type.ZmBoolean;
 
  */
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name=GqlConstants.CLASS_CHILD_ACCOUNT, description="")
 public class ChildAccount {
 
     /**
@@ -100,6 +105,7 @@ public class ChildAccount {
         setAttrs(attrs);
     }
 
+    @GraphQLQuery(name=GqlConstants.ATTRS, description="Attributes of the child account, including displayName")
     public List<Attr> getAttrs() {
         return Collections.unmodifiableList(attrs);
     }
@@ -111,8 +117,16 @@ public class ChildAccount {
         }
     }
 
+    @GraphQLNonNull
+    @GraphQLQuery(name=GqlConstants.ID, description="Child account ID")
     public String getId() { return id; }
+    @GraphQLNonNull
+    @GraphQLQuery(name=GqlConstants.NAME, description="Child account name")
     public String getName() { return name; }
+    @GraphQLNonNull
+    @GraphQLQuery(name=GqlConstants.IS_VISIBLE, description="Flag whether child account is visible or not")
     public boolean isVisible() { return ZmBoolean.toBool(isVisible); }
+    @GraphQLNonNull
+    @GraphQLQuery(name=GqlConstants.IS_ACTIVE, description="Flag whether child account is active or not")
     public boolean isActive() { return ZmBoolean.toBool(isActive); }
 }

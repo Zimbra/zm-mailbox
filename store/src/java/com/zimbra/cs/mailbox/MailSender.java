@@ -539,8 +539,11 @@ public class MailSender {
                 if (acct.isSmtpRestrictEnvelopeFrom() && !isDataSourceSender()) {
                     mEnvelopeFrom = mbox.getAccount().getName();
                 } else {
-                    // Set envelope sender to Sender or From, in that order.
+                    // Set envelope sender to Sender or Reply-To or From, in that order.
                     Address envAddress = mm.getSender();
+                    if (envAddress == null) {
+                        envAddress =  ArrayUtil.getFirstElement(mm.getReplyTo());
+                    }
                     if (envAddress == null) {
                         envAddress = ArrayUtil.getFirstElement(mm.getFrom());
                     }

@@ -29,10 +29,15 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name="Policy", description="A policy")
 public class Policy {
 
     @XmlEnum
+    @GraphQLType(name="PolicyType", description="A policy type")
     public enum Type {
         @XmlEnumValue("user") USER ("user"),
         @XmlEnumValue("system") SYSTEM ("system");
@@ -64,6 +69,7 @@ public class Policy {
      * @zm-api-field-description Retention policy type
      */
     @XmlAttribute(name=MailConstants.A_RETENTION_POLICY_TYPE /* type */, required=false)
+    @GraphQLQuery(name="type", description="Policy type")
     private Type type;
 
     /**
@@ -71,6 +77,7 @@ public class Policy {
      * @zm-api-field-description ID
      */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=false)
+    @GraphQLQuery(name="id", description="Policy id")
     private String id;
 
     /**
@@ -78,6 +85,7 @@ public class Policy {
      * @zm-api-field-description Name
      */
     @XmlAttribute(name=MailConstants.A_NAME /* name */, required=false)
+    @GraphQLQuery(name="name", description="Policy name")
     private String name;
 
     /**
@@ -85,6 +93,7 @@ public class Policy {
      * @zm-api-field-description Duration
      */
     @XmlAttribute(name=MailConstants.A_LIFETIME /* lifetime */, required=false)
+    @GraphQLQuery(name="lifetime", description="Policy duration")
     private String lifetime;
 
     /**
@@ -104,14 +113,14 @@ public class Policy {
     }
 
     public static Policy newUserPolicy(String lifetime) {
-        Policy p = new Policy();
+        final Policy p = new Policy();
         p.type = Type.USER;
         p.lifetime = lifetime;
         return p;
     }
 
     public static Policy newSystemPolicy(String id) {
-        Policy p = new Policy();
+        final Policy p = new Policy();
         p.type = Type.SYSTEM;
         p.id = id;
         return p;
@@ -122,24 +131,28 @@ public class Policy {
     }
 
     public static Policy newSystemPolicy(String id, String name, String lifetime) {
-        Policy p = newSystemPolicy(id);
+        final Policy p = newSystemPolicy(id);
         p.name = name;
         p.lifetime = lifetime;
         return p;
     }
 
+    @GraphQLQuery(name="type", description="Policy type")
     public Type getType() {
         return type;
     }
 
+    @GraphQLQuery(name="id", description="Policy id")
     public String getId() {
         return id;
     }
 
+    @GraphQLQuery(name="name", description="Policy name")
     public String getName() {
         return name;
     }
 
+    @GraphQLQuery(name="lifetime", description="Policy duration")
     public String getLifetime() {
         return lifetime;
     }
@@ -158,7 +171,7 @@ public class Policy {
         if (!(o instanceof Policy)) {
             return false;
         }
-        Policy other = (Policy) o;
+        final Policy other = (Policy) o;
         return Objects.equal(id, other.id) &&
             Objects.equal(name, other.name) &&
             Objects.equal(lifetime, other.lifetime) &&

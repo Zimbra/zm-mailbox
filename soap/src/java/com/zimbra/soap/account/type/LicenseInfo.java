@@ -28,10 +28,16 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.type.LicenseStatus;
 
+import io.leangen.graphql.annotations.GraphQLNonNull;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name=GqlConstants.CLASS_LICENSE_INFO, description="License information")
 public class LicenseInfo {
 
     /**
@@ -66,7 +72,10 @@ public class LicenseInfo {
         this.attrs.add(attr);
     }
 
+    @GraphQLNonNull
+    @GraphQLQuery(name=GqlConstants.STATUS, description="Status")
     public LicenseStatus getStatus() { return status; }
+    @GraphQLQuery(name=GqlConstants.ATTRS, description="attrs")
     public List<LicenseAttr> getAttrs() {
         return attrs;
     }

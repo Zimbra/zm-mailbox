@@ -74,6 +74,8 @@ public final class AdminConstants {
     public static final String E_SEARCH_ACCOUNTS_RESPONSE = "SearchAccountsResponse";
     public static final String E_RENAME_ACCOUNT_REQUEST = "RenameAccountRequest";
     public static final String E_RENAME_ACCOUNT_RESPONSE = "RenameAccountResponse";
+    public static final String E_CHANGE_PRIMARY_EMAIL_REQUEST = "ChangePrimaryEmailRequest";
+    public static final String E_CHANGE_PRIMARY_EMAIL_RESPONSE = "ChangePrimaryEmailResponse";
 
     public static final String E_CREATE_DOMAIN_REQUEST = "CreateDomainRequest";
     public static final String E_CREATE_DOMAIN_RESPONSE = "CreateDomainResponse";
@@ -228,6 +230,12 @@ public final class AdminConstants {
     public static final String E_REMOVE_DISTRIBUTION_LIST_ALIAS_RESPONSE = "RemoveDistributionListAliasResponse";
     public static final String E_RENAME_DISTRIBUTION_LIST_REQUEST = "RenameDistributionListRequest";
     public static final String E_RENAME_DISTRIBUTION_LIST_RESPONSE = "RenameDistributionListResponse";
+
+    public static final String E_CREATE_HAB_GROUP_REQUEST = "CreateHABGroupRequest";
+    public static final String E_CREATE_HAB_GROUP_RESPONSE = "CreateHABGroupResponse";
+    public static final String E_MODIFY_HAB_GROUP_REQUEST = "ModifyHABGroupRequest";
+    public static final String E_MODIFY_HAB_GROUP_RESPONSE = "ModifyHABGroupResponse";
+
 
     public static final String E_GET_VERSION_INFO_REQUEST = "GetVersionInfoRequest";
     public static final String E_GET_VERSION_INFO_RESPONSE = "GetVersionInfoResponse";
@@ -573,6 +581,8 @@ public final class AdminConstants {
     public static final QName SEARCH_ACCOUNTS_RESPONSE = QName.get(E_SEARCH_ACCOUNTS_RESPONSE, NAMESPACE);
     public static final QName RENAME_ACCOUNT_REQUEST = QName.get(E_RENAME_ACCOUNT_REQUEST, NAMESPACE);
     public static final QName RENAME_ACCOUNT_RESPONSE = QName.get(E_RENAME_ACCOUNT_RESPONSE, NAMESPACE);
+    public static final QName CHANGE_PRIMARY_EMAIL_REQUEST = QName.get(E_CHANGE_PRIMARY_EMAIL_REQUEST, NAMESPACE);
+    public static final QName CHANGE_PRIMARY_EMAIL_RESPONSE = QName.get(E_CHANGE_PRIMARY_EMAIL_RESPONSE, NAMESPACE);
 
     public static final QName CREATE_DOMAIN_REQUEST = QName.get(E_CREATE_DOMAIN_REQUEST, NAMESPACE);
     public static final QName CREATE_DOMAIN_RESPONSE = QName.get(E_CREATE_DOMAIN_RESPONSE, NAMESPACE);
@@ -728,6 +738,11 @@ public final class AdminConstants {
     public static final QName REMOVE_DISTRIBUTION_LIST_ALIAS_RESPONSE = QName.get(E_REMOVE_DISTRIBUTION_LIST_ALIAS_RESPONSE, NAMESPACE);
     public static final QName RENAME_DISTRIBUTION_LIST_REQUEST = QName.get(E_RENAME_DISTRIBUTION_LIST_REQUEST, NAMESPACE);
     public static final QName RENAME_DISTRIBUTION_LIST_RESPONSE = QName.get(E_RENAME_DISTRIBUTION_LIST_RESPONSE, NAMESPACE);
+
+    public static final QName CREATE_HAB_GROUP_REQUEST = QName.get(E_CREATE_HAB_GROUP_REQUEST, NAMESPACE);
+    public static final QName CREATE_HAB_GROUP_RESPONSE = QName.get(E_CREATE_HAB_GROUP_RESPONSE, NAMESPACE);
+    public static final QName MODIFY_HAB_GROUP_REQUEST = QName.get(E_MODIFY_HAB_GROUP_REQUEST, NAMESPACE);
+    public static final QName MODIFY_HAB_GROUP_RESPONSE = QName.get(E_MODIFY_HAB_GROUP_RESPONSE, NAMESPACE);
 
     public static final QName GET_VERSION_INFO_REQUEST = QName.get(E_GET_VERSION_INFO_REQUEST, NAMESPACE);
     public static final QName GET_VERSION_INFO_RESPONSE = QName.get(E_GET_VERSION_INFO_RESPONSE, NAMESPACE);
@@ -1042,6 +1057,34 @@ public final class AdminConstants {
     public static final QName MODIFY_OUTGOING_FILTER_RULES_RESPONSE = QName.get(E_MODIFY_OUTGOING_FILTER_RULES_RESPONSE, NAMESPACE);
     public static final QName CONTACT_BACKUP_REQUEST = QName.get(E_CONTACT_BACKUP_REQUEST, NAMESPACE);
     public static final QName CONTACT_BACKUP_RESPONSE = QName.get(E_CONTACT_BACKUP_RESPONSE, NAMESPACE);
+    
+    //HAB
+    public static final String E_HAB_ORG_UNIT_REQUEST = "HABOrgUnitRequest";
+    public static final String E_HAB_ORG_UNIT_RESPONSE = "HABOrgUnitResponse";
+    public static final QName HAB_ORG_UNIT_REQUEST = QName.get(E_HAB_ORG_UNIT_REQUEST, NAMESPACE);
+    public static final QName HAB_ORG_UNIT_RESPONSE = QName.get(E_HAB_ORG_UNIT_RESPONSE, NAMESPACE);
+    public static final String E_HAB_ORG_UNIT_NAME = "habOrgUnitName";
+    public static final String E_HAB_PARENT_GROUP = "parentHABGroup";
+    public static final String E_MEMBER = "member";
+
+    //AddressList
+    public static final String E_GET_ALL_ADDRESS_LISTS_REQUEST = "GetAllAddressListsRequest";
+    public static final String E_GET_ALL_ADDRESS_LISTS_RESPONSE = "GetAllAddressListsResponse";
+    public static final QName GET_ALL_ADDRESS_LISTS_REQUEST = QName.get(E_GET_ALL_ADDRESS_LISTS_REQUEST, NAMESPACE);
+    public static final QName GET_ALL_ADDRESS_LISTS_RESPONSE = QName.get(E_GET_ALL_ADDRESS_LISTS_RESPONSE, NAMESPACE);
+    public static final String E_DELETE_ADDRESS_LIST_REQUEST = "DeleteAddressListRequest";
+    public static final String E_DELETE_ADDRESS_LIST_RESPONSE = "DeleteAddressListResponse";
+    public static final QName DELETE_ADDRESS_LIST_REQUEST = QName.get(E_DELETE_ADDRESS_LIST_REQUEST, NAMESPACE);
+    public static final QName DELETE_ADDRESS_LIST_RESPONSE = QName.get(E_DELETE_ADDRESS_LIST_RESPONSE, NAMESPACE);
+    public static final String E_MODIFY_ADDRESS_LIST_REQUEST = "ModifyAddressListRequest";
+    public static final String E_MODIFY_ADDRESS_LIST_RESPONSE = "ModifyAddressListResponse";
+    public static final QName MODIFY_ADDRESS_LIST_REQUEST = QName.get(E_MODIFY_ADDRESS_LIST_REQUEST, NAMESPACE);
+    public static final QName MODIFY_ADDRESS_LIST_RESPONSE = QName.get(E_MODIFY_ADDRESS_LIST_RESPONSE, NAMESPACE);
+    public static final String E_GET_ADDRESS_LIST_INFO_REQUEST = "GetAddressListInfoRequest";
+    public static final String E_GET_ADDRESS_LIST_INFO_RESPONSE = "GetAddressListInfoResponse";
+    public static final QName GET_ADDRESS_LIST_INFO_REQUEST = QName.get(E_GET_ADDRESS_LIST_INFO_REQUEST, NAMESPACE);
+    public static final QName GET_ADDRESS_LIST_INFO_RESPONSE = QName.get(E_GET_ADDRESS_LIST_INFO_RESPONSE, NAMESPACE);
+
 
     // DumpSessions
     public static final String E_SESSION = "session";
@@ -1133,6 +1176,15 @@ public final class AdminConstants {
     public static final String E_SKIN = "skin";
     public static final String E_TOKEN = "token";
 
+    //HAB
+    public static final String E_HAB_GROUP_OPERATION ="habGroupOperation";
+
+    public static final String A_HAB_DISPLAY_NAME = "habDisplayName";
+    public static final String A_HAB_ORG_UNIT = "habOrgUnit";
+    public static final String A_HAB_GROUP_ID ="habGroupId";
+    public static final String A_CURRENT_PARENT_HAB_GROUP_ID = "currentParentHabGroupId";
+    public static final String A_TARGET_PARENT_HAB_GROUP_ID = "targetParentHabGroupId";
+
     public static final String A_ACCOUNT = "account";
     public static final String A_CALENDAR_RESOURCE = "calresource";
     public static final String A_COS = "cos";
@@ -1152,6 +1204,7 @@ public final class AdminConstants {
     public static final String A_SORT_BY = "sortBy";
     public static final String A_SORT_ASCENDING = "sortAscending";
     public static final String A_TYPE = "type";
+    public static final String A_ONLY_RELATED = "onlyRelated";
     public static final String A_C = "c";
     public static final String A_T = "t";
     public static final String A_NAME = "name";
@@ -1482,4 +1535,20 @@ public final class AdminConstants {
 
     // contact backup feature
     public static final String E_SERVERS = "servers";
+
+    //HAB
+    public static final String A_NEW_NAME = "newName";
+    public static final String A_FORCE_DELETE = "forceDelete";
+    public static final String E_MEMBERS = "members";
+    public static final String A_CASCADE_DELETE = "cascadeDelete";
+    
+    // address list
+    public static final String E_CREATE_ADDRESS_LIST_REQUEST = "CreateAddressListRequest";
+    public static final String E_CREATE_ADDRESS_LIST_RESPONSE = "CreateAddressListResponse";
+    public static final QName GET_CREATE_ADDRESS_LIST_REQUEST = QName.get(E_CREATE_ADDRESS_LIST_REQUEST, NAMESPACE);
+    public static final QName GET_CREATE_ADDRESS_LIST_RESPONSE = QName.get(E_CREATE_ADDRESS_LIST_RESPONSE, NAMESPACE);
+    public static final String E_SEARCH_FILTER = "searchFilter";
+    public static final String E_GAL_FILTER = "galFilter";
+    public static final String E_LDAP_FILTER = "ldapFilter";
+    public static final String A_CLEAR_FILTER = "clearFilter";
 }

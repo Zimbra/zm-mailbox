@@ -11,3 +11,4 @@ outgoing
 store/.pmd
 store/.ruleset
 eclipse-ivysettings.xml
+store/tmp/

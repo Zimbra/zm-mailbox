@@ -1,6 +1,6 @@
 open_source_license.txt
 
-Zimbra Windows Components 8.7.0 GA
+Zimbra Windows Components 8.8.10 GA
 
 
 ===========================================================================
@@ -155,12 +155,12 @@ The MIT license is compatible with both the GPL and commercial software, affordi
  **********************************************************************/
 
 
->>> zlib-1.2.6
+>>> zlib-1.2.11
 
 /* zlib.h -- interface of the 'zlib' general purpose compression library
-  version 1.2.7, May 2nd, 2012
+  version 1.2.11, January 15th, 2017
 
-  Copyright (C) 1995-2012 Jean-loup Gailly and Mark Adler
+  Copyright (C) 1995-2017 Jean-loup Gailly and Mark Adler
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -182,6 +182,10 @@ The MIT license is compatible with both the GPL and commercial software, affordi
   jloup@gzip.org          madler@alumni.caltech.edu
 
 
+  The data format used by the zlib library is described by RFCs (Request for
+  Comments) 1950 to 1952 in the files http://tools.ietf.org/html/rfc1950
+  (zlib format), rfc1951 (deflate format) and rfc1952 (gzip format).
+*/
 
 
 ===========================================================================

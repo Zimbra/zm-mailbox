@@ -22,10 +22,15 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
 import com.google.common.base.MoreObjects;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.DtTimeInfoInterface;
 
+import io.leangen.graphql.annotations.GraphQLInputField;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name=GqlConstants.CLASS_DT_TIME_INFO, description="Date/time information")
 public class DtTimeInfo
 implements DtTimeInfoInterface {
 
@@ -51,6 +56,7 @@ implements DtTimeInfoInterface {
      * </pre>
      */
     @XmlAttribute(name=MailConstants.A_CAL_DATETIME /* d */, required=false)
+    @GraphQLInputField(name=GqlConstants.DATE_TIME, description="Date and/or time.  Format is : YYYYMMDD['T'HHMMSS[Z]]")
     private final String dateTime;
 
     /**
@@ -75,10 +81,11 @@ implements DtTimeInfoInterface {
         this((String) null);
     }
 
-    public DtTimeInfo(String dateTime) {
+    public DtTimeInfo(@GraphQLInputField(name=GqlConstants.DATE_TIME) String dateTime) {
         this.dateTime = dateTime;
     }
 
+    
     public static DtTimeInfoInterface create(String dateTime) {
         return new DtTimeInfo(dateTime);
     }
@@ -90,8 +97,10 @@ implements DtTimeInfoInterface {
     }
 
     @Override
+    @GraphQLInputField(name=GqlConstants.TIMEZONE, description="Java timezone identifier")
     public void setTimezone(String timezone) { this.timezone = timezone; }
     @Override
+    @GraphQLInputField(name=GqlConstants.UTC_TIME, description="UTC time as milliseconds since the epoch.  Set if non-all-day")
     public void setUtcTime(Long utcTime) { this.utcTime = utcTime; }
     @Override
     public String getDateTime() { return dateTime; }

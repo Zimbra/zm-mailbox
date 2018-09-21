@@ -32,6 +32,7 @@ import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AttributeClass;
@@ -113,7 +114,7 @@ public class GetInfo extends AccountDocumentHandler  {
         // figure out the subset of data the caller wants (default to all data)
         String secstr = request.getAttribute(AccountConstants.A_SECTIONS, null);
         Set<Section> sections;
-        if (secstr != null) {
+        if (!StringUtil.isNullOrEmpty(secstr)) {
             sections = EnumSet.noneOf(Section.class);
             for (String sec : Splitter.on(',').omitEmptyStrings().trimResults().split(secstr)) {
                 sections.add(Section.lookup(sec));
@@ -124,7 +125,7 @@ public class GetInfo extends AccountDocumentHandler  {
 
         String rightsStr = request.getAttribute(AccountConstants.A_RIGHTS, null);
         Set<Right> rights = null;
-        if (rightsStr != null) {
+        if (!StringUtil.isNullOrEmpty(rightsStr)) {
             RightManager rightMgr = RightManager.getInstance();
             rights = Sets.newHashSet();
             for (String right : Splitter.on(',').omitEmptyStrings().trimResults().split(rightsStr)) {

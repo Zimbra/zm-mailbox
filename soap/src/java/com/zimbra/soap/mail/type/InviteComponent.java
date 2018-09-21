@@ -28,6 +28,7 @@ import javax.xml.bind.annotation.XmlType;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.AlarmInfoInterface;
 import com.zimbra.soap.base.CalOrganizerInterface;
@@ -41,11 +42,18 @@ import com.zimbra.soap.base.RecurrenceInfoInterface;
 import com.zimbra.soap.base.XPropInterface;
 import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
 
+import io.leangen.graphql.annotations.GraphQLIgnore;
+import io.leangen.graphql.annotations.GraphQLInputField;
+import io.leangen.graphql.annotations.GraphQLNonNull;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = { "categories", "comments", "contacts", "geo",
     "attendees", "alarms", "xProps", "fragment",
     "description", "htmlDescription", "organizer",
     "recurrence", "exceptionId", "dtStart", "dtEnd", "duration" })
+@GraphQLType(name=GqlConstants.CLASS_INVITE_COMPONENT, description="Invitation Component")
 public class InviteComponent
 extends InviteComponentCommon
 implements InviteComponentInterface
@@ -58,6 +66,7 @@ implements InviteComponentInterface
      * @zm-api-field-description Categories - for iCalendar CATEGORY properties
      */
     @XmlElement(name=MailConstants.E_CAL_CATEGORY /* category */, required=false)
+    @GraphQLQuery(name=GqlConstants.CATEGORIES, description="for iCalendar CATEGORY properties")
     private final List<String> categories = Lists.newArrayList();
 
     /**
@@ -65,6 +74,7 @@ implements InviteComponentInterface
      * @zm-api-field-description Comments - for iCalendar COMMENT properties
      */
     @XmlElement(name=MailConstants.E_CAL_COMMENT /* comment */, required=false)
+    @GraphQLQuery(name=GqlConstants.COMMENTS, description="for iCalendar COMMENT properties")
     private final List<String> comments = Lists.newArrayList();
 
     /**
@@ -72,6 +82,7 @@ implements InviteComponentInterface
      * @zm-api-field-description Contacts - for iCalendar CONTACT properties
      */
     @XmlElement(name=MailConstants.E_CAL_CONTACT /* contact */, required=false)
+    @GraphQLQuery(name=GqlConstants.CONTACTS, description="for iCalendar CONTACT properties")
     private final List<String> contacts = Lists.newArrayList();
 
     /**
@@ -84,18 +95,21 @@ implements InviteComponentInterface
      * @zm-api-field-description Attendees
      */
     @XmlElement(name=MailConstants.E_CAL_ATTENDEE /* at */, required=false)
+    @GraphQLQuery(name=GqlConstants.ATTENDEES, description="List of attendees")
     private final List<CalendarAttendee> attendees = Lists.newArrayList();
 
     /**
      * @zm-api-field-description Alarm information
      */
     @XmlElement(name=MailConstants.E_CAL_ALARM /* alarm */, required=false)
+    @GraphQLQuery(name=GqlConstants.ALARMS, description="Alarm information")
     private final List<AlarmInfo> alarms = Lists.newArrayList();
 
     /**
      * @zm-api-field-description iCalender XPROP properties
      */
     @XmlElement(name=MailConstants.E_CAL_XPROP /* xprop */, required=false)
+    @GraphQLQuery(name=GqlConstants.XPROPS, description="for iCalendar XPROP properties")
     private final List<XProp> xProps = Lists.newArrayList();
 
     /**
@@ -136,6 +150,7 @@ implements InviteComponentInterface
      * @zm-api-field-description RECURRENCE-ID, if this is an exception
      */
     @XmlElement(name=MailConstants.E_CAL_EXCEPTION_ID /* exceptId */, required=false)
+    @GraphQLQuery(name=GqlConstants.EXCEPTION_ID, description="Recurrence id, if this is an exception")
     private ExceptionRecurIdInfo exceptionId;
 
     // For JSON, wrapped in array because ToXML.encodeDtStart used addElement instead of addUniqueElement :-(
@@ -172,6 +187,7 @@ implements InviteComponentInterface
     }
 
     @Override
+    @GraphQLInputField(name=GqlConstants.CATEGORIES, description="for iCalendar CATEGORY properties")
     public void setCategories(Iterable <String> categories) {
         this.categories.clear();
         if (categories != null) {
@@ -180,11 +196,13 @@ implements InviteComponentInterface
     }
 
     @Override
+    @GraphQLIgnore
     public void addCategory(String category) {
         this.categories.add(category);
     }
 
     @Override
+    @GraphQLInputField(name=GqlConstants.COMMENTS, description="for iCalendar COMMENT properties")
     public void setComments(Iterable <String> comments) {
         this.comments.clear();
         if (comments != null) {
@@ -193,11 +211,13 @@ implements InviteComponentInterface
     }
 
     @Override
+    @GraphQLIgnore
     public void addComment(String comment) {
         this.comments.add(comment);
     }
 
     @Override
+    @GraphQLInputField(name=GqlConstants.CONTACTS, description="for iCalendar CONTACT properties")
     public void setContacts(Iterable <String> contacts) {
         this.contacts.clear();
         if (contacts != null) {
@@ -206,11 +226,13 @@ implements InviteComponentInterface
     }
 
     @Override
+    @GraphQLIgnore
     public void addContact(String contact) {
         this.contacts.add(contact);
     }
-
+    @GraphQLInputField(name=GqlConstants.GEO, description="for iCalendar GEO properties")
     public void setGeo(GeoInfo geo) { this.geo = geo; }
+    @GraphQLInputField(name=GqlConstants.ATTENDEES, description="List of attendees")
     public void setAttendees(Iterable <CalendarAttendee> attendees) {
         this.attendees.clear();
         if (attendees != null) {
@@ -218,10 +240,12 @@ implements InviteComponentInterface
         }
     }
 
+    @GraphQLIgnore
     public void addAttendee(CalendarAttendee attendee) {
         this.attendees.add(attendee);
     }
 
+    @GraphQLInputField(name=GqlConstants.ALARMS, description="Alarm information")
     public void setAlarms(Iterable <AlarmInfo> alarms) {
         this.alarms.clear();
         if (alarms != null) {
@@ -229,10 +253,12 @@ implements InviteComponentInterface
         }
     }
 
+    @GraphQLIgnore
     public void addAlarm(AlarmInfo alarm) {
         this.alarms.add(alarm);
     }
 
+    @GraphQLInputField(name=GqlConstants.XPROPS, description="for iCalendar XPROP properties")
     public void setXProps(Iterable <XProp> xProps) {
         this.xProps.clear();
         if (xProps != null) {
@@ -240,68 +266,98 @@ implements InviteComponentInterface
         }
     }
 
+    @GraphQLIgnore
     public void addXProp(XProp xProp) {
         this.xProps.add(xProp);
     }
 
     @Override
+    @GraphQLInputField(name=GqlConstants.FRAGMENT, description="First few bytes of the message (probably between 40 and 100 bytes)")
     public void setFragment(String fragment) { this.fragment = fragment; }
     @Override
+    @GraphQLInputField(name=GqlConstants.DESCRIPTION, description="Plain text description")
     public void setDescription(String description) {
         this.description = description;
     }
     @Override
+    @GraphQLInputField(name=GqlConstants.HTML_DESCRIPTION, description="HTML description")
     public void setHtmlDescription(String htmlDescription) {
         this.htmlDescription = htmlDescription;
     }
+    @GraphQLInputField(name=GqlConstants.ORGANIZER, description="Organizer")
     public void setOrganizer(CalOrganizer organizer) {
         this.organizer = organizer;
     }
+    @GraphQLInputField(name=GqlConstants.RECURRENCE, description="Recurrence information")
     public void setRecurrence(RecurrenceInfo recurrence) {
         this.recurrence = recurrence;
     }
+    @GraphQLInputField(name=GqlConstants.EXCEPTION_ID, description="Recurrence id, if this is an exception")
     public void setExceptionId(ExceptionRecurIdInfo exceptionId) {
         this.exceptionId = exceptionId;
     }
-    public void setDtStart(DtTimeInfo dtStart) { this.dtStart = dtStart; }
+    @GraphQLInputField(name=GqlConstants.START_DATE, description="Start date-time")
+    public void setDtStart(@GraphQLNonNull DtTimeInfo dtStart) { this.dtStart = dtStart; }
+    @GraphQLInputField(name=GqlConstants.END_DATE, description="End date-time")
     public void setDtEnd(DtTimeInfo dtEnd) { this.dtEnd = dtEnd; }
+    @GraphQLInputField(name=GqlConstants.DURATION, description="Duration")
     public void setDuration(DurationInfo duration) { this.duration = duration; }
 
     @Override
+    @GraphQLQuery(name=GqlConstants.CATEGORIES, description="for iCalendar CATEGORY properties")
     public List<String> getCategories() {
         return Collections.unmodifiableList(categories);
     }
     @Override
+    @GraphQLQuery(name=GqlConstants.COMMENTS, description="for iCalendar COMMENT properties")
     public List<String> getComments() {
         return Collections.unmodifiableList(comments);
     }
     @Override
+    @GraphQLQuery(name=GqlConstants.CONTACTS, description="for iCalendar CONTACT properties")
     public List<String> getContacts() {
         return Collections.unmodifiableList(contacts);
     }
+    @GraphQLQuery(name=GqlConstants.GEO, description="for iCalendar GEO properties")
     public GeoInfo getGeo() { return geo; }
+    @GraphQLQuery(name=GqlConstants.ATTENDEES, description="List of attendees")
     public List<CalendarAttendee> getAttendees() {
         return Collections.unmodifiableList(attendees);
     }
+    @GraphQLQuery(name=GqlConstants.ALARMS, description="Alarm information")
     public List<AlarmInfo> getAlarms() {
         return Collections.unmodifiableList(alarms);
     }
+    @GraphQLQuery(name=GqlConstants.XPROPS, description="for iCalendar XPROP properties")
     public List<XProp> getXProps() {
         return Collections.unmodifiableList(xProps);
     }
     @Override
+    @GraphQLQuery(name=GqlConstants.FRAGMENT, description="First few bytes of the message (probably between 40 and 100 bytes)")
     public String getFragment() { return fragment; }
     @Override
+    @GraphQLQuery(name=GqlConstants.DESCRIPTION, description="Present if noBlob is set, and message has a plain text description")
     public String getDescription() { return description; }
     @Override
+    @GraphQLQuery(name=GqlConstants.HTML_DESCRIPTION, description="Present if noBlob is set, and message has an HTML description")
     public String getHtmlDescription() { return htmlDescription; }
+    @GraphQLQuery(name=GqlConstants.ORGANIZER, description="Organizer")
+    public CalOrganizer getOrganizer() { return organizer; }
     @Override
+    @GraphQLIgnore
     public CalOrganizerInterface getOrganizerInterface() { return organizer; }
+    @GraphQLQuery(name=GqlConstants.RECURRENCE, description="Recurrence information")
+    public RecurrenceInfo getRecurrence() { return recurrence; }
     @Override
+    @GraphQLIgnore
     public RecurrenceInfoInterface getRecurrenceInterface() { return recurrence; }
+    @GraphQLQuery(name=GqlConstants.EXCEPTION_ID, description="Recurrence id, if this is an exception")
     public ExceptionRecurIdInfo getExceptionId() { return exceptionId; }
+    @GraphQLQuery(name=GqlConstants.START_DATE, description="Start date-time")
     public DtTimeInfo getDtStart() { return dtStart; }
+    @GraphQLQuery(name=GqlConstants.END_DATE, description="End date-time")
     public DtTimeInfo getDtEnd() { return dtEnd; }
+    @GraphQLQuery(name=GqlConstants.DURATION, description="Duration")
     public DurationInfo getDuration() { return duration; }
 
     @Override
@@ -332,108 +388,129 @@ implements InviteComponentInterface
     }
 
     @Override
+    @GraphQLIgnore
     public void setGeoInterface(GeoInfoInterface geo) {
         setGeo((GeoInfo) geo);
     }
 
     @Override
+    @GraphQLIgnore
     public void setAttendeeInterfaces(
             Iterable<CalendarAttendeeInterface> attendees) {
         setAttendees(CalendarAttendee.fromInterfaces(attendees));
     }
 
     @Override
+    @GraphQLIgnore
     public void addAttendeeInterface(CalendarAttendeeInterface attendee) {
         addAttendee((CalendarAttendee) attendee);
     }
 
     @Override
+    @GraphQLIgnore
     public void setAlarmInterfaces(Iterable<AlarmInfoInterface> alarms) {
         setAlarms(AlarmInfo.fromInterfaces(alarms));
     }
 
     @Override
+    @GraphQLIgnore
     public void addAlarmInterface(AlarmInfoInterface alarm) {
         addAlarm((AlarmInfo) alarm);
     }
 
     @Override
+    @GraphQLIgnore
     public void setXPropInterfaces(Iterable<XPropInterface> xProps) {
         setXProps(XProp.fromInterfaces(xProps));
     }
 
     @Override
+    @GraphQLIgnore
     public void addXPropInterface(XPropInterface xProp) {
         addXProp((XProp) xProp);
     }
 
     @Override
+    @GraphQLIgnore
     public void setOrganizerInterface(CalOrganizerInterface organizer) {
         setOrganizer((CalOrganizer) organizer);
     }
 
     @Override
+    @GraphQLIgnore
     public void setRecurrenceInterface(RecurrenceInfoInterface recurrence) {
         setRecurrence((RecurrenceInfo) recurrence);
     }
 
     @Override
+    @GraphQLIgnore
     public void setExceptionIdInterface(
             ExceptionRecurIdInfoInterface exceptionId) {
         setExceptionId((ExceptionRecurIdInfo) exceptionId);
     }
 
     @Override
+    @GraphQLIgnore
     public void setDtStartInterface(DtTimeInfoInterface dtStart) {
         setDtStart((DtTimeInfo) dtStart);
     }
 
     @Override
+    @GraphQLIgnore
     public void setDtEndInterface(DtTimeInfoInterface dtEnd) {
         setDtEnd((DtTimeInfo) dtEnd);
     }
 
     @Override
+    @GraphQLIgnore
     public void setDurationInterface(DurationInfoInterface duration) {
         setDuration((DurationInfo) duration);
     }
 
     @Override
+    @GraphQLIgnore
     public GeoInfoInterface getGeoInterface() {
         return this.geo;
     }
 
     @Override
+    @GraphQLIgnore
     public List<CalendarAttendeeInterface> getAttendeeInterfaces() {
         return CalendarAttendee.toInterfaces(this.attendees);
     }
 
     @Override
+    @GraphQLIgnore
     public List<AlarmInfoInterface> getAlarmInterfaces() {
         return AlarmInfo.toInterfaces(this.alarms);
     }
 
     @Override
+    @GraphQLIgnore
     public List<XPropInterface> getXPropInterfaces() {
         return XProp.toInterfaces(this.xProps);
     }
 
     @Override
+    @GraphQLIgnore
     public ExceptionRecurIdInfoInterface getExceptionIdInterface() {
         return this.exceptionId;
     }
 
     @Override
+    @GraphQLIgnore
     public DtTimeInfoInterface getDtStartInterface() {
         return this.dtStart;
     }
 
     @Override
+    @GraphQLIgnore
     public DtTimeInfoInterface getDtEndInterface() {
         return this.dtEnd;
     }
 
     @Override
+    @GraphQLIgnore
     public DurationInfoInterface getDurationInterface() {
         return this.duration;
     }

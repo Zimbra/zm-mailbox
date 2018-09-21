@@ -20,20 +20,24 @@ package com.zimbra.soap.mail.type;
 import java.util.Collections;
 import java.util.List;
 
-import com.google.common.base.MoreObjects;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.CustomMetadataInterface;
 
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_METADATA)
+@GraphQLType(name=GqlConstants.CLASS_MAIL_CUSTOM_METADATA, description="Custom metadatas")
 public class MailCustomMetadata
 extends MailKeyValuePairs
 implements CustomMetadataInterface {
@@ -56,22 +60,25 @@ implements CustomMetadataInterface {
     @Override
     public void setSection(String section) { this.section = section; }
     @Override
+    @GraphQLQuery(name=GqlConstants.SECTION, description="Section. If absent this indicates that CustomMetadata info is present but there are no sections to report on.")
     public String getSection() { return section; }
 
     public static List <MailCustomMetadata> fromInterfaces(Iterable <CustomMetadataInterface> params) {
-        if (params == null)
+        if (params == null) {
             return null;
-        List <MailCustomMetadata> newList = Lists.newArrayList();
-        for (CustomMetadataInterface param : params) {
+        }
+        final List <MailCustomMetadata> newList = Lists.newArrayList();
+        for (final CustomMetadataInterface param : params) {
             newList.add((MailCustomMetadata) param);
         }
         return newList;
     }
 
     public static List <CustomMetadataInterface> toInterfaces(Iterable <MailCustomMetadata> params) {
-        if (params == null)
+        if (params == null) {
             return null;
-        List <CustomMetadataInterface> newList = Lists.newArrayList();
+        }
+        final List <CustomMetadataInterface> newList = Lists.newArrayList();
         Iterables.addAll(newList, params);
         return Collections.unmodifiableList(newList);
     }
