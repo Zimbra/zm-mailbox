@@ -557,7 +557,11 @@ public final class SearchParams implements Cloneable, ZimbraSearchParams {
             params.setTypes(types);
         }
         params.setSortBy(soapParams.getSortBy());
-
+        if (query.toLowerCase().contains("is:unread") && isSortByReadFlag(SortBy.of(soapParams.getSortBy()))) {
+            params.setSortBy(SortBy.DATE_DESC);
+        } else {
+            params.setSortBy(soapParams.getSortBy());
+        }
         params.setIncludeTagDeleted(MoreObjects.firstNonNull(soapParams.getIncludeTagDeleted(), false));
         params.setIncludeTagMuted(MoreObjects.firstNonNull(soapParams.getIncludeTagMuted(), true));
         String allowableTasks = soapParams.getAllowableTaskStatus();
@@ -616,8 +620,9 @@ public final class SearchParams implements Cloneable, ZimbraSearchParams {
         params.setOffset(MoreObjects.firstNonNull(soapParams.getOffset(), 0));
 
         CursorInfo cursor = soapParams.getCursor();
-        if (cursor != null) {
-            params.parseCursor(cursor, zsc.getRequestedAccountId());
+       
+        if (cursor != null ) {
+            params.parseCursor(cursor, zsc.getRequestedAccountId(), params);
         }
 
         if (soapParams instanceof MailSearchParams) {
@@ -630,6 +635,15 @@ public final class SearchParams implements Cloneable, ZimbraSearchParams {
         return params;
     }
 
+
+    /**
+     * @param params
+     * @return
+     */
+    public static boolean isSortByReadFlag(SortBy sortBy) {
+        return (sortBy.getKey() == SortBy.READ_ASC.getKey() 
+            || sortBy.getKey() == SortBy.READ_DESC.getKey());
+    }
 
     /**
      * Parse the search parameters from a {@code <SearchRequest>} or similar element.
@@ -719,7 +733,7 @@ public final class SearchParams implements Cloneable, ZimbraSearchParams {
 
         Element cursor = request.getOptionalElement(MailConstants.E_CURSOR);
         if (cursor != null) {
-            params.parseCursor(cursor, zsc.getRequestedAccountId());
+            params.parseCursor(cursor, zsc.getRequestedAccountId(), params);
         }
 
         params.setWantContent(MoreObjects.firstNonNull(
@@ -735,11 +749,13 @@ public final class SearchParams implements Cloneable, ZimbraSearchParams {
      * @param cursor cursor element taken from a {@code <SearchRequest>}
      * @param acctId requested account id
      */
-    public void parseCursor(Element el, String acctId) throws ServiceException {
+    public void parseCursor(Element el, String acctId, SearchParams params) throws ServiceException {
         cursor = new Cursor();
         cursor.itemId = new ItemId(el.getAttribute(MailConstants.A_ID), acctId);
+        if (!isSortByReadFlag(params.getSortBy())) {
         cursor.sortValue = el.getAttribute(MailConstants.A_SORTVAL, null); // optional
         cursor.endSortValue = el.getAttribute(MailConstants.A_ENDSORTVAL, null); // optional
+        }
         cursor.includeOffset = el.getAttributeBool(MailConstants.A_INCLUDE_OFFSET, false); // optional
     }
 
@@ -749,14 +765,17 @@ public final class SearchParams implements Cloneable, ZimbraSearchParams {
      * @param cursorInfo cursor element taken from a {@code <SearchRequest>}
      * @param acctId requested account id
      */
-    public void parseCursor(CursorInfo cursorInfo, String acctId) throws ServiceException {
+    public void parseCursor(CursorInfo cursorInfo, String acctId,  SearchParams params) throws ServiceException {
         cursor = new Cursor();
         if (null == cursorInfo.getId()) {
                 throw ServiceException.INVALID_REQUEST("Invalid ID for " + MailConstants.E_CURSOR, null);
         }
         cursor.itemId = new ItemId(cursorInfo.getId(), acctId);
-        cursor.sortValue = cursorInfo.getSortVal(); // optional
-        cursor.endSortValue = cursorInfo.getEndSortVal(); // optional
+        if (!isSortByReadFlag(params.getSortBy())) {
+            cursor.sortValue = cursorInfo.getSortVal(); // optional
+            cursor.endSortValue = cursorInfo.getEndSortVal(); // optional
+        }
+       
         cursor.includeOffset = MoreObjects.firstNonNull(cursorInfo.getIncludeOffset(), false); // optional
     }
 

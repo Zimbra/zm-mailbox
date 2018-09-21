@@ -182,6 +182,10 @@ public final class DbSearch {
         if (sort.getDirection() == SortBy.Direction.DESC) {
             orderBy.append(" DESC");
         }
+
+        if (sort.getDirection() == SortBy.Direction.ASC && sort.getKey() == SortBy.Key.UNREAD) {
+            orderBy.append(" DESC");
+        }
         if (sort.getKey() == SortBy.Key.UNREAD) {
             return orderBy.append(", mi.id DESC").toString();
         }

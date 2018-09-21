@@ -211,6 +211,7 @@ public final class MailboxIndex {
         // the SortBy itself). We still will need this switch so that we can wrap the results in ReSortingQueryResults.
         boolean isTaskSort = false;
         boolean isLocalizedSort = false;
+        boolean isReadSort = false;
         SortBy originalSort = params.getSortBy();
         switch (originalSort) {
             case TASK_DUE_ASC:
@@ -237,6 +238,14 @@ public final class MailboxIndex {
                 isTaskSort = true;
                 params.setSortBy(SortBy.DATE_DESC);
                 break;
+            case READ_ASC:
+                isReadSort = true;
+                params.setSortBy(SortBy.READ_ASC);
+                break;
+            case READ_DESC:
+                isReadSort = true;
+                params.setSortBy(SortBy.DATE_DESC);
+                break;
             case NAME_LOCALIZED_ASC:
             case NAME_LOCALIZED_DESC:
                 isLocalizedSort = true;
@@ -244,7 +253,7 @@ public final class MailboxIndex {
         }
 
         ZimbraQueryResults results = zq.execute();
-        if (isTaskSort) {
+        if (isTaskSort || isReadSort) {
             results = new ReSortingQueryResults(results, originalSort, null);
         }
         if (isLocalizedSort) {

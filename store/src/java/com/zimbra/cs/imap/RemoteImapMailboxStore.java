@@ -77,7 +77,7 @@ public class RemoteImapMailboxStore extends ImapMailboxStore {
         irs.updateLastChangeId(irs.getMailbox().getLastChangeID());
         return irs;
     }
-
+    
     @Override
     public List<ImapListener> getListeners(ItemIdentifier ident) {
         String acctId = ident.accountId != null ? ident.accountId : getAccountId();

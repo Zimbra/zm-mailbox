@@ -38,6 +38,8 @@ public class ZInternetHeaderTest {
     private static String RAW_HEADER_COMBINED = "=?utf-8?B?V1NVUzog5pu05paw44OX44Ot44Kw44Op44Og44Gu54q25oWL" +
             "44Gu5qaC6KaB44KSIEJXU1VTVk1TViDjgYvjgonlj5fkv6HjgZfjgb7j" +
             "gZfjgZ8=?=";
+    private static String ZBUG536 = "=?iso-8859-1?B?QVBBRCAtIFN0YXRzIEFQQUQgLSBE6WJ1dCBldCBmaW4gZOljaXNpb24gZW50cmUgcG91ciBsZSBt\n" + 
+        "  b2lzIGRlIEp1aW4gMjAxOA==?=";
     private static String DECODED_HEADER = "WSUS: 更新プログラムの状態の概要を BWSUSVMSV から受信しました";
     private static String RAW_HEADER_FRENCH1 = "[FSU] Fwd: XXXXXX] =?UTF-8?Q?r=C3=A9ponse_=C3=A0?= la lettre du =?UTF-8?Q?pr=C3=A9sident=2E?=";
     private static String DECODED_FRENCH1 = "[FSU] Fwd: XXXXXX] réponse à la lettre du président.";
@@ -160,5 +162,11 @@ public class ZInternetHeaderTest {
         String decodedHeader;
         decodedHeader = ZInternetHeader.decode("=?us-ascii?Q?a b c?=");
         Assert.assertEquals("a b c", decodedHeader);
+    }
+    
+    @Test
+    public void testMultilineZBUG536Subject() {
+        String decodedHeader = ZInternetHeader.decode(ZBUG536);
+        Assert.assertEquals("APAD - Stats APAD - Début et fin décision entre pour le mois de Juin 2018", decodedHeader);
     }
 }

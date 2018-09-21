@@ -791,7 +791,7 @@ public final class MockProvisioning extends Provisioning {
 
     @Override
     public void flushCache(CacheEntryType type, CacheEntry[] entries) {
-        throw new UnsupportedOperationException();
+        //do nothing
     }
 
     @Override
