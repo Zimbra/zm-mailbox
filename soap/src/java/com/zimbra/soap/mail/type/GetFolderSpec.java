@@ -24,7 +24,11 @@ import javax.xml.bind.annotation.XmlAttribute;
 import com.google.common.base.MoreObjects;
 import com.zimbra.common.soap.MailConstants;
 
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name="GetFolderSpec", description="GetFolder input spec")
 public class GetFolderSpec {
 
     /**
@@ -32,6 +36,7 @@ public class GetFolderSpec {
      * @zm-api-field-description Base folder UUID
      */
     @XmlAttribute(name=MailConstants.A_UUID /* uuid */, required=false)
+    @GraphQLQuery(name="uuid", description="Base folder UUID")
     private String uuid;
 
     /**
@@ -39,6 +44,7 @@ public class GetFolderSpec {
      * @zm-api-field-description Base folder ID
      */
     @XmlAttribute(name=MailConstants.A_FOLDER /* l */, required=false)
+    @GraphQLQuery(name="folderId", description="Base folder ID")
     private String folderId;
 
     /**
@@ -46,25 +52,26 @@ public class GetFolderSpec {
      * @zm-api-field-description Fully qualified path
      */
     @XmlAttribute(name=MailConstants.A_PATH /* path */, required=false)
+    @GraphQLQuery(name="path", description="Base folder fully qualified path")
     private String path;
 
     public GetFolderSpec() {
     }
 
     public static GetFolderSpec forID(String id) {
-        GetFolderSpec spec = new GetFolderSpec();
+        final GetFolderSpec spec = new GetFolderSpec();
         spec.setFolderId(id);
         return spec;
     }
 
     public static GetFolderSpec forUUID(String uuid) {
-        GetFolderSpec spec = new GetFolderSpec();
+        final GetFolderSpec spec = new GetFolderSpec();
         spec.setUuid(uuid);
         return spec;
     }
 
     public static GetFolderSpec forPath(String path) {
-        GetFolderSpec spec = new GetFolderSpec();
+        final GetFolderSpec spec = new GetFolderSpec();
         spec.setPath(path);
         return spec;
     }

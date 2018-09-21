@@ -22,9 +22,14 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 
+import io.leangen.graphql.annotations.GraphQLInputField;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name=GqlConstants.CLASS_FREE_BUSY_USER_SPEC, description="Free busy user request information")
 public class FreeBusyUserSpec {
 
     /**
@@ -51,8 +56,11 @@ public class FreeBusyUserSpec {
     public FreeBusyUserSpec() {
     }
 
+    @GraphQLInputField(name=GqlConstants.FOLDER_ID, description="Calendar folder ID; if omitted, get f/b on all calendar folders")
     public void setFolderId(Integer folderId) { this.folderId = folderId; }
+    @GraphQLInputField(name=GqlConstants.ID, description="Zimbra ID Either name or id must be specified")
     public void setId(String id) { this.id = id; }
+    @GraphQLInputField(name=GqlConstants.NAME, description="Email address.  Either name or id must be specified")
     public void setName(String name) { this.name = name; }
     public Integer getFolderId() { return folderId; }
     public String getId() { return id; }

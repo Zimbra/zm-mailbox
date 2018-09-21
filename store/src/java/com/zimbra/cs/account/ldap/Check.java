@@ -25,6 +25,8 @@ import java.util.Map;
 
 import javax.net.ssl.SSLHandshakeException;
 
+import org.apache.http.HttpException;
+
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.fb.ExchangeEWSFreeBusyProvider;
@@ -95,7 +97,7 @@ public class Check {
 
     public static Provisioning.Result checkExchangeAuth(ExchangeFreeBusyProvider.ServerInfo sinfo, Account acct) throws ServiceException {
     	try {
-        	int code = ExchangeFreeBusyProvider.checkAuth(sinfo, acct);
+        	int code = ExchangeFreeBusyProvider.checkAuth(sinfo, acct).getStatusLine().getStatusCode();
         	switch (code) {
         	case 400:
         	case 404:
@@ -104,7 +106,7 @@ public class Check {
         	case 403:
                 return new Provisioning.Result(STATUS_AUTH_FAILED, "", null);
         	}
-    	} catch (IOException e) {
+    	} catch (IOException | HttpException e) {
     	    return toResult(e, "");
         }
     	return new Provisioning.Result(STATUS_OK, "", null);

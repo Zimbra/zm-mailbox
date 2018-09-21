@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2012, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2012, 2013, 2014, 2016, 2018 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -16,12 +16,14 @@
  */
 package com.zimbra.common.util;
 
-import org.apache.commons.httpclient.Cookie;
-import org.apache.commons.httpclient.Header;
-import org.apache.commons.httpclient.HttpState;
-import org.apache.commons.httpclient.URI;
-import org.apache.commons.httpclient.URIException;
-import org.apache.commons.httpclient.methods.PostMethod;
+
+import java.net.URI;
+import java.util.List;
+
+import org.apache.http.Header;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.cookie.Cookie;
+import org.apache.http.impl.client.BasicCookieStore;
 
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapHttpTransport.HttpDebugListener;
@@ -85,7 +87,7 @@ public class SoapDebugListener implements HttpDebugListener {
     }
     
     @Override
-    public void receiveSoapMessage(PostMethod postMethod, Element envelope) {
+    public void receiveSoapMessage(HttpPost postMethod, Element envelope) {
         if (level == Level.OFF) {
             return;
         }
@@ -94,7 +96,7 @@ public class SoapDebugListener implements HttpDebugListener {
         printer.println("=== Response ===");
         
         if (Level.needsHeader(level)) {
-            Header[] headers = postMethod.getResponseHeaders();
+            Header[] headers = postMethod.getAllHeaders();
             for (Header header : headers) {
                 printer.println(header.toString().trim()); // trim the ending crlf
             }
@@ -107,7 +109,7 @@ public class SoapDebugListener implements HttpDebugListener {
     }
 
     @Override
-    public void sendSoapMessage(PostMethod postMethod, Element envelope, HttpState httpState) {
+    public void sendSoapMessage(HttpPost postMethod, Element envelope, BasicCookieStore cookieStore) {
         if (level == Level.OFF) {
             return;
         }
@@ -116,23 +118,19 @@ public class SoapDebugListener implements HttpDebugListener {
         printer.println("=== Request ===");
         
         if (Level.needsHeader(level)) {
-            try {
-                URI uri = postMethod.getURI();
-                printer.println(uri.toString());
-            } catch (URIException e) {
-                e.printStackTrace();
-            }
+            URI uri = postMethod.getURI();
+            printer.println(uri.toString());
             
             // headers
-            Header[] headers = postMethod.getRequestHeaders();
+            Header[] headers = postMethod.getAllHeaders();
             for (Header header : headers) {
                 printer.println(header.toString().trim()); // trim the ending crlf
             }
             printer.println();
             
             //cookies
-            if (httpState != null) {
-                Cookie[] cookies = httpState.getCookies();
+            if (cookieStore != null) {
+                List<Cookie> cookies = cookieStore.getCookies();
                 for (Cookie cookie : cookies) {
                     printer.println("Cookie: " + cookie.toString());
                 }

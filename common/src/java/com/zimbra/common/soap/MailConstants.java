@@ -995,6 +995,15 @@ public final class MailConstants {
     public static final String E_CAL_ALARM_ABSOLUTE = "abs";
     public static final String E_CAL_ALARM_DESCRIPTION = "desc";
     public static final String E_CAL_ALARM_SUMMARY = "summary";
+    public static final String E_CAL_EVENT_ID = "eventId";
+    public static final String E_CAL_EVENT_SUBJECT = "subject";
+    public static final String E_CAL_EVENT_LOCATION = "location";
+    public static final String E_CAL_EVENT_ISPRIVATE = "isPrivate";
+    public static final String E_CAL_EVENT_ISREMINDERSET = "isReminderSet";
+    public static final String E_CAL_EVENT_ISMEETING = "isMeeting";
+    public static final String E_CAL_EVENT_ISRECURRING = "isRecurring";
+    public static final String E_CAL_EVENT_ISEXCEPTION = "isException";
+    public static final String E_CAL_EVENT_HASPERMISSION = "hasPermission";
 
     public static final String E_CAL_RULE = "rule";
     public static final String E_CAL_RULE_UNTIL = "until";

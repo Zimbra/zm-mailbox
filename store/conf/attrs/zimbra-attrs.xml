@@ -204,7 +204,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
     <desc>RFC2256: common name(s) for which the entity is known by</desc>
 </attr>
 
-<attr name="description" type="string" cardinality="multi" optionalIn="account,distributionList,group,groupDynamicUnit,groupStaticUnit,cos,domain,server,alwaysOnCluster,ucService,mimeEntry,objectEntry,aclTarget,globalConfig,xmppComponent,zimletEntry" flags="domainAdminModifiable">
+<attr name="description" type="string" cardinality="multi" optionalIn="account,distributionList,group,groupDynamicUnit,groupStaticUnit,cos,domain,server,alwaysOnCluster,ucService,mimeEntry,objectEntry,aclTarget,globalConfig,xmppComponent,zimletEntry,addressList" flags="domainAdminModifiable">
     <desc>RFC2256: descriptive information</desc>
 </attr>
 
@@ -328,7 +328,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
     <desc>RFC2256: title associated with the entity</desc>
 </attr>
 
-<attr name="uid" type="string" immutable="1" optionalIn="alias" requiredIn="account,distributionList" flags="accountInfo">
+<attr name="uid" type="string" immutable="1" optionalIn="alias" requiredIn="account,distributionList,addressList" flags="accountInfo">
     <desc>RFC1274: user identifier</desc>
 </attr>
 
@@ -349,7 +349,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 
-<attr id="1" name="zimbraId" type="id" immutable="1" cardinality="single" requiredIn="account,alias,distributionList,cos,domain,server,alwaysOnCluster,ucService,calendarResource,xmppComponent,group,groupDynamicUnit,groupStaticUnit" flags="accountInfo">
+<attr id="1" name="zimbraId" type="id" immutable="1" cardinality="single" requiredIn="account,alias,distributionList,cos,domain,server,alwaysOnCluster,ucService,calendarResource,xmppComponent,group,groupDynamicUnit,groupStaticUnit,addressList" flags="accountInfo">
   <desc>Zimbra Systems Unique ID</desc>
 </attr>
 
@@ -567,7 +567,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <globalConfigValue>zimbraGroupSync:(|(objectclass=zimbraDistributionList)(objectclass=zimbraGroup))</globalConfigValue>
   <globalConfigValue>zimbraAutoComplete:(&amp;(|(displayName=%s*)(cn=%s*)(sn=%s*)(gn=%s*)(zimbraPhoneticFirstName=%s*)(zimbraPhoneticLastName=%s*)(mail=%s*)(zimbraMailDeliveryAddress=%s*)(zimbraMailAlias=%s*))(|(objectclass=zimbraAccount)(objectclass=zimbraDistributionList)(objectclass=zimbraGroup)))</globalConfigValue>
   <globalConfigValue>zimbraSearch:(&amp;(|(displayName=*%s*)(cn=*%s*)(sn=*%s*)(gn=*%s*)(zimbraPhoneticFirstName=*%s*)(zimbraPhoneticLastName=*%s*)(mail=*%s*)(zimbraMailDeliveryAddress=*%s*)(zimbraMailAlias=*%s*))(|(objectclass=zimbraAccount)(objectclass=zimbraDistributionList)(objectclass=zimbraGroup)))</globalConfigValue>
-  <globalConfigValue>zimbraSync:(&amp;(|(objectclass=zimbraAccount)(objectclass=zimbraDistributionList)(objectclass=zimbraGroup))(!(&amp;(objectclass=zimbraCalendarResource)(!(zimbraAccountStatus=active)))))</globalConfigValue>
+  <globalConfigValue>zimbraSync:(&amp;(|(objectclass=zimbraAccount)(objectclass=zimbraDistributionList)(objectclass=zimbraGroup)(objectclass=zimbraAddressList)(objectclass=zimbraHabGroup))(!(&amp;(objectclass=zimbraCalendarResource)(!(|(zimbraAccountStatus=active)(zimbraIsAddressListActive=TRUE)(zimbraMailStatus=enabled))))))</globalConfigValue>
   <globalConfigValue>ad:(&amp;(|(displayName=*%s*)(cn=*%s*)(sn=*%s*)(givenName=*%s*)(mail=*%s*))(!(msExchHideFromAddressLists=TRUE))(|(&amp;(objectCategory=person)(objectClass=user)(!(homeMDB=*))(!(msExchHomeServerName=*)))(&amp;(objectCategory=person)(objectClass=user)(|(homeMDB=*)(msExchHomeServerName=*)))(&amp;(objectCategory=person)(objectClass=contact))(objectCategory=group)(objectCategory=publicFolder)(objectCategory=msExchDynamicDistributionList)))</globalConfigValue>
   <globalConfigValue>adAutoComplete:(&amp;(|(displayName=%s*)(cn=%s*)(sn=%s*)(givenName=%s*)(mail=%s*))(!(msExchHideFromAddressLists=TRUE))(|(&amp;(objectCategory=person)(objectClass=user)(!(homeMDB=*))(!(msExchHomeServerName=*)))(&amp;(objectCategory=person)(objectClass=user)(|(homeMDB=*)(msExchHomeServerName=*)))(&amp;(objectCategory=person)(objectClass=contact))(objectCategory=group)(objectCategory=publicFolder)(objectCategory=msExchDynamicDistributionList)))</globalConfigValue>
   <globalConfigValue>externalLdapAutoComplete:(|(cn=%s*)(sn=%s*)(gn=%s*)(mail=%s*))</globalConfigValue>
@@ -594,6 +594,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <globalConfigValue>nickname_has:(|(displayName=*%s*)(cn=*%s*))</globalConfigValue>
   <globalConfigValue>phoneticFirstName_has:(zimbraPhoneticFirstName=*%s*)</globalConfigValue>
   <globalConfigValue>phoneticLastName_has:(zimbraPhoneticLastName=*%s*)</globalConfigValue>
+  <globalConfigValue>notes_has:(description=*%s*)</globalConfigValue>
   <desc>LDAP search filter definitions for GAL queries</desc>
 </attr>
 
@@ -9503,6 +9504,21 @@ TODO: delete them permanently from here
   <desc>time for which reset password feature is suspended</desc>
 </attr>
 
+<attr id="2143" name="zimbraOldMailAddress" type="email" max="256" immutable="1" cardinality="single" optionalIn="mailRecipient" flags="accountInfo" since="8.8.10">
+  <desc>temporary RFC822 email address of this recipient for accepting mail during account rename</desc>
+</attr>
+
+<attr id="2144" name="zimbraPrimaryEmailChangeHistory" type="string" cardinality="multi" optionalIn="account" flags="accountInfo" since="8.8.10">
+  <desc>timestamp of account rename and previous name of the account</desc>
+</attr>
+
+<attr id="2994" name="zimbraPrefDefaultCalendarId" type="integer" cardinality="single" optionalIn="account,cos" flags="accountInherited" callback="DefaultCalendarIdCallback" since="8.8.10">
+  <defaultCOSValue>10</defaultCOSValue>
+  <desc>Default calendar folder id. Current default calendar id is 10, as calendar folder with id 10, is created for all users.
+    Cos level change is blocked. So admin can not change value of this attribute on cos level.
+  </desc>
+</attr>
+
 <attr id="2995" name="zimbraEphemeralBackendURL" type="string" cardinality="single" optionalIn="globalConfig" callback="EphemeralBackendCheck" since="8.7.6">
   <desc>URL of ephemeral storage backend</desc>
   <globalConfigValue>ldap://default</globalConfigValue>
@@ -9779,4 +9795,3 @@ TODO: delete them permanently from here
 </attr>
 
 </attrs>
-

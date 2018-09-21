@@ -19,9 +19,10 @@ package com.zimbra.cs.util.yauth;
 import java.io.IOException;
 import java.util.HashMap;
 
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpException;
-import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.http.HttpException;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.util.EntityUtils;
 
 import com.zimbra.common.httpclient.HttpClientUtil;
 
@@ -48,11 +49,11 @@ public class TokenAuthenticateV1 {
      * @return The token
      */
     public static String getToken(String username, String passwd) throws IOException, HttpException {
-        GetMethod method = new GetMethod("https://login.yahoo.com/config/pwtoken_get?src=ymsgr&login="+username+"&passwd="+passwd);
-        int response = HttpClientUtil.executeMethod(method);
+        HttpGet method = new HttpGet("https://login.yahoo.com/config/pwtoken_get?src=ymsgr&login="+username+"&passwd="+passwd);
+        HttpResponse response = HttpClientUtil.executeMethod(method);
 
-        if (response >= 200 && response < 300) { 
-            String body = method.getResponseBodyAsString();
+        if (response.getStatusLine().getStatusCode() >= 200 && response.getStatusLine().getStatusCode() < 300) { 
+            String body = EntityUtils.toString(response.getEntity());
             
             HashMap<String,String> map = new HashMap<String, String>();
             map.put("ymsgr", null);
@@ -91,11 +92,11 @@ public class TokenAuthenticateV1 {
      * @return
      */
     public static TokenAuthenticateV1 doAuth(String username, String token) throws IOException, HttpException {
-        GetMethod method = new GetMethod("https://login.yahoo.com/config/pwtoken_login?src=ymsgr&token="+token);
-        int response = HttpClientUtil.executeMethod(method);
+        HttpGet method = new HttpGet("https://login.yahoo.com/config/pwtoken_login?src=ymsgr&token="+token);
+        HttpResponse response = HttpClientUtil.executeMethod(method);
         
-        if (response >= 200 && response < 300) { 
-            String body = method.getResponseBodyAsString();
+        if (response.getStatusLine().getStatusCode() >= 200 && response.getStatusLine().getStatusCode() < 300) { 
+            String body = EntityUtils.toString(response.getEntity());
             
             HashMap<String,String> map = new HashMap<String, String>();
             map.put("crumb", null);

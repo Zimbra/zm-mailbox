@@ -56,7 +56,8 @@ import com.zimbra.soap.type.SearchHit;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ SoapHttpTransport.class })
-@PowerMockIgnore({ "javax.crypto.*", "javax.xml.bind.annotation.*" })
+@PowerMockIgnore({ "javax.crypto.*", "javax.xml.bind.annotation.*", "javax.net.ssl.*" })
+
 public class SearchActionTest {
 
     @Rule

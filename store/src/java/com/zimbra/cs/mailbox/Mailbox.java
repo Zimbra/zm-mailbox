@@ -1419,7 +1419,21 @@ public class Mailbox implements MailboxStore {
     /** Returns the total (uncompressed) size of the mailbox's contents. */
     @Override
     public long getSize() {
-        return currentChange().size == MailboxChange.NO_CHANGE ? mData.size : currentChange().size;
+        long additionalSize = getAdditionalSize();
+        return (currentChange().size == MailboxChange.NO_CHANGE ? mData.size : currentChange().size) + additionalSize;
+    }
+
+    private long getAdditionalSize() {
+        long additionalSize = 0L;
+        try {
+            for (AdditionalQuotaProvider listener : MailboxManager.getInstance().getAdditionalQuotaProviders()) {
+                additionalSize += listener.getAdditionalQuota(this);
+            }
+        }
+        catch (ServiceException e ) {
+            ZimbraLog.mailbox.warn("could not get mailbox total size", e);
+        }
+        return additionalSize;
     }
 
     /** change the current size of the mailbox */
@@ -1443,10 +1457,10 @@ public class Mailbox implements MailboxStore {
         currentChange().size = size;
     }
 
-    void checkSizeChange(long newSize) throws ServiceException {
+    public void checkSizeChange(long newSize) throws ServiceException {
         Account acct = getAccount();
         long acctQuota = AccountUtil.getEffectiveQuota(acct);
-        if (acctQuota != 0 && newSize > acctQuota) {
+        if (acctQuota != 0 && newSize + getAdditionalSize() > acctQuota) {
             throw MailServiceException.QUOTA_EXCEEDED(acctQuota);
         }
         Domain domain = Provisioning.getInstance().getDomain(acct);
@@ -10513,4 +10527,10 @@ public class Mailbox implements MailboxStore {
         // do nothing
     }
 
+    /*
+     * This method resets defalult calendar id to ID_FOLDER_CALENDAR in pref
+     */
+    public void resetDefaultCalendarId() throws ServiceException {
+        getAccount().setPrefDefaultCalendarId(ID_FOLDER_CALENDAR);
+    }
 }

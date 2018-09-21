@@ -124,7 +124,7 @@ public class RemoteMailQueue {
             if (id == null) {
                 throw new IOException("no ID defined near line=" + lineNo);
             }
-            doc.add(new Field(QueueAttr.id.toString(), id.toLowerCase(),
+            doc.add(new Field(QueueAttr.id.toString(), id,
                     Field.Store.YES, Field.Index.NOT_ANALYZED, Field.TermVector.NO));
 
             String time = map.get(QueueAttr.time.toString());
@@ -441,11 +441,7 @@ public class RemoteMailQueue {
                     }
                     sb.append(field.stringValue());
                 }
-                if (attr ==  QueueAttr.id) {
-                    qitem.put(attr, sb.toString().toUpperCase());
-                } else {
-                    qitem.put(attr, sb.toString());
-                }
+                qitem.put(attr, sb.toString());
             }
         }
         return qitem;
@@ -577,12 +573,12 @@ public class RemoteMailQueue {
                         sb.append(",");
                     }
                     if (!all) {
-                        Term toDelete = new Term(QueueAttr.id.toString(), ids[i].toLowerCase());
+                        Term toDelete = new Term(QueueAttr.id.toString(), ids[i]);
                         int numDeleted = indexReader.deleteDocuments(toDelete);
                         mNumMessages.getAndAdd(-numDeleted);
                         if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("deleting term:" + toDelete + ", docs deleted=" + numDeleted);
                     }
-                    sb.append(ids[i].toUpperCase());
+                    sb.append(ids[i]);
                 }
                 done = last;
                 rm.execute(sb.toString());

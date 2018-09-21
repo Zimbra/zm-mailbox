@@ -154,6 +154,7 @@ public final class ZimbraSoapContext {
     private int mHopCount;
     private boolean mMountpointTraversed;
 
+    private String mOriginalUserAgent;
     private String mUserAgent;
     private String mRequestIP;
     private Integer mPort;
@@ -472,6 +473,7 @@ public final class ZimbraSoapContext {
 
         mRequestIP = (String) context.get(SoapEngine.REQUEST_IP);
         mPort = (Integer) context.get(SoapEngine.REQUEST_PORT);
+        mOriginalUserAgent = (String) context.get(SoapEngine.ORIG_REQUEST_USER_AGENT);
 
     }
 
@@ -946,6 +948,10 @@ public final class ZimbraSoapContext {
 
     public boolean isProxyRequest() {
         return mIsProxyRequest;
+    }
+
+    public String getOriginalUserAgent() {
+        return mOriginalUserAgent;
     }
 
     /**

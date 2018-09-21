@@ -153,6 +153,12 @@ public class CsrfFilter implements Filter {
             }
         }
 
+        // We need virtual host information in DefangFilter
+        // Set them in ThreadLocal here
+        RequestContext reqCtxt = new RequestContext();
+        String host = CsrfUtil.getRequestHost(req);
+        reqCtxt.setVirtualHost(host);
+        ZThreadLocal.setContext(reqCtxt);
         if (!csrfCheckEnabled) {
             req.setAttribute(CSRF_TOKEN_CHECK, Boolean.FALSE);
             chain.doFilter(req, resp);
@@ -168,19 +174,7 @@ public class CsrfFilter implements Filter {
             }
             chain.doFilter(req, resp);
         }
-
-        try {
-            // We need virtual host information in DefangFilter
-            // Set them in ThreadLocal here
-            RequestContext reqCtxt = new RequestContext();
-            String host = CsrfUtil.getRequestHost(req);
-            reqCtxt.setVirtualHost(host);
-            ZThreadLocal.setContext(reqCtxt);
-
-        } finally {
-            // Unset the variables set in thread local
-            ZThreadLocal.unset();
-        }
+        ZThreadLocal.unset();
 
     }
 

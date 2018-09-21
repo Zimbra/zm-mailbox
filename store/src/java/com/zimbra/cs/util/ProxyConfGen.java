@@ -333,6 +333,10 @@ class ProxyConfVar
 
     String generateServerDirective(Server server, String serverName, String portName) {
         int serverPort = server.getIntAttr(portName, 0);
+        return generateServerDirective(server, serverName, serverPort);
+    }
+
+    String generateServerDirective(Server server, String serverName, int serverPort) {
         int timeout = server.getIntAttr(
                 Provisioning.A_zimbraMailProxyReconnectTimeout, 60);
         String version = server.getAttr(Provisioning.A_zimbraServerVersion, "");
@@ -887,6 +891,60 @@ class WebUpstreamServersVar extends ServersVar {
     		}
     	}
     	mValue = directives;
+    }
+}
+
+class WebUpstreamZxServersVar extends ServersVar {
+
+    public WebUpstreamZxServersVar() {
+        super("web.upstream.zx.:servers", null,
+              "List of upstream HTTP servers towards zx port used by Web Proxy (i.e. servers " +
+                "for which zimbraReverseProxyLookupTarget is true, and whose " +
+                "mail mode is http|https|mixed|both)");
+    }
+
+    @Override
+    public void update() throws ServiceException {
+        ArrayList<String> directives = new ArrayList<String>();
+
+        List<Server> mailclientservers = mProv.getAllMailClientServers();
+        for (Server server : mailclientservers) {
+            String serverName = server.getAttr(
+              Provisioning.A_zimbraServiceHostname, "");
+
+            if (isValidUpstream(server, serverName)) {
+                directives.add(generateServerDirective(server, serverName, ProxyConfGen.ZIMBRA_UPSTREAM_ZX_PORT));
+                mLog.debug("Added server to HTTP zx upstream: " + serverName);
+            }
+        }
+        mValue = directives;
+    }
+}
+
+class WebSslUpstreamZxServersVar extends ServersVar {
+
+    public WebSslUpstreamZxServersVar() {
+        super("web.ssl.upstream.zx.:servers", null,
+              "List of upstream HTTPS servers towards zx ssl port used by Web Proxy (i.e. servers " +
+                "for which zimbraReverseProxyLookupTarget is true, and whose " +
+                "mail mode is http|https|mixed|both)");
+    }
+
+    @Override
+    public void update() throws ServiceException {
+        ArrayList<String> directives = new ArrayList<String>();
+
+        List<Server> mailclientservers = mProv.getAllMailClientServers();
+        for (Server server : mailclientservers) {
+            String serverName = server.getAttr(
+              Provisioning.A_zimbraServiceHostname, "");
+
+            if (isValidUpstream(server, serverName)) {
+                directives.add(generateServerDirective(server, serverName, ProxyConfGen.ZIMBRA_UPSTREAM_SSL_ZX_PORT));
+                mLog.debug("Added server to HTTPS zx ssl upstream: " + serverName);
+            }
+        }
+        mValue = directives;
     }
 }
 
@@ -1652,6 +1710,22 @@ class XmppBoshProxyUpstreamProtoVar extends ProxyConfVar {
     }
 }
 
+class WebProxyUpstreamZxTargetVar extends ProxyConfVar {
+    public WebProxyUpstreamZxTargetVar() {
+        super("web.upstream.schema", Provisioning.A_zimbraReverseProxySSLToUpstreamEnabled, true, ProxyConfValueType.BOOLEAN,
+              ProxyConfOverride.SERVER, "The target for zx paths");
+    }
+
+    @Override
+    public String format(Object o) throws ProxyConfException {
+        Boolean value = (Boolean)o;
+        if(value == false) {
+            return "http://" + ProxyConfGen.ZIMBRA_UPSTREAM_ZX_NAME;
+        } else {
+            return "https://" + ProxyConfGen.ZIMBRA_SSL_UPSTREAM_ZX_NAME;
+        }
+    }
+}
 
 class WebSSLSessionCacheSizeVar extends ProxyConfVar {
 
@@ -2014,6 +2088,10 @@ public class ProxyConfGen
     static final String ZIMBRA_SSL_UPSTREAM_EWS_NAME = "zimbra_ews_ssl";
     static final String ZIMBRA_UPSTREAM_LOGIN_NAME = "zimbra_login";
     static final String ZIMBRA_SSL_UPSTREAM_LOGIN_NAME = "zimbra_login_ssl";
+    static final String ZIMBRA_UPSTREAM_ZX_NAME = "zx";
+    static final String ZIMBRA_SSL_UPSTREAM_ZX_NAME = "zx_ssl";
+    static final int    ZIMBRA_UPSTREAM_ZX_PORT = 8742;
+    static final int    ZIMBRA_UPSTREAM_SSL_ZX_PORT = 8743;
 
     /** the pattern for custom header cmd, such as "!{explode domain} */
     private static Pattern cmdPattern = Pattern.compile("(.*)\\!\\{([^\\}]+)\\}(.*)", Pattern.DOTALL);
@@ -2337,30 +2415,32 @@ public class ProxyConfGen
                 if(cmd_arg.length == 2 &&
                    cmd_arg[0].compareTo("explode") == 0) {
 
-                    if(!mGenConfPerVhn) { // explode only when GenConfPerVhn is enabled
-                        return;
+                    if( cmd_arg[1].startsWith("server(") && cmd_arg[1].endsWith(")")) {
+                        String serviceName = cmd_arg[1].substring("server(".length(), cmd_arg[1].length() - 1);
+                        if( serviceName.isEmpty() ) {
+                            throw new ProxyConfException("Missing service parameter in custom header command: " + cmdMatcher.group(2));
+                        }
+                        expandTemplateByExplodeServer(r, w, serviceName);
                     }
+                    else
+                    {
+                      if(!mGenConfPerVhn) { // explode only when GenConfPerVhn is enabled
+                        return;
+                      }
 
-                    if(cmd_arg[1].startsWith("domain(") &&cmd_arg[1].endsWith(")")) {
-                        //extract the args in "domain(arg1, arg2, ...)
-                        String arglist = cmd_arg[1].substring("domain(".length(), cmd_arg[1].length() - 1);
-                        String[] args;
-                        if(arglist.equals("")) {
-                            args = new String[0];
-                        } else {
-                            args = arglist.split(",( |\t)*");
-                        }
-                        expandTemplateByExplodeDomain(r, w, args);
-                    } else {
-                        if( cmd_arg[1].startsWith("server(") && cmd_arg[1].endsWith(")")) {
-                            String serviceName = cmd_arg[1].substring("server(".length(), cmd_arg[1].length() - 1);
-                            if( serviceName.isEmpty() ) {
-                                throw new ProxyConfException("Missing service parameter in custom header command: " + cmdMatcher.group(2));
-                            }
-                            expandTemplateByExplodeServer(r, w, serviceName);
-                        } else {
-                            throw new ProxyConfException("Illegal custom header command: " + cmdMatcher.group(2));
-                        }
+                      if(cmd_arg[1].startsWith("domain(") &&cmd_arg[1].endsWith(")")) {
+                          //extract the args in "domain(arg1, arg2, ...)
+                          String arglist = cmd_arg[1].substring("domain(".length(), cmd_arg[1].length() - 1);
+                          String[] args;
+                          if(arglist.equals("")) {
+                              args = new String[0];
+                          } else {
+                              args = arglist.split(",( |\t)*");
+                          }
+                          expandTemplateByExplodeDomain(r, w, args);
+                      } else {
+                          throw new ProxyConfException("Illegal custom header command: " + cmdMatcher.group(2));
+                      }
                     }
                 } else {
                     throw new ProxyConfException("Illegal custom header command: " + cmdMatcher.group(2));
@@ -2881,6 +2961,12 @@ public class ProxyConfGen
         mConfVars.put("web.ssl.dhparam.file", webSslDhParamFile);
         mConfVars.put("upstream.fair.shm.size", new ProxyFairShmVar());
         mConfVars.put("web.strict.servername", new WebStrictServerName());
+        mConfVars.put("web.upstream.zx", new WebProxyUpstreamZxTargetVar());
+        mConfVars.put("web.upstream.zx.name", new ProxyConfVar("web.upstream.zx.name", null, ZIMBRA_UPSTREAM_ZX_NAME, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG,"Symbolic name for HTTP zx upstream"));
+        mConfVars.put("web.ssl.upstream.zx.name", new ProxyConfVar("web.ssl.upstream.zx.name", null, ZIMBRA_SSL_UPSTREAM_ZX_NAME, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG,"Symbolic name for HTTPS zx upstream"));
+        mConfVars.put("web.upstream.zx.:servers", new WebUpstreamZxServersVar());
+        mConfVars.put("web.ssl.upstream.zx.:servers", new WebSslUpstreamZxServersVar());
+
         //Get the response headers list from globalconfig
         String[] rspHeaders = ProxyConfVar.configSource.getMultiAttr(Provisioning.A_zimbraReverseProxyResponseHeaders);
         ArrayList<String> rhdr = new ArrayList<String>();

@@ -27,7 +27,6 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.RightModifier;
-import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.FlushCacheRequest;
 import com.zimbra.soap.admin.message.GrantRightRequest;
@@ -45,7 +44,6 @@ public class GrantRight extends RightDocumentHandler {
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-
         GrantRightRequest grReq = zsc.elementToJaxb(request);
         RightModifierInfo modifierInfo = grReq.getRight();
         if (modifierInfo == null) {
@@ -74,7 +72,6 @@ public class GrantRight extends RightDocumentHandler {
                 }
             }
         }
-
         Element response = zsc.createElement(AdminConstants.GRANT_RIGHT_RESPONSE);
         return response;
     }

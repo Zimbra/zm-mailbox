@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2019 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -50,7 +50,6 @@ import com.zimbra.cs.db.Versions;
 import com.zimbra.cs.ephemeral.EphemeralStore;
 import com.zimbra.cs.ephemeral.LdapEphemeralStore;
 import com.zimbra.cs.extension.ExtensionUtil;
-import com.zimbra.cs.iochannel.MessageChannel;
 import com.zimbra.cs.mailbox.MailboxIndex;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.PurgeThread;
@@ -347,14 +346,6 @@ public final class Zimbra {
             if (app.supports(ExternalAccountManagerTask.class)) {
                 long interval = server.getExternalAccountStatusCheckInterval();
                 sTimer.schedule(new ExternalAccountManagerTask(), interval, interval);
-            }
-
-            if (prov.getLocalServer().isMessageChannelEnabled()) {
-                try {
-                    MessageChannel.getInstance().startup();
-                } catch (IOException e) {
-                    ZimbraLog.misc.warn("can't start notification channels", e);
-                }
             }
 
             Server localServer = Provisioning.getInstance().getLocalServer();

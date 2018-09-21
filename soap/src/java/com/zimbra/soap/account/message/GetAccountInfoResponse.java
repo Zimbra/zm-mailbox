@@ -147,6 +147,7 @@ public class GetAccountInfoResponse {
     public void setChangePasswordURL(String changePasswordURL) { this.changePasswordURL = changePasswordURL; }
     public void setCommunityURL(String communityURL) { this.communityURL = communityURL; }
     public void setAdminURL(String adminURL) { this.adminURL = adminURL; }
+    public void setBoshURL(String boshURL) { this.boshURL = boshURL; }
     public String getName() { return name; }
     public List<NamedValue> getAttrs() {
         return attrs;
@@ -156,6 +157,7 @@ public class GetAccountInfoResponse {
     public String getChangePasswordURL() { return changePasswordURL; }
     public String getCommunityURL() { return communityURL; }
     public String getAdminURL() { return adminURL; }
+    public String getBoshURL() { return boshURL; }
 
     public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         return helper

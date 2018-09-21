@@ -29,6 +29,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.AlarmInfoInterface;
 import com.zimbra.soap.base.AlarmTriggerInfoInterface;
@@ -37,7 +38,14 @@ import com.zimbra.soap.base.CalendarAttendeeInterface;
 import com.zimbra.soap.base.DurationInfoInterface;
 import com.zimbra.soap.base.XPropInterface;
 
+import io.leangen.graphql.annotations.GraphQLIgnore;
+import io.leangen.graphql.annotations.GraphQLInputField;
+import io.leangen.graphql.annotations.GraphQLNonNull;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name=GqlConstants.CLASS_ALARM_INFORMATION, description="Alarm information")
 public class AlarmInfo implements AlarmInfoInterface {
 
     /**
@@ -49,6 +57,10 @@ public class AlarmInfo implements AlarmInfoInterface {
      * <b>DISPLAY|AUDIO|EMAIL|PROCEDURE|X_YAHOO_CALENDAR_ACTION_IM|X_YAHOO_CALENDAR_ACTION_MOBILE</b>
      */
     @XmlAttribute(name=MailConstants.A_CAL_ALARM_ACTION /* action */, required=true)
+    @GraphQLNonNull
+    @GraphQLQuery(name=GqlConstants.ACTION, description="Alarm action\n "
+        + "> Possible values:\n "
+        + "* DISPLAY|AUDIO|EMAIL|PROCEDURE|X_YAHOO_CALENDAR_ACTION_IM|X_YAHOO_CALENDAR_ACTION_MOBILE")
     private final String action;
 
     /**
@@ -93,6 +105,7 @@ public class AlarmInfo implements AlarmInfoInterface {
      * @zm-api-field-description Attendee information
      */
     @XmlElement(name=MailConstants.E_CAL_ATTENDEE /* at */, required=false)
+    @GraphQLQuery(name=GqlConstants.ATTENDEES, description="Attendee information")
     private List<CalendarAttendee> attendees = Lists.newArrayList();
 
     /**
@@ -112,6 +125,7 @@ public class AlarmInfo implements AlarmInfoInterface {
      * </pre>
      */
     @XmlElement(name=MailConstants.E_CAL_XPROP /* xprop */, required=false)
+    @GraphQLQuery(name=GqlConstants.XPROPS, description="Non-standard properties")
     private List<XProp> xProps = Lists.newArrayList();
 
     /**
@@ -122,7 +136,8 @@ public class AlarmInfo implements AlarmInfoInterface {
         this((String) null);
     }
 
-    public AlarmInfo(String action) {
+    public AlarmInfo(
+        @GraphQLNonNull @GraphQLInputField(name=GqlConstants.ACTION) String action) {
         this.action = action;
     }
 
@@ -131,19 +146,28 @@ public class AlarmInfo implements AlarmInfoInterface {
         return new AlarmInfo(action);
     }
 
+    @GraphQLInputField(name=GqlConstants.TRIGGER, description="Alarm trigger information")
     public void setTrigger(AlarmTriggerInfo trigger) {
         this.trigger = trigger;
     }
 
+    @GraphQLInputField(name=GqlConstants.REPEAT, description="Alarm repeat information")
     public void setRepeat(DurationInfo repeat) { this.repeat = repeat; }
     @Override
+    @GraphQLInputField(name=GqlConstants.DESCRIPTION, description="Alarm description\n "
+        + "* action=DISPLAY: Reminder text to display\n "
+        + "* action=EMAIL|X_YAHOO_CALENDAR_ACTION_IM|X_YAHOO_CALENDAR_ACTION_MOBILE: EMail body \n"
+        + "* action=PROCEDURE: Description text")
     public void setDescription(String description) {
         this.description = description;
     }
 
+    @GraphQLInputField(name=GqlConstants.ATTACHMENT, description="Information on attachment")
     public void setAttach(CalendarAttach attach) { this.attach = attach; }
     @Override
+    @GraphQLInputField(name=GqlConstants.SUMMARY, description="Alarm summary")
     public void setSummary(String summary) { this.summary = summary; }
+    @GraphQLInputField(name=GqlConstants.ATTENDEES, description="Attendee information")
     public void setAttendees(Iterable <CalendarAttendee> attendees) {
         this.attendees.clear();
         if (attendees != null) {
@@ -151,10 +175,12 @@ public class AlarmInfo implements AlarmInfoInterface {
         }
     }
 
+    @GraphQLIgnore
     public void addAttendee(CalendarAttendee attendee) {
         this.attendees.add(attendee);
     }
 
+    @GraphQLInputField(name=GqlConstants.XPROPS, description="Non-standard properties")
     public void setXProps(Iterable <XProp> xProps) {
         this.xProps.clear();
         if (xProps != null) {
@@ -162,22 +188,33 @@ public class AlarmInfo implements AlarmInfoInterface {
         }
     }
 
+    @GraphQLIgnore
     public void addXProp(XProp xProp) {
         this.xProps.add(xProp);
     }
 
     @Override
     public String getAction() { return action; }
+    @GraphQLQuery(name=GqlConstants.TRIGGER, description="Alarm trigger information")
     public AlarmTriggerInfo getTrigger() { return trigger; }
+    @GraphQLQuery(name=GqlConstants.REPEAT, description="Alarm repeat information")
     public DurationInfo getRepeat() { return repeat; }
     @Override
+    @GraphQLQuery(name=GqlConstants.DESCRIPTION, description="Alarm description\n "
+        + "* action=DISPLAY: Reminder text to display\n "
+        + "* action=EMAIL|X_YAHOO_CALENDAR_ACTION_IM|X_YAHOO_CALENDAR_ACTION_MOBILE: EMail body \n"
+        + "* action=PROCEDURE: Description text")
     public String getDescription() { return description; }
+    @GraphQLQuery(name=GqlConstants.ATTACHMENT, description="Information on attachment")
     public CalendarAttach getAttach() { return attach; }
     @Override
+    @GraphQLQuery(name=GqlConstants.SUMMARY, description="Alarm summary")
     public String getSummary() { return summary; }
+    @GraphQLQuery(name=GqlConstants.ATTENDEES, description="Attendee information")
     public List<CalendarAttendee> getAttendees() {
         return Collections.unmodifiableList(attendees);
     }
+    @GraphQLQuery(name=GqlConstants.XPROPS, description="Non-standard properties")
     public List<XProp> getXProps() {
         return Collections.unmodifiableList(xProps);
     }
@@ -202,62 +239,74 @@ public class AlarmInfo implements AlarmInfoInterface {
     }
 
     @Override
+    @GraphQLIgnore
     public void setTriggerInterface(AlarmTriggerInfoInterface trigger) {
         setTrigger((AlarmTriggerInfo) trigger);
     }
 
     @Override
+    @GraphQLIgnore
     public void setRepeatInterface(DurationInfoInterface repeat) {
         setRepeat((DurationInfo) repeat);
     }
 
     @Override
+    @GraphQLIgnore
     public void setAttachInterface(CalendarAttachInterface attach) {
         setAttach((CalendarAttach) attach);
     }
 
     @Override
+    @GraphQLIgnore
     public void setAttendeeInterfaces(
             Iterable<CalendarAttendeeInterface> attendees) {
         setAttendees(CalendarAttendee.fromInterfaces(attendees));
     }
 
     @Override
+    @GraphQLIgnore
     public void addAttendeeInterface(CalendarAttendeeInterface attendee) {
         addAttendee((CalendarAttendee) attendee);
     }
 
     @Override
+    @GraphQLIgnore
     public void setXPropsInterface(Iterable<XPropInterface> xProps) {
         setXProps(XProp.fromInterfaces(xProps));
     }
 
     @Override
+    @GraphQLIgnore
     public void addXPropInterface(XPropInterface xProp) {
         addXProp((XProp) xProp);
     }
 
     @Override
+    @GraphQLIgnore
     public AlarmTriggerInfoInterface getTriggerInfo() {
         return trigger;
     }
 
     @Override
+    @GraphQLIgnore
     public DurationInfoInterface getRepeatInfo() {
         return repeat;
     }
 
     @Override
+    @GraphQLIgnore
     public CalendarAttachInterface getAttachInfo() {
         return attach;
     }
 
     @Override
+    @GraphQLIgnore
     public List<CalendarAttendeeInterface> getAttendeeInterfaces() {
         return CalendarAttendee.toInterfaces(attendees);
     }
 
     @Override
+    @GraphQLIgnore
     public List<XPropInterface> getXPropInterfaces() {
         return XProp.toInterfaces(xProps);
     }

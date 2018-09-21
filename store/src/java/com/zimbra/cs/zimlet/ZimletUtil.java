@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2018 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -21,7 +21,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLConnection;
@@ -43,13 +42,20 @@ import java.util.zip.CRC32;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpState;
-import org.apache.commons.httpclient.cookie.CookiePolicy;
-import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
-import org.apache.commons.httpclient.methods.multipart.Part;
-import org.apache.commons.httpclient.methods.multipart.PartBase;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpException;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.CookieSpecs;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.config.SocketConfig;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.impl.client.BasicCookieStore;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.cookie.BasicClientCookie;
+import org.apache.http.util.EntityUtils;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.ProvisioningConstants;
@@ -1616,7 +1622,7 @@ public class ZimletUtil {
             }
         }
 
-        private void soapDeployZimlet(boolean flushCache) throws ServiceException, IOException {
+        private void soapDeployZimlet(boolean flushCache) throws ServiceException, IOException, HttpException {
             XMLElement req = new XMLElement(AdminConstants.DEPLOY_ZIMLET_REQUEST);
             req.addAttribute(AdminConstants.A_ACTION, AdminConstants.A_DEPLOYLOCAL);
             req.addAttribute(AdminConstants.A_FLUSH, flushCache);
@@ -1685,29 +1691,46 @@ public class ZimletUtil {
             // of this methods are from command line, our idle connection reaper is
             // only started in the server anyway.  After the CLI exits all connections
             // will be released.
-            HttpClient client = new HttpClient(); // CLI only, don't need conn mgr
+            HttpClientBuilder clientBuilder = HttpClientBuilder.create(); // CLI only, don't need conn mgr
             Map<String, String> cookieMap = mAuth.cookieMap(true);
             if (cookieMap != null) {
-                HttpState state = new HttpState();
+                BasicCookieStore cookieStore = new BasicCookieStore();
                 for (Map.Entry<String, String> ck : cookieMap.entrySet()) {
-                    state.addCookie(new org.apache.commons.httpclient.Cookie(domain, ck.getKey(), ck.getValue(), "/", -1, false));
+                    BasicClientCookie cookie = new BasicClientCookie(ck.getKey(), ck.getValue());
+                    cookie.setDomain(domain);
+                    cookie.setPath("/");
+                    cookie.setSecure(false);
+                    cookie.setExpiryDate(null);
+                    cookieStore.addCookie(cookie);
+
                 }
-                client.setState(state);
-                client.getParams().setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
+                clientBuilder.setDefaultCookieStore(cookieStore);
+
+                RequestConfig reqConfig = RequestConfig.custom().
+                    setCookieSpec(CookieSpecs.BROWSER_COMPATIBILITY).build();
+                clientBuilder.setDefaultRequestConfig(reqConfig);
             }
 
-            PostMethod post = new PostMethod(uploadURL);
-            post.getParams().setSoTimeout((int) TimeUnit.MILLISECONDS.convert(LC.zimlet_deploy_timeout.intValue(),
-                    TimeUnit.SECONDS));
+            HttpPost post = new HttpPost(uploadURL);
+            SocketConfig config = SocketConfig.custom().setSoTimeout(
+                (int) TimeUnit.MILLISECONDS.convert(LC.zimlet_deploy_timeout.intValue(),
+                TimeUnit.SECONDS)).build();
+            clientBuilder.setDefaultSocketConfig(config);
+
             int statusCode = -1;
             try {
                 String contentType = URLConnection.getFileNameMap().getContentTypeFor(name);
-                Part[] parts = { new ByteArrayPart(data, name, contentType) };
-                post.setRequestEntity( new MultipartRequestEntity(parts, post.getParams()) );
-                statusCode = HttpClientUtil.executeMethod(client, post);
+                MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+                builder.addBinaryBody("upfile", data, ContentType.create(contentType), name);
+                HttpEntity httpEntity = builder.build();
+                post.setEntity(httpEntity);
+                HttpClient client = clientBuilder.build();
 
+                HttpResponse httpResp = HttpClientUtil.executeMethod(client, post);
+                statusCode = httpResp.getStatusLine().getStatusCode();
                 if (statusCode == 200) {
-                    String response = post.getResponseBodyAsString();
+                    String response = EntityUtils.toString(httpResp.getEntity());
+
                     // "raw" response should be of the format
                     //   200,'null','aac04dac-b3c8-4c26-b9c2-c2534f1d6ba1:79d2722f-d4c7-4304-9961-e7bcb146fc32'
                     String[] responseParts = response.split(",", 3);
@@ -1726,6 +1749,8 @@ public class ZimletUtil {
                 } else {
                     throw ZimletException.CANNOT_DEPLOY("Attachment post failed, status=" + statusCode, null);
                 }
+            } catch (HttpException e) {
+                throw new IOException("unexpected error during postAttachment operation: " + e.getMessage());
             } finally {
                 post.releaseConnection();
             }
@@ -1741,34 +1766,11 @@ public class ZimletUtil {
                 String adminUrl = URLUtil.getAdminURL(LC.zimbra_zmprov_default_soap_server.value());
                 mTransport = new SoapHttpTransport(adminUrl);
             }
+
             Element resp = mTransport.invoke(req);
             mAuth = new ZAuthToken(resp.getElement(AccountConstants.E_AUTH_TOKEN), true);
         }
 
-        private static class ByteArrayPart extends PartBase {
-            private byte[] mData;
-            private String mName;
-            public ByteArrayPart(byte[] data, String name, String type) throws IOException {
-                super(name, type, "UTF-8", "binary");
-                mName = name;
-                mData = data;
-            }
-            @Override
-            protected void sendData(OutputStream out) throws IOException {
-                out.write(mData);
-            }
-            @Override
-            protected long lengthOfData() throws IOException {
-                return mData.length;
-            }
-            @Override
-            protected void sendDispositionHeader(OutputStream out) throws IOException {
-                super.sendDispositionHeader(out);
-                StringBuilder buf = new StringBuilder();
-                buf.append("; filename=\"").append(mName).append("\"");
-                out.write(buf.toString().getBytes());
-            }
-        }
     }
 
     private static final int INSTALL_ZIMLET = 10;

@@ -27,6 +27,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.HeaderConstants;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.Pair;
@@ -47,6 +48,8 @@ public final class ProxyTarget {
     private final Server mServer;
     private final AuthToken mAuthToken;
     private final String mURL;
+    public static final String GQL_URI = "/service/extension/graphql";
+    public static final String SOAP_URI = "/service/soap";
 
     private int mMaxAttempts = 0;
     private long mTimeout = -1;
@@ -60,6 +63,10 @@ public final class ProxyTarget {
         mAuthToken = AuthToken.getCsrfUnsecuredAuthToken(authToken);
         String url;
         String requestStr = req.getRequestURI();
+        //workaround to proxy graphql requests
+        if(GQL_URI.equals(requestStr)) {
+            requestStr = SOAP_URI;
+        }
         String qs = req.getQueryString();
         if (qs != null)
             requestStr = requestStr + "?" + qs;
@@ -133,7 +140,10 @@ public final class ProxyTarget {
          * was supplied.  The server handler rejects a context which has account information but no authentication
          * info - see ZimbraSoapContext constructor - solution is to exclude the account info from the context.
          */
-        boolean excludeAccountDetails = AccountConstants.CHANGE_PASSWORD_REQUEST.equals(request.getQName());
+        boolean excludeAccountDetails = false;
+        if (AccountConstants.CHANGE_PASSWORD_REQUEST.equals(request.getQName()) || MailConstants.RECOVER_ACCOUNT_REQUEST.equals(request.getQName())) {
+            excludeAccountDetails = true;
+        }
         Element envelope = proto.soapEnvelope(request, zsc.toProxyContext(proto, excludeAccountDetails));
 
         SoapHttpTransport transport = null;

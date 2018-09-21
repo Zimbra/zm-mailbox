@@ -131,6 +131,16 @@ public final class ReSortingQueryResults implements ZimbraQueryResults {
                 return false;
         }
     }
+    
+    private boolean isReadSort() {
+        switch (sort) {
+            case READ_ASC:
+            case READ_DESC:
+                return true;
+            default:
+                return false;
+        }
+    }
 
     private void bufferAllHits() throws ServiceException {
         assert(mHitBuffer == null);
@@ -140,6 +150,33 @@ public final class ReSortingQueryResults implements ZimbraQueryResults {
         Comparator<ZimbraHit> comp;
         switch (sort) {
             default:
+                comp = new Comparator<ZimbraHit>() {
+                    @Override
+                    public int compare(ZimbraHit lhs, ZimbraHit rhs) {
+                        if (lhs  instanceof TaskHit) {
+                            return TaskHit.compareByDueDate(true, lhs, rhs);
+                        } else{
+                            return ZimbraHit.compareByReadFlag(true, lhs, rhs);
+                        } 
+                    }
+                };
+                break;
+            case READ_ASC:
+                comp = new Comparator<ZimbraHit>() {
+                    @Override
+                    public int compare(ZimbraHit lhs, ZimbraHit rhs) {
+                        return ZimbraHit.compareByReadFlag(true, lhs, rhs);
+                    }
+                };
+                break;
+            case READ_DESC:
+                comp = new Comparator<ZimbraHit>() {
+                    @Override
+                    public int compare(ZimbraHit lhs, ZimbraHit rhs) {
+                        return ZimbraHit.compareByReadFlag(false, lhs, rhs);
+                    }
+                };
+                break;
             case TASK_DUE_ASC:
                 comp = new Comparator<ZimbraHit>() {
                     @Override
@@ -210,6 +247,14 @@ public final class ReSortingQueryResults implements ZimbraQueryResults {
                     throw ServiceException.FAILURE("Invalid hit type, can only task-sort Tasks", null);
                 }
             }
+            
+            if (isReadSort()) {
+                if (!(cur instanceof ConversationHit  || cur instanceof ProxiedHit || cur instanceof MessageHit
+                   || cur instanceof MessagePartHit)) {
+                    throw ServiceException.FAILURE("Invalid hit type, can only read sort message, "
+                        + "conversation, message part", null);
+                }
+            }
 
             boolean skipHit = false;
 
@@ -224,7 +269,7 @@ public final class ReSortingQueryResults implements ZimbraQueryResults {
             }
 
             // handle cursor filtering
-            if (params != null && params.getCursor() != null) {
+            if (params != null && params.getCursor() != null && !SearchParams.isSortByReadFlag(params.getSortBy())) {
                 ZimbraHit firstHit = null;
                 if (params.getCursor().getSortValue() != null) {
                     firstHit = new ResultsPager.CursorHit(results, params.getCursor().getSortValue(),

@@ -22,10 +22,17 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
 import com.google.common.base.MoreObjects;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.IntervalRuleInterface;
 
+import io.leangen.graphql.annotations.GraphQLInputField;
+import io.leangen.graphql.annotations.GraphQLNonNull;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name=GqlConstants.CLASS_INTERVAL_RULE, description="Interval rule")
 public class IntervalRule
 implements IntervalRuleInterface {
 
@@ -34,6 +41,8 @@ implements IntervalRuleInterface {
      * @zm-api-field-description Rule interval count - a positive integer
      */
     @XmlAttribute(name=MailConstants.A_CAL_RULE_INTERVAL_IVAL /* ival */, required=true)
+    @GraphQLNonNull
+    @GraphQLQuery(name=GqlConstants.VALUE, description="Rule interval count - a positive integer")
     private final int ival;
 
     /**
@@ -44,7 +53,7 @@ implements IntervalRuleInterface {
         this(-1);
     }
 
-    public IntervalRule(int ival) {
+    public IntervalRule(@GraphQLNonNull @GraphQLInputField int ival) {
         this.ival = ival;
     }
 

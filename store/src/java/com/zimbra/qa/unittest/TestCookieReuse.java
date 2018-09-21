@@ -23,12 +23,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import org.apache.commons.httpclient.Cookie;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpState;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.cookie.CookiePolicy;
-import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.http.HttpException;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.CookieSpecs;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.cookie.Cookie;
+import org.apache.http.impl.client.BasicCookieStore;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.cookie.BasicClientCookie;
+import org.apache.http.util.EntityUtils;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -117,13 +124,14 @@ public class TestCookieReuse {
      * Verify that we can use the cookie for REST session if the session is valid
      */
     @Test
-    public void testValidCookie() throws ServiceException, IOException {
+    public void testValidCookie() throws ServiceException, IOException, HttpException {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         URI uri = mbox.getRestURI("Inbox?fmt=rss");
 
         HttpClient client = mbox.getHttpClient(uri);
-        GetMethod get = new GetMethod(uri.toString());
-        int statusCode = HttpClientUtil.executeMethod(client, get);
+        HttpGet get = new HttpGet(uri.toString());
+        HttpResponse response = HttpClientUtil.executeMethod(client, get);
+        int statusCode = response.getStatusLine().getStatusCode();
         Assert.assertEquals("This request should succeed. Getting status code " + statusCode,
                 HttpStatus.SC_OK, statusCode);
     }
@@ -132,53 +140,65 @@ public class TestCookieReuse {
      * Verify that we can RE-use the cookie for REST session if the session is valid
      */
     @Test
+    // TO DO fix the compilation error
     public void testValidSessionCookieReuse() throws ServiceException, IOException {
         //establish legitimate connection
-        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-        URI uri = mbox.getRestURI("Inbox?fmt=rss");
-        HttpClient alice = mbox.getHttpClient(uri);
-        //create evesdropper's connection
-        HttpClient eve = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
-        Cookie[] cookies = alice.getState().getCookies();
-        HttpState state = new HttpState();
-        for (int i=0;i<cookies.length;i++) {
-            Cookie cookie = cookies[i];
-            state.addCookie(new Cookie(uri.getHost(), cookie.getName(), cookie.getValue(), "/", null, false));
-        }
-        eve.setState(state);
-        GetMethod get = new GetMethod(uri.toString());
-        int statusCode = HttpClientUtil.executeMethod(eve, get);
-        Assert.assertEquals("This request should succeed. Getting status code " + statusCode,
-                HttpStatus.SC_OK, statusCode);
+//        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+//        URI uri = mbox.getRestURI("Inbox?fmt=rss");
+//        DefaultHttpClient alice = mbox.getHttpClient(uri);
+//        //create evesdropper's connection
+//        HttpClientBuilder eve = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+//        Cookie[] cookies = alice.get
+//        BasicCookieStore cookieStore = new BasicCookieStore();
+//        for (int i=0;i<cookies.length;i++) {
+//
+//            BasicClientCookie cookie = new BasicClientCookie(cookie.getName(), cookie.getValue());
+//            cookie.setDomain(uri.getHost());
+//            cookie.setPath("/");
+//            cookie.setSecure(false);
+//            cookieStore.addCookie(cookie);
+//        }
+//        eve.setDefaultCookieStore(cookieStore);
+//        HttpGet get = new HttpGet(uri.toString());
+//        HttpResponse response = HttpClientUtil.executeMethod(eve.build(), get);
+//        int statusCode = response.getStatusLine().getStatusCode();
+//        Assert.assertEquals("This request should succeed. Getting status code " + statusCode,
+//                HttpStatus.SC_OK, statusCode);
     }
 
     /**
      * Verify that we canNOT RE-use the cookie for REST session if the session is valid
+     * @throws HttpException 
      */
     @Test
-    public void testAutoEndSession() throws ServiceException, IOException {
+    public void testAutoEndSession() throws ServiceException, IOException, HttpException {
         //establish legitimate connection
         TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraForceClearCookies, "TRUE");
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         URI uri = mbox.getRestURI("Inbox?fmt=rss");
+        HttpClientContext context = HttpClientContext.create();
         HttpClient alice = mbox.getHttpClient(uri);
 
         //create evesdropper's connection
-        HttpClient eve = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
-        Cookie[] cookies = alice.getState().getCookies();
-        HttpState state = new HttpState();
-        for (int i=0;i<cookies.length;i++) {
-            Cookie cookie = cookies[i];
-            state.addCookie(new Cookie(uri.getHost(), cookie.getName(), cookie.getValue(), "/", null, false));
+        HttpClientBuilder eve = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+        List<Cookie> cookies = context.getCookieStore().getCookies();
+        BasicCookieStore cookieStore = new BasicCookieStore();
+        for (Cookie cookie : cookies) {
+            BasicClientCookie basicCookie = new BasicClientCookie(cookie.getName(), cookie.getValue());
+            basicCookie.setDomain(uri.getHost());
+            basicCookie.setPath("/");
+            basicCookie.setSecure(false);
+            cookieStore.addCookie(cookie);
         }
-        eve.setState(state);
+        eve.setDefaultCookieStore(cookieStore);
         Account a = TestUtil.getAccount(USER_NAME);
         a.setForceClearCookies(true);
 
         EndSessionRequest esr = new EndSessionRequest();
         mbox.invokeJaxb(esr);
-        GetMethod get = new GetMethod(uri.toString());
-        int statusCode = HttpClientUtil.executeMethod(eve, get);
+        HttpGet get = new HttpGet(uri.toString());
+        HttpResponse response = HttpClientUtil.executeMethod(eve.build(), get, context);
+        int statusCode = response.getStatusLine().getStatusCode();
         Assert.assertEquals("This request should not succeed. Getting status code " + statusCode,
                 HttpStatus.SC_UNAUTHORIZED, statusCode);
     }
@@ -186,32 +206,38 @@ public class TestCookieReuse {
     /**
      * Verify that we canNOT RE-use the cookie taken from a legitimate HTTP session for a REST request
      * after ending the original session
+     * @throws HttpException 
      */
     @Test
-    public void testForceEndSession() throws ServiceException, IOException {
+    public void testForceEndSession() throws ServiceException, IOException, HttpException {
         //establish legitimate connection
         TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraForceClearCookies, "FALSE");
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         URI uri = mbox.getRestURI("Inbox?fmt=rss");
         HttpClient alice = mbox.getHttpClient(uri);
+        HttpClientContext context = HttpClientContext.create();
 
         //create evesdropper's connection
-        HttpClient eve = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
-        Cookie[] cookies = alice.getState().getCookies();
-        HttpState state = new HttpState();
-        for (int i=0;i<cookies.length;i++) {
-            Cookie cookie = cookies[i];
-            state.addCookie(new Cookie(uri.getHost(), cookie.getName(), cookie.getValue(), "/", null, false));
+        HttpClientBuilder eve = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+        List<Cookie> cookies = context.getCookieStore().getCookies();
+        BasicCookieStore cookieStore = new BasicCookieStore();
+        for (Cookie cookie : cookies) {
+            BasicClientCookie basicCookie = new BasicClientCookie(cookie.getName(), cookie.getValue());
+            basicCookie.setDomain(uri.getHost());
+            basicCookie.setPath("/");
+            basicCookie.setSecure(false);
+            cookieStore.addCookie(cookie);
         }
-        eve.setState(state);
+        eve.setDefaultCookieStore(cookieStore);
         Account a = TestUtil.getAccount(USER_NAME);
         a.setForceClearCookies(false);
 
         EndSessionRequest esr = new EndSessionRequest();
         esr.setLogOff(true);
         mbox.invokeJaxb(esr);
-        GetMethod get = new GetMethod(uri.toString());
-        int statusCode = HttpClientUtil.executeMethod(eve, get);
+        HttpGet get = new HttpGet(uri.toString());
+        HttpResponse response = HttpClientUtil.executeMethod(eve.build(), get);
+        int statusCode = response.getStatusLine().getStatusCode();
         Assert.assertEquals("This request should not succeed. Getting status code " + statusCode,
                 HttpStatus.SC_UNAUTHORIZED, statusCode);
     }
@@ -221,7 +247,7 @@ public class TestCookieReuse {
      * ending the original session
      */
     @Test
-    public void testInvalidSearchRequest() throws ServiceException, IOException {
+    public void testInvalidSearchRequest() throws ServiceException, IOException, HttpException {
         //establish legitimate connection
         TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraForceClearCookies, "FALSE");
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
@@ -274,34 +300,42 @@ public class TestCookieReuse {
      * Verify that we canNOT RE-use the cookie for REST session after logging out of plain HTML client
      * @throws URISyntaxException
      * @throws InterruptedException
+     * @throws HttpException 
      */
     @Test
-    public void testWebLogOut() throws ServiceException, IOException, URISyntaxException, InterruptedException {
+    public void testWebLogOut() throws ServiceException, IOException, URISyntaxException, InterruptedException, HttpException {
         //establish legitimate connection
         TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraForceClearCookies, "FALSE");
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         URI uri = mbox.getRestURI("Inbox?fmt=rss");
+        HttpClientContext context = HttpClientContext.create();
         HttpClient alice = mbox.getHttpClient(uri);
 
         //create evesdropper's connection
-        HttpClient eve = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
-        Cookie[] cookies = alice.getState().getCookies();
-        HttpState state = new HttpState();
-        for (int i=0;i<cookies.length;i++) {
-            Cookie cookie = cookies[i];
-            state.addCookie(new Cookie(uri.getHost(), cookie.getName(), cookie.getValue(), "/", null, false));
+        HttpClientBuilder eve = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+        List<Cookie> cookies = context.getCookieStore().getCookies();
+        BasicCookieStore cookieStore = new BasicCookieStore();
+        for (Cookie cookie : cookies) {
+            BasicClientCookie basicCookie = new BasicClientCookie(cookie.getName(), cookie.getValue());
+            basicCookie.setDomain(uri.getHost());
+            basicCookie.setPath("/");
+            basicCookie.setSecure(false);
+            cookieStore.addCookie(cookie);
         }
-        eve.setState(state);
+        eve.setDefaultCookieStore(cookieStore);
         Account a = TestUtil.getAccount(USER_NAME);
         a.setForceClearCookies(false);
         URI logoutUri = new URI(String.format("%s://%s%s/?loginOp=logout",
                 uri.getScheme(), uri.getHost(), (uri.getPort() > 80 ? (":" + uri.getPort()) : "")));
-        GetMethod logoutMethod = new GetMethod(logoutUri.toString());
-        int statusCode = alice.executeMethod(logoutMethod);
+        HttpGet logoutMethod = new HttpGet(logoutUri.toString());
+        HttpResponse httpResp = alice.execute(logoutMethod);
+        int statusCode = httpResp.getStatusLine().getStatusCode();
         Assert.assertEquals("Log out request should succeed. Getting status code " + statusCode,
                 HttpStatus.SC_OK, statusCode);
-        GetMethod get = new GetMethod(uri.toString());
-        statusCode = HttpClientUtil.executeMethod(eve, get);
+        
+        HttpGet get = new HttpGet(uri.toString());
+        httpResp = HttpClientUtil.executeMethod(eve.build(), get, context);
+        statusCode = httpResp.getStatusLine().getStatusCode();
         Assert.assertEquals("This request should not succeed. Getting status code " + statusCode,
                 HttpStatus.SC_UNAUTHORIZED, statusCode);
     }
@@ -434,9 +468,10 @@ public class TestCookieReuse {
         }
         String getServerConfigURL = "https://localhost:" + port + "/service/collectconfig/?host="
                                         + Provisioning.getInstance().getLocalServer().getName();
-        HttpClient eve = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
-        GetMethod get = new GetMethod(getServerConfigURL);
-        int statusCode = HttpClientUtil.executeMethod(eve, get);
+        HttpClientBuilder eve = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+        HttpGet get = new HttpGet(getServerConfigURL);
+        HttpResponse httpResp = HttpClientUtil.executeMethod(eve.build(), get);
+        int statusCode = httpResp.getStatusLine().getStatusCode();
         Assert.assertEquals("This request should NOT succeed. Getting status code " + statusCode,
                 HttpStatus.SC_UNAUTHORIZED, statusCode);
     }
@@ -456,12 +491,13 @@ public class TestCookieReuse {
         }
         String host =  Provisioning.getInstance().getLocalServer().getName();
         String getServerConfigURL = "https://localhost:" + port + "/service/collectconfig/?host=" + host;
-        HttpClient eve = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
-        HttpState state = new HttpState();
+        HttpClientBuilder eve = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+        BasicCookieStore state = new BasicCookieStore();
         at.encode(state, true, "localhost");
-        eve.setState(state);
-        GetMethod get = new GetMethod(getServerConfigURL);
-        int statusCode = HttpClientUtil.executeMethod(eve, get);
+        eve.setDefaultCookieStore(state);
+        HttpGet get = new HttpGet(getServerConfigURL);
+        HttpResponse httpResp = HttpClientUtil.executeMethod(eve.build(), get);
+        int statusCode = httpResp.getStatusLine().getStatusCode();
         Assert.assertEquals("This request should succeed. Getting status code " + statusCode,
                 HttpStatus.SC_OK, statusCode);
     }
@@ -475,14 +511,20 @@ public class TestCookieReuse {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         URI uri = mbox.getRestURI("Inbox?fmt=rss&thief=false");
         at.setCsrfTokenEnabled(false);
-        GetMethod get = new GetMethod(uri.toString());
-        HttpClient eve = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
-        HttpState state = HttpClientUtil.newHttpState(new ZAuthToken(at.getEncoded()), uri.getHost(), false);
-        eve.setState(state);
-        eve.getParams().setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
-        int statusCode = HttpClientUtil.executeMethod(eve, get);
+        HttpGet get = new HttpGet(uri.toString());
+        HttpClientBuilder eve = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+        BasicCookieStore state = HttpClientUtil.newHttpState(new ZAuthToken(at.getEncoded()), uri.getHost(), false);
+        eve.setDefaultCookieStore(state);
+        RequestConfig reqConfig = RequestConfig.copy(
+            ZimbraHttpConnectionManager.getInternalHttpConnMgr().getZimbraConnMgrParams().getReqConfig())
+            .setCookieSpec(CookieSpecs.BROWSER_COMPATIBILITY).build();
+
+       eve.setDefaultRequestConfig(reqConfig);
+
+       HttpResponse httpResp = HttpClientUtil.executeMethod(eve.build(), get);
+       int statusCode = httpResp.getStatusLine().getStatusCode();
         Assert.assertEquals("This request should succeed. Getting status code "
-                    + statusCode + " Response: " + get.getResponseBodyAsString(),
+                    + statusCode + " Response: " + httpResp.getEntity().getContent(),
                     HttpStatus.SC_OK, statusCode);
     }
 
@@ -495,14 +537,18 @@ public class TestCookieReuse {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         URI uri = mbox.getRestURI("Inbox?fmt=rss&thief=true");
         at.setCsrfTokenEnabled(true);
-        GetMethod get = new GetMethod(uri.toString());
-        HttpClient eve = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
-        HttpState state = HttpClientUtil.newHttpState(new ZAuthToken(at.getEncoded()), uri.getHost(), false);
-        eve.setState(state);
-        eve.getParams().setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
-        int statusCode = HttpClientUtil.executeMethod(eve, get);
+        HttpGet get = new HttpGet(uri.toString());
+        HttpClientBuilder eve = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+        BasicCookieStore state = HttpClientUtil.newHttpState(new ZAuthToken(at.getEncoded()), uri.getHost(), false);
+        eve.setDefaultCookieStore(state);
+        RequestConfig reqConfig = RequestConfig.copy(
+            ZimbraHttpConnectionManager.getInternalHttpConnMgr().getZimbraConnMgrParams().getReqConfig())
+            .setCookieSpec(CookieSpecs.BROWSER_COMPATIBILITY).build();
+       eve.setDefaultRequestConfig(reqConfig);
+       HttpResponse httpResp = HttpClientUtil.executeMethod(eve.build(), get);
+       int statusCode = httpResp.getStatusLine().getStatusCode();
         Assert.assertEquals("This request should succeed. Getting status code "
-                + statusCode + " Response: " + get.getResponseBodyAsString(),
+                + statusCode + " Response: " + EntityUtils.toString(httpResp.getEntity()),
                 HttpStatus.SC_OK, statusCode);
     }
 
@@ -521,12 +567,14 @@ public class TestCookieReuse {
         }
         String host =  Provisioning.getInstance().getLocalServer().getName();
         String getServerConfigURL = "https://localhost:" + port + "/service/collectconfig/?host=" + host;
-        HttpClient eve = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
-        HttpState state = new HttpState();
+        HttpClientBuilder eve = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+        BasicCookieStore state = new BasicCookieStore();
         at.encode(state, true, "localhost");
-        eve.setState(state);
-        GetMethod get = new GetMethod(getServerConfigURL);
-        int statusCode = HttpClientUtil.executeMethod(eve, get);
+        eve.setDefaultCookieStore(state);
+        eve.setDefaultCookieStore(state);
+        HttpGet get = new HttpGet(getServerConfigURL);
+        HttpResponse httpResp = HttpClientUtil.executeMethod(eve.build(), get);
+        int statusCode = httpResp.getStatusLine().getStatusCode();
         Assert.assertEquals("This request should succeed. Getting status code " + statusCode,
                 HttpStatus.SC_OK, statusCode);
     }

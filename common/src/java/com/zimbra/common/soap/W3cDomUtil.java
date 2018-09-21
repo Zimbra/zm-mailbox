@@ -17,6 +17,7 @@
 
 package com.zimbra.common.soap;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -24,6 +25,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.regex.Pattern;
 
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
@@ -54,7 +56,9 @@ import org.xml.sax.SAXNotSupportedException;
 import org.xml.sax.SAXParseException;
 
 import com.google.common.base.Strings;
+import com.google.common.io.ByteStreams;
 import com.google.common.io.Closeables;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element.ElementFactory;
 import com.zimbra.common.util.Constants;
@@ -281,17 +285,42 @@ public class W3cDomUtil {
         }
     }
 
+    public static ByteArrayInputStream removeInvalidXMLChars(byte[] bytes) {
+        String xml = new String(bytes);
+        Pattern xmlInvalidChars = Pattern.compile(LC.xml_invalid_chars_regex.value());
+        xml = xmlInvalidChars.matcher(xml).replaceAll("");
+        ByteArrayInputStream is = new ByteArrayInputStream(xml.getBytes());
+        return is;
+    }
+
     public static Document parseXMLToDoc(InputStream is)
     throws XmlParseException {
+        byte[] bytes = null;
+        ByteArrayInputStream bais = null;
         javax.xml.parsers.DocumentBuilder jaxbBuilder = getBuilder();
         jaxbBuilder.reset();
         jaxbBuilder.setErrorHandler(new JAXPErrorHandler());
         try {
-            return jaxbBuilder.parse(is);
+            bytes = ByteStreams.toByteArray(is);
+            bais = new ByteArrayInputStream(bytes);
+            return jaxbBuilder.parse(bais);
         } catch (SAXException | IOException e) {
-            /* Bug 93816 log actual problem but throw generic one to avoid information disclosure */
-            logParseProblem(e);
-            throw XmlParseException.PARSE_ERROR();
+            if (e.getMessage().contains("invalid XML character")) {
+                try {
+                    ZimbraLog.backup.debug("SAXException for XML parsing, removing invalid characters and parsing again.", e);
+                    bais = removeInvalidXMLChars(bytes);
+                    return jaxbBuilder.parse(bais);
+                } catch (SAXException | IOException ex) {
+                    logParseProblem(ex);
+                    throw XmlParseException.PARSE_ERROR();
+                }
+            } else {
+                /* Bug 93816 log actual problem but throw generic one to avoid information disclosure */
+                logParseProblem(e);
+                throw XmlParseException.PARSE_ERROR();
+            }
+        } finally {
+            Closeables.closeQuietly(bais);
         }
     }
 

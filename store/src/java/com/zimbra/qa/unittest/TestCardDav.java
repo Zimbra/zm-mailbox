@@ -32,12 +32,13 @@ import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.methods.ByteArrayRequestEntity;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.httpclient.methods.PutMethod;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -229,10 +230,10 @@ public class TestCardDav {
             throws IOException, XmlParseException {
         TestCalDav.PropFindMethod method = new TestCalDav.PropFindMethod(
                 TestCalDav.getFullUrl(UrlNamespace.getAddressbookHomeSetUrl(acct.getName())));
-        method.addRequestHeader("Depth", "1");
-        method.addRequestHeader("Brief", "t");
-        method.addRequestHeader("Prefer", "return=minimal");
-        method.addRequestHeader("Accept", "*/*");
+        method.addHeader("Depth", "1");
+        method.addHeader("Brief", "t");
+        method.addHeader("Prefer", "return=minimal");
+        method.addHeader("Accept", "*/*");
         Document doc = TestCalDav.doMethodYieldingMultiStatus(method, acct, iosContactsPropfind);
         return doc;
     }
@@ -241,8 +242,8 @@ public class TestCardDav {
     public void badBasicAuthToContacts() throws Exception {
         assertNotNull("Test account object", dav1);
         String calFolderUrl = TestCalDav.getFolderUrl(dav1, "Contacts");
-        HttpClient client = new HttpClient();
-        GetMethod method = new GetMethod(calFolderUrl);
+        HttpClient client = HttpClientBuilder.create().build();
+        HttpGet method = new HttpGet(calFolderUrl);
         TestCalDav.addBasicAuthHeaderForUser(method, dav1, "badPassword");
         HttpMethodExecutor.execute(client, method, HttpStatus.SC_UNAUTHORIZED);
     }
@@ -265,9 +266,9 @@ public class TestCardDav {
         url.append(DavServlet.DAV_PATH).append("/").append(dav1.getName()).append("/OtherContacts/");
         MkColMethod method = new MkColMethod(url.toString());
         TestCalDav.addBasicAuthHeaderForUser(method, dav1);
-        HttpClient client = new HttpClient();
-        method.addRequestHeader("Content-Type", MimeConstants.CT_TEXT_XML);
-        method.setRequestEntity(new ByteArrayRequestEntity(xml.getBytes(), MimeConstants.CT_TEXT_XML));
+        HttpClient client = HttpClientBuilder.create().build();
+        method.addHeader("Content-Type", MimeConstants.CT_TEXT_XML);
+        method.setEntity(new ByteArrayEntity(xml.getBytes(), org.apache.http.entity.ContentType.create(MimeConstants.CT_TEXT_XML)));
         HttpMethodExecutor.execute(client, method, HttpStatus.SC_MULTI_STATUS);
 
         ZMailbox.Options options = new ZMailbox.Options();
@@ -288,65 +289,65 @@ public class TestCardDav {
         String davBaseName = "SCRUFF1.vcf";  // Based on UID
         String contactsFolderUrl = TestCalDav.getFolderUrl(dav1, "Contacts");
         String url = String.format("%s%s", contactsFolderUrl, davBaseName);
-        HttpClient client = new HttpClient();
-        PutMethod putMethod = new PutMethod(url);
+        HttpClient client = HttpClientBuilder.create().build();
+        HttpPut putMethod = new HttpPut(url);
         TestCalDav.addBasicAuthHeaderForUser(putMethod, dav1);
-        putMethod.addRequestHeader("Content-Type", "text/vcard");
+        putMethod.addHeader("Content-Type", "text/vcard");
 
-        putMethod.setRequestEntity(
-                new ByteArrayRequestEntity(simpleVcard.getBytes(), MimeConstants.CT_TEXT_VCARD));
+        putMethod.setEntity(
+                new ByteArrayEntity(simpleVcard.getBytes(), org.apache.http.entity.ContentType.create(MimeConstants.CT_TEXT_VCARD)));
         // Bug 84246 this used to fail with 409 Conflict because we used to require an If-None-Match header
         HttpMethodExecutor.execute(client, putMethod, HttpStatus.SC_CREATED);
 
         // Check that trying to put the same thing again when we don't expect it to exist (i.e. Using If-None-Match
         // header) will fail.
-        putMethod = new PutMethod(url);
+        putMethod = new HttpPut(url);
         TestCalDav.addBasicAuthHeaderForUser(putMethod, dav1);
-        putMethod.addRequestHeader("Content-Type", "text/vcard");
-        putMethod.addRequestHeader(DavProtocol.HEADER_IF_NONE_MATCH, "*");
-        putMethod.setRequestEntity(
-                new ByteArrayRequestEntity(simpleVcard.getBytes(), MimeConstants.CT_TEXT_VCARD));
+        putMethod.addHeader("Content-Type", "text/vcard");
+        putMethod.addHeader(DavProtocol.HEADER_IF_NONE_MATCH, "*");
+        putMethod.setEntity(
+                new ByteArrayEntity(simpleVcard.getBytes(), org.apache.http.entity.ContentType.create(MimeConstants.CT_TEXT_VCARD)));
         HttpMethodExecutor.execute(client, putMethod, HttpStatus.SC_PRECONDITION_FAILED);
     }
 
     @Test
     public void appleStyleGroup() throws ServiceException, IOException {
         String contactsFolderUrl = TestCalDav.getFolderUrl(dav1, "Contacts");
-        HttpClient client = new HttpClient();
+        HttpClient client = HttpClientBuilder.create().build();
 
-        PostMethod postMethod = new PostMethod(contactsFolderUrl);
+        HttpPost postMethod = new HttpPost(contactsFolderUrl);
         TestCalDav.addBasicAuthHeaderForUser(postMethod, dav1);
-        postMethod.addRequestHeader("Content-Type", "text/vcard");
-        postMethod.setRequestEntity(
-                new ByteArrayRequestEntity(rachelVcard.getBytes(), MimeConstants.CT_TEXT_VCARD));
+        postMethod.addHeader("Content-Type", "text/vcard");
+        postMethod.setEntity(
+                new ByteArrayEntity(rachelVcard.getBytes(), org.apache.http.entity.ContentType.create( MimeConstants.CT_TEXT_VCARD)));
         HttpMethodExecutor.execute(client, postMethod, HttpStatus.SC_CREATED);
 
-        postMethod = new PostMethod(contactsFolderUrl);
+        postMethod = new HttpPost(contactsFolderUrl);
         TestCalDav.addBasicAuthHeaderForUser(postMethod, dav1);
-        postMethod.addRequestHeader("Content-Type", "text/vcard");
-        postMethod.setRequestEntity(
-                new ByteArrayRequestEntity(blueGroupCreate.getBytes(), MimeConstants.CT_TEXT_VCARD));
+        postMethod.addHeader("Content-Type", "text/vcard");
+        postMethod.setEntity(
+                new ByteArrayEntity(blueGroupCreate.getBytes(), org.apache.http.entity.ContentType.create(MimeConstants.CT_TEXT_VCARD)));
         HttpMethodExecutor exe = HttpMethodExecutor.execute(client, postMethod, HttpStatus.SC_CREATED);
         exe.getNonNullHeaderValue("Location", "When creating Group");
 
-        postMethod = new PostMethod(contactsFolderUrl);
+        postMethod = new HttpPost(contactsFolderUrl);
         TestCalDav.addBasicAuthHeaderForUser(postMethod, dav1);
-        postMethod.addRequestHeader("Content-Type", "text/vcard");
-        postMethod.setRequestEntity(new ByteArrayRequestEntity(parisVcard.getBytes(),
-                MimeConstants.CT_TEXT_VCARD));
+        postMethod.addHeader("Content-Type", "text/vcard");
+        postMethod.setEntity(new ByteArrayEntity(parisVcard.getBytes(),
+            org.apache.http.entity.ContentType.create(MimeConstants.CT_TEXT_VCARD)));
         HttpMethodExecutor.execute(client, postMethod, HttpStatus.SC_CREATED);
 
         String url = String.format("%s%s", contactsFolderUrl, "F53A6F96-566F-46CC-8D48-A5263FAB5E38.vcf");
-        PutMethod putMethod = new PutMethod(url);
+        HttpPut putMethod = new HttpPut(url);
         TestCalDav.addBasicAuthHeaderForUser(putMethod, dav1);
-        putMethod.addRequestHeader("Content-Type", "text/vcard");
-        putMethod.setRequestEntity(new ByteArrayRequestEntity(blueGroupModify.getBytes(),
-                MimeConstants.CT_TEXT_VCARD));
+        putMethod.addHeader("Content-Type", "text/vcard");
+        putMethod.setEntity(new ByteArrayEntity(blueGroupModify.getBytes(),
+            org.apache.http.entity.ContentType.create(MimeConstants.CT_TEXT_VCARD)));
         HttpMethodExecutor.execute(client, putMethod, HttpStatus.SC_NO_CONTENT);
 
-        GetMethod getMethod = new GetMethod(url);
+        HttpGet getMethod = new HttpGet(url);
         TestCalDav.addBasicAuthHeaderForUser(getMethod, dav1);
-        getMethod.addRequestHeader("Content-Type", "text/vcard");
+        getMethod.addHeader("Content-Type", "text/vcard");
         exe = HttpMethodExecutor.execute(client, getMethod, HttpStatus.SC_OK);
         String respBody = exe.getResponseAsString();
         String [] expecteds = {
@@ -388,19 +389,19 @@ public class TestCardDav {
     @Test
     public void xBusyMacAttach() throws ServiceException, IOException {
         String contactsFolderUrl = TestCalDav.getFolderUrl(dav1, "Contacts");
-        HttpClient client = new HttpClient();
+        HttpClient client = HttpClientBuilder.create().build();
 
-        PostMethod postMethod = new PostMethod(contactsFolderUrl);
+        HttpPost postMethod = new HttpPost(contactsFolderUrl);
         TestCalDav.addBasicAuthHeaderForUser(postMethod, dav1);
-        postMethod.addRequestHeader("Content-Type", "text/vcard");
-        postMethod.setRequestEntity(new ByteArrayRequestEntity(smallBusyMacAttach.getBytes(),
-                MimeConstants.CT_TEXT_VCARD));
+        postMethod.addHeader("Content-Type", "text/vcard");
+        postMethod.setEntity(new ByteArrayEntity(smallBusyMacAttach.getBytes(),
+            org.apache.http.entity.ContentType.create(MimeConstants.CT_TEXT_VCARD)));
         HttpMethodExecutor exe = HttpMethodExecutor.execute(client, postMethod, HttpStatus.SC_CREATED);
         String location = exe.getNonNullHeaderValue("Location", "When creating VCARD");
         String url = String.format("%s%s", contactsFolderUrl, location.substring(location.lastIndexOf('/') + 1));
-        GetMethod getMethod = new GetMethod(url);
+        HttpGet getMethod = new HttpGet(url);
         TestCalDav.addBasicAuthHeaderForUser(getMethod, dav1);
-        getMethod.addRequestHeader("Content-Type", "text/vcard");
+        getMethod.addHeader("Content-Type", "text/vcard");
         exe = HttpMethodExecutor.execute(client, getMethod, HttpStatus.SC_OK);
         String respBody = exe.getResponseAsString();
         String [] expecteds = {
@@ -448,21 +449,21 @@ public class TestCardDav {
         assertNotNull("Test account object", dav2);
         shareContacts();
         String contactsFolderUrl = TestCalDav.getFolderUrl(dav1, sharedContactFolderName());
-        HttpClient client = new HttpClient();
+        HttpClient client = HttpClientBuilder.create().build();
 
-        PostMethod postMethod = new PostMethod(contactsFolderUrl);
+        HttpPost postMethod = new HttpPost(contactsFolderUrl);
         TestCalDav.addBasicAuthHeaderForUser(postMethod, dav1);
-        postMethod.addRequestHeader("Content-Type", "text/vcard");
-        postMethod.setRequestEntity(new ByteArrayRequestEntity(parisVcard.getBytes(),
-                MimeConstants.CT_TEXT_VCARD));
+        postMethod.addHeader("Content-Type", "text/vcard");
+        postMethod.setEntity(new ByteArrayEntity(parisVcard.getBytes(),
+            org.apache.http.entity.ContentType.create(MimeConstants.CT_TEXT_VCARD)));
         HttpMethodExecutor exe = HttpMethodExecutor.execute(client, postMethod, HttpStatus.SC_CREATED);
         String location =
                 exe.getNonNullHeaderValue("Location", "When creating VCARD in shared address book");
         String url = String.format("%s%s",contactsFolderUrl,
                 location.substring(location.lastIndexOf('/') + 1));
-        GetMethod getMethod = new GetMethod(url);
+        HttpGet getMethod = new HttpGet(url);
         TestCalDav.addBasicAuthHeaderForUser(getMethod, dav1);
-        getMethod.addRequestHeader("Content-Type", "text/vcard");
+        getMethod.addHeader("Content-Type", "text/vcard");
         exe = HttpMethodExecutor.execute(client, getMethod, HttpStatus.SC_OK);
     }
 

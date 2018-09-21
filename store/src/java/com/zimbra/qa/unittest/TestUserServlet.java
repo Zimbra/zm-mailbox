@@ -33,11 +33,14 @@ import javax.mail.util.SharedByteArrayInputStream;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
-import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.http.HttpException;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.InputStreamEntity;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -67,7 +70,6 @@ import com.zimbra.cs.util.JMSession;
 import net.fortuna.ical4j.data.CalendarOutputter;
 import net.fortuna.ical4j.model.Date;
 import net.fortuna.ical4j.model.Property;
-import net.fortuna.ical4j.model.ValidationException;
 import net.fortuna.ical4j.model.component.VEvent;
 import net.fortuna.ical4j.model.parameter.FmtType;
 import net.fortuna.ical4j.model.parameter.Value;
@@ -157,9 +159,10 @@ public class TestUserServlet{
      * Test that can import into a new calendar from ICALENDAR containing an inline ATTACHment.
      * Test that it is possible to export calendar entry with an attachment with the attachment
      * inlined if icalAttach=inline or ignoring the attachment if icalAttach=none
+     * @throws Exception 
      */
     @Test
-    public void testIcsImportExport() throws IOException, ValidationException, ServiceException {
+    public void testIcsImportExport() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         String calName = NAME_PREFIX + "2ndCalendar";
         String calUri = String.format("/%s?fmt=ics", calName);
@@ -185,13 +188,13 @@ public class TestUserServlet{
         outputter.output(calendar, buf);
         URI uri = mbox.getRestURI(calUri);
         HttpClient client = mbox.getHttpClient(uri);
-        PostMethod post = new PostMethod(uri.toString());
-        post.setRequestEntity(new InputStreamRequestEntity(new ByteArrayInputStream(buf.toByteArray()),
-                MimeConstants.CT_TEXT_CALENDAR));
+        HttpPost post = new HttpPost(uri.toString());
+        post.setEntity(new InputStreamEntity(new ByteArrayInputStream(buf.toByteArray()),
+                ContentType.create(MimeConstants.CT_TEXT_CALENDAR)));
         ZimbraLog.test.info("testIcsImportExport:ICS to be imported:%s", new String(buf.toByteArray()));
         TestCalDav.HttpMethodExecutor.execute(client, post, HttpStatus.SC_OK);
         uri = mbox.getRestURI(calUri + "&icalAttach=inline");
-        GetMethod get = new GetMethod(uri.toString());
+        HttpGet get = new HttpGet(uri.toString());
         TestCalDav.HttpMethodExecutor executor = new TestCalDav.HttpMethodExecutor(client, get, HttpStatus.SC_OK);
         String respIcal = new String(executor.responseBodyBytes, MimeConstants.P_CHARSET_UTF8);
         ZimbraLog.test.info("testIcsImportExport:ICS exported (with icalAttach=inline):%s", respIcal);
@@ -200,36 +203,37 @@ public class TestUserServlet{
         String fromAttach = respIcal.substring(attachNdx);
         Assert.assertTrue("BINARY should be present", -1 != fromAttach.indexOf("VALUE=BINARY"));
         uri = mbox.getRestURI(calUri + "&icalAttach=none");
-        get = new GetMethod(uri.toString());
+        get = new HttpGet(uri.toString());
         executor = new TestCalDav.HttpMethodExecutor(client, get, HttpStatus.SC_OK);
         respIcal = new String(executor.responseBodyBytes, MimeConstants.P_CHARSET_UTF8);
         ZimbraLog.test.debug("testIcsImportExport:ICS exported (with icalAttach=none):%s", respIcal);
         Assert.assertTrue("ATTACH should be present", -1 == respIcal.indexOf("ATTACH;"));
         uri = mbox.getRestURI(calUri);
-        get = new GetMethod(uri.toString());
+        get = new HttpGet(uri.toString());
         executor = new TestCalDav.HttpMethodExecutor(client, get, HttpStatus.SC_OK);
         respIcal = new String(executor.responseBodyBytes, MimeConstants.P_CHARSET_UTF8);
         ZimbraLog.test.debug("testIcsImportExport:ICS exported (default - same as icalAttach=none):%s", respIcal);
         Assert.assertTrue("ATTACH should be present", -1 == respIcal.indexOf("ATTACH;"));
     }
 
-    /** Bug 84362 Confirm that import with London timezone incorrectly identified as "GMT" works */
+    /** Bug 84362 Confirm that import with London timezone incorrectly identified as "GMT" works 
+     * @throws Exception */
     @Test
-    public void testIcsImportExportGMTtoLondon() throws IOException, ServiceException {
+    public void testIcsImportExportGMTtoLondon() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         String calName = NAME_PREFIX + "3rdCalendar";
         String calUri = String.format("/%s?fmt=ics", calName);
         TestUtil.createFolder(mbox, calName, ZFolder.View.appointment);
         URI uri = mbox.getRestURI(calUri);
         HttpClient client = mbox.getHttpClient(uri);
-        PostMethod post = new PostMethod(uri.toString());
-        post.setRequestEntity(new InputStreamRequestEntity(new ByteArrayInputStream(
+        HttpPost post = new HttpPost(uri.toString());
+        post.setEntity(new InputStreamEntity(new ByteArrayInputStream(
                 TestCalDav.LOTUS_NOTES_WITH_BAD_GMT_TZID.getBytes()),
-                MimeConstants.CT_TEXT_CALENDAR));
+            org.apache.http.entity.ContentType.create(MimeConstants.CT_TEXT_CALENDAR)));
         ZimbraLog.test.debug("testIcsImportExport:ICS to be imported:%s", TestCalDav.LOTUS_NOTES_WITH_BAD_GMT_TZID);
         TestCalDav.HttpMethodExecutor.execute(client, post, HttpStatus.SC_OK);
         uri = mbox.getRestURI(calUri);
-        GetMethod get = new GetMethod(uri.toString());
+        HttpGet get = new HttpGet(uri.toString());
         TestCalDav.HttpMethodExecutor executor = new TestCalDav.HttpMethodExecutor(client, get, HttpStatus.SC_OK);
         String respIcal = new String(executor.responseBodyBytes, MimeConstants.P_CHARSET_UTF8);
         ZimbraLog.test.debug("testIcsImportExport:ICS exported:%s", respIcal);
@@ -267,9 +271,10 @@ public class TestUserServlet{
     /**
      * Verifies that the value of {@code zimbraNotebookSanitizeHtml} does not
      * affect the {@code Content-Type} header (bug 67752).
+     * @throws HttpException 
      */
     @Test
-    public void testSanitizeHtmlContentType() throws ServiceException, IOException {
+    public void testSanitizeHtmlContentType() throws ServiceException, IOException, HttpException {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         ZDocument doc = TestUtil.createDocument(mbox,
             Integer.toString(Mailbox.ID_FOLDER_BRIEFCASE), NAME_PREFIX + " testSanitizeHtmlContentType.txt",
@@ -316,14 +321,15 @@ public class TestUserServlet{
         }
         Assert.assertEquals(expectedOrder, results);
     }
-    private void checkContentType(ZMailbox mbox, ZDocument doc) throws ServiceException, IOException {
+    private void checkContentType(ZMailbox mbox, ZDocument doc) throws ServiceException, IOException, HttpException {
         URI uri = mbox.getRestURI("?id=" + doc.getId());
         HttpClient client = mbox.getHttpClient(uri);
-        GetMethod get = new GetMethod(uri.toString());
-        int statusCode = HttpClientUtil.executeMethod(client, get);
+        HttpGet get = new HttpGet(uri.toString());
+        HttpResponse httpResp = HttpClientUtil.executeMethod(client, get);
+        int statusCode = httpResp.getStatusLine().getStatusCode();
         get.releaseConnection();
         Assert.assertEquals(200, statusCode);
-        Assert.assertEquals("text/plain", get.getResponseHeader("Content-Type").getValue());
+        Assert.assertEquals("text/plain", httpResp.getFirstHeader("Content-Type").getValue());
     }
 
     @After

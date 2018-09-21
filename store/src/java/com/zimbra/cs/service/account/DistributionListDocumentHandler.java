@@ -142,7 +142,7 @@ public abstract class DistributionListDocumentHandler extends AccountDocumentHan
             // client issues a BatchRequest containing CreateDistributionList and
             // DistributionListAction addMembers requests.  If the newly created DL has
             // not synced to replica yet, the prov.getGroup will trturn null.
-            group = prov.getGroup(Key.DistributionListBy.id, group.getId(), true);
+            group = prov.getGroup(Key.DistributionListBy.id, group.getId(), true, false);
 
             if (group == null) {
                 throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(groupName);

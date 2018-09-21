@@ -30,7 +30,6 @@ import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
-import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.DeleteDistributionListRequest;
 import com.zimbra.soap.admin.message.DeleteDistributionListResponse;
@@ -68,10 +67,11 @@ public class DeleteDistributionList extends DistributionListDocumentHandler {
 
         Group group = getGroupFromContext(context);
         String id = req.getId();
+        boolean cascadeDelete = req.isCascadeDelete();
         defendAgainstGroupHarvesting(group, DistributionListBy.id, id, zsc,
             Admin.R_deleteGroup, Admin.R_deleteDistributionList);
 
-        prov.deleteGroup(group.getId());
+        prov.deleteGroup(group.getId(), cascadeDelete);
 
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "DeleteDistributionList","name", group.getName(), "id", group.getId()}));

@@ -182,12 +182,20 @@ public final class DbSearch {
         if (sort.getDirection() == SortBy.Direction.DESC) {
             orderBy.append(" DESC");
         }
+
+        if (sort.getDirection() == SortBy.Direction.ASC && sort.getKey() == SortBy.Key.UNREAD) {
+            orderBy.append(" DESC");
+        }
         if (sort.getKey() == SortBy.Key.UNREAD) {
+            /* See also ResultsPager.forwardFindFirst() */
             return orderBy.append(", mi.id DESC").toString();
         }
         /* Successive searches using cursors need a predictable order, so add additional search column. */
         if (Key.ID != sort.getKey()) {
-            return orderBy.append(", mi.id").toString();
+            orderBy.append(", mi.id");
+            if (sort.getDirection() == SortBy.Direction.DESC) {
+                orderBy.append(" DESC");
+            }
         } 
         return orderBy.toString();
     }

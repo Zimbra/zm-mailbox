@@ -22,9 +22,14 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
 import com.google.common.base.MoreObjects;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 
+import io.leangen.graphql.annotations.GraphQLInputField;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name=GqlConstants.CLASS_MODIFY_CONTACT_GROUP_MEMBER, description="Contact group members to modify")
 public class ModifyContactGroupMember extends NewContactGroupMember {
 
     /**
@@ -53,6 +58,7 @@ public class ModifyContactGroupMember extends NewContactGroupMember {
         return new ModifyContactGroupMember(type, value);
     }
 
+    @GraphQLInputField(name=GqlConstants.OPERATION, description="Specify + or - to add or remove")
     public void setOperation(ModifyGroupMemberOperation operation) { this.operation = operation; }
     public ModifyGroupMemberOperation getOperation() { return operation; }
 

@@ -27,16 +27,19 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Matcher;
 
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.html.owasp.OwaspDefang;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
@@ -56,6 +59,7 @@ public class DefangFilterTest {
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
         EMAIL_BASE_DIR = MailboxTestUtil.getZimbraServerDir("") + EMAIL_BASE_DIR;
+        LC.zimbra_use_owasp_html_sanitizer.setDefault(false);
         Provisioning prov = Provisioning.getInstance();
         Account acct = prov.createAccount("test@in.telligent.com", "secret", new HashMap<String, Object>());
     }
@@ -81,7 +85,16 @@ public class DefangFilterTest {
     }
 
     public void defangStyleUnwantedFunc(String styleValue, String expected) throws Exception {
-        String after = DefangFilter.STYLE_UNWANTED_FUNC.matcher(styleValue).replaceAll("");
+        Matcher matcher = DefangFilter.STYLE_UNWANTED_FUNC.matcher(styleValue);
+        StringBuffer stringBuffer = new StringBuffer();
+        while (matcher.find()) {
+            String match = matcher.group();
+            if(!match.startsWith("rgb")&&!match.startsWith("media")&&!match.startsWith("and")) {
+                matcher.appendReplacement(stringBuffer, "");
+            }
+        }
+        matcher.appendTail(stringBuffer);
+        String after = stringBuffer.toString();
         Assert.assertEquals("StyleUnwantedFunc result", expected, after);
     }
 
@@ -1314,7 +1327,6 @@ public class DefangFilterTest {
                 + "data-mce-src=\"/home/ews01@zdev-vm002.eng.zimbra.com/Briefcase/rupali.jpeg\"></div>";
         htmlStream = new ByteArrayInputStream(html.getBytes());
         result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
-        System.out.println(result);
         Assert.assertTrue(result.contains("dfsrc=\"doc:Briefcase/rupali.jpeg\""));
         Assert.assertTrue(result.contains("data-mce-src=\"/home/ews01"));
     }
@@ -1417,7 +1429,7 @@ public class DefangFilterTest {
         result = DefangFilter.removeAnySpacesAndEncodedChars(html);
         Assert.assertTrue(result.startsWith("javascript:"));
     }
-    
+
     /**
      * Check span does not contain repetition on "'" character
      * @throws Exception
@@ -1429,6 +1441,51 @@ public class DefangFilterTest {
         String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
             true);
         Assert.assertTrue(!result.contains("'''''"));
-        
+
+    }
+
+    /**
+     * Check alert is removed from script.
+     */
+    @Test
+    public void testZCS5696() throws Exception {
+        String html = "<textarea></textarea/><body/oNloAd=alert('bug109020-2')>bug109020-2";
+        InputStream htmlStream = new ByteArrayInputStream(html.getBytes());
+        String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+            true);
+        Assert.assertTrue(!result.contains("alert"));
+
+        html = "<textarea></textarea/><body/oNloAd=javascript:alert('bug109020-2')>bug109020-2";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
+        Assert.assertTrue(!result.contains("alert"));
+    }
+
+    /**
+     * Checking mime which were causing high CPU utilization
+     * @throws Exception
+     */
+    @Test
+    public void testzbug736Mime1() throws Exception {
+        LC.zimbra_use_owasp_html_sanitizer.setDefault(false);
+        String fileName = "zbug736_2.txt";
+        InputStream htmlStream = getHtmlBody(fileName);
+        String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+            true);
+        Assert.assertTrue(result != null);
+    }
+
+    /**
+     * Checking zimbraUseOwaspHtmlSanitizer is true
+     * @throws Exception
+     */
+    @Test
+    public void testzcs6871OwaspDefanger() throws Exception {
+        BrowserDefang defanger2 = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML);
+        Assert.assertFalse(defanger2 instanceof OwaspDefang);
+
+        LC.zimbra_use_owasp_html_sanitizer.setDefault(true);
+        BrowserDefang defanger = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML);
+        Assert.assertTrue(defanger instanceof OwaspDefang);
     }
 }

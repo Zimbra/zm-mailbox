@@ -23,15 +23,20 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.httpclient.Credentials;
-import org.apache.commons.httpclient.Header;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.HttpState;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.UsernamePasswordCredentials;
-import org.apache.commons.httpclient.auth.AuthScope;
-import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.http.Header;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.Credentials;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.impl.client.BasicCookieStore;
+import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.util.EntityUtils;
 
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZGrant;
@@ -163,13 +168,13 @@ public class TestAccessKeyGrant extends TestCase {
         }
 
         @Override
-        public void encode(HttpClient client, HttpMethod method,
+        public void encode(HttpClient client, HttpRequestBase method,
                 boolean isAdminReq, String cookieDomain) throws ServiceException {
             throw ServiceException.FAILURE("Not implemented", null);
         }
 
         @Override
-        public void encode(HttpState state, boolean isAdminReq, String cookieDomain)
+        public void encode(BasicCookieStore state, boolean isAdminReq, String cookieDomain)
                 throws ServiceException {
             throw ServiceException.FAILURE("Not implemented", null);
         }
@@ -377,10 +382,11 @@ public class TestAccessKeyGrant extends TestCase {
         dumpGrants(TestUtil.getZMailbox("user4"), "258");
     }
 
-    private void executeHttpMethod(HttpClient client, HttpMethod method) throws Exception {
+    private void executeHttpMethod(HttpClient client, HttpRequestBase method) throws Exception {
         try {
 
-            int respCode = HttpClientUtil.executeMethod(client, method);
+            HttpResponse response = HttpClientUtil.executeMethod(client, method);
+            int respCode = response.getStatusLine().getStatusCode();
 
             if (respCode != HttpStatus.SC_OK ) {
                  System.out.println("failed, respCode=" + respCode);
@@ -391,14 +397,14 @@ public class TestAccessKeyGrant extends TestCase {
 
                  System.out.println("Headers:");
                  System.out.println("--------");
-                 for (Header header : method.getRequestHeaders()) {
+                 for (Header header : response.getAllHeaders()) {
                      System.out.print("    " + header.toString());
                  }
                  System.out.println();
 
                  System.out.println("Body:");
                  System.out.println("-----");
-                 String respBody = method.getResponseBodyAsString();
+                 String respBody = EntityUtils.toString(response.getEntity());
                  System.out.println(respBody);
              }
          } finally {
@@ -440,7 +446,7 @@ public class TestAccessKeyGrant extends TestCase {
      */
     public void disable_testCalendarGet_Yahoo_accesskey() throws Exception {
 
-        HttpClient client = new HttpClient();
+        HttpClient client = HttpClientBuilder.create().build();
 
         String accessKey = "3c4877ed3948511cee39379debbf968d-bogus";
         String url = getRestCalendarUrl(OWNER_NAME);
@@ -452,7 +458,7 @@ public class TestAccessKeyGrant extends TestCase {
         url = url + "?k=" + accessKey + "&h=" + getAccountId(OWNER_NAME);
 
         System.out.println("REST URL: " + url);
-        HttpMethod method = new GetMethod(url);
+        HttpRequestBase method = new HttpGet(url);
 
         executeHttpMethod(client, method);
     }
@@ -463,7 +469,7 @@ public class TestAccessKeyGrant extends TestCase {
      */
     public void testCalendarGet_guest() throws Exception {
 
-        HttpState initialState = new HttpState();
+        BasicCookieStore initialState = new BasicCookieStore();
 
         /*
         Cookie authCookie = new Cookie(restURL.getURL().getHost(), "ZM_AUTH_TOKEN", mAuthToken, "/", null, false);
@@ -475,14 +481,18 @@ public class TestAccessKeyGrant extends TestCase {
         String guestName = "g1@guest.com";
         String guestPassword = "zzz";
         Credentials loginCredentials = new UsernamePasswordCredentials(guestName, guestPassword);
-        initialState.setCredentials(AuthScope.ANY, loginCredentials);
+        CredentialsProvider credsProvider = new BasicCredentialsProvider();
+        credsProvider.setCredentials(AuthScope.ANY, loginCredentials);
+        
+        HttpClientBuilder clientBuilder = HttpClientBuilder.create();
+        clientBuilder.setDefaultCookieStore(initialState);
+        clientBuilder.setDefaultCredentialsProvider(credsProvider);
 
-        HttpClient client = new HttpClient();
-        client.setState(initialState);
+        HttpClient client = clientBuilder.build();
 
         String url = getRestCalendarUrl(OWNER_NAME);
         System.out.println("REST URL: " + url);
-        HttpMethod method = new GetMethod(url);
+        HttpRequestBase method = new HttpGet(url);
 
         executeHttpMethod(client, method);
     }

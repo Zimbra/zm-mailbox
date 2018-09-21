@@ -25,6 +25,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.http.HttpException;
 
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
@@ -117,7 +118,7 @@ public class FixCalendarTZUtil extends SoapCLI {
     }
 
     private void doit(ZAuthToken zat, String ruleFilePath, String[] accts, String after, boolean sync)
-    throws SoapFaultException, IOException, ServiceException {
+    throws SoapFaultException, IOException, ServiceException, HttpException {
         Element req = new Element.XMLElement(AdminConstants.FIX_CALENDAR_TZ_REQUEST);
 
         Element tzfixupElem = parseRuleFile(ruleFilePath);

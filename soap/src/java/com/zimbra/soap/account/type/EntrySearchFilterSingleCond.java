@@ -22,11 +22,16 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.type.SearchFilterCondition;
 import com.zimbra.soap.type.ZmBoolean;
 
+import io.leangen.graphql.annotations.GraphQLInputField;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name=GqlConstants.CLASS_SEARCH_FILTER_SINGLE_CONDITION, description="Single condition search filter.")
 public class EntrySearchFilterSingleCond
 implements SearchFilterCondition {
 
@@ -74,9 +79,21 @@ implements SearchFilterCondition {
     }
 
     @Override
+    @GraphQLInputField(name = GqlConstants.SEARCH_FILTER_NEGATION, description="Negation flag, if set to 1 (true) then negate the compound condition")
     public void setNot(Boolean not) { this.not = ZmBoolean.fromBool(not); }
+    @GraphQLInputField(name = GqlConstants.SEARCH_FILTER_ATTR, description="Attribute name")
     public void setAttr(String attr) { this.attr = attr; }
+    @GraphQLInputField(name = GqlConstants.SEARCH_FILTER_OP, description="Operator. Valid operators are:\n" + 
+            "eq  attr equals value (integer or string)\n" + 
+            "has attr has value (substring search)\n" + 
+            "ge  attr greater than or equal to integer value\n" + 
+            "le  attr less than or equal to integer value\n" + 
+            "gt  attr greater than (but not equal to) equal to integer value\n" + 
+            "lt  attr less than (but not equal to) to integer value\n" + 
+            "startswith  attr starts with value (string)\n" + 
+            "endswith    attr ends with value (string)")
     public void setOp(String op) { this.op = op; }
+    @GraphQLInputField(name = GqlConstants.SEARCH_FILTER_VALUE, description="value")
     public void setValue(String value) { this.value = value; }
 
     @Override

@@ -27,6 +27,7 @@ import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 
@@ -52,6 +53,8 @@ public abstract class Session {
     private   boolean   mIsRegistered;
     private   boolean   mAddedToCache;
     protected int lastChangeId;
+    protected String userAgent;
+    protected String requestIPAddress;
 
 
     /**
@@ -360,6 +363,14 @@ public abstract class Session {
 
     public boolean isDelegatedSession() {
         return !mAuthenticatedAccountId.equalsIgnoreCase(mTargetAccountId);
+    }
+
+    public String getUserAgent() {
+        return userAgent;
+    }
+
+    public String getRequestIPAddress() {
+        return requestIPAddress;
     }
 
     public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {

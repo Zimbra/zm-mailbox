@@ -28,6 +28,7 @@ import javax.mail.MessagingException;
 
 import junit.framework.TestCase;
 
+import org.apache.http.HttpException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -376,7 +377,7 @@ public class TestPurgeDataSource extends TestCase {
         assertEquals(3, getMsgCount(hits.get(0)));
     }
 
-    private void setThreadingAlgorithm(String algorithm) throws ServiceException, IOException {
+    private void setThreadingAlgorithm(String algorithm) throws ServiceException, IOException, HttpException {
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraMailThreadingAlgorithm, algorithm);
         ModifyAccountRequest modifyRequest = new ModifyAccountRequest(account.getId());

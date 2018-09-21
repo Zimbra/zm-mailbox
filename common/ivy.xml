@@ -9,10 +9,10 @@
   <dependency org="commons-httpclient" name="commons-httpclient" rev="3.1" />
   <dependency org="commons-lang" name="commons-lang" rev="2.6" />
   <dependency org="commons-logging" name="commons-logging" rev="1.1.1"/>
-  <dependency org="org.apache.httpcomponents" name="httpclient" rev="4.5.2"/>
-  <dependency org="org.apache.httpcomponents" name="httpasyncclient" rev="4.1.2"/>
-  <dependency org="org.apache.httpcomponents" name="httpcore" rev="4.4.5"/>
-  <dependency org="org.apache.httpcomponents" name="httpcore-nio" rev="4.4.5"/>
+  <dependency org="org.apache.httpcomponents" name="httpclient" rev="${httpclient.version}"/>
+  <dependency org="org.apache.httpcomponents" name="httpasyncclient" rev="${httpclient.async.version}"/>
+  <dependency org="org.apache.httpcomponents" name="httpcore" rev="${httpclient.httpcore.version}"/> 
+  <dependency org="org.apache.httpcomponents" name="httpcore-nio" rev="${httpclient.httpcore.version}"/>
   <dependency org="dom4j" name="dom4j" rev="1.5.2" />
   <dependency org="ical4j" name="ical4j" rev="0.9.16-patched" />
   <dependency org="junit" name="junit" rev="4.8.2" />
@@ -32,8 +32,8 @@
   <dependency org="org.easymock" name="easymock" rev="3.0" />
   <dependency org="cglib" name="cglib" rev="2.2.2" />
   <dependency org="asm" name="asm" rev="3.3.1" />
-  <dependency org="org.eclipse.jetty" name="jetty-rewrite" rev="9.3.5.v20151012" />
-  <dependency org="org.eclipse.jetty" name="jetty-util" rev="9.3.5.v20151012" />
+  <dependency org="org.eclipse.jetty" name="jetty-rewrite" rev="9.4.18.v20190429" />
+  <dependency org="org.eclipse.jetty" name="jetty-util" rev="9.4.18.v20190429" />
   <dependency org="zimbra" name="zm-native" rev="latest.integration" />
   <dependency org="ant-contrib" name="ant-contrib" rev="1.0b3" />
  </dependencies>

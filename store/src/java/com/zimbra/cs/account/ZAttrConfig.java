@@ -18199,7 +18199,7 @@ public abstract class ZAttrConfig extends Entry {
      */
     @ZAttr(id=52)
     public String[] getGalLdapFilterDef() {
-        String[] value = getMultiAttr(Provisioning.A_zimbraGalLdapFilterDef, true, true); return value.length > 0 ? value : new String[] {"zimbraAccounts:(&(|(displayName=*%s*)(cn=*%s*)(sn=*%s*)(gn=*%s*)(zimbraPhoneticFirstName=*%s*)(zimbraPhoneticLastName=*%s*)(mail=*%s*)(zimbraMailDeliveryAddress=*%s*)(zimbraMailAlias=*%s*))(|(objectclass=zimbraAccount)(objectclass=zimbraDistributionList)(objectclass=zimbraGroup))(!(objectclass=zimbraCalendarResource)))","zimbraAccountAutoComplete:(&(|(displayName=*%s*)(cn=%s*)(sn=%s*)(gn=%s*)(zimbraPhoneticFirstName=%s*)(zimbraPhoneticLastName=%s*)(mail=%s*)(zimbraMailDeliveryAddress=%s*)(zimbraMailAlias=%s*))(|(objectclass=zimbraAccount)(objectclass=zimbraDistributionList)(objectclass=zimbraGroup))(!(objectclass=zimbraCalendarResource)))","zimbraAccountSync:(&(|(objectclass=zimbraAccount)(objectclass=zimbraDistributionList)(objectclass=zimbraGroup))(!(objectclass=zimbraCalendarResource)))","zimbraResources:(&(|(displayName=*%s*)(cn=*%s*)(sn=*%s*)(gn=*%s*)(mail=*%s*)(zimbraMailDeliveryAddress=*%s*)(zimbraMailAlias=*%s*))(objectclass=zimbraCalendarResource)(zimbraAccountStatus=active))","zimbraResourceAutoComplete:(&(|(displayName=%s*)(cn=%s*)(sn=%s*)(gn=%s*)(mail=%s*)(zimbraMailDeliveryAddress=%s*)(zimbraMailAlias=%s*))(objectclass=zimbraCalendarResource)(zimbraAccountStatus=active))","zimbraResourceSync:(&(objectclass=zimbraCalendarResource)(zimbraAccountStatus=active))","zimbraGroups:(&(|(displayName=*%s*)(cn=*%s*)(sn=*%s*)(gn=*%s*)(mail=*%s*)(zimbraMailDeliveryAddress=*%s*)(zimbraMailAlias=*%s*))(|(objectclass=zimbraDistributionList)(objectclass=zimbraGroup)))","zimbraGroupAutoComplete:(&(|(displayName=%s*)(cn=%s*)(sn=%s*)(gn=%s*)(mail=%s*)(zimbraMailDeliveryAddress=%s*)(zimbraMailAlias=%s*))(|(objectclass=zimbraDistributionList)(objectclass=zimbraGroup)))","zimbraGroupSync:(|(objectclass=zimbraDistributionList)(objectclass=zimbraGroup))","zimbraAutoComplete:(&(|(displayName=%s*)(cn=%s*)(sn=%s*)(gn=%s*)(zimbraPhoneticFirstName=%s*)(zimbraPhoneticLastName=%s*)(mail=%s*)(zimbraMailDeliveryAddress=%s*)(zimbraMailAlias=%s*))(|(objectclass=zimbraAccount)(objectclass=zimbraDistributionList)(objectclass=zimbraGroup)))","zimbraSearch:(&(|(displayName=*%s*)(cn=*%s*)(sn=*%s*)(gn=*%s*)(zimbraPhoneticFirstName=*%s*)(zimbraPhoneticLastName=*%s*)(mail=*%s*)(zimbraMailDeliveryAddress=*%s*)(zimbraMailAlias=*%s*))(|(objectclass=zimbraAccount)(objectclass=zimbraDistributionList)(objectclass=zimbraGroup)))","zimbraSync:(&(|(objectclass=zimbraAccount)(objectclass=zimbraDistributionList)(objectclass=zimbraGroup))(!(&(objectclass=zimbraCalendarResource)(!(zimbraAccountStatus=active)))))","ad:(&(|(displayName=*%s*)(cn=*%s*)(sn=*%s*)(givenName=*%s*)(mail=*%s*))(!(msExchHideFromAddressLists=TRUE))(|(&(objectCategory=person)(objectClass=user)(!(homeMDB=*))(!(msExchHomeServerName=*)))(&(objectCategory=person)(objectClass=user)(|(homeMDB=*)(msExchHomeServerName=*)))(&(objectCategory=person)(objectClass=contact))(objectCategory=group)(objectCategory=publicFolder)(objectCategory=msExchDynamicDistributionList)))","adAutoComplete:(&(|(displayName=%s*)(cn=%s*)(sn=%s*)(givenName=%s*)(mail=%s*))(!(msExchHideFromAddressLists=TRUE))(|(&(objectCategory=person)(objectClass=user)(!(homeMDB=*))(!(msExchHomeServerName=*)))(&(objectCategory=person)(objectClass=user)(|(homeMDB=*)(msExchHomeServerName=*)))(&(objectCategory=person)(objectClass=contact))(objectCategory=group)(objectCategory=publicFolder)(objectCategory=msExchDynamicDistributionList)))","externalLdapAutoComplete:(|(cn=%s*)(sn=%s*)(gn=%s*)(mail=%s*))","email_has:(mail=*%s*)","email2_has:(mail=*%s*)","email3_has:(mail=*%s*)","email4_has:(mail=*%s*)","email5_has:(mail=*%s*)","email6_has:(mail=*%s*)","email7_has:(mail=*%s*)","email8_has:(mail=*%s*)","email9_has:(mail=*%s*)","email10_has:(mail=*%s*)","email11_has:(mail=*%s*)","email12_has:(mail=*%s*)","email13_has:(mail=*%s*)","email14_has:(mail=*%s*)","email15_has:(mail=*%s*)","email16_has:(mail=*%s*)","department_has:(ou=*%s*)","firstName_has:(gn=*%s*)","lastName_has:(sn=*%s*)","middleName_has:(initials=*%s*)","nickname_has:(|(displayName=*%s*)(cn=*%s*))","phoneticFirstName_has:(zimbraPhoneticFirstName=*%s*)","phoneticLastName_has:(zimbraPhoneticLastName=*%s*)"};
+        String[] value = getMultiAttr(Provisioning.A_zimbraGalLdapFilterDef, true, true); return value.length > 0 ? value : new String[] {"zimbraAccounts:(&(|(displayName=*%s*)(cn=*%s*)(sn=*%s*)(gn=*%s*)(zimbraPhoneticFirstName=*%s*)(zimbraPhoneticLastName=*%s*)(mail=*%s*)(zimbraMailDeliveryAddress=*%s*)(zimbraMailAlias=*%s*))(|(objectclass=zimbraAccount)(objectclass=zimbraDistributionList)(objectclass=zimbraGroup))(!(objectclass=zimbraCalendarResource)))","zimbraAccountAutoComplete:(&(|(displayName=*%s*)(cn=%s*)(sn=%s*)(gn=%s*)(zimbraPhoneticFirstName=%s*)(zimbraPhoneticLastName=%s*)(mail=%s*)(zimbraMailDeliveryAddress=%s*)(zimbraMailAlias=%s*))(|(objectclass=zimbraAccount)(objectclass=zimbraDistributionList)(objectclass=zimbraGroup))(!(objectclass=zimbraCalendarResource)))","zimbraAccountSync:(&(|(objectclass=zimbraAccount)(objectclass=zimbraDistributionList)(objectclass=zimbraGroup))(!(objectclass=zimbraCalendarResource)))","zimbraResources:(&(|(displayName=*%s*)(cn=*%s*)(sn=*%s*)(gn=*%s*)(mail=*%s*)(zimbraMailDeliveryAddress=*%s*)(zimbraMailAlias=*%s*))(objectclass=zimbraCalendarResource)(zimbraAccountStatus=active))","zimbraResourceAutoComplete:(&(|(displayName=%s*)(cn=%s*)(sn=%s*)(gn=%s*)(mail=%s*)(zimbraMailDeliveryAddress=%s*)(zimbraMailAlias=%s*))(objectclass=zimbraCalendarResource)(zimbraAccountStatus=active))","zimbraResourceSync:(&(objectclass=zimbraCalendarResource)(zimbraAccountStatus=active))","zimbraGroups:(&(|(displayName=*%s*)(cn=*%s*)(sn=*%s*)(gn=*%s*)(mail=*%s*)(zimbraMailDeliveryAddress=*%s*)(zimbraMailAlias=*%s*))(|(objectclass=zimbraDistributionList)(objectclass=zimbraGroup)))","zimbraGroupAutoComplete:(&(|(displayName=%s*)(cn=%s*)(sn=%s*)(gn=%s*)(mail=%s*)(zimbraMailDeliveryAddress=%s*)(zimbraMailAlias=%s*))(|(objectclass=zimbraDistributionList)(objectclass=zimbraGroup)))","zimbraGroupSync:(|(objectclass=zimbraDistributionList)(objectclass=zimbraGroup))","zimbraAutoComplete:(&(|(displayName=%s*)(cn=%s*)(sn=%s*)(gn=%s*)(zimbraPhoneticFirstName=%s*)(zimbraPhoneticLastName=%s*)(mail=%s*)(zimbraMailDeliveryAddress=%s*)(zimbraMailAlias=%s*))(|(objectclass=zimbraAccount)(objectclass=zimbraDistributionList)(objectclass=zimbraGroup)))","zimbraSearch:(&(|(displayName=*%s*)(cn=*%s*)(sn=*%s*)(gn=*%s*)(zimbraPhoneticFirstName=*%s*)(zimbraPhoneticLastName=*%s*)(mail=*%s*)(zimbraMailDeliveryAddress=*%s*)(zimbraMailAlias=*%s*))(|(objectclass=zimbraAccount)(objectclass=zimbraDistributionList)(objectclass=zimbraGroup)))","zimbraSync:(&(|(objectclass=zimbraAccount)(objectclass=zimbraDistributionList)(objectclass=zimbraGroup)(objectclass=zimbraAddressList)(objectclass=zimbraHabGroup))(!(&(objectclass=zimbraCalendarResource)(!(|(zimbraAccountStatus=active)(zimbraIsAddressListActive=TRUE)(zimbraMailStatus=enabled))))))","ad:(&(|(displayName=*%s*)(cn=*%s*)(sn=*%s*)(givenName=*%s*)(mail=*%s*))(!(msExchHideFromAddressLists=TRUE))(|(&(objectCategory=person)(objectClass=user)(!(homeMDB=*))(!(msExchHomeServerName=*)))(&(objectCategory=person)(objectClass=user)(|(homeMDB=*)(msExchHomeServerName=*)))(&(objectCategory=person)(objectClass=contact))(objectCategory=group)(objectCategory=publicFolder)(objectCategory=msExchDynamicDistributionList)))","adAutoComplete:(&(|(displayName=%s*)(cn=%s*)(sn=%s*)(givenName=%s*)(mail=%s*))(!(msExchHideFromAddressLists=TRUE))(|(&(objectCategory=person)(objectClass=user)(!(homeMDB=*))(!(msExchHomeServerName=*)))(&(objectCategory=person)(objectClass=user)(|(homeMDB=*)(msExchHomeServerName=*)))(&(objectCategory=person)(objectClass=contact))(objectCategory=group)(objectCategory=publicFolder)(objectCategory=msExchDynamicDistributionList)))","externalLdapAutoComplete:(|(cn=%s*)(sn=%s*)(gn=%s*)(mail=%s*))","email_has:(mail=*%s*)","email2_has:(mail=*%s*)","email3_has:(mail=*%s*)","email4_has:(mail=*%s*)","email5_has:(mail=*%s*)","email6_has:(mail=*%s*)","email7_has:(mail=*%s*)","email8_has:(mail=*%s*)","email9_has:(mail=*%s*)","email10_has:(mail=*%s*)","email11_has:(mail=*%s*)","email12_has:(mail=*%s*)","email13_has:(mail=*%s*)","email14_has:(mail=*%s*)","email15_has:(mail=*%s*)","email16_has:(mail=*%s*)","department_has:(ou=*%s*)","firstName_has:(gn=*%s*)","lastName_has:(sn=*%s*)","middleName_has:(initials=*%s*)","nickname_has:(|(displayName=*%s*)(cn=*%s*))","phoneticFirstName_has:(zimbraPhoneticFirstName=*%s*)","phoneticLastName_has:(zimbraPhoneticLastName=*%s*)","notes_has:(description=*%s*)"};
     }
 
     /**
@@ -19526,6 +19526,140 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetGlobalConfigExtraObjectClass(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraGlobalConfigExtraObjectClass, "");
+        return attrs;
+    }
+
+    /**
+     * LDAP attribute to HAB Group Member attribute mapping
+     *
+     * @return zimbraHABMemberLdapAttrMap, or empty array if unset
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=3073)
+    public String[] getHABMemberLdapAttrMap() {
+        String[] value = getMultiAttr(Provisioning.A_zimbraHABMemberLdapAttrMap, true, true); return value.length > 0 ? value : new String[] {"firstName=givenName","lastName=sn","displayName=displayName","commonName=cn","initials=initials","company=company","department=ou","jobTitle=title","workStreet=streetAddress","workPhone=telephoneNumber","workState=st","workCity=l","country=co","office=physicalDeliveryOfficeName","alias=zimbraMailAlias"};
+    }
+
+    /**
+     * LDAP attribute to HAB Group Member attribute mapping
+     *
+     * @param zimbraHABMemberLdapAttrMap new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=3073)
+    public void setHABMemberLdapAttrMap(String[] zimbraHABMemberLdapAttrMap) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHABMemberLdapAttrMap, zimbraHABMemberLdapAttrMap);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * LDAP attribute to HAB Group Member attribute mapping
+     *
+     * @param zimbraHABMemberLdapAttrMap new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=3073)
+    public Map<String,Object> setHABMemberLdapAttrMap(String[] zimbraHABMemberLdapAttrMap, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHABMemberLdapAttrMap, zimbraHABMemberLdapAttrMap);
+        return attrs;
+    }
+
+    /**
+     * LDAP attribute to HAB Group Member attribute mapping
+     *
+     * @param zimbraHABMemberLdapAttrMap new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=3073)
+    public void addHABMemberLdapAttrMap(String zimbraHABMemberLdapAttrMap) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraHABMemberLdapAttrMap, zimbraHABMemberLdapAttrMap);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * LDAP attribute to HAB Group Member attribute mapping
+     *
+     * @param zimbraHABMemberLdapAttrMap new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=3073)
+    public Map<String,Object> addHABMemberLdapAttrMap(String zimbraHABMemberLdapAttrMap, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraHABMemberLdapAttrMap, zimbraHABMemberLdapAttrMap);
+        return attrs;
+    }
+
+    /**
+     * LDAP attribute to HAB Group Member attribute mapping
+     *
+     * @param zimbraHABMemberLdapAttrMap existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=3073)
+    public void removeHABMemberLdapAttrMap(String zimbraHABMemberLdapAttrMap) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraHABMemberLdapAttrMap, zimbraHABMemberLdapAttrMap);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * LDAP attribute to HAB Group Member attribute mapping
+     *
+     * @param zimbraHABMemberLdapAttrMap existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=3073)
+    public Map<String,Object> removeHABMemberLdapAttrMap(String zimbraHABMemberLdapAttrMap, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraHABMemberLdapAttrMap, zimbraHABMemberLdapAttrMap);
+        return attrs;
+    }
+
+    /**
+     * LDAP attribute to HAB Group Member attribute mapping
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=3073)
+    public void unsetHABMemberLdapAttrMap() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHABMemberLdapAttrMap, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * LDAP attribute to HAB Group Member attribute mapping
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=3073)
+    public Map<String,Object> unsetHABMemberLdapAttrMap(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHABMemberLdapAttrMap, "");
         return attrs;
     }
 

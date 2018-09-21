@@ -28,10 +28,17 @@ import javax.xml.bind.annotation.XmlType;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
+
+import io.leangen.graphql.annotations.GraphQLIgnore;
+import io.leangen.graphql.annotations.GraphQLInputField;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"mimeParts", "attachments"})
+@GraphQLType(name=GqlConstants.CLASS_MIME_PART_INFO, description="The mime part information")
 public class MimePartInfo {
 
     /**
@@ -59,6 +66,7 @@ public class MimePartInfo {
      * @zm-api-field-description MIME Parts
      */
     @XmlElement(name=MailConstants.E_MIMEPART /* mp */, required=false)
+    @GraphQLQuery(name=GqlConstants.MIME_PARTS, description="Mime Parts")
     private final List<MimePartInfo> mimeParts = Lists.newArrayList();
 
     /**
@@ -71,20 +79,24 @@ public class MimePartInfo {
     }
 
     public static MimePartInfo createForContentType(String ct) {
-        MimePartInfo mp = new MimePartInfo();
+        final MimePartInfo mp = new MimePartInfo();
         mp.setContentType(ct);
         return mp;
     }
 
     public static MimePartInfo createForContentTypeAndContent(String ct, String text) {
-        MimePartInfo mp = createForContentType(ct);
+        final MimePartInfo mp = createForContentType(ct);
         mp.setContent(text);
         return mp;
     }
 
+    @GraphQLInputField(name=GqlConstants.CONTENT_TYPE, description="Content Type")
     public void setContentType(String contentType) { this.contentType = contentType; }
+    @GraphQLInputField(name=GqlConstants.CONTENT, description="Content")
     public void setContent(String content) { this.content = content; }
+    @GraphQLInputField(name=GqlConstants.CONTENT_ID, description="Content ID")
     public void setContentId(String contentId) { this.contentId = contentId; }
+    @GraphQLInputField(name=GqlConstants.MIME_PARTS, description="Mime Parts")
     public void setMimeParts(Iterable <MimePartInfo> mimeParts) {
         this.mimeParts.clear();
         if (mimeParts != null) {
@@ -92,17 +104,24 @@ public class MimePartInfo {
         }
     }
 
+    @GraphQLIgnore
     public void addMimePart(MimePartInfo mimePart) {
         this.mimeParts.add(mimePart);
     }
 
+    @GraphQLInputField(name=GqlConstants.ATTACHMENTS, description="Attachments")
     public void setAttachments(AttachmentsInfo attachments) { this.attachments = attachments; }
+    @GraphQLQuery(name=GqlConstants.CONTENT_TYPE, description="Content Type")
     public String getContentType() { return contentType; }
+    @GraphQLQuery(name=GqlConstants.CONTENT, description="Content")
     public String getContent() { return content; }
+    @GraphQLQuery(name=GqlConstants.CONTENT_ID, description="Content ID")
     public String getContentId() { return contentId; }
+    @GraphQLQuery(name=GqlConstants.MIME_PARTS, description="Mime Parts")
     public List<MimePartInfo> getMimeParts() {
         return mimeParts;
     }
+    @GraphQLQuery(name=GqlConstants.ATTACHMENTS, description="Attachments")
     public AttachmentsInfo getAttachments() { return attachments; }
 
     public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2018 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -31,27 +31,30 @@ import java.util.concurrent.Future;
 
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.httpclient.Cookie;
-import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
-import org.apache.commons.httpclient.Header;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpException;
-import org.apache.commons.httpclient.HttpState;
-import org.apache.commons.httpclient.HttpVersion;
-import org.apache.commons.httpclient.UsernamePasswordCredentials;
-import org.apache.commons.httpclient.auth.AuthScope;
-import org.apache.commons.httpclient.cookie.CookiePolicy;
-import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.httpclient.methods.StringRequestEntity;
-import org.apache.commons.httpclient.params.HttpMethodParams;
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
+import org.apache.http.HttpVersion;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.Credentials;
+import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CookieStore;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.CookieSpecs;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.concurrent.FutureCallback;
+import org.apache.http.config.SocketConfig;
 import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.BasicCookieStore;
+import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
+import org.apache.http.message.BasicHeader;
 import org.dom4j.DocumentException;
 import org.dom4j.ElementHandler;
 import org.dom4j.io.SAXReader;
@@ -73,7 +76,7 @@ import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
 
 public class SoapHttpTransport extends SoapTransport {
-    private HttpClient mClient = ZimbraHttpConnectionManager.getInternalHttpConnMgr().getDefaultHttpClient();
+    private HttpClientBuilder mClientBuilder = ZimbraHttpConnectionManager.getInternalHttpConnMgr().getDefaultHttpClient();
     private Map<String, String> mCustomHeaders;
     private ProxyHostConfiguration mHostConfig = null;
     private HttpDebugListener mHttpDebugListener;
@@ -86,8 +89,8 @@ public class SoapHttpTransport extends SoapTransport {
     private static int defaultTimeout = LC.httpclient_soaphttptransport_so_timeout.intValue();
 
     public interface HttpDebugListener {
-        public void sendSoapMessage(PostMethod postMethod, Element envelope, HttpState httpState);
-        public void receiveSoapMessage(PostMethod postMethod, Element envelope);
+        public void sendSoapMessage(HttpPost postMethod, Element envelope, BasicCookieStore httpState);
+        public void receiveSoapMessage(HttpPost postMethod, Element envelope);
     }
 
     @Override public String toString() {
@@ -102,7 +105,7 @@ public class SoapHttpTransport extends SoapTransport {
     public SoapHttpTransport(String uri) {
         super();
         mUri = uri;
-        mHostConfig = HttpProxyConfig.getProxyConfig(mClient.getHostConfiguration(), uri);
+        mHostConfig = HttpProxyConfig.getProxyConfig(uri);
     }
 
     public void setHttpDebugListener(HttpDebugListener listener) {
@@ -117,9 +120,9 @@ public class SoapHttpTransport extends SoapTransport {
      * Frees any resources such as connection pool held by this transport.
      */
     public void shutdown() {
-        if (mClient != null && mClient != ZimbraHttpConnectionManager.getInternalHttpConnMgr().getDefaultHttpClient()) {
-            mClient.getHttpConnectionManager().closeIdleConnections(0);
-            mClient = null;
+        if (mClientBuilder != null && mClientBuilder != ZimbraHttpConnectionManager.getInternalHttpConnMgr().getDefaultHttpClient()) {
+            ZimbraHttpConnectionManager.getInternalHttpConnMgr().closeIdleConnections();
+            mClientBuilder = null;
             mHostConfig = null;
         }
     }
@@ -182,20 +185,20 @@ public class SoapHttpTransport extends SoapTransport {
     @Override
     public Element invoke(Element document, boolean raw, boolean noSession,
             String requestedAccountId, String changeToken, String tokenType)
-    throws IOException, HttpException, ServiceException {
+    throws IOException, ServiceException {
         return invoke(document, raw, noSession, requestedAccountId, changeToken, tokenType, NotificationFormat.DEFAULT, null);
     }
 
     @Override
     public Element invoke(Element document, boolean raw, boolean noSession,
             String requestedAccountId, String changeToken, String tokenType, NotificationFormat nFormat, String curWaitSetID)
-    throws IOException, HttpException, ServiceException {
+    throws IOException, ServiceException {
         return invoke(document, raw, noSession, requestedAccountId, changeToken, tokenType, nFormat, curWaitSetID, null);
     }
 
     public Element invoke(Element document, boolean raw, boolean noSession, String requestedAccountId,
             String changeToken, String tokenType, ResponseHandler respHandler)
-            throws IOException, HttpException, ServiceException {
+            throws IOException, ServiceException {
         return invoke(document, raw, noSession, requestedAccountId, changeToken, tokenType, NotificationFormat.DEFAULT, null, respHandler);
     }
 
@@ -217,14 +220,15 @@ public class SoapHttpTransport extends SoapTransport {
 
     public Element invoke(Element document, boolean raw, boolean noSession, String requestedAccountId,
             String changeToken, String tokenType, NotificationFormat nFormat, String curWaitSetID, ResponseHandler respHandler)
-            throws IOException, HttpException, ServiceException {
-        PostMethod method = null;
+            throws IOException, ServiceException {
+        HttpPost method = null;
+        HttpClient client = null;
 
         try {
             // Assemble post method.  Append document name, so that the request
             // type is written to the access log.
             String uri = getUriWithPath(document);
-            method = new PostMethod(uri);
+            method = new HttpPost(uri);
 
             // Set user agent if it's specified.
             String agentName = getUserAgentName();
@@ -232,66 +236,94 @@ public class SoapHttpTransport extends SoapTransport {
                 String agentVersion = getUserAgentVersion();
                 if (agentVersion != null)
                     agentName += " " + agentVersion;
-                method.setRequestHeader(new Header("User-Agent", agentName));
+                method.addHeader(new BasicHeader("User-Agent", agentName));
+            }
+
+            // Set the original user agent if it's specified.
+            String originalUserAgent = getOriginalUserAgent();
+            if (originalUserAgent != null) {
+                method.addHeader(new BasicHeader(HeaderConstants.HTTP_HEADER_ORIG_USER_AGENT, originalUserAgent));
             }
 
             // the content-type charset will determine encoding used
             // when we set the request body
-            method.setRequestHeader("Content-Type", getRequestProtocol().getContentType());
+            method.addHeader("Content-Type", getRequestProtocol().getContentType());
             if (getClientIp() != null) {
-                method.setRequestHeader(RemoteIP.X_ORIGINATING_IP_HEADER, getClientIp());
+                method.addHeader(RemoteIP.X_ORIGINATING_IP_HEADER, getClientIp());
                 if (ZimbraLog.misc.isDebugEnabled()) {
                     ZimbraLog.misc.debug("set remote IP header [%s] to [%s]", RemoteIP.X_ORIGINATING_IP_HEADER, getClientIp());
                 }
             }
             Element soapReq = generateSoapMessage(document, raw, noSession, requestedAccountId, changeToken, tokenType, nFormat, curWaitSetID);
             String soapMessage = SoapProtocol.toString(soapReq, getPrettyPrint());
-            HttpMethodParams params = method.getParams();
 
-            method.setRequestEntity(new StringRequestEntity(soapMessage, null, "UTF-8"));
+            method.setEntity(new StringEntity(soapMessage, ContentType.create(ContentType.APPLICATION_XML.getMimeType(), "UTF-8")));
 
             if (getRequestProtocol().hasSOAPActionHeader())
-                method.setRequestHeader("SOAPAction", mUri);
+                method.addHeader("SOAPAction", mUri);
 
             if (mCustomHeaders != null) {
                 for (Map.Entry<String, String> entry : mCustomHeaders.entrySet())
-                    method.setRequestHeader(entry.getKey(), entry.getValue());
+                    method.addHeader(entry.getKey(), entry.getValue());
             }
 
             String host = method.getURI().getHost();
             ZAuthToken zToken = getAuthToken();
-            HttpState state = HttpClientUtil.newHttpState(zToken, host, this.isAdmin());
+
+            BasicCookieStore cookieStore = HttpClientUtil.newHttpState(zToken, host, this.isAdmin());
             String trustedToken = getTrustedToken();
             if (trustedToken != null) {
-                state.addCookie(new Cookie(host, ZimbraCookie.COOKIE_ZM_TRUST_TOKEN, trustedToken, "/", null, false));
+                BasicClientCookie cookie = new BasicClientCookie(ZimbraCookie.COOKIE_ZM_TRUST_TOKEN, trustedToken);
+                cookie.setDomain(host);
+                cookie.setPath("/");
+                cookie.setSecure(false);
+                cookieStore.addCookie(cookie);
             }
 
             if (zToken instanceof ZJWToken) {
-                method.setRequestHeader(Constants.AUTH_HEADER, Constants.BEARER + " " + zToken.getValue());
+                method.addHeader(Constants.AUTH_HEADER, Constants.BEARER + " " + zToken.getValue());
             }
-            params.setCookiePolicy(state.getCookies().length == 0 ? CookiePolicy.IGNORE_COOKIES : CookiePolicy.BROWSER_COMPATIBILITY);
-            params.setParameter(HttpMethodParams.RETRY_HANDLER, new DefaultHttpMethodRetryHandler(mRetryCount - 1, true));
-            params.setSoTimeout(mTimeout);
-            params.setVersion(HttpVersion.HTTP_1_1);
-            method.setRequestHeader("Connection", mKeepAlive ? "Keep-alive" : "Close");
+
+            RequestConfig reqConfig = RequestConfig.custom().
+                setCookieSpec(cookieStore.getCookies().size() == 0 ? CookieSpecs.IGNORE_COOKIES:
+               CookieSpecs.BROWSER_COMPATIBILITY).build();
+            SocketConfig socketConfig = SocketConfig.custom().setSoTimeout(LC.httpclient_external_connmgr_so_timeout.intValue())
+                .setTcpNoDelay(LC.httpclient_external_connmgr_tcp_nodelay.booleanValue()).build();
+            method.setProtocolVersion(HttpVersion.HTTP_1_1);
+            method.addHeader("Connection", mKeepAlive ? "Keep-alive" : "Close");
+
+
+            client = mClientBuilder.setDefaultRequestConfig(reqConfig)
+               .setDefaultSocketConfig(socketConfig)
+               .setDefaultCookieStore(cookieStore).build();
 
             if (mHostConfig != null && mHostConfig.getUsername() != null && mHostConfig.getPassword() != null) {
-                state.setProxyCredentials(new AuthScope(null, -1), new UsernamePasswordCredentials(mHostConfig.getUsername(), mHostConfig.getPassword()));
+
+                Credentials credentials = new UsernamePasswordCredentials(mHostConfig.getUsername(), mHostConfig.getPassword());
+                AuthScope authScope = new AuthScope(null, -1);
+                CredentialsProvider credsProvider = new BasicCredentialsProvider();
+                credsProvider.setCredentials(authScope, credentials);
+                client = HttpClientBuilder.create().setDefaultCredentialsProvider(credsProvider)
+                    .setDefaultRequestConfig(reqConfig)
+                    .setDefaultSocketConfig(socketConfig)
+                    .setDefaultCookieStore(cookieStore)
+                    .build();
             }
 
             if (mHttpDebugListener != null) {
-                mHttpDebugListener.sendSoapMessage(method, soapReq, state);
+                mHttpDebugListener.sendSoapMessage(method, soapReq, cookieStore);
             }
 
-            int responseCode = mClient.executeMethod(mHostConfig, method, state);
+            HttpResponse response = client.execute(method);
+            int responseCode = response.getStatusLine().getStatusCode();
             // SOAP allows for "200" on success and "500" on failure;
             //   real server issues will probably be "503" or "404"
             if (responseCode != HttpServletResponse.SC_OK && responseCode != HttpServletResponse.SC_INTERNAL_SERVER_ERROR)
-                throw ServiceException.PROXY_ERROR(method.getStatusLine().toString(), uri);
+                throw ServiceException.PROXY_ERROR(response.getStatusLine().getReasonPhrase(), uri);
 
             // Read the response body.  Use the stream API instead of the byte[]
             // version to avoid HTTPClient whining about a large response.
-            InputStreamReader reader = new InputStreamReader(method.getResponseBodyAsStream(), SoapProtocol.getCharset());
+            InputStreamReader reader = new InputStreamReader(response.getEntity().getContent(), SoapProtocol.getCharset());
             String responseStr = "";
 
             try {
@@ -299,7 +331,9 @@ public class SoapHttpTransport extends SoapTransport {
                     respHandler.process(reader);
                     return null;
                 } else {
-                    responseStr = ByteUtil.getContent(reader, (int) method.getResponseContentLength(), false);
+                    HttpEntity httpEntity = response.getEntity();
+                    httpEntity.getContentLength();
+                    responseStr = ByteUtil.getContent(reader,  (int)httpEntity.getContentLength(), false);
                     Element soapResp = parseSoapResponse(responseStr, raw);
 
                     if (mHttpDebugListener != null) {
@@ -323,7 +357,7 @@ public class SoapHttpTransport extends SoapTransport {
             // if called from CLI, all connections will be closed when the CLI
             // exits.  Leave it here anyway.
             if (!mKeepAlive)
-                mClient.getHttpConnectionManager().closeIdleConnections(0);
+                ZimbraHttpConnectionManager.getInternalHttpConnMgr().closeIdleConnections();
         }
     }
 
@@ -431,4 +465,5 @@ public class SoapHttpTransport extends SoapTransport {
         CloseableHttpAsyncClient httpClient = ZimbraHttpClientManager.getInstance().getInternalAsyncHttpClient();
         return httpClient.execute(post, context, cb);
     }
+
 }

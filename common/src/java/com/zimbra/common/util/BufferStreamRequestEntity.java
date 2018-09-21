@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2009, 2010, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2009, 2010, 2013, 2014, 2016, 2018 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -14,16 +14,20 @@
  * If not, see <https://www.gnu.org/licenses/>.
  * ***** END LICENSE BLOCK *****
  */
+
 package com.zimbra.common.util;
 
-import java.io.InputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 
-import org.apache.commons.httpclient.methods.RequestEntity;
 
-public class BufferStreamRequestEntity extends BufferStream implements
-    RequestEntity {
+/**
+ * @author zimbra
+ *
+ */
+public class BufferStreamRequestEntity extends BufferStream {
+
     String contentType;
     private InputStream is = null;
 
@@ -82,20 +86,7 @@ public class BufferStreamRequestEntity extends BufferStream implements
         this.contentType = contentType;
         this.is = is;
     }
-
-    public long getContentLength() {
-        readData();
-        return getSize();
-    }
-
-    public String getContentType() { return contentType; }
-
-    public boolean isRepeatable() { return true; }
-
-    public void setContentType(String contentType) {
-        this.contentType = contentType;
-    }
-
+   
     private void readData() {
         if (is != null) {
             try {

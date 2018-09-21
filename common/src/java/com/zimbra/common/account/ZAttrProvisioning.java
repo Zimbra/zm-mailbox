@@ -2979,6 +2979,22 @@ public class ZAttrProvisioning {
     public static final String A_zimbraActiveSyncEhcacheMaxDiskSize = "zimbraActiveSyncEhcacheMaxDiskSize";
 
     /**
+     * filter to decide members of the address list using gal
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=3074)
+    public static final String A_zimbraAddressListGalFilter = "zimbraAddressListGalFilter";
+
+    /**
+     * filter to decide members of the address list using ldap
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=3076)
+    public static final String A_zimbraAddressListLdapFilter = "zimbraAddressListLdapFilter";
+
+    /**
      * access control mechanism for admin access acl: ACL based access
      * control (a.k.a. delegated admin). global: allows only global admins.
      *
@@ -7854,6 +7870,23 @@ public class ZAttrProvisioning {
     public static final String A_zimbraGroupId = "zimbraGroupId";
 
     /**
+     * LDAP attribute to HAB Group Member attribute mapping
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=3073)
+    public static final String A_zimbraHABMemberLdapAttrMap = "zimbraHABMemberLdapAttrMap";
+
+    /**
+     * seniority index of the group or group member which will determine the
+     * sorting order in the hierarchical address book
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=3071)
+    public static final String A_zimbraHABSeniorityIndex = "zimbraHABSeniorityIndex";
+
+    /**
      * help URL for admin
      *
      * @since ZCS 5.0.7
@@ -7890,6 +7923,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=353)
     public static final String A_zimbraHideInGal = "zimbraHideInGal";
+
+    /**
+     * root group id of hierarchical address book
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=3072)
+    public static final String A_zimbraHierarchicalAddressBookRoot = "zimbraHierarchicalAddressBookRoot";
 
     /**
      * Deprecated since: 6.0.0_BETA2. deprecated in favor for
@@ -8461,6 +8502,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1242)
     public static final String A_zimbraIsACLGroup = "zimbraIsACLGroup";
+
+    /**
+     * whether address list is active or not
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=3075)
+    public static final String A_zimbraIsAddressListActive = "zimbraIsAddressListActive";
 
     /**
      * set to true for admin accounts
@@ -12040,6 +12089,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraObjectType = "zimbraObjectType";
 
     /**
+     * temporary RFC822 email address of this recipient for accepting mail
+     * during account rename
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=2143)
+    public static final String A_zimbraOldMailAddress = "zimbraOldMailAddress";
+
+    /**
      * allowed OpenID Provider Endpoint URLs for authentication
      *
      * @since ZCS 7.1.0
@@ -12431,6 +12489,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=307)
     public static final String A_zimbraPreAuthKey = "zimbraPreAuthKey";
+
+    /**
+     * whether or not the user has accepted the client&#039;s terms of
+     * service
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=3068)
+    public static final String A_zimbraPrefAcceptedClientTOS = "zimbraPrefAcceptedClientTOS";
 
     /**
      * whether or not account tree is expanded
@@ -12986,6 +13053,17 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=144)
     public static final String A_zimbraPrefDedupeMessagesSentToSelf = "zimbraPrefDedupeMessagesSentToSelf";
+
+    /**
+     * Default calendar folder id. Current default calendar id is 10, as
+     * calendar folder with id 10, is created for all users. Cos level change
+     * is blocked. So admin can not change value of this attribute on cos
+     * level.
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=2994)
+    public static final String A_zimbraPrefDefaultCalendarId = "zimbraPrefDefaultCalendarId";
 
     /**
      * default font size
@@ -14241,6 +14319,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=3018)
     public static final String A_zimbraPreviousEphemeralBackendURL = "zimbraPreviousEphemeralBackendURL";
+
+    /**
+     * timestamp of account rename and previous name of the account
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=2144)
+    public static final String A_zimbraPrimaryEmailChangeHistory = "zimbraPrimaryEmailChangeHistory";
 
     /**
      * whether this instance of Zimbra is running ZCS or some other
@@ -15860,6 +15946,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1900)
     public static final String A_zimbraShortTermGranteeCacheSize = "zimbraShortTermGranteeCacheSize";
+
+    /**
+     * whether or not to show client Terms of Service
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=3067)
+    public static final String A_zimbraShowClientTOS = "zimbraShowClientTOS";
 
     /**
      * Whether edit header commands in admin sieve scripts are enabled or

@@ -6,14 +6,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 
-import junit.framework.Assert;
-
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpException;
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.http.HttpException;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.entity.InputStreamEntity;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -35,6 +36,8 @@ import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.util.WebClientServiceUtil;
 import com.zimbra.cs.zimlet.ZimletUtil;
 import com.zimbra.soap.JaxbUtil;
+
+import junit.framework.Assert;
 
 public class TestServiceServlet {
     private static final String NAME_PREFIX = TestUserServlet.class.getSimpleName();
@@ -77,10 +80,11 @@ public class TestServiceServlet {
                 com.zimbra.soap.type.TargetType.fromString(com.zimbra.cs.account.accesscontrol.TargetType.server.toString()),
                 localServer.getName(), delegatedAdminWithRights.getName(), Admin.R_flushCache.getName());
 
-        GetMethod method = new GetMethod(String.format("%sflushacl",baseURL));
+        HttpGet method = new HttpGet(String.format("%sflushacl",baseURL));
         addAuthTokenHeader(method, AuthProvider.getAdminAuthToken().getEncoded());
-        HttpClient client = new HttpClient();
-        int code = HttpClientUtil.executeMethod(client, method);
+        HttpClient client = HttpClientBuilder.create().build();
+        HttpResponse httpResp = HttpClientUtil.executeMethod(client, method);
+        int code = httpResp.getStatusLine().getStatusCode();
         if(HttpStatus.SC_OK != code) {
             Assert.fail(String.format("Failed to flush all cache in /zimbra web app. Response code: %d", code));
         }
@@ -103,11 +107,11 @@ public class TestServiceServlet {
         cleanup();
     }
 
-    private static void addAuthTokenHeader(HttpMethod method, String token) {
-        method.addRequestHeader(WebClientServiceUtil.PARAM_AUTHTOKEN, token);
+    private static void addAuthTokenHeader(HttpRequestBase method, String token) {
+        method.addHeader(WebClientServiceUtil.PARAM_AUTHTOKEN, token);
     }
 
-    private String getAdminAuthToken(String adminName) throws ServiceException, IOException {
+    private String getAdminAuthToken(String adminName) throws ServiceException, IOException, HttpException {
         SoapHttpTransport transport = new SoapHttpTransport(TestUtil.getAdminSoapUrl());
         com.zimbra.soap.admin.message.AuthRequest authReq = new com.zimbra.soap.admin.message.AuthRequest(
                 adminName, TestUtil.DEFAULT_PASSWORD);
@@ -118,73 +122,84 @@ public class TestServiceServlet {
     }
 
     private void verifyAdminGET(String url) throws ServiceException, AuthTokenException, HttpException, IOException {
-        HttpClient client = new HttpClient();
+        HttpClient client = HttpClientBuilder.create().build();
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-        GetMethod method = new GetMethod(url);
-        int respCode = HttpClientUtil.executeMethod(client, method);
+        HttpGet method = new HttpGet(url);
+        HttpResponse httpResp = HttpClientUtil.executeMethod(client, method);
+        int respCode = httpResp.getStatusLine().getStatusCode();
         Assert.assertEquals("Should be getting error code without an auth token", HttpStatus.SC_UNAUTHORIZED, respCode);
 
-        method = new GetMethod(url);
+        method = new HttpGet(url);
         addAuthTokenHeader(method, mbox.getAuthToken().getValue());
-        respCode = HttpClientUtil.executeMethod(client, method);
+        httpResp = HttpClientUtil.executeMethod(client, method);
+        respCode = httpResp.getStatusLine().getStatusCode();
         Assert.assertEquals("Should be getting error code with user's auth token", HttpStatus.SC_UNAUTHORIZED, respCode);
 
-        method = new GetMethod(url);
+        method = new HttpGet(url);
         addAuthTokenHeader(method, AuthProvider.getAdminAuthToken().getEncoded());
-        respCode = HttpClientUtil.executeMethod(client, method);
+        httpResp = HttpClientUtil.executeMethod(client, method);
+        respCode = httpResp.getStatusLine().getStatusCode();
         Assert.assertEquals("Should be getting code 200 with super admin's auth token", HttpStatus.SC_OK, respCode);
 
-        method = new GetMethod(url);
+        method = new HttpGet(url);
         addAuthTokenHeader(method, getAdminAuthToken(delegatedAdminWithRights.getName()));
-        respCode = HttpClientUtil.executeMethod(client, method);
+        httpResp = HttpClientUtil.executeMethod(client, method);
+        respCode = httpResp.getStatusLine().getStatusCode();
         Assert.assertEquals("Should be getting code 200 with permitted delegated admin's auth token", HttpStatus.SC_OK, respCode);
 
-        method = new GetMethod(url);
+        method = new HttpGet(url);
         addAuthTokenHeader(method, getAdminAuthToken(delegatedAdminWithoutRights.getName()));
-        respCode = HttpClientUtil.executeMethod(client, method);
+        httpResp = HttpClientUtil.executeMethod(client, method);
+        respCode = httpResp.getStatusLine().getStatusCode();
         Assert.assertEquals("Should be getting code 401 with unpermitted delegated admin's auth token", HttpStatus.SC_UNAUTHORIZED, respCode);
     }
 
     private void verifyNonAdminGET(String url) throws ServiceException, AuthTokenException, HttpException, IOException {
-        HttpClient client = new HttpClient();
+        HttpClient client = HttpClientBuilder.create().build();
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-        GetMethod method = new GetMethod(url);
-        int respCode = HttpClientUtil.executeMethod(client, method);
+        HttpGet method = new HttpGet(url);
+        HttpResponse httpResp = HttpClientUtil.executeMethod(client, method);
+        int respCode = httpResp.getStatusLine().getStatusCode();
         Assert.assertEquals("Should be getting error code without an auth token", HttpStatus.SC_UNAUTHORIZED, respCode);
 
-        method = new GetMethod(url);
+        method = new HttpGet(url);
         addAuthTokenHeader(method, mbox.getAuthToken().getValue());
-        respCode = HttpClientUtil.executeMethod(client, method);
+        httpResp = HttpClientUtil.executeMethod(client, method);
+        respCode = httpResp.getStatusLine().getStatusCode();
         Assert.assertEquals("Should be getting code 200 with user's auth token", HttpStatus.SC_OK, respCode);
 
-        method = new GetMethod(url);
+        method = new HttpGet(url);
         addAuthTokenHeader(method, AuthProvider.getAdminAuthToken().getEncoded());
-        respCode = HttpClientUtil.executeMethod(client, method);
+        httpResp = HttpClientUtil.executeMethod(client, method);
+        respCode = httpResp.getStatusLine().getStatusCode();
         Assert.assertEquals("Should be getting code 200 with super admin's auth token", HttpStatus.SC_OK, respCode);
 
-        method = new GetMethod(url);
+        method = new HttpGet(url);
         addAuthTokenHeader(method, getAdminAuthToken(delegatedAdminWithRights.getName()));
-        respCode = HttpClientUtil.executeMethod(client, method);
+        httpResp = HttpClientUtil.executeMethod(client, method);
+        respCode = httpResp.getStatusLine().getStatusCode();
         Assert.assertEquals("Should be getting code 200 with permitted delegated admin's auth token", HttpStatus.SC_OK, respCode);
 
-        method = new GetMethod(url);
+        method = new HttpGet(url);
         addAuthTokenHeader(method, getAdminAuthToken(delegatedAdminWithoutRights.getName()));
-        respCode = HttpClientUtil.executeMethod(client, method);
+        httpResp = HttpClientUtil.executeMethod(client, method);
+        respCode = httpResp.getStatusLine().getStatusCode();
         Assert.assertEquals("Should be getting code 200 with unpermitted delegated admin's auth token", HttpStatus.SC_OK, respCode);
     }
 
     private void deployAdminVersionCheck() throws AuthTokenException, ServiceException, HttpException, IOException {
-        HttpClient client = new HttpClient();
+        HttpClient client = HttpClientBuilder.create().build();
         String url = baseURL + "deployzimlet";
-        PostMethod method = new PostMethod(url);
+        HttpPost method = new HttpPost(url);
         addAuthTokenHeader(method, AuthProvider.getAdminAuthToken().getEncoded());
-        method.addRequestHeader(ZimletUtil.PARAM_ZIMLET, "com_zimbra_adminversioncheck");
+        method.addHeader(ZimletUtil.PARAM_ZIMLET, "com_zimbra_adminversioncheck");
         File zimletFile = new File("/opt/zimbra/zimlets/com_zimbra_adminversioncheck.zip"); //standard admin extension, should always be there. No harm in redeploying it
         if(zimletFile.exists()) {
             InputStream targetStream = new FileInputStream(zimletFile);
-            method.setRequestBody(targetStream);
+            method.setEntity(new InputStreamEntity(targetStream));
         }
-        int respCode = HttpClientUtil.executeMethod(client, method);
+        HttpResponse httpResp = HttpClientUtil.executeMethod(client, method);
+        int respCode = httpResp.getStatusLine().getStatusCode();
         Assert.assertEquals("Super admin should be able to deploy com_zimbra_adminversioncheck admin extension", HttpStatus.SC_OK, respCode);
     }
 
@@ -221,122 +236,134 @@ public class TestServiceServlet {
     @Test
     public void testDeployZimlet() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-        HttpClient client = new HttpClient();
+        HttpClient client = HttpClientBuilder.create().build();
         String url = baseURL + "deployzimlet";
-        PostMethod method = new PostMethod(url);
+        HttpPost method = new HttpPost(url);
         addAuthTokenHeader(method, mbox.getAuthToken().getValue());
-        method.addRequestHeader(ZimletUtil.PARAM_ZIMLET, TEST_ZIMLET);
+        method.addHeader(ZimletUtil.PARAM_ZIMLET, TEST_ZIMLET);
         File zimletFile = new File(TEST_ZIMLET_PATH);
         if(zimletFile.exists()) {
             InputStream targetStream = new FileInputStream(zimletFile);
-            method.setRequestBody(targetStream);
+            method.setEntity(new InputStreamEntity(targetStream));
         }
-        int respCode = HttpClientUtil.executeMethod(client, method);
+        HttpResponse httpResp = HttpClientUtil.executeMethod(client, method);
+        int respCode = httpResp.getStatusLine().getStatusCode();
         Assert.assertEquals("Should be getting error code with user's auth token", HttpStatus.SC_UNAUTHORIZED, respCode);
 
-        method = new PostMethod(url);
+        method = new HttpPost(url);
         addAuthTokenHeader(method, AuthProvider.getAdminAuthToken().getEncoded());
-        method.addRequestHeader(ZimletUtil.PARAM_ZIMLET, TEST_ZIMLET);
+        method.addHeader(ZimletUtil.PARAM_ZIMLET, TEST_ZIMLET);
         if(zimletFile.exists()) {
             InputStream targetStream = new FileInputStream(zimletFile);
-            method.setRequestBody(targetStream);
+            method.setEntity(new InputStreamEntity(targetStream));
         }
-        respCode = HttpClientUtil.executeMethod(client, method);
+        httpResp = HttpClientUtil.executeMethod(client, method);
+        respCode = httpResp.getStatusLine().getStatusCode();
         Assert.assertEquals("Should be getting code 200 with super admin's auth token", HttpStatus.SC_OK, respCode);
 
-        method = new PostMethod(url);
+        method = new HttpPost(url);
         addAuthTokenHeader(method, getAdminAuthToken(delegatedAdminWithRights.getName()));
-        method.addRequestHeader(ZimletUtil.PARAM_ZIMLET, TEST_ZIMLET);
+        method.addHeader(ZimletUtil.PARAM_ZIMLET, TEST_ZIMLET);
         if(zimletFile.exists()) {
             InputStream targetStream = new FileInputStream(zimletFile);
-            method.setRequestBody(targetStream);
+            method.setEntity(new InputStreamEntity(targetStream));
         }
-        respCode = HttpClientUtil.executeMethod(client, method);
+        httpResp = HttpClientUtil.executeMethod(client, method);
+        respCode = httpResp.getStatusLine().getStatusCode();
         Assert.assertEquals("Should be getting code 200 with permitted delegated admin's auth token", HttpStatus.SC_OK, respCode);
 
-        method = new PostMethod(url);
+        method = new HttpPost(url);
         addAuthTokenHeader(method, getAdminAuthToken(delegatedAdminWithoutRights.getName()));
-        method.addRequestHeader(ZimletUtil.PARAM_ZIMLET, TEST_ZIMLET);
+        method.addHeader(ZimletUtil.PARAM_ZIMLET, TEST_ZIMLET);
         if(zimletFile.exists()) {
             InputStream targetStream = new FileInputStream(zimletFile);
-            method.setRequestBody(targetStream);
+            method.setEntity(new InputStreamEntity(targetStream));
         }
-        respCode = HttpClientUtil.executeMethod(client, method);
+        httpResp= HttpClientUtil.executeMethod(client, method);
+        respCode = httpResp.getStatusLine().getStatusCode();
         Assert.assertEquals("Should be getting code 401 with unpermitted delegated admin's auth token", HttpStatus.SC_UNAUTHORIZED, respCode);
     }
 
     @Test
     public void testDeployBadZimletName() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-        HttpClient client = new HttpClient();
+        HttpClient client = HttpClientBuilder.create().build();
         String url = baseURL + "deployzimlet";
-        PostMethod method = new PostMethod(url);
+        HttpPost method = new HttpPost(url);
         addAuthTokenHeader(method, mbox.getAuthToken().getValue());
-        method.addRequestHeader(ZimletUtil.PARAM_ZIMLET, "../conf/nginx.key");
+        method.addHeader(ZimletUtil.PARAM_ZIMLET, "../conf/nginx.key");
         File zimletFile = new File(TEST_ZIMLET_PATH);
         if(zimletFile.exists()) {
             InputStream targetStream = new FileInputStream(zimletFile);
-            method.setRequestBody(targetStream);
+            method.setEntity(new InputStreamEntity(targetStream));
         }
-        int respCode = HttpClientUtil.executeMethod(client, method);
+        HttpResponse httpResp = HttpClientUtil.executeMethod(client, method);
+        int respCode = httpResp.getStatusLine().getStatusCode();
         Assert.assertEquals("Should be getting error code with user's auth token", HttpStatus.SC_UNAUTHORIZED, respCode);
 
-        method = new PostMethod(url);
+        method = new HttpPost(url);
         addAuthTokenHeader(method, AuthProvider.getAdminAuthToken().getEncoded());
-        method.addRequestHeader(ZimletUtil.PARAM_ZIMLET, "../conf/nginx.key");
+        method.addHeader(ZimletUtil.PARAM_ZIMLET, "../conf/nginx.key");
         if(zimletFile.exists()) {
             InputStream targetStream = new FileInputStream(zimletFile);
-            method.setRequestBody(targetStream);
+            method.setEntity(new InputStreamEntity(targetStream));
         }
-        respCode = HttpClientUtil.executeMethod(client, method);
+        httpResp = HttpClientUtil.executeMethod(client, method);
+        respCode = httpResp.getStatusLine().getStatusCode();
         Assert.assertEquals("Should be getting code 400 with super admin's auth token w/o upload", HttpStatus.SC_BAD_REQUEST, respCode);
     }
 
     @Test
     public void testUnDeployZimlet() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-        HttpClient client = new HttpClient();
+        HttpClient client = HttpClientBuilder.create().build();
         String url = baseURL + "undeployzimlet";
-        PostMethod method = new PostMethod(url);
+        HttpPost method = new HttpPost(url);
         addAuthTokenHeader(method, mbox.getAuthToken().getValue());
-        method.addRequestHeader(ZimletUtil.PARAM_ZIMLET, TEST_ZIMLET);
-        int respCode = HttpClientUtil.executeMethod(client, method);
+        method.addHeader(ZimletUtil.PARAM_ZIMLET, TEST_ZIMLET);
+        HttpResponse httpResp = HttpClientUtil.executeMethod(client, method);
+        int respCode = httpResp.getStatusLine().getStatusCode();
         Assert.assertEquals("Should be getting error code with user's auth token", HttpStatus.SC_UNAUTHORIZED, respCode);
 
-        method = new PostMethod(url);
+        method = new HttpPost(url);
         addAuthTokenHeader(method, AuthProvider.getAdminAuthToken().getEncoded());
-        method.addRequestHeader(ZimletUtil.PARAM_ZIMLET, TEST_ZIMLET);
-        respCode = HttpClientUtil.executeMethod(client, method);
+        method.addHeader(ZimletUtil.PARAM_ZIMLET, TEST_ZIMLET);
+        httpResp = HttpClientUtil.executeMethod(client, method);
+        respCode = httpResp.getStatusLine().getStatusCode();
         Assert.assertEquals("Should be getting code 200 with super admin's auth token", HttpStatus.SC_OK, respCode);
 
-        method = new PostMethod(url);
+        method = new HttpPost(url);
         addAuthTokenHeader(method, getAdminAuthToken(delegatedAdminWithRights.getName()));
-        method.addRequestHeader(ZimletUtil.PARAM_ZIMLET, TEST_ZIMLET);
-        respCode = HttpClientUtil.executeMethod(client, method);
+        method.addHeader(ZimletUtil.PARAM_ZIMLET, TEST_ZIMLET);
+        httpResp = HttpClientUtil.executeMethod(client, method);
+        respCode = httpResp.getStatusLine().getStatusCode();
         Assert.assertEquals("Should be getting code 200 with permitted delegated admin's auth token", HttpStatus.SC_OK, respCode);
 
-        method = new PostMethod(url);
+        method = new HttpPost(url);
         addAuthTokenHeader(method, getAdminAuthToken(delegatedAdminWithoutRights.getName()));
-        method.addRequestHeader(ZimletUtil.PARAM_ZIMLET, TEST_ZIMLET);
-        respCode = HttpClientUtil.executeMethod(client, method);
+        method.addHeader(ZimletUtil.PARAM_ZIMLET, TEST_ZIMLET);
+        httpResp = HttpClientUtil.executeMethod(client, method);
+        respCode = httpResp.getStatusLine().getStatusCode();
         Assert.assertEquals("Should be getting code 401 with unpermitted delegated admin's auth token", HttpStatus.SC_UNAUTHORIZED, respCode);
     }
 
     @Test
     public void testUnDeployBadZimletname() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-        HttpClient client = new HttpClient();
+        HttpClient client = HttpClientBuilder.create().build();
         String url = baseURL + "undeployzimlet";
-        PostMethod method = new PostMethod(url);
+        HttpPost method = new HttpPost(url);
         addAuthTokenHeader(method, mbox.getAuthToken().getValue());
-        method.addRequestHeader(ZimletUtil.PARAM_ZIMLET, "../conf/nginx.key");
-        int respCode = HttpClientUtil.executeMethod(client, method);
+        method.addHeader(ZimletUtil.PARAM_ZIMLET, "../conf/nginx.key");
+        HttpResponse httpResp = HttpClientUtil.executeMethod(client, method);
+        int respCode = httpResp.getStatusLine().getStatusCode();
         Assert.assertEquals("Should be getting error code with user's auth token", HttpStatus.SC_UNAUTHORIZED, respCode);
 
-        method = new PostMethod(url);
+        method = new HttpPost(url);
         addAuthTokenHeader(method, AuthProvider.getAdminAuthToken().getEncoded());
-        method.addRequestHeader(ZimletUtil.PARAM_ZIMLET, "../conf/nginx.key");
-        respCode = HttpClientUtil.executeMethod(client, method);
+        method.addHeader(ZimletUtil.PARAM_ZIMLET, "../conf/nginx.key");
+        httpResp = HttpClientUtil.executeMethod(client, method);
+        respCode = httpResp.getStatusLine().getStatusCode();
         Assert.assertEquals("Should be getting code 400 with super admin's auth token", HttpStatus.SC_BAD_REQUEST, respCode);
     }
 
@@ -345,37 +372,40 @@ public class TestServiceServlet {
         deployAdminVersionCheck();
 
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-        HttpClient client = new HttpClient();
+        HttpClient client = HttpClientBuilder.create().build();
         String url = baseURL + "deployzimlet";
-        PostMethod method = new PostMethod(url);
+        HttpPost method = new HttpPost(url);
         addAuthTokenHeader(method, mbox.getAuthToken().getValue());
-        method.addRequestHeader(ZimletUtil.PARAM_ZIMLET, "com_zimbra_phone");
+        method.addHeader(ZimletUtil.PARAM_ZIMLET, "com_zimbra_phone");
         File zimletFile = new File("/opt/zimbra/zimlets/com_zimbra_adminversioncheck.zip"); //standard zimlet, should always be there. No harm in redeploying it
         if(zimletFile.exists()) {
             InputStream targetStream = new FileInputStream(zimletFile);
-            method.setRequestBody(targetStream);
+            method.setEntity(new InputStreamEntity(targetStream));
         }
-        int respCode = HttpClientUtil.executeMethod(client, method);
+        HttpResponse httpResp = HttpClientUtil.executeMethod(client, method);
+        int respCode = httpResp.getStatusLine().getStatusCode();
         Assert.assertEquals("Should be getting error code with user's auth token", HttpStatus.SC_UNAUTHORIZED, respCode);
 
-        method = new PostMethod(url);
+        method = new HttpPost(url);
         addAuthTokenHeader(method, getAdminAuthToken(delegatedAdminWithRights.getName()));
-        method.addRequestHeader(ZimletUtil.PARAM_ZIMLET, "com_zimbra_adminversioncheck");
+        method.addHeader(ZimletUtil.PARAM_ZIMLET, "com_zimbra_adminversioncheck");
         if(zimletFile.exists()) {
             InputStream targetStream = new FileInputStream(zimletFile);
-            method.setRequestBody(targetStream);
+            method.setEntity(new InputStreamEntity(targetStream));
         }
-        respCode = HttpClientUtil.executeMethod(client, method);
+        httpResp = HttpClientUtil.executeMethod(client, method);
+        respCode = httpResp.getStatusLine().getStatusCode();
         Assert.assertEquals("Should be getting code 401 with permitted delegated admin's auth token", HttpStatus.SC_UNAUTHORIZED, respCode);
 
-        method = new PostMethod(url);
+        method = new HttpPost(url);
         addAuthTokenHeader(method, getAdminAuthToken(delegatedAdminWithoutRights.getName()));
-        method.addRequestHeader(ZimletUtil.PARAM_ZIMLET, "com_zimbra_adminversioncheck");
+        method.addHeader(ZimletUtil.PARAM_ZIMLET, "com_zimbra_adminversioncheck");
         if(zimletFile.exists()) {
             InputStream targetStream = new FileInputStream(zimletFile);
-            method.setRequestBody(targetStream);
+            method.setEntity(new InputStreamEntity(targetStream));
         }
-        respCode = HttpClientUtil.executeMethod(client, method);
+        httpResp = HttpClientUtil.executeMethod(client, method);
+        respCode = httpResp.getStatusLine().getStatusCode();
         Assert.assertEquals("Should be getting code 401 with unpermitted delegated admin's auth token", HttpStatus.SC_UNAUTHORIZED, respCode);
     }
 
@@ -384,30 +414,34 @@ public class TestServiceServlet {
         deployAdminVersionCheck();
 
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-        HttpClient client = new HttpClient();
+        HttpClient client = HttpClientBuilder.create().build();
         String url = baseURL + "undeployzimlet";
-        PostMethod method = new PostMethod(url);
+        HttpPost method = new HttpPost(url);
         addAuthTokenHeader(method, mbox.getAuthToken().getValue());
-        method.addRequestHeader(ZimletUtil.PARAM_ZIMLET, "com_zimbra_adminversioncheck");
-        int respCode = HttpClientUtil.executeMethod(client, method);
+        method.addHeader(ZimletUtil.PARAM_ZIMLET, "com_zimbra_adminversioncheck");
+        HttpResponse httpResp = HttpClientUtil.executeMethod(client, method);
+        int respCode = httpResp.getStatusLine().getStatusCode();
         Assert.assertEquals("Should be getting error code with user's auth token", HttpStatus.SC_UNAUTHORIZED, respCode);
 
-        method = new PostMethod(url);
+        method = new HttpPost(url);
         addAuthTokenHeader(method, getAdminAuthToken(delegatedAdminWithRights.getName()));
-        method.addRequestHeader(ZimletUtil.PARAM_ZIMLET, "com_zimbra_adminversioncheck");
-        respCode = HttpClientUtil.executeMethod(client, method);
+        method.addHeader(ZimletUtil.PARAM_ZIMLET, "com_zimbra_adminversioncheck");
+        httpResp = HttpClientUtil.executeMethod(client, method);
+        respCode = httpResp.getStatusLine().getStatusCode();
         Assert.assertEquals("Delegated admin should not be allowed to undeploy admin extensions even with deployZimlet right", HttpStatus.SC_UNAUTHORIZED, respCode);
 
-        method = new PostMethod(url);
+        method = new HttpPost(url);
         addAuthTokenHeader(method, getAdminAuthToken(delegatedAdminWithoutRights.getName()));
-        method.addRequestHeader(ZimletUtil.PARAM_ZIMLET, "com_zimbra_adminversioncheck");
-        respCode = HttpClientUtil.executeMethod(client, method);
+        method.addHeader(ZimletUtil.PARAM_ZIMLET, "com_zimbra_adminversioncheck");
+        httpResp = HttpClientUtil.executeMethod(client, method);
+        respCode = httpResp.getStatusLine().getStatusCode();
         Assert.assertEquals("Delegated admin should not be allowed to undeploy admin extensions with or without deployZimlet right", HttpStatus.SC_UNAUTHORIZED, respCode);
 
-        method = new PostMethod(url);
+        method = new HttpPost(url);
         addAuthTokenHeader(method, AuthProvider.getAdminAuthToken().getEncoded());
-        method.addRequestHeader(ZimletUtil.PARAM_ZIMLET, "com_zimbra_adminversioncheck");
-        respCode = HttpClientUtil.executeMethod(client, method);
+        method.addHeader(ZimletUtil.PARAM_ZIMLET, "com_zimbra_adminversioncheck");
+        httpResp = HttpClientUtil.executeMethod(client, method);
+        respCode = httpResp.getStatusLine().getStatusCode();
         Assert.assertEquals("Super admin should be able to undeploy com_zimbra_adminversioncheck admin extension", HttpStatus.SC_OK, respCode);
     }
 }

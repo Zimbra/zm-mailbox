@@ -575,17 +575,14 @@ public final class LC {
             " -Djava.awt.headless=true" +
             " -Dsun.net.inetaddr.ttl=${networkaddress_cache_ttl}" +
             " -Dorg.apache.jasper.compiler.disablejsr199=true" +
-            " -XX:+UseConcMarkSweepGC" +
+            " -XX:+UseG1GC" +
             " -XX:SoftRefLRUPolicyMSPerMB=1" +
+            " -XX:+UnlockExperimentalVMOptions" +
+            " -XX:G1NewSizePercent=15" +
+            " -XX:G1MaxNewSizePercent=45" +
             " -XX:-OmitStackTraceInFastThrow" +
             " -verbose:gc" +
-            " -XX:+PrintGCDetails" +
-            " -XX:+PrintGCDateStamps" +
-            " -XX:+PrintGCApplicationStoppedTime" +
-            " -Xloggc:/opt/zimbra/log/gc.log" +
-            " -XX:+UseGCLogFileRotation" +
-            " -XX:NumberOfGCLogFiles=20" +
-            " -XX:GCLogFileSize=10M");
+            " -Xlog:gc*=info,safepoint=info:file=/opt/zimbra/log/gc.log:time:filecount=20,filesize=10m");
     @Supported
     public static final KnownKey mailboxd_pidfile = KnownKey.newKey("${zimbra_log_directory}/mailboxd.pid");
 
@@ -599,7 +596,7 @@ public final class LC {
     public static final KnownKey mailboxd_keystore_base_password = KnownKey.newKey("zimbra");
 
     @Supported
-    public static final KnownKey mailboxd_truststore = KnownKey.newKey("${zimbra_java_home}/jre/lib/security/cacerts");
+    public static final KnownKey mailboxd_truststore = KnownKey.newKey("${zimbra_java_home}/lib/security/cacerts");
 
     @Supported
     public static final KnownKey mailboxd_truststore_password = KnownKey.newKey("changeit");
@@ -1291,13 +1288,28 @@ public final class LC {
     @Reloadable
     public static final KnownKey imap_always_use_remote_store = KnownKey.newKey(false);
 
-    
+    // owasp handler
+    public static final KnownKey zimbra_use_owasp_html_sanitizer = KnownKey.newKey(true);
+
+    public static final KnownKey enable_delegated_admin_ldap_access = KnownKey.newKey(true);
+
     // OAuth2 Social
     public static final KnownKey zm_oauth_classes_handlers_yahoo = KnownKey.newKey("com.zimbra.oauth.handlers.impl.YahooOAuth2Handler");
     public static final KnownKey zm_oauth_classes_handlers_google = KnownKey.newKey("com.zimbra.oauth.handlers.impl.GoogleOAuth2Handler");
     public static final KnownKey zm_oauth_classes_handlers_facebook = KnownKey.newKey("com.zimbra.oauth.handlers.impl.FacebookOAuth2Handler");
-    
-    
+
+    // alias login
+    public static final KnownKey alias_login_enabled = KnownKey.newKey(true);
+
+    // Feed Manager comma-separated blacklist. addresses can be CIDR notation, or single ip. no wild-cards (default blacklist private networks)
+    public static final KnownKey zimbra_feed_manager_blacklist = KnownKey.newKey("10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,fd00::/8");
+
+    // Zimbra valid class list to de-serialize
+    public static final KnownKey zimbra_deserialize_classes = KnownKey.newKey("");
+
+    // XML 1.0 invalid characters regex pattern
+    public static final KnownKey xml_invalid_chars_regex = KnownKey.newKey("\\&\\#(?:x([0-9a-fA-F]+)|([0-9]+))\\;");
+
     static {
         // Automatically set the key name with the variable name.
         for (Field field : LC.class.getFields()) {

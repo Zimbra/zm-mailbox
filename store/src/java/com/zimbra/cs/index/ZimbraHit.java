@@ -23,6 +23,7 @@ import com.google.common.base.MoreObjects;
 import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.mailbox.ZimbraQueryHit;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.imap.ImapMessage;
 import com.zimbra.cs.mailbox.MailItem;
@@ -338,6 +339,50 @@ public abstract class ZimbraHit implements ZimbraQueryHit {
                 ZimbraLog.search.error("Failed to compare %s and %s", lhs, rhs, e);
                 return 0;
             }
+        }
+    }
+    
+    /**
+     * 
+     * @param ascending
+     * @param lhs
+     * @param rhs
+     * @return
+     */
+    protected static final int compareByReadFlag(boolean ascending, ZimbraHit lhs, ZimbraHit rhs) {
+        int retVal = 0;
+        try {
+            long left = getReadStatus(lhs);
+            long right = getReadStatus(rhs);
+            long result = right - left;
+            if (result > 0)
+                retVal = 1;
+            else if (result < 0)
+                retVal = -1;
+            else
+                retVal = 0;
+        } catch (ServiceException e) {
+            ZimbraLog.index.info("Caught ServiceException trying to compare ZimbraHit %s to ZimbraHit %s",
+                lhs, rhs);
+            ZimbraLog.index.debug(e);
+        }
+        if (ascending)
+            return -1 * retVal;
+        else
+            return retVal;
+    }
+    
+    /**
+     * @param lhs
+     * @return
+     * @throws ServiceException 
+     */
+    public static int getReadStatus(ZimbraHit zh) throws ServiceException {
+        if (zh instanceof ProxiedHit) {
+            return ((ProxiedHit) zh).getElement().getAttributeInt(MailConstants.A_UNREAD);
+        }
+        else {
+            return zh.getMailItem().isUnread() ? 1 : 0;
         }
     }
 }

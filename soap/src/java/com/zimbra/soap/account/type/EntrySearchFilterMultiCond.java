@@ -31,12 +31,18 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlType;
 
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.type.SearchFilterCondition;
 import com.zimbra.soap.type.ZmBoolean;
 
+import io.leangen.graphql.annotations.GraphQLIgnore;
+import io.leangen.graphql.annotations.GraphQLInputField;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {})
+@GraphQLType(name=GqlConstants.CLASS_SEARCH_FILTER_MULTIPLE_CONDITIONS, description="Multiple conditions search filter.")
 public class EntrySearchFilterMultiCond
 implements SearchFilterCondition {
 
@@ -69,14 +75,21 @@ implements SearchFilterCondition {
         @XmlElement(name=AccountConstants.E_ENTRY_SEARCH_FILTER_SINGLECOND /* cond */,
             type=EntrySearchFilterSingleCond.class)
     })
+
+    @GraphQLIgnore
     private List<SearchFilterCondition> conditions = Lists.newArrayList();
 
     public EntrySearchFilterMultiCond() {
     }
 
     @Override
+    @GraphQLInputField(name = GqlConstants.SEARCH_FILTER_NEGATION, description="Negation flag, if set to 1 (true) then negate the compound condition")
     public void setNot(Boolean not) { this.not = ZmBoolean.fromBool(not); }
+    @GraphQLInputField(name = GqlConstants.SEARCH_FILTER_OR, description="OR flag, 1 (true): child conditions are OR'ed together\n" + 
+            "0 (false): [default] child conditions are AND'ed together")
     public void setOr(Boolean or) { this.or = ZmBoolean.fromBool(or); }
+
+    @GraphQLIgnore
     public void setConditions(Iterable <SearchFilterCondition> conditions) {
         this.conditions.clear();
         if (conditions != null) {
@@ -84,6 +97,21 @@ implements SearchFilterCondition {
         }
     }
 
+    @GraphQLInputField(name = GqlConstants.SINGLE_CONDITION, description="search filter single conditions")
+    public void setSingleConditions(List<EntrySearchFilterSingleCond> conditions) {
+        if (conditions != null) {
+            Iterables.addAll(this.conditions, conditions);
+        }
+    }
+
+    @GraphQLInputField(name = GqlConstants.MULTIPLE_CONDITION, description="search filter multiple conditions")
+    public void setMultipleConditions(List<EntrySearchFilterMultiCond> conditions) {
+        if (conditions != null) {
+            Iterables.addAll(this.conditions, conditions);
+        }
+    }
+
+    @GraphQLIgnore
     public void addCondition(SearchFilterCondition condition) {
         this.conditions.add(condition);
     }

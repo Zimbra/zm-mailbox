@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.http.HttpException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -87,7 +88,7 @@ public class TestGetContactsRequest extends SoapTest {
     }
 
     public List<String> createContacts(SoapTransport soapTrans, String nameTemplate, int numContacts)
-    throws ServiceException, IOException {
+    throws ServiceException, IOException, HttpException{
         List<String> contactIds = Lists.newArrayListWithExpectedSize(numContacts);
         for (int i = 1; i<=numContacts; i++) {
             contactIds.add(createContact(soapTrans, String.format(nameTemplate, i)).getId());
@@ -95,7 +96,7 @@ public class TestGetContactsRequest extends SoapTest {
         return contactIds;
     }
 
-    public ContactInfo createContact(SoapTransport soapTrans, String fullName) throws ServiceException, IOException {
+    public ContactInfo createContact(SoapTransport soapTrans, String fullName) throws ServiceException, IOException, HttpException {
         ContactSpec contactSpec = new ContactSpec();
         contactSpec.addAttr(NewContactAttr.fromNameAndValue(ContactConstants.A_fullName, fullName));
         CreateContactResponse resp = invokeJaxb(soapTrans, new CreateContactRequest(contactSpec));
@@ -106,7 +107,7 @@ public class TestGetContactsRequest extends SoapTest {
     }
 
     public ContactInfo createContactGroup(SoapTransport soapTrans, String fullName, String...memberIds)
-            throws ServiceException, IOException {
+            throws ServiceException, IOException, HttpException {
         ContactSpec contactSpec = new ContactSpec();
         contactSpec.addAttr(NewContactAttr.fromNameAndValue(ContactConstants.A_fullName, fullName));
         contactSpec.addAttr(NewContactAttr.fromNameAndValue(ContactConstants.A_type, ContactConstants.TYPE_GROUP));
@@ -190,7 +191,7 @@ public class TestGetContactsRequest extends SoapTest {
     }
 
     private void checkGetContactsMemberOf(SoapTransport soapTrans, GetContactsRequest getContactsReq,
-        List<ContactInfo> groups, List<String> remIds, SoapProtocol proto) throws ServiceException, IOException {
+        List<ContactInfo> groups, List<String> remIds, SoapProtocol proto) throws ServiceException, IOException, HttpException {
         GetContactsResponse getContactsResp;
         getContactsResp = invokeJaxb(soapTrans, getContactsReq, proto);
         List<ContactInfo> contacts = getContactsResp.getContacts();

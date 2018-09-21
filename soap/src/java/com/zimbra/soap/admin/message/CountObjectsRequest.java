@@ -29,6 +29,7 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.CountObjectsType;
 import com.zimbra.soap.admin.type.DomainSelector;
 import com.zimbra.soap.admin.type.UCServiceSelector;
+import com.zimbra.soap.type.ZmBoolean;
 
 /**
  * @zm-api-command-auth-required true
@@ -44,6 +45,9 @@ import com.zimbra.soap.admin.type.UCServiceSelector;
  * For accountOnUCService/cosOnUCService/domainOnUCService, UCService is required,
  * and domain cannot be specified.
  *
+ * For domain, if onlyRelated attribute is true and the request is sent by a delegate or
+ * domain admin, counts only domain on which has rights, without requiring countDomain right.
+ *
  */
 @XmlRootElement(name=AdminConstants.E_COUNT_OBJECTS_REQUEST)
 public class CountObjectsRequest {
@@ -53,6 +57,12 @@ public class CountObjectsRequest {
      */
     @XmlAttribute(name=AdminConstants.A_TYPE /* type */, required=true)
     private CountObjectsType type;
+
+    /**
+     * @zm-api-field-description Get only related if delegated/domain admin
+     */
+    @XmlAttribute(name=AdminConstants.A_ONLY_RELATED /* onlyrelated */, required=false)
+    private ZmBoolean onlyRelated;
 
     /**
      * @zm-api-field-description Domain
@@ -121,5 +131,13 @@ public class CountObjectsRequest {
 
     public void setUcService(UCServiceSelector ucService) {
         this.ucService = ucService;
+    }
+
+    public void setOnlyRelated(Boolean onlyRelated) {
+        this.onlyRelated = ZmBoolean.fromBool(onlyRelated);
+    }
+
+    public Boolean getOnlyRelated() {
+        return ZmBoolean.toBool(onlyRelated, false);
     }
 }
