@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2011, 2013, 2014, 2016, 2018 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -34,6 +34,14 @@ public final class SearchParamsTest {
         Assert.assertEquals(new Locale("da", "DK"), SearchParams.parseLocale("da_DK"));
         Assert.assertEquals(new Locale("en"), SearchParams.parseLocale("en"));
         Assert.assertEquals(new Locale("en", "US", "MAC"), SearchParams.parseLocale("en_US-MAC"));
+    }
+    
+    
+    public void testIsSortByReadFlag() {
+        Assert.assertFalse(SearchParams.isSortByReadFlag(SortBy.DATE_ASC));
+        Assert.assertFalse(SearchParams.isSortByReadFlag(SortBy.DATE_DESC));
+        Assert.assertTrue(SearchParams.isSortByReadFlag(SortBy.READ_ASC));
+        Assert.assertTrue(SearchParams.isSortByReadFlag(SortBy.READ_DESC));
     }
 
 }
