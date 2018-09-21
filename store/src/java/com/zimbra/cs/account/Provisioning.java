@@ -2722,7 +2722,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
         throw ServiceException.UNSUPPORTED();
     }
 
-    public void modifyAddressList(String addressListId, Domain domain, String name, String desc,
+    public void modifyAddressList(String addressListId, Domain domain, String name,
         Map<String, String> attrs) throws ServiceException {
         throw ServiceException.UNSUPPORTED();
     }

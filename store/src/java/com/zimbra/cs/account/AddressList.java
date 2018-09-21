@@ -18,11 +18,13 @@ package com.zimbra.cs.account;
 
 import java.util.Map;
 
+import com.zimbra.cs.account.ldap.entry.LdapEntry;
+
 /**
  * @author zimbra
  *
  */
-public class AddressList extends NamedEntry {
+public class AddressList extends NamedEntry implements LdapEntry {
 
     private String mDn;
 
