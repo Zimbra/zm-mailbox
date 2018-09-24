@@ -16,12 +16,17 @@
  */
 package com.zimbra.cs.service;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -40,11 +45,9 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.fileupload.DefaultFileItem;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileUploadBase;
 import org.apache.commons.fileupload.FileUploadException;
-import org.apache.commons.fileupload.disk.DiskFileItem;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.lang.StringEscapeUtils;
@@ -115,23 +118,30 @@ public class FileUploadServlet extends ZimbraServlet {
     private static String sUploadDir;
 
     public static final class Upload {
-        final String   accountId;
-        String         contentType;
-        final String   uuid;
-        final String   name;
-        final File     file;
-        final String   physical_filename;
-        long time;
-        boolean deleted = false;
-        BlobInputStream blobInputStream;
+        private final static String  UPLOAD_FILENAME_FORMAT = "%s/upload_%s_%s.tmp";
+        private final static String  METADATA_FILENAME_FORMAT = "%s/uploadmetadata_%s_%s.tmp";
+        private static final String NAME_TAG = "name:";
+        private static final String CONTENT_TYPE_TAG = "content-type:";
+        private final String   accountId;
+        private String         contentType;
+        private final String   uuid;
+        private final String   name;
+        private final File     file;
+        private final File     metadataFile;
+        private final String   physical_filename;
+        private long time;
+        private boolean deleted = false;
+        private BlobInputStream blobInputStream;
 
         Upload(String acctId, String uploadId) {
             accountId = acctId;
             time      = System.currentTimeMillis();
             uuid      = uploadId;
-            name      = "";
-            physical_filename  = String.format("%s/upload_%s_%s.tmp", getUploadDir(), accountId, uuid);
+            physical_filename  = String.format(UPLOAD_FILENAME_FORMAT, getUploadDir(), accountId, uuid);
+            String metadataFilename  = String.format(METADATA_FILENAME_FORMAT, getUploadDir(), accountId, uuid);
             file      = new File(physical_filename);
+            metadataFile = new File(metadataFilename);
+            name = readMetadataFile();
         }
 
         Upload(String acctId, FileItem attachment) throws ServiceException {
@@ -148,7 +158,7 @@ public class FileUploadServlet extends ZimbraServlet {
             uuid      = localServer + UPLOAD_PART_DELIMITER + LdapUtil.generateUUID();
             name      = FileUtil.trimFilename(filename);
             // Force FileItem to be a deterministic filename
-            physical_filename  = String.format("%s/upload_%s_%s.tmp", getUploadDir(), accountId, uuid);
+            physical_filename  = String.format(UPLOAD_FILENAME_FORMAT, getUploadDir(), accountId, uuid);
             file      = new File(physical_filename);
             try {
                 attachment.write(file);
@@ -156,7 +166,6 @@ public class FileUploadServlet extends ZimbraServlet {
             catch (Exception e) {
                 mLog.error("unable to write file %s to disk as :%s", filename, physical_filename);
             }
-
             if (attachment == null) {
                 contentType = MimeConstants.CT_TEXT_PLAIN;
             } else {
@@ -195,6 +204,7 @@ public class FileUploadServlet extends ZimbraServlet {
                 if (contentType == null)
                     contentType = MimeConstants.CT_APPLICATION_OCTET_STREAM;
             }
+            metadataFile = createMetadataFile();
         }
 
         public String getName()         { return name; }
@@ -216,12 +226,55 @@ public class FileUploadServlet extends ZimbraServlet {
             return blobInputStream;
         }
 
+        private File createMetadataFile() {
+            String metadataFilename = String.format(METADATA_FILENAME_FORMAT, getUploadDir(), accountId, uuid);
+            File mFile = new File(metadataFilename);
+            try (BufferedWriter bw = new BufferedWriter(
+                    new OutputStreamWriter(new FileOutputStream(mFile), StandardCharsets.UTF_8))) {
+                bw.write(Upload.NAME_TAG);
+                bw.write(Strings.nullToEmpty(name));
+                bw.newLine();
+                bw.write(Upload.CONTENT_TYPE_TAG);
+                bw.write(Strings.nullToEmpty(contentType));
+                bw.newLine();
+                bw.flush();
+            } catch (IOException e) {
+                mLog.warnQuietly("unable to write upload metadata file %s to disk", metadataFilename, e);
+            }
+            mLog.debug("written upload metadata file [%s]", mFile);
+            return mFile;
+        }
+
+        private String readMetadataFile() {
+            String name = "";
+            try (BufferedReader br = new BufferedReader(
+                    new InputStreamReader(new FileInputStream(metadataFile), StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = br.readLine()) != null) {
+                    if (line.startsWith(Upload.NAME_TAG)) {
+                        name = line.substring(Upload.NAME_TAG.length());
+                    } else if (line.startsWith(Upload.CONTENT_TYPE_TAG)) {
+                        contentType = line.substring(Upload.CONTENT_TYPE_TAG.length());
+                    }
+                }
+            } catch (IOException e) {
+                mLog.warnQuietly("unable to read metadata file %s from disk", metadataFile, e);
+            }
+            mLog.debug("read upload metadata file [%s] name=%s content-type=%s", metadataFile, name, contentType);
+            return name;
+        }
+
         boolean accessedAfter(long checkpoint)  { return time > checkpoint; }
 
         void purge() {
+            boolean succeeded;
             if (file != null) {
-                mLog.debug("Deleting from disk: id=%s, %s", uuid, file);
-                file.delete();
+                succeeded = file.delete();
+                mLog.debug("Deleted from disk succeeded=%s : id=%s, %s", succeeded, uuid, file);
+            }
+            if (metadataFile != null) {
+                succeeded = metadataFile.delete();
+                mLog.debug("Deleted metadata file from disk succeeded=%s : %s", succeeded, metadataFile);
             }
             if (blobInputStream != null) {
                 blobInputStream.closeFile();
@@ -423,26 +476,6 @@ public class FileUploadServlet extends ZimbraServlet {
             sUploadDir = LC.zimbra_tmp_directory.value() + "/upload";
         }
         return sUploadDir;
-    }
-
-    private static class TempFileFilter implements FileFilter {
-        private final long mNow = System.currentTimeMillis();
-
-        TempFileFilter()  { }
-
-        /** Returns <code>true</code> if the specified <code>File</code>
-         *  follows the {@link DefaultFileItem} naming convention
-         *  (<code>upload_*.tmp</code>) and is older than
-         *  {@link FileUploadServlet#UPLOAD_TIMEOUT_MSEC}. */
-        @Override
-        public boolean accept(File pathname) {
-            // upload_ XYZ .tmp
-            if (pathname == null)
-                return false;
-            String name = pathname.getName();
-            // file naming convention used by DefaultFileItem class
-            return name.startsWith("upload_") && name.endsWith(".tmp") && mNow - pathname.lastModified() > UPLOAD_TIMEOUT_MSEC;
-        }
     }
 
     @Override
