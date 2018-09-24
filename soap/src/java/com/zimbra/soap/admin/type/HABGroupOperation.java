@@ -78,7 +78,7 @@ public class HABGroupOperation {
      * @zm-api-field-description the seniorityInex of HAB group
      */
     @XmlAttribute(name = AccountConstants.A_HAB_SENIORITY_INDEX /* op */, required = false)
-    int seniorityIndex;
+    privtea int seniorityIndex;
 
     /**
      * @zm-api-field-tag op
