@@ -3175,4 +3175,18 @@ public class SoapProvisioning extends Provisioning {
         invokeJaxb(new ModifyHABGroupRequest(operation));
     }
 
+    /**
+     * 
+     * @param habGroupId HAB group to be modified
+     * @param seniorityIndex seniority index
+     * @throws ServiceException if an aeeror occurs while modifying the HAB group
+     */
+    public void modifyHabGroupSeniority(String habGroupId, String seniorityIndex)
+        throws ServiceException {
+        HABGroupOperation operation = new HABGroupOperation(habGroupId,
+            Integer.parseInt(seniorityIndex), HabGroupOp.assignSeniority);
+        invokeJaxb(new ModifyHABGroupRequest(operation));
+
+    }
+
 }
