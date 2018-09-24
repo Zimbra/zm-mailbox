@@ -5779,7 +5779,8 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                 boolean mCaptchaEnabled = acct.getBooleanAttr(Provisioning.A_zimbraCAPTCHAEnabled, false);
                 if (mCaptchaEnabled) {
                     int loginFailCount = acct.getIntAttr(Provisioning.A_zimbraCAPTCHALoginFailedCount, 0);
-                    if (loginFailCount > 0 ) {
+                    int showCaptchaOnLoginfailCount = Integer.parseInt(Provisioning.getInstance().getConfig().getAttr(Provisioning.A_zimbraShowCaptchaOnLoginFailedCount, "2"));
+                    if (loginFailCount >= showCaptchaOnLoginfailCount - 1) {
                         throw AuthFailedServiceException.NEED_CAPTCHA();
                     }
                 }
