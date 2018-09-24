@@ -17,15 +17,15 @@
 
 package com.zimbra.common.util;
 
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
 
 /**
  */
@@ -43,12 +43,23 @@ public class ThreadPool implements Executor {
     }
 
     public ThreadPool(String name, int poolSize, long timeout) {
+        this(name, 1, poolSize, timeout);
+    }
+
+    public static ThreadPool newCachedThreadPool(String name) {
+        return new ThreadPool(name, 0, Integer.MAX_VALUE, TIMEOUT, new SynchronousQueue<>());
+    }
+
+    public ThreadPool(String name, int minPoolSize, int maxPoolSize, long timeout) {
+        this(name, minPoolSize, maxPoolSize, timeout, new LinkedBlockingQueue<>());
+    }
+
+    private ThreadPool(String name, int minPoolSize, int maxPoolSize, long timeout, BlockingQueue<Runnable> workQueue) {
         mName = name;
         mTimeout = timeout;
         NamedThreadFactory tfac = new NamedThreadFactory(name,
             Thread.NORM_PRIORITY);
-        mPool = new ThreadPoolExecutor(1, poolSize, 60, TimeUnit.SECONDS,
-            new LinkedBlockingQueue<Runnable>());
+        mPool = new ZimbraThreadPoolExecutor(minPoolSize, maxPoolSize, 60, TimeUnit.SECONDS, workQueue);
         mPool.setThreadFactory(tfac);
         mActiveThreadsCounter = new ThreadCounter();
     }
@@ -64,8 +75,9 @@ public class ThreadPool implements Executor {
         return mActiveThreadsCounter.getValue();
     }
 
+    @Override
     public void execute(Runnable task) throws RejectedExecutionException {
-        mPool.execute(new CountedTask(task, mActiveThreadsCounter));
+        mPool.execute(task);
     }
 
     /**
@@ -91,6 +103,10 @@ public class ThreadPool implements Executor {
             mLog.warn("InterruptedException waiting for thread pool shutdown",
                 e);
         }
+    }
+
+    public ExecutorService getExecutorService() {
+        return mPool;
     }
 
     private class ThreadCounter {
@@ -133,6 +149,7 @@ public class ThreadPool implements Executor {
             return mTask;
         }
 
+        @Override
         public void run() {
             mCounter.inc();
             mTask.run();
@@ -151,9 +168,10 @@ public class ThreadPool implements Executor {
             mPriority = priority;
         }
 
+        @Override
         public Thread newThread(Runnable command) {
             int n;
-            
+
             synchronized (this) {
                 n = ++mThreadNumber;
             }
@@ -162,6 +180,20 @@ public class ThreadPool implements Executor {
             Thread t = new Thread(command, sb.toString());
             t.setPriority(mPriority);
             return t;
+        }
+    }
+
+    private class ZimbraThreadPoolExecutor extends ThreadPoolExecutor {
+
+        public ZimbraThreadPoolExecutor(int corePoolSize, int maximumPoolSize,
+                long keepAliveTime, TimeUnit unit, BlockingQueue<Runnable> workQueue) {
+            super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue);
+        }
+
+        @Override
+        public void execute(Runnable command) {
+            mLog.trace("submitting task to executor %s - %s active threads, %s queued", mName, mActiveThreadsCounter.getValue(), getQueue().size());
+            super.execute(new CountedTask(command, mActiveThreadsCounter));
         }
     }
 }
