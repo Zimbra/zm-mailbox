@@ -308,7 +308,7 @@ public class ProvUtil implements HttpDebugListener {
                 "help on reverse proxy related commands"), RIGHT("help on right-related commands"), SEARCH(
                 "help on search-related commands"), SERVER("help on server-related commands"), ALWAYSONCLUSTER(
                 "help on alwaysOnCluster-related commands"), UCSERVICE("help on ucservice-related commands"), SHARE(
-                "help on share related commands");
+                "help on share related commands"), HAB("help on HAB Group commands");
 
         private final String description;
 
@@ -852,17 +852,19 @@ public class ProvUtil implements HttpDebugListener {
                Category.LOG, 0, 2),
         UNLOCK_MAILBOX("unlockMailbox", "ulm", "{name@domain|id} [hostname (When unlocking a mailbox after a failed move attempt provide the hostname of the server that was the target for the failed move. Otherwise, do not include hostname parameter)]", Category.MAILBOX, 1, 2, Via.soap),
         CREATE_HAB_OU("createHABOrgUnit", "chou",
-            "{domain} {ouName}", Category.MISC , 2, 2),
+            "{domain} {ouName}", Category.HAB , 2, 2),
         RENAME_HAB_OU("renameHABOrgUnit", "rhou",
-            "{domain} {ouName} {newName}", Category.MISC , 3, 3),
+            "{domain} {ouName} {newName}", Category.HAB , 3, 3),
         DELETE_HAB_OU("deleteHABOrgUnit", "dhou",
-            "{domain} {ouName}", Category.MISC , 2, 2),
+            "{domain} {ouName}", Category.HAB , 2, 2),
         CREATE_HAB_GROUP("createHabGroup", "chabg",
-            "{groupName} {ouName} {name@domain} {TRUE|FALSE} [attr1 value1 [attr2 value2...]]", Category.MISC , 3, Integer.MAX_VALUE),
+            "{groupName} {ouName} {name@domain} {TRUE|FALSE} [attr1 value1 [attr2 value2...]]", Category.HAB , 3, Integer.MAX_VALUE),
         GET_HAB("getHab", "ghab",
-            "{habRootGrpId} ", Category.ACCOUNT , 1, 1),
-        MODIFY_HAB_GROUP("modify HAB group", "mhab",
-            "{habRootGrpId} {habParentGrpId} {targetHabParentGrpId} ", Category.MISC , 3, 3);
+            "{habRootGrpId} ", Category.HAB , 1, 1),
+        MODIFY_HAB_GROUP("modifyHabGroup", "mhab",
+            "{habGrpId} {habParentGrpId} {targetHabParentGrpId} ", Category.HAB , 3, 3),
+        MODIFY_HAB_GROUP_SENIORITY("modifyHabGroupSeniority", "mhsi",
+            "{habGrpId} {seniorityIndex} ", Category.HAB, 2, 2);
         private String mName;
         private String mAlias;
         private String mHelp;
@@ -1619,6 +1621,9 @@ public class ProvUtil implements HttpDebugListener {
         case MODIFY_HAB_GROUP:
             modifyHabGroup(args);
             break;
+        case MODIFY_HAB_GROUP_SENIORITY:
+            modifyHabGroupSeniority(args);
+            break;
         default:
             return false;
         }
@@ -1776,6 +1781,20 @@ public class ProvUtil implements HttpDebugListener {
             ((SoapProvisioning) prov).modifyHabGroup(args[1], args[2], args[3]);
         } else if (args.length == 3) {
             ((SoapProvisioning) prov).modifyHabGroup(args[1], null, args[2]);
+        } else {
+            usage();
+            return;
+        }
+    }
+    
+    private void modifyHabGroupSeniority(String[] args)  throws ServiceException {
+        if (!(prov instanceof SoapProvisioning)) {
+            throwSoapOnly();
+        }
+        
+        //{habGrpId} {seniorityIndex} 
+        if (args.length == 3) {
+            ((SoapProvisioning) prov).modifyHabGroupSeniority(args[1], args[2]);
         } else {
             usage();
             return;

@@ -56,7 +56,7 @@ public class HABGroup extends HABMember {
      * @zm-api-field-description Attributes of the HAB group
      */
     @ZimbraKeyValuePairs
-    @XmlElement(name=AccountConstants.E_ATTR /* attr */, required=true)
+    @XmlElement(name=AccountConstants.E_ATTR /* attr */, required=false)
     private List<Attr> attrs = Lists.newArrayList();
 
     /**
