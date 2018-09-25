@@ -78,7 +78,7 @@ public class HABGroupOperation {
      * @zm-api-field-description the seniorityInex of HAB group
      */
     @XmlAttribute(name = AccountConstants.A_HAB_SENIORITY_INDEX /* seniorityIndex */, required = false)
-    private int seniorityIndex;
+    private Integer seniorityIndex;
 
     /**
      * @zm-api-field-tag op
@@ -153,11 +153,12 @@ public class HABGroupOperation {
         this.op = op;
     }
 
-    public int getSeniorityIndex() {
+    public Integer getSeniorityIndex() {
         return seniorityIndex;
     }
 
-    public void setSeniorityIndex(int seniorityIndex) {
+    
+    public void setSeniorityIndex(Integer seniorityIndex) {
         this.seniorityIndex = seniorityIndex;
     }
 
