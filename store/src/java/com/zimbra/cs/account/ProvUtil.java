@@ -308,7 +308,7 @@ public class ProvUtil implements HttpDebugListener {
                 "help on reverse proxy related commands"), RIGHT("help on right-related commands"), SEARCH(
                 "help on search-related commands"), SERVER("help on server-related commands"), ALWAYSONCLUSTER(
                 "help on alwaysOnCluster-related commands"), UCSERVICE("help on ucservice-related commands"), SHARE(
-                "help on share related commands"), HAB("help on HAB commands");
+                "help on HAB related commands"), HAB("help on HAB Group commands");
 
         private final String description;
 
@@ -874,7 +874,7 @@ public class ProvUtil implements HttpDebugListener {
         "{habGrpId} {seniorityIndex} ", Category.HAB, 2, 2),
         GET_HAB_GROUP_MEMBERS("getHABGroupMembers", "ghgm", "{name@domain|id}",
                 Category.HAB, 1, 1);
-
+        
         private String mName;
         private String mAlias;
         private String mHelp;
