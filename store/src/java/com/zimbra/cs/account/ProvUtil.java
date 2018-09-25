@@ -860,10 +860,10 @@ public class ProvUtil implements HttpDebugListener {
         CREATE_HAB_GROUP("createHabGroup", "chabg",
             "{groupName} {ouName} {name@domain} {TRUE|FALSE} [attr1 value1 [attr2 value2...]]", Category.HAB , 3, Integer.MAX_VALUE),
         GET_HAB("getHab", "ghab",
-            "{habRootGrpId} ", Category.ACCOUNT , 1, 1),
-        MODIFY_HAB_GROUP("modify HAB group", "mhab",
+            "{habRootGrpId} ", Category.HAB , 1, 1),
+        MODIFY_HAB_GROUP("modifyHabGroup", "mhab",
             "{habGrpId} {habParentGrpId} {targetHabParentGrpId} ", Category.HAB , 3, 3),
-        MODIFY_HAB_GROUP_SENIORITY("set seniority index of HAB group", "mhabsi",
+        MODIFY_HAB_GROUP_SENIORITY("modifyHabGroupSeniority", "mhsi",
             "{habGrpId} {seniorityIndex} ", Category.HAB, 2, 2);
         private String mName;
         private String mAlias;

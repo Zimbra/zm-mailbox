@@ -3179,7 +3179,7 @@ public class SoapProvisioning extends Provisioning {
      * 
      * @param habGroupId HAB group to be modified
      * @param seniorityIndex seniority index
-     * @throws ServiceException if an aeeror occurs while modifying the HAB group
+     * @throws ServiceException if an error occurs while modifying the HAB group
      */
     public void modifyHabGroupSeniority(String habGroupId, String seniorityIndex)
         throws ServiceException {
