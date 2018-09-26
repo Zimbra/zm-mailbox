@@ -18,10 +18,11 @@ package com.zimbra.cs.mailbox;
 
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
-import org.redisson.config.Config;
 import org.redisson.config.ClusterServersConfig;
+import org.redisson.config.Config;
 
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.util.ThreadPool;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.redis.RedissonRetryClient;
 
@@ -38,6 +39,8 @@ public final class RedissonClientHolder {
             uri = LC.redis_service_uri.value();
             ZimbraLog.system.info("redis_service_uri=%s", uri);
             Config config = new Config();
+            ThreadPool pool = ThreadPool.newCachedThreadPool("RedissonExecutor");
+            config.setExecutor(pool.getExecutorService());
             ClusterServersConfig clusterServersConfig = config.useClusterServers();
             clusterServersConfig.setScanInterval(LC.redis_cluster_scan_interval.intValue());
             clusterServersConfig.addNodeAddress(uri.split(" "));
