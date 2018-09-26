@@ -72,12 +72,6 @@ public class EventLoggerCallback extends AttributeCallback {
             }
         } else if (attrName.equals(Provisioning.A_zimbraEventBackendURL)) {
             EventStore.clearFactory();
-        } else {
-            try {
-                EventLogger.getEventLogger().restartEventNotifierExecutor();
-            } catch (ServiceException e) {
-                ZimbraLog.event.error("unable to restart event notifier executor", e);
-            }
         }
     }
 }
