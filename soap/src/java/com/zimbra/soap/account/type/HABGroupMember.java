@@ -33,6 +33,14 @@ import com.zimbra.soap.type.NamedValue;
 @XmlAccessorType(XmlAccessType.NONE)
 public class HABGroupMember extends HABMember {
 
+    /**
+     * no-argument constructor wanted by JAXB
+     */
+    @SuppressWarnings("unused")
+    public HABGroupMember() {
+        this((String) null);
+    }
+
     public HABGroupMember(String name) {
         super(name);
     }
@@ -68,7 +76,7 @@ public class HABGroupMember extends HABMember {
             MoreObjects.ToStringHelper helper) {
     super.addToStringInfo(helper);
     return helper
-        .add("attrs", attrs);
+        .add("attrs", attrs.toString());
 }
 
 }
