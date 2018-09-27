@@ -83,7 +83,6 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.Version;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zclient.ZClientException;
-import com.zimbra.cs.account.ProvUtil.ArgException;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
 import com.zimbra.cs.account.Provisioning.CountAccountResult;
 import com.zimbra.cs.account.Provisioning.MailMode;
@@ -126,6 +125,7 @@ import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.SoapCLI;
 import com.zimbra.cs.zclient.ZMailboxUtil;
 import com.zimbra.soap.JaxbUtil;
+import com.zimbra.soap.account.type.HABGroupMember;
 import com.zimbra.soap.admin.message.LockoutMailboxRequest;
 import com.zimbra.soap.admin.message.UnregisterMailboxMoveOutRequest;
 import com.zimbra.soap.admin.type.CacheEntryType;
@@ -308,7 +308,7 @@ public class ProvUtil implements HttpDebugListener {
                 "help on reverse proxy related commands"), RIGHT("help on right-related commands"), SEARCH(
                 "help on search-related commands"), SERVER("help on server-related commands"), ALWAYSONCLUSTER(
                 "help on alwaysOnCluster-related commands"), UCSERVICE("help on ucservice-related commands"), SHARE(
-                "help on share related commands"), HAB("help on HAB Group commands");
+                "help on share related commands"), HAB("help on HAB commands");
 
         private final String description;
 
@@ -857,14 +857,24 @@ public class ProvUtil implements HttpDebugListener {
             "{domain} {ouName} {newName}", Category.HAB , 3, 3),
         DELETE_HAB_OU("deleteHABOrgUnit", "dhou",
             "{domain} {ouName}", Category.HAB , 2, 2),
-        CREATE_HAB_GROUP("createHabGroup", "chabg",
+        CREATE_HAB_GROUP("createHABGroup", "chg",
             "{groupName} {ouName} {name@domain} {TRUE|FALSE} [attr1 value1 [attr2 value2...]]", Category.HAB , 3, Integer.MAX_VALUE),
-        GET_HAB("getHab", "ghab",
-            "{habRootGrpId} ", Category.HAB , 1, 1),
-        MODIFY_HAB_GROUP("modifyHabGroup", "mhab",
-            "{habGrpId} {habParentGrpId} {targetHabParentGrpId} ", Category.HAB , 3, 3),
-        MODIFY_HAB_GROUP_SENIORITY("modifyHabGroupSeniority", "mhsi",
-            "{habGrpId} {seniorityIndex} ", Category.HAB, 2, 2);
+        GET_HAB("getHAB", "ghab",
+            "{habRootGrpId}", Category.HAB, 1, 1),
+        MOVE_HAB_GROUP("moveHABGroup", "mhg",
+            "{habRootGrpId} {habParentGrpId} {targetHabParentGrpId}", Category.HAB , 3, 3),
+        ADD_HAB_GROUP_MEMBER("addHABGroupMember", "ahgm", "{name@domain|id} {member@domain}+",
+                Category.HAB, 2, Integer.MAX_VALUE),
+        REMOVE_HAB_GROUP_MEMBER(
+                "removeHABGroupMember", "rhgm", "{name@domain|id} {member@domain}", Category.HAB, 2,
+                Integer.MAX_VALUE),
+        DELETE_HAB_GROUP("deleteHABGroup", "dhg", "{name@domain|id} [true|false]",
+                Category.HAB, 1, 2),
+        MODIFY_HAB_GROUP_SENIORITY("modifyHABGroupSeniority", "mhgs",
+        "{habGrpId} {seniorityIndex} ", Category.HAB, 2, 2),
+        GET_HAB_GROUP_MEMBERS("getHABGroupMembers", "ghgm", "{name@domain|id}",
+                Category.HAB, 1, 1);
+
         private String mName;
         private String mAlias;
         private String mHelp;
@@ -1452,14 +1462,10 @@ public class ProvUtil implements HttpDebugListener {
             doDeleteDistributionList(args);
             break;
         case ADD_DISTRIBUTION_LIST_MEMBER:
-            members = new String[args.length - 2];
-            System.arraycopy(args, 2, members, 0, args.length - 2);
-            prov.addGroupMembers(lookupGroup(args[1]), members);
+            doAddMember(args);
             break;
         case REMOVE_DISTRIBUTION_LIST_MEMBER:
-            members = new String[args.length - 2];
-            System.arraycopy(args, 2, members, 0, args.length - 2);
-            prov.removeGroupMembers(lookupGroup(args[1]), members);
+            doRemoveMember(args);
             break;
         case CREATE_BULK_ACCOUNTS:
             doCreateAccountsBulk(args);
@@ -1618,16 +1624,45 @@ public class ProvUtil implements HttpDebugListener {
         case GET_HAB:
             doGetHab(args);
             break;
-        case MODIFY_HAB_GROUP:
+        case MOVE_HAB_GROUP:
             modifyHabGroup(args);
             break;
         case MODIFY_HAB_GROUP_SENIORITY:
             modifyHabGroupSeniority(args);
             break;
+        case ADD_HAB_GROUP_MEMBER:
+            doAddMember(args);
+            break;
+        case DELETE_HAB_GROUP:
+            doDeleteDistributionList(args);
+            break;
+        case REMOVE_HAB_GROUP_MEMBER:
+            doRemoveMember(args);
+            break;
+        case GET_HAB_GROUP_MEMBERS:
+            doGetHABGroupMembers(args);
+            break;
         default:
             return false;
         }
         return true;
+    }
+
+    private void doAddMember(String[] args) throws ServiceException {
+        String[] members = new String[args.length - 2];
+        System.arraycopy(args, 2, members, 0, args.length - 2);
+        prov.addGroupMembers(lookupGroup(args[1]), members);
+    }
+
+    private void doRemoveMember(String[] args) throws ServiceException {
+        String[] members = new String[args.length - 2];
+        System.arraycopy(args, 2, members, 0, args.length - 2);
+        prov.removeGroupMembers(lookupGroup(args[1]), members);
+    }
+
+    private void doGetHABGroupMembers(String[] args) throws ServiceException {
+        List<HABGroupMember> groupMembers = prov.getHABGroupMembers(lookupGroup(args[1]));
+        groupMembers.stream().forEach(console::println);
     }
 
     private void sendMailboxLockoutRequest(String acctName, String server, String operation) throws ServiceException, IOException {
