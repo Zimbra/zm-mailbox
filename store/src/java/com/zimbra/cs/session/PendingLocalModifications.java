@@ -26,6 +26,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.zimbra.common.mailbox.BaseItemInfo;
 import com.zimbra.common.mailbox.MailboxStore;
@@ -259,14 +260,17 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
         if (created == null) {
             return null;
         } else {
-            Map<String, String> createdMeta = new LinkedHashMap<>();
-            for (Map.Entry<ModificationKey, BaseItemInfo> entry: created.entrySet()) {
+        	Map<String, String> createdMeta = new ConcurrentHashMap<>();
+        	ConcurrentHashMap<ModificationKey, BaseItemInfo> chm = new ConcurrentHashMap<PendingModifications.ModificationKey, BaseItemInfo>(created);
+            //for (Map.Entry<ModificationKey, BaseItemInfo> entry: created.entrySet()) {
+            for (Iterator<Map.Entry<ModificationKey, BaseItemInfo>> it = chm.entrySet().iterator();it.hasNext();) {
+            	Map.Entry<ModificationKey, BaseItemInfo> entry = it.next();
                 ModificationKey key = entry.getKey();
                 BaseItemInfo itemInfo = entry.getValue();
                 if (itemInfo instanceof MailItem) {
                     MailItem item = (MailItem) itemInfo;
                     Metadata md = item.getUnderlyingData().serialize();
-                    createdMeta.put(new ModificationKeyMeta(key.getAccountId(), key.getItemId()).toString(), md.toString());
+                    createdMeta.putIfAbsent(new ModificationKeyMeta(key.getAccountId(), key.getItemId()).toString(), md.toString());
                 }
             }
             return createdMeta;
@@ -277,7 +281,7 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
         if (map == null) {
             return null;
         }
-        Map<String, ChangeMeta> metaMap = new LinkedHashMap<>();
+        Map<String, ChangeMeta> metaMap = new ConcurrentHashMap<>();
         for (Map.Entry<ModificationKey, Change> entry: map.entrySet()) {
             ModificationKey key = entry.getKey();
             Change change = entry.getValue();
