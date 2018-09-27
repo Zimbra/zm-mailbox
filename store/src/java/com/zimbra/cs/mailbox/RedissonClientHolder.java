@@ -41,11 +41,15 @@ public final class RedissonClientHolder {
             Config config = new Config();
             ThreadPool pool = ThreadPool.newCachedThreadPool("RedissonExecutor");
             config.setExecutor(pool.getExecutorService());
+            config.setNettyThreads(LC.redis_netty_threads.intValue());
             ClusterServersConfig clusterServersConfig = config.useClusterServers();
             clusterServersConfig.setScanInterval(LC.redis_cluster_scan_interval.intValue());
             clusterServersConfig.addNodeAddress(uri.split(" "));
             clusterServersConfig.setSubscriptionConnectionPoolSize(LC.redis_subscription_connection_pool_size.intValue());
             clusterServersConfig.setSubscriptionsPerConnection(LC.redis_subscriptions_per_connection.intValue());
+            clusterServersConfig.setRetryInterval(LC.redis_retry_interval.intValue());
+            clusterServersConfig.setTimeout(LC.redis_connection_timeout.intValue());
+            clusterServersConfig.setRetryAttempts(LC.redis_num_retries.intValue());
             client = new RedissonRetryClient(Redisson.create(config));
         } catch (Exception ex) {
             ZimbraLog.system.fatal("Cannot setup RedissonClient to connect to %s", uri, ex);
