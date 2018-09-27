@@ -37,6 +37,7 @@ import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
@@ -352,7 +353,7 @@ public class GalSearchControl {
         } else if (!Strings.isNullOrEmpty(query)) {
             searchQuery.append("contact:\"");
             searchQuery.append(query.replace("\"", "\\\"")); // escape quotes
-            searchQuery.append("\" AND");
+            searchQuery.append("\"");
         }
 
         GalSearchQueryCallback queryCallback = mParams.getExtraQueryCallback();
@@ -360,11 +361,15 @@ public class GalSearchControl {
             String extraQuery = queryCallback.getMailboxSearchQuery();
             if (extraQuery != null) {
                 ZimbraLog.gal.debug("extra search query: " + extraQuery);
+                if (!StringUtil.isNullOrEmpty(searchQuery.toString())) {
+                    searchQuery.append(" AND");
+                }
                 searchQuery.append(" (").append(extraQuery).append(")");
             }
         }
 
         boolean first = true;
+        boolean needClosing = false;
         if (addInId && galAcct != null) {
             GalMode galMode = mParams.getDomain().getGalMode();
             for (DataSource ds : galAcct.getAllDataSources()) {
@@ -375,12 +380,19 @@ public class GalSearchControl {
                     continue;
                 if (galMode == GalMode.zimbra && galType.compareTo("ldap") == 0)
                     continue;
-                if (first) searchQuery.append(" AND ("); else searchQuery.append(" OR");
+                if (!StringUtil.isNullOrEmpty(searchQuery.toString())) {
+                    if (first) {
+                        searchQuery.append(" AND (");
+                        needClosing = true;
+                    } else {
+                        searchQuery.append(" OR");
+                    }
+                }
                 first = false;
                 searchQuery.append(" inid:").append(ds.getFolderId());
             }
         }
-        if (!first)
+        if (needClosing)
             searchQuery.append(")");
         switch (type) {
         case resource:
