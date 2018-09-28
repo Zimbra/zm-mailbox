@@ -269,7 +269,7 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
                 if (itemInfo instanceof MailItem) {
                     MailItem item = (MailItem) itemInfo;
                     Metadata md = item.getUnderlyingData().serialize();
-                    createdMeta.putIfAbsent(new ModificationKeyMeta(key.getAccountId(), key.getItemId()).toString(), md.toString());
+                    createdMeta.put(new ModificationKeyMeta(key.getAccountId(), key.getItemId()).toString(), md.toString());
                 }
             }
             return createdMeta;
@@ -280,8 +280,10 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
         if (map == null) {
             return null;
         }
+        ConcurrentHashMap<ModificationKey, Change> concurrentMap = new ConcurrentHashMap<ModificationKey, Change>(map);
         Map<String, ChangeMeta> metaMap = new ConcurrentHashMap<>();
-        for (Map.Entry<ModificationKey, Change> entry: map.entrySet()) {
+        for (Iterator<Map.Entry<ModificationKey, Change>> iter = concurrentMap.entrySet().iterator();iter.hasNext();) {
+        	Map.Entry<ModificationKey, Change> entry = iter.next();
             ModificationKey key = entry.getKey();
             Change change = entry.getValue();
             ChangeMeta.ObjectType type = null;
