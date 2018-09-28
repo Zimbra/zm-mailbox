@@ -584,6 +584,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.MigrateAccountResponse.class,
             com.zimbra.soap.admin.message.ModifyAccountRequest.class,
             com.zimbra.soap.admin.message.ModifyAccountResponse.class,
+            com.zimbra.soap.admin.message.ModifyAddressListRequest.class,
+            com.zimbra.soap.admin.message.ModifyAddressListResponse.class,
             com.zimbra.soap.admin.message.ModifyAdminSavedSearchesRequest.class,
             com.zimbra.soap.admin.message.ModifyAdminSavedSearchesResponse.class,
             com.zimbra.soap.admin.message.ModifyAlwaysOnClusterRequest.class,
