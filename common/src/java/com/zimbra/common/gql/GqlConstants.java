@@ -33,6 +33,14 @@ public class GqlConstants {
     public static final String PARENT_FOLDER_ID = "parentFolderId";
     public static final String RGB = "rgb";
 
+    // new folder spec constants
+    public static final String CLASS_NEW_FOLDER_SPEC = "NewFolderSpec";
+    public static final String VIEW = "view";
+    public static final String URL = "url";
+    public static final String FETCH_IF_EXISTS = "fetchIfExists";
+    public static final String SYNC_TO_URL = "syncToUrl";
+    public static final String GRANTS = "grants";
+
     // search folder constants
     public static final String CLASS_SEARCH_FOLDER = "SearchFolder";
 
