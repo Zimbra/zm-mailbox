@@ -26,7 +26,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.soap.admin.type.DomainSelector;
 import com.zimbra.soap.admin.type.EntrySearchFilterInfo;
 import com.zimbra.soap.type.GalSearchType;
 
@@ -41,7 +40,7 @@ public class ModifyAddressListRequest {
 
     /**
      * @zm-api-field-tag type
-     * @zm-api-field-description gal search type
+     * @zm-api-field-description gal search type - defaults to `all` if unset
      */
     @XmlAttribute(name=AdminConstants.A_TYPE /* type */, required=false)
     private GalSearchType type;
@@ -75,13 +74,6 @@ public class ModifyAddressListRequest {
     private EntrySearchFilterInfo searchFilter;
 
     /**
-     * @zm-api-field-tag domain
-     * @zm-api-field-description Domain selector
-     */
-    @XmlElement(name=AdminConstants.E_DOMAIN, required=false)
-    private final DomainSelector domain;
-
-    /**
      * default private constructor to block the usage
      */
     @SuppressWarnings("unused")
@@ -93,7 +85,7 @@ public class ModifyAddressListRequest {
      * @param name
      */
     public ModifyAddressListRequest(String id) {
-        this(id, null, null, null, null, null);
+        this(id, null, null, null, null);
     }
 
     /**
@@ -102,15 +94,14 @@ public class ModifyAddressListRequest {
      * @param desc
      * @param type
      * @param searchFilter
-     * @param domain
      */
-    public ModifyAddressListRequest(String id, String name, String desc, GalSearchType type, EntrySearchFilterInfo searchFilter, DomainSelector domain) {
+    public ModifyAddressListRequest(String id, String name, String desc, GalSearchType type,
+        EntrySearchFilterInfo searchFilter) {
         this.id = id;
         this.name = name;
         this.desc = desc;
         this.type = type != null ? type : GalSearchType.all; // set gal search type to "all" if null
         this.searchFilter = searchFilter;
-        this.domain = domain;
     }
 
     /**
@@ -183,13 +174,6 @@ public class ModifyAddressListRequest {
         this.searchFilter = searchFilter;
     }
 
-    /**
-     * @return the domain
-     */
-    public DomainSelector getDomain() {
-        return domain;
-    }
-
     public void validateModifyAddressListRequest() throws ServiceException {
         if (StringUtil.isNullOrEmpty(id)) {
             throw ServiceException
@@ -198,20 +182,15 @@ public class ModifyAddressListRequest {
         if (type == null && name == null && desc == null && searchFilter == null) {
             throw ServiceException.INVALID_REQUEST("No modify params specified.", null);
         }
-        if (searchFilter != null) {
-            if (domain == null) {
-                ZimbraLog.addresslist.debug("Missing domain selector, original address list domain will be used.");
-            }
-            if (type == null) {
-                ZimbraLog.addresslist.debug("Setting gal search type to all.");
-                type = GalSearchType.all;
-            }
+        if (searchFilter != null && type == null) {
+            ZimbraLog.addresslist.debug("Setting gal search type to all.");
+            type = GalSearchType.all;
         }
     }
 
     @Override
     public String toString() {
-        return "ModifyAddressListRequest [type=" + type + ", id=" + id + ", name=" + name + ", desc=" + desc + ", searchFilter="
-                + searchFilter + ", domain=" + domain + "]";
+        return "ModifyAddressListRequest [type=" + type + ", id=" + id + ", name=" + name
+            + ", desc=" + desc + ", searchFilter=" + searchFilter + "]";
     }
 }

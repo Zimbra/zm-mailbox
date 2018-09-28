@@ -11477,30 +11477,25 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     @Override
-    public void modifyAddressList(String addressListId, Domain domain, String name,
-        Map<String, String> attrs) throws ServiceException {
-        AddressList addressListToModify = getAddressList(addressListId);
-        if (addressListToModify == null) {
-            throw AccountServiceException.NO_SUCH_ADDRESS_LIST(addressListId);
-        }
-        // fetch uid - note that create address list sets name as the uid
-        String oldName = addressListToModify.getAttr(Provisioning.A_uid);
+    public void modifyAddressList(AddressList addressList, String name, Map<String, String> attrs)
+        throws ServiceException {
         ZLdapContext zlc = null;
         try {
             zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.MODIFY_ADDRESS_LIST);
             // replace all given attrs
-            modifyAttrs(addressListToModify, attrs);
+            modifyAttrs(addressList, attrs);
             ZimbraLog.addresslist.debug("Modified address list attributes %s", attrs);
             // rename the dn if name changed
+            String oldName = addressList.getAttr(Provisioning.A_uid);
             if (!StringUtil.isNullOrEmpty(name) && !StringUtil.equal(name, oldName)) {
-                String domainDn = ((LdapEntry) domain).getDN();
-                String newDn = LdapConstants.ATTR_uid + "=" + name + "," + LdapConstants.ATTR_ou
-                    + "=" + LdapConstants.PEOPLE + "," + domainDn;
-                zlc.renameEntry(addressListToModify.getDN(), newDn);
+                String oldDn = addressList.getDN();
+                String newDn = oldDn.replaceFirst(LdapConstants.ATTR_uid + "=" + oldName,
+                    LdapConstants.ATTR_uid + "=" + name);
+                zlc.renameEntry(oldDn, newDn);
                 ZimbraLog.addresslist.debug("New entry DN: %s", newDn);
             }
         } catch (ServiceException e) {
-            throw ServiceException.FAILURE("error modifying address list: " + addressListId, e);
+            throw ServiceException.FAILURE("error modifying address list: " + addressList.getId(), e);
         } finally {
             LdapClient.closeContext(zlc);
         }
