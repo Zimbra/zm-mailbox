@@ -260,11 +260,10 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
         if (created == null) {
             return null;
         } else {
+        	ConcurrentHashMap<ModificationKey, BaseItemInfo> concurrentCreated = new ConcurrentHashMap<PendingModifications.ModificationKey, BaseItemInfo>(created);
         	Map<String, String> createdMeta = new ConcurrentHashMap<>();
-        	ConcurrentHashMap<ModificationKey, BaseItemInfo> chm = new ConcurrentHashMap<PendingModifications.ModificationKey, BaseItemInfo>(created);
-            //for (Map.Entry<ModificationKey, BaseItemInfo> entry: created.entrySet()) {
-            for (Iterator<Map.Entry<ModificationKey, BaseItemInfo>> it = chm.entrySet().iterator();it.hasNext();) {
-            	Map.Entry<ModificationKey, BaseItemInfo> entry = it.next();
+            for (Iterator<Map.Entry<ModificationKey, BaseItemInfo>> iter = concurrentCreated.entrySet().iterator();iter.hasNext();) {
+            	Map.Entry<ModificationKey, BaseItemInfo> entry = iter.next();
                 ModificationKey key = entry.getKey();
                 BaseItemInfo itemInfo = entry.getValue();
                 if (itemInfo instanceof MailItem) {
