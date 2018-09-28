@@ -28,7 +28,9 @@ import org.json.JSONException;
 
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
@@ -36,6 +38,7 @@ import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.datasource.MailItemImport;
 import com.zimbra.cs.db.DbDataSource;
 import com.zimbra.cs.db.DbDataSource.DataSourceItem;
+import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.ldap.LdapDateUtil;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.MailItem;
@@ -184,6 +187,19 @@ public class GalImport extends MailItemImport {
             }
         }
 
+        private void addFileAsFromUid(Map<String,Object> attrs) {
+            String dnString = attrs.get(LdapConstants.ATTR_dn).toString();
+            for (String dnAttr : dnString.split(",")) {
+                if (dnAttr.startsWith(LdapConstants.ATTR_uid)) {
+                    String[] uidArr = dnAttr.split("=");
+                    if (uidArr.length == 2
+                            && !StringUtil.isNullOrEmpty(uidArr[1])) {
+                        attrs.put(ContactConstants.A_fileAs, ContactConstants.FA_EXPLICIT+":"+uidArr[1]);
+                    }
+                }
+            }
+        }
+
         @Override
         public void visit(GalContact contact) throws ServiceException {
             Map<String,Object> attrs = contact.getAttrs();
@@ -192,7 +208,12 @@ public class GalImport extends MailItemImport {
             attrs.put(ContactConstants.A_dn, id);
             ZimbraLog.gal.debug("processing gal contact "+id);
             DataSourceItem dsItem = DbDataSource.getReverseMapping(getDataSource(), id);
-            addFileAsStr(attrs);
+            if (attrs.get(LdapConstants.ATTR_objectClass) != null
+                    && attrs.get(LdapConstants.ATTR_objectClass).equals(AttributeClass.OC_zimbraAddressList)) {
+                addFileAsFromUid(attrs);
+            } else {
+                addFileAsStr(attrs);
+            }
             if (dsItem.itemId == 0) {
                 ZimbraLog.gal.debug("creating new contact "+id);
                 dsItem.remoteId = id;
