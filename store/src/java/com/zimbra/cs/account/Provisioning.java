@@ -57,6 +57,7 @@ import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.account.type.HABGroupMember;
+import com.zimbra.soap.account.type.AddressListInfo;
 import com.zimbra.soap.admin.type.CacheEntryType;
 import com.zimbra.soap.admin.type.CmdRightsInfo;
 import com.zimbra.soap.admin.type.CountObjectsType;
@@ -2707,7 +2708,19 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public void removeConfigSMIMEConfig(String configName) throws ServiceException {
         throw ServiceException.UNSUPPORTED();
     }
+    
+    public AddressList getAddressList(String id) throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
+    
 
+    public List<AddressListInfo> getAllAddressLists(Domain domain, boolean activeOnly) throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
+
+    public void deleteAddressList(String addressListId) throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
 
     //
     //
@@ -2759,5 +2772,9 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public boolean  dlIsInDynamicHABGroup(DynamicGroup group, List<String> dlsToCheck)
         throws ServiceException {
         throw ServiceException.UNSUPPORTED();
+    }
+    // address list
+    public String createAddressList(Domain domain, String name, String desc, Map<String, Object> attrs) throws ServiceException {
+        throw new UnsupportedOperationException("Currently address list is not supported.");
     }
 }

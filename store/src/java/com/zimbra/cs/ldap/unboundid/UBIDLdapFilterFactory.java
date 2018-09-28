@@ -82,6 +82,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     private static Filter FILTER_NOT_EXCLUDED_FROM_CMB_SEARCH;
     private static Filter FILTER_WITH_ARCHIVE;
     private static Filter FILTER_ALL_INTERNAL_ACCOUNTS;
+    private static Filter FILTER_ALL_ADDRESS_LISTS;
 
 
     private static boolean initialized = false;
@@ -270,6 +271,9 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
         FILTER_ALL_INTERNAL_ACCOUNTS = Filter.createANDFilter(
             FILTER_ALL_ACCOUNTS,
             Filter.createNOTFilter(FILTER_IS_EXTERNAL_ACCOUNT));
+
+        FILTER_ALL_ADDRESS_LISTS = Filter.createEqualityFilter(
+                LdapConstants.ATTR_objectClass, AttributeClass.OC_zimbraAddressList);
     }
 
     @Override
@@ -1300,5 +1304,25 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                         Filter.createEqualityFilter(Provisioning.A_ou, name),
                         Filter.createEqualityFilter(LdapConstants.ATTR_objectClass, "organizationalUnit"))
                 );
+    }
+
+    /*
+     * address lists
+     */
+    @Override
+    public ZLdapFilter allAddressLists() {
+        return new UBIDLdapFilter(
+                FilterId.ALL_ADDRESS_LISTS,
+                FILTER_ALL_ADDRESS_LISTS
+                );
+    }
+
+    @Override
+    public ZLdapFilter addressListById(String id) {
+        return new UBIDLdapFilter(
+                FilterId.ADDRESS_LIST_BY_ID,
+                Filter.createANDFilter(
+                        Filter.createEqualityFilter(Provisioning.A_zimbraId, id),
+                        FILTER_ALL_ADDRESS_LISTS));
     }
 }

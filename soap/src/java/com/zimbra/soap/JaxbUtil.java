@@ -200,6 +200,12 @@ public final class JaxbUtil {
             com.zimbra.soap.account.message.SubscribeDistributionListResponse.class,
             com.zimbra.soap.account.message.SyncGalRequest.class,
             com.zimbra.soap.account.message.SyncGalResponse.class,
+            com.zimbra.soap.account.message.GetAllAddressListsRequest.class,
+            com.zimbra.soap.account.message.GetAllAddressListsResponse.class,
+            com.zimbra.soap.admin.message.GetAllAddressListsRequest.class,
+            com.zimbra.soap.admin.message.GetAllAddressListsResponse.class,
+            com.zimbra.soap.admin.message.DeleteAddressListRequest.class,
+            com.zimbra.soap.admin.message.DeleteAddressListResponse.class,
             com.zimbra.soap.admin.message.AbortHsmRequest.class,
             com.zimbra.soap.admin.message.AbortHsmResponse.class,
             com.zimbra.soap.admin.message.AbortXMbxSearchRequest.class,
@@ -278,6 +284,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.CountObjectsResponse.class,
             com.zimbra.soap.admin.message.CreateAccountRequest.class,
             com.zimbra.soap.admin.message.CreateAccountResponse.class,
+            com.zimbra.soap.admin.message.CreateAddressListRequest.class,
+            com.zimbra.soap.admin.message.CreateAddressListResponse.class,
             com.zimbra.soap.admin.message.CreateAlwaysOnClusterRequest.class,
             com.zimbra.soap.admin.message.CreateAlwaysOnClusterResponse.class,
             com.zimbra.soap.admin.message.CreateArchiveRequest.class,
@@ -1105,7 +1113,9 @@ public final class JaxbUtil {
             com.zimbra.soap.voice.message.UploadVoiceMailRequest.class,
             com.zimbra.soap.voice.message.UploadVoiceMailResponse.class,
             com.zimbra.soap.voice.message.VoiceMsgActionRequest.class,
-            com.zimbra.soap.voice.message.VoiceMsgActionResponse.class
+            com.zimbra.soap.voice.message.VoiceMsgActionResponse.class,
+            com.zimbra.soap.account.message.GetAddressListMembersRequest.class,
+            com.zimbra.soap.account.message.GetAddressListMemberResponse.class
         };
 
         try {

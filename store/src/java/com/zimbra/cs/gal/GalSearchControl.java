@@ -26,7 +26,6 @@ import org.apache.commons.lang.BooleanUtils;
 import org.apache.commons.lang.StringUtils;
 
 import com.google.common.base.Strings;
-import com.google.common.io.Closeables;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ZAttrProvisioning.GalMode;
@@ -122,7 +121,7 @@ public class GalSearchControl {
                 Account galAcct = mParams.getGalSyncAccount();
                 if (galAcct == null)
                     galAcct = getGalSyncAccount();
-                accountSearch(galAcct);
+                accountSearch(galAcct, true);
                 return;
             } catch (GalAccountNotConfiguredException e) {
             }
@@ -152,7 +151,7 @@ public class GalSearchControl {
             Account galAcct = mParams.getGalSyncAccount();
             if (galAcct == null)
                 galAcct = getGalSyncAccount();
-            accountSearch(galAcct);
+            accountSearch(galAcct, true);
         } catch (GalAccountNotConfiguredException e) {
             query = Strings.nullToEmpty(query);
             // fallback to ldap search
@@ -299,7 +298,7 @@ public class GalSearchControl {
         return ret;
     }
 
-    private Account getGalSyncAccount() throws GalAccountNotConfiguredException, ServiceException {
+   public Account getGalSyncAccount() throws GalAccountNotConfiguredException, ServiceException {
         Domain d = mParams.getDomain();
         String[] accts = d.getGalAccountId();
         if (accts.length == 0)
@@ -337,6 +336,11 @@ public class GalSearchControl {
     }
 
     private void generateSearchQuery(Account galAcct) throws ServiceException {
+        String searchQuery = getSearchQuery(galAcct, true);
+        mParams.parseSearchParams(mParams.getRequest(), searchQuery);
+    }
+
+    private String getSearchQuery(Account galAcct, boolean addInId) throws ServiceException {
         String query = mParams.getQuery();
         String searchByDn = mParams.getSearchEntryByDn();
 
@@ -356,23 +360,25 @@ public class GalSearchControl {
             String extraQuery = queryCallback.getMailboxSearchQuery();
             if (extraQuery != null) {
                 ZimbraLog.gal.debug("extra search query: " + extraQuery);
-                searchQuery.append(" (").append(extraQuery).append(") AND");
+                searchQuery.append(" (").append(extraQuery).append(")");
             }
         }
 
-        GalMode galMode = mParams.getDomain().getGalMode();
         boolean first = true;
-        for (DataSource ds : galAcct.getAllDataSources()) {
-            if (ds.getType() != DataSourceType.gal)
-                continue;
-            String galType = ds.getAttr(Provisioning.A_zimbraGalType);
-            if (galMode == GalMode.ldap && galType.compareTo("zimbra") == 0)
-                continue;
-            if (galMode == GalMode.zimbra && galType.compareTo("ldap") == 0)
-                continue;
-            if (first) searchQuery.append("("); else searchQuery.append(" OR");
-            first = false;
-            searchQuery.append(" inid:").append(ds.getFolderId());
+        if (addInId && galAcct != null) {
+            GalMode galMode = mParams.getDomain().getGalMode();
+            for (DataSource ds : galAcct.getAllDataSources()) {
+                if (ds.getType() != DataSourceType.gal)
+                    continue;
+                String galType = ds.getAttr(Provisioning.A_zimbraGalType);
+                if (galMode == GalMode.ldap && galType.compareTo("zimbra") == 0)
+                    continue;
+                if (galMode == GalMode.zimbra && galType.compareTo("ldap") == 0)
+                    continue;
+                if (first) searchQuery.append(" AND ("); else searchQuery.append(" OR");
+                first = false;
+                searchQuery.append(" inid:").append(ds.getFolderId());
+            }
         }
         if (!first)
             searchQuery.append(")");
@@ -390,7 +396,7 @@ public class GalSearchControl {
             break;
         }
         ZimbraLog.gal.debug("query: %s", searchQuery);
-        mParams.parseSearchParams(mParams.getRequest(), searchQuery.toString());
+        return searchQuery.toString();
     }
 
     private boolean generateLocalResourceSearchQuery(Account galAcct) throws ServiceException {
@@ -418,7 +424,11 @@ public class GalSearchControl {
         return false;
     }
 
-    private void accountSearch(Account galAcct) throws ServiceException, GalAccountNotConfiguredException {
+    public void addressListSearch(Account galAcct, boolean genQuery) throws ServiceException, GalAccountNotConfiguredException {
+        accountSearch(galAcct, false);
+    }
+
+    private void accountSearch(Account galAcct, boolean generateQuery) throws ServiceException, GalAccountNotConfiguredException {
         if (!galAcct.getAccountStatus().isActive()) {
             ZimbraLog.gal.info("GalSync account "+galAcct.getId()+" is in "+galAcct.getAccountStatus().name());
             throw new GalAccountNotConfiguredException();
@@ -429,7 +439,10 @@ public class GalSearchControl {
                         !doLocalGalAccountSearch(galAcct))
                     throw new GalAccountNotConfiguredException();
             }
-            generateSearchQuery(galAcct);
+            if (generateQuery) {
+                generateSearchQuery(galAcct);
+            }
+
             if (!doLocalGalAccountSearch(galAcct))
                 throw new GalAccountNotConfiguredException();
         } else {
@@ -839,7 +852,7 @@ public class GalSearchControl {
                 domain.isGalAlwaysIncludeLocalCalendarResources());
     }
 
-    private static class GalAccountNotConfiguredException extends Exception {
+    public static class GalAccountNotConfiguredException extends Exception {
         private static final long serialVersionUID = 679221874958248740L;
 
         public GalAccountNotConfiguredException() {
@@ -902,4 +915,7 @@ public class GalSearchControl {
         return buf.toString();
     }
 
+    public String getGalQuery() throws ServiceException {
+        return getSearchQuery(null, false);
+    }
 }

@@ -3251,3 +3251,34 @@ For create and rename operation the response is
 For delete operation
 <HABOrgUnitResponse >
 </HABOrgUnitResponse>
+------------------------
+API to get all address lists in the given domain
+<GetAllAddressListsRequest xmlns="urn:zimbraAdmin">
+      [<domain by="id|name">...</domain>]
+</GetAllAddressListsRequest>
+
+Returns list of address lists.
+      <GetAllAddressListsResponse xmlns="urn:zimbraAdmin">
+         <AddressLists>
+            <AddressList name={name_of_address_list} [description={description}] id={zimbraId} active={0|1}/>
+            ...
+         </AddressLists>
+      </GetAllAddressListsResponse>
+------------------------
+API to delete address list.
+<DeleteAddressListRequest id={address-list-zimbra-Id} xmlns="urn:zimbraAdmin"/>
+
+Response:
+<DeleteAddressListResponse xmlns="urn:zimbraAdmin"/>
+------------------------
+API to create address list in given domain
+  <CreateAddressListRequest [type="all|account|resource|group"]>
+     <name>name_of_addresslist</name>
+     [<desc>description_of_addresslist</desc>]
+     [<searchFilter>...</searchFilter>]
+     [<domain by="id|name|virtualHostname">domain-id|name|serviceHostname</domain>]
+  </CreateAddressListRequest>
+
+searchFilter: See SearchCalendarResourcesRequest section in soap.txt.
+domain: domain is optional element, if domain is not provided, admin account's domain is used from admin auth token
+

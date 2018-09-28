@@ -3104,6 +3104,7 @@ public class SoapProvisioning extends Provisioning {
         throw new UnsupportedOperationException("Currently no way to refresh required attributes over SOAP");
     }
 
+
     @Override
     public Set<String> createHabOrgUnit(Domain domain, String habOrgUnitName) throws ServiceException {
         DomainSelector domSel =
@@ -3172,6 +3173,20 @@ public class SoapProvisioning extends Provisioning {
         HABGroupOperation operation = new HABGroupOperation(habGroupId, currentParentGroupId,
             targetParentGroupId, HabGroupOp.move);
         invokeJaxb(new ModifyHABGroupRequest(operation));
+    }
+
+    /**
+     * 
+     * @param habGroupId HAB group to be modified
+     * @param seniorityIndex seniority index
+     * @throws ServiceException if an error occurs while modifying the HAB group
+     */
+    public void modifyHabGroupSeniority(String habGroupId, String seniorityIndex)
+        throws ServiceException {
+        HABGroupOperation operation = new HABGroupOperation(habGroupId,
+            Integer.parseInt(seniorityIndex), HabGroupOp.assignSeniority);
+        invokeJaxb(new ModifyHABGroupRequest(operation));
+
     }
 
 }

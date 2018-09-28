@@ -1067,6 +1067,17 @@ public final class AdminConstants {
     public static final String E_HAB_PARENT_GROUP = "parentHABGroup";
     public static final String E_MEMBER = "member";
 
+    //AddressList
+    public static final String E_GET_ALL_ADDRESS_LISTS_REQUEST = "GetAllAddressListsRequest";
+    public static final String E_GET_ALL_ADDRESS_LISTS_RESPONSE = "GetAllAddressListsResponse";
+    public static final QName GET_ALL_ADDRESS_LISTS_REQUEST = QName.get(E_GET_ALL_ADDRESS_LISTS_REQUEST, NAMESPACE);
+    public static final QName GET_ALL_ADDRESS_LISTS_RESPONSE = QName.get(E_GET_ALL_ADDRESS_LISTS_RESPONSE, NAMESPACE);
+    public static final String E_DELETE_ADDRESS_LIST_REQUEST = "DeleteAddressListRequest";
+    public static final String E_DELETE_ADDRESS_LIST_RESPONSE = "DeleteAddressListResponse";
+    public static final QName DELETE_ADDRESS_LIST_REQUEST = QName.get(E_DELETE_ADDRESS_LIST_REQUEST, NAMESPACE);
+    public static final QName DELETE_ADDRESS_LIST_RESPONSE = QName.get(E_DELETE_ADDRESS_LIST_RESPONSE, NAMESPACE);
+
+
     // DumpSessions
     public static final String E_SESSION = "session";
     public static final String A_ZIMBRA_ID = "zid";
@@ -1522,4 +1533,13 @@ public final class AdminConstants {
     public static final String A_FORCE_DELETE = "forceDelete";
     public static final String E_MEMBERS = "members";
     public static final String A_CASCADE_DELETE = "cascadeDelete";
+    
+    // address list
+    public static final String E_CREATE_ADDRESS_LIST_REQUEST = "CreateAddressListRequest";
+    public static final String E_CREATE_ADDRESS_LIST_RESPONSE = "CreateAddressListResponse";
+    public static final QName GET_CREATE_ADDRESS_LIST_REQUEST = QName.get(E_CREATE_ADDRESS_LIST_REQUEST, NAMESPACE);
+    public static final QName GET_CREATE_ADDRESS_LIST_RESPONSE = QName.get(E_CREATE_ADDRESS_LIST_RESPONSE, NAMESPACE);
+    public static final String E_SEARCH_FILTER = "searchFilter";
+    public static final String E_GAL_FILTER = "galFilter";
+    public static final String E_LDAP_FILTER = "ldapFilter";
 }
