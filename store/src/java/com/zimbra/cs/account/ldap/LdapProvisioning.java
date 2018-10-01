@@ -9771,25 +9771,15 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     @Override
     public List<HABGroupMember> getHABGroupMembers(Group group) throws ServiceException {
-        EntryCacheDataKey cacheKey = EntryCacheDataKey.HAB_GROUP_MEMBERS;
         List<HABGroupMember> members = null;
         if (group.isHABGroup()) {
             if (group instanceof DynamicGroup) {
                 DynamicGroup dynGroup = getDynamicGroup(Key.DistributionListBy.name, group.getName(), null, Boolean.FALSE);
                 members = getHABDynamicGroupMemberDetails(dynGroup);
             } else {
-                members = (List<HABGroupMember>) group.getCachedData(cacheKey);
-                if (members != null) {
-                    return members;
-                }
-                members = getHABGroupMemberDetails(group);  // should never be null
-                assert(members != null);
-                group.setCachedData(cacheKey, members);
+                members = getHABGroupMemberDetails(group);
             }
-        } else {
-            //throw error
         }
-
         return members;
     }
 

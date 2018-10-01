@@ -70,9 +70,11 @@ public abstract class HABMember {
 
     public MoreObjects.ToStringHelper addToStringInfo(
                 MoreObjects.ToStringHelper helper) {
-        return helper
-            .add("name", name)
-            .add("seniorityIndex", seniorityIndex);
+         helper.add("name", name);
+         if (seniorityIndex != 0) {
+             helper.add("seniorityIndex", seniorityIndex);
+         }
+         return helper;
     }
 
     @Override
