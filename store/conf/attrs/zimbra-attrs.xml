@@ -9778,5 +9778,10 @@ TODO: delete them permanently from here
 	<desc>This attribute is used to store the login history API url</desc>
 </attr>
 
+<attr id="5018" name="zimbraShowCaptchaOnLoginFailedCount" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.8.9">
+    <globalConfigValue>2</globalConfigValue>
+	<desc>This attribute is used to show captcha on login screen when login fails count reaches to attribute value</desc>
+</attr>
+
 </attrs>
 
