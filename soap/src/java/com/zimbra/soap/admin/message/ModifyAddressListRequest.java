@@ -74,6 +74,13 @@ public class ModifyAddressListRequest {
     private EntrySearchFilterInfo searchFilter;
 
     /**
+     * @zm-api-field-tag clearFilter
+     * @zm-api-field-description remove all filter conditions if no searchFilter is specified
+     */
+    @XmlAttribute(name=AdminConstants.A_CLEAR_FILTER /* clearFilter */, required=false)
+    private Boolean clearFilter;
+
+    /**
      * default private constructor to block the usage
      */
     @SuppressWarnings("unused")
@@ -172,6 +179,20 @@ public class ModifyAddressListRequest {
      */
     public void setSearchFilter(EntrySearchFilterInfo searchFilter) {
         this.searchFilter = searchFilter;
+    }
+
+    /**
+     * @return the clearFilter
+     */
+    public Boolean getClearFilter() {
+        return clearFilter;
+    }
+
+    /**
+     * @param clearFilter clearFilter to set
+     */
+    public void setClearFilter(Boolean clearFilter) {
+        this.clearFilter = clearFilter;
     }
 
     public void validateModifyAddressListRequest() throws ServiceException {
