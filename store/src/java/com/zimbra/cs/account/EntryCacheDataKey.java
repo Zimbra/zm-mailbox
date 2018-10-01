@@ -69,8 +69,7 @@ public enum EntryCacheDataKey {
     /*
      * group
      */
-    GROUP_MEMBERS,
-    HAB_GROUP_MEMBERS;
+    GROUP_MEMBERS;
 
     // all access of the key name must be through this,
     // not calling name() or toString() directly
