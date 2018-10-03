@@ -8523,6 +8523,78 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * This attribute is used to enable/disable dynamic banner functionality
+     *
+     * @return zimbraDynamicBannerEnabled, or false if unset
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5021)
+    public boolean isDynamicBannerEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraDynamicBannerEnabled, false, true);
+    }
+
+    /**
+     * This attribute is used to enable/disable dynamic banner functionality
+     *
+     * @param zimbraDynamicBannerEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5021)
+    public void setDynamicBannerEnabled(boolean zimbraDynamicBannerEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDynamicBannerEnabled, zimbraDynamicBannerEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute is used to enable/disable dynamic banner functionality
+     *
+     * @param zimbraDynamicBannerEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5021)
+    public Map<String,Object> setDynamicBannerEnabled(boolean zimbraDynamicBannerEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDynamicBannerEnabled, zimbraDynamicBannerEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * This attribute is used to enable/disable dynamic banner functionality
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5021)
+    public void unsetDynamicBannerEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDynamicBannerEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute is used to enable/disable dynamic banner functionality
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5021)
+    public Map<String,Object> unsetDynamicBannerEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDynamicBannerEnabled, "");
+        return attrs;
+    }
+
+    /**
      * This attribute stores the email templates service API url
      *
      * @return zimbraEmailTemplateApiUrl, or null if unset

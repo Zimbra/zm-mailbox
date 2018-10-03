@@ -6718,6 +6718,212 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * This attribute is used to store list of dynamic banner images
+     *
+     * @return zimbraDynamicBannerImage, or empty array if unset
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5019)
+    public String[] getDynamicBannerImage() {
+        return getMultiAttr(Provisioning.A_zimbraDynamicBannerImage, true, true);
+    }
+
+    /**
+     * This attribute is used to store list of dynamic banner images
+     *
+     * @param zimbraDynamicBannerImage new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5019)
+    public void setDynamicBannerImage(String[] zimbraDynamicBannerImage) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDynamicBannerImage, zimbraDynamicBannerImage);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute is used to store list of dynamic banner images
+     *
+     * @param zimbraDynamicBannerImage new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5019)
+    public Map<String,Object> setDynamicBannerImage(String[] zimbraDynamicBannerImage, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDynamicBannerImage, zimbraDynamicBannerImage);
+        return attrs;
+    }
+
+    /**
+     * This attribute is used to store list of dynamic banner images
+     *
+     * @param zimbraDynamicBannerImage new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5019)
+    public void addDynamicBannerImage(String zimbraDynamicBannerImage) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraDynamicBannerImage, zimbraDynamicBannerImage);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute is used to store list of dynamic banner images
+     *
+     * @param zimbraDynamicBannerImage new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5019)
+    public Map<String,Object> addDynamicBannerImage(String zimbraDynamicBannerImage, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraDynamicBannerImage, zimbraDynamicBannerImage);
+        return attrs;
+    }
+
+    /**
+     * This attribute is used to store list of dynamic banner images
+     *
+     * @param zimbraDynamicBannerImage existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5019)
+    public void removeDynamicBannerImage(String zimbraDynamicBannerImage) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraDynamicBannerImage, zimbraDynamicBannerImage);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute is used to store list of dynamic banner images
+     *
+     * @param zimbraDynamicBannerImage existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5019)
+    public Map<String,Object> removeDynamicBannerImage(String zimbraDynamicBannerImage, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraDynamicBannerImage, zimbraDynamicBannerImage);
+        return attrs;
+    }
+
+    /**
+     * This attribute is used to store list of dynamic banner images
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5019)
+    public void unsetDynamicBannerImage() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDynamicBannerImage, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute is used to store list of dynamic banner images
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5019)
+    public Map<String,Object> unsetDynamicBannerImage(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDynamicBannerImage, "");
+        return attrs;
+    }
+
+    /**
+     * This attribute is used to store display interval of the dynamic banner
+     *
+     * @return zimbraDynamicBannerInterval, or -1 if unset
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5020)
+    public int getDynamicBannerInterval() {
+        return getIntAttr(Provisioning.A_zimbraDynamicBannerInterval, -1, true);
+    }
+
+    /**
+     * This attribute is used to store display interval of the dynamic banner
+     *
+     * @param zimbraDynamicBannerInterval new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5020)
+    public void setDynamicBannerInterval(int zimbraDynamicBannerInterval) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDynamicBannerInterval, Integer.toString(zimbraDynamicBannerInterval));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute is used to store display interval of the dynamic banner
+     *
+     * @param zimbraDynamicBannerInterval new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5020)
+    public Map<String,Object> setDynamicBannerInterval(int zimbraDynamicBannerInterval, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDynamicBannerInterval, Integer.toString(zimbraDynamicBannerInterval));
+        return attrs;
+    }
+
+    /**
+     * This attribute is used to store display interval of the dynamic banner
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5020)
+    public void unsetDynamicBannerInterval() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDynamicBannerInterval, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute is used to store display interval of the dynamic banner
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5020)
+    public Map<String,Object> unsetDynamicBannerInterval(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDynamicBannerInterval, "");
+        return attrs;
+    }
+
+    /**
      * This attribute is used to enable/disable zimbra headers on email
      * printouts
      *

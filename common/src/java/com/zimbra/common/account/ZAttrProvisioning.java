@@ -6017,6 +6017,30 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDumpsterUserVisibleAge = "zimbraDumpsterUserVisibleAge";
 
     /**
+     * This attribute is used to enable/disable dynamic banner functionality
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5021)
+    public static final String A_zimbraDynamicBannerEnabled = "zimbraDynamicBannerEnabled";
+
+    /**
+     * This attribute is used to store list of dynamic banner images
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5019)
+    public static final String A_zimbraDynamicBannerImage = "zimbraDynamicBannerImage";
+
+    /**
+     * This attribute is used to store display interval of the dynamic banner
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5020)
+    public static final String A_zimbraDynamicBannerInterval = "zimbraDynamicBannerInterval";
+
+    /**
      * This attribute is used to enable/disable zimbra headers on email
      * printouts
      *
