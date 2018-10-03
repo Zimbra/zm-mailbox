@@ -26,6 +26,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.zimbra.common.mailbox.BaseItemInfo;
 import com.zimbra.common.mailbox.MailboxStore;
@@ -259,8 +260,10 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
         if (created == null) {
             return null;
         } else {
-            Map<String, String> createdMeta = new LinkedHashMap<>();
-            for (Map.Entry<ModificationKey, BaseItemInfo> entry: created.entrySet()) {
+        	ConcurrentHashMap<ModificationKey, BaseItemInfo> concurrentCreated = new ConcurrentHashMap<PendingModifications.ModificationKey, BaseItemInfo>(created);
+        	Map<String, String> createdMeta = new ConcurrentHashMap<>();
+            for (Iterator<Map.Entry<ModificationKey, BaseItemInfo>> iter = concurrentCreated.entrySet().iterator();iter.hasNext();) {
+            	Map.Entry<ModificationKey, BaseItemInfo> entry = iter.next();
                 ModificationKey key = entry.getKey();
                 BaseItemInfo itemInfo = entry.getValue();
                 if (itemInfo instanceof MailItem) {
@@ -277,8 +280,10 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
         if (map == null) {
             return null;
         }
-        Map<String, ChangeMeta> metaMap = new LinkedHashMap<>();
-        for (Map.Entry<ModificationKey, Change> entry: map.entrySet()) {
+        ConcurrentHashMap<ModificationKey, Change> concurrentMap = new ConcurrentHashMap<ModificationKey, Change>(map);
+        Map<String, ChangeMeta> metaMap = new ConcurrentHashMap<>();
+        for (Iterator<Map.Entry<ModificationKey, Change>> iter = concurrentMap.entrySet().iterator();iter.hasNext();) {
+        	Map.Entry<ModificationKey, Change> entry = iter.next();
             ModificationKey key = entry.getKey();
             Change change = entry.getValue();
             ChangeMeta.ObjectType type = null;
