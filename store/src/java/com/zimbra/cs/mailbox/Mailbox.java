@@ -9899,6 +9899,9 @@ public class Mailbox implements MailboxStore {
                     } catch (ServiceException e) {
                         exception = e;
                         this.rollback();
+                    } catch (Exception e2) {
+                        exception = ServiceException.FAILURE("uncaught exception during transaction close, rolling back transaction", e2);
+                        this.rollback();
                     }
                 }
 
