@@ -28,7 +28,6 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 
-//import io.leangen.graphql.annotations.GraphQLInputField;
 import com.zimbra.common.gql.GqlConstants;
 import io.leangen.graphql.annotations.GraphQLQuery;
 import io.leangen.graphql.annotations.types.GraphQLType;
@@ -71,9 +70,9 @@ public class LicenseInfo {
         }
         this.attrs.add(attr);
     }
-    @GraphQLQuery(name="status", description="license information status")
+    @GraphQLQuery(name=GqlConstants.STATUS, description="license information status")
     public LicenseStatus getStatus() { return status; }
-    @GraphQLQuery(name="licenseAttributes", description="license information attributes")
+    @GraphQLQuery(name=GqlConstants.LICENSE_ATTRIBUTES, description="license information attributes")
     public List<LicenseAttr> getAttrs() {
         return attrs;
     }
