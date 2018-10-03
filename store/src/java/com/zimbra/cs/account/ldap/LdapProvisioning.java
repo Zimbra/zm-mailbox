@@ -11480,7 +11480,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             if (!StringUtil.isNullOrEmpty(name) && !StringUtil.equal(name, oldName)) {
                 String oldDn = addressList.getDN();
                 String newDn = oldDn.replaceFirst(LdapConstants.ATTR_uid + "=" + oldName,
-                    LdapConstants.ATTR_uid + "=" + name);
+                    LdapConstants.ATTR_uid + "=" + LdapUtil.escapeRDNValue(name));
                 zlc.renameEntry(oldDn, newDn);
                 ZimbraLog.addresslist.debug("New entry DN: %s", newDn);
             }

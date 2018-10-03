@@ -1546,4 +1546,5 @@ public final class AdminConstants {
     public static final String E_SEARCH_FILTER = "searchFilter";
     public static final String E_GAL_FILTER = "galFilter";
     public static final String E_LDAP_FILTER = "ldapFilter";
+    public static final String A_CLEAR_FILTER = "clearFilter";
 }
