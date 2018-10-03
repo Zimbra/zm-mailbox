@@ -185,15 +185,15 @@ public class ModifyAddressListRequest {
     /**
      * @return the clearFilter
      */
-    public ZmBoolean getClearFilter() {
-        return clearFilter;
+    public Boolean getClearFilter() {
+        return ZmBoolean.toBool(clearFilter);
     }
 
     /**
      * @param clearFilter clearFilter to set
      */
-    public void setClearFilter(ZmBoolean clearFilter) {
-        this.clearFilter = clearFilter;
+    public void setClearFilter(Boolean clearFilter) {
+        this.clearFilter = ZmBoolean.fromBool(clearFilter);
     }
 
     public void validateModifyAddressListRequest() throws ServiceException {
