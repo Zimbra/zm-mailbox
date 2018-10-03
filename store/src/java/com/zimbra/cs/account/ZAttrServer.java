@@ -8529,7 +8529,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.9
      */
-    @ZAttr(id=5018)
+    @ZAttr(id=5021)
     public boolean isDynamicBannerEnabled() {
         return getBooleanAttr(Provisioning.A_zimbraDynamicBannerEnabled, false, true);
     }
@@ -8542,7 +8542,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.9
      */
-    @ZAttr(id=5018)
+    @ZAttr(id=5021)
     public void setDynamicBannerEnabled(boolean zimbraDynamicBannerEnabled) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDynamicBannerEnabled, zimbraDynamicBannerEnabled ? TRUE : FALSE);
@@ -8558,7 +8558,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.9
      */
-    @ZAttr(id=5018)
+    @ZAttr(id=5021)
     public Map<String,Object> setDynamicBannerEnabled(boolean zimbraDynamicBannerEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDynamicBannerEnabled, zimbraDynamicBannerEnabled ? TRUE : FALSE);
@@ -8572,7 +8572,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.9
      */
-    @ZAttr(id=5018)
+    @ZAttr(id=5021)
     public void unsetDynamicBannerEnabled() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDynamicBannerEnabled, "");
@@ -8587,7 +8587,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.9
      */
-    @ZAttr(id=5018)
+    @ZAttr(id=5021)
     public Map<String,Object> unsetDynamicBannerEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDynamicBannerEnabled, "");
@@ -48795,6 +48795,83 @@ public abstract class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetShortTermGranteeCacheSize(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraShortTermGranteeCacheSize, "");
+        return attrs;
+    }
+
+    /**
+     * This attribute is used to show captcha on login screen when login
+     * fails count reaches to attribute value
+     *
+     * @return zimbraShowCaptchaOnLoginFailedCount, or 2 if unset
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5018)
+    public int getShowCaptchaOnLoginFailedCount() {
+        return getIntAttr(Provisioning.A_zimbraShowCaptchaOnLoginFailedCount, 2, true);
+    }
+
+    /**
+     * This attribute is used to show captcha on login screen when login
+     * fails count reaches to attribute value
+     *
+     * @param zimbraShowCaptchaOnLoginFailedCount new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5018)
+    public void setShowCaptchaOnLoginFailedCount(int zimbraShowCaptchaOnLoginFailedCount) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraShowCaptchaOnLoginFailedCount, Integer.toString(zimbraShowCaptchaOnLoginFailedCount));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute is used to show captcha on login screen when login
+     * fails count reaches to attribute value
+     *
+     * @param zimbraShowCaptchaOnLoginFailedCount new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5018)
+    public Map<String,Object> setShowCaptchaOnLoginFailedCount(int zimbraShowCaptchaOnLoginFailedCount, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraShowCaptchaOnLoginFailedCount, Integer.toString(zimbraShowCaptchaOnLoginFailedCount));
+        return attrs;
+    }
+
+    /**
+     * This attribute is used to show captcha on login screen when login
+     * fails count reaches to attribute value
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5018)
+    public void unsetShowCaptchaOnLoginFailedCount() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraShowCaptchaOnLoginFailedCount, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute is used to show captcha on login screen when login
+     * fails count reaches to attribute value
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5018)
+    public Map<String,Object> unsetShowCaptchaOnLoginFailedCount(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraShowCaptchaOnLoginFailedCount, "");
         return attrs;
     }
 

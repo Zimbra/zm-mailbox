@@ -6005,7 +6005,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.9
      */
-    @ZAttr(id=5018)
+    @ZAttr(id=5021)
     public static final String A_zimbraDynamicBannerEnabled = "zimbraDynamicBannerEnabled";
 
     /**
@@ -15884,6 +15884,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1900)
     public static final String A_zimbraShortTermGranteeCacheSize = "zimbraShortTermGranteeCacheSize";
+
+    /**
+     * This attribute is used to show captcha on login screen when login
+     * fails count reaches to attribute value
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5018)
+    public static final String A_zimbraShowCaptchaOnLoginFailedCount = "zimbraShowCaptchaOnLoginFailedCount";
 
     /**
      * Whether edit header commands in admin sieve scripts are enabled or
