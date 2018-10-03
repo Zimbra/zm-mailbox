@@ -9779,8 +9779,20 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="5018" name="zimbraShowCaptchaOnLoginFailedCount" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.8.9">
-    <globalConfigValue>2</globalConfigValue>
+	<globalConfigValue>2</globalConfigValue>
 	<desc>This attribute is used to show captcha on login screen when login fails count reaches to attribute value</desc>
+</attr>
+
+<attr id="5019" name="zimbraDynamicBannerImage" type="string" cardinality="multi"  optionalIn="account,cos,domain" flags="accountInfo,accountCosDomainInherited,domainAdminModifiable" since="8.8.9">
+	<desc>This attribute is used to store list of dynamic banner images</desc>
+</attr>
+
+<attr id="5020" name="zimbraDynamicBannerInterval" type="integer" cardinality="single"  optionalIn="account,cos,domain" flags="accountInfo,accountCosDomainInherited,domainAdminModifiable" since="8.8.9">
+	<desc>This attribute is used to store display interval of the dynamic banner</desc>
+</attr>
+
+<attr id="5021" name="zimbraDynamicBannerEnabled" type="boolean" cardinality="single"  optionalIn="globalConfig,server" flags="serverInherited" since="8.8.9">
+	<desc>This attribute is used to enable/disable dynamic banner functionality</desc>
 </attr>
 
 </attrs>
