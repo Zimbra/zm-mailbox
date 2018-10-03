@@ -28,6 +28,7 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.soap.admin.type.EntrySearchFilterInfo;
 import com.zimbra.soap.type.GalSearchType;
+import com.zimbra.soap.type.ZmBoolean;
 
 /**
  * @zm-api-command-auth-required true
@@ -72,6 +73,13 @@ public class ModifyAddressListRequest {
      */
     @XmlElement(name=AdminConstants.E_SEARCH_FILTER /* searchFilter */, required=false)
     private EntrySearchFilterInfo searchFilter;
+
+    /**
+     * @zm-api-field-tag clearFilter
+     * @zm-api-field-description remove all filter conditions if no searchFilter is specified
+     */
+    @XmlAttribute(name=AdminConstants.A_CLEAR_FILTER /* clearFilter */, required=false)
+    private ZmBoolean clearFilter;
 
     /**
      * default private constructor to block the usage
@@ -172,6 +180,20 @@ public class ModifyAddressListRequest {
      */
     public void setSearchFilter(EntrySearchFilterInfo searchFilter) {
         this.searchFilter = searchFilter;
+    }
+
+    /**
+     * @return the clearFilter
+     */
+    public Boolean getClearFilter() {
+        return ZmBoolean.toBool(clearFilter);
+    }
+
+    /**
+     * @param clearFilter clearFilter to set
+     */
+    public void setClearFilter(Boolean clearFilter) {
+        this.clearFilter = ZmBoolean.fromBool(clearFilter);
     }
 
     public void validateModifyAddressListRequest() throws ServiceException {
