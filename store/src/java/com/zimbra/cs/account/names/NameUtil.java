@@ -16,7 +16,9 @@
  */
 package com.zimbra.cs.account.names;
 
-import javax.mail.internet.AddressException;
+//import javax.mail.internet.AddressException;
+
+import java.io.UnsupportedEncodingException;
 import javax.mail.internet.InternetAddress;
 
 import com.google.common.base.Strings;
@@ -59,10 +61,18 @@ public class NameUtil {
 
     public static void validEmailAddress(String addr) throws ServiceException {
         try {
-            InternetAddress ia = new InternetAddress(addr, true);
+            int index = addr.indexOf('@');
+            String localPart;
+            if (index == -1) {
+               localPart = addr;
+            } else {
+               localPart = addr.substring(0, index);
+            }
+            //InternetAddress ia = new InternetAddress(addr, true);
+            InternetAddress ia = new InternetAddress(addr, localPart, "utf-8");
             if (ia.getPersonal() != null && !ia.getPersonal().equals(""))
                 throw ServiceException.INVALID_REQUEST("invalid email address", null);
-        } catch (AddressException e) {
+        } catch (UnsupportedEncodingException e) {
             throw ServiceException.INVALID_REQUEST("invalid email address", e);
         }
     }

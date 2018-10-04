@@ -336,6 +336,11 @@ public class AttributeInfo {
                 throw AccountServiceException.INVALID_ATTR_VALUE(
                         mName+" is longer than max allowed: "+mMaxDuration, null);
             return;
+        case TYPE_INTL_EMAIL:
+            if (value.length() > mMax)
+                throw AccountServiceException.INVALID_ATTR_VALUE(
+                        mName+" value length("+value.length()+") larger than max allowed: "+mMax, null);
+            validEmailAddress(value, false);
         case TYPE_EMAIL:
             if (value.length() > mMax)
                 throw AccountServiceException.INVALID_ATTR_VALUE(
