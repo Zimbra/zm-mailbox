@@ -2096,7 +2096,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         return result;
     }
 
-    public ZContact getContactFromCache(String id) {
+    public ZContact getContactFromCache(String id) throws ServiceException {
         try (final MailboxLock l = getReadLockAndLockIt()) {
             return mContactCache.get(id);
         }
@@ -4106,10 +4106,13 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     /**
      *
      * @param type if non-null, clear only cached searches of the specified tape
+     * @throws ServiceException
      */
     public void clearSearchCache(String type) {
         try (final MailboxLock l = getReadLockAndLockIt()) {
             mSearchPagerCache.clear(type);
+        } catch (ServiceException e) {
+            //can't acquire a mailbox lock
         }
     }
 
@@ -5185,10 +5188,13 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     /**
      * clear all entries in the appointment summary cache. This is normally handled automatically
      * via notifications, except in the case of shared calendars.
+     * @throws ServiceException
      */
     public void clearApptSummaryCache() {
         try (final MailboxLock l = getReadLockAndLockIt()) {
             mApptSummaryCache.clear();
+        } catch (ServiceException e) {
+            //If we're here, then we can't acquire a mailbox lock
         }
     }
 
@@ -6402,12 +6408,12 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     }
 
     @Override
-    public MailboxLock getWriteLockAndLockIt() {
+    public MailboxLock getWriteLockAndLockIt() throws ServiceException {
         return lockFactory.acquiredWriteLock();
     }
 
     @Override
-    public MailboxLock getReadLockAndLockIt() {
+    public MailboxLock getReadLockAndLockIt() throws ServiceException {
         return lockFactory.acquiredReadLock();
     }
 
