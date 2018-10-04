@@ -28,6 +28,7 @@ import javax.net.ssl.SSLSocketFactory;
 
 import com.zimbra.common.io.TcpServerInputStream;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.NetUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -80,7 +81,11 @@ final class TcpImapHandler extends ProtocolHandler {
         super.setIdle(idle);
         ImapListener i4selected = delegate.selectedFolderListener;
         if (i4selected != null) {
-            i4selected.updateAccessTime();
+            try {
+                i4selected.updateAccessTime();
+            } catch (ServiceException e) {
+                ZimbraLog.imap.warn("unable to update access time of %s", i4selected);
+            }
         }
     }
 

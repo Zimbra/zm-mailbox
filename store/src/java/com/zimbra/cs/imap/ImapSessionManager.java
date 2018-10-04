@@ -693,7 +693,14 @@ final class ImapSessionManager {
         // if there are still other listeners on this folder, this session is unnecessary
         MailboxStore mbox = session.getMailbox();
         if (mbox != null) {
-            try (final MailboxLock l = mbox.getWriteLockAndLockIt()) {
+            MailboxLock lock;
+            try {
+                lock = mbox.getWriteLockAndLockIt();
+            } catch (ServiceException e) {
+                ZimbraLog.imap.warn("unable to acquire mailbox lock in ImapSessionManager.closeFolder(), proceeding anyways");
+                lock = null;
+            }
+            try (final MailboxLock l = lock) {
                 for (ImapListener i4listener : session.getImapMboxStore().getListeners(
                         session.getFolderItemIdentifier())) {
                     if (differentSessions(i4listener, session)) {

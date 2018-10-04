@@ -550,7 +550,13 @@ public abstract class ImapListener extends Session {
     public ImapListener detach() {
         MailboxStore mbox = this.getMailbox();
         // locking order is always Mailbox then Session
-        try (final MailboxLock l = (mbox != null) ? mbox.getWriteLockAndLockIt() : null) {
+        MailboxLock l = null;
+        try {
+            l = (mbox != null) ? mbox.getWriteLockAndLockIt() : null;
+        } catch (ServiceException e) {
+            ZimbraLog.imap.warn("unable to acquire mailbox lock in ImapListener.detatch(), proceeding anyways");
+        }
+        try (final MailboxLock lock = l) {
             synchronized (this) {
                 MANAGER.uncacheSession(this);
                 return isRegistered() ? (ImapListener)super.unregister() : this;
@@ -703,8 +709,16 @@ public abstract class ImapListener extends Session {
         }
         // Mailbox.endTransaction() -> ImapSession.notifyPendingChanges() locks in the order of Mailbox -> ImapSession.
         // Need to lock in the same order here, otherwise can result in deadlock.
-        try (final MailboxLock l = mbox.getWriteLockAndLockIt()
-                /* PagedFolderData.replay() locks Mailbox deep inside of it. */) {
+        MailboxLock lock;
+        try{
+            lock = mbox.getWriteLockAndLockIt(); // PagedFolderData.replay() locks Mailbox deep inside of it
+        } catch (ServiceException e) {
+            //For simplicity, close the session
+            ZimbraLog.imap.warn("unable to acquire mailbox lock in ImapListener.reload(), closing session");
+            throw new ImapSessionClosedException();
+        }
+
+        try (final MailboxLock l = lock) {
             synchronized (this) {
                 // if the data's already paged in, we can short-circuit
                 if (mFolder instanceof PagedFolderData) {
@@ -802,7 +816,7 @@ public abstract class ImapListener extends Session {
     }
 
     @Override
-    public void updateAccessTime() {
+    public void updateAccessTime() throws ServiceException {
         super.updateAccessTime();
         // ZESC-460, ZCS-4004: Ensure mailbox was not modified by another thread
         MailboxStore mbox = mailbox;
