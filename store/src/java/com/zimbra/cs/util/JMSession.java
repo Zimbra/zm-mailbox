@@ -333,6 +333,8 @@ public final class JMSession {
         props.setProperty("mail.smtp.port", getValue(server, domain, Provisioning.A_zimbraSmtpPort));
         props.setProperty("mail.smtp.localhost", LC.zimbra_server_hostname.value());
 
+        props.setProperty("mail.mime.allowutf8", "true");
+
         // Get timeout value in seconds from LDAP, convert to millis, and set on the session.
         String sTimeout = getValue(server, domain, Provisioning.A_zimbraSmtpTimeout);
         long timeout = (sTimeout == null ? 60 : Long.parseLong(sTimeout));
