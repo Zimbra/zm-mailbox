@@ -37,7 +37,6 @@ import org.junit.rules.TestName;
 
 import com.zimbra.client.ZLocalMailboxLockFactory;
 import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.mailbox.LockFailedException;
 import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.mailbox.MailboxLockFactory;
 import com.zimbra.common.service.ServiceException;
@@ -75,7 +74,7 @@ public class TestMailboxLock {
                 assertTrue("isWriteLock l2", l2.isWriteLock());
                 assertEquals("hold count l2", 2, l2.getHoldCount());
             }
-        } catch (LockFailedException lfe) {
+        } catch (ServiceException lfe) {
             ZimbraLog.test.info("Unexpected exception thrown", lfe);
             fail("Promoting read lock to a write lock for a thread should be allowed - " + lfe.getMessage());
         }
@@ -211,6 +210,8 @@ public class TestMailboxLock {
                                 Thread.sleep(sleepTime);
                             } catch (InterruptedException e) {
                             }
+                        } catch (ServiceException e1) {
+                            fail("can't acquire mailbox lock");
                         }
                     }
                 }
@@ -231,6 +232,8 @@ public class TestMailboxLock {
                                         getName(), testInfo.getMethodName(), e);
                                 fail("ServiceException:" + e.getMessage());
                             }
+                        } catch (ServiceException e1) {
+                            fail("can't acquire mailbox lock");
                         }
                         try {
                             Thread.sleep(sleepTime);
@@ -423,9 +426,9 @@ public class TestMailboxLock {
             try (final MailboxLock l = mbox.getWriteLockAndLockIt()) {
                 fail("expected too many waiters");
             }
-        } catch (LockFailedException e) {
+        } catch (ServiceException e) {
             //expected
-            assertTrue("Lock failed because too many waiters", e.getMessage().startsWith("too many waiters"));
+            assertTrue("Lock failed because too many waiters", e.getMessage().contains("too many waiters"));
             done.set(true); //cause writer to finish
         }
 
@@ -515,9 +518,9 @@ public class TestMailboxLock {
             // one more reader...this should give too many waiters
         try (final MailboxLock l = mbox.getWriteLockAndLockIt()) {
             fail("expected too many waiters");
-        } catch (LockFailedException e) {
+        } catch (ServiceException e) {
             //expected
-            assertTrue("Lock failed because too many waiters", e.getMessage().startsWith("too many waiters"));
+            assertTrue("Lock failed because too many waiters", e.getMessage().contains("too many waiters"));
             done.set(true); //cause writer to finish
         }
 
@@ -636,9 +639,9 @@ public class TestMailboxLock {
         //one more reader...this should give too many waiters
         try (final MailboxLock l = mbox.getWriteLockAndLockIt()) {
             fail("expected too many waiters");
-        } catch (LockFailedException e) {
+        } catch (ServiceException e) {
             //expected
-            assertTrue("Lock failed because too many waiters", e.getMessage().startsWith("too many waiters"));
+            assertTrue("Lock failed because too many waiters", e.getMessage().contains("too many waiters"));
             done.set(true); //cause writer to finish
         }
 
@@ -712,7 +715,7 @@ public class TestMailboxLock {
             public void run() {
                 try (final MailboxLock lock = lockFactory.acquiredReadLock()) {
                     Thread.sleep(1000);
-                } catch (InterruptedException e) {
+                } catch (InterruptedException | ServiceException e) {
                     ZimbraLog.test.debug("Exception thrown test %s", testInfo.getMethodName(), e);
                 }
             }
@@ -722,8 +725,8 @@ public class TestMailboxLock {
         Thread.sleep(100);
         try (final MailboxLock lock = lockFactory.acquiredReadLock()) {
             fail("should not be able to acquire the lock; should time out");
-        } catch (LockFailedException e) {
-            assertTrue("Lock failed due to timeout", e.getMessage().startsWith("lock timeout"));
+        } catch (ServiceException e) {
+            assertTrue("Lock failed due to timeout", e.getMessage().contains("lock timeout"));
         }
         thread.join();
     }
@@ -741,7 +744,7 @@ public class TestMailboxLock {
                 public void run() {
                     try (final MailboxLock lock = lockFactory.acquiredReadLock()) {
                         Thread.sleep(500);
-                    } catch (InterruptedException e) {
+                    } catch (InterruptedException | ServiceException e) {
                         ZimbraLog.test.debug("Exception thrown test %s", testInfo.getMethodName(), e);
                     }
                 }
@@ -755,8 +758,8 @@ public class TestMailboxLock {
         Thread.sleep(100);
         try (final MailboxLock lock = lockFactory.acquiredReadLock()) {
             fail("should not be able to acquire lock due to too many waiting threads");
-        } catch (LockFailedException e) {
-            assertTrue("Lock failed because too many waiters", e.getMessage().startsWith("too many waiters"));
+        } catch (ServiceException e) {
+            assertTrue("Lock failed because too many waiters", e.getMessage().contains("too many waiters"));
         }
         for (Thread t: threads) {
             t.join();
