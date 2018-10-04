@@ -324,15 +324,18 @@ public abstract class RedisSharedStateCache<M extends MailItem & SharedState> im
         public void transactionEnd(boolean success) {
             Set<RedisSharedState> touchedByThisThread = touchedItems.get();
             if (touchedByThisThread.isEmpty()) {
+                inTransaction.set(false);
                 return;
             }
-            ZimbraLog.cache.trace("end transaction: flushing changes to %s redis folder/tag maps for account %s", touchedByThisThread.size(), mbox.getAccountId());
-            RBatch batch = createBatch();
-            for (RedisSharedState state: touchedByThisThread) {
-                state.addChangesToBatch(batch);
-                state.clearLocalCache();
+            if (success) {
+                ZimbraLog.cache.trace("end transaction: flushing changes to %s redis folder/tag maps for account %s", touchedByThisThread.size(), mbox.getAccountId());
+                RBatch batch = createBatch();
+                for (RedisSharedState state: touchedByThisThread) {
+                    state.addChangesToBatch(batch);
+                    state.clearLocalCache();
+                }
+                batch.execute();
             }
-            batch.execute();
             touchedByThisThread.clear();
             inTransaction.set(false);
         }
