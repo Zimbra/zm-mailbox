@@ -26,6 +26,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.EmailUtil;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
+//import com.zimbra.common.util.ZimbraLog;
 
 public class NameUtil {
     private static final int MAX_DOMAIN_NAME_LEN = 255; // bug 15919, (RFC 1035)
@@ -69,9 +70,10 @@ public class NameUtil {
                localPart = addr.substring(0, index);
             }
             //InternetAddress ia = new InternetAddress(addr, true);
+
             InternetAddress ia = new InternetAddress(addr, localPart, "utf-8");
-            if (ia.getPersonal() != null && !ia.getPersonal().equals(""))
-                throw ServiceException.INVALID_REQUEST("invalid email address", null);
+            //ZimbraLog.mailbox.info(" *********** Address is not set  " + addr );
+
         } catch (UnsupportedEncodingException e) {
             throw ServiceException.INVALID_REQUEST("invalid email address", e);
         }
