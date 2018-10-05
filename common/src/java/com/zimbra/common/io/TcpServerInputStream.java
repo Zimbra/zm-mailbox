@@ -30,6 +30,7 @@ import java.nio.charset.StandardCharsets;
 public class TcpServerInputStream extends BufferedInputStream {
 
     StringBuilder buffer;
+    BufferedReader br;
     protected static final int CR = 13;
     protected static final int LF = 10;
 
@@ -54,9 +55,9 @@ public class TcpServerInputStream extends BufferedInputStream {
      */
 	public String readLine() throws IOException {
 		buffer.delete(0, buffer.length());
-		BufferedReader br = new BufferedReader(new InputStreamReader(this, StandardCharsets.UTF_8));
+		br = new BufferedReader(new InputStreamReader(this, StandardCharsets.UTF_8));
 		while (true) {
-			int ch = read();
+			int ch = br.read();
 			if (ch == -1) {
 				return null;
 			} else if (ch == CR) {
@@ -67,4 +68,8 @@ public class TcpServerInputStream extends BufferedInputStream {
 			buffer.append((char)ch);
 		}
 	}
+
+	public void close ()  throws IOException {
+	   br.close();
+	} 
 }
