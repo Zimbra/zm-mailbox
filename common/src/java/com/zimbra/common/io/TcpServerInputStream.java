@@ -36,11 +36,15 @@ public class TcpServerInputStream extends BufferedInputStream {
 
     public TcpServerInputStream(InputStream in) {
         super(in);
+
+        br = new BufferedReader(new InputStreamReader(this, StandardCharsets.UTF_8));
         buffer = new StringBuilder(128);
     }
 
     public TcpServerInputStream(InputStream in, int size) {
         super(in, size);
+
+        br = new BufferedReader(new InputStreamReader(this, StandardCharsets.UTF_8));
         buffer = new StringBuilder(128);
     }
     /**
@@ -55,7 +59,6 @@ public class TcpServerInputStream extends BufferedInputStream {
      */
 	public String readLine() throws IOException {
 		buffer.delete(0, buffer.length());
-		br = new BufferedReader(new InputStreamReader(this, StandardCharsets.UTF_8));
 		while (true) {
 			int ch = br.read();
 			if (ch == -1) {
