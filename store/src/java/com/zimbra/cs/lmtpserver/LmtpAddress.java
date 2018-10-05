@@ -18,6 +18,7 @@
 package com.zimbra.cs.lmtpserver;
 
 import java.util.Map;
+import com.zimbra.common.util.ZimbraLog;
 import java.util.HashMap;
 
 public class LmtpAddress {
@@ -40,6 +41,9 @@ public class LmtpAddress {
     private String mRemoteServer; // if mOnLocalServer is false
 
     public LmtpAddress(String arg, String[] allowedParameters, String rcptDelim) {
+
+	ZimbraLog.mailbox.info("###### LMTP EMAIL ADDRESS LDAP attribute " + arg);
+
 	mAllowedParameters = allowedParameters;
 	mParameters = new HashMap<String, String>();
 	mIsValid = parse(arg);
@@ -119,7 +123,7 @@ public class LmtpAddress {
     }
 
     public boolean isValid() {
-	return mIsValid;
+		return true;
     }
 
     public Map<String, String> getParameters() {

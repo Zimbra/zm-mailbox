@@ -19,6 +19,9 @@ package com.zimbra.common.io;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 
 /**
  * @since 2004. 10. 26.
@@ -51,7 +54,21 @@ public class TcpServerInputStream extends BufferedInputStream {
      * @throws IOException
      */
     public String readLine() throws IOException {
+
+        BufferedReader br = new BufferedReader(new InputStreamReader(this, StandardCharsets.UTF_8));
+        br.close();
         buffer.delete(0, buffer.length());
+
+        int c;
+        while( (c = br.read()) != -1) {
+           if (c == CR) {
+             continue;
+           } else if (c == LF) {
+             buffer.append((char) c);
+           }
+        }
+        return buffer.toString();
+/*
         while (true) {
             int ch = read();
             if (ch == -1) {
@@ -62,6 +79,6 @@ public class TcpServerInputStream extends BufferedInputStream {
                 return buffer.toString();
             }
             buffer.append((char)ch);
-        }
+        }*/
     }
 }
