@@ -369,13 +369,15 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
         private String toString(RReadWriteLock lck) {
             MoreObjects.ToStringHelper helper = MoreObjects.toStringHelper(lck)
                 .add("name", lck.getName());
-            if (lck.remainTimeToLive() == -1) {
-                helper.add("ttl", "forever");
-            } else if (lck.remainTimeToLive() != -2 /* -2 means key does not exist */) {
-                helper.add("ttl", lck.remainTimeToLive());
+            if (LC.include_redis_attrs_in_lock_debug.booleanValue()) {
+                if (lck.remainTimeToLive() == -1) {
+                    helper.add("ttl", "forever");
+                } else if (lck.remainTimeToLive() != -2 /* -2 means key does not exist */) {
+                    helper.add("ttl", lck.remainTimeToLive());
+                }
+                helper.add("read", toString(lck.readLock()));
+                helper.add("write", toString(lck.writeLock()));
             }
-            helper.add("read", toString(lck.readLock()));
-            helper.add("write", toString(lck.writeLock()));
             return helper.toString();
         }
 
