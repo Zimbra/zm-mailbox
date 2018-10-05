@@ -42,7 +42,6 @@ public class TcpServerInputStream extends BufferedInputStream {
         super(in, size);
         buffer = new StringBuilder(128);
     }
-
     /**
      * Reads a line from the stream.  A line is terminated with either
      * CRLF or bare LF.  (This is different from the behavior of
@@ -53,32 +52,19 @@ public class TcpServerInputStream extends BufferedInputStream {
      *         the end of the stream has been reached
      * @throws IOException
      */
-    public String readLine() throws IOException {
-
-        BufferedReader br = new BufferedReader(new InputStreamReader(this, StandardCharsets.UTF_8));
-        br.close();
-        buffer.delete(0, buffer.length());
-
-        int c;
-        while( (c = br.read()) != -1) {
-           if (c == CR) {
-             continue;
-           } else if (c == LF) {
-             buffer.append((char) c);
-           }
-        }
-        return buffer.toString();
-/*
-        while (true) {
-            int ch = read();
-            if (ch == -1) {
-                return null;
-            } else if (ch == CR) {
-                continue;
-            } else if (ch == LF) {
-                return buffer.toString();
-            }
-            buffer.append((char)ch);
-        }*/
-    }
+	public String readLine() throws IOException {
+		buffer.delete(0, buffer.length());
+		BufferedReader br = new BufferedReader(new InputStreamReader(this, StandardCharsets.UTF_8));
+		while (true) {
+			int ch = read();
+			if (ch == -1) {
+				return null;
+			} else if (ch == CR) {
+				continue;
+			} else if (ch == LF) {
+				return buffer.toString();
+			}
+			buffer.append((char)ch);
+		}
+	}
 }
