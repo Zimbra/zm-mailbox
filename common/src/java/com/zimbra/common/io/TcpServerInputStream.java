@@ -69,7 +69,8 @@ public class TcpServerInputStream extends BufferedInputStream {
 		}
 	}
 
-	public void close ()  throws IOException {
-	   br.close();
+	 public void close ()  throws IOException {
+        br.close();
+		super.close();
 	} 
 }
