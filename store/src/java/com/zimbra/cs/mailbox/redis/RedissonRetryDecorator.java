@@ -7,6 +7,8 @@ import org.redisson.client.RedisTimeoutException;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.stats.ActivityTracker;
+import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.util.RetryUtil.RequestWithRetry;
 import com.zimbra.cs.util.RetryUtil.RequestWithRetry.Command;
 
@@ -18,6 +20,7 @@ public abstract class RedissonRetryDecorator<R> {
     protected R redissonObject;
     private RedissonInitializer<R> initializer;
     protected int clientVersion;
+    private ActivityTracker tracker = ZimbraPerf.REDIS_TRACKER;
 
     public RedissonRetryDecorator(RedissonInitializer<R> initializer, RedissonRetryClient client) {
         this.client = client;
@@ -73,9 +76,13 @@ public abstract class RedissonRetryDecorator<R> {
 
     protected <T> T runCommand(Command<T> command) {
         checkClientVersion();
+        long startTime = System.currentTimeMillis();
         RequestWithRetry<T> withRetry = new RequestWithRetry<>(command, exceptionHandler, onFailure);
         try {
-            return withRetry.execute();
+            T result = withRetry.execute();
+            String caller = Thread.currentThread().getStackTrace()[2].getMethodName();
+            tracker.addStat(caller, startTime);
+            return result;
         } catch (ServiceException e) {
             if (e.getCause() instanceof RedisException) {
                 //re-throw underlying exception, since RedisException is unchecked

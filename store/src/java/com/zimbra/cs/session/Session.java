@@ -353,8 +353,9 @@ public abstract class Session {
         return mCreationTime;
     }
 
-    /** Public API for updating the access time of a session. */
-    public void updateAccessTime() {
+    /** Public API for updating the access time of a session.
+     * @throws ServiceException */
+    public void updateAccessTime() throws ServiceException {
         // go through the session cache so that the session cache's
         // time-ordered access list stays correct
         // see bug 16242

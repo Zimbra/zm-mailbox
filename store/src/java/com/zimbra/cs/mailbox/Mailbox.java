@@ -1247,7 +1247,7 @@ public class Mailbox implements MailboxStore {
      *  write op as well as right after the session expires.
      *
      * @see #recordLastSoapAccessTime(long) */
-    public long getLastSoapAccessTime() {
+    public long getLastSoapAccessTime() throws ServiceException {
         try (final MailboxLock l = getReadLockAndLockIt()) {
             long lastAccess = (currentChange().accessed == MailboxChange.NO_CHANGE ? state.getLastWriteDate()
                             : currentChange().accessed) * 1000L;
@@ -1793,7 +1793,7 @@ public class Mailbox implements MailboxStore {
      *
      * @param type  The type of item to completely uncache.  {@link MailItem#TYPE_UNKNOWN}
      * uncaches all items. */
-    public void purge(MailItem.Type type) {
+    public void purge(MailItem.Type type) throws ServiceException {
         try (final MailboxLock l = getWriteLockAndLockIt()) {
             switch (type) {
                 case FOLDER:
@@ -2182,7 +2182,7 @@ public class Mailbox implements MailboxStore {
         }
     }
 
-    public MailboxVersion getVersion() {
+    public MailboxVersion getVersion() throws ServiceException {
         try (final MailboxLock l = getReadLockAndLockIt()) {
             return mData.version;
         }
@@ -7269,8 +7269,9 @@ public class Mailbox implements MailboxStore {
      *
      * @param addrs email addresses
      * @return addresses doesn't exist
+     * @throws ServiceException
      */
-    public Collection<Address> newContactAddrs(Collection<Address> addrs) {
+    public Collection<Address> newContactAddrs(Collection<Address> addrs) throws ServiceException {
         if (addrs.isEmpty()) {
             return Collections.emptySet();
         }
@@ -8883,13 +8884,10 @@ public class Mailbox implements MailboxStore {
         // save for notifications (below)
         PendingLocalModifications dirty = null;
         if (change.dirty != null && change.dirty.hasNotifications()) {
-            assert (l.isWriteLockedByCurrentThread());
             assert(currentChange().writeChange);
             dirty = change.dirty;
             change.dirty = new PendingLocalModifications();
         }
-
-        assert (!change.hasChanges() || l.isWriteLockedByCurrentThread());
 
         try {
             // the mailbox data has changed, so commit the changes
@@ -8995,22 +8993,26 @@ public class Mailbox implements MailboxStore {
         }
         /* Interrogating the lock to see if current thread has lock has some cost, hence why only do it if
          * have notifications. */
-        if (lock.isLockedByCurrentThread()) {
-            /* Still locked, even though we've probably just released a lock.  Use a separate thread
-             * to avoid delaying the outer lock.
-             */
-            new Thread(new Runnable() {
-                @Override public void run() {
-                    doNotifyListeners(change, notification);
-                }
-            }, "notifyMboxListeners-" + Thread.currentThread().getId()).start();
-        } else {
-            /* we're not holding a lock any more. no need to use a separate thread */
-            doNotifyListeners(change, notification);
+        try {
+            if (lock.isLockedByCurrentThread()) {
+                /* Still locked, even though we've probably just released a lock.  Use a separate thread
+                 * to avoid delaying the outer lock.
+                 */
+                new Thread(new Runnable() {
+                    @Override public void run() {
+                        doNotifyListeners(change, notification);
+                    }
+                }, "notifyMboxListeners-" + Thread.currentThread().getId()).start();
+            } else {
+                /* we're not holding a lock any more. no need to use a separate thread */
+                doNotifyListeners(change, notification);
+            }
+        } catch (ServiceException e) {
+            ZimbraLog.mailbox.warn("unable to notify listeners for mailbox change %s", change, e);
         }
     }
 
-    private List<Object> rollbackCache(MailboxChange change) {
+    private List<Object> rollbackCache(MailboxChange change) throws ServiceException {
         if (change == null) {
             return null;
         }
@@ -9441,16 +9443,16 @@ public class Mailbox implements MailboxStore {
     }
 
     @Override
-    public MailboxLock getWriteLockAndLockIt() {
+    public MailboxLock getWriteLockAndLockIt() throws ServiceException {
         return lockFactory.acquiredWriteLock();
     }
 
     @Override
-    public MailboxLock getReadLockAndLockIt() {
+    public MailboxLock getReadLockAndLockIt() throws ServiceException {
         return requiresWriteLock() ? lockFactory.acquiredWriteLock() : lockFactory.acquiredReadLock();
     }
 
-    public boolean isWriteLockedByCurrentThread() {
+    public boolean isWriteLockedByCurrentThread() throws ServiceException {
         return lockFactory.writeLock().isWriteLockedByCurrentThread();
     }
 
@@ -9865,15 +9867,25 @@ public class Mailbox implements MailboxStore {
          */
         @Override
         public void close() throws ServiceException {
-            if (!lock.isLockedByCurrentThread()) {
+            try {
+                if (!lock.isLockedByCurrentThread()) {
+                    ZimbraLog.mailbox.warn("transaction canceled because of lock failure %s %s",
+                            this, ZimbraLog.getStackTrace(16));
+                    if (!startedChange) {
+                        /* if we haven't started a change yet, shouldn't be any further cleanup needed. */
+                        return;
+                    }
+                    /* This should cause rollback, cleanup of currentChange etc.  If we don't do
+                     * any needed tidyup here, things can get very confusing (change depth counter etc). */
+                    success = false;
+                }
+            } catch (ServiceException e) {
+                //if there is a problem calling isLockedByCallingThread, abort the transaction
                 ZimbraLog.mailbox.warn("transaction canceled because of lock failure %s %s",
                         this, ZimbraLog.getStackTrace(16));
                 if (!startedChange) {
-                    /* if we haven't started a change yet, shouldn't be any further cleanup needed. */
                     return;
                 }
-                /* This should cause rollback, cleanup of currentChange etc.  If we don't do
-                 * any needed tidyup here, things can get very confusing (change depth counter etc). */
                 success = false;
             }
             PendingDelete deletes = null; // blob and index to delete
@@ -9898,6 +9910,9 @@ public class Mailbox implements MailboxStore {
                         snapshotCounts();
                     } catch (ServiceException e) {
                         exception = e;
+                        this.rollback();
+                    } catch (Exception e2) {
+                        exception = ServiceException.FAILURE("uncaught exception during transaction close, rolling back transaction", e2);
                         this.rollback();
                     }
                 }

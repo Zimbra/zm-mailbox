@@ -122,6 +122,6 @@
   <dependency org="org.apache.xmlgraphics" name="batik-i18n" rev="1.9"/>
   <dependency org="org.apache.xmlgraphics" name="batik-util" rev="1.8"/>
   <dependency org="org.redisson" name="redisson" rev="3.7.5"/>
-  <dependency org="io.netty" name="netty-all" rev="4.1.13.Final"/>
+  <dependency org="io.netty" name="netty-all" rev="4.1.30.Final"/>
  </dependencies>
 </ivy-module>
