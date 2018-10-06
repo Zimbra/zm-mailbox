@@ -3754,6 +3754,24 @@ public abstract class ImapHandler {
                 false /* allowOutOfRangeMsgSeq */);
     }
 
+    @SuppressWarnings("serial")
+    private MailboxLock getReadLock(MailboxStore mbox) throws ImapException {
+        try {
+            return mbox.getReadLockAndLockIt();
+        } catch (ServiceException e) {
+            throw new ImapException("unable to acquire mailbox read lock") {};
+        }
+    }
+
+    @SuppressWarnings("serial")
+    private MailboxLock getwriteLock(MailboxStore mbox) throws ImapException {
+        try {
+            return mbox.getWriteLockAndLockIt();
+        } catch (ServiceException e) {
+            throw new ImapException("unable to acquire mailbox write lock") {};
+        }
+    }
+
     private boolean fetch(String tag, String sequenceSet, int attributes, List<ImapPartSpecifier> parts,
             boolean byUID, int changedSince, boolean standalone, boolean allowOutOfRangeMsgSeq)
     throws IOException, ImapException {
@@ -3807,7 +3825,7 @@ public abstract class ImapHandler {
 
         ImapMessageSet i4set;
         MailboxStore mbox = i4folder.getMailbox();
-        try (final MailboxLock l = mbox.getReadLockAndLockIt()) {
+        try (final MailboxLock l = getReadLock(mbox)) {
             i4set = i4folder.getSubsequence(tag, sequenceSet, byUID, allowOutOfRangeMsgSeq, true /* includeExpunged */);
             i4set.remove(null);
         }
@@ -3867,7 +3885,7 @@ public abstract class ImapHandler {
             }
         }
 
-        try (final MailboxLock l = mbox.getWriteLockAndLockIt()) {
+        try (final MailboxLock l = getwriteLock(mbox)) {
             if (i4folder.areTagsDirty()) {
                 sendUntagged("FLAGS (" + StringUtil.join(" ", i4folder.getFlagList(false)) + ')');
                 i4folder.setTagsDirty(false);
@@ -4140,7 +4158,7 @@ public abstract class ImapHandler {
         MailboxStore mbox = selectedFolderListener.getMailbox();
 
         Set<ImapMessage> i4set;
-        try (final MailboxLock l = mbox.getWriteLockAndLockIt()) {
+        try (final MailboxLock l = getwriteLock(mbox)) {
             i4set = i4folder.getSubsequence(tag, sequenceSet, byUID);
         }
         boolean allPresent = byUID || !i4set.contains(null);
@@ -4333,7 +4351,7 @@ public abstract class ImapHandler {
         }
         MailboxStore mbox = i4folder.getMailbox();
         Set<ImapMessage> i4set;
-        try (final MailboxLock l = mbox.getReadLockAndLockIt()) {
+        try (final MailboxLock l = getReadLock(mbox)) {
             i4set = i4folder.getSubsequence(tag, sequenceSet, byUID);
         } catch (ImapParseException ipe) {
             ZimbraLog.imap.error(ipe);
@@ -4535,55 +4553,52 @@ public abstract class ImapHandler {
         }
 
         List<String> notifications = new ArrayList<String>();
-        // XXX: is this the right thing to synchronize on?
-        try (final MailboxLock l = mbox.getWriteLockAndLockIt()) {
-            // FIXME: notify untagged NO if close to quota limit
 
-            if (i4folder.areTagsDirty()) {
-                notifications.add("FLAGS (" + StringUtil.join(" ", i4folder.getFlagList(false)) + ')');
-                i4folder.setTagsDirty(false);
-            }
+        // FIXME: notify untagged NO if close to quota limit
 
-            int oldRecent = i4folder.getRecentCount();
-            boolean removed = false;
-            boolean received = i4folder.checkpointSize();
-            if (notifyExpunges) {
-                List<Integer> expunged = i4folder.collapseExpunged(sessionActivated(ImapExtension.QRESYNC));
-                removed = !expunged.isEmpty();
-                if (removed) {
-                    if (sessionActivated(ImapExtension.QRESYNC)) {
-                        notifications.add("VANISHED " + ImapFolder.encodeSubsequence(expunged));
-                    } else {
-                        for (Integer index : expunged) {
-                            notifications.add(index + " EXPUNGE");
-                        }
+        if (i4folder.areTagsDirty()) {
+            notifications.add("FLAGS (" + StringUtil.join(" ", i4folder.getFlagList(false)) + ')');
+            i4folder.setTagsDirty(false);
+        }
+
+        int oldRecent = i4folder.getRecentCount();
+        boolean removed = false;
+        boolean received = i4folder.checkpointSize();
+        if (notifyExpunges) {
+            List<Integer> expunged = i4folder.collapseExpunged(sessionActivated(ImapExtension.QRESYNC));
+            removed = !expunged.isEmpty();
+            if (removed) {
+                if (sessionActivated(ImapExtension.QRESYNC)) {
+                    notifications.add("VANISHED " + ImapFolder.encodeSubsequence(expunged));
+                } else {
+                    for (Integer index : expunged) {
+                        notifications.add(index + " EXPUNGE");
                     }
                 }
             }
-            i4folder.checkpointSize();
+        }
+        i4folder.checkpointSize();
 
-            // notify of any message flag changes
-            boolean sendModseq = sessionActivated(ImapExtension.CONDSTORE);
-            for (Iterator<ImapFolder.DirtyMessage> it = i4folder.dirtyIterator(); it.hasNext(); ) {
-                ImapFolder.DirtyMessage dirty = it.next();
-                if (dirty.i4msg.isAdded()) {
-                    dirty.i4msg.setAdded(false);
-                } else {
-                    notifications.add(dirty.i4msg.sequence + " FETCH (" + dirty.i4msg.getFlags(i4folder) +
-                            (sendModseq && dirty.modseq > 0 ? " MODSEQ (" + dirty.modseq + ')' : "") + ')');
-                }
-            }
-            i4folder.clearDirty();
-
-            if (received || removed) {
-                notifications.add(i4folder.getSize() + " EXISTS");
-            }
-            if (received || oldRecent != i4folder.getRecentCount()) {
-                notifications.add(i4folder.getRecentCount() + " RECENT");
+        // notify of any message flag changes
+        boolean sendModseq = sessionActivated(ImapExtension.CONDSTORE);
+        for (Iterator<ImapFolder.DirtyMessage> it = i4folder.dirtyIterator(); it.hasNext(); ) {
+            ImapFolder.DirtyMessage dirty = it.next();
+            if (dirty.i4msg.isAdded()) {
+                dirty.i4msg.setAdded(false);
+            } else {
+                notifications.add(dirty.i4msg.sequence + " FETCH (" + dirty.i4msg.getFlags(i4folder) +
+                        (sendModseq && dirty.modseq > 0 ? " MODSEQ (" + dirty.modseq + ')' : "") + ')');
             }
         }
+        i4folder.clearDirty();
 
-        // no I/O while the Mailbox is locked...
+        if (received || removed) {
+            notifications.add(i4folder.getSize() + " EXISTS");
+        }
+        if (received || oldRecent != i4folder.getRecentCount()) {
+            notifications.add(i4folder.getRecentCount() + " RECENT");
+        }
+
         for (String ntfn : notifications) {
             sendUntagged(ntfn);
         }

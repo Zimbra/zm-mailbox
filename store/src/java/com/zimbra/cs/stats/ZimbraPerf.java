@@ -206,6 +206,7 @@ public class ZimbraPerf {
     public static final ActivityTracker LDAP_TRACKER = new ActivityTracker("ldap.csv");
     public static final ActivityTracker SYNC_TRACKER = new ActivityTracker("sync.csv");
     public static final ActivityTracker SQL_TRACKER  = new ActivityTracker("sql.csv");
+    public static final ActivityTracker REDIS_TRACKER  = new ActivityTracker("redis.csv");
 
     private static int mailboxCacheSize;
     private static long mailboxCacheSizeTimestamp = 0;
@@ -562,6 +563,7 @@ public class ZimbraPerf {
         StatsDumper.schedule(LDAP_TRACKER, CSV_DUMP_FREQUENCY);
         StatsDumper.schedule(SYNC_TRACKER, CSV_DUMP_FREQUENCY);
         StatsDumper.schedule(SQL_TRACKER, CSV_DUMP_FREQUENCY);
+        StatsDumper.schedule(REDIS_TRACKER, CSV_DUMP_FREQUENCY);
         ThreadStats threadStats = new ThreadStats("threads.csv");
         StatsDumper.schedule(threadStats, CSV_DUMP_FREQUENCY);
     }

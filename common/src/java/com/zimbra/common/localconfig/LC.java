@@ -1267,6 +1267,21 @@ public final class LC {
     public static final KnownKey redis_subscriptions_per_connection = KnownKey.newKey(10);
 
     @Supported
+    public static final KnownKey redis_connection_timeout = KnownKey.newKey(10000);
+
+    @Supported
+    public static final KnownKey redis_num_retries = KnownKey.newKey(10);
+
+    @Supported
+    public static final KnownKey redis_netty_threads = KnownKey.newKey(100);
+
+    @Supported
+    public static final KnownKey redis_retry_interval = KnownKey.newKey(3000);
+
+    @Supported
+    public static final KnownKey include_redis_attrs_in_lock_debug = KnownKey.newKey(false);
+
+    @Supported
     public static final KnownKey search_put_hits_chunk_size = KnownKey.newKey(100);
 
     @Supported
@@ -1329,13 +1344,13 @@ public final class LC {
     @Reloadable
     public static final KnownKey imap_always_use_remote_store = KnownKey.newKey(false);
 
-    
+
     // OAuth2 Social
     public static final KnownKey zm_oauth_classes_handlers_yahoo = KnownKey.newKey("com.zimbra.oauth.handlers.impl.YahooOAuth2Handler");
     public static final KnownKey zm_oauth_classes_handlers_google = KnownKey.newKey("com.zimbra.oauth.handlers.impl.GoogleOAuth2Handler");
     public static final KnownKey zm_oauth_classes_handlers_facebook = KnownKey.newKey("com.zimbra.oauth.handlers.impl.FacebookOAuth2Handler");
-    
-    
+
+
     static {
         // Automatically set the key name with the variable name.
         for (Field field : LC.class.getFields()) {

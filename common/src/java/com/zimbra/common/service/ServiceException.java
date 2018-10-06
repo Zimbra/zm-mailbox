@@ -60,6 +60,7 @@ public class ServiceException extends Exception {
     public static final String FORBIDDEN = "service.FORBIDDEN";
     // generic "not found" error for objects other than mail items
     public static final String NOT_FOUND = "service.NOT_FOUND";
+    public static final String LOCK_FAILED = "mail.LOCK_FAILED";
 
     //smime
     public static final String LOAD_CERTIFICATE_FAILED = "smime.LOAD_CERTIFICATE_FAILED";
@@ -438,5 +439,13 @@ public class ServiceException extends Exception {
 
     public static ServiceException NETWORK_MODULES_NG_ENABLED(String str) {
         return new ServiceException("ZimbraNetworkModulesNG: "+ str + " is not enabled.", ZIMBRA_NETWORK_MODULES_NG_ENABLED, RECEIVERS_FAULT);
+    }
+
+    public static ServiceException LOCK_FAILED(String message) {
+        return new ServiceException(message, LOCK_FAILED, RECEIVERS_FAULT, (Throwable) null);
+    }
+
+    public static ServiceException LOCK_FAILED(String message, Throwable cause) {
+        return new ServiceException(message, LOCK_FAILED, RECEIVERS_FAULT, cause);
     }
 }

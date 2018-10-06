@@ -58,8 +58,8 @@ public interface MailboxStore {
      *     (a) it's not a draft or a sent message, and
      *     (b) it was added since the last write operation associated with any SOAP session. */
     public void resetRecentMessageCount(OpContext octxt) throws ServiceException;
-    public MailboxLock getWriteLockAndLockIt();
-    public MailboxLock getReadLockAndLockIt();
+    public MailboxLock getWriteLockAndLockIt() throws ServiceException;
+    public MailboxLock getReadLockAndLockIt() throws ServiceException;
     /** Returns the IDs of all items modified since a given change number.
      *  Will not return modified folders or tags; for these you need to call
      * @return a List of IDs of all caller-visible MailItems of the given type modified since the checkpoint

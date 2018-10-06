@@ -23,6 +23,7 @@ import org.apache.mina.filter.codec.ProtocolDecoderException;
 import org.apache.mina.filter.codec.RecoverableProtocolDecoderException;
 
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.server.NioConnection;
 import com.zimbra.cs.server.NioHandler;
@@ -107,7 +108,11 @@ final class NioImapHandler extends ImapHandler implements NioHandler {
     private boolean processRequest(NioImapRequest req) throws IOException {
         ImapListener i4selected = selectedFolderListener;
         if (i4selected != null) {
-            i4selected.updateAccessTime();
+            try {
+                i4selected.updateAccessTime();
+            } catch (ServiceException e) {
+                ZimbraLog.imap.warn("unable to update access time of %s", i4selected);
+            }
         }
 
         long start = ZimbraPerf.STOPWATCH_IMAP.start();

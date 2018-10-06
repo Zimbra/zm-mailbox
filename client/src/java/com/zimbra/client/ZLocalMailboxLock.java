@@ -3,8 +3,8 @@ package com.zimbra.client;
 import java.util.concurrent.TimeUnit;
 
 import com.google.common.util.concurrent.Monitor;
-import com.zimbra.common.mailbox.LockFailedException;
 import com.zimbra.common.mailbox.MailboxLock;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
 /**
@@ -46,7 +46,7 @@ public class ZLocalMailboxLock implements MailboxLock {
     }
 
     @Override
-    public void lock() {
+    public void lock() throws ServiceException {
         try {
             //First, try to enter the monitor if it's not occupied.
             //We do not wait here, since we don't want blocked threads piling up.
@@ -57,17 +57,17 @@ public class ZLocalMailboxLock implements MailboxLock {
             //If too many threads are waiting on the lock, throw an exception.
             int queueLength = monitor.getQueueLength();
             if (queueLength >= maxWaitingThreads) {
-                throw new LockFailedException("too many waiters: " + queueLength);
+                throw ServiceException.LOCK_FAILED("too many waiters: " + queueLength);
             }
             //Wait for the lock up to the allowed limit
             if (monitor.enterInterruptibly(timeoutSeconds, TimeUnit.SECONDS)) {
                 ZimbraLog.mailboxlock.debug("acquired zmailbox lock");
                 return;
             } else {
-                throw new LockFailedException("lock timeout");
+                throw ServiceException.LOCK_FAILED("lock timeout");
             }
         } catch (InterruptedException e) {
-            throw new LockFailedException("lock interrupted", e);
+            throw ServiceException.LOCK_FAILED("lock interrupted");
         }
     }
 
