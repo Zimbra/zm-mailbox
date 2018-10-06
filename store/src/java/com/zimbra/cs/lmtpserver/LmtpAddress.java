@@ -18,7 +18,6 @@
 package com.zimbra.cs.lmtpserver;
 
 import java.util.Map;
-import com.zimbra.common.util.ZimbraLog;
 import java.util.HashMap;
 
 public class LmtpAddress {
@@ -41,8 +40,6 @@ public class LmtpAddress {
     private String mRemoteServer; // if mOnLocalServer is false
 
     public LmtpAddress(String arg, String[] allowedParameters, String rcptDelim) {
-
-	ZimbraLog.mailbox.info("###### LMTP EMAIL ADDRESS LDAP attribute " + arg);
 
 	mAllowedParameters = allowedParameters;
 	mParameters = new HashMap<String, String>();
@@ -356,7 +353,7 @@ public class LmtpAddress {
     }
 
     private boolean isLetter(int c) {
-	return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+        return Character.isAlphabetic(c);
     }
 
     private boolean skipAddress() {
@@ -464,9 +461,12 @@ public class LmtpAddress {
 	     *               and 127)
 	     */
 	    if (ch < 33 || ch > 126) { // 32 is ' '
-		if (debug) say("illegal character < 33 or > 126");
-		return false; // any one of the 128 ascii characters
-	    }
+            if (debug) say("illegal character < 33 or > 126: " + ch);
+            if (debug) say("but... is it alphabetic? " + Character.isAlphabetic(ch));
+            if (!Character.isAlphabetic(ch)) {
+               return false; // any one of the 128 ascii characters
+            }
+        }
 
 	    if ("<()[]\\,;:\"".indexOf(ch) > -1) {
 		/* Left out '>' and '@' which are terminators in this
