@@ -57,23 +57,27 @@ public class TcpServerInputStream extends BufferedInputStream {
      *         the end of the stream has been reached
      * @throws IOException
      */
-	public String readLine() throws IOException {
-		buffer.delete(0, buffer.length());
-		while (true) {
-			int ch = br.read();
-			if (ch == -1) {
-				return null;
-			} else if (ch == CR) {
-				continue;
-			} else if (ch == LF) {
-				return buffer.toString();
-			}
-			buffer.append((char)ch);
-		}
-	}
+    public String readLine() throws IOException {
+        buffer.delete(0, buffer.length());
+        while (true) {
+            int ch = br.read();
+            if (ch == -1) {
+                return null;
+            } else if (ch == CR) {
+                continue;
+            } else if (ch == LF) {
+                return buffer.toString();
+            }
+            buffer.append((char)ch);
+        }
+    }
 
-	 public void close ()  throws IOException {
-        br.close();
-		super.close();
-	} 
+    public void close ()  throws IOException {
+        try {
+           br.close();
+           super.close();
+        } catch (IOException $e) {
+            // @TODO --> handle / log exception
+        }
+    }
 }

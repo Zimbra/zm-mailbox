@@ -120,7 +120,7 @@ public class LmtpAddress {
     }
 
     public boolean isValid() {
-		return true;
+        return mIsValid;
     }
 
     public Map<String, String> getParameters() {
