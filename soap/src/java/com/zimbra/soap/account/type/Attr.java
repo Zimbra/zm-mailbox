@@ -30,6 +30,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.zclient.ZClientException;
@@ -48,7 +49,7 @@ import io.leangen.graphql.annotations.types.GraphQLType;
  *
  * Note:  where the attribute name is "n" rather than "name" use {@link KeyValuePair}
  */
-@GraphQLType(name="Attr", description="Attributes")
+@GraphQLType(name=GqlConstants.CLASS_ATTR, description="Attributes")
 public class Attr implements KeyAndValue {
 
     public static Function<Attr, Attr> COPY = new Function<Attr, Attr>() {

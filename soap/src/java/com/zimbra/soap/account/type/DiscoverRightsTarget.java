@@ -24,10 +24,16 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 
 import com.google.common.collect.Lists;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.type.TargetType;
 
+import io.leangen.graphql.annotations.GraphQLNonNull;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name=GqlConstants.CLASS_DISCOVER_RIGHTS_TARGET, description="Discover rights target")
 public class DiscoverRightsTarget {
 
     /**
@@ -80,10 +86,16 @@ public class DiscoverRightsTarget {
         setDisplayName(displayName);
     }
 
+    @GraphQLNonNull
+    @GraphQLQuery(name=GqlConstants.TYPE, description="Target type")
     public TargetType getType() { return type; }
+    @GraphQLQuery(name=GqlConstants.NAME, description="Target name")
     public String getName() { return name; }
+    @GraphQLQuery(name=GqlConstants.DISPLAY_NAME, description="Display name of the entry")
     public String getDisplayName() { return displayName; }
+    @GraphQLQuery(name=GqlConstants.ID, description="Target ID")
     public String getId() { return id; }
+    @GraphQLQuery(name=GqlConstants.EMAILS, description="Email addresses")
     public List<DiscoverRightsEmail> getAddrs() { return emails; }
 
     public void setType(TargetType type) {

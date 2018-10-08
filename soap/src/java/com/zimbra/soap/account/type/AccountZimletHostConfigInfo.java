@@ -30,12 +30,17 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.ZimletConstants;
 import com.zimbra.soap.base.ZimletHostConfigInfo;
 import com.zimbra.soap.base.ZimletProperty;
 
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {})
+@GraphQLType(name=GqlConstants.CLASS_ACCOUNT_ZIMLET_HOST_CONFIG_INFO, description="Account zimlet host configuration information")
 public class AccountZimletHostConfigInfo
 implements ZimletHostConfigInfo {
 
@@ -78,6 +83,7 @@ implements ZimletHostConfigInfo {
         this.properties.add(property);
     }
 
+    @GraphQLQuery(name=GqlConstants.NAME, description="Name")
     @Override
     public String getName() { return name; }
     public List<AccountZimletProperty> getProperties() {

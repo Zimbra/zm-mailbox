@@ -20,9 +20,15 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.AccountConstants;
 
+import io.leangen.graphql.annotations.GraphQLNonNull;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name=GqlConstants.CLASS_DISCOVER_RIGHTS_EMAIL, description="Discover rights email")
 public class DiscoverRightsEmail {
 
     /**
@@ -44,6 +50,8 @@ public class DiscoverRightsEmail {
         this.addr = addr;
     }
 
+    @GraphQLNonNull
+    @GraphQLQuery(name=GqlConstants.ADDR, description="Email address")
     public String getAddr() {
         return addr;
     }

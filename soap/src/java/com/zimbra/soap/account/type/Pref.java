@@ -22,6 +22,7 @@ import javax.xml.bind.annotation.XmlValue;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.soap.base.KeyAndValue;
 
 import io.leangen.graphql.annotations.GraphQLIgnore;
@@ -33,7 +34,7 @@ import io.leangen.graphql.annotations.types.GraphQLType;
 /*
    <pref name="{name}" modified="{modified-time}">{value}</pref>
  */
-@GraphQLType(name="Pref", description="Preferences")
+@GraphQLType(name=GqlConstants.CLASS_PREF, description="Preferences")
 public class Pref implements KeyAndValue {
 
     /**

@@ -29,11 +29,16 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.google.common.collect.Iterables;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.AccountConstants;
+
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AccountConstants.E_SIGNATURE)
 @XmlType(propOrder = {"contentList", AccountConstants.E_CONTACT_ID})
+@GraphQLType(name=GqlConstants.CLASS_SIGNATURE, description="Signature")
 public class Signature {
 
     /**
@@ -63,6 +68,7 @@ public class Signature {
     @XmlElement(name=AccountConstants.E_CONTACT_ID)
     private String cid;
 
+    @SuppressWarnings("unused")
     private Signature() {
     }
 
@@ -94,10 +100,13 @@ public class Signature {
         this(id, name, content, contentType, null);
     }
 
+    @GraphQLQuery(name=GqlConstants.NAME, description="Name for the signature")
     public String getName() { return name; }
+    @GraphQLQuery(name=GqlConstants.ID, description="ID for the signature")
     public String getId() { return id; }
+    @GraphQLQuery(name=GqlConstants.CID, description="Contact ID")
     public String getCid() { return cid; }
-
+    @GraphQLQuery(name=GqlConstants.CONTENT_LIST, description="Content of the signature")
     public List<SignatureContent> getContent() {
         return Collections.unmodifiableList(contentList);
     }
