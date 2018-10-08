@@ -40,7 +40,6 @@ public class LmtpAddress {
     private String mRemoteServer; // if mOnLocalServer is false
 
     public LmtpAddress(String arg, String[] allowedParameters, String rcptDelim) {
-
 	mAllowedParameters = allowedParameters;
 	mParameters = new HashMap<String, String>();
 	mIsValid = parse(arg);
@@ -353,7 +352,7 @@ public class LmtpAddress {
     }
 
     private boolean isLetter(int c) {
-        return Character.isAlphabetic(c);
+      return Character.isAlphabetic(c);
     }
 
     private boolean skipAddress() {
