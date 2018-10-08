@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2009, 2010, 2011, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2009, 2010, 2011, 2013, 2014, 2016, 2018 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -72,12 +72,12 @@ public class TcpServerInputStream extends BufferedInputStream {
         }
     }
 
-    public void close ()  throws IOException {
+    public void close()  throws IOException {
         try {
-           br.close();
-           super.close();
-        } catch (IOException $e) {
-            // @TODO --> handle / log exception
+            br.close();
+        } catch (IOException e) {
+            // Nothing to do with the exception.
         }
+        super.close();
     }
 }
