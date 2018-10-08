@@ -22332,6 +22332,83 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * seniority index of the group or group member which will determine the
+     * sorting order in the hierarchical address book
+     *
+     * @return zimbraHABSeniorityIndex, or -1 if unset
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=3071)
+    public int getHABSeniorityIndex() {
+        return getIntAttr(Provisioning.A_zimbraHABSeniorityIndex, -1, true);
+    }
+
+    /**
+     * seniority index of the group or group member which will determine the
+     * sorting order in the hierarchical address book
+     *
+     * @param zimbraHABSeniorityIndex new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=3071)
+    public void setHABSeniorityIndex(int zimbraHABSeniorityIndex) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHABSeniorityIndex, Integer.toString(zimbraHABSeniorityIndex));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * seniority index of the group or group member which will determine the
+     * sorting order in the hierarchical address book
+     *
+     * @param zimbraHABSeniorityIndex new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=3071)
+    public Map<String,Object> setHABSeniorityIndex(int zimbraHABSeniorityIndex, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHABSeniorityIndex, Integer.toString(zimbraHABSeniorityIndex));
+        return attrs;
+    }
+
+    /**
+     * seniority index of the group or group member which will determine the
+     * sorting order in the hierarchical address book
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=3071)
+    public void unsetHABSeniorityIndex() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHABSeniorityIndex, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * seniority index of the group or group member which will determine the
+     * sorting order in the hierarchical address book
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=3071)
+    public Map<String,Object> unsetHABSeniorityIndex(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHABSeniorityIndex, "");
+        return attrs;
+    }
+
+    /**
      * hide entry in Global Address List
      *
      * @return zimbraHideInGal, or false if unset
@@ -34199,6 +34276,83 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * temporary RFC822 email address of this recipient for accepting mail
+     * during account rename
+     *
+     * @return zimbraOldMailAddress, or null if unset
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=2143)
+    public String getOldMailAddress() {
+        return getAttr(Provisioning.A_zimbraOldMailAddress, null, true);
+    }
+
+    /**
+     * temporary RFC822 email address of this recipient for accepting mail
+     * during account rename
+     *
+     * @param zimbraOldMailAddress new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=2143)
+    public void setOldMailAddress(String zimbraOldMailAddress) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOldMailAddress, zimbraOldMailAddress);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * temporary RFC822 email address of this recipient for accepting mail
+     * during account rename
+     *
+     * @param zimbraOldMailAddress new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=2143)
+    public Map<String,Object> setOldMailAddress(String zimbraOldMailAddress, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOldMailAddress, zimbraOldMailAddress);
+        return attrs;
+    }
+
+    /**
+     * temporary RFC822 email address of this recipient for accepting mail
+     * during account rename
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=2143)
+    public void unsetOldMailAddress() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOldMailAddress, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * temporary RFC822 email address of this recipient for accepting mail
+     * during account rename
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=2143)
+    public Map<String,Object> unsetOldMailAddress(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOldMailAddress, "");
+        return attrs;
+    }
+
+    /**
      * regex of allowed characters in password
      *
      * @return zimbraPasswordAllowedChars, or null if unset
@@ -42434,6 +42588,93 @@ public abstract class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetPrefDedupeMessagesSentToSelf(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefDedupeMessagesSentToSelf, "");
+        return attrs;
+    }
+
+    /**
+     * Default calendar folder id. Current default calendar id is 10, as
+     * calendar folder with id 10, is created for all users. Cos level change
+     * is blocked. So admin can not change value of this attribute on cos
+     * level.
+     *
+     * @return zimbraPrefDefaultCalendarId, or 10 if unset
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=2994)
+    public int getPrefDefaultCalendarId() {
+        return getIntAttr(Provisioning.A_zimbraPrefDefaultCalendarId, 10, true);
+    }
+
+    /**
+     * Default calendar folder id. Current default calendar id is 10, as
+     * calendar folder with id 10, is created for all users. Cos level change
+     * is blocked. So admin can not change value of this attribute on cos
+     * level.
+     *
+     * @param zimbraPrefDefaultCalendarId new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=2994)
+    public void setPrefDefaultCalendarId(int zimbraPrefDefaultCalendarId) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefDefaultCalendarId, Integer.toString(zimbraPrefDefaultCalendarId));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Default calendar folder id. Current default calendar id is 10, as
+     * calendar folder with id 10, is created for all users. Cos level change
+     * is blocked. So admin can not change value of this attribute on cos
+     * level.
+     *
+     * @param zimbraPrefDefaultCalendarId new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=2994)
+    public Map<String,Object> setPrefDefaultCalendarId(int zimbraPrefDefaultCalendarId, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefDefaultCalendarId, Integer.toString(zimbraPrefDefaultCalendarId));
+        return attrs;
+    }
+
+    /**
+     * Default calendar folder id. Current default calendar id is 10, as
+     * calendar folder with id 10, is created for all users. Cos level change
+     * is blocked. So admin can not change value of this attribute on cos
+     * level.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=2994)
+    public void unsetPrefDefaultCalendarId() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefDefaultCalendarId, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Default calendar folder id. Current default calendar id is 10, as
+     * calendar folder with id 10, is created for all users. Cos level change
+     * is blocked. So admin can not change value of this attribute on cos
+     * level.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=2994)
+    public Map<String,Object> unsetPrefDefaultCalendarId(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefDefaultCalendarId, "");
         return attrs;
     }
 
@@ -55689,6 +55930,140 @@ public abstract class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetPrefZmgPushNotificationEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefZmgPushNotificationEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * timestamp of account rename and previous name of the account
+     *
+     * @return zimbraPrimaryEmailChangeHistory, or empty array if unset
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=2144)
+    public String[] getPrimaryEmailChangeHistory() {
+        return getMultiAttr(Provisioning.A_zimbraPrimaryEmailChangeHistory, true, true);
+    }
+
+    /**
+     * timestamp of account rename and previous name of the account
+     *
+     * @param zimbraPrimaryEmailChangeHistory new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=2144)
+    public void setPrimaryEmailChangeHistory(String[] zimbraPrimaryEmailChangeHistory) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrimaryEmailChangeHistory, zimbraPrimaryEmailChangeHistory);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * timestamp of account rename and previous name of the account
+     *
+     * @param zimbraPrimaryEmailChangeHistory new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=2144)
+    public Map<String,Object> setPrimaryEmailChangeHistory(String[] zimbraPrimaryEmailChangeHistory, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrimaryEmailChangeHistory, zimbraPrimaryEmailChangeHistory);
+        return attrs;
+    }
+
+    /**
+     * timestamp of account rename and previous name of the account
+     *
+     * @param zimbraPrimaryEmailChangeHistory new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=2144)
+    public void addPrimaryEmailChangeHistory(String zimbraPrimaryEmailChangeHistory) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraPrimaryEmailChangeHistory, zimbraPrimaryEmailChangeHistory);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * timestamp of account rename and previous name of the account
+     *
+     * @param zimbraPrimaryEmailChangeHistory new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=2144)
+    public Map<String,Object> addPrimaryEmailChangeHistory(String zimbraPrimaryEmailChangeHistory, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraPrimaryEmailChangeHistory, zimbraPrimaryEmailChangeHistory);
+        return attrs;
+    }
+
+    /**
+     * timestamp of account rename and previous name of the account
+     *
+     * @param zimbraPrimaryEmailChangeHistory existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=2144)
+    public void removePrimaryEmailChangeHistory(String zimbraPrimaryEmailChangeHistory) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraPrimaryEmailChangeHistory, zimbraPrimaryEmailChangeHistory);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * timestamp of account rename and previous name of the account
+     *
+     * @param zimbraPrimaryEmailChangeHistory existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=2144)
+    public Map<String,Object> removePrimaryEmailChangeHistory(String zimbraPrimaryEmailChangeHistory, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraPrimaryEmailChangeHistory, zimbraPrimaryEmailChangeHistory);
+        return attrs;
+    }
+
+    /**
+     * timestamp of account rename and previous name of the account
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=2144)
+    public void unsetPrimaryEmailChangeHistory() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrimaryEmailChangeHistory, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * timestamp of account rename and previous name of the account
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=2144)
+    public Map<String,Object> unsetPrimaryEmailChangeHistory(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrimaryEmailChangeHistory, "");
         return attrs;
     }
 

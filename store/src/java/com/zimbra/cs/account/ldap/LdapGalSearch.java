@@ -236,7 +236,8 @@ public class LdapGalSearch {
                     sgr.setMaxLdapTimeStamp(params.getMaxLdapTimeStamp());
                 }
 
-                searchGal(zlc,
+                if (params.isExpandQuery()) {
+                    searchGal(zlc,
                           galType,
                           cfg.getPageSize(),
                           cfg.getSearchBase(),
@@ -246,6 +247,18 @@ public class LdapGalSearch {
                           params.getSyncToken(),
                           params.getResult(),
                           params.getOp());
+                } else {
+                    searchGal(zlc,
+                        galType,
+                        cfg.getPageSize(),
+                        cfg.getSearchBase(),
+                        params.getQuery(),
+                        params.getLimit(),
+                        cfg.getRules(),
+                        params.getSyncToken(),
+                        params.getResult(),
+                        params.getOp());
+                }
             } else {
                 getGalEntryByDn(zlc, galType, fetchEntryByDn, cfg.getRules(), params.getResult());
             }

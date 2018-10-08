@@ -38,6 +38,11 @@ import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
 import com.zimbra.soap.json.jackson.annotate.ZimbraKeyValuePairs;
 import com.zimbra.soap.type.ZmBoolean;
 
+import io.leangen.graphql.annotations.GraphQLIgnore;
+import io.leangen.graphql.annotations.GraphQLNonNull;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 
 /*
 <AuthResponse">
@@ -55,12 +60,15 @@ import com.zimbra.soap.type.ZmBoolean;
  */
 @XmlRootElement(name=AccountConstants.E_AUTH_RESPONSE)
 @XmlType(propOrder = {})
+@GraphQLType(name="AuthResponse", description="Response to account authentication request.")
 public class AuthResponse {
 
     /**
      * @zm-api-field-description The authorization token
      */
     @XmlElement(name=AccountConstants.E_AUTH_TOKEN /* authToken */, required=true)
+    @GraphQLNonNull
+    @GraphQLQuery(name="authToken", description="The authorization token")
     private String authToken;
     /**
      * @zm-api-field-description Life time for the authorization
@@ -152,21 +160,29 @@ public class AuthResponse {
         setLifetime(lifetime);
     }
 
+    @GraphQLNonNull
+    @GraphQLQuery(name="authToken", description="The authorization token")
     public String getAuthToken() { return authToken; }
     public AuthResponse setAuthToken(String authToken) { this.authToken = authToken; return this; }
 
+    @GraphQLNonNull
+    @GraphQLQuery(name="lifetime", description="Life time for the authorization")
     public long getLifetime() { return lifetime; }
     public AuthResponse setLifetime(long lifetime) { this.lifetime = lifetime; return this; }
 
+    @GraphQLQuery(name="session", description="Session information")
     public Session getSession() { return session; }
     public AuthResponse setSession(Session session) { this.session = session; return this; }
 
+    @GraphQLQuery(name="refer", description="Host that additional SOAP requests should be redirected to")
     public String getRefer() { return refer; }
     public AuthResponse setRefer(String refer) { this.refer = refer; return this; }
 
+    @GraphQLQuery(name="skin", description="Name of the skin to use if a requestedSkin was specified")
     public String getSkin() { return skin; }
     public AuthResponse setSkin(String skin) { this.skin = skin; return this; }
 
+    @GraphQLQuery(name="prefs", description="Requested preference settings")
     public List<Pref> getPrefs() { return Collections.unmodifiableList(prefs); }
     public AuthResponse setPrefs(Collection<Pref> prefs) {
         this.prefs.clear();
@@ -176,6 +192,7 @@ public class AuthResponse {
         return this;
     }
 
+    @GraphQLQuery(name="attrs", description="Requested attribute settings that are allowed to be returned")
     public List<Attr> getAttrs() { return Collections.unmodifiableList(attrs); }
     public AuthResponse setAttrs(Collection<Attr> attrs) {
         this.attrs.clear();
@@ -185,10 +202,12 @@ public class AuthResponse {
         return this;
     }
 
+    @GraphQLIgnore
     public Multimap<String, String> getAttrsMultimap() {
         return Attr.toMultimap(attrs);
     }
 
+    @GraphQLIgnore
     public Multimap<String, String> getPrefsMultimap() {
         return Pref.toMultimap(prefs);
     }
@@ -197,6 +216,7 @@ public class AuthResponse {
     /**
      * @return the csrfToken
      */
+    @GraphQLQuery(name="csrfToken", description="The csrf token returned if the client says it is csrf enabled")
     public String getCsrfToken() {
         return csrfToken;
     }
@@ -213,6 +233,7 @@ public class AuthResponse {
         this.deviceId = deviceId;
     }
 
+    @GraphQLQuery(name="deviceId", description="Random secure device ID generated for the requesting device")
     public String getDeviceId() {
         return deviceId;
     }
@@ -221,19 +242,24 @@ public class AuthResponse {
         this.trustedToken = trustedToken;
     }
 
+    @GraphQLQuery(name="trustedToken", description="Trusted device token")
     public String getTrustedToken() {
         return trustedToken;
     }
 
+    @GraphQLQuery(name="trustLifetime", description="Trust lifetime, if a trusted token is issued")
     public Long getTrustLifetime() { return trustLifetime; }
     public AuthResponse setTrustLifetime(Long trustLifetime) { this.trustLifetime = trustLifetime; return this; }
 
+    @GraphQLQuery(name="twoFactorAuthRequired", description="Denotes if two factor authentication is required")
     public ZmBoolean getTwoFactorAuthRequired() { return twoFactorAuthRequired; }
     public AuthResponse setTwoFactorAuthRequired(boolean bool) { this.twoFactorAuthRequired = ZmBoolean.fromBool(bool); return this; }
 
+    @GraphQLQuery(name="zmgProxy", description="Indicates whether the authentication account acts as a proxy to a Zimbra account on another system")
     public Boolean getZmgProxy() { return ZmBoolean.toBool(zmgProxy); }
     public void setZmgProxy(Boolean zmgProxy) { this.zmgProxy = ZmBoolean.fromBool(zmgProxy); }
 
+    @GraphQLQuery(name="trustedDevicesEnabled", description="Denotes if trusted devices are enabled")
     public ZmBoolean getTrustedDevicesEnabled() { return trustedDevicesEnabled; }
     public AuthResponse setTrustedDevicesEnabled(boolean bool) { this.trustedDevicesEnabled = ZmBoolean.fromBool(bool); return this; }
 }

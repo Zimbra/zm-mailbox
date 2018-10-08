@@ -18,6 +18,7 @@ package com.zimbra.cs.store;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,7 +27,9 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
+import org.apache.commons.io.IOUtils;
 
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
@@ -235,6 +238,27 @@ public class BlobBuilder {
         if (digest != null) {
             blob.setDigest(ByteUtil.encodeFSSafeBase64(digest.digest()));
             blob.setRawSize(totalBytes);
+            File file = blob.getFile();
+            File uncompresedFile = null;
+            if (blob.isCompressed() && totalBytes == file.length())
+            {
+              ZimbraLog.store.info("Blob compression is useless avoid it");
+              GZIPInputStream in = null;
+              try {
+                uncompresedFile = File.createTempFile("blob","",file.getParentFile());
+                in = new GZIPInputStream(new FileInputStream(file));
+                out = createOutputStream(uncompresedFile);
+                IOUtils.copy(in,out);
+                blob.setCompressed(false);
+              } finally {
+                IOUtils.closeQuietly(in);
+                IOUtils.closeQuietly(out);
+                file.delete();
+                if (uncompresedFile != null) {
+                  uncompresedFile.renameTo(file);
+                }
+              }
+            }
         }
         if (ZimbraLog.store.isDebugEnabled())
             ZimbraLog.store.debug("stored " + this);

@@ -59,6 +59,7 @@ public class AccountServiceException extends ServiceException {
     public static final String NO_SUCH_ZIMLET     = "account.NO_SUCH_ZIMLET";
     public static final String NO_SUCH_XMPP_COMPONENT = "account.NO_SUCH_XMPP_COMPONENT";
     public static final String NO_SUCH_DISTRIBUTION_LIST = "account.NO_SUCH_DISTRIBUTION_LIST";
+    public static final String NO_SUCH_ADDRESS_LIST = "account.NO_SUCH_ADDRESS_LIST";
     public static final String NO_SUCH_GROUP      = "account.NO_SUCH_GROUP";
     public static final String NO_SUCH_CALENDAR_RESOURCE = "account.NO_SUCH_CALENDAR_RESOURCE";
     public static final String NO_SUCH_EXTERNAL_ENTRY    = "account.NO_SUCH_EXTERNAL_ENTRY";
@@ -94,6 +95,7 @@ public class AccountServiceException extends ServiceException {
     public static final String INVALID_TRUSTED_DEVICE_TOKEN = "account.INVALID_TRUSTED_DEVICE_TOKEN";
     public static final String TWO_FACTOR_AUTH_FAILED = "account.TWO_FACTOR_AUTH_FAILED";
     public static final String TWO_FACTOR_AUTH_REQUIRED = "account.TWO_FACTOR_AUTH_REQUIRED";
+    public static final String NO_SUCH_ORG_UNIT = "account.NO_SUCH_ORG_UNIT";
 
     private AccountServiceException(String message, String code, boolean isReceiversFault) {
         super(message, code, isReceiversFault);
@@ -220,6 +222,10 @@ public class AccountServiceException extends ServiceException {
         return new AccountServiceException("no such domain: "+name, Constants.ERROR_CODE_NO_SUCH_DOMAIN, SENDERS_FAULT, null);
     }
 
+    public static AccountServiceException NO_SUCH_ORG_UNIT(String name) {
+        return new AccountServiceException("no such organizational unit: " + name, NO_SUCH_ORG_UNIT, SENDERS_FAULT, null);
+    }
+
     public static AccountServiceException DOMAIN_NOT_EMPTY(String name, Exception e) {
         return new AccountServiceException("domain not empty: "+name, DOMAIN_NOT_EMPTY, SENDERS_FAULT, e);
     }
@@ -274,6 +280,11 @@ public class AccountServiceException extends ServiceException {
 
     public static AccountServiceException NO_SUCH_DISTRIBUTION_LIST(String name) {
         return new AccountServiceException("no such distribution list: " + name, NO_SUCH_DISTRIBUTION_LIST,
+                SENDERS_FAULT, null);
+    }
+
+    public static AccountServiceException NO_SUCH_ADDRESS_LIST(String name) {
+        return new AccountServiceException("no such address list: " + name, NO_SUCH_ADDRESS_LIST,
                 SENDERS_FAULT, null);
     }
 

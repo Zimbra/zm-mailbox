@@ -35,8 +35,13 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.json.jackson.annotate.ZimbraJsonArrayForWrapper;
 
+import io.leangen.graphql.annotations.GraphQLIgnore;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlRootElement(name=MailConstants.E_RETENTION_POLICY, namespace=MailConstants.NAMESPACE_STR)
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name="RetentionPolicy", description="The retention policy")
 public class RetentionPolicy {
 
     /**
@@ -45,6 +50,7 @@ public class RetentionPolicy {
     @ZimbraJsonArrayForWrapper
     @XmlElementWrapper(name=MailConstants.E_KEEP, required=false)
     @XmlElement(name=MailConstants.E_POLICY, required=false)
+    @GraphQLQuery(name="keep", description="`Keep` retention policies")
     private List<Policy> keep = Lists.newArrayList();
 
     /**
@@ -53,6 +59,7 @@ public class RetentionPolicy {
     @ZimbraJsonArrayForWrapper
     @XmlElementWrapper(name=MailConstants.E_PURGE, required=false)
     @XmlElement(name=MailConstants.E_POLICY, required=false)
+    @GraphQLQuery(name="purge", description="`Purge` retention policies")
     private List<Policy> purge = Lists.newArrayList();
 
     public RetentionPolicy() {
@@ -60,15 +67,15 @@ public class RetentionPolicy {
 
     public RetentionPolicy(Element e)
     throws ServiceException {
-        Element keepEl = e.getOptionalElement(MailConstants.E_KEEP);
+        final Element keepEl = e.getOptionalElement(MailConstants.E_KEEP);
         if (keepEl != null) {
-            for (Element p : keepEl.listElements(MailConstants.E_POLICY)) {
+            for (final Element p : keepEl.listElements(MailConstants.E_POLICY)) {
                 keep.add(new Policy(p));
             }
         }
-        Element purgeEl = e.getOptionalElement(MailConstants.E_PURGE);
+        final Element purgeEl = e.getOptionalElement(MailConstants.E_PURGE);
         if (purgeEl != null) {
-            for (Element p : purgeEl.listElements(MailConstants.E_POLICY)) {
+            for (final Element p : purgeEl.listElements(MailConstants.E_POLICY)) {
                 purge.add(new Policy(p));
             }
         }
@@ -85,21 +92,23 @@ public class RetentionPolicy {
         }
     }
 
+    @GraphQLQuery(name="keep", description="`Keep` retention policies")
     public List<Policy> getKeepPolicy() {
         return Collections.unmodifiableList(keep);
     }
 
+    @GraphQLQuery(name="purge", description="`Purge` retention policies")
     public List<Policy> getPurgePolicy() {
         return Collections.unmodifiableList(purge);
     }
 
     public Policy getPolicyById(String id) {
-        for (Policy p : keep) {
+        for (final Policy p : keep) {
             if (Objects.equal(p.getId(), id)) {
                 return p;
             }
         }
-        for (Policy p : purge) {
+        for (final Policy p : purge) {
             if (Objects.equal(p.getId(), id)) {
                 return p;
             }
@@ -107,6 +116,7 @@ public class RetentionPolicy {
         return null;
     }
 
+    @GraphQLIgnore
     public boolean isSet() {
         return !(keep.isEmpty() && purge.isEmpty());
     }
@@ -123,7 +133,7 @@ public class RetentionPolicy {
         if (!(o instanceof RetentionPolicy)) {
             return false;
         }
-        RetentionPolicy other = (RetentionPolicy) o;
+        final RetentionPolicy other = (RetentionPolicy) o;
         return keep.equals(other.keep) && purge.equals(other.purge);
     }
 

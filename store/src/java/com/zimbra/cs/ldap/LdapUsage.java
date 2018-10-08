@@ -31,7 +31,9 @@ public enum LdapUsage {
     AUTO_PROVISION,
     AUTO_PROVISION_ADMIN_SEARCH,
     COMPARE,
+    CREATE_OU,
     CREATE_ACCOUNT,
+    CREATE_ADDRESS_LIST,
     CREATE_COS,
     CREATE_DATASOURCE,
     CREATE_DISTRIBUTIONLIST,
@@ -129,7 +131,8 @@ public enum LdapUsage {
     ADD,
     DELETE,
     MOD,
-    MODRDN;
+    MODRDN,
+    DELETE_ADDRESSLIST;
 
     public static LdapUsage modifyEntryfromEntryType(Entry.EntryType entryType) {
         switch (entryType) {
