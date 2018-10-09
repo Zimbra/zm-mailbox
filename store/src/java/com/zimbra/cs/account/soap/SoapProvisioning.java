@@ -3157,10 +3157,10 @@ public class SoapProvisioning extends Provisioning {
      * @return GetHabResponse object
      * @throws ServiceException if an error occurs while fetching hierarchy from ldap
      */
-    public GetHABResponse getHab(String rootHabGroupId) throws ServiceException {
+    public Element getHab(Account account, String rootHabGroupId) throws ServiceException {
         XMLElement req = new XMLElement(AccountConstants.GET_HAB_REQUEST);
         req.addAttribute(AccountConstants.A_HAB_ROOT_GROUP_ID, rootHabGroupId);
-        GetHABResponse resp = invokeJaxb(new GetHABRequest(rootHabGroupId));
+        Element resp = invokeOnTargetAccount(req, account.getId());
         return resp;
     }
 
