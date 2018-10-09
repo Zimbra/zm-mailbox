@@ -860,7 +860,7 @@ public class ProvUtil implements HttpDebugListener {
         CREATE_HAB_GROUP("createHABGroup", "chg",
             "{groupName} {ouName} {name@domain} {TRUE|FALSE} [attr1 value1 [attr2 value2...]]", Category.HAB , 3, Integer.MAX_VALUE),
         GET_HAB("getHAB", "ghab",
-            "{habRootGrpId}", Category.HAB, 1, 1),
+            "{habRootGrpId}", Category.HAB, 2, 2),
         MOVE_HAB_GROUP("moveHABGroup", "mhg",
             "{habRootGrpId} {habParentGrpId} {targetHabParentGrpId}", Category.HAB , 3, 3),
         ADD_HAB_GROUP_MEMBER("addHABGroupMember", "ahgm", "{name@domain|id} {member@domain}+",
@@ -1796,7 +1796,7 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     private void doGetHab(String[] args)  throws ServiceException {
-        if(args.length != 2) { 
+        if(args.length != 3) { 
             usage();
             return;
         }
@@ -1804,7 +1804,8 @@ public class ProvUtil implements HttpDebugListener {
             throwSoapOnly();
         }
         SoapProvisioning sp = (SoapProvisioning) prov;
-        sp.getHab(args[1]);
+        Element response = sp.getHab(lookupAccount(args[1]), args[2]);
+        printOutput(response.prettyPrint());
     }
 
     private void modifyHabGroup(String[] args)  throws ServiceException {
