@@ -26,10 +26,13 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
+import com.google.common.base.Strings;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.CacheExtension;
 import com.zimbra.cs.account.Domain;
@@ -74,28 +77,15 @@ public class FlushCache extends AdminDocumentHandler {
         return zsc.jaxbToElement(new FlushCacheResponse());
     }
 
-    private static void validateInput(FlushCacheRequest req) throws ServiceException {
-        Provisioning prov = Provisioning.getInstance();
-        CacheEntry[] domains = getCacheEntries(req.getCache());
-        if (domains != null) {
-            for (CacheEntry entry : domains) {
-                Key.DomainBy domainBy = (entry.mEntryBy == Key.CacheEntryBy.id) ? Key.DomainBy.id : Key.DomainBy.name;
-                Domain domain = prov.get(Key.DomainBy.name, entry.mEntryIdentity);
-                if (domain == null) {
-                    throw AccountServiceException.NO_SUCH_DOMAIN(entry.mEntryIdentity);
-                }
-            }
-        }
-    }
-
     public static void doFlushCache(AdminDocumentHandler handler, Map<String, Object> context, FlushCacheRequest req)
     throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Server localServer = Provisioning.getInstance().getLocalServer();
         handler.checkRight(zsc, context, localServer, Admin.R_flushCache);
-        validateInput(req);
+        CacheSelector cacheSelector = req.getCache();
+        validateCacheSelector(cacheSelector);
 
-        PubSubService.getInstance().publish(PubSubService.BROADCAST, new FlushCacheMsg(req.getCache()));
+        PubSubService.getInstance().publish(PubSubService.BROADCAST, new FlushCacheMsg(cacheSelector));
     }
 
     public static void doFlush(CacheSelector cacheSelector) throws ServiceException {
@@ -155,6 +145,69 @@ public class FlushCache extends AdminDocumentHandler {
             // fall through to also flush ldap entries
         default:
             flushLdapCache(cacheType, cacheSelector);
+        }
+    }
+
+    private static void validateCacheSelector(CacheSelector selector) throws ServiceException {
+        if (selector == null) {
+            throw ServiceException.INVALID_REQUEST(
+                    String.format("missing required <%s> element", AdminConstants.E_CACHE), null);
+        }
+        String cacheTypes = selector.getTypes();
+        if (Strings.isNullOrEmpty(cacheTypes)) {
+            throw ServiceException.INVALID_REQUEST("no cache type specified", null);
+        }
+        String entryTypes = selector.getTypes();
+        List<String> unknownEntryTypes = CacheEntryType.toListOfUnknownCacheEntryTypes(entryTypes);
+        for (String unknownEntryType : unknownEntryTypes) {
+            if (CacheExtension.getHandler(unknownEntryType) == null) {
+                CacheEntryType.fromString(unknownEntryType);  // This should throw an exception
+            }
+        }
+        CacheEntry[] cacheEntries = getCacheEntries(selector);
+        if (cacheEntries == null || cacheEntries.length < 1) {
+            return;  /* nothing to validate */
+        }
+        List<CacheEntryType> knownEntryTypes = CacheEntryType.toListOfKnownCacheEntryTypes(entryTypes);
+        for (CacheEntryType cacheType : knownEntryTypes) {
+            switch (cacheType) {
+                case galgroup:
+                    checkDomains(cacheEntries);
+                    break;
+                case config:
+                    throw ServiceException.INVALID_REQUEST("cannot specify entry for flushing global config", null);
+                case globalgrant:
+                    throw ServiceException.INVALID_REQUEST("cannot specify entry for flushing global grant", null);
+                case license:
+                    throw ServiceException.INVALID_REQUEST("cannot specify entry for flushing license", null);
+                case all:
+                    throw ServiceException.INVALID_REQUEST("cannot specify entry for flushing all", null);
+                /* Zimbra 8 doesn't throw error for invalid values for the following - replicate that for Zimbra X */
+                case account:
+                case domain:
+                case cos:
+                case group:
+                case acl:
+                case server:
+                case alwaysOnCluster:
+                case zimlet:
+                case locale:
+                case skin:
+                case uistrings:
+                case mime:
+                default:
+            }
+        }
+    }
+
+    private static void checkDomains(CacheEntry[] entries) throws ServiceException {
+        Provisioning prov = Provisioning.getInstance();
+        for (CacheEntry entry : entries) {
+            Domain domain = prov.get((entry.mEntryBy == Key.CacheEntryBy.id) ? Key.DomainBy.id : Key.DomainBy.name,
+                    entry.mEntryIdentity);
+            if (domain == null) {
+                throw AccountServiceException.NO_SUCH_DOMAIN(entry.mEntryIdentity);
+            }
         }
     }
 
