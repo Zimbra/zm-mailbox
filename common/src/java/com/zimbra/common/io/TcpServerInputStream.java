@@ -71,13 +71,4 @@ public class TcpServerInputStream extends BufferedInputStream {
             buffer.append((char)ch);
         }
     }
-
-    public void close()  throws IOException {
-        try {
-            br.close();
-        } catch (IOException e) {
-            // Nothing to do with the exception.
-        }
-        super.close();
-    }
 }
