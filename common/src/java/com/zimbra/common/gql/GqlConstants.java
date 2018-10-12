@@ -53,6 +53,9 @@ public class GqlConstants {
     public static final String COMMUNITY_URL = "communityURL";
     public static final String ADMIN_URL = "adminURL";
     public static final String BOSH_URL = "boshURL";
+    public static final String LICENSE = "license";
+    public static final String LICENSE_ATTRIBUTES = "licenseAttributes";
+    public static final String STATUS = "status";
 
     // named value constants
     public static final String CLASS_NAMED_VALUE = "NamedValue";
@@ -303,4 +306,7 @@ public class GqlConstants {
     public static final String LAST_ACCESSED = "lastAccessed";
     public static final String USER_AGENT = "userAgent";
     public static final String REQUEST_IP_ADDRESS = "requestIPAddress";
+    
+    // license constants
+    public static final String CLASS_LICENSE_INFO = "LicenseInfo";
 }
