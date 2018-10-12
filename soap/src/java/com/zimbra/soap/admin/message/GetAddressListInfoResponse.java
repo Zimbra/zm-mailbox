@@ -46,7 +46,7 @@ public class GetAddressListInfoResponse {
      * @zm-api-field-tag name
      * @zm-api-field-description name of the address list
      */
-    @XmlElement(name=AdminConstants.E_NAME /* name */, required=false)
+    @XmlElement(name=AdminConstants.E_NAME /* name */, required=true)
     private String name;
 
     /**
@@ -67,7 +67,7 @@ public class GetAddressListInfoResponse {
      * @zm-api-field-tag type
      * @zm-api-field-description gal search type
      */
-    @XmlAttribute(name=AdminConstants.A_TYPE /* type */, required=false)
+    @XmlAttribute(name=AdminConstants.A_TYPE /* type */, required=true)
     private GalSearchType type;
 
     /**
