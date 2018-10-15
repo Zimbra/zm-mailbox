@@ -8,18 +8,11 @@ import java.net.URL;
 import java.net.URLEncoder;
 
 import com.zimbra.cs.lmtpserver.LmtpCallback;
-import com.zimbra.cs.lmtpserver.LmtpConfig;
 import com.zimbra.cs.lmtpserver.ZimbraLmtpBackend;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.lmtpserver.LmtpBackend;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.mime.shim.JavaMailInternetAddress;
-import com.zimbra.common.mime.shim.JavaMailInternetHeaders;
-
-import javax.mail.SendFailedException;
-import javax.mail.Address;
 
 public class EmailToSMS implements LmtpCallback {
 
@@ -57,7 +50,6 @@ public class EmailToSMS implements LmtpCallback {
 
       String recipients = pm.getRecipients();
       String[] splitedRecipients = recipients.split(",");
-      String sender = pm.getSender();
       String subject = pm.getSubject();
       String message = pm.getFragment(act.getLocale());
       String fullMessage =  encode(subject + "\n" + message);
@@ -69,17 +61,17 @@ public class EmailToSMS implements LmtpCallback {
         String mobNumberDomain = splitedMobNumber[1];
 
         if ( mobNumberDomain.toLowerCase().equals(smsDomain))  {
-          call(subject, fullMessage, mobNumber);
+          call(fullMessage, mobNumber);
         }
       }
     }
 
-    private void call(String subect, String message, String mnumber) throws ServiceException {
+    private void call(String message, String mnumber) throws ServiceException {
 
         String url = smsApiUrl + "?username="+ smsUsername + "&pin=" + smsPin + "&message="+ message + "&mnumber=" + mnumber + "&signature=" + smsSenderId;
         URL obj;
         String errorMsg = null;
-        
+
         try {
             obj = new URL(url);
             HttpURLConnection con = (HttpURLConnection) obj.openConnection();
@@ -111,7 +103,7 @@ public class EmailToSMS implements LmtpCallback {
                 errorMsg = "Email Delivery Disabled";
                break;
             case -404:
-                errorMsg = "Invalid MsgType";;
+                errorMsg = "Invalid MsgType";
                 break;
             case -406:
                 errorMsg = "Invalid Port";
