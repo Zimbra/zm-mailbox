@@ -312,6 +312,11 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
     }
 
     @Override
+    public boolean supports(StoreFeature feature, String locator) {
+      return supports(feature);
+    }
+
+    @Override
     public boolean supports(StoreFeature feature) {
         switch (feature) {
             case BULK_DELETE:                   return false;
