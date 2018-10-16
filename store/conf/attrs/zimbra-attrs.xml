@@ -9799,5 +9799,17 @@ TODO: delete them permanently from here
 	<desc>This attribute is used to store the SMS API url</desc>
 </attr>
 
+<attr id="5023" name="zimbraSMSApiUsername" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.8.9">
+        <desc>This attribute is used to store the SMS API url</desc>
+</attr>
+
+<attr id="5024" name="zimbraSMSApiPin" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.8.9">
+        <desc>This attribute is used to store the SMS API url</desc>
+</attr>
+
+<attr id="5025" name="zimbraSMSApiSenderId" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.8.9">
+        <desc>This attribute is used to store the SMS API url</desc>
+</attr>
+
 </attrs>
 
