@@ -2712,6 +2712,10 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public AddressList getAddressList(String id) throws ServiceException {
         throw ServiceException.UNSUPPORTED();
     }
+
+    public AddressListInfo getAddressListByName(String name, Domain domain) throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
     
 
     public List<AddressListInfo> getAllAddressLists(Domain domain, boolean activeOnly) throws ServiceException {

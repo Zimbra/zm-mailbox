@@ -11467,6 +11467,20 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     @Override
+    public AddressListInfo getAddressListByName(String name, Domain domain) throws ServiceException {
+        LdapEntry ldapEntry = (LdapEntry) (domain instanceof LdapEntry ? domain : getDomainById(domain.getId()));
+        if (ldapEntry == null) {
+            throw AccountServiceException.NO_SUCH_DOMAIN(domain.getName());
+        }
+        List<AddressListInfo> result = getAddressListByQuery(ldapEntry.getDN(), filterFactory.addressListByName(name), false);
+        if (result.size() < 1) {
+            throw AccountServiceException.NO_SUCH_ADDRESS_LIST(name);
+        }
+        // first should be what we want, ignore extras
+        return result.get(0);
+    }
+
+    @Override
     public void modifyAddressList(AddressList addressList, String name, Map<String, String> attrs)
         throws ServiceException {
         ZLdapContext zlc = null;
