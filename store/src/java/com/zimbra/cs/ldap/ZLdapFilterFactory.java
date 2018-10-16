@@ -155,6 +155,7 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
 	//address lists
         ALL_ADDRESS_LISTS(SINGLETON.allAddressLists()),
         ADDRESS_LIST_BY_ID(SINGLETON.addressListById("{ADDRESS-LIST-ID}")),
+        ADDRESS_LIST_BY_NAME(SINGLETON.addressListByName("{ADDRESS-LIST-NAME}")),
 
         //
         // =====================================
@@ -513,6 +514,7 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
      */
     public abstract ZLdapFilter allAddressLists();
     public abstract ZLdapFilter addressListById(String id);
+    public abstract ZLdapFilter addressListByName(String name);
     /*
      * util
      */
