@@ -64667,7 +64667,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * This attribute is used to store the SMS API url
+     * This attribute is used to store the SMS API pin
      *
      * @return zimbraSMSApiPin, or null if unset
      *
@@ -64679,7 +64679,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * This attribute is used to store the SMS API url
+     * This attribute is used to store the SMS API pin
      *
      * @param zimbraSMSApiPin new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -64694,7 +64694,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * This attribute is used to store the SMS API url
+     * This attribute is used to store the SMS API pin
      *
      * @param zimbraSMSApiPin new value
      * @param attrs existing map to populate, or null to create a new map
@@ -64710,7 +64710,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * This attribute is used to store the SMS API url
+     * This attribute is used to store the SMS API pin
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -64724,7 +64724,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * This attribute is used to store the SMS API url
+     * This attribute is used to store the SMS API pin
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -64739,7 +64739,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * This attribute is used to store the SMS API url
+     * This attribute is used to store the SMS API sender id
      *
      * @return zimbraSMSApiSenderId, or null if unset
      *
@@ -64751,7 +64751,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * This attribute is used to store the SMS API url
+     * This attribute is used to store the SMS API sender id
      *
      * @param zimbraSMSApiSenderId new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -64766,7 +64766,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * This attribute is used to store the SMS API url
+     * This attribute is used to store the SMS API sender id
      *
      * @param zimbraSMSApiSenderId new value
      * @param attrs existing map to populate, or null to create a new map
@@ -64782,7 +64782,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * This attribute is used to store the SMS API url
+     * This attribute is used to store the SMS API sender id
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -64796,7 +64796,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * This attribute is used to store the SMS API url
+     * This attribute is used to store the SMS API sender id
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -64883,7 +64883,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * This attribute is used to store the SMS API url
+     * This attribute is used to store the SMS API username
      *
      * @return zimbraSMSApiUsername, or null if unset
      *
@@ -64895,7 +64895,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * This attribute is used to store the SMS API url
+     * This attribute is used to store the SMS API username
      *
      * @param zimbraSMSApiUsername new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -64910,7 +64910,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * This attribute is used to store the SMS API url
+     * This attribute is used to store the SMS API username
      *
      * @param zimbraSMSApiUsername new value
      * @param attrs existing map to populate, or null to create a new map
@@ -64926,7 +64926,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * This attribute is used to store the SMS API url
+     * This attribute is used to store the SMS API username
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -64940,7 +64940,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * This attribute is used to store the SMS API url
+     * This attribute is used to store the SMS API username
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

@@ -16244,7 +16244,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraSmimeUserCertificateExtensions = "zimbraSmimeUserCertificateExtensions";
 
     /**
-     * This attribute is used to store the SMS API url
+     * This attribute is used to store the SMS API pin
      *
      * @since ZCS 8.8.9
      */
@@ -16252,7 +16252,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraSMSApiPin = "zimbraSMSApiPin";
 
     /**
-     * This attribute is used to store the SMS API url
+     * This attribute is used to store the SMS API sender id
      *
      * @since ZCS 8.8.9
      */
@@ -16268,7 +16268,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraSMSApiUrl = "zimbraSMSApiUrl";
 
     /**
-     * This attribute is used to store the SMS API url
+     * This attribute is used to store the SMS API username
      *
      * @since ZCS 8.8.9
      */
