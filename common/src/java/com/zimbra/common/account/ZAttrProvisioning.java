@@ -16321,6 +16321,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraSmimeUserCertificateExtensions = "zimbraSmimeUserCertificateExtensions";
 
     /**
+     * This attribute is used to store the SMS API url
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5022)
+    public static final String A_zimbraSMSApiUrl = "zimbraSMSApiUrl";
+
+    /**
      * Whether to enable smtp debug trace
      *
      * @since ZCS 6.0.0_BETA1

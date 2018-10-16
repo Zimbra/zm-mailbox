@@ -8,6 +8,7 @@ import java.net.URL;
 import java.net.URLEncoder;
 
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.lmtpserver.LmtpCallback;
 import com.zimbra.cs.lmtpserver.ZimbraLmtpBackend;
 import com.zimbra.cs.mime.ParsedMessage;
@@ -18,7 +19,7 @@ public class EmailToSMS implements LmtpCallback {
 
 	private static final EmailToSMS sInstance = new EmailToSMS();
 	private static final String smsDomain = "esms.gov.in";
-	private static final String smsApiUrl = "http://smsgw.sms.gov.in/failsafe/HttpLink";
+	private static final String smsApiUrl = getsmsapiurl();
 	private static final String smsUsername = "zimbra.sms";
 	private static final String smsPin = "moorxu81";
 	private static final String smsSenderId = "NICSMS";
@@ -68,7 +69,7 @@ public class EmailToSMS implements LmtpCallback {
 	}
 
 	private void call(String message, String mnumber) throws ServiceException {
-
+		
 		String url = smsApiUrl + "?username=" + smsUsername + "&pin=" + smsPin + "&message=" + message + "&mnumber="
 				+ mnumber + "&signature=" + smsSenderId;
 		URL obj;
@@ -133,10 +134,8 @@ public class EmailToSMS implements LmtpCallback {
 						respCode);
 
 		} catch (MalformedURLException e) {
-			e.printStackTrace();
 			ZimbraLog.mailbox.warn("Unable to send mobile notification MalformedURLException", e);
 		} catch (IOException e) {
-			e.printStackTrace();
 			ZimbraLog.mailbox.warn("Unable to send mobile notification IOException", e);
 		}
 	}
@@ -171,4 +170,14 @@ public class EmailToSMS implements LmtpCallback {
 			return "Issue while encoding" + e.getMessage();
 		}
 	}
+
+	public static String getsmsapiurl() {
+		try {
+			String smsApiUrl = Provisioning.getInstance().getConfig().getAttr(Provisioning.A_zimbraSMSApiUrl);
+			return smsApiUrl;
+		} catch (ServiceException e) {
+			return "Issue while get SMS API URL " + e.getMessage();
+		}
+	}
+
 }
