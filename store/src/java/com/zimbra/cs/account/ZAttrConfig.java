@@ -64801,6 +64801,78 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * This attribute is used to store the SMS API url
+     *
+     * @return zimbraSMSApiUrl, or null if unset
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5022)
+    public String getSMSApiUrl() {
+        return getAttr(Provisioning.A_zimbraSMSApiUrl, null, true);
+    }
+
+    /**
+     * This attribute is used to store the SMS API url
+     *
+     * @param zimbraSMSApiUrl new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5022)
+    public void setSMSApiUrl(String zimbraSMSApiUrl) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMSApiUrl, zimbraSMSApiUrl);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute is used to store the SMS API url
+     *
+     * @param zimbraSMSApiUrl new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5022)
+    public Map<String,Object> setSMSApiUrl(String zimbraSMSApiUrl, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMSApiUrl, zimbraSMSApiUrl);
+        return attrs;
+    }
+
+    /**
+     * This attribute is used to store the SMS API url
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5022)
+    public void unsetSMSApiUrl() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMSApiUrl, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute is used to store the SMS API url
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5022)
+    public Map<String,Object> unsetSMSApiUrl(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMSApiUrl, "");
+        return attrs;
+    }
+
+    /**
      * Specifies the JedisPool size used by SSDBEphemeralStore. Higher pool
      * sizes allow for more simultaneous connections to SSDB. A value of 0
      * will cause the pool size to be unlimited.
