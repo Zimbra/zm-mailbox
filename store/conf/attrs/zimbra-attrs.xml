@@ -9795,5 +9795,9 @@ TODO: delete them permanently from here
 	<desc>This attribute is used to enable/disable dynamic banner functionality</desc>
 </attr>
 
+<attr id="5022" name="zimbraSMSApiUrl" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.8.9">
+	<desc>This attribute is used to store the SMS API url</desc>
+</attr>
+
 </attrs>
 
