@@ -47,7 +47,7 @@ public class GetAddressListInfoRequest {
      * @zm-api-field-tag name
      * @zm-api-field-description name of the address list to get
      */
-    @XmlElement(name=AdminConstants.E_NAME /* name */, required=false)
+    @XmlAttribute(name=AdminConstants.E_NAME /* name */, required=false)
     private String name;
 
     /**
