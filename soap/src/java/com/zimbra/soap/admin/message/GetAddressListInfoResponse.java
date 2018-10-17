@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.admin.type.DomainSelector;
 import com.zimbra.soap.admin.type.EntrySearchFilterInfo;
 import com.zimbra.soap.type.GalSearchType;
 
@@ -46,7 +47,7 @@ public class GetAddressListInfoResponse {
      * @zm-api-field-tag name
      * @zm-api-field-description name of the address list
      */
-    @XmlElement(name=AdminConstants.E_NAME /* name */, required=true)
+    @XmlAttribute(name=AdminConstants.E_NAME /* name */, required=true)
     private String name;
 
     /**
@@ -55,6 +56,13 @@ public class GetAddressListInfoResponse {
      */
     @XmlElement(name=AdminConstants.E_DESC /* desc */, required=false)
     private String desc;
+
+    /**
+     * @zm-api-field-tag domain
+     * @zm-api-field-description domain of the address list
+     */
+    @XmlElement(name=AdminConstants.E_DOMAIN, /* domain */ required=false)
+    private DomainSelector domain;
 
     /**
      * @zm-api-field-tag searchFilter
@@ -110,6 +118,20 @@ public class GetAddressListInfoResponse {
      */
     public void setDesc(String desc) {
         this.desc = desc;
+    }
+
+    /**
+     * @return the domain
+     */
+    public DomainSelector getDomain() {
+        return domain;
+    }
+
+    /**
+     * @param domain the domain to set
+     */
+    public void setDomain(DomainSelector domain) {
+        this.domain = domain;
     }
 
     /**
