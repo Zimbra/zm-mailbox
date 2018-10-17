@@ -17,6 +17,7 @@
 package com.zimbra.cs.filter;
 
 import java.util.Collections;
+import org.junit.Ignore;
 import java.util.HashMap;
 import java.util.List;
 
@@ -47,7 +48,7 @@ import com.zimbra.cs.service.util.ItemId;
  *
  * @author ysasaki
  */
-public final class ContactRankingTestTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public final class ContactRankingTestTest {
 
     @BeforeClass
     public static void init() throws Exception {

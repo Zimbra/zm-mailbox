@@ -17,6 +17,7 @@
 package com.zimbra.cs.mailbox;
 
 import java.io.ByteArrayInputStream;
+import org.junit.Ignore;
 import java.io.InputStream;
 import java.util.HashMap;
 
@@ -30,7 +31,7 @@ import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mime.ParsedDocument;
 
-public class RenameTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class RenameTest {
     private Mailbox mbox;
     private Folder folder;
     private MailItem doc;

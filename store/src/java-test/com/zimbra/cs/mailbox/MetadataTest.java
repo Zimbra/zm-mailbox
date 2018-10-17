@@ -47,8 +47,7 @@ import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.util.JMSession;
 
-@Ignore("failing in hudson?!?")
-public class MetadataTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class MetadataTest {
 
     @BeforeClass
     public static void init() throws Exception {

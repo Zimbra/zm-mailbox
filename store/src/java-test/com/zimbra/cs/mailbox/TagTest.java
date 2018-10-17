@@ -17,6 +17,7 @@
 package com.zimbra.cs.mailbox;
 
 import java.util.List;
+import org.junit.Ignore;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -43,7 +44,7 @@ import com.zimbra.cs.session.PendingModifications.Change;
 
 import junit.framework.Assert;
 
-public class TagTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class TagTest {
 
     @BeforeClass
     public static void init() throws Exception {

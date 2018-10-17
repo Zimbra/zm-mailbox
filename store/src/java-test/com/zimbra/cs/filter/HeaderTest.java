@@ -17,6 +17,7 @@
 package com.zimbra.cs.filter;
 
 import static org.junit.Assert.fail;
+import org.junit.Ignore;
 
 import java.io.InputStream;
 import java.util.HashMap;
@@ -51,7 +52,7 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.ZTestWatchman;
 
-public class HeaderTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class HeaderTest {
     @Rule public TestName testName = new TestName();
     @Rule public MethodRule watchman = new ZTestWatchman();
     

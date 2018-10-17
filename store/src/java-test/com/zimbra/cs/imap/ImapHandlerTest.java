@@ -1,6 +1,7 @@
 package com.zimbra.cs.imap;
 
 import static org.junit.Assert.assertEquals;
+import org.junit.Ignore;
 import static org.junit.Assert.fail;
 
 import java.util.Arrays;
@@ -34,7 +35,7 @@ import com.zimbra.qa.unittest.TestUtil;
 import junit.framework.Assert;
 
 
-public class ImapHandlerTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class ImapHandlerTest {
     private static final String LOCAL_USER = "localimaptest@zimbra.com";
 
     @Rule public TestName testName = new TestName();

@@ -17,6 +17,7 @@
 package com.zimbra.cs.mailbox;
 
 import java.util.Arrays;
+import org.junit.Ignore;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -39,7 +40,7 @@ import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.util.JMSession;
 
-public final class ThreaderTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public final class ThreaderTest {
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();

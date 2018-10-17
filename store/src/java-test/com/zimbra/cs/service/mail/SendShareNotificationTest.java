@@ -17,6 +17,7 @@
 package com.zimbra.cs.service.mail;
 
 import static org.junit.Assert.assertTrue;
+import org.junit.Ignore;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -58,7 +59,7 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.soap.mail.message.SendShareNotificationRequest;
 
-public class SendShareNotificationTest extends SendShareNotification {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class SendShareNotificationTest extends SendShareNotification {
 
     @Override
     protected MimeMessage generateShareNotification(Account authAccount, Account ownerAccount, ShareInfoData sid,

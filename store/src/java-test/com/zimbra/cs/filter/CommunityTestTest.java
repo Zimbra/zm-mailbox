@@ -17,6 +17,7 @@
 package com.zimbra.cs.filter;
 
 import java.util.HashMap;
+import org.junit.Ignore;
 import java.util.List;
 
 import org.junit.Assert;
@@ -37,7 +38,7 @@ import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
 
-public class CommunityTestTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class CommunityTestTest {
     Account account;
     Mailbox mbox;
 

@@ -1,6 +1,7 @@
 package com.zimbra.cs.index.solr;
 
 import static org.junit.Assert.assertTrue;
+import org.junit.Ignore;
 
 import java.util.Arrays;
 import java.util.List;
@@ -13,7 +14,7 @@ import org.junit.Test;
 import com.google.common.base.Strings;
 import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.mime.ParsedMessage;
-public class RFC822AddressTokenizerTest extends SolrPluginTestBase {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class RFC822AddressTokenizerTest extends SolrPluginTestBase {
 
     @Test
     public void single() throws Exception {

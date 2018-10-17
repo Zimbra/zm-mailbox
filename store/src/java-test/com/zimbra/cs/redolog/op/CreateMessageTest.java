@@ -1,6 +1,7 @@
 package com.zimbra.cs.redolog.op;
 
 import com.google.common.base.Charsets;
+import org.junit.Ignore;
 import com.google.common.io.CharStreams;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -24,7 +25,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class CreateMessageTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class CreateMessageTest {
     private CreateMessage op;
     private Mailbox mbox;
 

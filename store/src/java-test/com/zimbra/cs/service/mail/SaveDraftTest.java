@@ -17,6 +17,7 @@
 package com.zimbra.cs.service.mail;
 
 import javax.mail.internet.MimeMessage;
+import org.junit.Ignore;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -38,7 +39,7 @@ import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.soap.ZimbraSoapContext;
 
-public class SaveDraftTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class SaveDraftTest {
 
     @BeforeClass
     public static void init() throws Exception {

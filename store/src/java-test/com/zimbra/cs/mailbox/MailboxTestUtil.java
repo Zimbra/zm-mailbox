@@ -18,6 +18,7 @@
 package com.zimbra.cs.mailbox;
 
 import java.io.File;
+import org.junit.Ignore;
 import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -74,7 +75,7 @@ import com.zimbra.cs.store.http.MockHttpStore;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.soap.DocumentHandler;
 
-public final class MailboxTestUtil {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public final class MailboxTestUtil {
 
     private MailboxTestUtil() {
     }

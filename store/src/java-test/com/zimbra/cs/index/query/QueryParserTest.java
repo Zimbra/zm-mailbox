@@ -17,6 +17,7 @@
 package com.zimbra.cs.index.query;
 
 import java.util.Calendar;
+import org.junit.Ignore;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
@@ -42,7 +43,7 @@ import com.zimbra.cs.mailbox.MailboxTestUtil;
  *
  * @author ysasaki
  */
-public final class QueryParserTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public final class QueryParserTest {
     private static QueryParser parser;
 
     @BeforeClass

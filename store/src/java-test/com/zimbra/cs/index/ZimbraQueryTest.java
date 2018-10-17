@@ -17,6 +17,7 @@
 package com.zimbra.cs.index;
 
 import java.util.Collections;
+import org.junit.Ignore;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
@@ -51,7 +52,7 @@ import com.zimbra.cs.util.IOUtil;
  *
  * @author ysasaki
  */
-public final class ZimbraQueryTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public final class ZimbraQueryTest {
 
     @BeforeClass
     public static void init() throws Exception {

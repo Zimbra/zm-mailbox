@@ -302,7 +302,7 @@
             <fileset dir="${test.classes.dir}/com/zimbra/extensions" />
           </move>
           <copy file="${test.src.dir}/log4j-test.properties" tofile="${test.classes.dir}/log4j.properties" failonerror="false"/>
-          <junit haltonfailure="true" printsummary="on" showoutput="true" errorproperty="junit.error" failureproperty="junit.failure" tempdir="${test.dir}" fork="true">
+          <junit haltonfailure="${halt-on-failure}" printsummary="on" showoutput="true" errorproperty="junit.error" failureproperty="junit.failure" tempdir="${test.dir}" fork="true">
             <classpath refid="test.class.path"/>
             <assertions><enable/></assertions>
             <formatter type="xml"/>

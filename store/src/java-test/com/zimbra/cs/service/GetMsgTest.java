@@ -17,6 +17,7 @@
 package com.zimbra.cs.service;
 
 import java.util.HashMap;
+import org.junit.Ignore;
 import java.util.List;
 
 import javax.mail.internet.MimeMessage;
@@ -43,7 +44,7 @@ import com.zimbra.cs.service.mail.GetMsg;
 import com.zimbra.cs.service.mail.ServiceTestUtil;
 import com.zimbra.cs.util.JMSession;
 
-public class GetMsgTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class GetMsgTest {
 
     public static String zimbraServerDir = "";
 
