@@ -17,7 +17,6 @@
 package com.zimbra.cs.account.names;
 
 import java.io.UnsupportedEncodingException;
-import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
 import com.google.common.base.Strings;
