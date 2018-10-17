@@ -30,7 +30,7 @@ import java.nio.charset.StandardCharsets;
 public class TcpServerInputStream extends BufferedInputStream {
 
     StringBuilder buffer;
-    BufferedReader br;
+    private BufferedReader br;
     protected static final int CR = 13;
     protected static final int LF = 10;
 
