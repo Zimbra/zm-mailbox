@@ -4870,3 +4870,24 @@ Response
  <member>{email}</member>+
 </alm>
 </GetAddressListMembersResponse>
+
+-----------------------------
+GetAddressListInfo
+
+API to get the meta info of an address list
+
+Request:
+<GetAddressListInfoRequest name="{address list name}" id="{address list id}">
+ <domain by="{by}">{address list domain}</domain>
+</GetAddressListInfoRequest>
+
+Response:
+<GetAddressListInfoResponse name="{address list name}" id="{address list id}" type="{address list type}" xmlns="urn:zimbraAccount">
+ <domain by="name">{address list domain}</domain>
+ <desc>{address list description}</desc>
+ <searchFilter>
+    <conds>
+        <cond/>+
+    </conds>
+ </searchFilter>
+</GetAddressListInfoResponse>
