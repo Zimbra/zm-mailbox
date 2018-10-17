@@ -17,6 +17,7 @@
 package com.zimbra.cs.filter;
 
 import static org.junit.Assert.*;
+import org.junit.Ignore;
 
 import java.util.HashMap;
 import java.util.List;
@@ -42,7 +43,7 @@ import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
 
-public class RelationalExtensionTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class RelationalExtensionTest {
     private static String sampleMsg = "Received: from edge01e.zimbra.com ([127.0.0.1])\n"
             + "\tby localhost (edge01e.zimbra.com [127.0.0.1]) (amavisd-new, port 10032)\n"
             + "\twith ESMTP id DN6rfD1RkHD7; Fri, 24 Jun 2016 01:45:31 -0400 (EDT)\n"

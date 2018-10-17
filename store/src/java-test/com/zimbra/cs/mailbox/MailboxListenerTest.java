@@ -17,6 +17,7 @@
 package com.zimbra.cs.mailbox;
 
 import java.io.ByteArrayInputStream;
+import org.junit.Ignore;
 import java.util.HashMap;
 
 import org.junit.After;
@@ -32,7 +33,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.PendingModifications.ModificationKey;
 
-public final class MailboxListenerTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public final class MailboxListenerTest {
 
     private static boolean listenerWasCalled;
 

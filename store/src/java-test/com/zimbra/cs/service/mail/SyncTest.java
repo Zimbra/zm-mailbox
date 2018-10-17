@@ -17,6 +17,7 @@
 package com.zimbra.cs.service.mail;
 
 import java.util.ArrayList;
+import org.junit.Ignore;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -65,7 +66,7 @@ import com.zimbra.soap.mail.message.SyncResponse;
 import com.zimbra.soap.mail.type.MessageSummary;
 import com.zimbra.soap.mail.type.SyncDeletedInfo;
 
-public class SyncTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class SyncTest {
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();

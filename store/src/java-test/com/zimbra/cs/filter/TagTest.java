@@ -17,6 +17,7 @@
 package com.zimbra.cs.filter;
 
 import static org.junit.Assert.fail;
+import org.junit.Ignore;
 
 import java.util.HashMap;
 import java.util.List;
@@ -38,7 +39,7 @@ import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
 
-public class TagTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class TagTest {
 
     @BeforeClass
     public static void init() throws Exception {

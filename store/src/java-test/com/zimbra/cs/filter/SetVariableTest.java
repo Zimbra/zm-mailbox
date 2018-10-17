@@ -56,7 +56,7 @@ import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
 
-public class SetVariableTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class SetVariableTest {
     private String filterScript = "";
 
     @BeforeClass

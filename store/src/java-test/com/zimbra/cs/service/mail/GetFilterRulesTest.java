@@ -17,6 +17,7 @@
 package com.zimbra.cs.service.mail;
 
 import com.google.common.collect.Maps;
+import org.junit.Ignore;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -46,7 +47,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class GetFilterRulesTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class GetFilterRulesTest {
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();

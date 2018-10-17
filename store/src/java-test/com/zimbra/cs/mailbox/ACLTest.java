@@ -17,6 +17,7 @@
 package com.zimbra.cs.mailbox;
 
 import java.util.HashMap;
+import org.junit.Ignore;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -30,7 +31,7 @@ import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 
-public class ACLTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class ACLTest {
 
     @BeforeClass
     public static void init() throws Exception {

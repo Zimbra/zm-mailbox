@@ -16,6 +16,7 @@
 package com.zimbra.cs.service.mail;
 
 import java.io.ByteArrayInputStream;
+import org.junit.Ignore;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
@@ -47,7 +48,7 @@ import com.zimbra.soap.ZimbraSoapContext;
 
 import junit.framework.Assert;
 
-public class GetContactBackupListTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class GetContactBackupListTest {
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();

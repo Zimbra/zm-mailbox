@@ -17,6 +17,7 @@
 package com.zimbra.cs.session;
 
 import java.util.Collections;
+import org.junit.Ignore;
 import java.util.Comparator;
 import java.util.List;
 
@@ -28,7 +29,7 @@ import org.junit.Test;
  *
  * @author ysasaki
  */
-public final class SessionMapTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public final class SessionMapTest {
 
     @Test
     public void test() throws Exception {

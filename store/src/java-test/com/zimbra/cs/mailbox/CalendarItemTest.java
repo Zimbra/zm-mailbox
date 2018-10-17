@@ -16,6 +16,7 @@
 package com.zimbra.cs.mailbox;
 
 import java.util.HashMap;
+import org.junit.Ignore;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -32,7 +33,7 @@ import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({OperationContext.class, Mailbox.class, CalendarItem.class})
-public class CalendarItemTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class CalendarItemTest {
     private OperationContext octxt;
     private CalendarItem calItem;
     private final Integer SEQ = 123;

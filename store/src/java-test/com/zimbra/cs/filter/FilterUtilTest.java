@@ -17,6 +17,7 @@
 package com.zimbra.cs.filter;
 
 import static org.junit.Assert.fail;
+import org.junit.Ignore;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -45,7 +46,7 @@ import static com.zimbra.cs.filter.JsieveConfigMapHandler.CAPABILITY_VARIABLES;
 /**
  * Unit tests for {@link FilterUtil}.
  */
-public class FilterUtilTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class FilterUtilTest {
 
     @BeforeClass
     public static void init() throws Exception {

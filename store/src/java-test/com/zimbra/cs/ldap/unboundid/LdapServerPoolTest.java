@@ -17,6 +17,7 @@
 package com.zimbra.cs.ldap.unboundid;
 
 import junit.framework.Assert;
+import org.junit.Ignore;
 
 import org.junit.Test;
 
@@ -26,7 +27,7 @@ import com.zimbra.cs.ldap.LdapConnType;
 import com.zimbra.cs.ldap.LdapServerConfig.ZimbraLdapConfig;
 import com.zimbra.cs.ldap.LdapServerType;
 
-public class LdapServerPoolTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class LdapServerPoolTest {
 
     @Test
     public void testLDAPICreatePool() throws Exception {

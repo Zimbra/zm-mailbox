@@ -17,6 +17,7 @@
 package com.zimbra.cs.store;
 
 import java.io.ByteArrayInputStream;
+import org.junit.Ignore;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
@@ -39,7 +40,7 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.store.external.ExternalStoreManager;
 import com.zimbra.qa.unittest.TestUtil;
 
-public abstract class AbstractStoreManagerTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public abstract class AbstractStoreManagerTest {
 
     static StoreManager originalStoreManager;
 

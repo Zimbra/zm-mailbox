@@ -17,6 +17,7 @@
 package com.zimbra.cs.service.mail;
 
 import java.io.BufferedReader;
+import org.junit.Ignore;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -63,7 +64,7 @@ import com.zimbra.soap.ZimbraSoapContext;
  *
  * @author ysasaki
  */
-public final class ParseMimeMessageTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public final class ParseMimeMessageTest {
 
     @BeforeClass
     public static void init() throws Exception {

@@ -1,6 +1,7 @@
 package com.zimbra.cs.imap;
 
 import java.util.HashMap;
+import org.junit.Ignore;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -26,7 +27,7 @@ import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.MetadataList;
 import com.zimbra.qa.unittest.TestUtil;
 
-public class LocalImapMailboxStoreTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class LocalImapMailboxStoreTest {
     private static final String LOCAL_USER = "localimaptest@zimbra.com";
     private Account acct = null;
     private Mailbox mbox = null;

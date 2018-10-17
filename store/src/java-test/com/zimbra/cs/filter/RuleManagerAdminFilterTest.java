@@ -17,6 +17,7 @@
 package com.zimbra.cs.filter;
 
 import java.util.Enumeration;
+import org.junit.Ignore;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,7 +47,7 @@ import com.zimbra.cs.service.util.ItemId;
 /**
  * Unit test for {@link RuleManager} with admin-defined rules.
  */
-public final class RuleManagerAdminFilterTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public final class RuleManagerAdminFilterTest {
     String scriptAdminBefore = "require [\"tag\", \"log\"];\n"
         + "if true {\n"
         + "  tag \"admin-defined-before\";\n"
