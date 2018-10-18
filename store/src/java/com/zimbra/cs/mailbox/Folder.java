@@ -1392,7 +1392,7 @@ public class Folder extends MailItem implements FolderStore, SharedState {
                 throw MailServiceException.IS_NOT_CHILD();
             }
             if (subfolders.remove(subfolder.getName().toLowerCase()) == null) {
-                if (subfolders.containsValue(subfolder)) {
+                if (subfolders.containsValue(subfolder.getId())) {
                     //edge case when folder has been moved and renamed in same txn
                     //the rename happens before removal from 'old' folder, so lookup by name won't work
                     Iterator<Integer> it = subfolders.values().iterator();
