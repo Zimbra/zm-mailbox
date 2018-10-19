@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2009, 2010, 2011, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2009, 2010, 2011, 2013, 2014, 2016, 2018 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -19,6 +19,9 @@ package com.zimbra.common.io;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 
 /**
  * @since 2004. 10. 26.
@@ -27,19 +30,23 @@ import java.io.InputStream;
 public class TcpServerInputStream extends BufferedInputStream {
 
     StringBuilder buffer;
+    private BufferedReader br;
     protected static final int CR = 13;
     protected static final int LF = 10;
 
     public TcpServerInputStream(InputStream in) {
         super(in);
+
+        br = new BufferedReader(new InputStreamReader(this, StandardCharsets.UTF_8));
         buffer = new StringBuilder(128);
     }
 
     public TcpServerInputStream(InputStream in, int size) {
         super(in, size);
+
+        br = new BufferedReader(new InputStreamReader(this, StandardCharsets.UTF_8));
         buffer = new StringBuilder(128);
     }
-
     /**
      * Reads a line from the stream.  A line is terminated with either
      * CRLF or bare LF.  (This is different from the behavior of
@@ -53,7 +60,7 @@ public class TcpServerInputStream extends BufferedInputStream {
     public String readLine() throws IOException {
         buffer.delete(0, buffer.length());
         while (true) {
-            int ch = read();
+            int ch = br.read();
             if (ch == -1) {
                 return null;
             } else if (ch == CR) {

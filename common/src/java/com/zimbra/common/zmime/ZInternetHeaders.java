@@ -34,6 +34,7 @@ import com.zimbra.common.zmime.ZMimeUtility.ByteBuilder;
 
 public class ZInternetHeaders extends InternetHeaders {
     private static final boolean ZPARSER = ZMimeMessage.ZPARSER;
+    protected List headers;
 
     private ZMimePart parent;
     private boolean ordered = true;
