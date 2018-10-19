@@ -32,6 +32,8 @@ import com.google.common.collect.Iterables;
 import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.AccountConstants;
 
+import io.leangen.graphql.annotations.GraphQLIgnore;
+import io.leangen.graphql.annotations.GraphQLInputField;
 import io.leangen.graphql.annotations.GraphQLQuery;
 import io.leangen.graphql.annotations.types.GraphQLType;
 
@@ -59,6 +61,7 @@ public class Signature {
      * @zm-api-field-description Content of the signature
      */
     @XmlElement(name=AccountConstants.E_CONTENT)
+    @GraphQLQuery(name=GqlConstants.CONTENT_LIST, description="Content of the signature")
     private List<SignatureContent> contentList = new ArrayList<SignatureContent>();
 
     /**
@@ -111,18 +114,22 @@ public class Signature {
         return Collections.unmodifiableList(contentList);
     }
 
+    @GraphQLInputField(name=GqlConstants.NAME, description="Name for the signature")
     public void setName(String name) {
         this.name = name;
     }
 
+    @GraphQLIgnore
     public void setId(String id) {
         this.id = id;
     }
 
+    @GraphQLIgnore
     public void addContent(SignatureContent content) {
         this.contentList.add(content);
     }
 
+    @GraphQLInputField(name=GqlConstants.CONTENT_LIST, description="Content of the signature")
     public void setContent(Iterable<SignatureContent> content) {
         this.contentList.clear();
         if (content != null) {
@@ -130,6 +137,7 @@ public class Signature {
         }
     }
 
+    @GraphQLInputField(name=GqlConstants.CID, description="Contact ID")
     public void setCid(String cid) {
         this.cid = cid;
     }

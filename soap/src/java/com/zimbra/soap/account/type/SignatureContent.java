@@ -24,6 +24,7 @@ import javax.xml.bind.annotation.XmlValue;
 import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.AccountConstants;
 
+import io.leangen.graphql.annotations.GraphQLInputField;
 import io.leangen.graphql.annotations.GraphQLQuery;
 import io.leangen.graphql.annotations.types.GraphQLType;
 
@@ -57,6 +58,7 @@ public class SignatureContent {
         return contentType;
     }
 
+    @GraphQLInputField(name=GqlConstants.CONTENT_TYPE, description="Content Type - \"text/plain\" or \"text/html\"")
     public void setContentType(String contentType) {
         this.contentType = contentType;
     }
@@ -66,6 +68,7 @@ public class SignatureContent {
         return content;
     }
 
+    @GraphQLInputField(name=GqlConstants.CONTENT, description="Signature value")
     public void setContent(String content) {
         this.content = content;
     }
