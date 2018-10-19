@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2016, 2018 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -335,6 +335,12 @@ public class AttributeInfo {
             if (l > mMax)
                 throw AccountServiceException.INVALID_ATTR_VALUE(
                         mName+" is longer than max allowed: "+mMaxDuration, null);
+            return;
+        case TYPE_INTL_EMAIL:
+            if (value.length() > mMax)
+                throw AccountServiceException.INVALID_ATTR_VALUE(
+                        mName+" value length("+value.length()+") larger than max allowed: "+mMax, null);
+            validEmailAddress(value, false);
             return;
         case TYPE_EMAIL:
             if (value.length() > mMax)
