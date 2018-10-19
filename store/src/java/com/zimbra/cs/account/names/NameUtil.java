@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2009, 2010, 2011, 2012, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2009, 2010, 2011, 2012, 2013, 2014, 2016, 2018 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -16,7 +16,7 @@
  */
 package com.zimbra.cs.account.names;
 
-import javax.mail.internet.AddressException;
+import java.io.UnsupportedEncodingException;
 import javax.mail.internet.InternetAddress;
 
 import com.google.common.base.Strings;
@@ -59,10 +59,10 @@ public class NameUtil {
 
     public static void validEmailAddress(String addr) throws ServiceException {
         try {
-            InternetAddress ia = new InternetAddress(addr, true);
+            InternetAddress ia = new InternetAddress(addr, "", "UTF-8");
             if (ia.getPersonal() != null && !ia.getPersonal().equals(""))
                 throw ServiceException.INVALID_REQUEST("invalid email address", null);
-        } catch (AddressException e) {
+        } catch (UnsupportedEncodingException e) {
             throw ServiceException.INVALID_REQUEST("invalid email address", e);
         }
     }

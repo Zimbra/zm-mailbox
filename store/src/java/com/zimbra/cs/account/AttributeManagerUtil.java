@@ -429,6 +429,12 @@ public class AttributeManagerUtil {
             substr = "caseIgnoreSubstringsMatch";
             break;
 
+        case TYPE_INTL_EMAIL:
+            syntax = "1.3.6.1.4.1.1466.115.121.1.15{256}";
+            equality = "caseIgnoreMatch";
+            substr = "caseIgnoreSubstringsMatch";
+            break;
+
         case TYPE_GENTIME:
             syntax = "1.3.6.1.4.1.1466.115.121.1.24";
             equality = "generalizedTimeMatch";

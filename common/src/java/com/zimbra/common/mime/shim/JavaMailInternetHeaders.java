@@ -70,8 +70,8 @@ public class JavaMailInternetHeaders extends InternetHeaders implements JavaMail
     @SuppressWarnings("unchecked")
     JavaMailInternetHeaders(InternetHeaders jmheaders) {
         this();
-        for (Enumeration<InternetHeader> en = jmheaders.getAllHeaders(); en.hasMoreElements(); ) {
-            InternetHeader jmheader = en.nextElement();
+        for (Enumeration<Header> en = jmheaders.getAllHeaders(); en.hasMoreElements(); ) {
+            InternetHeader jmheader =  (InternetHeader) en.nextElement();
             addHeader(jmheader.getName(), jmheader.getValue());
         }
     }
