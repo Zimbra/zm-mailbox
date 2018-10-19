@@ -4874,7 +4874,9 @@ Response
 -----------------------------
 GetAddressListInfo
 
-API to get the meta info of an address list
+API to get the meta info of an address list.
+Address list may be requested by id, or name and domain.
+If address list is requested by id, name and domain are ignored.
 
 Request:
 <GetAddressListInfoRequest name="{address list name}" id="{address list id}">
