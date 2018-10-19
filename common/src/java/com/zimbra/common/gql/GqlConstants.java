@@ -405,7 +405,7 @@ public class GqlConstants {
     public static final String IS_TRACKING_IMAP = "isTrackingIMAP";
     public static final String CLASS_ATTRS_IMPL = "AttrsImpl";
 
-    //Change password related constants
+    // Change password related constants
     public static final String CLASS_CHANGE_PASSWORD_RESPONSE = "ChangePasswordResponse";
     public static final String OLD_PASSWORD = "oldPassword";
     public static final String NEW_PASSWORD = "newPassword";
@@ -417,4 +417,8 @@ public class GqlConstants {
     public static final String CLASS_WHITE_BLACK_LIST_RESPONSE = "WhiteBlackListResponse";
     public static final String WHITE_LIST_ENTRIES = "whiteListEntries";
     public static final String BLACK_LIST_ENTRIES = "blackListEntries";
+
+    public static final String CLASS_NAME_ID = "NameId";
+    public static final String IDENTIFIER = "identifier";
+    public static final String SIGNATURE = "signature";
 }
