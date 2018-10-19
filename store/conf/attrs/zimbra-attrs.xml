@@ -365,13 +365,13 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
                   The use case is for hosted.  New account creation based on invites 
                   that are not completed until user accepts TOS on account creation confirmation page.  
     closed      - no login, no delivery(lmtp server returns 5.x.x Permanent Failure),
-                  all addresses (account main email and all aliases) of the 
+                  all addresses (account main intl_email and all aliases) of the 
                   account are removed from all distribution lists.
   </desc>
 </attr>
 
-<attr id="3" name="zimbraMailAddress" type="email" max="256" immutable="1" cardinality="multi" optionalIn="mailRecipient">
-  <desc>RFC822 email address of this recipient for accepting mail</desc>
+<attr id="3" name="zimbraMailAddress" type="intl_email" max="256" immutable="1" cardinality="multi" optionalIn="mailRecipient">
+  <desc>RFC822 intl_email address of this recipient for accepting mail</desc>
 </attr>
 
 <attr id="4" name="zimbraMailHost" type="astring" max="256" callback="MailHost" cardinality="single" optionalIn="mailRecipient,group">
@@ -396,11 +396,11 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>dynamic group membership</desc>
 </attr>
 
-<attr id="12" name="zimbraMailForwardingAddress" type="email" max="256" cardinality="multi" optionalIn="mailRecipient,groupStaticUnit" flags="accountInfo,domainAdminModifiable">
+<attr id="12" name="zimbraMailForwardingAddress" type="intl_email" max="256" cardinality="multi" optionalIn="mailRecipient,groupStaticUnit" flags="accountInfo,domainAdminModifiable">
   <desc>RFC822 forwarding address for an account</desc>
 </attr>
 
-<attr id="13" name="zimbraMailDeliveryAddress" type="email" max="256" immutable="1" cardinality="multi" optionalIn="mailRecipient">
+<attr id="13" name="zimbraMailDeliveryAddress" type="intl_email" max="256" immutable="1" cardinality="multi" optionalIn="mailRecipient">
   <desc>RFC822 email address of this recipient for local delivery</desc>
 </attr>
 
@@ -429,7 +429,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>name of the domain</desc>
 </attr>
 
-<attr id="20" name="zimbraMailAlias" type="email" max="256" immutable="1" cardinality="multi" optionalIn="mailRecipient,group,groupDynamicUnit" flags="accountInfo">
+<attr id="20" name="zimbraMailAlias" type="intl_email" max="256" immutable="1" cardinality="multi" optionalIn="mailRecipient,group,groupDynamicUnit" flags="accountInfo">
   <desc>RFC822 email address of this recipient for accepting mail</desc>
 </attr>
 
@@ -813,7 +813,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether or not new mail notification is enabled</desc>
 </attr>
 
-<attr id="127" name="zimbraPrefNewMailNotificationAddress" type="email" max="256" cardinality="single" optionalIn="account" flags="domainAdminModifiable">
+<attr id="127" name="zimbraPrefNewMailNotificationAddress" type="intl_email" max="256" cardinality="single" optionalIn="account" flags="domainAdminModifiable">
   <desc>RFC822 email address for email notifications</desc>
 </attr>
 
@@ -1292,7 +1292,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>should be one of: local, alias</desc>
 </attr>
 
-<attr id="213" name="zimbraMailCanonicalAddress" type="email" max="256" cardinality="single" optionalIn="mailRecipient" flags="domainAdminModifiable">
+<attr id="213" name="zimbraMailCanonicalAddress" type="intl_email" max="256" cardinality="single" optionalIn="mailRecipient" flags="domainAdminModifiable">
   <desc>RFC822 email address for senders outbound messages</desc>
 </attr>
 
@@ -1424,11 +1424,11 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>compatibility mode for calendar server</desc>
 </attr>
 
-<attr id="244" name="zimbraSpamIsSpamAccount" type="email" max="256" cardinality="single" optionalIn="globalConfig">
+<attr id="244" name="zimbraSpamIsSpamAccount" type="intl_email" max="256" cardinality="single" optionalIn="globalConfig">
   <desc>When user classifies a message as spam forward message via SMTP to this account</desc>
 </attr>
 
-<attr id="245" name="zimbraSpamIsNotSpamAccount" type="email" max="256" cardinality="single" optionalIn="globalConfig">
+<attr id="245" name="zimbraSpamIsNotSpamAccount" type="intl_email" max="256" cardinality="single" optionalIn="globalConfig">
   <desc>When user classifies a message as not spam forward message via SMTP to this account</desc>
 </attr>
 
@@ -1803,7 +1803,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>name of contact in charge of resource</desc>
 </attr>
 
-<attr id="332" name="zimbraCalResContactEmail" type="email" cardinality="single" optionalIn="calendarResource" flags="domainAdminModifiable">
+<attr id="332" name="zimbraCalResContactEmail" type="intl_email" cardinality="single" optionalIn="calendarResource" flags="domainAdminModifiable">
   <desc>email of contact in charge of resource</desc>
 </attr>
 
@@ -1864,7 +1864,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>enable end-user mail forwarding features</desc>
 </attr>
 
-<attr id="343" name="zimbraPrefMailForwardingAddress" type="cs_emailp" cardinality="single" optionalIn="account" flags="domainAdminModifiable" callback="PrefMailForwardingAddress" >
+<attr id="343" name="zimbraPrefMailForwardingAddress" type="intl_email" cardinality="single" optionalIn="account" flags="domainAdminModifiable" callback="PrefMailForwardingAddress" >
   <desc>RFC822 forwarding address for an account</desc>
 </attr>
 
@@ -2062,7 +2062,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>server remembers addresses to which notifications have been sent for this interval, and does not send duplicate notifications in this interval</desc>
 </attr>
 
-<attr id="387" name="zimbraPrefOutOfOfficeDirectAddress" type="email" cardinality="multi" optionalIn="account" flags="domainAdminModifiable">
+<attr id="387" name="zimbraPrefOutOfOfficeDirectAddress" type="intl_email" cardinality="multi" optionalIn="account" flags="domainAdminModifiable">
   <desc>per RFC 3834 no out of office notifications are sent if recipients address is not directly specified in the To/CC headers - for this check, we check to see if To/CC contained accounts address, aliases, canonical address.  But when external accounts are forwarded to Zimbra, and you want notifications sent to messages that contain their external address in To/Cc, add those address, then you can specify those external addresses here.</desc>
 </attr>
 
@@ -2243,11 +2243,11 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Whether this account can use any from address.  Not changeable by domain admin to allow arbitrary addresses</desc>
 </attr>
 
-<attr id="428" name="zimbraAllowFromAddress" type="email" max="256" cardinality="multi" optionalIn="account" flags="accountInfo,domainAdminModifiable" callback="AllowFromAddress">
+<attr id="428" name="zimbraAllowFromAddress" type="intl_email" max="256" cardinality="multi" optionalIn="account" flags="accountInfo,domainAdminModifiable" callback="AllowFromAddress">
   <desc>Addresses that this account is permitted to use in From: header on sent messages. Only applicable when zimbraAllowAnyFromAddress is set to false.</desc>
 </attr>
 
-<attr id="429" name="zimbraArchiveAccount" type="email" max="256" cardinality="multi" optionalIn="account">
+<attr id="429" name="zimbraArchiveAccount" type="intl_email" max="256" cardinality="multi" optionalIn="account">
   <desc>
     Mailboxes in which the current account in archived.  Multi-value
     attr with eg values { user-2006@example.com.archive,
@@ -2256,7 +2256,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-<attr id="430" name="zimbraArchiveMailFrom" type="email" max="256" cardinality="single" optionalIn="globalConfig">
+<attr id="430" name="zimbraArchiveMailFrom" type="intl_email" max="256" cardinality="single" optionalIn="globalConfig">
   <desc>
     Address to which archive message bounces should be sent.
     Typically could be an admin account.  This is global across all
@@ -3051,7 +3051,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <deprecateDesc>was added for Yahoo calendar, no longer used</deprecateDesc>
 </attr>
 
-<attr id="575" name="zimbraPrefCalendarReminderEmail" type="email" max="256" cardinality="single" optionalIn="account" flags="domainAdminModifiable" since="7.0.0">
+<attr id="575" name="zimbraPrefCalendarReminderEmail" type="intl_email" max="256" cardinality="single" optionalIn="account" flags="domainAdminModifiable" since="7.0.0">
   <desc>RFC822 email address for receiving reminders for appointments and tasks</desc>
 </attr>
 
@@ -4914,7 +4914,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether to send a notification message if Zimbra version check detects a new version</desc>
 </attr>
 
-<attr id="1063" name="zimbraVersionCheckNotificationEmail" type="cs_emailp" cardinality="single" optionalIn="globalConfig" since="6.0.2">
+<attr id="1063" name="zimbraVersionCheckNotificationEmail" type="intl_email" cardinality="single" optionalIn="globalConfig" since="6.0.2">
   <desc>email address to send mail to for the Zimbra version check notification message</desc>
 </attr>
 
@@ -5123,7 +5123,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>If TRUE, a mailbox that exceeds its quota is still allowed to receive mail, but is not allowed to send.</desc>
 </attr>
 
-<attr id="1100" name="zimbraAmavisQuarantineAccount" type="email" max="256" cardinality="single" optionalIn="globalConfig" since="7.0.0">
+<attr id="1100" name="zimbraAmavisQuarantineAccount" type="intl_email" max="256" cardinality="single" optionalIn="globalConfig" since="7.0.0">
   <desc>When a virus is detected quarantine message to this account</desc>
 </attr>
 
@@ -5316,7 +5316,7 @@ TODO: delete them permanently from here
   <desc>Maximum number of entries for zimbraPrefMailTrustedSenderList.</desc>
 </attr>
 
-<attr id="1140" name="zimbraCalendarReminderDeviceEmail" type="email" max="256" cardinality="single" optionalIn="account" flags="accountInfo,domainAdminModifiable" since="7.0.0">
+<attr id="1140" name="zimbraCalendarReminderDeviceEmail" type="intl_email" max="256" cardinality="single" optionalIn="account" flags="accountInfo,domainAdminModifiable" since="7.0.0">
   <desc>email address identifying the default device for receiving reminders for appointments and tasks</desc>
 </attr>
 
@@ -6173,7 +6173,7 @@ TODO: delete them permanently from here
   <desc>whether it is an external user account</desc>
 </attr>
 
-<attr id="1244" name="zimbraExternalUserMailAddress" type="email" cardinality="single" optionalIn="account" flags="accountInfo" since="8.0.0">
+<attr id="1244" name="zimbraExternalUserMailAddress" type="intl_email" cardinality="single" optionalIn="account" flags="accountInfo" since="8.0.0">
   <desc>External email address of an external user. Applicable only when zimbraIsExternalVirtualAccount is set to TRUE.</desc>
 </attr>
 
@@ -6681,7 +6681,7 @@ TODO: delete them permanently from here
   <desc>percentage threshold for domain aggregate quota warnings</desc>
 </attr>
 
-<attr id="1331" name="zimbraDomainAggregateQuotaWarnEmailRecipient" type="email" cardinality="multi" optionalIn="domain,globalConfig" flags="domainInherited" since="8.0.0">
+<attr id="1331" name="zimbraDomainAggregateQuotaWarnEmailRecipient" type="intl_email" cardinality="multi" optionalIn="domain,globalConfig" flags="domainInherited" since="8.0.0">
   <desc>email recipients to be notified when zimbraAggregateQuotaLastUsage reaches zimbraDomainAggregateQuotaWarnPercent of the zimbraDomainAggregateQuota</desc>
 </attr>
 
@@ -6690,7 +6690,7 @@ TODO: delete them permanently from here
         addr of upstream server connecting to which the error happens</desc>
 </attr>
 
-<attr id="1333" name="zimbraPrefAllowAddressForDelegatedSender" type="email" max="256" cardinality="multi" optionalIn="account,distributionList,group" flags="accountInfo,domainAdminModifiable" callback="AllowAddressForDelegatedSender" since="8.0.0">
+<attr id="1333" name="zimbraPrefAllowAddressForDelegatedSender" type="intl_email" max="256" cardinality="multi" optionalIn="account,distributionList,group" flags="accountInfo,domainAdminModifiable" callback="AllowAddressForDelegatedSender" since="8.0.0">
   <desc>Addresses of the account that can be used by allowed delegated senders as From and Sender address.</desc>
 </attr>
 
@@ -7169,7 +7169,7 @@ TODO: delete them permanently from here
   <desc>whether mobile sync notification enabled or not</desc>
 </attr>
 
-<attr id="1422" name="zimbraMobileNotificationAdminAddress" type="email" max="256" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.5.0">
+<attr id="1422" name="zimbraMobileNotificationAdminAddress" type="intl_email" max="256" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.5.0">
   <desc>admin email address used for receiving notifications</desc>
 </attr>
 
@@ -9436,7 +9436,7 @@ TODO: delete them permanently from here
   <desc>Expiry time for end-user email address verification</desc>
 </attr>
 
-<attr id="2128" name="zimbraFeatureAddressUnderVerification" type="cs_emailp" cardinality="single" optionalIn="account" callback="PrefMailForwardingAddress" since="8.8.5">
+<attr id="2128" name="zimbraFeatureAddressUnderVerification" type="intl_email" cardinality="single" optionalIn="account" callback="PrefMailForwardingAddress" since="8.8.5">
   <desc>RFC822 email address under verification for an account</desc>
 </attr>
 
@@ -9467,7 +9467,7 @@ TODO: delete them permanently from here
   <desc>status of password reset feature</desc>
 </attr>
 
-<attr id="2135" name="zimbraPrefPasswordRecoveryAddress" type="cs_emailp" cardinality="single" optionalIn="account" flags="accountInfo" callback="RecoveryEmailCallback" since="8.8.9">
+<attr id="2135" name="zimbraPrefPasswordRecoveryAddress" type="intl_email" cardinality="single" optionalIn="account" flags="accountInfo" callback="RecoveryEmailCallback" since="8.8.9">
   <desc>RFC822 recovery email address for an account</desc>
 </attr>
 
