@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2009, 2010, 2011, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2009, 2010, 2011, 2013, 2014, 2016, 2018 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -119,7 +119,7 @@ public class LmtpAddress {
     }
 
     public boolean isValid() {
-	return mIsValid;
+        return mIsValid;
     }
 
     public Map<String, String> getParameters() {
@@ -352,7 +352,7 @@ public class LmtpAddress {
     }
 
     private boolean isLetter(int c) {
-	return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+      return Character.isAlphabetic(c);
     }
 
     private boolean skipAddress() {
@@ -460,9 +460,12 @@ public class LmtpAddress {
 	     *               and 127)
 	     */
 	    if (ch < 33 || ch > 126) { // 32 is ' '
-		if (debug) say("illegal character < 33 or > 126");
-		return false; // any one of the 128 ascii characters
-	    }
+            if (debug) say("illegal character < 33 or > 126: " + ch);
+            if (debug) say("but... is it alphabetic? " + Character.isAlphabetic(ch));
+            if (!Character.isAlphabetic(ch)) {
+               return false; // any one of the 128 ascii characters
+            }
+        }
 
 	    if ("<()[]\\,;:\"".indexOf(ch) > -1) {
 		/* Left out '>' and '@' which are terminators in this
