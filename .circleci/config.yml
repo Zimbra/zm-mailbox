@@ -538,7 +538,6 @@ workflows:
             branches:
               only:
                  - develop 
-                 - zcs-5608b
       - build_native_submodule:
           requires:
             - checkout_and_verify_params
@@ -546,7 +545,6 @@ workflows:
             branches:
               only:
                  - develop 
-                 - zcs-5608b
       - build_common_submodule:
           requires:
             - build_native_submodule
@@ -554,7 +552,6 @@ workflows:
             branches:
               only:
                  - develop 
-                 - zcs-5608b
       - build_soap_submodule:
           requires:
             - build_common_submodule
@@ -562,7 +559,6 @@ workflows:
             branches:
               only:
                  - develop 
-                 - zcs-5608b
       - build_client_submodule:
           requires:
             - build_soap_submodule
@@ -570,7 +566,6 @@ workflows:
             branches:
               only:
                  - develop 
-                 - zcs-5608b
       - build_store_submodule:
           requires:
             - build_client_submodule
@@ -578,7 +573,6 @@ workflows:
             branches:
               only:
                  - develop 
-                 - zcs-5608b
       - test_native_submodule:
           requires:
             - build_native_submodule
@@ -586,7 +580,6 @@ workflows:
             branches:
               only:
                  - develop 
-                 - zcs-5608b
       - test_common_submodule:
           requires:
             - build_common_submodule
@@ -594,7 +587,6 @@ workflows:
             branches:
               only:
                  - develop 
-                 - zcs-5608b
       - test_soap_submodule:
           requires:
             - build_soap_submodule
@@ -602,7 +594,6 @@ workflows:
             branches:
               only:
                  - develop 
-                 - zcs-5608b
       - test_client_submodule:
           requires:
             - build_client_submodule
@@ -610,7 +601,6 @@ workflows:
             branches:
               only:
                  - develop 
-                 - zcs-5608b
       - test_store_submodule:
           requires:
             - build_store_submodule
@@ -618,7 +608,6 @@ workflows:
             branches:
               only:
                  - develop 
-                 - zcs-5608b
       - checkout_and_build_installer:
           requires:
             - test_native_submodule
@@ -630,7 +619,6 @@ workflows:
             branches:
               only:
                  - develop 
-                 - zcs-5608b
       - build_and_deploy_zmcbase_container_images:
           requires:
             - checkout_and_build_installer
@@ -638,7 +626,6 @@ workflows:
             branches:
               only:
                  - develop 
-                 - zcs-5608b
       - build_and_deploy_zmcldap_container_images:
           requires:
             - checkout_and_build_installer
@@ -646,7 +633,6 @@ workflows:
             branches:
               only:
                  - develop 
-                 - zcs-5608b 
       - build_and_deploy_zmcmta_container_images:
           requires:
             - checkout_and_build_installer
@@ -654,7 +640,6 @@ workflows:
             branches:
               only:
                  - develop 
-                 - zcs-5608b
       - build_and_deploy_zmcmailbox_container_images:
           requires:
             - checkout_and_build_installer
@@ -662,7 +647,6 @@ workflows:
             branches:
               only:
                  - develop 
-                 - zcs-5608b
       - build_and_deploy_zmcmysqlproxy_container_images:
           requires:
             - checkout_and_build_installer
@@ -670,7 +654,6 @@ workflows:
             branches:
               only:
                  - develop 
-                 - zcs-5608b
       - build_and_deploy_zmcmysqllocal_container_images:
           requires:
             - checkout_and_build_installer
@@ -678,7 +661,6 @@ workflows:
             branches:
               only:
                  - develop 
-                 - zcs-5608b
       - build_and_deploy_zmcproxy_container_images:
           requires:
             - checkout_and_build_installer
@@ -686,7 +668,6 @@ workflows:
             branches:
               only:
                  - develop 
-                 - zcs-5608b
       - build_and_deploy_zmczookeeper_container_images:
           requires:
             - checkout_and_build_installer
@@ -694,7 +675,6 @@ workflows:
             branches:
               only:
                  - develop 
-                 - zcs-5608b
       - build_and_deploy_zmcsolr_container_images:
           requires:
             - checkout_and_build_installer
@@ -702,7 +682,6 @@ workflows:
             branches:
               only:
                  - develop 
-                 - zcs-5608b
       - build_and_deploy_zmcredismaster_container_images:
           requires:
             - checkout_and_build_installer
@@ -710,8 +689,7 @@ workflows:
             branches:
               only:
                  - develop 
-                 - zcs-5608b
-###########################################################################
+############################################################################
 
 notify:
   webhooks:
