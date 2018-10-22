@@ -242,6 +242,10 @@ public abstract class RedisSharedStateCache<M extends MailItem & SharedState> im
             }
             getLocalCache().put(fieldName, value);
             valueChanges.put(fieldName, value);
+            //if this key was previously deleted in this transaction, remove it from the deletions list!
+            if (keyDeletions.remove(fieldName)) {
+                ZimbraLog.cache.trace("RedisSharedState: removed %s from keyDeletions set", fieldName);
+            }
         }
 
         @Override
