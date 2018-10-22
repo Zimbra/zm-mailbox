@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlValue;
 
 import com.google.common.base.MoreObjects;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.type.ZmBoolean;
 
@@ -66,9 +67,10 @@ public class AuthToken {
         this.verifyAccount = ZmBoolean.fromBool(verifyAccount);
     }
 
-    @GraphQLQuery(name="value", description="Value for authorization token")
+    @GraphQLQuery(name=GqlConstants.VALUE, description="Value for authorization token")
     public String getValue() { return value; }
-    @GraphQLInputField(name="value", description="Value for authorization token")
+
+    @GraphQLInputField(name=GqlConstants.VALUE, description="Value for authorization token")
     public void setValue(String value) { this.value = value; }
 
     @GraphQLQuery(name="verifyAccount", description="Denotes whether to verify account data in the request")
@@ -76,12 +78,12 @@ public class AuthToken {
     @GraphQLInputField(name="verifyAccount", description="Denotes whether to verify account data in the request")
     public void setVerifyAccount(Boolean verifyAccount) { this.verifyAccount = ZmBoolean.fromBool(verifyAccount); }
 
-    @GraphQLQuery(name="lifetime", description="Life time of the auth token")
+    @GraphQLQuery(name=GqlConstants.LIFETIME, description="Life time of the auth token")
     public Long getLifetime() {
         return lifetime;
     }
 
-    @GraphQLInputField(name="lifetime", description="Life time of the auth token")
+    @GraphQLInputField(name=GqlConstants.LIFETIME, description="Life time of the auth token")
     public void setLifetime(Long lifetime) {
         this.lifetime = lifetime;
     }

@@ -411,4 +411,5 @@ public class GqlConstants {
     public static final String NEW_PASSWORD = "newPassword";
     public static final String ACCOUNT_SELECTOR = "accountSelector";
     public static final String AUTH_TOKEN = "authToken";
+
 }
