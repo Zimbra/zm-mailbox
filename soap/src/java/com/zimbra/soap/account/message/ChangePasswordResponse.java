@@ -56,7 +56,7 @@ public class ChangePasswordResponse {
     public ChangePasswordResponse() {
     }
 
-    @GraphQLQuery(name="authToken", description="Auth token based on the new password")
+    @GraphQLQuery(name=GqlConstants.AUTH_TOKEN, description="Auth token based on the new password")
     public String getAuthToken() { return authToken; }
     @GraphQLQuery(name=GqlConstants.LIFETIME, description="Life time of the auth token")
     public long getLifetime() { return lifetime; }
