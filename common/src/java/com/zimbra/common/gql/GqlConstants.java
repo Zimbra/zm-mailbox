@@ -402,4 +402,12 @@ public class GqlConstants {
     public static final String LICENSE = "license";
     public static final String IS_TRACKING_IMAP = "isTrackingIMAP";
     public static final String CLASS_ATTRS_IMPL = "AttrsImpl";
+    
+    //Change password related constansts
+    public static final String CLASS_CHANGE_PASSWORD_RESPONSE = "ChangePasswordResponse";
+    public static final String OLD_PASSWORD = "oldPassword";
+    public static final String NEW_PASSWORD = "newPassword";
+    public static final String ACCOUNT_SELECTOR = "accountSelector";
+    public static final String AUTH_TOKEN = "authToken";
+
 }
