@@ -4,8 +4,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.redisson.api.BatchOptions;
 import org.redisson.api.RBatch;
@@ -223,7 +225,7 @@ public abstract class RedisSharedStateCache<M extends MailItem & SharedState> im
                 initLocalCache();
             }
             T val = (T) getLocalCache().get(fieldName);
-            ZimbraLog.cache.trace("RedisSharedState.get(%s=%s), transaction=%s. %s", fieldName, val, tracker.inTransaction.get(), map.getName());
+            ZimbraLog.cache.trace("RedisSharedState.get(%s=%s), %s", fieldName, val, map.getName());
             return val;
         }
 
@@ -303,7 +305,6 @@ public abstract class RedisSharedStateCache<M extends MailItem & SharedState> im
 
         private Mailbox mbox;
         private ThreadLocal<Set<RedisSharedState>> touchedItems;
-        private ThreadLocal<Boolean> inTransaction = ThreadLocal.withInitial(() -> false);
 
         public RedisCacheTracker(Mailbox mbox) {
             this.mbox = mbox;
@@ -321,33 +322,44 @@ public abstract class RedisSharedStateCache<M extends MailItem & SharedState> im
         }
 
         @Override
-        public void transactionEnd(boolean success) {
-            Set<RedisSharedState> touchedByThisThread = touchedItems.get();
-            if (touchedByThisThread.isEmpty()) {
-                inTransaction.set(false);
-                return;
-            }
-            if (success) {
-                ZimbraLog.cache.trace("end transaction: flushing changes to %s redis folder/tag maps for account %s", touchedByThisThread.size(), mbox.getAccountId());
-                RBatch batch = createBatch();
-                for (RedisSharedState state: touchedByThisThread) {
-                    state.addChangesToBatch(batch);
-                    state.clearLocalCache();
-                }
-                batch.execute();
-            }
-            touchedByThisThread.clear();
-            inTransaction.set(false);
+        public void transactionEnd(boolean success, boolean endChange) {
+            ZimbraLog.cache.trace("RedisCacheTracker.transactionEnd(): success=%s, endChange=%s", success, endChange);
+            //nothing to do here
         }
 
         @Override
-        public void transactionBegin() {
-            inTransaction.set(true);
+        public void transactionBegin(boolean startChange) {
+            ZimbraLog.cache.trace("RedisCacheTracker.transactionBegin(): startChange=%s", startChange);
+            if (startChange) {
+                //clear out any caches built by getters invoked *outside* of a transaction
+                clearTouchedItems();
+            }
+        }
+
+        @Override
+        public void commitCache() {
+            Set<RedisSharedState> touchedByThisThread = touchedItems.get();
+            ZimbraLog.cache.trace("RedisCacheTracker.commitCache(): flushing changes to %s redis maps for account %s", touchedByThisThread.size(), mbox.getAccountId());
+            RBatch batch = createBatch();
+            touchedByThisThread.stream().forEach(item -> item.addChangesToBatch(batch));
+            batch.execute();
+            clearTouchedItems();
+        }
+
+        @Override
+        public void rollbackCache() {
+            clearTouchedItems();
+        }
+
+        private void clearTouchedItems() {
             Set<RedisSharedState> touchedByThisThread = touchedItems.get();
             if (touchedByThisThread.isEmpty()) {
                 return;
             }
-            ZimbraLog.cache.trace("new transaction: clearing caches of %s redis folder/tag maps for account %s", touchedItems.get().size(), mbox.getAccountId());
+            if (ZimbraLog.cache.isTraceEnabled()) {
+                List<String> touched = touchedByThisThread.stream().map(s -> s.map.getName()).sorted().collect(Collectors.toList());
+                ZimbraLog.cache.trace("RedisCacheTracker.clearTouchedItems(): clearing touched items: %s", Joiner.on(", ").join(touched));
+            }
             touchedByThisThread.stream().forEach(item -> item.clearLocalCache());
             touchedByThisThread.clear();
         }
