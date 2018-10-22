@@ -303,6 +303,8 @@ public class GqlConstants {
     public static final String LAST_ACCESSED = "lastAccessed";
     public static final String USER_AGENT = "userAgent";
     public static final String REQUEST_IP_ADDRESS = "requestIPAddress";
+    public static final String CLEAR_ALL_SOAP_SESSIONS = "clearAllSoapSessions";
+    public static final String EXCLUDE_CURRENT_SESSION = "excludeCurrentSession";
 
     // get info constants
     public static final String CLASS_GET_INFO_REQUEST = "GetInfoRequest";
@@ -408,4 +410,5 @@ public class GqlConstants {
     public static final String OLD_PASSWORD = "oldPassword";
     public static final String NEW_PASSWORD = "newPassword";
     public static final String ACCOUNT_SELECTOR = "accountSelector";
+    public static final String AUTH_TOKEN = "authToken";
 }
