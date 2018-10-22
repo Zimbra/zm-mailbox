@@ -63,6 +63,7 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.DeliveryOptions;
+import com.zimbra.cs.mailbox.EmailToSMS;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -111,6 +112,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
     static {
         addCallback(Notification.getInstance());
         addCallback(QuotaWarning.getInstance());
+        addCallback(EmailToSMS.getInstance());
     }
 
     private static LoadingCache<Integer, ReentrantLock> createMailboxDeliveryLocks() {

@@ -64801,6 +64801,294 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * This attribute is used to store the SMS API pin
+     *
+     * @return zimbraSMSApiPin, or null if unset
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5024)
+    public String getSMSApiPin() {
+        return getAttr(Provisioning.A_zimbraSMSApiPin, null, true);
+    }
+
+    /**
+     * This attribute is used to store the SMS API pin
+     *
+     * @param zimbraSMSApiPin new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5024)
+    public void setSMSApiPin(String zimbraSMSApiPin) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMSApiPin, zimbraSMSApiPin);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute is used to store the SMS API pin
+     *
+     * @param zimbraSMSApiPin new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5024)
+    public Map<String,Object> setSMSApiPin(String zimbraSMSApiPin, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMSApiPin, zimbraSMSApiPin);
+        return attrs;
+    }
+
+    /**
+     * This attribute is used to store the SMS API pin
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5024)
+    public void unsetSMSApiPin() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMSApiPin, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute is used to store the SMS API pin
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5024)
+    public Map<String,Object> unsetSMSApiPin(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMSApiPin, "");
+        return attrs;
+    }
+
+    /**
+     * This attribute is used to store the SMS API sender id
+     *
+     * @return zimbraSMSApiSenderId, or null if unset
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5025)
+    public String getSMSApiSenderId() {
+        return getAttr(Provisioning.A_zimbraSMSApiSenderId, null, true);
+    }
+
+    /**
+     * This attribute is used to store the SMS API sender id
+     *
+     * @param zimbraSMSApiSenderId new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5025)
+    public void setSMSApiSenderId(String zimbraSMSApiSenderId) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMSApiSenderId, zimbraSMSApiSenderId);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute is used to store the SMS API sender id
+     *
+     * @param zimbraSMSApiSenderId new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5025)
+    public Map<String,Object> setSMSApiSenderId(String zimbraSMSApiSenderId, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMSApiSenderId, zimbraSMSApiSenderId);
+        return attrs;
+    }
+
+    /**
+     * This attribute is used to store the SMS API sender id
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5025)
+    public void unsetSMSApiSenderId() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMSApiSenderId, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute is used to store the SMS API sender id
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5025)
+    public Map<String,Object> unsetSMSApiSenderId(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMSApiSenderId, "");
+        return attrs;
+    }
+
+    /**
+     * This attribute is used to store the SMS API url
+     *
+     * @return zimbraSMSApiUrl, or null if unset
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5022)
+    public String getSMSApiUrl() {
+        return getAttr(Provisioning.A_zimbraSMSApiUrl, null, true);
+    }
+
+    /**
+     * This attribute is used to store the SMS API url
+     *
+     * @param zimbraSMSApiUrl new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5022)
+    public void setSMSApiUrl(String zimbraSMSApiUrl) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMSApiUrl, zimbraSMSApiUrl);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute is used to store the SMS API url
+     *
+     * @param zimbraSMSApiUrl new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5022)
+    public Map<String,Object> setSMSApiUrl(String zimbraSMSApiUrl, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMSApiUrl, zimbraSMSApiUrl);
+        return attrs;
+    }
+
+    /**
+     * This attribute is used to store the SMS API url
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5022)
+    public void unsetSMSApiUrl() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMSApiUrl, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute is used to store the SMS API url
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5022)
+    public Map<String,Object> unsetSMSApiUrl(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMSApiUrl, "");
+        return attrs;
+    }
+
+    /**
+     * This attribute is used to store the SMS API username
+     *
+     * @return zimbraSMSApiUsername, or null if unset
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5023)
+    public String getSMSApiUsername() {
+        return getAttr(Provisioning.A_zimbraSMSApiUsername, null, true);
+    }
+
+    /**
+     * This attribute is used to store the SMS API username
+     *
+     * @param zimbraSMSApiUsername new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5023)
+    public void setSMSApiUsername(String zimbraSMSApiUsername) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMSApiUsername, zimbraSMSApiUsername);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute is used to store the SMS API username
+     *
+     * @param zimbraSMSApiUsername new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5023)
+    public Map<String,Object> setSMSApiUsername(String zimbraSMSApiUsername, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMSApiUsername, zimbraSMSApiUsername);
+        return attrs;
+    }
+
+    /**
+     * This attribute is used to store the SMS API username
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5023)
+    public void unsetSMSApiUsername() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMSApiUsername, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute is used to store the SMS API username
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5023)
+    public Map<String,Object> unsetSMSApiUsername(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMSApiUsername, "");
+        return attrs;
+    }
+
+    /**
      * Specifies the JedisPool size used by SSDBEphemeralStore. Higher pool
      * sizes allow for more simultaneous connections to SSDB. A value of 0
      * will cause the pool size to be unlimited.
