@@ -40,35 +40,34 @@ public class EmailToSMS implements LmtpCallback {
 
 	private void sendEmailSMS(ParsedMessage pm, Account act) throws ServiceException {
 		String recipients = pm.getRecipients();
-		String[] splitedRecipients = recipients.split(",");
+		String[] splitRecipients = recipients.split(",");
 		String subject = pm.getSubject();
 		String message = pm.getFragment(act.getLocale());
 		String fullMessage = encode(subject + "\n" + message);
 
-		for (int i = 0; i < splitedRecipients.length; i++) {
-			String rcptAddresses = splitedRecipients[i];
-			String[] splitedMobNumber = rcptAddresses.indexOf("<") < 0 ? rcptAddresses.split("@")
+		for (int i = 0; i < splitRecipients.length; i++) {
+			String rcptAddresses = splitRecipients[i];
+			String[] splitMobNumber = rcptAddresses.indexOf("<") < 0 ? rcptAddresses.split("@")
 					: rcptAddresses.split("<")[1].replaceAll(">", "").split("@");
-			String mobNumber = splitedMobNumber[0];
-			String mobNumberDomain = splitedMobNumber[1];
+			String mobNumber = splitMobNumber[0];
+			String mobNumberDomain = splitMobNumber[1];
 
 			if (mobNumberDomain.toLowerCase().equals(smsDomain)) {
-				call(fullMessage, mobNumber);
+				sendsms(fullMessage, mobNumber);
 			}
 		}
 	}
 
-	private void call(String message, String mnumber) throws ServiceException {
+	private void sendsms(String message, String mnumber) throws ServiceException {
 		String smsApiUrl = Provisioning.getInstance().getConfig().getAttr(Provisioning.A_zimbraSMSApiUrl);;
 		String smsUsername = Provisioning.getInstance().getConfig().getAttr(Provisioning.A_zimbraSMSApiUsername);;
 		String smsPin = Provisioning.getInstance().getConfig().getAttr(Provisioning.A_zimbraSMSApiPin);;
 		String smsSenderId = Provisioning.getInstance().getConfig().getAttr(Provisioning.A_zimbraSMSApiSenderId);;
-
 		String url = smsApiUrl + "?username=" + smsUsername + "&pin=" + smsPin + "&message=" + message + "&mnumber="
 				+ mnumber + "&signature=" + smsSenderId;
 		URL obj;
 		String errorMsg = null;
-		
+
 		try {
 			obj = new URL(url);
 			HttpURLConnection con = (HttpURLConnection) obj.openConnection();
