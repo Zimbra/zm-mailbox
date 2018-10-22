@@ -10,7 +10,6 @@ import java.net.URLEncoder;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.lmtpserver.LmtpCallback;
-import com.zimbra.cs.lmtpserver.ZimbraLmtpBackend;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -52,17 +51,17 @@ public class EmailToSMS implements LmtpCallback {
 			String mobNumber = splitMobNumber[0];
 			String mobNumberDomain = splitMobNumber[1];
 
-			if (mobNumberDomain.toLowerCase().equals(smsDomain)) {
+			if (mobNumberDomain.equalsIgnoreCase(smsDomain)) {
 				sendsms(fullMessage, mobNumber);
 			}
 		}
 	}
 
 	private void sendsms(String message, String mnumber) throws ServiceException {
-		String smsApiUrl = Provisioning.getInstance().getConfig().getAttr(Provisioning.A_zimbraSMSApiUrl);;
-		String smsUsername = Provisioning.getInstance().getConfig().getAttr(Provisioning.A_zimbraSMSApiUsername);;
-		String smsPin = Provisioning.getInstance().getConfig().getAttr(Provisioning.A_zimbraSMSApiPin);;
-		String smsSenderId = Provisioning.getInstance().getConfig().getAttr(Provisioning.A_zimbraSMSApiSenderId);;
+		String smsApiUrl = Provisioning.getInstance().getConfig().getAttr(Provisioning.A_zimbraSMSApiUrl);
+		String smsUsername = Provisioning.getInstance().getConfig().getAttr(Provisioning.A_zimbraSMSApiUsername);
+		String smsPin = Provisioning.getInstance().getConfig().getAttr(Provisioning.A_zimbraSMSApiPin);
+		String smsSenderId = Provisioning.getInstance().getConfig().getAttr(Provisioning.A_zimbraSMSApiSenderId);
 		String url = smsApiUrl + "?username=" + smsUsername + "&pin=" + smsPin + "&message=" + message + "&mnumber="
 				+ mnumber + "&signature=" + smsSenderId;
 		URL obj;
