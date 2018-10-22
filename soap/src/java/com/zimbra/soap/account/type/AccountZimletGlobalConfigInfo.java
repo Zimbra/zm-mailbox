@@ -33,6 +33,7 @@ import com.zimbra.common.soap.ZimletConstants;
 import com.zimbra.soap.base.ZimletGlobalConfigInfo;
 import com.zimbra.soap.base.ZimletProperty;
 
+import io.leangen.graphql.annotations.GraphQLIgnore;
 import io.leangen.graphql.annotations.GraphQLQuery;
 import io.leangen.graphql.annotations.types.GraphQLType;
 
@@ -63,7 +64,7 @@ implements ZimletGlobalConfigInfo {
         this.properties.add(property);
     }
 
-    @GraphQLQuery(name=GqlConstants.PROPERTIES, description="Global zimlet configuration property")
+    @GraphQLQuery(name=GqlConstants.ZIMLET_GLOBAL_CONFIG_PROPERTIES, description="Global zimlet configuration properties")
     public List<AccountZimletProperty> getProperties() {
         return Collections.unmodifiableList(properties);
     }
@@ -79,6 +80,7 @@ implements ZimletGlobalConfigInfo {
     }
 
     @Override
+    @GraphQLIgnore
     public List<ZimletProperty> getZimletProperties() {
         return AccountZimletProperty.toInterfaces(properties);
     }

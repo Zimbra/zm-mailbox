@@ -381,7 +381,8 @@ public class GqlConstants {
     public static final String ENUM_CONNECTION_TYPE = "ConnectionType";
     public static final String DATA_SOURCES = "dataSources";
     public static final String GLOBAL = "global";
-    public static final String PROPERTIES = "properties";
+    public static final String ZIMLET_GLOBAL_CONFIG_PROPERTIES = "globalConfigProperties";
+    public static final String ZIMLET_HOST_CONFIG_PROPERTIES = "hostConfigProperties";
     public static final String ZIMLET_CONTEXT = "zimletContext";
     public static final String ZIMLET_CONFIG = "zimletConfig";
     public static final String ZIMLET_HANDLER_CONFIG = "zimletHandlerConfig";
@@ -404,6 +405,15 @@ public class GqlConstants {
     public static final String LICENSE = "license";
     public static final String IS_TRACKING_IMAP = "isTrackingIMAP";
     public static final String CLASS_ATTRS_IMPL = "AttrsImpl";
+    public static final String CLASS_ZIMLET_SERVER_EXTENSION = "ZimletServerExtension";
+    public static final String HAS_KEYWORD = "hasKeyword";
+    public static final String EXTENSION_CLASS = "extensionClass";
+    public static final String REGEX = "regex";
+    public static final String CLASS_ACCOUNT_ZIMLET_INCLUDE = "AccountZimletInclude";
+    public static final String CLASS_ACCOUNT_ZIMLET_INCLUDE_CSS = "AccountZimletIncludeCSS";
+    public static final String CLASS_ACCOUNT_ZIMLET_TARGET = "AccountZimletTarget";
+    public static final String CLASS_ADMIN_ZIMLET_PROPERTY = "AdminZimletProperty";
+    public static final String ENUM_LICENSE_STATUS = "LicenseStatus";
 
     // Change password related constants
     public static final String CLASS_CHANGE_PASSWORD_RESPONSE = "ChangePasswordResponse";
