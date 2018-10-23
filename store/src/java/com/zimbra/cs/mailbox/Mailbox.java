@@ -9784,7 +9784,6 @@ public class Mailbox implements MailboxStore {
             boolean write = (definitelyWrite || requiresWriteLock());
             this.lock = write ? lockFactory.writeLock() : lockFactory.readLock();
             assert recorder == null || write;
-            this.lock.lock();
             try {
                 this.lock.lock();
                 if (!write && requiresWriteLock()) {
