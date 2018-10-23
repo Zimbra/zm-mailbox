@@ -23,7 +23,6 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlValue;
 
 import com.google.common.base.MoreObjects;
-import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.type.ZmBoolean;
 
