@@ -53,7 +53,7 @@ public class OpValue {
      * @zm-api-field-description Email address
      */
     @XmlValue
-    @GraphQLInputField(name=GqlConstants.VALUE, description="Email address")
+    @GraphQLInputField(name=GqlConstants.VALUE, description="Email or domain address")
     private final String value;
 
     /**
