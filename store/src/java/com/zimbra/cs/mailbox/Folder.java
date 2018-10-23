@@ -865,7 +865,7 @@ public class Folder extends MailItem implements FolderStore, SharedState {
             while (folder.getId() != Mailbox.ID_FOLDER_ROOT) {
                 Folder parent = folder.getParentFolder();
                 if (folder.getId() == child.getId()) {
-                    ZimbraLog.mailop.warn("Attempting to place folder='%s' underneath itself %s", this);
+                    ZimbraLog.mailop.warn("Attempting to place folder='%s' underneath itself", this);
                     return false;
                 }
                 if (parent == null) {
