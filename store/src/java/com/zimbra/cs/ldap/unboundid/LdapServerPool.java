@@ -138,7 +138,7 @@ public class LdapServerPool {
                 Long timeout = LC.ldap_cache_dns_maxage.longValue();
                 return new RoundRobinDNSServerSet(url.getHost(), url.getPort(),
                         RoundRobinDNSServerSet.AddressSelectionMode.ROUND_ROBIN,
-                        timeout, "dns:", socketFactory, connOpts);
+                        timeout, null, socketFactory, connOpts);
             }
         } else {
             Set<Pair<String, Integer>> hostsAndPorts = new LinkedHashSet<>();
