@@ -440,18 +440,20 @@ public class Mailbox implements MailboxStore {
             }
         }
 
-        void startChange(String caller, OperationContext ctxt, RedoableOp op, boolean write) {
+        boolean startChange(String caller, OperationContext ctxt, RedoableOp op, boolean write) {
             active = true;
             if (depth++ == 0) {
                 octxt = ctxt;
                 recorder = op;
                 this.writeChange = write;
                 ZimbraLog.mailbox.debug("startChange beginning operation (%s) %s", caller, this);
+                return true;
             } else {
                 assert (write == false || writeChange); // if this call is a
                                                         // write, the first one
                                                         // must be a write
                 ZimbraLog.mailbox.debug("startChange increased stack depth (%s) %s", caller, this);
+                return false;
             }
         }
 
@@ -8951,6 +8953,7 @@ public class Mailbox implements MailboxStore {
                     ZimbraLog.mailbox.warn("error getting account for the mailbox", e);
                 }
             }
+            Mailbox.this.transactionListeners.forEach(listener -> listener.commitCache());
         } catch (RuntimeException e) {
             ZimbraLog.mailbox.error("ignoring error during cache commit", e);
         } finally {
@@ -9045,6 +9048,7 @@ public class Mailbox implements MailboxStore {
                     mConvHashes.remove(obj);
                 }
             }
+            Mailbox.this.transactionListeners.forEach(listener -> listener.rollbackCache());
             return deletes;
         } catch (RuntimeException e) {
             ZimbraLog.mailbox.error("ignoring error during cache rollback", e);
@@ -9780,16 +9784,16 @@ public class Mailbox implements MailboxStore {
             boolean write = (definitelyWrite || requiresWriteLock());
             this.lock = write ? lockFactory.writeLock() : lockFactory.readLock();
             assert recorder == null || write;
-            this.lock.lock();
             try {
-                Mailbox.this.transactionListeners.forEach(listener -> listener.transactionBegin());
+                this.lock.lock();
                 if (!write && requiresWriteLock()) {
                     //another call must have purged the cache.
                     //the lock.lock() call should have resulted in write lock already
                     assert(lock.isWriteLockedByCurrentThread());
                     write = true;
                 }
-                currentChange().startChange(caller, octxt, recorder, write);
+                boolean newChange = currentChange().startChange(caller, octxt, recorder, write);
+                Mailbox.this.transactionListeners.forEach(listener -> listener.transactionBegin(newChange));
                 startedChange = true;
 
                 // if a Connection object was provided, use it
@@ -10001,7 +10005,7 @@ public class Mailbox implements MailboxStore {
                 // We are finally done with database and redo commits. Cache update comes last.
                 changeNotification = commitCache(currentChange(), lock);
             } finally {
-                Mailbox.this.transactionListeners.forEach(listener -> listener.transactionEnd(success));
+                Mailbox.this.transactionListeners.forEach(listener -> listener.transactionEnd(success, currentChange().depth == 0));
                 lock.close();
                 // notify listeners outside lock as can take significant time
                 if (changeNotification != null) {
