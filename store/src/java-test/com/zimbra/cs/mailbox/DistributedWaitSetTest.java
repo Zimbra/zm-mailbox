@@ -1,6 +1,7 @@
 package com.zimbra.cs.mailbox;
 
 import java.util.ArrayList;
+import org.junit.Ignore;
 import java.util.Collection;
 
 import org.junit.Test;
@@ -22,7 +23,7 @@ import com.zimbra.soap.type.IdAndType;
 
 import junit.framework.Assert;
 
-public class DistributedWaitSetTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class DistributedWaitSetTest {
 
 	@Test
 	public void publishTest() throws Exception {

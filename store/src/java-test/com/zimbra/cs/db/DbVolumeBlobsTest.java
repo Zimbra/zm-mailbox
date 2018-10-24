@@ -17,6 +17,7 @@
 package com.zimbra.cs.db;
 
 import java.io.ByteArrayInputStream;
+import org.junit.Ignore;
 import java.io.File;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -57,7 +58,7 @@ import com.zimbra.cs.volume.VolumeManager;
 
 import junit.framework.Assert;
 
-public class DbVolumeBlobsTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class DbVolumeBlobsTest {
 
     private DbConnection conn;
     private StoreManager originalStoreManager;

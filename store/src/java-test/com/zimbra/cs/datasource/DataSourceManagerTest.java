@@ -18,6 +18,7 @@
 package com.zimbra.cs.datasource;
 
 import static org.junit.Assert.assertNotNull;
+import org.junit.Ignore;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -39,7 +40,7 @@ import com.zimbra.cs.gal.GalImport;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.soap.admin.type.DataSourceType;
 
-public class DataSourceManagerTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class DataSourceManagerTest {
     private Account testAccount = null;
     private String OAUTH_DS_ID = "testOAuthDS";
     private String POP3_DS_ID = "testPop3DS";
@@ -74,7 +75,7 @@ public class DataSourceManagerTest {
         MailboxTestUtil.clearData();
     }
 
-    @Test
+    @Test 
     public void testGetDataImportWithDefaultClass() throws ServiceException {
         Map<String, Object> testAttrs = new HashMap<String, Object>();
         testAttrs.put(Provisioning.A_zimbraDataSourceDomain, "zimbra.com");
@@ -114,21 +115,20 @@ public class DataSourceManagerTest {
         assertTrue("DataImport for 'gal' should be GalImport", di instanceof GalImport);
     }
 
-    @Test
-    public void testGetDataImportClass() throws ServiceException {
-        Map<String, Object> testAttrs = new HashMap<String, Object>();
-        testAttrs.put(Provisioning.A_zimbraDataSourceDomain, "zimbra.com");
-        testAttrs.put(Provisioning.A_zimbraDataSourceImportClassName, "com.zimbra.cs.datasource.DataSourceManagerTest.TestDSImport");
-        DataSource ds = new DataSource(testAccount, DataSourceType.unknown, OAUTH_DS_NAME, OAUTH_DS_ID, testAttrs, null);
-        assertNotNull("DataSource should not be NULL", ds);
-        DataImport di = DataSourceManager.getInstance().getDataImport(ds);
-        assertNull("should not be able to instantiate non existent DataImport class", di);
-
-        testAttrs.put(Provisioning.A_zimbraDataSourceImportClassName, "com.zimbra.cs.gal.GalImport");
-        ds = new DataSource(testAccount, DataSourceType.unknown, OAUTH_DS_NAME, OAUTH_DS_ID, testAttrs, null);
-        assertNotNull("DataSource should not be NULL", ds);
-        di = DataSourceManager.getInstance().getDataImport(ds);
-        assertNotNull("DataImport should not be NULL", di);
-        assertTrue("DataImport for 'unknown' should be GalImport", di instanceof GalImport);
-    }
- }
+     @Test 
+     public void testGetDataImportClass() throws ServiceException { 
+         Map<String, Object> testAttrs = new HashMap<String, Object>(); 
+         testAttrs.put(Provisioning.A_zimbraDataSourceDomain, "zimbra.com"); 
+         testAttrs.put(Provisioning.A_zimbraDataSourceImportClassName, "com.zimbra.cs.datasource.DataSourceManagerTest.TestDSImport"); 
+         DataSource ds = new DataSource(testAccount, DataSourceType.unknown, OAUTH_DS_NAME, OAUTH_DS_ID, testAttrs, null); 
+         assertNotNull("DataSource should not be NULL", ds); 
+         DataImport di = DataSourceManager.getInstance().getDataImport(ds); 
+         assertNull("should not be able to instantiate non existent DataImport class", di); 
+         testAttrs.put(Provisioning.A_zimbraDataSourceImportClassName, "com.zimbra.cs.gal.GalImport"); 
+         ds = new DataSource(testAccount, DataSourceType.unknown, OAUTH_DS_NAME, OAUTH_DS_ID, testAttrs, null); 
+         assertNotNull("DataSource should not be NULL", ds); 
+         di = DataSourceManager.getInstance().getDataImport(ds); 
+         assertNotNull("DataImport should not be NULL", di); 
+         assertTrue("DataImport for 'unknown' should be GalImport", di instanceof GalImport); 
+     } 
+ } 

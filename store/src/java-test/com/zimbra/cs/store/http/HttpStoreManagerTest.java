@@ -44,7 +44,7 @@ import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.store.external.AbstractExternalStoreManagerTest;
 
-public class HttpStoreManagerTest extends AbstractExternalStoreManagerTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class HttpStoreManagerTest extends AbstractExternalStoreManagerTest {
 
     public static class MockHttpStoreManager extends HttpStoreManager {
         @Override

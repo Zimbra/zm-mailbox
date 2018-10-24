@@ -17,11 +17,12 @@
 package com.zimbra.cs.store.external;
 
 import org.junit.After;
+import org.junit.Ignore;
 
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.store.file.BlobConsistencyChecker;
 
-public class ValidationFailingBlobConsistencyCheckTest extends ExternalBlobConsistencyCheckTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class ValidationFailingBlobConsistencyCheckTest extends ExternalBlobConsistencyCheckTest {
 
     private MockValidationFailingStore storeManager = new MockValidationFailingStore();
 

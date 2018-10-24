@@ -17,6 +17,7 @@
 package com.zimbra.cs.store.external;
 
 import java.io.File;
+import org.junit.Ignore;
 import java.io.InputStream;
 
 import org.junit.Assert;
@@ -35,7 +36,7 @@ import com.zimbra.cs.store.StagedBlob;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.qa.unittest.TestUtil;
 
-public abstract class AbstractExternalStoreManagerTest extends AbstractStoreManagerTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public abstract class AbstractExternalStoreManagerTest extends AbstractStoreManagerTest {
 
     @Test
     public void testUncachedSubstream() throws Exception {

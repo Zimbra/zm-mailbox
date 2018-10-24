@@ -17,6 +17,7 @@
 package com.zimbra.cs.mailbox;
 
 import java.io.ByteArrayInputStream;
+import org.junit.Ignore;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
@@ -33,7 +34,7 @@ import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.mime.ParsedMessageOptions;
 
-public class DumpsterTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class DumpsterTest {
 
     private Mailbox mbox;
     private Folder folder;

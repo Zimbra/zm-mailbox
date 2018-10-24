@@ -17,6 +17,7 @@
 package com.zimbra.cs.filter;
 
 import java.lang.reflect.Field;
+import org.junit.Ignore;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
@@ -52,7 +53,7 @@ import com.zimbra.cs.util.ZTestWatchman;
  * Unit test for {@link com.zimbra.cs.filter.RuleManager}
  * used with CustomActionFilter extension
  */
-public final class RuleManagerWithCustomActionFilterTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public final class RuleManagerWithCustomActionFilterTest {
 
     @Rule public TestName testName = new TestName();
     @Rule public MethodRule watchman = new ZTestWatchman();

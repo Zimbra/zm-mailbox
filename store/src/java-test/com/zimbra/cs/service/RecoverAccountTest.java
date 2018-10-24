@@ -18,6 +18,7 @@
 package com.zimbra.cs.service;
 
 import java.util.ArrayList;
+import org.junit.Ignore;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -68,7 +69,7 @@ import com.zimbra.soap.type.Channel;
 
 import junit.framework.Assert;
 
-public class RecoverAccountTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class RecoverAccountTest {
 
     public static String zimbraServerDir = "";
 

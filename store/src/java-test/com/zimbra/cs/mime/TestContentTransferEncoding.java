@@ -58,7 +58,7 @@ import com.zimbra.soap.mail.type.MimePartAttachSpec;
 import com.zimbra.soap.mail.type.MimePartInfo;
 import com.zimbra.soap.mail.type.MsgToSend;
 
-public class TestContentTransferEncoding {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class TestContentTransferEncoding {
 
     Mailbox mbox;
 

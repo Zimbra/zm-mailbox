@@ -1,6 +1,7 @@
 package com.zimbra.cs.index.history;
 
 import static org.junit.Assert.assertEquals;
+import org.junit.Ignore;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -32,7 +33,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 
-public class LuceneSearchHistoryIndexTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class LuceneSearchHistoryIndexTest {
 
     private IndexStore idxStore;
     private LuceneSearchHistoryIndex index;

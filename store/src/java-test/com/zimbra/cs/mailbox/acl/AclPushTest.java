@@ -18,6 +18,7 @@
 package com.zimbra.cs.mailbox.acl;
 
 import static org.junit.Assert.assertEquals;
+import org.junit.Ignore;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -49,7 +50,7 @@ import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.ScheduledTaskManager;
 
-public class AclPushTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class AclPushTest {
 
     private DbConnection connection;
 

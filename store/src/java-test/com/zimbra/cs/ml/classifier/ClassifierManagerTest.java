@@ -1,6 +1,7 @@
 package com.zimbra.cs.ml.classifier;
 
 import static org.junit.Assert.assertEquals;
+import org.junit.Ignore;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
@@ -53,7 +54,7 @@ import com.zimbra.cs.ml.schema.TrainingSetInfo;
 import com.zimbra.cs.ml.schema.TrainingSpec;
 import com.zimbra.qa.unittest.TestUtil;
 
-public class ClassifierManagerTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class ClassifierManagerTest {
 
     private static final String USER = "classifierManagerTest";
 

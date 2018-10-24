@@ -36,8 +36,7 @@ import com.zimbra.cs.store.external.ContentAddressableStoreManager;
 import com.zimbra.cs.store.triton.TritonBlobStoreManager.HashType;
 import com.zimbra.qa.unittest.TestUtil;
 
-@Ignore("requires Triton server")
-public class TritonBlobStoreManagerTest extends AbstractStoreManagerTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class TritonBlobStoreManagerTest extends AbstractStoreManagerTest {
     @Override
     protected StoreManager getStoreManager() {
         return new TritonBlobStoreManager("http://192.168.2.107", HashType.SHA0) {

@@ -1,6 +1,7 @@
 package com.zimbra.cs.service.admin;
 
 import java.util.ArrayList;
+import org.junit.Ignore;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -29,7 +30,7 @@ import com.zimbra.soap.admin.type.ServerSelector.ServerBy;
 
 import junit.framework.Assert;
 
-public class ContactBackupApiTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class ContactBackupApiTest {
     private static Provisioning prov = null;
     private static final String DOMAIN_NAME = "zimbra.com";
     private static final String BUG_NUMBER = "zcs3594";

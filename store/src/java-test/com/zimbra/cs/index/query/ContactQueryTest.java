@@ -44,7 +44,7 @@ import com.zimbra.cs.mime.ParsedContact;
  *
  * @author ysasaki
  */
-public final class ContactQueryTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public final class ContactQueryTest {
 
     @BeforeClass
     public static void init() throws Exception {

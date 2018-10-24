@@ -18,6 +18,7 @@
 package com.zimbra.cs.redolog.op;
 
 import static org.junit.Assert.assertEquals;
+import org.junit.Ignore;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -37,7 +38,7 @@ import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.soap.mail.type.Policy;
 import com.zimbra.soap.mail.type.RetentionPolicy;
 
-public class SetRetentionPolicyTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class SetRetentionPolicyTest {
 
     @BeforeClass
     public static void init() throws Exception {

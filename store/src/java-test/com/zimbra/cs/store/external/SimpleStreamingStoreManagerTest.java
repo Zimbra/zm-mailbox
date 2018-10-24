@@ -17,8 +17,9 @@
 package com.zimbra.cs.store.external;
 
 import com.zimbra.cs.store.StoreManager;
+import org.junit.Ignore;
 
-public class SimpleStreamingStoreManagerTest extends AbstractExternalStoreManagerTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class SimpleStreamingStoreManagerTest extends AbstractExternalStoreManagerTest {
 
     @Override
     protected StoreManager getStoreManager() {

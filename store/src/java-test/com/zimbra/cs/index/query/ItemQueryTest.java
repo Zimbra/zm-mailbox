@@ -1,6 +1,7 @@
 package com.zimbra.cs.index.query;
 
 import java.util.HashMap;
+import org.junit.Ignore;
 import java.util.List;
 
 import org.junit.After;
@@ -36,7 +37,7 @@ import com.zimbra.soap.type.SearchHit;
  * @author Greg Solovyev
  *
  */
-public class ItemQueryTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class ItemQueryTest {
     @Rule public TestName testName = new TestName();
     @Rule public MethodRule watchman = new ZTestWatchman();
 

@@ -1,6 +1,7 @@
 package com.zimbra.cs.event.logger;
 
 import static org.junit.Assert.assertEquals;
+import org.junit.Ignore;
 import static org.junit.Assert.assertFalse;
 
 import java.util.ArrayList;
@@ -42,7 +43,7 @@ import com.zimbra.cs.mailbox.Message.EventFlag;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedMessage;
 
-public class EventLoggerTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class EventLoggerTest {
     private static String USER_EMAIL = "eventloggertest@zimbra.com";
     private static String SENDER_EMAIL = "test@zimbra.com";
     private static String DATASOURCE_ID = "testDataSourceID";

@@ -52,7 +52,7 @@ import com.zimbra.cs.service.util.ItemId;
 /**
  * Unit test for {@link EscapeSequencesTest}.
  */
-public final class EscapeSequencesTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public final class EscapeSequencesTest {
 
     @BeforeClass
     public static void init() throws Exception {

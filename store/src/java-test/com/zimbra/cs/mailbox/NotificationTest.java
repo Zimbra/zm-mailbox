@@ -17,6 +17,7 @@
 package com.zimbra.cs.mailbox;
 
 import java.util.Map;
+import org.junit.Ignore;
 import java.util.UUID;
 
 import org.junit.After;
@@ -36,7 +37,7 @@ import com.zimbra.cs.util.ZTestWatchman;
 
 import junit.framework.Assert;
 
-public class NotificationTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class NotificationTest {
     
     @Rule public TestName testName = new TestName();
     @Rule public MethodRule watchman = new ZTestWatchman();
