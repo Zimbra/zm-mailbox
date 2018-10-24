@@ -3,7 +3,6 @@ package com.zimbra.cs.mailbox;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
 
 import org.redisson.api.RTopic;
 import org.redisson.api.RedissonClient;
@@ -154,21 +153,15 @@ public class RedisPubSub extends NotificationPubSub {
             }
             ZimbraLog.mailbox.debug("handling notification.  accountId=%s, changeId=%d, channel=%s",
                     notificationAcctId, msg.changeId, channel);
-            new Thread(new Runnable() {
-
-                @Override
-                public void run() {
-                    PendingLocalModifications mods;
-                    try {
-                        mods = PendingLocalModifications.fromSnapshot(subscriber.getMailbox(), msg.modification);
-                        subscriber.notifyListeners(mods, msg.changeId, msg.source, msg.sourceMailboxHash, true);
-                    } catch (ServiceException e) {
-                        ZimbraLog.mailbox.error(
+            PendingLocalModifications mods;
+            try {
+                mods = PendingLocalModifications.fromSnapshot(subscriber.getMailbox(), msg.modification);
+                subscriber.notifyListeners(mods, msg.changeId, msg.source, msg.sourceMailboxHash, true);
+            } catch (ServiceException e) {
+                ZimbraLog.mailbox.error(
                                 "unable to deserialize notifications for accountId=%s, changeId=%s, channel=%s",
-                                notificationAcctId, msg.changeId, channel, e);
-                    }
-                }
-            }, "processNotification-" + Thread.currentThread().getId()).start();
+                        notificationAcctId, msg.changeId, channel, e);
+            }
         }
 
         @Override
