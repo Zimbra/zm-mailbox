@@ -17,6 +17,7 @@
 package com.zimbra.cs.filter;
 
 import java.util.HashMap;
+import org.junit.Ignore;
 import java.util.List;
 
 import org.junit.Assert;
@@ -43,7 +44,7 @@ import com.zimbra.cs.service.util.ItemId;
  *
  * @author ysasaki
  */
-public final class FacebookTestTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public final class FacebookTestTest {
 
     @BeforeClass
     public static void init() throws Exception {

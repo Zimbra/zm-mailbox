@@ -17,6 +17,7 @@
 package com.zimbra.cs.mailbox;
 
 import static org.junit.Assert.assertEquals;
+import org.junit.Ignore;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -60,7 +61,7 @@ import com.zimbra.cs.store.StoreManager;
  *
  * @author ysasaki
  */
-public final class MailboxTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public final class MailboxTest {
 
     @BeforeClass
     public static void init() throws Exception {

@@ -1,6 +1,7 @@
 package com.zimbra.cs.index.queue;
 
 import static org.junit.Assert.assertEquals;
+import org.junit.Ignore;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
@@ -27,7 +28,7 @@ import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.qa.unittest.TestUtil;
 
-public class IndexingServiceTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class IndexingServiceTest {
 
     @BeforeClass
     public static void init() throws Exception {

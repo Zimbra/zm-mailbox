@@ -17,6 +17,7 @@
 package com.zimbra.cs.service.mail;
 
 import java.io.BufferedWriter;
+import org.junit.Ignore;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -78,7 +79,7 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.util.JMSession;
 
-public class SendMsgTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class SendMsgTest {
 
     @BeforeClass
     public static void init() throws Exception {

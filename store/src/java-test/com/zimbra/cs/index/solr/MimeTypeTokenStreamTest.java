@@ -10,7 +10,7 @@ import org.junit.Test;
 
 import com.google.common.base.Strings;
 
-public class MimeTypeTokenStreamTest extends SolrPluginTestBase {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class MimeTypeTokenStreamTest extends SolrPluginTestBase {
 
     @Test
     public void testTokenize() throws Exception {

@@ -18,6 +18,7 @@
 package com.zimbra.cs.service;
 
 import java.util.ArrayList;
+import org.junit.Ignore;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -59,7 +60,7 @@ import com.zimbra.soap.account.message.ResetPasswordRequest;
 
 import junit.framework.Assert;
 
-public class ResetPasswordTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class ResetPasswordTest {
 
     final static String USER_NAME = "test4802@zimbra.com";
     final static String PASSWORD = "old_secret";

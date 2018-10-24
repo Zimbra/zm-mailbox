@@ -17,6 +17,7 @@
 package com.zimbra.cs.service.admin;
 
 import java.util.Map;
+import org.junit.Ignore;
 import java.util.UUID;
 
 import org.junit.AfterClass;
@@ -44,7 +45,7 @@ import com.zimbra.soap.type.AccountSelector;
 
 import junit.framework.Assert;
 
-public class ChangePrimaryEmailTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class ChangePrimaryEmailTest {
     public static String zimbraServerDir = "";
 
     @Rule

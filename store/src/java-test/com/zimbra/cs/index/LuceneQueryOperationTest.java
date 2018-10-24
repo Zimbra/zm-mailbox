@@ -17,6 +17,7 @@
 package com.zimbra.cs.index;
 
 import java.util.Collections;
+import org.junit.Ignore;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
@@ -44,7 +45,7 @@ import com.zimbra.cs.mime.ParsedMessage;
  *
  * @author ysasaki
  */
-public final class LuceneQueryOperationTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public final class LuceneQueryOperationTest {
 
     @BeforeClass
     public static void init() throws Exception {

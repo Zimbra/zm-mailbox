@@ -1,6 +1,7 @@
 package com.zimbra.cs.mailbox;
 
 import static org.junit.Assert.*;
+import org.junit.Ignore;
 
 import java.util.HashMap;
 import java.util.List;
@@ -19,7 +20,7 @@ import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.qa.unittest.TestUtil;
 
-public class SmartFolderTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class SmartFolderTest {
 
     private static final String USER = "SmartFolderTest";
     private Mailbox mbox;

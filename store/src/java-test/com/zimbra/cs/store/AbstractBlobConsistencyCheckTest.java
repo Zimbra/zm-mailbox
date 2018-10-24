@@ -17,6 +17,7 @@
 package com.zimbra.cs.store;
 
 import java.io.IOException;
+import org.junit.Ignore;
 import java.util.Collection;
 import java.util.HashMap;
 
@@ -42,7 +43,7 @@ import com.zimbra.cs.store.file.BlobConsistencyChecker;
 import com.zimbra.cs.store.file.BlobConsistencyChecker.BlobInfo;
 import com.zimbra.cs.store.file.BlobConsistencyChecker.Results;
 
-public abstract class AbstractBlobConsistencyCheckTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public abstract class AbstractBlobConsistencyCheckTest {
 
     static StoreManager originalStoreManager;
     protected final Log log = ZimbraLog.store;

@@ -16,11 +16,13 @@
  */
 package com.zimbra.cs.index;
 
+import org.junit.Ignore;
+
 /**
  * Unit test for {@link LuceneIndex}.
  */
 
-public final class LuceneIndexTest extends AbstractIndexStoreTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public final class LuceneIndexTest extends AbstractIndexStoreTest {
 
     @Override
     protected String getIndexStoreFactory() {

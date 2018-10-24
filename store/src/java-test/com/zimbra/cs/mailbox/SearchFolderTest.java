@@ -17,6 +17,7 @@
 package com.zimbra.cs.mailbox;
 
 import java.util.HashMap;
+import org.junit.Ignore;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -32,7 +33,7 @@ import com.zimbra.cs.account.Provisioning;
  *
  * @author ysasaki
  */
-public final class SearchFolderTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public final class SearchFolderTest {
 
     @BeforeClass
     public static void init() throws Exception {

@@ -1,6 +1,7 @@
 package com.zimbra.cs.event.logger;
 
 import static org.junit.Assert.*;
+import org.junit.Ignore;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -24,7 +25,7 @@ import com.zimbra.cs.event.SolrEventDocument;
 import com.zimbra.cs.event.logger.BatchingEventLogger.BatchedEvents;
 import com.zimbra.cs.event.logger.BatchingEventLogger.BatchedEventCallback;;
 
-public class SolrEventLoggerTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class SolrEventLoggerTest {
 
     private static final String ACCOUNT_ID_1 = "test_id_1";
     private static final String ACCOUNT_ID_2 = "test_id_2";

@@ -17,6 +17,7 @@
 package com.zimbra.cs.mailbox;
 
 import java.io.File;
+import org.junit.Ignore;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -75,7 +76,7 @@ import com.zimbra.cs.util.ZTestWatchman;
  *
  * @author ysasaki
  */
-public final class ContactTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public final class ContactTest {
 
     @Rule public TestName testName = new TestName();
     @Rule public MethodRule watchman = new ZTestWatchman();

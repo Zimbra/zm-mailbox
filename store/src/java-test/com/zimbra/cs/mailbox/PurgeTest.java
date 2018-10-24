@@ -18,6 +18,7 @@
 package com.zimbra.cs.mailbox;
 
 import static org.junit.Assert.assertEquals;
+import org.junit.Ignore;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -45,7 +46,7 @@ import com.zimbra.qa.unittest.TestUtil;
 import com.zimbra.soap.mail.type.Policy;
 import com.zimbra.soap.mail.type.RetentionPolicy;
 
-public class PurgeTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class PurgeTest {
 
     @BeforeClass
     public static void init() throws Exception {

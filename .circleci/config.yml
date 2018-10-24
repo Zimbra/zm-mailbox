@@ -132,35 +132,65 @@ jobs:
       - *default_attach_workspace
       - run:
           name: Running unit tests for 'zm-mailbox/native'
-          command: ant -f native/build.xml test
+          command: |
+            set -e
+            ant -Dhalt-on-failure=true -f native/build.xml test
+      - store_test_results:
+          path: native/build/test/report
+      - store_artifacts:
+          path: native/build/test/report
   test_common_submodule:
     <<: *default_environment_settings
     steps:
       - *default_attach_workspace
       - run:
           name: Running unit tests for 'zm-mailbox/common'
-          command: ant -f common/build.xml test
+          command: |
+            set -e
+            ant -Dhalt-on-failure=true -f common/build.xml test
+      - store_test_results:
+          path: common/build/test/report
+      - store_artifacts:
+          path: common/build/test/report
   test_soap_submodule:
     <<: *default_environment_settings
     steps:
       - *default_attach_workspace
       - run:
           name: Running unit tests for 'zm-mailbox/soap'
-          command: ant -f soap/build.xml test
+          command: |
+            set -e
+            ant -Dhalt-on-failure=true -f soap/build.xml test
+      - store_test_results:
+          path: soap/build/test/report
+      - store_artifacts:
+          path: soap/build/test/report
   test_client_submodule:
     <<: *default_environment_settings
     steps:
       - *default_attach_workspace
       - run:
           name: Running unit tests for 'zm-mailbox/client'
-          command: ant -f client/build.xml test
+          command: |
+            set -e
+            ant -Dhalt-on-failure=true -f client/build.xml test
+      - store_test_results:
+          path: client/build/test/report
+      - store_artifacts:
+          path: client/build/test/report
   test_store_submodule:
     <<: *default_environment_settings
     steps:
       - *default_attach_workspace
       - run:
           name: Running unit tests for 'zm-mailbox/store'
-          command: ant -f store/build.xml test
+          command: |
+            set -e 
+            ant -Dhalt-on-failure=true -f store/build.xml test
+      - store_test_results:
+          path: store/build/test/report
+      - store_artifacts:
+          path: store/build/test/report
   checkout_and_build_installer:
     <<: *default_environment_settings
     steps:
@@ -507,77 +537,77 @@ workflows:
           filters:
             branches:
               only:
-                - develop
+                 - develop 
       - build_native_submodule:
           requires:
             - checkout_and_verify_params
           filters:
             branches:
               only:
-                - develop
+                 - develop 
       - build_common_submodule:
           requires:
             - build_native_submodule
           filters:
             branches:
               only:
-                - develop
+                 - develop 
       - build_soap_submodule:
           requires:
             - build_common_submodule
           filters:
             branches:
               only:
-                - develop
+                 - develop 
       - build_client_submodule:
           requires:
             - build_soap_submodule
           filters:
             branches:
               only:
-                - develop
+                 - develop 
       - build_store_submodule:
           requires:
             - build_client_submodule
           filters:
             branches:
               only:
-                - develop
+                 - develop 
       - test_native_submodule:
           requires:
             - build_native_submodule
           filters:
             branches:
               only:
-                - develop
+                 - develop 
       - test_common_submodule:
           requires:
             - build_common_submodule
           filters:
             branches:
               only:
-                - develop
+                 - develop 
       - test_soap_submodule:
           requires:
             - build_soap_submodule
           filters:
             branches:
               only:
-                - develop
+                 - develop 
       - test_client_submodule:
           requires:
             - build_client_submodule
           filters:
             branches:
               only:
-                - develop
+                 - develop 
       - test_store_submodule:
           requires:
             - build_store_submodule
           filters:
             branches:
               only:
-                - develop
+                 - develop 
       - checkout_and_build_installer:
           requires:
             - test_native_submodule
@@ -588,77 +618,77 @@ workflows:
           filters:
             branches:
               only:
-                - develop
+                 - develop 
       - build_and_deploy_zmcbase_container_images:
           requires:
             - checkout_and_build_installer
           filters:
             branches:
               only:
-                - develop
+                 - develop 
       - build_and_deploy_zmcldap_container_images:
           requires:
             - checkout_and_build_installer
           filters:
             branches:
               only:
-                - develop  
+                 - develop 
       - build_and_deploy_zmcmta_container_images:
           requires:
             - checkout_and_build_installer
           filters:
             branches:
               only:
-                - develop
+                 - develop 
       - build_and_deploy_zmcmailbox_container_images:
           requires:
             - checkout_and_build_installer
           filters:
             branches:
               only:
-                - develop
+                 - develop 
       - build_and_deploy_zmcmysqlproxy_container_images:
           requires:
             - checkout_and_build_installer
           filters:
             branches:
               only:
-                - develop
+                 - develop 
       - build_and_deploy_zmcmysqllocal_container_images:
           requires:
             - checkout_and_build_installer
           filters:
             branches:
               only:
-                - develop
+                 - develop 
       - build_and_deploy_zmcproxy_container_images:
           requires:
             - checkout_and_build_installer
           filters:
             branches:
               only:
-                - develop
+                 - develop 
       - build_and_deploy_zmczookeeper_container_images:
           requires:
             - checkout_and_build_installer
           filters:
             branches:
               only:
-                - develop
+                 - develop 
       - build_and_deploy_zmcsolr_container_images:
           requires:
             - checkout_and_build_installer
           filters:
             branches:
               only:
-                - develop
+                 - develop 
       - build_and_deploy_zmcredismaster_container_images:
           requires:
             - checkout_and_build_installer
           filters:
             branches:
               only:
-                - develop
+                 - develop 
 ############################################################################
 
 notify:

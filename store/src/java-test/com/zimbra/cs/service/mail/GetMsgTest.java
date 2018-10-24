@@ -18,6 +18,7 @@
 package com.zimbra.cs.service.mail;
 
 import static org.junit.Assert.assertTrue;
+import org.junit.Ignore;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -61,7 +62,7 @@ import com.zimbra.soap.mail.type.FolderActionSelector;
 import com.zimbra.soap.mail.type.MsgSpec;
 import com.zimbra.soap.mail.type.NewMountpointSpec;
 
-public class GetMsgTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class GetMsgTest {
     private static final String desc = "The following is a new meeting request";
     /**
      * @throws java.lang.Exception

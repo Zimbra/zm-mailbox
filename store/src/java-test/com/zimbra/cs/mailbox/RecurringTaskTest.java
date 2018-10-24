@@ -1,6 +1,7 @@
 package com.zimbra.cs.mailbox;
 
 import static org.junit.Assert.assertEquals;
+import org.junit.Ignore;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -23,7 +24,7 @@ import com.zimbra.cs.mailbox.calendar.IcsImportParseHandler.ImportInviteVisitor;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.Recurrence;
 
-public class RecurringTaskTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class RecurringTaskTest {
 
     @BeforeClass
     public static void init() throws Exception {

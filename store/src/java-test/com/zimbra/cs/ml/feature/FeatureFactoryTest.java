@@ -1,6 +1,7 @@
 package com.zimbra.cs.ml.feature;
 
 import static org.junit.Assert.assertEquals;
+import org.junit.Ignore;
 import static org.junit.Assert.assertFalse;
 
 import java.util.ArrayList;
@@ -42,7 +43,7 @@ import com.zimbra.cs.ml.feature.NumRecipientsFeatureFactory.RecipientCountType;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.qa.unittest.TestUtil;
 
-public class FeatureFactoryTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class FeatureFactoryTest {
 
     private final String USER = "testFeatureFactories@zimbra.com";
     private Mailbox mbox;

@@ -18,6 +18,7 @@
 package com.zimbra.cs.mailbox;
 
 import java.sql.PreparedStatement;
+import org.junit.Ignore;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -40,7 +41,7 @@ import com.zimbra.cs.redolog.op.RedoableOp;
 
 import junit.framework.Assert;
 
-public class DesktopMailboxTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class DesktopMailboxTest {
 
     @BeforeClass
     public static void init() throws Exception {

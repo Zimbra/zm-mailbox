@@ -1,6 +1,7 @@
 package com.zimbra.cs.index.solr;
 
 import static org.junit.Assert.assertEquals;
+import org.junit.Ignore;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,7 +13,7 @@ import org.junit.Test;
 
 import com.google.common.base.Strings;
 
-public class FieldTokenizerTest extends SolrPluginTestBase {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class FieldTokenizerTest extends SolrPluginTestBase {
 
     @Test
     public void tokens() throws Exception {

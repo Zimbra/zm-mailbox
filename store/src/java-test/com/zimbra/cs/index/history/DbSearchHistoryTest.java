@@ -1,6 +1,7 @@
 package com.zimbra.cs.index.history;
 
 import static org.junit.Assert.*;
+import org.junit.Ignore;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -30,7 +31,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 
-public class DbSearchHistoryTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class DbSearchHistoryTest {
 
     private DbSearchHistory db;
     private Provisioning prov;
