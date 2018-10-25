@@ -32,13 +32,16 @@ public abstract class RedisSharedStateCache<M extends MailItem & SharedState> im
     protected AbstractItemCache<M> localCache;
     protected RedissonClient client;
     private RedisCacheTracker tracker;
+    private KnownItemIds knownItemIds;
 
     public RedisSharedStateCache(Mailbox mbox, AbstractItemCache<M> localCache) {
         this.mbox = mbox;
         this.localCache = localCache;
         this.client = RedissonClientHolder.getInstance().getRedissonClient();
         this.tracker = new RedisCacheTracker(mbox);
+        this.knownItemIds = new KnownItemIds();
         mbox.addTransactionListener(tracker);
+        mbox.addTransactionListener(knownItemIds);
     }
 
     protected abstract M construct(int id, Map<String, Object> map);
@@ -72,6 +75,7 @@ public abstract class RedisSharedStateCache<M extends MailItem & SharedState> im
         localCache.put(item);
         if (persistInRedis) {
             persist(item);
+            knownItemIds.addIdAddedInThisTransaction(item.getId());
         }
     }
 
@@ -94,6 +98,13 @@ public abstract class RedisSharedStateCache<M extends MailItem & SharedState> im
         if (item == null) {
             //item may not be in local cache yet, check Redis
             item = lookup(mbox.getAccountId(), id);
+        } else {
+            //check that this item hasn't been deleted by a different mbox worker
+            if (!knownItemIds.contains(item.getId())) {
+                ZimbraLog.cache.info("%s was deleted remotely, removing from local cache", item);
+                localCache.remove(item.getId());
+                item = null;
+            }
         }
         return item;
     }
@@ -328,7 +339,6 @@ public abstract class RedisSharedStateCache<M extends MailItem & SharedState> im
         @Override
         public void transactionEnd(boolean success, boolean endChange) {
             ZimbraLog.cache.trace("RedisCacheTracker.transactionEnd(): success=%s, endChange=%s", success, endChange);
-            //nothing to do here
         }
 
         @Override
@@ -366,6 +376,58 @@ public abstract class RedisSharedStateCache<M extends MailItem & SharedState> im
             }
             touchedByThisThread.stream().forEach(item -> item.clearLocalCache());
             touchedByThisThread.clear();
+        }
+    }
+
+    private class KnownItemIds implements TransactionListener {
+
+        private ThreadLocal<Set<Integer>> allItemIds;
+
+        public KnownItemIds() {
+            allItemIds = new ThreadLocal<>();
+        }
+
+        @Override
+        public void transactionBegin(boolean startChange) {
+            if (startChange) {
+                allItemIds.set(null);
+            }
+        }
+
+        @Override
+        public void transactionEnd(boolean success, boolean endChange) {
+            if (endChange) {
+                allItemIds.set(null);
+            }
+        }
+
+        @Override
+        public void commitCache() {}
+
+        @Override
+        public void rollbackCache() {}
+
+        private Set<Integer> getIdsFromRedis() {
+            Set<Integer> ids = new HashSet<>(getAllIds());
+            ZimbraLog.cache.trace("KnownItemIds: getting item ids for account %s (%s): %s", mbox.getAccountId(), RedisSharedStateCache.this.getClass().getSimpleName(), ids);
+            return ids;
+        }
+
+        private Set<Integer> getThreadLocalIds() {
+            Set<Integer> ids = allItemIds.get();
+            if (ids == null) {
+                ids = getIdsFromRedis();
+                allItemIds.set(ids);
+            }
+            return ids;
+        }
+
+        public boolean contains(int itemId) {
+            return getThreadLocalIds().contains(itemId);
+        }
+
+        public void addIdAddedInThisTransaction(int id) {
+            getThreadLocalIds().add(id);
         }
     }
 }
