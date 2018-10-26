@@ -65,15 +65,29 @@ public final class MailboxTest {
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
-        Provisioning prov = Provisioning.getInstance();
-        prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
     }
 
     @Before
     public void setUp() throws Exception {
-        MailboxTestUtil.clearData();
-        MailboxTestUtil.cleanupIndexStore(
-                MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID));
+        Provisioning prov = Provisioning.getInstance();
+        prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
+    }
+
+    @After
+    public void cleanUp() throws Exception {
+        Mailbox mbox = null;
+        try {
+            mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+            if (mbox != null) {
+                // Keeping these for exercising this code, even though deleting the account
+                MailboxTestUtil.clearData();
+                MailboxTestUtil.cleanupIndexStore(
+                        MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID));
+                Provisioning prov = Provisioning.getInstance();
+                prov.deleteAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+            }
+        } catch (Exception ex) {
+        }
     }
 
     public static final DeliveryOptions STANDARD_DELIVERY_OPTIONS = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
