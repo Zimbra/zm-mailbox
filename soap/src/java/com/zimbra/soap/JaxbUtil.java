@@ -584,6 +584,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.MigrateAccountResponse.class,
             com.zimbra.soap.admin.message.ModifyAccountRequest.class,
             com.zimbra.soap.admin.message.ModifyAccountResponse.class,
+            com.zimbra.soap.admin.message.ModifyAddressListRequest.class,
+            com.zimbra.soap.admin.message.ModifyAddressListResponse.class,
             com.zimbra.soap.admin.message.ModifyAdminSavedSearchesRequest.class,
             com.zimbra.soap.admin.message.ModifyAdminSavedSearchesResponse.class,
             com.zimbra.soap.admin.message.ModifyAlwaysOnClusterRequest.class,
@@ -1115,7 +1117,9 @@ public final class JaxbUtil {
             com.zimbra.soap.voice.message.VoiceMsgActionRequest.class,
             com.zimbra.soap.voice.message.VoiceMsgActionResponse.class,
             com.zimbra.soap.account.message.GetAddressListMembersRequest.class,
-            com.zimbra.soap.account.message.GetAddressListMemberResponse.class
+            com.zimbra.soap.account.message.GetAddressListMemberResponse.class,
+            com.zimbra.soap.admin.message.GetAddressListInfoRequest.class,
+            com.zimbra.soap.admin.message.GetAddressListInfoResponse.class
         };
 
         try {

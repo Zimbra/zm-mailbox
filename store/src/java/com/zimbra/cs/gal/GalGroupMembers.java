@@ -250,8 +250,9 @@ public class GalGroupMembers {
         @Override
         public void encodeMembers(int beginIndex, int endIndex, Element resp) {
             if (endIndex <= getTotal() && getTotal() != 0) {
+                Element habGroupMembers = resp.addNonUniqueElement(AccountConstants.E_HAB_GROUP_MEMBERS);
                 for (int i = beginIndex; i < endIndex; i++) {
-                    Element habGroupMember = resp.addNonUniqueElement(AccountConstants.E_HAB_GROUP_MEMBER);
+                    Element habGroupMember = habGroupMembers.addNonUniqueElement(AccountConstants.E_HAB_GROUP_MEMBER);
                     habGroupMember.addAttribute(AccountConstants.A_NAME, habMembers.get(i).getName());
                     for (NamedValue nv : habMembers.get(i).getAttrs()) {
                         habGroupMember.addKeyValuePair(nv.getName(), nv.getValue(), AccountConstants.E_ATTR, AccountConstants.A_NAME);

@@ -22,6 +22,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlEnum;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 
 /**
@@ -34,7 +35,7 @@ public class HABGroupOperation {
     @XmlEnum
     public enum HabGroupOp {
         // case must match
-        move, update;
+        move, assignSeniority;
 
         public static HabGroupOp fromString(String s) throws ServiceException {
             try {
@@ -69,9 +70,16 @@ public class HABGroupOperation {
      */
     @XmlAttribute(name = AdminConstants.A_TARGET_PARENT_HAB_GROUP_ID /*
                                                                       * habTargetParentGroupId
-                                                                      */, required = true)
+                                                                      */, required = false)
     private String targetHabGroupId;
-    
+
+    /**
+     * @zm-api-field-tag seniorityIndex, not required, defaults to 0
+     * @zm-api-field-description the seniorityInex of HAB group
+     */
+    @XmlAttribute(name = AccountConstants.A_HAB_SENIORITY_INDEX /* seniorityIndex */, required = false)
+    private Integer seniorityIndex;
+
     /**
      * @zm-api-field-tag op
      * @zm-api-field-description operation
@@ -82,8 +90,6 @@ public class HABGroupOperation {
     public HABGroupOperation() {
 
     }
-
-    
 
     /**
      * @param habGroupId
@@ -97,6 +103,19 @@ public class HABGroupOperation {
         this.habGroupId = habGroupId;
         this.currentHabGroupId = currentHabGroupId;
         this.targetHabGroupId = targetHabGroupId;
+        this.op = op;
+    }
+
+    /**
+     * 
+     * @param habGroupId id of HAB group
+     * @param seniorityIndex seniorityIndex
+     * @param op type of modify operation
+     */
+    public HABGroupOperation(String habGroupId, int seniorityIndex, HabGroupOp op) {
+        super();
+        this.habGroupId = habGroupId;
+        this.seniorityIndex = seniorityIndex;
         this.op = op;
     }
 
@@ -130,9 +149,17 @@ public class HABGroupOperation {
         return op;
     }
 
-    
     public void setOp(HabGroupOp op) {
         this.op = op;
+    }
+
+    public Integer getSeniorityIndex() {
+        return seniorityIndex;
+    }
+
+    
+    public void setSeniorityIndex(Integer seniorityIndex) {
+        this.seniorityIndex = seniorityIndex;
     }
 
     @Override
@@ -154,6 +181,10 @@ public class HABGroupOperation {
             builder.append(targetHabGroupId);
             builder.append(", ");
         }
+
+        builder.append("seniorityIndex=");
+        builder.append(seniorityIndex);
+        builder.append(", ");
         if (op != null) {
             builder.append("op=");
             builder.append(op);

@@ -87,6 +87,7 @@ public enum LdapUsage {
     GET_ZIMLET,
     MODIFY_ENTRY,
     MODIFY_ACCOUNT,
+    MODIFY_ADDRESS_LIST,
     MODIFY_ALIAS,
     MODIFY_CALRESOURCE,
     MODIFY_COS,
@@ -137,6 +138,7 @@ public enum LdapUsage {
     public static LdapUsage modifyEntryfromEntryType(Entry.EntryType entryType) {
         switch (entryType) {
             case ACCOUNT: return MODIFY_ACCOUNT;
+            case ADDRESS_LIST: return MODIFY_ADDRESS_LIST;
             case ALIAS: return MODIFY_ALIAS;
             case CALRESOURCE: return MODIFY_CALRESOURCE;
             case COS: return MODIFY_COS;
