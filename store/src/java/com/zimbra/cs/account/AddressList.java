@@ -18,11 +18,29 @@ package com.zimbra.cs.account;
 
 import java.util.Map;
 
+import com.zimbra.cs.account.ldap.entry.LdapEntry;
+
 /**
  * @author zimbra
  *
  */
-public class AddressList extends NamedEntry {
+public class AddressList extends NamedEntry implements LdapEntry {
+
+    private String mDn;
+
+    /**
+     * @param dn
+     * @param name
+     * @param id
+     * @param attrs
+     * @param defaults
+     * @param prov
+     */
+    public AddressList(String dn, String name, String id, Map<String, Object> attrs,
+        Map<String, Object> defaults, Provisioning prov) {
+        this(name, id, attrs, defaults, prov);
+        this.mDn = dn;
+    }
 
     /**
      * @param name
@@ -55,5 +73,9 @@ public class AddressList extends NamedEntry {
     
     public String getDisplayName() {
         return getAttr(Provisioning.A_displayName);
+    }
+
+    public String getDN() {
+        return mDn;
     }
 }
