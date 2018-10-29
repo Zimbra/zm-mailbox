@@ -27,6 +27,7 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
     private final RedissonClient redisson;
     private RReadWriteLock readWriteLock;
     private ReentrantReadWriteLock localLock;
+    private RLock redisFairLock;
     private List<ReentrantReadWriteLock> waiters;
 
     public DistributedMailboxLockFactory(final Mailbox mailbox) {
@@ -38,6 +39,8 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
             this.readWriteLock = this.redisson.getReadWriteLock(lockName);
             this.waiters = new ArrayList<>();
             this.localLock = new ReentrantReadWriteLock();
+            String fairLockName = RedisUtils.createAccountRoutedKey(this.mailbox.getAccountId(), "FAIR_LOCK");
+            this.redisFairLock = this.redisson.getFairLock(fairLockName);
         } catch (Exception e) {
             ZimbraLog.system.fatal("Can't instantiate Redisson server", e);
         }
@@ -45,12 +48,12 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
 
     @Override
     public MailboxLock readLock() {
-        return new DistributedMailboxLock(localLock, readWriteLock, false);
+        return new DistributedMailboxLock(localLock, readWriteLock, redisFairLock, false);
     }
 
     @Override
     public MailboxLock writeLock() {
-        return new DistributedMailboxLock(localLock, readWriteLock, true);
+        return new DistributedMailboxLock(localLock, readWriteLock, redisFairLock, true);
     }
 
     @Override
@@ -342,12 +345,14 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
 
         private RReadWriteLock redisLock;
         private RLock sublock;
+        private RLock fairLock;
         private boolean write;
 
-        public DistributedMailboxLock(ReentrantReadWriteLock localLock, RReadWriteLock redisLock, boolean write) {
+        public DistributedMailboxLock(ReentrantReadWriteLock localLock, RReadWriteLock redisLock, RLock fairLock, boolean write) {
             super(localLock, write);
             this.redisLock = redisLock;
             this.sublock = write ? redisLock.writeLock() : redisLock.readLock();
+            this.fairLock = fairLock;
             this.write = write;
         }
 
@@ -381,12 +386,40 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
             boolean reinstateRedisReadLock = super.reinstateReadLocks();
             if (reinstateRedisReadLock) {
                 ZimbraLog.mailboxlock.trace("reinstating redis read lock");
+                try {
+                    fairLock.lock();
+                    fairLock.unlock();
+                } catch (RedisException e) {
+                    ZimbraLog.mailboxlock.warn("unable to acquire redis fair lock when reinstating read locks", e);
+                }
                 redisLock.readLock().tryLock();
             }
             return reinstateRedisReadLock;
         }
 
+        private void acquireFairLock() throws ServiceException {
+            ZimbraLog.mailboxlock.trace("acquiring fair lock for %s", super.toString());
+            try {
+                fairLock.lock();
+            } catch (RedisException e) {
+                throw ServiceException.LOCK_FAILED(String.format("failed to acquire redis fair lock for %s", super.toString()), e);
+            }
+        }
+
+        private void releaseFairLock() throws ServiceException {
+            try {
+                ZimbraLog.mailboxlock.trace("releasing redis fair lock for %s", super.toString());
+                fairLock.unlock();
+            } catch (RedisException e) {
+                throw ServiceException.LOCK_FAILED(String.format("failed to release redis fair lock for %s", super.toString()), e);
+            }
+        }
+
         private boolean acquireRedisLock() throws ServiceException {
+            acquireFairLock();
+            if (!write) {
+                releaseFairLock();
+            }
             try {
                 if (sublock.tryLock(0, leaseSeconds(write), TimeUnit.SECONDS)) {
                     return true;
@@ -395,9 +428,9 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
                     return true;
                 }
             } catch (RedisException e) {
-                throw ServiceException.LOCK_FAILED("Failed to acquire redis lock", e);
+                throw ServiceException.LOCK_FAILED("failed to acquire redis lock", e);
             } catch (InterruptedException e) {
-                throw ServiceException.LOCK_FAILED("Failed to acquire redis lock - interrupted");
+                throw ServiceException.LOCK_FAILED("failed to acquire redis lock - interrupted");
             }
             return false;
         }
@@ -406,8 +439,19 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
         public void close() {
             super.close();
             if (getHoldCount() == 0) {
-                ZimbraLog.mailboxlock.trace("unlocking redis lock in close() for %s", super.toString());
-                sublock.unlock();
+                ZimbraLog.mailboxlock.trace("releasing redis lock in close() for %s", super.toString());
+                try {
+                    sublock.unlock();
+                } catch (RedisException e) {
+                    ZimbraLog.mailboxlock.error("failed to release redis lock in close() for %s", super.toString(), e);
+                }
+                if (write) {
+                    try {
+                        releaseFairLock();
+                    } catch (ServiceException e) {
+                        ZimbraLog.mailboxlock.error("failed to release redis fair lock in close() for %s", super.toString(), e);
+                    }
+                }
             }
         }
     }
