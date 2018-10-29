@@ -2682,7 +2682,7 @@ public class Mailbox implements MailboxStore {
 
     public MailItem[] getItemById(OperationContext octxt, int[] ids, MailItem.Type type, boolean fromDumpster)
             throws ServiceException {
-        try (final MailboxTransaction t = mailboxWriteTransaction("getItemById[]", octxt)
+        try (final MailboxTransaction t = mailboxReadTransaction("getItemById[]", octxt)
              /* tag/folder caches are populated in beginTransaction... */) {
             MailItem[] items = getItemById(ids, type, fromDumpster);
             // make sure all those items are visible...
