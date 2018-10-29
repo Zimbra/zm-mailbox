@@ -66,7 +66,6 @@ public class EmailToSMS implements LmtpCallback {
 		String url = smsApiUrl + "?username=" + smsUsername + "&pin=" + smsPin + "&message=" + message + "&mnumber="
 				+ mnumber + "&signature=" + smsSenderId;
 		URL obj;
-		String errorMsg = null;
 
 		try {
 			obj = new URL(url);
