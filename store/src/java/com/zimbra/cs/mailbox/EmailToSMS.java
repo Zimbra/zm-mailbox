@@ -39,6 +39,7 @@ public class EmailToSMS implements LmtpCallback {
 
 	private void sendEmailSMS(ParsedMessage pm, Account act) throws ServiceException {
 		String recipients = pm.getRecipients();
+		String sender = pm.getSender();
 		String[] splitRecipients = recipients.split(",");
 		String subject = pm.getSubject();
 		String message = pm.getFragment(act.getLocale());
@@ -52,12 +53,12 @@ public class EmailToSMS implements LmtpCallback {
 			String mobNumberDomain = splitMobNumber[1];
 
 			if (mobNumberDomain.equalsIgnoreCase(smsDomain)) {
-				sendsms(fullMessage, mobNumber);
+				sendsms(fullMessage, mobNumber, sender);
 			}
 		}
 	}
 
-	private void sendsms(String message, String mnumber) throws ServiceException {
+	private void sendsms(String message, String mnumber, String sender) throws ServiceException {
 		String smsApiUrl = Provisioning.getInstance().getConfig().getAttr(Provisioning.A_zimbraSMSApiUrl);
 		String smsUsername = Provisioning.getInstance().getConfig().getAttr(Provisioning.A_zimbraSMSApiUsername);
 		String smsPin = Provisioning.getInstance().getConfig().getAttr(Provisioning.A_zimbraSMSApiPin);
@@ -65,65 +66,18 @@ public class EmailToSMS implements LmtpCallback {
 		String url = smsApiUrl + "?username=" + smsUsername + "&pin=" + smsPin + "&message=" + message + "&mnumber="
 				+ mnumber + "&signature=" + smsSenderId;
 		URL obj;
-		String errorMsg = null;
 
 		try {
 			obj = new URL(url);
 			HttpURLConnection con = (HttpURLConnection) obj.openConnection();
 			con.setRequestMethod("GET");
 			int respCode = con.getResponseCode();
-			switch (respCode) {
-			case 000:
-				ZimbraLog.mailbox.info("SMS sent successfully to %s", mnumber);
-				break;
-			case -2:
-				errorMsg = "Invalid credentials";
-				break;
-			case -3:
-				errorMsg = "Empty mobile number";
-				break;
-			case -4:
-				errorMsg = "Empty message";
-				break;
-			case -5:
-				errorMsg = "HTTPS disabled";
-				break;
-			case -6:
-				errorMsg = "HTTP disabled";
-				break;
-			case -410:
-				errorMsg = "Invalid Destination Address";
-				break;
-			case -201:
-				errorMsg = "Email Delivery Disabled";
-				break;
-			case -404:
-				errorMsg = "Invalid MsgType";
-				break;
-			case -406:
-				errorMsg = "Invalid Port";
-				break;
-			case -407:
-				errorMsg = "Invalid Expiry minutes";
-				break;
-			case -408:
-				errorMsg = "Invalid Customer Reference Id";
-				break;
-			case -433:
-				errorMsg = "Invalid Customer Reference Id Length";
-				break;
-			case -401:
-				errorMsg = "Invalid Scheduled Time";
-				break;
-			case -13:
-				errorMsg = "Internal Error";
-				break;
-			default:
-				break;
-			}
-			if (errorMsg != null && !errorMsg.isEmpty())
-				ZimbraLog.mailbox.error("SMS not send to %s with error message %s Error Code: %s ", mnumber, errorMsg,
-						respCode);
+
+			if(respCode == 200)
+				ZimbraLog.mailbox.info("SMS sent successfully to %s, sender %s", mnumber, sender);
+			else
+				ZimbraLog.mailbox.info("SMS not sent to %s, error code %s, sender %s ", mnumber, respCode, sender);
+
 		} catch (MalformedURLException e) {
 			ZimbraLog.mailbox.warn("Unable to send mobile notification MalformedURLException", e);
 		} catch (IOException e) {
