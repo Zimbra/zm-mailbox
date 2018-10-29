@@ -7140,7 +7140,7 @@ public class Mailbox implements MailboxStore {
 
         CreateContact redoRecorder = new CreateContact(mId, folderId, pc, tags);
 
-        try (final MailboxLock l = lockFactory.writeLock()) {
+        try (final MailboxLock l = getWriteLockAndLockIt()) {
             final MailboxTransaction t = mailboxWriteTransaction("createContact", octxt, redoRecorder);
             try {
                 CreateContact redoPlayer = (CreateContact) currentChange().getRedoPlayer();
@@ -7191,7 +7191,7 @@ public class Mailbox implements MailboxStore {
         }
 
         ModifyContact redoRecorder = new ModifyContact(mId, contactId, pc);
-        try (final MailboxLock l = lockFactory.writeLock()) {
+        try (final MailboxLock l = getWriteLockAndLockIt()) {
             final MailboxTransaction t = mailboxWriteTransaction("modifyContact", octxt, redoRecorder);
             try {
                 Contact con = getContactById(contactId);
@@ -7850,7 +7850,7 @@ public class Mailbox implements MailboxStore {
     private boolean deletedBatchOfItemsInFolder(OperationContext octxt, QueryParams params, TargetConstraint tcon)
     throws ServiceException {
         // Lock this mailbox to make sure that no one modifies the items we're about to delete.
-        try (final MailboxLock l = lockFactory.writeLock()) {
+        try (final MailboxLock l = getWriteLockAndLockIt()) {
             DeleteItem redoRecorder = new DeleteItem(mId, MailItem.Type.UNKNOWN, tcon);
             try (final MailboxTransaction t = mailboxWriteTransaction("delete", octxt, redoRecorder)) {
                 setOperationTargetConstraint(tcon);
@@ -8344,7 +8344,7 @@ public class Mailbox implements MailboxStore {
         SaveDocument redoRecorder = new SaveDocument(mId, pd.getDigest(), pd.getSize(), folderId, flags);
 
         long start = System.currentTimeMillis();
-        try (final MailboxLock l = lockFactory.writeLock()) {
+        try (final MailboxLock l = getWriteLockAndLockIt()) {
             final MailboxTransaction t = mailboxWriteTransaction("createDoc", octxt, redoRecorder);
             try {
                 SaveDocument redoPlayer = (octxt == null ? null : (SaveDocument) octxt.getPlayer());
@@ -8424,7 +8424,7 @@ public class Mailbox implements MailboxStore {
 
         AddDocumentRevision redoRecorder = new AddDocumentRevision(mId, pd.getDigest(), pd.getSize(), 0);
 
-        try (final MailboxLock l = lockFactory.writeLock()) {
+        try (final MailboxLock l = getWriteLockAndLockIt()) {
             final MailboxTransaction t = mailboxWriteTransaction("addDocumentRevision", octxt, redoRecorder);
             try {
                 Document doc = getDocumentById(docId);
@@ -8491,7 +8491,7 @@ public class Mailbox implements MailboxStore {
         int size = (int) staged.getSize();
 
         CreateChat redoRecorder = new CreateChat(mId, digest, size, folderId, flags, tags);
-        try (final MailboxLock l = lockFactory.writeLock()) {
+        try (final MailboxLock l = getWriteLockAndLockIt()) {
             final MailboxTransaction t = mailboxWriteTransaction("createChat", octxt, redoRecorder);
             try {
                 Tag.NormalizedTags ntags = new Tag.NormalizedTags(this, tags);
@@ -8539,7 +8539,7 @@ public class Mailbox implements MailboxStore {
         int size = (int) staged.getSize();
 
         SaveChat redoRecorder = new SaveChat(mId, id, digest, size, -1, 0, null);
-        try (final MailboxLock l = lockFactory.writeLock()) {
+        try (final MailboxLock l = getWriteLockAndLockIt()) {
             final MailboxTransaction t = mailboxWriteTransaction("saveChat", octxt, redoRecorder);
             try {
                 SaveChat redoPlayer = (SaveChat) currentChange().getRedoPlayer();
