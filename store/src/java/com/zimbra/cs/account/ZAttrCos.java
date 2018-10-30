@@ -34173,13 +34173,13 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * Display received/sent time in mail list
      *
-     * @return zimbraPrefDisplayTimeInMailList, or false if unset
+     * @return zimbraPrefDisplayTimeInMailList, or true if unset
      *
      * @since ZCS 8.8.8
      */
     @ZAttr(id=3022)
     public boolean isPrefDisplayTimeInMailList() {
-        return getBooleanAttr(Provisioning.A_zimbraPrefDisplayTimeInMailList, false, true);
+        return getBooleanAttr(Provisioning.A_zimbraPrefDisplayTimeInMailList, true, true);
     }
 
     /**
