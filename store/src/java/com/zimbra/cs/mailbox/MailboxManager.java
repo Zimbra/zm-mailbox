@@ -125,7 +125,7 @@ public class MailboxManager {
     private static MailboxManager sInstance;
 
     public MailboxManager() throws ServiceException {
-        synchronized (this){
+        synchronized (this) {
             cacheManager = new DistributedMailboxCacheManager();
         }
     }
@@ -312,9 +312,7 @@ public class MailboxManager {
             throw new IllegalArgumentException();
 
         Integer mailboxKey;
-        synchronized (this) {
-            mailboxKey = cacheManager.getMailboxKey(accountId.toLowerCase());
-        }
+        mailboxKey = cacheManager.getMailboxKey(accountId.toLowerCase());
         if (mailboxKey != null) {
             if (DebugConfig.mockMultiserverInstall)
                 lookupAccountWithHostCheck(accountId, skipMailHostCheck);
@@ -325,9 +323,7 @@ public class MailboxManager {
 
         // auto-create the mailbox if this is the right host...
         Account account = lookupAccountWithHostCheck(accountId, skipMailHostCheck);
-        synchronized (this) {
-            mailboxKey = cacheManager.getMailboxKey(accountId.toLowerCase());
-        }
+        mailboxKey = cacheManager.getMailboxKey(accountId.toLowerCase());
         if (mailboxKey != null)
             return getMailboxById(mailboxKey, fetchMode, skipMailHostCheck);
         else
