@@ -65,15 +65,29 @@ public final class MailboxTest {
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
-        Provisioning prov = Provisioning.getInstance();
-        prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
     }
 
     @Before
     public void setUp() throws Exception {
-        MailboxTestUtil.clearData();
-        MailboxTestUtil.cleanupIndexStore(
-                MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID));
+        Provisioning prov = Provisioning.getInstance();
+        prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
+    }
+
+    @After
+    public void cleanUp() throws Exception {
+        Mailbox mbox = null;
+        try {
+            mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+            if (mbox != null) {
+                // Keeping these for exercising this code, even though deleting the account
+                MailboxTestUtil.clearData();
+                MailboxTestUtil.cleanupIndexStore(
+                        MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID));
+                Provisioning prov = Provisioning.getInstance();
+                prov.deleteAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+            }
+        } catch (Exception ex) {
+        }
     }
 
     public static final DeliveryOptions STANDARD_DELIVERY_OPTIONS = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
@@ -638,6 +652,63 @@ public final class MailboxTest {
         OperationContext octxt = new OperationContext(acct);
         int count = mbox.getModifiedItemsCount(octxt, 0, 0, MailItem.Type.CONTACT, folderIds);
         Assert.assertEquals(2, count);
+    }
+
+    @Test
+    public void testAdditionalQuotaProviderExceedsQuota() throws Exception {
+        AdditionalQuotaProvider additionalQuotaProvider = new AdditionalQuotaProvider() {
+            @Override
+            public long getAdditionalQuota(Mailbox mailbox) {
+                return 10;
+            }
+        };
+        MailboxManager.getInstance().addAdditionalQuotaProvider(additionalQuotaProvider);
+        Provisioning prov = Provisioning.getInstance();
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put("zimbraMailQuota", "5");
+        Account acct = prov.createAccount("testAdditionalQuotaProvider@zimbra.com", "secret", attrs);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
+        try {
+            mbox.checkSizeChange(0);
+            Assert.fail("Expected QUOTA_EXCEEDED exception");
+        }
+        catch (MailServiceException ignored) {}
+
+        Assert.assertEquals(10L, mbox.getSize());
+
+        MailboxManager.getInstance().removeAdditionalQuotaProvider(additionalQuotaProvider);
+        try {
+            mbox.checkSizeChange(5);
+        }
+        catch (MailServiceException ignored) {
+            Assert.fail("Unexpected QUOTA_EXCEEDED exception");
+        }
+
+        Assert.assertEquals(0L, mbox.getSize());
+    }
+
+    @Test
+    public void testAdditionalQuotaProviderRespectsQuota() throws Exception {
+        MailboxManager.getInstance().addAdditionalQuotaProvider(
+          new AdditionalQuotaProvider() {
+              public long getAdditionalQuota(Mailbox mbox) {
+                  return 10;
+              }
+          }
+        );
+        Provisioning prov = Provisioning.getInstance();
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put("zimbraMailQuota", "30");
+        Account acct = prov.createAccount("testAdditionalQuotaProvider@zimbra.com", "secret", attrs);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
+        try {
+            mbox.checkSizeChange(10);
+        }
+        catch (MailServiceException ignored) {
+            Assert.fail("Unexpected QUOTA_EXCEEDED exception");
+        }
+
+        Assert.assertEquals(10L, mbox.getSize());
     }
 
     /**
