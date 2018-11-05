@@ -4,11 +4,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.redisson.api.RBucket;
+import org.redisson.api.RedissonClient;
+
 import com.google.common.collect.Lists;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
+import com.zimbra.cs.mailbox.redis.RedisUtils;
 
 public class DistributedMailboxCacheManager extends MailboxCacheManager {
 
@@ -53,21 +57,56 @@ public class DistributedMailboxCacheManager extends MailboxCacheManager {
         return Lists.newArrayList(listMailboxes().values());
     }
 
-    @Override
-    public Integer getMailboxKey(String accountId){
-        Integer mailboxKey = null;
-        DbPool.DbConnection conn = null;
-        try {
-            try {
-                conn = DbPool.getConnection();
-                mailboxKey =  DbMailbox.getMailboxKey(conn, accountId.toLowerCase());
-            } catch (ServiceException e) {
-                ZimbraLog.mailbox.error("fetching mailbox key: ", e);
-                throw new CacheManagerException("fetching mailbox key: ", e.getCause());
-            }
-        }finally {
-            DbPool.quietClose(conn);
-        }
-        return mailboxKey;
-    }
+    RedissonClient client = RedissonClientHolder.getInstance().getRedissonClient();
+	private RBucket<Integer> mailboxKeyBucket;
+
+	private RBucket<Integer> getRedisBucket(String accountId) {
+		return mailboxKeyBucket = client.getBucket(RedisUtils.createAccountRoutedKey(accountId, "MAILBOX_ID"));
+	}
+
+	public Integer fetchMailboxKey(String accountId) {
+
+		getRedisBucket(accountId);
+		Integer mailboxAccID = mailboxKeyBucket.get();
+		Integer mboxID = null;
+		
+		if (mailboxAccID != null) {
+			return mailboxAccID;
+		}
+		else {	
+			mboxID = getMailboxKeyFromDB(accountId);
+			if (mboxID != null) {
+				mailboxKeyBucket.set(mboxID);
+			}
+			return mailboxAccID;
+		}
+	}
+
+	public Integer getMailboxKeyFromDB(String accountId){
+		Integer mailboxKey = null;
+		DbPool.DbConnection conn = null;
+		try {
+			try {
+				conn = DbPool.getConnection();
+				mailboxKey =  DbMailbox.getMailboxKey(conn, accountId.toLowerCase());
+			} catch (ServiceException e) {
+				ZimbraLog.mailbox.error("fetching mailbox key: ", e);
+				throw new CacheManagerException("fetching mailbox key: ", e.getCause());
+			}
+		}finally {
+			DbPool.quietClose(conn);
+		}
+		return mailboxKey;
+	}
+
+	@Override
+	public Integer getMailboxKey(String accountId) {
+
+		if (accountId == null)
+			throw new IllegalArgumentException();
+
+		Integer mailboxKey = null;
+		mailboxKey = fetchMailboxKey(accountId.toLowerCase());
+		return mailboxKey;
+	}
 }
