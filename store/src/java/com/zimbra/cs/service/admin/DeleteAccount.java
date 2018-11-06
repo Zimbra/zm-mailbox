@@ -69,9 +69,6 @@ public class DeleteAccount extends AdminDocumentHandler {
     public boolean defendsAgainstDelegateAdminAccountHarvesting() {
         return true;
     }
-    
-    RedissonClient client = RedissonClientHolder.getInstance().getRedissonClient();
-	private RBucket<Integer> mailboxKeyBucket;
 	
     /**
      * Deletes an account and its mailbox.
@@ -115,12 +112,6 @@ public class DeleteAccount extends AdminDocumentHandler {
 
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
             new String[] {"cmd", "DeleteAccount","name", account.getName(), "id", account.getId()}));   
-        
-    	mailboxKeyBucket = client.getBucket(RedisUtils.createAccountRoutedKey(id, "MAILBOX_ID"));
-    	if (mailboxKeyBucket.get() != null) {
-			mailboxKeyBucket.delete();
-		} 	
-        
         return zsc.jaxbToElement(new DeleteAccountResponse());
     }
 

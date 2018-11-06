@@ -63,6 +63,16 @@ public class DistributedMailboxCacheManager extends MailboxCacheManager {
 		RBucket<Integer> mailboxKeyBucket = client.getBucket(RedisUtils.createAccountRoutedKey(accountId, "MAILBOX_ID"));
 		return mailboxKeyBucket;
 	}
+	
+	@Override
+	public void removeMailboxId(String accountId){
+		RBucket<Integer> mailboxKeyBucket;	
+		mailboxIds.remove(accountId);
+		mailboxKeyBucket = client.getBucket(RedisUtils.createAccountRoutedKey(accountId, "MAILBOX_ID"));
+    	if (mailboxKeyBucket.get() != null) {
+			mailboxKeyBucket.delete();
+		}
+	}
 
 	public Integer fetchMailboxKey(String accountId) {
 
