@@ -90,7 +90,7 @@ public class DistributedMailboxCacheManager extends MailboxCacheManager {
 				conn = DbPool.getConnection();
 				mailboxKey =  DbMailbox.getMailboxKey(conn, accountId.toLowerCase());
 			} catch (ServiceException e) {
-				ZimbraLog.mailbox.error("fetching mailbox key: ", e);
+				ZimbraLog.mailbox.error("fetching mailbox key: %s", accountId, e);
 				throw new CacheManagerException("fetching mailbox key: ", e.getCause());
 			}
 		}finally {
