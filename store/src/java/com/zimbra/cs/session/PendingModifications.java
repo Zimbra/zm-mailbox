@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.zimbra.client.ZBaseItem;
@@ -544,5 +545,20 @@ public abstract class PendingModifications<T extends ZimbraMailItem> {
         }
 
         return folderMap;
+    }
+
+    protected MoreObjects.ToStringHelper addProperties(MoreObjects.ToStringHelper helper) {
+        helper.add("changedTypes", changedTypes)
+            .add("changedParentFolders", changedParentFolders)
+                .add("changedFolders", changedFolders)
+                .add("created", created)
+                .add("modified", modified)
+                .add("deleted", deleted);
+        return helper;
+    }
+
+    @Override
+    public String toString() {
+        return addProperties(MoreObjects.toStringHelper(this)).toString();
     }
 }
