@@ -23,9 +23,6 @@ package com.zimbra.cs.service.admin;
 import java.util.List;
 import java.util.Map;
 
-import org.redisson.api.RBucket;
-import org.redisson.api.RedissonClient;
-
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ZAttrProvisioning.AccountStatus;
 import com.zimbra.common.service.ServiceException;
@@ -38,9 +35,6 @@ import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.mailbox.RedissonClientHolder;
-import com.zimbra.cs.mailbox.redis.RedisUtils;
-import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.DeleteAccountRequest;
 import com.zimbra.soap.admin.message.DeleteAccountResponse;
