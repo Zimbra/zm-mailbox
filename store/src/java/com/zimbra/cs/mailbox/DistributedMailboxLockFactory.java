@@ -412,6 +412,8 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
                 fairLock.unlock();
             } catch (RedisException e) {
                 throw ServiceException.LOCK_FAILED(String.format("failed to release redis fair lock for %s", super.toString()), e);
+            } catch (IllegalStateException e) {
+                ZimbraLog.mailboxlock.warn("trying to release redis fair lock but it is not held by this thread", e);
             }
         }
 
@@ -444,6 +446,8 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
                     sublock.unlock();
                 } catch (RedisException e) {
                     ZimbraLog.mailboxlock.error("failed to release redis lock in close() for %s", super.toString(), e);
+                } catch (IllegalStateException e) {
+                    ZimbraLog.mailboxlock.warn("trying to release redis lock but it is not held by this thread", e);
                 }
                 if (write) {
                     try {
