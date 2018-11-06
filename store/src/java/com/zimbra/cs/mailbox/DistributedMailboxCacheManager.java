@@ -58,16 +58,16 @@ public class DistributedMailboxCacheManager extends MailboxCacheManager {
     }
 
     RedissonClient client = RedissonClientHolder.getInstance().getRedissonClient();
-	private RBucket<Integer> mailboxKeyBucket;
 
 	private RBucket<Integer> getRedisBucket(String accountId) {
-		return mailboxKeyBucket = client.getBucket(RedisUtils.createAccountRoutedKey(accountId, "MAILBOX_ID"));
+		RBucket<Integer> mailboxKeyBucket = client.getBucket(RedisUtils.createAccountRoutedKey(accountId, "MAILBOX_ID"));
+		return mailboxKeyBucket;
 	}
 
 	public Integer fetchMailboxKey(String accountId) {
 
 		getRedisBucket(accountId);
-		Integer mailboxAccID = mailboxKeyBucket.get();
+		Integer mailboxAccID = getRedisBucket(accountId).get();
 		Integer mboxID = null;
 		
 		if (mailboxAccID != null) {
@@ -76,7 +76,7 @@ public class DistributedMailboxCacheManager extends MailboxCacheManager {
 		else {	
 			mboxID = getMailboxKeyFromDB(accountId);
 			if (mboxID != null) {
-				mailboxKeyBucket.set(mboxID);
+				getRedisBucket(accountId).set(mboxID);
 			}
 			return mailboxAccID;
 		}
