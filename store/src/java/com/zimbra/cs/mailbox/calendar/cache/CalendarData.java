@@ -25,17 +25,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Metadata;
 
 public class CalendarData {
-    private int mFolderId;
-    private int mModSeq;  // last-modified sequence of the folder
-    private long mRangeStart;
-    private long mRangeEnd;
-    private List<CalendarItemData> mCalendarItems;
-    private Map<Integer, CalendarItemData> mCalendarItemsMap;
-    private Set<Integer> mStaleItemIds;
+    private final int mFolderId;
+    private final int mModSeq;  // last-modified sequence of the folder
+    private final long mRangeStart;
+    private final long mRangeEnd;
+    private final List<CalendarItemData> mCalendarItems;
+    private final Map<Integer, CalendarItemData> mCalendarItemsMap;
+    private final Set<Integer> mStaleItemIds;
 
     CalendarData(int folderId, int modSeq, long rangeStart, long rangeEnd) {
         mFolderId = folderId;
@@ -103,6 +104,8 @@ public class CalendarData {
     private static final String FN_RANGE_END = "rgEnd";
     private static final String FN_NUM_CALITEMS = "numCi";
     private static final String FN_CALITEM = "ci";
+    private static final String FN_NUM_STALEITEMS = "numStale";
+    private static final String FN_STALEITEM = "stale";
 
     CalendarData(Metadata meta) throws ServiceException {
         mFolderId = (int) meta.getLong(FN_FOLDER_ID);
@@ -124,7 +127,18 @@ public class CalendarData {
             mCalendarItems = new ArrayList<CalendarItemData>(0);
             mCalendarItemsMap = new HashMap<Integer, CalendarItemData>(0);
         }
-        mStaleItemIds = new HashSet<Integer>();
+        int numStaleItems = (int) meta.getLong(FN_NUM_STALEITEMS, 0);
+        if (numStaleItems > 0) {
+            mStaleItemIds = new HashSet<>(numStaleItems);
+            for (int i = 0; i < numStaleItems; i++) {
+                int staleId = meta.getInt(FN_STALEITEM + i, -1);
+                if (staleId != -1) {
+                    mStaleItemIds.add(staleId);
+                }
+            }
+        } else {
+            mStaleItemIds = new HashSet<>(0);
+        }
     }
 
     Metadata encodeMetadata() {
@@ -139,6 +153,32 @@ public class CalendarData {
             meta.put(FN_CALITEM + i, calItemData.encodeMetadata());
             i++;
         }
+        meta.put(FN_NUM_STALEITEMS, mStaleItemIds.size());
+        i = 0;
+        for (Integer staleId : mStaleItemIds) {
+            meta.put(FN_STALEITEM + i, staleId);
+            i++;
+        }
         return meta;
+    }
+
+    @Override
+    public String toString() {
+        MoreObjects.ToStringHelper helper = MoreObjects.toStringHelper(this)
+                .add("folderId", mFolderId)
+                .add("modSeq", mModSeq)
+                .add("rangeStart", mRangeStart)
+                .add("rangeEnd", mRangeEnd);
+        if (mCalendarItems.size() > 20) {
+            helper.add("calendarItems.size", mCalendarItems.size());
+        } else {
+            helper.add("calendarItems", mCalendarItems);
+        }
+        if (mStaleItemIds.size() > 20) {
+            helper.add("staleItemIds.size", mStaleItemIds.size());
+        } else {
+            helper.add("staleItemIds", mStaleItemIds);
+        }
+        return helper.toString();
     }
 }
