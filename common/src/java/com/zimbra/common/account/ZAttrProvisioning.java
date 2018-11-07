@@ -2930,8 +2930,8 @@ public class ZAttrProvisioning {
      * hosted. New account creation based on invites that are not completed
      * until user accepts TOS on account creation confirmation page. closed -
      * no login, no delivery(lmtp server returns 5.x.x Permanent Failure),
-     * all addresses (account main email and all aliases) of the account are
-     * removed from all distribution lists.
+     * all addresses (account main intl_email and all aliases) of the account
+     * are removed from all distribution lists.
      */
     @ZAttr(id=2)
     public static final String A_zimbraAccountStatus = "zimbraAccountStatus";
@@ -8791,7 +8791,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraLowestSupportedAuthVersion = "zimbraLowestSupportedAuthVersion";
 
     /**
-     * RFC822 email address of this recipient for accepting mail
+     * RFC822 intl_email address of this recipient for accepting mail
      */
     @ZAttr(id=3)
     public static final String A_zimbraMailAddress = "zimbraMailAddress";
@@ -12727,6 +12727,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=240)
     public static final String A_zimbraPrefCalendarInitialView = "zimbraPrefCalendarInitialView";
+
+    /**
+     * This attribute is used to set the number of days to show for multi-day
+     * calendar view
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5026)
+    public static final String A_zimbraPrefCalendarMultiDayLength = "zimbraPrefCalendarMultiDayLength";
 
     /**
      * If set to true, user is notified by email of changes made to her
