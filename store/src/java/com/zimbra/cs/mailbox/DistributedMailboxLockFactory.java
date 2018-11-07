@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.redisson.api.RLock;
 import org.redisson.api.RReadWriteLock;
@@ -24,7 +26,9 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
     private final Mailbox mailbox;
     private final RedissonClient redisson;
     private RReadWriteLock readWriteLock;
-    private List<RLock> waiters;
+    private ReentrantReadWriteLock localLock;
+    private RLock redisFairLock;
+    private List<ReentrantReadWriteLock> waiters;
 
     public DistributedMailboxLockFactory(final Mailbox mailbox) {
         this.mailbox = mailbox;
@@ -34,6 +38,9 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
             String lockName = RedisUtils.createAccountRoutedKey(this.mailbox.getAccountId(), "LOCK");
             this.readWriteLock = this.redisson.getReadWriteLock(lockName);
             this.waiters = new ArrayList<>();
+            this.localLock = new ReentrantReadWriteLock();
+            String fairLockName = RedisUtils.createAccountRoutedKey(this.mailbox.getAccountId(), "FAIR_LOCK");
+            this.redisFairLock = this.redisson.getFairLock(fairLockName);
         } catch (Exception e) {
             ZimbraLog.system.fatal("Can't instantiate Redisson server", e);
         }
@@ -41,12 +48,12 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
 
     @Override
     public MailboxLock readLock() {
-        return new DistributedMailboxLock(this.readWriteLock, false);
+        return new DistributedMailboxLock(localLock, readWriteLock, redisFairLock, false);
     }
 
     @Override
     public MailboxLock writeLock() {
-        return new DistributedMailboxLock(this.readWriteLock, true);
+        return new DistributedMailboxLock(localLock, readWriteLock, redisFairLock, true);
     }
 
     @Override
@@ -69,7 +76,8 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
      */
     @Override
     public int getHoldCount() {
-        return readWriteLock.readLock().getHoldCount() + readWriteLock.writeLock().getHoldCount();
+        //returns only the local hold count
+        return localLock.getReadHoldCount() + localLock.getWriteHoldCount();
     }
 
     @Override
@@ -92,6 +100,10 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
         return waiters.size();
     }
 
+    public static long leaseSeconds(boolean write) {
+        return write ? LC.zimbra_mailbox_lock_write_lease_seconds.longValue() :
+            LC.zimbra_mailbox_lock_read_lease_seconds.longValue();
+    }
     /**
      * Intended to handle the life-cycle of a single lock/unlock of a mailbox, hence there
      * isn't an <b>unlock</b> method.  Unlocking is intended to be performed by {@link #close()}.
@@ -103,59 +115,31 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
      * Note: MUST either use this with "try with resources" or ensure that {@link #close()} is
      *       called in finally block wrapped round the call to the constructor
      */
-    public class DistributedMailboxLock implements MailboxLock {
-        private final RReadWriteLock rwLock;
+    public class LocalMailboxLock implements MailboxLock {
+        private final ReentrantReadWriteLock localLock;
         private final int id;
         private final long construct_start;
         private Long time_got_lock = null;
         private boolean write;
-        private RLock lock;
         private final int initialReadHoldCount;
         private final int initialWriteHoldCount;
 
-        private DistributedMailboxLock(final RReadWriteLock readWriteLock, final boolean write) {
-            this.rwLock = readWriteLock;
+        private LocalMailboxLock(final ReentrantReadWriteLock localLock, final boolean write) {
+            this.localLock = localLock;
             this.write = write;
-            this.lock = this.write ? readWriteLock.writeLock() : readWriteLock.readLock();
             id = lockIdBase.incrementAndGet();
             if (id >= 0xfffffff) {
                 lockIdBase.set(1);  // keep id relatively short
             }
             construct_start = System.currentTimeMillis();
-            initialReadHoldCount = readWriteLock.readLock().getHoldCount();
-            initialWriteHoldCount = readWriteLock.writeLock().getHoldCount();
+            initialReadHoldCount = localLock.getReadHoldCount();
+            initialWriteHoldCount = localLock.getWriteHoldCount();
             ZimbraLog.mailboxlock.trace("constructor %s", this);
-        }
-
-        public DistributedMailboxLock createAndAcquireWriteLock(final RReadWriteLock rReadWriteLock) throws ServiceException {
-            DistributedMailboxLock myLock = new DistributedMailboxLock(rReadWriteLock, true);
-            if (initialWriteHoldCount <= 0) {
-                myLock.lock();
-            } else {
-                ZimbraLog.mailboxlock.debug("createAndAcquireWriteLock not locking again holds=%d",
-                        initialWriteHoldCount);
-            }
-            return myLock;
-        }
-
-        public DistributedMailboxLock createAndAcquireReadLock(final RReadWriteLock rReadWriteLock) throws ServiceException {
-            DistributedMailboxLock myLock = new DistributedMailboxLock(rReadWriteLock, false);
-            if (initialReadHoldCount <= 0) {
-                myLock.lock();
-            } else {
-                ZimbraLog.mailboxlock.debug("createAndAcquireReadLock not locking again holds=%d",
-                        initialReadHoldCount);
-            }
-            return myLock;
         }
 
         @Override
         public void lock() throws ServiceException {
-            try {
-                releaseReadLocksBeforeWriteLock();
-            } catch (RedisException re) {
-                throw ServiceException.LOCK_FAILED(String.format("Redis error encountered trying to release read locks before write lock - %s", this), re);
-            }
+            releaseReadLocksBeforeWriteLock();
             long lock_start = System.currentTimeMillis();
             try {
                 if (tryLock()) {
@@ -171,7 +155,7 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
                 }
 
                 synchronized (waiters) {
-                    waiters.add(this.lock);
+                    waiters.add(this.localLock);
                 }
                 try {
                     if (!tryLockWithTimeout()) {
@@ -181,27 +165,25 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
                     }
                 } finally {
                     synchronized (waiters) {
-                        waiters.remove(this.lock);
+                        waiters.remove(this.localLock);
                     }
                 }
             } catch (InterruptedException ex) {
                 ZimbraLog.mailboxlock.trace("lock() Failed to acquire %s lock cost=%s", this,
                         ZimbraLog.elapsedSince(lock_start), ex);
                 throw ServiceException.LOCK_FAILED(String.format("Failed to acquire %s - interrupted", this));
-            } catch (RedisException re) {
-                throw ServiceException.LOCK_FAILED(String.format("Redis error encountered trying to acquire %s", this), re);
             }
             ZimbraLog.mailboxlock.trace("lock() tryLockWithTimeout succeeded lock cost=%s",
                     ZimbraLog.elapsedSince(lock_start));
         }
 
-        private long leaseSeconds() {
-            return write ? LC.zimbra_mailbox_lock_write_lease_seconds.longValue() :
-                LC.zimbra_mailbox_lock_read_lease_seconds.longValue();
-        }
-
         private boolean tryLock() throws InterruptedException {
-            boolean result = this.lock.tryLock(0, leaseSeconds(), TimeUnit.SECONDS);
+            boolean result;
+            if (write) {
+                result = localLock.writeLock().tryLock();
+            } else {
+                result = localLock.readLock().tryLock();
+            }
             if (result) {
                 time_got_lock = System.currentTimeMillis();
             }
@@ -210,8 +192,12 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
         }
 
         private boolean tryLockWithTimeout() throws InterruptedException {
-            boolean result = this.lock.tryLock(LC.zimbra_mailbox_lock_timeout.intValue(), leaseSeconds(),
-                    TimeUnit.SECONDS);
+            boolean result;
+            if (write) {
+                result = localLock.writeLock().tryLock(LC.zimbra_mailbox_lock_timeout.intValue(), TimeUnit.SECONDS);
+            } else {
+                result = localLock.readLock().tryLock(LC.zimbra_mailbox_lock_timeout.intValue(), TimeUnit.SECONDS);
+            }
             if (result) {
                 time_got_lock = System.currentTimeMillis();
             }
@@ -221,24 +207,20 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
 
         @Override
         public void close() {
-            try {
-                long close_start = System.currentTimeMillis();
-                restoreToInitialLockCount(rwLock.writeLock(), initialWriteHoldCount, "write");
-                restoreToInitialLockCount(rwLock.readLock(), initialReadHoldCount, "read");
-                reinstateReadLocks();
-                if ((time_got_lock != null) && (System.currentTimeMillis() - time_got_lock) >
-                LC.zimbra_mailbox_lock_long_lock_milliseconds.longValue()) {
-                    /* Took a long time.*/
-                    if (ZimbraLog.mailboxlock.isTraceEnabled()) {
-                        ZimbraLog.mailboxlock.warn("close() LONG-LOCK %s %s", this, ZimbraLog.getStackTrace(16));
-                    } else {
-                        ZimbraLog.mailboxlock.warn("close() LONG-LOCK %s", this);
-                    }
+            long close_start = System.currentTimeMillis();
+            restoreToInitialLockCount(true);
+            restoreToInitialLockCount(false);
+            reinstateReadLocks();
+            if ((time_got_lock != null) && (System.currentTimeMillis() - time_got_lock) >
+            LC.zimbra_mailbox_lock_long_lock_milliseconds.longValue()) {
+                /* Took a long time.*/
+                if (ZimbraLog.mailboxlock.isTraceEnabled()) {
+                    ZimbraLog.mailboxlock.warn("close() LONG-LOCK %s %s", this, ZimbraLog.getStackTrace(16));
                 } else {
-                    ZimbraLog.mailboxlock.trace("close() unlock cost=%s %s", ZimbraLog.elapsedSince(close_start), this);
+                    ZimbraLog.mailboxlock.warn("close() LONG-LOCK %s", this);
                 }
-            } catch (RedisException re) {
-                ZimbraLog.mailboxlock.warn("Redis error encountered unlocking lock %s!", this, re);
+            } else {
+                ZimbraLog.mailboxlock.trace("close() unlock cost=%s %s", ZimbraLog.elapsedSince(close_start), this);
             }
         }
 
@@ -248,9 +230,7 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
          */
         @Override
         public int getHoldCount() {
-            // eric: I feel like summing read + write lock hold count here is strange, but this is being done to
-            // match the behavior of LocalMailboxLock
-            return this.rwLock.readLock().getHoldCount() + this.rwLock.writeLock().getHoldCount();
+            return localLock.getReadHoldCount() + localLock.getWriteHoldCount();
         }
 
         @Override
@@ -259,56 +239,44 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
         }
 
         @Override
-        public boolean isWriteLockedByCurrentThread() throws ServiceException {
-            try {
-                return this.rwLock.writeLock().isHeldByCurrentThread();
-            } catch (RedisException re) {
-                throw ServiceException.LOCK_FAILED("failure checking if write lock is held by current thread", re);
-            }
+        public boolean isWriteLockedByCurrentThread() {
+            return this.localLock.isWriteLockedByCurrentThread();
         }
 
         @Override
-        public boolean isReadLockedByCurrentThread() throws ServiceException {
-            try {
-                return this.rwLock.readLock().isHeldByCurrentThread();
-            } catch (RedisException re) {
-                throw ServiceException.LOCK_FAILED("failure checking if read lock is held by current thread", re);
-            }
+        public boolean isReadLockedByCurrentThread() {
+            return this.localLock.getReadHoldCount() > 0;
         }
 
         @Override
-        public boolean isLockedByCurrentThread() throws ServiceException {
-            try {
-                return isWriteLockedByCurrentThread() || isReadLockedByCurrentThread();
-            } catch (RedisException re) {
-                throw ServiceException.LOCK_FAILED("failure checking if lock is held by current thread", re);
-            }
+        public boolean isLockedByCurrentThread() {
+            return isWriteLockedByCurrentThread() || isReadLockedByCurrentThread();
         }
 
-        private void restoreToInitialLockCount(RLock subLock, int initialHoldCount, String lockType) {
-            int iters = subLock.getHoldCount() - initialHoldCount;
-            try {
-                while (iters > 0) {
-                    subLock.unlock();
-                    iters--;
-                }
-            } catch (IllegalMonitorStateException imse) {
-                /* most likely cause is that the lease on the lock has run out */
-                ZimbraLog.mailboxlock.info("closing %slocks problem (ignoring) %s", lockType, this, imse);
+        private void restoreToInitialLockCount(boolean write) {
+            int holdCount = write ? localLock.getWriteHoldCount() : localLock.getReadHoldCount();
+            int initialHoldCount = write ? initialWriteHoldCount : initialReadHoldCount;
+            Lock subLock = write ? localLock.writeLock() : localLock.readLock();
+            int iters = holdCount - initialHoldCount;
+            while (iters > 0) {
+                subLock.unlock();
+                iters--;
             }
         }
 
         /** If we upgraded to a write lock, we may need to reinstate read locks that we released */
-        private void reinstateReadLocks() {
-            int iters = initialReadHoldCount - rwLock.readLock().getHoldCount();
+        protected boolean reinstateReadLocks() {
+            int iters = initialReadHoldCount - localLock.getReadHoldCount();
+            boolean needToReinstate = iters > 0;
             if (ZimbraLog.mailboxlock.isTraceEnabled() && (iters > 0)) {
                 ZimbraLog.mailboxlock.trace("close - re-instating %d read locks", iters);
             }
             while (iters > 0) {
-                boolean result = rwLock.readLock().tryLock();
+                boolean result = localLock.readLock().tryLock();
                 ZimbraLog.mailboxlock.trace("close readLock().tryLock() return=%s", result);
                 iters--;
             }
+            return needToReinstate;
         }
 
         /**
@@ -316,16 +284,16 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
          * reading before anyway, so it is ok to release all locks with a view to getting a
          * write lock soon - doesn't matter if other things read/write in the mean time
          */
-        private void releaseReadLocksBeforeWriteLock() throws ServiceException {
+        protected boolean releaseReadLocksBeforeWriteLock() {
             if (!write) {
-                return;  /* we're not trying to write anyway */
+                return false;  /* we're not trying to write anyway */
             }
             if (isWriteLockedByCurrentThread()) {
-                return; /* if we've got a write lock, then don't need to release read locks */
+                return false; /* if we've got a write lock, then don't need to release read locks */
             }
-            int iters = rwLock.readLock().getHoldCount();
+            int iters = localLock.getReadHoldCount();
             if (iters == 0) {
-                return; /* this thread isn't holding any locks */
+                return false; /* this thread isn't holding any locks */
             }
             if (ZimbraLog.mailboxlock.isTraceEnabled()) {
                 ZimbraLog.mailboxlock.trace(
@@ -338,19 +306,11 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
 
             }
             /* close() should get these locks again later */
-            while ((iters > 0) && (rwLock.readLock().getHoldCount() > 0)) {
-                rwLock.readLock().unlock();
+            while ((iters > 0) && (localLock.getReadHoldCount() > 0)) {
+                localLock.readLock().unlock();
                 iters--;
             }
-        }
-
-        public void changeToWriteLock() {
-            if (ZimbraLog.mailboxlock.isTraceEnabled()) {
-                ZimbraLog.mailboxlock.trace("changeToWriteLock %s\n%s",
-                        this, ZimbraLog.getStackTrace(16));
-            }
-            this.write = true;
-            this.lock = rwLock.writeLock();
+            return true;
         }
 
         private void addIfNot(MoreObjects.ToStringHelper helper, String desc, int test, int actual) {
@@ -368,50 +328,135 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
             helper.add("sinceLocked", ZimbraLog.elapsedSince(time_got_lock));
         }
 
-        private String toString(RLock lck) {
-            MoreObjects.ToStringHelper helper = MoreObjects.toStringHelper(lck);
-            if (lck.isLocked()) {
-                helper.add("locked", lck.isLocked());
-            }
-            if (lck.getHoldCount() != 0) {
-                helper.add("holds", lck.getHoldCount());
-            }
-            if (!lck.isExists()) {
-                helper.add("exists", lck.isExists());
-            }
-            if (lck.remainTimeToLive() == -1) {
-                helper.add("ttl", "forever");
-            } else if (lck.remainTimeToLive() != -2 /* -2 means key does not exist */) {
-                helper.add("ttl", lck.remainTimeToLive());
-            }
-            return helper.toString();
-        }
-
-        private String toString(RReadWriteLock lck) {
-            MoreObjects.ToStringHelper helper = MoreObjects.toStringHelper(lck)
-                .add("name", lck.getName());
-            if (LC.include_redis_attrs_in_lock_debug.booleanValue()) {
-                if (lck.remainTimeToLive() == -1) {
-                    helper.add("ttl", "forever");
-                } else if (lck.remainTimeToLive() != -2 /* -2 means key does not exist */) {
-                    helper.add("ttl", lck.remainTimeToLive());
-                }
-                helper.add("read", toString(lck.readLock()));
-                helper.add("write", toString(lck.writeLock()));
-            }
-            return helper.toString();
-        }
-
         @Override
         public String toString() {
             MoreObjects.ToStringHelper helper = MoreObjects.toStringHelper(this)
                 .add("id", Integer.toHexString(id))
                 .add("write", write)
-                .add("rwLock", toString(rwLock));
+                .add("rwLock", localLock);
             addIfNot(helper, "initialReadHoldCount", 0, initialReadHoldCount);
             addIfNot(helper, "initialWriteHoldCount", 0, initialWriteHoldCount);
             addTimingInfo(helper);
             return helper.toString();
+        }
+    }
+
+    public class DistributedMailboxLock extends LocalMailboxLock {
+
+        private RReadWriteLock redisLock;
+        private RLock sublock;
+        private RLock fairLock;
+        private boolean write;
+
+        public DistributedMailboxLock(ReentrantReadWriteLock localLock, RReadWriteLock redisLock, RLock fairLock, boolean write) {
+            super(localLock, write);
+            this.redisLock = redisLock;
+            this.sublock = write ? redisLock.writeLock() : redisLock.readLock();
+            this.fairLock = fairLock;
+            this.write = write;
+        }
+
+        @Override
+        public void lock() throws ServiceException {
+            if (getHoldCount() == 0) {
+                if (acquireRedisLock()) {
+                    ZimbraLog.mailboxlock.trace("need to acquire redis lock for %s", super.toString());
+                    super.lock();
+                } else {
+                    throw ServiceException.LOCK_FAILED(String.format("unable to acquire redis lock for %s", super.toString()));
+                }
+            } else {
+                super.lock();
+            }
+
+        }
+
+        @Override
+        protected boolean releaseReadLocksBeforeWriteLock() {
+            boolean releaseRedisReadLock = super.releaseReadLocksBeforeWriteLock();
+            if (releaseRedisReadLock) {
+                ZimbraLog.mailboxlock.trace("unlocking redis read lock before acquiring write lock");
+                redisLock.readLock().unlock();
+            }
+            return releaseRedisReadLock;
+        }
+
+        @Override
+        protected boolean reinstateReadLocks() {
+            boolean reinstateRedisReadLock = super.reinstateReadLocks();
+            if (reinstateRedisReadLock) {
+                ZimbraLog.mailboxlock.trace("reinstating redis read lock");
+                try {
+                    fairLock.lock();
+                    fairLock.unlock();
+                } catch (RedisException e) {
+                    ZimbraLog.mailboxlock.warn("unable to acquire redis fair lock when reinstating read locks", e);
+                }
+                redisLock.readLock().tryLock();
+            }
+            return reinstateRedisReadLock;
+        }
+
+        private void acquireFairLock() throws ServiceException {
+            ZimbraLog.mailboxlock.trace("acquiring fair lock for %s", super.toString());
+            try {
+                fairLock.lock();
+            } catch (RedisException e) {
+                throw ServiceException.LOCK_FAILED(String.format("failed to acquire redis fair lock for %s", super.toString()), e);
+            }
+        }
+
+        private void releaseFairLock() throws ServiceException {
+            try {
+                ZimbraLog.mailboxlock.trace("releasing redis fair lock for %s", super.toString());
+                fairLock.unlock();
+            } catch (RedisException e) {
+                throw ServiceException.LOCK_FAILED(String.format("failed to release redis fair lock for %s", super.toString()), e);
+            } catch (IllegalStateException e) {
+                ZimbraLog.mailboxlock.warn("trying to release redis fair lock but it is not held by this thread", e);
+            }
+        }
+
+        private boolean acquireRedisLock() throws ServiceException {
+            acquireFairLock();
+            if (!write) {
+                releaseFairLock();
+            }
+            try {
+                if (sublock.tryLock(0, leaseSeconds(write), TimeUnit.SECONDS)) {
+                    return true;
+                }
+                if (sublock.tryLock(LC.zimbra_mailbox_lock_timeout.intValue(), leaseSeconds(write), TimeUnit.SECONDS)) {
+                    return true;
+                }
+            } catch (RedisException e) {
+                throw ServiceException.LOCK_FAILED("failed to acquire redis lock", e);
+            } catch (InterruptedException e) {
+                throw ServiceException.LOCK_FAILED("failed to acquire redis lock - interrupted");
+            }
+            return false;
+        }
+
+        @Override
+        public void close() {
+            super.close();
+            if (getHoldCount() == 0) {
+                ZimbraLog.mailboxlock.trace("releasing redis lock in close() for %s", super.toString());
+                try {
+                    sublock.unlock();
+                } catch (RedisException e) {
+                    ZimbraLog.mailboxlock.error("failed to release redis lock in close() for %s", super.toString(), e);
+                } catch (IllegalStateException e) {
+                    ZimbraLog.mailboxlock.warn("trying to release redis lock but it is not held by this thread", e);
+                }
+                if (write) {
+                    try {
+                        releaseFairLock();
+                    } catch (ServiceException e) {
+                        ZimbraLog.mailboxlock.error("failed to release redis fair lock in close() for %s", super.toString(), e);
+                    }
+                }
+            }
         }
     }
 }

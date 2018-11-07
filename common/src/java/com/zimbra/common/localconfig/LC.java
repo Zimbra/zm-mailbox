@@ -1270,7 +1270,7 @@ public final class LC {
     public static final KnownKey redis_num_retries = KnownKey.newKey(10);
 
     @Supported
-    public static final KnownKey redis_netty_threads = KnownKey.newKey(100);
+    public static final KnownKey redis_netty_threads = KnownKey.newKey(0);
 
     @Supported
     public static final KnownKey redis_retry_interval = KnownKey.newKey(3000);

@@ -242,6 +242,11 @@ public class RedissonRetryClient implements RedissonClient {
         return new RedissonRetryBatch(client -> client.createBatch(options), this);
     }
 
+    @Override
+    public RLock getFairLock(String name) {
+        return new RedissonRetryLock(client -> client.getFairLock(name), this);
+    }
+
     //RedissonClient interface methods below are not currently used anywhere in the codebase,
     //and therefore do not have corresponding retry-capable implementations subclassing {@link RedissonRetryDecorator}.
 
@@ -373,11 +378,6 @@ public class RedissonRetryClient implements RedissonClient {
 
     @Override
     public RPermitExpirableSemaphore getPermitExpirableSemaphore(String name) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public RLock getFairLock(String name) {
         throw new UnsupportedOperationException();
     }
 
