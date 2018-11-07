@@ -35,7 +35,6 @@ import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.DeleteAccountRequest;
 import com.zimbra.soap.admin.message.DeleteAccountResponse;
@@ -64,7 +63,7 @@ public class DeleteAccount extends AdminDocumentHandler {
     public boolean defendsAgainstDelegateAdminAccountHarvesting() {
         return true;
     }
-
+	
     /**
      * Deletes an account and its mailbox.
      */
@@ -106,8 +105,7 @@ public class DeleteAccount extends AdminDocumentHandler {
         prov.deleteAccount(id);
 
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
-            new String[] {"cmd", "DeleteAccount","name", account.getName(), "id", account.getId()}));
-
+            new String[] {"cmd", "DeleteAccount","name", account.getName(), "id", account.getId()}));   
         return zsc.jaxbToElement(new DeleteAccountResponse());
     }
 
