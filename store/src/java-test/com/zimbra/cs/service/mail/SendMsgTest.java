@@ -128,7 +128,7 @@ import com.zimbra.cs.util.JMSession;
 
     public static class DirectInsertionMailboxManager extends MailboxManager {
         public DirectInsertionMailboxManager() throws ServiceException {
-            super();
+            super(true);
         }
 
         @Override

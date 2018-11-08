@@ -191,6 +191,19 @@ public class MailboxManager {
         sInstance = mmgr;
     }
 
+    @VisibleForTesting
+    public synchronized static void setInstanceUsingLocalMailboxCacheManager() throws ServiceException {
+        sInstance = new MailboxManager(true);
+    }
+
+    @VisibleForTesting
+    public synchronized static MailboxManager getInstancePreferringLocalMailboxCacheManager() throws ServiceException {
+        if (sInstance == null) {
+            setInstanceUsingLocalMailboxCacheManager();
+        }
+        return sInstance;
+    }
+
     public void startup() {
         //noop
     }
