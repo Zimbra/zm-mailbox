@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.db.DbTag;
 import com.zimbra.cs.mailbox.MailItem;
@@ -255,5 +256,26 @@ public class CalendarItemData {
         meta.put(FN_RANGE_START, mActualRangeStart);
         meta.put(FN_RANGE_END, mActualRangeEnd);
         return meta;
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("type", type)
+                .add("FolderId", mFolderId)
+                .add("CalItemId", mCalItemId)
+                .add("mFlags", mFlags)
+                .add("mTags", mTags)
+                .add("isPublic", mIsPublic)
+                .add("modMetadata", mModMetadata)
+                .add("modContent", mModContent)
+                .add("date", mDate)
+                .add("changeDate", mChangeDate)
+                .add("size", mSize)
+                .add("uid", mUid)
+                .add("isRecurring", mIsRecurring)
+                .add("hasexceptions", mHasExceptions)
+                .add("actualRangeStart", mActualRangeStart)
+                .add("actualRangeEnd", mActualRangeEnd).toString();
     }
 }
