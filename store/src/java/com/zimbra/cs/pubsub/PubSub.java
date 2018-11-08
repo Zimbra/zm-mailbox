@@ -67,7 +67,7 @@ public class PubSub {
      * @param channel name of the channel
      * @param msg PubSubMsg object containing the message received from the channel
      */
-    public void onMessage(String channel, PubSubMsg msg) {
+    public void onMessage(CharSequence channel, PubSubMsg msg) {
         ZimbraLog.pubsub.debug("PubSub.onMessage(%s, %s) - %s", channel, msg, msg.getClass());
         CopyOnWriteArraySet<ListenerCallback> listeners = listenerMap.get(channel);
         if (listeners == null) {

@@ -23,6 +23,7 @@ import org.redisson.api.RMultimapAsync;
 import org.redisson.api.RMultimapCacheAsync;
 import org.redisson.api.RQueueAsync;
 import org.redisson.api.RScoredSortedSetAsync;
+import org.redisson.api.RScript;
 import org.redisson.api.RScriptAsync;
 import org.redisson.api.RSetAsync;
 import org.redisson.api.RSetCacheAsync;
@@ -45,16 +46,6 @@ public class RedissonRetryBatch extends RedissonRetryDecorator<RBatch> implement
     @Override
     public <K, V> RMapAsync<K, V> getMap(String name, Codec codec) {
         return runCommand(() -> redissonObject.getMap(name, codec));
-    }
-
-    @Override
-    public <K, V> RStreamAsync<K, V> getStream(String name) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <K, V> RStreamAsync<K, V> getStream(String name, Codec codec) {
-        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -166,16 +157,6 @@ public class RedissonRetryBatch extends RedissonRetryDecorator<RBatch> implement
 
     @Override
     public <V> RSetAsync<V> getSet(String name, Codec codec) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <M> RTopicAsync<M> getTopic(String name) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <M> RTopicAsync<M> getTopic(String name, Codec codec) {
         throw new UnsupportedOperationException();
     }
 
@@ -298,5 +279,30 @@ public class RedissonRetryBatch extends RedissonRetryDecorator<RBatch> implement
     @Override
     public RBatch retryAttempts(int retryAttempts) {
         return redissonObject.retryAttempts(retryAttempts);
+    }
+
+    @Override
+    public RScript getScript(Codec arg0) {
+        return redissonObject.getScript(arg0);
+    }
+
+    @Override
+    public <K, V> RStreamAsync<K, V> getStream(String arg0) {
+        return redissonObject.getStream(arg0);
+    }
+
+    @Override
+    public <K, V> RStreamAsync<K, V> getStream(String arg0, Codec arg1) {
+        return redissonObject.getStream(arg0, arg1);
+    }
+
+    @Override
+    public RTopicAsync getTopic(String arg0) {
+        return redissonObject.getTopic(arg0);
+    }
+
+    @Override
+    public RTopicAsync getTopic(String arg0, Codec arg1) {
+        return redissonObject.getTopic(arg0, arg1);
     }
 }

@@ -192,12 +192,12 @@ public class RedissonRetryList<V> extends RedissonRetryExpirable<RList<V>> imple
     }
 
     @Override
-    public RFuture<Void> fastRemoveAsync(long index) {
+    public RFuture<Void> fastRemoveAsync(int index) {
         return runCommand(() -> redissonObject.fastRemoveAsync(index));
     }
 
     @Override
-    public RFuture<V> removeAsync(long index) {
+    public RFuture<V> removeAsync(int index) {
         return runCommand(() -> redissonObject.removeAsync(index));
     }
 
@@ -395,5 +395,80 @@ public class RedissonRetryList<V> extends RedissonRetryExpirable<RList<V>> imple
     @Override
     public void fastRemove(int index) {
         runCommand(() -> { redissonObject.fastRemove(index); return null; });
+    }
+
+    @Override
+    public RFuture<Boolean> addAsync(int index, V element) {
+        return runCommand(() -> redissonObject.addAsync(index, element));
+    }
+
+    @Override
+    public RFuture<Boolean> removeAsync(Object o, int count) {
+        return runCommand(() -> redissonObject.removeAsync(o, count));
+    }
+
+    @Override
+    public RFuture<List<V>> readSortAlphaAsync(SortOrder order) {
+        return runCommand(() -> redissonObject.readSortAlphaAsync(order));
+    }
+
+    @Override
+    public RFuture<List<V>> readSortAlphaAsync(SortOrder order, int offset, int count) {
+        return runCommand(() -> redissonObject.readSortAlphaAsync(order, offset, count));
+    }
+
+    @Override
+    public RFuture<List<V>> readSortAlphaAsync(String byPattern, SortOrder order) {
+        return runCommand(() -> redissonObject.readSortAlphaAsync(byPattern, order));
+    }
+
+    @Override
+    public RFuture<List<V>> readSortAlphaAsync(String byPattern, SortOrder order, int offset, int count) {
+        return runCommand(() -> redissonObject.readSortAlphaAsync(byPattern, order, offset, count));
+    }
+
+    @Override
+    public <T> RFuture<Collection<T>> readSortAlphaAsync(String byPattern, List<String> getPatterns, SortOrder order) {
+        return runCommand(() -> redissonObject.readSortAlphaAsync(byPattern, getPatterns, order));
+    }
+
+    @Override
+    public <T> RFuture<Collection<T>> readSortAlphaAsync(String byPattern, List<String> getPatterns, SortOrder order, int offset, int count) {
+        return runCommand(() -> redissonObject.readSortAlphaAsync(byPattern, getPatterns, order, offset, count));
+    }
+
+    @Override
+    public List<V> readSortAlpha(SortOrder order) {
+        return runCommand(() -> redissonObject.readSortAlpha(order));
+    }
+
+    @Override
+    public List<V> readSortAlpha(SortOrder order, int offset, int count) {
+        return runCommand(() -> redissonObject.readSortAlpha(order, offset, count));
+    }
+
+    @Override
+    public List<V> readSortAlpha(String byPattern, SortOrder order) {
+        return runCommand(() -> redissonObject.readSortAlpha(byPattern, order));
+    }
+
+    @Override
+    public List<V> readSortAlpha(String byPattern, SortOrder order, int offset, int count) {
+        return runCommand(() -> redissonObject.readSortAlpha(byPattern, order, offset, count));
+    }
+
+    @Override
+    public <T> Collection<T> readSortAlpha(String byPattern, List<String> getPatterns, SortOrder order) {
+        return runCommand(() -> redissonObject.readSortAlpha(byPattern, getPatterns, order));
+    }
+
+    @Override
+    public <T> Collection<T> readSortAlpha(String byPattern, List<String> getPatterns, SortOrder order, int offset, int count) {
+        return runCommand(() -> redissonObject.readSortAlpha(byPattern, getPatterns, order, offset, count));
+    }
+
+    @Override
+    public boolean remove(Object o, int count) {
+        return runCommand(() -> redissonObject.remove(o, count));
     }
 }

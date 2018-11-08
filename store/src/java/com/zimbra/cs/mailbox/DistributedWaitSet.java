@@ -19,7 +19,7 @@ public class DistributedWaitSet {
      * Notify downstream subscribers that a change has occurred.
      */
 	public long publish(final String accountId, final WaitSetResp resp) {
-		final RTopic<WaitSetResp> topic = redisson.getTopic(accountId);
+		final RTopic topic = redisson.getTopic(accountId);
 		return topic.publish(resp);
 	}
 
@@ -28,8 +28,8 @@ public class DistributedWaitSet {
      * Should be called on a thread other than the thread being used to publish via DistributedWaitSet#publish
      */
 	public void subscribe(final String accountId, final MessageListener<WaitSetResp> respListener) {
-		final RTopic<WaitSetResp> topic = redisson.getTopic(accountId);
-		topic.addListener(respListener);
+		final RTopic topic = redisson.getTopic(accountId);
+		topic.addListener(WaitSetResp.class, respListener);
 	}
 
     private static class InstanceHolder {
