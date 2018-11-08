@@ -30,7 +30,7 @@ import junit.framework.Assert;
 		final DistributedWaitSet dws = DistributedWaitSet.getInstance();
 		MessageListener<WaitSetResp> msgListener = new MessageListener<WaitSetResp>() {
 			@Override
-			public void onMessage(String arg0, WaitSetResp arg1) {
+			public void onMessage(CharSequence arg0, WaitSetResp arg1) {
 				System.out.println("channel:"+arg0 +" message:"+arg1);
 			}
 		};
@@ -39,7 +39,7 @@ import junit.framework.Assert;
 		System.out.println("delivered:"+delivered );
 		Assert.assertEquals(delivered, 1);
 	}
-	
+
 	private WaitSetResp getWaitSetResp() {
 		Collection<PendingFolderModifications> mods = new ArrayList<>();
 		PendingFolderModifications pendingFolderModifications = new PendingFolderModifications(10);

@@ -29,6 +29,7 @@ public class RedisPubSub extends PubSub {
         this.client = client;
     }
 
+    @Override
     public void addListener(String channel, ListenerCallback callback) {
         ZimbraLog.pubsub.debug("RedisPubSub.addListener(%s) - '%s'", channel, callback);
         super.addListener(channel, callback);
@@ -37,6 +38,7 @@ public class RedisPubSub extends PubSub {
         }
     }
 
+    @Override
     public boolean removeListener(String channel, ListenerCallback callback) {
         ZimbraLog.pubsub.debug("RedisPubSub.removeListener(%s) - '%s'", channel, callback);
         boolean removed = super.removeListener(channel, callback);
@@ -48,6 +50,7 @@ public class RedisPubSub extends PubSub {
         return removed;
     }
 
+    @Override
     public void publish(String channel, PubSubMsg msg) {
         NotificationChannel nchannel = channelListenerMap.get(channel);
         if (nchannel != null) {
@@ -72,7 +75,7 @@ public class RedisPubSub extends PubSub {
     public static class NotificationChannel implements MessageListener<PubSubMsg> {
         private PubSub pubSub;
         private int listenerId;
-        private RTopic<PubSubMsg> channel;
+        private RTopic channel;
         private boolean active = false;
 
         public NotificationChannel(PubSub pubsub, RedissonClient client, String channelName) {
@@ -85,7 +88,7 @@ public class RedisPubSub extends PubSub {
             if (active) {
                 return;
             }
-            listenerId = channel.addListener(this);
+            listenerId = channel.addListener(PubSubMsg.class, this);
             ZimbraLog.pubsub.debug("RedisPubSub.NotificationChannel(%s).beginListening()", channel.getChannelNames().get(0));
             active = true;
         }
@@ -99,7 +102,8 @@ public class RedisPubSub extends PubSub {
             active = false;
         }
 
-        public void onMessage(String channel, PubSubMsg msg) {
+        @Override
+        public void onMessage(CharSequence channel, PubSubMsg msg) {
             ZimbraLog.mailbox.debug("RedisPubSub.NotificationChannel.onMessage(%s) = %s", channel, msg);
             pubSub.onMessage(channel, msg);
         }
@@ -115,6 +119,7 @@ public class RedisPubSub extends PubSub {
 
         private static PubSub pubsub;
 
+        @Override
         protected PubSub initPubSub() {
             if (RedisPubSub.Factory.pubsub == null) {
                 RedissonClient client = RedissonClientHolder.getInstance().getRedissonClient();

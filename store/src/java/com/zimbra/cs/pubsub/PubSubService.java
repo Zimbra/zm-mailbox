@@ -77,7 +77,7 @@ public class PubSubService {
 
     public class BroadcastCallback extends ListenerCallback {
         @Override
-        public void onMessage(String channel, PubSubMsg msg) {
+        public void onMessage(CharSequence channel, PubSubMsg msg) {
             ZimbraLog.pubsub.debug("PubSubService.BroadcastCallback.onMessage(%s) = %s", channel, msg);
             if (msg instanceof FlushCacheMsg) {
                 ZimbraLog.pubsub.debug("FlushCacheMsg received: calling FlushCache.doFlush(selector)");

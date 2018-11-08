@@ -7,9 +7,9 @@ import org.redisson.api.RTopic;
 import org.redisson.api.listener.MessageListener;
 import org.redisson.api.listener.StatusListener;
 
-public class RedissonRetryTopic<M> extends RedissonRetryDecorator<RTopic<M>> implements RTopic<M>{
+public class RedissonRetryTopic extends RedissonRetryDecorator<RTopic> implements RTopic {
 
-    public RedissonRetryTopic(RedissonInitializer<RTopic<M>> topicInitializer, RedissonRetryClient client) {
+    public RedissonRetryTopic(RedissonInitializer<RTopic> topicInitializer, RedissonRetryClient client) {
         super(topicInitializer, client);
     }
 
@@ -19,13 +19,13 @@ public class RedissonRetryTopic<M> extends RedissonRetryDecorator<RTopic<M>> imp
     }
 
     @Override
-    public long publish(M message) {
+    public long publish(Object message) {
         return runCommand(() -> redissonObject.publish(message));
     }
 
     @Override
-    public int addListener(MessageListener<M> listener) {
-        return runCommand(() -> redissonObject.addListener(listener));
+    public <M> int addListener(Class<M> type, MessageListener<? extends M> listener) {
+        return runCommand(() -> redissonObject.addListener(type, listener));
     }
 
     @Override
@@ -34,7 +34,7 @@ public class RedissonRetryTopic<M> extends RedissonRetryDecorator<RTopic<M>> imp
     }
 
     @Override
-    public RFuture<Long> publishAsync(M message) {
+    public RFuture<Long> publishAsync(Object message) {
         return runCommand(() -> redissonObject.publishAsync(message));
     }
 
@@ -56,7 +56,12 @@ public class RedissonRetryTopic<M> extends RedissonRetryDecorator<RTopic<M>> imp
     }
 
     @Override
-    public RFuture<Integer> addListenerAsync(MessageListener<M> listener) {
+    public <M> RFuture<Integer> addListenerAsync(Class<M> type, MessageListener<M> listener) {
+        return runCommand(() -> redissonObject.addListenerAsync(type, listener));
+    }
+
+    @Override
+    public RFuture<Integer> addListenerAsync(StatusListener listener) {
         return runCommand(() -> redissonObject.addListenerAsync(listener));
     }
 }

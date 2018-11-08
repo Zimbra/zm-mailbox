@@ -3,7 +3,7 @@ package com.zimbra.cs.mailbox.redis;
 import org.redisson.api.RLock;
 import org.redisson.api.RReadWriteLock;
 
-public class RedissonRetryReadWriteLock extends RedissonRetryExpirable<RReadWriteLock> implements RReadWriteLock {
+public class RedissonRetryReadWriteLock extends RedissonRetryDecorator<RReadWriteLock> implements RReadWriteLock {
 
     public RedissonRetryReadWriteLock(RedissonInitializer<RReadWriteLock> lockInitializer, RedissonRetryClient client) {
         super(lockInitializer, client);
