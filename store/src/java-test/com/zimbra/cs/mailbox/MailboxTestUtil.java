@@ -169,7 +169,7 @@ import com.zimbra.soap.DocumentHandler;
         ItemCache.setFactory(new LocalItemCache.Factory());
         SessionDataProvider.setFactory(new LocalSessionDataProvider.Factory());
         NotificationPubSub.setFactory(new LocalPubSub.Factory());
-        MailboxManager.setInstance(null);
+        MailboxManager.setInstanceUsingLocalMailboxCacheManager();
         IndexStore.setFactory(LC.zimbra_class_index_store_factory.value());
         LC.zimbra_class_store.setDefault(storeManagerClass.getName());
         StoreManager.getInstance().startup();
@@ -195,7 +195,7 @@ import com.zimbra.soap.DocumentHandler;
         SessionDataProvider.setFactory(new LocalSessionDataProvider.Factory());
         NotificationPubSub.setFactory(new LocalPubSub.Factory());
         PubSubService.setFactory(new com.zimbra.cs.pubsub.MemoryPubSub.Factory());
-        MailboxManager.setInstance(null);
+        MailboxManager.setInstanceUsingLocalMailboxCacheManager();
 
         LC.zimbra_class_store.setDefault(storeManagerClass.getName());
         StoreManager.getInstance().startup();
@@ -218,7 +218,7 @@ import com.zimbra.soap.DocumentHandler;
      */
     public static void clearData(String zimbraServerDir) throws Exception {
         HSQLDB.clearDatabase(zimbraServerDir);
-        MailboxManager.getInstance().cacheManager.clearCache();
+        MailboxManager.getInstancePreferringLocalMailboxCacheManager().cacheManager.clearCache();
         try {
             IndexStore.getFactory().destroy();
             cleanupAllIndexStores();
