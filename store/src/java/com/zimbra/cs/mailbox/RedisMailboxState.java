@@ -8,21 +8,23 @@ import org.redisson.client.RedisException;
 
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Mailbox.MailboxData;
+import com.zimbra.cs.mailbox.redis.RedisBackedMap;
 import com.zimbra.cs.mailbox.redis.RedisUtils;
 
 public class RedisMailboxState extends MailboxState {
 
     private RedissonClient client;
-    private RMap<String, Object> redisHash;
+    private RedisBackedMap<String, Object> redisMap;
 
-    public RedisMailboxState(MailboxData data) {
-        super(data);
+    public RedisMailboxState(MailboxData data, TransactionCacheTracker tracker) {
+        super(data, tracker);
     }
 
     @Override
     protected void init() {
         client = RedissonClientHolder.getInstance().getRedissonClient();
-        redisHash = client.getMap(RedisUtils.createAccountRoutedKey(data.accountId, "MAILBOX"));
+        RMap<String, Object> redisHash = client.getMap(RedisUtils.createAccountRoutedKey(data.accountId, "MAILBOX"));
+        redisMap = new RedisBackedMap<>(redisHash, cacheTracker);
         super.init();
     }
     @Override
@@ -52,16 +54,17 @@ public class RedisMailboxState extends MailboxState {
             this.hashKey = field.name();
         }
 
+        @SuppressWarnings("unchecked")
         @Override
         public T value() {
-            T val = (T) redisHash.get(hashKey);
+            T val = (T) redisMap.get(hashKey);
             ZimbraLog.mailbox.debug("got %s=%s from redis for mailbox %s", hashKey, val, data.accountId);
             return val;
         }
 
         @Override
         public void set(T val) {
-            redisHash.put(hashKey, val);
+            redisMap.put(hashKey, val);
             ZimbraLog.mailbox.debug("set %s=%s for mailbox %s", hashKey, val, data.accountId);
         }
 
@@ -69,7 +72,7 @@ public class RedisMailboxState extends MailboxState {
         @Override
         public T setIfNotExists(T value) {
             try {
-                T prevValue = (T) redisHash.putIfAbsent(hashKey, value);
+                T prevValue = (T) redisMap.getMap().putIfAbsent(hashKey, value);
                 if (prevValue == null) {
                     ZimbraLog.mailbox.debug("set %s=%s for account %s", hashKey, value, data.accountId);
                     return value;
@@ -87,8 +90,8 @@ public class RedisMailboxState extends MailboxState {
     public static class Factory implements MailboxState.Factory {
 
         @Override
-        public MailboxState getMailboxState(MailboxData data) {
-            return new RedisMailboxState(data);
+        public MailboxState getMailboxState(MailboxData data, TransactionCacheTracker tracker) {
+            return new RedisMailboxState(data, tracker);
         }
 
     }

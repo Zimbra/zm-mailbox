@@ -10,21 +10,24 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
-import com.zimbra.cs.mailbox.redis.RedisUtils;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.RedissonClientHolder;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.TagState;
+import com.zimbra.cs.mailbox.TransactionCacheTracker;
+import com.zimbra.cs.mailbox.redis.RedisBackedMap;
+import com.zimbra.cs.mailbox.redis.RedisUtils;
 
 public class RedisTagCache extends RedisSharedStateCache<Tag> implements TagCache {
 
-    private RMap<String, Integer> name2Id;
+    private RedisBackedMap<String, Integer> name2Id;
 
-    public RedisTagCache(Mailbox mbox) {
-        super(mbox, new LocalTagCache());
+    public RedisTagCache(Mailbox mbox, TransactionCacheTracker cacheTracker) {
+        super(mbox, new LocalTagCache(), cacheTracker);
         RedissonClient client = RedissonClientHolder.getInstance().getRedissonClient();
         String name2IdMapName = RedisUtils.createAccountRoutedKey(mbox.getAccountId(), "TAG_NAME2ID");
-        name2Id = client.getMap(name2IdMapName);
+        RMap<String, Integer> rmap = client.getMap(name2IdMapName);
+        name2Id = new RedisBackedMap<>(rmap, cacheTracker);
     }
 
     private LocalTagCache getLocalCache() {
@@ -44,7 +47,7 @@ public class RedisTagCache extends RedisSharedStateCache<Tag> implements TagCach
     public Tag remove(int tagId) {
         Tag removed = super.remove(tagId);
         if (removed != null ) {
-            name2Id.fastRemove(removed.getName().toLowerCase());
+            name2Id.remove(removed.getName().toLowerCase());
         }
         return removed;
     }
@@ -57,7 +60,7 @@ public class RedisTagCache extends RedisSharedStateCache<Tag> implements TagCach
     @Override
     public void put(Tag tag) {
         super.put(tag);
-        name2Id.fastPut(tag.getName().toLowerCase(), tag.getId());
+        name2Id.put(tag.getName().toLowerCase(), tag.getId());
     }
 
     @Override
@@ -85,6 +88,6 @@ public class RedisTagCache extends RedisSharedStateCache<Tag> implements TagCach
 
     @Override
     protected Collection<Integer> getAllIds() {
-        return name2Id.readAllValues();
+        return name2Id.values();
     }
 }
