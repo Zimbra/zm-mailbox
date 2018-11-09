@@ -3978,7 +3978,12 @@ public class Mailbox implements MailboxStore {
     }
 
     Message getMessageById(int id) throws ServiceException {
-        return (Message) getItemById(id, MailItem.Type.MESSAGE);
+        if (currentChange().isActive()) {
+            return (Message) getItemById(id, MailItem.Type.MESSAGE);
+        } else {
+            // need to be in a transaction.
+            return (Message) getItemById((OperationContext)null, id, MailItem.Type.MESSAGE);
+        }
     }
 
     Message getMessage(MailItem.UnderlyingData data) throws ServiceException {
