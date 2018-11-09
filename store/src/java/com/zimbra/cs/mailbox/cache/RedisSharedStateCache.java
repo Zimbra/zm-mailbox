@@ -2,19 +2,13 @@ package com.zimbra.cs.mailbox.cache;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
-import org.redisson.api.BatchOptions;
-import org.redisson.api.RBatch;
 import org.redisson.api.RMap;
 import org.redisson.api.RedissonClient;
 
-import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Sets;
 import com.zimbra.common.util.ZimbraLog;
@@ -24,23 +18,24 @@ import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailItemState;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.RedissonClientHolder;
+import com.zimbra.cs.mailbox.TransactionCacheTracker;
 import com.zimbra.cs.mailbox.TransactionListener;
+import com.zimbra.cs.mailbox.redis.RedisBackedMap;
 
 public abstract class RedisSharedStateCache<M extends MailItem & SharedState> implements AbstractItemCache<M> {
 
     protected Mailbox mbox;
     protected AbstractItemCache<M> localCache;
     protected RedissonClient client;
-    private RedisCacheTracker tracker;
     private KnownItemIds knownItemIds;
+    private TransactionCacheTracker tracker;
 
-    public RedisSharedStateCache(Mailbox mbox, AbstractItemCache<M> localCache) {
+    public RedisSharedStateCache(Mailbox mbox, AbstractItemCache<M> localCache, TransactionCacheTracker cacheTracker) {
         this.mbox = mbox;
         this.localCache = localCache;
         this.client = RedissonClientHolder.getInstance().getRedissonClient();
-        this.tracker = new RedisCacheTracker(mbox);
+        this.tracker = cacheTracker;
         this.knownItemIds = new KnownItemIds();
-        mbox.addTransactionListener(tracker);
         mbox.addTransactionListener(knownItemIds);
     }
 
@@ -212,170 +207,40 @@ public abstract class RedisSharedStateCache<M extends MailItem & SharedState> im
         return data;
     }
 
-    protected static class RedisSharedState implements SharedStateAccessor {
+    protected static class RedisSharedState extends RedisBackedMap<String, Object> implements SharedStateAccessor {
 
-        private final RMap<String, Object> map;
-        private ThreadLocal<Map<String, Object>> localCache = null;
-        private Map<String, Object> valueChanges = null;
-        private Set<String> keyDeletions = null;
-        private RedisCacheTracker tracker;
-
-        public RedisSharedState(RMap<String, Object> map, RedisCacheTracker tracker) {
-            this.map = map;
-            this.tracker = tracker;
-            localCache = new ThreadLocal<>();
-        }
-
-        private Map<String, Object> getLocalCache() {
-            return localCache.get();
-        }
-        @SuppressWarnings("unchecked")
-        @Override
-        public <T> T get(String fieldName) {
-            if (getLocalCache() == null) {
-                initLocalCache();
-            }
-            T val = (T) getLocalCache().get(fieldName);
-            ZimbraLog.cache.trace("RedisSharedState.get(%s=%s), %s", fieldName, val, map.getName());
-            return val;
-        }
-
-        @Override
-        public <T> void set(String fieldName, T value) {
-            ZimbraLog.cache.trace("RedisSharedState.set(%s=%s). %s", fieldName, value, map.getName());
-            addChange(fieldName, value);
-        }
-
-        private <T> void addChange(String fieldName, T value) {
-
-            if (getLocalCache() == null) {
-                initLocalCache();
-            }
-            getLocalCache().put(fieldName, value);
-            valueChanges.put(fieldName, value);
-            //if this key was previously deleted in this transaction, remove it from the deletions list!
-            if (keyDeletions.remove(fieldName)) {
-                ZimbraLog.cache.trace("RedisSharedState: removed %s from keyDeletions set", fieldName);
-            }
-        }
-
-        @Override
-        public void delete() {
-            ZimbraLog.cache.trace("RedisSharedState.delete() %s", this);
-            map.delete();
-            localCache.set(null);
-            valueChanges = null;
-            keyDeletions = null;
-        }
-
-        @Override
-        public void unset(String fieldName) {
-            ZimbraLog.cache.trace("RedisSharedState.unset(%s) %s", fieldName, this);
-            if (getLocalCache() == null) {
-                initLocalCache();
-            }
-            getLocalCache().remove(fieldName);
-            keyDeletions.add(fieldName);
-
-        }
-
-        private void initLocalCache() {
-            ZimbraLog.cache.trace("initializing local cache for map %s in thread %s", map.getName(), Thread.currentThread().getName());
-            valueChanges = new HashMap<>();
-            keyDeletions = new HashSet<>();
-            localCache.set(map.readAllMap());
-            tracker.addToTracker(this);
-        }
-
-        private void addChangesToBatch(RBatch batch) {
-            if (valueChanges != null && !valueChanges.isEmpty()) {
-                ZimbraLog.cache.trace("adding %s changes to redis map %s via batch: %s", valueChanges.size(), map.getName(), valueChanges);
-                batch.getMap(map.getName()).putAllAsync(valueChanges);
-                valueChanges = null;
-            }
-            if (keyDeletions != null && !keyDeletions.isEmpty()) {
-                int numDeletions = keyDeletions.size();
-                ZimbraLog.cache.trace("pushing %s deletions to redis map %s: %s", numDeletions, map.getName(), Joiner.on(",").join(keyDeletions));
-                batch.getMap(map.getName()).fastRemoveAsync(keyDeletions.toArray());
-                keyDeletions = null;
-            }
-        }
-
-        private void clearLocalCache() {
-            ZimbraLog.cache.trace("clearing cache of redis map %s", map.getName());
-            localCache.set(null);
+        public RedisSharedState(RMap<String, Object> map, TransactionCacheTracker tracker) {
+            super(map, tracker);
         }
 
         @Override
         public String toString() {
             return MoreObjects.toStringHelper(this).omitNullValues()
-                    .add("map", localCache == null ? null : getLocalCache().entrySet())
-                    .add("map.name", map == null ? null : map.getName())
-                    .add("map.hashCode", System.identityHashCode(map))
+                    .add("map", getLocalCache() == null ? null : getLocalCache().entrySet())
+                    .add("map.name", getName())
+                    .add("map.hashCode", System.identityHashCode(redisMap))
                     .toString();
         }
-    }
 
-    private static class RedisCacheTracker implements TransactionListener {
-
-        private Mailbox mbox;
-        private ThreadLocal<Set<RedisSharedState>> touchedItems;
-
-        public RedisCacheTracker(Mailbox mbox) {
-            this.mbox = mbox;
-            touchedItems = ThreadLocal.withInitial(() -> new HashSet<>());
-        }
-
-        public void addToTracker(RedisSharedState item) {
-            ZimbraLog.cache.trace("adding %s to RedisCacheTracker from thread %s", item.map.getName(), Thread.currentThread().getName());
-            touchedItems.get().add(item);
-        }
-
-        private RBatch createBatch() {
-            RedissonClient client = RedissonClientHolder.getInstance().getRedissonClient();
-            return client.createBatch(BatchOptions.defaults());
+        @SuppressWarnings("unchecked")
+        @Override
+        public <T> T get(String fieldName) {
+            return (T) super.get(fieldName);
         }
 
         @Override
-        public void transactionEnd(boolean success, boolean endChange) {
-            ZimbraLog.cache.trace("RedisCacheTracker.transactionEnd(): success=%s, endChange=%s", success, endChange);
+        public void unset(String fieldName) {
+            remove(fieldName);
         }
 
         @Override
-        public void transactionBegin(boolean startChange) {
-            ZimbraLog.cache.trace("RedisCacheTracker.transactionBegin(): startChange=%s", startChange);
-            if (startChange) {
-                //clear out any caches built by getters invoked *outside* of a transaction
-                clearTouchedItems();
-            }
+        public void delete() {
+            clear();
         }
 
         @Override
-        public void commitCache() {
-            Set<RedisSharedState> touchedByThisThread = touchedItems.get();
-            ZimbraLog.cache.trace("RedisCacheTracker.commitCache(): flushing changes to %s redis maps for account %s", touchedByThisThread.size(), mbox.getAccountId());
-            RBatch batch = createBatch();
-            touchedByThisThread.stream().forEach(item -> item.addChangesToBatch(batch));
-            batch.execute();
-            clearTouchedItems();
-        }
-
-        @Override
-        public void rollbackCache() {
-            clearTouchedItems();
-        }
-
-        private void clearTouchedItems() {
-            Set<RedisSharedState> touchedByThisThread = touchedItems.get();
-            if (touchedByThisThread.isEmpty()) {
-                return;
-            }
-            if (ZimbraLog.cache.isTraceEnabled()) {
-                List<String> touched = touchedByThisThread.stream().map(s -> s.map.getName()).sorted().collect(Collectors.toList());
-                ZimbraLog.cache.trace("RedisCacheTracker.clearTouchedItems(): clearing touched items: %s", Joiner.on(", ").join(touched));
-            }
-            touchedByThisThread.stream().forEach(item -> item.clearLocalCache());
-            touchedByThisThread.clear();
+        public void set(String fieldName, Object value) {
+            put(fieldName, value);
         }
     }
 
@@ -402,7 +267,7 @@ public abstract class RedisSharedStateCache<M extends MailItem & SharedState> im
         }
 
         @Override
-        public void commitCache() {}
+        public void commitCache(boolean endChange) {}
 
         @Override
         public void rollbackCache() {}

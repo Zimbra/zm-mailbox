@@ -7,6 +7,7 @@ import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Metadata;
+import com.zimbra.cs.mailbox.TransactionCacheTracker;
 
 public class LocalItemCache extends MapItemCache<MailItem> {
 
@@ -39,7 +40,7 @@ public class LocalItemCache extends MapItemCache<MailItem> {
     public static class Factory implements ItemCache.Factory {
 
         @Override
-        public ItemCache getItemCache(Mailbox mbox) {
+        public ItemCache getItemCache(Mailbox mbox, TransactionCacheTracker cacheTracker) {
             Map<Integer, MailItem> itemMap = new ConcurrentLinkedHashMap.Builder<Integer, MailItem>().maximumWeightedCapacity(
                     Mailbox.MAX_ITEM_CACHE_WITH_LISTENERS).build();
             Map<String, Integer> uuidMap = new ConcurrentHashMap<>(Mailbox.MAX_ITEM_CACHE_WITH_LISTENERS);
@@ -47,13 +48,19 @@ public class LocalItemCache extends MapItemCache<MailItem> {
         }
 
         @Override
-        public FolderCache getFolderCache(Mailbox mbox) {
+        public FolderCache getFolderCache(Mailbox mbox, TransactionCacheTracker cacheTracker) {
             return new LocalFolderCache();
         }
 
         @Override
-        public TagCache getTagCache(Mailbox mbox) {
+        public TagCache getTagCache(Mailbox mbox, TransactionCacheTracker cacheTracker) {
             return new LocalTagCache();
+        }
+
+        @Override
+        public TransactionCacheTracker getTransactionCacheTracker(Mailbox mbox) {
+            //no need for transaction tracker for local case
+            return null;
         }
     }
 }

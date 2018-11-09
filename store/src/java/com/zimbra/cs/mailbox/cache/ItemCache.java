@@ -12,6 +12,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.MetadataList;
 import com.zimbra.cs.mailbox.Tag;
+import com.zimbra.cs.mailbox.TransactionCacheTracker;
 
 public abstract class ItemCache {
 
@@ -110,8 +111,9 @@ public abstract class ItemCache {
     }
 
     public static interface Factory {
-        public ItemCache getItemCache(Mailbox mbox);
-        public FolderCache getFolderCache(Mailbox mbox);
-        public TagCache getTagCache(Mailbox mbox);
+        public ItemCache getItemCache(Mailbox mbox, TransactionCacheTracker cacheTracker);
+        public FolderCache getFolderCache(Mailbox mbox, TransactionCacheTracker cacheTracker);
+        public TagCache getTagCache(Mailbox mbox, TransactionCacheTracker cacheTracker);
+        public TransactionCacheTracker getTransactionCacheTracker(Mailbox mbox);
     }
 }

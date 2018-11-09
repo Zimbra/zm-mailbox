@@ -22,9 +22,11 @@ public abstract class MailboxState {
     private static Factory factory;
     protected MailboxData data;
     private Map<MailboxField, SynchronizedField<?>> fieldMap = new HashMap<>();
+    protected TransactionCacheTracker cacheTracker;
 
-    public MailboxState(MailboxData data) {
+    public MailboxState(MailboxData data, TransactionCacheTracker cacheTracker) {
         this.data = data;
+        this.cacheTracker = cacheTracker;
         init();
     }
 
@@ -284,6 +286,6 @@ public abstract class MailboxState {
 
     public static interface Factory {
 
-        public MailboxState getMailboxState(MailboxData data);
+        public MailboxState getMailboxState(MailboxData data, TransactionCacheTracker tracker);
     }
 }
