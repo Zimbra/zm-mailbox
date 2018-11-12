@@ -1,0 +1,174 @@
+#!/bin/bash
+#
+# Setups zm-docker for given build tag
+STACK_SLEEP=30
+SLEEP=5
+
+#######################################
+# Waits until services are undeployed
+# Globals:
+#   SLEEP
+# Arguments:
+#   None
+# Returns:
+#   None
+#######################################
+wait_undeploy(){
+    secs=0
+    while [ "$(docker ps | grep -c zmc-)" -gt 0 ]; do
+        echo "Waiting for stack services to come down for ${secs} seconds"
+        sleep ${secs}
+        secs=$((secs + SLEEP))
+    done
+}
+
+#######################################
+# Waits until services are up
+# Globals:
+#   STACK_SLEEP
+# Arguments:
+#   None
+# Returns:
+#   None
+#######################################
+wait_up() {
+    timeout=$(($(date +%s)+360))
+    timer=$(date +%s)
+    UP=no
+    while [ "${UP}" == "no" ] && [ "${timer}" -lt "${timeout}" ]
+    do
+        echo "$(date) - Waiting for stack to come up ..."
+        sleep ${STACK_SLEEP}
+        if docker service logs zm-docker_zmc-proxy | grep -q 'INITIALIZED'
+        then
+            echo "$(date) - Stack is up..."
+            UP=yes
+        fi
+        timer=$(date +%s)
+    done
+    if [ "${UP}" == "no" ]; then
+      echo "360 second timeout and services were not all up"
+      exit 1
+    fi
+}
+
+#######################################
+# Checkouts or updates zm-docker repo
+# Globals:
+#   None
+# Arguments:
+#   None
+# Returns:
+#   None
+#######################################
+handle_repo() {
+  rm -rf repos/zm-docker
+  mkdir -p repos
+  cd repos || exit 1
+  git clone --depth=1 --branch develop git@github.com:ZimbraOS/zm-docker.git zm-docker
+  cp ~/.ssh/id_rsa* zm-docker/build/config/DOT-ssh
+  cd zm-docker || exit 1
+}
+
+#######################################
+# Displays the failure msg and exits
+# Globals:
+#   None
+# Arguments:
+#   Failure Message
+#   Exit Code
+# Returns:
+#   None
+#######################################
+echo_fail_exit() {
+  echo "$1"
+  exit "$2"
+}
+
+#######################################
+# Builds and starts up zm-docker stack
+# Globals:
+#   None
+# Arguments:
+#   Docker build tag number
+# Returns:
+#   None
+#######################################
+build_setup() {
+  docker_build_tag="$1"
+  make DOCKER_BUILD_TAG="${docker_build_tag}" DEPLOY_WITH_REG_AUTH=--with-registry-auth up || echo_fail_exit "FAILED:make up" 1
+}
+
+#######################################
+# Resets the stack
+# Globals:
+#   None
+# Arguments:
+#   None
+# Returns:
+#   None
+#######################################
+reset_stack() {
+  if [ -d repos/zm-docker ]; then
+    cd repos/zm-docker || exit 1
+    echo "Undeploying stack..."
+    make down
+    wait_undeploy
+    cd ../.. || exit 1
+  fi
+  echo "Pruning..."
+  docker system prune -f
+
+  for vol in $(docker volume ls | grep -E 'ZM-BUILDS|zm-docker' | awk '{print $2}'); do
+    echo "Removing volume ${vol}"
+    docker volume rm "${vol}"
+  done
+
+  for img in $(docker images | grep -E 'zmc-|zm-docker-build' | awk '{print $3}'); do
+    echo "Removing image ${img}"
+    docker rmi -f "${img}"
+  done
+}
+
+#######################################
+# Makes the default network attachable
+# MIGHT USE IN FUTURE SO LEAVING IN
+# Globals:
+#   None
+# Arguments:
+#   None
+# Returns:
+#   None
+#######################################
+make_default_network_attachable() {
+  cat << EOT >> ./docker-compose.yml
+  networks:
+    default:
+  driver: overlay
+  attachable: true
+EOT
+}
+
+#######################################
+# Main function
+# Globals:
+#   None
+# Arguments:
+#   Docker build tag
+# Returns:
+#   None
+#######################################
+main() {
+  docker_build_tag="$1"
+  if [ -z "${docker_build_tag}" ]; then
+    echo "Please pass in a build tag"
+    exit 1
+  fi
+  
+  reset_stack
+  handle_repo
+  build_setup "${docker_build_tag}"
+  wait_up
+}
+
+main "$1"

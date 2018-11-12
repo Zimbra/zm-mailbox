@@ -22,7 +22,7 @@ references:
             curl -L -o /tmp/docker-$VER.tgz https://download.docker.com/linux/static/stable/x86_64/docker-$VER.tgz
             tar -xz -C /tmp -f /tmp/docker-$VER.tgz
             sudo mv /tmp/docker/* /usr/bin
-   save_env: &save_env
+   load_env: &load_env
        run: echo 'source $PWD/.env' >> $BASH_ENV
    build_docker_context: &build_docker_context
        run:
@@ -223,7 +223,7 @@ jobs:
       - *default_attach_workspace
       - setup_remote_docker
       - *install_docker_client
-      - *save_env
+      - *load_env
       - *build_docker_context
       - *install_python
       - *start_apt_catcher_ng
@@ -254,7 +254,7 @@ jobs:
       - *default_attach_workspace
       - setup_remote_docker
       - *install_docker_client
-      - *save_env
+      - *load_env
       - *build_docker_context
       - *install_python
       - *start_apt_catcher_ng
@@ -285,7 +285,7 @@ jobs:
       - *default_attach_workspace
       - setup_remote_docker
       - *install_docker_client
-      - *save_env
+      - *load_env
       - *build_docker_context
       - *install_python
       - *start_apt_catcher_ng
@@ -316,7 +316,7 @@ jobs:
       - *default_attach_workspace
       - setup_remote_docker
       - *install_docker_client
-      - *save_env
+      - *load_env
       - *build_docker_context
       - *install_python
       - *start_apt_catcher_ng
@@ -347,7 +347,7 @@ jobs:
       - *default_attach_workspace
       - setup_remote_docker
       - *install_docker_client
-      - *save_env
+      - *load_env
       - *build_docker_context
       - *install_python
       - *start_apt_catcher_ng
@@ -378,7 +378,7 @@ jobs:
       - *default_attach_workspace
       - setup_remote_docker
       - *install_docker_client
-      - *save_env
+      - *load_env
       - *build_docker_context
       - *install_python
       - *start_apt_catcher_ng
@@ -409,7 +409,7 @@ jobs:
       - *default_attach_workspace
       - setup_remote_docker
       - *install_docker_client
-      - *save_env
+      - *load_env
       - *build_docker_context
       - *install_python
       - *start_apt_catcher_ng
@@ -440,7 +440,7 @@ jobs:
       - *default_attach_workspace
       - setup_remote_docker
       - *install_docker_client
-      - *save_env
+      - *load_env
       - *build_docker_context
       - *install_python
       - *start_apt_catcher_ng
@@ -471,7 +471,7 @@ jobs:
       - *default_attach_workspace
       - setup_remote_docker
       - *install_docker_client
-      - *save_env
+      - *load_env
       - *build_docker_context
       - *install_python
       - *start_apt_catcher_ng
@@ -502,7 +502,7 @@ jobs:
       - *default_attach_workspace
       - setup_remote_docker
       - *install_docker_client
-      - *save_env
+      - *load_env
       - *build_docker_context
       - *install_python
       - *start_apt_catcher_ng
@@ -527,6 +527,20 @@ jobs:
             docker tag "${CONTAINERNAME}" "${DOCKER_REPO_NS}/${CONTAINERNAME}:latest-${SANITIZED_BRANCH}"
             docker push "${DOCKER_REPO_NS}/${CONTAINERNAME}:${TAG}"
             docker push "${DOCKER_REPO_NS}/${CONTAINERNAME}:latest-${SANITIZED_BRANCH}"
+  deploy_to_swarm:
+    <<: *default_environment_settings
+    steps:
+      - *default_attach_workspace
+      - add_ssh_keys:
+          fingerprints:
+            - "25:9a:68:3e:d8:ab:fa:39:2e:b2:ce:41:8e:26:28:0d"
+      - *load_env
+      - run:
+          name: setup known_hosts file for infrastructure-dev-deployment
+          command: echo '|1|sd70Lml0Kpdm9QA8UX7u46dCevs=|b9cy345Pf4ZAYZ9R0/mW3ogKRds= ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBMRWAuJ3TAVVkRP/uFIJVOjEwvm6k+yMxTl0Y+8E/J7B+fw7ctsNa34+RkcXrjqUeLtjSRLpnd8fow8EHtrwiog=' >> ~/.ssh/known_hosts
+      - run:
+          name: Deploying to one-node aws swarm 
+          command: ssh ubuntu@54.157.18.126 "./deploy_images latest-${SANITIZED_BRANCH}"
 ############################################################################
 
 workflows:
@@ -689,6 +703,22 @@ workflows:
             branches:
               only:
                  - develop 
+      - deploy_to_swarm:
+          requires:
+            - build_and_deploy_zmcbase_container_images
+            - build_and_deploy_zmcldap_container_images
+            - build_and_deploy_zmcmta_container_images
+            - build_and_deploy_zmcmailbox_container_images
+            - build_and_deploy_zmcmysqlproxy_container_images
+            - build_and_deploy_zmcmysqllocal_container_images
+            - build_and_deploy_zmcproxy_container_images
+            - build_and_deploy_zmczookeeper_container_images
+            - build_and_deploy_zmcsolr_container_images
+            - build_and_deploy_zmcredismaster_container_images
+          filters:
+            branches:
+              only:
+                 - develop
 ############################################################################
 
 notify:
