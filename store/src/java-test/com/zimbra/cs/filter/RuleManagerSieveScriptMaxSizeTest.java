@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.filter;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -70,9 +71,51 @@ public final class RuleManagerSieveScriptMaxSizeTest {
             account.setMailSieveScriptMaxSize(100000L);
             account.unsetMailSieveScript();
 
-            RuleManager.setIncomingXMLRules(account, generateFilterRules());
+            RuleManager.setIncomingXMLRules(account, generateSmallFilterRules());
 
             Assert.assertNotNull(account.getMailSieveScript());
+        } catch (Exception e) {
+            Assert.fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    @Test
+    public void testSieveScriptReducedSizeButExceedsThreshold() throws Exception {
+        try {
+            config.setMailSieveScriptMaxSize(100000L);
+            account.setMailSieveScriptMaxSize(100000L);
+            account.unsetMailSieveScript();
+
+            RuleManager.setIncomingXMLRules(account, generateLargeFilterRules());
+            long oldSieveScriptSize = account.getMailSieveScript().getBytes(StandardCharsets.UTF_8).length;
+
+            account.setMailSieveScriptMaxSize(1L);
+
+            RuleManager.setIncomingXMLRules(account, generateSmallFilterRules());
+            long newSieveScriptSize = account.getMailSieveScript().getBytes(StandardCharsets.UTF_8).length;
+
+            Assert.assertFalse(newSieveScriptSize == oldSieveScriptSize);
+        } catch (Exception e) {
+            Assert.fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    @Test
+    public void testOutgoingSieveScriptReducedSizeButExceedsThreshold() throws Exception {
+        try {
+            config.setMailSieveScriptMaxSize(100000L);
+            account.setMailSieveScriptMaxSize(100000L);
+            account.unsetMailOutgoingSieveScript();
+
+            RuleManager.setOutgoingXMLRules(account, generateLargeFilterRules());
+            long oldSieveScriptSize = account.getMailOutgoingSieveScript().getBytes(StandardCharsets.UTF_8).length;
+
+            account.setMailSieveScriptMaxSize(1L);
+
+            RuleManager.setOutgoingXMLRules(account, generateSmallFilterRules());
+            long newSieveScriptSize = account.getMailOutgoingSieveScript().getBytes(StandardCharsets.UTF_8).length;
+
+            Assert.assertFalse(newSieveScriptSize == oldSieveScriptSize);
         } catch (Exception e) {
             Assert.fail("No exception should be thrown: " + e.getMessage());
         }
@@ -82,19 +125,57 @@ public final class RuleManagerSieveScriptMaxSizeTest {
     public void testSieveScriptExceedsThreshold() throws Exception {
         config.setMailSieveScriptMaxSize(100000L);
         account.setMailSieveScriptMaxSize(1L);
+        account.unsetMailSieveScript();
 
-        RuleManager.setIncomingXMLRules(account, generateFilterRules());
+        RuleManager.setIncomingXMLRules(account, generateSmallFilterRules());
     }
 
     @Test(expected = ServiceException.class)
     public void testSieveScriptExceedsGlobalThreshold() throws Exception {
         config.setMailSieveScriptMaxSize(1L);
         account.unsetMailSieveScriptMaxSize();
+        account.unsetMailSieveScript();
 
-        RuleManager.setIncomingXMLRules(account, generateFilterRules());
+        RuleManager.setIncomingXMLRules(account, generateSmallFilterRules());
     }
 
-    private List<FilterRule> generateFilterRules() {
+    @Test(expected = ServiceException.class)
+    public void testSieveScriptLargerAndExceedsThreshold() throws Exception {
+        config.setMailSieveScriptMaxSize(100000L);
+        account.setMailSieveScriptMaxSize(100000L);
+        account.unsetMailSieveScript();
+
+        RuleManager.setIncomingXMLRules(account, generateSmallFilterRules());
+        long oldSieveScriptSize = account.getMailSieveScript().getBytes(StandardCharsets.UTF_8).length;
+
+        account.setMailSieveScriptMaxSize(1L);
+
+        RuleManager.setIncomingXMLRules(account, generateLargeFilterRules());
+    }
+
+    @Test(expected = ServiceException.class)
+    public void testOutgoingSieveScriptLargerAndExceedsThreshold() throws Exception {
+        config.setMailSieveScriptMaxSize(100000L);
+        account.setMailSieveScriptMaxSize(100000L);
+        account.unsetMailOutgoingSieveScript();
+
+        RuleManager.setOutgoingXMLRules(account, generateSmallFilterRules());
+        long oldSieveScriptSize = account.getMailOutgoingSieveScript().getBytes(StandardCharsets.UTF_8).length;
+
+        account.setMailSieveScriptMaxSize(1L);
+
+        RuleManager.setOutgoingXMLRules(account, generateLargeFilterRules());
+    }
+
+    private List<FilterRule> generateLargeFilterRules() {
+        return generateFilterRules(true);
+    }
+
+    private List<FilterRule> generateSmallFilterRules() {
+        return generateFilterRules(false);
+    }
+
+    private List<FilterRule> generateFilterRules(boolean large) {
         FilterRule rule = new FilterRule("testFilterRule", true);
 
         FilterTest.AddressTest test = new FilterTest.AddressTest();
@@ -106,12 +187,17 @@ public final class RuleManagerSieveScriptMaxSizeTest {
 
         FilterTests tests = new FilterTests("anyof");
         tests.addTest(test);
-
-        FilterAction action = new FilterAction.KeepAction();
-        action.setIndex(0);
-
         rule.setFilterTests(tests);
-        rule.addFilterAction(action);
+
+        FilterAction keepAction = new FilterAction.KeepAction();
+        keepAction.setIndex(0);
+        rule.addFilterAction(keepAction);
+
+        if (large) {
+            FilterAction stopAction = new FilterAction.StopAction();
+            stopAction.setIndex(1);
+            rule.addFilterAction(stopAction);
+        }
 
         List<FilterRule> filterRuleList = new ArrayList<FilterRule>();
         filterRuleList.add(rule);
