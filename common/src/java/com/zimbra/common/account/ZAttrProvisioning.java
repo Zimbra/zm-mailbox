@@ -1642,6 +1642,7 @@ public class ZAttrProvisioning {
 
     public static enum PrefCalendarInitialView {
         day("day"),
+        multiDay("multiDay"),
         week("week"),
         workWeek("workWeek"),
         month("month"),
@@ -1657,6 +1658,7 @@ public class ZAttrProvisioning {
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isDay() { return this == day;}
+        public boolean isMultiDay() { return this == multiDay;}
         public boolean isWeek() { return this == week;}
         public boolean isWorkWeek() { return this == workWeek;}
         public boolean isMonth() { return this == month;}
