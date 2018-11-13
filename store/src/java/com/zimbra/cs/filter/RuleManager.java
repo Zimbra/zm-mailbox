@@ -89,6 +89,9 @@ public final class RuleManager {
             RuleManager.class.getSimpleName() + ".ADMIN_OUTGOING_FILTER_RULES_AFTER_CACHE";
     public static final String editHeaderUserScriptError = "EDIT_HEADER_NOT_SUPPORTED_FOR_USER_SCRIPT";
 
+    // See RFC 5228 Section 3.2
+    private static final Pattern PAT_REQUIRE = Pattern.compile("^\\s*require.+?\"\\s*\\]?\\s*;", Pattern.CASE_INSENSITIVE);
+
     public static enum FilterType {INCOMING, OUTGOING};
     public static enum AdminFilterType {
         BEFORE,
@@ -151,7 +154,7 @@ public final class RuleManager {
             script = "";
         }
 
-        rejectSieveScriptExceedingMaxSize(entry, script);
+        rejectSieveScriptExceedingMaxSize(entry, script, sieveScriptAttrName);
 
         try {
             Node node = parse(script);
@@ -176,16 +179,19 @@ public final class RuleManager {
 
     /**
      * Reject the sieve script by throwing a ServiceException if its size exceeds
-     * the limit in the {@code zimbraMailSieveScriptMaxSize} attribute.
+     * the limit in the {@code zimbraMailSieveScriptMaxSize} attribute. If the new sieve
+     * script exceeds the limit, but is smaller than before, then the new script is not
+     * rejected.
      *
      * If the value of the attribute is not set, or if the attribute getter is not
      * defined for the entry type, then the limit defined in the global config is used.
      *
      * @param entry the account/domain/cos/server for which the rules are to be saved
-     * @param script the sieve script, or an empty string
+     * @param newSieveScript the new sieve script, or an empty string
+     * @param sieveScriptAttrName the name of the sieve script attribute
      * @throws ServiceException if the sieve script exceeds the value of the max size attribute
      */
-    private static void rejectSieveScriptExceedingMaxSize(Entry entry, String script)
+    private static void rejectSieveScriptExceedingMaxSize(Entry entry, String newSieveScript, String sieveScriptAttrName)
             throws ServiceException {
         long sieveScriptMaxSize;
         String zimbraMailSieveScriptMaxSize = entry.getAttr(Provisioning.A_zimbraMailSieveScriptMaxSize);
@@ -196,13 +202,49 @@ public final class RuleManager {
             sieveScriptMaxSize = config.getMailSieveScriptMaxSize();
         }
 
-        long sieveScriptSize = script.getBytes(StandardCharsets.UTF_8).length;
-        if (sieveScriptMaxSize < sieveScriptSize) {
+        long newSieveScriptSize = newSieveScript.getBytes(StandardCharsets.UTF_8).length;
+        long oldSieveScriptSize = 0;
+        String oldSieveScript = entry.getAttr(sieveScriptAttrName);
+        if (oldSieveScript != null && !oldSieveScript.isEmpty()) {
+            oldSieveScriptSize = oldSieveScript.getBytes(StandardCharsets.UTF_8).length;
+        }
+
+        ZimbraLog.filter.debug("Old sieve script size: " + oldSieveScriptSize);
+        ZimbraLog.filter.debug("New sieve script size: " + newSieveScriptSize);
+
+        long oldSieveScriptRequireSize = 0;
+        long newSieveScriptRequireSize = 0;
+        long requireSizeDiff = 0;
+
+        Matcher matcher;
+        if (oldSieveScript != null) {
+            matcher = PAT_REQUIRE.matcher(oldSieveScript);
+            if (matcher.find()) {
+                String oldSieveScriptRequire = matcher.group();
+                oldSieveScriptRequireSize = oldSieveScriptRequire.length();
+                ZimbraLog.filter.debug("require in old sieve script: " + oldSieveScriptRequire + " Size: " + oldSieveScriptRequireSize);
+            }
+        }
+
+        if (newSieveScript != null) {
+            matcher = PAT_REQUIRE.matcher(newSieveScript);
+            if (matcher.find()) {
+                String newSieveScriptRequire = matcher.group();
+                newSieveScriptRequireSize = newSieveScriptRequire.length();
+                ZimbraLog.filter.debug("require in new sieve script: " + newSieveScriptRequire + " Size: " + newSieveScriptRequireSize);
+            }
+        }
+
+        if (oldSieveScriptRequireSize < newSieveScriptRequireSize) {
+            requireSizeDiff = newSieveScriptRequireSize - oldSieveScriptRequireSize;
+        }
+
+        if (sieveScriptMaxSize < newSieveScriptSize && (oldSieveScriptSize + requireSizeDiff) <= newSieveScriptSize) {
             Locale locale = entry.getLocale();
             StringBuilder msg = new StringBuilder();
             msg.append(L10nUtil.getMessage(MsgKey.sieveScriptMaxSizeErrorMsg, locale))
                 .append(": ")
-                .append(sieveScriptSize)
+                .append(newSieveScriptSize)
                 .append(" bytes exceeds the limit of ")
                 .append(sieveScriptMaxSize)
                 .append(" bytes");
