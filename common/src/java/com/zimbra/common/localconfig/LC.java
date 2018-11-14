@@ -1258,7 +1258,16 @@ public final class LC {
     public static final KnownKey redis_cluster_reconnect_timeout = KnownKey.newKey(15000);
 
     @Supported
-    public static final KnownKey redis_subscription_connection_pool_size = KnownKey.newKey(100);
+    public static final KnownKey redis_master_connection_pool_size = KnownKey.newKey(200);
+    
+    @Supported
+    public static final KnownKey redis_master_idle_connection_pool_size = KnownKey.newKey(100);
+    
+    @Supported
+    public static final KnownKey redis_subscription_connection_pool_size = KnownKey.newKey(200);
+    
+    @Supported
+    public static final KnownKey redis_subscription_idle_connection_pool_size = KnownKey.newKey(100);
 
     @Supported
     public static final KnownKey redis_subscriptions_per_connection = KnownKey.newKey(10);
