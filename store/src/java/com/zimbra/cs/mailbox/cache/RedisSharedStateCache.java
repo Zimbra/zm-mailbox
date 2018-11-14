@@ -122,6 +122,7 @@ public abstract class RedisSharedStateCache<M extends MailItem & SharedState> im
         M removed = localCache.remove(id);
         if (removed != null) {
             removed.detatch();
+            knownItemIds.removeIdRemovedInThisTransaction(id);
         }
         return removed;
     }
@@ -131,7 +132,7 @@ public abstract class RedisSharedStateCache<M extends MailItem & SharedState> im
     @Override
     public Collection<M> values() {
         //validate in-memory cache against redis map in case another node has added/deleted a folder/tag
-        Set<Integer> allIds = new HashSet<>(getAllIds());
+        Set<Integer> allIds = new HashSet<>(knownItemIds.getThreadLocalIds());
         Collection<M> values = new ArrayList<>();
         Set<Integer> localIds = new HashSet<>();
         for (M item: localCache.values()) {
@@ -289,6 +290,10 @@ public abstract class RedisSharedStateCache<M extends MailItem & SharedState> im
 
         public boolean contains(int itemId) {
             return getThreadLocalIds().contains(itemId);
+        }
+
+        private void removeIdRemovedInThisTransaction(int id) {
+            getThreadLocalIds().remove(id);
         }
 
         public void addIdAddedInThisTransaction(int id) {
