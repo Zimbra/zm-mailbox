@@ -174,8 +174,8 @@ public class EmailToSMS implements LmtpCallback {
 		out = StringEscapeUtils.escapeJava(s);
 		out = out.replace("\\u", "");
 		out = out.replace(" ", "0020");
-		out = out.replace("\\r\\n", "");
-		out = out.replace("\\n", "");
+		out = out.replace("\\r", "000a");
+		out = out.replace("\\n", "000a");
 		return out;
 	}
 
