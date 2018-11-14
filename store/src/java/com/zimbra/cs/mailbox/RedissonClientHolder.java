@@ -45,7 +45,10 @@ public final class RedissonClientHolder {
             ClusterServersConfig clusterServersConfig = config.useClusterServers();
             clusterServersConfig.setScanInterval(LC.redis_cluster_scan_interval.intValue());
             clusterServersConfig.addNodeAddress(uri.split(" "));
+            clusterServersConfig.setMasterConnectionPoolSize(LC.redis_master_connection_pool_size.intValue());
+            clusterServersConfig.setMasterConnectionMinimumIdleSize(LC.redis_master_idle_connection_pool_size.intValue());
             clusterServersConfig.setSubscriptionConnectionPoolSize(LC.redis_subscription_connection_pool_size.intValue());
+            clusterServersConfig.setSubscriptionConnectionMinimumIdleSize(LC.redis_subscription_idle_connection_pool_size.intValue());
             clusterServersConfig.setSubscriptionsPerConnection(LC.redis_subscriptions_per_connection.intValue());
             clusterServersConfig.setRetryInterval(LC.redis_retry_interval.intValue());
             clusterServersConfig.setTimeout(LC.redis_connection_timeout.intValue());
