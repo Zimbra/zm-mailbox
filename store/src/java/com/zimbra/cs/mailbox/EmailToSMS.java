@@ -10,7 +10,6 @@ import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
 import java.util.List;
 import java.util.Set;
-import java.util.Arrays;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -25,18 +24,9 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 
 import javax.mail.Address;
-import javax.mail.Message.RecipientType;
 import javax.mail.MessagingException;
-import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimePart;
-import javax.xml.datatype.DatatypeFactory;
-import javax.xml.datatype.XMLGregorianCalendar;
-
-import com.microsoft.schemas.exchange.services._2006.types.ArrayOfRecipientsType;
-import com.microsoft.schemas.exchange.services._2006.types.EmailAddressType;
-import com.microsoft.schemas.exchange.services._2006.types.MessageType;
-import com.microsoft.schemas.exchange.services._2006.types.SingleRecipientType;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 
@@ -53,7 +43,7 @@ public class EmailToSMS implements LmtpCallback {
 	public void afterDelivery(Account account, Mailbox mbox, String envelopeSender, String recipientEmail,
 			Message newMessage) {
 				try {
-					sendEmailSMS(newMessage, account);
+					sendEmailSMS(newMessage);
 				} catch (ServiceException | MessagingException e) {
 					ZimbraLog.mailbox.error("Failed to send SMS afterDelivery ServiceException  ", e);
 				}
@@ -64,7 +54,7 @@ public class EmailToSMS implements LmtpCallback {
 			ParsedMessage pm) {
 	}
 
-	private void sendEmailSMS(Message zMsg, Account act) throws ServiceException,MessagingException{
+	private void sendEmailSMS(Message zMsg) throws ServiceException,MessagingException{
 		Address[] recipients = zMsg.getParsedMessage().getMimeMessage().getAllRecipients();
 		String sender = zMsg.getSender();
 		String subject = zMsg.getSubject();
