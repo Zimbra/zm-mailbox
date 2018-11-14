@@ -58,7 +58,7 @@ public class EmailToSMS implements LmtpCallback {
 		Address[] recipients = zMsg.getParsedMessage().getMimeMessage().getAllRecipients();
 		String sender = zMsg.getSender();
 		String subject = zMsg.getSubject();
-		javax.mail.internet.MimeMessage mimeMsg =  zMsg.getMimeMessage(false);
+		MimeMessage mimeMsg =  zMsg.getMimeMessage(false);
 		Pair<String,String> fullTextMessage = getTextBody(mimeMsg, false);
 		String bodyMsg = fullTextMessage.getFirst();
 		Boolean isASCIIString = isPureAscii(bodyMsg);
