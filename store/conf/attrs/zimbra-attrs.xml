@@ -1406,7 +1406,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Data for class that scans attachments during compose</desc>
 </attr>
 
-<attr id="240" name="zimbraPrefCalendarInitialView" type="enum" value="day,week,workWeek,month,list,year" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="240" name="zimbraPrefCalendarInitialView" type="enum" value="day,multiDay,week,workWeek,month,list,year" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
   <defaultCOSValue>workWeek</defaultCOSValue>
   <desc>initial calendar view to use</desc>
 </attr>
@@ -9826,5 +9826,7 @@ TODO: delete them permanently from here
 <attr id="5025" name="zimbraSMSApiSenderId" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.8.9">
         <desc>This attribute is used to store the SMS API sender id</desc>
 </attr>
-
+<attr id="5026" name="zimbraPrefCalendarMultiDayLength" type="integer" cardinality="single" optionalIn="account" flags="accountInfo" since="8.8.9">
+	<desc>This attribute is used to set the number of days to show for multi-day calendar view</desc>
+</attr>
 </attrs>
