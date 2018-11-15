@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
+import com.google.common.base.MoreObjects.ToStringHelper;
 import com.zimbra.common.util.ZimbraLog;
 
 public abstract class TransactionAware<V, C extends TransactionAware.Change> {
@@ -63,8 +64,15 @@ public abstract class TransactionAware<V, C extends TransactionAware.Change> {
         changes.reset();
     }
 
+
+    public static enum ChangeType {
+        CLEAR, REMOVE, //used by both set and map
+        MAP_PUT, MAP_PUT_ALL,
+        SET_ADD, SET_ADD_ALL, SET_REMOVE_ALL, SET_RETAIN_ALL;
+    }
+
     public class Changes {
-        protected List<C> changes = new ArrayList<>();
+        private List<C> changes = new ArrayList<>();
 
         public Changes() {
             reset();
@@ -103,5 +111,20 @@ public abstract class TransactionAware<V, C extends TransactionAware.Change> {
         }
     }
 
-    public static abstract class Change{}
+    public static abstract class Change {
+
+        private ChangeType changeType;
+
+        public Change(ChangeType changeType) {
+            this.changeType = changeType;
+        }
+
+        public ChangeType getChangeType() {
+            return changeType;
+        }
+
+        protected ToStringHelper toStringHelper() {
+            return MoreObjects.toStringHelper(this);
+        }
+    }
 }

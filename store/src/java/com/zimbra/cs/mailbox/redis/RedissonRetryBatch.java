@@ -49,6 +49,16 @@ public class RedissonRetryBatch extends RedissonRetryDecorator<RBatch> implement
     }
 
     @Override
+    public <V> RSetAsync<V> getSet(String name) {
+        return runCommand(() -> redissonObject.getSet(name));
+    }
+
+    @Override
+    public <V> RSetAsync<V> getSet(String name, Codec codec) {
+        return runCommand(() -> redissonObject.getSet(name, codec));
+    }
+
+    @Override
     public <V> RGeoAsync<V> getGeo(String name) {
         throw new UnsupportedOperationException();
     }
@@ -147,16 +157,6 @@ public class RedissonRetryBatch extends RedissonRetryDecorator<RBatch> implement
     @Override
     public <K, V> RMultimapAsync<K, V> getListMultimapCache(String name,
             Codec codec) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <V> RSetAsync<V> getSet(String name) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <V> RSetAsync<V> getSet(String name, Codec codec) {
         throw new UnsupportedOperationException();
     }
 

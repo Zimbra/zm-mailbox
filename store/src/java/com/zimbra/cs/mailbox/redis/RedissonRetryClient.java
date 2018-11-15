@@ -247,6 +247,16 @@ public class RedissonRetryClient implements RedissonClient {
         return new RedissonRetryLock(client -> client.getFairLock(name), this);
     }
 
+    @Override
+    public <V> RSet<V> getSet(String name) {
+        return new RedissonRetrySet<V>(client -> client.getSet(name), this);
+    }
+
+    @Override
+    public <V> RSet<V> getSet(String name, Codec codec) {
+        return new RedissonRetrySet<V>(client -> client.getSet(name, codec), this);
+    }
+
     //RedissonClient interface methods below are not currently used anywhere in the codebase,
     //and therefore do not have corresponding retry-capable implementations subclassing {@link RedissonRetryDecorator}.
 
@@ -378,16 +388,6 @@ public class RedissonRetryClient implements RedissonClient {
 
     @Override
     public RPermitExpirableSemaphore getPermitExpirableSemaphore(String name) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <V> RSet<V> getSet(String name) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <V> RSet<V> getSet(String name, Codec codec) {
         throw new UnsupportedOperationException();
     }
 

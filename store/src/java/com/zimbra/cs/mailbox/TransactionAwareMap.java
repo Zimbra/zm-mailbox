@@ -4,9 +4,6 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.base.MoreObjects;
-import com.google.common.base.MoreObjects.ToStringHelper;
-
 public abstract class TransactionAwareMap<K, V> extends TransactionAware<Map<K, V>, TransactionAwareMap.MapChange> implements Map<K, V> {
 
     public TransactionAwareMap(TransactionCacheTracker tracker, String mapName) {
@@ -41,27 +38,27 @@ public abstract class TransactionAwareMap<K, V> extends TransactionAware<Map<K, 
     @Override
     public V put(K key, V value) {
         V val = getLocalCache().put(key, value);
-        addChange(new PutOp(key, value));
+        addChange(new MapPutOp(key, value));
         return val;
     }
 
     @Override
     public V remove(Object key) {
         V val = getLocalCache().remove(key);
-        addChange(new RemoveOp(key));
+        addChange(new MapRemoveOp(key));
         return val;
     }
 
     @Override
     public void putAll(Map<? extends K, ? extends V> m) {
         getLocalCache().putAll(m);
-        addChange(new PutAllOp(m));
+        addChange(new MapPutAllOp(m));
     }
 
     @Override
     public void clear() {
         getLocalCache().clear();
-        addChange(new ClearOp());
+        addChange(new MapClearOp());
         clearLocalCache();
     }
 
@@ -80,33 +77,19 @@ public abstract class TransactionAwareMap<K, V> extends TransactionAware<Map<K, 
         return getLocalCache().entrySet();
     }
 
-    public static enum MapChangeType {
-        CLEAR, PUT, PUT_ALL, REMOVE;
-    }
-
     public static abstract class MapChange extends TransactionAware.Change {
 
-        protected MapChangeType changeType;
-
-        private MapChange(MapChangeType changeType) {
-            this.changeType = changeType;
-        }
-
-        public MapChangeType getChangeType() {
-            return changeType;
-        }
-
-        protected ToStringHelper toStringHelper() {
-            return MoreObjects.toStringHelper(this);
+        private MapChange(ChangeType changeType) {
+            super(changeType);
         }
     }
 
-    public class RemoveOp extends MapChange {
+    public class MapRemoveOp extends MapChange {
 
         private Object key;
 
-        public RemoveOp(Object key) {
-            super(MapChangeType.REMOVE);
+        public MapRemoveOp(Object key) {
+            super(ChangeType.REMOVE);
             this.key = key;
         }
 
@@ -120,12 +103,12 @@ public abstract class TransactionAwareMap<K, V> extends TransactionAware<Map<K, 
         }
     }
 
-    public class PutAllOp extends MapChange {
+    public class MapPutAllOp extends MapChange {
 
         private Map<? extends K, ? extends V> changes;
 
-        public PutAllOp(Map<? extends K, ? extends V> m){
-            super(MapChangeType.PUT_ALL);
+        public MapPutAllOp(Map<? extends K, ? extends V> m){
+            super(ChangeType.MAP_PUT_ALL);
             this.changes = m;
         }
 
@@ -140,13 +123,13 @@ public abstract class TransactionAwareMap<K, V> extends TransactionAware<Map<K, 
 
     }
 
-    public class PutOp extends MapChange  {
+    public class MapPutOp extends MapChange  {
 
         private K key;
         private V value;
 
-        public PutOp(K key, V value) {
-            super(MapChangeType.PUT);
+        public MapPutOp(K key, V value) {
+            super(ChangeType.MAP_PUT);
             this.key = key;
             this.value = value;
         }
@@ -165,10 +148,10 @@ public abstract class TransactionAwareMap<K, V> extends TransactionAware<Map<K, 
         }
     }
 
-    public class ClearOp extends MapChange  {
+    public class MapClearOp extends MapChange  {
 
-        public ClearOp() {
-            super(MapChangeType.CLEAR);
+        public MapClearOp() {
+            super(ChangeType.CLEAR);
         }
 
         @Override
