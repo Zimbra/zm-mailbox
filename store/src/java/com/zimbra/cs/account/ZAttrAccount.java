@@ -2796,8 +2796,8 @@ public abstract class ZAttrAccount  extends MailTarget {
      * hosted. New account creation based on invites that are not completed
      * until user accepts TOS on account creation confirmation page. closed -
      * no login, no delivery(lmtp server returns 5.x.x Permanent Failure),
-     * all addresses (account main email and all aliases) of the account are
-     * removed from all distribution lists.
+     * all addresses (account main intl_email and all aliases) of the account
+     * are removed from all distribution lists.
      *
      * <p>Valid values: [active, maintenance, locked, closed, lockout, pending]
      *
@@ -2819,8 +2819,8 @@ public abstract class ZAttrAccount  extends MailTarget {
      * hosted. New account creation based on invites that are not completed
      * until user accepts TOS on account creation confirmation page. closed -
      * no login, no delivery(lmtp server returns 5.x.x Permanent Failure),
-     * all addresses (account main email and all aliases) of the account are
-     * removed from all distribution lists.
+     * all addresses (account main intl_email and all aliases) of the account
+     * are removed from all distribution lists.
      *
      * <p>Valid values: [active, maintenance, locked, closed, lockout, pending]
      *
@@ -2842,8 +2842,8 @@ public abstract class ZAttrAccount  extends MailTarget {
      * hosted. New account creation based on invites that are not completed
      * until user accepts TOS on account creation confirmation page. closed -
      * no login, no delivery(lmtp server returns 5.x.x Permanent Failure),
-     * all addresses (account main email and all aliases) of the account are
-     * removed from all distribution lists.
+     * all addresses (account main intl_email and all aliases) of the account
+     * are removed from all distribution lists.
      *
      * <p>Valid values: [active, maintenance, locked, closed, lockout, pending]
      *
@@ -2868,8 +2868,8 @@ public abstract class ZAttrAccount  extends MailTarget {
      * hosted. New account creation based on invites that are not completed
      * until user accepts TOS on account creation confirmation page. closed -
      * no login, no delivery(lmtp server returns 5.x.x Permanent Failure),
-     * all addresses (account main email and all aliases) of the account are
-     * removed from all distribution lists.
+     * all addresses (account main intl_email and all aliases) of the account
+     * are removed from all distribution lists.
      *
      * <p>Valid values: [active, maintenance, locked, closed, lockout, pending]
      *
@@ -2895,8 +2895,8 @@ public abstract class ZAttrAccount  extends MailTarget {
      * hosted. New account creation based on invites that are not completed
      * until user accepts TOS on account creation confirmation page. closed -
      * no login, no delivery(lmtp server returns 5.x.x Permanent Failure),
-     * all addresses (account main email and all aliases) of the account are
-     * removed from all distribution lists.
+     * all addresses (account main intl_email and all aliases) of the account
+     * are removed from all distribution lists.
      *
      * <p>Valid values: [active, maintenance, locked, closed, lockout, pending]
      *
@@ -2921,8 +2921,8 @@ public abstract class ZAttrAccount  extends MailTarget {
      * hosted. New account creation based on invites that are not completed
      * until user accepts TOS on account creation confirmation page. closed -
      * no login, no delivery(lmtp server returns 5.x.x Permanent Failure),
-     * all addresses (account main email and all aliases) of the account are
-     * removed from all distribution lists.
+     * all addresses (account main intl_email and all aliases) of the account
+     * are removed from all distribution lists.
      *
      * <p>Valid values: [active, maintenance, locked, closed, lockout, pending]
      *
@@ -2948,8 +2948,8 @@ public abstract class ZAttrAccount  extends MailTarget {
      * hosted. New account creation based on invites that are not completed
      * until user accepts TOS on account creation confirmation page. closed -
      * no login, no delivery(lmtp server returns 5.x.x Permanent Failure),
-     * all addresses (account main email and all aliases) of the account are
-     * removed from all distribution lists.
+     * all addresses (account main intl_email and all aliases) of the account
+     * are removed from all distribution lists.
      *
      * <p>Valid values: [active, maintenance, locked, closed, lockout, pending]
      *
@@ -2973,8 +2973,8 @@ public abstract class ZAttrAccount  extends MailTarget {
      * hosted. New account creation based on invites that are not completed
      * until user accepts TOS on account creation confirmation page. closed -
      * no login, no delivery(lmtp server returns 5.x.x Permanent Failure),
-     * all addresses (account main email and all aliases) of the account are
-     * removed from all distribution lists.
+     * all addresses (account main intl_email and all aliases) of the account
+     * are removed from all distribution lists.
      *
      * <p>Valid values: [active, maintenance, locked, closed, lockout, pending]
      *
@@ -25489,7 +25489,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * RFC822 email address of this recipient for accepting mail
+     * RFC822 intl_email address of this recipient for accepting mail
      *
      * @return zimbraMailAddress, or empty array if unset
      */
@@ -25499,7 +25499,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * RFC822 email address of this recipient for accepting mail
+     * RFC822 intl_email address of this recipient for accepting mail
      *
      * @param zimbraMailAddress new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -25512,7 +25512,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * RFC822 email address of this recipient for accepting mail
+     * RFC822 intl_email address of this recipient for accepting mail
      *
      * @param zimbraMailAddress new value
      * @param attrs existing map to populate, or null to create a new map
@@ -25526,7 +25526,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * RFC822 email address of this recipient for accepting mail
+     * RFC822 intl_email address of this recipient for accepting mail
      *
      * @param zimbraMailAddress new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -25539,7 +25539,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * RFC822 email address of this recipient for accepting mail
+     * RFC822 intl_email address of this recipient for accepting mail
      *
      * @param zimbraMailAddress new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -25553,7 +25553,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * RFC822 email address of this recipient for accepting mail
+     * RFC822 intl_email address of this recipient for accepting mail
      *
      * @param zimbraMailAddress existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -25566,7 +25566,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * RFC822 email address of this recipient for accepting mail
+     * RFC822 intl_email address of this recipient for accepting mail
      *
      * @param zimbraMailAddress existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -25580,7 +25580,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * RFC822 email address of this recipient for accepting mail
+     * RFC822 intl_email address of this recipient for accepting mail
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -25592,7 +25592,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * RFC822 email address of this recipient for accepting mail
+     * RFC822 intl_email address of this recipient for accepting mail
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -40384,7 +40384,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * initial calendar view to use
      *
-     * <p>Valid values: [day, week, workWeek, month, list, year]
+     * <p>Valid values: [day, multiDay, week, workWeek, month, list, year]
      *
      * @return zimbraPrefCalendarInitialView, or ZAttrProvisioning.PrefCalendarInitialView.workWeek if unset and/or has invalid value
      */
@@ -40396,7 +40396,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * initial calendar view to use
      *
-     * <p>Valid values: [day, week, workWeek, month, list, year]
+     * <p>Valid values: [day, multiDay, week, workWeek, month, list, year]
      *
      * @return zimbraPrefCalendarInitialView, or "workWeek" if unset
      */
@@ -40408,7 +40408,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * initial calendar view to use
      *
-     * <p>Valid values: [day, week, workWeek, month, list, year]
+     * <p>Valid values: [day, multiDay, week, workWeek, month, list, year]
      *
      * @param zimbraPrefCalendarInitialView new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -40423,7 +40423,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * initial calendar view to use
      *
-     * <p>Valid values: [day, week, workWeek, month, list, year]
+     * <p>Valid values: [day, multiDay, week, workWeek, month, list, year]
      *
      * @param zimbraPrefCalendarInitialView new value
      * @param attrs existing map to populate, or null to create a new map
@@ -40439,7 +40439,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * initial calendar view to use
      *
-     * <p>Valid values: [day, week, workWeek, month, list, year]
+     * <p>Valid values: [day, multiDay, week, workWeek, month, list, year]
      *
      * @param zimbraPrefCalendarInitialView new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -40454,7 +40454,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * initial calendar view to use
      *
-     * <p>Valid values: [day, week, workWeek, month, list, year]
+     * <p>Valid values: [day, multiDay, week, workWeek, month, list, year]
      *
      * @param zimbraPrefCalendarInitialView new value
      * @param attrs existing map to populate, or null to create a new map
@@ -40470,7 +40470,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * initial calendar view to use
      *
-     * <p>Valid values: [day, week, workWeek, month, list, year]
+     * <p>Valid values: [day, multiDay, week, workWeek, month, list, year]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -40484,7 +40484,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * initial calendar view to use
      *
-     * <p>Valid values: [day, week, workWeek, month, list, year]
+     * <p>Valid values: [day, multiDay, week, workWeek, month, list, year]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -40493,6 +40493,83 @@ public abstract class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetPrefCalendarInitialView(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefCalendarInitialView, "");
+        return attrs;
+    }
+
+    /**
+     * This attribute is used to set the number of days to show for multi-day
+     * calendar view
+     *
+     * @return zimbraPrefCalendarMultiDayLength, or -1 if unset
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5026)
+    public int getPrefCalendarMultiDayLength() {
+        return getIntAttr(Provisioning.A_zimbraPrefCalendarMultiDayLength, -1, true);
+    }
+
+    /**
+     * This attribute is used to set the number of days to show for multi-day
+     * calendar view
+     *
+     * @param zimbraPrefCalendarMultiDayLength new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5026)
+    public void setPrefCalendarMultiDayLength(int zimbraPrefCalendarMultiDayLength) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarMultiDayLength, Integer.toString(zimbraPrefCalendarMultiDayLength));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute is used to set the number of days to show for multi-day
+     * calendar view
+     *
+     * @param zimbraPrefCalendarMultiDayLength new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5026)
+    public Map<String,Object> setPrefCalendarMultiDayLength(int zimbraPrefCalendarMultiDayLength, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarMultiDayLength, Integer.toString(zimbraPrefCalendarMultiDayLength));
+        return attrs;
+    }
+
+    /**
+     * This attribute is used to set the number of days to show for multi-day
+     * calendar view
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5026)
+    public void unsetPrefCalendarMultiDayLength() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarMultiDayLength, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute is used to set the number of days to show for multi-day
+     * calendar view
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5026)
+    public Map<String,Object> unsetPrefCalendarMultiDayLength(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarMultiDayLength, "");
         return attrs;
     }
 
