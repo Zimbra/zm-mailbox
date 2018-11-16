@@ -53,7 +53,7 @@ import com.zimbra.cs.mailbox.calendar.ZOrganizer;
  */
 public class FreeBusy implements Iterable<FreeBusy.Interval> {
 
-    // free from start to end
+	// free from start to end
 	public static FreeBusy emptyFreeBusy(String name, long start, long end) {
 		return new FreeBusy(name, start, end);
 	}
@@ -79,7 +79,87 @@ public class FreeBusy implements Iterable<FreeBusy.Interval> {
     private long mStart;
     private long mEnd;
     
-    private static class IntervalIterator implements Iterator<Interval> {
+    //Below parameters are added to support Detailed and FreeBusy view response.
+    private String id;
+    private String location;
+    private String subject;
+    private boolean isMeeting;
+    private boolean isRecurring;
+    private boolean isException;
+    private boolean isReminderSet;
+    private boolean isPrivate;
+    private boolean hasPermission = true;
+    
+    
+    public FreeBusy(String name, long start, long end, String id, String location, String subject, boolean isMeeting, boolean isRecurring,
+			boolean isException, boolean isReminderSet, boolean isPrivate, boolean hasPermission) {
+		this(name,start,end);
+		this.id = id;
+		this.location = location;
+		this.subject = subject;
+		this.isMeeting = isMeeting;
+		this.isRecurring = isRecurring;
+		this.isException = isException;
+		this.isReminderSet = isReminderSet;
+		this.isPrivate = isPrivate;
+		this.hasPermission = hasPermission;
+	}
+	public String getId() {
+		return id;
+	}
+	public void setId(String id) {
+		this.id = id;
+	}
+	public String getLocation() {
+		return location;
+	}
+	public void setLocation(String location) {
+		this.location = location;
+	}
+	public String getSubject() {
+		return subject;
+	}
+	public void setSubject(String subject) {
+		this.subject = subject;
+	}
+	public boolean isMeeting() {
+		return isMeeting;
+	}
+	public void setMeeting(boolean isMeeting) {
+		this.isMeeting = isMeeting;
+	}
+	public boolean isRecurring() {
+		return isRecurring;
+	}
+	public void setRecurring(boolean isRecurring) {
+		this.isRecurring = isRecurring;
+	}
+	public boolean isException() {
+		return isException;
+	}
+	public void setException(boolean isException) {
+		this.isException = isException;
+	}
+	public boolean isReminderSet() {
+		return isReminderSet;
+	}
+	public void setReminderSet(boolean isReminderSet) {
+		this.isReminderSet = isReminderSet;
+	}
+	public boolean isPrivate() {
+		return isPrivate;
+	}
+	public void setPrivate(boolean isPrivate) {
+		this.isPrivate = isPrivate;
+	}
+	public boolean isHasPermission() {
+		return hasPermission;
+	}
+	public void setHasPermission(boolean hasPermission) {
+		this.hasPermission = hasPermission;
+	}
+
+	private static class IntervalIterator implements Iterator<Interval> {
         private Interval mCur;
         private IntervalIterator(IntervalList list) {
             mCur = list.getHead();
