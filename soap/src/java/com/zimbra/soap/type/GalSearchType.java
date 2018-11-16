@@ -21,12 +21,20 @@ import java.util.Arrays;
 
 import javax.xml.bind.annotation.XmlEnum;
 
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.service.ServiceException;
 
+import io.leangen.graphql.annotations.GraphQLEnumValue;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlEnum
+@GraphQLType(name=GqlConstants.CLASS_SEARCH_TYPE, description="Search type")
 public enum GalSearchType {
     // case must match protocol
-    all, account, resource, group;
+    @GraphQLEnumValue(description="for combination of all types") all,
+    @GraphQLEnumValue(description="for regular user accounts, aliases and distribution lists") account,
+    @GraphQLEnumValue(description="for calendar resources") resource,
+    @GraphQLEnumValue(description="for groups") group;
 
     public static GalSearchType fromString(String s) throws ServiceException {
         try {

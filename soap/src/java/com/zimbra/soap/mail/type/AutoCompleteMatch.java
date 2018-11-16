@@ -22,10 +22,15 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
 import com.google.common.base.MoreObjects;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.ZmBoolean;
 
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name=GqlConstants.CLASS_AUTO_COMPLETE_MATCH, description="Contains auto-complete match information")
 public class AutoCompleteMatch {
 
     /**
@@ -156,20 +161,35 @@ public class AutoCompleteMatch {
     public void setNickname(String nickname) { this.nickname = nickname; }
     public void setCompany(String company) { this.company = company; }
     public void setFileAs(String fileAs) { this.fileAs = fileAs; }
+    @GraphQLQuery(name=GqlConstants.EMAIL, description="Comma-separated list of email addresses in case of group")
     public String getEmail() { return email; }
+    @GraphQLQuery(name=GqlConstants.TYPE, description="The match type. (gal|contact|rankingTable)")
     public String getMatchType() { return matchType; }
+    @GraphQLQuery(name=GqlConstants.RANKING, description="The ranking")
     public Integer getRanking() { return ranking; }
+    @GraphQLQuery(name=GqlConstants.IS_GROUP, description="Denotes whether this is a group entry")
     public Boolean getGroup() { return ZmBoolean.toBool(group); }
+    @GraphQLQuery(name=GqlConstants.IS_EXPANDABLE, description="Denotes whether the user has the right to expand group members. Returned only when requested")
     public Boolean getCanExpandGroupMembers() { return ZmBoolean.toBool(canExpandGroupMembers); }
+    @GraphQLQuery(name=GqlConstants.ID, description="ID")
     public String getId() { return id; }
+    @GraphQLQuery(name=GqlConstants.FOLDER_ID, description="Folder ID")
     public String getFolder() { return folder; }
+    @GraphQLQuery(name=GqlConstants.DISPLAY_NAME, description="String that should be displayed by the client")
     public String getDisplayName() { return displayName; }
+    @GraphQLQuery(name=GqlConstants.FIRST_NAME, description="First name")
     public String getFirstName() { return firstName; }
+    @GraphQLQuery(name=GqlConstants.MIDDLE_NAME, description="Middle name")
     public String getMiddleName() { return middleName; }
+    @GraphQLQuery(name=GqlConstants.LAST_NAME, description="Last name")
     public String getLastName() { return lastName; }
+    @GraphQLQuery(name=GqlConstants.NAME, description="Full name")
     public String getFullName() { return fullName; }
+    @GraphQLQuery(name=GqlConstants.NICKNAME, description="Nickname")
     public String getNickname() { return nickname; }
+    @GraphQLQuery(name=GqlConstants.COMPANY, description="Company name")
     public String getCompany() { return company; }
+    @GraphQLQuery(name=GqlConstants.FILE_AS, description="What the entry is filed as")
     public String getFileAs() { return fileAs; }
 
     public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {

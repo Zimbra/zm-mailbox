@@ -431,4 +431,20 @@ public class GqlConstants {
     public static final String CLASS_NAME_ID = "NameId";
     public static final String IDENTIFIER = "identifier";
     public static final String SIGNATURE = "signature";
+
+    // auto complete constants
+    public static final String CLASS_AUTO_COMPLETE_RESPONSE = "AutoCompleteResponse";
+    public static final String CLASS_AUTO_COMPLETE_MATCH = "AutoCompleteMatch";
+    public static final String CLASS_SEARCH_TYPE = "SearchType";
+    public static final String RANKING = "ranking";
+    public static final String IS_GROUP = "isGroup";
+    public static final String FIRST_NAME = "firstName";
+    public static final String MIDDLE_NAME = "middleName";
+    public static final String LAST_NAME = "lastName";
+    public static final String NICKNAME = "nickname";
+    public static final String COMPANY = "company";
+    public static final String FOLDERS = "folders";
+    public static final String INCLUDE_GAL = "includeGal";
+    public static final String IS_CACHEABLE = "isCacheable";
+    public static final String MATCHES = "matches";
 }
