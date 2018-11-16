@@ -22,6 +22,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlValue;
 
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 
@@ -75,4 +76,15 @@ public class CacheEntrySelector {
     public String getKey() { return key; }
 
     public CacheEntryBy getBy() { return cacheEntryBy; }
+
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
+        return helper
+                .add("cacheEntryBy", cacheEntryBy)
+                .add("key", key);
+    }
+
+    @Override
+    public String toString() {
+        return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
+    }
 }
