@@ -9678,7 +9678,7 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="3022" name="zimbraPrefDisplayTimeInMailList" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.8.8">
-  <defaultCOSValue>FALSE</defaultCOSValue>
+  <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>Display received/sent time in mail list</desc>
 </attr>
 
