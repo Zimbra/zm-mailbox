@@ -40,6 +40,69 @@ public class FreeBusySlot {
      */
     @XmlAttribute(name=MailConstants.A_CAL_END_TIME /* e */, required=true)
     private final long endTime;
+    
+    /**
+     * @zm-api-field-tag id
+     * @zm-api-field-description calendar event id
+     */
+    @XmlAttribute(name=MailConstants.E_CAL_EVENT_ID, required=true)
+    private String id;
+    
+    /**
+     * @zm-api-field-tag subject
+     * @zm-api-field-description Appointment subject
+     */
+    @XmlAttribute(name=MailConstants.E_CAL_EVENT_SUBJECT, required=true)
+    private String subject;
+    
+    /**
+     * @zm-api-field-tag location
+     * @zm-api-field-description location of meeting
+     */
+    @XmlAttribute(name=MailConstants.E_CAL_EVENT_LOCATION, required=true)
+    private String location;
+    
+    /**
+     * @zm-api-field-tag isMeeting
+     * @zm-api-field-description returns a boolean value whether this calendar event is a meeting?
+     */
+    @XmlAttribute(name=MailConstants.E_CAL_EVENT_ISMEETING, required=true)
+    private boolean isMeeting;
+    
+    /**
+     * @zm-api-field-tag isRecurring
+     * @zm-api-field-description returns a boolean indicating whether it is continuous?
+     */
+    @XmlAttribute(name=MailConstants.E_CAL_EVENT_ISRECURRING, required=true)
+    private boolean isRecurring;
+    
+    /**
+     * @zm-api-field-tag isException
+     * @zm-api-field-description returns a boolean indicating whether there is any exception?
+     */
+    @XmlAttribute(name=MailConstants.E_CAL_EVENT_ISEXCEPTION, required=true)
+    private boolean isException;
+    
+    /**
+     * @zm-api-field-tag isReminderSet
+     * @zm-api-field-description returns a boolean indicating whether any reminder has been set?
+     */
+    @XmlAttribute(name=MailConstants.E_CAL_EVENT_ISREMINDERSET, required=true)
+    private boolean isReminderSet;
+    
+    /**
+     * @zm-api-field-tag isPrivate
+     * @zm-api-field-description returns a boolean indicating whether this meeting is private?
+     */
+    @XmlAttribute(name=MailConstants.E_CAL_EVENT_ISPRIVATE, required=true)
+    private boolean isPrivate;
+    
+    /**
+     * @zm-api-field-tag hasPermission
+     * @zm-api-field-description returns a boolean indicating hasPermission to view FreeBusy information
+     */
+    @XmlAttribute(name=MailConstants.E_CAL_EVENT_HASPERMISSION, required=true)
+    private boolean hasPermission;
 
     /**
      * no-argument constructor wanted by JAXB
@@ -48,7 +111,7 @@ public class FreeBusySlot {
     protected FreeBusySlot() {
         this(-1L, -1L);
     }
-
+	
     public FreeBusySlot(long startTime, long endTime) {
         this.startTime = startTime;
         this.endTime = endTime;
@@ -57,10 +120,59 @@ public class FreeBusySlot {
     public long getStartTime() { return startTime; }
     public long getEndTime() { return endTime; }
 
-    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
+    public String getId() {
+		return id;
+	}
+
+	public String getSubject() {
+		return subject;
+	}
+
+	public String getLocation() {
+		return location;
+	}
+
+	public boolean isMeeting() {
+		return isMeeting;
+	}
+
+	public boolean isRecurring() {
+		return isRecurring;
+	}
+
+	public boolean isException() {
+		return isException;
+	}
+
+	public boolean isReminderSet() {
+		return isReminderSet;
+	}
+
+	public boolean isPrivate() {
+		return isPrivate;
+	}
+
+	public boolean isHasPermission() {
+		return hasPermission;
+	}
+
+	public void setHasPermission(boolean hasPermission) {
+		this.hasPermission = hasPermission;
+	}
+
+	public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         return helper
             .add("startTime", startTime)
-            .add("endTime", endTime);
+            .add("endTime", endTime)
+            .add("id", id)
+            .add("subject", subject)
+            .add("location", location)
+            .add("isMeeting", isMeeting)
+            .add("isRecurring", isRecurring)
+            .add("isException", isException)
+            .add("isPrivate", isPrivate)
+            .add("isReminderSet", isReminderSet)
+            .add("hasPermission", hasPermission);
     }
 
     @Override
