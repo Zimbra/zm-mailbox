@@ -36,6 +36,9 @@ import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlMixed;
 import javax.xml.parsers.DocumentBuilder;
 
+import com.fasterxml.jackson.databind.type.TypeFactory;
+import com.zimbra.soap.admin.type.CacheEntrySelector;
+import com.zimbra.soap.admin.type.CacheSelector;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -2000,6 +2003,20 @@ header="X-Spam-Score"/>
         Assert.assertEquals("roundtripped value", true, roundtripped.getSuccess());
     }
 
+    @Test
+    public void cacheSelectorStringSerializeDeserialize() throws Exception {
+        CacheSelector selector = new CacheSelector(false, "acl,skin");
+        selector.setIncludeImapServers(true);
+        selector.addEntry(new CacheEntrySelector(CacheEntrySelector.CacheEntryBy.name, "foobar"));
+        selector.addEntry(new CacheEntrySelector(CacheEntrySelector.CacheEntryBy.name, "humph"));
+        String json = JacksonUtil.jaxbToJsonNonSoapApi(selector);
+        logDebug("JSON from JAXB\n%1$s", json);
+        CacheSelector newSel = JacksonUtil.jsonToJaxbNonSoapApi(json, CacheSelector.class);
+        String json2 = JacksonUtil.jaxbToJsonNonSoapApi(newSel);
+        logDebug("Round tripped JSON\n%1$s", json2);
+        Assert.assertEquals("Round tripped json", json, json2);
+    }
+
     public String getZimbraJsonJaxbString(Object obj) {
             try {
                 return JacksonUtil.jaxbToJsonString(JacksonUtil.getObjectMapper(), obj);
@@ -2020,7 +2037,8 @@ header="X-Spam-Score"/>
     public ObjectMapper getSimpleJsonJaxbMapper() {
         ObjectMapper mapper = new ObjectMapper();
         mapper.setAnnotationIntrospector(
-                AnnotationIntrospector.pair(new JacksonAnnotationIntrospector(), new JaxbAnnotationIntrospector()));
+                AnnotationIntrospector.pair(new JacksonAnnotationIntrospector(),
+                        new JaxbAnnotationIntrospector(TypeFactory.defaultInstance())));
         mapper.enable(SerializationFeature.INDENT_OUTPUT);
         return mapper;
     }
