@@ -26,6 +26,9 @@ import com.fasterxml.jackson.databind.AnnotationIntrospector;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
+import com.fasterxml.jackson.databind.type.TypeFactory;
+import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 import com.google.common.base.Strings;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -99,6 +102,37 @@ public final class JacksonUtil {
         } catch (SoapParseException e) {
             throw ServiceException.FAILURE("SoapParseException", e);
         }
+    }
+
+    private static <T> T jsonToJaxb(ObjectMapper mapper, String json, Class<T> klass) {
+        try {
+            return mapper.readValue(json, klass);
+        } catch (IOException e) {
+            LOG.warn("Problem deserializing json string '%s' to class '%s' - returning null", json, klass, e);
+        }
+        return null;
+    }
+
+    /**
+     * Uses a JSON format similar to that used by the SOAP API but more compact in most circumstances.
+     * Only use where compatibility with the SOAP API is not required.
+     *
+     * WARNING: The serialization work for the SOAP API concentrated on serialization, and continues
+     * to leverage the Element API for deserialization.  This code may work for some objects
+     * but not necessarily all.  Needs testing before using for all objects you may encounter for new uses.
+     */
+    public static <T> T jsonToJaxbNonSoapApi(String json, Class<T> klass) {
+        return jsonToJaxb(JacksonUtil.getCompactNonSoapObjectMapper(), json, klass);
+    }
+
+    /**
+     * Uses a JSON format similar to that used by the SOAP API but more compact in most circumstances.
+     * Only use where compatibility with the SOAP API is not required.
+     * @param obj the soap JAXB object to be serialized
+     * @return JSON string representing the object
+     */
+    public static String jaxbToJsonNonSoapApi(Object obj) throws ServiceException {
+        return jaxbToJsonString(JacksonUtil.getCompactNonSoapObjectMapper(), obj);
     }
 
     public static String jaxbToJsonString(ObjectMapper mapper, Object obj)
@@ -182,6 +216,18 @@ public final class JacksonUtil {
         ObjectMapper mapper = getObjectMapper();
         // Enable this next line to get everything wrapped with the name of the root element.
         mapper.enable(SerializationFeature.WRAP_ROOT_VALUE);
+        return mapper;
+    }
+
+    /**
+     * Use with care.  Serialization/Deserialization using this may differ from what is used in the Zimbra SOAP
+     * API and in particular, may not work for deserialization for some objects as that has not been extensively
+     * used and functionality is likely missing for some objects.
+     */
+    public static ObjectMapper getCompactNonSoapObjectMapper() {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.setAnnotationIntrospector(AnnotationIntrospector.pair(
+                new JacksonAnnotationIntrospector(), new JaxbAnnotationIntrospector(TypeFactory.defaultInstance())));
         return mapper;
     }
 }
