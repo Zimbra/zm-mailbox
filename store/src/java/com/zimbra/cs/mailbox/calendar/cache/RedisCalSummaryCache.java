@@ -59,7 +59,12 @@ public class RedisCalSummaryCache {
             return;
         }
         ZimbraLog.calendar.trace("RedisCalSummaryCache.put(%s,%s,%s)", accountId, itemId, calendarData);
-        calSummaryMap.fastPut(itemId, serialize(calendarData));
+        String encoded = serialize(calendarData);
+        if (encoded == null) {
+            calSummaryMap.fastRemove(itemId);  // RMap does not allow null keys or values
+        } else {
+            calSummaryMap.fastPut(itemId, serialize(calendarData));
+        }
     }
 
     protected void purge(String accountId) {
