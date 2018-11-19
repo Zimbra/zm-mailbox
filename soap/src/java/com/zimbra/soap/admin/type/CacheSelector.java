@@ -25,6 +25,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.zimbra.common.soap.AdminConstants;
@@ -110,4 +111,17 @@ public final class CacheSelector {
     }
     public void setIncludeImapServers(boolean bool) { imapServers = ZmBoolean.fromBool(bool); }
     public boolean isIncludeImapServers() { return ZmBoolean.toBool(imapServers, true); }
+
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
+        return helper
+                .add("allServers", allServers)
+                .add("imapServers", imapServers)
+                .add("types", types)
+                .add("entries", entries);
+    }
+
+    @Override
+    public String toString() {
+        return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
+    }
 }
