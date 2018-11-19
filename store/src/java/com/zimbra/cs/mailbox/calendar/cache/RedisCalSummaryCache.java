@@ -59,7 +59,12 @@ public class RedisCalSummaryCache {
             return;
         }
         ZimbraLog.calendar.trace("RedisCalSummaryCache.put(%s,%s,%s)", accountId, itemId, calendarData);
-        calSummaryMap.fastPut(itemId, serialize(calendarData));
+        String encoded = serialize(calendarData);
+        if (encoded == null) {
+            calSummaryMap.fastRemove(itemId);  // RMap does not allow null keys or values
+        } else {
+            calSummaryMap.fastPut(itemId, serialize(calendarData));
+        }
     }
 
     protected void purge(String accountId) {
@@ -69,7 +74,11 @@ public class RedisCalSummaryCache {
     }
 
     public String serialize(CalendarData value) {
-            return value.encodeMetadata().toString();
+        if (value == null) {
+            return null;
+        }
+        Metadata meta = value.encodeMetadata();
+        return (meta == null) ? null : meta.toString();
     }
 
     public CalendarData deserialize(String encoded) {
@@ -79,7 +88,7 @@ public class RedisCalSummaryCache {
         Metadata meta = null;
         try {
             meta = new Metadata(encoded);
-        return new CalendarData(meta);
+            return new CalendarData(meta);
         } catch (ServiceException se) {
             ZimbraLog.calendar.warnQuietly("Problem deserializing String into CalendarData - returning null", se);
             return null;
