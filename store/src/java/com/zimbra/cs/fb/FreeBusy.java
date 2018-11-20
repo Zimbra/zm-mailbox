@@ -52,6 +52,20 @@ import com.zimbra.cs.mailbox.calendar.ZOrganizer;
  * 9-11busy)
  */
 public class FreeBusy implements Iterable<FreeBusy.Interval> {
+	private String mName;
+	private long mStart;
+    private long mEnd;
+    protected IntervalList mList; 
+	//Below parameters are added to support Detailed and FreeBusy view response.
+    private String id;
+    private String location;
+    private String subject;
+    private boolean isMeeting;
+    private boolean isRecurring;
+    private boolean isException;
+    private boolean isReminderSet;
+    private boolean isPrivate;
+    private boolean hasPermission = true;
 
 	// free from start to end
 	public static FreeBusy emptyFreeBusy(String name, long start, long end) {
@@ -73,24 +87,6 @@ public class FreeBusy implements Iterable<FreeBusy.Interval> {
         mStart = start;
         mEnd = end;
     }
-    private String mName;
-    protected IntervalList mList; 
-    
-    private long mStart;
-    private long mEnd;
-    
-    //Below parameters are added to support Detailed and FreeBusy view response.
-    private String id;
-    private String location;
-    private String subject;
-    private boolean isMeeting;
-    private boolean isRecurring;
-    private boolean isException;
-    private boolean isReminderSet;
-    private boolean isPrivate;
-    private boolean hasPermission = true;
-    
-    
     public FreeBusy(String name, long start, long end, String id, String location, String subject, boolean isMeeting, boolean isRecurring,
 			boolean isException, boolean isReminderSet, boolean isPrivate, boolean hasPermission) {
 		this(name,start,end);
