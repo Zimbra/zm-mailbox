@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import com.zimbra.cs.mailclient.MailConfig;
 import org.dom4j.DocumentException;
 import org.junit.After;
 import org.junit.BeforeClass;
@@ -188,8 +189,14 @@ public abstract class ImapTestBase {
         assertFalse("ImapConnection should not be closed", conn.isClosed());
     }
 
-    protected ImapConnection connect(String user) throws IOException {
+    protected ImapConfig getImapConfig() {
         ImapConfig config = new ImapConfig(imapHostname);
+        config.setSecurity(MailConfig.Security.TLS_IF_AVAILABLE);
+        return config;
+    }
+
+    protected ImapConnection connect(String user) throws IOException {
+        ImapConfig config = getImapConfig();
         config.setPort(imapPort);
         config.setAuthenticationId(user);
         config.getLogger().setLevel(Log.Level.trace);
@@ -218,7 +225,7 @@ public abstract class ImapTestBase {
         return connectAndSelectInbox(USER);
     }
 
-    protected ImapConnection getAdminConnection() throws Exception {
+    protected ImapConfig getAdminImapConfig() {
         AuthenticatorFactory authFactory = new AuthenticatorFactory();
         authFactory.register(ZimbraAuthenticator.MECHANISM, ZimbraClientAuthenticator.class);
         ImapConfig config = new ImapConfig(imapServer.getServiceHostname());
@@ -227,7 +234,11 @@ public abstract class ImapTestBase {
         config.setPort(imapPort);
         config.setAuthenticationId(LC.zimbra_ldap_user.value());
         config.getLogger().setLevel(Log.Level.trace);
-        ImapConnection conn = new ImapConnection(config);
+        return config;
+    }
+
+    protected ImapConnection getAdminConnection() throws Exception {
+        ImapConnection conn = new ImapConnection(getAdminImapConfig());
         conn.connect();
         conn.authenticate(AuthProvider.getAdminAuthToken().getEncoded());
         return conn;
