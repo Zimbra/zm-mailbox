@@ -374,6 +374,10 @@ public class SolrUtils {
     private static InitialCollectionSpec getInitialCollectionSpec(String accountId, IndexType indexType) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         Account account = prov.getAccountById(accountId);
+        if (account == null) {
+            throw ServiceException.FAILURE(String.format(
+                    "cannot get shard and replica information for non-existent account=%s", accountId), null);
+        }
         int numShards = 0;
         int numReplicas = 0;
         switch (indexType) {
@@ -404,6 +408,10 @@ public class SolrUtils {
     public static String getEventIndexName(String accountId) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         Account account = prov.getAccountById(accountId);
+        if (account == null) {
+            throw ServiceException.FAILURE(
+                    String.format("event index name not found because account=%s not found", accountId), null);
+        }
         String indexName = account.getEventIndexName();
         if (Strings.isNullOrEmpty(indexName)) {
             indexName = prov.getConfig().getEventIndexName();
@@ -417,6 +425,10 @@ public class SolrUtils {
     public static String getMailboxIndexName(String accountId) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         Account account = prov.getAccountById(accountId);
+        if (account == null) {
+            throw ServiceException.FAILURE(
+                    String.format("mailbox index name not found because account=%s not found", accountId), null);
+        }
         String indexName = account.getMailboxIndexName();
         if (Strings.isNullOrEmpty(indexName)) {
             indexName = prov.getConfig().getMailboxIndexName();
