@@ -57,6 +57,8 @@ public class ZMessage extends ZBaseItem implements ToZJSONObject {
     private final Map<String, String> mReqHdrs;
     private final String mIdentityId;
     private final long mAutoSendTime;
+    private final String mSubjectFontSize;
+    private final String mLocationFontSize;
 
     public ZMessage(Element e, ZMailbox zmailbox) throws ServiceException {
         super(e.getAttribute(MailConstants.A_ID),
@@ -80,6 +82,11 @@ public class ZMessage extends ZBaseItem implements ToZJSONObject {
         mSize = e.getAttributeLong(MailConstants.A_SIZE, -1);
         mIdentityId = e.getAttribute(MailConstants.A_IDENTITY_ID, null);
         mAutoSendTime = e.getAttributeLong(MailConstants.A_AUTO_SEND_TIME, 1);
+
+        Element mMeta = e.getMetaSection("fontSize");
+        mSubjectFontSize = mMeta.getMetaValueFromKey("subjectFontSize");
+        mLocationFontSize = mMeta.getMetaValueFromKey("locationFontSize");
+
         Element content = e.getOptionalElement(MailConstants.E_CONTENT);
         if (content != null) {
             mContent = content.getText();
@@ -162,6 +169,14 @@ public class ZMessage extends ZBaseItem implements ToZJSONObject {
         return mReplyType;
     }
 
+    public String getSubjectFontSize() {
+        return  mSubjectFontSize;
+    }
+
+    public String getLocationFontSize() {
+        return mLocationFontSize;
+    }
+
     @Override
     public long getSize() {
         return mSize;
@@ -210,6 +225,8 @@ public class ZMessage extends ZBaseItem implements ToZJSONObject {
         zjo.put("isSentByMe", isSentByMe());
         zjo.put("isUnread", isUnread());
         zjo.put("idnt", mIdentityId);
+        zjo.put("subjectFontSize", mSubjectFontSize);
+        zjo.put("locationFontSize", mLocationFontSize);
         if (imapUid >= 0) {
             zjo.put("imapUid", imapUid);
         }
