@@ -304,11 +304,6 @@ public abstract class Element implements Cloneable {
      *  with the given name exist, returns an empty <tt>List</tt> */
     public abstract List<Element> listElements(String name);
 
-    public abstract Element getMetaSection(String name);
-
-    // to be used only with Elements returned from getMetaSection
-    public abstract String getMetaValueFromKey(String key);
-
     /** Returns whether the element has any sub-elements. */
     public abstract boolean hasChildren();
 
@@ -1152,17 +1147,6 @@ public abstract class Element implements Cloneable {
         }
 
         @Override
-        public Element getMetaSection(String section) {
-            throw new UnsupportedOperationException();//can support eventually, but don't need to for print
-        }
-
-        @Override
-        public String getMetaValueFromKey(String key) {
-            throw new UnsupportedOperationException();//can support eventually, but don't need to for print
-
-        }
-
-        @Override
         public String getText() {
             return getAttribute(A_CONTENT, "");
         }
@@ -1827,37 +1811,6 @@ public abstract class Element implements Cloneable {
         }
 
         @Override
-        public Element getMetaSection(String sectionName) {
-            Element meta = new XMLElement("empty");
-
-            for (Element elt : listElements("meta")) {
-                String metaSection = elt.getAttribute("section", null);
-
-                if(sectionName.equals(metaSection)) {
-                    meta = elt;
-                    return meta;
-                }
-            }
-
-            return meta;
-        }
-
-        //to be used only with Elements returned from getMetaSection
-        @Override
-        public String getMetaValueFromKey(String key) {
-
-            for (Element elt : listElements("a")) {
-                String attr = elt.getAttribute("n", null);
-
-                if (attr.equals(key)) {
-                    return elt.getText();
-                }
-            }
-
-            return "";
-        }
-
-        @Override
         public String getText() {
             return (mText == null ? "" : mText);
         }
@@ -2178,16 +2131,6 @@ public abstract class Element implements Cloneable {
 
         @Override
         public List<KeyValuePair> listKeyValuePairs(String eltname, String attrname) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public Element getMetaSection(String section) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public String getMetaValueFromKey(String key) {
             throw new UnsupportedOperationException();
         }
 

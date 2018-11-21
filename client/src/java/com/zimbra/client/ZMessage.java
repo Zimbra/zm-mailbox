@@ -83,9 +83,9 @@ public class ZMessage extends ZBaseItem implements ToZJSONObject {
         mIdentityId = e.getAttribute(MailConstants.A_IDENTITY_ID, null);
         mAutoSendTime = e.getAttributeLong(MailConstants.A_AUTO_SEND_TIME, 1);
 
-        Element mMeta = e.getMetaSection("fontSize");
-        mSubjectFontSize = mMeta.getMetaValueFromKey("subjectFontSize");
-        mLocationFontSize = mMeta.getMetaValueFromKey("locationFontSize");
+        Element mMeta = getMetaSection(e, "fontSize");
+        mSubjectFontSize = getMetaValueFromKey(mMeta, "subjectFontSize");
+        mLocationFontSize = getMetaValueFromKey(mMeta, "locationFontSize");
 
         Element content = e.getOptionalElement(MailConstants.E_CONTENT);
         if (content != null) {
@@ -122,6 +122,36 @@ public class ZMessage extends ZBaseItem implements ToZJSONObject {
                 mShare = ZShare.parseXml(shareContent);
             }
         }
+    }
+
+    //get the metadata off the message, by sectionName
+    public Element getMetaSection(Element e, String sectionName) {
+        Element meta = new Element.XMLElement("empty");
+
+        for (Element elt : e.listElements("meta")) {
+            String metaSection = elt.getAttribute("section", null);
+
+            if (sectionName.equals(metaSection)) {
+                meta = elt;
+                return meta;
+            }
+        }
+
+        return meta;
+    }
+
+    // for use with Elements returned from getMetaSection
+    public String getMetaValueFromKey(Element e, String key) {
+
+        for (Element elt : e.listElements("a")) {
+            String attr = elt.getAttribute("n", null);
+
+            if (attr.equals(key)) {
+                return elt.getText();
+            }
+        }
+
+        return "";
     }
 
     public void modifyNotification(ZModifyMessageEvent mevent) throws ServiceException {
