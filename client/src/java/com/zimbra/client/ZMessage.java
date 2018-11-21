@@ -57,6 +57,8 @@ public class ZMessage extends ZBaseItem implements ToZJSONObject {
     private final Map<String, String> mReqHdrs;
     private final String mIdentityId;
     private final long mAutoSendTime;
+    private final String mSubjectFontSize;
+    private final String mLocationFontSize;
 
     public ZMessage(Element e, ZMailbox zmailbox) throws ServiceException {
         super(e.getAttribute(MailConstants.A_ID),
@@ -80,6 +82,11 @@ public class ZMessage extends ZBaseItem implements ToZJSONObject {
         mSize = e.getAttributeLong(MailConstants.A_SIZE, -1);
         mIdentityId = e.getAttribute(MailConstants.A_IDENTITY_ID, null);
         mAutoSendTime = e.getAttributeLong(MailConstants.A_AUTO_SEND_TIME, 1);
+
+        Element mMeta = getMetaSection(e, "fontSize");
+        mSubjectFontSize = getMetaValueFromKey(mMeta, "subjectFontSize");
+        mLocationFontSize = getMetaValueFromKey(mMeta, "locationFontSize");
+
         Element content = e.getOptionalElement(MailConstants.E_CONTENT);
         if (content != null) {
             mContent = content.getText();
@@ -115,6 +122,36 @@ public class ZMessage extends ZBaseItem implements ToZJSONObject {
                 mShare = ZShare.parseXml(shareContent);
             }
         }
+    }
+
+    //get the metadata off the message, by sectionName
+    public Element getMetaSection(Element e, String sectionName) {
+        Element meta = new Element.XMLElement("empty");
+
+        for (Element elt : e.listElements("meta")) {
+            String metaSection = elt.getAttribute("section", null);
+
+            if (sectionName.equals(metaSection)) {
+                meta = elt;
+                return meta;
+            }
+        }
+
+        return meta;
+    }
+
+    // for use with Elements returned from getMetaSection
+    public String getMetaValueFromKey(Element e, String key) {
+
+        for (Element elt : e.listElements("a")) {
+            String attr = elt.getAttribute("n", null);
+
+            if (attr.equals(key)) {
+                return elt.getText();
+            }
+        }
+
+        return "";
     }
 
     public void modifyNotification(ZModifyMessageEvent mevent) throws ServiceException {
@@ -160,6 +197,14 @@ public class ZMessage extends ZBaseItem implements ToZJSONObject {
      */
     public String getReplyType() {
         return mReplyType;
+    }
+
+    public String getSubjectFontSize() {
+        return  mSubjectFontSize;
+    }
+
+    public String getLocationFontSize() {
+        return mLocationFontSize;
     }
 
     @Override
@@ -210,6 +255,8 @@ public class ZMessage extends ZBaseItem implements ToZJSONObject {
         zjo.put("isSentByMe", isSentByMe());
         zjo.put("isUnread", isUnread());
         zjo.put("idnt", mIdentityId);
+        zjo.put("subjectFontSize", mSubjectFontSize);
+        zjo.put("locationFontSize", mLocationFontSize);
         if (imapUid >= 0) {
             zjo.put("imapUid", imapUid);
         }
