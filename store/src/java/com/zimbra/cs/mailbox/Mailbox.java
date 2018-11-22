@@ -2076,16 +2076,15 @@ public class Mailbox implements MailboxStore {
             boolean needRedo = needRedo(null, redoRecorder);
             boolean success = false;
             try {
-                final MailboxTransaction t = mailboxReadTransaction("deleteMailbox", null, redoRecorder);
-                if (needRedo) {
-                    redoRecorder.log();
-                }
+                try (final MailboxTransaction t = mailboxWriteTransaction("deleteMailbox", null, redoRecorder)) {
+                    if (needRedo) {
+                        redoRecorder.log();
+                    }
 
-                if (deleteStore && !sm.supports(StoreManager.StoreFeature.BULK_DELETE)) {
-                    blobs = DbMailItem.getAllBlobs(this);
-                }
+                    if (deleteStore && !sm.supports(StoreManager.StoreFeature.BULK_DELETE)) {
+                        blobs = DbMailItem.getAllBlobs(this);
+                    }
 
-                try {
                     // Remove the mime messages from MessageCache
                     if (deleteStore) {
                         DbMailItem.visitAllBlobDigests(this, new MessageCachePurgeCallback());
@@ -2101,8 +2100,6 @@ public class Mailbox implements MailboxStore {
 
                     success = true;
                     t.commit();
-                } finally {
-                    t.close();
                 }
 
                 if (success) {
