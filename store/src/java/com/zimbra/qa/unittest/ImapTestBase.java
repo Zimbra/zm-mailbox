@@ -191,7 +191,13 @@ public abstract class ImapTestBase {
 
     protected ImapConfig getImapConfig() {
         ImapConfig config = new ImapConfig(imapHostname);
-        config.setSecurity(MailConfig.Security.TLS_IF_AVAILABLE);
+        if (imapServer != null) {
+            // Some logging currently gets corrupted if using StartTLS, so leaving this
+            config.setSecurity(imapServer.isImapCleartextLoginEnabled() ?
+                    MailConfig.Security.NONE : MailConfig.Security.TLS_IF_AVAILABLE);
+        } else {
+            config.setSecurity(MailConfig.Security.TLS_IF_AVAILABLE);
+        }
         return config;
     }
 
