@@ -59,7 +59,7 @@ public abstract class TransactionAware<V, C extends TransactionAware.Change> {
 
     public void resetChanges() {
         if (changes.hasChanges()) {
-            ZimbraLog.cache.warn("clearing uncommitted changes: %s", changes.toString());
+            ZimbraLog.cache.warn("clearing %d uncommitted changes for %s", changes.size(), getName());
         }
         changes.reset();
     }
@@ -105,6 +105,7 @@ public abstract class TransactionAware<V, C extends TransactionAware.Change> {
 
         @Override
         public String toString() {
+
             return MoreObjects.toStringHelper(this)
                     .add("name", getName())
                     .add("changes", Joiner.on(",").join(changes)).toString();
