@@ -8,7 +8,9 @@ import org.junit.Before;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.localconfig.LC;
+import org.junit.Ignore;
 
+@Ignore("For Zimbra-X just test the configured IMAP via proxy")
 public class TestImapDaemonNotifications extends SharedImapNotificationTests {
 
     @Before

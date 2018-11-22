@@ -10,7 +10,9 @@ import com.zimbra.client.ZMailbox;
 import com.zimbra.cs.imap.ImapRemoteSession;
 import com.zimbra.cs.imap.ImapServerListener;
 import com.zimbra.cs.imap.ImapServerListenerPool;
+import org.junit.Ignore;
 
+@Ignore("For Zimbra-X just test the configured IMAP via proxy")
 public abstract class TestImapNotificationsViaMailbox extends SharedImapNotificationTests {
 
     @Override
