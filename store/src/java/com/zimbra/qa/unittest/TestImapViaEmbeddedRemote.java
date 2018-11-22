@@ -5,6 +5,7 @@ import java.io.IOException;
 import org.dom4j.DocumentException;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 
 import com.zimbra.common.localconfig.ConfigException;
 import com.zimbra.common.localconfig.LC;
@@ -17,6 +18,7 @@ import com.zimbra.common.service.ServiceException;
  *
  * The actual tests that are run are in {@link SharedImapTests}
  */
+@Ignore("Need AdminWaitSet support at a minimum - which is not currently working for Zimbra-X")
 public class TestImapViaEmbeddedRemote extends SharedImapTests {
 
     @Before
