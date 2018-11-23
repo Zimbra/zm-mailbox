@@ -22,6 +22,8 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.filter.RuleManager.AdminFilterType;
@@ -64,6 +66,8 @@ public class ModifyFilterRules extends AdminDocumentHandler {
         }
 
         RuleManager.setAdminRulesFromXML(entry, req.getFilterRules(), FilterType.INCOMING, afType);
+        ZimbraLog.filter.debug("ModifyFilterRules(Admin).handle going to execute clearConfigCacheOnAllServers with accountId: %s", ((Account)entry).getId());
+        clearConfigCacheOnAllServers(((Account)entry).getId());
         return zsc.jaxbToElement(new ModifyFilterRulesResponse());
     }
 
