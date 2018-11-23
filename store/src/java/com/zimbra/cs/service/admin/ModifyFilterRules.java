@@ -66,8 +66,10 @@ public class ModifyFilterRules extends AdminDocumentHandler {
         }
 
         RuleManager.setAdminRulesFromXML(entry, req.getFilterRules(), FilterType.INCOMING, afType);
-        ZimbraLog.filter.debug("ModifyFilterRules(Admin).handle going to execute clearConfigCacheOnAllServers with accountId: %s", ((Account)entry).getId());
-        clearConfigCacheOnAllServers(((Account)entry).getId());
+        if (entry instanceof Account) {
+            ZimbraLog.filter.debug("ModifyFilterRules(Admin).handle going to execute clearConfigCacheOnAllServers with accountId: %s", ((Account)entry).getId());
+            clearConfigCacheOnAllServers(((Account)entry).getId());	
+        }
         return zsc.jaxbToElement(new ModifyFilterRulesResponse());
     }
 
