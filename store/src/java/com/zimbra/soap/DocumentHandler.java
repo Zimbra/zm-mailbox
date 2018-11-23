@@ -43,12 +43,17 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.pubsub.PubSubService;
+import com.zimbra.cs.pubsub.message.FlushCacheMsg;
 import com.zimbra.cs.session.AdminSession;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.SoapSession;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.ZimbraSoapContext.SessionInfo;
+import com.zimbra.soap.admin.type.CacheEntrySelector;
+import com.zimbra.soap.admin.type.CacheEntryType;
+import com.zimbra.soap.admin.type.CacheSelector;
 
 /**
  * @since May 26, 2004
@@ -719,5 +724,15 @@ public abstract class DocumentHandler {
 
         LOCAL_HOST = "";
         LOCAL_HOST_ID = "";
+    }
+    
+    protected void clearConfigCacheOnAllServers(String accountId)
+    {
+        ZimbraLog.filter.debug("DocumentHandler.clearConfigCacheOnAllServers Going to execute clearConfigCacheOnAllServers with accountId: %s", accountId);
+        CacheSelector selector = new CacheSelector(true, CacheEntryType.account.name());
+        CacheEntrySelector.CacheEntryBy enumVal = CacheEntrySelector.CacheEntryBy.id;
+        CacheEntrySelector ceSel = new CacheEntrySelector(enumVal,accountId);
+        selector.addEntry(ceSel);
+        PubSubService.getInstance().publish(PubSubService.BROADCAST, new FlushCacheMsg(selector));
     }
 }
