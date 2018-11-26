@@ -266,7 +266,7 @@ jobs:
             cp ldap/Dockerfile .
             tar zcvf "$BUILD/docker-context.tgz" *
             cd "$BUILD"; python -m SimpleHTTPServer &
-            docker build -t zmc-ldap --build-arg "DOCKER_REPO_NS=$DOCKER_REPO_NS" --build-arg "DOCKER_BUILD_TAG=latest-$SANITIZED_BRANCH" --build-arg "DOCKER_CACHE_TAG=$DOCKER_CACHE_TAG" --build-arg "LOCAL_SRC_DIR=." http://$(hostname):8000/docker-context.tgz
+            docker build -t zmc-ldap --build-arg "DOCKER_REPO_NS=$DOCKER_REPO_NS" --build-arg "DOCKER_BUILD_TAG=latest-${SANITIZED_BRANCH}" --build-arg "DOCKER_CACHE_TAG=$DOCKER_CACHE_TAG" --build-arg "LOCAL_SRC_DIR=." http://$(hostname):8000/docker-context.tgz
       - run:
           name: Going to push zmc-ldap container image
           command: |
@@ -297,7 +297,7 @@ jobs:
             cp mta/Dockerfile .
             tar zcvf "$BUILD/docker-context.tgz" *
             cd "$BUILD"; python -m SimpleHTTPServer &
-            docker build -t zmc-mta --build-arg "DOCKER_REPO_NS=$DOCKER_REPO_NS" --build-arg "DOCKER_BUILD_TAG=latest-$SANITIZED_BRANCH" --build-arg "DOCKER_CACHE_TAG=$DOCKER_CACHE_TAG" --build-arg "LOCAL_SRC_DIR=." http://$(hostname):8000/docker-context.tgz
+            docker build -t zmc-mta --build-arg "DOCKER_REPO_NS=$DOCKER_REPO_NS" --build-arg "DOCKER_BUILD_TAG=latest-${SANITIZED_BRANCH}" --build-arg "DOCKER_CACHE_TAG=$DOCKER_CACHE_TAG" --build-arg "LOCAL_SRC_DIR=." http://$(hostname):8000/docker-context.tgz
       - run:
           name: Going to push zmc-mta container image
           command: |
@@ -328,13 +328,57 @@ jobs:
             cp mailbox/Dockerfile .
             tar zcvf "$BUILD/docker-context.tgz" *
             cd "$BUILD"; python -m SimpleHTTPServer &
-            docker build -t zmc-mailbox --build-arg "DOCKER_REPO_NS=$DOCKER_REPO_NS" --build-arg "DOCKER_BUILD_TAG=latest-$SANITIZED_BRANCH" --build-arg "DOCKER_CACHE_TAG=$DOCKER_CACHE_TAG" --build-arg "LOCAL_SRC_DIR=." http://$(hostname):8000/docker-context.tgz
+            docker build -t zmc-mailbox --build-arg "DOCKER_REPO_NS=$DOCKER_REPO_NS" --build-arg "DOCKER_BUILD_TAG=latest-${SANITIZED_BRANCH}" --build-arg "DOCKER_CACHE_TAG=$DOCKER_CACHE_TAG" --build-arg "LOCAL_SRC_DIR=." http://$(hostname):8000/docker-context.tgz
       - run:
           name: Going to push zmc-mailbox container image
           command: |
             docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
             export DATE=$(date +"%Y%m%d-%H%M")
             export CONTAINERNAME="zmc-mailbox"
+            export SHORTHASH=$(git rev-parse --short "$CIRCLE_SHA1")
+            export TAG="${DATE}_${SANITIZED_BRANCH}_${SHORTHASH}"
+            docker tag "${CONTAINERNAME}" "${DOCKER_REPO_NS}/${CONTAINERNAME}:${TAG}"
+            docker tag "${CONTAINERNAME}" "${DOCKER_REPO_NS}/${CONTAINERNAME}:latest-${SANITIZED_BRANCH}"
+            docker push "${DOCKER_REPO_NS}/${CONTAINERNAME}:${TAG}"
+            docker push "${DOCKER_REPO_NS}/${CONTAINERNAME}:latest-${SANITIZED_BRANCH}"
+  build_and_deploy_zmcmailbox_debug_container_images:
+    <<: *default_environment_settings
+    steps:
+      - *default_attach_workspace
+      - setup_remote_docker
+      - *install_docker_client
+      - *load_env
+      - *build_docker_context
+      - *install_python
+      - *start_apt_catcher_ng
+      - run:
+          name: Create debug healthcheck.py file
+          command: |
+            echo "generate-healthcheck started.."
+            cd "$BUILD"/zm-docker/mailbox_debug
+            cp ../mailbox/healthcheck.py healthcheck_base.py
+            split -l 10 healthcheck_base.py
+            cat xaa healthcheck_debug.py xa[b-z] > healthcheck.py
+            sed -i 's/\    main/    main_debug/' healthcheck.py
+            rm xa*
+            echo "generate-healthcheck finished.."
+      - run:
+          name: Building zmc-mailbox_debug container image
+          command: |
+            docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
+            cd "$BUILD"/zm-docker
+            cp mailbox_debug/Dockerfile .
+            cat Dockerfile | sed 's/healthcheck/healthcheck_debug/g' > Docker.tmp
+            mv Docker.tmp Dockerfile
+            tar zcvf "$BUILD/docker-context.tgz" *
+            cd "$BUILD"; python -m SimpleHTTPServer &
+            docker build -t zmc-mailbox_debug --build-arg "DOCKER_REPO_NS=$DOCKER_REPO_NS" --build-arg "DOCKER_BUILD_TAG=latest-${SANITIZED_BRANCH}" --build-arg "DOCKER_CACHE_TAG=$DOCKER_CACHE_TAG" --build-arg "LOCAL_SRC_DIR=." http://$(hostname):8000/docker-context.tgz
+      - run:
+          name: Going to push zmc-mailbox_debug container image
+          command: |
+            docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
+            export DATE=$(date +"%Y%m%d-%H%M")
+            export CONTAINERNAME="zmc-mailbox_debug"
             export SHORTHASH=$(git rev-parse --short "$CIRCLE_SHA1")
             export TAG="${DATE}_${SANITIZED_BRANCH}_${SHORTHASH}"
             docker tag "${CONTAINERNAME}" "${DOCKER_REPO_NS}/${CONTAINERNAME}:${TAG}"
@@ -359,7 +403,7 @@ jobs:
             cp mysql-proxy/Dockerfile .
             tar zcvf "$BUILD/docker-context.tgz" *
             cd "$BUILD"; python -m SimpleHTTPServer &
-            docker build -t zmc-mysql-proxy --build-arg "DOCKER_REPO_NS=$DOCKER_REPO_NS" --build-arg "DOCKER_BUILD_TAG=latest-$SANITIZED_BRANCH" --build-arg "DOCKER_CACHE_TAG=$DOCKER_CACHE_TAG" --build-arg "LOCAL_SRC_DIR=." http://$(hostname):8000/docker-context.tgz
+            docker build -t zmc-mysql-proxy --build-arg "DOCKER_REPO_NS=$DOCKER_REPO_NS" --build-arg "DOCKER_BUILD_TAG=latest-${SANITIZED_BRANCH}" --build-arg "DOCKER_CACHE_TAG=$DOCKER_CACHE_TAG" --build-arg "LOCAL_SRC_DIR=." http://$(hostname):8000/docker-context.tgz
       - run:
           name: Going to push zmc-mysql-proxy container image
           command: |
@@ -390,7 +434,7 @@ jobs:
             cp mysql-local/Dockerfile .
             tar zcvf "$BUILD/docker-context.tgz" *
             cd "$BUILD"; python -m SimpleHTTPServer &
-            docker build -t zmc-mysql-local --build-arg "DOCKER_REPO_NS=$DOCKER_REPO_NS" --build-arg "DOCKER_BUILD_TAG=latest-$SANITIZED_BRANCH" --build-arg "DOCKER_CACHE_TAG=$DOCKER_CACHE_TAG" --build-arg "LOCAL_SRC_DIR=." http://$(hostname):8000/docker-context.tgz
+            docker build -t zmc-mysql-local --build-arg "DOCKER_REPO_NS=$DOCKER_REPO_NS" --build-arg "DOCKER_BUILD_TAG=latest-${SANITIZED_BRANCH}" --build-arg "DOCKER_CACHE_TAG=$DOCKER_CACHE_TAG" --build-arg "LOCAL_SRC_DIR=." http://$(hostname):8000/docker-context.tgz
       - run:
           name: Going to push zmc-mysql-local container image
           command: |
@@ -421,7 +465,7 @@ jobs:
             cp proxy/Dockerfile .
             tar zcvf "$BUILD/docker-context.tgz" *
             cd "$BUILD"; python -m SimpleHTTPServer &
-            docker build -t zmc-proxy --build-arg "DOCKER_REPO_NS=$DOCKER_REPO_NS" --build-arg "DOCKER_BUILD_TAG=latest-$SANITIZED_BRANCH" --build-arg "DOCKER_CACHE_TAG=$DOCKER_CACHE_TAG" --build-arg "LOCAL_SRC_DIR=." http://$(hostname):8000/docker-context.tgz
+            docker build -t zmc-proxy --build-arg "DOCKER_REPO_NS=$DOCKER_REPO_NS" --build-arg "DOCKER_BUILD_TAG=latest-${SANITIZED_BRANCH}" --build-arg "DOCKER_CACHE_TAG=$DOCKER_CACHE_TAG" --build-arg "LOCAL_SRC_DIR=." http://$(hostname):8000/docker-context.tgz
       - run:
           name: Going to push zmc-proxy container image
           command: |
@@ -452,7 +496,7 @@ jobs:
             cp zk/Dockerfile .
             tar zcvf "$BUILD/docker-context.tgz" *
             cd "$BUILD"; python -m SimpleHTTPServer &
-            docker build -t zmc-zookeeper --build-arg "DOCKER_REPO_NS=$DOCKER_REPO_NS" --build-arg "DOCKER_BUILD_TAG=latest-$SANITIZED_BRANCH" --build-arg "DOCKER_CACHE_TAG=$DOCKER_CACHE_TAG" --build-arg "LOCAL_SRC_DIR=." http://$(hostname):8000/docker-context.tgz
+            docker build -t zmc-zookeeper --build-arg "DOCKER_REPO_NS=$DOCKER_REPO_NS" --build-arg "DOCKER_BUILD_TAG=latest-${SANITIZED_BRANCH}" --build-arg "DOCKER_CACHE_TAG=$DOCKER_CACHE_TAG" --build-arg "LOCAL_SRC_DIR=." http://$(hostname):8000/docker-context.tgz
       - run:
           name: Going to push zmc-zookeeper container image
           command: |
@@ -483,7 +527,7 @@ jobs:
             cp solr/Dockerfile .
             tar zcvf "$BUILD/docker-context.tgz" *
             cd "$BUILD"; python -m SimpleHTTPServer &
-            docker build -t zmc-solr --build-arg "DOCKER_REPO_NS=$DOCKER_REPO_NS" --build-arg "DOCKER_BUILD_TAG=latest-$SANITIZED_BRANCH" --build-arg "DOCKER_CACHE_TAG=$DOCKER_CACHE_TAG" --build-arg "LOCAL_SRC_DIR=." http://$(hostname):8000/docker-context.tgz
+            docker build -t zmc-solr --build-arg "DOCKER_REPO_NS=$DOCKER_REPO_NS" --build-arg "DOCKER_BUILD_TAG=latest-${SANITIZED_BRANCH}" --build-arg "DOCKER_CACHE_TAG=$DOCKER_CACHE_TAG" --build-arg "LOCAL_SRC_DIR=." http://$(hostname):8000/docker-context.tgz
       - run:
           name: Going to push zmc-solr container image
           command: |
@@ -510,11 +554,12 @@ jobs:
           name: Building zmc-redismaster container image
           command: |
             docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
+            echo "SANITIZED_BRANCH = ${SANITIZED_BRANCH}"
             cd "$BUILD"/zm-docker
             cp redis_master/Dockerfile .
             tar zcvf "$BUILD/docker-context.tgz" *
             cd "$BUILD"; python -m SimpleHTTPServer &
-            docker build -t zmc-redismaster --build-arg "DOCKER_REPO_NS=$DOCKER_REPO_NS" --build-arg "DOCKER_BUILD_TAG=latest-$SANITIZED_BRANCH" --build-arg "DOCKER_CACHE_TAG=$DOCKER_CACHE_TAG" --build-arg "LOCAL_SRC_DIR=." http://$(hostname):8000/docker-context.tgz
+            docker build -t zmc-redismaster --build-arg "DOCKER_REPO_NS=$DOCKER_REPO_NS" --build-arg "DOCKER_BUILD_TAG=latest-${SANITIZED_BRANCH}" --build-arg "DOCKER_CACHE_TAG=$DOCKER_CACHE_TAG" --build-arg "LOCAL_SRC_DIR=." http://$(hostname):8000/docker-context.tgz
       - run:
           name: Going to push zmc-redismaster container image
           command: |
@@ -551,77 +596,77 @@ workflows:
           filters:
             branches:
               only:
-                 - develop 
+                 - develop
       - build_native_submodule:
           requires:
             - checkout_and_verify_params
           filters:
             branches:
               only:
-                 - develop 
+                 - develop
       - build_common_submodule:
           requires:
             - build_native_submodule
           filters:
             branches:
               only:
-                 - develop 
+                 - develop
       - build_soap_submodule:
           requires:
             - build_common_submodule
           filters:
             branches:
               only:
-                 - develop 
+                 - develop
       - build_client_submodule:
           requires:
             - build_soap_submodule
           filters:
             branches:
               only:
-                 - develop 
+                 - develop
       - build_store_submodule:
           requires:
             - build_client_submodule
           filters:
             branches:
               only:
-                 - develop 
+                 - develop
       - test_native_submodule:
           requires:
             - build_native_submodule
           filters:
             branches:
               only:
-                 - develop 
+                 - develop
       - test_common_submodule:
           requires:
             - build_common_submodule
           filters:
             branches:
               only:
-                 - develop 
+                 - develop
       - test_soap_submodule:
           requires:
             - build_soap_submodule
           filters:
             branches:
               only:
-                 - develop 
+                 - develop
       - test_client_submodule:
           requires:
             - build_client_submodule
           filters:
             branches:
               only:
-                 - develop 
+                 - develop
       - test_store_submodule:
           requires:
             - build_store_submodule
           filters:
             branches:
               only:
-                 - develop 
+                 - develop
       - checkout_and_build_installer:
           requires:
             - test_native_submodule
@@ -632,7 +677,7 @@ workflows:
           filters:
             branches:
               only:
-                 - develop 
+                 - develop
       - build_and_deploy_zmcbase_container_images:
           requires:
             - checkout_and_build_installer
@@ -661,6 +706,13 @@ workflows:
             branches:
               only:
                  - develop 
+      - build_and_deploy_zmcmailbox_debug_container_images:
+          requires:
+            - checkout_and_build_installer
+          filters:
+            branches:
+              only:
+                - develop
       - build_and_deploy_zmcmysqlproxy_container_images:
           requires:
             - checkout_and_build_installer
@@ -709,6 +761,7 @@ workflows:
             - build_and_deploy_zmcldap_container_images
             - build_and_deploy_zmcmta_container_images
             - build_and_deploy_zmcmailbox_container_images
+            - build_and_deploy_zmcmailbox_debug_container_images
             - build_and_deploy_zmcmysqlproxy_container_images
             - build_and_deploy_zmcmysqllocal_container_images
             - build_and_deploy_zmcproxy_container_images
@@ -720,7 +773,6 @@ workflows:
               only:
                  - develop
 ############################################################################
-
-notify:
-  webhooks:
-    - url: http://ec2-52-90-104-127.compute-1.amazonaws.com:5000/post-status
+#notify:
+#  webhooks:
+#    - url: http://ec2-52-90-104-127.compute-1.amazonaws.com:5000/post-status
