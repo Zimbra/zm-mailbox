@@ -97,14 +97,19 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
 
     @Override
     public void recordDeleted(ZimbraMailItem itemSnapshot) {
-        MailItem.Type type = MailItem.Type.fromCommon(itemSnapshot.getMailItemType());
-        changedTypes.add(type);
-        try {
-            addChangedParentFolderId(itemSnapshot.getFolderIdInMailbox());
-        } catch (ServiceException e) {
-            ZimbraLog.mailbox.warn("error getting folder ID for modified item");
+        if (null != itemSnapshot) {
+            MailItem.Type type = MailItem.Type.fromCommon(itemSnapshot.getMailItemType());
+            changedTypes.add(type);
+            try {
+                addChangedParentFolderId(itemSnapshot.getFolderIdInMailbox());
+            } catch (ServiceException e) {
+                ZimbraLog.mailbox.warn("error getting folder ID for modified item");
+            }
+            delete(new ModificationKey(itemSnapshot), type, itemSnapshot);
         }
-        delete(new ModificationKey(itemSnapshot), type, itemSnapshot);
+        else {
+        	ZimbraLog.mailbox.warn("PendingLocalModifications.recordDeleted itemSnapshot is NULL");
+        }
     }
 
     @Override
