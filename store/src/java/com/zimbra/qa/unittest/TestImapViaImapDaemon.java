@@ -11,6 +11,7 @@ import java.util.Set;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.Sets;
@@ -38,6 +39,7 @@ import com.zimbra.soap.admin.type.CacheEntryType;
    *
    * The actual tests that are run are in {@link SharedImapTests}
    */
+  @Ignore("Need AdminWaitSet support at a minimum - which is not currently working for Zimbra-X")
   public class TestImapViaImapDaemon extends SharedImapTests {
       private static String IMAPD_CSV_FILE = "/opt/zimbra/zmstat/imapd.csv";
       private static String IMAPD_CSV_STATS_FILE = "/opt/zimbra/zmstat/imapd_stats.csv";

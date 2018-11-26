@@ -652,7 +652,14 @@ public abstract class ImapListener extends Session {
             return;
         }
         ImapHandler i4handler = handler;
-        try {
+        //mailbox reference is volatile, so we need to acquire a local reference to avoid an NPE
+        MailboxStore mbox = getMailbox();
+        if (mbox == null) {
+            return;
+        }
+        // Mailbox.endTransaction() -> ImapSession.notifyPendingChanges() locks in the order of Mailbox -> ImapSession.
+        // Need to lock in the same order here, otherwise can result in deadlock.
+        try (final MailboxLock l = mbox.getReadLockAndLockIt() /* serialize() locks Mailbox deep inside of it */) {
             synchronized (this) {
                 AddedItems added = new AddedItems();
                 if (pnsIn.deleted != null) {
@@ -682,7 +689,7 @@ public abstract class ImapListener extends Session {
             if (i4handler != null && i4handler.isIdle()) {
                 i4handler.sendNotifications(true, true);
             }
-        } catch (IOException e) {
+        } catch (IOException | ServiceException e) {
             // ImapHandler.dropConnection clears our mHandler and calls SessionCache.clearSession,
             //   which calls Session.doCleanup, which calls Mailbox.removeListener
             if (ZimbraLog.imap.isDebugEnabled()) { // with stack trace
@@ -788,7 +795,7 @@ public abstract class ImapListener extends Session {
     }
 
     /**
-     * Serializes this {@link ImapSession} to the session manager's current {@link ImapSessionManager.FolderSerializer}
+     * Serializes this {@link ImapSession} to the session manager's current FolderSerializer
      * if it's not already serialized there.
      *
      * @param active selects active or inactive cache

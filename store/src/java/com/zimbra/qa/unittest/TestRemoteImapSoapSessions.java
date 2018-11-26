@@ -10,6 +10,7 @@ import java.util.Collection;
 import org.dom4j.DocumentException;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.zimbra.common.localconfig.ConfigException;
@@ -18,6 +19,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailclient.imap.MailboxInfo;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
+@Ignore("For Zimbra-X just test the configured IMAP via proxy")
 public class TestRemoteImapSoapSessions extends ImapTestBase {
     @Before
     public void setUp() throws ServiceException, IOException, DocumentException, ConfigException  {
