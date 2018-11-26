@@ -9,7 +9,9 @@ import com.zimbra.cs.imap.ImapServerListener;
 import com.zimbra.cs.imap.ImapServerListenerPool;
 import com.zimbra.cs.session.SomeAccountsWaitSet;
 import com.zimbra.cs.session.WaitSetMgr;
+import org.junit.Ignore;
 
+@Ignore("For Zimbra-X just test the configured IMAP via proxy")
 public abstract class TestImapNotificationsViaWaitsets extends SharedImapNotificationTests {
 
     @Override
