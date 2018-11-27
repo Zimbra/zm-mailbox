@@ -68,6 +68,25 @@ public class ZimbraQoSFilter implements Filter {
     private ConcurrentLinkedHashMap<String, Semaphore> passes = new ConcurrentLinkedHashMap.Builder<String, Semaphore>()
                                                                 .maximumWeightedCapacity(2000).build();
 
+    private Semaphore getPass(ServletRequest request) {
+        String user = extractUserId(request);
+        if (user == null) {
+            return null;
+        }
+        int max = LC.servlet_max_concurrent_http_requests_per_account.intValue();
+        if (max <= 0) {
+            return null;
+        }
+
+        Semaphore freshPass = new Semaphore(max, true);
+        Semaphore existingPass = passes.putIfAbsent(user, freshPass);
+        if (existingPass == null) {
+            return freshPass;
+        } else {
+            return existingPass;
+        }
+    }
+
     public static String extractUserId(ServletRequest request) {
         try {
             if (request instanceof HttpServletRequest) {
@@ -106,19 +125,14 @@ public class ZimbraQoSFilter implements Filter {
             suspendMs=Integer.parseInt(filterConfig.getInitParameter(SUSPEND_INIT_PARAM));
         }
     }
-    
+
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) 
     throws IOException, ServletException {
         try {
-            String user = extractUserId(request);
-            int max = LC.servlet_max_concurrent_http_requests_per_account.intValue();
-            if (user == null || max <= 0) {
-                chain.doFilter(request,response);
-                return;
-            }
-            Semaphore pass = passes.putIfAbsent(user, new Semaphore(max, true));
+            Semaphore pass = getPass(request);
             if (pass == null) {
-                pass = passes.get(user);
+                chain.doFilter(request, response);
+                return;
             }
             if (pass.tryAcquire(waitMs, TimeUnit.MILLISECONDS)) {
                 try {
