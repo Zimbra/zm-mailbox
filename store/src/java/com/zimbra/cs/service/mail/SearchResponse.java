@@ -372,7 +372,7 @@ final class SearchResponse {
         if (rangeStart == -1 && rangeEnd == -1 && (item instanceof Appointment)) {
             // If no time range was given, force first instance only. (bug 51267)
             rangeStart = item.getStartTime();
-            rangeEnd = rangeStart + 1;
+            rangeEnd = rangeStart + 86400000;
         }
         EncodeCalendarItemResult encoded =
             GetCalendarItemSummaries.encodeCalendarItemInstances(zsc, octxt, item, acct, rangeStart, rangeEnd, true);
