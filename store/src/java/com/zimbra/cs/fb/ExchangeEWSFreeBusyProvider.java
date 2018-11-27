@@ -874,7 +874,7 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
 
             FreeBusyViewOptionsType availabilityOpts =
                 new FreeBusyViewOptionsType();
-            availabilityOpts.setMergedFreeBusyIntervalInMinutes(fb_interval);
+            //availabilityOpts.setMergedFreeBusyIntervalInMinutes(fb_interval);
 
             // Request for highest hierarchy view. The rest hierarchy will be Detailed->FreeBusy->MergedOnly->None
             availabilityOpts.getRequestedView().add("Detailed");
@@ -948,18 +948,18 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
                         		ret.addAll(detailed);
                         	}else {
                         		ZimbraLog.fb.debug("No available calendar information present in Detailed view for [%s]", emailAddress);
-                        		ret.add(FreeBusy.nodataFreeBusy(name, req.get(0).start, req.get(0).end));
+                        		ret.add(FreeBusy.nodataFreeBusy(emailAddress, req.get(0).start, req.get(0).end));
                         	}
                         }
                         // Parsing FreeBusy fb view response
                         else if ("FreeBusy".equals(fbResponseViewType)) {
                         	ZimbraLog.fb.debug("FreeBusy view is available for [%s]", emailAddress);
-                        	List<FreeBusy> freebusy = parseDetailedFreeBusyResponse(name,req.get(0).start,req.get(0).end,attendeeAvailability);
+                        	List<FreeBusy> freebusy = parseDetailedFreeBusyResponse(emailAddress,req.get(0).start,req.get(0).end,attendeeAvailability);
                         	if (freebusy != null) {
                         		ret.addAll(freebusy);
                         	}else {
                         		ZimbraLog.fb.debug("No available calendar information present in FreeBusy View for [%s]", emailAddress);
-                        		ret.add(FreeBusy.nodataFreeBusy(name, req.get(0).start, req.get(0).end));
+                        		ret.add(FreeBusy.nodataFreeBusy(emailAddress, req.get(0).start, req.get(0).end));
                         	}
                         }
                         // Parsing MergedOnly fb view response
@@ -976,7 +976,7 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
                         // No FreeBusy view information available. returning nodata freebusy in response
                         else {
                         	 ZimbraLog.fb.debug("No Free Busy view info avaiable for [%s], free busy view type from response : %s", emailAddress, fbResponseViewType);
-                        	 ret.add(FreeBusy.nodataFreeBusy(name, req.get(0).start, req.get(0).end));
+                        	 ret.add(FreeBusy.nodataFreeBusy(emailAddress, req.get(0).start, req.get(0).end));
                         }
                     }
                     i++;
@@ -1029,19 +1029,22 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
         	    			isPrivate = calendarEventDetails.isIsPrivate();
         	    			ZimbraLog.fb.debug("eventID : %s, location : %s, subject : %s, isMeeting : %b, isRecurring : %b, isException : %b, isReminderSet : %b, isPrivate : %b",eventID, location, subject, isMeeting
         	    					,isRecurring, isException, isReminderSet, isPrivate);
-        	    			fb = new FreeBusy(name,start,end,eventID,location, subject, isMeeting,isRecurring,isException,isReminderSet, isPrivate, hasPermission);
+        	    			fb = new FreeBusy(name,start,end,eventID,location, subject, isMeeting,isRecurring,isException,isReminderSet, isPrivate, hasPermission, String.valueOf(legacyType.value().charAt(0)));
         	    			freeBusyList.add(fb);
     	    			}else {
-    	    				ZimbraLog.fb.debug("Calendar Event details not found for the user %s, for %s view", name, fb);
+    	    				ZimbraLog.fb.debug("Calendar Event details not found for the user %s", name);
+    	    				return null;
     	    			}
     	    		}
+    	    		return freeBusyList;
     	    	}
     	    	else {
         			ZimbraLog.fb.debug("No Calendar Information available for the user : %s", name);
+        			return null;
         		}
     		}
     	}
-		return freeBusyList;
+		return null;
     }
 
     public static int checkAuth(ServerInfo info, Account requestor)

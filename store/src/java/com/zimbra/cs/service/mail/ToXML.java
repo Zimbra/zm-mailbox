@@ -3283,7 +3283,7 @@ throws ServiceException {
             if (elt != null) {
                 elt.addAttribute(MailConstants.A_CAL_START_TIME, cur.getStart());
                 elt.addAttribute(MailConstants.A_CAL_END_TIME, cur.getEnd());
-                if(fb!=null) {
+                if(fb != null && fb.isHasPermission()) {
                 	elt.addAttribute(MailConstants.E_CAL_EVENT_ID,fb.getId());
                     elt.addAttribute(MailConstants.E_CAL_EVENT_SUBJECT, fb.getSubject());
                     elt.addAttribute(MailConstants.E_CAL_EVENT_LOCATION, fb.getLocation());
@@ -3292,10 +3292,10 @@ throws ServiceException {
                     elt.addAttribute(MailConstants.E_CAL_EVENT_ISRECURRING, fb.isRecurring());
                     elt.addAttribute(MailConstants.E_CAL_EVENT_ISREMINDERSET, fb.isReminderSet());
                     elt.addAttribute(MailConstants.E_CAL_EVENT_ISEXCEPTION, fb.isException());
+                } else {
                     if(!fb.isHasPermission()) {
-                    	elt.addAttribute(MailConstants.E_CAL_EVENT_HASPERMISSION, fb.isHasPermission());
+                        elt.addAttribute(MailConstants.E_CAL_EVENT_HASPERMISSION, fb.isHasPermission());
                     }
-                    
                 }
                 
             }

@@ -81,6 +81,10 @@ public class FreeBusy implements Iterable<FreeBusy.Interval> {
     protected FreeBusy(String name, long start, long end) {
     	this(name, new IntervalList(start, end), start, end);
     }
+    protected FreeBusy(String name, long start, long end, String fbStatus) {
+        this(name, new IntervalList(start, end, fbStatus), start, end);
+    }
+    
     protected FreeBusy(String name, IntervalList list, long start, long end) {
     	mName = name;
         mList = list;
@@ -88,8 +92,8 @@ public class FreeBusy implements Iterable<FreeBusy.Interval> {
         mEnd = end;
     }
     public FreeBusy(String name, long start, long end, String id, String location, String subject, boolean isMeeting, boolean isRecurring,
-			boolean isException, boolean isReminderSet, boolean isPrivate, boolean hasPermission) {
-		this(name,start,end);
+			boolean isException, boolean isReminderSet, boolean isPrivate, boolean hasPermission, String fbStauts) {
+		this(name,start,end, fbStauts);
 		this.id = id;
 		this.location = location;
 		this.subject = subject;
@@ -189,6 +193,12 @@ public class FreeBusy implements Iterable<FreeBusy.Interval> {
             mStart = start;
             mEnd = end;
             mHead = new Interval(start, end, IcalXmlStrMap.FBTYPE_FREE);
+        }
+        
+        IntervalList(long start, long end, String fbStatus) {
+            mStart = start;
+            mEnd = end;
+            mHead = new Interval(start, end, fbStatus);
         }
 
         public void addInterval(Interval toAdd) {
