@@ -6,7 +6,7 @@ public abstract interface TransactionListener {
 
     public void transactionEnd(boolean success, boolean endChange);
 
-    public void commitCache();
+    public void commitCache(boolean endChange);
 
     public void rollbackCache();
 

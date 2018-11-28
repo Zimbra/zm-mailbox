@@ -4,7 +4,7 @@ public interface SharedStateAccessor {
 
     public <T> T get(String fieldName);
 
-    public <T> void set(String fieldName, T value);
+    public void set(String fieldName, Object value);
 
     public void unset(String fieldName);
 

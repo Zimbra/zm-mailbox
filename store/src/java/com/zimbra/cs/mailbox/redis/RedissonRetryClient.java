@@ -162,13 +162,13 @@ public class RedissonRetryClient implements RedissonClient {
     }
 
     @Override
-    public <M> RTopic<M> getTopic(String name) {
-        return new RedissonRetryTopic<M>(client -> client.getTopic(name), this);
+    public RTopic getTopic(String name) {
+        return new RedissonRetryTopic(client -> client.getTopic(name), this);
     }
 
     @Override
-    public <M> RTopic<M> getTopic(String name, Codec codec) {
-        return new RedissonRetryTopic<M>(client -> client.getTopic(name, codec), this);
+    public RTopic getTopic(String name, Codec codec) {
+        return new RedissonRetryTopic(client -> client.getTopic(name, codec), this);
     }
 
     @Override
@@ -245,6 +245,16 @@ public class RedissonRetryClient implements RedissonClient {
     @Override
     public RLock getFairLock(String name) {
         return new RedissonRetryLock(client -> client.getFairLock(name), this);
+    }
+
+    @Override
+    public <V> RSet<V> getSet(String name) {
+        return new RedissonRetrySet<V>(client -> client.getSet(name), this);
+    }
+
+    @Override
+    public <V> RSet<V> getSet(String name, Codec codec) {
+        return new RedissonRetrySet<V>(client -> client.getSet(name, codec), this);
     }
 
     //RedissonClient interface methods below are not currently used anywhere in the codebase,
@@ -382,16 +392,6 @@ public class RedissonRetryClient implements RedissonClient {
     }
 
     @Override
-    public <V> RSet<V> getSet(String name) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <V> RSet<V> getSet(String name, Codec codec) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public <V> RSortedSet<V> getSortedSet(String name) {
         throw new UnsupportedOperationException();
     }
@@ -417,12 +417,12 @@ public class RedissonRetryClient implements RedissonClient {
     }
 
     @Override
-    public <M> RPatternTopic<M> getPatternTopic(String pattern) {
+    public RPatternTopic getPatternTopic(String pattern) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public <M> RPatternTopic<M> getPatternTopic(String pattern, Codec codec) {
+    public RPatternTopic getPatternTopic(String pattern, Codec codec) {
         throw new UnsupportedOperationException();
     }
 
@@ -636,6 +636,11 @@ public class RedissonRetryClient implements RedissonClient {
 
     @Override
     public <K, V> RStream<K, V> getStream(String arg0, Codec arg1) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public RScript getScript(Codec arg0) {
         throw new UnsupportedOperationException();
     }
 }

@@ -166,6 +166,7 @@ import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.cache.CalSummaryCache.CalendarDataResult;
 import com.zimbra.cs.mailbox.calendar.cache.CalendarCacheManager;
 import com.zimbra.cs.mailbox.calendar.tzfixup.TimeZoneFixupRules;
+import com.zimbra.cs.mailbox.redis.RedisCacheTracker;
 import com.zimbra.cs.mailbox.util.TypedIdList;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedAddress;
@@ -645,6 +646,7 @@ public class Mailbox implements MailboxStore {
     private MailboxState state;
     private NotificationPubSub.Publisher publisher;
     private Set<TransactionListener> transactionListeners;
+    private TransactionCacheTracker cacheTracker;
 
     protected Mailbox(MailboxData data) {
         mId = data.id;
@@ -656,11 +658,12 @@ public class Mailbox implements MailboxStore {
         callbacks = new HashMap<>();
         callbacks.put(MessageCallback.Type.sent, new SentMessageCallback());
         callbacks.put(MessageCallback.Type.received, new ReceivedMessageCallback());
-
-        state = MailboxState.getFactory().getMailboxState(mData);
+        cacheTracker = ItemCache.getFactory().getTransactionCacheTracker(this);
+        transactionListeners = new HashSet<>();
+        addTransactionListener(cacheTracker);
+        state = MailboxState.getFactory().getMailboxState(mData, cacheTracker);
         state.setLastChangeDate(System.currentTimeMillis());
         publisher = getNotificationPubSub().getPublisher();
-        transactionListeners = new HashSet<>();
     }
 
     public void setGalSyncMailbox(boolean galSyncMailbox) {
@@ -1976,7 +1979,7 @@ public class Mailbox implements MailboxStore {
                 DbMailbox.updateMailboxStats(this);
             }
 
-            mFolderCache = ItemCache.getFactory().getFolderCache(this);
+            mFolderCache = ItemCache.getFactory().getFolderCache(this, cacheTracker);
             // create the folder objects and, as a side-effect, populate the new cache
             for (Map.Entry<MailItem.UnderlyingData, DbMailItem.FolderTagCounts> entry : folderData.entrySet()) {
                 Folder folder = (Folder) MailItem.constructItem(this, entry.getKey());
@@ -2004,7 +2007,7 @@ public class Mailbox implements MailboxStore {
                 }
             }
 
-            mTagCache = ItemCache.getFactory().getTagCache(this);
+            mTagCache = ItemCache.getFactory().getTagCache(this, cacheTracker);
             // create the tag objects and, as a side-effect, populate the new
             // cache
             for (Map.Entry<MailItem.UnderlyingData, DbMailItem.FolderTagCounts> entry : tagData.entrySet()) {
@@ -8958,7 +8961,7 @@ public class Mailbox implements MailboxStore {
                     ZimbraLog.mailbox.warn("error getting account for the mailbox", e);
                 }
             }
-            Mailbox.this.transactionListeners.forEach(listener -> listener.commitCache());
+            Mailbox.this.transactionListeners.forEach(listener -> listener.commitCache(change.depth == 0));
         } catch (RuntimeException e) {
             ZimbraLog.mailbox.error("ignoring error during cache commit", e);
         } finally {
@@ -9826,7 +9829,7 @@ public class Mailbox implements MailboxStore {
                 }
 
                 if (mItemCache == null) {
-                    mItemCache = ItemCache.getFactory().getItemCache(Mailbox.this);
+                    mItemCache = ItemCache.getFactory().getItemCache(Mailbox.this, Mailbox.this.cacheTracker);
                     ZimbraLog.cache.debug("created a new MailItem cache for mailbox %s %s", getId(), this);
                 }
                 currentChange().itemCache = mItemCache;

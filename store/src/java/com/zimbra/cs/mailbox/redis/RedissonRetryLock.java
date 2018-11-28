@@ -129,13 +129,18 @@ public class RedissonRetryLock extends RedissonRetryExpirable<RLock> implements 
     }
 
     @Override
-    public void forceUnlock() {
-        runCommand(() -> { redissonObject.forceUnlock(); return null; });
+    public boolean forceUnlock() {
+        return runCommand(() -> redissonObject.forceUnlock());
 
     }
 
     @Override
     public boolean isLocked() {
         return runCommand(() -> redissonObject.isLocked());
+    }
+
+    @Override
+    public RFuture<Integer> getHoldCountAsync() {
+        return runCommand(() -> redissonObject.getHoldCountAsync());
     }
 }

@@ -6,8 +6,8 @@ import com.zimbra.cs.mailbox.Mailbox.MailboxData;
 
 public class LocalMailboxState extends MailboxState {
 
-    public LocalMailboxState(MailboxData data) {
-        super(data);
+    public LocalMailboxState(MailboxData data, TransactionCacheTracker cacheTracker) {
+        super(data, cacheTracker);
     }
 
     @Override
@@ -54,8 +54,8 @@ public class LocalMailboxState extends MailboxState {
     public static class Factory implements MailboxState.Factory {
 
         @Override
-        public MailboxState getMailboxState(MailboxData data) {
-            return new LocalMailboxState(data);
+        public MailboxState getMailboxState(MailboxData data, TransactionCacheTracker cacheTracker) {
+            return new LocalMailboxState(data, cacheTracker);
         }
     }
 }
