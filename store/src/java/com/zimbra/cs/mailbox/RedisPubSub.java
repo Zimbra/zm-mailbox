@@ -102,7 +102,7 @@ public class RedisPubSub extends NotificationPubSub {
     public static class NotificationChannel implements MessageListener<NotificationMsg> {
 
         private int listenerId;
-        private RTopic<NotificationMsg> channel;
+        private RTopic channel;
         private Map<String, Subscriber> subscriberMap;
         private String name;
         private boolean active = false;
@@ -118,7 +118,7 @@ public class RedisPubSub extends NotificationPubSub {
             if (active) {
                 return;
             }
-            this.listenerId = channel.addListener(this);
+            this.listenerId = channel.addListener(NotificationMsg.class, this);
             ZimbraLog.mailbox.info("beginning listening on Redis notification channel %s", name);
             active = true;
         }
@@ -144,7 +144,7 @@ public class RedisPubSub extends NotificationPubSub {
         }
 
         @Override
-        public void onMessage(String channel, NotificationMsg msg) {
+        public void onMessage(CharSequence channel, NotificationMsg msg) {
             String notificationAcctId = msg.accountId;
             Subscriber subscriber = subscriberMap.get(notificationAcctId);
             if (subscriber == null) {

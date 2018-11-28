@@ -1,11 +1,9 @@
 package com.zimbra.cs.mailbox.cache;
 
-import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.redisson.api.RBucket;
-import org.redisson.api.RMap;
 import org.redisson.api.RedissonClient;
 
 import com.google.common.base.Strings;
@@ -13,10 +11,13 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
-import com.zimbra.cs.mailbox.redis.RedisUtils;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.RedissonClientHolder;
+import com.zimbra.cs.mailbox.TransactionCacheTracker;
+import com.zimbra.cs.mailbox.redis.RedisBackedMap;
+import com.zimbra.cs.mailbox.redis.RedisCacheTracker;
+import com.zimbra.cs.mailbox.redis.RedisUtils;
 
 public class RedisItemCache extends MapItemCache<String> {
 
@@ -66,22 +67,6 @@ public class RedisItemCache extends MapItemCache<String> {
         }
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
-    protected Collection<String> getAllValues() {
-        return ((RMap<Integer, String>) mapById).readAllValues();
-    }
-
-    @Override
-    protected void putItem(int id, String value) {
-        ((RMap<Integer, String>) mapById).fastPut(id, value);
-    }
-
-    @Override
-    protected void putUuid(String uuid, int id) {
-        ((RMap<String, Integer>) uuid2id).fastPut(uuid, id);
-    }
-
     @Override
     protected Metadata getCachedTagsAndFolders() {
         String encoded = folderTagBucket.get();
@@ -109,24 +94,29 @@ public class RedisItemCache extends MapItemCache<String> {
     public static class Factory implements ItemCache.Factory {
 
         @Override
-        public ItemCache getItemCache(Mailbox mbox) {
+        public ItemCache getItemCache(Mailbox mbox, TransactionCacheTracker cacheTracker) {
             RedissonClient client = RedissonClientHolder.getInstance().getRedissonClient();
             String accountId = mbox.getAccountId();
             String itemMapName = RedisUtils.createAccountRoutedKey(accountId, String.format("ITEMS_BY_ID"));
             String uuidMapName = RedisUtils.createAccountRoutedKey(accountId, String.format("ITEMS_BY_UUID"));
-            RMap<Integer, String> itemMap = client.getMap(itemMapName);
-            RMap<String, Integer> uuidMap = client.getMap(uuidMapName);
+            RedisBackedMap<Integer, String> itemMap = new RedisBackedMap<>(client.getMap(itemMapName), cacheTracker);
+            RedisBackedMap<String, Integer> uuidMap = new RedisBackedMap<>(client.getMap(uuidMapName), cacheTracker);
             return new RedisItemCache(mbox, itemMap, uuidMap);
         }
 
         @Override
-        public FolderCache getFolderCache(Mailbox mbox) {
-            return new RedisFolderCache(mbox);
+        public FolderCache getFolderCache(Mailbox mbox, TransactionCacheTracker cacheTracker) {
+            return new RedisFolderCache(mbox, cacheTracker);
         }
 
         @Override
-        public TagCache getTagCache(Mailbox mbox) {
-            return new RedisTagCache(mbox);
+        public TagCache getTagCache(Mailbox mbox, TransactionCacheTracker cacheTracker) {
+            return new RedisTagCache(mbox, cacheTracker);
+        }
+
+        @Override
+        public RedisCacheTracker getTransactionCacheTracker(Mailbox mbox) {
+            return new RedisCacheTracker(mbox);
         }
     }
 }

@@ -342,4 +342,14 @@ public class RedissonRetryMap<K, V> extends RedissonRetryExpirable<RMap<K, V>> i
     public Set<java.util.Map.Entry<K, V>> entrySet(int count) {
         return runCommand(() -> redissonObject.entrySet(count));
     }
+
+    @Override
+    public RFuture<Void> putAllAsync(Map<? extends K, ? extends V> map, int batchSize) {
+        return runCommand(() -> redissonObject.putAllAsync(map, batchSize));
+    }
+
+    @Override
+    public void putAll(Map<? extends K, ? extends V> map, int batchSize) {
+        runCommand(() -> { redissonObject.putAll(map, batchSize); return null; });
+    }
 }
