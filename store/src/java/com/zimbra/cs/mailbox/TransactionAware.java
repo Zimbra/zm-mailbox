@@ -1,25 +1,43 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2018 Synacor, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software Foundation,
+ * version 2 of the License.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ * ***** END LICENSE BLOCK *****
+ */
 package com.zimbra.cs.mailbox;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.MoreObjects.ToStringHelper;
 import com.zimbra.common.util.ZimbraLog;
 
 public abstract class TransactionAware<V, C extends TransactionAware.Change> {
 
-    private String name;
-    private TransactionCacheTracker tracker;
-    private ThreadLocal<V> localCache;
-    private Changes changes;
+    private final String name;
+    private final TransactionCacheTracker tracker;
+    private final ThreadLocal<V> localCache;
+    /**  This can be changed from read transactions, for instance from
+     * loadFoldersAndTags or even just when an item is first cached, hence
+     * why it is ThreadLocal */
+    private final ThreadLocal<Changes> threadChanges;
 
     public TransactionAware(TransactionCacheTracker cacheTracker, String name) {
         this.tracker = cacheTracker;
         this.name = name;
         this.localCache = new ThreadLocal<>();
-        this.changes = new Changes();
+        this.threadChanges = new ThreadLocal<>();
     }
 
     public String getName() {
@@ -30,13 +48,12 @@ public abstract class TransactionAware<V, C extends TransactionAware.Change> {
         localCache.set(null);
     }
 
-    public boolean hasChanges() {
-        return changes.hasChanges();
-    }
-
     protected V getLocalCache() {
         if (localCache.get() == null) {
-            ZimbraLog.cache.trace("initializing local cache for %s %s in thread %s", getName(), getClass().getSimpleName(), Thread.currentThread().getName());
+            if (ZimbraLog.cache.isTraceEnabled()) {
+                ZimbraLog.cache.trace("initializing local cache for %s %s in thread %s",
+                        getName(), getClass().getSimpleName(), Thread.currentThread().getName());
+            }
             localCache.set(initLocalCache());
             tracker.addToTracker(this);
         }
@@ -45,25 +62,37 @@ public abstract class TransactionAware<V, C extends TransactionAware.Change> {
 
     protected abstract V initLocalCache();
 
-    protected void addChange(C change) {
-        changes.addChange(change);
-    }
-
     public Changes getChanges() {
-        return changes;
+        Changes changes = threadChanges.get();
+        if (changes != null) {
+            return changes;
+        }
+        threadChanges.set(new Changes());
+        return threadChanges.get();
     }
 
+    public boolean hasChanges() {
+        return getChanges().hasChanges();
+    }
+
+    protected void addChange(C change) {
+        getChanges().addChange(change);
+    }
+
+    /**
+     * @return the current state of changes
+     */
     public List<C> getChangeList() {
-        return changes.getChanges();
+        return getChanges().getChanges();
     }
 
     public void resetChanges() {
+        Changes changes = getChanges();
         if (changes.hasChanges()) {
             ZimbraLog.cache.warn("clearing %d uncommitted changes for %s", changes.size(), getName());
         }
         changes.reset();
     }
-
 
     public static enum ChangeType {
         CLEAR, REMOVE, //used by both set and map
@@ -72,14 +101,16 @@ public abstract class TransactionAware<V, C extends TransactionAware.Change> {
     }
 
     public class Changes {
-        private List<C> changes = new ArrayList<>();
+        private final List<C> changes = new ArrayList<>();
 
         public Changes() {
             reset();
         }
 
         public void reset() {
-            ZimbraLog.cache.trace("resetting changes for %s", getName());
+            if (ZimbraLog.cache.isTraceEnabled()) {
+                ZimbraLog.cache.trace("resetting changes for %s", getName());
+            }
             changes.clear();
         }
 
@@ -105,10 +136,13 @@ public abstract class TransactionAware<V, C extends TransactionAware.Change> {
 
         @Override
         public String toString() {
-
-            return MoreObjects.toStringHelper(this)
-                    .add("name", getName())
-                    .add("changes", Joiner.on(",").join(changes)).toString();
+            MoreObjects.ToStringHelper helper = MoreObjects.toStringHelper(this).add("name", getName());
+            if (changes.size() > 20) {
+                helper.add("changes.size()", changes.size());
+            } else {
+                helper.add("changes", changes);
+            }
+            return helper.toString();
         }
     }
 
