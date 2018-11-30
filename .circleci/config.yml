@@ -497,6 +497,7 @@ jobs:
             tar zcvf "$BUILD/docker-context.tgz" *
             cd "$BUILD"; python -m SimpleHTTPServer &
             docker build -t zmc-zookeeper --build-arg "DOCKER_REPO_NS=$DOCKER_REPO_NS" --build-arg "DOCKER_BUILD_TAG=latest-${SANITIZED_BRANCH}" --build-arg "DOCKER_CACHE_TAG=$DOCKER_CACHE_TAG" --build-arg "LOCAL_SRC_DIR=." http://$(hostname):8000/docker-context.tgz
+          no_output_timeout: 30m
       - run:
           name: Going to push zmc-zookeeper container image
           command: |
@@ -684,28 +685,28 @@ workflows:
           filters:
             branches:
               only:
-                 - develop 
+                 - develop
       - build_and_deploy_zmcldap_container_images:
           requires:
             - checkout_and_build_installer
           filters:
             branches:
               only:
-                 - develop 
+                 - develop
       - build_and_deploy_zmcmta_container_images:
           requires:
             - checkout_and_build_installer
           filters:
             branches:
               only:
-                 - develop 
+                 - develop
       - build_and_deploy_zmcmailbox_container_images:
           requires:
             - checkout_and_build_installer
           filters:
             branches:
               only:
-                 - develop 
+                 - develop
       - build_and_deploy_zmcmailbox_debug_container_images:
           requires:
             - checkout_and_build_installer
@@ -719,42 +720,42 @@ workflows:
           filters:
             branches:
               only:
-                 - develop 
+                 - develop
       - build_and_deploy_zmcmysqllocal_container_images:
           requires:
             - checkout_and_build_installer
           filters:
             branches:
               only:
-                 - develop 
+                 - develop
       - build_and_deploy_zmcproxy_container_images:
           requires:
             - checkout_and_build_installer
           filters:
             branches:
               only:
-                 - develop 
+                 - develop
       - build_and_deploy_zmczookeeper_container_images:
           requires:
             - checkout_and_build_installer
           filters:
             branches:
               only:
-                 - develop 
+                 - develop
       - build_and_deploy_zmcsolr_container_images:
           requires:
             - checkout_and_build_installer
           filters:
             branches:
               only:
-                 - develop 
+                 - develop
       - build_and_deploy_zmcredismaster_container_images:
           requires:
             - checkout_and_build_installer
           filters:
             branches:
               only:
-                 - develop 
+                 - develop
       - deploy_to_swarm:
           requires:
             - build_and_deploy_zmcbase_container_images
