@@ -923,6 +923,8 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
         for (Request re : req) {
             
             int i = 0;
+            long startTime = req.get(0).start;
+            long endTime = req.get(0).end;
             for (FreeBusyResponseType attendeeAvailability : results) {
                 if (attendeeAvailability.getFreeBusyView() != null) {
                     	String fbResponseViewType = attendeeAvailability.getFreeBusyView().getFreeBusyViewType().get(0);
@@ -936,13 +938,11 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
                                 emailAddress,
                                 attendeeAvailability.getResponseMessage().getResponseCode(),
                                 attendeeAvailability.getResponseMessage().getMessageText());
+                           
+                            FreeBusy npFreeBusy = FreeBusy.nodataFreeBusy(name, startTime, endTime);
+                            ret.add(npFreeBusy);
                             if (attendeeAvailability.getResponseMessage().getResponseCode().equals(ResponseCodeType.ERROR_NO_FREE_BUSY_ACCESS)) {
-                                	FreeBusy npFreeBusy = FreeBusy.nodataFreeBusy(name, req.get(0).start, req.get(0).end);
                                 	npFreeBusy.mList.getHead().hasPermission = false;
-                                	ret.add(npFreeBusy);
-                            } else {
-                                FreeBusy npFreeBusy = FreeBusy.nodataFreeBusy(name, req.get(0).start, req.get(0).end);
-                                ret.add(npFreeBusy);
                             }
                             ZimbraLog.fb.info("Error in response. continuing to next one sending nodata as response");
                             i++;
@@ -957,19 +957,19 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
                             fb = "";  //Avoid NPE.
                         } else {
                             userIntervals.add(new ExchangeFreeBusyProvider.ExchangeUserFreeBusy(fb,
-                                re.email, fb_interval, req.get(0).start, req.get(0).end));
+                                re.email, fb_interval, startTime, endTime));
                             ret.addAll(userIntervals);
                         }
 
                         // Parsing Detailed fb view response
                         if ("DetailedMerged".equals(fbResponseViewType) || "FreeBusyMerged".equals(fbResponseViewType)) {
 
-                            parseDetailedFreeBusyResponse(name,req.get(0).start,req.get(0).end,attendeeAvailability, userIntervals);
+                            parseDetailedFreeBusyResponse(name, startTime, endTime, attendeeAvailability, userIntervals);
                             ret.addAll(userIntervals);
                         } else {  // No FreeBusy view information available. returning nodata freebusy in response
 
                         	     ZimbraLog.fb.debug("No Free Busy view info avaiable for [%s], free busy view type from response : %s", emailAddress, fbResponseViewType);
-                        	     ret.add(FreeBusy.nodataFreeBusy(emailAddress, req.get(0).start, req.get(0).end));
+                        	     ret.add(FreeBusy.nodataFreeBusy(emailAddress, startTime, endTime));
                         }
                     }
                     i++;
