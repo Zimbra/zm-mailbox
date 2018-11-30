@@ -3263,6 +3263,7 @@ throws ServiceException {
         resp.addAttribute(MailConstants.A_ID, fb.getName());
         for (Iterator<FreeBusy.Interval> iter = fb.iterator(); iter.hasNext(); ) {
             FreeBusy.Interval cur = iter.next();
+
             String status = cur.getStatus();
             Element elt;
             if (status.equals(IcalXmlStrMap.FBTYPE_FREE)) {
@@ -3283,19 +3284,18 @@ throws ServiceException {
             if (elt != null) {
                 elt.addAttribute(MailConstants.A_CAL_START_TIME, cur.getStart());
                 elt.addAttribute(MailConstants.A_CAL_END_TIME, cur.getEnd());
-                if(fb!=null) {
-                	elt.addAttribute(MailConstants.E_CAL_EVENT_ID,fb.getId());
-                    elt.addAttribute(MailConstants.E_CAL_EVENT_SUBJECT, fb.getSubject());
-                    elt.addAttribute(MailConstants.E_CAL_EVENT_LOCATION, fb.getLocation());
-                    elt.addAttribute(MailConstants.E_CAL_EVENT_ISMEETING, fb.isMeeting());
-                    elt.addAttribute(MailConstants.E_CAL_EVENT_ISPRIVATE, fb.isPrivate());
-                    elt.addAttribute(MailConstants.E_CAL_EVENT_ISRECURRING, fb.isRecurring());
-                    elt.addAttribute(MailConstants.E_CAL_EVENT_ISREMINDERSET, fb.isReminderSet());
-                    elt.addAttribute(MailConstants.E_CAL_EVENT_ISEXCEPTION, fb.isException());
-                    if(!fb.isHasPermission()) {
-                    	elt.addAttribute(MailConstants.E_CAL_EVENT_HASPERMISSION, fb.isHasPermission());
-                    }
-                    
+                if (cur.isDetailsExist()) {
+                    elt.addAttribute(MailConstants.E_CAL_EVENT_ID,cur.getId());
+                    elt.addAttribute(MailConstants.E_CAL_EVENT_SUBJECT, cur.getSubject());
+                    elt.addAttribute(MailConstants.E_CAL_EVENT_LOCATION, cur.getLocation());
+                    elt.addAttribute(MailConstants.E_CAL_EVENT_ISMEETING, cur.isMeeting());
+                    elt.addAttribute(MailConstants.E_CAL_EVENT_ISPRIVATE, cur.isPrivate());
+                    elt.addAttribute(MailConstants.E_CAL_EVENT_ISRECURRING, cur.isRecurring());
+                    elt.addAttribute(MailConstants.E_CAL_EVENT_ISREMINDERSET, cur.isReminderSet());
+                    elt.addAttribute(MailConstants.E_CAL_EVENT_ISEXCEPTION, cur.isException());
+                } 
+                if(!cur.isHasPermission()) {
+                    elt.addAttribute(MailConstants.E_CAL_EVENT_HASPERMISSION, cur.isHasPermission());
                 }
                 
             }
