@@ -331,43 +331,43 @@ public class FreeBusy implements Iterable<FreeBusy.Interval> {
         }
 
         public String getId() {
-            return id;
+            return this.id;
         }
 
         public String getLocation() {
-            return location;
+            return this.location;
         }
 
         public String getSubject() {
-            return subject;
+            return this.subject;
         }
 
         public boolean isMeeting() {
-            return isMeeting;
+            return this.isMeeting;
         }
 
         public boolean isRecurring() {
-            return isRecurring;
+            return this.isRecurring;
         }
 
         public boolean isException() {
-            return isException;
+            return this.isException;
         }
 
         public boolean isReminderSet() {
-            return isReminderSet;
+            return this.isReminderSet;
         }
 
         public boolean isPrivate() {
-            return isPrivate;
+            return this.isPrivate;
         }
 
         public boolean isHasPermission() {
-            return hasPermission;
+            return this.hasPermission;
         }
 
         public boolean isDetailsExist() {
-            return detailsExist;
+            return this.detailsExist;
         }
 
         long mStart;
