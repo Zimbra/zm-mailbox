@@ -2076,16 +2076,15 @@ public class Mailbox implements MailboxStore {
             boolean needRedo = needRedo(null, redoRecorder);
             boolean success = false;
             try {
-                final MailboxTransaction t = mailboxReadTransaction("deleteMailbox", null, redoRecorder);
-                if (needRedo) {
-                    redoRecorder.log();
-                }
+                try (final MailboxTransaction t = mailboxWriteTransaction("deleteMailbox", null, redoRecorder)) {
+                    if (needRedo) {
+                        redoRecorder.log();
+                    }
 
-                if (deleteStore && !sm.supports(StoreManager.StoreFeature.BULK_DELETE)) {
-                    blobs = DbMailItem.getAllBlobs(this);
-                }
+                    if (deleteStore && !sm.supports(StoreManager.StoreFeature.BULK_DELETE)) {
+                        blobs = DbMailItem.getAllBlobs(this);
+                    }
 
-                try {
                     // Remove the mime messages from MessageCache
                     if (deleteStore) {
                         DbMailItem.visitAllBlobDigests(this, new MessageCachePurgeCallback());
@@ -2101,8 +2100,6 @@ public class Mailbox implements MailboxStore {
 
                     success = true;
                     t.commit();
-                } finally {
-                    t.close();
                 }
 
                 if (success) {
@@ -3230,12 +3227,17 @@ public class Mailbox implements MailboxStore {
     }
 
     public void beginTrackingImap() throws ServiceException {
+        try (final MailboxLock l = getReadLockAndLockIt()) {
+            if (isTrackingImap()) {
+                return;
+            }
+        }
         try (final MailboxLock l = getWriteLockAndLockIt()) {
             if (isTrackingImap()) {
                 return;
             }
             TrackImap redoRecorder = new TrackImap(mId);
-            try (final MailboxTransaction t = mailboxReadTransaction("beginTrackingImap", null, redoRecorder)) {
+            try (final MailboxTransaction t = mailboxWriteTransaction("beginTrackingImap", null, redoRecorder)) {
                 DbMailbox.startTrackingImap(this);
                 currentChange().imap = Boolean.TRUE;
                 t.commit();
@@ -3254,7 +3256,7 @@ public class Mailbox implements MailboxStore {
                 return;
             }
             TrackSync redoRecorder = new TrackSync(mId);
-            try (final MailboxTransaction t = mailboxReadTransaction("beginTrackingSync", null, redoRecorder)) {
+            try (final MailboxTransaction t = mailboxWriteTransaction("beginTrackingSync", null, redoRecorder)) {
                 currentChange().sync = getLastChangeID();
                 DbMailbox.startTrackingSync(this);
                 t.commit();
@@ -3505,7 +3507,9 @@ public class Mailbox implements MailboxStore {
             } else if (visible != null) {
                 folderIds = SetUtil.intersect(folderIds, visible);
             }
-            return DbMailItem.getModifiedItemsCount(this, type, lastSync, sinceDate, folderIds);
+            int count = DbMailItem.getModifiedItemsCount(this, type, lastSync, sinceDate, folderIds);
+            t.commit();
+            return count;
         }
     }
 
