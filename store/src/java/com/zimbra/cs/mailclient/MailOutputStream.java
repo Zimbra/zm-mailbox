@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2013, 2014, 2016, 2018 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -18,8 +18,10 @@ package com.zimbra.cs.mailclient;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.io.OutputStream;
 
+import java.nio.charset.StandardCharsets;
 import com.zimbra.common.util.Log;
 
 /**
@@ -75,16 +77,21 @@ public class MailOutputStream extends OutputStream {
     }
 
     /**
-     * Writes the specified ASCII string to the output stream.
+     * Writes the specified ASCII/UTF8 string to the output stream.
      *
      * @param s the string that is to be written
      * @throws IOException if an I/O error occurs
      */
     public void write(String s) throws IOException {
-        int len = s.length();
-        for (int i = 0; i < len; i++) {
-            write(s.charAt(i));
+        try {
+            byte b[] = s.getBytes(StandardCharsets.UTF_8);
+            for (int i = 0; i < b.length; i++) {
+                write(b[i]);
+            }
         }
+        catch (UnsupportedEncodingException e) {
+             System.out.println("Unsupported character set: " + e); 
+         } 
     }
 
     /**
