@@ -214,15 +214,6 @@ public abstract class RedisSharedStateCache<M extends MailItem & SharedState> im
             super(map, tracker);
         }
 
-        @Override
-        public String toString() {
-            return MoreObjects.toStringHelper(this).omitNullValues()
-                    .add("map", getLocalCache() == null ? null : getLocalCache().entrySet())
-                    .add("map.name", getName())
-                    .add("map.hashCode", System.identityHashCode(redisMap))
-                    .toString();
-        }
-
         @SuppressWarnings("unchecked")
         @Override
         public <T> T get(String fieldName) {
