@@ -352,7 +352,20 @@ public class LmtpAddress {
     }
 
     private boolean isLetter(int c) {
-      return Character.isAlphabetic(c);
+      return (Character.isAlphabetic(c) || isValidType(c));
+    }
+
+    private boolean isValidType(int ch) {
+
+        // including the character types which are failing for validation of localpart.
+        switch (Character.getType(ch)) {
+
+            case Character.NON_SPACING_MARK:
+                return true;
+            default:
+                break;
+        }
+        return false;
     }
 
     private boolean skipAddress() {
@@ -457,13 +470,15 @@ public class LmtpAddress {
 	     * <special> ::= "<" | ">" | "(" | ")" | "[" | "]" | "\" | "."
 	     *               | "," | ";" | ":" | "@"  """ | the control
 	     *               characters (ASCII codes 0 through 31 inclusive
-	     *               and 127)
+	     *               and 127 OR Hindi / Devanagari characters)
 	     */
 	    if (ch < 33 || ch > 126) { // 32 is ' '
             if (debug) say("illegal character < 33 or > 126: " + ch);
             if (debug) say("but... is it alphabetic? " + Character.isAlphabetic(ch));
-            if (!Character.isAlphabetic(ch)) {
-               return false; // any one of the 128 ascii characters
+            if (debug) say("but... it is of valid type? " + isValidType(ch));
+
+            if (!Character.isAlphabetic(ch) && !isValidType(ch)) {
+               return false; // any one of the 128 ascii characters or allowed type
             }
         }
 
