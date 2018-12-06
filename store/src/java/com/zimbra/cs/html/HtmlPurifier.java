@@ -37,10 +37,8 @@ public class HtmlPurifier extends Purifier {
     private static final PolicyFactory sanitizer = Sanitizers.FORMATTING.and(Sanitizers.IMAGES);
     private static final Pattern IMG_SKIP_OWASPSANITIZE = Pattern.compile(
         DebugConfig.defangImgSkipOwaspSanitize, Pattern.CASE_INSENSITIVE);
-    private static final Pattern VALID_SCRIPT_TAG = Pattern.compile(
+    private static final Pattern JAVASCRIPT = Pattern.compile(
         DebugConfig.defangOwaspJavaScript, Pattern.CASE_INSENSITIVE);
-    private static final Pattern VALID_ALERT_TAG = Pattern.compile(
-        DebugConfig.defangOwaspAlert, Pattern.CASE_INSENSITIVE);
 
     /* (non-Javadoc)
      * @see org.cyberneko.html.filters.Purifier#purifyText(org.apache.xerces.xni.XMLString)
@@ -57,7 +55,7 @@ public class HtmlPurifier extends Purifier {
             temp = sanitizer.sanitize(temp);
         }
 
-        if (VALID_ALERT_TAG.matcher(temp).find() || VALID_SCRIPT_TAG.matcher(temp).find()) {
+        if (JAVASCRIPT.matcher(temp).find()) {
             temp = sanitizer.sanitize(temp);
         }
 

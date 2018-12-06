@@ -1437,15 +1437,9 @@ public class DefangFilterTest {
      */
     @Test
     public void testZCS5696() throws Exception {
-        String html = "<textarea></textarea/><body/oNloAd=alert('bug109020-2')>bug109020-2";
+        String html = "<textarea></textarea/><body/oNloAd=javascript:alert('bug109020-2')>bug109020-2";
         InputStream htmlStream = new ByteArrayInputStream(html.getBytes());
-        String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
-            true);
-        Assert.assertTrue(!result.contains("alert"));
-
-        html = "<textarea></textarea/><body/oNloAd=javascript:alert('bug109020-2')>bug109020-2";
-        htmlStream = new ByteArrayInputStream(html.getBytes());
-        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
+        String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
         Assert.assertTrue(!result.contains("alert"));
     }
 }
