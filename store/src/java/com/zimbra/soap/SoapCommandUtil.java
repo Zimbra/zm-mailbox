@@ -88,6 +88,8 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
     private static final String LO_FILE = "file";
     private static final String LO_TYPE = "type";
     private static final String LO_USE_SESSION = "use-session";
+    private static final String LO_SESSION_ID = "session-id";
+    private static final String LO_MAX_NOTIFY_SEQUENCE = "max-notify-seq";
 
     private static final String TYPE_MAIL = "mail";
     private static final String TYPE_ADMIN = "admin";
@@ -120,11 +122,12 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
     private String mTwoFactorScratchCode;
     private String[] mPaths;
     private String mAuthToken;
-    private String mSessionId;
+    private String mSessionId = null;
     private SoapHttpTransport mTransport;
     private boolean mVerbose = false;
     private boolean mVeryVerbose = false;
     private boolean mUseSession = false;
+    private Long maxNotifySeq = null;
     private boolean mNoOp = false;
     private String mSelect;
     private boolean mUseJson = false;
@@ -198,6 +201,8 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         mOptions.addOption(opt);
 
         mOptions.addOption(new Option(null, LO_USE_SESSION, false, "Use a SOAP session."));
+        mOptions.addOption(new Option(null, LO_SESSION_ID, true, "SOAP session ID to use."));
+        mOptions.addOption(new Option(null, LO_MAX_NOTIFY_SEQUENCE, true, "'seq' value for 'notify' block."));
 
         mOptions.addOption(new Option(null, LO_TOTP, true, "TOTP token for two-factor auth"));
 
@@ -323,6 +328,11 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         mFilePath = CliUtil.getOptionValue(cl, LO_FILE);
         mFactory = (mUseJson ? JSONElement.mFactory : XMLElement.mFactory);
         mUseSession = CliUtil.hasOption(cl, LO_USE_SESSION);
+        mSessionId = CliUtil.getOptionValue(cl, LO_SESSION_ID);
+        String maxNotifySeqString = CliUtil.getOptionValue(cl, LO_MAX_NOTIFY_SEQUENCE);
+        if (maxNotifySeqString != null) {
+            maxNotifySeq = Long.parseLong(maxNotifySeqString);
+        }
     }
 
     private static final String[] XPATH_PASSWORD = new String[] { "Body", AdminConstants.AUTH_REQUEST.getName(), AdminConstants.E_PASSWORD };
@@ -403,6 +413,9 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         mTransport.setSessionId(mSessionId);
         mTransport.setDebugListener(this);
         mTransport.setTimeout(0);
+        if (maxNotifySeq != null) {
+            mTransport.setMaxNotifySeq(maxNotifySeq);
+        }
         return mTransport;
     }
 
@@ -410,7 +423,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
     throws ServiceException {
         mAuthToken = authResponse.getAttribute(AccountConstants.E_AUTH_TOKEN);
         Element sessionEl = authResponse.getOptionalElement(HeaderConstants.E_SESSION);
-        if (sessionEl != null) {
+        if ((mSessionId == null) && (sessionEl != null)) {
             mSessionId = sessionEl.getAttribute(HeaderConstants.A_ID);
         }
     }
