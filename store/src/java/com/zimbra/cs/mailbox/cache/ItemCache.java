@@ -49,11 +49,7 @@ public abstract class ItemCache {
 
     public abstract MailItem remove(int id);
 
-    public abstract boolean contains(MailItem item);
-
     public abstract Collection<MailItem> values();
-
-    public abstract int size();
 
     public abstract void clear();
 
