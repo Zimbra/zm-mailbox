@@ -2450,9 +2450,7 @@ public class Mailbox implements MailboxStore {
                 } else if (item instanceof MailItem){
                     MailItem mi = (MailItem) item;
                     // NOTE: if the folder cache is null, folders fall down here and should always get copy == false
-                    if (mItemCache.contains(mi)) {
-                        mi = snapshotItem(mi);
-                    }
+                    mi = snapshotItem(mi);
                     snapshot.recordCreated(mi);
                 }
             }
@@ -2480,9 +2478,7 @@ public class Mailbox implements MailboxStore {
                     }
                 } else {
                     // NOTE: if the folder cache is null, folders fall down here and should always get copy == false
-                    if (mItemCache.contains(item)) {
-                        item = snapshotItem(item);
-                    }
+                    item = snapshotItem(item);
                     snapshot.recordModified(item, chg.why, (MailItem) chg.preModifyObj);
                 }
             }
