@@ -16,6 +16,11 @@
  */
 package com.zimbra.soap;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Random;
@@ -307,9 +312,10 @@ public final class ZimbraSoapContext {
                         // erase the auth token and continue
                         mAuthToken = null;
                     } else {
-                        if (sLog.isDebugEnabled()) {
-                            sLog.debug("Throwing AUTH_EXPIRED for token:%s expired=%s registered=%s",
-                                    mAuthToken, isExpired, isRegistered);
+                        if (sLog.isInfoEnabled()) {
+                            sLog.info("Throwing AUTH_EXPIRED for token:%s expired=%s registered=%s expires=%s",
+                                    mAuthToken, isExpired, isRegistered, DateTimeFormatter.ISO_INSTANT.format(
+                                            Instant.ofEpochMilli(mAuthToken.getExpires())));
                         }
                         throw ServiceException.AUTH_EXPIRED();
                     }
