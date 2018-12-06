@@ -8983,13 +8983,9 @@ public class Mailbox implements MailboxStore {
         } catch (RuntimeException e) {
             ZimbraLog.mailbox.error("ignoring error during cache commit", e);
         } finally {
-            // keep our MailItem cache at a reasonable size
-            trimItemCache();
             //remove local references to MailItems used over the course of the transaction
             if (change.depth == 0) {
                 mItemCache.flush();
-            } else {
-                ZimbraLog.cache.info("not flushing local cache");
             }
             // make sure we're ready for the next change
             change.reset();
@@ -9080,52 +9076,8 @@ public class Mailbox implements MailboxStore {
             ZimbraLog.mailbox.error("ignoring error during cache rollback", e);
             return null;
         } finally {
-            // keep our MailItem cache at a reasonable size
-            trimItemCache();
             // toss any pending changes to the Mailbox object and get ready for the next change
             change.reset();
-        }
-    }
-
-    private void trimItemCache() {
-        try {
-            int sizeTarget = MAX_ITEM_CACHE_WITH_LISTENERS;
-            if (galSyncMailbox) {
-                sizeTarget = MAX_ITEM_CACHE_FOR_GALSYNC_MAILBOX;
-            }
-
-            ItemCache cache = currentChange().itemCache;
-            if (cache == null) {
-                return;
-            }
-
-            int excess = cache.size() - sizeTarget;
-            if (excess <= 0) {
-                return;
-            }
-
-            // cache the overflow to avoid the Iterator's ConcurrentModificationException
-            MailItem[] overflow = new MailItem[excess];
-            int i = 0;
-            for (MailItem item : cache.values()) {
-                overflow[i++] = item;
-                if (i >= excess) {
-                    break;
-                }
-            }
-            // trim the excess; note that "uncache" can cascade and take out child items
-            while (--i >= 0) {
-                if (cache.size() <= sizeTarget) {
-                    return;
-                }
-
-                try {
-                    uncache(overflow[i]);
-                } catch (ServiceException e) {
-                }
-            }
-        } catch (RuntimeException e) {
-            ZimbraLog.mailbox.error("ignoring error during item cache trim", e);
         }
     }
 
