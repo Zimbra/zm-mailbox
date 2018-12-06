@@ -337,6 +337,7 @@ public abstract class LmtpHandler extends ProtocolHandler {
                 "250-ENHANCEDSTATUSCODES\r\n" +
                 (startedTLS? "" : "250-STARTTLS\r\n") + //don't publish STARTTLS to LHLO if STARTTLS is already done.
                 "250-SIZE\r\n" +
+                "250-SMTPUTF8\r\n" +
                 "250 PIPELINING";
         mWriter.println(resp);
         mWriter.flush();
