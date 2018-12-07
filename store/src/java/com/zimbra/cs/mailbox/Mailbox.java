@@ -1979,65 +1979,83 @@ public class Mailbox implements MailboxStore {
                 DbMailbox.updateMailboxStats(this);
             }
 
-            mFolderCache = ItemCache.getFactory().getFolderCache(this, cacheTracker);
-            // create the folder objects and, as a side-effect, populate the new cache
-            for (Map.Entry<MailItem.UnderlyingData, DbMailItem.FolderTagCounts> entry : folderData.entrySet()) {
-                Folder folder = (Folder) MailItem.constructItem(this, entry.getKey());
-                DbMailItem.FolderTagCounts fcounts = entry.getValue();
-                if (fcounts != null) {
-                    folder.setSize(folder.getItemCount(), fcounts.deletedCount, fcounts.totalSize, fcounts.deletedUnreadCount);
-                }
-            }
-            // establish the folder hierarchy
-            for (Folder folder : mFolderCache.values()) {
-                Folder parent = mFolderCache.get(folder.getFolderId());
-                // FIXME: side effect of this is that parent is marked as dirty...
-                if (parent != null) {
-                    parent.addChild(folder, false);
-                }
-                // some broken upgrades ended up with CHANGE_DATE = NULL; patch it here
-                boolean badChangeDate = folder.getChangeDate() <= 0;
-                if (badChangeDate) {
-                    markItemModified(folder, Change.INTERNAL_ONLY);
-                    folder.metadataChanged();
-                }
-                // if we recalculated folder counts or had to fix CHANGE_DATE, persist those values now
-                if (persist || badChangeDate) {
-                    folder.saveFolderCounts(initial);
-                }
-            }
+            initFolderTagFields(folderData, tagData, initial, persist, loadedFromCache);
 
-            mTagCache = ItemCache.getFactory().getTagCache(this, cacheTracker);
-            // create the tag objects and, as a side-effect, populate the new
-            // cache
-            for (Map.Entry<MailItem.UnderlyingData, DbMailItem.FolderTagCounts> entry : tagData.entrySet()) {
-                Tag tag = new Tag(this, entry.getKey());
-                if (persist) {
-                    tag.saveTagCounts();
-                }
-            }
-
-            if (!loadedFromCache && !DebugConfig.disableFoldersTagsCache) {
-                cacheFoldersTags();
-            }
             if (requiresWriteLock) {
                 requiresWriteLock = false;
                 ZimbraLog.mailbox.debug("consuming forceWriteMode");
                 //we've reloaded folder/tags so new callers can go back to using read
             }
         } catch (ServiceException e) {
+        	ZimbraLog.mailbox.warn("Unexpected exception whilst loading folders and tags - setting mTagCache/mFolderCache as null", e);
             mTagCache = null;
             mFolderCache = null;
             throw e;
         }
     }
 
-    void cacheFoldersTags() throws ServiceException {
-        try (final MailboxLock l = getWriteLockAndLockIt()) {
-            List<Folder> folderList = new ArrayList<Folder>(mFolderCache.values());
-            List<Tag> tagList = new ArrayList<Tag>(mTagCache.values());
-            mItemCache.cacheTagsAndFolders(folderList, tagList);
-        }
+    private void initFolderTagFields(DbMailItem.FolderTagMap folderData, DbMailItem.FolderTagMap tagData,
+    		boolean initial, boolean persist, boolean loadedFromCache) throws ServiceException {
+    	/* Use temporary variables for these until we have a write lock to avoid another thread's updates
+    	 * to the corresponding fields causing inconsistencies. */
+    	FolderCache folderCache = ItemCache.getFactory().getFolderCache(this, cacheTracker);
+    	TagCache tagCache = ItemCache.getFactory().getTagCache(this, cacheTracker);
+    	try (final MailboxLock l = getWriteLockAndLockIt()) {
+    		mFolderCache = folderCache;
+    		mTagCache = tagCache;
+    		// create the folder objects and, as a side-effect, populate the new cache
+    		for (Map.Entry<MailItem.UnderlyingData, DbMailItem.FolderTagCounts> entry : folderData.entrySet()) {
+    			Folder folder = (Folder) MailItem.constructItem(this, entry.getKey());
+    			DbMailItem.FolderTagCounts fcounts = entry.getValue();
+    			if (fcounts != null) {
+    				folder.setSize(folder.getItemCount(), fcounts.deletedCount, fcounts.totalSize, fcounts.deletedUnreadCount);
+    			}
+    		}
+    		// establish the folder hierarchy
+    		for (Folder folder : mFolderCache.values()) {
+    			Folder parent = mFolderCache.get(folder.getFolderId());
+    			// FIXME: side effect of this is that parent is marked as dirty...
+    			if (parent != null) {
+    				parent.addChild(folder, false);
+    			}
+    			// some broken upgrades ended up with CHANGE_DATE = NULL; patch it here
+    			boolean badChangeDate = folder.getChangeDate() <= 0;
+    			if (badChangeDate) {
+    				markItemModified(folder, Change.INTERNAL_ONLY);
+    				folder.metadataChanged();
+    			}
+    			// if we recalculated folder counts or had to fix CHANGE_DATE, persist those values now
+    			if (persist || badChangeDate) {
+    				folder.saveFolderCounts(initial);
+    			}
+    		}
+
+    		mTagCache = ItemCache.getFactory().getTagCache(this, cacheTracker);
+    		// create the tag objects and, as a side-effect, populate the new
+    		// cache
+    		for (Map.Entry<MailItem.UnderlyingData, DbMailItem.FolderTagCounts> entry : tagData.entrySet()) {
+    			Tag tag = new Tag(this, entry.getKey());
+    			if (persist) {
+    				tag.saveTagCounts();
+    			}
+    		}
+
+    		if (!loadedFromCache && !DebugConfig.disableFoldersTagsCache) {
+    			cacheFoldersTagsWhenHaveWriteLock();
+    		}
+    	}
+    }
+
+    private void cacheFoldersTagsWhenHaveWriteLock() throws ServiceException {
+    	List<Folder> folderList = new ArrayList<>(mFolderCache.values());
+    	List<Tag> tagList = new ArrayList<>(mTagCache.values());
+    	mItemCache.cacheTagsAndFolders(folderList, tagList);
+    }
+
+    private void cacheFoldersTags() throws ServiceException {
+    	try (final MailboxLock l = getWriteLockAndLockIt()) {
+    		cacheFoldersTagsWhenHaveWriteLock();
+    	}
     }
 
     public void recalculateFolderAndTagCounts() throws ServiceException {
