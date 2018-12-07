@@ -36,13 +36,13 @@ public abstract class TransactionAware<V, C extends TransactionAware.Change> {
 
     private String name;
     private TransactionCacheTracker tracker;
-    private final ThreadLocal<Changes> threadChanges;
+    private final ChangeCache<C> threadChanges;
     private final Getter<V,?> transactionAccessor;
 
     public TransactionAware(String name, TransactionCacheTracker cacheTracker, Getter<V,?> getter) {
         this.tracker = cacheTracker;
         this.name = name;
-        this.threadChanges = new ThreadLocal<>();
+        this.threadChanges = new ChangeCache<>(name);
         this.transactionAccessor = getter;
     }
 
@@ -70,13 +70,8 @@ public abstract class TransactionAware<V, C extends TransactionAware.Change> {
         getChanges().addChange(change);
     }
 
-    public Changes getChanges() {
-        Changes changes = threadChanges.get();
-        if (changes != null) {
-            return changes;
-        }
-        threadChanges.set(new Changes());
-        return threadChanges.get();
+    public Changes<C> getChanges() {
+        return threadChanges.get(isInTransaction());
     }
 
     public List<C> getChangeList() {
@@ -84,11 +79,11 @@ public abstract class TransactionAware<V, C extends TransactionAware.Change> {
     }
 
     public void resetChanges() {
-        Changes changes = getChanges();
+        Changes<C> changes = getChanges();
         if (changes.hasChanges()) {
             ZimbraLog.cache.warn("clearing %d uncommitted changes for %s", changes.size(), getName());
         }
-        changes.reset();
+        threadChanges.remove(isInTransaction());
     }
 
 
@@ -98,10 +93,12 @@ public abstract class TransactionAware<V, C extends TransactionAware.Change> {
         SET_ADD, SET_ADD_ALL, SET_REMOVE_ALL, SET_RETAIN_ALL;
     }
 
-    public class Changes {
+    public static class Changes<C extends Change> {
         private List<C> changes = new ArrayList<>();
+        private String objectName;
 
-        public Changes() {
+        public Changes(String objectName) {
+            this.objectName = objectName;
             reset();
         }
 
@@ -125,7 +122,7 @@ public abstract class TransactionAware<V, C extends TransactionAware.Change> {
         }
 
         public String getName() {
-            return TransactionAware.this.getName();
+            return objectName;
         }
 
         public int size() {
@@ -164,31 +161,52 @@ public abstract class TransactionAware<V, C extends TransactionAware.Change> {
     /**
      * Alternative to ThreadLocal to avoid memory leaks
      */
+
     private static class LocalCache<V, G extends CachedObject<V>> {
+
+        protected String objectName;
         private Cache<Thread, G> transactionCache;
         private Cache<Thread, G> nonTransactionCache;
-        private Getter<V, G> getter;
 
-        private LocalCache(Getter<V, G> getter) {
-            this.getter = getter;
+        public LocalCache(String objectName) {
+            this.objectName = objectName;
             transactionCache = buildTransactionCache();
             nonTransactionCache = buildNonTransactionCache();
         }
 
-        private Cache<Thread, G> buildTransactionCache() {
-            CacheBuilder<Object, Object> builder = CacheBuilder.newBuilder();
-            builder.weakKeys();
-            builder.removalListener(new RemovalListener<Thread, G>() {
+        protected RemovalListener<Thread, G> getTransactionRemovalListener() {
+            return new RemovalListener<Thread, G>() {
 
                 @Override
                 public void onRemoval(RemovalNotification<Thread, G> notification) {
                     Thread key = notification.getKey();
                     if (ZimbraLog.cache.isTraceEnabled()) {
-                        ZimbraLog.cache.trace("removing %s from transactionCache for %s, cause=%s", key, getter, notification.getCause());
+                        ZimbraLog.cache.trace("removing %s from %s.transactionCache for %s, cause=%s", key, this.getClass().getSimpleName(), objectName, notification.getCause());
                     }
                 }
+            };
+        }
 
-            });
+        protected RemovalListener<Thread, G> getNonTransactionRemovalListener() {
+            return new RemovalListener<Thread, G>() {
+
+                @Override
+                public void onRemoval(RemovalNotification<Thread, G> notification) {
+                    if (ZimbraLog.cache.isTraceEnabled()) {
+                        Thread key = notification.getKey();
+                        ZimbraLog.cache.trace("removing %s from %s.nonTransactionCache for %s, cause=%s", key, this.getClass().getSimpleName(), objectName, notification.getCause());
+                    }
+                }
+            };
+        }
+
+        private Cache<Thread, G> buildTransactionCache() {
+            CacheBuilder<Object, Object> builder = CacheBuilder.newBuilder();
+            builder.weakKeys();
+            RemovalListener<Thread, G> listener = getTransactionRemovalListener();
+            if (listener != null) {
+                builder.removalListener(listener);
+            }
             return builder.build();
         }
 
@@ -198,25 +216,18 @@ public abstract class TransactionAware<V, C extends TransactionAware.Change> {
             builder.weakKeys();
             builder.maximumSize(LC.outside_transaction_threadlocal_cache_max_size.intValue());
             builder.expireAfterAccess(LC.outside_transaction_threadlocal_cache_expiry_seconds.intValue(), TimeUnit.SECONDS);
-            builder.removalListener(new RemovalListener<Thread, G>() {
-
-                @Override
-                public void onRemoval(RemovalNotification<Thread, G> notification) {
-                    if (ZimbraLog.cache.isTraceEnabled()) {
-                        Thread key = notification.getKey();
-                        ZimbraLog.cache.trace("removing %s from nonTransactionCache for %s, cause=%s", key, getter.getObjectName(), notification.getCause());
-                    }
-                }
-
-            });
+            RemovalListener<Thread, G> listener = getNonTransactionRemovalListener();
+            if (listener != null) {
+                builder.removalListener(listener);
+            }
             return builder.build();
         }
 
-        private Cache<Thread, G> getCache(boolean inTransaction) {
+        protected Cache<Thread, G> getCache(boolean inTransaction) {
             return inTransaction ? transactionCache : nonTransactionCache;
         }
 
-        private G get(boolean inTransaction, Callable<G> callable) {
+        public G get(boolean inTransaction, Callable<G> callable) {
             Thread thread = Thread.currentThread();
             try {
                 return getCache(inTransaction).get(thread, callable);
@@ -226,7 +237,7 @@ public abstract class TransactionAware<V, C extends TransactionAware.Change> {
             }
         }
 
-        private void remove(boolean inTransaction) {
+        public void remove(boolean inTransaction) {
             Thread thread = Thread.currentThread();
             Cache<Thread, G> cache = getCache(inTransaction);
             cache.invalidate(thread);
@@ -236,10 +247,9 @@ public abstract class TransactionAware<V, C extends TransactionAware.Change> {
         @Override
         public String toString() {
             return MoreObjects.toStringHelper(this)
-                    .add("obj", getter.getObjectName())
-                    .add("transactionCacheSize", transactionCache.size())
-                    .add("nonTransactionCacheSize", nonTransactionCache.size())
-                    .toString();
+                .add("obj", objectName)
+                .add("transactionCacheSize", transactionCache.size())
+                .add("nonTransactionCacheSize", nonTransactionCache.size()).toString();
         }
     }
 
@@ -287,7 +297,7 @@ public abstract class TransactionAware<V, C extends TransactionAware.Change> {
 
         public Getter(String objectName) {
             this.objectName = objectName;
-            localCache = new LocalCache<V, G>(this);
+            localCache = new LocalCache<V, G>(objectName);
         }
 
         public String getObjectName() {
@@ -333,5 +343,40 @@ public abstract class TransactionAware<V, C extends TransactionAware.Change> {
         protected GreedyCachedObject<V> loadCacheValue() {
             return new GreedyCachedObject<>(objectName, loadObject());
         }
+    }
+
+
+    private static class ChangeCache<C extends Change> extends LocalCache<Changes<C>, CachedChanges<C>> {
+
+        public ChangeCache(String objectName) {
+            super(objectName);
+        }
+
+        public Changes<C> get(boolean inTransaction) {
+            return super.get(inTransaction, new Callable<CachedChanges<C>>() {
+
+                @Override
+                public CachedChanges<C> call() throws Exception {
+                    return new CachedChanges<>(new Changes<>(objectName));
+                }
+
+            }).getObject();
+        }
+    }
+
+    private static class CachedChanges<C extends Change> extends CachedObject<Changes<C>> {
+
+        private Changes<C> changes;
+
+        public CachedChanges(Changes<C> changes) {
+            super(changes.getName());
+            this.changes = changes;
+        }
+
+        @Override
+        public Changes<C> getObject() {
+            return changes;
+        }
+
     }
 }
