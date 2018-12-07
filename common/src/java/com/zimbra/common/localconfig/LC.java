@@ -1259,13 +1259,13 @@ public final class LC {
 
     @Supported
     public static final KnownKey redis_master_connection_pool_size = KnownKey.newKey(200);
-    
+
     @Supported
     public static final KnownKey redis_master_idle_connection_pool_size = KnownKey.newKey(100);
-    
+
     @Supported
     public static final KnownKey redis_subscription_connection_pool_size = KnownKey.newKey(200);
-    
+
     @Supported
     public static final KnownKey redis_subscription_idle_connection_pool_size = KnownKey.newKey(100);
 
@@ -1292,6 +1292,12 @@ public final class LC {
 
     @Supported
     public static final KnownKey mailbox_healthcheck_touchpoint_file = KnownKey.newKey("/opt/zimbra/healthcheck_touchpoint");
+
+    @Supported
+    public static final KnownKey outside_transaction_threadlocal_cache_expiry_seconds = KnownKey.newKey(30);
+
+    @Supported
+    public static final KnownKey outside_transaction_threadlocal_cache_max_size = KnownKey.newKey(10);
 
     public enum PUBLIC_SHARE_VISIBILITY { samePrimaryDomain, all, none };
 

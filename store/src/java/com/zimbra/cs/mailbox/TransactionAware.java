@@ -12,6 +12,7 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.RemovalListener;
 import com.google.common.cache.RemovalNotification;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
 
 public abstract class TransactionAware<V, C extends TransactionAware.Change> {
@@ -150,7 +151,6 @@ public abstract class TransactionAware<V, C extends TransactionAware.Change> {
         private Cache<Thread, G> transactionCache;
         private Cache<Thread, G> nonTransactionCache;
         private Getter<V, G> getter;
-        private static final int NON_TRANSACTION_CACHE_TTL_SECONDS = 5;
 
         private LocalCache(Getter<V, G> getter) {
             this.getter = getter;
@@ -179,13 +179,14 @@ public abstract class TransactionAware<V, C extends TransactionAware.Change> {
         private Cache<Thread, G> buildNonTransactionCache() {
             CacheBuilder<Object, Object> builder = CacheBuilder.newBuilder();
             builder.weakKeys();
-            builder.expireAfterWrite(NON_TRANSACTION_CACHE_TTL_SECONDS, TimeUnit.SECONDS);
+            builder.maximumSize(LC.outside_transaction_threadlocal_cache_max_size.intValue());
+            builder.expireAfterAccess(LC.outside_transaction_threadlocal_cache_expiry_seconds.intValue(), TimeUnit.SECONDS);
             builder.removalListener(new RemovalListener<Thread, G>() {
 
                 @Override
                 public void onRemoval(RemovalNotification<Thread, G> notification) {
-                    Thread key = notification.getKey();
                     if (ZimbraLog.cache.isTraceEnabled()) {
+                        Thread key = notification.getKey();
                         ZimbraLog.cache.trace("removing %s from nonTransactionCache for %s, cause=%s", key, getter.getObjectName(), notification.getCause());
                     }
                 }
