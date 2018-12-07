@@ -624,7 +624,7 @@ public class Folder extends MailItem implements FolderStore, SharedState {
         	for (int subfolderId: subfolders.values()) {
         		try {
         			visible.add(mMailbox.getFolderById(subfolderId));
-        		} catch (Exception e) {
+        		} catch (ServiceException e) {
         			ZimbraLog.mailbox.error("error while getting the folder by id: %s, ignoring to add", subfolderId, e);
         		}             
         	}
