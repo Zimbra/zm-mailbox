@@ -39,6 +39,7 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.UUID;
+import java.util.WeakHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
@@ -659,7 +660,7 @@ public class Mailbox implements MailboxStore {
         callbacks.put(MessageCallback.Type.sent, new SentMessageCallback());
         callbacks.put(MessageCallback.Type.received, new ReceivedMessageCallback());
         cacheTracker = ItemCache.getFactory().getTransactionCacheTracker(this);
-        transactionListeners = new HashSet<>();
+        transactionListeners = Collections.newSetFromMap(new WeakHashMap<>());
         addTransactionListener(cacheTracker);
         state = MailboxState.getFactory().getMailboxState(mData, cacheTracker);
         state.setLastChangeDate(System.currentTimeMillis());
