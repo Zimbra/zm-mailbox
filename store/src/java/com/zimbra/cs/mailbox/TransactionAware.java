@@ -203,6 +203,7 @@ public abstract class TransactionAware<V, C extends TransactionAware.Change> {
         private Cache<Thread, G> buildTransactionCache() {
             CacheBuilder<Object, Object> builder = CacheBuilder.newBuilder();
             builder.weakKeys();
+            builder.expireAfterAccess(LC.transaction_threadlocal_cache_expiry_seconds.intValue(), TimeUnit.SECONDS);
             RemovalListener<Thread, G> listener = getTransactionRemovalListener();
             if (listener != null) {
                 builder.removalListener(listener);
