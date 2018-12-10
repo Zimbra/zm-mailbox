@@ -1302,6 +1302,9 @@ public final class LC {
     @Supported
     public static final KnownKey outside_transaction_threadlocal_cache_max_size = KnownKey.newKey(10);
 
+    @Supported
+    public static final KnownKey threadlocal_cache_cleanup_interval_seconds  = KnownKey.newKey(120);
+
     public enum PUBLIC_SHARE_VISIBILITY { samePrimaryDomain, all, none };
 
     /**
