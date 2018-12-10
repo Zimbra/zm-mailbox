@@ -1297,6 +1297,9 @@ public final class LC {
     public static final KnownKey outside_transaction_threadlocal_cache_expiry_seconds = KnownKey.newKey(30);
 
     @Supported
+    public static final KnownKey transaction_threadlocal_cache_expiry_seconds = KnownKey.newKey(300);
+
+    @Supported
     public static final KnownKey outside_transaction_threadlocal_cache_max_size = KnownKey.newKey(10);
 
     public enum PUBLIC_SHARE_VISIBILITY { samePrimaryDomain, all, none };
