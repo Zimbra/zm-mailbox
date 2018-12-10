@@ -20,29 +20,26 @@ package com.zimbra.cs.mailbox;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.MoreObjects.ToStringHelper;
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.RemovalListener;
-import com.google.common.cache.RemovalNotification;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.mailbox.cache.ThreadLocalCache;
+import com.zimbra.cs.mailbox.cache.ThreadLocalCacheManager;
+import com.zimbra.cs.mailbox.cache.ThreadLocalCache.CachedObject;
+import com.zimbra.cs.mailbox.cache.ThreadLocalCache.GreedyCachedObject;
 
 public abstract class TransactionAware<V, C extends TransactionAware.Change> {
 
     private String name;
     private TransactionCacheTracker tracker;
-    private final ChangeCache<C> threadChanges;
+    private final ThreadLocalCache<Changes<C>, CachedChanges<C>> threadChanges;
     private final Getter<V,?> transactionAccessor;
 
     public TransactionAware(String name, TransactionCacheTracker cacheTracker, Getter<V,?> getter) {
         this.tracker = cacheTracker;
         this.name = name;
-        this.threadChanges = new ChangeCache<>(name);
+        this.threadChanges = ThreadLocalCacheManager.getInstance().newThreadLocalCache(name, "CHANGES");
         this.transactionAccessor = getter;
     }
 
@@ -71,7 +68,14 @@ public abstract class TransactionAware<V, C extends TransactionAware.Change> {
     }
 
     public Changes<C> getChanges() {
-        return threadChanges.get(isInTransaction());
+        return threadChanges.get(isInTransaction(), new Callable<CachedChanges<C>>() {
+
+            @Override
+            public CachedChanges<C> call() throws Exception {
+                return new CachedChanges<>(new Changes<>(name));
+            }
+
+        }).getObject();
     }
 
     public List<C> getChangeList() {
@@ -158,147 +162,14 @@ public abstract class TransactionAware<V, C extends TransactionAware.Change> {
         }
     }
 
-    /**
-     * Alternative to ThreadLocal to avoid memory leaks
-     */
-
-    private static class LocalCache<V, G extends CachedObject<V>> {
-
-        protected String objectName;
-        private Cache<Thread, G> transactionCache;
-        private Cache<Thread, G> nonTransactionCache;
-
-        public LocalCache(String objectName) {
-            this.objectName = objectName;
-            transactionCache = buildTransactionCache();
-            nonTransactionCache = buildNonTransactionCache();
-        }
-
-        protected RemovalListener<Thread, G> getTransactionRemovalListener() {
-            return new RemovalListener<Thread, G>() {
-
-                @Override
-                public void onRemoval(RemovalNotification<Thread, G> notification) {
-                    Thread key = notification.getKey();
-                    if (ZimbraLog.cache.isTraceEnabled()) {
-                        ZimbraLog.cache.trace("removing %s from %s.transactionCache for %s, cause=%s", key, this.getClass().getSimpleName(), objectName, notification.getCause());
-                    }
-                }
-            };
-        }
-
-        protected RemovalListener<Thread, G> getNonTransactionRemovalListener() {
-            return new RemovalListener<Thread, G>() {
-
-                @Override
-                public void onRemoval(RemovalNotification<Thread, G> notification) {
-                    if (ZimbraLog.cache.isTraceEnabled()) {
-                        Thread key = notification.getKey();
-                        ZimbraLog.cache.trace("removing %s from %s.nonTransactionCache for %s, cause=%s", key, this.getClass().getSimpleName(), objectName, notification.getCause());
-                    }
-                }
-            };
-        }
-
-        private Cache<Thread, G> buildTransactionCache() {
-            CacheBuilder<Object, Object> builder = CacheBuilder.newBuilder();
-            builder.weakKeys();
-            builder.expireAfterAccess(LC.transaction_threadlocal_cache_expiry_seconds.intValue(), TimeUnit.SECONDS);
-            RemovalListener<Thread, G> listener = getTransactionRemovalListener();
-            if (listener != null) {
-                builder.removalListener(listener);
-            }
-            return builder.build();
-        }
-
-
-        private Cache<Thread, G> buildNonTransactionCache() {
-            CacheBuilder<Object, Object> builder = CacheBuilder.newBuilder();
-            builder.weakKeys();
-            builder.maximumSize(LC.outside_transaction_threadlocal_cache_max_size.intValue());
-            builder.expireAfterAccess(LC.outside_transaction_threadlocal_cache_expiry_seconds.intValue(), TimeUnit.SECONDS);
-            RemovalListener<Thread, G> listener = getNonTransactionRemovalListener();
-            if (listener != null) {
-                builder.removalListener(listener);
-            }
-            return builder.build();
-        }
-
-        protected Cache<Thread, G> getCache(boolean inTransaction) {
-            return inTransaction ? transactionCache : nonTransactionCache;
-        }
-
-        public G get(boolean inTransaction, Callable<G> callable) {
-            Thread thread = Thread.currentThread();
-            try {
-                return getCache(inTransaction).get(thread, callable);
-            } catch (ExecutionException e) {
-                ZimbraLog.cache.warn("error getting value from %s for %s, returning null!", this, thread);
-                return null;
-            }
-        }
-
-        public void remove(boolean inTransaction) {
-            Thread thread = Thread.currentThread();
-            Cache<Thread, G> cache = getCache(inTransaction);
-            cache.invalidate(thread);
-
-        }
-
-        @Override
-        public String toString() {
-            return MoreObjects.toStringHelper(this)
-                .add("obj", objectName)
-                .add("transactionCacheSize", transactionCache.size())
-                .add("nonTransactionCacheSize", nonTransactionCache.size()).toString();
-        }
-    }
-
-    protected static abstract class CachedObject<V> {
-
-        protected String objectName;
-
-        public CachedObject(String objectName) {
-            this.objectName = objectName;
-        }
-
-        public String getObjectName() {
-            return objectName;
-        }
-
-        public abstract V getObject();
-
-        @Override
-        public String toString() {
-            return MoreObjects.toStringHelper(this)
-                    .add("obj", objectName).toString();
-        }
-    }
-
-    protected static class GreedyCachedObject<V> extends CachedObject<V> {
-
-        private V object;
-
-        public GreedyCachedObject(String objectName, V object) {
-            super(objectName);
-            this.object = object;
-        }
-
-        @Override
-        public V getObject() {
-            return object;
-        }
-
-    }
-
     protected static abstract class Getter<V, G extends CachedObject<V>> {
 
         protected String objectName;
-        protected LocalCache<V, G> localCache;
+        protected ThreadLocalCache<V, G> localCache;
 
         public Getter(String objectName) {
             this.objectName = objectName;
-            localCache = new LocalCache<V, G>(objectName);
+            localCache = ThreadLocalCacheManager.getInstance().newThreadLocalCache(objectName, "CACHED_VALUES");
         }
 
         public String getObjectName() {
@@ -343,25 +214,6 @@ public abstract class TransactionAware<V, C extends TransactionAware.Change> {
         @Override
         protected GreedyCachedObject<V> loadCacheValue() {
             return new GreedyCachedObject<>(objectName, loadObject());
-        }
-    }
-
-
-    private static class ChangeCache<C extends Change> extends LocalCache<Changes<C>, CachedChanges<C>> {
-
-        public ChangeCache(String objectName) {
-            super(objectName);
-        }
-
-        public Changes<C> get(boolean inTransaction) {
-            return super.get(inTransaction, new Callable<CachedChanges<C>>() {
-
-                @Override
-                public CachedChanges<C> call() throws Exception {
-                    return new CachedChanges<>(new Changes<>(objectName));
-                }
-
-            }).getObject();
         }
     }
 

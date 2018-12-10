@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.mailbox.cache.ThreadLocalCache.CachedObject;
 
 public abstract class TransactionAwareMap<K, V> extends TransactionAware<Map<K, V>, TransactionAwareMap.MapChange> implements Map<K, V> {
 
