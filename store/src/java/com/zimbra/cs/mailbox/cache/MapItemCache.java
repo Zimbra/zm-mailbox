@@ -68,11 +68,6 @@ public abstract class MapItemCache<T> extends ItemCache {
         return removed;
     }
 
-    @Override
-    public boolean contains(MailItem item) {
-        return mapById.containsKey(item.getId());
-    }
-
     protected Collection<T> getAllValues() {
         return mapById.values();
     }
@@ -80,11 +75,6 @@ public abstract class MapItemCache<T> extends ItemCache {
     @Override
     public Collection<MailItem> values() {
         return getAllValues().stream().map(v -> fromCacheValue(v)).filter(mi -> Objects.nonNull(mi)).collect(Collectors.toList());
-    }
-
-    @Override
-    public int size() {
-        return mapById.size();
     }
 
     @Override
