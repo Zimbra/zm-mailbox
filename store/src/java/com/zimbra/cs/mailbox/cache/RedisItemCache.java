@@ -99,8 +99,8 @@ public class RedisItemCache extends MapItemCache<String> {
             String accountId = mbox.getAccountId();
             String itemMapName = RedisUtils.createAccountRoutedKey(accountId, String.format("ITEMS_BY_ID"));
             String uuidMapName = RedisUtils.createAccountRoutedKey(accountId, String.format("ITEMS_BY_UUID"));
-            RedisBackedMap<Integer, String> itemMap = new RedisBackedMap<>(client.getMap(itemMapName), cacheTracker);
-            RedisBackedMap<String, Integer> uuidMap = new RedisBackedMap<>(client.getMap(uuidMapName), cacheTracker);
+            RedisBackedMap<Integer, String> itemMap = new RedisBackedMap<>(client.getMap(itemMapName), cacheTracker, false);
+            RedisBackedMap<String, Integer> uuidMap = new RedisBackedMap<>(client.getMap(uuidMapName), cacheTracker, false);
             return new RedisItemCache(mbox, itemMap, uuidMap);
         }
 

@@ -39,6 +39,7 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.UUID;
+import java.util.WeakHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
@@ -659,7 +660,7 @@ public class Mailbox implements MailboxStore {
         callbacks.put(MessageCallback.Type.sent, new SentMessageCallback());
         callbacks.put(MessageCallback.Type.received, new ReceivedMessageCallback());
         cacheTracker = ItemCache.getFactory().getTransactionCacheTracker(this);
-        transactionListeners = new HashSet<>();
+        transactionListeners = Collections.newSetFromMap(new WeakHashMap<>());
         addTransactionListener(cacheTracker);
         state = MailboxState.getFactory().getMailboxState(mData, cacheTracker);
         state.setLastChangeDate(System.currentTimeMillis());
@@ -1717,7 +1718,13 @@ public class Mailbox implements MailboxStore {
 
         ZimbraLog.cache.debug("uncached %s %d in mailbox %d", item.getType(), item.getId(), getId());
 
-        uncacheChildren(item);
+        /*
+         * With the item cache stored in redis, uncacheChildren is very inefficient.
+         * Since the cache is unbounded, itemCache.values() requires pulling an arbitrarily high number of
+         * items into memory (even if it was bounded, it would still be an inefficient operation).
+         * Temporarily commenting this out shouldn't do any damage other than keeping stale hash entries in redis.
+         * uncacheChildren(item);
+         */
     }
 
     /** Removes an item from the <code>Mailbox</code>'s item cache.
@@ -2450,9 +2457,7 @@ public class Mailbox implements MailboxStore {
                 } else if (item instanceof MailItem){
                     MailItem mi = (MailItem) item;
                     // NOTE: if the folder cache is null, folders fall down here and should always get copy == false
-                    if (mItemCache.contains(mi)) {
-                        mi = snapshotItem(mi);
-                    }
+                    mi = snapshotItem(mi);
                     snapshot.recordCreated(mi);
                 }
             }
@@ -2480,9 +2485,7 @@ public class Mailbox implements MailboxStore {
                     }
                 } else {
                     // NOTE: if the folder cache is null, folders fall down here and should always get copy == false
-                    if (mItemCache.contains(item)) {
-                        item = snapshotItem(item);
-                    }
+                    item = snapshotItem(item);
                     snapshot.recordModified(item, chg.why, (MailItem) chg.preModifyObj);
                 }
             }
@@ -8987,13 +8990,9 @@ public class Mailbox implements MailboxStore {
         } catch (RuntimeException e) {
             ZimbraLog.mailbox.error("ignoring error during cache commit", e);
         } finally {
-            // keep our MailItem cache at a reasonable size
-            trimItemCache();
             //remove local references to MailItems used over the course of the transaction
             if (change.depth == 0) {
                 mItemCache.flush();
-            } else {
-                ZimbraLog.cache.info("not flushing local cache");
             }
             // make sure we're ready for the next change
             change.reset();
@@ -9084,52 +9083,8 @@ public class Mailbox implements MailboxStore {
             ZimbraLog.mailbox.error("ignoring error during cache rollback", e);
             return null;
         } finally {
-            // keep our MailItem cache at a reasonable size
-            trimItemCache();
             // toss any pending changes to the Mailbox object and get ready for the next change
             change.reset();
-        }
-    }
-
-    private void trimItemCache() {
-        try {
-            int sizeTarget = MAX_ITEM_CACHE_WITH_LISTENERS;
-            if (galSyncMailbox) {
-                sizeTarget = MAX_ITEM_CACHE_FOR_GALSYNC_MAILBOX;
-            }
-
-            ItemCache cache = currentChange().itemCache;
-            if (cache == null) {
-                return;
-            }
-
-            int excess = cache.size() - sizeTarget;
-            if (excess <= 0) {
-                return;
-            }
-
-            // cache the overflow to avoid the Iterator's ConcurrentModificationException
-            MailItem[] overflow = new MailItem[excess];
-            int i = 0;
-            for (MailItem item : cache.values()) {
-                overflow[i++] = item;
-                if (i >= excess) {
-                    break;
-                }
-            }
-            // trim the excess; note that "uncache" can cascade and take out child items
-            while (--i >= 0) {
-                if (cache.size() <= sizeTarget) {
-                    return;
-                }
-
-                try {
-                    uncache(overflow[i]);
-                } catch (ServiceException e) {
-                }
-            }
-        } catch (RuntimeException e) {
-            ZimbraLog.mailbox.error("ignoring error during item cache trim", e);
         }
     }
 
