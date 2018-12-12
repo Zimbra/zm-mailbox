@@ -17,11 +17,12 @@
 
 package com.zimbra.cs.mailbox.cache;
 
+import java.lang.ref.WeakReference;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.TimerTask;
-import java.util.WeakHashMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import com.google.common.cache.Cache;
@@ -36,10 +37,10 @@ public class ThreadLocalCacheManager {
 
     public static ThreadLocalCacheManager instance = new ThreadLocalCacheManager();
 
-    private Set<ThreadLocalCache<?,?>> caches;
+    private Set<WeakReference<ThreadLocalCache<?,?>>> caches;
 
     private ThreadLocalCacheManager() {
-        caches = Collections.newSetFromMap(Collections.synchronizedMap(new WeakHashMap<>()));
+        caches = Collections.newSetFromMap(new ConcurrentHashMap<>());
         startSweeperThread();
     }
 
@@ -60,7 +61,7 @@ public class ThreadLocalCacheManager {
                 LC.outside_transaction_threadlocal_cache_max_size.intValue(),
                 cacheType, false);
         ThreadLocalCache<V, G> cache = new ThreadLocalCache<>(objectName, transactionCache, nonTransactionCache);
-        caches.add(cache);
+        caches.add(new WeakReference<>(cache));
         return cache;
     }
 
@@ -97,11 +98,20 @@ public class ThreadLocalCacheManager {
         public void run() {
             long start = System.currentTimeMillis();
             try {
-                Iterator<ThreadLocalCache<?,?>> iter = caches.iterator();
+                Iterator<WeakReference<ThreadLocalCache<?,?>>> iter = caches.iterator();
+                ZimbraLog.cache.info("cleaning up %s caches", caches.size());
+                int removed = 0;
                 while (iter.hasNext()) {
-                    iter.next().cleanUp();
+                    ThreadLocalCache<?,?> cache = iter.next().get();
+                    if (cache == null) {
+                        //underlying cache was GC'd
+                        removed++;
+                        iter.remove();
+                    } else {
+                        cache.cleanUp();
+                    }
                 }
-                ZimbraLog.cache.info("cleaned up %s caches in %s ms", caches.size(), System.currentTimeMillis() - start);
+                ZimbraLog.cache.debug("caches cleaned up in %sms, %s removed during iteration", System.currentTimeMillis() - start, removed);
             } catch (Exception e) {
                 ZimbraLog.cache.warn("caught exception in CacheSweeper", e);
             }
