@@ -69,7 +69,7 @@ public class PubSub {
      */
     public void onMessage(CharSequence channel, PubSubMsg msg) {
         ZimbraLog.pubsub.debug("PubSub.onMessage(%s, %s) - %s", channel, msg, msg.getClass());
-        CopyOnWriteArraySet<ListenerCallback> listeners = listenerMap.get(channel);
+        CopyOnWriteArraySet<ListenerCallback> listeners = listenerMap.get(channel.toString());
         if (listeners == null) {
             return;
         }
