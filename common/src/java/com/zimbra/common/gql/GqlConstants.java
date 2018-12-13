@@ -447,4 +447,15 @@ public class GqlConstants {
     public static final String INCLUDE_GAL = "includeGal";
     public static final String IS_CACHEABLE = "isCacheable";
     public static final String MATCHES = "matches";
+
+    public static final String STORE_LOOKUP_OPT = "storeLookupOption";
+    public static final String SOURCE_LOOKUP_OPT = "sourceLookupOption";
+    public static final String STORE_TYPES = "storeTypes";
+    public static final String STORE_TYPE = "storeType";
+    public static final String CERTIFICATES = "certificates";
+    public static final String CLASS_STORE_LOOKUP_OPT_TYPE = "StoreLookupOptionType";
+    public static final String CLASS_SOURCE_LOOKUP_OPT_TYPE = "SourceLookupOptionType";
+    public static final String CLASS_SMIME_STORE_TYPE = "SMIMEStoreType";
+    public static final String CLASS_SMIME_PUBLIC_CERTS_INFO = "SMIMEPublicCertsInfo";
+    public static final String CLASS_SMIME_PUBLIC_CERT_INFO = "SMIMEPublicCertInfo";
 }
