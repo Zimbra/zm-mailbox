@@ -156,6 +156,7 @@ public class RedisCacheTracker extends TransactionCacheTracker {
                     batchedValueUpdates.putAll(putAllOp.getChanges());
                     break;
                 default:
+                    ZimbraLog.cache.warn("unsupported change operation %s for map %", op.getChangeType(), mapName);
                     break;
                 }
             }
@@ -196,6 +197,7 @@ public class RedisCacheTracker extends TransactionCacheTracker {
                     batchSet.retainAllAsync(retainOp.getValues());
                     break;
                 default:
+                    ZimbraLog.cache.warn("unsupported change operation %s for set %", op.getChangeType(), setName);
                     break;
                 }
             }
@@ -219,6 +221,7 @@ public class RedisCacheTracker extends TransactionCacheTracker {
                     batchSet.deleteAsync();
                     break;
                 default:
+                    ZimbraLog.cache.warn("unsupported change operation %s for LRU item cache %s", op.getChangeType(), lruCacheName);
                     break;
                 }
             }
