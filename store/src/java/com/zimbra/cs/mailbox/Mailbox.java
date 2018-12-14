@@ -8990,6 +8990,8 @@ public class Mailbox implements MailboxStore {
         } catch (RuntimeException e) {
             ZimbraLog.mailbox.error("ignoring error during cache commit", e);
         } finally {
+            // keep our MailItem cache at a reasonable size
+            trimItemCache();
             //remove local references to MailItems used over the course of the transaction
             if (change.depth == 0) {
                 mItemCache.flush();
@@ -9083,8 +9085,24 @@ public class Mailbox implements MailboxStore {
             ZimbraLog.mailbox.error("ignoring error during cache rollback", e);
             return null;
         } finally {
+            // keep our MailItem cache at a reasonable size
+            trimItemCache();
             // toss any pending changes to the Mailbox object and get ready for the next change
             change.reset();
+        }
+    }
+
+    private void trimItemCache() {
+        try {
+            int sizeTarget = MAX_ITEM_CACHE_WITH_LISTENERS;
+            if (galSyncMailbox) {
+                sizeTarget = MAX_ITEM_CACHE_FOR_GALSYNC_MAILBOX;
+            }
+
+            ItemCache cache = currentChange().itemCache;
+            cache.trim(sizeTarget);
+        } catch (RuntimeException e) {
+            ZimbraLog.mailbox.error("ignoring error during item cache trim", e);
         }
     }
 
