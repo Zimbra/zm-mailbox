@@ -50,6 +50,11 @@ public class RedisBackedLRUItemCache extends TransactionAwareLRUItemCache {
 
         @Override
         public Collection<Integer> trimCache(int numItemsToKeep) {
+            /*
+             * To trim the cache to the most recent N values, the script gets the zset elements from the start of the LRU set
+             * to the (n-1)th element, and then removes them from both the zset and the item hash.
+             * The IDs of the trimmed items are returned for debugging purposes.
+             */
             RScript script = RedissonClientHolder.getInstance().getRedissonClient().getScript();
             String luaScript =
                     "local trimmedIds = redis.call('zrange', KEYS[1], 0, -1 * (ARGV[1]+1)); "
