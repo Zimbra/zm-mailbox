@@ -63,4 +63,7 @@ public class LocalItemCache extends MapItemCache<MailItem> {
             return null;
         }
     }
+
+    @Override
+    public void trim(int numItems) {}
 }

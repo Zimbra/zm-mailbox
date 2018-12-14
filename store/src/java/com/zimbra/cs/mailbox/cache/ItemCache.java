@@ -59,6 +59,8 @@ public abstract class ItemCache {
 
     protected abstract void cacheFoldersTagsMeta(Metadata folderTagMeta);
 
+    public abstract void trim(int numItems);
+
     public CachedTagsAndFolders getTagsAndFolders() {
         Metadata folderTagMeta = getCachedTagsAndFolders();
 
