@@ -257,6 +257,27 @@ public class RedissonRetryClient implements RedissonClient {
         return new RedissonRetrySet<V>(client -> client.getSet(name, codec), this);
     }
 
+    @Override
+    public <V> RScoredSortedSet<V> getScoredSortedSet(String name) {
+        return new RedissonRetryScoredSortedSet<V>(client -> client.getScoredSortedSet(name), this);
+    }
+
+    @Override
+    public <V> RScoredSortedSet<V> getScoredSortedSet(String name, Codec codec) {
+        return new RedissonRetryScoredSortedSet<V>(client -> client.getScoredSortedSet(name, codec), this);
+    }
+
+    @Override
+    public RScript getScript() {
+        return new RedissonRetryScript(client -> client.getScript(), this);
+    }
+
+
+    @Override
+    public RScript getScript(Codec arg0) {
+        return new RedissonRetryScript(client -> client.getScript(arg0), this);
+    }
+
     //RedissonClient interface methods below are not currently used anywhere in the codebase,
     //and therefore do not have corresponding retry-capable implementations subclassing {@link RedissonRetryDecorator}.
 
@@ -398,16 +419,6 @@ public class RedissonRetryClient implements RedissonClient {
 
     @Override
     public <V> RSortedSet<V> getSortedSet(String name, Codec codec) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <V> RScoredSortedSet<V> getScoredSortedSet(String name) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <V> RScoredSortedSet<V> getScoredSortedSet(String name, Codec codec) {
         throw new UnsupportedOperationException();
     }
 
@@ -560,11 +571,6 @@ public class RedissonRetryClient implements RedissonClient {
     }
 
     @Override
-    public RScript getScript() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public RScheduledExecutorService getExecutorService(String name) {
         throw new UnsupportedOperationException();
     }
@@ -636,11 +642,6 @@ public class RedissonRetryClient implements RedissonClient {
 
     @Override
     public <K, V> RStream<K, V> getStream(String arg0, Codec arg1) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public RScript getScript(Codec arg0) {
         throw new UnsupportedOperationException();
     }
 }
