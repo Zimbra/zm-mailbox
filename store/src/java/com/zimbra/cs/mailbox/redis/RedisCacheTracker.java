@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 import org.redisson.api.BatchOptions;
 import org.redisson.api.RBatch;
 import org.redisson.api.RMapAsync;
+import org.redisson.api.RScoredSortedSetAsync;
 import org.redisson.api.RSetAsync;
 import org.redisson.api.RedissonClient;
 
@@ -36,14 +37,18 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.RedissonClientHolder;
 import com.zimbra.cs.mailbox.TransactionAware;
-import com.zimbra.cs.mailbox.TransactionAwareSet;
 import com.zimbra.cs.mailbox.TransactionAware.Change;
 import com.zimbra.cs.mailbox.TransactionAware.Changes;
+import com.zimbra.cs.mailbox.TransactionAwareLRUItemCache;
+import com.zimbra.cs.mailbox.TransactionAwareLRUItemCache.LRUCacheChange;
+import com.zimbra.cs.mailbox.TransactionAwareLRUItemCache.LRUMarkAccessedOp;
+import com.zimbra.cs.mailbox.TransactionAwareLRUItemCache.LRURemoveOp;
 import com.zimbra.cs.mailbox.TransactionAwareMap;
 import com.zimbra.cs.mailbox.TransactionAwareMap.MapChange;
 import com.zimbra.cs.mailbox.TransactionAwareMap.MapPutAllOp;
 import com.zimbra.cs.mailbox.TransactionAwareMap.MapPutOp;
 import com.zimbra.cs.mailbox.TransactionAwareMap.MapRemoveOp;
+import com.zimbra.cs.mailbox.TransactionAwareSet;
 import com.zimbra.cs.mailbox.TransactionAwareSet.SetAddAllOp;
 import com.zimbra.cs.mailbox.TransactionAwareSet.SetAddOp;
 import com.zimbra.cs.mailbox.TransactionAwareSet.SetChange;
@@ -196,6 +201,24 @@ public class RedisCacheTracker extends TransactionCacheTracker {
             putBatchedSetUpdates(batchSet, batchedValueUpdates);
         }
 
+        private void addLruCacheChanges(String lruCacheName, List<LRUCacheChange> changes) {
+            RScoredSortedSetAsync<Object> batchSet = batch.getScoredSortedSet(lruCacheName);
+            for (LRUCacheChange op: changes) {
+                switch (op.getChangeType()) {
+                case LRU_MARK_ACCESSED:
+                    LRUMarkAccessedOp accessedOp = (LRUMarkAccessedOp) op;
+                    batchSet.addAsync(System.currentTimeMillis(), accessedOp.getItemId());
+                    break;
+                case REMOVE:
+                    LRURemoveOp removeOp = (LRURemoveOp) op;
+                    batchSet.removeAsync(removeOp.getItemId());
+                    break;
+                default:
+                    break;
+                }
+            }
+        }
+
         @SuppressWarnings("unchecked")
         public void addItem(TransactionAware<?,?> item) {
             if (!item.hasChanges()) {
@@ -212,6 +235,11 @@ public class RedisCacheTracker extends TransactionCacheTracker {
                 List<SetChange> setChanges = set.getChangeList();
                 changeMap.put(changes.getName(), setChanges);
                 addSetChanges(set.getName(), setChanges);
+            } else if (item instanceof TransactionAwareLRUItemCache) {
+                TransactionAwareLRUItemCache lruCache = (TransactionAwareLRUItemCache) item;
+                List<LRUCacheChange> setChanges = lruCache.getChangeList();
+                changeMap.put(changes.getName(), setChanges);
+                addLruCacheChanges(lruCache.getName(), setChanges);
             }
             changes.reset();
         }
