@@ -125,6 +125,15 @@ public class RedisItemCache extends MapItemCache<String> {
     }
 
     @Override
+    public void clear() {
+        if (ZimbraLog.cache.isTraceEnabled()) {
+            ZimbraLog.cache.trace("clearing RedisItemCache");
+        }
+        super.clear();
+        lruCache.clear();
+    }
+
+    @Override
     protected void cacheFoldersTagsMeta(Metadata folderTagMeta) {
         folderTagBucket.set(folderTagMeta.toString());
     }

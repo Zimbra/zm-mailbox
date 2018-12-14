@@ -32,4 +32,5 @@ public interface LRUItemCache {
      */
     public Collection<Integer> trimCache(int numItemsToKeep);
 
+    public void clear();
 }

@@ -43,14 +43,27 @@ public abstract class TransactionAwareLRUItemCache extends TransactionAware<LRUI
         return data().trimCache(numItemsToKeep);
     }
 
+    @Override
+    public void clear() {
+        addChange(new LRUClearOp());
+    }
+
     public static abstract class LRUCacheChange extends TransactionAware.Change {
+
+        public LRUCacheChange(ChangeType changeType) {
+            super(changeType);
+        }
+    }
+
+    public class LRUMarkAccessedOp extends LRUCacheChange {
 
         private int itemId;
 
-        public LRUCacheChange(int itemId, ChangeType changeType) {
-            super(changeType);
+        public LRUMarkAccessedOp(int itemId) {
+            super(ChangeType.LRU_MARK_ACCESSED);
             this.itemId = itemId;
         }
+
 
         public int getItemId() {
             return itemId;
@@ -62,18 +75,30 @@ public abstract class TransactionAwareLRUItemCache extends TransactionAware<LRUI
         }
     }
 
-    public class LRUMarkAccessedOp extends LRUCacheChange {
+    public class LRURemoveOp extends LRUCacheChange {
 
-        public LRUMarkAccessedOp(int itemId) {
-            super(itemId, ChangeType.LRU_MARK_ACCESSED);
+        private int itemId;
+
+        public LRURemoveOp(int itemId) {
+            super(ChangeType.REMOVE);
+        }
+
+
+        public int getItemId() {
+            return itemId;
+        }
+
+        @Override
+        public String toString() {
+            return toStringHelper().add("itemId", itemId).toString();
         }
 
     }
 
-    public class LRURemoveOp extends LRUCacheChange {
+    public class LRUClearOp extends LRUCacheChange {
 
-        public LRURemoveOp(int itemId) {
-            super(itemId, ChangeType.REMOVE);
+        public LRUClearOp() {
+            super(ChangeType.CLEAR);
         }
     }
 
@@ -109,7 +134,12 @@ public abstract class TransactionAwareLRUItemCache extends TransactionAware<LRUI
             //nothing to do here, since we are never loading the values into memory
         }
 
+        @Override
+        public void clear() {
+          //nothing to do here, since we are never loading the values into memory
+        }
     }
+
     protected static class LRUCacheGetter extends Getter<LRUItemCache, LRUCacheCachedObject> {
 
         LRUCacheTrimAction action;

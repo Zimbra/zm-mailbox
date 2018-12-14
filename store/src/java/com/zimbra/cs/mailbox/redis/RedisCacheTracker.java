@@ -41,6 +41,7 @@ import com.zimbra.cs.mailbox.TransactionAware.Change;
 import com.zimbra.cs.mailbox.TransactionAware.Changes;
 import com.zimbra.cs.mailbox.TransactionAwareLRUItemCache;
 import com.zimbra.cs.mailbox.TransactionAwareLRUItemCache.LRUCacheChange;
+import com.zimbra.cs.mailbox.TransactionAwareLRUItemCache.LRUClearOp;
 import com.zimbra.cs.mailbox.TransactionAwareLRUItemCache.LRUMarkAccessedOp;
 import com.zimbra.cs.mailbox.TransactionAwareLRUItemCache.LRURemoveOp;
 import com.zimbra.cs.mailbox.TransactionAwareMap;
@@ -212,6 +213,10 @@ public class RedisCacheTracker extends TransactionCacheTracker {
                 case REMOVE:
                     LRURemoveOp removeOp = (LRURemoveOp) op;
                     batchSet.removeAsync(removeOp.getItemId());
+                    break;
+                case CLEAR:
+                    LRUClearOp clearOp = (LRUClearOp) op;
+                    batchSet.deleteAsync();
                     break;
                 default:
                     break;
