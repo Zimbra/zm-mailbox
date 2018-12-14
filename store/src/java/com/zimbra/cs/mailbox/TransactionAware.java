@@ -52,11 +52,13 @@ public abstract class TransactionAware<V, C extends TransactionAware.Change> {
     }
 
     protected V data() {
-        return transactionAccessor.getObject(this);
+        return transactionAccessor != null ? transactionAccessor.getObject(this) : null;
     }
 
     public void clearLocalCache() {
-        transactionAccessor.clearCache(isInTransaction());
+        if (transactionAccessor != null) {
+            transactionAccessor.clearCache(isInTransaction());
+        }
     }
 
     public boolean hasChanges() {
@@ -72,6 +74,7 @@ public abstract class TransactionAware<V, C extends TransactionAware.Change> {
 
             @Override
             public CachedChanges<C> call() throws Exception {
+                tracker.addToTracker(TransactionAware.this);
                 return new CachedChanges<>(new Changes<>(name));
             }
 
@@ -94,7 +97,8 @@ public abstract class TransactionAware<V, C extends TransactionAware.Change> {
     public static enum ChangeType {
         CLEAR, REMOVE, //used by both set and map
         MAP_PUT, MAP_PUT_ALL,
-        SET_ADD, SET_ADD_ALL, SET_REMOVE_ALL, SET_RETAIN_ALL;
+        SET_ADD, SET_ADD_ALL, SET_REMOVE_ALL, SET_RETAIN_ALL,
+        LRU_MARK_ACCESSED;
     }
 
     public static class Changes<C extends Change> {
