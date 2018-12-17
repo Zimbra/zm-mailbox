@@ -204,7 +204,7 @@ implements RecurRuleBase, SimpleRepeatingRuleInterface {
     public void setByMonth(ByMonthRule byMonth) { this.byMonth = byMonth; }
     @GraphQLInputField(name=GqlConstants.BY_SET_POS, description="BYSETPOS rule")
     public void setBySetPos(BySetPosRule bySetPos) { this.bySetPos = bySetPos; }
-    @GraphQLInputField(name=GqlConstants.WEEK_START, description="Week start day - <b>SU,MO,TU,WE,TH,FR,SA</b>")
+    @GraphQLInputField(name=GqlConstants.WEEK_START, description="Week start day - SU,MO,TU,WE,TH,FR,SA")
     public void setWeekStart(WkstRule weekStart) { this.weekStart = weekStart; }
     @GraphQLInputField(name=GqlConstants.X_NAMES, description="X Name rules")
     public void setXNames(Iterable <XNameRule> xNames) {
@@ -247,7 +247,7 @@ implements RecurRuleBase, SimpleRepeatingRuleInterface {
     public ByMonthRule getByMonth() { return byMonth; }
     @GraphQLQuery(name=GqlConstants.BY_SET_POS, description="BYSETPOS rule")
     public BySetPosRule getBySetPos() { return bySetPos; }
-    @GraphQLQuery(name=GqlConstants.WEEK_START, description="Week start day - <b>SU,MO,TU,WE,TH,FR,SA</b>")
+    @GraphQLQuery(name=GqlConstants.WEEK_START, description="Week start day - SU,MO,TU,WE,TH,FR,SA")
     public WkstRule getWeekStart() { return weekStart; }
     @GraphQLQuery(name=GqlConstants.X_NAMES, description="X Name rules")
     public List<XNameRule> getXNames() {

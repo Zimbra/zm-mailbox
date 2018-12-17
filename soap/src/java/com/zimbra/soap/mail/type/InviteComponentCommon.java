@@ -268,7 +268,7 @@ implements InviteComponentCommonInterface {
     public InviteComponentCommon(
         @GraphQLInputField(name=GqlConstants.METHOD) String method,
         @GraphQLInputField(name=GqlConstants.COMPONENT_NUMBER) int componentNum,
-        @GraphQLInputField(name=GqlConstants.RSVP) boolean rsvp) {
+        @GraphQLInputField(name=GqlConstants.RSVP) Boolean rsvp) {
         this.method = method;
         this.componentNum = componentNum;
         this.rsvp = ZmBoolean.fromBool(rsvp);

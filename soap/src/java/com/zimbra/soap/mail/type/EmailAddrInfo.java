@@ -78,7 +78,17 @@ public class EmailAddrInfo {
         eai.setAddressType(addressType);
         return eai;
     }
-    @GraphQLInputField(name=GqlConstants.ADDRESS_TYPE, description="Address type - (f)rom, (t)o, (c)c, (b)cc, (r)eply-to, (s)ender, read-receipt (n)otification, (rf) resent-from")
+    @GraphQLInputField(name=GqlConstants.ADDRESS_TYPE, description="Address type\n "
+        + "> Valid values:\n "
+        + "* f: from\n "
+        + "* t: to\n "
+        + "* c: cc\n "
+        + "* b: bcc\n "
+        + "* r: reply-to\n "
+        + "* s: sender\n "
+        + "* read-receipt\n "
+        + "* n: notification\n "
+        + "* rf: resent-from")
     public void setAddressType(@GraphQLNonNull String addressType) { this.addressType = addressType; }
     @GraphQLInputField(name=GqlConstants.PERSONAL, description="The comment/name part of an address")
     public void setPersonal(String personal) { this.personal = personal; }

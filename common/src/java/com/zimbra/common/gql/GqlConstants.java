@@ -503,6 +503,8 @@ public class GqlConstants {
     public static final String CLASS_WEEK_START_RULE = "WeekStartRule";
     public static final String CLASS_XNAME_RULE = "XNameRule";
     public static final String CLASS_INVITE_AS_MP = "InviteAsMP";
+    public static final String CLASS_MP_INVITE_INFORMATION = "MPInviteInformation";
+    public static final String CLASS_CALENDAR_REPLY = "CalendarReply";
     public static final String UID = "uid";
     public static final String SUMMARY = "summary";
     public static final String UTC_TIME = "utcTime";
@@ -575,6 +577,7 @@ public class GqlConstants {
     public static final String IS_ORGANIZER = "isOrganizer";
     public static final String XUID = "xUid";
     public static final String CALENDAR_ITEM_FOLDER = "calendarItemFolder";
+    public static final String CALENDAR_ITEM_TYPE = "calendarItemType";
     public static final String CALENDAR_CLASS = "calendarClass";
     public static final String IS_EXCEPTION = "isException";
     public static final String RECURRENCE_ID_Z = "recurrenceIdZ";
@@ -610,4 +613,7 @@ public class GqlConstants {
     public static final String FREQUENCY = "frequency";
     public static final String LIST = "list";
     public static final String DAY = "day";
+    public static final String CALENDAR_REPLIES = "calendarReplies";
+    public static final String INVITE_COMPONENTS = "inviteComponents";
+    public static final String ATTENDEE = "attendee";
 }
