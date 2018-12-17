@@ -19,8 +19,12 @@ package com.zimbra.soap.mail.message;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.soap.mail.type.CreateCalendarItemResponse;
 
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlRootElement(name="CreateAppointmentResponse")
+@GraphQLType(name=GqlConstants.CLASS_CREATE_APPOINTMENT_RESPONSE, description="Contains response information for create appointment")
 public class CreateAppointmentResponse extends CreateCalendarItemResponse {
 }
