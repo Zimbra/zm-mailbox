@@ -8,6 +8,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.TransactionCacheTracker;
+import com.zimbra.common.localconfig.LC;
 
 public class LocalItemCache extends MapItemCache<MailItem> {
 
@@ -41,9 +42,9 @@ public class LocalItemCache extends MapItemCache<MailItem> {
 
         @Override
         public ItemCache getItemCache(Mailbox mbox, TransactionCacheTracker cacheTracker) {
-            Map<Integer, MailItem> itemMap = new ConcurrentLinkedHashMap.Builder<Integer, MailItem>().maximumWeightedCapacity(
-                    Mailbox.MAX_ITEM_CACHE_WITH_LISTENERS).build();
-            Map<String, Integer> uuidMap = new ConcurrentHashMap<>(Mailbox.MAX_ITEM_CACHE_WITH_LISTENERS);
+            int cacheCapacity = LC.zimbra_mailbox_active_cache.intValue();
+            Map<Integer, MailItem> itemMap = new ConcurrentLinkedHashMap.Builder<Integer, MailItem>().maximumWeightedCapacity(cacheCapacity).build();
+            Map<String, Integer> uuidMap = new ConcurrentHashMap<>(cacheCapacity);
             return new LocalItemCache(mbox, itemMap, uuidMap);
         }
 
