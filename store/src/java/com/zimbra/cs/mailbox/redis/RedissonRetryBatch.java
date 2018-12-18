@@ -59,6 +59,16 @@ public class RedissonRetryBatch extends RedissonRetryDecorator<RBatch> implement
     }
 
     @Override
+    public <V> RScoredSortedSetAsync<V> getScoredSortedSet(String name) {
+        return runCommand(() -> redissonObject.getScoredSortedSet(name));
+    }
+
+    @Override
+    public <V> RScoredSortedSetAsync<V> getScoredSortedSet(String name, Codec codec) {
+        return runCommand(() -> redissonObject.getScoredSortedSet(name, codec));
+    }
+
+    @Override
     public <V> RGeoAsync<V> getGeo(String name) {
         throw new UnsupportedOperationException();
     }
@@ -207,17 +217,6 @@ public class RedissonRetryBatch extends RedissonRetryDecorator<RBatch> implement
 
     @Override
     public RAtomicDoubleAsync getAtomicDouble(String name) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <V> RScoredSortedSetAsync<V> getScoredSortedSet(String name) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public <V> RScoredSortedSetAsync<V> getScoredSortedSet(String name,
-            Codec codec) {
         throw new UnsupportedOperationException();
     }
 
