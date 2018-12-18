@@ -616,4 +616,13 @@ public class GqlConstants {
     public static final String CALENDAR_REPLIES = "calendarReplies";
     public static final String INVITE_COMPONENTS = "inviteComponents";
     public static final String ATTENDEE = "attendee";
+
+    // free busy user
+    public static final String CLASS_FREE_BUSY_USER_SPEC = "FreeBusyUserSpec";
+    public static final String CLASS_FREE_BUSY_USER_INFORMATION = "FreeBusyUserInformation";
+    public static final String CLASS_FREE_BUSY_SLOT = "FreeBusySlot";
+    public static final String START_TIME = "startTime";
+    public static final String END_TIME = "endTime";
+    public static final String EXCLUDE_UID = "excludeUid";
+    public static final String FREE_BUSY_USERS = "freeBusyUsers";
 }
