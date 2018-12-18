@@ -1,9 +1,12 @@
 package com.zimbra.cs.mailbox.cache;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.redisson.api.RBucket;
+import org.redisson.api.RMap;
+import org.redisson.api.RScoredSortedSet;
 import org.redisson.api.RedissonClient;
 
 import com.google.common.base.Strings;
@@ -15,6 +18,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.RedissonClientHolder;
 import com.zimbra.cs.mailbox.TransactionCacheTracker;
+import com.zimbra.cs.mailbox.redis.RedisBackedLRUItemCache;
 import com.zimbra.cs.mailbox.redis.RedisBackedMap;
 import com.zimbra.cs.mailbox.redis.RedisCacheTracker;
 import com.zimbra.cs.mailbox.redis.RedisUtils;
@@ -26,16 +30,23 @@ public class RedisItemCache extends MapItemCache<String> {
     //cache that stores items locally over the course of a transaction, so multiple requests
     //for the same item ID will yield the same object
     private Map<Integer, MailItem> localCache;
+    private RedisBackedLRUItemCache lruCache;
+    private RedissonClient client;
 
-    public RedisItemCache(Mailbox mbox, Map<Integer, String> itemMap, Map<String, Integer> uuidMap) {
+    public RedisItemCache(Mailbox mbox, Map<Integer, String> itemMap, Map<String, Integer> uuidMap, RedisBackedLRUItemCache lruCache) {
         super(mbox, itemMap, uuidMap);
+        this.client = RedissonClientHolder.getInstance().getRedissonClient();
+        this.localCache = new ConcurrentHashMap<>();
+        this.lruCache = lruCache;
         initFolderTagBucket();
-        localCache = new ConcurrentHashMap<>();
     }
 
     private void initFolderTagBucket() {
-        RedissonClient client = RedissonClientHolder.getInstance().getRedissonClient();
         folderTagBucket = client.getBucket(RedisUtils.createAccountRoutedKey(mbox.getAccountId(), "FOLDERS_TAGS"));
+    }
+
+    private void markItemAccessed(int id) {
+        lruCache.markAccessed(id);
     }
 
     @Override
@@ -47,7 +58,16 @@ public class RedisItemCache extends MapItemCache<String> {
                 localCache.put(id, item);
             }
         }
+        if (item != null) {
+            markItemAccessed(id);
+        }
         return item;
+    }
+
+    @Override
+    public void put(MailItem item) {
+        super.put(item);
+        markItemAccessed(item.getId());
     }
 
     @Override
@@ -87,6 +107,33 @@ public class RedisItemCache extends MapItemCache<String> {
     }
 
     @Override
+    public void trim(int numItemsToKeep) {
+        Collection<Integer> removed = lruCache.trimCache(numItemsToKeep);
+        if (!removed.isEmpty()) {
+            if (ZimbraLog.cache.isDebugEnabled()) {
+                ZimbraLog.cache.debug("trimmed %d items from the redis cache", removed.size());
+            } else if (ZimbraLog.cache.isTraceEnabled()) {
+                ZimbraLog.cache.debug("trimmed %d items from the redis cache: %s", removed.size(), removed);
+            }
+        }
+    }
+
+    @Override
+    public MailItem remove(int id) {
+        lruCache.remove(id);
+        return super.remove(id);
+    }
+
+    @Override
+    public void clear() {
+        if (ZimbraLog.cache.isTraceEnabled()) {
+            ZimbraLog.cache.trace("clearing RedisItemCache");
+        }
+        super.clear();
+        lruCache.clear();
+    }
+
+    @Override
     protected void cacheFoldersTagsMeta(Metadata folderTagMeta) {
         folderTagBucket.set(folderTagMeta.toString());
     }
@@ -99,9 +146,14 @@ public class RedisItemCache extends MapItemCache<String> {
             String accountId = mbox.getAccountId();
             String itemMapName = RedisUtils.createAccountRoutedKey(accountId, String.format("ITEMS_BY_ID"));
             String uuidMapName = RedisUtils.createAccountRoutedKey(accountId, String.format("ITEMS_BY_UUID"));
-            RedisBackedMap<Integer, String> itemMap = new RedisBackedMap<>(client.getMap(itemMapName), cacheTracker, false);
-            RedisBackedMap<String, Integer> uuidMap = new RedisBackedMap<>(client.getMap(uuidMapName), cacheTracker, false);
-            return new RedisItemCache(mbox, itemMap, uuidMap);
+            String itemSetName = RedisUtils.createAccountRoutedKey(accountId, String.format("ITEMS_LRU_SET"));
+            RScoredSortedSet<Integer> rLruItemSet = client.getScoredSortedSet(itemSetName);
+            RMap<Integer, String> rItemMap = client.getMap(itemMapName);
+            RMap<String, Integer> rUuidMap = client.getMap(uuidMapName);
+            RedisBackedMap<Integer, String> itemMap = new RedisBackedMap<>(rItemMap, cacheTracker, false);
+            RedisBackedMap<String, Integer> uuidMap = new RedisBackedMap<>(rUuidMap, cacheTracker, false);
+            RedisBackedLRUItemCache lruItemSet = new RedisBackedLRUItemCache(rLruItemSet, rItemMap, cacheTracker);
+            return new RedisItemCache(mbox, itemMap, uuidMap, lruItemSet);
         }
 
         @Override

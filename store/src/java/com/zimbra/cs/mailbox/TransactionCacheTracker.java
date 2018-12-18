@@ -51,6 +51,7 @@ public abstract class TransactionCacheTracker implements TransactionListener {
     @Override
     public void transactionEnd(boolean success, boolean endChange) {
         if (endChange) {
+            processItems(touchedItems.get());
             resetChanges();
             inTransaction.set(false);
         }
@@ -87,6 +88,7 @@ public abstract class TransactionCacheTracker implements TransactionListener {
 
     @Override
     public void rollbackCache() {
+        resetChanges();
         clearTouchedItems();
     }
 
