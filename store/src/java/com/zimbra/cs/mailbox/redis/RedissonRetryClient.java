@@ -66,6 +66,7 @@ import org.redisson.api.RedissonClient;
 import org.redisson.api.TransactionOptions;
 import org.redisson.client.RedisException;
 import org.redisson.client.codec.Codec;
+import org.redisson.command.CommandExecutor;
 import org.redisson.config.Config;
 
 import com.zimbra.common.localconfig.LC;
@@ -84,6 +85,10 @@ public class RedissonRetryClient implements RedissonClient {
 
     public int getClientVersion() {
         return clientVersion;
+    }
+
+    public CommandExecutor getCommandExecutor() {
+        return ((Redisson) client).getCommandExecutor();
     }
 
     private boolean waitForCluster(Config redissonConfig, int maxWaitMillis) {
