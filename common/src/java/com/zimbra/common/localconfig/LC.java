@@ -1285,6 +1285,9 @@ public final class LC {
     public static final KnownKey redis_retry_interval = KnownKey.newKey(3000);
 
     @Supported
+    public static final KnownKey redis_num_lock_channels = KnownKey.newKey(50);
+
+    @Supported
     public static final KnownKey include_redis_attrs_in_lock_debug = KnownKey.newKey(false);
 
     @Supported
