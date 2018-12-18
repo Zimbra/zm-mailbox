@@ -622,10 +622,7 @@ public class Mailbox implements MailboxStore {
      */
     private final ReentrantLock emptyFolderOpLock = new ReentrantLock();
 
-    // TODO: figure out correct caching strategy
-    public static final int MAX_ITEM_CACHE_WITH_LISTENERS = LC.zimbra_mailbox_active_cache.intValue();
-    private static final int MAX_ITEM_CACHE_WITHOUT_LISTENERS = LC.zimbra_mailbox_inactive_cache.intValue();
-    private static final int MAX_ITEM_CACHE_FOR_GALSYNC_MAILBOX = LC.zimbra_mailbox_galsync_cache.intValue();
+    public static int MAX_ITEM_CACHE_SIZE;
     private static final int MAX_MSGID_CACHE = 10;
 
     private final int mId;
@@ -665,10 +662,17 @@ public class Mailbox implements MailboxStore {
         state = MailboxState.getFactory().getMailboxState(mData, cacheTracker);
         state.setLastChangeDate(System.currentTimeMillis());
         publisher = getNotificationPubSub().getPublisher();
+        MAX_ITEM_CACHE_SIZE = LC.zimbra_mailbox_active_cache.intValue();
     }
 
     public void setGalSyncMailbox(boolean galSyncMailbox) {
         this.galSyncMailbox = galSyncMailbox;
+        //update cache size limit
+        if (galSyncMailbox) {
+            MAX_ITEM_CACHE_SIZE = LC.zimbra_mailbox_galsync_cache.intValue();
+        } else {
+            MAX_ITEM_CACHE_SIZE = LC.zimbra_mailbox_active_cache.intValue();
+        }
     }
 
     public boolean isGalSyncMailbox() {
@@ -9094,13 +9098,8 @@ public class Mailbox implements MailboxStore {
 
     private void trimItemCache() {
         try {
-            int sizeTarget = MAX_ITEM_CACHE_WITH_LISTENERS;
-            if (galSyncMailbox) {
-                sizeTarget = MAX_ITEM_CACHE_FOR_GALSYNC_MAILBOX;
-            }
-
             ItemCache cache = currentChange().itemCache;
-            cache.trim(sizeTarget);
+            cache.trim(MAX_ITEM_CACHE_SIZE);
         } catch (RuntimeException e) {
             ZimbraLog.mailbox.error("ignoring error during item cache trim", e);
         }
