@@ -87,6 +87,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
     private static final String LO_NO_JAXB = "no-jaxb";
     private static final String LO_FILE = "file";
     private static final String LO_TYPE = "type";
+    private static final String LO_AUTH_TOKEN = "auth-token";
     private static final String LO_USE_SESSION = "use-session";
     private static final String LO_SESSION_ID = "session-id";
     private static final String LO_MAX_NOTIFY_SEQUENCE = "max-notify-seq";
@@ -121,7 +122,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
     private String mTwoFactorCode;
     private String mTwoFactorScratchCode;
     private String[] mPaths;
-    private String mAuthToken;
+    private String mAuthToken = null;
     private String mSessionId = null;
     private SoapHttpTransport mTransport;
     private boolean mVerbose = false;
@@ -200,6 +201,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         opt.setArgName("type");
         mOptions.addOption(opt);
 
+        mOptions.addOption(new Option(null, LO_AUTH_TOKEN, true, "Use this instead of authenticating."));
         mOptions.addOption(new Option(null, LO_USE_SESSION, false, "Use a SOAP session."));
         mOptions.addOption(new Option(null, LO_SESSION_ID, true, "SOAP session ID to use."));
         mOptions.addOption(new Option(null, LO_MAX_NOTIFY_SEQUENCE, true, "'seq' value for 'notify' block."));
@@ -329,6 +331,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         mFactory = (mUseJson ? JSONElement.mFactory : XMLElement.mFactory);
         mUseSession = CliUtil.hasOption(cl, LO_USE_SESSION);
         mSessionId = CliUtil.getOptionValue(cl, LO_SESSION_ID);
+        mAuthToken = CliUtil.getOptionValue(cl, LO_AUTH_TOKEN);
         String maxNotifySeqString = CliUtil.getOptionValue(cl, LO_MAX_NOTIFY_SEQUENCE);
         if (maxNotifySeqString != null) {
             maxNotifySeq = Long.parseLong(maxNotifySeqString);
@@ -525,7 +528,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         // If this is an EnableTwoFactorAuthRequest, skip authentication
         boolean skipAuth = request.getName().equals(AccountConstants.E_ENABLE_TWO_FACTOR_AUTH_REQUEST);
         // Authenticate if necessary
-        if (!skipAuth) {
+        if (!skipAuth && (mAuthToken == null)) {
              if (mAdminAccountName != null) {
                 adminAuth();
             } else {
