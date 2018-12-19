@@ -233,7 +233,12 @@ public class Folder extends MailItem implements FolderStore, SharedState {
             return "/";
         }
         setupParent();
-        String parentPath = getParentFolder().getPath();
+        Folder parentFolder = getParentFolder();
+        if(null == parentFolder) {
+            //Allowing NPE to be thrown as can't throw ServiceException.
+            ZimbraLog.mailbox.error("Folder.getPath parent folder is null for message id %d, uuid %s\n%s", mId, uuid, ZimbraLog.getStackTrace(10));
+        }
+        String parentPath = parentFolder.getPath();
         return parentPath + (parentPath.equals("/") ? "" : "/") + getName();
     }
 
