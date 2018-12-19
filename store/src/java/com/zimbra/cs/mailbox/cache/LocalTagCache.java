@@ -60,4 +60,10 @@ public class LocalTagCache implements TagCache {
     public int size() {
         return tagNameMap.size();
     }
+
+    @Override
+    public void updateName(String oldName, String newName) {
+        Tag tag = tagNameMap.remove(oldName);
+        tagNameMap.put(newName, tag);
+    }
 }
