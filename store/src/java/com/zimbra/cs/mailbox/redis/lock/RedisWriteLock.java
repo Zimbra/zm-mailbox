@@ -41,19 +41,24 @@ public class RedisWriteLock extends RedisLock {
         String script =
                 "local mode = redis.call('hget', KEYS[1], 'mode'); " +
                 "if (mode == false) then " +
+                      //no one is holding the lock, so set the mode to "write"
                       "redis.call('hset', KEYS[1], 'mode', 'write'); " +
+                      //set this thread's write hold count to 1 in the lock hash
                       "redis.call('hset', KEYS[1], ARGV[2], 1); " +
+                      //set the lock hash expiry to the lease time
                       "redis.call('pexpire', KEYS[1], ARGV[1]); " +
                       "return nil; " +
                   "end; " +
                   "if (mode == 'write') then " +
                       "if (redis.call('hexists', KEYS[1], ARGV[2]) == 1) then " +
+                          //if this thread is already holding a write lock, increment the hold count
                           "redis.call('hincrby', KEYS[1], ARGV[2], 1); " +
                           "local currentExpire = redis.call('pttl', KEYS[1]); " +
                           "redis.call('pexpire', KEYS[1], currentExpire + ARGV[1]); " +
                           "return nil; " +
                       "end; " +
                     "end;" +
+                     //otherwise, this thread can't obtain the lock, so return the TTL of the lock hash
                     "return redis.call('pttl', KEYS[1]);";
         return execute(script, LongCodec.INSTANCE, RedisCommands.EVAL_LONG,
             Arrays.<Object>asList(lockName),
@@ -70,25 +75,32 @@ public class RedisWriteLock extends RedisLock {
         String script =
                 "local mode = redis.call('hget', KEYS[1], 'mode'); " +
                 "if (mode == false) then " +
+                    //no one is holding the lock, so publish an unlock message
                     "redis.call('publish', KEYS[2], ARGV[1]); " +
                     "return 1; " +
                 "end;" +
                 "if (mode == 'write') then " +
                     "local lockExists = redis.call('hexists', KEYS[1], ARGV[3]); " +
                     "if (lockExists == 0) then " +
+                        //someone else is holding the lock (returning nil results in a warning)
                         "return nil;" +
                     "else " +
+                        //decrement the write hold count for this thread
                         "local counter = redis.call('hincrby', KEYS[1], ARGV[3], -1); " +
                         "if (counter > 0) then " +
+                            //if we are still holding write locks, update the TTL on the hash
                             "redis.call('pexpire', KEYS[1], ARGV[2]); " +
                             "return 0; " +
                         "else " +
+                            //delete the lock hash entry for this thread
                             "redis.call('hdel', KEYS[1], ARGV[3]); " +
                             "if (redis.call('hlen', KEYS[1]) == 1) then " +
+                                //no more holds on this lock (only the "mode" key is left),
+                                //so delete the lock hash and publish an unlock message
                                 "redis.call('del', KEYS[1]); " +
                                 "redis.call('publish', KEYS[2], ARGV[1]); " +
                             "else " +
-                                // has unlocked read-locks
+                                //this thread still has a read lock, so toggle the mode to "read"
                                 "redis.call('hset', KEYS[1], 'mode', 'read'); " +
                             "end; " +
                             "return 1; "+
