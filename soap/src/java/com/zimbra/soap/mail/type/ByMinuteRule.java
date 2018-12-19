@@ -22,10 +22,17 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.ByMinuteRuleInterface;
 
+import io.leangen.graphql.annotations.GraphQLInputField;
+import io.leangen.graphql.annotations.GraphQLNonNull;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name=GqlConstants.CLASS_BY_MINUTE_RULE, description="By-minute rule")
 public class ByMinuteRule implements ByMinuteRuleInterface {
 
     /**
@@ -33,6 +40,8 @@ public class ByMinuteRule implements ByMinuteRuleInterface {
      * @zm-api-field-description Comma separated list of minutes where minute is a number between 0 and 59
      */
     @XmlAttribute(name=MailConstants.A_CAL_RULE_BYMINUTE_MINLIST, required=true)
+    @GraphQLNonNull
+    @GraphQLQuery(name=GqlConstants.LIST, description="Comma separated list of minutes where minute is a number between 0 and 59")
     private final String list;
 
     /**
@@ -43,7 +52,7 @@ public class ByMinuteRule implements ByMinuteRuleInterface {
         this((String) null);
     }
 
-    public ByMinuteRule(String list) {
+    public ByMinuteRule(@GraphQLNonNull @GraphQLInputField String list) {
         this.list = list;
     }
 

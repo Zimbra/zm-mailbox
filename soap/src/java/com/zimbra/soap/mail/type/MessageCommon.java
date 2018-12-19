@@ -86,6 +86,7 @@ implements MessageCommonInterface {
      */
     @Deprecated
     @XmlAttribute(name=MailConstants.A_TAGS /* t */, required=false)
+    @GraphQLIgnore
     private String tags;
 
     /**
@@ -138,6 +139,7 @@ implements MessageCommonInterface {
     @Override
     public void setFlags(String flags) { this.flags = flags; }
     @Override
+    @GraphQLIgnore
     public void setTags(String tags) { this.tags = tags; }
     @Override
     public void setTagNames(String tagNames) { this.tagNames = tagNames; }
@@ -176,7 +178,7 @@ implements MessageCommonInterface {
     @GraphQLQuery(name=GqlConstants.FLAGS, description="Flags set on the conversation. (u)nread, (f)lagged, has (a)ttachment, (r)eplied, (s)ent by me, for(w)arded, calendar in(v)ite, (d)raft, IMAP-Deleted (x), (n)otification sent, urgent (!), low-priority (?), priority (+)")
     public String getFlags() { return flags; }
     @Override
-    @GraphQLQuery(name=GqlConstants.TAGS, description="Tags - Comma separated list of integers. DEPRECATED - use \"tagNames\" instead")
+    @GraphQLIgnore
     public String getTags() { return tags; }
     @Override
     @GraphQLQuery(name=GqlConstants.TAG_NAMES, description="Comma-separated list of tag names")
