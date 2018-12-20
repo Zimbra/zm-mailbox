@@ -1,0 +1,226 @@
+version: 2
+
+############################################################################
+
+references:
+   default_environment_settings: &default_environment_settings
+      docker:
+        - image: zimbra/zm-base-os:devcore-ubuntu-16.04
+      environment:
+        - ANT_OPTS: "-Dzimbra.buildinfo.version=8.9.0"
+        - BUILD: "/home/build"
+      working_directory: /home/build/zm-mailbox-circleci
+   default_attach_workspace: &default_attach_workspace
+         attach_workspace:
+            at: /home/build/
+   filter_branches: &filter_branches
+     filters:
+       branches:
+         ignore:
+           - develop 
+############################################################################
+
+jobs:
+  checkout_and_verify_params:
+    <<: *default_environment_settings
+    steps:
+      - checkout
+      - run:
+          name: Verifying configuration parameters
+          command: |
+            [ ! -z "$DOCKER_USER" ] || exit 1
+            [ ! -z "$DOCKER_PASS" ] || exit 1
+            [ ! -z "$DOCKER_REPO_NS" ] || exit 1
+            export SANITIZED_BRANCH=${CIRCLE_BRANCH/\//_}
+            echo "Docker Repo Namespace: $DOCKER_REPO_NS"
+            echo "Docker User: $DOCKER_USER"
+            echo "Sanitized branch name: $SANITIZED_BRANCH"
+            echo "SANITIZED_BRANCH=$SANITIZED_BRANCH" | tee -a .env;
+      - persist_to_workspace:
+          root: /home/build/
+          paths:
+            - zm-mailbox-circleci
+            - zm-mailbox  
+            - .ssh
+  build_native_submodule:
+    <<: *default_environment_settings
+    steps: 
+      - *default_attach_workspace
+      - run:
+          name: Building 'zm-mailbox/native'
+          command: |
+            ant -f native/build.xml compile publish-local
+      - persist_to_workspace:
+          root: /home/build/
+          paths:
+            - zm-mailbox/native
+            - .zcs-deps/zimbra/zm-native
+  build_common_submodule:
+    <<: *default_environment_settings
+    steps:
+      - *default_attach_workspace
+      - run:
+          name: Building 'zm-mailbox/common'
+          command: | 
+            ant -f common/build.xml compile publish-local
+      - persist_to_workspace:
+          root: /home/build/
+          paths:
+            - zm-mailbox/common
+            - .zcs-deps/zimbra/zm-common
+  build_soap_submodule:
+    <<: *default_environment_settings
+    steps:
+      - *default_attach_workspace
+      - run:
+          name: Building 'zm-mailbox/soap'
+          command: |
+            ant -f soap/build.xml compile publish-local
+      - persist_to_workspace:
+          root: /home/build/
+          paths:
+            - zm-mailbox/soap
+            - .zcs-deps/zimbra/zm-soap
+  build_client_submodule:
+    <<: *default_environment_settings
+    steps:
+      - *default_attach_workspace
+      - run:
+          name: Building 'zm-mailbox/client'
+          command: |
+            ant -f client/build.xml compile publish-local
+      - persist_to_workspace:
+          root: /home/build/
+          paths:
+            - zm-mailbox/client
+            - .zcs-deps/zimbra/zm-client
+  build_store_submodule:
+    <<: *default_environment_settings
+    steps:
+      - *default_attach_workspace
+      - run:
+          name: Building 'zm-mailbox/store'
+          command: |
+            ant -f store/build.xml compile publish-local
+      - persist_to_workspace:
+          root: /home/build/
+          paths:
+            - zm-mailbox/store
+            - .zcs-deps/zimbra/zm-store
+  test_native_submodule:
+    <<: *default_environment_settings
+    steps:
+      - *default_attach_workspace
+      - run:
+          name: Running unit tests for 'zm-mailbox/native'
+          command: |
+            set -e
+            ant -Dhalt-on-failure=true -f native/build.xml test
+      - store_test_results:
+          path: "$BUILD/zm-mailbox/native/build/test/report"
+      - store_artifacts:
+          path: "$BUILD/zm-mailbox/native/build/test/report"
+  test_common_submodule:
+    <<: *default_environment_settings
+    steps:
+      - *default_attach_workspace
+      - run:
+          name: Running unit tests for 'zm-mailbox/common'
+          command: |
+            set -e
+            ant -Dhalt-on-failure=true -f common/build.xml test
+      - store_test_results:
+          path: "$BUILD/zm-mailbox/common/build/test/report"
+      - store_artifacts:
+          path: "$BUILD/zm-mailbox/common/build/test/report"
+  test_soap_submodule:
+    <<: *default_environment_settings
+    steps:
+      - *default_attach_workspace
+      - run:
+          name: Running unit tests for 'zm-mailbox/soap'
+          command: |
+            set -e
+            ant -Dhalt-on-failure=true -f soap/build.xml test
+      - store_test_results:
+          path: "$BUILD/zm-mailbox/soap/build/test/report"
+      - store_artifacts:
+          path: "$BUILD/zm-mailbox/soap/build/test/report"
+  test_client_submodule:
+    <<: *default_environment_settings
+    steps:
+      - *default_attach_workspace
+      - run:
+          name: Running unit tests for 'zm-mailbox/client'
+          command: |
+            set -e
+            ant -Dhalt-on-failure=true -f client/build.xml test
+      - store_test_results:
+          path: "$BUILD/zm-mailbox/client/build/test/report"
+      - store_artifacts:
+          path: "$BUILD/zm-mailbox/client/build/test/report"
+  test_store_submodule:
+    <<: *default_environment_settings
+    steps:
+      - *default_attach_workspace
+      - run:
+          name: Running unit tests for 'zm-mailbox/store'
+          command: |
+            set -e 
+            ant -Dhalt-on-failure=true -f store/build.xml test
+      - store_test_results:
+          path: "$BUILD/zm-mailbox/store/build/test/report"
+      - store_artifacts:
+          path: "$BUILD/zm-mailbox/store/build/test/report"
+############################################################################
+
+workflows:
+  version: 2
+  build_deploy:
+    jobs:
+      - checkout_and_verify_params:
+          <<: *filter_branches
+      - build_native_submodule:
+          requires:
+            - checkout_and_verify_params
+          <<: *filter_branches
+      - build_common_submodule:
+          requires:
+            - build_native_submodule
+          <<: *filter_branches
+      - build_soap_submodule:
+          requires:
+            - build_common_submodule
+          <<: *filter_branches
+      - build_client_submodule:
+          requires:
+            - build_soap_submodule
+          <<: *filter_branches
+      - build_store_submodule:
+          requires:
+            - build_client_submodule
+          <<: *filter_branches
+      - test_native_submodule:
+          requires:
+            - build_native_submodule
+          <<: *filter_branches
+      - test_common_submodule:
+          requires:
+            - build_common_submodule
+          <<: *filter_branches
+      - test_soap_submodule:
+          requires:
+            - build_soap_submodule
+          <<: *filter_branches
+      - test_client_submodule:
+          requires:
+            - build_client_submodule
+          <<: *filter_branches
+      - test_store_submodule:
+          requires:
+            - build_store_submodule
+          <<: *filter_branches
+############################################################################
+#notify:
+#  webhooks:
+#    - url: http://ec2-52-90-104-127.compute-1.amazonaws.com:5000/post-status
