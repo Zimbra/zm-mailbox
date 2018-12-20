@@ -48,7 +48,7 @@ public class FreeBusyUserInfo {
      */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=true)
     @GraphQLNonNull
-    @GraphQLQuery(name=GqlConstants.EMAIL, description="Account email")
+    @GraphQLQuery(name=GqlConstants.IDENTIFIER, description="Account identifier (email or id)")
     private final String id;
 
     /**
@@ -90,7 +90,7 @@ public class FreeBusyUserInfo {
     }
 
     @GraphQLNonNull
-    @GraphQLQuery(name=GqlConstants.EMAIL, description="Account email")
+    @GraphQLQuery(name=GqlConstants.IDENTIFIER, description="Account identifier (email or id)")
     public String getId() { return id; }
     @GraphQLQuery(name=GqlConstants.ELEMENTS, description="Free/Busy slots")
     public List<FreeBusySlot> getElements() {
