@@ -8993,13 +8993,13 @@ public class Mailbox implements MailboxStore {
             }
             Iterator<WeakReference<TransactionListener>> itr = Mailbox.this.transactionListeners.iterator();
             while (itr.hasNext()) {
-            	TransactionListener listener = itr.next().get();
-            	if (listener == null) {
-            		itr.remove(); 
-            	} 
-            	else {
-            		listener.commitCache(change.depth == 0);
-            	}
+                TransactionListener listener = itr.next().get();
+                if (listener == null) {
+                    itr.remove(); 
+                } 
+                else {
+                    listener.commitCache(change.depth == 0);
+                }
             }
             
         } catch (RuntimeException e) {
@@ -9097,13 +9097,13 @@ public class Mailbox implements MailboxStore {
             }
             Iterator<WeakReference<TransactionListener>> itr = Mailbox.this.transactionListeners.iterator();
             while (itr.hasNext()) {
-            	TransactionListener listener = itr.next().get();
-            	if (listener == null) {
-            		itr.remove(); 
-            	} 
-            	else {
-            		listener.rollbackCache();
-            	}
+                TransactionListener listener = itr.next().get();
+                if (listener == null) {
+                    itr.remove(); 
+                } 
+                else {
+                    listener.rollbackCache();
+                }
             }
             return deletes;
         } catch (RuntimeException e) {
@@ -9818,13 +9818,13 @@ public class Mailbox implements MailboxStore {
                 boolean newChange = currentChange().startChange(caller, octxt, recorder, write);               
                 Iterator<WeakReference<TransactionListener>> itr = Mailbox.this.transactionListeners.iterator();
                 while (itr.hasNext()) {
-                	TransactionListener listener = itr.next().get();
-                	if (listener == null) {
-                		itr.remove(); 
-                	} 
-                	else {
-                		listener.transactionBegin(newChange);
-                	}
+                    TransactionListener listener = itr.next().get();
+                    if (listener == null) {
+                        itr.remove(); 
+                    } 
+                    else {
+                        listener.transactionBegin(newChange);
+                    }
                 }
                 
                 startedChange = true;
@@ -10038,15 +10038,15 @@ public class Mailbox implements MailboxStore {
                 // We are finally done with database and redo commits. Cache update comes last.
                 changeNotification = commitCache(currentChange(), lock);
             } finally {
-            	Iterator<WeakReference<TransactionListener>> itr = Mailbox.this.transactionListeners.iterator();
+                Iterator<WeakReference<TransactionListener>> itr = Mailbox.this.transactionListeners.iterator();
                 while (itr.hasNext()) {
-                	TransactionListener listener = itr.next().get();
-                	if (listener == null) {
-                		itr.remove(); 
-                	} 
-                	else {
-                		listener.transactionEnd(success, currentChange().depth == 0);
-                	}
+                    TransactionListener listener = itr.next().get();
+                    if (listener == null) {
+                        itr.remove(); 
+                    } 
+                    else {
+                        listener.transactionEnd(success, currentChange().depth == 0);
+                    }
                 }
                 lock.close();
                 // notify listeners outside lock as can take significant time
