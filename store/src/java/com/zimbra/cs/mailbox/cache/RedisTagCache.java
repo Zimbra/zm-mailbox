@@ -90,4 +90,13 @@ public class RedisTagCache extends RedisSharedStateCache<Tag> implements TagCach
     protected Collection<Integer> getAllIds() {
         return name2Id.values();
     }
+
+    @Override
+    public void updateName(String oldName, String newName) {
+        oldName = oldName.toLowerCase();
+        Integer tagId = name2Id.get(oldName);
+        name2Id.remove(oldName);
+        name2Id.put(newName.toLowerCase(), tagId);
+        getLocalCache().updateName(oldName, newName);
+    }
 }
