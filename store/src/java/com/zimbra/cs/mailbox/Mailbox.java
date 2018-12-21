@@ -6763,8 +6763,7 @@ public class Mailbox implements MailboxStore {
             }
 
             if (item instanceof Tag) {
-                mTagCache.remove(oldName.toLowerCase());
-                mTagCache.put((Tag) item);
+                mTagCache.updateName(oldName, name);
             }
             t.commit();
         }

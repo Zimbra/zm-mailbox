@@ -26,14 +26,14 @@ public class LocalTagCache implements TagCache {
     public Tag remove(int tagId) {
         Tag removed = tagIdMap.remove(tagId);
         if (removed != null) {
-            tagNameMap.remove(removed.getName());
+            remove(removed.getName());
         }
         return removed;
     }
 
     @Override
     public Tag remove(String tagName) {
-        return tagNameMap.remove(tagName);
+        return tagNameMap.remove(tagName.toLowerCase());
     }
 
     @Override
@@ -59,5 +59,11 @@ public class LocalTagCache implements TagCache {
     @Override
     public int size() {
         return tagNameMap.size();
+    }
+
+    @Override
+    public void updateName(String oldName, String newName) {
+        Tag tag = tagNameMap.remove(oldName.toLowerCase());
+        tagNameMap.put(newName.toLowerCase(), tag);
     }
 }
