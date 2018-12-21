@@ -21,6 +21,7 @@ import java.io.InputStream;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
+import java.lang.ref.WeakReference;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -39,7 +40,7 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.UUID;
-import java.util.WeakHashMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
@@ -167,7 +168,6 @@ import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.cache.CalSummaryCache.CalendarDataResult;
 import com.zimbra.cs.mailbox.calendar.cache.CalendarCacheManager;
 import com.zimbra.cs.mailbox.calendar.tzfixup.TimeZoneFixupRules;
-import com.zimbra.cs.mailbox.redis.RedisCacheTracker;
 import com.zimbra.cs.mailbox.util.TypedIdList;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedAddress;
@@ -643,8 +643,10 @@ public class Mailbox implements MailboxStore {
     private volatile boolean requiresWriteLock = true;
     private MailboxState state;
     private NotificationPubSub.Publisher publisher;
-    private Set<TransactionListener> transactionListeners;
+    private Set<WeakReference<TransactionListener>> transactionListeners;
     private TransactionCacheTracker cacheTracker;
+    
+    
 
     protected Mailbox(MailboxData data) {
         mId = data.id;
@@ -657,7 +659,7 @@ public class Mailbox implements MailboxStore {
         callbacks.put(MessageCallback.Type.sent, new SentMessageCallback());
         callbacks.put(MessageCallback.Type.received, new ReceivedMessageCallback());
         cacheTracker = ItemCache.getFactory().getTransactionCacheTracker(this);
-        transactionListeners = Collections.newSetFromMap(new WeakHashMap<>());
+        transactionListeners = Collections.newSetFromMap(new ConcurrentHashMap<>());
         addTransactionListener(cacheTracker);
         state = MailboxState.getFactory().getMailboxState(mData, cacheTracker);
         state.setLastChangeDate(System.currentTimeMillis());
@@ -8989,7 +8991,17 @@ public class Mailbox implements MailboxStore {
                     ZimbraLog.mailbox.warn("error getting account for the mailbox", e);
                 }
             }
-            Mailbox.this.transactionListeners.forEach(listener -> listener.commitCache(change.depth == 0));
+            Iterator<WeakReference<TransactionListener>> itr = Mailbox.this.transactionListeners.iterator();
+            while (itr.hasNext()) {
+                TransactionListener listener = itr.next().get();
+                if (listener == null) {
+                    itr.remove(); 
+                } 
+                else {
+                    listener.commitCache(change.depth == 0);
+                }
+            }
+            
         } catch (RuntimeException e) {
             ZimbraLog.mailbox.error("ignoring error during cache commit", e);
         } finally {
@@ -9004,6 +9016,7 @@ public class Mailbox implements MailboxStore {
         }
         return notification;
     }
+    
 
     private void doNotifyListeners(MailboxChange change, ChangeNotification notification) {
         long start = System.currentTimeMillis();
@@ -9082,7 +9095,16 @@ public class Mailbox implements MailboxStore {
                     mConvHashes.remove(obj);
                 }
             }
-            Mailbox.this.transactionListeners.forEach(listener -> listener.rollbackCache());
+            Iterator<WeakReference<TransactionListener>> itr = Mailbox.this.transactionListeners.iterator();
+            while (itr.hasNext()) {
+                TransactionListener listener = itr.next().get();
+                if (listener == null) {
+                    itr.remove(); 
+                } 
+                else {
+                    listener.rollbackCache();
+                }
+            }
             return deletes;
         } catch (RuntimeException e) {
             ZimbraLog.mailbox.error("ignoring error during cache rollback", e);
@@ -9793,8 +9815,18 @@ public class Mailbox implements MailboxStore {
                     assert(lock.isWriteLockedByCurrentThread());
                     write = true;
                 }
-                boolean newChange = currentChange().startChange(caller, octxt, recorder, write);
-                Mailbox.this.transactionListeners.forEach(listener -> listener.transactionBegin(newChange));
+                boolean newChange = currentChange().startChange(caller, octxt, recorder, write);               
+                Iterator<WeakReference<TransactionListener>> itr = Mailbox.this.transactionListeners.iterator();
+                while (itr.hasNext()) {
+                    TransactionListener listener = itr.next().get();
+                    if (listener == null) {
+                        itr.remove(); 
+                    } 
+                    else {
+                        listener.transactionBegin(newChange);
+                    }
+                }
+                
                 startedChange = true;
 
                 // if a Connection object was provided, use it
@@ -10006,7 +10038,16 @@ public class Mailbox implements MailboxStore {
                 // We are finally done with database and redo commits. Cache update comes last.
                 changeNotification = commitCache(currentChange(), lock);
             } finally {
-                Mailbox.this.transactionListeners.forEach(listener -> listener.transactionEnd(success, currentChange().depth == 0));
+                Iterator<WeakReference<TransactionListener>> itr = Mailbox.this.transactionListeners.iterator();
+                while (itr.hasNext()) {
+                    TransactionListener listener = itr.next().get();
+                    if (listener == null) {
+                        itr.remove(); 
+                    } 
+                    else {
+                        listener.transactionEnd(success, currentChange().depth == 0);
+                    }
+                }
                 lock.close();
                 // notify listeners outside lock as can take significant time
                 if (changeNotification != null) {
@@ -10079,6 +10120,6 @@ public class Mailbox implements MailboxStore {
     }
 
     public void addTransactionListener(TransactionListener listener) {
-        transactionListeners.add(listener);
+        transactionListeners.add(new WeakReference<>(listener));
     }
 }
