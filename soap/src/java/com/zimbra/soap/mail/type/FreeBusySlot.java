@@ -17,15 +17,14 @@
 
 package com.zimbra.soap.mail.type;
 
-import com.google.common.base.MoreObjects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 
-import io.leangen.graphql.annotations.GraphQLIgnore;
 import io.leangen.graphql.annotations.GraphQLNonNull;
 import io.leangen.graphql.annotations.GraphQLQuery;
 import io.leangen.graphql.annotations.types.GraphQLType;
@@ -47,63 +46,63 @@ public class FreeBusySlot {
      */
     @XmlAttribute(name=MailConstants.A_CAL_END_TIME /* e */, required=true)
     private final long endTime;
-    
+
     /**
      * @zm-api-field-tag id
      * @zm-api-field-description calendar event id
      */
     @XmlAttribute(name=MailConstants.E_CAL_EVENT_ID, required=false)
     private String id;
-    
+
     /**
      * @zm-api-field-tag subject
      * @zm-api-field-description Appointment subject
      */
     @XmlAttribute(name=MailConstants.E_CAL_EVENT_SUBJECT, required=false)
     private String subject;
-    
+
     /**
      * @zm-api-field-tag location
      * @zm-api-field-description location of meeting
      */
     @XmlAttribute(name=MailConstants.E_CAL_EVENT_LOCATION, required=false)
     private String location;
-    
+
     /**
      * @zm-api-field-tag isMeeting
      * @zm-api-field-description returns a boolean value whether this calendar event is a meeting or not.
      */
     @XmlAttribute(name=MailConstants.E_CAL_EVENT_ISMEETING, required=false)
     private boolean isMeeting;
-    
+
     /**
      * @zm-api-field-tag isRecurring
      * @zm-api-field-description returns a boolean indicating whether it is continuous or not.
      */
     @XmlAttribute(name=MailConstants.E_CAL_EVENT_ISRECURRING, required=false)
     private boolean isRecurring;
-    
+
     /**
      * @zm-api-field-tag isException
      * @zm-api-field-description returns a boolean indicating whether there is any exception or not.
      */
     @XmlAttribute(name=MailConstants.E_CAL_EVENT_ISEXCEPTION, required=false)
     private boolean isException;
-    
+
     /**
      * @zm-api-field-tag isReminderSet
      * @zm-api-field-description returns a boolean indicating whether any reminder has been set or not.
      */
     @XmlAttribute(name=MailConstants.E_CAL_EVENT_ISREMINDERSET, required=false)
     private boolean isReminderSet;
-    
+
     /**
      * @zm-api-field-tag isPrivate
      * @zm-api-field-description returns a boolean indicating whether this meeting is private or not.
      */
     @XmlAttribute(name=MailConstants.E_CAL_EVENT_ISPRIVATE, required=false)
     private boolean isPrivate;
-    
+
     /**
      * @zm-api-field-tag hasPermission
      * @zm-api-field-description returns a boolean indicating hasPermission to view FreeBusy information
@@ -129,7 +128,7 @@ public class FreeBusySlot {
     @GraphQLQuery(name=GqlConstants.END_TIME, description="GMT End time for slot in milliseconds")
     public long getEndTime() { return endTime; }
 
-    @GraphQLIgnore
+    @GraphQLQuery(name=GqlConstants.ID, description="Id of the calendar event.")
 	public String getId() {
 		return id;
 	}
@@ -138,7 +137,7 @@ public class FreeBusySlot {
 		this.id = id;
 	}
 
-	@GraphQLIgnore
+	@GraphQLQuery(name=GqlConstants.SUBJECT, description="Subject for the calendar event.")
 	public String getSubject() {
 		return subject;
 	}
@@ -147,7 +146,7 @@ public class FreeBusySlot {
 		this.subject = subject;
 	}
 
-	@GraphQLIgnore
+	@GraphQLQuery(name=GqlConstants.LOCATION, description="Location of the calendar event")
 	public String getLocation() {
 		return location;
 	}
@@ -156,7 +155,7 @@ public class FreeBusySlot {
 		this.location = location;
 	}
 
-	@GraphQLIgnore
+	@GraphQLQuery(name=GqlConstants.IS_MEETING, description="Whether the calendar event is meeting.")
 	public boolean isMeeting() {
 		return isMeeting;
 	}
@@ -165,7 +164,7 @@ public class FreeBusySlot {
 		this.isMeeting = isMeeting;
 	}
 
-	@GraphQLIgnore
+	@GraphQLQuery(name=GqlConstants.IS_RECURRING, description="Whether the calendar event is recurring.")
 	public boolean isRecurring() {
 		return isRecurring;
 	}
@@ -174,7 +173,7 @@ public class FreeBusySlot {
 		this.isRecurring = isRecurring;
 	}
 
-	@GraphQLIgnore
+	@GraphQLQuery(name=GqlConstants.IS_EXCEPTION, description="Whether the calendar event is an exception to the series.")
 	public boolean isException() {
 		return isException;
 	}
@@ -183,7 +182,7 @@ public class FreeBusySlot {
 		this.isException = isException;
 	}
 
-	@GraphQLIgnore
+	@GraphQLQuery(name=GqlConstants.IS_REMINDER_SET, description="Whether the calendar event has a reminder set.")
 	public boolean isReminderSet() {
 		return isReminderSet;
 	}
@@ -192,7 +191,7 @@ public class FreeBusySlot {
 		this.isReminderSet = isReminderSet;
 	}
 
-	@GraphQLIgnore
+	@GraphQLQuery(name=GqlConstants.IS_PRIVATE, description="Whether the calendar event is private.")
 	public boolean isPrivate() {
 		return isPrivate;
 	}
@@ -201,7 +200,7 @@ public class FreeBusySlot {
 		this.isPrivate = isPrivate;
 	}
 
-	@GraphQLIgnore
+	@GraphQLQuery(name=GqlConstants.HAS_PERMISSION, description="Whether the user has permissions for calendar event.")
 	public boolean isHasPermission() {
 		return hasPermission;
 	}

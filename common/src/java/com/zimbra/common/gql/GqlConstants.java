@@ -61,7 +61,7 @@ public class GqlConstants {
 
     // end session constants
     public static final String CLEAR_COOKIES= "clearCookies";
-    
+
     // shared class constants
     public static final String ATTACHMENTS = "attachments";
     public static final String ATTACHMENT_ID = "attachmentId";
@@ -74,7 +74,7 @@ public class GqlConstants {
     public static final String IN_REPLY_TO = "inReplyTo";
     public static final String INVITE = "invite";
     public static final String MIME_PARTS = "mimeParts";
-    
+
     // message constants
     public static final String CLASS_MESSAGE = "Message";
     public static final String EMAILADDRESSES = "emailAddresses";
@@ -625,4 +625,9 @@ public class GqlConstants {
     public static final String END_TIME = "endTime";
     public static final String EXCLUDE_UID = "excludeUid";
     public static final String FREE_BUSY_USERS = "freeBusyUsers";
+    public static final String HAS_PERMISSION = "hasPermission";
+    public static final String IS_PRIVATE = "isPrivate";
+    public static final String IS_REMINDER_SET = "isReminderSet";
+    public static final String IS_MEETING = "isMeeting";
+    public static final String IS_RECURRING = "isRecurring";
 }
