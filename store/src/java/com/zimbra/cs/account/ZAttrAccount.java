@@ -58370,6 +58370,83 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * This attribute is used to show user profile page, should be TRUE or
+     * FALSE
+     *
+     * @return zimbraShowUserProfile, or false if unset
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5027)
+    public boolean isShowUserProfile() {
+        return getBooleanAttr(Provisioning.A_zimbraShowUserProfile, false, true);
+    }
+
+    /**
+     * This attribute is used to show user profile page, should be TRUE or
+     * FALSE
+     *
+     * @param zimbraShowUserProfile new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5027)
+    public void setShowUserProfile(boolean zimbraShowUserProfile) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraShowUserProfile, zimbraShowUserProfile ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute is used to show user profile page, should be TRUE or
+     * FALSE
+     *
+     * @param zimbraShowUserProfile new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5027)
+    public Map<String,Object> setShowUserProfile(boolean zimbraShowUserProfile, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraShowUserProfile, zimbraShowUserProfile ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * This attribute is used to show user profile page, should be TRUE or
+     * FALSE
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5027)
+    public void unsetShowUserProfile() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraShowUserProfile, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute is used to show user profile page, should be TRUE or
+     * FALSE
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5027)
+    public Map<String,Object> unsetShowUserProfile(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraShowUserProfile, "");
+        return attrs;
+    }
+
+    /**
      * Whether edit header commands in admin sieve scripts are enabled or
      * disabled. If TRUE, the addheader, deleteheader and replaceheader
      * commands will be executed during admin sieve script execution.
