@@ -174,7 +174,7 @@ final class NioImapHandler extends ImapHandler implements NioHandler {
 
     @Override
     public void connectionIdle() {
-        ZimbraLog.imap.debug("dropping connection for inactivity");
+        ZimbraLog.imap.debug("dropping NIO connection for inactivity");
         dropConnection();
     }
 
