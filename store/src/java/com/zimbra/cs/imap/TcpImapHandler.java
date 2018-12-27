@@ -174,7 +174,7 @@ final class TcpImapHandler extends ProtocolHandler {
 
         // TODO in the TcpServer case, is this duplicated effort with
         // session timeout code that also drops connections?
-        ZimbraLog.imap.debug("dropping connection for inactivity");
+        ZimbraLog.imap.debug("dropping TCP connection for inactivity");
         dropConnection();
     }
 
