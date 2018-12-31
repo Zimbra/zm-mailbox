@@ -320,7 +320,12 @@ public class IDNUtil {
 
         String localPart = parts[0];
         String domain = parts[1];
-        emailAddress = localPart + "@" + IDNUtil.toUnicodeDomainName(domain);
+        if (domain.indexOf('>') != 1) {
+            domain = domain.substring(0, domain.length() - 1);
+            emailAddress = localPart + "@" + IDNUtil.toUnicodeDomainName(domain) + ">";
+        } else {
+            emailAddress = localPart + "@" + IDNUtil.toUnicodeDomainName(domain);
+        }
         return emailAddress;
     }
     
