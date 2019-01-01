@@ -33,7 +33,6 @@ import com.zimbra.cs.mailbox.ContactAutoComplete.ContactEntry;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.type.GalSearchType;
-import com.zimbra.common.util.ZimbraLog;
 
 public class AutoComplete extends MailDocumentHandler {
 
@@ -107,7 +106,6 @@ public class AutoComplete extends MailDocumentHandler {
             if (!entry.isContactGroup()) {
                 cn.addAttribute(MailConstants.A_EMAIL, IDNUtil.toUnicode(entry.getEmail()));
             }
-
             cn.addAttribute(MailConstants.A_MATCH_TYPE, getType(entry));
             cn.addAttribute(MailConstants.A_RANKING, Integer.toString(entry.getRanking()));
             cn.addAttribute(MailConstants.A_IS_GROUP, entry.isGroup());
