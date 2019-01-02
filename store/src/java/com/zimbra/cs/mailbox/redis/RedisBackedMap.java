@@ -17,6 +17,8 @@
 
 package com.zimbra.cs.mailbox.redis;
 
+import java.util.Map;
+
 import org.redisson.api.RMap;
 
 import com.zimbra.cs.mailbox.TransactionAwareMap;
@@ -29,14 +31,24 @@ public class RedisBackedMap<K, V> extends TransactionAwareMap<K, V> {
 
     protected RMap<K, V> redisMap;
 
-    public RedisBackedMap(RMap<K, V> redisMap, TransactionCacheTracker tracker) {
-        this(redisMap, tracker, true);
+    public RedisBackedMap(RMap<K, V> redisMap, TransactionCacheTracker cacheTracker, Getter<Map<K, V>, ?> getter,
+            ReadPolicy readPolicy, WritePolicy writePolicy) {
+        super(redisMap.getName(), cacheTracker, getter, readPolicy, writePolicy);
+        this.redisMap = redisMap;
     }
 
-    public RedisBackedMap(RMap<K, V> redisMap, TransactionCacheTracker tracker, boolean greedyLoad) {
+    public RedisBackedMap(RMap<K, V> redisMap, TransactionCacheTracker tracker,
+            ReadPolicy readPolicy, WritePolicy writePolicy, CachePolicy cachePolicy) {
+        this(redisMap, tracker, readPolicy, writePolicy, true, cachePolicy);
+    }
+
+    public RedisBackedMap(RMap<K, V> redisMap, TransactionCacheTracker tracker,
+            ReadPolicy readPolicy, WritePolicy writePolicy,
+            boolean greedyLoad, CachePolicy cachePolicy) {
         super(redisMap.getName(), tracker, greedyLoad ?
-            new GreedyMapGetter<>(redisMap.getName(), () -> redisMap.readAllMap()) :
-            new LazyMapGetter<>(redisMap.getName(), (key) -> redisMap.get(key)));
+            new GreedyMapGetter<>(redisMap.getName(), cachePolicy, () -> redisMap.readAllMap()) :
+            new LazyMapGetter<>(redisMap.getName(), cachePolicy, (key) -> redisMap.get(key)),
+            readPolicy, writePolicy);
         this.redisMap = redisMap;
     }
 
