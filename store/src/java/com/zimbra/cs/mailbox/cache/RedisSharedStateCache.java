@@ -9,7 +9,6 @@ import java.util.Set;
 import org.redisson.api.RMap;
 import org.redisson.api.RedissonClient;
 
-import com.google.common.base.MoreObjects;
 import com.google.common.collect.Sets;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem;
@@ -18,8 +17,13 @@ import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailItemState;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.RedissonClientHolder;
+import com.zimbra.cs.mailbox.TransactionAware.CachePolicy;
+import com.zimbra.cs.mailbox.TransactionAwareMap.GreedyMapGetter;
+import com.zimbra.cs.mailbox.TransactionAwareMap.MapLoader;
 import com.zimbra.cs.mailbox.TransactionCacheTracker;
 import com.zimbra.cs.mailbox.TransactionListener;
+import com.zimbra.cs.mailbox.cache.CachedObjectRegistry.CachedObjectKey;
+import com.zimbra.cs.mailbox.cache.CachedObjectRegistry.CachedObjectKeyType;
 import com.zimbra.cs.mailbox.redis.RedisBackedMap;
 
 public abstract class RedisSharedStateCache<M extends MailItem & SharedState> implements AbstractItemCache<M> {
@@ -29,6 +33,7 @@ public abstract class RedisSharedStateCache<M extends MailItem & SharedState> im
     protected RedissonClient client;
     private KnownItemIds knownItemIds;
     private TransactionCacheTracker tracker;
+    private CachedObjectRegistry cachedObjects;
 
     public RedisSharedStateCache(Mailbox mbox, AbstractItemCache<M> localCache, TransactionCacheTracker cacheTracker) {
         this.mbox = mbox;
@@ -36,6 +41,7 @@ public abstract class RedisSharedStateCache<M extends MailItem & SharedState> im
         this.client = RedissonClientHolder.getInstance().getRedissonClient();
         this.tracker = cacheTracker;
         this.knownItemIds = new KnownItemIds();
+        this.cachedObjects = cacheTracker.getCachedObjects();
         mbox.addTransactionListener(knownItemIds);
     }
 
@@ -58,7 +64,7 @@ public abstract class RedisSharedStateCache<M extends MailItem & SharedState> im
         if (stateMap.isExists()) {
             M item = construct(itemId, stateMap.readAllMap());
             if (item != null) {
-                item.attach(new RedisSharedState(stateMap, tracker));
+                item.attach(new RedisSharedState(stateMap, tracker, item.getId()));
                 put(item, false);
                 return item;
             }
@@ -76,7 +82,7 @@ public abstract class RedisSharedStateCache<M extends MailItem & SharedState> im
 
     private void persist(M item) {
         if (!item.isAttached()) {
-            RedisSharedState sharedState = new RedisSharedState(getMap(item), tracker);
+            RedisSharedState sharedState = new RedisSharedState(getMap(item), tracker, item.getId());
             item.attach(sharedState);
             item.sync();
         }
@@ -208,10 +214,30 @@ public abstract class RedisSharedStateCache<M extends MailItem & SharedState> im
         return data;
     }
 
-    protected static class RedisSharedState extends RedisBackedMap<String, Object> implements SharedStateAccessor {
+    private class MailItemGetter<K, V> extends GreedyMapGetter<K, V> {
 
-        public RedisSharedState(RMap<String, Object> map, TransactionCacheTracker tracker) {
-            super(map, tracker);
+        private int mailItemId;
+
+        public MailItemGetter(String objectName, MapLoader<K, V> loader, int mailItemId) {
+            super(objectName, CachePolicy.SINGLE_VALUE, loader);
+            this.mailItemId = mailItemId;
+        }
+
+        @Override
+        protected Map<K, V> loadObject() {
+            Map<K, V> mapSnapshot = super.loadObject();
+            CachedObjectKey key = new CachedObjectKey(CachedObjectKeyType.MAILITEM, mailItemId);
+            cachedObjects.addObject(key, this);
+            return mapSnapshot;
+        }
+
+
+    }
+    protected class RedisSharedState extends RedisBackedMap<String, Object> implements SharedStateAccessor {
+
+        public RedisSharedState(RMap<String, Object> map, TransactionCacheTracker tracker, int mailItemId) {
+            super(map, tracker, new MailItemGetter<>(map.getName(), () -> map.readAllMap(), mailItemId),
+                    ReadPolicy.ANYTIME, WritePolicy.TRANSACTION_ONLY);
         }
 
         @SuppressWarnings("unchecked")
