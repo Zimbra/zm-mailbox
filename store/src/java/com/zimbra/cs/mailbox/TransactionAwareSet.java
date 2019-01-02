@@ -22,11 +22,13 @@ import java.util.Iterator;
 import java.util.Set;
 
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.mailbox.TransactionAware.WritePolicy;
 
 public abstract class TransactionAwareSet<E> extends TransactionAware<Set<E>, TransactionAwareSet.SetChange> implements Set<E> {
 
-    public TransactionAwareSet(String name, TransactionCacheTracker cacheTracker, Getter<Set<E>, ?> getter) {
-        super(name, cacheTracker, getter);
+    public TransactionAwareSet(String name, TransactionCacheTracker cacheTracker, Getter<Set<E>, ?> getter,
+            ReadPolicy readPolicy, WritePolicy writePolicy) {
+        super(name, cacheTracker, getter, readPolicy, writePolicy);
     }
 
     @Override
@@ -216,12 +218,12 @@ public abstract class TransactionAwareSet<E> extends TransactionAware<Set<E>, Tr
         public Set<E> loadSet();
     }
 
-    protected static class GreedySetGetter<E> extends GreedyGetter<Set<E>> {
+    protected static class GreedySetGetter<E> extends GreedyCachingGetter<Set<E>> {
 
         private SetLoader<E> loader;
 
-        public GreedySetGetter(String objectName, SetLoader<E> loader) {
-            super(objectName);
+        public GreedySetGetter(String objectName, CachePolicy cachePolicy, SetLoader<E> loader) {
+            super(objectName, cachePolicy);
             this.loader = loader;
         }
 

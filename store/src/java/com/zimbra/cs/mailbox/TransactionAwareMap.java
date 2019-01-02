@@ -23,12 +23,13 @@ import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.mailbox.cache.ThreadLocalCache.CachedObject;
+import com.zimbra.cs.mailbox.cache.CachedObject;
 
 public abstract class TransactionAwareMap<K, V> extends TransactionAware<Map<K, V>, TransactionAwareMap.MapChange> implements Map<K, V> {
 
-    public TransactionAwareMap(String name, TransactionCacheTracker cacheTracker, Getter<Map<K, V>, ?> getter) {
-        super(name, cacheTracker, getter);
+    public TransactionAwareMap(String name, TransactionCacheTracker cacheTracker, Getter<Map<K, V>, ?> getter,
+            ReadPolicy readPolicy, WritePolicy writePolicy) {
+        super(name, cacheTracker, getter, readPolicy, writePolicy);
     }
 
     @Override
@@ -181,21 +182,21 @@ public abstract class TransactionAwareMap<K, V> extends TransactionAware<Map<K, 
     }
 
     @FunctionalInterface
-    protected static interface MapLoader<K, V> {
+    public static interface MapLoader<K, V> {
         public Map<K, V> loadMap();
     }
 
     @FunctionalInterface
-    protected static interface MapValueLoader<V> {
+    public static interface MapValueLoader<V> {
         public V loadValue(Object key);
     }
 
-    protected static class GreedyMapGetter<K, V> extends GreedyGetter<Map<K, V>> {
+    public static class GreedyMapGetter<K, V> extends GreedyCachingGetter<Map<K, V>> {
 
         private MapLoader<K, V> loader;
 
-        public GreedyMapGetter(String objectName, MapLoader<K, V> loader) {
-            super(objectName);
+        public GreedyMapGetter(String objectName, CachePolicy cachePolicy, MapLoader<K, V> loader) {
+            super(objectName, cachePolicy);
             this.loader = loader;
         }
 
@@ -208,12 +209,12 @@ public abstract class TransactionAwareMap<K, V> extends TransactionAware<Map<K, 
         }
     }
 
-    protected static class LazyMapGetter<K, V> extends Getter<Map<K, V>, LazyMapCachedObject<K, V>> {
+    public static class LazyMapGetter<K, V> extends Getter<Map<K, V>, LazyMapCachedObject<K, V>> {
 
         protected MapValueLoader<V> loader;
 
-        public LazyMapGetter(String objectName, MapValueLoader<V> loader) {
-            super(objectName);
+        public LazyMapGetter(String objectName, CachePolicy cachePolicy, MapValueLoader<V> loader) {
+            super(objectName, cachePolicy);
             this.loader = loader;
         }
 
@@ -234,7 +235,6 @@ public abstract class TransactionAwareMap<K, V> extends TransactionAware<Map<K, 
             this.loader = loader;
             this.cachedMapEntries = new HashMap<>();
         }
-
 
         @Override
         public Map<K, V> getObject() {

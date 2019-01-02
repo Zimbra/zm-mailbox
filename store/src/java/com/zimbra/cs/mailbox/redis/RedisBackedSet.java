@@ -25,9 +25,11 @@ import com.zimbra.cs.mailbox.TransactionCacheTracker;
 
 public class RedisBackedSet<E> extends TransactionAwareSet<E> {
 
-    public RedisBackedSet(RSet<E> redisSet, TransactionCacheTracker cacheTracker) {
+    public RedisBackedSet(RSet<E> redisSet, TransactionCacheTracker cacheTracker,
+            ReadPolicy readPolicy, WritePolicy writePolicy, CachePolicy cachePolicy) {
         super(redisSet.getName(), cacheTracker,
-                new GreedySetGetter<>(redisSet.getName(), () -> redisSet.readAll()));
+                new GreedySetGetter<>(redisSet.getName(), cachePolicy, () -> redisSet.readAll()),
+                readPolicy, writePolicy);
     }
 
     public Collection<E> values() {

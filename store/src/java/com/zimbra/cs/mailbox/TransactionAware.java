@@ -56,7 +56,6 @@ public abstract class TransactionAware<V, C extends TransactionAware.Change> {
         this.transactionAccessor = getter;
         this.readPolicy = readPolicy;
         this.writePolicy = writePolicy;
-        ZimbraLog.cache.info("constructor: %s", this);
     }
 
     public String getName() {
