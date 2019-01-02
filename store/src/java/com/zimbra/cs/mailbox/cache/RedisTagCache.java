@@ -10,6 +10,9 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
+import com.zimbra.cs.mailbox.TransactionAware.CachePolicy;
+import com.zimbra.cs.mailbox.TransactionAware.ReadPolicy;
+import com.zimbra.cs.mailbox.TransactionAware.WritePolicy;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.RedissonClientHolder;
 import com.zimbra.cs.mailbox.Tag;
@@ -27,7 +30,7 @@ public class RedisTagCache extends RedisSharedStateCache<Tag> implements TagCach
         RedissonClient client = RedissonClientHolder.getInstance().getRedissonClient();
         String name2IdMapName = RedisUtils.createAccountRoutedKey(mbox.getAccountId(), "TAG_NAME2ID");
         RMap<String, Integer> rmap = client.getMap(name2IdMapName);
-        name2Id = new RedisBackedMap<>(rmap, cacheTracker);
+        name2Id = new RedisBackedMap<>(rmap, cacheTracker, ReadPolicy.ANYTIME, WritePolicy.ANYTIME, true, CachePolicy.THREAD_LOCAL);
     }
 
     private LocalTagCache getLocalCache() {

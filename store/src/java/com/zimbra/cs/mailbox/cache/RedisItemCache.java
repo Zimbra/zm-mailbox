@@ -17,6 +17,9 @@ import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.RedissonClientHolder;
+import com.zimbra.cs.mailbox.TransactionAware.CachePolicy;
+import com.zimbra.cs.mailbox.TransactionAware.ReadPolicy;
+import com.zimbra.cs.mailbox.TransactionAware.WritePolicy;
 import com.zimbra.cs.mailbox.TransactionCacheTracker;
 import com.zimbra.cs.mailbox.redis.RedisBackedLRUItemCache;
 import com.zimbra.cs.mailbox.redis.RedisBackedMap;
@@ -150,8 +153,15 @@ public class RedisItemCache extends MapItemCache<String> {
             RScoredSortedSet<Integer> rLruItemSet = client.getScoredSortedSet(itemSetName);
             RMap<Integer, String> rItemMap = client.getMap(itemMapName);
             RMap<String, Integer> rUuidMap = client.getMap(uuidMapName);
-            RedisBackedMap<Integer, String> itemMap = new RedisBackedMap<>(rItemMap, cacheTracker, false);
-            RedisBackedMap<String, Integer> uuidMap = new RedisBackedMap<>(rUuidMap, cacheTracker, false);
+            RedisBackedMap<Integer, String> itemMap = new RedisBackedMap<>(rItemMap, cacheTracker,
+                    ReadPolicy.TRANSACTION_ONLY,
+                    WritePolicy.TRANSACTION_ONLY,
+                    false, //lazy loading values
+                    CachePolicy.THREAD_LOCAL);
+            RedisBackedMap<String, Integer> uuidMap = new RedisBackedMap<>(rUuidMap, cacheTracker,
+                    ReadPolicy.TRANSACTION_ONLY,
+                    WritePolicy.TRANSACTION_ONLY,
+                    false, CachePolicy.THREAD_LOCAL);
             RedisBackedLRUItemCache lruItemSet = new RedisBackedLRUItemCache(rLruItemSet, rItemMap, cacheTracker);
             return new RedisItemCache(mbox, itemMap, uuidMap, lruItemSet);
         }
