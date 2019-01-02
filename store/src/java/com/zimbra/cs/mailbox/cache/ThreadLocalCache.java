@@ -24,7 +24,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.cache.Cache;
 import com.zimbra.common.util.ZimbraLog;
 
-public class ThreadLocalCache<V, G extends ThreadLocalCache.CachedObject<V>> {
+public class ThreadLocalCache<V, G extends CachedObject<V>> {
 
     protected String objectName;
     private Cache<Thread, G> transactionCache;
@@ -70,42 +70,5 @@ public class ThreadLocalCache<V, G extends ThreadLocalCache.CachedObject<V>> {
             .add("obj", objectName)
             .add("transactionCacheSize", transactionCache.size())
             .add("nonTransactionCacheSize", nonTransactionCache.size()).toString();
-    }
-
-    public static abstract class CachedObject<V> {
-
-        protected String objectName;
-
-        public CachedObject(String objectName) {
-            this.objectName = objectName;
-        }
-
-        public String getObjectName() {
-            return objectName;
-        }
-
-        public abstract V getObject();
-
-        @Override
-        public String toString() {
-            return MoreObjects.toStringHelper(this)
-                    .add("obj", objectName).toString();
-        }
-
-    }
-
-    public static class GreedyCachedObject<V> extends CachedObject<V> {
-
-        private V object;
-
-        public GreedyCachedObject(String objectName, V object) {
-            super(objectName);
-            this.object = object;
-        }
-
-        @Override
-        public V getObject() {
-            return object;
-        }
     }
 }
