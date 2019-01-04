@@ -130,13 +130,21 @@ public class FolderState extends MailItemState {
         return getIntField(F_PARENT_FOLDER).get();  /* note: can be null */
     }
 
+    public void setParentFolderById(int parentId) {
+        setParentFolderById(parentId, AccessMode.DEFAULT);
+    }
+
+    public void setParentFolderById(int parentId, AccessMode setMode) {
+        getField(F_PARENT_FOLDER).set(parentId, setMode);
+    }
+
     public void setParentFolder(Folder folder) {
         setParentFolder(folder, AccessMode.DEFAULT);
     }
 
     public void setParentFolder(Folder folder, AccessMode setMode) {
         if (folder != null) {
-            getField(F_PARENT_FOLDER).set(folder.getId(), setMode);
+            setParentFolderById(folder.getId(), setMode);
         }
     }
 
