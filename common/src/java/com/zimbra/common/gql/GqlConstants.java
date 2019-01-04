@@ -654,4 +654,9 @@ public class GqlConstants {
     public static final String TOKENIZE_KEY = "tokenizeKey";
     public static final String IS_OWNER = "isOwner";
     public static final String IS_MEMBER = "isMember";
+
+    //Task Constants
+    public static final String CLASS_CREATE_TASK_RESPONSE = "CreateTaskResponse";
+    public static final String CLASS_CREATE_TASK_EXCEPTION_RESPONSE = "CreateTaskExceptionResponse";
+    public static final String CLASS_MODIFY_TASK_RESPONSE = "ModifyTaskResponse";
 }
