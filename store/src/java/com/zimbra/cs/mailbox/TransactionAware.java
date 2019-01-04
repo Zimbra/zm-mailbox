@@ -109,11 +109,7 @@ public abstract class TransactionAware<V, C extends TransactionAware.Change> {
     }
 
     public void resetChanges() {
-        Changes<C> changes = getChanges();
-        if (changes.hasChanges()) {
-            ZimbraLog.cache.warn("clearing %d uncommitted changes for %s: %s", changes.size(), getName(), changes);
-        }
-        changes.reset();
+        getChanges().reset();
     }
 
     @Override
