@@ -226,7 +226,7 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
                 what = MailItem.constructItem(mbox, ud, true);
                 if (what instanceof Folder) {
                     Folder folder = ((Folder) what);
-                    folder.setParent(mbox.getFolderById(null, folder.getFolderId()));
+                    folder.setParentId(folder.getFolderId());
                 }
             } else if (changeMeta.whatType == ChangeMeta.ObjectType.MAILITEMTYPE) {
                 what = MailItem.Type.of(changeMeta.metaWhat);
@@ -245,7 +245,7 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
                 preModifyObj = MailItem.constructItem(mbox, ud, true);
                 if (preModifyObj instanceof Folder) {
                     Folder folder = ((Folder) preModifyObj);
-                    folder.setParent(mbox.getFolderById(null, folder.getFolderId()));
+                    folder.setParentId(folder.getFolderId());
                 }
             } else if (changeMeta.preModifyObjType == ChangeMeta.ObjectType.MAILITEMTYPE) {
                 preModifyObj = MailItem.Type.of(changeMeta.metaPreModifyObj);
@@ -354,8 +354,7 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
                 MailItem item = MailItem.constructItem(mbox, ud, true);
                 if (item instanceof Folder) {
                     Folder folder = ((Folder) item);
-                    folder.setParent(mbox.getFolderById(null, folder.getFolderId()));
-
+                    folder.setParentId(folder.getFolderId());
                 }
                 ModificationKeyMeta keyMeta = ModificationKeyMeta.fromString(entry.getKey());
                 PendingModifications.ModificationKey key = new PendingModifications.ModificationKey(
