@@ -100,6 +100,11 @@ public abstract class TransactionAwareLRUItemCache extends TransactionAware<LRUI
         public LRUClearOp() {
             super(ChangeType.CLEAR);
         }
+
+        @Override
+        public String toString() {
+            return toStringHelper().toString();
+        }
     }
 
     @FunctionalInterface
