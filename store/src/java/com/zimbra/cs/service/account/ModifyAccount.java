@@ -90,6 +90,10 @@ public class ModifyAccount extends AccountDocumentHandler {
 
         // pass in true to checkImmutable
         prov.modifyAttrs(account, attrs, true, zsc.getAuthToken());
+        // get account again, in the case when zimbraCOSId or zimbraForeignPrincipal
+        // is changed, the cache object(he one we are holding on to) would'd been
+        // flushed out from cache. Get the account again to get the fresh one.
+        account = getAuthenticatedAccount(zsc);
 
         ZimbraLog.security
                 .info(ZimbraLog.encodeAttrs(new String[] { "cmd", "ModifyAccount", "name", account.getName() }, attrs));
