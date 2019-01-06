@@ -117,7 +117,7 @@ public final class EhcacheManager {
         return CacheConfigurationBuilder.newCacheConfigurationBuilder(String.class,
                 ImapFolder.class,
                 ResourcePoolsBuilder.newResourcePoolsBuilder()
-                .heap(1, EntryUnit.ENTRIES)
+                .heap(10, EntryUnit.ENTRIES)
                 .offheap(inactiveSessionCache, MemoryUnit.B)
                 .disk(maxBytesOnLocalDisk, MemoryUnit.B, true)) // disk backed persistent store
                 .build();
