@@ -2,17 +2,25 @@ package com.zimbra.cs.mailbox;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 import org.redisson.api.RTopic;
 import org.redisson.api.RedissonClient;
 import org.redisson.api.listener.MessageListener;
 
+import com.google.common.collect.Iterators;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.mailbox.cache.CachedObjectRegistry;
+import com.zimbra.cs.mailbox.cache.CachedObjectRegistry.CachedObjectKey;
+import com.zimbra.cs.mailbox.cache.CachedObjectRegistry.CachedObjectKeyType;
 import com.zimbra.cs.session.PendingLocalModifications;
 import com.zimbra.cs.session.PendingLocalModifications.PendingModificationSnapshot;
+import com.zimbra.cs.session.PendingModifications.Change;
+import com.zimbra.cs.session.PendingModifications.ModificationKey;
 import com.zimbra.cs.session.Session.SourceSessionInfo;
 import com.zimbra.cs.session.Session.Type;
 
@@ -156,11 +164,50 @@ public class RedisPubSub extends NotificationPubSub {
             PendingLocalModifications mods;
             try {
                 mods = PendingLocalModifications.fromSnapshot(subscriber.getMailbox(), msg.modification);
+                clearRedisCachedValues(subscriber.getMailbox(), mods, msg.changeId);
                 subscriber.notifyListeners(mods, msg.changeId, msg.source, msg.sourceMailboxHash, true);
             } catch (ServiceException e) {
                 ZimbraLog.mailbox.error(
                                 "unable to deserialize notifications for accountId=%s, changeId=%s, channel=%s",
                         notificationAcctId, msg.changeId, channel, e);
+            }
+        }
+
+        private void clearRedisCachedValues(Mailbox mbox, PendingLocalModifications mods, int changeId) {
+            CachedObjectRegistry cachedObjects = mbox.getCachedObjects();
+            Set<Integer> changedFolders = mods.getAllChangedFolders();
+            int numCleared = 0;
+            if (!changedFolders.isEmpty()) {
+                for (Integer folderId: changedFolders) {
+                    cachedObjects.invalidate(new CachedObjectKey(CachedObjectKeyType.MAILITEM, folderId));
+                    numCleared++;
+                }
+            }
+            Iterator<Map.Entry<ModificationKey, Change>> changeIterator;
+
+            boolean hasMods = mods.modified != null;
+            boolean hasDeletes = mods.deleted != null;
+
+            if (!hasMods && !hasDeletes) {
+                return;
+            }
+            if (hasMods && hasDeletes) {
+                changeIterator = Iterators.concat(mods.modified.entrySet().iterator(), mods.deleted.entrySet().iterator());
+            } else if (hasMods) {
+                changeIterator = mods.modified.entrySet().iterator();
+            } else {
+                changeIterator = mods.deleted.entrySet().iterator();
+            }
+            while (changeIterator.hasNext()) {
+                Map.Entry<ModificationKey, Change> mod = changeIterator.next();
+                Integer itemId = mod.getKey().getItemId();
+                if (itemId != 0) {
+                    cachedObjects.invalidate(new CachedObjectKey(CachedObjectKeyType.MAILITEM, itemId));
+                    numCleared++;
+                }
+            }
+            if (ZimbraLog.cache.isTraceEnabled()) {
+                ZimbraLog.cache.trace("invalidated %s cached redis objects for account %s (changeId=%s)", numCleared, mbox.getAccountId(), changeId);
             }
         }
 

@@ -19,13 +19,13 @@ package com.zimbra.cs.mailbox;
 
 import java.util.Collection;
 
+import com.zimbra.cs.mailbox.cache.CachedObject;
 import com.zimbra.cs.mailbox.cache.LRUItemCache;
-import com.zimbra.cs.mailbox.cache.ThreadLocalCache.CachedObject;
 
 public abstract class TransactionAwareLRUItemCache extends TransactionAware<LRUItemCache, TransactionAwareLRUItemCache.LRUCacheChange> implements LRUItemCache {
 
     public TransactionAwareLRUItemCache(String name, TransactionCacheTracker cacheTracker, Getter<LRUItemCache, ?> getter) {
-        super(name, cacheTracker, getter);
+        super(name, cacheTracker, getter, ReadPolicy.TRANSACTION_ONLY, WritePolicy.TRANSACTION_ONLY, true);
     }
 
     @Override
@@ -100,6 +100,11 @@ public abstract class TransactionAwareLRUItemCache extends TransactionAware<LRUI
         public LRUClearOp() {
             super(ChangeType.CLEAR);
         }
+
+        @Override
+        public String toString() {
+            return toStringHelper().toString();
+        }
     }
 
     @FunctionalInterface
@@ -145,7 +150,7 @@ public abstract class TransactionAwareLRUItemCache extends TransactionAware<LRUI
         LRUCacheTrimAction action;
 
         public LRUCacheGetter(String objectName, LRUCacheTrimAction action) {
-            super(objectName);
+            super(objectName, CachePolicy.THREAD_LOCAL);
             this.action = action;
         }
 

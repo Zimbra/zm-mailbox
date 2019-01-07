@@ -23,21 +23,28 @@ import java.util.stream.Collectors;
 
 import com.google.common.base.Joiner;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.mailbox.cache.CachedObjectRegistry;
 
 public abstract class TransactionCacheTracker implements TransactionListener {
 
     protected Mailbox mbox;
     protected ThreadLocal<Set<TransactionAware<?,?>>> touchedItems;
     private ThreadLocal<Boolean> inTransaction;
+    protected CachedObjectRegistry cachedObjects;
 
     public TransactionCacheTracker(Mailbox mbox) {
         this.mbox = mbox;
         touchedItems = ThreadLocal.withInitial(() -> new HashSet<>());
         inTransaction = ThreadLocal.withInitial(() -> false);
+        cachedObjects = new CachedObjectRegistry(mbox);
     }
 
     public void addToTracker(TransactionAware<?,?> item) {
-        touchedItems.get().add(item);
+        if (touchedItems.get().add(item)) {
+            if (ZimbraLog.cache.isTraceEnabled()) {
+                ZimbraLog.cache.trace("added %s to cache tracker", item);
+            }
+        }
     }
 
     private boolean hasChanges() {
@@ -53,6 +60,7 @@ public abstract class TransactionCacheTracker implements TransactionListener {
         if (endChange) {
             processItems(touchedItems.get());
             resetChanges();
+            clearTouchedItems();
             inTransaction.set(false);
         }
     }
@@ -66,8 +74,6 @@ public abstract class TransactionCacheTracker implements TransactionListener {
                         .filter(item -> item.hasChanges()).map(item -> item.getName()).collect(Collectors.toList());
                 ZimbraLog.cache.warn("maps with changes exist at the beginning of a transaction! %s", Joiner.on(",").join(mapsWithChanges));
             }
-            //clear out any caches built by getters invoked *outside* of a transaction
-            clearTouchedItems();
         }
     }
 
@@ -92,6 +98,11 @@ public abstract class TransactionCacheTracker implements TransactionListener {
         clearTouchedItems();
     }
 
+    public boolean isInTransaction() {
+        return inTransaction.get();
+    }
+
+
     protected void clearTouchedItems(Set<TransactionAware<?,?>> items) {
         items.stream().forEach(item -> item.clearLocalCache());
     }
@@ -105,7 +116,7 @@ public abstract class TransactionCacheTracker implements TransactionListener {
         touchedByThisThread.clear();
     }
 
-    public boolean isInTransaction() {
-        return inTransaction.get();
+    public CachedObjectRegistry getCachedObjects() {
+        return cachedObjects;
     }
 }

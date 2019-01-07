@@ -14,6 +14,9 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.RedissonClientHolder;
+import com.zimbra.cs.mailbox.TransactionAware.CachePolicy;
+import com.zimbra.cs.mailbox.TransactionAware.ReadPolicy;
+import com.zimbra.cs.mailbox.TransactionAware.WritePolicy;
 import com.zimbra.cs.mailbox.TransactionCacheTracker;
 import com.zimbra.cs.mailbox.redis.RedisBackedMap;
 import com.zimbra.cs.mailbox.redis.RedisBackedSet;
@@ -29,10 +32,10 @@ public class RedisFolderCache extends RedisSharedStateCache<Folder> implements F
         RedissonClient client = RedissonClientHolder.getInstance().getRedissonClient();
         String uuid2IdMapName = RedisUtils.createAccountRoutedKey(mbox.getAccountId(), "FOLDER_UUID2ID");
         RMap<String, Integer> rmap  = client.getMap(uuid2IdMapName);
-        uuid2IdMap = new RedisBackedMap<>(rmap, cacheTracker);
+        uuid2IdMap = new RedisBackedMap<>(rmap, cacheTracker, ReadPolicy.ANYTIME, WritePolicy.ANYTIME, true, CachePolicy.THREAD_LOCAL);
         String idSetName = RedisUtils.createAccountRoutedKey(mbox.getAccountId(), "FOLDER_IDS");
         RSet<Integer> rset = client.getSet(idSetName);
-        idSet = new RedisBackedSet<>(rset, cacheTracker);
+        idSet = new RedisBackedSet<>(rset, cacheTracker, ReadPolicy.ANYTIME, WritePolicy.ANYTIME, CachePolicy.THREAD_LOCAL);
     }
 
     @Override

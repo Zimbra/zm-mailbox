@@ -8,6 +8,9 @@ import org.redisson.client.RedisException;
 
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Mailbox.MailboxData;
+import com.zimbra.cs.mailbox.TransactionAware.CachePolicy;
+import com.zimbra.cs.mailbox.TransactionAwareMap.GreedyMapGetter;
+import com.zimbra.cs.mailbox.TransactionAwareMap.MapLoader;
 import com.zimbra.cs.mailbox.redis.RedisBackedMap;
 import com.zimbra.cs.mailbox.redis.RedisUtils;
 
@@ -24,7 +27,7 @@ public class RedisMailboxState extends MailboxState {
     protected void init() {
         client = RedissonClientHolder.getInstance().getRedissonClient();
         RMap<String, Object> redisHash = client.getMap(RedisUtils.createAccountRoutedKey(data.accountId, "MAILBOX"));
-        redisMap = new RedisBackedMap<>(redisHash, cacheTracker);
+        redisMap = new MailboxMap(redisHash, cacheTracker);
         super.init();
     }
     @Override
@@ -93,6 +96,20 @@ public class RedisMailboxState extends MailboxState {
         public MailboxState getMailboxState(MailboxData data, TransactionCacheTracker tracker) {
             return new RedisMailboxState(data, tracker);
         }
+    }
 
+    private class MailboxGetter<K, V> extends GreedyMapGetter<K, V> {
+
+        public MailboxGetter(String objectName, MapLoader<K, V> loader) {
+            super(objectName, CachePolicy.THREAD_LOCAL, loader);
+        }
+    }
+
+    private class MailboxMap extends RedisBackedMap<String, Object> {
+
+        public MailboxMap(RMap<String, Object> redisMap, TransactionCacheTracker cacheTracker) {
+            super(redisMap, cacheTracker, new MailboxGetter<>(redisMap.getName(), () -> redisMap.readAllMap()),
+                    ReadPolicy.ANYTIME, WritePolicy.ANYTIME);
+        }
     }
 }
