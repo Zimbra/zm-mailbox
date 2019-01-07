@@ -13,11 +13,45 @@ references:
    default_attach_workspace: &default_attach_workspace
          attach_workspace:
             at: /home/build/
+   install_docker_client: &install_docker_client
+       run:
+          name: Installing Docker client
+          command: |
+            set -x
+            VER="17.03.0-ce"
+            curl -L -o /tmp/docker-$VER.tgz https://download.docker.com/linux/static/stable/x86_64/docker-$VER.tgz
+            tar -xz -C /tmp -f /tmp/docker-$VER.tgz
+            sudo mv /tmp/docker/* /usr/bin
+   load_env: &load_env
+       run: echo 'source $PWD/.env' >> $BASH_ENV
+   build_docker_context: &build_docker_context
+       run:
+          name: Building docker context
+          command: |
+            echo "Building the docker context file"
+            mkdir -p "$BUILD"/zm-docker/BUILDS/latest
+            cp -r "$BUILD"/BUILDS/UBUNTU16_64-ZIMBRAX-890-*/archives "$BUILD"/zm-docker/BUILDS/latest || echo ""
+   install_python: &install_python
+       run:
+          name: Installing python
+          command: |
+            sudo apt update
+            sudo apt install -y python
+   start_apt_catcher_ng: &start_apt_catcher_ng
+       run:
+          name: Starting apt-cacher-ng
+          command: |
+            docker pull sameersbn/apt-cacher-ng:latest
+            docker run --name apt-cacher-ng -d --rm --publish 3142:3142 --volume APT-CACHER-NG:/var/cache/apt-cacher-ng sameersbn/apt-cacher-ng:latest
    filter_branches: &filter_branches
      filters:
        branches:
          ignore:
            - develop 
+   add_ssh_keys: &add_ssh_keys
+     add_ssh_keys:
+       fingerprints:
+         - "c5:cd:65:2e:89:6a:50:c2:4d:ad:21:43:d1:d4:92:87"
 ############################################################################
 
 jobs:
@@ -36,6 +70,11 @@ jobs:
             echo "Docker User: $DOCKER_USER"
             echo "Sanitized branch name: $SANITIZED_BRANCH"
             echo "SANITIZED_BRANCH=$SANITIZED_BRANCH" | tee -a .env;
+      - run:
+          name: Cloning zm-mailbox...
+          command: |
+            cd "$BUILD"
+            [ ! -z "$DOCKER_USER" ] && git clone --depth=1 --branch develop git@github.com:ZimbraOS/zm-mailbox.git zm-mailbox || exit 1
       - persist_to_workspace:
           root: /home/build/
           paths:
@@ -49,6 +88,7 @@ jobs:
       - run:
           name: Building 'zm-mailbox/native'
           command: |
+            cd "$BUILD/zm-mailbox"
             ant -f native/build.xml compile publish-local
       - persist_to_workspace:
           root: /home/build/
@@ -62,6 +102,7 @@ jobs:
       - run:
           name: Building 'zm-mailbox/common'
           command: | 
+            cd "$BUILD/zm-mailbox"
             ant -f common/build.xml compile publish-local
       - persist_to_workspace:
           root: /home/build/
@@ -75,6 +116,7 @@ jobs:
       - run:
           name: Building 'zm-mailbox/soap'
           command: |
+            cd "$BUILD/zm-mailbox" 
             ant -f soap/build.xml compile publish-local
       - persist_to_workspace:
           root: /home/build/
@@ -88,6 +130,7 @@ jobs:
       - run:
           name: Building 'zm-mailbox/client'
           command: |
+            cd "$BUILD/zm-mailbox"
             ant -f client/build.xml compile publish-local
       - persist_to_workspace:
           root: /home/build/
@@ -101,6 +144,7 @@ jobs:
       - run:
           name: Building 'zm-mailbox/store'
           command: |
+            cd "$BUILD/zm-mailbox"
             ant -f store/build.xml compile publish-local
       - persist_to_workspace:
           root: /home/build/
@@ -114,6 +158,7 @@ jobs:
       - run:
           name: Running unit tests for 'zm-mailbox/native'
           command: |
+            cd "$BUILD/zm-mailbox"
             set -e
             ant -Dhalt-on-failure=true -f native/build.xml test
       - store_test_results:
@@ -127,6 +172,7 @@ jobs:
       - run:
           name: Running unit tests for 'zm-mailbox/common'
           command: |
+            cd "$BUILD/zm-mailbox"
             set -e
             ant -Dhalt-on-failure=true -f common/build.xml test
       - store_test_results:
@@ -140,6 +186,7 @@ jobs:
       - run:
           name: Running unit tests for 'zm-mailbox/soap'
           command: |
+            cd "$BUILD/zm-mailbox"
             set -e
             ant -Dhalt-on-failure=true -f soap/build.xml test
       - store_test_results:
@@ -153,6 +200,7 @@ jobs:
       - run:
           name: Running unit tests for 'zm-mailbox/client'
           command: |
+            cd "$BUILD/zm-mailbox"
             set -e
             ant -Dhalt-on-failure=true -f client/build.xml test
       - store_test_results:
@@ -166,12 +214,404 @@ jobs:
       - run:
           name: Running unit tests for 'zm-mailbox/store'
           command: |
+            cd "$BUILD/zm-mailbox"
             set -e 
             ant -Dhalt-on-failure=true -f store/build.xml test
       - store_test_results:
           path: "$BUILD/zm-mailbox/store/build/test/report"
       - store_artifacts:
           path: "$BUILD/zm-mailbox/store/build/test/report"
+  checkout_and_build_installer:
+    <<: *default_environment_settings
+    steps:
+      - *default_attach_workspace
+      - run:
+          name: Preparing to build installer - checking out zm-build & zm-docker
+          command: |
+            cd "$BUILD"
+            [ ! -z "$DOCKER_USER" ] && git clone --depth=1 --branch develop git@github.com:ZimbraOS/zm-build.git zm-build || echo "Skipping zm-build checkout"
+            [ ! -z "$DOCKER_USER" ] && git clone --depth=1 --branch develop git@github.com:ZimbraOS/zm-docker.git zm-docker || echo "Skipping zm-docker checkout"
+      - run:
+          name: Building Zimbra Installer package + debian files
+          command: |
+            touch /home/build/zm-docker/.env
+            [ ! -z "$DOCKER_USER" ] && cd "$BUILD"/zm-build || echo ""
+            [ ! -z "$DOCKER_USER" ] && cp "$BUILD/zm-mailbox/.circleci/images/zmc-mailbox/config.build" "$BUILD"/zm-build  || echo ""
+            [ ! -z "$DOCKER_USER" ] && echo "BUILD_NO=$CIRCLE_BUILD_NUM" >> "$BUILD"/zm-build/config.build  || echo ""
+            [ ! -z "$DOCKER_USER" ] && ./build.pl || echo "Skipping building the installer" || echo ""
+      - persist_to_workspace:
+          root: /home/build/
+          paths:
+            - zm-build
+            - zm-mailbox
+            - zm-docker 
+            - BUILDS
+            - .zcs-deps
+            - .staging
+  build_and_deploy_zmcbase_container_images:
+    <<: *default_environment_settings
+    steps:
+      - *default_attach_workspace
+      - setup_remote_docker
+      - *install_docker_client
+      - *load_env
+      - *build_docker_context
+      - *install_python
+      - *start_apt_catcher_ng
+      - run:
+          name: Building zmc-base container image
+          command: |
+            cd "$BUILD"/zm-docker
+            cp _base/Dockerfile .
+            tar zcvf docker-context.tgz *
+            python -m SimpleHTTPServer &
+            docker build --build-arg "PACKAGE_CNF=_conf/pkg-list.in" --build-arg "PACKAGE_KEY=_conf/pkg-key.in" -t zmc-base http://$(hostname):8000/docker-context.tgz
+      - run:
+          name: Going to push zmc-base container image
+          command: |
+            docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
+            export CONTAINERNAME="zmc-base"
+            docker tag "${CONTAINERNAME}" "${DOCKER_REPO_NS}/${CONTAINERNAME}:pretest-${SANITIZED_BRANCH}"
+            docker push "${DOCKER_REPO_NS}/${CONTAINERNAME}:pretest-${SANITIZED_BRANCH}"
+  build_and_deploy_zmcldap_container_images:
+    <<: *default_environment_settings
+    steps:
+      - *default_attach_workspace
+      - setup_remote_docker
+      - *install_docker_client
+      - *load_env
+      - *build_docker_context
+      - *install_python
+      - *start_apt_catcher_ng
+      - run:
+          name: Building zmc-ldap container image
+          command: |
+            docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
+            cd "$BUILD"/zm-docker
+            cp ldap/Dockerfile .
+            tar zcvf "$BUILD/docker-context.tgz" *
+            cd "$BUILD"; python -m SimpleHTTPServer &
+            docker build -t zmc-ldap --build-arg "DOCKER_REPO_NS=$DOCKER_REPO_NS" --build-arg "DOCKER_BUILD_TAG=pretest-${SANITIZED_BRANCH}" --build-arg "DOCKER_CACHE_TAG=$DOCKER_CACHE_TAG" --build-arg "LOCAL_SRC_DIR=." http://$(hostname):8000/docker-context.tgz
+      - run:
+          name: Going to push zmc-ldap container image
+          command: |
+            docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
+            export CONTAINERNAME="zmc-ldap"
+            docker tag "${CONTAINERNAME}" "${DOCKER_REPO_NS}/${CONTAINERNAME}:pretest-${SANITIZED_BRANCH}"
+            docker push "${DOCKER_REPO_NS}/${CONTAINERNAME}:pretest-${SANITIZED_BRANCH}"
+  build_and_deploy_zmcmta_container_images:
+    <<: *default_environment_settings
+    steps:
+      - *default_attach_workspace
+      - setup_remote_docker
+      - *install_docker_client
+      - *load_env
+      - *build_docker_context
+      - *install_python
+      - *start_apt_catcher_ng
+      - run:
+          name: Building zmc-mta container image
+          command: |
+            docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
+            cd "$BUILD"/zm-docker
+            cp mta/Dockerfile .
+            tar zcvf "$BUILD/docker-context.tgz" *
+            cd "$BUILD"; python -m SimpleHTTPServer &
+            docker build -t zmc-mta --build-arg "DOCKER_REPO_NS=$DOCKER_REPO_NS" --build-arg "DOCKER_BUILD_TAG=pretest-${SANITIZED_BRANCH}" --build-arg "DOCKER_CACHE_TAG=$DOCKER_CACHE_TAG" --build-arg "LOCAL_SRC_DIR=." http://$(hostname):8000/docker-context.tgz
+      - run:
+          name: Going to push zmc-mta container image
+          command: |
+            docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
+            export CONTAINERNAME="zmc-mta"
+            docker tag "${CONTAINERNAME}" "${DOCKER_REPO_NS}/${CONTAINERNAME}:pretest-${SANITIZED_BRANCH}"
+            docker push "${DOCKER_REPO_NS}/${CONTAINERNAME}:pretest-${SANITIZED_BRANCH}"
+  build_and_deploy_zmcmailbox_container_images:
+    <<: *default_environment_settings
+    steps:
+      - *default_attach_workspace
+      - setup_remote_docker
+      - *install_docker_client
+      - *load_env
+      - *build_docker_context
+      - *install_python
+      - *start_apt_catcher_ng
+      - run:
+          name: Building zmc-mailbox container image
+          command: |
+            docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
+            cd "$BUILD"/zm-docker
+            cp mailbox/Dockerfile .
+            tar zcvf "$BUILD/docker-context.tgz" *
+            cd "$BUILD"; python -m SimpleHTTPServer &
+            docker build -t zmc-mailbox --build-arg "DOCKER_REPO_NS=$DOCKER_REPO_NS" --build-arg "DOCKER_BUILD_TAG=pretest-${SANITIZED_BRANCH}" --build-arg "DOCKER_CACHE_TAG=$DOCKER_CACHE_TAG" --build-arg "LOCAL_SRC_DIR=." http://$(hostname):8000/docker-context.tgz
+      - run:
+          name: Going to push zmc-mailbox container image
+          command: |
+            docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
+            export CONTAINERNAME="zmc-mailbox"
+            docker tag "${CONTAINERNAME}" "${DOCKER_REPO_NS}/${CONTAINERNAME}:pretest-${SANITIZED_BRANCH}"
+            docker push "${DOCKER_REPO_NS}/${CONTAINERNAME}:pretest-${SANITIZED_BRANCH}"
+  build_and_deploy_zmcmailbox_debug_container_images:
+    <<: *default_environment_settings
+    steps:
+      - *default_attach_workspace
+      - setup_remote_docker
+      - *install_docker_client
+      - *load_env
+      - *build_docker_context
+      - *install_python
+      - *start_apt_catcher_ng
+      - run:
+          name: Create debug healthcheck.py file
+          command: |
+            echo "generate-healthcheck started.."
+            cd "$BUILD"/zm-docker/mailbox_debug
+            cp ../mailbox/healthcheck.py healthcheck_base.py
+            split -l 10 healthcheck_base.py
+            cat xaa healthcheck_debug.py xa[b-z] > healthcheck.py
+            sed -i 's/\    main/    main_debug/' healthcheck.py
+            rm xa*
+            echo "generate-healthcheck finished.."
+      - run:
+          name: Building zmc-mailbox_debug container image
+          command: |
+            docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
+            cd "$BUILD"/zm-docker
+            cp mailbox_debug/Dockerfile .
+            cat Dockerfile | sed 's/healthcheck/healthcheck_debug/g' > Docker.tmp
+            mv Docker.tmp Dockerfile
+            tar zcvf "$BUILD/docker-context.tgz" *
+            cd "$BUILD"; python -m SimpleHTTPServer &
+            docker build -t zmc-mailbox_debug --build-arg "DOCKER_REPO_NS=$DOCKER_REPO_NS" --build-arg "DOCKER_BUILD_TAG=pretest-${SANITIZED_BRANCH}" --build-arg "DOCKER_CACHE_TAG=$DOCKER_CACHE_TAG" --build-arg "LOCAL_SRC_DIR=." http://$(hostname):8000/docker-context.tgz
+      - run:
+          name: Going to push zmc-mailbox_debug container image
+          command: |
+            docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
+            export CONTAINERNAME="zmc-mailbox_debug"
+            docker tag "${CONTAINERNAME}" "${DOCKER_REPO_NS}/${CONTAINERNAME}:pretest-${SANITIZED_BRANCH}"
+            docker push "${DOCKER_REPO_NS}/${CONTAINERNAME}:pretest-${SANITIZED_BRANCH}"
+  build_and_deploy_zmcmysqlproxy_container_images:
+    <<: *default_environment_settings
+    steps:
+      - *default_attach_workspace
+      - setup_remote_docker
+      - *install_docker_client
+      - *load_env
+      - *build_docker_context
+      - *install_python
+      - *start_apt_catcher_ng
+      - run:
+          name: Building zmc-mysql-proxy container image
+          command: |
+            docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
+            cd "$BUILD"/zm-docker
+            cp mysql-proxy/Dockerfile .
+            tar zcvf "$BUILD/docker-context.tgz" *
+            cd "$BUILD"; python -m SimpleHTTPServer &
+            docker build -t zmc-mysql-proxy --build-arg "DOCKER_REPO_NS=$DOCKER_REPO_NS" --build-arg "DOCKER_BUILD_TAG=pretest-${SANITIZED_BRANCH}" --build-arg "DOCKER_CACHE_TAG=$DOCKER_CACHE_TAG" --build-arg "LOCAL_SRC_DIR=." http://$(hostname):8000/docker-context.tgz
+      - run:
+          name: Going to push zmc-mysql-proxy container image
+          command: |
+            docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
+            export CONTAINERNAME="zmc-mysql-proxy"
+            docker tag "${CONTAINERNAME}" "${DOCKER_REPO_NS}/${CONTAINERNAME}:pretest-${SANITIZED_BRANCH}"
+            docker push "${DOCKER_REPO_NS}/${CONTAINERNAME}:pretest-${SANITIZED_BRANCH}"
+  build_and_deploy_zmcmysqllocal_container_images:
+    <<: *default_environment_settings
+    steps:
+      - *default_attach_workspace
+      - setup_remote_docker
+      - *install_docker_client
+      - *load_env
+      - *build_docker_context
+      - *install_python
+      - *start_apt_catcher_ng
+      - run:
+          name: Building zmc-mysql-local container image
+          command: |
+            docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
+            cd "$BUILD"/zm-docker
+            cp mysql-local/Dockerfile .
+            tar zcvf "$BUILD/docker-context.tgz" *
+            cd "$BUILD"; python -m SimpleHTTPServer &
+            docker build -t zmc-mysql-local --build-arg "DOCKER_REPO_NS=$DOCKER_REPO_NS" --build-arg "DOCKER_BUILD_TAG=pretest-${SANITIZED_BRANCH}" --build-arg "DOCKER_CACHE_TAG=$DOCKER_CACHE_TAG" --build-arg "LOCAL_SRC_DIR=." http://$(hostname):8000/docker-context.tgz
+      - run:
+          name: Going to push zmc-mysql-local container image
+          command: |
+            docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
+            export CONTAINERNAME="zmc-mysql-local"
+            docker tag "${CONTAINERNAME}" "${DOCKER_REPO_NS}/${CONTAINERNAME}:pretest-${SANITIZED_BRANCH}"
+            docker push "${DOCKER_REPO_NS}/${CONTAINERNAME}:pretest-${SANITIZED_BRANCH}"
+  build_and_deploy_zmcproxy_container_images:
+    <<: *default_environment_settings
+    steps:
+      - *default_attach_workspace
+      - setup_remote_docker
+      - *install_docker_client
+      - *load_env
+      - *build_docker_context
+      - *install_python
+      - *start_apt_catcher_ng
+      - run:
+          name: Building zmc-proxy container image
+          command: |
+            docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
+            cd "$BUILD"/zm-docker
+            cp proxy/Dockerfile .
+            tar zcvf "$BUILD/docker-context.tgz" *
+            cd "$BUILD"; python -m SimpleHTTPServer &
+            docker build -t zmc-proxy --build-arg "DOCKER_REPO_NS=$DOCKER_REPO_NS" --build-arg "DOCKER_BUILD_TAG=pretest-${SANITIZED_BRANCH}" --build-arg "DOCKER_CACHE_TAG=$DOCKER_CACHE_TAG" --build-arg "LOCAL_SRC_DIR=." http://$(hostname):8000/docker-context.tgz
+      - run:
+          name: Going to push zmc-proxy container image
+          command: |
+            docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
+            export CONTAINERNAME="zmc-proxy"
+            docker tag "${CONTAINERNAME}" "${DOCKER_REPO_NS}/${CONTAINERNAME}:pretest-${SANITIZED_BRANCH}"
+            docker push "${DOCKER_REPO_NS}/${CONTAINERNAME}:pretest-${SANITIZED_BRANCH}"
+  build_and_deploy_zmczookeeper_container_images:
+    <<: *default_environment_settings
+    steps:
+      - *default_attach_workspace
+      - setup_remote_docker
+      - *install_docker_client
+      - *load_env
+      - *build_docker_context
+      - *install_python
+      - *start_apt_catcher_ng
+      - run:
+          name: Building zmc-zookeeper container image
+          command: |
+            docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
+            cd "$BUILD"/zm-docker
+            cp zk/Dockerfile .
+            tar zcvf "$BUILD/docker-context.tgz" *
+            cd "$BUILD"; python -m SimpleHTTPServer &
+            docker build -t zmc-zookeeper --build-arg "DOCKER_REPO_NS=$DOCKER_REPO_NS" --build-arg "DOCKER_BUILD_TAG=pretest-${SANITIZED_BRANCH}" --build-arg "DOCKER_CACHE_TAG=$DOCKER_CACHE_TAG" --build-arg "LOCAL_SRC_DIR=." http://$(hostname):8000/docker-context.tgz
+          no_output_timeout: 30m
+      - run:
+          name: Going to push zmc-zookeeper container image
+          command: |
+            docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
+            export CONTAINERNAME="zmc-zookeeper"
+            docker tag "${CONTAINERNAME}" "${DOCKER_REPO_NS}/${CONTAINERNAME}:pretest-${SANITIZED_BRANCH}"
+            docker push "${DOCKER_REPO_NS}/${CONTAINERNAME}:pretest-${SANITIZED_BRANCH}"
+  build_and_deploy_zmcsolr_container_images:
+    <<: *default_environment_settings
+    steps:
+      - *default_attach_workspace
+      - setup_remote_docker
+      - *install_docker_client
+      - *load_env
+      - *build_docker_context
+      - *install_python
+      - *start_apt_catcher_ng
+      - run:
+          name: Building zmc-solr container image
+          command: |
+            docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
+            cd "$BUILD"/zm-docker
+            cp solr/Dockerfile .
+            tar zcvf "$BUILD/docker-context.tgz" *
+            cd "$BUILD"; python -m SimpleHTTPServer &
+            docker build -t zmc-solr --build-arg "DOCKER_REPO_NS=$DOCKER_REPO_NS" --build-arg "DOCKER_BUILD_TAG=pretest-${SANITIZED_BRANCH}" --build-arg "DOCKER_CACHE_TAG=$DOCKER_CACHE_TAG" --build-arg "LOCAL_SRC_DIR=." http://$(hostname):8000/docker-context.tgz
+      - run:
+          name: Going to push zmc-solr container image
+          command: |
+            docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
+            export CONTAINERNAME="zmc-solr"
+            docker tag "${CONTAINERNAME}" "${DOCKER_REPO_NS}/${CONTAINERNAME}:pretest-${SANITIZED_BRANCH}"
+            docker push "${DOCKER_REPO_NS}/${CONTAINERNAME}:pretest-${SANITIZED_BRANCH}"
+  build_and_deploy_zmcredismaster_container_images:
+    <<: *default_environment_settings
+    steps:
+      - *default_attach_workspace
+      - setup_remote_docker
+      - *install_docker_client
+      - *load_env
+      - *build_docker_context
+      - *install_python
+      - *start_apt_catcher_ng
+      - run:
+          name: Building zmc-redismaster container image
+          command: |
+            docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
+            echo "SANITIZED_BRANCH = ${SANITIZED_BRANCH}"
+            cd "$BUILD"/zm-docker
+            cp redis_master/Dockerfile .
+            tar zcvf "$BUILD/docker-context.tgz" *
+            cd "$BUILD"; python -m SimpleHTTPServer &
+            docker build -t zmc-redismaster --build-arg "DOCKER_REPO_NS=$DOCKER_REPO_NS" --build-arg "DOCKER_BUILD_TAG=pretest-${SANITIZED_BRANCH}" --build-arg "DOCKER_CACHE_TAG=$DOCKER_CACHE_TAG" --build-arg "LOCAL_SRC_DIR=." http://$(hostname):8000/docker-context.tgz
+      - run:
+          name: Going to push zmc-redismaster container image
+          command: |
+            docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
+            export CONTAINERNAME="zmc-redismaster"
+            docker tag "${CONTAINERNAME}" "${DOCKER_REPO_NS}/${CONTAINERNAME}:pretest-${SANITIZED_BRANCH}"
+            docker push "${DOCKER_REPO_NS}/${CONTAINERNAME}:pretest-${SANITIZED_BRANCH}"
+  deploy_to_swarm:
+    <<: *default_environment_settings
+    steps:
+      - *default_attach_workspace
+      - *add_ssh_keys
+      - *load_env
+      - run:
+          name: setup known_hosts file for infrastructure-dev-deploy1
+          command: echo '|1|3fcLe5kmPGpsjzORR/oUJLC2UjY=|LHn6j0UrQwWS9qHvTD/jYAgo/88= ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBGVFXloxZyPPemHZ0yC014WrFWgtVyoz/jKGS75Ud+A35GkmNMMJa2eW83RZRe1r1Z8BNQvMBIG/UC491ZXe0WI=' >> ~/.ssh/known_hosts
+      - run:
+          name: Deploying to one-node aws swarm 
+          command: ssh ubuntu@34.226.65.84 "repos/zm-continuous-integration/deploy_images pretest-${SANITIZED_BRANCH}"
+  run_sanity_tests:
+    <<: *default_environment_settings
+    steps:
+      - *default_attach_workspace
+      - *add_ssh_keys
+      - *load_env
+      - run:
+          name: setup known_hosts file for infrastructure-dev-deploy1
+          command: echo '|1|3fcLe5kmPGpsjzORR/oUJLC2UjY=|LHn6j0UrQwWS9qHvTD/jYAgo/88= ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBGVFXloxZyPPemHZ0yC014WrFWgtVyoz/jKGS75Ud+A35GkmNMMJa2eW83RZRe1r1Z8BNQvMBIG/UC491ZXe0WI=' >> ~/.ssh/known_hosts
+      - run:
+          name: Running sanity tests 
+          command: ssh ubuntu@34.226.65.84 "repos/zm-continuous-integration/run_soap_sanity_tests"
+          no_output_timeout: 30m
+  tag_as_latest_and_push:
+    <<: *default_environment_settings
+    steps:
+      - *default_attach_workspace
+      - setup_remote_docker
+      - *install_docker_client
+      - *load_env
+      - *build_docker_context
+      - *install_python
+      - *start_apt_catcher_ng
+      - run:
+          name: Pulling down pretest tag images
+          command: |
+            cd "$BUILD"/zm-docker
+            containers=('base' 'ldap' 'mta' 'mailbox' 'mailbox_debug' 'mysql-proxy' 'mysql-local' 'proxy' 'zookeeper' 'solr' 'redismaster')
+            for container in "${containers[@]}"; do
+              make DOCKER_PULL_TAG=pretest-"${SANITIZED_BRANCH}" pull-zmc-"${container}"
+            done
+      - run:
+          name: Tag new images as latest
+          command: |
+            docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
+            containers=('base' 'ldap' 'mta' 'mailbox' 'mailbox_debug' 'mysql-proxy' 'mysql-local' 'proxy' 'zookeeper' 'solr' 'redismaster')
+            for container in "${containers[@]}"; do         
+              docker tag "${DOCKER_REPO_NS}/zmc-${container}:pretest-${SANITIZED_BRANCH}" "${DOCKER_REPO_NS}/zmc-${container}:latest-${SANITIZED_BRANCH}"
+              docker push "${DOCKER_REPO_NS}/zmc-${container}:latest-${SANITIZED_BRANCH}"
+            done
+  update_infdevdeployment_with_latest_tag:
+    <<: *default_environment_settings
+    steps:
+      - *default_attach_workspace
+      - *add_ssh_keys
+      - *load_env
+      - run: 
+          name: setup known_hosts file for infrastructure-dev-deploy1
+          command: echo '|1|3fcLe5kmPGpsjzORR/oUJLC2UjY=|LHn6j0UrQwWS9qHvTD/jYAgo/88= ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBGVFXloxZyPPemHZ0yC014WrFWgtVyoz/jKGS75Ud+A35GkmNMMJa2eW83RZRe1r1Z8BNQvMBIG/UC491ZXe0WI=' >> ~/.ssh/known_hosts
+      - run:
+          name: Updating infrastructure-dev-deploy1 with latest tag
+          command: ssh ubuntu@34.226.65.84 "repos/zm-continuous-integration/deploy_images latest-${SANITIZED_BRANCH}"
 ############################################################################
 
 workflows:
@@ -220,7 +660,85 @@ workflows:
           requires:
             - build_store_submodule
           <<: *filter_branches
+      - checkout_and_build_installer:
+          requires:
+            - test_native_submodule
+            - test_common_submodule
+            - test_soap_submodule
+            - test_client_submodule
+            - test_store_submodule
+          <<: *filter_branches
+      - build_and_deploy_zmcbase_container_images:
+          requires:
+            - checkout_and_build_installer
+          <<: *filter_branches
+      - build_and_deploy_zmcldap_container_images:
+          requires:
+            - checkout_and_build_installer
+          <<: *filter_branches
+      - build_and_deploy_zmcmta_container_images:
+          requires:
+            - checkout_and_build_installer
+          <<: *filter_branches
+      - build_and_deploy_zmcmailbox_container_images:
+          requires:
+            - checkout_and_build_installer
+          <<: *filter_branches
+      - build_and_deploy_zmcmailbox_debug_container_images:
+          requires:
+            - checkout_and_build_installer
+          <<: *filter_branches
+      - build_and_deploy_zmcmysqlproxy_container_images:
+          requires:
+            - checkout_and_build_installer
+          <<: *filter_branches
+      - build_and_deploy_zmcmysqllocal_container_images:
+          requires:
+            - checkout_and_build_installer
+          <<: *filter_branches
+      - build_and_deploy_zmcproxy_container_images:
+          requires:
+            - checkout_and_build_installer
+          <<: *filter_branches
+      - build_and_deploy_zmczookeeper_container_images:
+          requires:
+            - checkout_and_build_installer
+          <<: *filter_branches
+      - build_and_deploy_zmcsolr_container_images:
+          requires:
+            - checkout_and_build_installer
+          <<: *filter_branches
+      - build_and_deploy_zmcredismaster_container_images:
+          requires:
+            - checkout_and_build_installer
+          <<: *filter_branches
+      - deploy_to_swarm:
+          requires:
+            - build_and_deploy_zmcbase_container_images
+            - build_and_deploy_zmcldap_container_images
+            - build_and_deploy_zmcmta_container_images
+            - build_and_deploy_zmcmailbox_container_images
+            - build_and_deploy_zmcmailbox_debug_container_images
+            - build_and_deploy_zmcmysqlproxy_container_images
+            - build_and_deploy_zmcmysqllocal_container_images
+            - build_and_deploy_zmcproxy_container_images
+            - build_and_deploy_zmczookeeper_container_images
+            - build_and_deploy_zmcsolr_container_images
+            - build_and_deploy_zmcredismaster_container_images
+          <<: *filter_branches
+      - run_sanity_tests:
+          requires:
+            - deploy_to_swarm
+          <<: *filter_branches
+      - tag_as_latest_and_push:
+          requires:
+            - run_sanity_tests
+          <<: *filter_branches
+      - update_infdevdeployment_with_latest_tag:
+          requires:
+            - tag_as_latest_and_push
+          <<: *filter_branches
 ############################################################################
-#notify:
-#  webhooks:
-#    - url: http://ec2-52-90-104-127.compute-1.amazonaws.com:5000/post-status
+notify:
+  webhooks:
+    - url: http://ec2-54-157-18-126.compute-1.amazonaws.com:5000/post-status
