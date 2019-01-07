@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2018 Synacor, Inc.
+ * Copyright (C) 2019 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -14,25 +14,28 @@
  * If not, see <https://www.gnu.org/licenses/>.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.mailbox.redis;
 
-import java.util.Collection;
+package com.zimbra.cs.mailbox.cache;
 
-import org.redisson.api.RSet;
+import com.google.common.base.MoreObjects;
 
-import com.zimbra.cs.mailbox.TransactionAwareSet;
-import com.zimbra.cs.mailbox.TransactionCacheTracker;
+public abstract class CachedObject<V> {
 
-public class RedisBackedSet<E> extends TransactionAwareSet<E> {
+    protected String objectName;
 
-    public RedisBackedSet(RSet<E> redisSet, TransactionCacheTracker cacheTracker,
-            ReadPolicy readPolicy, WritePolicy writePolicy, CachePolicy cachePolicy) {
-        super(redisSet.getName(), cacheTracker,
-                new GreedySetGetter<>(redisSet.getName(), cachePolicy, () -> redisSet.readAll()),
-                readPolicy, writePolicy);
+    public CachedObject(String objectName) {
+        this.objectName = objectName;
     }
 
-    public Collection<E> values() {
-        return data();
+    public String getObjectName() {
+        return objectName;
+    }
+
+    public abstract V getObject();
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("obj", objectName).toString();
     }
 }

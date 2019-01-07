@@ -54,7 +54,7 @@ public class ThreadLocalCacheManager {
     public static ThreadLocalCacheManager getInstance() {
         return instance;
     }
-    public <V, G extends ThreadLocalCache.CachedObject<V>> ThreadLocalCache<V, G> newThreadLocalCache(String objectName, String cacheType) {
+    public <V, G extends CachedObject<V>> ThreadLocalCache<V, G> newThreadLocalCache(String objectName, String cacheType) {
         Cache<Thread, G> transactionCache = buildCache(objectName, LC.transaction_threadlocal_cache_expiry_seconds.intValue(), 0, cacheType, true);
         Cache<Thread, G> nonTransactionCache = buildCache(objectName,
                 LC.outside_transaction_threadlocal_cache_expiry_seconds.intValue(),
