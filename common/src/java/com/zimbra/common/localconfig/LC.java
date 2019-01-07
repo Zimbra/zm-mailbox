@@ -705,6 +705,8 @@ public final class LC {
     public static final KnownKey imap_throttle_acct_limit = KnownKey.newKey(5000);
     public static final KnownKey imap_throttle_command_limit = KnownKey.newKey(25);
     public static final KnownKey imap_throttle_fetch = KnownKey.newKey(true);
+    //The following config should not be changed
+    public static final KnownKey imap_ehcache_heap_size = KnownKey.newKey(10);
     public static final KnownKey data_source_imap_reuse_connections = KnownKey.newKey(false);
 
     @Supported
