@@ -38,6 +38,7 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxNotificationInfo;
 import com.zimbra.cs.mailbox.Metadata;
 
 public final class PendingLocalModifications extends PendingModifications<MailItem> {
@@ -64,11 +65,13 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
         }
 
         if (other.modified != null) {
-            for (PendingModifications.Change chg : other.modified.values()) {
+            for (Map.Entry<PendingModifications.ModificationKey, PendingModifications.Change> entry : other.modified.entrySet()) {
+                PendingModifications.ModificationKey key = entry.getKey();
+                PendingModifications.Change chg = entry.getValue();
                 if (chg.what instanceof ZimbraMailItem) {
                     recordModified((ZimbraMailItem) chg.what, chg.why, (ZimbraMailItem) chg.preModifyObj);
-                } else if (chg.what instanceof Mailbox) {
-                    recordModified((Mailbox) chg.what, chg.why);
+                } else if (chg.what instanceof MailboxNotificationInfo) {
+                    recordModified(key, chg.what, chg.why, null, false);
                 }
             }
         }
@@ -119,10 +122,9 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
 
     @Override
     public void recordModified(MailboxStore mbox, int reason) {
-        // Not recording preModify state of the mailbox for now
         if (mbox instanceof Mailbox) {
             Mailbox mb = (Mailbox) mbox;
-            recordModified(new PendingModifications.ModificationKey(mb.getAccountId(), 0), mbox, reason, null, false);
+            recordModified(new PendingModifications.ModificationKey(mb.getAccountId(), 0), new MailboxNotificationInfo(mb), reason, null, false);
         }
     }
 
@@ -226,13 +228,13 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
                 what = MailItem.constructItem(mbox, ud, true);
                 if (what instanceof Folder) {
                     Folder folder = ((Folder) what);
-                    folder.setParent(mbox.getFolderById(null, folder.getFolderId()));
+                    folder.setParentId(folder.getFolderId());
                 }
             } else if (changeMeta.whatType == ChangeMeta.ObjectType.MAILITEMTYPE) {
                 what = MailItem.Type.of(changeMeta.metaWhat);
             } else if (changeMeta.whatType == ChangeMeta.ObjectType.MAILBOX) {
-                mbox.refreshMailbox(null);
-                what = mbox;
+                Long mboxSize = Long.valueOf(changeMeta.metaWhat);
+                what = new MailboxNotificationInfo(mbox.getAccountId(), mboxSize);
             } else {
                 ZimbraLog.session.warn("Unexpected mailbox change type received: %s", changeMeta.whatType);
                 continue;
@@ -245,7 +247,7 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
                 preModifyObj = MailItem.constructItem(mbox, ud, true);
                 if (preModifyObj instanceof Folder) {
                     Folder folder = ((Folder) preModifyObj);
-                    folder.setParent(mbox.getFolderById(null, folder.getFolderId()));
+                    folder.setParentId(folder.getFolderId());
                 }
             } else if (changeMeta.preModifyObjType == ChangeMeta.ObjectType.MAILITEMTYPE) {
                 preModifyObj = MailItem.Type.of(changeMeta.metaPreModifyObj);
@@ -295,8 +297,9 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
             ChangeMeta.ObjectType preModType = null;
             String str = null;
             String preModStr = null;
-            if (change.what instanceof Mailbox) {
+            if (change.what instanceof MailboxNotificationInfo) {
                 type = ChangeMeta.ObjectType.MAILBOX;
+                str = ((Long) ((MailboxNotificationInfo) change.what).getSize()).toString();
             } else if (change.what instanceof MailItem) {
                 type = ChangeMeta.ObjectType.MAILITEM;
                 str = ((MailItem) change.what).getUnderlyingData().serialize().toString();
@@ -354,8 +357,7 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
                 MailItem item = MailItem.constructItem(mbox, ud, true);
                 if (item instanceof Folder) {
                     Folder folder = ((Folder) item);
-                    folder.setParent(mbox.getFolderById(null, folder.getFolderId()));
-
+                    folder.setParentId(folder.getFolderId());
                 }
                 ModificationKeyMeta keyMeta = ModificationKeyMeta.fromString(entry.getKey());
                 PendingModifications.ModificationKey key = new PendingModifications.ModificationKey(

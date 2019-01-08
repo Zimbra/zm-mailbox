@@ -631,7 +631,7 @@ public class Folder extends MailItem implements FolderStore, SharedState {
         			visible.add(mMailbox.getFolderById(subfolderId));
         		} catch (ServiceException e) {
         			ZimbraLog.mailbox.error("error while getting the folder by id: %s, ignoring to add", subfolderId, e);
-        		}             
+        		}
         	}
         } else {
             for (int subfolderId : subfolders.values()) {
@@ -644,7 +644,7 @@ public class Folder extends MailItem implements FolderStore, SharedState {
         Collections.sort(visible, new SortByName());
         return visible;
     }
-    
+
     /** Returns a <tt>List</tt> that includes this folder and all its
      *  subfolders visible to the user in OperationContext.
      */
@@ -682,6 +682,10 @@ public class Folder extends MailItem implements FolderStore, SharedState {
             }
         }
         return list;
+    }
+
+    public void setParentId(int parentId) {
+        getState().setParentId(parentId);
     }
 
     public void setParent(Folder folder) {
