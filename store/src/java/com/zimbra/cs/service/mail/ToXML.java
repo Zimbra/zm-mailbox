@@ -130,6 +130,7 @@ import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxNotificationInfo;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.Note;
@@ -255,12 +256,12 @@ public final class ToXML {
     }
 
     public static Element encodeMailbox(Element parent, OperationContext octxt, Mailbox mbox) {
-        return encodeMailbox(parent, octxt, mbox, NOTIFY_FIELDS);
+        return encodeMailbox(parent, octxt, new MailboxNotificationInfo(mbox), NOTIFY_FIELDS);
     }
 
-    public static Element encodeMailbox(Element parent, OperationContext octxt, Mailbox mbox, int fields) {
+    public static Element encodeMailbox(Element parent, OperationContext octxt, MailboxNotificationInfo mbox, int fields) {
         Element elem = parent.addNonUniqueElement(MailConstants.E_MAILBOX);
-        if (octxt.isDelegatedRequest(mbox)) {
+        if (octxt.isDelegatedRequest(mbox.getAccountId())) {
             elem.addAttribute(HeaderConstants.A_ACCOUNT_ID, mbox.getAccountId());
         }
         if (needToOutput(fields, Change.SIZE)) {

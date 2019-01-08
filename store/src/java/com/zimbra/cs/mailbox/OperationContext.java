@@ -156,7 +156,11 @@ public class OperationContext implements OpContext {
     }
 
     public boolean isDelegatedRequest(Mailbox mbox) {
-        return authuser != null && !authuser.getId().equalsIgnoreCase(mbox.getAccountId());
+        return isDelegatedRequest(mbox.getAccountId());
+    }
+
+    public boolean isDelegatedRequest(String accountId) {
+        return authuser != null && !authuser.getId().equalsIgnoreCase(accountId);
     }
 
     /**

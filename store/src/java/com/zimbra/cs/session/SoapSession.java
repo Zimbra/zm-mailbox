@@ -60,6 +60,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.FolderNode;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxNotificationInfo;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Message.EventFlag;
 import com.zimbra.cs.mailbox.Mountpoint;
@@ -1551,8 +1552,8 @@ public class SoapSession extends Session {
                             ZimbraLog.session.warn("error encoding item " + item.getId(), e);
                             return;
                         }
-                    } else if (chg.why != 0 && chg.what instanceof Mailbox) {
-                        ToXML.encodeMailbox(eModified, octxt, (Mailbox) chg.what, chg.why);
+                    } else if (chg.why != 0 && chg.what instanceof MailboxNotificationInfo) {
+                        ToXML.encodeMailbox(eModified, octxt, (MailboxNotificationInfo) chg.what, chg.why);
                     }
                 }
                 // sanity-check the returned element
