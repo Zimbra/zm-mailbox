@@ -952,7 +952,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         if (zimbraId == null)
             return null;
         Account a = accountCache.getById(zimbraId);
-        if (a == null) {
+        if (a == null || loadFromMaster == true) {
             ZLdapFilter filter = filterFactory.accountById(zimbraId);
 
             a = getAccountByQuery(mDIT.mailBranchBaseDN(), filter, zlc, loadFromMaster);
