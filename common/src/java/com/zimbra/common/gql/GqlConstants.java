@@ -659,4 +659,39 @@ public class GqlConstants {
     public static final String CLASS_CREATE_TASK_RESPONSE = "CreateTaskResponse";
     public static final String CLASS_CREATE_TASK_EXCEPTION_RESPONSE = "CreateTaskExceptionResponse";
     public static final String CLASS_MODIFY_TASK_RESPONSE = "ModifyTaskResponse";
+
+    //Mountpoint constants
+    public static final String CLASS_MOUNTPOINT = "Mountpoint";
+    public static final String CLASS_OWNER_SELECTOR = "OwnerSelector";
+    public static final String CLASS_FOLDER_SELECTOR = "FolderSelector";
+    public static final String OWNER_SELECTOR = "ownerSelector";
+    public static final String REMOTE_FOLDER_SELECTOR = "remoteFolderSelector";
+    public static final String OWNER = "owner";
+    public static final String REMOTE_FOLDER = "remoteFolder";
+    public static final String REMINDER_ENABLED = "reminderEnabled";
+    public static final String OWNER_EMAIL = "ownerEmail";
+    public static final String OWNER_ACCOUNT_ID = "ownerAccountId";
+    public static final String REMOTE_FOLDER_ID = "remoteFolderId";
+    public static final String OWNER_FOLDER_NAME = "ownerFolderName";
+    public static final String IS_BROKEN = "isBroken";
+    public static final String REMOTE_UUID = "remoteUUID";
+
+    //sharing constants
+    public static final String CLASS_ACTION = "Action";
+    public static final String ITEM_ID = "itemId";
+    public static final String EMAIL_ADDRESSES = "emailAddresses";
+    public static final String NOTES = "notes";
+    public static final String INTERNAL = "internal";
+    public static final String INCLUDE_SELF = "includeSelf";
+    public static final String GRANTEE = "grantee";
+    public static final String CLASS_GRANTEE_SELECTOR = "GranteeSelector";
+    public static final String CLASS_SHARE_INFO = "ShareInfo";
+    public static final String OWNER_ID = "ownerId";
+    public static final String OWNER_NAME = "ownerName";
+    public static final String FOLDER_UUID = "folderUuid";
+    public static final String FOLDER_PATH = "folderPath";
+    public static final String GRANTEE_TYPE = "granteeType";
+    public static final String GRNATEE_NAME = "granteeName";
+    public static final String GRANTEE_DISPLAY_NAME = "granteeDisplayName";
+    public static final String MOUNTPOINT_ID = "mountpointId";
 }
