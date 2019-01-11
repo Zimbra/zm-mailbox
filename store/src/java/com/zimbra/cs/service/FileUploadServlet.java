@@ -230,6 +230,7 @@ public class FileUploadServlet extends ZimbraServlet {
     static Log mLog = LogFactory.getLog(FileUploadServlet.class);
 
     static final long DEFAULT_MAX_SIZE = 10 * 1024 * 1024;
+    static final long DEFAULT_MIN_SIZE = 0L;
 
     /** Returns the zimbra id of the server the specified upload resides on.
      *
@@ -522,7 +523,6 @@ public class FileUploadServlet extends ZimbraServlet {
             }
 
             boolean limitByFileUploadMaxSize = req.getParameter(PARAM_LIMIT_BY_FILE_UPLOAD_MAX_SIZE) != null;
-
             // file upload requires multipart enctype
             if (ServletFileUpload.isMultipartContent(req)) {
                 handleMultipartUpload(req, resp, fmt, acct, limitByFileUploadMaxSize, at, csrfCheckComplete);
@@ -682,9 +682,9 @@ public class FileUploadServlet extends ZimbraServlet {
 
         // Unescape the filename so it actually displays correctly
         filename = StringEscapeUtils.unescapeHtml(filename);
-
         // store the fetched file as a normal upload
-        ServletFileUpload upload = getUploader2(limitByFileUploadMaxSize);
+        ServletFileUpload upload = getUploader3(limitByFileUploadMaxSize, acct);
+        
         FileItem fi = upload.getFileItemFactory().createItem("upload", contentType, false, filename);
         try {
             // write the upload to disk, but make sure not to exceed the permitted max upload size
@@ -827,6 +827,13 @@ public class FileUploadServlet extends ZimbraServlet {
         return getUploader(getFileUploadMaxSize(limitByFileUploadMaxSize));
     }
 
+    public static ServletFileUpload getUploader3(boolean limitByFileUploadMaxSize, Account acct) {
+    	long fileUploadMaxSize = acct.getLongAttr(Provisioning.A_zimbraFileUploadMaxSize, DEFAULT_MIN_SIZE);
+         if (fileUploadMaxSize == DEFAULT_MIN_SIZE) {
+        	 fileUploadMaxSize = getFileUploadMaxSize(limitByFileUploadMaxSize);
+         }
+        return getUploader(fileUploadMaxSize);
+    }
     public static ServletFileUpload getUploader(long maxSize) {
         DiskFileItemFactory dfif = new DiskFileItemFactory();
         dfif.setSizeThreshold(32 * 1024);
