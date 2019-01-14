@@ -1434,7 +1434,7 @@ public class DefangFilterTest {
     /**
      * Check alert is removed from script.
      */
-    @Test //"<.*on.*=.*\\(.*\\)?>"
+    @Test
     public void testZCS5696() throws Exception {
         String html = "<textarea></textarea/><body/oNloAd=alert('bug109020-2')>bug109020-2";
         InputStream htmlStream = new ByteArrayInputStream(html.getBytes());
@@ -1453,7 +1453,7 @@ public class DefangFilterTest {
      * @throws Exception
      */
     @Test
-    public void testzbug736_1() throws Exception {
+    public void testzbug736Mime1() throws Exception {
         String fileName = "zbug736_2.txt";
         InputStream htmlStream = getHtmlBody(fileName);
         String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
