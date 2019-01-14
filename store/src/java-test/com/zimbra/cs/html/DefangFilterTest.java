@@ -1313,7 +1313,6 @@ public class DefangFilterTest {
                 + "data-mce-src=\"/home/ews01@zdev-vm002.eng.zimbra.com/Briefcase/rupali.jpeg\"></div>";
         htmlStream = new ByteArrayInputStream(html.getBytes());
         result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
-        System.out.println(result);
         Assert.assertTrue(result.contains("dfsrc=\"doc:Briefcase/rupali.jpeg\""));
         Assert.assertTrue(result.contains("data-mce-src=\"/home/ews01"));
     }
@@ -1416,7 +1415,7 @@ public class DefangFilterTest {
         result = DefangFilter.removeAnySpacesAndEncodedChars(html);
         Assert.assertTrue(result.startsWith("javascript:"));
     }
-    
+
     /**
      * Check span does not contain repetition on "'" character
      * @throws Exception
@@ -1428,7 +1427,7 @@ public class DefangFilterTest {
         String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
             true);
         Assert.assertTrue(!result.contains("'''''"));
-        
+
     }
 
     /**
@@ -1446,5 +1445,18 @@ public class DefangFilterTest {
         htmlStream = new ByteArrayInputStream(html.getBytes());
         result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
         Assert.assertTrue(!result.contains("alert"));
+    }
+
+    /**
+     * Checking mime which were causing high CPU utilization
+     * @throws Exception
+     */
+    @Test
+    public void testzbug736Mime1() throws Exception {
+        String fileName = "zbug736_2.txt";
+        InputStream htmlStream = getHtmlBody(fileName);
+        String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+            true);
+        Assert.assertTrue(result != null);
     }
 }
