@@ -54,8 +54,8 @@ public class DefangFilterTest {
     private static String EMAIL_BASE_DIR = "data/unittest/email/";
     @BeforeClass
     public static void init() throws Exception {
-        MailboxTestUtil.initServer();
-        EMAIL_BASE_DIR = MailboxTestUtil.getZimbraServerDir("") + EMAIL_BASE_DIR;
+        MailboxTestUtil.initServer("store/");
+        EMAIL_BASE_DIR = MailboxTestUtil.getZimbraServerDir("store/") + EMAIL_BASE_DIR;
         Provisioning prov = Provisioning.getInstance();
         Account acct = prov.createAccount("test@in.telligent.com", "secret", new HashMap<String, Object>());
     }
@@ -1314,7 +1314,6 @@ public class DefangFilterTest {
                 + "data-mce-src=\"/home/ews01@zdev-vm002.eng.zimbra.com/Briefcase/rupali.jpeg\"></div>";
         htmlStream = new ByteArrayInputStream(html.getBytes());
         result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
-        System.out.println(result);
         Assert.assertTrue(result.contains("dfsrc=\"doc:Briefcase/rupali.jpeg\""));
         Assert.assertTrue(result.contains("data-mce-src=\"/home/ews01"));
     }
@@ -1417,7 +1416,7 @@ public class DefangFilterTest {
         result = DefangFilter.removeAnySpacesAndEncodedChars(html);
         Assert.assertTrue(result.startsWith("javascript:"));
     }
-    
+
     /**
      * Check span does not contain repetition on "'" character
      * @throws Exception
@@ -1429,7 +1428,7 @@ public class DefangFilterTest {
         String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
             true);
         Assert.assertTrue(!result.contains("'''''"));
-        
+
     }
 
     /**
@@ -1447,5 +1446,18 @@ public class DefangFilterTest {
         htmlStream = new ByteArrayInputStream(html.getBytes());
         result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
         Assert.assertTrue(!result.contains("alert"));
+    }
+
+    /**
+     * Checking mime which were causing high CPU utilization
+     * @throws Exception
+     */
+    @Test
+    public void testzbug736Mime1() throws Exception {
+        String fileName = "zbug736_2.txt";
+        InputStream htmlStream = getHtmlBody(fileName);
+        String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+            true);
+        Assert.assertTrue(result != null);
     }
 }
