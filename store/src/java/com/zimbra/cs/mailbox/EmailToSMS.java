@@ -57,7 +57,6 @@ public class EmailToSMS implements LmtpCallback {
 	private void sendEmailSMS(String recipient, Message zMsg) throws ServiceException,MessagingException{
 		Address[] recipients = zMsg.getParsedMessage().getMimeMessage().getAllRecipients();
 		String[] recipientEmail = recipient.split("@");
-		String recipientEmailId = recipientEmail[0];
 		String recipientEmailDomain = recipientEmail[1];
 		String sender = zMsg.getSender();
 		String subject = zMsg.getSubject();
@@ -80,9 +79,9 @@ public class EmailToSMS implements LmtpCallback {
 			String[] splitMobNumber = rcptAddresses.indexOf("<") < 0 ? rcptAddresses.split("@")
 					: rcptAddresses.split("<")[1].replaceAll(">", "").split("@");
 			String mobNumber = splitMobNumber[0];
-			String mobNumberWithoutCountryCode = splitMobNumber[0].replace("+", "");
+			String mobNumberWithoutSymbol = splitMobNumber[0].replace("+", "");
 			String mobNumberDomain = splitMobNumber[1];
-			if (mobNumberDomain.equalsIgnoreCase(smsDomain) && recipientEmailDomain.equalsIgnoreCase(smsDomain) && StringUtils.isNumeric(mobNumberWithoutCountryCode) && !uniqueMobileSet.contains(mobNumber)) {
+			if (mobNumberDomain.equalsIgnoreCase(smsDomain) && recipientEmailDomain.equalsIgnoreCase(smsDomain) && StringUtils.isNumeric(mobNumberWithoutSymbol) && !uniqueMobileSet.contains(mobNumber)) {
 				uniqueMobileSet.add(mobNumber);
 				sendsms(fullMessage, mobNumber, sender, isASCIIString);
 			}
