@@ -150,7 +150,6 @@ public class ShareInfo {
         this.ownerDisplayName = ownerDisplayName;
     }
 
-    @GraphQLNonNull
     @GraphQLQuery(name=GqlConstants.OWNER_NAME, description="owner display name")
     public String getOwnerDisplayName() { return ownerDisplayName; }
 
