@@ -25,6 +25,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.mailbox.ContactAutoComplete;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.ContactAutoComplete.AutoCompleteResult;
@@ -103,7 +104,7 @@ public class AutoComplete extends MailDocumentHandler {
             // for contact group, emails of members will be expanded 
             // separately on user request
             if (!entry.isContactGroup()) {
-                cn.addAttribute(MailConstants.A_EMAIL, entry.getEmail());
+                cn.addAttribute(MailConstants.A_EMAIL, IDNUtil.toUnicode(entry.getEmail()));
             }
             cn.addAttribute(MailConstants.A_MATCH_TYPE, getType(entry));
             cn.addAttribute(MailConstants.A_RANKING, Integer.toString(entry.getRanking()));
