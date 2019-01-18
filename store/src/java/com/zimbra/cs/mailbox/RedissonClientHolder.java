@@ -20,6 +20,7 @@ import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
 import org.redisson.config.ClusterServersConfig;
 import org.redisson.config.Config;
+import org.redisson.config.SingleServerConfig;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ThreadPool;
@@ -38,26 +39,67 @@ public final class RedissonClientHolder {
         try {
             uri = LC.redis_service_uri.value();
             ZimbraLog.system.info("redis_service_uri=%s", uri);
-            Config config = new Config();
+            String servers[] = uri.split(" ");
             ThreadPool pool = ThreadPool.newCachedThreadPool("RedissonExecutor");
-            config.setExecutor(pool.getExecutorService());
-            config.setNettyThreads(LC.redis_netty_threads.intValue());
-            ClusterServersConfig clusterServersConfig = config.useClusterServers();
-            clusterServersConfig.setScanInterval(LC.redis_cluster_scan_interval.intValue());
-            clusterServersConfig.addNodeAddress(uri.split(" "));
-            clusterServersConfig.setMasterConnectionPoolSize(LC.redis_master_connection_pool_size.intValue());
-            clusterServersConfig.setMasterConnectionMinimumIdleSize(LC.redis_master_idle_connection_pool_size.intValue());
-            clusterServersConfig.setSubscriptionConnectionPoolSize(LC.redis_subscription_connection_pool_size.intValue());
-            clusterServersConfig.setSubscriptionConnectionMinimumIdleSize(LC.redis_subscription_idle_connection_pool_size.intValue());
-            clusterServersConfig.setSubscriptionsPerConnection(LC.redis_subscriptions_per_connection.intValue());
-            clusterServersConfig.setRetryInterval(LC.redis_retry_interval.intValue());
-            clusterServersConfig.setTimeout(LC.redis_connection_timeout.intValue());
-            clusterServersConfig.setRetryAttempts(LC.redis_num_retries.intValue());
-            client = new RedissonRetryClient(Redisson.create(config));
+            RedissonRetryClient newClient;
+            /* First, assume we're connecting to a Redis cluster, note that that can be represented
+             * by either a single URI or multiple URIs.
+             * If we're actually connecting to a standalone Redis server, will probably get this logged:
+             *     ClusterConnectionManager - ERR This instance has cluster support disabled.
+             * and then get RedisConnectionException thrown.
+             * If that happens, try to connect in standalone mode (if it makes sense to do so) */
+            try {
+                newClient = getClientForCluster(uri, servers, pool);
+            } catch (Exception ex) {
+                if (servers.length != 1) {
+                    throw ex;  // cannot possibly be a standalone server
+                }
+                ZimbraLog.system.warnQuietly("Unable to setup RedissonClient to connect to %s in cluster mode",
+                        uri, ex);
+                newClient = getClientForStandalone(uri, pool);
+            }
+            client = newClient;
         } catch (Exception ex) {
             ZimbraLog.system.fatal("Cannot setup RedissonClient to connect to %s", uri, ex);
             throw ex;
         }
+    }
+
+    private RedissonRetryClient getClientForCluster(String uri, String servers[], ThreadPool pool) {
+        Config config = new Config();
+        config.setExecutor(pool.getExecutorService());
+        config.setNettyThreads(LC.redis_netty_threads.intValue());
+        ClusterServersConfig clusterServersConfig = config.useClusterServers();
+        clusterServersConfig.setScanInterval(LC.redis_cluster_scan_interval.intValue());
+        clusterServersConfig.addNodeAddress(servers);
+        clusterServersConfig.setMasterConnectionPoolSize(LC.redis_master_connection_pool_size.intValue());
+        clusterServersConfig.setMasterConnectionMinimumIdleSize(LC.redis_master_idle_connection_pool_size.intValue());
+        clusterServersConfig.setSubscriptionConnectionPoolSize(LC.redis_subscription_connection_pool_size.intValue());
+        clusterServersConfig.setSubscriptionConnectionMinimumIdleSize(
+                LC.redis_subscription_idle_connection_pool_size.intValue());
+        clusterServersConfig.setSubscriptionsPerConnection(LC.redis_subscriptions_per_connection.intValue());
+        clusterServersConfig.setRetryInterval(LC.redis_retry_interval.intValue());
+        clusterServersConfig.setTimeout(LC.redis_connection_timeout.intValue());
+        clusterServersConfig.setRetryAttempts(LC.redis_num_retries.intValue());
+        return new RedissonRetryClient(Redisson.create(config));
+    }
+
+    private RedissonRetryClient getClientForStandalone(String uri, ThreadPool pool) {
+        Config config = new Config();
+        config.setExecutor(pool.getExecutorService());
+        config.setNettyThreads(LC.redis_netty_threads.intValue());
+        SingleServerConfig singleServer = config.useSingleServer();
+        singleServer.setAddress(uri);
+        singleServer.setConnectionPoolSize(LC.redis_master_connection_pool_size.intValue());
+        singleServer.setConnectionMinimumIdleSize(LC.redis_master_idle_connection_pool_size.intValue());
+        singleServer.setSubscriptionConnectionPoolSize(LC.redis_subscription_connection_pool_size.intValue());
+        singleServer.setSubscriptionConnectionMinimumIdleSize(
+                LC.redis_subscription_idle_connection_pool_size.intValue());
+        singleServer.setSubscriptionsPerConnection(LC.redis_subscriptions_per_connection.intValue());
+        singleServer.setRetryInterval(LC.redis_retry_interval.intValue());
+        singleServer.setTimeout(LC.redis_connection_timeout.intValue());
+        singleServer.setRetryAttempts(LC.redis_num_retries.intValue());
+        return new RedissonRetryClient(Redisson.create(config));
     }
 
     public static RedissonClientHolder getInstance() {
