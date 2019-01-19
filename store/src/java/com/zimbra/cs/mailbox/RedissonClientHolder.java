@@ -49,7 +49,7 @@ public final class RedissonClientHolder {
              * and then get RedisConnectionException thrown.
              * If that happens, try to connect in standalone mode (if it makes sense to do so) */
             try {
-                newClient = getClientForCluster(uri, servers, pool);
+                newClient = getClientForCluster(servers, pool);
             } catch (Exception ex) {
                 if (servers.length != 1) {
                     throw ex;  // cannot possibly be a standalone server
@@ -65,10 +65,8 @@ public final class RedissonClientHolder {
         }
     }
 
-    private RedissonRetryClient getClientForCluster(String uri, String servers[], ThreadPool pool) {
-        Config config = new Config();
-        config.setExecutor(pool.getExecutorService());
-        config.setNettyThreads(LC.redis_netty_threads.intValue());
+    private RedissonRetryClient getClientForCluster(String servers[], ThreadPool pool) {
+        Config config = getConfig(pool);
         ClusterServersConfig clusterServersConfig = config.useClusterServers();
         clusterServersConfig.setScanInterval(LC.redis_cluster_scan_interval.intValue());
         clusterServersConfig.addNodeAddress(servers);
@@ -85,13 +83,13 @@ public final class RedissonClientHolder {
     }
 
     private RedissonRetryClient getClientForStandalone(String uri, ThreadPool pool) {
-        Config config = new Config();
-        config.setExecutor(pool.getExecutorService());
-        config.setNettyThreads(LC.redis_netty_threads.intValue());
+        Config config = getConfig(pool);
         SingleServerConfig singleServer = config.useSingleServer();
         singleServer.setAddress(uri);
         singleServer.setConnectionPoolSize(LC.redis_master_connection_pool_size.intValue());
         singleServer.setConnectionMinimumIdleSize(LC.redis_master_idle_connection_pool_size.intValue());
+        // Despite apparently similar code in getClientForCluster, these method calls are either different or
+        // from non-public base class BaseConfig
         singleServer.setSubscriptionConnectionPoolSize(LC.redis_subscription_connection_pool_size.intValue());
         singleServer.setSubscriptionConnectionMinimumIdleSize(
                 LC.redis_subscription_idle_connection_pool_size.intValue());
@@ -100,6 +98,13 @@ public final class RedissonClientHolder {
         singleServer.setTimeout(LC.redis_connection_timeout.intValue());
         singleServer.setRetryAttempts(LC.redis_num_retries.intValue());
         return new RedissonRetryClient(Redisson.create(config));
+    }
+
+    private Config getConfig(ThreadPool pool) {
+        Config config = new Config();
+        config.setExecutor(pool.getExecutorService());
+        config.setNettyThreads(LC.redis_netty_threads.intValue());
+        return config;
     }
 
     public static RedissonClientHolder getInstance() {
