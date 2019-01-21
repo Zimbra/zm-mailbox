@@ -8,8 +8,7 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -29,6 +28,7 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimePart;
 
 import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.lang.StringUtils;
 
 public class EmailToSMS implements LmtpCallback {
 
@@ -43,7 +43,7 @@ public class EmailToSMS implements LmtpCallback {
 	public void afterDelivery(Account account, Mailbox mbox, String envelopeSender, String recipientEmail,
 			Message newMessage) {
 				try {
-					sendEmailSMS(newMessage);
+					sendEmailSMS(recipientEmail, newMessage);
 				} catch (ServiceException | MessagingException e) {
 					ZimbraLog.mailbox.error("Failed to send SMS afterDelivery ServiceException  ", e);
 				}
@@ -54,8 +54,10 @@ public class EmailToSMS implements LmtpCallback {
 			ParsedMessage pm) {
 	}
 
-	private void sendEmailSMS(Message zMsg) throws ServiceException,MessagingException{
+	private void sendEmailSMS(String recipient, Message zMsg) throws ServiceException,MessagingException{
 		Address[] recipients = zMsg.getParsedMessage().getMimeMessage().getAllRecipients();
+		String[] recipientEmail = recipient.split("@");
+		String recipientEmailDomain = recipientEmail[1];
 		String sender = zMsg.getSender();
 		String subject = zMsg.getSubject();
 		MimeMessage mimeMsg =  zMsg.getMimeMessage(false);
@@ -71,13 +73,16 @@ public class EmailToSMS implements LmtpCallback {
 			fullMessage = fullMessage + convertStringToUnicode("\n");
 			fullMessage = fullMessage + convertStringToUnicode(bodyMsg);
 		}
+		Set<String> uniqueMobileSet = new HashSet<String>();
 		for (int i = 0; i < recipients.length; i++) {
 			String rcptAddresses = recipients[i].toString();
 			String[] splitMobNumber = rcptAddresses.indexOf("<") < 0 ? rcptAddresses.split("@")
 					: rcptAddresses.split("<")[1].replaceAll(">", "").split("@");
-			String mobNumber = splitMobNumber[0];
+			String mobNumber = splitMobNumber[0].replaceAll("[()\\-. ]", "");
+			String mobNumberWithoutSymbol = splitMobNumber[0].replaceAll("[()\\-+. ]", "");
 			String mobNumberDomain = splitMobNumber[1];
-			if (mobNumberDomain.equalsIgnoreCase(smsDomain)) {
+			if (mobNumberDomain.equalsIgnoreCase(smsDomain) && recipientEmailDomain.equalsIgnoreCase(smsDomain) && StringUtils.isNumeric(mobNumberWithoutSymbol) && !uniqueMobileSet.contains(mobNumber)) {
+				uniqueMobileSet.add(mobNumber);
 				sendsms(fullMessage, mobNumber, sender, isASCIIString);
 			}
 		}
