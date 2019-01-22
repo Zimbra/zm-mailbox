@@ -16,22 +16,36 @@
  */
 package com.zimbra.common.net;
 
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.util.ZimbraLog;
-import sun.security.util.HostnameChecker;
-
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLPeerUnverifiedException;
-import javax.net.ssl.SSLSession;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.util.Set;
+
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLPeerUnverifiedException;
+import javax.net.ssl.SSLSession;
+
+import org.bouncycastle.est.jcajce.JsseDefaultHostnameAuthorizer;
+
+import com.google.common.collect.Sets;
+import com.zimbra.common.util.ZimbraLog;
+
+
+
+
+
+
+
+
+
+
 
 public class CustomHostnameVerifier implements HostnameVerifier {
+
+
     public static void verifyHostname(String hostname, SSLSession session) throws IOException {
         if (NetConfig.getInstance().isAllowMismatchedCerts()) return;
 
@@ -50,14 +64,10 @@ public class CustomHostnameVerifier implements HostnameVerifier {
         CustomTrustManager ctm = TrustManagers.customTrustManager();
         if (ctm.isCertificateAcceptedForHostname(hostname, cert))
             return;
+        Set<String> knownSuffixes = Sets.newHashSet();
+        JsseDefaultHostnameAuthorizer hc = new JsseDefaultHostnameAuthorizer(knownSuffixes);
+        hc.verify(hostname, cert);
 
-        HostnameChecker hc = HostnameChecker.getInstance(HostnameChecker.TYPE_TLS);
-        try {
-            hc.match(hostname, cert);
-        } catch (CertificateException x) {
-            String certInfo = ctm.handleCertificateCheckFailure(hostname, cert, true);
-            throw new SSLPeerUnverifiedException(certInfo);
-        }
     }
 
     private static java.security.cert.X509Certificate certJavax2Java(javax.security.cert.X509Certificate cert) {
@@ -71,7 +81,8 @@ public class CustomHostnameVerifier implements HostnameVerifier {
         }
         return null;
     }
-        
+
+    @Override
     public boolean verify(String hostname, SSLSession session) {
         try {
             verifyHostname(hostname, session);

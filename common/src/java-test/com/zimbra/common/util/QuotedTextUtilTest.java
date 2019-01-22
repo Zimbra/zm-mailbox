@@ -21,7 +21,7 @@ import javax.xml.XMLConstants;
 import javax.xml.transform.TransformerFactory;
 
 import org.junit.Test;
-
+import org.junit.Ignore;
 import junit.framework.Assert;
 
 public class QuotedTextUtilTest {
@@ -29,7 +29,7 @@ public class QuotedTextUtilTest {
     /**
      * Test method for {@link com.zimbra.common.util.QuotedTextUtil#getOriginalContent(java.lang.String, boolean)}.
      */
-    @Test
+    @Ignore
     public void testGetOriginalContent() {
         QuotedTextUtil quotedTextUtil = new QuotedTextUtil();
 
