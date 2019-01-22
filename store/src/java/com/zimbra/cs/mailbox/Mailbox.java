@@ -9120,7 +9120,9 @@ public class Mailbox implements MailboxStore {
     private void trimItemCache() {
         try {
             ItemCache cache = currentChange().itemCache;
-            cache.trim(MAX_ITEM_CACHE_SIZE);
+            if (cache != null) {
+                cache.trim(MAX_ITEM_CACHE_SIZE);
+            }
         } catch (RuntimeException e) {
             ZimbraLog.mailbox.error("ignoring error during item cache trim", e);
         }
