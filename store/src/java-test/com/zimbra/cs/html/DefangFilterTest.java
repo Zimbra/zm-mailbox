@@ -54,8 +54,8 @@ public class DefangFilterTest {
     private static String EMAIL_BASE_DIR = "data/unittest/email/";
     @BeforeClass
     public static void init() throws Exception {
-        MailboxTestUtil.initServer("store/");
-        EMAIL_BASE_DIR = MailboxTestUtil.getZimbraServerDir("store/") + EMAIL_BASE_DIR;
+        MailboxTestUtil.initServer();
+        EMAIL_BASE_DIR = MailboxTestUtil.getZimbraServerDir("") + EMAIL_BASE_DIR;
         Provisioning prov = Provisioning.getInstance();
         Account acct = prov.createAccount("test@in.telligent.com", "secret", new HashMap<String, Object>());
     }
