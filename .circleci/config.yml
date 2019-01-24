@@ -207,13 +207,13 @@ jobs:
           command: echo '|1|NejILQJJKhGOrm0/6LH096Db4pA=|7zUWnDat1buNmT7qKwFJAg2agK4= ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBGVFXloxZyPPemHZ0yC014WrFWgtVyoz/jKGS75Ud+A35GkmNMMJa2eW83RZRe1r1Z8BNQvMBIG/UC491ZXe0WI=' > ~/.ssh/known_hosts
       - run:
           name: Running zm-docker make compile
-          command: ssh -t ubuntu@ec2-34-226-65-84.compute-1.amazonaws.com "repos/zm-continuous-integration/build_and_deploy_images latest-${SANITIZED_BRANCH} compile"
+          command: ssh -t ubuntu@ec2-34-226-65-84.compute-1.amazonaws.com "repos/zm-continuous-integration/build_and_deploy_images compile"
       - run:
           name: Running zm-docker make build-all
-          command: ssh -t ubuntu@ec2-34-226-65-84.compute-1.amazonaws.com "repos/zm-continuous-integration/build_and_deploy_images latest-${SANITIZED_BRANCH} build ec2-3-81-175-193.compute-1.amazonaws.com" 
+          command: ssh -t ubuntu@ec2-34-226-65-84.compute-1.amazonaws.com "repos/zm-continuous-integration/build_and_deploy_images build latest-${SANITIZED_BRANCH} ec2-3-81-175-193.compute-1.amazonaws.com" 
       - run:
           name: Running zm-docker make up
-          command: ssh -t ubuntu@ec2-34-226-65-84.compute-1.amazonaws.com "repos/zm-continuous-integration/build_and_deploy_images latest-${SANITIZED_BRANCH} up"
+          command: ssh -t ubuntu@ec2-34-226-65-84.compute-1.amazonaws.com "repos/zm-continuous-integration/build_and_deploy_images up latest-${SANITIZED_BRANCH} ec2-3-81-175-193.compute-1.amazonaws.com"
   run_sanity_tests:
     <<: *default_environment_settings
     steps:
@@ -241,7 +241,7 @@ jobs:
           command: echo '|1|NejILQJJKhGOrm0/6LH096Db4pA=|7zUWnDat1buNmT7qKwFJAg2agK4= ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBGVFXloxZyPPemHZ0yC014WrFWgtVyoz/jKGS75Ud+A35GkmNMMJa2eW83RZRe1r1Z8BNQvMBIG/UC491ZXe0WI=' > ~/.ssh/known_hosts
       - run: 
           name: Running make push-all to push latest images
-          command: ssh ubuntu@ec2-34-226-65-84.compute-1.amazonaws.com "repos/zm-continuous-integration/build_and_deploy_images latest-${SANITIZED_BRANCH} push ec2-3-81-175-193.compute-1.amazonaws.com $PRIVATE_DOCKER_USER $PRIVATE_DOCKER_PASS"
+          command: ssh ubuntu@ec2-34-226-65-84.compute-1.amazonaws.com "repos/zm-continuous-integration/build_and_deploy_images push latest-${SANITIZED_BRANCH} ec2-3-81-175-193.compute-1.amazonaws.com $PRIVATE_DOCKER_USER $PRIVATE_DOCKER_PASS"
 ############################################################################
 
 workflows:
