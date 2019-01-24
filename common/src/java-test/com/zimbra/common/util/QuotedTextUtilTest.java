@@ -63,11 +63,11 @@ public class QuotedTextUtilTest {
             "Kolkata, Mumbai, New Delhi <br><br>Invitees: pune-employees@zimbra.com <br><br>" +
             "<br>*~*~*~*~*~*~*~*~*~*<br></div></body></html>";
         originalContent = quotedTextUtil.getOriginalContent(content, true);
-        expected = "<HTML>\n<HEAD>\n<META http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n" +
-        "</HEAD>\n<BODY xmlns=\"http://www.w3.org/1999/xhtml\">\n" +
-        "<DIV style=\"font-family: verdana,helvetica,sans-serif; font-size: 10pt; color: #000000\">\n" +
-        "<DIV>Venue Details as Below. Please be there by 07:00PM today evening.</DIV>\n" +
-        "</DIV>\n</BODY>\n</HTML>\n";
+        expected = "<HTML>\n    <HEAD>\n        <META http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n" +
+        "    </HEAD>\n    <BODY xmlns=\"http://www.w3.org/1999/xhtml\">\n" +
+        "        <DIV style=\"font-family: verdana,helvetica,sans-serif; font-size: 10pt; color: #000000\">\n" +
+        "            <DIV>Venue Details as Below. Please be there by 07:00PM today evening.</DIV>\n" +
+        "        </DIV>\n    </BODY>\n</HTML>\n";
         Assert.assertEquals(expected, originalContent);
 
         content = "FYI...\n"
@@ -115,10 +115,10 @@ public class QuotedTextUtilTest {
             + "<div style=\"font-family:arial,helvetica,sans-serif;font-size:12pt;color:#000000\">"
             + "<div>teat mail re 1<br></div></div></div></blockquote></div><br></div></div></div>";
         originalContent = quotedTextUtil.getOriginalContent(content, true);
-        expected = "<HTML>\n<HEAD>\n<META http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n"
-            + "</HEAD>\n<BODY xmlns=\"http://www.w3.org/1999/xhtml\">\n"
-            + "<DIV dir=\"ltr\">This is my reply<BR>\n<DIV>\n<DIV class=\"gmail_extra\">\n"
-            + "<BR>\n</DIV>\n</DIV>\n</DIV>\n</BODY>\n</HTML>\n";
+        expected = "<HTML>\n    <HEAD>\n        <META http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n"
+            + "    </HEAD>\n    <BODY xmlns=\"http://www.w3.org/1999/xhtml\">\n"
+            + "        <DIV dir=\"ltr\">\n            This is my reply\n            <BR>\n            <DIV>\n                <DIV class=\"gmail_extra\">\n"
+            + "                    <BR>\n                </DIV>\n            </DIV>\n        </DIV>\n    </BODY>\n</HTML>\n";
         Assert.assertEquals(expected, originalContent);
     }
 
@@ -129,3 +129,4 @@ public class QuotedTextUtilTest {
         Assert.assertEquals("", factory.getAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET));
     }
 }
+
