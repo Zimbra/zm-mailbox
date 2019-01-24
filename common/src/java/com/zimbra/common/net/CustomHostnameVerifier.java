@@ -34,15 +34,6 @@ import com.google.common.collect.Sets;
 import com.zimbra.common.util.ZimbraLog;
 
 
-
-
-
-
-
-
-
-
-
 public class CustomHostnameVerifier implements HostnameVerifier {
 
 
