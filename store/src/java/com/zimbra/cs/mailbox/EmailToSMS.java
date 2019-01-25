@@ -88,6 +88,30 @@ public class EmailToSMS implements LmtpCallback {
 		}
 	}
 
+	public void sendCalendarSMS(Account acct, MimeMessage mimeMsg) throws ServiceException {
+		String senderMobileNo = acct.getCalendarReminderDeviceEmail();
+		if(!StringUtil.isNullOrEmpty(senderMobileNo)) {
+			String sender = acct.getName();
+			Pair<String,String> message = getTextBody(mimeMsg, false);
+			String bodyMsg = message.getFirst();
+			bodyMsg = bodyMsg.replace("The following is a new meeting request:", "The following meeting has been generated:");
+			Boolean isASCIIString = isPureAscii(bodyMsg);
+			String fullMessage = "";
+			if(isASCIIString) {
+				fullMessage = encode(bodyMsg);
+			} else {
+				fullMessage = fullMessage + "FEFF";
+				fullMessage = fullMessage + convertStringToUnicode(bodyMsg);
+			}
+
+			int index = senderMobileNo.indexOf("@");
+			if(index != -1) {
+				senderMobileNo = senderMobileNo.substring(0, index);
+			}
+			sendsms(fullMessage, senderMobileNo, sender, isASCIIString);
+		}
+	}
+
 	private void sendsms(String message, String mnumber, String sender, Boolean isASCIIString) throws ServiceException {
 		String smsApiUrl = Provisioning.getInstance().getConfig().getAttr(Provisioning.A_zimbraSMSApiUrl);
 		String smsUsername = Provisioning.getInstance().getConfig().getAttr(Provisioning.A_zimbraSMSApiUsername);
