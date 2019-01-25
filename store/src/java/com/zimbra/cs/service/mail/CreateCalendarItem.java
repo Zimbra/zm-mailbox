@@ -38,6 +38,7 @@ import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.cs.mailbox.EmailToSMS;
 
 /**
  * @author tim
@@ -120,7 +121,9 @@ public class CreateCalendarItem extends CalendarRequest {
         MailSendQueue sendQueue = new MailSendQueue();
         try {
             sendCalendarMessage(zsc, octxt, iidFolder.getId(), acct, mbox, dat, response, true, forceSend, sendQueue);
-        } finally {
+			// send sms to calendar creator
+			EmailToSMS.getInstance().sendCalendarSMS(acct, dat.mMm);
+		} finally {
             sendQueue.send();
         }
         boolean echo = request.getAttributeBool(MailConstants.A_CAL_ECHO, false);
