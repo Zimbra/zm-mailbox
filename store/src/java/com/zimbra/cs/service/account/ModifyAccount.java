@@ -54,16 +54,6 @@ import com.zimbra.soap.admin.type.CacheEntryType;//TODO: ??
  */
 public class ModifyAccount extends AccountDocumentHandler {
 
-    /**
-     * must be careful and only allow modifies to accounts/attrs domain admin has
-     * access to
-     */
-    //TODO: how to update this for attributes user has access to change?
-    @Override
-    public boolean domainAuthSufficient(Map context) {
-        return true;
-    }
-
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
@@ -71,20 +61,14 @@ public class ModifyAccount extends AccountDocumentHandler {
         Provisioning prov = Provisioning.getInstance();
         ModifyAccountRequest req = zsc.elementToJaxb(request);
         AuthToken authToken = zsc.getAuthToken();
-        String id = req.getId();
-        if (null == id) {
-            throw ServiceException.INVALID_REQUEST("missing required attribute: " + AccountConstants.E_ID, null);
-        }
+
+        ZimbraLog.account.info("The account is: " + account);
+        ZimbraLog.account.info("The authToken is: " + authToken);
 
         Map<String, Object> attrs = req.getAttrsAsOldMultimap();
 
         // pass in true to checkImmutable
-        prov.modifyAttrs(account, attrs, true);
-
-        // get account again, in the case when zimbraCOSId or zimbraForeignPrincipal
-        // is changed, the cache object(he one we are holding on to) would'd been
-        // flushed out from cache. Get the account again to get the fresh one.
-        account = prov.get(AccountBy.id, id, zsc.getAuthToken());
+        prov.modifyAttrs(account, attrs, true, authToken);
 
         ZimbraLog.security
                 .info(ZimbraLog.encodeAttrs(new String[] { "cmd", "ModifyAccount", "name", account.getName() }, attrs));

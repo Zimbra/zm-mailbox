@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011, 2012, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2019 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -25,10 +25,11 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.account.type.AttrsImpl;
+import com.zimbra.common.service.ServiceException;
 
 /**
  * @zm-api-command-auth-required true
- * @zm-api-command-admin-auth-required true
+ * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Modify an account
  * <br />
  * Notes:
@@ -42,25 +43,6 @@ import com.zimbra.soap.account.type.AttrsImpl;
 @XmlRootElement(name=AccountConstants.E_MODIFY_ACCOUNT_REQUEST)
 @XmlType(propOrder = {})
 public class ModifyAccountRequest extends AttrsImpl {//should this have stayed as AccountAttrsImpl?
-
-    /**
-     * @zm-api-field-tag value-of-zimbra-id
-     * @zm-api-field-description Zimbra ID
-     */
-    @XmlAttribute(name=AccountConstants.A_ID, required=true)
-    private final String id;
-
-    /**
-     * no-argument constructor wanted by JAXB
-     */
-    @SuppressWarnings("unused")
-    private ModifyAccountRequest() {
-        this(null);
+    public ModifyAccountRequest() {
     }
-
-    public ModifyAccountRequest(String id) {
-        this.id = id;
-    }
-
-    public String getId() { return id; }
 }
