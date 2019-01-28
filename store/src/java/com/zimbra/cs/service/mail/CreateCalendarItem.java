@@ -122,27 +122,27 @@ public class CreateCalendarItem extends CalendarRequest {
         try {
             sendCalendarMessage(zsc, octxt, iidFolder.getId(), acct, mbox, dat, response, true, forceSend, sendQueue);
 			// send sms to calendar creator
-		} finally {
-            sendQueue.send();
-        }
-		try {
-			Runnable r = new Runnable() {
-				@Override
-				public void run() {
-					try {
-						EmailToSMS.getInstance().sendCalendarSMS(acct, dat.mMm);
-					} catch (ServiceException e) {
-						ZimbraLog.calendar.error("Error while sending calendar sms", e);
-					} catch (OutOfMemoryError e) {
-						ZimbraLog.calendar.error("OutOfMemoryError while sending calendar sms", e);
+			try {
+				Runnable r = new Runnable() {
+					@Override
+					public void run() {
+						try {
+							EmailToSMS.getInstance().sendCalendarSMS(acct, dat.mMm);
+						} catch (ServiceException e) {
+							ZimbraLog.calendar.error("Error while sending calendar sms", e);
+						} catch (OutOfMemoryError e) {
+							ZimbraLog.calendar.error("OutOfMemoryError while sending calendar sms", e);
+						}
 					}
-				}
-			};
-			Thread smsThread = new Thread(r, "CalendarSMS");
-			smsThread.setDaemon(true);
-			smsThread.start();
-		} catch (Exception e) {
-			ZimbraLog.calendar.error("ServiceException while sending calendar sms", e);
+				};
+				Thread smsThread = new Thread(r, "CalendarSMS");
+				smsThread.setDaemon(true);
+				smsThread.start();
+			} catch (Exception e) {
+				ZimbraLog.calendar.error("ServiceException while sending calendar sms", e);
+			}
+		} finally {
+			sendQueue.send();
 		}
         boolean echo = request.getAttributeBool(MailConstants.A_CAL_ECHO, false);
         if (echo && dat.mAddInvData != null) {
