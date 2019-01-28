@@ -38,6 +38,7 @@ import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.cs.mailbox.EmailToSMS;
 
 /**
  * @author tim
@@ -120,9 +121,29 @@ public class CreateCalendarItem extends CalendarRequest {
         MailSendQueue sendQueue = new MailSendQueue();
         try {
             sendCalendarMessage(zsc, octxt, iidFolder.getId(), acct, mbox, dat, response, true, forceSend, sendQueue);
-        } finally {
+			// send sms to calendar creator
+		} finally {
             sendQueue.send();
         }
+		try {
+			Runnable r = new Runnable() {
+				@Override
+				public void run() {
+					try {
+						EmailToSMS.getInstance().sendCalendarSMS(acct, dat.mMm);
+					} catch (ServiceException e) {
+						ZimbraLog.calendar.error("Error while sending calendar sms", e);
+					} catch (OutOfMemoryError e) {
+						ZimbraLog.calendar.error("OutOfMemoryError while sending calendar sms", e);
+					}
+				}
+			};
+			Thread smsThread = new Thread(r, "CalendarSMS");
+			smsThread.setDaemon(true);
+			smsThread.start();
+		} catch (Exception e) {
+			ZimbraLog.calendar.error("ServiceException while sending calendar sms", e);
+		}
         boolean echo = request.getAttributeBool(MailConstants.A_CAL_ECHO, false);
         if (echo && dat.mAddInvData != null) {
             ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
