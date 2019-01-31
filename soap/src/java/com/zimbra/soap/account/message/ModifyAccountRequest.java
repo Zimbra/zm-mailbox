@@ -19,13 +19,11 @@ package com.zimbra.soap.account.message;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.account.type.AttrsImpl;
-import com.zimbra.common.service.ServiceException;
 
 /**
  * @zm-api-command-auth-required true

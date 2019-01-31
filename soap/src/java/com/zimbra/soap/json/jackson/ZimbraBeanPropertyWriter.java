@@ -116,7 +116,6 @@ public class ZimbraBeanPropertyWriter
     public void serializeAsField(Object bean, JsonGenerator jgen, SerializerProvider prov)
     throws Exception {
         Object value = get(bean);
-        ZimbraLog.misc.warn("value: " + value);
         if (value == null) {
             if (!_suppressNulls) {
                 jgen.writeFieldName(_name);
@@ -205,7 +204,6 @@ public class ZimbraBeanPropertyWriter
      */
     public void serializeInnerField(Object value, JsonGenerator jgen, SerializerProvider prov,
         JsonSerializer<Object> ser) throws JsonGenerationException, IOException {
-        ZimbraLog.misc.warn("value in serializeInnerField: " + value);
         jgen.writeFieldName(wrappedName.getLocalPart());
         if (nameInfo.isTreatAsAttribute()) {
             ser.serialize(value, jgen, prov);
@@ -332,7 +330,6 @@ public class ZimbraBeanPropertyWriter
         if (pairs == null) {
             return;
         }
-        ZimbraLog.misc.warn("pairs: " + pairs);//attribute name is null
         jgen.writeObjectFieldStart(Element.JSONElement.E_ATTRS /* _attrs */);
         for (Object obj : pairs) {
             Class<?> objClass = obj.getClass();

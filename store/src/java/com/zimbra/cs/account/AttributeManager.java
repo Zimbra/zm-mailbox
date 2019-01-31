@@ -1320,8 +1320,6 @@ public class AttributeManager {
     public void preModify(Map<String, ? extends Object> attrs,
             Entry entry, CallbackContext context, boolean checkImmutable, boolean allowCallback)
     throws ServiceException {
-        ZimbraLog.misc.warn("attrs: " + attrs);
-        ZimbraLog.misc.warn("entry: " + entry);
         String[] keys = attrs.keySet().toArray(new String[0]);
         for (int i = 0; i < keys.length; i++) {
             String name = keys[i];
