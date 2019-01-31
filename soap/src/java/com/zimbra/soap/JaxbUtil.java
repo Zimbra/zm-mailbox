@@ -1541,6 +1541,7 @@ public final class JaxbUtil {
     @SuppressWarnings("unchecked")
     public static <T> T elementToJaxb(Element e) throws ServiceException {
         Class<?> klass = classForTopLevelElem(e);
+        ZimbraLog.misc.warn("The klass is: " + klass);
         if (klass == null) {
             LOG.info("Failed to find CLASS for name=[" + e.getName() +
                     "]  Is it a Request or Response node?");
