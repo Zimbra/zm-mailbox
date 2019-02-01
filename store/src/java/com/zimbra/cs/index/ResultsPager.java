@@ -174,7 +174,8 @@ public final class ResultsPager {
                 if (params.getCursor().getItemId().getId() == 0) { // special case prevId of 0
                     return hit;
                 }
-                if (params.getSortBy().getDirection() == SortBy.Direction.DESC) {
+                /* See also DbSearch.sortBy(SortBy, boolean) */
+                if (params.getSortBy().getDirection() == SortBy.Direction.DESC || params.getSortBy().getKey() == SortBy.Key.UNREAD) {
                     if (hit.getItemId() < params.getCursor().getItemId().getId()) {
                         return hit;
                     }
