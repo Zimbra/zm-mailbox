@@ -16209,6 +16209,83 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * Whether to check for file type regardless of extension while uploading
+     * in briefcase or not
+     *
+     * @return zimbraFileTypeCheckEnabled, or false if unset
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5027)
+    public boolean isFileTypeCheckEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFileTypeCheckEnabled, false, true);
+    }
+
+    /**
+     * Whether to check for file type regardless of extension while uploading
+     * in briefcase or not
+     *
+     * @param zimbraFileTypeCheckEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5027)
+    public void setFileTypeCheckEnabled(boolean zimbraFileTypeCheckEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileTypeCheckEnabled, zimbraFileTypeCheckEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to check for file type regardless of extension while uploading
+     * in briefcase or not
+     *
+     * @param zimbraFileTypeCheckEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5027)
+    public Map<String,Object> setFileTypeCheckEnabled(boolean zimbraFileTypeCheckEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileTypeCheckEnabled, zimbraFileTypeCheckEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to check for file type regardless of extension while uploading
+     * in briefcase or not
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5027)
+    public void unsetFileTypeCheckEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileTypeCheckEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to check for file type regardless of extension while uploading
+     * in briefcase or not
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5027)
+    public Map<String,Object> unsetFileTypeCheckEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileTypeCheckEnabled, "");
+        return attrs;
+    }
+
+    /**
      * Maximum size in bytes for each attachment.
      *
      * @return zimbraFileUploadMaxSizePerFile, or 2147483648 if unset
