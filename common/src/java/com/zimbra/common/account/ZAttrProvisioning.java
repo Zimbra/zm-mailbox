@@ -7284,6 +7284,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFileShareLifetime = "zimbraFileShareLifetime";
 
     /**
+     * Whether to check for file type regardless of extension while uploading
+     * in briefcase or not
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5027)
+    public static final String A_zimbraFileTypeCheckEnabled = "zimbraFileTypeCheckEnabled";
+
+    /**
      * Maximum size in bytes for file uploads
      */
     @ZAttr(id=227)
