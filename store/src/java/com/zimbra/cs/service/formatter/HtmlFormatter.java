@@ -277,6 +277,7 @@ public class HtmlFormatter extends Formatter {
                 sb.append(attrName).append("=").append(HttpUtil.urlEscape(attrValue)).append("&");
             }
             HttpGet postMethod = new HttpGet(sb.toString());
+            postMethod.setHeader("Accept-Language", context.getLocale().getLanguage());
 
             HttpResponse httpResp;
             try {
