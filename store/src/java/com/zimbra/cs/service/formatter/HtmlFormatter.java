@@ -238,7 +238,6 @@ public class HtmlFormatter extends Formatter {
             context.req.setAttribute(ATTR_TARGET_USE_INSTANCE, context.getUseInstance());
             context.req.setAttribute(ATTR_TARGET_XIM, context.getXim());
             context.req.setAttribute(ATTR_TARGET_VIEW, context.getView());
-
         } else {
             context.req.setAttribute(ATTR_TARGET_ITEM_COLOR, Color.getMappedColor(null));
         }
