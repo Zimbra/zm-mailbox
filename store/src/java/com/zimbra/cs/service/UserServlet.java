@@ -261,6 +261,31 @@ public class UserServlet extends ZimbraServlet {
 
     protected static final String MSGPAGE_BLOCK = "errorpage.attachment.blocked";
 
+    // used in restCalendar
+    public static final String QP_ACTION = "action";
+    public static final String QP_BODYPART = "bodypart";
+    public static final String QP_COLOR = "color";
+    public static final String QP_DATE = "date";
+    public static final String QP_EX_COMP_NUM = "exCompNum";
+    public static final String QP_EX_INV_ID = "exInvId";
+    public static final String QP_FOLDER_IDS = "folderIds";
+    public static final String QP_IM_ID = "im_id";
+    public static final String QP_IM_PART = "im_part";
+    public static final String QP_IM_XIM = "im_xim";
+    public static final String QP_INST_DURATION = "instDuration";
+    public static final String QP_INST_START_TIME = "instStartTime";
+    public static final String QP_INV_COMP_NUM = "invCompNum";
+    public static final String QP_INV_ID = "invId";
+    public static final String QP_NOTOOLBAR = "notoolbar";
+    public static final String QP_NUMDAYS = "numdays";
+    public static final String QP_PSTAT = "pstat";
+    public static final String QP_REFRESH = "refresh";
+    public static final String QP_SKIN = "skin";
+    public static final String QP_SQ = "sq";
+    public static final String QP_TZ = "tz";
+    public static final String QP_USE_INSTANCE = "useInstance";
+    public static final String QP_XIM = "xim";
+
     public static final Log log = LogFactory.getLog(UserServlet.class);
 
     /** Returns the REST URL for the account. */
