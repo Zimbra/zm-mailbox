@@ -145,4 +145,8 @@ public class CalItemEmailReminderTask extends CalItemReminderTaskBase {
                                             L10nUtil.MsgKey.apptReminderEmailBody : L10nUtil.MsgKey.taskReminderEmailBody,
                                     locale, formattedStart, formattedEnd, location, organizer, folder, description);
     }
+
+	@Override
+	protected void sendReminderSMS(CalendarItem calItem) {}
+
 }
