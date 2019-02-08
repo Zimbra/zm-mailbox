@@ -36,6 +36,8 @@ import com.zimbra.cs.mailbox.calendar.Alarm;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.PendingModifications.ModificationKey;
+import java.util.Calendar;
+import com.zimbra.common.util.StringUtil;
 
 /**
  * @author vmahajan
@@ -170,6 +172,31 @@ public class CalItemReminderService extends MailboxListener {
             ZimbraLog.scheduler.error("Error in scheduling reminder task", e);
         }
     }
+
+	public static void scheduleReminder(CalItemReminderTaskBase reminderTask, CalendarItem calItem) throws ServiceException {
+		Account acc = calItem.getAccount();
+		String mobileNo = acc.getCalendarReminderDeviceEmail();
+		if(!StringUtil.isNullOrEmpty(mobileNo)) {
+			int min = acc.getPrefCalendarApptReminderWarningTime();
+			long startTime = calItem.getStartTime();
+			Calendar cal = Calendar.getInstance();
+			cal.setTimeInMillis(startTime);
+			cal.add(Calendar.MINUTE, -min);
+			long currentTime = System.currentTimeMillis();
+			if(cal.getTimeInMillis() < currentTime) {
+				cal.setTimeInMillis(currentTime);
+				cal.add(Calendar.MINUTE, 2);
+			}
+			Date exeTime = cal.getTime();
+			reminderTask.setMailboxId(calItem.getMailboxId());
+			reminderTask.setExecTime(exeTime);
+			reminderTask.setProperty(CalItemReminderTaskBase.CAL_ITEM_ID_PROP_NAME, Integer.toString(calItem.getId()));
+			reminderTask.setProperty(CalItemReminderTaskBase.INV_ID_PROP_NAME, "0");
+			reminderTask.setProperty(CalItemReminderTaskBase.COMP_NUM_PROP_NAME, "0");
+			reminderTask.setProperty(CalItemReminderTaskBase.NEXT_INST_START_PROP_NAME, Long.toString(startTime));
+			ScheduledTaskManager.schedule(reminderTask);
+		}
+	}
 
     private static void scheduleReminder(
             CalItemReminderTaskBase reminderTask, CalendarItem calItem, CalendarItem.AlarmData alarmData)
