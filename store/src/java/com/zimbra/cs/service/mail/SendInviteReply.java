@@ -65,6 +65,9 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.cs.mailbox.alerts.CalItemReminderService;
+import com.zimbra.cs.mailbox.alerts.CalItemSmsReminderTask;
+import com.zimbra.common.util.StringUtil;
 
 /**
  * @since Mar 2, 2005
@@ -424,7 +427,14 @@ public class SendInviteReply extends CalendarRequest {
             if (calItem != null)
                 mbox.modifyPartStat(octxt, calItemId, recurId, cnStr, addressStr, null, role, verb.getXmlPartStat(), Boolean.FALSE, seqNo, dtStamp);
         }
-
+        
+		try {
+			if(!StringUtil.isNullOrEmpty(verbStr) && verbStr.equals("ACCEPT")) {
+				CalItemReminderService.scheduleReminder(new CalItemSmsReminderTask(), calItem);
+			}
+		} catch(Exception ex) {
+			ZimbraLog.calendar.warn("Can't schedule reminder sms for recipient : "+ex.getMessage());
+		}
         // move the invite to the Trash if the user wants it
         if (deleteInviteOnReply(acct)) {
             try {
