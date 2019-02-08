@@ -29,6 +29,13 @@ import javax.mail.internet.MimePart;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Iterator;
+import java.util.Locale;
+import java.util.TimeZone;
+import com.zimbra.cs.mailbox.calendar.Invite;
+import com.zimbra.cs.mailbox.calendar.Util;
 
 public class EmailToSMS implements LmtpCallback {
 
@@ -88,27 +95,64 @@ public class EmailToSMS implements LmtpCallback {
 		}
 	}
 
-	public void sendCalendarSMS(Account acct, MimeMessage mimeMsg) throws ServiceException {
+	public void sendCalendarSMS(String bodyMsg, Account acct) throws ServiceException {
 		String senderMobileNo = acct.getCalendarReminderDeviceEmail();
 		if(!StringUtil.isNullOrEmpty(senderMobileNo)) {
 			String sender = acct.getName();
-			Pair<String,String> message = getTextBody(mimeMsg, false);
-			String bodyMsg = message.getFirst();
-			bodyMsg = bodyMsg.replace("The following is a new meeting request:", "The following meeting has been generated:");
 			Boolean isASCIIString = isPureAscii(bodyMsg);
 			String fullMessage = "";
 			if(isASCIIString) {
 				fullMessage = encode(bodyMsg);
 			} else {
 				fullMessage = fullMessage + "FEFF";
+				fullMessage = fullMessage + convertStringToUnicode("\n");
 				fullMessage = fullMessage + convertStringToUnicode(bodyMsg);
 			}
-
 			int index = senderMobileNo.indexOf("@");
 			if(index != -1) {
 				senderMobileNo = senderMobileNo.substring(0, index);
 			}
-			sendsms(fullMessage, senderMobileNo, sender, isASCIIString);
+			sendsms(fullMessage, senderMobileNo, sender, true);
+		}
+	}
+
+	public void sendCalendarReminderSMS(CalendarItem calItem) throws ServiceException {
+		Account acct = calItem.getAccount();
+		String senderMobileNo = acct.getCalendarReminderDeviceEmail();
+		if(!StringUtil.isNullOrEmpty(senderMobileNo)) {
+			Invite[] invites = calItem.getInvites();
+			StringBuffer strBuff = new StringBuffer();
+			strBuff.append("Appointment Reminder: ");
+			strBuff.append(calItem.getSubject());
+			TimeZone tz = Util.getAccountTimeZone(acct);
+			Locale locale = acct.getLocale();
+			String pattern = "dd/MM HH:mm";
+			SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern, locale);
+			simpleDateFormat.setTimeZone(tz);
+			if(invites != null && invites.length>0) {
+				Invite invite = invites[0];
+				strBuff.append("Time: ");strBuff.append(simpleDateFormat.format(invite.getStartTime().getDate()));
+				strBuff.append("-");strBuff.append(simpleDateFormat.format(invite.getEndTime().getDate()));
+				strBuff.append(" ,Location: ");
+				strBuff.append(invite.getLocation());
+				strBuff.append(" (Calendar)");
+			}
+			String sender = acct.getName();
+			String message = strBuff.toString();
+			Boolean isASCIIString = isPureAscii(message);
+			String fullMessage = "";
+			if(isASCIIString) {
+				fullMessage = encode(message);
+			} else {
+				fullMessage = fullMessage + "FEFF";
+				fullMessage = fullMessage + convertStringToUnicode("\n");
+				fullMessage = fullMessage + convertStringToUnicode(message);
+			}
+			int index = senderMobileNo.indexOf("@");
+			if(index != -1) {
+				senderMobileNo = senderMobileNo.substring(0, index);
+			}
+			sendsms(fullMessage, senderMobileNo, sender, true);
 		}
 	}
 
