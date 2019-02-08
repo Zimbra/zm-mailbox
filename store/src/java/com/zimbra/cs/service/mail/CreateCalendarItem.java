@@ -40,6 +40,15 @@ import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.cs.mailbox.EmailToSMS;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Iterator;
+import java.util.Locale;
+import java.util.TimeZone;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.cs.mailbox.calendar.Alarm;
+import com.zimbra.cs.mailbox.calendar.Util;
+
 /**
  * @author tim
  */
@@ -127,7 +136,11 @@ public class CreateCalendarItem extends CalendarRequest {
 					@Override
 					public void run() {
 						try {
-							EmailToSMS.getInstance().sendCalendarSMS(acct, dat.mMm);
+							java.util.List<Alarm> listAlarm = dat.mInvite.getAlarms();
+							String senderMobileNo = acct.getCalendarReminderDeviceEmail();
+							if(listAlarm!=null && listAlarm.size()> 1 && !StringUtil.isNullOrEmpty(senderMobileNo)) {
+								EmailToSMS.getInstance().sendCalendarSMS(getCalendarSMS(dat, acct), acct);
+							}
 						} catch (ServiceException e) {
 							ZimbraLog.calendar.error("Error while sending calendar sms", e);
 						} catch (OutOfMemoryError e) {
@@ -154,4 +167,25 @@ public class CreateCalendarItem extends CalendarRequest {
         }
         return response;
     }
+	private String getCalendarSMS(CalSendData dat, Account acct) throws ServiceException {
+		StringBuffer message = new StringBuffer();
+		TimeZone tz = Util.getAccountTimeZone(acct);
+		Locale locale = acct.getLocale();
+		String pattern = "dd/MM HH:mm";
+		SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern, locale);
+		simpleDateFormat.setTimeZone(tz);
+
+		message.append("The following meeting has been generated:");
+		message.append("\n");
+		message.append("Subject: ");message.append(dat.mInvite.getName());
+		message.append("\n");
+		message.append("Organizer: ");message.append(acct.getName());
+		message.append("\n");
+		message.append("Location: ");message.append(dat.mInvite.getLocation());
+		message.append("\n");
+		message.append("Time: ");message.append(simpleDateFormat.format(dat.mInvite.getStartTime().getDate()));
+		message.append("-");message.append(simpleDateFormat.format(dat.mInvite.getEndTime().getDate()));
+		return message.toString();
+	}
+
 }
