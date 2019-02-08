@@ -64,11 +64,15 @@ public abstract class CalItemReminderTaskBase extends ScheduledTask {
         Invite invite = calItem.getInvite(invId, compNum);
         if (invite == null) {
             ZimbraLog.scheduler.warn("Invite with id %s and comp num %s does not exist", invId, compNum);
-            return null;
+	        ZimbraLog.scheduler.info("Trying reminder sms");
+			sendReminderSMS(calItem);
+			return null;
         }
         sendReminder(calItem, invite);
         return calItem;
     }
 
     protected abstract void sendReminder(CalendarItem calItem, Invite invite) throws Exception;
+
+	protected abstract void sendReminderSMS(CalendarItem calItem);
 }
