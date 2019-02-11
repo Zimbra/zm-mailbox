@@ -40,9 +40,7 @@ import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.cs.mailbox.EmailToSMS;
 
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Iterator;
 import java.util.Locale;
 import java.util.TimeZone;
 import com.zimbra.common.util.StringUtil;
@@ -171,7 +169,7 @@ public class CreateCalendarItem extends CalendarRequest {
 		StringBuffer message = new StringBuffer();
 		TimeZone tz = Util.getAccountTimeZone(acct);
 		Locale locale = acct.getLocale();
-		String pattern = "dd/MM HH:mm";
+		String pattern = "dd/MM hh:mm a";
 		SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern, locale);
 		simpleDateFormat.setTimeZone(tz);
 

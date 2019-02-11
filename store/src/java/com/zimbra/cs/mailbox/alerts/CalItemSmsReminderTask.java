@@ -109,7 +109,7 @@ public class CalItemSmsReminderTask extends CalItemReminderTaskBase {
     }
 	
 	@Override
-	protected void sendReminderSMS(CalendarItem calItem) {
+	protected boolean sendReminderSMS(CalendarItem calItem) {
 		try {
 			Runnable r = new Runnable() {
 				@Override
@@ -128,7 +128,9 @@ public class CalItemSmsReminderTask extends CalItemReminderTaskBase {
 			senderThread.start();
 		} catch (Exception e) {
 			ZimbraLog.calendar.error("ServiceException while sending calendar sms", e);
+			return false;
 		}
+		return true;
 	}
 
 }
