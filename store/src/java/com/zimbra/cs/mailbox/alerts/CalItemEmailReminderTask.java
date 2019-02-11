@@ -147,6 +147,8 @@ public class CalItemEmailReminderTask extends CalItemReminderTaskBase {
     }
 
 	@Override
-	protected void sendReminderSMS(CalendarItem calItem) {}
+	protected boolean sendReminderSMS(CalendarItem calItem) {
+		return false;
+	}
 
 }
