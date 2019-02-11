@@ -74,5 +74,5 @@ public abstract class CalItemReminderTaskBase extends ScheduledTask {
 
     protected abstract void sendReminder(CalendarItem calItem, Invite invite) throws Exception;
 
-	protected abstract void sendReminderSMS(CalendarItem calItem);
+	protected abstract boolean sendReminderSMS(CalendarItem calItem);
 }
