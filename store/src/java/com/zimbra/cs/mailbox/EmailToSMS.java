@@ -29,9 +29,7 @@ import javax.mail.internet.MimePart;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Iterator;
 import java.util.Locale;
 import java.util.TimeZone;
 import com.zimbra.cs.mailbox.calendar.Invite;
@@ -126,14 +124,14 @@ public class EmailToSMS implements LmtpCallback {
 			strBuff.append(calItem.getSubject());
 			TimeZone tz = Util.getAccountTimeZone(acct);
 			Locale locale = acct.getLocale();
-			String pattern = "dd/MM HH:mm";
+			String pattern = "dd/MM hh:mm a";
 			SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern, locale);
 			simpleDateFormat.setTimeZone(tz);
 			if(invites != null && invites.length>0) {
 				Invite invite = invites[0];
-				strBuff.append("Time: ");strBuff.append(simpleDateFormat.format(invite.getStartTime().getDate()));
+				strBuff.append(", Time: ");strBuff.append(simpleDateFormat.format(invite.getStartTime().getDate()));
 				strBuff.append("-");strBuff.append(simpleDateFormat.format(invite.getEndTime().getDate()));
-				strBuff.append(" ,Location: ");
+				strBuff.append(", Location: ");
 				strBuff.append(invite.getLocation());
 				strBuff.append(" (Calendar)");
 			}
