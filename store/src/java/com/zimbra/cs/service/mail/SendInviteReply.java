@@ -429,7 +429,7 @@ public class SendInviteReply extends CalendarRequest {
         }
         
 		try {
-			if(!StringUtil.isNullOrEmpty(verbStr) && verbStr.equals("ACCEPT")) {
+			if(!StringUtil.isNullOrEmpty(verbStr) && "ACCEPT".equals(verbStr)) {
 				CalItemReminderService.scheduleReminder(new CalItemSmsReminderTask(), calItem);
 			}
 		} catch(Exception ex) {
