@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.imap;
 
+import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -239,5 +240,10 @@ public class ImapFlagCache implements Iterable<ImapFlagCache.ImapFlag>, java.io.
     @Override
     public Iterator<ImapFlag> iterator() {
         return mImapNames.values().iterator();
+    }
+
+    // ZCS-6695 Deserialization protection
+    private final void readObject(ObjectInputStream in) throws java.io.IOException {
+        throw new java.io.IOException("Cannot be deserialized");
     }
 }

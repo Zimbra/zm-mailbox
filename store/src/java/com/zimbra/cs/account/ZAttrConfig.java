@@ -13692,6 +13692,140 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * White list of classes that can be deserialized in ZCS
+     *
+     * @return zimbraDeserializerWhiteList, or empty array if unset
+     *
+     * @since ZCS 8.8.12
+     */
+    @ZAttr(id=3077)
+    public String[] getDeserializerWhiteList() {
+        String[] value = getMultiAttr(Provisioning.A_zimbraDeserializerWhiteList, true, true); return value.length > 0 ? value : new String[] {"com.zimbra.cs.imap.ImapFolder","com.zimbra.cs.mailbox.MailItem.Type","java.util.EnumSet","com.zimbra.cs.store.MailboxBlob.MailboxBlobInfo","java.lang.String"};
+    }
+
+    /**
+     * White list of classes that can be deserialized in ZCS
+     *
+     * @param zimbraDeserializerWhiteList new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.12
+     */
+    @ZAttr(id=3077)
+    public void setDeserializerWhiteList(String[] zimbraDeserializerWhiteList) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDeserializerWhiteList, zimbraDeserializerWhiteList);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * White list of classes that can be deserialized in ZCS
+     *
+     * @param zimbraDeserializerWhiteList new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.12
+     */
+    @ZAttr(id=3077)
+    public Map<String,Object> setDeserializerWhiteList(String[] zimbraDeserializerWhiteList, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDeserializerWhiteList, zimbraDeserializerWhiteList);
+        return attrs;
+    }
+
+    /**
+     * White list of classes that can be deserialized in ZCS
+     *
+     * @param zimbraDeserializerWhiteList new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.12
+     */
+    @ZAttr(id=3077)
+    public void addDeserializerWhiteList(String zimbraDeserializerWhiteList) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraDeserializerWhiteList, zimbraDeserializerWhiteList);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * White list of classes that can be deserialized in ZCS
+     *
+     * @param zimbraDeserializerWhiteList new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.12
+     */
+    @ZAttr(id=3077)
+    public Map<String,Object> addDeserializerWhiteList(String zimbraDeserializerWhiteList, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraDeserializerWhiteList, zimbraDeserializerWhiteList);
+        return attrs;
+    }
+
+    /**
+     * White list of classes that can be deserialized in ZCS
+     *
+     * @param zimbraDeserializerWhiteList existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.12
+     */
+    @ZAttr(id=3077)
+    public void removeDeserializerWhiteList(String zimbraDeserializerWhiteList) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraDeserializerWhiteList, zimbraDeserializerWhiteList);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * White list of classes that can be deserialized in ZCS
+     *
+     * @param zimbraDeserializerWhiteList existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.12
+     */
+    @ZAttr(id=3077)
+    public Map<String,Object> removeDeserializerWhiteList(String zimbraDeserializerWhiteList, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraDeserializerWhiteList, zimbraDeserializerWhiteList);
+        return attrs;
+    }
+
+    /**
+     * White list of classes that can be deserialized in ZCS
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.12
+     */
+    @ZAttr(id=3077)
+    public void unsetDeserializerWhiteList() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDeserializerWhiteList, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * White list of classes that can be deserialized in ZCS
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.12
+     */
+    @ZAttr(id=3077)
+    public Map<String,Object> unsetDeserializerWhiteList(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDeserializerWhiteList, "");
+        return attrs;
+    }
+
+    /**
      * Deprecated since: 5.0. deprecated in favor of the
      * domainAdminAdminModifiable flag. Orig desc: account attributes that a
      * domain administrator is allowed to modify
@@ -17973,7 +18107,7 @@ public abstract class ZAttrConfig extends Entry {
      */
     @ZAttr(id=52)
     public String[] getGalLdapFilterDef() {
-        String[] value = getMultiAttr(Provisioning.A_zimbraGalLdapFilterDef, true, true); return value.length > 0 ? value : new String[] {"zimbraAccounts:(&(|(displayName=*%s*)(cn=*%s*)(sn=*%s*)(gn=*%s*)(zimbraPhoneticFirstName=*%s*)(zimbraPhoneticLastName=*%s*)(mail=*%s*)(zimbraMailDeliveryAddress=*%s*)(zimbraMailAlias=*%s*))(|(objectclass=zimbraAccount)(objectclass=zimbraDistributionList)(objectclass=zimbraGroup))(!(objectclass=zimbraCalendarResource)))","zimbraAccountAutoComplete:(&(|(displayName=*%s*)(cn=%s*)(sn=%s*)(gn=%s*)(zimbraPhoneticFirstName=%s*)(zimbraPhoneticLastName=%s*)(mail=%s*)(zimbraMailDeliveryAddress=%s*)(zimbraMailAlias=%s*))(|(objectclass=zimbraAccount)(objectclass=zimbraDistributionList)(objectclass=zimbraGroup))(!(objectclass=zimbraCalendarResource)))","zimbraAccountSync:(&(|(objectclass=zimbraAccount)(objectclass=zimbraDistributionList)(objectclass=zimbraGroup))(!(objectclass=zimbraCalendarResource)))","zimbraResources:(&(|(displayName=*%s*)(cn=*%s*)(sn=*%s*)(gn=*%s*)(mail=*%s*)(zimbraMailDeliveryAddress=*%s*)(zimbraMailAlias=*%s*))(objectclass=zimbraCalendarResource)(zimbraAccountStatus=active))","zimbraResourceAutoComplete:(&(|(displayName=%s*)(cn=%s*)(sn=%s*)(gn=%s*)(mail=%s*)(zimbraMailDeliveryAddress=%s*)(zimbraMailAlias=%s*))(objectclass=zimbraCalendarResource)(zimbraAccountStatus=active))","zimbraResourceSync:(&(objectclass=zimbraCalendarResource)(zimbraAccountStatus=active))","zimbraGroups:(&(|(displayName=*%s*)(cn=*%s*)(sn=*%s*)(gn=*%s*)(mail=*%s*)(zimbraMailDeliveryAddress=*%s*)(zimbraMailAlias=*%s*))(|(objectclass=zimbraDistributionList)(objectclass=zimbraGroup)))","zimbraGroupAutoComplete:(&(|(displayName=%s*)(cn=%s*)(sn=%s*)(gn=%s*)(mail=%s*)(zimbraMailDeliveryAddress=%s*)(zimbraMailAlias=%s*))(|(objectclass=zimbraDistributionList)(objectclass=zimbraGroup)))","zimbraGroupSync:(|(objectclass=zimbraDistributionList)(objectclass=zimbraGroup))","zimbraAutoComplete:(&(|(displayName=%s*)(cn=%s*)(sn=%s*)(gn=%s*)(zimbraPhoneticFirstName=%s*)(zimbraPhoneticLastName=%s*)(mail=%s*)(zimbraMailDeliveryAddress=%s*)(zimbraMailAlias=%s*))(|(objectclass=zimbraAccount)(objectclass=zimbraDistributionList)(objectclass=zimbraGroup)))","zimbraSearch:(&(|(displayName=*%s*)(cn=*%s*)(sn=*%s*)(gn=*%s*)(zimbraPhoneticFirstName=*%s*)(zimbraPhoneticLastName=*%s*)(mail=*%s*)(zimbraMailDeliveryAddress=*%s*)(zimbraMailAlias=*%s*))(|(objectclass=zimbraAccount)(objectclass=zimbraDistributionList)(objectclass=zimbraGroup)))","zimbraSync:(&(|(objectclass=zimbraAccount)(objectclass=zimbraDistributionList)(objectclass=zimbraGroup))(!(&(objectclass=zimbraCalendarResource)(!(zimbraAccountStatus=active)))))","ad:(&(|(displayName=*%s*)(cn=*%s*)(sn=*%s*)(givenName=*%s*)(mail=*%s*))(!(msExchHideFromAddressLists=TRUE))(|(&(objectCategory=person)(objectClass=user)(!(homeMDB=*))(!(msExchHomeServerName=*)))(&(objectCategory=person)(objectClass=user)(|(homeMDB=*)(msExchHomeServerName=*)))(&(objectCategory=person)(objectClass=contact))(objectCategory=group)(objectCategory=publicFolder)(objectCategory=msExchDynamicDistributionList)))","adAutoComplete:(&(|(displayName=%s*)(cn=%s*)(sn=%s*)(givenName=%s*)(mail=%s*))(!(msExchHideFromAddressLists=TRUE))(|(&(objectCategory=person)(objectClass=user)(!(homeMDB=*))(!(msExchHomeServerName=*)))(&(objectCategory=person)(objectClass=user)(|(homeMDB=*)(msExchHomeServerName=*)))(&(objectCategory=person)(objectClass=contact))(objectCategory=group)(objectCategory=publicFolder)(objectCategory=msExchDynamicDistributionList)))","externalLdapAutoComplete:(|(cn=%s*)(sn=%s*)(gn=%s*)(mail=%s*))","email_has:(mail=*%s*)","email2_has:(mail=*%s*)","email3_has:(mail=*%s*)","email4_has:(mail=*%s*)","email5_has:(mail=*%s*)","email6_has:(mail=*%s*)","email7_has:(mail=*%s*)","email8_has:(mail=*%s*)","email9_has:(mail=*%s*)","email10_has:(mail=*%s*)","email11_has:(mail=*%s*)","email12_has:(mail=*%s*)","email13_has:(mail=*%s*)","email14_has:(mail=*%s*)","email15_has:(mail=*%s*)","email16_has:(mail=*%s*)","department_has:(ou=*%s*)","firstName_has:(gn=*%s*)","lastName_has:(sn=*%s*)","middleName_has:(initials=*%s*)","nickname_has:(|(displayName=*%s*)(cn=*%s*))","phoneticFirstName_has:(zimbraPhoneticFirstName=*%s*)","phoneticLastName_has:(zimbraPhoneticLastName=*%s*)"};
+        String[] value = getMultiAttr(Provisioning.A_zimbraGalLdapFilterDef, true, true); return value.length > 0 ? value : new String[] {"zimbraAccounts:(&(|(displayName=*%s*)(cn=*%s*)(sn=*%s*)(gn=*%s*)(zimbraPhoneticFirstName=*%s*)(zimbraPhoneticLastName=*%s*)(mail=*%s*)(zimbraMailDeliveryAddress=*%s*)(zimbraMailAlias=*%s*))(|(objectclass=zimbraAccount)(objectclass=zimbraDistributionList)(objectclass=zimbraGroup))(!(objectclass=zimbraCalendarResource)))","zimbraAccountAutoComplete:(&(|(displayName=*%s*)(cn=%s*)(sn=%s*)(gn=%s*)(zimbraPhoneticFirstName=%s*)(zimbraPhoneticLastName=%s*)(mail=%s*)(zimbraMailDeliveryAddress=%s*)(zimbraMailAlias=%s*))(|(objectclass=zimbraAccount)(objectclass=zimbraDistributionList)(objectclass=zimbraGroup))(!(objectclass=zimbraCalendarResource)))","zimbraAccountSync:(&(|(objectclass=zimbraAccount)(objectclass=zimbraDistributionList)(objectclass=zimbraGroup))(!(objectclass=zimbraCalendarResource)))","zimbraResources:(&(|(displayName=*%s*)(cn=*%s*)(sn=*%s*)(gn=*%s*)(mail=*%s*)(zimbraMailDeliveryAddress=*%s*)(zimbraMailAlias=*%s*))(objectclass=zimbraCalendarResource)(zimbraAccountStatus=active))","zimbraResourceAutoComplete:(&(|(displayName=%s*)(cn=%s*)(sn=%s*)(gn=%s*)(mail=%s*)(zimbraMailDeliveryAddress=%s*)(zimbraMailAlias=%s*))(objectclass=zimbraCalendarResource)(zimbraAccountStatus=active))","zimbraResourceSync:(&(objectclass=zimbraCalendarResource)(zimbraAccountStatus=active))","zimbraGroups:(&(|(displayName=*%s*)(cn=*%s*)(sn=*%s*)(gn=*%s*)(mail=*%s*)(zimbraMailDeliveryAddress=*%s*)(zimbraMailAlias=*%s*))(|(objectclass=zimbraDistributionList)(objectclass=zimbraGroup)))","zimbraGroupAutoComplete:(&(|(displayName=%s*)(cn=%s*)(sn=%s*)(gn=%s*)(mail=%s*)(zimbraMailDeliveryAddress=%s*)(zimbraMailAlias=%s*))(|(objectclass=zimbraDistributionList)(objectclass=zimbraGroup)))","zimbraGroupSync:(|(objectclass=zimbraDistributionList)(objectclass=zimbraGroup))","zimbraAutoComplete:(&(|(displayName=%s*)(cn=%s*)(sn=%s*)(gn=%s*)(zimbraPhoneticFirstName=%s*)(zimbraPhoneticLastName=%s*)(mail=%s*)(zimbraMailDeliveryAddress=%s*)(zimbraMailAlias=%s*))(|(objectclass=zimbraAccount)(objectclass=zimbraDistributionList)(objectclass=zimbraGroup)))","zimbraSearch:(&(|(displayName=*%s*)(cn=*%s*)(sn=*%s*)(gn=*%s*)(zimbraPhoneticFirstName=*%s*)(zimbraPhoneticLastName=*%s*)(mail=*%s*)(zimbraMailDeliveryAddress=*%s*)(zimbraMailAlias=*%s*))(|(objectclass=zimbraAccount)(objectclass=zimbraDistributionList)(objectclass=zimbraGroup)))","zimbraSync:(&(|(objectclass=zimbraAccount)(objectclass=zimbraDistributionList)(objectclass=zimbraGroup)(objectclass=zimbraAddressList)(objectclass=zimbraHabGroup))(!(&(objectclass=zimbraCalendarResource)(!(|(zimbraAccountStatus=active)(zimbraIsAddressListActive=TRUE)(zimbraMailStatus=enabled))))))","ad:(&(|(displayName=*%s*)(cn=*%s*)(sn=*%s*)(givenName=*%s*)(mail=*%s*))(!(msExchHideFromAddressLists=TRUE))(|(&(objectCategory=person)(objectClass=user)(!(homeMDB=*))(!(msExchHomeServerName=*)))(&(objectCategory=person)(objectClass=user)(|(homeMDB=*)(msExchHomeServerName=*)))(&(objectCategory=person)(objectClass=contact))(objectCategory=group)(objectCategory=publicFolder)(objectCategory=msExchDynamicDistributionList)))","adAutoComplete:(&(|(displayName=%s*)(cn=%s*)(sn=%s*)(givenName=%s*)(mail=%s*))(!(msExchHideFromAddressLists=TRUE))(|(&(objectCategory=person)(objectClass=user)(!(homeMDB=*))(!(msExchHomeServerName=*)))(&(objectCategory=person)(objectClass=user)(|(homeMDB=*)(msExchHomeServerName=*)))(&(objectCategory=person)(objectClass=contact))(objectCategory=group)(objectCategory=publicFolder)(objectCategory=msExchDynamicDistributionList)))","externalLdapAutoComplete:(|(cn=%s*)(sn=%s*)(gn=%s*)(mail=%s*))","email_has:(mail=*%s*)","email2_has:(mail=*%s*)","email3_has:(mail=*%s*)","email4_has:(mail=*%s*)","email5_has:(mail=*%s*)","email6_has:(mail=*%s*)","email7_has:(mail=*%s*)","email8_has:(mail=*%s*)","email9_has:(mail=*%s*)","email10_has:(mail=*%s*)","email11_has:(mail=*%s*)","email12_has:(mail=*%s*)","email13_has:(mail=*%s*)","email14_has:(mail=*%s*)","email15_has:(mail=*%s*)","email16_has:(mail=*%s*)","department_has:(ou=*%s*)","firstName_has:(gn=*%s*)","lastName_has:(sn=*%s*)","middleName_has:(initials=*%s*)","nickname_has:(|(displayName=*%s*)(cn=*%s*))","phoneticFirstName_has:(zimbraPhoneticFirstName=*%s*)","phoneticLastName_has:(zimbraPhoneticLastName=*%s*)","notes_has:(description=*%s*)"};
     }
 
     /**
