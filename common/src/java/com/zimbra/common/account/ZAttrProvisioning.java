@@ -5521,14 +5521,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDefaultFolderFlags = "zimbraDefaultFolderFlags";
 
     /**
-     * White list of classes that can be deserialized in ZCS
-     *
-     * @since ZCS 8.8.12
-     */
-    @ZAttr(id=3077)
-    public static final String A_zimbraDeserializerWhiteList = "zimbraDeserializerWhiteList";
-
-    /**
      * allowed passcode lockout duration. Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not

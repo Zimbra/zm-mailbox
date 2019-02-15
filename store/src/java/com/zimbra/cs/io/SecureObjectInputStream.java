@@ -22,10 +22,6 @@ import java.io.InvalidClassException;
 import java.io.ObjectInputStream;
 import java.io.ObjectStreamClass;
 
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Provisioning;
-
 
 /**
  * @author zimbra
@@ -33,27 +29,26 @@ import com.zimbra.cs.account.Provisioning;
  */
 public class SecureObjectInputStream extends ObjectInputStream {
 
-
     /**
+     * @param string
+     * @param fileInputStream
      * @throws IOException
      * @throws SecurityException
      */
+
+    private String acceptedClassname = null;
     protected SecureObjectInputStream() throws IOException, SecurityException {
         super();
-
     }
-
-
 
     /**
      * @param in
      * @throws IOException
      */
-    public SecureObjectInputStream(InputStream in) throws IOException {
+    public SecureObjectInputStream(InputStream in, String acceptedClassname) throws IOException {
         super(in);
+        this.acceptedClassname = acceptedClassname;
     }
-
-
 
     /**
      * Only deserialize instances of known zimbra classes
@@ -61,22 +56,11 @@ public class SecureObjectInputStream extends ObjectInputStream {
     @Override
     protected Class<?> resolveClass(ObjectStreamClass desc)
         throws IOException, ClassNotFoundException {
-        String[] config = {};
-        try {
-             config = Provisioning.getInstance().getConfig().getDeserializerWhiteList();
-            for (int i = 0; i < config.length; ++i) {
-                if (desc.getName().equals(config[i].getClass().getName())) {
-                    return super.resolveClass(desc);
-                }
-            }
-            throw new InvalidClassException( "Unauthorized deserialization attempt", desc.getName());
-        } catch (ServiceException e) {
-            ZimbraLog.misc.errorQuietly("Error fetching  white list of deseializable  classes", e);
-            throw new IOException("Error fetching the white list of deseializable  classes");
+
+        if (desc.getName().equals(this.acceptedClassname)) {
+            return super.resolveClass(desc);
         }
+        throw new InvalidClassException("Unauthorized deserialization attempt", desc.getName());
+
     }
-
-
-
-
 }

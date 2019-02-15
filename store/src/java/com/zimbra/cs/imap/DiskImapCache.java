@@ -117,7 +117,7 @@ final class DiskImapCache implements ImapSessionManager.Cache<String, ImapFolder
         ObjectInputStream ois = null;
         try {
             // read serialized ImapFolder from cache
-            ois = new SecureObjectInputStream(fis = new FileInputStream(pagefile));
+            ois = new SecureObjectInputStream(fis = new FileInputStream(pagefile), ImapFolder.class.getName());
             return (ImapFolder) ois.readObject();
         } catch (Exception e) {
             ByteUtil.closeStream(ois);

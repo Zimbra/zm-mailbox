@@ -258,7 +258,7 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
             throws IOException, ClassNotFoundException, ServiceException {
         ByteArrayInputStream bis = new ByteArrayInputStream(data);
         PendingLocalModifications pms = new PendingLocalModifications();
-        try (ObjectInputStream ois = new SecureObjectInputStream(bis)) {
+        try (ObjectInputStream ois = new SecureObjectInputStream(bis, Type.class.getName())) {
             pms.changedTypes = (Set<Type>) ois.readObject();
             pms.addChangedParentFolderIds((Set<Integer>) ois.readObject());
 

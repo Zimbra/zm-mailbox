@@ -9754,14 +9754,5 @@ TODO: delete them permanently from here
   <desc>filter to decide members of the address list using ldap</desc>
 </attr>
 
-<attr id="3077" name="zimbraDeserializerWhiteList" type="string" max="1024" cardinality="multi" optionalIn="globalConfig" since="8.8.12">
-  <globalConfigValue>com.zimbra.cs.imap.ImapFolder</globalConfigValue>
-  <globalConfigValue>com.zimbra.cs.mailbox.MailItem.Type</globalConfigValue>
-  <globalConfigValue>java.util.EnumSet</globalConfigValue>
-  <globalConfigValue>com.zimbra.cs.store.MailboxBlob.MailboxBlobInfo</globalConfigValue>
-  <globalConfigValue>java.lang.String</globalConfigValue>
-  <desc>White list of classes that can be deserialized in ZCS</desc>
-</attr>
-
 </attrs>
 

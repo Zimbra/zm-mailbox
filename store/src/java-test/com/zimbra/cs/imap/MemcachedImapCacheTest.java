@@ -39,7 +39,6 @@ import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.memcached.MemcachedConnector;
 import com.zimbra.cs.util.ZTestWatchman;
 
-
 /**
  * @author zimbra
  *
@@ -69,7 +68,6 @@ public class MemcachedImapCacheTest {
     public void testInvalidObject() {
         try {
 
-
             PowerMockito.mockStatic(MemcachedConnector.class);
             ZimbraMemcachedClient  memcachedClient = new MockZimbraMemcachedClient();
             PowerMockito.when(MemcachedConnector.getClient()).thenReturn(memcachedClient);
@@ -82,7 +80,6 @@ public class MemcachedImapCacheTest {
             fail("Exception should not be thrown");
         }
     }
-
 
     public class MockZimbraMemcachedClient extends ZimbraMemcachedClient {
 
@@ -113,9 +110,5 @@ public class MemcachedImapCacheTest {
             }
             return true;
         }
-
     }
-
-
-
 }
