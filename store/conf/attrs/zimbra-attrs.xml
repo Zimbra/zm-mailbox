@@ -9834,4 +9834,9 @@ TODO: delete them permanently from here
   <defaultExternalCOSValue>FALSE</defaultExternalCOSValue>
   <desc>Whether to check for file type regardless of extension while uploading in briefcase or not</desc>
 </attr>
+<attr id="5028" name="zimbraAccountSettingEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.8.9">
+	<defaultCOSValue>FALSE</defaultCOSValue>
+	<defaultExternalCOSValue>FALSE</defaultExternalCOSValue>
+	<desc>This attribute is used to enable/disable user setting options under preference</desc>
+</attr>
 </attrs>
