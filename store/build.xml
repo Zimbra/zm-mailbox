@@ -384,6 +384,7 @@
     </java>
   </target>
   <target name="update-ldap-schema" depends="generate-ldap-config,set-dev-version">
+    <antcall target="stop-zimbra"/>
     <copy todir="${zimbra.home.dir}/conf/attrs" overwrite="true">
       <fileset dir="${build.dir}/attrs"/>
     </copy>
@@ -395,6 +396,7 @@
     <copy todir="${zimbra.home.dir}/${slapd.etc.dir}/zimbra/schema/" file="${build.dir}/ldap-config/config/zimbra.ldif" overwrite="true"/>
     <!-- apply ldap schema changes -->
     <exec executable="/opt/zimbra/libexec/zmldapschema"/>
+    <antcall target="start-zimbra"/>
   </target>
   <target name="create-version-sql" depends="build-init, compile, set-dev-version" description="Creates version-init.sql">
     <java classname="com.zimbra.cs.db.MySQL" fork="true" classpathref="class.path" failonerror="true">
