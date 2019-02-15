@@ -56,11 +56,9 @@ public class SecureObjectInputStream extends ObjectInputStream {
     @Override
     protected Class<?> resolveClass(ObjectStreamClass desc)
         throws IOException, ClassNotFoundException {
-
         if (desc.getName().equals(this.acceptedClassname)) {
             return super.resolveClass(desc);
         }
         throw new InvalidClassException("Unauthorized deserialization attempt", desc.getName());
-
     }
 }
