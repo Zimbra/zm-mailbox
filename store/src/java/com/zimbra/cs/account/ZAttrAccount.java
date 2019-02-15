@@ -2786,6 +2786,83 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * This attribute is used to enable/disable user setting options under
+     * preference
+     *
+     * @return zimbraAccountSettingEnabled, or false if unset
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5028)
+    public boolean isAccountSettingEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraAccountSettingEnabled, false, true);
+    }
+
+    /**
+     * This attribute is used to enable/disable user setting options under
+     * preference
+     *
+     * @param zimbraAccountSettingEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5028)
+    public void setAccountSettingEnabled(boolean zimbraAccountSettingEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAccountSettingEnabled, zimbraAccountSettingEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute is used to enable/disable user setting options under
+     * preference
+     *
+     * @param zimbraAccountSettingEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5028)
+    public Map<String,Object> setAccountSettingEnabled(boolean zimbraAccountSettingEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAccountSettingEnabled, zimbraAccountSettingEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * This attribute is used to enable/disable user setting options under
+     * preference
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5028)
+    public void unsetAccountSettingEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAccountSettingEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute is used to enable/disable user setting options under
+     * preference
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5028)
+    public Map<String,Object> unsetAccountSettingEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAccountSettingEnabled, "");
+        return attrs;
+    }
+
+    /**
      * account status. active - active lockout - no login until lockout
      * duration is over, mail delivery OK. locked - no login, mail delivery
      * OK. maintenance - no login, no delivery(lmtp server returns 4.x.x
