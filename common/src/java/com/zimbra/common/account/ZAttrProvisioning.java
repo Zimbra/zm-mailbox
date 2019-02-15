@@ -2922,6 +2922,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraAccountExtraObjectClass = "zimbraAccountExtraObjectClass";
 
     /**
+     * This attribute is used to enable/disable user setting options under
+     * preference
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=5028)
+    public static final String A_zimbraAccountSettingEnabled = "zimbraAccountSettingEnabled";
+
+    /**
      * account status. active - active lockout - no login until lockout
      * duration is over, mail delivery OK. locked - no login, mail delivery
      * OK. maintenance - no login, no delivery(lmtp server returns 4.x.x
