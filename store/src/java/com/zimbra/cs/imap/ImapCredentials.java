@@ -20,6 +20,7 @@
  */
 package com.zimbra.cs.imap;
 
+import java.io.ObjectInputStream;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -168,5 +169,9 @@ class ImapCredentials implements java.io.Serializable {
 
     boolean isFolderHidden(ImapPath path) {
         return mHiddenFolders == null ? false : mHiddenFolders.contains(path);
+    }
+    // ZCS-6695 Deserialization protection
+    private final void readObject(ObjectInputStream in) throws java.io.IOException {
+        throw new java.io.IOException("Cannot be deserialized");
     }
 }

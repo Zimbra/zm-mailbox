@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.store.file;
 
+import java.io.ObjectInputStream;
 import java.io.Serializable;
 
 import com.zimbra.znative.IO.FileInfo;
@@ -75,13 +76,17 @@ public class BlobReference implements Serializable {
     public void setProcessed(boolean processed) {
         this.processed = processed;
     }
-    
+
     public FileInfo getFileInfo() {
         return fileInfo;
     }
-    
+
     public void setFileInfo(FileInfo fileInfo) {
         this.fileInfo = fileInfo;
+    }
+
+    private final void readObject(ObjectInputStream in) throws java.io.IOException {
+        throw new java.io.IOException("Cannot be deserialized");
     }
 
 }

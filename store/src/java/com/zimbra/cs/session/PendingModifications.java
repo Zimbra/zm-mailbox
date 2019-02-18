@@ -20,11 +20,9 @@
  */
 package com.zimbra.cs.session;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -371,6 +369,10 @@ public final class PendingModifications {
             this.itemId = itemId;
         }
 
+        private final void readObject(ObjectInputStream in) throws java.io.IOException {
+            throw new java.io.IOException("Cannot be deserialized");
+        }
+
     }
 
     public static final class ChangeMeta implements Serializable {
@@ -390,6 +392,10 @@ public final class PendingModifications {
             this.preModifyObjType = preModifyObjType;
             metaPreModifyObj = preModifyObj;
         }
+
+        private final void readObject(ObjectInputStream in) throws java.io.IOException {
+            throw new java.io.IOException("Cannot be deserialized");
+         }
 
     }
 

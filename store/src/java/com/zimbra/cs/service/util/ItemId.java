@@ -19,6 +19,7 @@
  */
 package com.zimbra.cs.service.util;
 
+import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -248,6 +249,11 @@ public class ItemId implements java.io.Serializable {
             }
         }
         return foldersMap;
+    }
+
+    // ZCS-6695 Deserialization protection
+    private final void readObject(ObjectInputStream in) throws java.io.IOException {
+        throw new java.io.IOException("Cannot be deserialized");
     }
 
     public static void main(String[] args) {

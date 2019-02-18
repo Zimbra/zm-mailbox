@@ -18,6 +18,8 @@
 /* JavaCCOptions:TOKEN_EXTENDS=,KEEP_LINE_COL=null,SUPPORT_CLASS_VISIBILITY_PUBLIC=false */
 package com.zimbra.cs.index.query.parser;
 
+import java.io.ObjectInputStream;
+
 /**
  * Describes the input token stream.
  */
@@ -141,6 +143,11 @@ class Token implements java.io.Serializable {
   public static Token newToken(int ofKind)
   {
     return newToken(ofKind, null);
+  }
+
+  //ZCS-6695 Deserialization protection
+  private final void readObject(ObjectInputStream in) throws java.io.IOException {
+      throw new java.io.IOException("Cannot be deserialized");
   }
 
 }
