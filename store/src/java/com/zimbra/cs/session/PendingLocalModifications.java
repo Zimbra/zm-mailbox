@@ -31,6 +31,7 @@ import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.io.SecureObjectInputStream;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailItem.Type;
@@ -257,7 +258,7 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
             throws IOException, ClassNotFoundException, ServiceException {
         ByteArrayInputStream bis = new ByteArrayInputStream(data);
         PendingLocalModifications pms = new PendingLocalModifications();
-        try (ObjectInputStream ois = new ObjectInputStream(bis)) {
+        try (ObjectInputStream ois = new SecureObjectInputStream(bis, Type.class.getName())) {
             pms.changedTypes = (Set<Type>) ois.readObject();
             pms.addChangedParentFolderIds((Set<Integer>) ois.readObject());
 
