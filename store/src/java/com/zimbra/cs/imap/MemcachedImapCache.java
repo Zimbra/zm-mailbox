@@ -28,6 +28,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.memcached.MemcachedKey;
 import com.zimbra.common.util.memcached.MemcachedMap;
 import com.zimbra.common.util.memcached.MemcachedSerializer;
+import com.zimbra.cs.io.SecureObjectInputStream;
 import com.zimbra.cs.memcached.MemcachedConnector;
 import com.zimbra.cs.memcached.MemcachedKeyPrefix;
 
@@ -111,7 +112,7 @@ final class MemcachedImapCache implements ImapSessionManager.Cache<String, ImapF
         public ImapFolder deserialize(Object obj) throws ServiceException {
             ObjectInputStream in = null;
             try {
-                in = new ObjectInputStream(new ByteArrayInputStream((byte[]) obj));
+                in = new SecureObjectInputStream(new ByteArrayInputStream((byte[]) obj), ImapFolder.class.getName());
                 return (ImapFolder) in.readObject();
             } catch (Exception e) {
                 throw ServiceException.FAILURE("Failed to deserialize ImapFolder", e);
