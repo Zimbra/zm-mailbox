@@ -5,6 +5,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Mailbox.MailboxData;
 
 /**
@@ -23,10 +25,14 @@ public abstract class MailboxState {
     protected MailboxData data;
     private Map<MailboxField, SynchronizedField<?>> fieldMap = new HashMap<>();
     protected TransactionCacheTracker cacheTracker;
+    static {
+        setFactory(new RedisMailboxState.Factory());
+    }
 
     public MailboxState(MailboxData data, TransactionCacheTracker cacheTracker) {
         this.data = data;
         this.cacheTracker = cacheTracker;
+        ZimbraLog.mailbox.info("using %s", this.getClass().getSimpleName());
         init();
     }
 

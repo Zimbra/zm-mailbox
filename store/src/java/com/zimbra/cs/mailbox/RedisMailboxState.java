@@ -6,6 +6,7 @@ import org.redisson.api.RMap;
 import org.redisson.api.RedissonClient;
 import org.redisson.client.RedisException;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Mailbox.MailboxData;
 import com.zimbra.cs.mailbox.TransactionAware.CachePolicy;
@@ -90,11 +91,15 @@ public class RedisMailboxState extends MailboxState {
         }
     }
 
-    public static class Factory implements MailboxState.Factory {
+    public static class Factory extends LocalMailboxState.Factory {
 
         @Override
         public MailboxState getMailboxState(MailboxData data, TransactionCacheTracker tracker) {
-            return new RedisMailboxState(data, tracker);
+            if (LC.redis_cache_synchronize_mailbox_state.booleanValue()) {
+                return new RedisMailboxState(data, tracker);
+            } else {
+                return super.getMailboxState(data, tracker);
+            }
         }
     }
 

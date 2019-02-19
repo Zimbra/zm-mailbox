@@ -10126,6 +10126,6 @@ public class Mailbox implements MailboxStore {
     }
 
     public CachedObjectRegistry getCachedObjects() {
-        return cacheTracker.getCachedObjects();
+        return cacheTracker == null ? null : cacheTracker.getCachedObjects();
     }
 }

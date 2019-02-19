@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Folder;
 
 public class LocalFolderCache implements FolderCache {
@@ -12,6 +13,7 @@ public class LocalFolderCache implements FolderCache {
     private final Map<String, Folder> mapByUuid;
 
     public LocalFolderCache() {
+        ZimbraLog.cache.info("using local folder cache");
         mapById = new ConcurrentHashMap<Integer, Folder>();
         mapByUuid = new ConcurrentHashMap<String, Folder>();
     }
