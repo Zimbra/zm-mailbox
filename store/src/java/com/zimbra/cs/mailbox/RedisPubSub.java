@@ -175,6 +175,9 @@ public class RedisPubSub extends NotificationPubSub {
 
         private void clearRedisCachedValues(Mailbox mbox, PendingLocalModifications mods, int changeId) {
             CachedObjectRegistry cachedObjects = mbox.getCachedObjects();
+            if (cachedObjects == null) {
+                return;
+            }
             Set<Integer> changedFolders = mods.getAllChangedFolders();
             int numCleared = 0;
             if (!changedFolders.isEmpty()) {

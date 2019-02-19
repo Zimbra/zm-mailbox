@@ -3,6 +3,7 @@ package com.zimbra.cs.mailbox.cache;
 import java.util.Collection;
 import java.util.List;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
@@ -27,6 +28,7 @@ public abstract class ItemCache {
 
     public ItemCache(Mailbox mbox) {
         this.mbox = mbox;
+        ZimbraLog.mailbox.info("using %s", this.getClass().getSimpleName());
     }
 
     public static Factory getFactory() {
