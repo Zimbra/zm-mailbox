@@ -14,6 +14,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.MailboxLock;
+import com.zimbra.common.mailbox.MailboxLockContext;
 import com.zimbra.common.mailbox.MailboxLockFactory;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
@@ -58,16 +59,16 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
     }
 
     @Override
-    public MailboxLock acquiredWriteLock() throws ServiceException {
+    public MailboxLock acquiredWriteLock(MailboxLockContext lockContext) throws ServiceException {
         MailboxLock myLock = writeLock();
-        myLock.lock();
+        myLock.lock(lockContext);
         return myLock;
     }
 
     @Override
-    public MailboxLock acquiredReadLock() throws ServiceException {
+    public MailboxLock acquiredReadLock(MailboxLockContext lockContext) throws ServiceException {
         MailboxLock myLock = readLock();
-        myLock.lock();
+        myLock.lock(lockContext);
         return myLock;
     }
 
@@ -141,7 +142,7 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
         }
 
         @Override
-        public void lock() throws ServiceException {
+        public void lock(MailboxLockContext lockContext) throws ServiceException {
             releaseReadLocksBeforeWriteLock();
             long lock_start = System.currentTimeMillis();
             try {
@@ -364,27 +365,25 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
     public class DistributedMailboxLock extends LocalMailboxLock {
 
         private RedisLock zRedisLock;
-        private boolean write;
 
         public DistributedMailboxLock(ReentrantReadWriteLock localLock, RedisLock zRedisLock, boolean write) {
             super(localLock, write);
             this.zRedisLock = zRedisLock;
-            this.write = write;
         }
 
         @Override
-        public void lock() throws ServiceException {
+        public void lock(MailboxLockContext lockContext) throws ServiceException {
             if (getHoldCount() == 0) {
                 if (log.isTraceEnabled()) {
                     log.trace("need to acquire redis lock for %s", this);
                 }
                 if (acquireRedisLock()) {
-                    super.lock();
+                    super.lock(lockContext);
                 } else {
                     throw ServiceException.LOCK_FAILED(String.format("unable to acquire redis lock for %s", this));
                 }
             } else {
-                super.lock();
+                super.lock(lockContext);
             }
         }
 

@@ -663,25 +663,25 @@ public class TestMailboxLock {
     public void testZMailboxReenter() throws Exception {
         final MailboxLockFactory lockFactory = new ZLocalMailboxLockFactory(1, 1);
         assertFalse("unlocked at start", lockFactory.readLock().isLockedByCurrentThread());
-        try (final MailboxLock l1 = lockFactory.acquiredReadLock()) {
+        try (final MailboxLock l1 = lockFactory.acquiredReadLock(null)) {
             assertEquals("hold count [l1]", 1, l1.getHoldCount());
             assertTrue("isLockedByCurrentThread [l1]", l1.isLockedByCurrentThread());
-            try (final MailboxLock l2 = lockFactory.acquiredReadLock()) {
+            try (final MailboxLock l2 = lockFactory.acquiredReadLock(null)) {
                 assertEquals("hold count 2 locks [l1]", 2, l1.getHoldCount());
                 assertEquals("hold count 2 locks [l2]", 2, l1.getHoldCount());
-                try (final MailboxLock l3 = lockFactory.acquiredReadLock()) {
+                try (final MailboxLock l3 = lockFactory.acquiredReadLock(null)) {
                     assertEquals("hold count 3 locks [l1]", 3, l1.getHoldCount());
                     assertEquals("hold count 3 locks [l3]", 3, l3.getHoldCount());
-                    try (final MailboxLock l4 = lockFactory.acquiredReadLock()) {
+                    try (final MailboxLock l4 = lockFactory.acquiredReadLock(null)) {
                         assertEquals("hold count 4 locks [l1]", 4, l1.getHoldCount());
                         assertEquals("hold count 4 locks [l4]", 4, l4.getHoldCount());
-                        try (final MailboxLock l5 = lockFactory.acquiredReadLock()) {
+                        try (final MailboxLock l5 = lockFactory.acquiredReadLock(null)) {
                             assertEquals("hold count 5 locks [l1]", 5, l1.getHoldCount());
                             assertEquals("hold count 5 locks [l5]", 5, l5.getHoldCount());
-                            try (final MailboxLock l6 = lockFactory.acquiredReadLock()) {
+                            try (final MailboxLock l6 = lockFactory.acquiredReadLock(null)) {
                                 assertEquals("hold count 6 locks [l1]", 6, l1.getHoldCount());
                                 assertEquals("hold count 6 locks [l6]", 6, l6.getHoldCount());
-                                try (final MailboxLock l7 = lockFactory.acquiredReadLock()) {
+                                try (final MailboxLock l7 = lockFactory.acquiredReadLock(null)) {
                                     assertEquals("hold count 7 locks [l2]", 7, l2.getHoldCount());
                                     assertEquals("hold count 6 locks [l7]", 7, l7.getHoldCount());
                                 }
@@ -713,7 +713,7 @@ public class TestMailboxLock {
         Thread thread = new Thread(String.format("TestMailboxLock-ZMailbox")) {
             @Override
             public void run() {
-                try (final MailboxLock lock = lockFactory.acquiredReadLock()) {
+                try (final MailboxLock lock = lockFactory.acquiredReadLock(null)) {
                     Thread.sleep(1000);
                 } catch (InterruptedException | ServiceException e) {
                     ZimbraLog.test.debug("Exception thrown test %s", testInfo.getMethodName(), e);
@@ -723,7 +723,7 @@ public class TestMailboxLock {
         thread.setDaemon(true);
         thread.start();
         Thread.sleep(100);
-        try (final MailboxLock lock = lockFactory.acquiredReadLock()) {
+        try (final MailboxLock lock = lockFactory.acquiredReadLock(null)) {
             fail("should not be able to acquire the lock; should time out");
         } catch (ServiceException e) {
             assertTrue("Lock failed due to timeout", e.getMessage().contains("lock timeout"));
@@ -742,7 +742,7 @@ public class TestMailboxLock {
             Thread thread = new Thread(String.format("TestMailboxLock-ZMailbox-%s", i)) {
                 @Override
                 public void run() {
-                    try (final MailboxLock lock = lockFactory.acquiredReadLock()) {
+                    try (final MailboxLock lock = lockFactory.acquiredReadLock(null)) {
                         Thread.sleep(500);
                     } catch (InterruptedException | ServiceException e) {
                         ZimbraLog.test.debug("Exception thrown test %s", testInfo.getMethodName(), e);
@@ -756,7 +756,7 @@ public class TestMailboxLock {
             t.start();
         }
         Thread.sleep(100);
-        try (final MailboxLock lock = lockFactory.acquiredReadLock()) {
+        try (final MailboxLock lock = lockFactory.acquiredReadLock(null)) {
             fail("should not be able to acquire lock due to too many waiting threads");
         } catch (ServiceException e) {
             assertTrue("Lock failed because too many waiters", e.getMessage().contains("too many waiters"));
