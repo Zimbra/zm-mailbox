@@ -20,6 +20,7 @@
  */
 package com.zimbra.cs.session;
 
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -410,7 +411,7 @@ public abstract class PendingModifications<T extends ZimbraMailItem> {
         }
 
         private final void readObject(ObjectInputStream in) throws java.io.IOException {
-            throw new java.io.IOException("Cannot be deserialized");
+            throw new IOException("Cannot be deserialized");
         }
 
     }
@@ -437,7 +438,7 @@ public abstract class PendingModifications<T extends ZimbraMailItem> {
         }
 
         private final void readObject(ObjectInputStream in) throws java.io.IOException {
-            throw new java.io.IOException("Cannot be deserialized");
+            throw new IOException("Cannot be deserialized");
          }
 
     }
