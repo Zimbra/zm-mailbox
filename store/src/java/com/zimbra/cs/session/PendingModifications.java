@@ -370,7 +370,7 @@ public final class PendingModifications {
         }
 
         private final void readObject(ObjectInputStream in) throws java.io.IOException {
-            throw new java.io.IOException("Cannot be deserialized");
+            throw new IOException("Cannot be deserialized");
         }
 
     }
@@ -394,7 +394,7 @@ public final class PendingModifications {
         }
 
         private final void readObject(ObjectInputStream in) throws java.io.IOException {
-            throw new java.io.IOException("Cannot be deserialized");
+            throw new IOException("Cannot be deserialized");
          }
 
     }

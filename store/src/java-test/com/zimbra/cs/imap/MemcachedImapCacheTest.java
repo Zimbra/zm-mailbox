@@ -93,7 +93,6 @@ public class MemcachedImapCacheTest {
                     oout.close();
                 }
             } catch (Exception e) {
-                e.printStackTrace();
                 return bout.toByteArray();
             }
            return bout.toByteArray();
@@ -105,7 +104,6 @@ public class MemcachedImapCacheTest {
             try (ObjectOutputStream oout = new ObjectOutputStream(bout)) {
                 oout.writeObject(new Hacker("hacked"));
             } catch (Exception e) {
-                e.printStackTrace();
                 return false;
             }
             return true;
