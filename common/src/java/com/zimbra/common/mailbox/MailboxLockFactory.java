@@ -11,9 +11,9 @@ public interface MailboxLockFactory extends AutoCloseable {
 
     MailboxLock writeLock();
 
-    MailboxLock acquiredWriteLock() throws ServiceException;
+    MailboxLock acquiredWriteLock(MailboxLockContext lockContext) throws ServiceException;
 
-    MailboxLock acquiredReadLock() throws ServiceException;
+    MailboxLock acquiredReadLock(MailboxLockContext lockContext) throws ServiceException;
 
     /**
      * Number of holds on this lock by the current thread (sum of read and write locks)

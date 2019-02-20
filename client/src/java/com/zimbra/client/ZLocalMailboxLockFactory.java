@@ -1,7 +1,9 @@
 package com.zimbra.client;
 
 import com.zimbra.common.mailbox.MailboxLock;
+import com.zimbra.common.mailbox.MailboxLockContext;
 import com.zimbra.common.mailbox.MailboxLockFactory;
+import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.service.ServiceException;
 
 public class ZLocalMailboxLockFactory implements MailboxLockFactory {
@@ -22,16 +24,16 @@ public class ZLocalMailboxLockFactory implements MailboxLockFactory {
     }
 
     @Override
-    public MailboxLock acquiredWriteLock() throws ServiceException {
+    public MailboxLock acquiredWriteLock(MailboxLockContext lockContext) throws ServiceException {
         MailboxLock myLock = writeLock();
-        myLock.lock();
+        myLock.lock(lockContext);
         return myLock;
     }
 
     @Override
-    public MailboxLock acquiredReadLock() throws ServiceException {
+    public MailboxLock acquiredReadLock(MailboxLockContext lockContext) throws ServiceException {
         MailboxLock myLock = readLock();
-        myLock.lock();
+        myLock.lock(lockContext);
         return myLock;
     }
 

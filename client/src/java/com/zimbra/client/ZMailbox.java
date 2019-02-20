@@ -117,6 +117,7 @@ import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.mailbox.MailboxLock;
+import com.zimbra.common.mailbox.MailboxLockContext;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.mailbox.OpContext;
 import com.zimbra.common.mailbox.ZimbraMailItem;
@@ -6472,12 +6473,12 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
 
     @Override
     public MailboxLock getWriteLockAndLockIt() throws ServiceException {
-        return lockFactory.acquiredWriteLock();
+        return lockFactory.acquiredWriteLock(new MailboxLockContext(this));
     }
 
     @Override
     public MailboxLock getReadLockAndLockIt() throws ServiceException {
-        return lockFactory.acquiredReadLock();
+        return lockFactory.acquiredReadLock(new MailboxLockContext(this));
     }
 
     /**

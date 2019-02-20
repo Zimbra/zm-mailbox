@@ -83,6 +83,7 @@ import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.mailbox.MailboxLock;
+import com.zimbra.common.mailbox.MailboxLockContext;
 import com.zimbra.common.mailbox.MailboxLockFactory;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.mailbox.OpContext;
@@ -9473,12 +9474,13 @@ public class Mailbox implements MailboxStore {
 
     @Override
     public MailboxLock getWriteLockAndLockIt() throws ServiceException {
-        return lockFactory.acquiredWriteLock();
+        return lockFactory.acquiredWriteLock(new MailboxLockContext(this));
     }
 
     @Override
     public MailboxLock getReadLockAndLockIt() throws ServiceException {
-        return requiresWriteLock() ? lockFactory.acquiredWriteLock() : lockFactory.acquiredReadLock();
+        MailboxLockContext lockContext = new MailboxLockContext(this);
+        return requiresWriteLock() ? lockFactory.acquiredWriteLock(lockContext) : lockFactory.acquiredReadLock(lockContext);
     }
 
     public boolean isWriteLockedByCurrentThread() throws ServiceException {
@@ -9810,7 +9812,8 @@ public class Mailbox implements MailboxStore {
             this.lock = write ? lockFactory.writeLock() : lockFactory.readLock();
             assert recorder == null || write;
             try {
-                this.lock.lock();
+                MailboxLockContext lockContext = new MailboxLockContext(Mailbox.this, caller);
+                this.lock.lock(lockContext);
                 if (!write && requiresWriteLock()) {
                     //another call must have purged the cache.
                     //the lock.lock() call should have resulted in write lock already
