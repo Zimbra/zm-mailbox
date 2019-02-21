@@ -1314,13 +1314,13 @@ public final class LC {
     public static final KnownKey redis_cache_synchronize_item_cache = KnownKey.newKey(true);
 
     @Supported
-    public static final KnownKey redis_cache_synchronize_folders_tags = KnownKey.newKey(true);
+    public static final KnownKey redis_cache_synchronize_folders_tags = KnownKey.newKey(false);
 
     @Supported
     public static final KnownKey redis_cache_synchronize_folder_tag_snapshot = KnownKey.newKey(true);
 
     @Supported
-    public static final KnownKey redis_cache_synchronize_mailbox_state = KnownKey.newKey(true);
+    public static final KnownKey redis_cache_synchronize_mailbox_state = KnownKey.newKey(false);
 
     @Supported
     public static final KnownKey only_flush_cache_on_first_read_after_foreign_write = KnownKey.newKey(true);
