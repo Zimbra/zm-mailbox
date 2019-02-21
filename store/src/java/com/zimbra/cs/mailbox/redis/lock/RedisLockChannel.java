@@ -35,7 +35,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.RedissonClientHolder;
 import com.zimbra.cs.mailbox.redis.RedisUtils.RedisKey;
-import com.zimbra.cs.mailbox.redis.lock.QueuedLockRequest.LockCallback;
+import com.zimbra.cs.mailbox.redis.lock.RedisLock.LockResponse;
 
 
 public class RedisLockChannel implements MessageListener<String> {
@@ -78,9 +78,9 @@ public class RedisLockChannel implements MessageListener<String> {
         getQueue(waitingLock.getAccountId()).remove(waitingLock);
     }
 
-    public void waitForUnlock(QueuedLockRequest waitingLock, long timeoutMillis) throws ServiceException {
+    public LockResponse waitForUnlock(QueuedLockRequest waitingLock, long timeoutMillis) throws ServiceException {
         try {
-            waitingLock.waitForUnlock(timeoutMillis);
+            return waitingLock.waitForUnlock(timeoutMillis);
         } finally {
             remove(waitingLock);
         }

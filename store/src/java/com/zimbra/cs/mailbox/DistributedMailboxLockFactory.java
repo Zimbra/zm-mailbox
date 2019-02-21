@@ -21,6 +21,7 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.redis.lock.RedisLock;
 import com.zimbra.cs.mailbox.redis.lock.RedisReadWriteLock;
+import com.zimbra.cs.mailbox.util.MailboxClusterUtil;
 
 public class DistributedMailboxLockFactory implements MailboxLockFactory {
     private static AtomicInteger lockIdBase = new AtomicInteger();
@@ -28,6 +29,7 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
     private final String accountId;
     private final RedissonClient redisson;
     private String zimbraLockBaseName;
+    private String lockId;
     private RedisReadWriteLock redisLock;
     private ReentrantReadWriteLock localLock;
     private List<ReentrantReadWriteLock> waiters;
@@ -37,12 +39,12 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
         this.mailbox = mailbox;
         this.accountId = mailbox.getAccountId();
         this.redisson = RedissonClientHolder.getInstance().getRedissonClient();
-
+        this.lockId = MailboxClusterUtil.getMailboxWorkerName();
         try {
             zimbraLockBaseName = accountId + "-LOCK"; //actual name in redis will be hashtagged to be co-located with pubsub hannel
             this.waiters = new ArrayList<>();
             this.localLock = new ReentrantReadWriteLock();
-            this.redisLock = new RedisReadWriteLock(mailbox.getAccountId(), zimbraLockBaseName);
+            this.redisLock = new RedisReadWriteLock(mailbox.getAccountId(), zimbraLockBaseName, lockId);
         } catch (Exception e) {
             ZimbraLog.system.fatal("Can't instantiate Redisson server", e);
         }
@@ -106,6 +108,7 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
         return write ? LC.zimbra_mailbox_lock_write_lease_seconds.longValue() :
             LC.zimbra_mailbox_lock_read_lease_seconds.longValue();
     }
+
     /**
      * Intended to handle the life-cycle of a single lock/unlock of a mailbox, hence there
      * isn't an <b>unlock</b> method.  Unlocking is intended to be performed by {@link #close()}.

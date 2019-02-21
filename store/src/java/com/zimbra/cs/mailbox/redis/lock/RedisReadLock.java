@@ -21,14 +21,15 @@ import java.util.Arrays;
 import java.util.regex.Pattern;
 
 import org.redisson.client.codec.LongCodec;
+import org.redisson.client.codec.StringCodec;
 import org.redisson.client.protocol.RedisCommands;
 
 import com.google.common.base.MoreObjects.ToStringHelper;
 
 public class RedisReadLock extends RedisLock {
 
-    public RedisReadLock(String accountId, String lockBaseName) {
-        super(accountId, lockBaseName);
+    public RedisReadLock(String accountId, String lockBaseName, String lockId) {
+        super(accountId, lockBaseName, lockId);
     }
 
     private String getReadWriteTimeoutNamePrefix() {
@@ -45,7 +46,7 @@ public class RedisReadLock extends RedisLock {
     }
 
     @Override
-    protected Long tryAcquire() {
+    protected LockResponse tryAcquire() {
         String script =
             "local mode = redis.call('hget', KEYS[1], 'mode'); " +
             "if (mode == false) then " +
@@ -57,7 +58,11 @@ public class RedisReadLock extends RedisLock {
               "redis.call('pexpire', KEYS[2] .. ':1', ARGV[1]); " +
                //set an expiration for the lock hash
               "redis.call('pexpire', KEYS[1], ARGV[1]); " +
-              "return nil; " +
+               //get the name of the last mailbox worker that acquired a write lock
+              "local last_writer = redis.call('get', KEYS[1] .. ':last_writer'); " +
+               //add this worker's name to the set of workers that have acquired a read lock since the last write
+              "local is_first_read_since_last_write = redis.call('sadd', KEYS[1] .. ':reads_since_last_write', ARGV[4]); " +
+              "return {1, last_writer, is_first_read_since_last_write}; " +
             "end; " +
             "if (mode == 'read') or (mode == 'write' and redis.call('hexists', KEYS[1], ARGV[3]) == 1) then " +
                //either the lock is in read mode, or the requesting thread is holding a write lock,
@@ -69,14 +74,18 @@ public class RedisReadLock extends RedisLock {
               "redis.call('pexpire', key, ARGV[1]); " +
                //update the expiration on the lock hash
               "redis.call('pexpire', KEYS[1], ARGV[1]); " +
-              "return nil; " +
+               //get the name of the last mailbox worker that acquired a write lock
+              "local last_writer = redis.call('get', KEYS[1] .. ':last_writer'); " +
+               //add this worker's name to the set of workers that have acquired a read lock since the last write
+              "local is_first_read_since_last_write = redis.call('sadd', KEYS[1] .. ':reads_since_last_write', ARGV[4]); " +
+              "return {1, last_writer, is_first_read_since_last_write}; " +
             "end;" +
              //a read lock cannot be acquired, so return the TTL of the lock hash
-            "return redis.call('pttl', KEYS[1]);";
+            "return {0, redis.call('pttl', KEYS[1])};";
 
-        return execute(script, LongCodec.INSTANCE, RedisCommands.EVAL_LONG,
+        return execute(script, StringCodec.INSTANCE, RedisLock.LOCK_RESPONSE_CMD,
                 Arrays.<Object>asList(lockName, getReadWriteTimeoutNamePrefix()),
-                getLeaseTime(), getThreadLockName(), getWriteLockName());
+                getLeaseTime(), getThreadLockName(), getWriteLockName(), lockId);
     }
 
     @Override
