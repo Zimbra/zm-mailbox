@@ -5,8 +5,11 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.db.DbMailbox;
+import com.zimbra.cs.db.DbPool;
+import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.mailbox.Mailbox.MailboxData;
 
 /**
@@ -32,7 +35,7 @@ public abstract class MailboxState {
     public MailboxState(MailboxData data, TransactionCacheTracker cacheTracker) {
         this.data = data;
         this.cacheTracker = cacheTracker;
-        ZimbraLog.mailbox.info("using %s", this.getClass().getSimpleName());
+        ZimbraLog.mailbox.info("Tracking mailbox state using %s", this.getClass().getSimpleName());
         init();
     }
 
@@ -59,6 +62,19 @@ public abstract class MailboxState {
     }
 
     protected abstract SynchronizedField<?> initField(MailboxField fieldType);
+
+    public void reload() {
+        DbConnection conn = null;
+        try {
+            conn = DbPool.getConnection();
+            this.data = DbMailbox.getMailboxStats(conn, data.id);
+            init();
+        } catch (ServiceException e) {
+            ZimbraLog.mailbox.error("unable to reload mailbox stats!", e);
+        } finally {
+            DbPool.quietClose(conn);
+        }
+    }
 
     public long getSize() {
         return getLongField(MailboxField.SIZE).value();
