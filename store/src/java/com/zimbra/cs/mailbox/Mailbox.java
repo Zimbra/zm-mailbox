@@ -10131,4 +10131,19 @@ public class Mailbox implements MailboxStore {
     public CachedObjectRegistry getCachedObjects() {
         return cacheTracker == null ? null : cacheTracker.getCachedObjects();
     }
+
+    public void clearStaleCaches(MailboxLockContext context) throws ServiceException {
+        String caller = context.getCaller();
+        if (caller != null && caller.equals("createMailbox")) {
+            ZimbraLog.cache.info("clearStateCaches called during createMailbox operation, ignoring");
+            return;
+        }
+        if (!LC.redis_cache_synchronize_folders_tags.booleanValue()) {
+            clearFolderCache();
+            clearTagCache();
+        }
+        if (!LC.redis_cache_synchronize_mailbox_state.booleanValue()) {
+            state.reload();
+        }
+    }
 }
