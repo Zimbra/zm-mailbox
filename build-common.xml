@@ -3,7 +3,7 @@
     <dirname property="zimbra.root.dir" file="${ant.file.build-common}/../"/>
     <dirname property="zm-mailbox.basedir" file="${ant.file.build-common}"/>
     <!-- Java -->
-    <property name="javac.target" value="11"/>
+    <property name="javac.target" value="1.8"/>
     <!-- base path for ivy cache, local repository, ant libraries, etc -->
 
     <property name="dev.home"  value="${user.home}"/>
@@ -310,27 +310,12 @@
             <jvmarg value="-Dserver.dir=${server.dir}"/>
             <jvmarg value="-Dzimbra.config=${server.dir}/src/java-test/localconfig-test.xml"/>
             <jvmarg value="-Dfile.encoding=UTF-8"/>
-            <jvmarg value="-Djava.locale.providers=COMPAT,SPI"/>
             <batchtest todir="${test.dir}/output">
                 <fileset dir="${test.src.dir}">
                     <include name="${test.pattern}"/>
                     <exclude name="**/Abstract*Test.java"/>
                     <exclude name="**/mailbox/ContactTest.java"/>
                     <exclude name="**/filter/FileIntoCopyTest.java"/>
-                    <exclude name="**/filter/RuleManagerWithCustomActionFilterTest.java"/>
-                    <exclude name="**/filter/ZimbraMailAdapterTest.java"/>
-                    <exclude name="**/dav/UrlNamespaceTest.java"/>
-                    <exclude name="**/ldap/unboundid/UBIDUserCertificateAttributeTest.java"/>
-                    <exclude name="**/GetMsgTest.java"/>
-                    <exclude name="**/SearchActionTest.java"/>
-                    <exclude name="**/SendMsgTest.java"/>
-                    <exclude name="**/CalendarItemTest.java"/>
-                    <exclude name="**/CalendarRequestTest.java"/>
-                    <exclude name="**/ModifyPrefsTest.java"/>
-                    <exclude name="**/UserServletTest.java"/>
-                    <exclude name="**/ModifyFilterRulesAdminTest.java"/>
-                    <exclude name="**/ModifyProfileImageTest.java"/>
-                    <exclude name="**/JWTBasedAuthTest.java"/>
                 </fileset>
             </batchtest>
           </junit>
