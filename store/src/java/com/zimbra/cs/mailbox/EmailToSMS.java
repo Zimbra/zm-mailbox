@@ -59,36 +59,42 @@ public class EmailToSMS implements LmtpCallback {
 			ParsedMessage pm) {
 	}
 
-	private void sendEmailSMS(String recipient, Message zMsg) throws ServiceException,MessagingException{
-		Address[] recipients = zMsg.getParsedMessage().getMimeMessage().getAllRecipients();
-		String[] recipientEmail = recipient.split("@");
-		String recipientEmailDomain = recipientEmail[1];
-		String sender = zMsg.getSender();
-		String subject = zMsg.getSubject();
-		MimeMessage mimeMsg =  zMsg.getMimeMessage(false);
-		Pair<String,String> fullTextMessage = getTextBody(mimeMsg, false);
-		String bodyMsg = fullTextMessage.getFirst();
-		Boolean isASCIIString = isPureAscii(bodyMsg);
-		String fullMessage = "";
-		if(isASCIIString) {
-			fullMessage = encode(subject + "\n" + bodyMsg);
-		} else {
-			fullMessage = fullMessage + "FEFF";
-			fullMessage = fullMessage + convertStringToUnicode(subject);
-			fullMessage = fullMessage + convertStringToUnicode("\n");
-			fullMessage = fullMessage + convertStringToUnicode(bodyMsg);
-		}
-		Set<String> uniqueMobileSet = new HashSet<String>();
-		for (int i = 0; i < recipients.length; i++) {
-			String rcptAddresses = recipients[i].toString();
-			String[] splitMobNumber = rcptAddresses.indexOf("<") < 0 ? rcptAddresses.split("@")
-					: rcptAddresses.split("<")[1].replaceAll(">", "").split("@");
-			String mobNumber = splitMobNumber[0].replaceAll("[()\\-. ]", "");
-			String mobNumberWithoutSymbol = splitMobNumber[0].replaceAll("[()\\-+. ]", "");
-			String mobNumberDomain = splitMobNumber[1];
-			if (mobNumberDomain.equalsIgnoreCase(smsDomain) && recipientEmailDomain.equalsIgnoreCase(smsDomain) && StringUtils.isNumeric(mobNumberWithoutSymbol) && !uniqueMobileSet.contains(mobNumber)) {
-				uniqueMobileSet.add(mobNumber);
-				sendsms(fullMessage, mobNumber, sender, isASCIIString);
+	private void sendEmailSMS(String recipient, Message zMsg) throws ServiceException,MessagingException {
+		if(recipient != null && zMsg != null) {
+			Address[] recipients = zMsg.getParsedMessage().getMimeMessage().getAllRecipients();
+			String[] recipientEmail = recipient.split("@");
+			String recipientEmailDomain = recipientEmail.length>1 ? recipientEmail[1] : null;
+			if(smsDomain.equalsIgnoreCase(recipientEmailDomain)) {
+				String sender = zMsg.getSender();
+				String subject = zMsg.getSubject();
+				MimeMessage mimeMsg =  zMsg.getMimeMessage(false);
+				Pair<String,String> fullTextMessage = getTextBody(mimeMsg, false);
+				String bodyMsg = fullTextMessage.getFirst();
+				Boolean isASCIIString = isPureAscii(bodyMsg);
+				String fullMessage = "";
+				if(isASCIIString) {
+					fullMessage = encode(subject + "\n" + bodyMsg);
+				} else {
+					fullMessage = fullMessage + "FEFF";
+					fullMessage = fullMessage + convertStringToUnicode(subject);
+					fullMessage = fullMessage + convertStringToUnicode("\n");
+					fullMessage = fullMessage + convertStringToUnicode(bodyMsg);
+				}
+				Set<String> uniqueMobileSet = new HashSet<String>();
+				for (int i = 0; i < recipients.length; i++) {
+					String rcptAddresses = recipients[i].toString();
+					String[] splitMobNumber = rcptAddresses.indexOf("<") < 0 ? rcptAddresses.split("@")
+							: rcptAddresses.split("<")[1].replaceAll(">", "").split("@");
+					if(splitMobNumber.length>1) {
+						String mobNumber = splitMobNumber[0].replaceAll("[()\\-. ]", "");
+						String mobNumberWithoutSymbol = splitMobNumber[0].replaceAll("[()\\-+. ]", "");
+						String mobNumberDomain = splitMobNumber[1];
+						if (mobNumberDomain.equalsIgnoreCase(smsDomain) && StringUtils.isNumeric(mobNumberWithoutSymbol) && !uniqueMobileSet.contains(mobNumber)) {
+							uniqueMobileSet.add(mobNumber);
+							sendsms(fullMessage, mobNumber, sender, isASCIIString);
+						}
+					}
+				}
 			}
 		}
 	}
