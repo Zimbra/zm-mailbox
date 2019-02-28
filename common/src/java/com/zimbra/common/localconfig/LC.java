@@ -575,7 +575,7 @@ public final class LC {
             " -Djava.awt.headless=true" +
             " -Dsun.net.inetaddr.ttl=${networkaddress_cache_ttl}" +
             " -Dorg.apache.jasper.compiler.disablejsr199=true" +
-            " -XX:+UseConcMarkSweepGC" +
+            " -XX:+UseG1GC" +
             " -XX:SoftRefLRUPolicyMSPerMB=1" +
             " -XX:-OmitStackTraceInFastThrow" +
             " -verbose:gc" +
