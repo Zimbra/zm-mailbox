@@ -87,7 +87,7 @@ public class EmailToSMS implements LmtpCallback {
 							: rcptAddresses.split("<")[1].replaceAll(">", "").split("@");
 					String mobNumber = splitMobNumber[0].replaceAll("[()\\-. ]", "");
 					String mobNumberWithoutSymbol = splitMobNumber[0].replaceAll("[()\\-+. ]", "");
-					String mobNumberDomain = splitMobNumber.length>1 ? splitMobNumber[1] : null;
+					String mobNumberDomain = splitMobNumber[1];
 					if (smsDomain.equalsIgnoreCase(mobNumberDomain) && StringUtils.isNumeric(mobNumberWithoutSymbol) && !uniqueMobileSet.contains(mobNumber)) {
 						uniqueMobileSet.add(mobNumber);
 						sendsms(fullMessage, mobNumber, sender, isASCIIString);
