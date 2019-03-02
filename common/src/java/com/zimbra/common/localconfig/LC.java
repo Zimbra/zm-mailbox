@@ -575,17 +575,11 @@ public final class LC {
             " -Djava.awt.headless=true" +
             " -Dsun.net.inetaddr.ttl=${networkaddress_cache_ttl}" +
             " -Dorg.apache.jasper.compiler.disablejsr199=true" +
-            " -XX:+UseConcMarkSweepGC" +
+            " -XX:+UseG1GC" +
             " -XX:SoftRefLRUPolicyMSPerMB=1" +
             " -XX:-OmitStackTraceInFastThrow" +
             " -verbose:gc" +
-            " -XX:+PrintGCDetails" +
-            " -XX:+PrintGCDateStamps" +
-            " -XX:+PrintGCApplicationStoppedTime" +
-            " -Xloggc:/opt/zimbra/log/gc.log" +
-            " -XX:+UseGCLogFileRotation" +
-            " -XX:NumberOfGCLogFiles=20" +
-            " -XX:GCLogFileSize=10M");
+            " -Xlog:gc*=debug,safepoint=info:file=/opt/zimbra/log/gc.log:time:filecount=20,filesize=10m");
     @Supported
     public static final KnownKey mailboxd_pidfile = KnownKey.newKey("${zimbra_log_directory}/mailboxd.pid");
 
@@ -599,7 +593,7 @@ public final class LC {
     public static final KnownKey mailboxd_keystore_base_password = KnownKey.newKey("zimbra");
 
     @Supported
-    public static final KnownKey mailboxd_truststore = KnownKey.newKey("${zimbra_java_home}/jre/lib/security/cacerts");
+    public static final KnownKey mailboxd_truststore = KnownKey.newKey("${zimbra_java_home}/lib/security/cacerts");
 
     @Supported
     public static final KnownKey mailboxd_truststore_password = KnownKey.newKey("changeit");
@@ -1291,13 +1285,13 @@ public final class LC {
     @Reloadable
     public static final KnownKey imap_always_use_remote_store = KnownKey.newKey(false);
 
-    
+
     // OAuth2 Social
     public static final KnownKey zm_oauth_classes_handlers_yahoo = KnownKey.newKey("com.zimbra.oauth.handlers.impl.YahooOAuth2Handler");
     public static final KnownKey zm_oauth_classes_handlers_google = KnownKey.newKey("com.zimbra.oauth.handlers.impl.GoogleOAuth2Handler");
     public static final KnownKey zm_oauth_classes_handlers_facebook = KnownKey.newKey("com.zimbra.oauth.handlers.impl.FacebookOAuth2Handler");
-    
-    
+
+
     static {
         // Automatically set the key name with the variable name.
         for (Field field : LC.class.getFields()) {
