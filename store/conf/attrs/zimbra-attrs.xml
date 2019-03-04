@@ -9915,6 +9915,15 @@ TODO: delete them permanently from here
   <desc>OAuth consumer API scope. It is in the format of apiscope1{separator character}apiscope2:consumer-app-name. The separator between apiscope1 and apiscope2 is consumer-app specific</desc>
 </attr>
 
+<attr id="3067" name="zimbraShowClientTOS" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited,accountInfo,domainInfo" since="8.8.8">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>whether or not to show client Terms of Service</desc>
+</attr>
+
+<attr id="3068" name="zimbraPrefAcceptedClientTOS" type="boolean" cardinality="single" optionalIn="account" flags="accountInfo" since="8.8.8">
+  <desc>whether or not the user has accepted the client's terms of service</desc>
+</attr>
+
 <attr id="3072" name="zimbraHierarchicalAddressBookRoot" type="string" cardinality="multi" optionalIn="domain" flags="domainInfo" since="8.8.10">
   <desc>root group id of hierarchical address book</desc>
 </attr>
