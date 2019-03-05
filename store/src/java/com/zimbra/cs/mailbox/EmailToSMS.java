@@ -45,10 +45,16 @@ public class EmailToSMS implements LmtpCallback {
 	}
 
 	@Override
-	public void afterDelivery(Account account, Mailbox mbox, String envelopeSender, String recipientEmail,
+	public void afterDelivery(Account account, Mailbox mbox, String envelopeSender, String recipient,
 			Message newMessage) {
 				try {
-					sendEmailSMS(recipientEmail, newMessage);
+					if(recipient != null && newMessage != null) {
+						String[] recipientEmail = recipient.split("@");
+						String recipientEmailDomain = recipientEmail.length>1 ? recipientEmail[1] : null;
+						if(smsDomain.equalsIgnoreCase(recipientEmailDomain)) {
+							sendEmailSMS(newMessage);
+						}
+					}
 				} catch (ServiceException | MessagingException e) {
 					ZimbraLog.mailbox.error("Failed to send SMS afterDelivery ServiceException  ", e);
 				}
@@ -59,10 +65,8 @@ public class EmailToSMS implements LmtpCallback {
 			ParsedMessage pm) {
 	}
 
-	private void sendEmailSMS(String recipient, Message zMsg) throws ServiceException,MessagingException{
+	private void sendEmailSMS(Message zMsg) throws ServiceException,MessagingException {
 		Address[] recipients = zMsg.getParsedMessage().getMimeMessage().getAllRecipients();
-		String[] recipientEmail = recipient.split("@");
-		String recipientEmailDomain = recipientEmail[1];
 		String sender = zMsg.getSender();
 		String subject = zMsg.getSubject();
 		MimeMessage mimeMsg =  zMsg.getMimeMessage(false);
@@ -86,7 +90,7 @@ public class EmailToSMS implements LmtpCallback {
 			String mobNumber = splitMobNumber[0].replaceAll("[()\\-. ]", "");
 			String mobNumberWithoutSymbol = splitMobNumber[0].replaceAll("[()\\-+. ]", "");
 			String mobNumberDomain = splitMobNumber[1];
-			if (mobNumberDomain.equalsIgnoreCase(smsDomain) && recipientEmailDomain.equalsIgnoreCase(smsDomain) && StringUtils.isNumeric(mobNumberWithoutSymbol) && !uniqueMobileSet.contains(mobNumber)) {
+			if (smsDomain.equalsIgnoreCase(mobNumberDomain) && StringUtils.isNumeric(mobNumberWithoutSymbol) && !uniqueMobileSet.contains(mobNumber)) {
 				uniqueMobileSet.add(mobNumber);
 				sendsms(fullMessage, mobNumber, sender, isASCIIString);
 			}
