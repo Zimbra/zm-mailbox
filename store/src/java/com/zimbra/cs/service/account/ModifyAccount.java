@@ -21,16 +21,10 @@
 package com.zimbra.cs.service.account;
 
 import java.util.Map;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Locale;
 import java.util.Set;
-import java.util.TimeZone;
 
-import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
@@ -56,12 +50,12 @@ public class ModifyAccount extends AccountDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Account account = getAuthenticatedAccount(zsc);
         Provisioning prov = Provisioning.getInstance();
-        ModifyAccountRequest req = zsc.elementToJaxb(request);
 
         HashMap<String, Object> attrs = new HashMap<String, Object>();
         Map<String, Set<String>> name2uniqueAttrValues = new HashMap<String, Set<String>>();
         for (KeyValuePair kvp : request.listKeyValuePairs("a", "n")) {
-            String name = kvp.getKey(), value = kvp.getValue();
+            String name = kvp.getKey();
+            String value = kvp.getValue();
             char ch = name.length() > 0 ? name.charAt(0) : 0;
             int offset = ch == '+' || ch == '-' ? 1 : 0;
 
