@@ -12359,6 +12359,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPreAuthKey = "zimbraPreAuthKey";
 
     /**
+     * whether or not the user has accepted the client&#039;s terms of
+     * service
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=3068)
+    public static final String A_zimbraPrefAcceptedClientTOS = "zimbraPrefAcceptedClientTOS";
+
+    /**
      * whether or not account tree is expanded
      *
      * @since ZCS 6.0.2
@@ -15805,6 +15814,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1900)
     public static final String A_zimbraShortTermGranteeCacheSize = "zimbraShortTermGranteeCacheSize";
+
+    /**
+     * whether or not to show client Terms of Service
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=3067)
+    public static final String A_zimbraShowClientTOS = "zimbraShowClientTOS";
 
     /**
      * Whether edit header commands in admin sieve scripts are enabled or
