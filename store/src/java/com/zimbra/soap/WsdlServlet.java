@@ -29,7 +29,9 @@ import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.soap.util.WsdlGenerator;
@@ -85,8 +87,9 @@ public class WsdlServlet extends ZimbraServlet {
                 resp.setContentType(MimeConstants.CT_TEXT_XML);
                 ByteUtil.copy(is, true /* closeIn */, resp.getOutputStream(), false /* closeOut */);
             } else {
+                Domain domain = getBestDomain(req.getServerName());
                 if (!WsdlGenerator.handleRequestForWsdl(pathInfo, resp.getOutputStream(),
-                        getSoapURL(), getSoapAdminURL())) {
+                        getSoapURL(domain), getSoapAdminURL(domain))) {
                     resp.sendError(HttpServletResponse.SC_NOT_FOUND);
                 }
             }
@@ -94,19 +97,46 @@ public class WsdlServlet extends ZimbraServlet {
             ZimbraLog.clearContext();
         }
     }
-    
-    private static String getSoapAdminURL() {
+
+    private Domain getBestDomain(String serverName) {
+        Provisioning prov = Provisioning.getInstance();
+        Domain domain;
         try {
-            return URLUtil.getAdminURL(Provisioning.getInstance().getLocalServer());
+            domain = prov.getDomainByName(serverName);
+            if (domain != null) {
+                return domain;
+            }
+        } catch (ServiceException e) {
+        }
+        try {
+            Server server = prov.getLocalServer();
+            if (server != null) {
+                domain = prov.getDomainByName(serverName);
+                if (domain != null) {
+                    return domain;
+                }
+            }
+        } catch (ServiceException e) {
+        }
+        try {
+            return prov.getDefaultDomain();
+        } catch (ServiceException e) {
+            return null;
+        }
+    }
+
+    private static String getSoapAdminURL(Domain domain) {
+        try {
+            return URLUtil.getPublicAdminConsoleURLForDomain(Provisioning.getInstance().getLocalServer(), domain);
         } catch (ServiceException e) {
             return WsdlServiceInfo.localhostSoapAdminHttpsURL;
         }
     }
 
-    private static String getSoapURL() {
+    private static String getSoapURL(Domain domain) {
         try {
-            return URLUtil.getServiceURL(Provisioning.getInstance().getLocalServer(),
-                    AccountConstants.USER_SERVICE_URI, true);
+            return URLUtil.getPublicURLForDomain(Provisioning.getInstance().getLocalServer(),
+                    domain, "", true);
         } catch (ServiceException e) {
             return WsdlServiceInfo.localhostSoapHttpURL;
         }
