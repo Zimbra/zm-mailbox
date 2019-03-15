@@ -25,8 +25,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
+import java.net.InetAddress;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URLDecoder;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -47,6 +52,7 @@ import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpURL;
 import org.apache.commons.httpclient.HttpsURL;
+import org.apache.commons.httpclient.URIException;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
@@ -56,9 +62,11 @@ import org.apache.commons.httpclient.util.DateParseException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.common.io.Closeables;
+import com.google.common.net.InetAddresses;
 import com.zimbra.common.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.common.httpclient.HttpClientUtil;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
@@ -185,6 +193,28 @@ public class FeedManager {
         }
     }
 
+    /**
+     * Returns true if target address is private, link-local, loopback, or individually blacklisted.
+     * @param url The target
+     * @return True if address is blocked for feed manager
+     */
+    protected static boolean isBlockedFeedAddress(HttpURL url) {
+        List<String> blacklist = Arrays.asList(LC.zimbra_feed_manager_ip_blacklist.value().split(","));
+        try {
+            InetAddress targetAddress = InetAddress.getByName(url.getHost());
+            if (targetAddress.isSiteLocalAddress()
+                || targetAddress.isAnyLocalAddress()
+                || targetAddress.isLinkLocalAddress()
+                || targetAddress.isLoopbackAddress()
+                || blacklist.contains(targetAddress.getHostAddress())) {
+                    return true;
+                }
+        } catch (URIException | UnknownHostException e) {
+            ZimbraLog.misc.warn("unable to parse url host: %s", url);
+        }
+        return false;
+    }
+
     private static RemoteDataInfo retrieveRemoteData(String url, Folder.SyncData fsd)
     throws ServiceException, HttpException, IOException {
         assert !Strings.isNullOrEmpty(url);
@@ -217,9 +247,14 @@ public class FeedManager {
                     throw ServiceException.INVALID_REQUEST("url must begin with http: or https:", null);
                 }
 
+                HttpURL httpurl = lcurl.startsWith("https:") ? new HttpsURL(url) : new HttpURL(url);
+                // validate target address (also handles followed `location` header addresses)
+                if (isBlockedFeedAddress(httpurl)) {
+                    throw ServiceException.INVALID_REQUEST(String.format("invalid url for feed: %s", url), null);
+                }
+
                 // username and password are encoded in the URL as http://user:pass@host/...
                 if (url.indexOf('@') != -1) {
-                    HttpURL httpurl = lcurl.startsWith("https:") ? new HttpsURL(url) : new HttpURL(url);
                     if (httpurl.getUser() != null) {
                         String user = httpurl.getUser();
                         if (user.indexOf('%') != -1) {
@@ -240,7 +275,8 @@ public class FeedManager {
                 } catch (OutOfMemoryError e) {
                     Zimbra.halt("out of memory", e);  return null;
                 } catch (Throwable t) {
-                    throw ServiceException.INVALID_REQUEST("invalid url for feed: " + url, t);
+                    ZimbraLog.misc.warnQuietly(String.format("invalid url for feed: %s", url), t);
+                    throw ServiceException.INVALID_REQUEST("invalid url for feed: " + url, null);
                 }
                 get.setParams(params);
                 get.setFollowRedirects(true);

@@ -1296,8 +1296,11 @@ public final class LC {
     public static final KnownKey zm_oauth_classes_handlers_yahoo = KnownKey.newKey("com.zimbra.oauth.handlers.impl.YahooOAuth2Handler");
     public static final KnownKey zm_oauth_classes_handlers_google = KnownKey.newKey("com.zimbra.oauth.handlers.impl.GoogleOAuth2Handler");
     public static final KnownKey zm_oauth_classes_handlers_facebook = KnownKey.newKey("com.zimbra.oauth.handlers.impl.FacebookOAuth2Handler");
-    
-    
+
+    // Feed Manager comma-separated ip blacklist
+    public static final KnownKey zimbra_feed_manager_ip_blacklist = KnownKey.newKey("");
+
+
     static {
         // Automatically set the key name with the variable name.
         for (Field field : LC.class.getFields()) {

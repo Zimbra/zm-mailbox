@@ -25,12 +25,15 @@ import java.io.Reader;
 import java.nio.charset.Charset;
 import java.util.List;
 
+import org.apache.commons.httpclient.HttpURL;
+import org.apache.commons.httpclient.HttpsURL;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mime.MPartInfo;
@@ -114,6 +117,43 @@ public class FeedManagerTest {
         } else {
             Assert.fail("Expecting a ParsedMessage where is " + obj.getClass().getName());
         }
+    }
+
+    @Test
+    public void testIsBlockedFeedAddress() throws Exception {
+        // loopback
+        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new HttpURL("http://localhost/feed")));
+        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new HttpURL("http://localhost:8085/feed")));
+        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new HttpURL("http://127.0.0.1/feed")));
+        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new HttpURL("http://127.0.0.1:8085/feed")));
+
+        // private
+        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new HttpURL("http://172.16.150.140/feed")));
+        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new HttpURL("http://172.25.150.140/feed")));
+        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new HttpURL("http://user:pass@192.168.5.1/feed")));
+        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new HttpURL("http://192.168.5.1:8080/feed")));
+        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new HttpURL("http://192.168.166.150/feed")));
+        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new HttpURL("http://192.168.166.150:8081/feed")));
+
+        // public blacklisted
+        Assert.assertFalse(FeedManager.isBlockedFeedAddress(new HttpURL("http://198.51.100.230:8081/feed")));
+        LC.zimbra_feed_manager_ip_blacklist.setDefault("198.51.100.230");
+        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new HttpURL("http://198.51.100.230:8081/feed")));
+        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new HttpsURL("https://198.51.100.230:8082/feed")));
+
+        Assert.assertFalse(FeedManager.isBlockedFeedAddress(new HttpURL("http://198.51.100.231:8081/feed")));
+        Assert.assertFalse(FeedManager.isBlockedFeedAddress(new HttpURL("http://198.51.100.220:8081/feed")));
+        LC.zimbra_feed_manager_ip_blacklist.setDefault("198.51.100.230,198.51.100.231,198.51.100.220");
+        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new HttpURL("http://198.51.100.230:8081/feed")));
+        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new HttpsURL("https://198.51.100.230:8082/feed")));
+        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new HttpURL("http://198.51.100.220:8081/feed")));
+        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new HttpURL("http://198.51.100.231:8081/feed")));
+        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new HttpURL("http://user:pass@198.51.100.231:8081/feed")));
+
+        // public non-blacklisted
+        Assert.assertFalse(FeedManager.isBlockedFeedAddress(new HttpURL("http://zimbra.test:8080/feed")));
+        Assert.assertFalse(FeedManager.isBlockedFeedAddress(new HttpsURL("https://zimbra.test/feed")));
+        Assert.assertFalse(FeedManager.isBlockedFeedAddress(new HttpsURL("https://user:pass@zimbra.test/feed")));
     }
 
     public static String streamToString(InputStream stream, Charset cs)
