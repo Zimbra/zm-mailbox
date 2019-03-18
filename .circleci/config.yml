@@ -9,6 +9,7 @@ references:
       environment:
         - ANT_OPTS: -Dzimbra.buildinfo.version=8.7.6_GA
         - BUILD: "/home/build"
+        - CIRCLE_TEST_REPORTS: "/tmp"
       working_directory: /home/build/zm-mailbox
    default_attach_workspace: &default_attach_workspace
          attach_workspace:
