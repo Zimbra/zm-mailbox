@@ -37,7 +37,7 @@ jobs:
           name: Clone zm-timezones
           command: |
             cd "$BUILD"
-            git clone https://github.com/Zimbra/zm-timezones.git -b develop --single-branch: || exit 1
+            git clone https://github.com/Zimbra/zm-timezones.git -b develop --single-branch || exit 1
       - run:
           command: ant clean compile publish-local
           working_directory: native
