@@ -54,7 +54,7 @@ jobs:
           command: ant clean compile publish-local
           working_directory: store
       - persist_to_workspace:
-          root: /home/build/
+          root: /home/ubuntu/
           paths:
             - zm-timezones
             - zm-mailbox
