@@ -67,8 +67,8 @@ jobs:
     steps:
       - *default_attach_workspace
       - run:
-          name: Install npm and nodejs-legacy 
-          command: sudo apt-get update; sudo apt-get install nodejs-legacy npm
+          name: Install npm and nodejs
+          command: sudo apt-get update; sudo apt-get install nodejs npm
       - run:
           name: Install junit-merge
           command: sudo npm config set strict-ssl false && sudo npm install -g junit-merge
