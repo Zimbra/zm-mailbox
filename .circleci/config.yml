@@ -8,12 +8,11 @@ references:
         - image: circleci/build-image:ubuntu-14.04-XXL-upstart-1189-5614f37
       environment:
         - ANT_OPTS: -Dzimbra.buildinfo.version=8.7.6_GA
-        - BUILD: "/home/build"
         - CIRCLE_TEST_REPORTS: "/tmp"
       working_directory: /home/build/zm-mailbox
    default_attach_workspace: &default_attach_workspace
          attach_workspace:
-            at: /home/build/
+            at: /home/ubuntu
    filter_branches: &filter_branches
      filters:
        branches:
@@ -26,12 +25,6 @@ jobs:
   build:
     <<: *default_environment_settings
     steps:
-      - run: 
-          name: Create build directory
-          command: sudo mkdir "$BUILD"
-      - run:
-          name: cd to build directory
-          command: cd "$BUILD"
       - checkout
       - run:
           name: Install ant-contrib and nodejb-legacy
@@ -65,37 +58,6 @@ jobs:
             - zm-timezones
             - zm-mailbox
             - .ssh
-  test:
-    <<: *default_environment_settings
-    steps:
-      - *default_attach_workspace
-      - run: 
-          name: Create test report directory to hold junit tests
-          command: mkdir -p $CIRCLE_TEST_REPORTS/junit/
-      - run:
-        command: ant test
-        working_directory: native
-      - run:
-        command: ant test
-        working_directory: common
-      - run:
-        command: ant test
-        working_directory: soap
-      - run:
-        command: ant test
-        working_directory: client
-      - run:
-        command: ant test
-        no_output_timeout: 1200s
-        working_directory: store
-      - run: 
-        name: Find test results
-        command: find . -type f -regex ".*/build/test/report/.*xml" | xargs junit-merge
-      - run: 
-        name: Copy test results to proper directory 
-        command: cp merged-test-results.xml $CIRCLE_TEST_REPORTS/junit/
-      - store_test_results:
-        path: $CIRCLE_TEST_REPORTS/junit/
 ############################################################################
 
 workflows:
@@ -103,9 +65,5 @@ workflows:
   build_deploy:
     jobs:
       - build:
-          <<: *filter_branches
-      - test:
-          requires:
-            - build
           <<: *filter_branches
 ############################################################################
