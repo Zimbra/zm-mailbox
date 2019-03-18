@@ -26,6 +26,12 @@ jobs:
   build:
     <<: *default_environment_settings
     steps:
+      - run: 
+          name: Create build directory
+          command: sudo mkdir "$BUILD"
+      - run:
+          name: cd to build directory
+          command: cd "$BUILD"
       - checkout
       - run:
           name: Install ant-contrib and nodejb-legacy
