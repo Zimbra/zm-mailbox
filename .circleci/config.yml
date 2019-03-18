@@ -29,7 +29,7 @@ jobs:
       - checkout
       - run:
           name: Install ant-contrib and nodejs-legacy
-          command: sudo apt-get update; sudo apt-get install ant-contrib nodejs-legacy npm
+          command: sudo apt-get update; sudo apt-get install ant-contrib nodejs-legacy
       - run:
           name: Clone zm-timezones
           command: |
@@ -66,6 +66,9 @@ jobs:
     <<: *default_environment_settings
     steps:
       - *default_attach_workspace
+      - run:
+          name: Install npm
+          command: sudo apt-get update; sudo apt-get install npm
       - run:
           name: Install junit-merge
           command: sudo npm config set strict-ssl false && sudo npm install -g junit-merge
