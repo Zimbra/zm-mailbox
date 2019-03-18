@@ -1311,6 +1311,9 @@ public final class LC {
 
     public static final KnownKey sieve_immutable_headers = KnownKey.newKey("Received,DKIM-Signature,Authentication-Results,Received-SPF,Message-ID");
 
+    // Feed Manager comma-separated blacklist. addresses can be CIDR notation, or single ip. no wild-cards (default blacklist private networks)
+    public static final KnownKey zimbra_feed_manager_blacklist = KnownKey.newKey("10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,fd00::/8");
+
     static {
         // Automatically set the key name with the variable name.
         for (Field field : LC.class.getFields()) {
