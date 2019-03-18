@@ -101,7 +101,7 @@ jobs:
           working_directory: store
       - run:
           name: Find test results
-          command: find . -type f -regex ".*/build/test/report/.*xml" -exec junit-merge {} \;
+          command: sudo find . -type f -regex ".*/build/test/report/.*xml" -exec junit-merge {} \;
       - run:
           name: Copy test results to proper directory
           command: cp merged-test-results.xml $CIRCLE_TEST_REPORTS/junit/
