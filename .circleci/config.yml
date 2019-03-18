@@ -67,8 +67,8 @@ jobs:
           name: Create test report directory to hold junit tests
           command: mkdir -p $CIRCLE_TEST_REPORTS/junit/
       - run:
-        command: ant test
-        working_directory: native
+          command: ant test
+          working_directory: native
 ############################################################################
 
 workflows:
