@@ -59,6 +59,7 @@ jobs:
             - zm-timezones
             - zm-mailbox
             - .ssh
+            - .zcs-deps
   test:
     <<: *default_environment_settings
     steps:
