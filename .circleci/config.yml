@@ -67,8 +67,13 @@ jobs:
     steps:
       - *default_attach_workspace
       - run:
-          name: Install npm and nodejs
-          command: sudo apt-get update; sudo apt-get install nodejs npm
+          name: Install nodejs
+          command: |
+            sudo curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
+            sudo apt-get install -y nodejs
+      - run:
+          name: Install npm 
+          command: sudo apt-get update; sudo apt-get install npm
       - run:
           name: Create node symbolic link
           command: sudo ln -s /usr/bin/nodejs /usr/bin/node
