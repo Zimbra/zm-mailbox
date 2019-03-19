@@ -67,16 +67,13 @@ jobs:
     steps:
       - *default_attach_workspace
       - run:
+          name: Install npm
+          command: sudo apt-get update; sudo apt-get install npm
+      - run:
           name: Install nodejs
           command: |
             sudo curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
             sudo apt-get install -y nodejs
-      - run:
-          name: Install npm 
-          command: sudo apt-get update; sudo apt-get install npm
-      - run:
-          name: Create node symbolic link
-          command: sudo ln -s /usr/bin/nodejs /usr/bin/node
       - run:
           name: Install junit-merge
           command: sudo npm config set strict-ssl false && sudo npm install -g junit-merge
