@@ -9,7 +9,6 @@ references:
       environment:
         - ANT_OPTS: -Dzimbra.buildinfo.version=8.7.6_GA
         - BUILD: "/home/ubuntu"
-        - CIRCLE_TEST_REPORTS: "/tmp"
       working_directory: /home/ubuntu/zm-mailbox
    default_attach_workspace: &default_attach_workspace
          attach_workspace:
@@ -79,7 +78,7 @@ jobs:
           command: sudo npm config set strict-ssl false && sudo npm install -g junit-merge
       - run:
           name: Create test report directory to hold junit tests
-          command: mkdir -p $CIRCLE_TEST_REPORTS/junit/
+          command: mkdir -p /tmp/junit/
       - run:
           name: Running ant test native
           command: ant test
@@ -106,9 +105,9 @@ jobs:
           command: find . -type f -regex ".*/build/test/report/.*xml" | xargs junit-merge
       - run:
           name: Copy test results to proper directory
-          command: cp merged-test-results.xml $CIRCLE_TEST_REPORTS/junit/
+          command: cp merged-test-results.xml /tmp/junit/
       - store_test_results:
-          path: $CIRCLE_TEST_REPORTS/junit/
+          path: /tmp/junit/
 ############################################################################
 
 workflows:
