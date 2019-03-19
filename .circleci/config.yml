@@ -100,7 +100,7 @@ jobs:
           no_output_timeout: 1200s
           working_directory: store
       - run:
-          name: Find test results
+          name: Finding test results
           command: junit-merge -r ./*/TESTS-TestSuites.xml
       - run:
           name: Copy test results to proper directory
