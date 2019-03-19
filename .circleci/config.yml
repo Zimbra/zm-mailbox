@@ -103,7 +103,7 @@ jobs:
           working_directory: store
       - run:
           name: Finding test results
-          command: junit-merge -r ./*/TESTS-TestSuites.xml
+          command: find . -type f -regex ".*/build/test/report/.*xml" | xargs junit-merge
       - run:
           name: Copy test results to proper directory
           command: cp merged-test-results.xml $CIRCLE_TEST_REPORTS/junit/
