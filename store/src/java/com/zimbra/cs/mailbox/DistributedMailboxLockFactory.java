@@ -13,7 +13,9 @@ import org.redisson.client.RedisException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
+import com.zimbra.common.localconfig.KnownKey;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.localconfig.LC.Supported;
 import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.mailbox.MailboxLockContext;
 import com.zimbra.common.mailbox.MailboxLockFactory;
@@ -386,6 +388,9 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
                 }
                 LockResponse response = acquireRedisLock();
                 super.lock(lockContext);
+                if (!LC.lock_based_cache_invalidation_enabled.booleanValue()) {
+                    return;
+                }
                 String lastWriter = response.getLastWriter();
                 Mailbox mailbox = (Mailbox) lockContext.getMailboxStore();
                 if (Strings.isNullOrEmpty(lastWriter)) {
