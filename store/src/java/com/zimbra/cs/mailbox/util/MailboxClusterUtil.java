@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 
 import com.google.common.io.Files;
+import com.zimbra.common.util.UUIDUtil;
 import com.zimbra.common.util.ZimbraLog;
 
 public class MailboxClusterUtil {
@@ -15,8 +16,8 @@ public class MailboxClusterUtil {
             mailboxWorkerName = Files.asCharSource(new File("/var/run/pod-info/pod-name"), Charset.defaultCharset()).read();
             ZimbraLog.mailbox.info("mailbox worker name is %s", mailboxWorkerName);
         } catch (IOException e) {
-            ZimbraLog.mailbox.warn("Unable to determine mailbox worker name! Defaulting to blank string");
-            mailboxWorkerName = "";
+            mailboxWorkerName = String.format("zmc-mailbox-%s", UUIDUtil.generateUUID());
+            ZimbraLog.mailbox.warn("Unable to determine mailbox worker name! Generated name '%s' instead", mailboxWorkerName);
         }
     }
 

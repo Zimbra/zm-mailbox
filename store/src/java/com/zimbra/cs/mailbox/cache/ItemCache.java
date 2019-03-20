@@ -28,7 +28,7 @@ public abstract class ItemCache {
 
     public ItemCache(Mailbox mbox) {
         this.mbox = mbox;
-        ZimbraLog.mailbox.info("using %s", this.getClass().getSimpleName());
+        ZimbraLog.mailbox.info("Using %s for Mailbox item cache", this.getClass().getSimpleName());
     }
 
     public static Factory getFactory() {

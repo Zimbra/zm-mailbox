@@ -395,7 +395,7 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
                 Mailbox mailbox = (Mailbox) lockContext.getMailboxStore();
                 if (Strings.isNullOrEmpty(lastWriter)) {
                     if (ZimbraLog.cache.isDebugEnabled()) {
-                        ZimbraLog.cache.debug("unable to determine last mailbox worker to acquire write lock, flushing local caches", lastWriter);
+                        ZimbraLog.cache.debug("unable to determine last mailbox worker to acquire write lock, flushing local caches");
                     }
                     mailbox.clearStaleCaches(lockContext);
                 } else if (!lastWriter.equals(lockId)) {

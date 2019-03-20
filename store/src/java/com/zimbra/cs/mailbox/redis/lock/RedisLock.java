@@ -90,7 +90,7 @@ public abstract class RedisLock {
 
     /**
      * Try to acquire the lock in redis
-     * @return null if success; otherwise the TTL of the held lock
+     * @return LockResponse containing information about the lock acquisition
      */
     protected abstract LockResponse tryAcquire();
 
@@ -102,6 +102,9 @@ public abstract class RedisLock {
     public LockResponse lock() throws ServiceException {
         QueuedLockRequest waitingLock = lockChannel.add(this, (context) -> {
             LockResponse response = tryAcquire();
+            if (!response.isValid()) {
+                throw ServiceException.LOCK_FAILED("invalid redis lock response", null);
+            }
             if (response.success()) {
                 if (ZimbraLog.mailboxlock.isTraceEnabled()) {
                     ZimbraLog.mailboxlock.trace("successfully acquired %s: %s", this, context);
@@ -115,6 +118,9 @@ public abstract class RedisLock {
         });
         if (waitingLock.canTryAcquireNow()) {
             LockResponse response = tryAcquire();
+            if (!response.isValid()) {
+                throw ServiceException.LOCK_FAILED("invalid redis lock response", null);
+            }
             if (response.success()) {
                 if (ZimbraLog.mailboxlock.isTraceEnabled()) {
                     ZimbraLog.mailboxlock.trace("successfully acquired %s without waiting", this);
@@ -163,14 +169,21 @@ public abstract class RedisLock {
         private Long ttl;
         private String lastWriter;
         private boolean firstReadSinceLastWrite;
+        private boolean validResponse;
+
+        private LockResponse(boolean validResponse) {
+            this.validResponse = validResponse;
+        }
 
         public LockResponse(Long ttl) {
             this.ttl = ttl;
+            this.validResponse = true;
         }
 
         public LockResponse(String lastWriter, boolean firstReadSinceLastWrite) {
             this.lastWriter = lastWriter;
             this.firstReadSinceLastWrite = firstReadSinceLastWrite;
+            this.validResponse = true;
         }
 
         public boolean success() {
@@ -188,6 +201,13 @@ public abstract class RedisLock {
         public boolean isFirstReadSinceLastWrite() {
             return firstReadSinceLastWrite;
         }
+
+        public boolean isValid() {
+            return validResponse;
+        }
+
+        private static final LockResponse INVALID_LOCK_RESPONSE = new LockResponse(false);
+
     }
 
     private static class LockResponseConvertor implements MultiDecoder<LockResponse> {
@@ -201,6 +221,10 @@ public abstract class RedisLock {
         public LockResponse decode(List<Object> parts, State state) {
             if (ZimbraLog.mailboxlock.isTraceEnabled()) {
                 ZimbraLog.mailboxlock.trace("LockResponseConvertor received response %s", parts);
+            }
+            if (parts.size() < 2 || parts.size() > 3) {
+                ZimbraLog.mailboxlock.warn("invalid LockResponse: %s", parts);
+                return LockResponse.INVALID_LOCK_RESPONSE;
             }
             if (parts.get(0).equals(Long.valueOf(1))) {
                 //lock success
