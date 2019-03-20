@@ -74,7 +74,7 @@ public class QueuedLockRequest {
                 }
             } catch (InterruptedException e) {
                 ZimbraLog.mailboxlock.warn("interrupted while waiting for %s to be released!", lock.getLockName());
-                return null; //TODO: this is probably not safe
+                throw ServiceException.LOCK_FAILED("failed to acquire redis lock", e);
             }
         }
     }
@@ -115,7 +115,7 @@ public class QueuedLockRequest {
 
     @FunctionalInterface
     static interface LockCallback {
-        public LockResponse attemptLock(LockTimingContext context);
+        public LockResponse attemptLock(LockTimingContext context) throws ServiceException;
     }
 
 }

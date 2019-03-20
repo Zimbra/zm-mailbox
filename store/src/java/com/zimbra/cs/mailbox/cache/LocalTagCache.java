@@ -4,7 +4,6 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Tag;
 
 public class LocalTagCache implements TagCache {
