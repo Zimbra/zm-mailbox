@@ -13,7 +13,6 @@ public class LocalTagCache implements TagCache {
     private Map<Integer, Tag> tagIdMap;
 
     public LocalTagCache() {
-        ZimbraLog.cache.info("using local tag cache");
         tagNameMap = new ConcurrentHashMap<String, Tag>();
         tagIdMap = new ConcurrentHashMap<Integer, Tag>();
     }

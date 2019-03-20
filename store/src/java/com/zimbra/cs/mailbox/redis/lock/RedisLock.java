@@ -199,7 +199,9 @@ public abstract class RedisLock {
 
         @Override
         public LockResponse decode(List<Object> parts, State state) {
-            ZimbraLog.mailboxlock.info("LockResponseConvertor received response %s", parts);
+            if (ZimbraLog.mailboxlock.isTraceEnabled()) {
+                ZimbraLog.mailboxlock.trace("LockResponseConvertor received response %s", parts);
+            }
             if (parts.get(0).equals(Long.valueOf(1))) {
                 //lock success
                 String lastWriter = (String) parts.get(1);

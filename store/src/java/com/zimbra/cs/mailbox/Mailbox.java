@@ -10135,7 +10135,8 @@ public class Mailbox implements MailboxStore {
     public void clearStaleCaches(MailboxLockContext context) throws ServiceException {
         String caller = context.getCaller();
         if (caller != null && caller.equals("createMailbox")) {
-            ZimbraLog.cache.info("clearStateCaches called during createMailbox operation, ignoring");
+            //mailbox creation will always reach this point (since there is no lock marker in redis),
+            //but we don't actually need to flush any caches
             return;
         }
         if (!LC.redis_cache_synchronize_folders_tags.booleanValue()) {

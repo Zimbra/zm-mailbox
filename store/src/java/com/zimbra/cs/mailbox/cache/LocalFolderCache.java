@@ -13,7 +13,6 @@ public class LocalFolderCache implements FolderCache {
     private final Map<String, Folder> mapByUuid;
 
     public LocalFolderCache() {
-        ZimbraLog.cache.info("using local folder cache");
         mapById = new ConcurrentHashMap<Integer, Folder>();
         mapByUuid = new ConcurrentHashMap<String, Folder>();
     }

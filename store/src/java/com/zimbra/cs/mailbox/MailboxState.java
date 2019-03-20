@@ -35,7 +35,6 @@ public abstract class MailboxState {
     public MailboxState(MailboxData data, TransactionCacheTracker cacheTracker) {
         this.data = data;
         this.cacheTracker = cacheTracker;
-        ZimbraLog.mailbox.info("Tracking mailbox state using %s", this.getClass().getSimpleName());
         init();
     }
 
