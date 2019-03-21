@@ -64,12 +64,23 @@ public class RedisLockChannel implements MessageListener<String> {
     }
 
     public synchronized QueuedLockRequest add(RedisLock lock, QueuedLockRequest.LockCallback callback) {
+        return add(lock, callback, false);
+    }
+
+    public synchronized QueuedLockRequest add(RedisLock lock, QueuedLockRequest.LockCallback callback, boolean skipQueue) {
         if (!isActive && waitingLocksQueues.isEmpty()) {
             isActive = true; //lazily activate the channel
             subscribe();
         }
         QueuedLockRequest waitingLock = new QueuedLockRequest(lock, callback);
-        boolean tryAcquireNow = getQueue(lock.getAccountId()).add(waitingLock);
+        boolean tryAcquireNow;
+        LockQueue lockQueue = getQueue(lock.getAccountId());
+        if (skipQueue) {
+            lockQueue.addToFront(waitingLock);
+            tryAcquireNow = true;
+        } else {
+            tryAcquireNow = lockQueue.add(waitingLock);
+        }
         waitingLock.setTryAcquireNow(tryAcquireNow);
         return waitingLock;
     }
@@ -134,6 +145,21 @@ public class RedisLockChannel implements MessageListener<String> {
                     return numWriters == 0;
                 }
             }
+        }
+
+        /**
+         * Add a QueuedLockRequest to the front of the queue, bypassing all other waiting locks.
+         * This is used to reinstate read locks when releasing a mailbox write lock that was upgraded from a read lock.
+         * @param lock
+         */
+        public void addToFront(QueuedLockRequest lock) {
+            int curSize = queue.size();
+            if (curSize == 0) {
+                trace("adding %s to the front of the queue (no locks queued)", lock);
+            } else {
+                trace("adding %s to the front of the queue: %s", lock, this);
+            }
+            queue.addFirst(lock);
         }
 
         public boolean remove(QueuedLockRequest lock) {
