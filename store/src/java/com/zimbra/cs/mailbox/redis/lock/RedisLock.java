@@ -100,6 +100,10 @@ public abstract class RedisLock {
     protected abstract Boolean unlockInner();
 
     public LockResponse lock() throws ServiceException {
+        return lock(false);
+    }
+
+    public LockResponse lock(boolean skipQueue) throws ServiceException {
         QueuedLockRequest waitingLock = lockChannel.add(this, (context) -> {
             LockResponse response = tryAcquire();
             if (!response.isValid()) {
@@ -115,7 +119,7 @@ public abstract class RedisLock {
                 }
             }
             return response;
-        });
+        }, skipQueue);
         if (waitingLock.canTryAcquireNow()) {
             LockResponse response = tryAcquire();
             if (!response.isValid()) {

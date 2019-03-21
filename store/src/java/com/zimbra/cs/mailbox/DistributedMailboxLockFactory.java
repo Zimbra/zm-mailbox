@@ -226,12 +226,11 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
             return result;
         }
 
-        @Override
-        public void close() {
+        protected boolean closeCommon() {
             long close_start = System.currentTimeMillis();
             restoreToInitialLockCount(true);
             restoreToInitialLockCount(false);
-            reinstateReadLocks();
+            boolean needToReinstate = reinstateReadLocks();
             if ((time_got_lock != null) && (System.currentTimeMillis() - time_got_lock) >
             LC.zimbra_mailbox_lock_long_lock_milliseconds.longValue()) {
                 /* Took a long time.*/
@@ -245,6 +244,12 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
                     log.trace("close() unlock cost=%s %s", ZimbraLog.elapsedSince(close_start), this);
                 }
             }
+            return needToReinstate;
+        }
+
+        @Override
+        public void close() {
+            closeCommon();
         }
 
         /**
@@ -432,19 +437,6 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
             return releaseRedisReadLock;
         }
 
-        @Override
-        protected boolean reinstateReadLocks() {
-            boolean reinstateRedisReadLock = super.reinstateReadLocks();
-            if (reinstateRedisReadLock) {
-                try {
-                    redisLock.readLock().lock();
-                } catch (RedisException | ServiceException e) {
-                    log.warn("unable to acquire redis read lock when reinstating read locks", e);
-                }
-            }
-            return reinstateRedisReadLock;
-        }
-
         private LockResponse acquireRedisLock() throws ServiceException {
             try {
                 return zRedisLock.lock();
@@ -455,13 +447,23 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
 
         @Override
         public void close() {
-            super.close();
+            boolean reinstateRedisReadLock = closeCommon();
             if (getHoldCount() == 0) {
                 if (log.isTraceEnabled()) {
                     log.trace("releasing redis lock in close() for %s", this);
                 }
                 try {
                     zRedisLock.unlock();
+                    if (reinstateRedisReadLock) {
+                        try {
+                            if (log.isTraceEnabled()) {
+                                log.trace("reinstating redis read lock in close() for %s", this);
+                            }
+                            redisLock.readLock().lock(true);
+                        } catch (RedisException | ServiceException e) {
+                            log.warn("unable to acquire redis read lock when reinstating read locks", e);
+                        }
+                    }
                 } catch (RedisException e) {
                     log.error("failed to release redis lock in close() for %s", this, e);
                 } catch (IllegalStateException e) {
