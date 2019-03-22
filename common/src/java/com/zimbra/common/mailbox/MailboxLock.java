@@ -15,9 +15,15 @@ public interface MailboxLock extends AutoCloseable {
      */
     int getHoldCount() throws ServiceException;
 
-    void lock() throws ServiceException;
+    /**
+     * Acquire a lock
+     * @return
+     * @throws ServiceException
+     */
+    void lock(MailboxLockContext lockContext) throws ServiceException;
 
     /* override which doesn't throw any exceptions */
     @Override
     void close();
+
 }

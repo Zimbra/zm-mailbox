@@ -20,7 +20,10 @@ package com.zimbra.cs.mailbox.redis.lock;
 import java.util.List;
 
 import org.redisson.client.codec.Codec;
+import org.redisson.client.handler.State;
+import org.redisson.client.protocol.Decoder;
 import org.redisson.client.protocol.RedisCommand;
+import org.redisson.client.protocol.decoder.MultiDecoder;
 import org.redisson.command.CommandExecutor;
 
 import com.google.common.base.MoreObjects;
@@ -40,15 +43,19 @@ public abstract class RedisLock {
     protected String lockChannelName;
     protected String accountId;
     protected RedissonRetryClient client;
-    protected String uuid;
+    protected String uuid; //unique for each lock instance
+    protected String lockId; //unique for each top-level RedisReadWriteLock
 
-    public RedisLock(String accountId, String lockBaseName) {
+    protected static RedisCommand<LockResponse> LOCK_RESPONSE_CMD = new RedisCommand<>("EVAL", new LockResponseConvertor());
+
+    public RedisLock(String accountId, String lockBaseName, String lockId) {
         this.lockChannel = RedisLockChannelManager.getInstance().getLockChannel(accountId);
         this.lockChannelName = lockChannel.getChannelName().getKey();
         this.lockName = RedisUtils.createAccountRoutedKey(lockChannel.getChannelName().getHashTag(), lockBaseName);
         this.accountId = accountId;
         this.client = (RedissonRetryClient) RedissonClientHolder.getInstance().getRedissonClient();
         this.uuid = UUIDUtil.generateUUID();
+        this.lockId = lockId;
     }
 
 
@@ -77,45 +84,58 @@ public abstract class RedisLock {
         return LC.zimbra_mailbox_lock_timeout.intValue() * 1000;
     }
 
+    protected String getLastAccessKey() {
+        return lockName + ":" + "last_accessed";
+    }
+
     /**
      * Try to acquire the lock in redis
-     * @return null if success; otherwise the TTL of the held lock
+     * @return LockResponse containing information about the lock acquisition
      */
-    protected abstract Long tryAcquire();
+    protected abstract LockResponse tryAcquire();
 
     /**
      * Release the lock in redis
      */
     protected abstract Boolean unlockInner();
 
-    public void lock() throws ServiceException {
+    public LockResponse lock() throws ServiceException {
+        return lock(false);
+    }
+
+    public LockResponse lock(boolean skipQueue) throws ServiceException {
         QueuedLockRequest waitingLock = lockChannel.add(this, (context) -> {
-            Long ttl2 = tryAcquire();
-            if (ttl2 == null) {
+            LockResponse response = tryAcquire();
+            if (!response.isValid()) {
+                throw ServiceException.LOCK_FAILED("invalid redis lock response", null);
+            }
+            if (response.success()) {
                 if (ZimbraLog.mailboxlock.isTraceEnabled()) {
                     ZimbraLog.mailboxlock.trace("successfully acquired %s: %s", this, context);
                 }
-                return true;
             } else {
                 if (ZimbraLog.mailboxlock.isTraceEnabled()) {
                     ZimbraLog.mailboxlock.trace("%s received unlock message but it was acquired elsewhere, will try again (%s ms left)", this, context.getRemainingTime());
                 }
-                return false;
             }
-        });
+            return response;
+        }, skipQueue);
         if (waitingLock.canTryAcquireNow()) {
-            Long ttl = tryAcquire();
-            if (ttl == null) {
+            LockResponse response = tryAcquire();
+            if (!response.isValid()) {
+                throw ServiceException.LOCK_FAILED("invalid redis lock response", null);
+            }
+            if (response.success()) {
                 if (ZimbraLog.mailboxlock.isTraceEnabled()) {
                     ZimbraLog.mailboxlock.trace("successfully acquired %s without waiting", this);
                 }
                 lockChannel.remove(waitingLock);
-                return;
+                return response;
             }
-            long timeout = Math.min(ttl, getTimeout());
-            lockChannel.waitForUnlock(waitingLock, timeout);
+            long timeout = Math.min(response.getTTL(), getTimeout());
+            return lockChannel.waitForUnlock(waitingLock, timeout);
         } else {
-            lockChannel.waitForUnlock(waitingLock, getTimeout());
+            return lockChannel.waitForUnlock(waitingLock, getTimeout());
         }
     }
 
@@ -146,5 +166,80 @@ public abstract class RedisLock {
     @Override
     public String toString() {
         return toStringHelper().toString();
+    }
+
+    public static class LockResponse {
+
+        private Long ttl;
+        private String lastWriter;
+        private boolean firstReadSinceLastWrite;
+        private boolean validResponse;
+
+        private LockResponse(boolean validResponse) {
+            this.validResponse = validResponse;
+        }
+
+        public LockResponse(Long ttl) {
+            this.ttl = ttl;
+            this.validResponse = true;
+        }
+
+        public LockResponse(String lastWriter, boolean firstReadSinceLastWrite) {
+            this.lastWriter = lastWriter;
+            this.firstReadSinceLastWrite = firstReadSinceLastWrite;
+            this.validResponse = true;
+        }
+
+        public boolean success() {
+            return ttl == null;
+        }
+
+        public Long getTTL() {
+            return ttl;
+        }
+
+        public String getLastWriter() {
+            return lastWriter;
+        }
+
+        public boolean isFirstReadSinceLastWrite() {
+            return firstReadSinceLastWrite;
+        }
+
+        public boolean isValid() {
+            return validResponse;
+        }
+
+        private static final LockResponse INVALID_LOCK_RESPONSE = new LockResponse(false);
+
+    }
+
+    private static class LockResponseConvertor implements MultiDecoder<LockResponse> {
+
+        @Override
+        public Decoder<Object> getDecoder(int paramNum, State state) {
+            return null;
+        }
+
+        @Override
+        public LockResponse decode(List<Object> parts, State state) {
+            if (ZimbraLog.mailboxlock.isTraceEnabled()) {
+                ZimbraLog.mailboxlock.trace("LockResponseConvertor received response %s", parts);
+            }
+            if (parts.size() < 2 || parts.size() > 3) {
+                ZimbraLog.mailboxlock.warn("invalid LockResponse: %s", parts);
+                return LockResponse.INVALID_LOCK_RESPONSE;
+            }
+            if (parts.get(0).equals(Long.valueOf(1))) {
+                //lock success
+                String lastWriter = (String) parts.get(1);
+                boolean isFirstReadSinceLastWrite = parts.size() == 3 ? (parts.get(2)).equals(Long.valueOf(1)) : true;
+                return new LockResponse(lastWriter, isFirstReadSinceLastWrite);
+            } else {
+                //failed to acquire lock, returning TTL
+                Long ttl = (Long) parts.get(1);
+                return new LockResponse(ttl);
+            }
+        }
     }
 }

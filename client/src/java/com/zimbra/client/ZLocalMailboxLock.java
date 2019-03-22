@@ -4,6 +4,8 @@ import java.util.concurrent.TimeUnit;
 
 import com.google.common.util.concurrent.Monitor;
 import com.zimbra.common.mailbox.MailboxLock;
+import com.zimbra.common.mailbox.MailboxLockContext;
+import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
@@ -46,7 +48,7 @@ public class ZLocalMailboxLock implements MailboxLock {
     }
 
     @Override
-    public void lock() throws ServiceException {
+    public void lock(MailboxLockContext lockContext) throws ServiceException {
         try {
             //First, try to enter the monitor if it's not occupied.
             //We do not wait here, since we don't want blocked threads piling up.

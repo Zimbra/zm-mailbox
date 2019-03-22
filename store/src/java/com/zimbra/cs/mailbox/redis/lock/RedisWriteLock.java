@@ -20,6 +20,7 @@ package com.zimbra.cs.mailbox.redis.lock;
 import java.util.Arrays;
 
 import org.redisson.client.codec.LongCodec;
+import org.redisson.client.codec.StringCodec;
 import org.redisson.client.protocol.RedisCommands;
 
 import com.google.common.base.MoreObjects.ToStringHelper;
@@ -27,8 +28,8 @@ import com.zimbra.common.localconfig.LC;
 
 public class RedisWriteLock extends RedisLock {
 
-    public RedisWriteLock(String accountId, String lockBaseName) {
-        super(accountId, lockBaseName);
+    public RedisWriteLock(String accountId, String lockBaseName, String lockId) {
+        super(accountId, lockBaseName, lockId);
     }
 
     @Override
@@ -37,9 +38,13 @@ public class RedisWriteLock extends RedisLock {
     }
 
     @Override
-    protected Long tryAcquire() {
+    protected LockResponse tryAcquire() {
         String script =
                 "local mode = redis.call('hget', KEYS[1], 'mode'); " +
+                "local last_write_access_key = KEYS[1] .. ':last_writer'; " +
+                "local reads_since_last_write_key = KEYS[1] .. ':reads_since_last_write'; " +
+                 // store id of last mailbox worker to acquire a write lock
+                "local last_writer = redis.call('get', last_write_access_key); " +
                 "if (mode == false) then " +
                       //no one is holding the lock, so set the mode to "write"
                       "redis.call('hset', KEYS[1], 'mode', 'write'); " +
@@ -47,7 +52,11 @@ public class RedisWriteLock extends RedisLock {
                       "redis.call('hset', KEYS[1], ARGV[2], 1); " +
                       //set the lock hash expiry to the lease time
                       "redis.call('pexpire', KEYS[1], ARGV[1]); " +
-                      "return nil; " +
+                      //update id of last worker to acquire a write lock
+                      "redis.call('set', last_write_access_key, ARGV[3]); " +
+                      //delete the reads_since_last_write set
+                      "redis.call('del', reads_since_last_write_key); " +
+                      "return {1, last_writer}; " +
                   "end; " +
                   "if (mode == 'write') then " +
                       "if (redis.call('hexists', KEYS[1], ARGV[2]) == 1) then " +
@@ -55,14 +64,16 @@ public class RedisWriteLock extends RedisLock {
                           "redis.call('hincrby', KEYS[1], ARGV[2], 1); " +
                           "local currentExpire = redis.call('pttl', KEYS[1]); " +
                           "redis.call('pexpire', KEYS[1], currentExpire + ARGV[1]); " +
-                          "return nil; " +
+                          "redis.call('set', last_write_access_key, ARGV[3]); " +
+                          "redis.call('del', reads_since_last_write_key); " +
+                          "return {1, last_writer}; " +
                       "end; " +
                     "end;" +
                      //otherwise, this thread can't obtain the lock, so return the TTL of the lock hash
-                    "return redis.call('pttl', KEYS[1]);";
-        return execute(script, LongCodec.INSTANCE, RedisCommands.EVAL_LONG,
+                    "return {0, redis.call('pttl', KEYS[1])};";
+        return execute(script, StringCodec.INSTANCE, RedisLock.LOCK_RESPONSE_CMD,
             Arrays.<Object>asList(lockName),
-            getLeaseTime(), getThreadLockName());
+            getLeaseTime(), getThreadLockName(), lockId);
     }
 
     @Override

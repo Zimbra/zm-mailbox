@@ -12,14 +12,20 @@ import org.redisson.client.RedisException;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Strings;
+import com.zimbra.common.localconfig.KnownKey;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.localconfig.LC.Supported;
 import com.zimbra.common.mailbox.MailboxLock;
+import com.zimbra.common.mailbox.MailboxLockContext;
 import com.zimbra.common.mailbox.MailboxLockFactory;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.redis.lock.RedisLock;
+import com.zimbra.cs.mailbox.redis.lock.RedisLock.LockResponse;
 import com.zimbra.cs.mailbox.redis.lock.RedisReadWriteLock;
+import com.zimbra.cs.mailbox.util.MailboxClusterUtil;
 
 public class DistributedMailboxLockFactory implements MailboxLockFactory {
     private static AtomicInteger lockIdBase = new AtomicInteger();
@@ -27,6 +33,7 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
     private final String accountId;
     private final RedissonClient redisson;
     private String zimbraLockBaseName;
+    private String lockId;
     private RedisReadWriteLock redisLock;
     private ReentrantReadWriteLock localLock;
     private List<ReentrantReadWriteLock> waiters;
@@ -36,12 +43,12 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
         this.mailbox = mailbox;
         this.accountId = mailbox.getAccountId();
         this.redisson = RedissonClientHolder.getInstance().getRedissonClient();
-
+        this.lockId = MailboxClusterUtil.getMailboxWorkerName();
         try {
             zimbraLockBaseName = accountId + "-LOCK"; //actual name in redis will be hashtagged to be co-located with pubsub hannel
             this.waiters = new ArrayList<>();
             this.localLock = new ReentrantReadWriteLock();
-            this.redisLock = new RedisReadWriteLock(mailbox.getAccountId(), zimbraLockBaseName);
+            this.redisLock = new RedisReadWriteLock(mailbox.getAccountId(), zimbraLockBaseName, lockId);
         } catch (Exception e) {
             ZimbraLog.system.fatal("Can't instantiate Redisson server", e);
         }
@@ -58,16 +65,16 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
     }
 
     @Override
-    public MailboxLock acquiredWriteLock() throws ServiceException {
+    public MailboxLock acquiredWriteLock(MailboxLockContext lockContext) throws ServiceException {
         MailboxLock myLock = writeLock();
-        myLock.lock();
+        myLock.lock(lockContext);
         return myLock;
     }
 
     @Override
-    public MailboxLock acquiredReadLock() throws ServiceException {
+    public MailboxLock acquiredReadLock(MailboxLockContext lockContext) throws ServiceException {
         MailboxLock myLock = readLock();
-        myLock.lock();
+        myLock.lock(lockContext);
         return myLock;
     }
 
@@ -105,6 +112,7 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
         return write ? LC.zimbra_mailbox_lock_write_lease_seconds.longValue() :
             LC.zimbra_mailbox_lock_read_lease_seconds.longValue();
     }
+
     /**
      * Intended to handle the life-cycle of a single lock/unlock of a mailbox, hence there
      * isn't an <b>unlock</b> method.  Unlocking is intended to be performed by {@link #close()}.
@@ -141,7 +149,7 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
         }
 
         @Override
-        public void lock() throws ServiceException {
+        public void lock(MailboxLockContext lockContext) throws ServiceException {
             releaseReadLocksBeforeWriteLock();
             long lock_start = System.currentTimeMillis();
             try {
@@ -218,12 +226,11 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
             return result;
         }
 
-        @Override
-        public void close() {
+        protected boolean closeCommon() {
             long close_start = System.currentTimeMillis();
             restoreToInitialLockCount(true);
             restoreToInitialLockCount(false);
-            reinstateReadLocks();
+            boolean needToReinstate = reinstateReadLocks();
             if ((time_got_lock != null) && (System.currentTimeMillis() - time_got_lock) >
             LC.zimbra_mailbox_lock_long_lock_milliseconds.longValue()) {
                 /* Took a long time.*/
@@ -237,6 +244,12 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
                     log.trace("close() unlock cost=%s %s", ZimbraLog.elapsedSince(close_start), this);
                 }
             }
+            return needToReinstate;
+        }
+
+        @Override
+        public void close() {
+            closeCommon();
         }
 
         /**
@@ -373,18 +386,42 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
         }
 
         @Override
-        public void lock() throws ServiceException {
+        public void lock(MailboxLockContext lockContext) throws ServiceException {
             if (getHoldCount() == 0) {
                 if (log.isTraceEnabled()) {
                     log.trace("need to acquire redis lock for %s", this);
                 }
-                if (acquireRedisLock()) {
-                    super.lock();
-                } else {
-                    throw ServiceException.LOCK_FAILED(String.format("unable to acquire redis lock for %s", this));
+                LockResponse response = acquireRedisLock();
+                super.lock(lockContext);
+                if (!LC.lock_based_cache_invalidation_enabled.booleanValue()) {
+                    return;
+                }
+                String lastWriter = response.getLastWriter();
+                Mailbox mailbox = (Mailbox) lockContext.getMailboxStore();
+                if (Strings.isNullOrEmpty(lastWriter)) {
+                    if (ZimbraLog.cache.isDebugEnabled()) {
+                        ZimbraLog.cache.debug("unable to determine last mailbox worker to acquire write lock, flushing local caches");
+                    }
+                    mailbox.clearStaleCaches(lockContext);
+                } else if (!lastWriter.equals(lockId)) {
+                    if (write) {
+                        if (ZimbraLog.cache.isDebugEnabled()) {
+                            ZimbraLog.cache.debug("last write lock was acquired by different mailbox worker (%s), flushing local caches prior to write lock", lastWriter);
+                        }
+                        mailbox.clearStaleCaches(lockContext);
+                    } else if (!LC.only_flush_cache_on_first_read_after_foreign_write.booleanValue() || response.isFirstReadSinceLastWrite()) {
+                        if (ZimbraLog.cache.isDebugEnabled()) {
+                            ZimbraLog.cache.debug("last write lock was acquired by different mailbox worker (%s), flushing local caches prior to read lock", lastWriter);
+                        }
+                        mailbox.clearStaleCaches(lockContext);
+                    } else {
+                        if (ZimbraLog.cache.isDebugEnabled()) {
+                            ZimbraLog.cache.debug("last write lock was acquired by different mailbox worker (%s), but this worker has acquired a read lock since then", lastWriter);
+                        }
+                    }
                 }
             } else {
-                super.lock();
+                super.lock(lockContext);
             }
         }
 
@@ -400,23 +437,9 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
             return releaseRedisReadLock;
         }
 
-        @Override
-        protected boolean reinstateReadLocks() {
-            boolean reinstateRedisReadLock = super.reinstateReadLocks();
-            if (reinstateRedisReadLock) {
-                try {
-                    redisLock.readLock().lock();
-                } catch (RedisException | ServiceException e) {
-                    log.warn("unable to acquire redis read lock when reinstating read locks", e);
-                }
-            }
-            return reinstateRedisReadLock;
-        }
-
-        private boolean acquireRedisLock() throws ServiceException {
+        private LockResponse acquireRedisLock() throws ServiceException {
             try {
-                zRedisLock.lock();
-                return true;
+                return zRedisLock.lock();
             } catch (RedisException e) {
                 throw ServiceException.LOCK_FAILED("failed to acquire redis lock", e);
             }
@@ -424,13 +447,23 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
 
         @Override
         public void close() {
-            super.close();
+            boolean reinstateRedisReadLock = closeCommon();
             if (getHoldCount() == 0) {
                 if (log.isTraceEnabled()) {
                     log.trace("releasing redis lock in close() for %s", this);
                 }
                 try {
                     zRedisLock.unlock();
+                    if (reinstateRedisReadLock) {
+                        try {
+                            if (log.isTraceEnabled()) {
+                                log.trace("reinstating redis read lock in close() for %s", this);
+                            }
+                            redisLock.readLock().lock(true);
+                        } catch (RedisException | ServiceException e) {
+                            log.warn("unable to acquire redis read lock when reinstating read locks", e);
+                        }
+                    }
                 } catch (RedisException e) {
                     log.error("failed to release redis lock in close() for %s", this, e);
                 } catch (IllegalStateException e) {

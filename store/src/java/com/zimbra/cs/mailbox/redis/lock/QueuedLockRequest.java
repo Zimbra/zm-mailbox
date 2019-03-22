@@ -23,6 +23,7 @@ import java.util.concurrent.TimeUnit;
 import com.google.common.base.MoreObjects;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.mailbox.redis.lock.RedisLock.LockResponse;
 import com.zimbra.cs.mailbox.redis.lock.RedisLockChannel.LockTimingContext;
 
 public class QueuedLockRequest {
@@ -45,7 +46,7 @@ public class QueuedLockRequest {
         throw ServiceException.LOCK_FAILED("unable to acquire zimbra redis lock; timeout reached");
     }
 
-    public void waitForUnlock(long timeoutMillis) throws ServiceException {
+    public LockResponse waitForUnlock(long timeoutMillis) throws ServiceException {
         timingContext.setTimeout(timeoutMillis);
         while (true) {
             long remainingMillis = timingContext.getRemainingTime();
@@ -61,9 +62,9 @@ public class QueuedLockRequest {
                     if (ZimbraLog.mailboxlock.isTraceEnabled()) {
                         ZimbraLog.mailboxlock.trace("acquired semaphore for %s", lock);
                     }
-                    if (callback.attemptLock(timingContext)) {
-                        //success!
-                        return;
+                    LockResponse resp = callback.attemptLock(timingContext);
+                    if (resp.success()) {
+                        return resp;
                     } else {
                         //keep trying
                         continue;
@@ -73,7 +74,7 @@ public class QueuedLockRequest {
                 }
             } catch (InterruptedException e) {
                 ZimbraLog.mailboxlock.warn("interrupted while waiting for %s to be released!", lock.getLockName());
-                return;
+                throw ServiceException.LOCK_FAILED("failed to acquire redis lock", e);
             }
         }
     }
@@ -114,7 +115,7 @@ public class QueuedLockRequest {
 
     @FunctionalInterface
     static interface LockCallback {
-        public boolean attemptLock(LockTimingContext context);
+        public LockResponse attemptLock(LockTimingContext context) throws ServiceException;
     }
 
 }

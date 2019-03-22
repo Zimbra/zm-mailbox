@@ -332,7 +332,6 @@ public final class Zimbra {
 
         SessionDataProvider.setFactory(new RedisSessionDataProvider.Factory());
         NotificationPubSub.setFactory(new RedisPubSub.Factory());
-        MailboxState.setFactory(new RedisMailboxState.Factory());
 
         app.initialize(sIsMailboxd);
         if (sIsMailboxd) {

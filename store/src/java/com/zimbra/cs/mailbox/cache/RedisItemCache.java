@@ -10,6 +10,7 @@ import org.redisson.api.RScoredSortedSet;
 import org.redisson.api.RedissonClient;
 
 import com.google.common.base.Strings;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem;
@@ -92,6 +93,9 @@ public class RedisItemCache extends MapItemCache<String> {
 
     @Override
     protected Metadata getCachedTagsAndFolders() {
+        if (!LC.redis_cache_synchronize_folder_tag_snapshot.booleanValue()) {
+            return null;
+        }
         String encoded = folderTagBucket.get();
         if (Strings.isNullOrEmpty(encoded)) {
             return null;
@@ -138,13 +142,18 @@ public class RedisItemCache extends MapItemCache<String> {
 
     @Override
     protected void cacheFoldersTagsMeta(Metadata folderTagMeta) {
-        folderTagBucket.set(folderTagMeta.toString());
+        if (LC.redis_cache_synchronize_folder_tag_snapshot.booleanValue()) {
+            folderTagBucket.set(folderTagMeta.toString());
+        }
     }
 
-    public static class Factory implements ItemCache.Factory {
+    public static class Factory extends LocalItemCache.Factory {
 
         @Override
         public ItemCache getItemCache(Mailbox mbox, TransactionCacheTracker cacheTracker) {
+            if (!LC.redis_cache_synchronize_item_cache.booleanValue()) {
+                return super.getItemCache(mbox, cacheTracker);
+            }
             RedissonClient client = RedissonClientHolder.getInstance().getRedissonClient();
             String accountId = mbox.getAccountId();
             String itemMapName = RedisUtils.createAccountRoutedKey(accountId, String.format("ITEMS_BY_ID"));
@@ -168,12 +177,20 @@ public class RedisItemCache extends MapItemCache<String> {
 
         @Override
         public FolderCache getFolderCache(Mailbox mbox, TransactionCacheTracker cacheTracker) {
-            return new RedisFolderCache(mbox, cacheTracker);
+            if (LC.redis_cache_synchronize_folders_tags.booleanValue()) {
+                return new RedisFolderCache(mbox, cacheTracker);
+            } else {
+                return super.getFolderCache(mbox, cacheTracker);
+            }
         }
 
         @Override
         public TagCache getTagCache(Mailbox mbox, TransactionCacheTracker cacheTracker) {
-            return new RedisTagCache(mbox, cacheTracker);
+            if (LC.redis_cache_synchronize_folders_tags.booleanValue()) {
+                return new RedisTagCache(mbox, cacheTracker);
+            } else {
+                return super.getTagCache(mbox, cacheTracker);
+            }
         }
 
         @Override

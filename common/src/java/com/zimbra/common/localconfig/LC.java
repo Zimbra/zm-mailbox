@@ -1310,6 +1310,25 @@ public final class LC {
     @Supported
     public static final KnownKey threadlocal_cache_cleanup_interval_seconds  = KnownKey.newKey(120);
 
+    @Supported
+    public static final KnownKey redis_cache_synchronize_item_cache = KnownKey.newKey(true);
+
+    @Supported
+    public static final KnownKey redis_cache_synchronize_folders_tags = KnownKey.newKey(false);
+
+    @Supported
+    public static final KnownKey redis_cache_synchronize_folder_tag_snapshot = KnownKey.newKey(true);
+
+    @Supported
+    public static final KnownKey redis_cache_synchronize_mailbox_state = KnownKey.newKey(false);
+
+    @Supported
+    public static final KnownKey lock_based_cache_invalidation_enabled = KnownKey.newKey(true);
+
+    @Supported
+    public static final KnownKey only_flush_cache_on_first_read_after_foreign_write = KnownKey.newKey(true);
+
+
     public enum PUBLIC_SHARE_VISIBILITY { samePrimaryDomain, all, none };
 
     /**
