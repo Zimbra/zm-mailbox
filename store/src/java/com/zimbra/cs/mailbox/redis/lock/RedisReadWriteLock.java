@@ -17,22 +17,25 @@
 
 package com.zimbra.cs.mailbox.redis.lock;
 
+
+
 public class RedisReadWriteLock {
 
     private String accountId;
     private String lockBaseName;
+    private String lockId;
 
-    public RedisReadWriteLock(String accountId, String lockBaseName) {
+    public RedisReadWriteLock(String accountId, String lockBaseName, String lockId) {
         this.accountId = accountId;
         this.lockBaseName = lockBaseName;
+        this.lockId = lockId;
     }
 
     public RedisLock readLock() {
-        return new RedisReadLock(accountId, lockBaseName);
+        return new RedisReadLock(accountId, lockBaseName, lockId);
     }
 
     public RedisLock writeLock() {
-        return new RedisWriteLock(accountId, lockBaseName);
+        return new RedisWriteLock(accountId, lockBaseName, lockId);
     }
-
 }
