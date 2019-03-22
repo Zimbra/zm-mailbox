@@ -197,14 +197,6 @@ public class ProxyServlet extends ZimbraServlet {
                         resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "authtoken expired");
                         return;
                     }
-                    if (!authToken.isRegistered()) {
-                        resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "authtoken is invalid");
-                        return;
-                    }
-                    if (isAdmin && !authToken.isAdmin()) {
-                        resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "permission denied");
-                        return;
-                    }
                 } catch (AuthTokenException e) {
                     resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "unable to parse authtoken");
                     return;
@@ -213,6 +205,14 @@ public class ProxyServlet extends ZimbraServlet {
         }
         if (authToken == null) {
             resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "no authtoken cookie");
+            return;
+        }
+        if (!authToken.isRegistered()) {
+            resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "authtoken is invalid");
+            return;
+        }
+        if (isAdmin && !authToken.isAdmin()) {
+            resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "permission denied");
             return;
         }
 
