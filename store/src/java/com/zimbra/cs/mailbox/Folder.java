@@ -31,6 +31,7 @@ import java.util.Set;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.ACLGrant;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.mailbox.FolderStore;
@@ -191,6 +192,7 @@ public class Folder extends MailItem implements FolderStore, SharedState {
     private SyncData  syncData;
     private boolean   activeSyncDisabled;
     private int webOfflineSyncDays;
+    private ParentLocator parentLocator;
 
     Folder(Mailbox mbox, UnderlyingData ud) throws ServiceException {
         this(mbox, ud, false);
@@ -198,6 +200,7 @@ public class Folder extends MailItem implements FolderStore, SharedState {
 
     Folder(Mailbox mbox, UnderlyingData ud, boolean skipCache) throws ServiceException {
         super(mbox, ud, skipCache);
+        parentLocator = LC.redis_cache_synchronize_folders_tags.booleanValue() ? new ReferencedParentLocator() : new DirectParentLocator();
         init();
     }
 
@@ -233,12 +236,7 @@ public class Folder extends MailItem implements FolderStore, SharedState {
             return "/";
         }
         setupParent();
-        Folder parentFolder = getParentFolder();
-        if(null == parentFolder) {
-            //Allowing NPE to be thrown as can't throw ServiceException.
-            ZimbraLog.mailbox.error("Folder.getPath parent folder is null for message id %d, uuid %s\n%s", mId, uuid, ZimbraLog.getStackTrace(10));
-        }
-        String parentPath = parentFolder.getPath();
+        String parentPath = parentLocator.getParent().getPath();
         return parentPath + (parentPath.equals("/") ? "" : "/") + getName();
     }
 
@@ -536,23 +534,8 @@ public class Folder extends MailItem implements FolderStore, SharedState {
     }
 
     /** Tries as far as possible to ensure "parent" has a non-null value. */
-    private Folder setupParent() {
-        /* root folder's parent is itself.  Don't setup parent in that case as might cause code loops */
-        Folder parent = getParentFolder();
-        if ((parent != null) || (getId() == Mailbox.ID_FOLDER_ROOT)) {
-            return parent;
-        }
-        try {
-            parent = super.getFolder();
-            getState().setParentFolder(parent);
-            ZimbraLog.mailbox.debug("setupParent() for folder %s. parent was null\n%s",
-                    this, ZimbraLog.getStackTrace(15));
-        } catch (ServiceException e) {
-            // Will end up throwing an NPE if call sites assume parent is non-null.
-            ZimbraLog.mailbox.info("setupParent() Problem re-getting parent for folder=%s",
-                    this, e.getMessage());
-        }
-        return parent;
+    private void setupParent() {
+        parentLocator.setupParent();
     }
 
     @Override
@@ -607,13 +590,7 @@ public class Folder extends MailItem implements FolderStore, SharedState {
     }
 
     private Folder getParentFolder()  {
-        Integer parentFolderId = getState().getParentFolder();
-        try {
-            return parentFolderId == null ? null : mMailbox.getFolderById(parentFolderId);
-        } catch (ServiceException e) {
-            ZimbraLog.mailbox.error("unable to get parent folder with id=%d for folder %s", parentFolderId, getName());
-            return null;
-        }
+        return parentLocator.getParent();
     }
 
     /**
@@ -1387,7 +1364,7 @@ public class Folder extends MailItem implements FolderStore, SharedState {
             }
             subfolders.put(subfolder.getName().toLowerCase(), subfolder.getId());
             getState().setSubfolders(subfolders);
-            subfolder.getState().setParentFolder(this);
+            subfolder.parentLocator.setParent(this);
         }
     }
 
@@ -1420,7 +1397,7 @@ public class Folder extends MailItem implements FolderStore, SharedState {
                 }
             }
             getState().setSubfolders(subfolders);
-            subfolder.getState().unsetParentFolderId();
+            subfolder.parentLocator.unsetParent();
         }
     }
 
@@ -1860,5 +1837,83 @@ public class Folder extends MailItem implements FolderStore, SharedState {
     @Override
     public void sync() {
         getState().syncWithSharedState(this);
+    }
+
+    /**
+     * Helper class used to look up a folder's parent or subfolders.
+     * How this works depends on the FolderCache implementations
+     * @author iraykin
+     *
+     */
+    private abstract class ParentLocator {
+
+        public abstract Folder getParent();
+
+        protected abstract void setParent(Folder parent);
+
+        public abstract void unsetParent();
+
+        public void setupParent() {
+            if (getParent() != null) {
+                return;
+            }
+            try {
+                ZimbraLog.mailbox.debug("setupParent() for folder id=%s name=%s. parent was null, re-getting.",
+                        getId(), getName());
+                setParent(getFolder());
+            } catch (ServiceException e) {
+                // Will end up throwing an NPE if call sites assume parent is non-null.
+                // (close to release so don't want to change behavior)
+                ZimbraLog.mailbox.warn("setupParent() Problem re-getting parent for folder id=%s name=%s %s",
+                        getId(), getName(), e.getMessage());
+            }
+        }
+    }
+
+    private class DirectParentLocator extends ParentLocator {
+
+        private Folder parent;
+
+        @Override
+        public Folder getParent() {
+            return parent;
+        }
+
+        @Override
+        public void unsetParent() {
+            parent = null;
+
+        }
+
+        @Override
+        protected void setParent(Folder parent) {
+            this.parent = parent;
+
+        }
+    }
+
+    private class ReferencedParentLocator extends ParentLocator {
+
+        @Override
+        public Folder getParent() {
+            Integer parentFolderId = getState().getParentFolder();
+            try {
+                return parentFolderId == null ? null : mMailbox.getFolderById(parentFolderId);
+            } catch (ServiceException e) {
+                ZimbraLog.mailbox.error("unable to get parent folder with id=%d for folder %s", parentFolderId, getName());
+                return null;
+            }
+        }
+
+        @Override
+        public void unsetParent() {
+            getState().unsetParentFolderId();
+        }
+
+        @Override
+        protected void setParent(Folder parent) {
+            getState().setParentFolder(parent);
+
+        }
     }
 }
