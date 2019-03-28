@@ -84,7 +84,6 @@ import com.zimbra.cs.util.ZTestWatchman;
  */
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({GalGroupInfoProvider.class})
-public final class ContactTest {
 @Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public final class ContactTest {
 
     @Rule public TestName testName = new TestName();
