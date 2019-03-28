@@ -417,6 +417,7 @@ public abstract class PendingModifications<T extends ZimbraMailItem> {
 
         private final void readObject(ObjectInputStream in) throws java.io.IOException {
             throw new IOException("Cannot be deserialized");
+        }
 
         public static ModificationKeyMeta fromString(String encoded) {
             String[] parts = encoded.split("\\|");
