@@ -42,7 +42,11 @@ import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -633,6 +637,9 @@ public class Mailbox implements MailboxStore {
 
     private FolderCache mFolderCache;
     private TagCache mTagCache;
+    private FolderTagCacheReadWriteLock folderTagCacheLock = new FolderTagCacheReadWriteLock();
+    private FolderTagCacheLock ftCacheReadLock = folderTagCacheLock.readLock();
+    private FolderTagCacheLock ftCacheWriteLock = folderTagCacheLock.writeLock();
     private ItemCache mItemCache = null;
     private final Map<String, Integer> mConvHashes = new ConcurrentLinkedHashMap.Builder<String, Integer>()
                     .maximumWeightedCapacity(MAX_MSGID_CACHE).build();
@@ -1677,12 +1684,16 @@ public class Mailbox implements MailboxStore {
         }
 
         if (item instanceof Tag) {
-            if (mTagCache != null) {
-                mTagCache.put((Tag) item);
+            try(FolderTagCacheLock lock = ftCacheReadLock.lock()) {
+                if (mTagCache != null) {
+                    mTagCache.put((Tag) item);
+                }
             }
         } else if (item instanceof Folder) {
-            if (mFolderCache != null) {
-                mFolderCache.put((Folder) item);
+            try(FolderTagCacheLock lock = ftCacheReadLock.lock()) {
+                if (mFolderCache != null) {
+                    mFolderCache.put((Folder) item);
+                }
             }
         } else {
             getItemCache().put(item);
@@ -1708,16 +1719,20 @@ public class Mailbox implements MailboxStore {
         }
 
         if (item instanceof Tag) {
-            if (mTagCache == null) {
-                return;
+            try(FolderTagCacheLock lock = ftCacheReadLock.lock()) {
+                if (mTagCache == null) {
+                    return;
+                }
+                mTagCache.remove(item.getId());
+                mTagCache.remove(item.getName().toLowerCase());
             }
-            mTagCache.remove(item.getId());
-            mTagCache.remove(item.getName().toLowerCase());
         } else if (item instanceof Folder) {
-            if (mFolderCache == null) {
-                return;
+            try(FolderTagCacheLock lock = ftCacheReadLock.lock()) {
+                if (mFolderCache == null) {
+                    return;
+                }
+                mFolderCache.remove(item.getId());
             }
-            mFolderCache.remove(item.getId());
         } else {
             getItemCache().remove(item);
             MessageCache.purge(item);
@@ -1764,7 +1779,9 @@ public class Mailbox implements MailboxStore {
         if (!(parent instanceof Folder)) {
             cached = getItemCache().values();
         } else if (mFolderCache != null) {
-            cached = mFolderCache.values();
+            try(FolderTagCacheLock lock = ftCacheReadLock.lock()) {
+                cached = mFolderCache.values();
+            }
         } else {
             return;
         }
@@ -1784,9 +1801,11 @@ public class Mailbox implements MailboxStore {
         }
     }
 
-    private void clearFolderCache() {
-        mFolderCache = null;
-        requiresWriteLock = true;
+    private void clearFolderCache() throws ServiceException {
+        try(FolderTagCacheLock lock = ftCacheReadLock.lock()) {
+            mFolderCache = null;
+            requiresWriteLock = true;
+        }
         // Remove from memcached cache
         try {
             FoldersTagsCache.getInstance().purgeMailbox(this);
@@ -1795,9 +1814,11 @@ public class Mailbox implements MailboxStore {
         }
     }
 
-    private void clearTagCache() {
-        mTagCache = null;
-        requiresWriteLock = true;
+    private void clearTagCache() throws ServiceException {
+        try(FolderTagCacheLock lock = ftCacheReadLock.lock()) {
+            mTagCache = null;
+            requiresWriteLock = true;
+        }
         // Remove from memcached cache
         try {
             FoldersTagsCache.getInstance().purgeMailbox(this);
@@ -1935,8 +1956,10 @@ public class Mailbox implements MailboxStore {
     private void loadFoldersAndTags() throws ServiceException {
         // if the persisted mailbox sizes aren't available, we *must* recalculate
         boolean initial = state.getNumContacts() < 0 || state.getSize() < 0;
-        if (mFolderCache != null && mTagCache != null && !initial) {
-            return;
+        try(FolderTagCacheLock lock = ftCacheReadLock.lock()) {
+            if (mFolderCache != null && mTagCache != null && !initial) {
+                return;
+            }
         }
         if (ZimbraLog.cache.isDebugEnabled()) {
             ZimbraLog.cache.debug("loading due to initial? %s folders? %s tags? %s writeChange? %s", initial, mFolderCache == null, mTagCache == null, currentChange().writeChange);
@@ -2002,9 +2025,11 @@ public class Mailbox implements MailboxStore {
             }
         } catch (ServiceException e) {
         	ZimbraLog.mailbox.warn("Unexpected exception whilst loading folders and tags - setting mTagCache/mFolderCache as null", e);
-            mTagCache = null;
-            mFolderCache = null;
-            throw e;
+        	try(FolderTagCacheLock lock = ftCacheWriteLock.lock()) {
+        	    mTagCache = null;
+        	    mFolderCache = null;
+        	    throw e;
+        	}
         }
     }
 
@@ -2014,7 +2039,7 @@ public class Mailbox implements MailboxStore {
     	 * to the corresponding fields causing inconsistencies. */
     	FolderCache folderCache = ItemCache.getFactory().getFolderCache(this, cacheTracker);
     	TagCache tagCache = ItemCache.getFactory().getTagCache(this, cacheTracker);
-    	try (final MailboxLock l = getWriteLockAndLockIt()) {
+    	try(FolderTagCacheLock lock = ftCacheWriteLock.lock()) {
     		mFolderCache = folderCache;
     		mTagCache = tagCache;
     		// create the folder objects and, as a side-effect, populate the new cache
@@ -2044,7 +2069,6 @@ public class Mailbox implements MailboxStore {
     			}
     		}
 
-    		mTagCache = ItemCache.getFactory().getTagCache(this, cacheTracker);
     		// create the tag objects and, as a side-effect, populate the new
     		// cache
     		for (Map.Entry<MailItem.UnderlyingData, DbMailItem.FolderTagCounts> entry : tagData.entrySet()) {
@@ -2061,9 +2085,11 @@ public class Mailbox implements MailboxStore {
     }
 
     private void cacheFoldersTagsWhenHaveWriteLock() throws ServiceException {
-    	List<Folder> folderList = new ArrayList<>(mFolderCache.values());
-    	List<Tag> tagList = new ArrayList<>(mTagCache.values());
-    	mItemCache.cacheTagsAndFolders(folderList, tagList);
+        try(FolderTagCacheLock lock = ftCacheReadLock.lock()) {
+        	List<Folder> folderList = new ArrayList<>(mFolderCache.values());
+        	List<Tag> tagList = new ArrayList<>(mTagCache.values());
+        	mItemCache.cacheTagsAndFolders(folderList, tagList);
+        }
     }
 
     private void cacheFoldersTags() throws ServiceException {
@@ -2383,7 +2409,9 @@ public class Mailbox implements MailboxStore {
             return item;
         }
         if (item instanceof Folder) {
-            return mFolderCache == null ? item : (T) snapshotFolders().get(item.getId());
+            try(FolderTagCacheLock lock = ftCacheReadLock.lock()) {
+                return mFolderCache == null ? item : (T) snapshotFolders().get(item.getId());
+            }
         }
 
         MailItem.UnderlyingData data = item.getUnderlyingData().clone();
@@ -2411,10 +2439,12 @@ public class Mailbox implements MailboxStore {
      *  If the {@code Mailbox}'s folder cache is {@code null}, this method will
      *  also return {@code null}. */
     private FolderCache snapshotFolders() throws ServiceException {
-        if (currentChange().depth > 1 || mFolderCache == null) {
-            return mFolderCache;
-        } else {
-            return copyFolderCache();
+        try(FolderTagCacheLock lock = ftCacheReadLock.lock()) {
+            if (currentChange().depth > 1 || mFolderCache == null) {
+                return mFolderCache;
+            } else {
+                return copyFolderCache();
+            }
         }
     }
 
@@ -2437,8 +2467,11 @@ public class Mailbox implements MailboxStore {
         }
         assert (currentChange().depth == 0);
 
-        FolderCache folders = mFolderCache == null || Collections.disjoint(pms.changedTypes, FOLDER_TYPES) ? mFolderCache
-                        : snapshotFolders();
+        FolderCache folders;
+        try(FolderTagCacheLock lock = ftCacheReadLock.lock()) {
+            folders = mFolderCache == null || Collections.disjoint(pms.changedTypes, FOLDER_TYPES) ? mFolderCache
+                    : snapshotFolders();
+        }
 
         PendingLocalModifications snapshot = new PendingLocalModifications();
 
@@ -2854,11 +2887,13 @@ public class Mailbox implements MailboxStore {
         if (item == null) {
             item = getItemCache().get(key);
         }
-        if (item == null && mTagCache != null) {
-            item = mTagCache.get(key);
-        }
-        if (item == null && mFolderCache != null) {
-            item = mFolderCache.get(key);
+        try(FolderTagCacheLock lock = ftCacheReadLock.lock()) {
+            if (item == null && mTagCache != null) {
+                item = mTagCache.get(key);
+            }
+            if (item == null && mFolderCache != null) {
+                item = mFolderCache.get(key);
+            }
         }
         logCacheActivity(key, item == null ? MailItem.Type.UNKNOWN : item.getType(), item);
         return item;
@@ -2872,17 +2907,21 @@ public class Mailbox implements MailboxStore {
             case FLAG:
             case TAG:
             case SMARTFOLDER:
-                if (key < 0) {
-                    item = Flag.of(this, key);
-                } else if (mTagCache != null) {
-                    item = mTagCache.get(key);
+                try(FolderTagCacheLock lock = ftCacheReadLock.lock()) {
+                    if (key < 0) {
+                        item = Flag.of(this, key);
+                    } else if (mTagCache != null) {
+                        item = mTagCache.get(key);
+                    }
                 }
                 break;
             case MOUNTPOINT:
             case SEARCHFOLDER:
             case FOLDER:
-                if (mFolderCache != null) {
-                    item = mFolderCache.get(key);
+                try(FolderTagCacheLock lock = ftCacheReadLock.lock()) {
+                    if (mFolderCache != null) {
+                        item = mFolderCache.get(key);
+                    }
                 }
                 break;
             default:
@@ -2902,8 +2941,10 @@ public class Mailbox implements MailboxStore {
     MailItem getCachedItemByUuid(String uuid) throws ServiceException {
         MailItem item = null;
         item = getItemCache().get(uuid);
-        if (item == null && mFolderCache != null) {
-            item = mFolderCache.get(uuid);
+        try(FolderTagCacheLock lock = ftCacheReadLock.lock()) {
+            if (item == null && mFolderCache != null) {
+                item = mFolderCache.get(uuid);
+            }
         }
         logCacheActivity(uuid, item == null ? MailItem.Type.UNKNOWN : item.getType(), item);
         return item;
@@ -2917,8 +2958,10 @@ public class Mailbox implements MailboxStore {
             case MOUNTPOINT:
             case SEARCHFOLDER:
             case FOLDER:
-                if (mFolderCache != null) {
-                    item = mFolderCache.get(uuid);
+                try(FolderTagCacheLock lock = ftCacheReadLock.lock()) {
+                    if (mFolderCache != null) {
+                        item = mFolderCache.get(uuid);
+                    }
                 }
                 break;
             default:
@@ -3102,11 +3145,13 @@ public class Mailbox implements MailboxStore {
                 case FOLDER:
                 case SEARCHFOLDER:
                 case MOUNTPOINT:
-                    result = new ArrayList<MailItem>(mFolderCache.size());
-                    for (Folder subfolder : mFolderCache.values()) {
-                        if (subfolder.getType() == type || type == MailItem.Type.FOLDER) {
-                            if (folder == null || subfolder.getFolderId() == folderId) {
-                                result.add(subfolder);
+                    try(FolderTagCacheLock lock = ftCacheReadLock.lock()) {
+                        result = new ArrayList<MailItem>(mFolderCache.size());
+                        for (Folder subfolder : mFolderCache.values()) {
+                            if (subfolder.getType() == type || type == MailItem.Type.FOLDER) {
+                                if (folder == null || subfolder.getFolderId() == folderId) {
+                                    result.add(subfolder);
+                                }
                             }
                         }
                     }
@@ -3117,9 +3162,11 @@ public class Mailbox implements MailboxStore {
                         return Collections.emptyList();
                     }
                     result = new ArrayList<MailItem>();
-                    for (Tag tag : mTagCache.values()) {
-                        if (tag.isListed() && !(tag instanceof SmartFolder)) {
-                            result.add(tag);
+                    try(FolderTagCacheLock lock = ftCacheReadLock.lock()) {
+                        for (Tag tag : mTagCache.values()) {
+                            if (tag.isListed() && !(tag instanceof SmartFolder)) {
+                                result.add(tag);
+                            }
                         }
                     }
                     t.commit();
@@ -3140,9 +3187,11 @@ public class Mailbox implements MailboxStore {
                         return Collections.emptyList();
                     }
                     result = new ArrayList<MailItem>();
-                    for (Tag tag : mTagCache.values()) {
-                        if (tag instanceof SmartFolder) {
-                            result.add(tag);
+                    try(FolderTagCacheLock lock = ftCacheReadLock.lock()) {
+                        for (Tag tag : mTagCache.values()) {
+                            if (tag instanceof SmartFolder) {
+                                result.add(tag);
+                            }
                         }
                     }
                     t.commit();
@@ -3403,9 +3452,11 @@ public class Mailbox implements MailboxStore {
             List<Tag> modified = new ArrayList<Tag>();
             try (final MailboxTransaction t = mailboxReadTransaction("getModifiedTags", octxt)) {
                 if (hasFullAccess()) {
-                    for (Tag tag: mTagCache.values()) {
-                        if (tag.isListed() && tag.getModifiedSequence() > lastSync) {
-                            modified.add(tag);
+                    try(FolderTagCacheLock lock = ftCacheReadLock.lock()) {
+                        for (Tag tag: mTagCache.values()) {
+                            if (tag.isListed() && tag.getModifiedSequence() > lastSync) {
+                                modified.add(tag);
+                            }
                         }
                     }
                 }
@@ -3585,11 +3636,13 @@ public class Mailbox implements MailboxStore {
         }
         boolean incomplete = false;
         Set<Folder> visible = new HashSet<Folder>();
-        for (Folder folder : mFolderCache.values()) {
-            if (folder.canAccess(rights)) {
-                visible.add(folder);
-            } else {
-                incomplete = true;
+        try(FolderTagCacheLock lock = ftCacheReadLock.lock()) {
+            for (Folder folder : mFolderCache.values()) {
+                if (folder.canAccess(rights)) {
+                    visible.add(folder);
+                } else {
+                    incomplete = true;
+                }
             }
         }
         return incomplete ? visible : null;
@@ -3649,11 +3702,13 @@ public class Mailbox implements MailboxStore {
     }
 
     Tag getTagByName(String name) throws ServiceException {
-        Tag tag = (name.startsWith(Tag.FLAG_NAME_PREFIX) && !name.startsWith(Tag.SMARTFOLDER_NAME_PREFIX)) ? Flag.of(this, name) : mTagCache.get(name.toLowerCase());
-        if (tag == null) {
-            throw MailServiceException.NO_SUCH_TAG(name);
+        try(FolderTagCacheLock lock = ftCacheReadLock.lock()) {
+            Tag tag = (name.startsWith(Tag.FLAG_NAME_PREFIX) && !name.startsWith(Tag.SMARTFOLDER_NAME_PREFIX)) ? Flag.of(this, name) : mTagCache.get(name.toLowerCase());
+            if (tag == null) {
+                throw MailServiceException.NO_SUCH_TAG(name);
+            }
+            return tag;
         }
-        return tag;
     }
 
     /** Returns the folder with the specified id.
@@ -3820,8 +3875,10 @@ public class Mailbox implements MailboxStore {
         return folders;
     }
 
-    List<Folder> listAllFolders() {
-        return new ArrayList<Folder>(mFolderCache.values());
+    List<Folder> listAllFolders() throws ServiceException {
+        try(FolderTagCacheLock lock = ftCacheReadLock.lock()) {
+            return new ArrayList<Folder>(mFolderCache.values());
+        }
     }
 
     public static class FolderNode {
@@ -6766,7 +6823,9 @@ public class Mailbox implements MailboxStore {
             }
 
             if (item instanceof Tag) {
-                mTagCache.updateName(oldName, name);
+                try(FolderTagCacheLock lock = ftCacheReadLock.lock()) {
+                    mTagCache.updateName(oldName, name);
+                }
             }
             t.commit();
         }
@@ -9669,8 +9728,10 @@ public class Mailbox implements MailboxStore {
             throw ServiceException.FAILURE("Cannot have an empty SmartFolder name", null);
         }
         //check if this smart folder already exists
-        if (mTagCache.contains(SmartFolder.getInternalTagName(smartFolderName).toLowerCase())) {
-            throw MailServiceException.ALREADY_EXISTS(smartFolderName);
+        try(FolderTagCacheLock lock = ftCacheReadLock.lock()) {
+            if (mTagCache.contains(SmartFolder.getInternalTagName(smartFolderName).toLowerCase())) {
+                throw MailServiceException.ALREADY_EXISTS(smartFolderName);
+            }
         }
 
         CreateSmartFolder redoRecorder = new CreateSmartFolder(mId, smartFolderName);
@@ -10104,11 +10165,13 @@ public class Mailbox implements MailboxStore {
 
     private FolderCache copyFolderCache() throws ServiceException {
         FolderCache copy = new LocalFolderCache();
-        for (Folder folder : mFolderCache.values()) {
-            MailItem.UnderlyingData data = folder.getUnderlyingData().clone();
-            data.setFlag(Flag.FlagInfo.UNCACHED);
-            data.metadata = folder.encodeMetadata().toString();
-            copy.put((Folder) MailItem.constructItem(folder.getMailbox(), data));
+        try(FolderTagCacheLock lock = ftCacheReadLock.lock()) {
+            for (Folder folder : mFolderCache.values()) {
+                MailItem.UnderlyingData data = folder.getUnderlyingData().clone();
+                data.setFlag(Flag.FlagInfo.UNCACHED);
+                data.metadata = folder.encodeMetadata().toString();
+                copy.put((Folder) MailItem.constructItem(folder.getMailbox(), data));
+            }
         }
         for (Folder folder : copy.values()) {
             Folder parent = copy.get(folder.getFolderId());
@@ -10145,6 +10208,48 @@ public class Mailbox implements MailboxStore {
         }
         if (!LC.redis_cache_synchronize_mailbox_state.booleanValue()) {
             state.reload();
+        }
+    }
+
+    private class FolderTagCacheReadWriteLock {
+        private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+        private final FolderTagCacheLock readLock = new FolderTagCacheLock(lock.readLock());
+        private final FolderTagCacheLock writeLock = new FolderTagCacheLock(lock.writeLock());
+
+        public FolderTagCacheLock readLock() {
+            return readLock;
+        }
+
+        public FolderTagCacheLock writeLock() {
+            return writeLock;
+        }
+    }
+
+    private class FolderTagCacheLock implements AutoCloseable {
+
+        private final Lock lock;
+        private final int timeout;
+
+        private FolderTagCacheLock(Lock lock) {
+            this.lock = lock;
+            this.timeout = LC.folder_tag_cache_lock_timeout_seconds.intValue();
+        }
+
+        public FolderTagCacheLock lock() throws ServiceException {
+            try {
+                boolean gotLock = lock.tryLock(timeout, TimeUnit.SECONDS);
+                if (!gotLock) {
+                    throw ServiceException.FAILURE(String.format("unable to get folder/tag cache lock %s", lock), null);
+                }
+            } catch (InterruptedException e) {
+                throw ServiceException.FAILURE(String.format("unable to get folder/tag cache lock %s", lock), e);
+            }
+            return this;
+        }
+
+        @Override
+        public void close() {
+            lock.unlock();
         }
     }
 }

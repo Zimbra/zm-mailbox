@@ -1328,6 +1328,8 @@ public final class LC {
     @Supported
     public static final KnownKey only_flush_cache_on_first_read_after_foreign_write = KnownKey.newKey(true);
 
+    @Supported
+    public static final KnownKey folder_tag_cache_lock_timeout_seconds = KnownKey.newKey(10);
 
     public enum PUBLIC_SHARE_VISIBILITY { samePrimaryDomain, all, none };
 
