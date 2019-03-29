@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringEscapeUtils;
@@ -465,13 +466,29 @@ public class DefangFilter extends DefaultFilter {
         DebugConfig.defangStyleUnwantedStrgPattern, Pattern.CASE_INSENSITIVE);
     
     private static String sanitizeStyleValue(String value) {
-        // remove comments
-        value = STYLE_UNWANTED_STRG_PATTERN.matcher(value).replaceAll("");
-        value = COMMENT.matcher(value).replaceAll("");
-        // strip off unwanted functions
-        value = STYLE_UNWANTED_FUNC.matcher(value).replaceAll("");
-       // strip off any @import
-        return STYLE_UNWANTED_IMPORT.matcher(value).replaceAll("");
+        if (value.length() < DebugConfig.defangStyleValueLimit) {
+            // remove comments
+            value = STYLE_UNWANTED_STRG_PATTERN.matcher(value).replaceAll("");
+            value = COMMENT.matcher(value).replaceAll("");
+            // strip off unwanted functions
+            Matcher matcher = STYLE_UNWANTED_FUNC.matcher(value);
+            StringBuffer stringBuffer = new StringBuffer();
+            while (matcher.find()) {
+                String match = matcher.group();
+                if (!match.startsWith("rgb") && !match.startsWith("media")
+                    && !match.startsWith("and")) {
+                    matcher.appendReplacement(stringBuffer, "");
+                }
+            }
+            matcher.appendTail(stringBuffer);
+            value = stringBuffer.toString();
+            // strip off any @import
+            ZimbraLog.mailbox.info("sanitizeStyleValue END");
+            value = STYLE_UNWANTED_IMPORT.matcher(value).replaceAll("");
+        } else {
+            ZimbraLog.mailbox.info("style value is too long:%d characters.", value.length());
+        }
+        return value;
     }
 
     /** Ignorable whitespace. */
