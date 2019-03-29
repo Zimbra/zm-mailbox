@@ -201,7 +201,7 @@ public final class DebugConfig {
 
     public static final String defangStyleUnwantedFunc = value(
             "defang_style_unwanted_func",
-            "[\\S&&[^:]]+(?<!(rgb|and|not|media|,))\\s*\\(.*\\)");
+            "\\w+\\s*\\(.*?\\)");
     public static final String defangValidExtUrl = value(
             "defang_valid_ext_url",
             "^(https?://[\\w-].*|mailto:.*|notes:.*|smb:.*|ftp:.*|gopher:.*|news:.*|tel:.*|callto:.*|webcal:.*|feed:.*:|file:.*|#.+)");
@@ -230,6 +230,7 @@ public final class DebugConfig {
     public static final String defangStyleUnwantedImport = value(
             "defang_style_unwanted_import",
             "@import(\\s)*((\'|\")?(\\s)*(http://|https://)?([^\\s;]*)(\\s)*(\'|\")?(\\s)*;?)");
+    public static final int defangStyleValueLimit = value("defang_style_value_limit", 10000);
 
     public static boolean defang_block_form_same_host_post_req = value("defang_block_form_same_host_post_req", true);
 
