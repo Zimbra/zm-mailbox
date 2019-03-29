@@ -27,6 +27,7 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Matcher;
 
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -81,7 +82,16 @@ public class DefangFilterTest {
     }
 
     public void defangStyleUnwantedFunc(String styleValue, String expected) throws Exception {
-        String after = DefangFilter.STYLE_UNWANTED_FUNC.matcher(styleValue).replaceAll("");
+        Matcher matcher = DefangFilter.STYLE_UNWANTED_FUNC.matcher(styleValue);
+        StringBuffer stringBuffer = new StringBuffer();
+        while (matcher.find()) {
+            String match = matcher.group();
+            if(!match.startsWith("rgb")&&!match.startsWith("media")&&!match.startsWith("and")) {
+                matcher.appendReplacement(stringBuffer, "");
+            }
+        }
+        matcher.appendTail(stringBuffer);
+        String after = stringBuffer.toString();
         Assert.assertEquals("StyleUnwantedFunc result", expected, after);
     }
 
