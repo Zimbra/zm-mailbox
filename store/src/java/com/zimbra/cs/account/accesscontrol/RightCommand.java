@@ -1564,7 +1564,8 @@ public class RightCommand {
         eRight.addAttribute(AdminConstants.A_TARGET_TYPE, right.getTargetTypeStr());
         eRight.addAttribute(AdminConstants.A_RIGHT_CLASS, right.getRightClass().name());
 
-        String desc = L10nUtil.getMessage(L10nUtil.MSG_RIGHTS_FILE_BASENAME, right.getName(), locale);
+        String desc = L10nUtil.getMessage(false /* shoutIfMissing */,
+                L10nUtil.MSG_RIGHTS_FILE_BASENAME, right.getName(), locale);
         if (desc == null) {
             desc = right.getDesc();
         }
