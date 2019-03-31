@@ -390,6 +390,8 @@ public class AccountConstants {
     public static final String E_VIRTUAL_HOST = "virtualHost";
     public static final String E_SKIN = "skin";
     public static final String E_LICENSE = "license";
+    public static final String E_HAB_ROOTS = "habRoots";
+    public static final String E_HAB = "hab";
     public static final String E_IDENTITIES = "identities";
     public static final String E_SIGNATURES = "signatures";
     public static final String E_IDENTITY = "identity";

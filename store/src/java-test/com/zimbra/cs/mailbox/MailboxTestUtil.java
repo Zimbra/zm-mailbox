@@ -183,6 +183,7 @@ public final class MailboxTestUtil {
      */
     public static void clearData() throws Exception {
         clearData("");
+        MailboxManager.getInstance().clearAdditionalQuotaProviders();
     }
 
     /**

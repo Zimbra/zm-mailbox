@@ -35,6 +35,7 @@ import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 
 import io.leangen.graphql.annotations.GraphQLIgnore;
+import io.leangen.graphql.annotations.GraphQLInputField;
 import io.leangen.graphql.annotations.GraphQLQuery;
 import io.leangen.graphql.annotations.types.GraphQLType;
 
@@ -70,9 +71,11 @@ public class AttachmentsInfo {
     public AttachmentsInfo() {
     }
 
+    @GraphQLInputField(name=GqlConstants.ATTACHMENT_ID, description="Attachment upload ID")
     public void setAttachmentId(String attachmentId) {
         this.attachmentId = attachmentId;
     }
+    @GraphQLInputField(name=GqlConstants.ATTACHMENTS, description="Attachment details")
     public void setAttachments(Iterable <AttachSpec> attachments) {
         this.attachments.clear();
         if (attachments != null) {
@@ -80,11 +83,13 @@ public class AttachmentsInfo {
         }
     }
 
+    @GraphQLIgnore
     public AttachmentsInfo addAttachment(AttachSpec attachment) {
         this.attachments.add(attachment);
         return this;
     }
 
+    @GraphQLIgnore
     public void setExtraElements(Iterable <org.w3c.dom.Element> extraElements) {
         this.extraElements.clear();
         if (extraElements != null) {
@@ -92,6 +97,7 @@ public class AttachmentsInfo {
         }
     }
 
+    @GraphQLIgnore
     public AttachmentsInfo addExtraElement(org.w3c.dom.Element extraElement) {
         this.extraElements.add(extraElement);
         return this;

@@ -23,9 +23,15 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlValue;
 
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 
+import io.leangen.graphql.annotations.GraphQLInputField;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name=GqlConstants.CLASS_RAW_INVITE, description="The raw invitation")
 public class RawInvite {
 
     /**
@@ -52,11 +58,17 @@ public class RawInvite {
     public RawInvite() {
     }
 
+    @GraphQLInputField(name=GqlConstants.UID, description="UID")
     public void setUid(String uid) { this.uid = uid; }
+    @GraphQLInputField(name=GqlConstants.SUMMARY, description="Summary")
     public void setSummary(String summary) { this.summary = summary; }
+    @GraphQLInputField(name=GqlConstants.CONTENT, description="Raw iCalendar data")
     public void setContent(String content) { this.content = content; }
+    @GraphQLQuery(name=GqlConstants.UID, description="UID")
     public String getUid() { return uid; }
+    @GraphQLQuery(name=GqlConstants.SUMMARY, description="Summary")
     public String getSummary() { return summary; }
+    @GraphQLQuery(name=GqlConstants.CONTENT, description="Raw iCalendar data")
     public String getContent() { return content; }
 
     public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {

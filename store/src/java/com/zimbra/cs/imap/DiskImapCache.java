@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011, 2012, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2011, 2012, 2013, 2014, 2016, 2019 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -27,6 +27,7 @@ import java.util.Comparator;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.cs.io.SecureObjectInputStream;
 
 /**
  * IMAP cache using local disk.
@@ -116,7 +117,7 @@ final class DiskImapCache implements ImapSessionManager.Cache<String, ImapFolder
         ObjectInputStream ois = null;
         try {
             // read serialized ImapFolder from cache
-            ois = new ObjectInputStream(fis = new FileInputStream(pagefile));
+            ois = new SecureObjectInputStream(fis = new FileInputStream(pagefile), ImapFolder.class.getName());
             return (ImapFolder) ois.readObject();
         } catch (Exception e) {
             ByteUtil.closeStream(ois);

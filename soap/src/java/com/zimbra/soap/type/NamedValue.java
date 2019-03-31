@@ -22,6 +22,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlValue;
 
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.AdminConstants;
 
@@ -65,4 +66,15 @@ public class NamedValue {
 
     public String getName() { return name; }
     public String getValue() { return value; }
+
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
+        return helper
+            .add("name", name)
+            .add("value", value);
+    }
+
+    @Override
+    public String toString() {
+        return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
+    }
 }

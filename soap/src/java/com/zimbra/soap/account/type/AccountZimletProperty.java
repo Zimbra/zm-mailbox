@@ -28,10 +28,15 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlValue;
 
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.ZimletConstants;
 import com.zimbra.soap.base.ZimletProperty;
 
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name=GqlConstants.CLASS_ACCOUNT_ZIMLET_PROPERTY, description="Account zimlet property")
 public class AccountZimletProperty
 implements ZimletProperty {
 
@@ -65,8 +70,10 @@ implements ZimletProperty {
     public void setName(String name) { this.name = name; }
     @Override
     public void setValue(String value) { this.value = value; }
+    @GraphQLQuery(name=GqlConstants.NAME, description="Name")
     @Override
     public String getName() { return name; }
+    @GraphQLQuery(name=GqlConstants.VALUE, description="Value")
     @Override
     public String getValue() { return value; }
 

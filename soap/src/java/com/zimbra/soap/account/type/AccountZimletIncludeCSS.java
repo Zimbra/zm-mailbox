@@ -23,8 +23,12 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlValue;
 
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.ZimletConstants;
 import com.zimbra.soap.base.ZimletIncludeCSS;
+
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
 
 /**
  * Implemented as an object rather than using String with @XmlElement because when constructing a JAXB
@@ -34,6 +38,7 @@ import com.zimbra.soap.base.ZimletIncludeCSS;
  */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=ZimletConstants.ZIMLET_TAG_CSS)
+@GraphQLType(name=GqlConstants.CLASS_ACCOUNT_ZIMLET_INCLUDE_CSS, description="Account zimlet include css")
 public class AccountZimletIncludeCSS
 implements ZimletIncludeCSS {
 
@@ -51,6 +56,7 @@ implements ZimletIncludeCSS {
     @Override
     public void setValue(String value) { this.value = value; }
     @Override
+    @GraphQLQuery(name=GqlConstants.VALUE, description="Value")
     public String getValue() { return value; }
 
     public MoreObjects.ToStringHelper addToStringInfo(

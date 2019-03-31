@@ -142,6 +142,7 @@ public class Msg {
      * @zm-api-field-description Email address information
      */
     @XmlElement(name=MailConstants.E_EMAIL /* e */, required=false)
+    @GraphQLQuery(name=GqlConstants.EMAILADDRESSES, description="Email address information")
     private final List<EmailAddrInfo> emailAddresses = Lists.newArrayList();
 
     // ParseMimeMessage.parseMimeMsgSoap looks for E_CAL_TZ but does no further processing.
@@ -150,6 +151,7 @@ public class Msg {
      * @zm-api-field-description Timezones
      */
     @XmlElement(name=MailConstants.E_CAL_TZ /* tz */, required=false)
+    @GraphQLInputField(name=GqlConstants.TIMEZONES, description="Timezones")
     private final List<CalTZInfo> timezones = Lists.newArrayList();
 
     // ParseMimeMessage.parseMimeMsgSoap looks for E_FRAG but does nothing with it.
@@ -166,6 +168,7 @@ public class Msg {
      * @zm-api-field-description Other elements
      */
     @XmlAnyElement
+    @GraphQLIgnore
     private final List<org.w3c.dom.Element> extraElements = Lists.newArrayList();
 
     public Msg() {
@@ -201,7 +204,7 @@ public class Msg {
     public void setAttachments(AttachmentsInfo attachments) {
         this.attachments = attachments;
     }
-    @GraphQLIgnore
+    @GraphQLInputField(name=GqlConstants.INVITE, description="Invite information")
     public void setInvite(InvitationInfo invite) { this.invite = invite; }
     @GraphQLInputField(name=GqlConstants.EMAILADDRESSES, description="Email address information")
     public void setEmailAddresses(Iterable <EmailAddrInfo> emailAddresses) {
@@ -263,7 +266,7 @@ public class Msg {
     public MimePartInfo getMimePart() { return mimePart; }
     @GraphQLQuery(name=GqlConstants.ATTACHMENTS, description="Attachments information")
     public AttachmentsInfo getAttachments() { return attachments; }
-    @GraphQLIgnore
+    @GraphQLQuery(name=GqlConstants.INVITE, description="Invite information")
     public InvitationInfo getInvite() { return invite; }
     @GraphQLQuery(name=GqlConstants.EMAILADDRESSES, description="Email address information")
     public List<EmailAddrInfo> getEmailAddresses() {
@@ -305,12 +308,14 @@ public class Msg {
         return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
     }
 
+    @GraphQLType(name=GqlConstants.CLASS_HEADER, description="Header information")
     public static final class Header {
         /**
          * @zm-api-field-tag header-name
          * @zm-api-field-description Header name
          */
         @XmlAttribute(name=MailConstants.A_NAME)
+        @GraphQLQuery(name=GqlConstants.NAME, description="Header name") 
         private String name;
 
         /**
@@ -318,12 +323,15 @@ public class Msg {
          * @zm-api-field-description Header value
          */
         @XmlValue
+        @GraphQLQuery(name=GqlConstants.VALUE, description="Header value")
         private String value;
 
         public Header() {
         }
 
-        public Header(String name, String value) {
+        public Header(
+            @GraphQLInputField(name=GqlConstants.NAME) String name,
+            @GraphQLInputField(name=GqlConstants.VALUE) String value) {
             this.name = name;
             this.value = value;
         }

@@ -476,6 +476,11 @@ public final class ZimbraLog {
     public static final Log addresslist = LogFactory.getLog("zimbra.addresslist");
 
     /**
+     * the "zimbra.gql" logger. For graphql logs.
+     */
+    public static final Log gql = LogFactory.getLog("zimbra.gql");
+
+    /**
      * Maps the log category name to its description.
      */
     public static final Map<String, String> CATEGORY_DESCRIPTIONS;
@@ -566,6 +571,7 @@ public final class ZimbraLog {
         descriptions.put(contactbackup.getCategory(), "Contact Backup and restore");
         descriptions.put(passwordreset.getCategory(), "Password Reset operations");
         descriptions.put(addresslist.getCategory(), "Addresslist operations");
+        descriptions.put(gql.getCategory(), "GraphQL operations");
         CATEGORY_DESCRIPTIONS = Collections.unmodifiableMap(descriptions);
     }
 

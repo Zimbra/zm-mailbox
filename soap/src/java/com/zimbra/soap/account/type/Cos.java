@@ -21,10 +21,16 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
+import com.zimbra.common.gql.GqlConstants;
+
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 /**
  * <cos name="cos-name" id="cos-id"/>
  */
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name=GqlConstants.CLASS_COS, description="Cos objec with id and name")
 public class Cos {
 
     /**
@@ -42,7 +48,9 @@ public class Cos {
     public Cos() {
     }
 
+    @GraphQLQuery(name=GqlConstants.NAME, description="Name of the cos")
     public String getName() { return name; }
+    @GraphQLQuery(name=GqlConstants.ID, description="Id of the cos")
     public String getId() { return id; }
 
     public Cos setName(String name) {

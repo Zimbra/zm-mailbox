@@ -24,9 +24,12 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.google.common.base.Joiner;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.account.type.InfoSection;
+
+import io.leangen.graphql.annotations.GraphQLInputField;
 
 /**
  * <GetInfoRequest [sections="mbox,prefs,attrs,zimlets,props,idents,sigs,dsrcs,children"]/>
@@ -65,11 +68,12 @@ public class GetInfoRequest {
      * @zm-api-field-description comma-separated-rights
      * @zm-api-field-description Comma separated list of rights to return information about.
      */
-    @XmlAttribute(name=AccountConstants.A_RIGHTS) 
+    @XmlAttribute(name=AccountConstants.A_RIGHTS)
     public String getRights() {
         return COMMA_JOINER.join(rights);
     }
 
+    @GraphQLInputField(name=GqlConstants.SECTIONS, description="Comma separated list of sections to return information about")
     public GetInfoRequest setSections(String sections)
     throws ServiceException {
         this.sections.clear();
@@ -105,6 +109,12 @@ public class GetInfoRequest {
             }
         }
         return this;
+    }
+
+    @GraphQLInputField(name=GqlConstants.RIGHTS, description="Comma separated list of rights to return information about")
+    public void setRights(String rights)
+    throws ServiceException {
+        setRights(rights.split(","));
     }
 
     public GetInfoRequest setRights(String... rights)

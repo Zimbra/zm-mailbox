@@ -107,11 +107,14 @@ import com.zimbra.soap.account.message.CreateIdentityRequest;
 import com.zimbra.soap.account.message.CreateIdentityResponse;
 import com.zimbra.soap.account.message.DeleteIdentityRequest;
 import com.zimbra.soap.account.message.EndSessionRequest;
+import com.zimbra.soap.account.message.GetDistributionListMembersRequest;
+import com.zimbra.soap.account.message.GetDistributionListMembersResponse;
 import com.zimbra.soap.account.message.GetHABRequest;
 import com.zimbra.soap.account.message.GetHABResponse;
 import com.zimbra.soap.account.message.GetIdentitiesRequest;
 import com.zimbra.soap.account.message.GetIdentitiesResponse;
 import com.zimbra.soap.account.message.ModifyIdentityRequest;
+import com.zimbra.soap.account.type.HABGroupMember;
 import com.zimbra.soap.account.type.NameId;
 import com.zimbra.soap.admin.message.AddAccountAliasRequest;
 import com.zimbra.soap.admin.message.AddAccountLoggerRequest;
@@ -3154,10 +3157,10 @@ public class SoapProvisioning extends Provisioning {
      * @return GetHabResponse object
      * @throws ServiceException if an error occurs while fetching hierarchy from ldap
      */
-    public GetHABResponse getHab(String rootHabGroupId) throws ServiceException {
+    public Element getHab(String rootHabGroupId) throws ServiceException {
         XMLElement req = new XMLElement(AccountConstants.GET_HAB_REQUEST);
         req.addAttribute(AccountConstants.A_HAB_ROOT_GROUP_ID, rootHabGroupId);
-        GetHABResponse resp = invokeJaxb(new GetHABRequest(rootHabGroupId));
+        Element resp = invoke(req);
         return resp;
     }
 
@@ -3173,6 +3176,30 @@ public class SoapProvisioning extends Provisioning {
         HABGroupOperation operation = new HABGroupOperation(habGroupId, currentParentGroupId,
             targetParentGroupId, HabGroupOp.move);
         invokeJaxb(new ModifyHABGroupRequest(operation));
+    }
+
+    /**
+     * 
+     * @param habGroupId HAB group to be modified
+     * @param seniorityIndex seniority index
+     * @throws ServiceException if an error occurs while modifying the HAB group
+     */
+    public void modifyHabGroupSeniority(String habGroupId, String seniorityIndex)
+        throws ServiceException {
+        HABGroupOperation operation = new HABGroupOperation(habGroupId,
+            Integer.parseInt(seniorityIndex), HabGroupOp.assignSeniority);
+        invokeJaxb(new ModifyHABGroupRequest(operation));
+
+    }
+
+    /**
+     * 
+     * @param group HAB group whose members will be returned
+     * @throws ServiceException if an error occurs while getting the HAB group members
+     */
+    public List<HABGroupMember> getHABGroupMembers(Group group) throws ServiceException {
+        GetDistributionListMembersResponse resp = invokeJaxb(new GetDistributionListMembersRequest(0, 0, group.getName()));
+        return resp.getHABGroupMembers();
     }
 
 }

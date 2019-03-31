@@ -28,15 +28,18 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.ZmBoolean;
 
+import io.leangen.graphql.annotations.GraphQLIgnore;
+import io.leangen.graphql.annotations.GraphQLInputField;
 import io.leangen.graphql.annotations.GraphQLNonNull;
 import io.leangen.graphql.annotations.GraphQLQuery;
 import io.leangen.graphql.annotations.types.GraphQLType;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@GraphQLType(name="NewFolderSpec", description="Input for creating a new folder")
+@GraphQLType(name=GqlConstants.CLASS_NEW_FOLDER_SPEC, description="Input for creating a new folder")
 public class NewFolderSpec {
 
     /**
@@ -46,7 +49,7 @@ public class NewFolderSpec {
      */
     @XmlAttribute(name=MailConstants.A_NAME /* name */, required=true)
     @GraphQLNonNull
-    @GraphQLQuery(name="name", description="If parentFolderId is unset, name is the full path of the new folder; otherwise, name may not contain the folder separator '/'")
+    @GraphQLQuery(name=GqlConstants.NAME, description="If parentFolderId is unset, name is the full path of the new folder; otherwise, name may not contain the folder separator '/'")
     private final String name;
 
     /**
@@ -56,7 +59,6 @@ public class NewFolderSpec {
      * possible values are the same as <b>&lt;SearchRequest></b>'s {types}: <b>conversation|message|contact|etc</b>
      */
     @XmlAttribute(name=MailConstants.A_DEFAULT_VIEW /* view */, required=false)
-    @GraphQLQuery(name="view", description="Default type for the folder; used by web client to decide which view to use;")
     private String defaultView;
 
     /**
@@ -64,7 +66,6 @@ public class NewFolderSpec {
      * @zm-api-field-description Flags
      */
     @XmlAttribute(name=MailConstants.A_FLAGS /* f */, required=false)
-    @GraphQLQuery(name="flags", description="Folder flags")
     private String flags;
 
     /**
@@ -72,7 +73,6 @@ public class NewFolderSpec {
      * @zm-api-field-description color numeric; range 0-127; defaults to 0 if not present; client can display only 0-7
      */
     @XmlAttribute(name=MailConstants.A_COLOR /* color */, required=false)
-    @GraphQLQuery(name="color", description="color numeric; range 0-127; defaults to 0 if not present; client can display only 0-7")
     private Byte color;
 
     /**
@@ -80,7 +80,6 @@ public class NewFolderSpec {
      * @zm-api-field-description RGB color in format #rrggbb where r,g and b are hex digits
      */
     @XmlAttribute(name=MailConstants.A_RGB /* rgb */, required=false)
-    @GraphQLQuery(name="rgb", description="RGB color in format #rrggbb where r,g and b are hex digits")
     private String rgb;
 
     /**
@@ -88,7 +87,6 @@ public class NewFolderSpec {
      * @zm-api-field-description URL (RSS, iCal, etc.) this folder syncs its contents to
      */
     @XmlAttribute(name=MailConstants.A_URL /* url */, required=false)
-    @GraphQLQuery(name="url", description="URL (RSS, iCal, etc.) this folder syncs its contents to")
     private String url;
 
     /**
@@ -96,8 +94,6 @@ public class NewFolderSpec {
      * @zm-api-field-description Parent folder ID
      */
     @XmlAttribute(name=MailConstants.A_FOLDER /* l */, required=true)
-    @GraphQLNonNull
-    @GraphQLQuery(name="parentFolderId", description="Parent folder Id")
     private String parentFolderId;
 
     /**
@@ -106,7 +102,7 @@ public class NewFolderSpec {
      * mail.ALREADY_EXISTS
      */
     @XmlAttribute(name=MailConstants.A_FETCH_IF_EXISTS /* fie */, required=false)
-    @GraphQLQuery(name="fetchIfExists", description="If set, the server will fetch the folder if it already exists rather than throwing mail.ALREADY_EXISTS")
+    @GraphQLInputField(name=GqlConstants.FETCH_IF_EXISTS, description="If set, the server will fetch the folder if it already exists rather than throwing mail.ALREADY_EXISTS")
     private ZmBoolean fetchIfExists;
 
     /**
@@ -114,7 +110,6 @@ public class NewFolderSpec {
      * @zm-api-field-description If set (default) then if "url" is set, synchronize folder content on folder creation
      */
     @XmlAttribute(name=MailConstants.A_SYNC /* sync */, required=false)
-    @GraphQLQuery(name="syncToUrl", description="If set (default) then if url is set, synchronize folder content on folder creation")
     private ZmBoolean syncToUrl;
 
     /**
@@ -122,7 +117,7 @@ public class NewFolderSpec {
      */
     @XmlElementWrapper(name=MailConstants.E_ACL /* acl */, required=false)
     @XmlElement(name=MailConstants.E_GRANT /* grant */, required=false)
-    @GraphQLQuery(name="grants", description="Grant specification")
+    @GraphQLInputField(name=GqlConstants.GRANTS, description="Grant specification")
     private final List<ActionGrantSelector> grants = Lists.newArrayList();
 
     /**
@@ -143,14 +138,23 @@ public class NewFolderSpec {
         return nfs;
     }
 
+    @GraphQLInputField(name=GqlConstants.VIEW, description="Default type for the folder; used by web client to decide which view to use;")
     public void setDefaultView(String defaultView) { this.defaultView = defaultView; }
+    @GraphQLInputField(name=GqlConstants.FLAGS, description="Folder flags")
     public void setFlags(String flags) { this.flags = flags; }
+    @GraphQLInputField(name=GqlConstants.COLOR, description="color numeric; range 0-127; defaults to 0 if not present; client can display only 0-7")
     public void setColor(Byte color) { this.color = color; }
+    @GraphQLInputField(name=GqlConstants.RGB, description="RGB color in format #rrggbb where r,g and b are hex digits")
     public void setRgb(String rgb) { this.rgb = rgb; }
+    @GraphQLInputField(name=GqlConstants.URL, description="URL (RSS, iCal, etc.) this folder syncs its contents to")
     public void setUrl(String url) { this.url = url; }
-    public void setParentFolderId(String parentFolderId) { this.parentFolderId = parentFolderId; }
+    @GraphQLQuery(name=GqlConstants.PARENT_FOLDER_ID, description="Parent folder Id")
+    public void setParentFolderId(@GraphQLNonNull String parentFolderId) { this.parentFolderId = parentFolderId; }
+    @GraphQLInputField(name="fetchIfExists", description="If set, the server will fetch the folder if it already exists rather than throwing mail.ALREADY_EXISTS")
     public void setFetchIfExists(Boolean fetchIfExists) { this.fetchIfExists = ZmBoolean.fromBool(fetchIfExists); }
+    @GraphQLInputField(name=GqlConstants.SYNC_TO_URL, description="If set (default) then if url is set, synchronize folder content on folder creation")
     public void setSyncToUrl(Boolean syncToUrl) { this.syncToUrl = ZmBoolean.fromBool(syncToUrl); }
+    @GraphQLInputField(name=GqlConstants.GRANTS, description="Grant specification")
     public void setGrants(Iterable <ActionGrantSelector> grants) {
         this.grants.clear();
         if (grants != null) {
@@ -158,6 +162,7 @@ public class NewFolderSpec {
         }
     }
 
+    @GraphQLIgnore
     public void addGrant(ActionGrantSelector grant) {
         this.grants.add(grant);
     }
