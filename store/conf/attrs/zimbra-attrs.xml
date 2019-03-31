@@ -657,7 +657,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="74" name="zimbraRedoLogEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox">
-  <globalConfigValue>TRUE</globalConfigValue>
+  <globalConfigValue>FALSE</globalConfigValue>
   <desc>whether redo logging is enabled</desc>
 </attr>
 
@@ -7974,7 +7974,7 @@ TODO: delete them permanently from here
   <desc>For zimbra dnscache, whether or not to use UDP. Defaults to yes</desc>
 </attr>
 
-<attr id="1587" name="zimbraDefaultAnalyzerStopWords" type="string" cardinality="multi" optionalIn="globalConfig" since="8.5.0">
+<attr id="1587" name="zimbraDefaultAnalyzerStopWords" type="string" cardinality="multi" optionalIn="globalConfig" since="8.5.0" callback="SolrSchemaCallback">
   <desc>stop words for lucene text analyzer. This setting takes effect only for default analyzer. This setting affects only accounts that do not have custom text analyzers. See zimbraTextAnalyzer for information on custom text analyzers.</desc>
   <globalConfigValue>a</globalConfigValue>
   <globalConfigValue>an</globalConfigValue>
@@ -9519,9 +9519,10 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
-<attr id="2995" name="zimbraEphemeralBackendURL" type="string" cardinality="single" optionalIn="globalConfig" callback="EphemeralBackendCheck" since="8.7.6">
+<attr id="2995" name="zimbraEphemeralBackendURL" type="string" cardinality="single" optionalIn="globalConfig" since="8.7.6" deprecatedSince="10.0.0">
   <desc>URL of ephemeral storage backend</desc>
   <globalConfigValue>ldap://default</globalConfigValue>
+  <deprecateDesc>Deprecated in Zimbra X in favor of ephemeral data being stored in the existing redis deployment, governed by the redis_service_uri LC attribute</deprecateDesc>
 </attr>
 
 <attr id="2996" name="zimbraReverseProxyIPLoginImapLimit" type="integer" min="0" cardinality="single" optionalIn="globalConfig" since="8.7.0">
@@ -9634,14 +9635,17 @@ TODO: delete them permanently from here
   <desc>Determines the load-balancing algorithm used to select an IMAP server from the pool of available zimbraReverseProxyUpstreamImapServers. Valid values are AccountIdHash, custom:{handler-algorithm} [arg1 arg2 ...]</desc>
 </attr>
 
-<attr id="3010" name="zimbraSSDBResourcePoolSize" type="integer" min="0" cardinality="single" optionalIn="globalConfig" callback="EphemeralBackendCheck" since="8.7.6">
+<attr id="3010" name="zimbraSSDBResourcePoolSize" type="integer" min="0" cardinality="single" optionalIn="globalConfig" since="8.7.6" deprecatedSince="10.0.0">
   <globalConfigValue>0</globalConfigValue>
-  <desc>Specifies the JedisPool size used by SSDBEphemeralStore. Higher pool sizes allow for more simultaneous connections to SSDB. A value of 0 will cause the pool size to be unlimited.</desc>
+  <desc>Specifies the JedisPool size used by SSDBEphemeralStore. Higher pool sizes allow for more simultaneous connections to SSDB. A value of 0 will cause the pool size to 
+    be unlimited.</desc>
+  <deprecateDesc>As of Zimbra X, SSDBEphemeralStore no longer uses the Jedis libary</deprecateDesc>
 </attr>
 
-<attr id="3011" name="zimbraSSDBResourcePoolTimeout" type="duration" cardinality="single" optionalIn="globalConfig" callback="EphemeralBackendCheck" since="8.7.6">
+<attr id="3011" name="zimbraSSDBResourcePoolTimeout" type="duration" cardinality="single" optionalIn="globalConfig" since="8.7.6" deprecatedSince="10.0.0">
   <globalConfigValue>0</globalConfigValue>
   <desc>Specifies the amount of time a thread will wait for a JedisPool resource. A value of 0 will cause the thread to block indefinitely.</desc>
+  <deprecateDesc>As of Zimbra X, SSDBEphemeralStore no longer uses the Jedis libary</deprecateDesc>
 </attr>
 
 <attr id="3012" name="zimbraOpenImapFolderRequestChunkSize" type="integer" cardinality="single" optionalIn="server,globalConfig" flags="serverInherited" since="8.8.1">
@@ -9674,8 +9678,9 @@ TODO: delete them permanently from here
   <desc>Configures the 'upstream_fair_shm_size' value used by Nginx to set the size of shared memory for storing information about the busy-ness of backends. Values are in kilobytes.</desc>
 </attr>
 
-<attr id="3018" name="zimbraPreviousEphemeralBackendURL" type="string" cardinality="single" optionalIn="globalConfig" immutable="1" since="8.8.1">
+<attr id="3018" name="zimbraPreviousEphemeralBackendURL" type="string" cardinality="single" optionalIn="globalConfig" immutable="1" since="8.8.1" deprecatedSince="10.0.0">
   <desc>URL of the previous ephemeral storage backend</desc>
+  <deprecateDesc>Deprecated in Zimbra X; the ephemeral backend is no longer governed by an LDAP attribute</deprecateDesc>
 </attr>
 
 <attr id="3019" name="zimbraAttributeMigrationInfo" type="string" cardinality="single" optionalIn="globalConfig" immutable="1" since="8.8.1">
@@ -9703,15 +9708,207 @@ TODO: delete them permanently from here
   <globalConfigValue>1518163473</globalConfigValue>
 </attr>
 
-<attr id="3024" name="zimbraXZimletCompatibleSemVer" type="string" max="256" cardinality="single" optionalIn="zimletEntry" since="8.8.9">
+<attr id="3024" name="zimbraFeatureSearchHistoryEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="domainAdminModifiable,accountInfo,accountInherited" since="8.8.6">
+  <desc>Whether to enable Search History</desc>
+  <defaultCOSValue>TRUE</defaultCOSValue>
+</attr>
+
+<attr id="3025" name="zimbraNumSearchesForSavedSearchPrompt" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.8.6">
+  <desc>Searching for the same query this many times will result in a prompt offering the user to save this query as a search folder. This will only happen once per query. A value of 0 disables this feature.</desc>
+  <defaultCOSValue>3</defaultCOSValue>
+</attr>
+
+<attr id="3026" name="zimbraSearchHistoryAge" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.8.6">
+  <desc>Search history entries older than this will not show up in search suggestions and will not be included in the count used for zimbraNumSearchesForSavedSearchPrompt or as part of GetSearchHistoryResponse/SearchSuggestResponse. If purging is enabled, these entries will be purged as part of a mailbox purge.</desc>
+  <defaultCOSValue>365d</defaultCOSValue>
+</attr>
+
+<attr id="3027" name="zimbraIndexURL" type="string" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.8.6">
+    <globalConfigValue>solr:http://localhost:7983/solr</globalConfigValue>
+    <desc>URL for accessing external indexing service.
+    First part of the URL before the first colon identifies the implementation Factory and should be registered by calling IndexStore.registerFactory(prefix, classname).
+    ZCS ships with two index Factory implementations:
+    1) SolrIndex identified by prefix "solr".
+    2) SolrCloudIndex identified by prefix "solrcloud".
+    If using solrcloud, the URL should be set to that of the ZooKeeper host managing the SOLR cluster.
+     </desc>
+</attr>
+
+<attr id="3028" name="zimbraIndexTermsCacheSize" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.8.6">
+  <globalConfigValue>1024</globalConfigValue>
+  <desc>The number of terms SOLR will cache during term enumeration queries</desc>
+</attr>
+
+<attr id="3029" name="zimbraSolrMaxRetries" type="integer" min="0" max="4" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.8.6">
+  <globalConfigValue>1</globalConfigValue>
+  <desc>The number of times the server will attempt to connect to a SOLR core. 1 is the recommended setting.</desc>
+</attr>
+
+<attr id="3030" name= "zimbraIndexReplicationTimeout" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.8.6">
+  <globalConfigValue>20s</globalConfigValue>
+  <desc>Time that the mailstore will wait for an external indexing service to fully replicate an index for a single mailbox.
+  When using SolrCloud, this is the time that a mailstore will wait for all replicas of a SOLR collection to go live and sync up to the leader.</desc>
+</attr>
+
+<attr id="3031" name="zimbraIndexPollingInterval" type="duration" cardinality="single" min="100" max="60000" optionalIn="globalConfig,server,alwaysOnCluster" since="8.8.6">
+    <globalConfigValue>500ms</globalConfigValue>
+    <desc>Time that the mailstore will wait between attempts to request status from an external indexing service (Solr or SolrCloud).</desc>
+</attr>
+
+<attr id="3032" name="zimbraSolrReplicationFactor" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.8.6">
+  <globalConfigValue>2</globalConfigValue>
+  <desc>Replication factor for the mailbox index</desc>
+</attr>
+
+<attr id="3033" name= "zimbraZKClientTimeout" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.8.6">
+  <globalConfigValue>10s</globalConfigValue>
+  <desc>Timeout for ZooKeeper requests</desc>
+</attr>
+
+<attr id="3034" name="zimbraIndexingQueueMaxSize" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.8.6">
+  <globalConfigValue>10000</globalConfigValue>
+  <desc>The maximum number of items that can be held in memory while queued for indexing</desc>
+</attr>
+
+<attr id="3035" name="zimbraIndexThreads" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.8.6">
+  <globalConfigValue>10</globalConfigValue>
+  <desc> Number of threads used for indexing items from the queue</desc>
+</attr>
+
+<attr id="3036" name="zimbraIndexReIndexThreads" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.8.6">
+  <globalConfigValue>10</globalConfigValue>
+  <desc>Maximum number of threads for re-indexing. Re-index threads are not pooled.</desc>
+</attr>
+
+<attr id="3037" name="zimbraIndexingQueuePollingInterval" type="duration" cardinality="single" min="100" max="60000" optionalIn="globalConfig,server,alwaysOnCluster" since="8.8.6">
+    <globalConfigValue>500ms</globalConfigValue>
+    <desc>Time that mailstore will wait between attempts to take/put an indexing task from/to a shared indexing queue.</desc>
+</attr>
+
+<attr id="3038" name="zimbraMaxIndexingRetries" type="integer" min="0" cardinality="single" optionalIn="alwaysOnCluster,server,globalConfig" flags="serverInherited,serverPreferAlwaysOn" since="8.8.6">
+ <globalConfigValue>2</globalConfigValue>
+ <desc>Maximum number of times a server will re-attempt to send a document to an indexing service. When this value is higher than 0 and an attempt to index a document fails, the server will put the document into the indexing queue for additional indexing attempts.</desc>
+</attr>
+
+<attr id="3039" name="zimbraReindexBatchSize" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited" since="8.8.6">
+  <globalConfigValue>20</globalConfigValue>
+  <desc>Maximum number of items to put into a single reindexing task.</desc>
+</attr>
+
+<attr id="3040" name="zimbraIndexingQueueTimeout" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" since="8.8.6">
+    <globalConfigValue>30s</globalConfigValue>
+    <desc>Time that mailstore will wait for space to free up in the shared indexing queue. Increase this value if you are reindexing several large mailboxes simultaneously.</desc>
+</attr>
+
+<attr id="3042" name="zimbraEventLoggingBackends" type="string" cardinality="multi" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" callback="EventLoggerCallback" since="8.8.6">
+    <globalConfigValue>file:</globalConfigValue>
+    <desc>Event logging backends to be used for storing events.
+    The value before the first colon identifies the implementation Factory;
+    everything after is configuration.
+    Current options are:
+    1) File backend that logs events in a log file. It is recommended to keep this enabled.
+    2) SolrCloud backend. Format is "solrcloud:[ZooKeeper URL]"
+     </desc>
+</attr>
+
+<attr id="3043" name="zimbraEventLoggingNumThreads" type="integer" min="1" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" callback="EventLoggerCallback" since="8.8.6"> 
+  <globalConfigValue>10</globalConfigValue>
+  <desc>Number of consumer threads used to process the event logging queue</desc>
+</attr>
+
+<attr id="3044" name="zimbraEventBatchMaxSize" type="integer" min="1" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" callback="EventLoggerCallback" since="8.8.6">
+  <globalConfigValue>100</globalConfigValue>
+  <desc>Event batch size used by batching EventLogHandlers such as "solrcloud". When this limit is reached, the batch is flushed.</desc>
+</attr>
+
+<attr id="3045" name="zimbraEventBatchLifetime" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" callback="EventLoggerCallback" since="8.8.6">
+  <globalConfigValue>5m</globalConfigValue>
+  <desc>If an event batch remains unmodified for this duration of time, it will be flushed regardless of its size</desc>
+</attr> <!-- 3045 -->
+
+<attr id="3046" name="zimbraEventIndexName" type="string" cardinality="single" optionalIn="account,cos,domain,globalConfig" flags="accountCosDomainInherited" since="8.8.6">
+    <globalConfigValue>event_index</globalConfigValue>
+    <desc>The name of the Solr collection to be used for indexing mailbox event data.</desc>
+</attr>
+
+<attr id="3047" name="zimbraEventLoggingEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" callback="EventLoggerCallback" since="8.8.6">
+  <desc>Whether event logging is enabled</desc>
+  <globalConfigValue>TRUE</globalConfigValue>
+</attr> <!-- 3047 -->
+
+<attr id="3048" name="zimbraEventBackendURL" type="string" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" callback="EventLoggerCallback" since="8.8.6">
+  <desc>URL of the event storage backend to be queried for event analytics</desc>
+</attr> <!-- 3048 -->
+
+<attr id="3049" name="zimbraContactAffinityEventLoggingEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" callback="EventLoggerCallback" since="8.8.6">
+  <desc>If TRUE, incoming emails will cause an AFFINITY event to be logged for each recipient. This allows for more accurate "related contacts" results, at the cost of higher index usage</desc>
+  <defaultCOSValue>TRUE</defaultCOSValue>
+</attr> <!-- 3049 -->
+
+<attr id="3050" name="zimbraRelatedContactsMaxAge" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.8.6">
+  <desc>The time window for which related contacts are calculated; emails older than this will not affect the contact affinity calculation</desc>
+  <defaultCOSValue>365d</defaultCOSValue>
+</attr> <!-- 3050 -->
+
+<attr id="3051" name="zimbraRelatedContactsMinConcurrenceCount" type="integer" min="1" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.8.6">
+  <desc>The number of times two contacts have to co-occur on an email in order to be considered related</desc>
+  <defaultCOSValue>1</defaultCOSValue>
+</attr> <!-- 3051 -->
+
+<attr id="3052" name="zimbraFeatureRelatedContactsEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.8.6">
+  <desc>Whether the Related Contacts feature is enabled on the account/COS</desc>
+  <defaultCOSValue>TRUE</defaultCOSValue>
+</attr> <!-- 3052 -->
+
+<attr id="3053" name="zimbraDefaultSortByRelevance" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.8.6">
+  <desc>If true, search results will be sorted by relevance if a sortBy value is not provided.</desc>
+  <defaultCOSValue>FALSE</defaultCOSValue>
+</attr> <!-- 3053 -->
+
+<attr id="3054" name="zimbraMachineLearningClassifierInfo" type="string" cardinality="multi" optionalIn="globalConfig" since="8.8.6">
+  <desc>Serialized info about registered classifiers</desc>
+</attr>
+
+<attr id="3055" name="zimbraMachineLearningBackendURL" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.8.6">
+    <desc>URL for accessing the machine learning service.
+    First part of the URL before the first colon identifies the implementation Factory.
+    Only the "zimbra" prefix is currently supported.</desc>
+</attr> <!-- 3055 -->
+
+<attr id="3056" name="zimbraMachineLearningTaskConfig" type="string" cardinality="multi" optionalIn="server,globalConfig" flags="serverInherited" since="8.8.6">
+    <desc>The names of classifiers to be used for handling known classification tasks.
+      Format is taskName:classifierLabel[:probThreshold].</desc>
+</attr> <!-- 3056 -->
+
+<attr id="3057" name="zimbraMailboxIndexName" type="string" cardinality="single" optionalIn="account,cos,domain,globalConfig" flags="accountCosDomainInherited" since="8.8.6">
+    <globalConfigValue>mailbox_index</globalConfigValue>
+    <desc>The name of the Solr collection to be used for indexing mailbox data.</desc>
+</attr>
+
+<attr id="3058" name="zimbraMailboxIndexInitialNumShards" type="integer" min="1" cardinality="single" optionalIn="account,cos,domain,globalConfig" flags="accountCosDomainInherited" since="8.8.6">
+    <globalConfigValue>1</globalConfigValue>
+    <desc>The initial number of shards that the mailbox index is created with</desc>
+</attr>
+
+<attr id="3059" name="zimbraEventIndexInitialNumShards" type="integer" min="1" cardinality="single" optionalIn="account,cos,domain,globalConfig" flags="accountCosDomainInherited" since="8.8.6">
+    <globalConfigValue>1</globalConfigValue>
+    <desc>The initial number of shards that the event index is created with</desc>
+</attr>
+
+<attr id="3060" name="zimbraEventIndexReplicationFactor" type="integer" cardinality="single" optionalIn="globalConfig" since="10.0.0">
+  <globalConfigValue>2</globalConfigValue>
+  <desc>Replication factor for the event index</desc>
+</attr>
+
+<attr id="3064" name="zimbraXZimletCompatibleSemVer" type="string" max="256" cardinality="single" optionalIn="zimletEntry" since="8.8.9">
   <desc>ZimbraX compatible semantic version expression</desc>
 </attr>
 
-<attr id="3025" name="zimbraOAuthConsumerRedirectUri" type="string" cardinality="multi" optionalIn="globalConfig,domain" flags="domainInherited" since="8.8.9">
+<attr id="3065" name="zimbraOAuthConsumerRedirectUri" type="string" cardinality="multi" optionalIn="globalConfig,domain" flags="domainInherited" since="8.8.9">
   <desc>OAuth redirectURI. It is in the format of redirectURI:consumer-app-name</desc>
 </attr>
 
-<attr id="3026" name="zimbraOAuthConsumerAPIScope" type="string" cardinality="multi" optionalIn="globalConfig,domain" flags="domainInherited" since="8.8.9">
+<attr id="3066" name="zimbraOAuthConsumerAPIScope" type="string" cardinality="multi" optionalIn="globalConfig,domain" flags="domainInherited" since="8.8.9">
   <desc>OAuth consumer API scope. It is in the format of apiscope1{separator character}apiscope2:consumer-app-name. The separator between apiscope1 and apiscope2 is consumer-app specific</desc>
 </attr>
 
@@ -9719,6 +9916,7 @@ TODO: delete them permanently from here
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>whether or not to show client Terms of Service</desc>
 </attr>
+
 <attr id="3068" name="zimbraPrefAcceptedClientTOS" type="boolean" cardinality="single" optionalIn="account" flags="accountInfo" since="8.8.8">
   <desc>whether or not the user has accepted the client's terms of service</desc>
 </attr>
@@ -9760,6 +9958,5 @@ TODO: delete them permanently from here
 
 <attr id="3076" name="zimbraAddressListLdapFilter" type="string" cardinality="single" requiredIn="addressList" flags="domainAdminModifiable" since="8.8.10">
   <desc>filter to decide members of the address list using ldap</desc>
-</attr>
-
+</attr> <!-- 3076 -->
 </attrs>
