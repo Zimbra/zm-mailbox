@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
@@ -39,7 +41,7 @@ public class EmailToSMS implements LmtpCallback {
 
 	private static final EmailToSMS sInstance = new EmailToSMS();
 	private static final String smsDomain = "esms.gov.in";
-	static CharsetEncoder asciiEncoder = Charset.forName("US-ASCII").newEncoder();
+	private static CharsetEncoder asciiEncoder = Charset.forName("US-ASCII").newEncoder();
 
 	private EmailToSMS() {
 	}
@@ -68,10 +70,10 @@ public class EmailToSMS implements LmtpCallback {
 	private void sendEmailSMS(Message zMsg) throws ServiceException,MessagingException {
 		Address[] recipients = zMsg.getParsedMessage().getMimeMessage().getAllRecipients();
 		String sender = zMsg.getSender();
-		String subject = zMsg.getSubject();
+		String subject = "From: "+sender+"\nSubject: "+zMsg.getSubject();
 		MimeMessage mimeMsg =  zMsg.getMimeMessage(false);
 		Pair<String,String> fullTextMessage = getTextBody(mimeMsg, false);
-		String bodyMsg = fullTextMessage.getFirst();
+		String bodyMsg = "Message: "+fullTextMessage.getFirst();
 		Boolean isASCIIString = isPureAscii(bodyMsg);
 		String fullMessage = "";
 		if(isASCIIString) {
@@ -169,8 +171,12 @@ public class EmailToSMS implements LmtpCallback {
 		URL obj;
 
 		try {
+			ZimbraLog.mailbox.debug("SMS url %s, sender %s", url, sender);
 			obj = new URL(url);
 			HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+			ZimbraLog.mailbox.debug("BEFORE: SMS proxy configuration host : "+System.getProperty("http.proxyHost")+" port : "+System.getProperty("http.proxyPort"));
+			configureProxy();
+			ZimbraLog.mailbox.debug("AFTER: SMS proxy configuration host : "+System.getProperty("http.proxyHost")+" port : "+System.getProperty("http.proxyPort"));
 			con.setRequestMethod("GET");
 			int respCode = con.getResponseCode();
 			if(respCode == 200)
@@ -182,6 +188,29 @@ public class EmailToSMS implements LmtpCallback {
 			ZimbraLog.mailbox.warn("Unable to send mobile notification MalformedURLException", e);
 		} catch (IOException e) {
 			ZimbraLog.mailbox.warn("Unable to send mobile notification IOException", e);
+		}
+	}
+
+	private void configureProxy() {
+		try {
+			String url = Provisioning.getInstance().getLocalServer().getAttr(Provisioning.A_zimbraHttpProxyURL, null);
+			if (url == null) {
+				ZimbraLog.mailbox.debug("zimbraHttpProxyURL is not set url : "+url);
+				return;
+			}
+			URI sProxyUri = new URI(url);
+			String proxyHost = sProxyUri.getHost();
+			String proxyPort = String.valueOf(sProxyUri.getPort());
+			ZimbraLog.mailbox.debug("SMS zimbraHttpProxy host : "+proxyHost);
+			ZimbraLog.mailbox.debug("SMS zimbraHttpProxy port : "+proxyPort);
+			System.getProperties().put("http.proxyHost", proxyHost);
+			System.getProperties().put("http.proxyPort", proxyPort);
+		} catch (ServiceException e) {
+			ZimbraLog.misc.warn("Unable to configureProxy ServiceException: "+e.getMessage(), e);
+		} catch (URISyntaxException e) {
+			ZimbraLog.misc.warn("Unable to configureProxy URISyntaxException : "+e.getMessage(), e);
+		} catch (Exception e) {
+			ZimbraLog.misc.warn("Unable to configureProxy: "+e.getMessage(), e);
 		}
 	}
 
