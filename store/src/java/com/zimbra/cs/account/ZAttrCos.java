@@ -16363,6 +16363,68 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * Maximum size in bytes for file uploads
+     *
+     * @return zimbraFileUploadMaxSize, or 10485760 if unset
+     */
+    @ZAttr(id=227)
+    public long getFileUploadMaxSize() {
+        return getLongAttr(Provisioning.A_zimbraFileUploadMaxSize, 10485760L, true);
+    }
+
+    /**
+     * Maximum size in bytes for file uploads
+     *
+     * @param zimbraFileUploadMaxSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=227)
+    public void setFileUploadMaxSize(long zimbraFileUploadMaxSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileUploadMaxSize, Long.toString(zimbraFileUploadMaxSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum size in bytes for file uploads
+     *
+     * @param zimbraFileUploadMaxSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=227)
+    public Map<String,Object> setFileUploadMaxSize(long zimbraFileUploadMaxSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileUploadMaxSize, Long.toString(zimbraFileUploadMaxSize));
+        return attrs;
+    }
+
+    /**
+     * Maximum size in bytes for file uploads
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=227)
+    public void unsetFileUploadMaxSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileUploadMaxSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum size in bytes for file uploads
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=227)
+    public Map<String,Object> unsetFileUploadMaxSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileUploadMaxSize, "");
+        return attrs;
+    }
+
+    /**
      * Maximum size in bytes for each attachment.
      *
      * @return zimbraFileUploadMaxSizePerFile, or 2147483648 if unset
