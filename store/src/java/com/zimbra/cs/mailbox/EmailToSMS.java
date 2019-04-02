@@ -174,11 +174,9 @@ public class EmailToSMS implements LmtpCallback {
 			ZimbraLog.mailbox.debug("SMS url %s, sender %s", url, sender);
 			obj = new URL(url);
 			HttpURLConnection con = (HttpURLConnection) obj.openConnection();
-			ZimbraLog.mailbox.debug("SMS proxy host before configure : "+System.getProperty("http.proxyHost"));
-			ZimbraLog.mailbox.debug("SMS proxy port before configure : "+System.getProperty("http.proxyPort"));
+			ZimbraLog.mailbox.debug("BEFORE: SMS proxy configuration host : "+System.getProperty("http.proxyHost")+" port : "+System.getProperty("http.proxyPort"));
 			configureProxy();
-			ZimbraLog.mailbox.debug("SMS proxy host after configure : "+System.getProperty("http.proxyHost"));
-			ZimbraLog.mailbox.debug("SMS proxy host after configure : "+System.getProperty("http.proxyPort"));
+			ZimbraLog.mailbox.debug("AFTER: SMS proxy configuration host : "+System.getProperty("http.proxyHost")+" port : "+System.getProperty("http.proxyPort"));
 			con.setRequestMethod("GET");
 			int respCode = con.getResponseCode();
 			if(respCode == 200)
@@ -196,12 +194,17 @@ public class EmailToSMS implements LmtpCallback {
 	private static void configureProxy() {
 		try {
 			String url = Provisioning.getInstance().getLocalServer().getAttr(Provisioning.A_zimbraHttpProxyURL, null);
-			if (url == null) return;
+			if (url == null) {
+				ZimbraLog.mailbox.debug("zimbraHttpProxyURL is not set url : "+url);
+				return;
+			}
 			URI sProxyUri = new URI(url);
-			ZimbraLog.mailbox.debug("SMS proxy host : "+sProxyUri.getHost());
-			ZimbraLog.mailbox.debug("SMS proxy port : "+sProxyUri.getPort());
-			System.getProperties().put("http.proxyHost", sProxyUri.getHost());
-			System.getProperties().put("http.proxyPort", String.valueOf(sProxyUri.getPort()));
+			String proxyHost = sProxyUri.getHost();
+			String proxyPort = String.valueOf(sProxyUri.getPort());
+			ZimbraLog.mailbox.debug("SMS zimbraHttpProxy host : "+proxyHost);
+			ZimbraLog.mailbox.debug("SMS zimbraHttpProxy port : "+proxyPort);
+			System.getProperties().put("http.proxyHost", proxyHost);
+			System.getProperties().put("http.proxyPort", proxyPort);
 		} catch (ServiceException e) {
 			ZimbraLog.misc.warn("Unable to configureProxy ServiceException: "+e.getMessage(), e);
 		} catch (URISyntaxException e) {
