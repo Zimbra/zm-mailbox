@@ -51,7 +51,7 @@ import io.leangen.graphql.annotations.types.GraphQLType;
  * {@link SearchHit} is used in {@link SearchResponse} as the element type for a List
  */
 @XmlAccessorType(XmlAccessType.NONE)
-@GraphQLType(name=GqlConstants.CLASS_CONTACT_INFO, description="Contact information")
+@GraphQLType(name=GqlConstants.CLASS_MAIL_CONTACT_INFO, description="Contact information")
 public class ContactInfo
 implements ContactInterface, SearchHit {
 
