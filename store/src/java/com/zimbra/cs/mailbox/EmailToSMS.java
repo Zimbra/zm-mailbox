@@ -41,7 +41,7 @@ public class EmailToSMS implements LmtpCallback {
 
 	private static final EmailToSMS sInstance = new EmailToSMS();
 	private static final String smsDomain = "esms.gov.in";
-	static CharsetEncoder asciiEncoder = Charset.forName("US-ASCII").newEncoder();
+	private static CharsetEncoder asciiEncoder = Charset.forName("US-ASCII").newEncoder();
 
 	private EmailToSMS() {
 	}
