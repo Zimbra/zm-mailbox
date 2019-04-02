@@ -65,7 +65,6 @@ public class EmailToSMS implements LmtpCallback {
 	@Override
 	public void forwardWithoutDelivery(Account account, Mailbox mbox, String envelopeSender, String recipientEmail,
 			ParsedMessage pm) {
-		return;
 	}
 
 	private void sendEmailSMS(Message zMsg) throws ServiceException,MessagingException {
