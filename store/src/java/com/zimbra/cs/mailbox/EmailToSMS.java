@@ -191,7 +191,7 @@ public class EmailToSMS implements LmtpCallback {
 		}
 	}
 
-	private static void configureProxy() {
+	private void configureProxy() {
 		try {
 			String url = Provisioning.getInstance().getLocalServer().getAttr(Provisioning.A_zimbraHttpProxyURL, null);
 			if (url == null) {
