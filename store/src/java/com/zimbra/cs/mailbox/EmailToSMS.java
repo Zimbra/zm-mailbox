@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
@@ -68,10 +70,10 @@ public class EmailToSMS implements LmtpCallback {
 	private void sendEmailSMS(Message zMsg) throws ServiceException,MessagingException {
 		Address[] recipients = zMsg.getParsedMessage().getMimeMessage().getAllRecipients();
 		String sender = zMsg.getSender();
-		String subject = zMsg.getSubject();
+		String subject = "From: "+sender+"\nSubject: "+zMsg.getSubject();
 		MimeMessage mimeMsg =  zMsg.getMimeMessage(false);
 		Pair<String,String> fullTextMessage = getTextBody(mimeMsg, false);
-		String bodyMsg = fullTextMessage.getFirst();
+		String bodyMsg = "Message: "+fullTextMessage.getFirst();
 		Boolean isASCIIString = isPureAscii(bodyMsg);
 		String fullMessage = "";
 		if(isASCIIString) {
@@ -169,8 +171,14 @@ public class EmailToSMS implements LmtpCallback {
 		URL obj;
 
 		try {
+			ZimbraLog.mailbox.debug("SMS url %s, sender %s", url, sender);
 			obj = new URL(url);
 			HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+			ZimbraLog.mailbox.debug("SMS proxy host before configure : "+System.getProperty("http.proxyHost"));
+			ZimbraLog.mailbox.debug("SMS proxy port before configure : "+System.getProperty("http.proxyPort"));
+			configureProxy();
+			ZimbraLog.mailbox.debug("SMS proxy host after configure : "+System.getProperty("http.proxyHost"));
+			ZimbraLog.mailbox.debug("SMS proxy host after configure : "+System.getProperty("http.proxyPort"));
 			con.setRequestMethod("GET");
 			int respCode = con.getResponseCode();
 			if(respCode == 200)
@@ -182,6 +190,24 @@ public class EmailToSMS implements LmtpCallback {
 			ZimbraLog.mailbox.warn("Unable to send mobile notification MalformedURLException", e);
 		} catch (IOException e) {
 			ZimbraLog.mailbox.warn("Unable to send mobile notification IOException", e);
+		}
+	}
+
+	private static void configureProxy() {
+		try {
+			String url = Provisioning.getInstance().getLocalServer().getAttr(Provisioning.A_zimbraHttpProxyURL, null);
+			if (url == null) return;
+			URI sProxyUri = new URI(url);
+			ZimbraLog.mailbox.debug("SMS proxy host : "+sProxyUri.getHost());
+			ZimbraLog.mailbox.debug("SMS proxy port : "+sProxyUri.getPort());
+			System.getProperties().put("http.proxyHost", sProxyUri.getHost());
+			System.getProperties().put("http.proxyPort", String.valueOf(sProxyUri.getPort()));
+		} catch (ServiceException e) {
+			ZimbraLog.misc.warn("Unable to configureProxy ServiceException: "+e.getMessage(), e);
+		} catch (URISyntaxException e) {
+			ZimbraLog.misc.warn("Unable to configureProxy URISyntaxException : "+e.getMessage(), e);
+		} catch (Exception e) {
+			ZimbraLog.misc.warn("Unable to configureProxy: "+e.getMessage(), e);
 		}
 	}
 
