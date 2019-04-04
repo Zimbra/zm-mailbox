@@ -472,7 +472,7 @@ public class DefangFilter extends DefaultFilter {
             int endIndex = 0;
             int random = 0;
             SecureRandom r = new SecureRandom();
-            int range = 500;
+            int range = 200;
             random = r.nextInt(range) + range;
             for (int startIndex = 0; endIndex < value.length();) {
                 endIndex = startIndex + random;
