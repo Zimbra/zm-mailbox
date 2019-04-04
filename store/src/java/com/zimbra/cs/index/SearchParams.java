@@ -557,6 +557,11 @@ public final class SearchParams implements Cloneable, ZimbraSearchParams {
             params.setTypes(types);
         }
         params.setSortBy(soapParams.getSortBy());
+        if (query.toLowerCase().contains("is:unread") && isSortByReadFlag(SortBy.of(soapParams.getSortBy()))) {
+            params.setSortBy(SortBy.DATE_DESC);
+        } else {
+            params.setSortBy(soapParams.getSortBy());
+        }
         params.setIncludeTagDeleted(MoreObjects.firstNonNull(soapParams.getIncludeTagDeleted(), false));
         params.setIncludeTagMuted(MoreObjects.firstNonNull(soapParams.getIncludeTagMuted(), true));
         String allowableTasks = soapParams.getAllowableTaskStatus();
@@ -636,9 +641,6 @@ public final class SearchParams implements Cloneable, ZimbraSearchParams {
      * @return
      */
     public static boolean isSortByReadFlag(SortBy sortBy) {
-        if (sortBy == null) {
-            return false;
-        }
         return (sortBy.getKey() == SortBy.READ_ASC.getKey() 
             || sortBy.getKey() == SortBy.READ_DESC.getKey());
     }
@@ -769,8 +771,11 @@ public final class SearchParams implements Cloneable, ZimbraSearchParams {
                 throw ServiceException.INVALID_REQUEST("Invalid ID for " + MailConstants.E_CURSOR, null);
         }
         cursor.itemId = new ItemId(cursorInfo.getId(), acctId);
-        cursor.sortValue = cursorInfo.getSortVal(); // optional
-        cursor.endSortValue = cursorInfo.getEndSortVal(); // optional
+        if (!isSortByReadFlag(params.getSortBy())) {
+            cursor.sortValue = cursorInfo.getSortVal(); // optional
+            cursor.endSortValue = cursorInfo.getEndSortVal(); // optional
+        }
+       
         cursor.includeOffset = MoreObjects.firstNonNull(cursorInfo.getIncludeOffset(), false); // optional
     }
 

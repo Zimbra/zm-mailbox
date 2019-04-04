@@ -163,4 +163,10 @@ public class ZInternetHeaderTest {
         decodedHeader = ZInternetHeader.decode("=?us-ascii?Q?a b c?=");
         Assert.assertEquals("a b c", decodedHeader);
     }
+    
+    @Test
+    public void testMultilineZBUG536Subject() {
+        String decodedHeader = ZInternetHeader.decode(ZBUG536);
+        Assert.assertEquals("APAD - Stats APAD - Début et fin décision entre pour le mois de Juin 2018", decodedHeader);
+    }
 }

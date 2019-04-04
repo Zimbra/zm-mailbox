@@ -535,7 +535,7 @@ public class ZInternetHeader {
                     currElement.appendBody(content[pos]);
                 }
             } else if (currStat == SequenceType.EW) {
-                if ((content[pos] == ' ' || content[pos] == '\t') && !"us-ascii".equalsIgnoreCase(currElement.getCharset())) {
+                if ((content[pos] == ' ' || content[pos] == '\t') && !allowInvalidEncoding(currElement.getCharset())) {
                     return null;
                 } else if (encodeStat == EncodeSequenceState.TEXT && (pos < (end - 1)) && content[pos] == '?' && content[pos + 1] == '=' ) {
                     pos++;

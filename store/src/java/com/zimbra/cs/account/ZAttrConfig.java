@@ -9038,83 +9038,6 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * This attribute stores the captcha service API url to display and
-     * validate captcha
-     *
-     * @return zimbraCaptchaApiUrl, or null if unset
-     *
-     * @since ZCS 8.8.8
-     */
-    @ZAttr(id=5012)
-    public String getCaptchaApiUrl() {
-        return getAttr(Provisioning.A_zimbraCaptchaApiUrl, null, true);
-    }
-
-    /**
-     * This attribute stores the captcha service API url to display and
-     * validate captcha
-     *
-     * @param zimbraCaptchaApiUrl new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.8.8
-     */
-    @ZAttr(id=5012)
-    public void setCaptchaApiUrl(String zimbraCaptchaApiUrl) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraCaptchaApiUrl, zimbraCaptchaApiUrl);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * This attribute stores the captcha service API url to display and
-     * validate captcha
-     *
-     * @param zimbraCaptchaApiUrl new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.8.8
-     */
-    @ZAttr(id=5012)
-    public Map<String,Object> setCaptchaApiUrl(String zimbraCaptchaApiUrl, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraCaptchaApiUrl, zimbraCaptchaApiUrl);
-        return attrs;
-    }
-
-    /**
-     * This attribute stores the captcha service API url to display and
-     * validate captcha
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.8.8
-     */
-    @ZAttr(id=5012)
-    public void unsetCaptchaApiUrl() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraCaptchaApiUrl, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * This attribute stores the captcha service API url to display and
-     * validate captcha
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.8.8
-     */
-    @ZAttr(id=5012)
-    public Map<String,Object> unsetCaptchaApiUrl(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraCaptchaApiUrl, "");
-        return attrs;
-    }
-
-    /**
      * When creating self-signed SSL certs during an install, we also create
      * a local Certificate Authority (CA) to sign these SSL certs. This local
      * CA-s own cert is then added to different applications &quot;trusted
@@ -15347,78 +15270,6 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetDynamicBannerEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDynamicBannerEnabled, "");
-        return attrs;
-    }
-
-    /**
-     * This attribute stores the email templates service API url
-     *
-     * @return zimbraEmailTemplateApiUrl, or null if unset
-     *
-     * @since ZCS 8.8.8
-     */
-    @ZAttr(id=5014)
-    public String getEmailTemplateApiUrl() {
-        return getAttr(Provisioning.A_zimbraEmailTemplateApiUrl, null, true);
-    }
-
-    /**
-     * This attribute stores the email templates service API url
-     *
-     * @param zimbraEmailTemplateApiUrl new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.8.8
-     */
-    @ZAttr(id=5014)
-    public void setEmailTemplateApiUrl(String zimbraEmailTemplateApiUrl) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraEmailTemplateApiUrl, zimbraEmailTemplateApiUrl);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * This attribute stores the email templates service API url
-     *
-     * @param zimbraEmailTemplateApiUrl new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.8.8
-     */
-    @ZAttr(id=5014)
-    public Map<String,Object> setEmailTemplateApiUrl(String zimbraEmailTemplateApiUrl, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraEmailTemplateApiUrl, zimbraEmailTemplateApiUrl);
-        return attrs;
-    }
-
-    /**
-     * This attribute stores the email templates service API url
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.8.8
-     */
-    @ZAttr(id=5014)
-    public void unsetEmailTemplateApiUrl() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraEmailTemplateApiUrl, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * This attribute stores the email templates service API url
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.8.8
-     */
-    @ZAttr(id=5014)
-    public Map<String,Object> unsetEmailTemplateApiUrl(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraEmailTemplateApiUrl, "");
         return attrs;
     }
 
@@ -65137,7 +64988,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * This attribute is used to store the SMS API username
+     * This attribute is used to store the SMS API url
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -65151,7 +65002,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * This attribute is used to store the SMS API username
+     * This attribute is used to store the SMS API url
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -65209,7 +65060,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * This attribute is used to store the SMS API url
+     * This attribute is used to store the SMS API username
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -65223,7 +65074,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * This attribute is used to store the SMS API url
+     * This attribute is used to store the SMS API username
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
