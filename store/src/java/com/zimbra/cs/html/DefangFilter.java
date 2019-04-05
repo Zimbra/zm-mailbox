@@ -465,10 +465,14 @@ public class DefangFilter extends DefaultFilter {
         DebugConfig.defangStyleUnwantedImport, Pattern.CASE_INSENSITIVE);
     private static final Pattern STYLE_UNWANTED_STRG_PATTERN = Pattern.compile(
         DebugConfig.defangStyleUnwantedStrgPattern, Pattern.CASE_INSENSITIVE);
-    
+
     private static String sanitizeStyleValue(String value) {
         String sanitizedValue = "";
-        if (value.length() < DebugConfig.defangStyleValueLimit) {
+        if (value.length() > DebugConfig.defangStyleValueLimit) {
+            ZimbraLog.mailbox.info("style value is too long:%d characters. Removing it.", value.length());
+            sanitizedValue = "";
+
+            StringBuffer data = new StringBuffer();
             int endIndex = 0;
             int random = 0;
             SecureRandom r = new SecureRandom();
@@ -496,19 +500,17 @@ public class DefangFilter extends DefaultFilter {
                 }
                 matcher.appendTail(stringBuffer);
                 valuePart = stringBuffer.toString();
-                sanitizedValue = sanitizedValue + valuePart;
+                data.append(valuePart);
                 random = r.nextInt(range) + range;
                 startIndex = endIndex;
             }
-            // remove comments
-            sanitizedValue = STYLE_UNWANTED_STRG_PATTERN.matcher(sanitizedValue).replaceAll("");
-            sanitizedValue = COMMENT.matcher(sanitizedValue).replaceAll("");
-            // strip off any @import
-            sanitizedValue = STYLE_UNWANTED_IMPORT.matcher(sanitizedValue).replaceAll("");
-        } else {
-            ZimbraLog.mailbox.info("style value is too long:%d characters. Removing it.", value.length());
-            sanitizedValue = "";
+            sanitizedValue = data.toString();
+
         }
+        sanitizedValue = STYLE_UNWANTED_STRG_PATTERN.matcher(sanitizedValue).replaceAll("");
+        sanitizedValue = COMMENT.matcher(sanitizedValue).replaceAll("");
+        // strip off any @import
+        sanitizedValue = STYLE_UNWANTED_IMPORT.matcher(sanitizedValue).replaceAll("");
         return sanitizedValue;
     }
 
