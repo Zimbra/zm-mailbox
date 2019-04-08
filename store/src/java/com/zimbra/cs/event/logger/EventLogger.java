@@ -12,6 +12,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
@@ -128,7 +129,11 @@ public class EventLogger {
     }
 
     public void startupEventNotifierExecutor() throws ServiceException {
-        if (executorServiceRunning.get()) {
+        if (!isEnabled()) {
+            ZimbraLog.event.info("Event logging is disabled");
+            return;
+        }
+        else if (executorServiceRunning.get()) {
             ZimbraLog.event.info("Event logger executor service already running...");
             return;
         }
@@ -202,13 +207,13 @@ public class EventLogger {
         @Override
         public void run() {
         	try {
-                while (!shutdownExecutor.get()) { 
+                while (!shutdownExecutor.get()) {
                     Event event = eventQueue.poll(POLL_TIMEOUT, TimeUnit.SECONDS);
                     if (event != null) {
                          notifyEventLogHandlers(event);
                     }
                 }
-                
+
                 if (drainQueueBeforeShutdown.get()) {
                 	drainQueue();
                 }
@@ -310,5 +315,9 @@ public class EventLogger {
 
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
+    }
+
+    public boolean isEnabled() {
+        return enabled && !LC.disable_all_event_logging.booleanValue();
     }
 }

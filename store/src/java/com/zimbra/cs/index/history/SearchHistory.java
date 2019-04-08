@@ -3,6 +3,7 @@ package com.zimbra.cs.index.history;
 import java.util.List;
 
 import com.google.common.base.Strings;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -83,7 +84,7 @@ public abstract class SearchHistory {
      * Returns whether search history is enabled for the specified account
      */
     public static boolean featureEnabled(Account acct) throws ServiceException {
-        return acct.isFeatureSearchHistoryEnabled();
+        return !LC.disable_all_search_history.booleanValue() && acct.isFeatureSearchHistoryEnabled();
     }
 
     /**

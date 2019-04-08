@@ -1331,6 +1331,12 @@ public final class LC {
     @Supported
     public static final KnownKey folder_tag_cache_lock_timeout_seconds = KnownKey.newKey(10);
 
+    @Supported
+    public static final KnownKey disable_all_event_logging = KnownKey.newKey(true);
+
+    @Supported
+    public static final KnownKey disable_all_search_history = KnownKey.newKey(true);
+
     public enum PUBLIC_SHARE_VISIBILITY { samePrimaryDomain, all, none };
 
     /**

@@ -43,6 +43,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.event.logger.EventLogger;
 import com.zimbra.cs.index.ConversationHit;
 import com.zimbra.cs.index.MessageHit;
 import com.zimbra.cs.index.QueryInfo;
@@ -255,7 +256,7 @@ public class Search extends MailDocumentHandler  {
      *  longer than necessary */
     private void flagMessagesAsSeen(OperationContext octxt, Mailbox mbox, List<Message> msgs)
             throws ServiceException {
-        if (msgs.isEmpty()) {
+        if (msgs.isEmpty() || !EventLogger.getEventLogger().isEnabled()) {
             return;
         }
         new Thread(new Runnable() {

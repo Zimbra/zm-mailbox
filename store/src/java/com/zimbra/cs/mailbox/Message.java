@@ -1401,7 +1401,7 @@ public class Message extends MailItem implements Classifiable {
         // tell the tags about the new read/unread item
         updateTagUnread(delta, deletedDelta);
 
-        if (delta < 0) {
+        if (delta < 0 && EventLogger.getEventLogger().isEnabled()) {
             // log a READ event if this is the first time the message is being marked as unread
             mMailbox.advanceMessageEventFlag(this, EventFlag.read);
         }
@@ -1713,7 +1713,8 @@ public class Message extends MailItem implements Classifiable {
     @Override
     void alterTag(Tag tag, boolean add) throws ServiceException {
         if (add && (tag instanceof Flag)
-                && ((Flag) tag).toBitmask() == FlagInfo.REPLIED.toBitmask()) {
+                && ((Flag) tag).toBitmask() == FlagInfo.REPLIED.toBitmask()
+                && EventLogger.getEventLogger().isEnabled()) {
             mMailbox.advanceMessageEventFlag(this, EventFlag.replied);
         }
         super.alterTag(tag, add);

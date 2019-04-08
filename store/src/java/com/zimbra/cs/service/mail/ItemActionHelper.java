@@ -58,6 +58,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.event.logger.EventLogger;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.CalendarItem;
@@ -71,10 +72,10 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
 import com.zimbra.cs.mailbox.MailItem.Type;
-import com.zimbra.cs.mailbox.Message.EventFlag;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.Message.EventFlag;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.Invite;
@@ -564,6 +565,9 @@ public class ItemActionHelper {
                 Mailbox mbox = getMailbox();
                 if (type != Type.MESSAGE) {
                     throw ServiceException.INVALID_REQUEST("SEEN operation can only be performed on Messages", null);
+                }
+                if (!EventLogger.getEventLogger().isEnabled()) {
+                    throw ServiceException.INVALID_REQUEST("event logging is not enabled", null);
                 }
                 MailItem[] items = mbox.getItemById(getOpCtxt(), ids, type);
                 List<Message> msgs = new ArrayList<>(items.length);

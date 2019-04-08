@@ -9693,6 +9693,9 @@ public class Mailbox implements MailboxStore {
     }
 
     public void markMsgSeen(OperationContext octxt, Message msg) throws ServiceException {
+        if (!EventLogger.getEventLogger().isEnabled()) {
+            return;
+        }
         advanceMessageEventFlags(octxt, ImmutableList.of(msg), EventFlag.seen);
     }
 
@@ -9791,9 +9794,12 @@ public class Mailbox implements MailboxStore {
 
         @Override
         public void execute(Message msg, MessageCallbackContext ctxt) {
-            long timestamp = ctxt.getTimestamp() == null ? System.currentTimeMillis() : ctxt.getTimestamp();
-            List<Event> events = Event.generateSentEvents(msg, timestamp);
-            EventLogger.getEventLogger().log(events);
+            EventLogger eventLogger = EventLogger.getEventLogger();
+            if (eventLogger.isEnabled()) {
+                long timestamp = ctxt.getTimestamp() == null ? System.currentTimeMillis() : ctxt.getTimestamp();
+                List<Event> events = Event.generateSentEvents(msg, timestamp);
+                eventLogger.log(events);
+            }
         }
     }
 
@@ -9807,13 +9813,15 @@ public class Mailbox implements MailboxStore {
             } else {
                 long timestamp = ctxt.getTimestamp() == null ? System.currentTimeMillis() : ctxt.getTimestamp();
                 EventLogger logger = EventLogger.getEventLogger();
-                logger.log(Event.generateReceivedEvent(msg, recipient, timestamp));
-                try {
-                    if (getAccount().isContactAffinityEventLoggingEnabled()) {
-                        logger.log(Event.generateAffinityEvents(msg, recipient, timestamp));
+                if (logger.isEnabled()) {
+                    logger.log(Event.generateReceivedEvent(msg, recipient, timestamp));
+                    try {
+                        if (getAccount().isContactAffinityEventLoggingEnabled()) {
+                            logger.log(Event.generateAffinityEvents(msg, recipient, timestamp));
+                        }
+                    } catch (ServiceException e) {
+                        ZimbraLog.event.error("unable to determine whether AFFINITY event logging is enabled", e);
                     }
-                } catch (ServiceException e) {
-                    ZimbraLog.event.error("unable to determine whether AFFINITY event logging is enabled", e);
                 }
             }
             try {
