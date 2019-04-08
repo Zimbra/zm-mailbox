@@ -6254,6 +6254,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             setLdapPassword(acct, null, newPassword);
             // modify the password
             modifyAttrs(acct, attrs);
+            ZimbraLog.account.info("password changed for %s", acct.getName());
         } catch(ServiceException se){
             ChangePasswordListener.invokeOnException(acct, newPassword, ctxts, se);
             throw se;
