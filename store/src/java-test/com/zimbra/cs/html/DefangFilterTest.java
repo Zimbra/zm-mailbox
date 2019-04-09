@@ -42,6 +42,7 @@ import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.service.mail.ToXML;
 import com.zimbra.cs.servlet.ZThreadLocal;
 import com.zimbra.soap.RequestContext;
 
@@ -55,9 +56,10 @@ public class DefangFilterTest {
     private static String EMAIL_BASE_DIR = "data/unittest/email/";
     @BeforeClass
     public static void init() throws Exception {
-        MailboxTestUtil.initServer("store/");
-        EMAIL_BASE_DIR = MailboxTestUtil.getZimbraServerDir("store/") + EMAIL_BASE_DIR;
+        MailboxTestUtil.initServer();
+        EMAIL_BASE_DIR = MailboxTestUtil.getZimbraServerDir("") + EMAIL_BASE_DIR;
         Provisioning prov = Provisioning.getInstance();
+        prov.getConfig().setUseOwaspHtmlSanitizer(false);
         Account acct = prov.createAccount("test@in.telligent.com", "secret", new HashMap<String, Object>());
     }
 
@@ -1464,10 +1466,25 @@ public class DefangFilterTest {
      */
     @Test
     public void testzbug736Mime1() throws Exception {
+        Provisioning.getInstance().getConfig().setUseOwaspHtmlSanitizer(false);
         String fileName = "zbug736_2.txt";
         InputStream htmlStream = getHtmlBody(fileName);
         String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
             true);
         Assert.assertTrue(result != null);
+    }
+
+    /**
+     * Checking zimbraUseOwaspHtmlSanitizer is true
+     * @throws Exception
+     */
+    @Test
+    public void testzcs6871OwaspDefanger() throws Exception {
+        BrowserDefang defanger2 = DefangFactory.getDefanger(null);
+        Assert.assertFalse(defanger2 instanceof OwaspHtmlSanitizer);
+
+        Provisioning.getInstance().getConfig().setUseOwaspHtmlSanitizer(true);
+        BrowserDefang defanger = DefangFactory.getDefanger(null);
+        Assert.assertTrue(defanger instanceof OwaspHtmlSanitizer);
     }
 }
