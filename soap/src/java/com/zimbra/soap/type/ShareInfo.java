@@ -199,7 +199,6 @@ public class ShareInfo {
         this.granteeId = granteeId;
     }
 
-    @GraphQLNonNull
     @GraphQLQuery(name=GqlConstants.RIGHTS, description="rights")
     public String getGranteeId() { return granteeId; }
 
@@ -207,7 +206,6 @@ public class ShareInfo {
         this.granteeName = granteeName;
     }
 
-    @GraphQLNonNull
     @GraphQLQuery(name=GqlConstants.GRNATEE_NAME, description="grantee name")
     public String getGranteeName() { return granteeName; }
 
