@@ -41,6 +41,7 @@ import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.service.mail.ToXML;
 import com.zimbra.cs.servlet.ZThreadLocal;
 import com.zimbra.soap.RequestContext;
 
@@ -57,6 +58,7 @@ public class DefangFilterTest {
         MailboxTestUtil.initServer();
         EMAIL_BASE_DIR = MailboxTestUtil.getZimbraServerDir("") + EMAIL_BASE_DIR;
         Provisioning prov = Provisioning.getInstance();
+        prov.getConfig().setUseOwaspHtmlSanitizer(false);
         Account acct = prov.createAccount("test@in.telligent.com", "secret", new HashMap<String, Object>());
     }
 
@@ -1429,6 +1431,50 @@ public class DefangFilterTest {
         String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
             true);
         Assert.assertTrue(!result.contains("'''''"));
-        
+    }
+
+    /**
+     * Check alert is removed from script.
+     */
+    @Test
+    public void testZCS5696() throws Exception {
+        String html = "<textarea></textarea/><body/oNloAd=alert('bug109020-2')>bug109020-2";
+        InputStream htmlStream = new ByteArrayInputStream(html.getBytes());
+        String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+            true);
+        Assert.assertTrue(!result.contains("alert"));
+
+        html = "<textarea></textarea/><body/oNloAd=javascript:alert('bug109020-2')>bug109020-2";
+        htmlStream = new ByteArrayInputStream(html.getBytes());
+        result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
+        Assert.assertTrue(!result.contains("alert"));
+    }
+
+    /**
+     * Checking mime which were causing high CPU utilization
+     * @throws Exception
+     */
+    @Test
+    public void testzbug736Mime1() throws Exception {
+        Provisioning.getInstance().getConfig().setUseOwaspHtmlSanitizer(false);
+        String fileName = "zbug736_2.txt";
+        InputStream htmlStream = getHtmlBody(fileName);
+        String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+            true);
+        Assert.assertTrue(result != null);
+    }
+
+    /**
+     * Checking zimbraUseOwaspHtmlSanitizer is true
+     * @throws Exception
+     */
+    @Test
+    public void testzcs6871OwaspDefanger() throws Exception {
+        BrowserDefang defanger2 = DefangFactory.getDefanger(null);
+        Assert.assertFalse(defanger2 instanceof OwaspHtmlSanitizer);
+
+        Provisioning.getInstance().getConfig().setUseOwaspHtmlSanitizer(true);
+        BrowserDefang defanger = DefangFactory.getDefanger(null);
+        Assert.assertTrue(defanger instanceof OwaspHtmlSanitizer);
     }
 }

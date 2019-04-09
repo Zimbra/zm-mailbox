@@ -73773,6 +73773,78 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * If true, use owasp html sanitizer else use neko html defanger
+     *
+     * @return zimbraUseOwaspHtmlSanitizer, or true if unset
+     *
+     * @since ZCS 8.8.12
+     */
+    @ZAttr(id=3077)
+    public boolean isUseOwaspHtmlSanitizer() {
+        return getBooleanAttr(Provisioning.A_zimbraUseOwaspHtmlSanitizer, true, true);
+    }
+
+    /**
+     * If true, use owasp html sanitizer else use neko html defanger
+     *
+     * @param zimbraUseOwaspHtmlSanitizer new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.12
+     */
+    @ZAttr(id=3077)
+    public void setUseOwaspHtmlSanitizer(boolean zimbraUseOwaspHtmlSanitizer) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUseOwaspHtmlSanitizer, zimbraUseOwaspHtmlSanitizer ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * If true, use owasp html sanitizer else use neko html defanger
+     *
+     * @param zimbraUseOwaspHtmlSanitizer new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.12
+     */
+    @ZAttr(id=3077)
+    public Map<String,Object> setUseOwaspHtmlSanitizer(boolean zimbraUseOwaspHtmlSanitizer, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUseOwaspHtmlSanitizer, zimbraUseOwaspHtmlSanitizer ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * If true, use owasp html sanitizer else use neko html defanger
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.12
+     */
+    @ZAttr(id=3077)
+    public void unsetUseOwaspHtmlSanitizer() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUseOwaspHtmlSanitizer, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * If true, use owasp html sanitizer else use neko html defanger
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.12
+     */
+    @ZAttr(id=3077)
+    public Map<String,Object> unsetUseOwaspHtmlSanitizer(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUseOwaspHtmlSanitizer, "");
+        return attrs;
+    }
+
+    /**
      * Time interval after which Zimbra version check detects a new version.
      * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
      * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,

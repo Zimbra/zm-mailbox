@@ -17129,6 +17129,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraUCVoicemailURL = "zimbraUCVoicemailURL";
 
     /**
+     * If true, use owasp html sanitizer else use neko html defanger
+     *
+     * @since ZCS 8.8.12
+     */
+    @ZAttr(id=3077)
+    public static final String A_zimbraUseOwaspHtmlSanitizer = "zimbraUseOwaspHtmlSanitizer";
+
+    /**
      * whether end-user services on SOAP and LMTP interfaces are enabled
      */
     @ZAttr(id=146)

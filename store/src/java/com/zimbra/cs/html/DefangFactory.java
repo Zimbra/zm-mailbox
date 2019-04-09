@@ -17,6 +17,8 @@
 package com.zimbra.cs.html;
 
 import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.account.Provisioning;
 
 /**
  * This factory is used to determine the proper defanger based on content type for
@@ -35,12 +37,17 @@ public class DefangFactory {
      * The xml defanger, used for xhtml and svg 
      */
     private static XHtmlDefang xhtmlDefang = new XHtmlDefang();
-    
+
     /**
      * This defanger does nothing. Here for
      * backwards compatibility
      */
     private static NoopDefang noopDefang = new NoopDefang();
+
+    /**
+     * This defanger is used for OWASP
+     */
+    private static OwaspHtmlSanitizer owaspDefang = new OwaspHtmlSanitizer();
     
     /**
      * 
@@ -48,6 +55,16 @@ public class DefangFactory {
      * @return
      */
     public static BrowserDefang getDefanger(String contentType){
+        try {
+            boolean isOwasp = Provisioning.getInstance().getConfig().getBooleanAttr(Provisioning.A_zimbraUseOwaspHtmlSanitizer, Boolean.TRUE);
+            if (isOwasp) {
+                return owaspDefang;
+            }
+        } catch (ServiceException e) {
+            // in case of exception, return noopDefang
+            return noopDefang;
+        }
+
         if(contentType == null) {
             return noopDefang;
         }
