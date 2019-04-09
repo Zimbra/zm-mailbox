@@ -251,9 +251,11 @@ public class GqlConstants {
     public static final String CLASS_MODIFY_CONTACT_GROUP_MEMBER = "ModifyContactGroupMember";
     public static final String CLASS_MODIFY_CONTACT_ATTRIBUTE = "ModifyContactAttribute";
     public static final String CLASS_MODIFY_CONTACT_SPEC = "ModifyContactSpec";
-    public static final String CLASS_CONTACT_GROUP_MEMBER = "ContactGroupMember";
+    public static final String CLASS_ACCOUNT_CONTACT_GROUP_MEMBER = "AccountContactGroupMember";
+    public static final String CLASS_MAIL_CONTACT_GROUP_MEMBER = "MailContactGroupMember";
     public static final String CLASS_CONTACT_ATTRIBUTE = "ContactAttribute";
-    public static final String CLASS_CONTACT_INFO = "ContactInfo";
+    public static final String CLASS_ACCOUNT_CONTACT_INFO = "AccountContactInfo";
+    public static final String CLASS_MAIL_CONTACT_INFO = "MailContactInfo";
     public static final String CLASS_ACTION_RESULT = "ActionResult";
     public static final String CLASS_NEW_CONTACT_GROUP_MEMBER = "NewContactGroupMember";
     public static final String CLASS_VCARD_INFO = "VCardInfo";

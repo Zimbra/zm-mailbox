@@ -43,7 +43,7 @@ import io.leangen.graphql.annotations.GraphQLQuery;
 import io.leangen.graphql.annotations.types.GraphQLType;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@GraphQLType(name=GqlConstants.CLASS_CONTACT_INFO, description="Contact information")
+@GraphQLType(name=GqlConstants.CLASS_ACCOUNT_CONTACT_INFO, description="Contact information")
 public class ContactInfo
 implements ContactInterface {
 
