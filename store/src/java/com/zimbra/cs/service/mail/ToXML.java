@@ -106,6 +106,7 @@ import com.zimbra.cs.html.BrowserDefang;
 import com.zimbra.cs.html.DefangFactory;
 import com.zimbra.cs.html.DefangFilter;
 import com.zimbra.cs.html.HtmlDefang;
+import com.zimbra.cs.html.OwaspDefang;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SearchParams.ExpandResults;
@@ -2295,7 +2296,7 @@ public final class ToXML {
                     descElem.setText(desc);
                 }
                 String descHtml = invite.getDescriptionHtml();
-                BrowserDefang defanger = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML);
+                BrowserDefang defanger = new OwaspDefang();
                 if (descHtml != null) {
                     try {
                         descHtml = StringUtil.stripControlCharacters(descHtml);
@@ -2854,21 +2855,38 @@ throws ServiceException {
                 if (charset != null && !charset.trim().isEmpty()) {
                     // make sure to feed getTextReader() a full Content-Type header, not just the primary/subtype portion
                     reader = Mime.getTextReader(stream, mp.getContentType(), defaultCharset);
-                    BrowserDefang defanger = DefangFactory.getDefanger(mp.getContentType());
+                    BrowserDefang defanger;
+                    if (mp.getContentType().toLowerCase().startsWith(MimeConstants.CT_TEXT_HTML)) {
+                        defanger = new OwaspDefang();
+                    } else {
+                        defanger = DefangFactory.getDefanger(mp.getContentType());
+                    }
                     defanger.defang(reader, neuter, out);
                     data = sw.toString();
                 } else {
                     String cte = mp.getEncoding();
                     if (cte != null && !cte.trim().toLowerCase().equals(MimeConstants.ET_7BIT)) {
                         try {
-                            DefangFactory.getDefanger(ctype).defang(stream, neuter, out);
+                            BrowserDefang defanger;
+                            if (ctype.toLowerCase().startsWith(MimeConstants.CT_TEXT_HTML)) {
+                                defanger = new OwaspDefang();
+                            } else {
+                                defanger = DefangFactory.getDefanger(mp.getContentType());
+                            }
+                            defanger.defang(stream, neuter, out);
                             data = sw.toString();
                         } catch (IOException e) {
                         }
                     }
                     if (data == null) {
                         reader = Mime.getTextReader(stream, mp.getContentType(), defaultCharset);
-                        DefangFactory.getDefanger(ctype).defang(reader, neuter, out);
+                        BrowserDefang defanger;
+                        if (ctype.toLowerCase().startsWith(MimeConstants.CT_TEXT_HTML)) {
+                            defanger = new OwaspDefang();
+                        } else {
+                            defanger = DefangFactory.getDefanger(mp.getContentType());
+                        }
+                        defanger.defang(reader, neuter, out);
                         data = sw.toString();
                     }
                 }
