@@ -38,6 +38,10 @@ public class InMemoryEventLogHandlerTest {
 
         EventLogger eventLogger = EventLogger.getEventLogger(mockConfigProvider);
         Event event = new Event("InMemoryEventLoggerTestAccountId", Event.EventType.SENT, System.currentTimeMillis());
+        if (!eventLogger.isEnabled()) {
+            // By default we're not enabling event logger so no need to test
+            return;
+        }
         eventLogger.log(event);
 
         eventLogger.startupEventNotifierExecutor();
