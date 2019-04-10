@@ -1470,11 +1470,11 @@ public class DefangFilterTest {
      */
     @Test
     public void testzcs6871OwaspDefanger() throws Exception {
-        BrowserDefang defanger2 = DefangFactory.getDefanger(null);
+        BrowserDefang defanger2 = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML);
         Assert.assertFalse(defanger2 instanceof OwaspHtmlSanitizer);
 
         Provisioning.getInstance().getConfig().setUseOwaspHtmlSanitizer(true);
-        BrowserDefang defanger = DefangFactory.getDefanger(null);
+        BrowserDefang defanger = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML);
         Assert.assertTrue(defanger instanceof OwaspHtmlSanitizer);
     }
 }
