@@ -579,8 +579,7 @@ public final class LC {
             " -XX:SoftRefLRUPolicyMSPerMB=1" +
             " -XX:-OmitStackTraceInFastThrow" +
             " -verbose:gc" +
-            " -Xlog:gc*=debug,safepoint=info:file=/opt/zimbra/log/gc.log:time:filecount=20,filesize=10m" +
-            " --module-path /opt/zimbra/jetty/common/endorsed");
+            " -Xlog:gc*=debug,safepoint=info:file=/opt/zimbra/log/gc.log:time:filecount=20,filesize=10m");
     @Supported
     public static final KnownKey mailboxd_pidfile = KnownKey.newKey("${zimbra_log_directory}/mailboxd.pid");
 
