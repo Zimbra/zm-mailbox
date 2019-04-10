@@ -1,4 +1,4 @@
- /*
+	 /*
   * ***** BEGIN LICENSE BLOCK *****
   * Zimbra Collaboration Suite Server
   * Copyright (C) 2011, 2012, 2013, 2014, 2015, 2016, 2017 Synacor, Inc.
@@ -1458,5 +1458,19 @@ public class DefangFilterTest {
         String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
             true);
         Assert.assertTrue(result != null);
+    }
+
+    /**
+     * Checking zimbraUseOwaspHtmlSanitizer is true
+     * @throws Exception
+     */
+    @Test
+    public void testzcs6871OwaspDefanger() throws Exception {
+        BrowserDefang defanger2 = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML);
+        Assert.assertFalse(defanger2 instanceof OwaspHtmlSanitizer);
+
+        Provisioning.getInstance().getConfig().setUseOwaspHtmlSanitizer(true);
+        BrowserDefang defanger = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML);
+        Assert.assertTrue(defanger instanceof OwaspHtmlSanitizer);
     }
 }
