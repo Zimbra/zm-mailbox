@@ -587,12 +587,9 @@ public final class LC {
             " -Dorg.apache.jasper.compiler.disablejsr199=true" +
             " -XX:+UseG1GC" +
             " -XX:SoftRefLRUPolicyMSPerMB=1" +
-            " -XX:+UnlockExperimentalVMOptions" +
-            " -XX:G1NewSizePercent=15" +
-            " -XX:G1MaxNewSizePercent=45" +
             " -XX:-OmitStackTraceInFastThrow" +
             " -verbose:gc" +
-            " -Xlog:gc*=info,safepoint=info:file=/opt/zimbra/log/gc.log:time:filecount=20,filesize=10m");
+            " -Xlog:gc*=debug,safepoint=info:file=/opt/zimbra/log/gc.log:time:filecount=20,filesize=10m");
     @Supported
     public static final KnownKey mailboxd_pidfile = KnownKey.newKey("${zimbra_log_directory}/mailboxd.pid");
 
