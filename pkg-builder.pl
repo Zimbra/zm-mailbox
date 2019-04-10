@@ -75,8 +75,8 @@ sub git_timestamp_from_dirs($)
 my %PKG_GRAPH = (
    "zimbra-mbox-service" => {
       summary   => "Zimbra Mailbox Service",
-      version   => "2.0.0",
-      revision  => 1,
+      version   => "$version",
+      revision  => $revision,
       hard_deps => [
          "zimbra-mbox-war",
          "zimbra-mbox-conf",
@@ -98,8 +98,8 @@ my %PKG_GRAPH = (
 
    "zimbra-mbox-war" => {
       summary    => "Zimbra Mailbox Service War",
-      version    => "2.0.0",
-      revision   => 1,
+      version    => "$version",
+      revision   => $revision,
       hard_deps  => [],
       soft_deps  => [],
       other_deps => ["zimbra-store-components"],
@@ -110,8 +110,8 @@ my %PKG_GRAPH = (
 
    "zimbra-mbox-conf" => {
       summary    => "Zimbra Mailbox Service Configuration",
-      version    => "2.0.0",
-      revision   => 1,
+      version    => "$version",
+      revision   => $revision,
       hard_deps  => [],
       soft_deps  => [],
       other_deps => ["zimbra-store-components"],
@@ -122,8 +122,8 @@ my %PKG_GRAPH = (
 
    "zimbra-common-mbox-conf" => {
       summary    => "Zimbra Core Mailbox Configuration",
-      version    => "2.0.0",
-      revision   => 1,
+      version    => "$version",
+      revision   => $revision,
       hard_deps  => [],
       soft_deps  => [],
       other_deps => ["zimbra-core-components"],
@@ -134,8 +134,8 @@ my %PKG_GRAPH = (
 
    "zimbra-common-mbox-db" => {
       summary    => "Zimbra Core Mailbox DB Files",
-      version    => "2.0.0",
-      revision   => 1,
+      version    => "$version",
+      revision   => $revision,
       hard_deps  => [],
       soft_deps  => [],
       other_deps => ["zimbra-core-components"],
@@ -146,8 +146,8 @@ my %PKG_GRAPH = (
 
    "zimbra-common-mbox-native-lib" => {
       summary    => "Zimbra Core Mailbox Native Libs",
-      version    => "2.0.0",
-      revision   => 1,
+      version    => "$version",
+      revision   => $revision,
       hard_deps  => [],
       soft_deps  => [],
       other_deps => ["zimbra-core-components"],
@@ -158,8 +158,8 @@ my %PKG_GRAPH = (
 
    "zimbra-common-mbox-conf-msgs" => {
       summary    => "Zimbra Core Mailbox Message Locale Files",
-      version    => "2.0.0",
-      revision   => 1,
+      version    => "$version",
+      revision   => $revision,
       hard_deps  => [],
       soft_deps  => [],
       other_deps => ["zimbra-core-components"],
@@ -170,8 +170,8 @@ my %PKG_GRAPH = (
 
    "zimbra-common-mbox-conf-rights" => {
       summary    => "Zimbra Core Mailbox Rights Configuration",
-      version    => "2.0.0",
-      revision   => 1,
+      version    => "$version",
+      revision   => $revision,
       hard_deps  => [],
       soft_deps  => [],
       other_deps => ["zimbra-core-components"],
@@ -182,8 +182,8 @@ my %PKG_GRAPH = (
 
    "zimbra-common-mbox-conf-attrs" => {
       summary    => "Zimbra Core Mailbox Attributes Configuration",
-      version    => "2.0.0",
-      revision   => 1,
+      version    => "$version",
+      revision   => $revision,
       hard_deps  => [],
       soft_deps  => [],
       other_deps => ["zimbra-core-components"],
@@ -194,8 +194,8 @@ my %PKG_GRAPH = (
 
    "zimbra-common-mbox-docs" => {
       summary    => "Zimbra Core Mailbox Docs",
-      version    => "2.0.0",
-      revision   => 1,
+      version    => "$version",
+      revision   => $revision,
       hard_deps  => [],
       soft_deps  => [],
       other_deps => ["zimbra-core-components"],
@@ -206,8 +206,8 @@ my %PKG_GRAPH = (
 
    "zimbra-common-core-jar" => {
       summary    => "Zimbra Core Jars",
-      version    => "2.0.0",
-      revision   => 1,
+      version    => "$version",
+      revision   => $revision,
       hard_deps  => [],
       soft_deps  => [],
       other_deps => ["zimbra-core-components"],
