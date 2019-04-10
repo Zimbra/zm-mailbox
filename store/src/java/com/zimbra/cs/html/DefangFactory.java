@@ -18,6 +18,7 @@ package com.zimbra.cs.html;
 
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 
 /**
@@ -29,7 +30,7 @@ import com.zimbra.cs.account.Provisioning;
  */
 public class DefangFactory {
     /**
-     * The instance of the html defanger 
+     * The instance of the neko html defanger 
      */
     private static HtmlDefang htmlDefang = new HtmlDefang();
     
@@ -45,30 +46,30 @@ public class DefangFactory {
     private static NoopDefang noopDefang = new NoopDefang();
 
     /**
-     * This defanger is used for OWASP
+     * The instance of the owasp html defanger
      */
-    private static OwaspHtmlSanitizer owaspDefang = new OwaspHtmlSanitizer();
+    private static OwaspDefang owaspDefang = new OwaspDefang();
     
     /**
+     * if content type is null, returns noopDefang which does nothing
      * 
      * @param contentType
      * @return
      */
     public static BrowserDefang getDefanger(String contentType){
-        try {
-            boolean isOwasp = Provisioning.getInstance().getConfig().getBooleanAttr(Provisioning.A_zimbraUseOwaspHtmlSanitizer, Boolean.TRUE);
-            if (isOwasp) {
-                return owaspDefang;
-            }
-        } catch (ServiceException e) {
-            // in case of exception, return noopDefang
-            return noopDefang;
-        }
-
         if(contentType == null) {
             return noopDefang;
         }
         String contentTypeLowerCase = contentType.toLowerCase();
+        try {
+            boolean isOwaspEnabled = Provisioning.getInstance().getConfig()
+                .getBooleanAttr(Provisioning.A_zimbraUseOwaspHtmlSanitizer, Boolean.TRUE);
+            if (contentTypeLowerCase.startsWith(MimeConstants.CT_TEXT_HTML) && isOwaspEnabled) {
+                return owaspDefang;
+            }
+        } catch (ServiceException e) {
+            ZimbraLog.soap.debug("Error reading attribute zimbraUseOwaspHtmlSanitizer", e);
+        }
         if (contentTypeLowerCase.startsWith(MimeConstants.CT_TEXT_HTML) ||
             contentTypeLowerCase.startsWith(MimeConstants.CT_APPLICATION_ZIMBRA_DOC) ||
             contentTypeLowerCase.startsWith(MimeConstants.CT_APPLICATION_ZIMBRA_SLIDES) ||
