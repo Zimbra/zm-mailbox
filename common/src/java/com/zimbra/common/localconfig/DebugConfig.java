@@ -322,16 +322,36 @@ public final class DebugConfig {
     public static int invalidPasswordCacheExpirationInMinutes =
         value("debug_invalid_password_cache_expiration_in_minutes", 2880);
 
-    private static boolean value(String key, boolean defaultValue) {
-        String value = LC.get(key);
-        return value.isEmpty() ? defaultValue : Boolean.parseBoolean(value);
-    }
+    /**
+     * "profile_image_max_size" maximum image size allowed for account profile.
+     */
+    public static final int profileImageMaxSize = value ("profile_image_max_size", 2*1024*1024);
+
+    /**
+     * "profile_thumbnail_image_dimension" profile ldap thumbnail image dimesion.
+     */
+    public static final int profileThumbnailImageDimension = value ("profile_thumbnail_image_dimension", 50);
 
     /**
      * "restricted_server_ldap_attributes" comma separated list of restricted server ldap attributes
      */
     public static final String restrictedServerLDAPAttributes = value ("restricted_server_ldap_attributes", "zimbraSSLPrivateKey");
+
+    /**
+     * sleep time between account rename and alias creation for testing mail delivery during change of primary email
+     */
+    public static final int sleepTimeForTestingChangePrimaryEmail = value ("change_primary_email_sleep_time", 0);
     
+    /**
+     * time given to owasp service for html sanitization in seconds
+     */
+    public static final int owasp_html_sanitizer_timeout = value ("owasp_html_sanitizer_timeout", 15);
+
+    private static boolean value(String key, boolean defaultValue) {
+        String value = LC.get(key);
+        return value.isEmpty() ? defaultValue : Boolean.parseBoolean(value);
+    }
+
     private static int value(String key, int defaultValue) {
         String value = LC.get(key);
         try {
