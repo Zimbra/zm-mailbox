@@ -44,14 +44,11 @@ public class DefangFactory {
      * backwards compatibility
      */
     private static NoopDefang noopDefang = new NoopDefang();
-<<<<<<< HEAD
-=======
 
     /**
      * The instance of the owasp html defanger
      */
     private static OwaspDefang owaspDefang = new OwaspDefang();
->>>>>>> a8c832c... ZCS-6870:Add support for OWASP HTML sanitisation
     
     /**
      * if content type is null, returns noopDefang which does nothing
