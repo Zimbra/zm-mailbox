@@ -21,11 +21,17 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map;
 
-import org.apache.commons.httpclient.Cookie;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpState;
-import org.apache.commons.httpclient.cookie.CookiePolicy;
-import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.http.HttpException;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.CookieSpecs;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.config.SocketConfig;
+import org.apache.http.impl.client.BasicCookieStore;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.cookie.BasicClientCookie;
+import org.apache.http.util.EntityUtils;
 
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.httpclient.HttpClientUtil;
@@ -120,39 +126,50 @@ public class LmcMessage {
                                      LmcSession session,
                                      String cookieDomain,
                                      int msTimeout)
-    throws LmcSoapClientException, IOException {
+    throws Exception {
         // set the cookie.
         if (session == null)
             System.err.println(System.currentTimeMillis() + " " + Thread.currentThread() + " LmcMessage.downloadAttachment session=null");
         
-        HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+        HttpClientBuilder clientBuilder = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
         String url = baseURL + "?id=" + getID() + "&part=" + partNo;
-        GetMethod get = new GetMethod(url);
+        HttpGet get = new HttpGet(url);
 
         ZAuthToken zat = session.getAuthToken();
         Map<String, String> cookieMap = zat.cookieMap(false);
         if (cookieMap != null) {
-            HttpState initialState = new HttpState();
+            BasicCookieStore initialState = new BasicCookieStore();
             for (Map.Entry<String, String> ck : cookieMap.entrySet()) {
-                Cookie cookie = new Cookie(cookieDomain, ck.getKey(), ck.getValue(), "/", -1, false);
+                BasicClientCookie cookie = new BasicClientCookie(ck.getKey(), ck.getValue());
+                cookie.setDomain(cookieDomain);
+                cookie.setPath("/");
+                cookie.setSecure(false);
+                cookie.setExpiryDate(null);
                 initialState.addCookie(cookie);
             }
-            client.setState(initialState);
-            client.getParams().setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
+            clientBuilder.setDefaultCookieStore(initialState);
+            
+            RequestConfig reqConfig = RequestConfig.copy(
+                ZimbraHttpConnectionManager.getInternalHttpConnMgr().getZimbraConnMgrParams().getReqConfig())
+                .setCookieSpec(CookieSpecs.BROWSER_COMPATIBILITY).build();
+
+            clientBuilder.setDefaultRequestConfig(reqConfig);
         }
-        
-        get.getParams().setSoTimeout(msTimeout);
+
+        SocketConfig config = SocketConfig.custom().setSoTimeout(msTimeout).build();
+        clientBuilder.setDefaultSocketConfig(config);
+        HttpClient client = clientBuilder.build();
         int statusCode = -1;
         try {
-            statusCode = HttpClientUtil.executeMethod(client, get);
+            HttpResponse response = HttpClientUtil.executeMethod(client, get);
 
             // parse the response
-            if (statusCode == 200) {
-                return get.getResponseBody();
+            if (response.getStatusLine().getStatusCode() == 200) {
+                return EntityUtils.toByteArray(response.getEntity());
             } else {
                 throw new LmcSoapClientException("Attachment download failed, status=" + statusCode);
             }
-        } catch (IOException e) {
+        } catch (IOException | HttpException e) {
             System.err.println("Attachment download failed");
             e.printStackTrace();
             throw e;

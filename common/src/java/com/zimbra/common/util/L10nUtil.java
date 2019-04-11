@@ -371,7 +371,11 @@ public class L10nUtil {
     }
 
     public static String getMessage(String basename, String key, Locale lc, Object... args) {
-        ResourceBundle rb;
+        return getMessage(true /* shoutIfMissing */, basename, key, lc, args);
+    }
+
+    public static String getMessage(boolean shoutIfMissing, String basename, String key, Locale lc, Object... args) {
+        ResourceBundle rb = null;
         try {
             if (lc == null) {
                 lc = Locale.getDefault();
@@ -384,8 +388,23 @@ public class L10nUtil {
                 return fmt;
             }
         } catch (MissingResourceException e) {
-            ZimbraLog.misc.warn("no resource bundle for base name " + basename + " can be found, " +
-                    "(locale=" + key + ")", e);
+            if (rb == null) {
+                if (shoutIfMissing) {
+                    ZimbraLog.misc.warn("no resource bundle found for (basename='%s', key='%s' locale='%s')",
+                            basename, key, lc, e);
+                } else {
+                    ZimbraLog.misc.info("no resource bundle found for (basename='%s', key='%s' locale='%s')",
+                            basename, key, lc);
+                }
+            } else {
+                if (shoutIfMissing) {
+                    ZimbraLog.misc.warn("no resource string found in bundle for (basename='%s', key='%s' locale='%s')",
+                            basename, key, lc, e);
+                } else {
+                    ZimbraLog.misc.info("no resource string found in bundle for (basename='%s', key='%s' locale='%s')",
+                            basename, key, lc);
+                }
+            }
             return null;
         }
     }

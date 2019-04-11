@@ -25,20 +25,21 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.http.HttpException;
 
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.soap.Element.XMLElement;
+import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.httpclient.URLUtil;
 
 public class GalSyncAccountUtil {
@@ -144,6 +145,8 @@ public class GalSyncAccountUtil {
     			ds.addAttribute(AdminConstants.A_RESET, "TRUE");
 
     		mTransport.invoke(req);
+        } catch (HttpException e) {
+            
         } finally {
             if (mTransport != null)
                 mTransport.shutdown();
@@ -169,7 +172,9 @@ public class GalSyncAccountUtil {
     			req.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, Provisioning.A_zimbraDataSourcePollingInterval).setText(pollingInterval);
 
     		return mTransport.invokeWithoutSession(req);
-        } finally {
+        } catch (HttpException e) {
+            throw new IOException("Unexpected error." + e);
+        }  finally {
             if (mTransport != null)
                 mTransport.shutdown();
         }
@@ -193,7 +198,9 @@ public class GalSyncAccountUtil {
 	            req.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, Provisioning.A_zimbraDataSourcePollingInterval).setText(pollingInterval);
 
 	        return mTransport.invokeWithoutSession(req);
-	    } finally {
+	    } catch (HttpException e) {
+            throw new IOException("Unexpected error." + e);
+        } finally {
 	        if (mTransport != null)
 	            mTransport.shutdown();
 	    }
@@ -218,6 +225,8 @@ public class GalSyncAccountUtil {
     		acct.addAttribute(AdminConstants.A_BY, by.name());
     		acct.setText(account);
     		return mTransport.invokeWithoutSession(req);
+        } catch (HttpException e) {
+            throw new IOException("Unexpected error." + e);
         } finally {
             if (mTransport != null)
                 mTransport.shutdown();
@@ -241,7 +250,7 @@ public class GalSyncAccountUtil {
 	private void setForceSync() {
 		mForceSync = true;
 	}
-	private void auth() throws ServiceException, IOException {
+	private void auth() throws ServiceException, IOException, HttpException {
 		XMLElement req = new XMLElement(AdminConstants.AUTH_REQUEST);
 		req.addElement(AdminConstants.E_NAME).setText(mUsername);
 		req.addElement(AdminConstants.E_PASSWORD).setText(mPassword);

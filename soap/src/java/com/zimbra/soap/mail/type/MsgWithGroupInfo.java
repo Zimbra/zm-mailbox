@@ -30,12 +30,18 @@ import com.google.common.base.MoreObjects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
 import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 import com.zimbra.soap.type.KeyValuePair;
 import com.zimbra.soap.type.UrlAndValue;
 
+import io.leangen.graphql.annotations.GraphQLIgnore;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name=GqlConstants.CLASS_MESSAGE_WITH_GROUP_INFO, description="Message with group information")
 public class MsgWithGroupInfo extends MessageCommon {
 
     /**
@@ -221,6 +227,7 @@ public class MsgWithGroupInfo extends MessageCommon {
         this.messageIdHeader = messageIdHeader;
     }
     public void setInReplyTo(String inReplyTo) { this.inReplyTo = inReplyTo; }
+    @GraphQLIgnore
     public void setInvite(InviteWithGroupInfo invite) { this.invite = invite; }
     public void setHeaders(Iterable <KeyValuePair> headers) {
         this.headers.clear();
@@ -245,31 +252,51 @@ public class MsgWithGroupInfo extends MessageCommon {
     }
 
     public void setContent(UrlAndValue content) { this.content = content; }
+    @GraphQLQuery(name=GqlConstants.ID, description="The message ID")
     public String getId() { return id; }
+    @GraphQLQuery(name=GqlConstants.IMAP_UID, description="The imap UID")
     public Integer getImapUid() { return imapUid; }
+    @GraphQLIgnore
     public String getCalendarIntendedFor() { return calendarIntendedFor; }
+    @GraphQLQuery(name=GqlConstants.ORIG_ID, description="Message id of the message being replied to/forwarded (outbound messages only)")
     public String getOrigId() { return origId; }
+    @GraphQLQuery(name=GqlConstants.DRAFT_REPLY_TYPE, description="Reply type - r|w")
     public String getDraftReplyType() { return draftReplyType; }
+    @GraphQLQuery(name=GqlConstants.IDENTITY_ID, description="Specifies the identity being used to compose the message")
     public String getIdentityId() { return identityId; }
+    @GraphQLQuery(name=GqlConstants.DRAFT_ACCOUNT_ID, description="Draft account ID")
     public String getDraftAccountId() { return draftAccountId; }
+    @GraphQLQuery(name=GqlConstants.DRAFT_AUTO_SEND_TIME, description="Specifies the time at which the draft should be automatically sent by the server")
     public Long getDraftAutoSendTime() { return draftAutoSendTime; }
+    @GraphQLQuery(name=GqlConstants.SENT_DATE, description="The sent date in the header")
     public Long getSentDate() { return sentDate; }
+    @GraphQLQuery(name=GqlConstants.RESENT_DATE, description="The re-sent date in the header")
     public Long getResentDate() { return resentDate; }
+    @GraphQLQuery(name=GqlConstants.PART, description="Part")
     public String getPart() { return part; }
+    @GraphQLQuery(name=GqlConstants.FRAGMENT, description="First few bytes of the message (probably between 40 and 100 bytes)")
     public String getFragment() { return fragment; }
+    @GraphQLQuery(name=GqlConstants.EMAILS, description="Email information")
     public List<EmailInfo> getEmails() {
         return Collections.unmodifiableList(emails);
     }
+    @GraphQLQuery(name=GqlConstants.SUBJECT, description="The email subject")
     public String getSubject() { return subject; }
+    @GraphQLQuery(name=GqlConstants.MESSAGE_ID_HEADER, description="The message ID")
     public String getMessageIdHeader() { return messageIdHeader; }
+    @GraphQLQuery(name=GqlConstants.IN_REPLY_TO, description="Message-ID header for message being replied to")
     public String getInReplyTo() { return inReplyTo; }
+    @GraphQLIgnore
     public InviteWithGroupInfo getInvite() { return invite; }
+    @GraphQLQuery(name=GqlConstants.HEADERS, description="List of headers")
     public List<KeyValuePair> getHeaders() {
         return Collections.unmodifiableList(headers);
     }
+    @GraphQLQuery(name=GqlConstants.CONTENT_ELEMS, description="List of content elements")
     public List<Object> getContentElems() {
         return Collections.unmodifiableList(contentElems);
     }
+    @GraphQLQuery(name=GqlConstants.CONTENT, description="Url and Value pairs")
     public UrlAndValue getContent() { return content; }
 
     @Override

@@ -30,12 +30,18 @@ import com.google.common.base.MoreObjects;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
-
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.soap.base.KeyAndValue;
 import com.zimbra.soap.type.ZmBoolean;
+
+import io.leangen.graphql.annotations.GraphQLIgnore;
+import io.leangen.graphql.annotations.GraphQLInputField;
+import io.leangen.graphql.annotations.GraphQLNonNull;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
 
 /**
  * e.g. For element named "attr":
@@ -43,6 +49,7 @@ import com.zimbra.soap.type.ZmBoolean;
  *
  * Note:  where the attribute name is "n" rather than "name" use {@link KeyValuePair}
  */
+@GraphQLType(name=GqlConstants.CLASS_ATTR, description="Attributes")
 public class Attr implements KeyAndValue {
 
     public static Function<Attr, Attr> COPY = new Function<Attr, Attr>() {
@@ -105,20 +112,28 @@ public class Attr implements KeyAndValue {
     }
 
     public static Attr forNameWithPermDenied(String name) {
-        Attr attr = new Attr(name, "");
+        final Attr attr = new Attr(name, "");
         attr.setPermDenied(true);
         return attr;
     }
 
+    @GraphQLNonNull
+    @GraphQLQuery(name="name", description="Attribute name")
     public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
 
+    @GraphQLInputField(name="name", description="Attribute name")
+    public void setName(@GraphQLNonNull String name) { this.name = name; }
+
+    @GraphQLQuery(name="permDenied", description="Denotes whether permission has been denied")
     public Boolean getPermDenied() { return ZmBoolean.toBool(permDenied); }
+    @GraphQLInputField(name="permDenied", description="Flags whether permission has been denied")
     public void setPermDenied(Boolean permDenied) { this.permDenied = ZmBoolean.fromBool(permDenied); }
 
     @Override
+    @GraphQLQuery(name="value", description="Attribute value")
     public String getValue() { return value; }
     @Override
+    @GraphQLIgnore
     public void setValue(String value) { this.value = value; }
 
     @Override
@@ -130,9 +145,9 @@ public class Attr implements KeyAndValue {
     }
 
     public static Multimap<String, String> toMultimap(List<? extends Attr> attrs) {
-        Multimap<String, String> map = ArrayListMultimap.create();
+        final Multimap<String, String> map = ArrayListMultimap.create();
         if (attrs != null) {
-            for (Attr a : attrs) {
+            for (final Attr a : attrs) {
                 map.put(a.getName(), a.getValue());
             }
         }
@@ -140,9 +155,9 @@ public class Attr implements KeyAndValue {
     }
 
     public static List<Attr> fromMultimap(Multimap<String, String> attrMap) {
-        List<Attr> attrs = new ArrayList<Attr>();
+        final List<Attr> attrs = new ArrayList<Attr>();
         if (attrMap != null) {
-            for (Map.Entry<String, String> entry : attrMap.entries()) {
+            for (final Map.Entry<String, String> entry : attrMap.entries()) {
                 attrs.add(new Attr(entry.getKey(), entry.getValue()));
             }
         }
@@ -151,23 +166,23 @@ public class Attr implements KeyAndValue {
 
     public static List <Attr> fromMap(Map<String, ? extends Object> attrs)
     throws ServiceException {
-        List<Attr> newAttrs = Lists.newArrayList();
+        final List<Attr> newAttrs = Lists.newArrayList();
         if (attrs == null) return newAttrs;
 
-        for (Entry<String, ? extends Object> entry : attrs.entrySet()) {
-            String key = (String) entry.getKey();
-            Object value = entry.getValue();
+        for (final Entry<String, ? extends Object> entry : attrs.entrySet()) {
+            final String key = entry.getKey();
+            final Object value = entry.getValue();
             if (value == null) {
                 newAttrs.add(new Attr(key, (String) null));
             } else if (value instanceof String) {
                 newAttrs.add(new Attr(key, (String) value));
             } else if (value instanceof String[]) {
-                String[] values = (String[]) value;
+                final String[] values = (String[]) value;
                 if (values.length == 0) {
                     // an empty array == removing the attr
                     newAttrs.add(new Attr(key, (String) null));
                 } else {
-                    for (String v: values) {
+                    for (final String v: values) {
                         newAttrs.add(new Attr(key, v));
                     }
                 }
@@ -181,9 +196,11 @@ public class Attr implements KeyAndValue {
     }
 
     @Override
+    @GraphQLIgnore
     public void setKey(String key) { setName(key); }
 
     @Override
+    @GraphQLIgnore
     public String getKey() { return getName(); }
 
 }

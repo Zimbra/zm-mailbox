@@ -18,6 +18,7 @@ package com.zimbra.qa.unittest.prov.soap;
 
 import java.io.IOException;
 
+import org.apache.http.HttpException;
 import org.junit.BeforeClass;
 
 import com.zimbra.common.localconfig.KnownKey;
@@ -89,7 +90,8 @@ public class SoapTest extends ProvTest {
      * @throws IOException
      * @throws ServiceException
      */
-   public static SoapTransport authUser(String acctName, boolean csrfEnabled, boolean setCsrfToken) throws ServiceException, IOException {
+   public static SoapTransport authUser(String acctName, boolean csrfEnabled, boolean setCsrfToken) 
+       throws ServiceException, IOException, HttpException {
         com.zimbra.soap.type.AccountSelector acct =
             new com.zimbra.soap.type.AccountSelector(com.zimbra.soap.type.AccountBy.name, acctName);
 
@@ -134,13 +136,13 @@ public class SoapTest extends ProvTest {
     }
 
     public static <T> T invokeJaxb(SoapTransport transport, Object jaxbObject)
-    throws ServiceException, IOException {
+    throws ServiceException, IOException, HttpException {
         return (T) invokeJaxb(transport, jaxbObject,
                 JSON ? SoapProtocol.SoapJS : SoapProtocol.Soap12);
     }
 
     public static <T> T invokeJaxb(SoapTransport transport, Object jaxbObject, SoapProtocol proto)
-    throws ServiceException, IOException {
+    throws ServiceException, IOException, HttpException {
         Element req = JaxbUtil.jaxbToElement(jaxbObject, proto.getFactory());
 
         Element res = transport.invoke(req);

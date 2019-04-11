@@ -19,9 +19,13 @@ package com.zimbra.cs.httpclient;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.UsernamePasswordCredentials;
-import org.apache.commons.httpclient.auth.AuthScope;
+import org.apache.http.HttpHost;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.impl.client.HttpClientBuilder;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -34,7 +38,7 @@ public class HttpProxyUtil {
     private static AuthScope sProxyAuthScope = null;
     private static UsernamePasswordCredentials sProxyCreds = null;
     
-    public static synchronized void configureProxy(HttpClient client) {
+    public static synchronized void configureProxy(HttpClientBuilder clientBuilder) {
         try {
             String url = Provisioning.getInstance().getLocalServer().getAttr(Provisioning.A_zimbraHttpProxyURL, null);
             if (url == null) return;
@@ -57,9 +61,17 @@ public class HttpProxyUtil {
             if (ZimbraLog.misc.isDebugEnabled()) {
                 ZimbraLog.misc.debug("setting proxy: "+url);
             }
-            client.getHostConfiguration().setProxy(sProxyUri.getHost(), sProxyUri.getPort());
-            if (sProxyAuthScope != null && sProxyCreds != null) 
-                client.getState().setProxyCredentials(sProxyAuthScope, sProxyCreds);
+            
+            HttpHost proxy = new HttpHost(sProxyUri.getHost(), sProxyUri.getPort());
+            RequestConfig config = RequestConfig.custom()
+                    .setProxy(proxy)
+                    .build();
+            clientBuilder.setDefaultRequestConfig(config);
+            if (sProxyAuthScope != null && sProxyCreds != null)  {
+                CredentialsProvider cred = new BasicCredentialsProvider();
+                cred.setCredentials(sProxyAuthScope, sProxyCreds);
+                clientBuilder.setDefaultCredentialsProvider(cred);
+            }
         } catch (ServiceException e) {
             ZimbraLog.misc.warn("Unable to configureProxy: "+e.getMessage(), e);
         } catch (URISyntaxException e) {

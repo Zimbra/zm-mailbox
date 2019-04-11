@@ -21,9 +21,12 @@ import java.security.MessageDigest;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.methods.HeadMethod;
+import org.apache.http.HttpException;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpHead;
+import org.apache.http.util.EntityUtils;
 
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.service.ServiceException;
@@ -78,14 +81,15 @@ public class TritonIncomingBlob extends ExternalResumableIncomingBlob {
     @Override
     protected long getRemoteSize() throws IOException {
         outStream.flush();
-        HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
-        HeadMethod head = new HeadMethod(baseUrl + uploadUrl);
+        HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient().build();
+        HttpHead head = new HttpHead(baseUrl + uploadUrl);
         ZimbraLog.store.info("heading %s", head.getURI());
         try {
-            head.addRequestHeader(TritonHeaders.SERVER_TOKEN, serverToken.getToken());
-            int statusCode = HttpClientUtil.executeMethod(client, head);
+            head.addHeader(TritonHeaders.SERVER_TOKEN, serverToken.getToken());
+            HttpResponse httpResp = HttpClientUtil.executeMethod(client, head);
+            int statusCode = httpResp.getStatusLine().getStatusCode();
             if (statusCode == HttpStatus.SC_OK) {
-                String contentLength = head.getResponseHeader(TritonHeaders.CONTENT_LENGTH).getValue();
+                String contentLength = httpResp.getFirstHeader(TritonHeaders.CONTENT_LENGTH).getValue();
                 long remoteSize = -1;
                 try {
                     remoteSize = Long.valueOf(contentLength);
@@ -94,9 +98,11 @@ public class TritonIncomingBlob extends ExternalResumableIncomingBlob {
                 }
                 return remoteSize;
             } else {
-                ZimbraLog.store.error("failed with code %d response: %s", statusCode, head.getResponseBodyAsString());
-                throw new IOException("unable to head blob "+statusCode + ":" + head.getStatusText(), null);
+                ZimbraLog.store.error("failed with code %d response: %s", statusCode, EntityUtils.toString(httpResp.getEntity()));
+                throw new IOException("unable to head blob "+statusCode + ":" + httpResp.getStatusLine().getReasonPhrase(), null);
             }
+        } catch (HttpException e) {
+            throw new IOException("unexpected error during getremotesize() operation: " + e.getMessage());
         } finally {
             head.releaseConnection();
         }

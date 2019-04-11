@@ -150,6 +150,13 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
         VELODROME_ALL_DISTRIBUTION_LISTS_BY_DOMAIN(SINGLETON.velodromeAllDistributionListsByDomain("{DOMAIN-NAME}")),
         VELODROME_ALL_GROUPS_BY_DOMAIN(SINGLETON.velodromeAllGroupsByDomain("{DOMAIN-NAME}")),
 
+        HAB_ORG_UNIT_BY_NAME(SINGLETON.habOrgUnitByName("{ORG-UNIT-NAME}")),
+        
+	//address lists
+        ALL_ADDRESS_LISTS(SINGLETON.allAddressLists()),
+        ADDRESS_LIST_BY_ID(SINGLETON.addressListById("{ADDRESS-LIST-ID}")),
+        ADDRESS_LIST_BY_NAME(SINGLETON.addressListByName("{ADDRESS-LIST-NAME}")),
+
         //
         // =====================================
         // FilterId for fromFilterString() calls
@@ -402,6 +409,7 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
     public abstract ZLdapFilter allGroups();
     public abstract ZLdapFilter groupById(String id);
     public abstract ZLdapFilter groupByName(String name);
+    public abstract ZLdapFilter allHabGroups();
 
 
     /*
@@ -501,9 +509,19 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
     public abstract ZLdapFilter velodromeAllDistributionListsByDomain(String domainName);
     public abstract ZLdapFilter velodromeAllGroupsByDomain(String domainName);
 
-
+    /*
+     * Address Lists
+     */
+    public abstract ZLdapFilter allAddressLists();
+    public abstract ZLdapFilter addressListById(String id);
+    public abstract ZLdapFilter addressListByName(String name);
     /*
      * util
      */
     public abstract ZLdapFilter dnSubtreeMatch(String... dns);
+
+    /**
+     * HAB
+     */
+    public abstract ZLdapFilter habOrgUnitByName(String name);
 }

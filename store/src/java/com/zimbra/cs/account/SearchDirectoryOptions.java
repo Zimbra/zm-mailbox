@@ -73,7 +73,8 @@ public class SearchDirectoryOptions {
         domains(Provisioning.SD_DOMAIN_FLAG),
         coses(Provisioning.SD_COS_FLAG),
         servers(Provisioning.SD_SERVER_FLAG),
-        ucservices(Provisioning.SD_UC_SERVICE_FLAG),;
+        ucservices(Provisioning.SD_UC_SERVICE_FLAG),
+        habgroups(Provisioning.SD_HAB_FLAG),;
 
         private int flag;
         private ObjectType(int flag) {
@@ -181,6 +182,8 @@ public class SearchDirectoryOptions {
     private boolean convertIDNToAscii;
     private boolean isUseControl = true;
     private boolean isManageDSAit = false;
+    
+    private String habRootGroupDn;
 
     public SearchDirectoryOptions() {
     }
@@ -473,4 +476,14 @@ public class SearchDirectoryOptions {
     public void setManageDSAit(boolean isManageDSAit) {
         this.isManageDSAit = isManageDSAit;
     }
+
+    
+    public String getHabRootGroupDn() {
+        return habRootGroupDn;
+    }
+
+    public void setHabRootGroupDn(String baseDn) {
+        this.habRootGroupDn = baseDn;
+    }
+
 }

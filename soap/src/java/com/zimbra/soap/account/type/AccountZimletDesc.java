@@ -33,13 +33,18 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.ZimletConstants;
 import com.zimbra.soap.base.ZimletDesc;
+
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {})
 @JsonPropertyOrder({ "description", "name", "target", "label", "version", "include", "handlerObject",
     "serverExtension", "contentObject"})
+@GraphQLType(name=GqlConstants.CLASS_ACCOUNT_ZIMLET_DESC, description="Account zimlet description")
 public class AccountZimletDesc implements ZimletDesc {
 
     // Turning schema validation on for WSDL clients using WSDL derived
@@ -140,18 +145,25 @@ public class AccountZimletDesc implements ZimletDesc {
         this.elements.add(element);
     }
 
+    @GraphQLQuery(name=GqlConstants.NAME, description="Zimlet name")
     @Override
     public String getName() { return name; }
+    @GraphQLQuery(name=GqlConstants.VERSION, description="Zimlet version")
     @Override
     public String getVersion() { return version; }
+    @GraphQLQuery(name=GqlConstants.DESCRIPTION, description="Zimlet description")
     @Override
     public String getDescription() { return description; }
+    @GraphQLQuery(name=GqlConstants.EXTENSION, description="Zimlet extension")
     @Override
     public String getExtension() { return extension; }
+    @GraphQLQuery(name=GqlConstants.TARGET, description="Zimlet target")
     @Override
     public String getTarget() { return target; }
+    @GraphQLQuery(name=GqlConstants.LABEL, description="Zimlet label")
     @Override
     public String getLabel() { return label; }
+    @GraphQLQuery(name=GqlConstants.ELEMENTS, description="Zimlet elements")
     @Override
     public List<Object> getElements() {
         return Collections.unmodifiableList(elements);

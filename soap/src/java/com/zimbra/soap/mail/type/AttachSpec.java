@@ -17,15 +17,20 @@
 
 package com.zimbra.soap.mail.type;
 
-import com.google.common.base.MoreObjects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
+import com.google.common.base.MoreObjects;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.ZmBoolean;
 
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name=GqlConstants.CLASS_ATTACHMENT_SPECIFICATIONS, description="Attachment specifications")
 public abstract class AttachSpec {
 
     /**
@@ -39,6 +44,7 @@ public abstract class AttachSpec {
     }
 
     public void setOptional(Boolean optional) { this.optional = ZmBoolean.fromBool(optional); }
+    @GraphQLQuery(name=GqlConstants.OPTIONAL, description="Optional")
     public Boolean getOptional() { return ZmBoolean.toBool(optional); }
 
     public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {

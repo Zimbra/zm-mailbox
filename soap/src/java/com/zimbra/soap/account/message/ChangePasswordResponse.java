@@ -21,8 +21,12 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
+
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
 
 /**
 <ChangePasswordResponse>
@@ -32,6 +36,7 @@ import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
  * @zm-api-response-description Note: Returns new authToken, as old authToken will be invalidated on password change.
  */
 @XmlRootElement(name=AccountConstants.E_CHANGE_PASSWORD_RESPONSE)
+@GraphQLType(name=GqlConstants.CLASS_CHANGE_PASSWORD_RESPONSE, description="The response to change password request.")
 @XmlType(propOrder = {})
 public class ChangePasswordResponse {
 
@@ -51,7 +56,9 @@ public class ChangePasswordResponse {
     public ChangePasswordResponse() {
     }
 
+    @GraphQLQuery(name=GqlConstants.AUTH_TOKEN, description="Auth token based on the new password")
     public String getAuthToken() { return authToken; }
+    @GraphQLQuery(name=GqlConstants.LIFETIME, description="Life time of the auth token")
     public long getLifetime() { return lifetime; }
 
     public ChangePasswordResponse setAuthToken(String authToken) {

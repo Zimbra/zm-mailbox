@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8"?>
+ <!--Shorthands
+     CORE = id,class,title,style
+     LANG = dir,lang,xml:lang
+     KBD = accesshtml,tabindex-->
+<owasp_policy>
+  <url_protocols>cid,http,https,mailto,data,smb</url_protocols>
+  <url_protocol_attributes>href,src</url_protocol_attributes>
+  <disallow_text_in>applet,frameset,object,script,title</disallow_text_in>
+  <allow_text_in>style</allow_text_in>
+  <css_whitelist>float,display</css_whitelist>
+  <element name="a">
+    <attributes>KBD,charset,coords,href,hreflang,name,rel,rev,shape,target,type</attributes>
+    <url_protocols>cid,http,https,mailto,smb</url_protocols>
+  </element>
+  <element name="base">
+    <attributes>href</attributes>
+  </element>
+  <element name="address">
+    <attributes>CORE,LANG</attributes>
+  </element>
+  <element name="bdo">
+    <attributes>CORE,LANG</attributes>
+  </element>
+  <element name="blockquote">
+    <attributes>CORE,LANG,cite</attributes>
+  </element>
+  <element name="body">
+    <attributes>CORE,LANG,background</attributes>
+  </element>
+  <element name="br">
+    <attributes>CORE,clear</attributes>
+  </element>
+  <element name="center">
+    <attributes>CORE,LANG</attributes>
+  </element>
+  <element name="del">
+    <attributes>CORE,LANG,cite,datetime</attributes>
+  </element>
+  <element name="div">
+    <attributes>CORE,LANG,align</attributes>
+  </element>
+  <element name="head">
+    <attributes>LANG</attributes>
+  </element>
+  <element name="h1">
+    <attributes>CORE,LANG,align</attributes>
+  </element>
+  <element name="h2">
+    <attributes>CORE,LANG,align</attributes>
+  </element>
+  <element name="h3">
+    <attributes>CORE,LANG,align</attributes>
+  </element>
+  <element name="h4">
+    <attributes>CORE,LANG,align</attributes>
+  </element>
+  <element name="h5">
+    <attributes>CORE,LANG,align</attributes>
+  </element>
+  <element name="h6">
+    <attributes>CORE,LANG,align</attributes>
+  </element>
+  <element name="hr">
+    <attributes>CORE,LANG,align,noshade,size,width</attributes>
+  </element>
+  <element name="html">
+    <attributes>LANG,xmlns</attributes>
+  </element>
+  <element name="img">
+    <attributes>CORE,LANG,align,alt,border,height,hspace,ismap,longdesc,src,usemap,vspace,width,dfsrc,data-mce-src</attributes>
+    <url_protocols>cid,http,https,data,doc</url_protocols>
+  </element>
+  <element name="ins">
+    <attributes>CORE,LANG,cite</attributes>
+  </element>
+  <element name="label">
+    <attributes>CORE,LANG,for</attributes>
+  </element>
+  <element name="p">
+    <attributes>CORE,LANG,align</attributes>
+  </element>
+  <element name="pre">
+    <attributes>CORE,LANG,width</attributes>
+  </element>
+  <element name="q">
+    <attributes>CORE,LANG,cite</attributes>
+  </element>
+  <element name="span">
+    <attributes>CORE,LANG</attributes>
+  </element>
+  <element name="style">
+    <attributes>CORE,LANG</attributes>
+  </element>
+  <element name="sub">
+    <attributes>CORE,LANG</attributes>
+  </element>
+  <element name="sup">
+    <attributes>CORE,LANG</attributes>
+  </element>
+  <element name="title">
+    <attributes></attributes>
+  </element>
+  <element name="b">
+    <attributes>CORE,LANG</attributes>
+  </element>
+  <element name="basefont">
+    <attributes>CORE,LANG,color,face,size</attributes>
+  </element>
+  <element name="big">
+    <attributes>CORE,LANG</attributes>
+  </element>
+  <element name="font">
+    <attributes>CORE,LANG,color,face,size</attributes>
+  </element>
+  <element name="i">
+    <attributes>CORE,LANG</attributes>
+  </element>
+  <element name="s">
+    <attributes>CORE,LANG</attributes>
+  </element>
+  <element name="small">
+    <attributes>CORE,LANG</attributes>
+  </element>
+  <element name="strike">
+    <attributes>CORE,LANG</attributes>
+  </element>
+  <element name="tt">
+    <attributes>CORE,LANG</attributes>
+  </element>
+  <element name="u">
+    <attributes>CORE,LANG</attributes>
+  </element>
+  <element name="dir">
+    <attributes>CORE,LANG,compact</attributes>
+  </element>
+  <element name="dl">
+    <attributes>CORE,LANG</attributes>
+  </element>
+  <element name="dt">
+    <attributes>CORE,LANG</attributes>
+  </element>
+  <element name="li">
+    <attributes>CORE,LANG,type,value</attributes>
+  </element>
+  <element name="ol">
+    <attributes>CORE,LANG,compact,start,type</attributes>
+  </element>
+  <element name="ul">
+    <attributes>CORE,LANG,compact,type</attributes>
+  </element>
+  <element name="dd">
+    <attributes>CORE,LANG</attributes>
+  </element>
+  <element name="menu">
+    <attributes>CORE,LANG,compact</attributes>
+  </element>
+  <element name="abbr">
+    <attributes>CORE,LANG</attributes>
+  </element>
+  <element name="acronym">
+    <attributes>CORE,LANG</attributes>
+  </element>
+  <element name="cite">
+    <attributes>CORE,LANG</attributes>
+  </element>
+  <element name="code">
+    <attributes>CORE,LANG</attributes>
+  </element>
+  <element name="dfn">
+    <attributes>CORE,LANG</attributes>
+    </element>
+  <element name="em">
+    <attributes>CORE,LANG</attributes>
+  </element>
+  <element name="kbd">
+    <attributes>CORE,LANG</attributes>
+    </element>
+  <element name="samp">
+    <attributes>CORE,LANG</attributes>
+  </element>
+  <element name="strong">
+    <attributes>CORE,LANG</attributes>
+  </element>
+  <element name="var">
+    <attributes>CORE,LANG</attributes>
+  </element>
+  <element name="caption">
+    <attributes>CORE,LANG,align</attributes>
+  </element>
+  <element name="col">
+    <attributes>CORE,LANG,alink,background,char,charoff,span,valign,width</attributes>
+  </element>
+  <element name="colgroup">
+    <attributes>CORE,LANG,alink,background,char,charoff,span,valign,width</attributes>
+  </element>
+  <element name="table">
+    <attributes>CORE,LANG,align,valign,background,bgcolor,border,cellpadding,cellspacing,frame,rules,summary,width</attributes>
+  </element>
+
+  <element name="tbody">
+    <attributes>CORE,LANG,align,background,char,charoff,valign</attributes>
+  </element>
+  <element name="td">
+    <attributes>CORE,LANG,abbr,align,axis,background,bgcolor,char,charoff,colspan,headers,height,nowrap,rowspan,scope,,valign,width</attributes>
+  </element>
+  <element name="tfoot">
+    <attributes>CORE,LANG,align,background,char,charoff,valign</attributes>
+  </element>
+  <element name="th">
+    <attributes>CORE,LANG,abbr,align,axis,background,bgcolor,char,charoff,colspan,headers,height,nowrap,rowspan,scope,valign,width</attributes>
+  </element>
+  <element name="thead">
+    <attributes>CORE,LANG,align,background,char,charoff,valign</attributes>
+  </element>
+  <element name="tr">
+    <attributes>CORE,LANG,align,background,bgcolor,char,charoff,valign,height</attributes>
+  </element>
+  <element name="area">
+    <attributes>CORE,LANG,KBD,alt,coords,href,nohref,shape,target</attributes>
+  </element>
+  <element name="button">
+    <attributes>CORE,LANG,KBD,disabled,name,type,value</attributes>
+  </element>
+  <element name="fieldset">
+    <attributes>CORE,LANG</attributes>
+  </element>
+  <element name="form">
+    <attributes>CORE,LANG,action,accept,acceptcharset,enctype,method,name,target</attributes>
+  </element>
+  <element name="input">
+    <attributes>CORE,LANG,accept,align,alt,checked,disabled,maxlength,name,readonly,size,src,type,value</attributes>
+  </element>
+  <element name="legend">
+    <attributes>CORE,LANG,align</attributes>
+  </element>
+  <element name="map">
+    <attributes>CORE,LANG,name</attributes>
+  </element>
+  <element name="optgroup">
+    <attributes>CORE,LANG,disabled,label</attributes>
+  </element>
+  <element name="option">
+    <attributes>CORE,LANG,KBD,disabled,label,selected,value</attributes>
+  </element>
+  <element name="select">
+    <attributes>CORE,LANG,KBD,disabled,multiple,name,size</attributes>
+  </element>
+  <element name="textarea">
+    <attributes>CORE,LANG,cols,disabled,name,readonly,rows</attributes>
+  </element>
+</owasp_policy>

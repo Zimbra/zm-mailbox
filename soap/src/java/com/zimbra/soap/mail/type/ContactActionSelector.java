@@ -17,10 +17,6 @@
 
 package com.zimbra.soap.mail.type;
 
-import com.google.common.base.MoreObjects;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -28,6 +24,9 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
@@ -37,9 +36,13 @@ public class ContactActionSelector extends ActionSelector {
      * @zm-api-field-description New Contact attributes
      */
     @XmlElement(name=MailConstants.E_ATTRIBUTE, required=false)
-    private List<NewContactAttr> attrs = Lists.newArrayList();
+    private final List<NewContactAttr> attrs = Lists.newArrayList();
 
     public ContactActionSelector() {
+    }
+
+    public ContactActionSelector(String ids, String operation) {
+        super(ids, operation);
     }
 
     public void setAttrs(Iterable <NewContactAttr> attrs) {

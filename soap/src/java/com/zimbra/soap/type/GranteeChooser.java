@@ -21,9 +21,15 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.AdminConstants;
 
+import io.leangen.graphql.annotations.GraphQLIgnore;
+import io.leangen.graphql.annotations.GraphQLInputField;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name=GqlConstants.CLASS_GRANTEE_SELECTOR, description="grantee selector")
 public class GranteeChooser {
 
     //See ACL.stringToType for valid (case insensitive) grantee types
@@ -54,12 +60,15 @@ public class GranteeChooser {
         this(null, null, null);
     }
 
-    public GranteeChooser(String type, String id, String name) {
+    public GranteeChooser(@GraphQLInputField(name=GqlConstants.TYPE, description="grantee type") String type,
+            @GraphQLInputField(name=GqlConstants.ID, description="grantee id") String id,
+            @GraphQLInputField(name=GqlConstants.NAME, description="grantee name") String name) {
         this.type = type;
         this.id = id;
         this.name = name;
     }
 
+    @GraphQLIgnore
     public static GranteeChooser createForId(String id) {
         return new GranteeChooser(null, id, null);
     }

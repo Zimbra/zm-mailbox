@@ -77,6 +77,7 @@ public class GalSearchParams {
     private int ldapMatchCount = 0;
     private boolean ldapHasMore = true;
     private boolean getCount = false;
+    private boolean expandQuery = true;
 
     private GalOp mOp;
 
@@ -435,6 +436,14 @@ public class GalSearchParams {
         } else {
             return " (" + ((mUserAgent == null) ? "" : mUserAgent) + ")";
         }
+    }
+
+    public boolean isExpandQuery() {
+        return expandQuery;
+    }
+
+    public void setExpandQuery(boolean expandQuery) {
+        this.expandQuery = expandQuery;
     }
 
 }

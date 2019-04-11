@@ -142,15 +142,14 @@ public class GalSearchResultCallback implements GalContact.Visitor {
     }
 
     public void handleContact(GalContact c) throws ServiceException {
-		Element eGalContact = ToXML.encodeGalContact(mResponse, c);
+        String zimbraId = c.getSingleAttr(ContactConstants.A_zimbraId);
+        boolean canExpand = GalSearchControl
+            .canExpandGalGroup(c.getSingleAttr(ContactConstants.A_email), zimbraId, mAuthAcct);
+		Element eGalContact = ToXML.encodeGalContact(mResponse, c, null, canExpand);
 		eGalContact.addAttribute(AccountConstants.A_REF, c.getId());
 
 		if (c.isGroup()) {
-		    String zimbraId = c.getSingleAttr(ContactConstants.A_zimbraId);
-
     		if (mNeedCanExpand) {
-    		    boolean canExpand = GalSearchControl.canExpandGalGroup(
-    		            c.getSingleAttr(ContactConstants.A_email), zimbraId, mAuthAcct);
     		    eGalContact.addAttribute(AccountConstants.A_EXP, canExpand);
     		}
 

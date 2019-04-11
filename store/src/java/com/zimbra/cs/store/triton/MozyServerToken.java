@@ -16,7 +16,7 @@
  */
 package com.zimbra.cs.store.triton;
 
-import org.apache.commons.httpclient.HttpMethod;
+import org.apache.http.HttpResponse;
 
 /**
  * String wrapper so Mozy token can be passed around and updated on each request if necessary
@@ -36,7 +36,7 @@ public class MozyServerToken {
     /**
      * Set token value based on TDS response header contained in HttpMethod
      */
-    public void setToken(HttpMethod method) {
-        this.token = method.getResponseHeader(TritonHeaders.SERVER_TOKEN).getValue();
+    public void setToken(HttpResponse resp) {
+        this.token = resp.getFirstHeader(TritonHeaders.SERVER_TOKEN).getValue();
     }
 }

@@ -116,6 +116,7 @@ public class LdapDIT {
     protected final String DEFAULT_NAMING_RDN_ATTR_SHARE_LOCATOR    = "cn";
     protected final String DEFAULT_NAMING_RDN_ATTR_XMPPCOMPONENT    = "cn";
     protected final String DEFAULT_NAMING_RDN_ATTR_ZIMLET           = "cn";
+    protected final String DEFAULT_NAMING_RDN_ATTR_HAB              = "cn";
 
     /*
      * Variables that has to be set in the init method
@@ -152,6 +153,7 @@ public class LdapDIT {
     protected String NAMING_RDN_ATTR_SHARE_LOCATOR;
     protected String NAMING_RDN_ATTR_XMPPCOMPONENT;
     protected String NAMING_RDN_ATTR_ZIMLET;
+    protected String NAMING_RDN_ATTR_HAB;
 
     protected String DN_GLOBALCONFIG;
     protected String DN_GLOBALGRANT;
@@ -183,6 +185,7 @@ public class LdapDIT {
         NAMING_RDN_ATTR_SHARE_LOCATOR = DEFAULT_NAMING_RDN_ATTR_SHARE_LOCATOR;
         NAMING_RDN_ATTR_XMPPCOMPONENT = DEFAULT_NAMING_RDN_ATTR_XMPPCOMPONENT;
         NAMING_RDN_ATTR_ZIMLET        = DEFAULT_NAMING_RDN_ATTR_ZIMLET;
+        NAMING_RDN_ATTR_HAB           = DEFAULT_NAMING_RDN_ATTR_HAB;
 
         DN_GLOBALCONFIG      = NAMING_RDN_ATTR_GLOBALCONFIG + "=config" + "," + BASE_DN_CONFIG_BRANCH;
         DN_GLOBALGRANT       = NAMING_RDN_ATTR_GLOBALGRANT  + "=globalgrant" + "," + BASE_DN_CONFIG_BRANCH;
@@ -409,6 +412,17 @@ public class LdapDIT {
         return emailToDN(newLocalPart, newDomain);
     }
 
+    /*
+     * =====================
+     *   hab group
+     * =====================
+     */
+    public String habGroupDNCreate(String orgUnitDN, String localPart) throws ServiceException {
+        if (localPart == null || orgUnitDN == null) {
+            throw ServiceException.INVALID_REQUEST("localPart and orgUnitDN cannot be null", null);
+        }
+        return NAMING_RDN_ATTR_HAB + "=" + LdapUtil.escapeRDNValue(localPart) + "," + orgUnitDN;
+    }
 
     /*
      * ==========
@@ -695,6 +709,10 @@ public class LdapDIT {
     public ZLdapFilter filterGroupsByDomain(Domain domain) {
         return ZLdapFilterFactory.getInstance().allGroups();
     }
+    
+    public ZLdapFilter filterHabGroupsByDn() {
+        return ZLdapFilterFactory.getInstance().allHabGroups();
+    }
 
 
 
@@ -788,6 +806,7 @@ public class LdapDIT {
         boolean coses = (flags & Provisioning.SD_COS_FLAG) != 0;
         boolean servers = (flags & Provisioning.SD_SERVER_FLAG) != 0;
         boolean ucservices = (flags & Provisioning.SD_UC_SERVICE_FLAG) != 0;
+        boolean habgroups = (flags & Provisioning.SD_HAB_FLAG) != 0;
 
         if (accounts || aliases || lists || dynamicgroups || calendarResources) {
             addBase(bases, mailBranchBaseDN());
@@ -797,7 +816,7 @@ public class LdapDIT {
             addBase(bases, adminBaseDN());
         }
 
-        if (domains) {
+        if (domains || habgroups) {
             addBase(bases, domainBaseDN());
         }
 

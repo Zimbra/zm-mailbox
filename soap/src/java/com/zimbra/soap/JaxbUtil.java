@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010, 2011, 2012, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2018 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -202,6 +202,12 @@ public final class JaxbUtil {
             com.zimbra.soap.account.message.SubscribeDistributionListResponse.class,
             com.zimbra.soap.account.message.SyncGalRequest.class,
             com.zimbra.soap.account.message.SyncGalResponse.class,
+            com.zimbra.soap.account.message.GetAllAddressListsRequest.class,
+            com.zimbra.soap.account.message.GetAllAddressListsResponse.class,
+            com.zimbra.soap.admin.message.GetAllAddressListsRequest.class,
+            com.zimbra.soap.admin.message.GetAllAddressListsResponse.class,
+            com.zimbra.soap.admin.message.DeleteAddressListRequest.class,
+            com.zimbra.soap.admin.message.DeleteAddressListResponse.class,
             com.zimbra.soap.admin.message.AbortHsmRequest.class,
             com.zimbra.soap.admin.message.AbortHsmResponse.class,
             com.zimbra.soap.admin.message.AbortXMbxSearchRequest.class,
@@ -280,6 +286,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.CountObjectsResponse.class,
             com.zimbra.soap.admin.message.CreateAccountRequest.class,
             com.zimbra.soap.admin.message.CreateAccountResponse.class,
+            com.zimbra.soap.admin.message.CreateAddressListRequest.class,
+            com.zimbra.soap.admin.message.CreateAddressListResponse.class,
             com.zimbra.soap.admin.message.CreateAlwaysOnClusterRequest.class,
             com.zimbra.soap.admin.message.CreateAlwaysOnClusterResponse.class,
             com.zimbra.soap.admin.message.CreateArchiveRequest.class,
@@ -292,6 +300,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.CreateDataSourceResponse.class,
             com.zimbra.soap.admin.message.CreateDistributionListRequest.class,
             com.zimbra.soap.admin.message.CreateDistributionListResponse.class,
+            com.zimbra.soap.admin.message.CreateHABGroupRequest.class,
+            com.zimbra.soap.admin.message.CreateHABGroupResponse.class,
             com.zimbra.soap.admin.message.CreateDomainRequest.class,
             com.zimbra.soap.admin.message.CreateDomainResponse.class,
             com.zimbra.soap.admin.message.CreateGalSyncAccountRequest.class,
@@ -488,6 +498,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.GetFreeBusyQueueInfoResponse.class,
             com.zimbra.soap.admin.message.GetGrantsRequest.class,
             com.zimbra.soap.admin.message.GetGrantsResponse.class,
+            com.zimbra.soap.account.message.GetHABRequest.class,
+            com.zimbra.soap.account.message.GetHABResponse.class,
             com.zimbra.soap.admin.message.GetHsmStatusRequest.class,
             com.zimbra.soap.admin.message.GetHsmStatusResponse.class,
             com.zimbra.soap.admin.message.GetIndexStatsRequest.class,
@@ -556,6 +568,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.GetZimletStatusResponse.class,
             com.zimbra.soap.admin.message.GrantRightRequest.class,
             com.zimbra.soap.admin.message.GrantRightResponse.class,
+            com.zimbra.soap.admin.message.HABOrgUnitRequest.class,
+            com.zimbra.soap.admin.message.HABOrgUnitResponse.class,
             com.zimbra.soap.admin.message.HsmRequest.class,
             com.zimbra.soap.admin.message.HsmResponse.class,
             com.zimbra.soap.admin.message.InstallCertRequest.class,
@@ -572,6 +586,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.MigrateAccountResponse.class,
             com.zimbra.soap.admin.message.ModifyAccountRequest.class,
             com.zimbra.soap.admin.message.ModifyAccountResponse.class,
+            com.zimbra.soap.admin.message.ModifyAddressListRequest.class,
+            com.zimbra.soap.admin.message.ModifyAddressListResponse.class,
             com.zimbra.soap.admin.message.ModifyAdminSavedSearchesRequest.class,
             com.zimbra.soap.admin.message.ModifyAdminSavedSearchesResponse.class,
             com.zimbra.soap.admin.message.ModifyAlwaysOnClusterRequest.class,
@@ -590,6 +606,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.ModifyDistributionListResponse.class,
             com.zimbra.soap.admin.message.ModifyDomainRequest.class,
             com.zimbra.soap.admin.message.ModifyDomainResponse.class,
+            com.zimbra.soap.admin.message.ModifyHABGroupRequest.class,
+            com.zimbra.soap.admin.message.ModifyHABGroupResponse.class,
             com.zimbra.soap.admin.message.ModifyFilterRulesRequest.class,
             com.zimbra.soap.admin.message.ModifyFilterRulesResponse.class,
             com.zimbra.soap.admin.message.ModifyLDAPEntryRequest.class,
@@ -660,6 +678,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.RemoveStaleDeviceMetadataResponse.class,
             com.zimbra.soap.admin.message.RenameAccountRequest.class,
             com.zimbra.soap.admin.message.RenameAccountResponse.class,
+            com.zimbra.soap.admin.message.ChangePrimaryEmailRequest.class,
+            com.zimbra.soap.admin.message.ChangePrimaryEmailResponse.class,
             com.zimbra.soap.admin.message.RenameCalendarResourceRequest.class,
             com.zimbra.soap.admin.message.RenameCalendarResourceResponse.class,
             com.zimbra.soap.admin.message.RenameCosRequest.class,
@@ -1097,7 +1117,11 @@ public final class JaxbUtil {
             com.zimbra.soap.voice.message.UploadVoiceMailRequest.class,
             com.zimbra.soap.voice.message.UploadVoiceMailResponse.class,
             com.zimbra.soap.voice.message.VoiceMsgActionRequest.class,
-            com.zimbra.soap.voice.message.VoiceMsgActionResponse.class
+            com.zimbra.soap.voice.message.VoiceMsgActionResponse.class,
+            com.zimbra.soap.account.message.GetAddressListMembersRequest.class,
+            com.zimbra.soap.account.message.GetAddressListMemberResponse.class,
+            com.zimbra.soap.admin.message.GetAddressListInfoRequest.class,
+            com.zimbra.soap.admin.message.GetAddressListInfoResponse.class
         };
 
         try {

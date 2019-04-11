@@ -45,6 +45,7 @@ import com.zimbra.cs.imap.ImapMessage.ImapMessageSet;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.PendingModifications.ModificationKey;
@@ -386,6 +387,11 @@ public abstract class ImapListener extends Session {
         mIsVirtual = i4folder.isVirtual();
         mFolder    = i4folder;
         this.handler = handler;
+        final OperationContext octxt = i4folder.getCredentials().getContext();
+        if (octxt != null) {
+            userAgent = octxt.getUserAgent();
+            requestIPAddress = octxt.getRequestIP();
+        }
 
         i4folder.setSession(this);
     }

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2009, 2010, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2007, 2009, 2010, 2013, 2014, 2016, 2019 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -48,19 +48,27 @@ public class Krb5Login {
     public static void verifyPassword(String principal, String password) throws LoginException {
         LoginContext lc = null;
         try {
+            ZimbraLog.account.debug("Kerberos(krb5) principal login with password: %s and password: %s", principal, password);
             lc = Krb5Login.withPassword(principal, password);
             lc.login();
         } finally {
             if (lc != null) {
                 try {
+                    //Only log out if a login occured. If a login didn't occur, then a logout throws a NPE.
+                    if (lc.getSubject() != null
+                            && !lc.getSubject().getPrincipals().isEmpty()) {
+                        ZimbraLog.account.debug("Kerberos(krb5) Login Context subject and principal are not null. Safely logging out.");
                     lc.logout();
-                } catch(LoginException le) {
+                    } else {
+                        ZimbraLog.account.debug("Kerberos(krb5) Login Context subject and principal are null. Cannot safely log out.");
+                    }
+                } catch (LoginException le) {
                     ZimbraLog.account.warn("krb5 logout failed", le);
                 }
             }
         }
     }
-    
+
     public static void performAs(String principal, String keytab, PrivilegedExceptionAction action) throws PrivilegedActionException, LoginException {
         LoginContext lc = null;
         try {
@@ -198,6 +206,9 @@ public class Krb5Login {
             return name.equals(mName) ? mEntry : null;
         }
 
+        /**
+         * Refresh method
+         */
         public void refresh() {}
     }
 
@@ -205,16 +216,16 @@ public class Krb5Login {
     {
         private Map<String, String> mOptions;
 
-        private Krb5Config(String loginModuleName, LoginModuleControlFlag controlFlag, Map<String, ?> options) {
-            super(loginModuleName, controlFlag, options);
-        }
-
         public static final AppConfigurationEntry.LoginModuleControlFlag
-                DEFAULT_CONTROL_FLAG =
-                AppConfigurationEntry.LoginModuleControlFlag.REQUIRED;
+            DEFAULT_CONTROL_FLAG =
+            AppConfigurationEntry.LoginModuleControlFlag.REQUIRED;
 
         private static final String DEFAULT_LOGIN_MODULE_NAME =
                 "com.sun.security.auth.module.Krb5LoginModule";
+
+        private Krb5Config(String loginModuleName, LoginModuleControlFlag controlFlag, Map<String, ?> options) {
+            super(loginModuleName, controlFlag, options);
+        }
 
         public static Krb5Config getInstance() {
             HashMap<String, String> options = new HashMap<String, String>();

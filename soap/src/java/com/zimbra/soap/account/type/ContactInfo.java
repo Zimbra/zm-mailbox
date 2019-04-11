@@ -17,10 +17,6 @@
 
 package com.zimbra.soap.account.type;
 
-import com.google.common.base.MoreObjects;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -29,7 +25,10 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 
-import com.zimbra.common.mailbox.ContactConstants;
+import com.google.common.base.MoreObjects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.ContactGroupMemberInterface;
@@ -38,7 +37,13 @@ import com.zimbra.soap.base.CustomMetadataInterface;
 import com.zimbra.soap.type.ContactAttr;
 import com.zimbra.soap.type.ZmBoolean;
 
+import io.leangen.graphql.annotations.GraphQLIgnore;
+import io.leangen.graphql.annotations.GraphQLNonNull;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name=GqlConstants.CLASS_ACCOUNT_CONTACT_INFO, description="Contact information")
 public class ContactInfo
 implements ContactInterface {
 
@@ -327,61 +332,85 @@ implements ContactInterface {
     }
 
     @Override
+    @GraphQLQuery(name=GqlConstants.SORT_FIELD, description="Sort field value")
     public String getSortField() { return sortField; }
     @Override
+    @GraphQLQuery(name=GqlConstants.IS_EXPANDABLE, description="Denotes whether user can expand group members")
     public Boolean getCanExpand() { return ZmBoolean.toBool(canExpand); }
     @Override
+    @GraphQLQuery(name=GqlConstants.ID, description="Unique contact ID")
+    @GraphQLNonNull
     public String getId() { return id; }
     @Override
+    @GraphQLQuery(name=GqlConstants.FOLDER_ID, description="The containing Folder ID")
     public String getFolder() { return folder; }
     @Override
+    @GraphQLQuery(name=GqlConstants.FLAGS, description="(f)lagged, has (a)ttachment")
     public String getFlags() { return flags; }
     @Override
+    @GraphQLIgnore
     public String getTags() { return tags; }
     @Override
+    @GraphQLQuery(name=GqlConstants.TAG_NAMES, description="Comma-separated list of tag names")
     public String getTagNames() { return tagNames; }
     @Override
+    @GraphQLQuery(name=GqlConstants.LAST_MODIFIED, description="Modified date in seconds")
     public Long getChangeDate() { return changeDate; }
     @Override
+    @GraphQLQuery(name=GqlConstants.MODIFIED_SEQUENCE, description="Modified sequence")
     public Integer getModifiedSequenceId() { return modifiedSequenceId; }
     @Override
+    @GraphQLQuery(name=GqlConstants.DATE, description="Date in milliseconds")
     public Long getDate() { return date; }
     @Override
+    @GraphQLQuery(name=GqlConstants.REVISION, description="Saved sequence number")
     public Integer getRevisionId() { return revisionId; }
     @Override
+    @GraphQLQuery(name=GqlConstants.FILE_AS, description="Current fileAs string for display/sorting purposes")
     public String getFileAs() { return fileAs; }
     @Override
+    @GraphQLQuery(name=GqlConstants.EMAIL, description="Contact email address")
     public String getEmail() { return email; }
     @Override
+    @GraphQLQuery(name=GqlConstants.EMAIL2, description="Contact email address 2")
     public String getEmail2() { return email2; }
     @Override
+    @GraphQLQuery(name=GqlConstants.EMAIL3, description="Contact email address 3")
     public String getEmail3() { return email3; }
     @Override
+    @GraphQLQuery(name=GqlConstants.TYPE, description="Contact type, Default value is \"contact\". If is present and set to \"group\", then the contact is a personal distribution list.")
     public String getType() { return type; }
     @Override
+    @GraphQLQuery(name=GqlConstants.DLIST, description="Contact distribution list")
     public String getDlist() { return dlist; }
     @Override
+    @GraphQLQuery(name=GqlConstants.REFERENCE, description="Global Address List entry reference")
     public String getReference() { return reference; }
     @Override
+    @GraphQLQuery(name=GqlConstants.IS_TOO_MANY_MEMBERS, description="Denotes whether the number of entries on a GAL group exceeds the specified max")
     public Boolean getTooManyMembers() { return ZmBoolean.toBool(tooManyMembers); }
 
+    @GraphQLQuery(name=GqlConstants.METADATAS, description="Custom metadata information")
     public List<AccountCustomMetadata> getMetadatas() {
         return metadatas;
     }
     @Override
+    @GraphQLQuery(name=GqlConstants.ATTRIBUTES, description="Attributes")
     public List<ContactAttr> getAttrs() {
         return attrs;
     }
 
+    @GraphQLQuery(name=GqlConstants.CONTACT_GROUP_MEMBERS, description="Contact group members")
     public List<ContactGroupMember> getContactGroupMembers() {
         return Collections.unmodifiableList(contactGroupMembers);
     }
 
-
+    @GraphQLQuery(name=GqlConstants.IS_OWNER, description="For group entries, flags whether user is the owner of a group")
     public Boolean isOwner() {
         return ZmBoolean.toBool(isOwner);
     }
 
+    @GraphQLQuery(name=GqlConstants.IS_MEMBER, description="For group entries, flags whether user is a member of a group ")
     public Boolean isMember() {
         return ZmBoolean.toBool(isMember);
     }
@@ -401,6 +430,7 @@ implements ContactInterface {
 
     // non-JAXB method
     @Override
+    @GraphQLIgnore
     public List<CustomMetadataInterface> getMetadataInterfaces() {
         return AccountCustomMetadata.toInterfaces(metadatas);
     }
@@ -466,6 +496,7 @@ implements ContactInterface {
     }
 
     @Override
+    @GraphQLIgnore
     public List<ContactGroupMemberInterface> getContactGroupMemberInterfaces() {
         return ContactGroupMember.toInterfaces(contactGroupMembers);
     }

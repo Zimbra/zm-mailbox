@@ -14823,6 +14823,140 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
+     * root group id of hierarchical address book
+     *
+     * @return zimbraHierarchicalAddressBookRoot, or empty array if unset
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=3072)
+    public String[] getHierarchicalAddressBookRoot() {
+        return getMultiAttr(Provisioning.A_zimbraHierarchicalAddressBookRoot, true, true);
+    }
+
+    /**
+     * root group id of hierarchical address book
+     *
+     * @param zimbraHierarchicalAddressBookRoot new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=3072)
+    public void setHierarchicalAddressBookRoot(String[] zimbraHierarchicalAddressBookRoot) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHierarchicalAddressBookRoot, zimbraHierarchicalAddressBookRoot);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * root group id of hierarchical address book
+     *
+     * @param zimbraHierarchicalAddressBookRoot new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=3072)
+    public Map<String,Object> setHierarchicalAddressBookRoot(String[] zimbraHierarchicalAddressBookRoot, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHierarchicalAddressBookRoot, zimbraHierarchicalAddressBookRoot);
+        return attrs;
+    }
+
+    /**
+     * root group id of hierarchical address book
+     *
+     * @param zimbraHierarchicalAddressBookRoot new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=3072)
+    public void addHierarchicalAddressBookRoot(String zimbraHierarchicalAddressBookRoot) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraHierarchicalAddressBookRoot, zimbraHierarchicalAddressBookRoot);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * root group id of hierarchical address book
+     *
+     * @param zimbraHierarchicalAddressBookRoot new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=3072)
+    public Map<String,Object> addHierarchicalAddressBookRoot(String zimbraHierarchicalAddressBookRoot, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraHierarchicalAddressBookRoot, zimbraHierarchicalAddressBookRoot);
+        return attrs;
+    }
+
+    /**
+     * root group id of hierarchical address book
+     *
+     * @param zimbraHierarchicalAddressBookRoot existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=3072)
+    public void removeHierarchicalAddressBookRoot(String zimbraHierarchicalAddressBookRoot) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraHierarchicalAddressBookRoot, zimbraHierarchicalAddressBookRoot);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * root group id of hierarchical address book
+     *
+     * @param zimbraHierarchicalAddressBookRoot existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=3072)
+    public Map<String,Object> removeHierarchicalAddressBookRoot(String zimbraHierarchicalAddressBookRoot, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraHierarchicalAddressBookRoot, zimbraHierarchicalAddressBookRoot);
+        return attrs;
+    }
+
+    /**
+     * root group id of hierarchical address book
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=3072)
+    public void unsetHierarchicalAddressBookRoot() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHierarchicalAddressBookRoot, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * root group id of hierarchical address book
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=3072)
+    public Map<String,Object> unsetHierarchicalAddressBookRoot(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHierarchicalAddressBookRoot, "");
+        return attrs;
+    }
+
+    /**
      * Zimbra Systems Unique ID
      *
      * @return zimbraId, or null if unset
@@ -21198,6 +21332,78 @@ public abstract class ZAttrDomain extends NamedEntry {
     public Map<String,Object> unsetSSLPrivateKey(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSSLPrivateKey, "");
+        return attrs;
+    }
+
+    /**
+     * whether or not to show client Terms of Service
+     *
+     * @return zimbraShowClientTOS, or false if unset
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=3067)
+    public boolean isShowClientTOS() {
+        return getBooleanAttr(Provisioning.A_zimbraShowClientTOS, false, true);
+    }
+
+    /**
+     * whether or not to show client Terms of Service
+     *
+     * @param zimbraShowClientTOS new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=3067)
+    public void setShowClientTOS(boolean zimbraShowClientTOS) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraShowClientTOS, zimbraShowClientTOS ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether or not to show client Terms of Service
+     *
+     * @param zimbraShowClientTOS new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=3067)
+    public Map<String,Object> setShowClientTOS(boolean zimbraShowClientTOS, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraShowClientTOS, zimbraShowClientTOS ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether or not to show client Terms of Service
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=3067)
+    public void unsetShowClientTOS() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraShowClientTOS, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether or not to show client Terms of Service
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=3067)
+    public Map<String,Object> unsetShowClientTOS(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraShowClientTOS, "");
         return attrs;
     }
 

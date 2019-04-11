@@ -96,8 +96,10 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE;
+import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.cs.fb.FreeBusy;
 import com.zimbra.cs.gal.GalGroup.GroupInfo;
+import com.zimbra.cs.gal.GalGroup;
 import com.zimbra.cs.gal.GalGroupInfoProvider;
 import com.zimbra.cs.gal.GalGroupMembers.ContactDLMembers;
 import com.zimbra.cs.html.BrowserDefang;
@@ -741,13 +743,27 @@ public final class ToXML {
                 fields, migratedDlist, returnHiddenAttrs, maxMembers, returnCertInfo, (Set<String>) null);
     }
 
+    public static Element encodeContact(Element parent, ItemIdFormatter ifmt,
+        OperationContext octxt, Contact contact, ContactGroup contactGroup,
+        Collection<String> memberAttrFilter, boolean summary, Collection<String> attrFilter,
+        int fields, String migratedDlist, boolean returnHiddenAttrs, long maxMembers,
+        boolean returnCertInfo, Set<String> memberOfIds) throws ServiceException {
+        return encodeContact(parent, ifmt, octxt, contact, contactGroup, memberAttrFilter, summary,
+            attrFilter, fields, migratedDlist, returnHiddenAttrs, maxMembers, returnCertInfo,
+            memberOfIds, null, null);
+    }
+
     /**
      * @param memberOfIds set of IDs of contact groups this contact is a member of
+     * @param mRequestedAcct requested account
+     * @param mAuthedAcct authenticated account
      */
-    public static Element encodeContact(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Contact contact,
-            ContactGroup contactGroup, Collection<String> memberAttrFilter, boolean summary,
-            Collection<String> attrFilter, int fields, String migratedDlist,
-            boolean returnHiddenAttrs, long maxMembers, boolean returnCertInfo, Set<String> memberOfIds)
+    public static Element encodeContact(Element parent, ItemIdFormatter ifmt,
+        OperationContext octxt, Contact contact, ContactGroup contactGroup,
+        Collection<String> memberAttrFilter, boolean summary, Collection<String> attrFilter,
+        int fields, String migratedDlist, boolean returnHiddenAttrs, long maxMembers,
+        boolean returnCertInfo, Set<String> memberOfIds, Account mRequestedAcct,
+        Account mAuthedAcct)
     throws ServiceException {
         Element el = parent.addNonUniqueElement(MailConstants.E_CONTACT);
         el.addAttribute(MailConstants.A_ID, ifmt.formatItemId(contact));
@@ -828,19 +844,22 @@ public final class ToXML {
             for (Map.Entry<String, String> me : contactFields.entrySet()) {
                 String name = me.getKey();
                 String value = me.getValue();
-
                 // don't put returnHiddenAttrs in one of the && condition because member
                 // can be configured as a hidden or non-hidden field
-                if (ContactConstants.A_member.equals(name) &&
-                            maxMembers != GetContacts.NO_LIMIT_MAX_MEMBERS) {
-                    // there is a limit on the max number of members to return
-                    ContactDLMembers dlMembers = new ContactDLMembers(contact);
-                    if (dlMembers.getTotal() > maxMembers) {
-                        el.addAttribute(MailConstants.A_TOO_MANY_MEMBERS, true);
+                if (ContactConstants.A_member.equals(name)) {
+                    String email = contactFields.get("email");
+                    if (!hasDLViewRight(email, mRequestedAcct, mAuthedAcct)) {
                         continue;
                     }
+                    if (maxMembers != GetContacts.NO_LIMIT_MAX_MEMBERS) {
+                        // there is a limit on the max number of members to return
+                        ContactDLMembers dlMembers = new ContactDLMembers(contact);
+                        if (dlMembers.getTotal() > maxMembers) {
+                            el.addAttribute(MailConstants.A_TOO_MANY_MEMBERS, true);
+                            continue;
+                        }
+                    }
                 }
-
                 if (name != null && !name.trim().isEmpty() && !Strings.isNullOrEmpty(value)) {
                     encodeContactAttr(el, name, value, contact, encodeContactGroupMembersBasic, octxt, returnCertInfo);
                 }
@@ -872,6 +891,19 @@ public final class ToXML {
                     Element.Disposition.CONTENT);
         }
         return el;
+    }
+
+    public static boolean hasDLViewRight(String email, Account mRequestedAcct,
+        Account mAuthedAcct) {
+        boolean canExpand = true;
+        if (mRequestedAcct != null && mAuthedAcct != null) {
+            GalGroup.GroupInfo groupInfo = GalGroupInfoProvider.getInstance().getGroupInfo(email,
+                true, mRequestedAcct, mAuthedAcct);
+            if (groupInfo != null) {
+                canExpand = (GalGroup.GroupInfo.CAN_EXPAND == groupInfo);
+            }
+        }
+        return canExpand;
     }
 
     private static void encodeContactAttr(Element elem, String name, String value,
@@ -1622,8 +1654,8 @@ public final class ToXML {
                     "The message is signed. Forwarding it to SmimeHandler for signature verification.");
                 if (SmimeHandler.getHandler() != null) {
                     SmimeHandler.getHandler().verifyMessageSignature(msg, m, mm, octxt);
-                }
-            } else {
+                } 
+           } else {
                 // if the original mime message was PKCS7-signed and it was
                 // decoded and stored in cache as plain mime
                 if ((mm instanceof Mime.FixedMimeMessage)
@@ -3268,6 +3300,7 @@ throws ServiceException {
         resp.addAttribute(MailConstants.A_ID, fb.getName());
         for (Iterator<FreeBusy.Interval> iter = fb.iterator(); iter.hasNext(); ) {
             FreeBusy.Interval cur = iter.next();
+
             String status = cur.getStatus();
             Element elt;
             if (status.equals(IcalXmlStrMap.FBTYPE_FREE)) {
@@ -3288,6 +3321,20 @@ throws ServiceException {
             if (elt != null) {
                 elt.addAttribute(MailConstants.A_CAL_START_TIME, cur.getStart());
                 elt.addAttribute(MailConstants.A_CAL_END_TIME, cur.getEnd());
+                if (cur.isDetailsExist()) {
+                    elt.addAttribute(MailConstants.E_CAL_EVENT_ID,cur.getId());
+                    elt.addAttribute(MailConstants.E_CAL_EVENT_SUBJECT, cur.getSubject());
+                    elt.addAttribute(MailConstants.E_CAL_EVENT_LOCATION, cur.getLocation());
+                    elt.addAttribute(MailConstants.E_CAL_EVENT_ISMEETING, cur.isMeeting());
+                    elt.addAttribute(MailConstants.E_CAL_EVENT_ISPRIVATE, cur.isPrivate());
+                    elt.addAttribute(MailConstants.E_CAL_EVENT_ISRECURRING, cur.isRecurring());
+                    elt.addAttribute(MailConstants.E_CAL_EVENT_ISREMINDERSET, cur.isReminderSet());
+                    elt.addAttribute(MailConstants.E_CAL_EVENT_ISEXCEPTION, cur.isException());
+                } 
+                if(!cur.isHasPermission()) {
+                    elt.addAttribute(MailConstants.E_CAL_EVENT_HASPERMISSION, cur.isHasPermission());
+                }
+                
             }
         }
 
@@ -3414,12 +3461,22 @@ throws ServiceException {
     }
 
     public static Element encodeGalContact(Element response, GalContact contact,
-            Collection<String> returnAttrs) {
+        Collection<String> returnAttrs) {
+        return encodeGalContact(response, contact, returnAttrs, true);
+    }
+
+    public static Element encodeGalContact(Element response, GalContact contact,
+            Collection<String> returnAttrs, boolean canExpand) {
         Element cn = response.addNonUniqueElement(MailConstants.E_CONTACT);
         cn.addAttribute(MailConstants.A_ID, contact.getId());
         Map<String, Object> attrs = contact.getAttrs();
         for (Map.Entry<String, Object> entry : attrs.entrySet()) {
             String key = entry.getKey();
+            if (ContactConstants.A_member.equals(key)) {
+                if (!canExpand) {
+                    continue;
+                }
+            }
             if (returnAttrs == null || returnAttrs.contains(key)) {
                 Object value = entry.getValue();
                 if (value instanceof String[]) {

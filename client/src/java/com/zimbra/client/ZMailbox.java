@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2018 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -45,16 +45,22 @@ import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpState;
-import org.apache.commons.httpclient.cookie.CookiePolicy;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.httpclient.methods.multipart.ByteArrayPartSource;
-import org.apache.commons.httpclient.methods.multipart.FilePart;
-import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
-import org.apache.commons.httpclient.methods.multipart.Part;
 import org.apache.commons.lang.StringUtils;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpException;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.CookieSpecs;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.config.SocketConfig;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.entity.mime.content.ByteArrayBody;
+import org.apache.http.impl.client.BasicCookieStore;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.util.EntityUtils;
 import org.dom4j.QName;
 import org.json.JSONException;
 
@@ -102,6 +108,7 @@ import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.auth.twofactor.TOTPAuthenticator;
 import com.zimbra.common.auth.twofactor.TwoFactorOptions.Encoding;
 import com.zimbra.common.httpclient.HttpClientUtil;
+import com.zimbra.common.httpclient.InputStreamRequestHttpRetryHandler;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.ExistingParentFolderStoreAndUnmatchedPart;
 import com.zimbra.common.mailbox.FolderStore;
@@ -137,6 +144,7 @@ import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.account.message.AuthRequest;
@@ -413,6 +421,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         private String mClientIp;
         private String mUserAgentName;
         private String mUserAgentVersion;
+        private String mOriginalUserAgent;
         private int mTimeout = -1;
         private int mRetryCount = -1;
         private SoapTransport.DebugListener mDebugListener;
@@ -526,6 +535,12 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         public Options setUserAgent(String name, String version) {
             mUserAgentName = name;
             mUserAgentVersion = version;
+            return this;
+        }
+
+        public String getOriginalUserAgent() { return mOriginalUserAgent; }
+        public Options setOriginalUserAgent(String userAgent) {
+            this.mOriginalUserAgent = userAgent;
             return this;
         }
 
@@ -924,6 +939,9 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         } else {
             mTransport.setUserAgent(options.getUserAgentName(), options.getUserAgentVersion());
         }
+        if (options.getOriginalUserAgent() != null) {
+            mTransport.setOriginalUserAgent(options.getOriginalUserAgent());
+        }
         mTransport.setMaxNotifySeq(0);
         mTransport.setClientIp(mClientIp);
         if (options.getTimeout() > -1) {
@@ -1237,6 +1255,13 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             mTransport.setMaxNotifySeq(0);
             mSize = event.getSize();
             if (root != null) {
+                try {
+                    // skip the cache update if invalid auth/zmailbox instance
+                    mailbox.getAccountId();
+                } catch (ServiceException e) {
+                    ZimbraLog.cache.error("Unable to refresh mailbox item id mappings due to missing auth info.");
+                    return;
+                }
                 mUserRoot = root;
                 addIdMappings(mUserRoot);
             }
@@ -2468,18 +2493,14 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      * @return the attachment id
      */
     public String uploadAttachments(File[] files, int msTimeout) throws ServiceException {
-        Part[] parts = new Part[files.length];
+        MultipartEntityBuilder builder = MultipartEntityBuilder.create();
         for (int i = 0; i < files.length; i++) {
             File file = files[i];
             String contentType = URLConnection.getFileNameMap().getContentTypeFor(file.getName());
-            try {
-                parts[i] = new FilePart(file.getName(), file, contentType, "UTF-8");
-            } catch (IOException e) {
-                throw ZClientException.IO_ERROR(e.getMessage(), e);
-            }
+            builder.addBinaryBody("upfile", file, ContentType.create(contentType, "UTF-8"), file.getName());
         }
 
-        return uploadAttachments(parts, msTimeout);
+        return uploadAttachments(builder, msTimeout);
     }
 
     /**
@@ -2487,10 +2508,10 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      * @return the attachment id
      */
     public String uploadAttachment(String name, byte[] content, String contentType, int msTimeout) throws ServiceException {
-        FilePart part = new FilePart(name, new ByteArrayPartSource(name, content));
-        part.setContentType(contentType);
 
-        return uploadAttachments(new Part[] { part }, msTimeout);
+        MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+        builder.addBinaryBody("upfile",content, ContentType.create(contentType), name);
+        return uploadAttachments(builder, msTimeout);
     }
 
     /**
@@ -2503,23 +2524,22 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         if (attachments == null || attachments.size() == 0) {
             return null;
         }
-        Part[] parts = new Part[attachments.size()];
-        int i = 0;
+        MultipartEntityBuilder builder = MultipartEntityBuilder.create();
         for (String name : attachments.keySet()) {
             byte[] content = attachments.get(name);
-            parts[i++] = createAttachmentPart(name, content);
+            String contentType = URLConnection.getFileNameMap().getContentTypeFor(name);
+            builder.addBinaryBody(name, content, ContentType.create(contentType), name);
         }
 
-        return uploadAttachments(parts, msTimeout);
+        return uploadAttachments(builder, msTimeout);
     }
 
     /**
      * Creates an <tt>HttpClient FilePart</tt> from the given filename and content.
      */
-    public FilePart createAttachmentPart(String filename, byte[] content) {
-        FilePart part = new FilePart(filename, new ByteArrayPartSource(filename, content));
+    public ByteArrayBody createAttachmentPart(String filename, byte[] content) {
         String contentType = URLConnection.getFileNameMap().getContentTypeFor(filename);
-        part.setContentType(contentType);
+        ByteArrayBody part = new ByteArrayBody(content, ContentType.create(contentType), filename);
         return part;
     }
 
@@ -2527,40 +2547,45 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      * Uploads HTTP post parts to <tt>FileUploadServlet</tt>.
      * @return the attachment id
      */
-    public String uploadAttachments(Part[] parts, int msTimeout) throws ServiceException {
+    public String uploadAttachments(MultipartEntityBuilder builder, int msTimeout) throws ServiceException {
         String aid = null;
 
         URI uri = getUploadURI();
-        HttpClient client = getHttpClient(uri);
-
         // make the post
-        PostMethod post = new PostMethod(uri.toString());
-        post.getParams().setSoTimeout(msTimeout);
+        HttpPost post = new HttpPost(uri.toString());
 
+        HttpClientBuilder clientBuilder = getHttpClientBuilder(uri);
+        SocketConfig config = SocketConfig.custom().setSoTimeout(msTimeout).build();
+        clientBuilder.setDefaultSocketConfig(config);
+        HttpClient client = clientBuilder.build();
         int statusCode;
         try {
             if (mCsrfToken != null) {
-                post.setRequestHeader(Constants.CSRF_TOKEN, mCsrfToken);
+                post.addHeader(Constants.CSRF_TOKEN, mCsrfToken);
             }
-            post.setRequestEntity( new MultipartRequestEntity(parts, post.getParams()) );
-            statusCode = HttpClientUtil.executeMethod(client, post);
+            HttpEntity entity = builder.build();
+            post.setEntity(entity);
+            HttpResponse response = HttpClientUtil.executeMethod(client, post);
+            statusCode = response.getStatusLine().getStatusCode();
 
             // parse the response
             if (statusCode == HttpServletResponse.SC_OK) {
-                String response = post.getResponseBodyAsString();
-                aid = getAttachmentId(response);
+                String content = EntityUtils.toString(response.getEntity());
+                aid = getAttachmentId(content);
             } else if (statusCode == HttpServletResponse.SC_REQUEST_ENTITY_TOO_LARGE) {
                 throw ZClientException.UPLOAD_SIZE_LIMIT_EXCEEDED("upload size limit exceeded", null);
             } else {
                 throw ZClientException.UPLOAD_FAILED("Attachment post failed, status=" + statusCode, null);
             }
-        } catch (IOException e) {
+        } catch (IOException | HttpException e) {
             throw ZClientException.IO_ERROR(e.getMessage(), e);
         } finally {
             post.releaseConnection();
         }
         return aid;
     }
+
+
 
     public String uploadContentAsStream(String name, InputStream in, String contentType, long contentLength, int msTimeout)
             throws ServiceException {
@@ -2575,30 +2600,37 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         }
 
         URI uri = getUploadURI(limitByFileUploadMaxSize);
-        HttpClient client = getHttpClient(uri);
-
         // make the post
-        PostMethod post = new PostMethod(uri.toString());
-        post.getParams().setSoTimeout(msTimeout);
-
+        HttpPost post = new HttpPost(uri.toString());
+        HttpClientBuilder clientBuilder = getHttpClientBuilder(uri);
+        SocketConfig config = SocketConfig.custom().setSoTimeout(msTimeout).build();
+        clientBuilder.setDefaultSocketConfig(config);
+        clientBuilder.setRetryHandler(new InputStreamRequestHttpRetryHandler());
+        HttpClient client = clientBuilder.build();
         int statusCode;
         try {
-            post = HttpClientUtil.addInputStreamToHttpMethod(post, in, contentLength, contentType);
+            MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+            builder.addBinaryBody("upfile", in, ContentType.DEFAULT_BINARY, name);
+            HttpEntity httpEntity = builder.build();
+            post.setEntity(httpEntity);
+
             if (mCsrfToken != null) {
-                post.addRequestHeader(Constants.CSRF_TOKEN, this.mCsrfToken);
+                post.addHeader(Constants.CSRF_TOKEN, mCsrfToken);
             }
-            statusCode = HttpClientUtil.executeMethod(client, post);
+
+            HttpResponse response = HttpClientUtil.executeMethod(client, post);
+            statusCode = response.getStatusLine().getStatusCode();
 
             // parse the response
             if (statusCode == HttpServletResponse.SC_OK) {
-                String response = post.getResponseBodyAsString();
-                aid = getAttachmentId(response);
+                String content = EntityUtils.toString(response.getEntity());
+                aid = getAttachmentId(content);
             } else if (statusCode == HttpServletResponse.SC_REQUEST_ENTITY_TOO_LARGE) {
                 throw ZClientException.UPLOAD_SIZE_LIMIT_EXCEEDED("upload size limit exceeded", null);
             } else {
                 throw ZClientException.UPLOAD_FAILED("Attachment post failed, status=" + statusCode, null);
             }
-        } catch (IOException e) {
+        } catch (IOException | HttpException e) {
             throw ZClientException.IO_ERROR(e.getMessage(), e);
         } finally {
             post.releaseConnection();
@@ -2631,11 +2663,30 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
 
     public HttpClient getHttpClient(URI uri) {
         boolean isAdmin = uri.getPort() == LC.zimbra_admin_service_port.intValue();
-        HttpState initialState = HttpClientUtil.newHttpState(getAuthToken(), uri.getHost(), isAdmin);
-        HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
-        client.setState(initialState);
-        client.getParams().setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
-        return client;
+        BasicCookieStore initialState = HttpClientUtil.newHttpState(getAuthToken(), uri.getHost(), isAdmin);
+        HttpClientBuilder clientBuilder = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+        clientBuilder.setDefaultCookieStore(initialState);
+
+        RequestConfig reqConfig = RequestConfig.copy(
+            ZimbraHttpConnectionManager.getInternalHttpConnMgr().getZimbraConnMgrParams().getReqConfig())
+            .setCookieSpec(CookieSpecs.BROWSER_COMPATIBILITY).build();
+
+        clientBuilder.setDefaultRequestConfig(reqConfig);
+        return clientBuilder.build();
+    }
+
+    public HttpClientBuilder getHttpClientBuilder(URI uri) {
+        boolean isAdmin = uri.getPort() == LC.zimbra_admin_service_port.intValue();
+        BasicCookieStore initialState = HttpClientUtil.newHttpState(getAuthToken(), uri.getHost(), isAdmin);
+        HttpClientBuilder clientBuilder = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+        clientBuilder.setDefaultCookieStore(initialState);
+
+        RequestConfig reqConfig = RequestConfig.copy(
+            ZimbraHttpConnectionManager.getInternalHttpConnMgr().getZimbraConnMgrParams().getReqConfig())
+            .setCookieSpec(CookieSpecs.BROWSER_COMPATIBILITY).build();
+
+        clientBuilder.setDefaultRequestConfig(reqConfig);
+        return clientBuilder;
     }
 
     /**
@@ -3214,22 +3265,27 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
 
     private InputStream getResource(URI uri, int msecTimeout)
     throws ServiceException {
-        GetMethod get = null;
+        HttpGet get = null;
         try {
-            HttpClient client = getHttpClient(uri);
-            get = new GetMethod(uri.toString());
+
+            get = new HttpGet(uri.toString());
+            HttpClientBuilder clientBuilder = getHttpClientBuilder(uri);
             if (msecTimeout > -1) {
-                get.getParams().setSoTimeout(msecTimeout);
+                SocketConfig config = SocketConfig.custom().setSoTimeout(msecTimeout).build();
+                clientBuilder.setDefaultSocketConfig(config);
             }
-            int statusCode = HttpClientUtil.executeMethod(client, get);
+            HttpClient client = clientBuilder.build();
+            HttpResponse response = HttpClientUtil.executeMethod(client, get);
+            int statusCode = response.getStatusLine().getStatusCode();
+
             // parse the response
             if (statusCode == HttpServletResponse.SC_OK) {
-                return new GetMethodInputStream(get);
+                return new GetMethodInputStream(response.getEntity().getContent());
             } else {
-                String msg = String.format("GET from %s failed, status=%d.  %s", uri, statusCode, get.getStatusText());
+                String msg = String.format("GET from %s failed, status=%d.  %s", uri, statusCode, response.getStatusLine().getReasonPhrase());
                 throw ServiceException.FAILURE(msg, null);
             }
-        } catch (IOException e) {
+        } catch (IOException | HttpException e) {
             String msg = String.format("Unable to get resource from '%s' : %s", uri, e.getMessage());
             throw ZClientException.IO_ERROR(msg, e);
         }
@@ -3348,7 +3404,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      * @param is the input stream to post
      * @param closeIs whether to close the input stream when done
      * @param length length of inputstream, or 0/-1 if length is unknown.
-     * @param contentType optional content-type header value (defaults to "application/octect-stream")
+     * @param contentType optional content-type header value (defaults to "binary")
      * @param ignoreAndContinueOnError if true, set optional ignore=1 query string parameter
      * @param preserveAlarms if true, set optional preserveAlarms=1 query string parameter
      * @param msecTimeout connection timeout in milliseconds, or <tt>-1</tt> for no timeout
@@ -3359,7 +3415,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             String contentType, boolean ignoreAndContinueOnError, boolean preserveAlarms,
             int msecTimeout, String alternateUrl)
                     throws ServiceException {
-        PostMethod post = null;
+        HttpPost post = null;
 
         try {
             if (ignoreAndContinueOnError) {
@@ -3377,21 +3433,28 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
                 }
             }
             URI uri = getRestURI(relativePath, alternateUrl);
-            HttpClient client = getHttpClient(uri);
-
-            post = new PostMethod(uri.toString());
-
+            post = new HttpPost(uri.toString());
+            HttpClientBuilder clientBuilder = getHttpClientBuilder(uri);
             if (msecTimeout > -1) {
-                post.getParams().setSoTimeout(msecTimeout);
+                SocketConfig config = SocketConfig.custom().setSoTimeout(msecTimeout).build();
+                clientBuilder.setDefaultSocketConfig(config);
             }
+            clientBuilder.setRetryHandler(new InputStreamRequestHttpRetryHandler());
+            HttpClient client = clientBuilder.build();
+            int statusCode;
 
-            post = HttpClientUtil.addInputStreamToHttpMethod(post, is, length, contentType != null ? contentType: "application/octet-stream");
-            int statusCode = HttpClientUtil.executeMethod(client, post);
+            MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+            builder.addBinaryBody("upfile", is, ContentType.DEFAULT_BINARY, "file");
+            HttpEntity httpEntity = builder.build();
+            post.setEntity(httpEntity);
+            HttpResponse response = HttpClientUtil.executeMethod(client, post);
+
+            statusCode =response.getStatusLine().getStatusCode();
             // parse the response
             if (statusCode != HttpServletResponse.SC_OK) {
-                throw ServiceException.FAILURE("POST failed, status=" + statusCode+" "+post.getStatusText(), null);
+                throw ServiceException.FAILURE("POST failed, status=" + statusCode+" "+ response.getStatusLine().getStatusCode(), null);
             }
-        } catch (IOException e) {
+        } catch (IOException | HttpException e) {
             throw ZClientException.IO_ERROR(e.getMessage(), e);
         } finally {
             if (closeIs) {

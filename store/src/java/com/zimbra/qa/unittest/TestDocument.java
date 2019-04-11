@@ -20,9 +20,11 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.util.List;
 
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.http.client.HttpClient;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.util.EntityUtils;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -241,11 +243,12 @@ public class TestDocument {
         mbox.grantAccess(null, folder.getId(), null, ACL.GRANTEE_PUBLIC, ACL.stringToRights("rw"), null);
 
         String URL = TestUtil.getBaseUrl()+"/home/" + mbox.getAccount().getName()+"/"+folderName;
-        HttpClient eve = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
-        GetMethod get = new GetMethod(URL);
-        int statusCode = HttpClientUtil.executeMethod(eve, get);
+        HttpClient eve = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient().build();
+        HttpGet get = new HttpGet(URL);
+        HttpResponse response = HttpClientUtil.executeMethod(eve, get);
+        int statusCode = response.getStatusLine().getStatusCode();
         Assert.assertEquals("This request should succeed. Getting status code " + statusCode, HttpStatus.SC_OK,statusCode);
-        String respStr = get.getResponseBodyAsString();
+        String respStr = EntityUtils.toString(response.getEntity());
         Assert.assertFalse("Should not contain AUTH_EXPIRED", respStr.contains("AUTH_EXPIRED"));
         Assert.assertTrue("Should contain shared content ", respStr.contains("test2.txt"));
     }

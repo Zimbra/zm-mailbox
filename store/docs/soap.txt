@@ -533,14 +533,18 @@ See ZimbraTwoFactorAuth server extension docs for more details on two-factor aut
   Returns new authToken, as old authToken will be invalidated on password change.
 
 ---------------------------
-
-<EndSessionRequest xmlns="urn:zimbraAccount" [logoff="1"]/>
+<EndSessionRequest xmlns="urn:zimbraAccount" [logoff="1"] [all="1"] [excludeCurrent="1"] [sessionId="session_id"]/>
 
 Ends the current session, removing it from all caches.  Called when
 the browser app (or other session-using app) shuts down.  Has no
 effect if called in a <nosession> context.
 
 Setting logoff to "1" will prevent the cookie from being re-used.
+Setting sessionId will end session for given session id and not current session.
+
+When all is 1, all web sessions of the user will be cleared.
+When all is 1 and excludeCurrent is also 1, all web sessions of the user, except the current session will be cleared.
+For all and sessionId, <nosession> context has no effect.
 
 ---------
  <GetPrefsRequest>
@@ -4339,6 +4343,9 @@ Ajax client can use this request to ask the server for help in generating a prop
 
 <GetDistributionListMembersResponse more="{more-flag}" [total="{total}"]>
     <dlm>{member email}</dlm>+
+    <groupMember name={member email}>
+      <attr name={attribute-name}>{attribute-value}</attr>+
+    </groupMember>+
 </GetDistributionListMembersResponse>
 
 Notes:
@@ -4348,7 +4355,8 @@ Notes:
     more-flag = true if more members left to return
     total = total number of distribution lists (not affected by limit/offset)
     
-    returns group members sorted ascendingly by email address.
+    returns group members in <dlm> element, sorted ascendingly by email address for non-hab distribution lists
+    For HAB Groups, it returns group members with their details in groupMember element, sorted by seniorityIndex and then by name.
 
 -----------------------------
 
@@ -4816,3 +4824,73 @@ API to reset password of authenticated account under zimbraAccount namespace.
  password = new password to set for account
 
 <ResetPasswordResponse />
+
+-----------------------
+Get HAB API
+-----------------------
+<GetHABRequest habRootGroupId="{id of HAB Group}"/>
+
+</GetHABRequest>
+
+<GetHABResponse>
+    <habGroup rootHabGroup="{TRUE|FALSE}" seniorityIndex="{0|1}"
+       name="{habGroupName}" id="{habGroupId}" parentHabGroupId="{parentHabGroupId}">
+       <a n="...">...</a>+
+       {Child groups of this parent group}
+       <habGroup rootHabGroup="{TRUE|FALSE}" seniorityIndex="{0|1}"
+       name="{habGroupName}" id="{habGroupId}" parentHabGroupId="{parentHabGroupId}">
+       </habGroup>+
+      
+    </habGroup>+
+ </GetHABResponse>
+   
+
+----------------------------
+API to get all active address lists in the user's domain
+<GetAllAddressListsRequest xmlns="urn:zimbraAccount"/>
+
+Returns list of address lists.
+      <GetAllAddressListsResponse xmlns="urn:zimbraAccount">
+         <AddressLists>
+            <AddressList name={name_of_address_list} [description={description}] id={zimbraId}/>
+            ...
+         </AddressLists>
+      </GetAllAddressListsResponse>
+
+-----------------------------
+GetAddressListMembers
+
+API to get the members of an address list
+
+Request:
+<GetAddressListMembersRequest limit="{max result items}" offset="{offset from which result should be returned}"   id="{address list id}" countOnly="0|1{if only total account is returned}"/>
+
+Response
+<GetAddressListMembersResponse xmlns="urn:zimbraAccount">
+ <alm total="{total members in query result}">
+ <member>{email}</member>+
+</alm>
+</GetAddressListMembersResponse>
+
+-----------------------------
+GetAddressListInfo
+
+API to get the meta info of an address list.
+Address list may be requested by id, or name and domain.
+If address list is requested by id, name and domain are ignored.
+
+Request:
+<GetAddressListInfoRequest name="{address list name}" id="{address list id}">
+ <domain by="{by}">{address list domain}</domain>
+</GetAddressListInfoRequest>
+
+Response:
+<GetAddressListInfoResponse name="{address list name}" id="{address list id}" type="{address list type}" xmlns="urn:zimbraAccount">
+ <domain by="name">{address list domain}</domain>
+ <desc>{address list description}</desc>
+ <searchFilter>
+    <conds>
+        <cond/>+
+    </conds>
+ </searchFilter>
+</GetAddressListInfoResponse>

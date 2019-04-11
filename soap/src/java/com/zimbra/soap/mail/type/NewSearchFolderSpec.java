@@ -22,9 +22,16 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
 import com.google.common.base.MoreObjects;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 
+import io.leangen.graphql.annotations.GraphQLInputField;
+import io.leangen.graphql.annotations.GraphQLNonNull;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name="NewSearchFolderSpec", description="Input for creating a new search folder")
 public class NewSearchFolderSpec {
 
     /**
@@ -32,14 +39,14 @@ public class NewSearchFolderSpec {
      * @zm-api-field-description Name
      */
     @XmlAttribute(name=MailConstants.A_NAME /* name */, required=true)
-    private final String name;
+    private String name;
 
     /**
      * @zm-api-field-tag query
      * @zm-api-field-description query
      */
     @XmlAttribute(name=MailConstants.A_QUERY /* query */, required=true)
-    private final String query;
+    private String query;
 
     /**
      * @zm-api-field-tag search-types
@@ -102,19 +109,37 @@ public class NewSearchFolderSpec {
         return spec;
     }
 
+    @GraphQLInputField(name=GqlConstants.NAME, description="name of the new folder")
+    public void setName(@GraphQLNonNull String name) { this.name = name; }
+    @GraphQLInputField(name=GqlConstants.QUERY, description="query to search")
+    public void setQuery(@GraphQLNonNull String query) { this.query = query; }
+    @GraphQLInputField(name=GqlConstants.SEARCH_TYPES, description="type of the new folder to be created")
     public void setSearchTypes(String searchTypes) { this.searchTypes = searchTypes; }
+    @GraphQLInputField(name=GqlConstants.SORT_BY, description="sort order for the search results")
     public void setSortBy(String sortBy) { this.sortBy = sortBy; }
+    @GraphQLInputField(name=GqlConstants.FLAGS, description="Folder flags")
     public void setFlags(String flags) { this.flags = flags; }
+    @GraphQLInputField(name=GqlConstants.COLOR, description="color numeric; range 0-127; defaults to 0 if not present; client can display only 0-7")
     public void setColor(Byte color) { this.color = color; }
-    public void setParentFolderId(String parentFolderId) { this.parentFolderId = parentFolderId; }
-    public String getName() { return name; }
-    public String getQuery() { return query; }
-    public String getSearchTypes() { return searchTypes; }
-    public String getSortBy() { return sortBy; }
-    public String getFlags() { return flags; }
-    public Byte getColor() { return color; }
-    public String getParentFolderId() { return parentFolderId; }
+    @GraphQLInputField(name=GqlConstants.PARENT_FOLDER_ID, description="parent folder id")
+    public void setParentFolderId(@GraphQLNonNull String parentFolderId) { this.parentFolderId = parentFolderId; }
+    @GraphQLInputField(name=GqlConstants.RGB, description="RGB color in format #rrggbb where r,g and b are hex digits")
     public void setRgb(String rgb) { this.rgb = rgb; }
+    @GraphQLQuery(name=GqlConstants.NAME, description="name of the new folder")
+    public String getName() { return name; }
+    @GraphQLQuery(name=GqlConstants.QUERY, description="query to search")
+    public String getQuery() { return query; }
+    @GraphQLQuery(name=GqlConstants.SEARCH_TYPES, description="type of the new folder to be created")
+    public String getSearchTypes() { return searchTypes; }
+    @GraphQLQuery(name=GqlConstants.SORT_BY, description="sort order for the search results")
+    public String getSortBy() { return sortBy; }
+    @GraphQLQuery(name=GqlConstants.FLAGS, description="Folder flags")
+    public String getFlags() { return flags; }
+    @GraphQLQuery(name=GqlConstants.COLOR, description="color numeric; range 0-127; defaults to 0 if not present; client can display only 0-7")
+    public Byte getColor() { return color; }
+    @GraphQLQuery(name=GqlConstants.PARENT_FOLDER_ID, description="parent folder id")
+    public String getParentFolderId() { return parentFolderId; }
+    @GraphQLQuery(name=GqlConstants.RGB, description="RGB color in format #rrggbb where r,g and b are hex digits")
     public String getRgb() { return rgb; }
 
     public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {

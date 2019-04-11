@@ -20,6 +20,8 @@ package com.zimbra.cs.service.admin;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -59,7 +61,12 @@ public class CreateDistributionList extends AdminDocumentHandler {
         Provisioning prov = Provisioning.getInstance();
         CreateDistributionListRequest req = zsc.elementToJaxb(request);
 
+        if (StringUtils.isEmpty(req.getName())) {
+            throw ServiceException.INVALID_REQUEST(String.format("missing %s", AdminConstants.E_NAME), null);
+        }
+
         String name = req.getName().toLowerCase();
+
         Map<String, Object> attrs = req.getAttrsAsOldMultimap(true);
 
         boolean dynamic = Boolean.TRUE.equals(req.getDynamic());
@@ -72,12 +79,13 @@ public class CreateDistributionList extends AdminDocumentHandler {
             checkSetAttrsOnCreate(zsc, TargetType.dl, name, attrs);
         }
 
+        preGroupCreation(request, zsc, attrs);
         Group group = prov.createGroup(name, attrs, dynamic);
 
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "CreateDistributionList","name", name}, attrs));
 
-        Element response = zsc.createElement(AdminConstants.CREATE_DISTRIBUTION_LIST_RESPONSE);
+        Element response = getResponseElement(zsc);
 
         GetDistributionList.encodeDistributionList(response, group);
 
@@ -92,5 +100,14 @@ public class CreateDistributionList extends AdminDocumentHandler {
                 Admin.R_modifyDistributionList.getName(), "distribution list"));
         notes.add(String.format(AdminRightCheckPoint.Notes.MODIFY_ENTRY,
                 Admin.R_modifyGroup.getName(), "group"));
+    }
+
+    protected void preGroupCreation(Element request, ZimbraSoapContext zsc, Map<String, Object> attrs)
+            throws ServiceException {
+        // do nothing
+    }
+
+    protected Element getResponseElement(ZimbraSoapContext zsc) {
+        return zsc.createElement(AdminConstants.CREATE_DISTRIBUTION_LIST_RESPONSE);
     }
 }

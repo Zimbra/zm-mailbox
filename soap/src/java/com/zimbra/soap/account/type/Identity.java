@@ -25,7 +25,11 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlType;
 
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.AccountConstants;
+
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
 
 /*
      <identity name={identity-name} id="...">
@@ -37,6 +41,7 @@ import com.zimbra.common.soap.AccountConstants;
  */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"name", "id"})
+@GraphQLType(name=GqlConstants.IDENTITY, description="Identity")
 public class Identity extends AttrsImpl {
 
     // TODO:Want constructor for old style Identity
@@ -83,7 +88,9 @@ public class Identity extends AttrsImpl {
 
     public void setId(String id) { this.id = id; }
 
+    @GraphQLQuery(name=GqlConstants.NAME, description="Identity name")
     public String getName() { return name; }
+    @GraphQLQuery(name=GqlConstants.ID, description="Identity ID")
     public String getId() { return id; }
 
     @Override

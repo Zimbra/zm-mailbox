@@ -29,12 +29,11 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.util.ByteArrayDataSource;
 
-import org.apache.commons.httpclient.HttpException;
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.methods.DeleteMethod;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpRequestBase;
 
 import com.google.common.base.Strings;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
@@ -183,6 +182,7 @@ public final class MailboxTestUtil {
      */
     public static void clearData() throws Exception {
         clearData("");
+        MailboxManager.getInstance().clearAdditionalQuotaProviders();
     }
 
     /**
@@ -236,7 +236,7 @@ public final class MailboxTestUtil {
         if (index instanceof ElasticSearchIndex) {
             String key = mbox.getAccountId();
             String indexUrl = String.format("%s%s/", LC.zimbra_index_elasticsearch_url_base.value(), key);
-            HttpMethod method = new DeleteMethod(indexUrl);
+            HttpRequestBase method = new HttpDelete(indexUrl);
             try {
                 ElasticSearchConnector connector = new ElasticSearchConnector();
                 int statusCode = connector.executeMethod(method);
@@ -254,8 +254,6 @@ public final class MailboxTestUtil {
                         ZimbraLog.index.error("Problem deleting index for key=%s error=%s", key, error);
                     }
                 }
-            } catch (HttpException e) {
-                ZimbraLog.index.error("Problem Deleting index with key=" + key, e);
             } catch (IOException e) {
                 ZimbraLog.index.error("Problem Deleting index with key=" + key, e);
             }

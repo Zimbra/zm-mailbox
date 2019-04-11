@@ -23,12 +23,18 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.google.common.base.MoreObjects;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.MailConstants;
+
+import io.leangen.graphql.annotations.GraphQLNonNull;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @JsonPropertyOrder({ "ownerId", "ownerEmail", "ownerName", "folderId", "folderUuid", "folderPath", "view", "rights",
     "granteeType", "granteeId", "granteeName", "granteeDisplayName", "mid" })
+@GraphQLType(name=GqlConstants.CLASS_SHARE_INFO, description="share info")
 public class ShareInfo {
 
     /**
@@ -128,72 +134,93 @@ public class ShareInfo {
 
     public void setOwnerId(String ownerId) { this.ownerId = ownerId; }
 
+    @GraphQLNonNull
+    @GraphQLQuery(name=GqlConstants.OWNER_ID, description="owner id")
     public String getOwnerId() { return ownerId; }
 
     public void setOwnerEmail(String ownerEmail) {
         this.ownerEmail = ownerEmail;
     }
 
+    @GraphQLNonNull
+    @GraphQLQuery(name=GqlConstants.OWNER_EMAIL, description="owner email")
     public String getOwnerEmail() { return ownerEmail; }
 
     public void setOwnerDisplayName(String ownerDisplayName) {
         this.ownerDisplayName = ownerDisplayName;
     }
 
+    @GraphQLQuery(name=GqlConstants.OWNER_NAME, description="owner display name")
     public String getOwnerDisplayName() { return ownerDisplayName; }
 
     public void setFolderId(int folderId) { this.folderId = folderId; }
 
+    @GraphQLNonNull
+    @GraphQLQuery(name=GqlConstants.FOLDER_ID, description="shared folder id")
     public int getFolderId() { return folderId; }
 
     public void setFolderUuid(String folderUuid) { this.folderUuid = folderUuid; }
 
+    @GraphQLNonNull
+    @GraphQLQuery(name=GqlConstants.FOLDER_UUID, description="shared folder UUID")
     public String getFolderUuid() { return folderUuid; }
 
     public void setFolderPath(String folderPath) {
         this.folderPath = folderPath;
     }
 
+    @GraphQLNonNull
+    @GraphQLQuery(name=GqlConstants.FOLDER_PATH, description="shared folder path")
     public String getFolderPath() { return folderPath; }
 
     public void setDefaultView(String defaultView) {
         this.defaultView = defaultView;
     }
 
+    @GraphQLNonNull
+    @GraphQLQuery(name=GqlConstants.VIEW, description="shared folder view")
     public String getDefaultView() { return defaultView; }
 
     public void setRights(String rights) { this.rights = rights; }
 
+    @GraphQLNonNull
+    @GraphQLQuery(name=GqlConstants.RIGHTS, description="rights")
     public String getRights() { return rights; }
 
     public void setGranteeType(String granteeType) {
         this.granteeType = granteeType;
     }
 
+    @GraphQLNonNull
+    @GraphQLQuery(name=GqlConstants.GRANTEE_TYPE, description="grantee type")
     public String getGranteeType() { return granteeType; }
 
     public void setGranteeId(String granteeId) {
         this.granteeId = granteeId;
     }
 
+    @GraphQLQuery(name=GqlConstants.RIGHTS, description="rights")
     public String getGranteeId() { return granteeId; }
 
     public void setGranteeName(String granteeName) {
         this.granteeName = granteeName;
     }
 
+    @GraphQLQuery(name=GqlConstants.GRNATEE_NAME, description="grantee name")
     public String getGranteeName() { return granteeName; }
 
     public void setGranteeDisplayName(String granteeDisplayName) {
         this.granteeDisplayName = granteeDisplayName;
     }
 
+    @GraphQLQuery(name=GqlConstants.GRANTEE_DISPLAY_NAME, description="grantee display name")
     public String getGranteeDisplayName() { return granteeDisplayName; }
 
     public void setMountpointId(String mountpointId) {
         this.mountpointId = mountpointId;
     }
 
+    @GraphQLQuery(name=GqlConstants.MOUNTPOINT_ID, description="mountpoint id")
     public String getMountpointId() { return mountpointId; }
 
     @Override

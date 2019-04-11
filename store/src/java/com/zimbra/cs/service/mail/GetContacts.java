@@ -65,7 +65,8 @@ public final class GetContacts extends MailDocumentHandler  {
         Mailbox mbox = getRequestedMailbox(zsc);
         OperationContext octxt = getOperationContext(zsc, context);
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
-
+        Account mRequestedAcct = getRequestedAccount(zsc);
+        Account mAuthedAcct = getAuthenticatedAccount(zsc);
         GetContactsRequest req = zsc.elementToJaxb(request);
         boolean sync = req.getSync() == null ? false : req.getSync();
         boolean derefContactGroupMember = req.getDerefGroupMember();
@@ -191,7 +192,7 @@ public final class GetContacts extends MailDocumentHandler  {
                         ToXML.encodeContact(response, ifmt, octxt, con, contactGroup,
                                 memberAttrs, false /* summary */, attrs, fields, migratedDlist,
                                 returnHiddenAttrs, maxMembers, returnCertInfo,
-                                ContactMemberOfMap.setOfMemberOf(zsc.getRequestedAccountId(), id, memberOfMap));
+                                ContactMemberOfMap.setOfMemberOf(zsc.getRequestedAccountId(), id, memberOfMap), mRequestedAcct, mAuthedAcct);
                     }
                 }
             }

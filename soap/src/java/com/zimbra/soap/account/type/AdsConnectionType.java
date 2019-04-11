@@ -23,16 +23,21 @@ import javax.xml.bind.annotation.XmlEnum;
 import javax.xml.bind.annotation.XmlEnumValue;
 
 import com.google.common.base.Function;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.soap.type.DataSource.ConnectionType;
 
+import io.leangen.graphql.annotations.GraphQLEnumValue;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlEnum
+@GraphQLType(name=GqlConstants.ENUM_ADS_CONNECTION_TYPE_ENUM, description="Account data source connection type")
 public enum AdsConnectionType {
-    @XmlEnumValue("cleartext") cleartext,
-    @XmlEnumValue("ssl") ssl,
-    @XmlEnumValue("tls") tls,
-    @XmlEnumValue("tls_is_available") tls_if_available;
+    @GraphQLEnumValue @XmlEnumValue("cleartext") cleartext,
+    @GraphQLEnumValue @XmlEnumValue("ssl") ssl,
+    @GraphQLEnumValue @XmlEnumValue("tls") tls,
+    @GraphQLEnumValue @XmlEnumValue("tls_is_available") tls_if_available;
 
     public static AdsConnectionType fromString(String s) throws ServiceException {
         try {

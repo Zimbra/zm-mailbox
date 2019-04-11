@@ -35,9 +35,16 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
 import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 
+import com.zimbra.common.gql.GqlConstants;
+import io.leangen.graphql.annotations.GraphQLIgnore;
+import io.leangen.graphql.annotations.GraphQLInputField;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"content", "headers", "mimePart", "attachments", "invite",
            "emailAddresses", "timezones", "fragment", "extraElements"})
+@GraphQLType(name=GqlConstants.CLASS_MESSAGE, description="A message")
 public class Msg {
 
     /**
@@ -135,6 +142,7 @@ public class Msg {
      * @zm-api-field-description Email address information
      */
     @XmlElement(name=MailConstants.E_EMAIL /* e */, required=false)
+    @GraphQLQuery(name=GqlConstants.EMAILADDRESSES, description="Email address information")
     private final List<EmailAddrInfo> emailAddresses = Lists.newArrayList();
 
     // ParseMimeMessage.parseMimeMsgSoap looks for E_CAL_TZ but does no further processing.
@@ -143,6 +151,7 @@ public class Msg {
      * @zm-api-field-description Timezones
      */
     @XmlElement(name=MailConstants.E_CAL_TZ /* tz */, required=false)
+    @GraphQLInputField(name=GqlConstants.TIMEZONES, description="Timezones")
     private final List<CalTZInfo> timezones = Lists.newArrayList();
 
     // ParseMimeMessage.parseMimeMsgSoap looks for E_FRAG but does nothing with it.
@@ -159,84 +168,117 @@ public class Msg {
      * @zm-api-field-description Other elements
      */
     @XmlAnyElement
+    @GraphQLIgnore
     private final List<org.w3c.dom.Element> extraElements = Lists.newArrayList();
 
     public Msg() {
     }
 
+    @GraphQLInputField(name=GqlConstants.ATTACHMENT_ID, description="Uploaded MIME body ID")
     public void setAttachmentId(String attachmentId) {
         this.attachmentId = attachmentId;
     }
+    @GraphQLInputField(name=GqlConstants.ORIGINAL_ID, description="Original ID")
     public void setOrigId(String origId) { this.origId = origId; }
+    @GraphQLInputField(name=GqlConstants.REPLY_TYPE, description="Reply type - r|w. (r)eplied or for(w)arded.")
     public void setReplyType(String replyType) { this.replyType = replyType; }
+    @GraphQLInputField(name=GqlConstants.IDENTITY_ID, description="The identity referenced by {identity-id} specifies the folder where the sent message is saved.")
     public void setIdentityId(String identityId) {
         this.identityId = identityId;
     }
+    @GraphQLInputField(name=GqlConstants.SUBJECT, description="Subject")
     public void setSubject(String subject) { this.subject = subject; }
+    @GraphQLInputField(name=GqlConstants.HEADERS, description="Headers")
     public void setHeaders(List<Header> headers) { this.headers = headers; }
+    @GraphQLInputField(name=GqlConstants.IN_REPLY_TO, description="Message-ID header for message being replied to")
     public void setInReplyTo(String inReplyTo) { this.inReplyTo = inReplyTo; }
+    @GraphQLInputField(name=GqlConstants.FOLDER_ID, description="Folder ID")
     public void setFolderId(String folderId) { this.folderId = folderId; }
+    @GraphQLInputField(name=GqlConstants.FLAGS, description="Flags")
     public void setFlags(String flags) { this.flags = flags; }
+    @GraphQLInputField(name=GqlConstants.CONTENT, description="Content")
     public void setContent(String content) { this.content = content; }
+    @GraphQLInputField(name=GqlConstants.MIME_PART, description="Mime part information")
     public void setMimePart(MimePartInfo mimePart) { this.mimePart = mimePart; }
+    @GraphQLInputField(name=GqlConstants.ATTACHMENTS, description="Attachments information")
     public void setAttachments(AttachmentsInfo attachments) {
         this.attachments = attachments;
     }
+    @GraphQLInputField(name=GqlConstants.INVITE, description="Invite information")
     public void setInvite(InvitationInfo invite) { this.invite = invite; }
+    @GraphQLInputField(name=GqlConstants.EMAILADDRESSES, description="Email address information")
     public void setEmailAddresses(Iterable <EmailAddrInfo> emailAddresses) {
         this.emailAddresses.clear();
         if (emailAddresses != null) {
             Iterables.addAll(this.emailAddresses,emailAddresses);
         }
     }
-
+    @GraphQLIgnore
     public void addEmailAddress(EmailAddrInfo emailAddress) {
         this.emailAddresses.add(emailAddress);
     }
-
+    @GraphQLInputField(name=GqlConstants.TIMEZONES, description="Timezones")
     public void setTimezones(Iterable <CalTZInfo> timezones) {
         this.timezones.clear();
         if (timezones != null) {
             Iterables.addAll(this.timezones,timezones);
         }
     }
-
+    @GraphQLIgnore
     public void addTimezone(CalTZInfo timezone) {
         this.timezones.add(timezone);
     }
-
+    @GraphQLInputField(name=GqlConstants.FRAGMENT, description="First few bytes of the message (probably between 40 and 100 bytes)")
     public void setFragment(String fragment) { this.fragment = fragment; }
+    @GraphQLIgnore
     public void setExtraElements(Iterable <org.w3c.dom.Element> extraElements) {
         this.extraElements.clear();
         if (extraElements != null) {
             Iterables.addAll(this.extraElements,extraElements);
         }
     }
-
+    @GraphQLIgnore
     public void addExtraElement(org.w3c.dom.Element extraElement) {
         this.extraElements.add(extraElement);
     }
 
+    @GraphQLQuery(name=GqlConstants.ATTACHMENT_ID, description="Uploaded MIME body ID")
     public String getAttachmentId() { return attachmentId; }
+    @GraphQLQuery(name=GqlConstants.ORIGINAL_ID, description="Original ID")
     public String getOrigId() { return origId; }
+    @GraphQLQuery(name=GqlConstants.REPLY_TYPE, description="Reply type - r|w. (r)eplied or for(w)arded.")
     public String getReplyType() { return replyType; }
+    @GraphQLQuery(name=GqlConstants.IDENTITY_ID, description="The identity referenced by {identity-id} specifies the folder where the sent message is saved.")
     public String getIdentityId() { return identityId; }
+    @GraphQLQuery(name=GqlConstants.SUBJECT, description="Subject")
     public String getSubject() { return subject; }
+    @GraphQLQuery(name=GqlConstants.HEADERS, description="Headers")
     public List<Header> getHeaders() { return headers; }
+    @GraphQLQuery(name=GqlConstants.IN_REPLY_TO, description="Message-ID header for message being replied to")
     public String getInReplyTo() { return inReplyTo; }
+    @GraphQLQuery(name=GqlConstants.FOLDER_ID, description="Folder ID")
     public String getFolderId() { return folderId; }
+    @GraphQLQuery(name=GqlConstants.FLAGS, description="Flags")
     public String getFlags() { return flags; }
+    @GraphQLQuery(name=GqlConstants.CONTENT, description="Content")
     public String getContent() { return content; }
+    @GraphQLQuery(name=GqlConstants.MIME_PART, description="Mime part information")
     public MimePartInfo getMimePart() { return mimePart; }
+    @GraphQLQuery(name=GqlConstants.ATTACHMENTS, description="Attachments information")
     public AttachmentsInfo getAttachments() { return attachments; }
+    @GraphQLQuery(name=GqlConstants.INVITE, description="Invite information")
     public InvitationInfo getInvite() { return invite; }
+    @GraphQLQuery(name=GqlConstants.EMAILADDRESSES, description="Email address information")
     public List<EmailAddrInfo> getEmailAddresses() {
         return Collections.unmodifiableList(emailAddresses);
     }
+    @GraphQLQuery(name=GqlConstants.TIMEZONES, description="Timezones")
     public List<CalTZInfo> getTimezones() {
         return Collections.unmodifiableList(timezones);
     }
+    @GraphQLQuery(name=GqlConstants.FRAGMENT, description="First few bytes of the message (probably between 40 and 100 bytes)")
     public String getFragment() { return fragment; }
+    @GraphQLIgnore
     public List<org.w3c.dom.Element> getExtraElements() {
         return Collections.unmodifiableList(extraElements);
     }
@@ -266,12 +308,14 @@ public class Msg {
         return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
     }
 
+    @GraphQLType(name=GqlConstants.CLASS_HEADER, description="Header information")
     public static final class Header {
         /**
          * @zm-api-field-tag header-name
          * @zm-api-field-description Header name
          */
         @XmlAttribute(name=MailConstants.A_NAME)
+        @GraphQLQuery(name=GqlConstants.NAME, description="Header name") 
         private String name;
 
         /**
@@ -279,12 +323,15 @@ public class Msg {
          * @zm-api-field-description Header value
          */
         @XmlValue
+        @GraphQLQuery(name=GqlConstants.VALUE, description="Header value")
         private String value;
 
         public Header() {
         }
 
-        public Header(String name, String value) {
+        public Header(
+            @GraphQLInputField(name=GqlConstants.NAME) String name,
+            @GraphQLInputField(name=GqlConstants.VALUE) String value) {
             this.name = name;
             this.value = value;
         }

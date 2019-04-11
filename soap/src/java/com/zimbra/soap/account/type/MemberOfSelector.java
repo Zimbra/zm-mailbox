@@ -16,12 +16,17 @@
  */
 package com.zimbra.soap.account.type;
 
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.service.ServiceException;
 
+import io.leangen.graphql.annotations.GraphQLEnumValue;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
+@GraphQLType(name=GqlConstants.CLASS_MEMBER_OF_SELECTOR, description="Criteria to decide when \"isMember\" is set for group")
 public enum MemberOfSelector {
-    all,
-    directOnly,
-    none;
+    @GraphQLEnumValue(description = "the isMember flag returned is set if the user is a direct or indirect member of the group, otherwise it is unset") all, 
+    @GraphQLEnumValue(description = "the isMember flag returned is set if the user is a direct member of the group, otherwise it is unset") directOnly,
+    @GraphQLEnumValue(description = "the isMember flag is not returned") none;
 
     public static MemberOfSelector fromString(String s) throws ServiceException {
         try {

@@ -48,6 +48,8 @@ public final class ProxyTarget {
     private final Server mServer;
     private final AuthToken mAuthToken;
     private final String mURL;
+    public static final String GQL_URI = "/service/extension/graphql";
+    public static final String SOAP_URI = "/service/soap";
 
     private int mMaxAttempts = 0;
     private long mTimeout = -1;
@@ -61,6 +63,10 @@ public final class ProxyTarget {
         mAuthToken = AuthToken.getCsrfUnsecuredAuthToken(authToken);
         String url;
         String requestStr = req.getRequestURI();
+        //workaround to proxy graphql requests
+        if(GQL_URI.equals(requestStr)) {
+            requestStr = SOAP_URI;
+        }
         String qs = req.getQueryString();
         if (qs != null)
             requestStr = requestStr + "?" + qs;

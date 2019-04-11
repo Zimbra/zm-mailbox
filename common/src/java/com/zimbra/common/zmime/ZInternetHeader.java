@@ -588,6 +588,12 @@ public class ZInternetHeader {
         return ("iso-8859-1".equalsIgnoreCase(charset) || "us-ascii".equalsIgnoreCase(charset)) ;
     }
 
+    public static boolean allowInvalidEncoding(String charset) {
+
+        return ("iso-8859-1".equalsIgnoreCase(charset) || "us-ascii".equalsIgnoreCase(charset)
+            || ("utf-8").equalsIgnoreCase(charset)) ;
+    }
+
     static String unfold(final String folded) {
         int length = folded.length(), i;
         for (i = 0; i < length; i++) {
