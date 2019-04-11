@@ -265,6 +265,7 @@ public final class DebugConfig {
     public static final String defangImgSkipOwaspSanitize = value("defang_img_skip_owasp_sanitize", "^cid:.*@");
     public static final String defangOwaspValidImgTag = value("owasp_valid_img_tag", "<\\s*img");
     public static final String defangStyleUnwantedStrgPattern = value("defang_style_unwanted_strg_pattern", "\\s*(('){2,})");
+    public static final String defangOnloadMethod = value("defang_owasp_alert_tag", "onload=.*\\(.*\\)");
 
     /*
      * Default maximum size of convertd response. This reduces OOME in case of
@@ -339,6 +340,11 @@ public final class DebugConfig {
      * "restricted_server_ldap_attributes" comma separated list of restricted server ldap attributes
      */
     public static final String restrictedServerLDAPAttributes = value ("restricted_server_ldap_attributes", "zimbraSSLPrivateKey");
+
+    /**
+     * sleep time between account rename and alias creation for testing mail delivery during change of primary email
+     */
+    public static final int sleepTimeForTestingChangePrimaryEmail = value ("change_primary_email_sleep_time", 0);
 
     private static boolean value(String key, boolean defaultValue) {
         String value = LC.get(key);

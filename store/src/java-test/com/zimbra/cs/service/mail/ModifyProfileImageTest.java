@@ -120,6 +120,7 @@ public class ModifyProfileImageTest {
         ModifyProfileImageResponse responseJaxb = JaxbUtil.elementToJaxb(response);
         int profileItemId = responseJaxb.getItemId();
         GetInfoRequest getRequestJaxb = new GetInfoRequest();
+        getRequestJaxb.setSections("mbox");
         Element getRequest = JaxbUtil.jaxbToElement(getRequestJaxb);
         Element getResponse = new GetInfo().handle(getRequest,
             ServiceTestUtil.getRequestContext(acct));
@@ -152,6 +153,7 @@ public class ModifyProfileImageTest {
         ModifyProfileImageResponse responseJaxb = JaxbUtil.elementToJaxb(response);
         int profileItemId = responseJaxb.getItemId();
         GetInfoRequest getRequestJaxb = new GetInfoRequest();
+        getRequestJaxb.setSections("mbox");
         Element getRequest = JaxbUtil.jaxbToElement(getRequestJaxb);
         Element getResponse = new GetInfo().handle(getRequest,
             ServiceTestUtil.getRequestContext(acct));
@@ -166,6 +168,7 @@ public class ModifyProfileImageTest {
         Element request1 = JaxbUtil.jaxbToElement(requestJaxb1);
         new ModifyProfileImage().handle(request1, ServiceTestUtil.getRequestContext(acct));
         GetInfoRequest getRequestJaxb1 = new GetInfoRequest();
+        getRequestJaxb1 .setSections("mbox");
         Element getRequest1 = JaxbUtil.jaxbToElement(getRequestJaxb1);
         Element getResponse1 = new GetInfo().handle(getRequest1,
             ServiceTestUtil.getRequestContext(acct));

@@ -23,12 +23,18 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlValue;
 
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.AccountConstants;
+
+import io.leangen.graphql.annotations.GraphQLNonNull;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
 
 /*
  * Used in GetInfoResponse if ZimbraLicenseExtension is installed
  */
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name=GqlConstants.CLASS_LICENSE_ATTR, description="License attributes")
 public class LicenseAttr {
 
     /**
@@ -50,7 +56,10 @@ public class LicenseAttr {
 
     public void setName(String name) { this.name = name; }
     public void setContent(String content) { this.content = content; }
+    @GraphQLNonNull
+    @GraphQLQuery(name=GqlConstants.NAME, description="Name of license attribute")
     public String getName() { return name; }
+    @GraphQLQuery(name=GqlConstants.CONTENT, description="Value of license attribute")
     public String getContent() { return content; }
 
     public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {

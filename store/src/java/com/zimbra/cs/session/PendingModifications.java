@@ -20,6 +20,8 @@
  */
 package com.zimbra.cs.session;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -42,14 +44,14 @@ import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.util.TypedIdList;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.mail.type.DeleteItemNotification;
-import com.zimbra.soap.mail.type.PendingFolderModifications;
 import com.zimbra.soap.mail.type.ModifyNotification.ModifyTagNotification;
+import com.zimbra.soap.mail.type.PendingFolderModifications;
 
 
 /**
@@ -408,6 +410,10 @@ public abstract class PendingModifications<T extends ZimbraMailItem> {
             this.itemId = itemId;
         }
 
+        private final void readObject(ObjectInputStream in) throws java.io.IOException {
+            throw new IOException("Cannot be deserialized");
+        }
+
     }
 
     public static final class ChangeMeta implements Serializable {
@@ -430,6 +436,10 @@ public abstract class PendingModifications<T extends ZimbraMailItem> {
             this.preModifyObjType = preModifyObjType;
             metaPreModifyObj = preModifyObj;
         }
+
+        private final void readObject(ObjectInputStream in) throws java.io.IOException {
+            throw new IOException("Cannot be deserialized");
+         }
 
     }
 

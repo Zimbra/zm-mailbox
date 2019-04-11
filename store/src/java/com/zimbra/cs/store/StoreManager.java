@@ -117,13 +117,19 @@ public abstract class StoreManager {
          * The remote store must track reference count internally
          * and delete the actual file only when ref-count reaches 0
          */
-        SINGLE_INSTANCE_SERVER_CREATE
+        SINGLE_INSTANCE_SERVER_CREATE,
+        /**
+         * The store is a custom store that does not support standard Zimbra actions.
+         * It requires to be handled using zxsuite command
+         */
+        CUSTOM_STORE_API,
     };
 
     /**
      * Returns whether the store supports a given {@link StoreFeature}.
      */
     public abstract boolean supports(StoreFeature feature);
+    public abstract boolean supports(StoreFeature feature, String locator);
 
     /**
      * Returns a 'BlobBuilder' which can be used to store a blob in incoming

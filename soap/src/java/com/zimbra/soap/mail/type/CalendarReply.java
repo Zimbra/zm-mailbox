@@ -27,11 +27,19 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.CalendarReplyInterface;
 
+import io.leangen.graphql.annotations.GraphQLIgnore;
+import io.leangen.graphql.annotations.GraphQLInputField;
+import io.leangen.graphql.annotations.GraphQLNonNull;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name=GqlConstants.CLASS_CALENDAR_REPLY, description="Calendar reply information")
 public class CalendarReply
 extends RecurIdInfo
 implements CalendarReplyInterface {
@@ -86,7 +94,10 @@ implements CalendarReplyInterface {
     private CalendarReply() {
     }
 
-    public CalendarReply(int seq, long date, String attendee) {
+    public CalendarReply(
+        @GraphQLNonNull @GraphQLInputField int seq,
+        @GraphQLNonNull @GraphQLInputField long date,
+        @GraphQLNonNull @GraphQLInputField String attendee) {
         this.seq = seq;
         this.date = date;
         this.attendee = attendee;
@@ -97,18 +108,46 @@ implements CalendarReplyInterface {
     }
 
     @Override
+    @GraphQLInputField(name=GqlConstants.SENT_BY, description="iCalendar SENT-BY")
     public void setSentBy(String sentBy) { this.sentBy = sentBy; }
     @Override
+    @GraphQLInputField(name=GqlConstants.PARTICIPATION_STATUS, description="iCalendar PTST (Participation status)\n"
+        + "* \"NE\"eds-action\n "
+        + "* \"TE\"ntative\n "
+        + "* \"AC\"cept\n "
+        + "* \"DE\"clined\n "
+        + "* \"DG\" (delegated)\n "
+        + "* \"CO\"mpleted (todo)\n "
+        + "* \"IN\"-process (todo)\n "
+        + "* \"WA\"iting (custom value only for todo)\n "
+        + "* \"DF\" (deferred; custom value only for todo)")
     public void setPartStat(String partStat) { this.partStat = partStat; }
     @Override
+    @GraphQLNonNull
+    @GraphQLQuery(name=GqlConstants.SEQUENCE, description="Sequence number")
     public int getSeq() { return seq; }
     @Override
+    @GraphQLNonNull
+    @GraphQLQuery(name=GqlConstants.DATE, description="DTSTAMP date in milliseconds")
     public long getDate() { return date; }
     @Override
+    @GraphQLNonNull
+    @GraphQLQuery(name=GqlConstants.ATTENDEE, description="Attendee address")
     public String getAttendee() { return attendee; }
     @Override
+    @GraphQLQuery(name=GqlConstants.SENT_BY, description="iCalendar SENT-BY")
     public String getSentBy() { return sentBy; }
     @Override
+    @GraphQLQuery(name=GqlConstants.PARTICIPATION_STATUS, description="iCalendar PTST (Participation status)\n"
+        + "* \"NE\"eds-action\n "
+        + "* \"TE\"ntative\n "
+        + "* \"AC\"cept\n "
+        + "* \"DE\"clined\n "
+        + "* \"DG\" (delegated)\n "
+        + "* \"CO\"mpleted (todo)\n "
+        + "* \"IN\"-process (todo)\n "
+        + "* \"WA\"iting (custom value only for todo)\n "
+        + "* \"DF\" (deferred; custom value only for todo)")
     public String getPartStat() { return partStat; }
 
     public static Iterable <CalendarReply> fromInterfaces(
@@ -142,6 +181,7 @@ implements CalendarReplyInterface {
         }
     }
 
+    @GraphQLIgnore
     /** Done like this rather than using JAXB for performance reasons */
     public Element toElement(Element parent) {
         Element curElt = parent.addNonUniqueElement(MailConstants.E_CAL_REPLY);

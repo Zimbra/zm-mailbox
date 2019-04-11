@@ -21,10 +21,14 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.CreateCalendarItemResponse;
 
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name="SendInviteReplyResponse")
+@GraphQLType(name=GqlConstants.CLASS_REPLY_TO_INVITE_RESPONSE, description="Contains response information for reply to invite")
 public class SendInviteReplyResponse extends CreateCalendarItemResponse {
 }

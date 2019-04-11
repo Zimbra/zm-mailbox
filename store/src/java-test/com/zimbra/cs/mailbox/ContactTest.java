@@ -39,6 +39,10 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.MethodRule;
 import org.junit.rules.TestName;
+import org.junit.runner.RunWith;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -57,6 +61,8 @@ import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.db.DbResults;
 import com.zimbra.cs.db.DbUtil;
+import com.zimbra.cs.gal.GalGroup.GroupInfo;
+import com.zimbra.cs.gal.GalGroupInfoProvider;
 import com.zimbra.cs.mailbox.Contact.Attachment;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedContact;
@@ -75,6 +81,8 @@ import com.zimbra.cs.util.ZTestWatchman;
  *
  * @author ysasaki
  */
+@RunWith(PowerMockRunner.class)
+@PrepareForTest({GalGroupInfoProvider.class})
 public final class ContactTest {
 
     @Rule public TestName testName = new TestName();
@@ -91,6 +99,7 @@ public final class ContactTest {
        System.out.println(testName.getMethodName());
        Provisioning prov = Provisioning.getInstance();
        prov.createAccount("testCont@zimbra.com", "secret", new HashMap<String, Object>());
+       prov.createAccount("test6232@zimbra.com", "secret", new HashMap<String, Object>());
     }
 
     @Test
@@ -319,6 +328,15 @@ public final class ContactTest {
         Account acct = Provisioning.getInstance().get(Key.AccountBy.name, "testCont@zimbra.com");
         ToXML.encodeContact(response, new ItemIdFormatter(), new OperationContext(acct), contact, true, null);
         Assert.assertEquals(response.getElement("cn").getElement("a").getText(), "Cert1149638887753217");
+    }
+
+    @Test
+    public void testZCS6232() throws Exception {
+        Account account = Provisioning.getInstance().getAccountByName("test6232@zimbra.com");
+        // mocking the group not to have view permission
+        PowerMockito.stub(PowerMockito.method(GalGroupInfoProvider.class, "getGroupInfo"))
+            .toReturn(GroupInfo.IS_GROUP);
+        Assert.assertFalse(ToXML.hasDLViewRight("mydl@zimbra.com", account, account));
     }
 
     @Test

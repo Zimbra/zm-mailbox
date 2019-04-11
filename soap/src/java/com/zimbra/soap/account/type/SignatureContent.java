@@ -21,9 +21,15 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.XmlValue;
 
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.AccountConstants;
 
+import io.leangen.graphql.annotations.GraphQLInputField;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlType(propOrder = {})
+@GraphQLType(name=GqlConstants.CLASS_SIGNATURE_CONTENT, description="Content of the signature")
 public class SignatureContent {
 
     /**
@@ -47,18 +53,22 @@ public class SignatureContent {
         this.contentType = contentType;
     }
 
+    @GraphQLQuery(name=GqlConstants.CONTENT_TYPE, description="Content Type - \"text/plain\" or \"text/html\"")
     public String getContentType() {
         return contentType;
     }
 
+    @GraphQLInputField(name=GqlConstants.CONTENT_TYPE, description="Content Type - \"text/plain\" or \"text/html\"")
     public void setContentType(String contentType) {
         this.contentType = contentType;
     }
 
+    @GraphQLQuery(name=GqlConstants.CONTENT, description="Signature value")
     public String getContent() {
         return content;
     }
 
+    @GraphQLInputField(name=GqlConstants.CONTENT, description="Signature value")
     public void setContent(String content) {
         this.content = content;
     }

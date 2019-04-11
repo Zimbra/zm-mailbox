@@ -17,10 +17,6 @@
 
 package com.zimbra.soap.mail.type;
 
-import com.google.common.base.MoreObjects;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -29,11 +25,19 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.SearchHit;
 import com.zimbra.soap.type.ZmBoolean;
 
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name=GqlConstants.CLASS_MESSAGE_HIT_INFO, description="Message search result information containing a list of messages")
 public class MessageHitInfo
 extends MessageInfo
 implements SearchHit {
@@ -56,7 +60,7 @@ implements SearchHit {
      * @zm-api-field-description Hit Parts -- indicators that the named parts matched the search string
      */
     @XmlElement(name=MailConstants.E_HIT_MIMEPART /* hp */, required=false)
-    private List<Part> messagePartHits = Lists.newArrayList();
+    private final List<Part> messagePartHits = Lists.newArrayList();
 
     public MessageHitInfo() {
         this(null);
@@ -65,6 +69,7 @@ implements SearchHit {
         super(id);
     }
 
+    @Override
     public void setSortField(String sortField) {
         this.sortField = sortField;
     }
@@ -83,12 +88,17 @@ implements SearchHit {
         return this;
     }
 
+    @Override
+    @GraphQLQuery(name=GqlConstants.SORT_FIELD, description="The sort field value")
     public String getSortField() { return sortField; }
+    @GraphQLQuery(name=GqlConstants.CONTENT_MATCHED, description="If the message matched the specified query string")
     public Boolean getContentMatched() { return ZmBoolean.toBool(contentMatched); }
+    @GraphQLQuery(name=GqlConstants.MESSAGE_PART_HITS, description="Hit Parts, indicators that the named parts matched the search string")
     public List<Part> getMessagePartHits() {
         return Collections.unmodifiableList(messagePartHits);
     }
 
+    @Override
     public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);
         return helper

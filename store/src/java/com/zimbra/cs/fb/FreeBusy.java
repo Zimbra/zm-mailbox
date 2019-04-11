@@ -52,8 +52,12 @@ import com.zimbra.cs.mailbox.calendar.ZOrganizer;
  * 9-11busy)
  */
 public class FreeBusy implements Iterable<FreeBusy.Interval> {
+	private String mName;
+	private long mStart;
+    private long mEnd;
+    protected IntervalList mList; 
 
-    // free from start to end
+	// free from start to end
 	public static FreeBusy emptyFreeBusy(String name, long start, long end) {
 		return new FreeBusy(name, start, end);
 	}
@@ -67,19 +71,18 @@ public class FreeBusy implements Iterable<FreeBusy.Interval> {
     protected FreeBusy(String name, long start, long end) {
     	this(name, new IntervalList(start, end), start, end);
     }
+    protected FreeBusy(String name, long start, long end, String fbStatus) {
+        this(name, new IntervalList(start, end, fbStatus), start, end);
+    }
+    
     protected FreeBusy(String name, IntervalList list, long start, long end) {
     	mName = name;
         mList = list;
         mStart = start;
         mEnd = end;
     }
-    private String mName;
-    protected IntervalList mList; 
-    
-    private long mStart;
-    private long mEnd;
-    
-    private static class IntervalIterator implements Iterator<Interval> {
+
+	private static class IntervalIterator implements Iterator<Interval> {
         private Interval mCur;
         private IntervalIterator(IntervalList list) {
             mCur = list.getHead();
@@ -113,6 +116,12 @@ public class FreeBusy implements Iterable<FreeBusy.Interval> {
             mStart = start;
             mEnd = end;
             mHead = new Interval(start, end, IcalXmlStrMap.FBTYPE_FREE);
+        }
+        
+        IntervalList(long start, long end, String fbStatus) {
+            mStart = start;
+            mEnd = end;
+            mHead = new Interval(start, end, fbStatus);
         }
 
         public void addInterval(Interval toAdd) {
@@ -269,6 +278,18 @@ public class FreeBusy implements Iterable<FreeBusy.Interval> {
     }
     
     public static class Interval {
+      //Below parameters are added to support Detailed and FreeBusy view response.
+        String id;
+        String location;
+        String subject;
+        boolean isMeeting;
+        boolean isRecurring;
+        boolean isException;
+        boolean isReminderSet;
+        boolean isPrivate;
+        boolean hasPermission = true;
+        boolean detailsExist = false;
+
         public Interval(long start, long end, String status) {
             mStart = start;
             mEnd = end;
@@ -308,7 +329,47 @@ public class FreeBusy implements Iterable<FreeBusy.Interval> {
             toRet.append("]");
             return toRet.toString();
         }
-        
+
+        public String getId() {
+            return this.id;
+        }
+
+        public String getLocation() {
+            return this.location;
+        }
+
+        public String getSubject() {
+            return this.subject;
+        }
+
+        public boolean isMeeting() {
+            return this.isMeeting;
+        }
+
+        public boolean isRecurring() {
+            return this.isRecurring;
+        }
+
+        public boolean isException() {
+            return this.isException;
+        }
+
+        public boolean isReminderSet() {
+            return this.isReminderSet;
+        }
+
+        public boolean isPrivate() {
+            return this.isPrivate;
+        }
+
+        public boolean isHasPermission() {
+            return this.hasPermission;
+        }
+
+        public boolean isDetailsExist() {
+            return this.detailsExist;
+        }
+
         long mStart;
         long mEnd;
         Interval mNext = null;

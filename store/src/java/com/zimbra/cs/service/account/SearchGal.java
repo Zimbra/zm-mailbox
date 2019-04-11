@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.service.account;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -26,19 +27,22 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.EntrySearchFilter;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.EntrySearchFilter.Multi;
 import com.zimbra.cs.account.EntrySearchFilter.Operator;
 import com.zimbra.cs.account.EntrySearchFilter.Single;
 import com.zimbra.cs.account.EntrySearchFilter.Visitor;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.gal.GalOp;
 import com.zimbra.cs.account.gal.GalUtil;
 import com.zimbra.cs.gal.GalExtraSearchFilter;
+import com.zimbra.cs.gal.GalExtraSearchFilter.GalExtraQueryCallback;
 import com.zimbra.cs.gal.GalSearchConfig;
+import com.zimbra.cs.gal.GalSearchConfig.GalType;
 import com.zimbra.cs.gal.GalSearchControl;
 import com.zimbra.cs.gal.GalSearchParams;
 import com.zimbra.cs.gal.GalSearchQueryCallback;
-import com.zimbra.cs.gal.GalExtraSearchFilter.GalExtraQueryCallback;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.account.type.MemberOfSelector;
 import com.zimbra.soap.type.GalSearchType;
@@ -234,6 +238,39 @@ public class SearchGal extends GalDocumentHandler {
             }
         }
     }
-    
 
+    public static Map<String, String> getQueries(Domain domain, GalSearchParams params, GalSearchType type, EntrySearchFilter filter, ZimbraSoapContext zsc) throws ServiceException {
+        // set default values in params
+        params.setType(type);
+        params.setQuery("");
+        params.setOp(GalOp.search);
+        params.setNeedCanExpand(true);
+        params.setNeedIsMember(MemberOfSelector.none);
+        params.setNeedIsOwner(false);
+        params.setNeedSMIMECerts(false);
+        params.setWildCardSearch(true);
+        params.setQuery(domain.getName());
+        params.setToken(domain.getGalTokenizeSearchKeyAsString());
+        if (filter != null) {
+            params.setExtraQueryCallback(new SearchGalExtraQueryCallback(filter));
+        }
+
+        Map<String, String> map = new HashMap<String, String>();
+        GalSearchControl galSearchControl = new GalSearchControl(params);
+
+        String galQuery = galSearchControl.getGalQuery();
+        if (!StringUtil.isNullOrEmpty(galQuery)) {
+            ZimbraLog.addresslist.debug("Gal Query: %s", galQuery);
+            map.put(Provisioning.A_zimbraAddressListGalFilter, galQuery);
+        }
+
+        params.createSearchConfig(GalType.zimbra);
+        String ldapQuery = params.generateLdapQuery();
+        if (!StringUtil.isNullOrEmpty(ldapQuery)) {
+            ZimbraLog.addresslist.debug("Ldap Query: %s", ldapQuery);
+            map.put(Provisioning.A_zimbraAddressListLdapFilter, ldapQuery);
+        }
+
+        return map;
+    }
 }

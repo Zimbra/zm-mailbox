@@ -21,11 +21,15 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.CreateCalendarItemResponse;
 
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name="CreateAppointmentExceptionResponse")
+@GraphQLType(name=GqlConstants.CLASS_CREATE_APPOINTMENT_EXCEPTION_RESPONSE, description="Contains response information for create appointment exception")
 public class CreateAppointmentExceptionResponse
             extends CreateCalendarItemResponse {
 }

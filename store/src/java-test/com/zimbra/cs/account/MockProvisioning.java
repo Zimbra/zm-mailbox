@@ -331,7 +331,7 @@ public final class MockProvisioning extends Provisioning {
 
     @Override
     public void renameAccount(String zimbraId, String newName) {
-        throw new UnsupportedOperationException();
+        //do nothing
     }
 
     @Override
@@ -869,5 +869,39 @@ public final class MockProvisioning extends Provisioning {
     @Override
     public void refreshUserCredentials(Account account) {
         // Does nothing
+    }
+
+    /* (non-Javadoc)
+     * @see com.zimbra.cs.account.Provisioning#createHabOrgUnit(com.zimbra.cs.account.Domain, java.lang.String)
+     */
+    @Override
+    public Set<String> createHabOrgUnit(Domain domain, String habOrgUnitName)
+        throws ServiceException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /* (non-Javadoc)
+     * @see com.zimbra.cs.account.Provisioning#renameHabOrgUnit(com.zimbra.cs.account.Domain, java.lang.String, java.lang.String)
+     */
+    @Override
+    public Set<String> renameHabOrgUnit(Domain domain, String habOrgUnitName,
+        String newHabOrgUnitName) throws ServiceException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /* (non-Javadoc)
+     * @see com.zimbra.cs.account.Provisioning#deleteHabOrgUnit(com.zimbra.cs.account.Domain, java.lang.String)
+     */
+    @Override
+    public void deleteHabOrgUnit(Domain domain, String habOrgUnitName) throws ServiceException {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void deleteGroup(String zimbraId, boolean cascadeDelete) throws ServiceException {
+        // do nothing
     }
 }

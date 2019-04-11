@@ -22,12 +22,20 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.ExceptionRecurIdInfoInterface;
+
+import io.leangen.graphql.annotations.GraphQLIgnore;
+import io.leangen.graphql.annotations.GraphQLInputField;
+import io.leangen.graphql.annotations.GraphQLNonNull;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
 
 // See ToXML.encodeRecurId
 
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name=GqlConstants.CLASS_EXCEPTION_RECURRENCE_ID_INFORMATION, description="Exception recurrence id information")
 public class ExceptionRecurIdInfo
 implements ExceptionRecurIdInfoInterface {
 
@@ -53,6 +61,7 @@ implements ExceptionRecurIdInfoInterface {
      * </pre>
      */
     @XmlAttribute(name=MailConstants.A_CAL_DATETIME /* d */, required=true)
+    @GraphQLQuery(name=GqlConstants.DATE_TIME, description="Date and/or time.  Format is : YYYYMMDD['T'HHMMSS[Z]]")
     private final String dateTime;
 
     /**
@@ -77,18 +86,25 @@ implements ExceptionRecurIdInfoInterface {
         this((String) null);
     }
 
-    public ExceptionRecurIdInfo(String dateTime) {
+    public ExceptionRecurIdInfo(
+        @GraphQLNonNull @GraphQLInputField(name=GqlConstants.DATE_TIME) String dateTime) {
         this.dateTime = dateTime;
     }
 
     @Override
+    @GraphQLIgnore
     public ExceptionRecurIdInfoInterface create(String dateTime) {
         return new ExceptionRecurIdInfo(dateTime);
     }
 
     @Override
+    @GraphQLInputField(name=GqlConstants.TIMEZONE, description="Java timezone identifier")
     public void setTimezone(String timezone) { this.timezone = timezone; }
     @Override
+    @GraphQLInputField(name=GqlConstants.RECURRENCE_RANGE_TYPE, description="Range type\n "
+        + "* 1: NONE\n "
+        + "* 2: THISANDFUTURE\n "
+        + "* 3: THISANDPRIOR")
     public void setRecurrenceRangeType(Integer recurrenceRangeType) {
         this.recurrenceRangeType = recurrenceRangeType;
     }
@@ -96,8 +112,13 @@ implements ExceptionRecurIdInfoInterface {
     @Override
     public String getDateTime() { return dateTime; }
     @Override
+    @GraphQLQuery(name=GqlConstants.TIMEZONE, description="Java timezone identifier")
     public String getTimezone() { return timezone; }
     @Override
+    @GraphQLQuery(name=GqlConstants.RECURRENCE_RANGE_TYPE, description="Range type\n "
+        + "* 1: NONE\n "
+        + "* 2: THISANDFUTURE\n "
+        + "* 3: THISANDPRIOR")
     public Integer getRecurrenceRangeType() { return recurrenceRangeType; }
 
     @Override

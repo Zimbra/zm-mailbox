@@ -557,7 +557,7 @@ public final class SearchParams implements Cloneable, ZimbraSearchParams {
             params.setTypes(types);
         }
         params.setSortBy(soapParams.getSortBy());
-        if (query.toLowerCase().contains("is:unread") && isSortByReadFlag(SortBy.of(soapParams.getSortBy()))) {
+        if (soapParams.getSortBy() != null && query.toLowerCase().contains("is:unread") && isSortByReadFlag(SortBy.of(soapParams.getSortBy()))) {
             params.setSortBy(SortBy.DATE_DESC);
         } else {
             params.setSortBy(soapParams.getSortBy());
@@ -641,6 +641,9 @@ public final class SearchParams implements Cloneable, ZimbraSearchParams {
      * @return
      */
     public static boolean isSortByReadFlag(SortBy sortBy) {
+        if (sortBy == null) {
+            return false;
+        }
         return (sortBy.getKey() == SortBy.READ_ASC.getKey() 
             || sortBy.getKey() == SortBy.READ_DESC.getKey());
     }

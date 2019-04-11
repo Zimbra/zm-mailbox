@@ -281,6 +281,7 @@ public class UserServlet extends ZimbraServlet {
             && (req.getMethod().equalsIgnoreCase("POST") || req.getMethod().equalsIgnoreCase("PUT"))) {
             resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, L10nUtil.getMessage(MsgKey.errMustAuthenticate, req));
         } else if (ctxt != null && ctxt.getAuthAccount() instanceof GuestAccount && ctxt.basicAuthAllowed() ) {
+            resp.addHeader(AuthUtil.WWW_AUTHENTICATE_HEADER, getRealmHeader(req, null));
                 resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, L10nUtil.getMessage(MsgKey.errMustAuthenticate, req));
          } else {
                 resp.sendError(HttpServletResponse.SC_NOT_FOUND, message);

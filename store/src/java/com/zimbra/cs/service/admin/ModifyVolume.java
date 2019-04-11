@@ -25,6 +25,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.volume.Volume;
 import com.zimbra.cs.volume.VolumeManager;
 import com.zimbra.soap.JaxbUtil;
@@ -50,6 +51,10 @@ public final class ModifyVolume extends AdminDocumentHandler {
         VolumeInfo vol = req.getVolume();
         if (vol == null) {
             throw ServiceException.INVALID_REQUEST("must specify a volume Element", null);
+        }
+        StoreManager storeManager = StoreManager.getInstance();
+        if (storeManager.supports(StoreManager.StoreFeature.CUSTOM_STORE_API, String.valueOf(vol.getId()))) {
+            throw ServiceException.INVALID_REQUEST("Operation unsupported, use zxsuite to edit this volume", null);
         }
         if (vol.getType() > 0) {
             builder.setType(vol.getType());
