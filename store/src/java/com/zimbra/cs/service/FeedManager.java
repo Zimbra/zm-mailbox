@@ -292,7 +292,7 @@ public class FeedManager {
                 || blacklist.stream()
                     .anyMatch(ip -> isAddressInRange(targetAddress, ip));
         } catch (UnknownHostException e) {
-            ZimbraLog.misc.warn("unable to parse feed manager target url host: %s", url);
+            ZimbraLog.misc.warn("unable to identify feed manager target url host: %s", url);
         }
         return false;
     }
