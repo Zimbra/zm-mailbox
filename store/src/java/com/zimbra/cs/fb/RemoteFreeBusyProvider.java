@@ -222,6 +222,9 @@ public class RemoteFreeBusyProvider extends FreeBusyProvider {
                 req.addAttribute(MailConstants.A_CAL_START_TIME, mStart);
                 req.addAttribute(MailConstants.A_CAL_END_TIME, mEnd);
                 req.addAttribute(MailConstants.A_UID, paramStr);
+                
+                if (mExApptUid != null)
+                    req.addAttribute(MailConstants.A_APPT_FREEBUSY_EXCLUDE_UID, mExApptUid);
 
                 // hack: use the ID of the first user
                 Account acct = prov.get(AccountBy.name, idStrs[0], mSoapCtxt.getAuthToken());
