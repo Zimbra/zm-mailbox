@@ -26,8 +26,7 @@ import java.net.InetAddress;
 import java.nio.charset.Charset;
 import java.util.List;
 
-import org.apache.commons.httpclient.HttpURL;
-import org.apache.commons.httpclient.HttpsURL;
+import org.apache.http.client.utils.URIBuilder;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -233,85 +232,85 @@ public class FeedManagerTest {
     @Test
     public void testIsBlockedFeedAddressDefaultBlacklist() throws Exception {
         // loopback
-        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new HttpURL("http://localhost/feed")));
-        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new HttpURL("http://localhost:8085/feed")));
-        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new HttpURL("http://127.0.0.1/feed")));
-        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new HttpURL("http://127.0.0.1:8085/feed")));
+        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new URIBuilder("http://localhost/feed")));
+        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new URIBuilder("http://localhost:8085/feed")));
+        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new URIBuilder("http://127.0.0.1/feed")));
+        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new URIBuilder("http://127.0.0.1:8085/feed")));
 
         // private
-        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new HttpURL("http://172.16.150.140/feed")));
-        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new HttpURL("http://172.25.150.140/feed")));
-        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new HttpURL("http://user:pass@192.168.5.1/feed")));
-        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new HttpURL("http://192.168.5.1:8080/feed")));
-        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new HttpURL("http://192.168.166.150/feed")));
-        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new HttpURL("http://192.168.166.150:8081/feed")));
-        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new HttpURL("http://10.0.0.1/feed")));
-        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new HttpURL("http://10.15.150.140/feed")));
+        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new URIBuilder("http://172.16.150.140/feed")));
+        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new URIBuilder("http://172.25.150.140/feed")));
+        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new URIBuilder("http://user:pass@192.168.5.1/feed")));
+        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new URIBuilder("http://192.168.5.1:8080/feed")));
+        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new URIBuilder("http://192.168.166.150/feed")));
+        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new URIBuilder("http://192.168.166.150:8081/feed")));
+        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new URIBuilder("http://10.0.0.1/feed")));
+        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new URIBuilder("http://10.15.150.140/feed")));
     }
 
     @Test
     public void testIsBlockedFeedAddressPublicBlacklisted() throws Exception {
-        Assert.assertFalse(FeedManager.isBlockedFeedAddress(new HttpURL("http://198.51.100.230:8081/feed")));
+        Assert.assertFalse(FeedManager.isBlockedFeedAddress(new URIBuilder("http://198.51.100.230:8081/feed")));
         LC.zimbra_feed_manager_blacklist.setDefault("198.51.100.230");
-        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new HttpURL("http://198.51.100.230:8081/feed")));
-        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new HttpsURL("https://198.51.100.230:8082/feed")));
+        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new URIBuilder("http://198.51.100.230:8081/feed")));
+        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new URIBuilder("https://198.51.100.230:8082/feed")));
     }
 
     @Test
     public void testIsBlockedFeedAddressPublicBlacklistedMultiple() throws Exception {
-        Assert.assertFalse(FeedManager.isBlockedFeedAddress(new HttpURL("http://198.51.100.231:8081/feed")));
-        Assert.assertFalse(FeedManager.isBlockedFeedAddress(new HttpURL("http://198.51.100.220:8081/feed")));
+        Assert.assertFalse(FeedManager.isBlockedFeedAddress(new URIBuilder("http://198.51.100.231:8081/feed")));
+        Assert.assertFalse(FeedManager.isBlockedFeedAddress(new URIBuilder("http://198.51.100.220:8081/feed")));
         LC.zimbra_feed_manager_blacklist.setDefault("198.51.100.230,198.51.100.231,198.51.100.220");
-        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new HttpURL("http://198.51.100.230:8081/feed")));
-        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new HttpsURL("https://198.51.100.230:8082/feed")));
-        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new HttpURL("http://198.51.100.220:8081/feed")));
-        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new HttpURL("http://198.51.100.231:8081/feed")));
-        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new HttpURL("http://user:pass@198.51.100.231:8081/feed")));
+        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new URIBuilder("http://198.51.100.230:8081/feed")));
+        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new URIBuilder("https://198.51.100.230:8082/feed")));
+        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new URIBuilder("http://198.51.100.220:8081/feed")));
+        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new URIBuilder("http://198.51.100.231:8081/feed")));
+        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new URIBuilder("http://user:pass@198.51.100.231:8081/feed")));
     }
 
     @Test
     public void testIsBlockedFeedAddressPublicBlacklistCIDR() throws Exception {
-        Assert.assertFalse(FeedManager.isBlockedFeedAddress(new HttpURL("http://198.51.100.130:8081/feed")));
-        Assert.assertFalse(FeedManager.isBlockedFeedAddress(new HttpURL("http://198.51.100.120:8081/feed")));
+        Assert.assertFalse(FeedManager.isBlockedFeedAddress(new URIBuilder("http://198.51.100.130:8081/feed")));
+        Assert.assertFalse(FeedManager.isBlockedFeedAddress(new URIBuilder("http://198.51.100.120:8081/feed")));
         LC.zimbra_feed_manager_blacklist.setDefault("198.51.100.0/25");
-        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new HttpURL("http://198.51.100.95:8081/feed")));
-        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new HttpsURL("https://198.51.100.95:8082/feed")));
-        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new HttpURL("http://198.51.100.101:8081/feed")));
-        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new HttpURL("http://198.51.100.127:8081/feed")));
-        Assert.assertFalse(FeedManager.isBlockedFeedAddress(new HttpURL("http://198.51.100.128:8081/feed")));
+        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new URIBuilder("http://198.51.100.95:8081/feed")));
+        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new URIBuilder("https://198.51.100.95:8082/feed")));
+        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new URIBuilder("http://198.51.100.101:8081/feed")));
+        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new URIBuilder("http://198.51.100.127:8081/feed")));
+        Assert.assertFalse(FeedManager.isBlockedFeedAddress(new URIBuilder("http://198.51.100.128:8081/feed")));
     }
 
     @Test
     public void testIsBlockedFeedAddressPublicBlacklistCIDRMultiple() throws Exception {
-        Assert.assertFalse(FeedManager.isBlockedFeedAddress(new HttpURL("http://203.0.113.167:8081/feed")));
+        Assert.assertFalse(FeedManager.isBlockedFeedAddress(new URIBuilder("http://203.0.113.167:8081/feed")));
         LC.zimbra_feed_manager_blacklist.setDefault("198.51.100.0/24,203.0.113.0/24,192.0.2.121");
-        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new HttpURL("http://203.0.113.227:8081/feed")));
-        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new HttpURL("http://203.0.113.167:8081/feed")));
-        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new HttpURL("http://198.51.100.120:8081/feed")));
-        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new HttpURL("http://192.0.2.121:8081/feed")));
+        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new URIBuilder("http://203.0.113.227:8081/feed")));
+        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new URIBuilder("http://203.0.113.167:8081/feed")));
+        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new URIBuilder("http://198.51.100.120:8081/feed")));
+        Assert.assertTrue(FeedManager.isBlockedFeedAddress(new URIBuilder("http://192.0.2.121:8081/feed")));
     }
 
     @Test
     public void testIsBlockedFeedAddressPublicTest() throws Exception {
-        Assert.assertFalse(FeedManager.isBlockedFeedAddress(new HttpURL("http://zimbra.test:8080/feed")));
-        Assert.assertFalse(FeedManager.isBlockedFeedAddress(new HttpsURL("https://zimbra.test/feed")));
-        Assert.assertFalse(FeedManager.isBlockedFeedAddress(new HttpsURL("https://user:pass@zimbra.test/feed")));
-        Assert.assertFalse(FeedManager.isBlockedFeedAddress(new HttpsURL("https://user:pass@192.0.2.165/feed")));
+        Assert.assertFalse(FeedManager.isBlockedFeedAddress(new URIBuilder("http://zimbra.test:8080/feed")));
+        Assert.assertFalse(FeedManager.isBlockedFeedAddress(new URIBuilder("https://zimbra.test/feed")));
+        Assert.assertFalse(FeedManager.isBlockedFeedAddress(new URIBuilder("https://user:pass@zimbra.test/feed")));
+        Assert.assertFalse(FeedManager.isBlockedFeedAddress(new URIBuilder("https://user:pass@192.0.2.165/feed")));
     }
 
     @Test
     public void testIsBlockedFeedAddressPrivateNoBlacklist() throws Exception {
         LC.zimbra_feed_manager_blacklist.setDefault("");
-        Assert.assertFalse(FeedManager.isBlockedFeedAddress(new HttpURL("http://10.15.150.140/feed")));
-        Assert.assertFalse(FeedManager.isBlockedFeedAddress(new HttpURL("http://172.16.150.140/feed")));
-        Assert.assertFalse(FeedManager.isBlockedFeedAddress(new HttpURL("http://192.168.5.1/feed")));
+        Assert.assertFalse(FeedManager.isBlockedFeedAddress(new URIBuilder("http://10.15.150.140/feed")));
+        Assert.assertFalse(FeedManager.isBlockedFeedAddress(new URIBuilder("http://172.16.150.140/feed")));
+        Assert.assertFalse(FeedManager.isBlockedFeedAddress(new URIBuilder("http://192.168.5.1/feed")));
     }
 
     @Test
     public void testIsBlockedFeedAddressUnknownAddressNoBlacklist() throws Exception {
         LC.zimbra_feed_manager_blacklist.setDefault("");
-        Assert.assertFalse(FeedManager.isBlockedFeedAddress(new HttpURL("http://fake.test/feed")));
-        Assert.assertFalse(FeedManager.isBlockedFeedAddress(new HttpURL("http://example.test/feed")));
+        Assert.assertFalse(FeedManager.isBlockedFeedAddress(new URIBuilder("http://fake.test/feed")));
+        Assert.assertFalse(FeedManager.isBlockedFeedAddress(new URIBuilder("http://example.test/feed")));
     }
 
     public static String streamToString(InputStream stream, Charset cs)
