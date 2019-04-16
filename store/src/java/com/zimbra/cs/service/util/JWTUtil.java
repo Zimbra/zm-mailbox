@@ -40,11 +40,11 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
+import com.zimbra.cs.mailbox.cache.JWTInfo;
+import com.zimbra.cs.mailbox.cache.RedisJwtCache;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenKey;
 import com.zimbra.cs.account.AuthTokenProperties;
-import com.zimbra.cs.account.JWTCache;
-import com.zimbra.cs.account.JWTInfo;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ZimbraJWToken;
 import com.zimbra.soap.SoapEngine;
@@ -73,9 +73,9 @@ public class JWTUtil {
      * @param expires       time after which jwt expires
      * @param account       account for jwt is being generated
      * @return              jwt
-     * @throws AuthFailedServiceException 
+     * @throws ServiceException 
      */
-    public static final String generateJWT(byte[] jwtKey, String salt, long issuedAt, AuthTokenProperties properties, long keyVersion) throws AuthFailedServiceException {
+    public static final String generateJWT(byte[] jwtKey, String salt, long issuedAt, AuthTokenProperties properties, long keyVersion) throws ServiceException {
         if (properties != null) {
             Key key = new SecretKeySpec(jwtKey, SignatureAlgorithm.HS512.getJcaName());
             JwtBuilder builder = Jwts.builder();
@@ -102,7 +102,7 @@ public class JWTUtil {
             if (properties.getUsage() != null) {
                 builder.claim(AuthTokenProperties.C_USAGE, properties.getUsage().getCode());
             }
-            JWTCache.put(jti, new JWTInfo(salt, properties.getExpires()));
+            RedisJwtCache.put(jti, new JWTInfo(salt, properties.getExpires()));
             return builder.signWith(SignatureAlgorithm.HS512, key).compact();
         } else {
             throw AuthFailedServiceException.AUTH_FAILED("properties is required"); 
@@ -208,7 +208,7 @@ public class JWTUtil {
      */
     private static String getJWTSalt(String jwt, String jti, String salts) throws ServiceException {
         String jwtSpecificSalt = null;
-        JWTInfo jwtInfo = JWTCache.get(jti);
+        JWTInfo jwtInfo = RedisJwtCache.get(jti);
         if (jwtInfo != null && salts.contains(jwtInfo.getSalt())) {
             jwtSpecificSalt = jwtInfo.getSalt();
         } else {
@@ -221,7 +221,7 @@ public class JWTUtil {
                     try {
                         Claims claims = Jwts.parser().setSigningKey(key).parseClaimsJws(jwt).getBody();
                         jwtSpecificSalt = salt;
-                        JWTCache.put(jti, new JWTInfo(salt, claims.getExpiration().getTime()));
+                        RedisJwtCache.put(jti, new JWTInfo(salt, claims.getExpiration().getTime()));
                         break;
                     } catch(Exception e) {
                         //invalid salt, continue to try another salt value
@@ -349,7 +349,7 @@ public class JWTUtil {
      */
     public static String getJWTSalt(String jwt) throws ServiceException {
         String jti = getJTI(jwt);
-        JWTInfo jwtInfo = JWTCache.get(jti);
+        JWTInfo jwtInfo = RedisJwtCache.get(jti);
         return jwtInfo != null ? jwtInfo.getSalt() : null;
     }
 }

@@ -121,7 +121,7 @@ public class JWTBasedAuthTest {
         }
     }
 
-    private String generateJWT(Account acct, String salt) throws AuthFailedServiceException, AuthTokenException {
+    private String generateJWT(Account acct, String salt) throws AuthTokenException, ServiceException {
         AuthTokenKey atkey = AuthTokenUtil.getCurrentKey();
         byte[] jwtKey = Bytes.concat(atkey.getKey(), salt.getBytes());
         long issuedAt = System.currentTimeMillis();

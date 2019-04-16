@@ -48,6 +48,8 @@ import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
 import com.zimbra.cs.ephemeral.EphemeralInput.AbsoluteExpiration;
 import com.zimbra.cs.ephemeral.EphemeralInput.Expiration;
+import com.zimbra.cs.mailbox.cache.JWTInfo;
+import com.zimbra.cs.mailbox.cache.RedisJwtCache;
 import com.zimbra.cs.service.util.JWTUtil;
 
 import io.jsonwebtoken.Claims;
@@ -135,7 +137,7 @@ public class ZimbraJWToken extends AuthToken {
                        if (jwtId != null) {
                            Expiration expiration = new AbsoluteExpiration(properties.getExpires());
                            acct.addInvalidJWTokens(jwtId, properties.getServerVersion(), expiration);
-                           JWTCache.remove(jwtId);
+                           RedisJwtCache.remove(jwtId);
                            ZimbraLog.account.debug("added jti: %s to invalid list", jwtId);
                            if(acct.getBooleanAttr(Provisioning.A_zimbraLogOutFromAllServers, false)) {
                                AuthTokenRegistry.addTokenToQueue(this);
@@ -283,7 +285,7 @@ public class ZimbraJWToken extends AuthToken {
             String zmJwtCookieVal = JWTUtil.getZMJWTCookieValue(reqst);
             if (deregister) {
                 String jwtId = JWTUtil.getJTI(properties.getEncoded());
-                JWTInfo jwt = JWTCache.get(jwtId);
+                JWTInfo jwt = RedisJwtCache.get(jwtId);
                 if (jwt != null) {
                     finalValue = JWTUtil.clearSalt(zmJwtCookieVal, jwt.getSalt());
                     ZimbraLog.security.debug("EndSession: found salt in cache for jti: %s",jwtId);
