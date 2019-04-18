@@ -350,7 +350,7 @@ public class WebDavClient {
         mUserAgent = "Zimbra " + app + "/" + BuildInfo.VERSION + " (" + BuildInfo.DATE + ")";
     }
 
-    private String mUserAgent;
+    protected String mUserAgent;
     private final String mBaseUrl;
     private String mUsername;
     private String mPassword;

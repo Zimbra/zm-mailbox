@@ -162,7 +162,7 @@ public class CalDavDataImport extends MailItemImport {
         return "ZCS";
     }
 
-    private CalDavClient getClient() throws ServiceException, IOException, DavException, HttpException {
+    protected CalDavClient getClient() throws ServiceException, IOException, DavException, HttpException {
         if (mClient == null) {
             mClient = new CalDavClient(getTargetUrl());
             mClient.setAppName(getAppName());
