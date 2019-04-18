@@ -13,11 +13,11 @@
   <dependency org="com.google.guava" name="guava" rev="23.0" />
   <dependency org="org.json" name="json" rev="20090211" />
   <dependency org="javax.servlet" name="javax.servlet-api" rev="3.1.0" />
-  <dependency org="org.apache.httpcomponents" name="httpclient" rev="4.5.8"/>
-  <dependency org="org.apache.httpcomponents" name="httpasyncclient" rev="4.1.3"/>
-  <dependency org="org.apache.httpcomponents" name="httpcore" rev="4.4.11"/>
-  <dependency org="org.apache.httpcomponents" name="httpcore-nio" rev="4.4.11"/>
-  <dependency org="org.apache.httpcomponents" name="httpmime" rev="4.5.8"/>
+  <dependency org="org.apache.httpcomponents" name="httpclient" rev="${httpclient.version}"/>
+  <dependency org="org.apache.httpcomponents" name="httpasyncclient" rev="${httpclient.async.version}"/>
+  <dependency org="org.apache.httpcomponents" name="httpcore" rev="${httpclient.httpcore.version}"/> 
+  <dependency org="org.apache.httpcomponents" name="httpcore-nio" rev="${httpclient.httpcore.version}"/>
+  <dependency org="org.apache.httpcomponents" name="httpmime" rev="${httpclient.version}"/>
   <dependency org="commons-lang" name="commons-lang" rev="2.6" />
   <dependency org="zimbra" name="zm-common" rev="latest.integration" />
   <dependency org="zimbra" name="zm-soap" rev="latest.integration" />

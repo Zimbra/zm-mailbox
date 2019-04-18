@@ -9,10 +9,10 @@
   <dependency org="commons-httpclient" name="commons-httpclient" rev="3.1" />
   <dependency org="commons-lang" name="commons-lang" rev="2.6" />
   <dependency org="commons-logging" name="commons-logging" rev="1.1.1"/>
-  <dependency org="org.apache.httpcomponents" name="httpclient" rev="4.5.8"/>
-  <dependency org="org.apache.httpcomponents" name="httpasyncclient" rev="4.1.3"/>
-  <dependency org="org.apache.httpcomponents" name="httpcore" rev="4.4.11"/>
-  <dependency org="org.apache.httpcomponents" name="httpcore-nio" rev="4.4.11"/>
+  <dependency org="org.apache.httpcomponents" name="httpclient" rev="${httpclient.version}"/>
+  <dependency org="org.apache.httpcomponents" name="httpasyncclient" rev="${httpclient.async.version}"/>
+  <dependency org="org.apache.httpcomponents" name="httpcore" rev="${httpclient.httpcore.version}"/> 
+  <dependency org="org.apache.httpcomponents" name="httpcore-nio" rev="${httpclient.httpcore.version}"/>
   <dependency org="dom4j" name="dom4j" rev="1.5.2" />
   <dependency org="ical4j" name="ical4j" rev="0.9.16-patched" />
   <dependency org="junit" name="junit" rev="4.8.2" />
