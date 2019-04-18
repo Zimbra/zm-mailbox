@@ -16,29 +16,17 @@
  */
 package com.zimbra.common.net;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.security.GeneralSecurityException;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.UnrecoverableKeyException;
-import java.security.cert.CertificateException;
 
 import javax.net.SocketFactory;
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
-
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.util.ZimbraLog;
 
 /**
  * Override SSLSocketFactory to provide a createSocket() interface
@@ -51,7 +39,7 @@ class CustomSSLSocketFactory extends SSLSocketFactory {
 
     CustomSSLSocketFactory(TrustManager tm, SocketFactory sf, boolean verifyHostname)
         throws GeneralSecurityException, IOException {
-        
+
         SSLContext context = SSLContext.getInstance("TLS");
         context.init(null, tm != null ? new TrustManager[] { tm } : null, null);
         sslFactory = context.getSocketFactory();
@@ -59,7 +47,7 @@ class CustomSSLSocketFactory extends SSLSocketFactory {
         factory = sf;
         this.verifyHostname = verifyHostname && tm instanceof CustomTrustManager;
     }
-    
+
     boolean isVerifyHostname() {
         return verifyHostname;
     }
