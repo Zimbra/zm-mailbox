@@ -24,6 +24,7 @@ import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.OperationContext;
 
 public abstract class SmimeHandler {
 
@@ -37,8 +38,8 @@ public abstract class SmimeHandler {
         return instance;
     }
 
-    public abstract boolean verifyMessageSignature(Account account, Element m, MimeMessage mm,
-        SoapProtocol mResponseProtocol);
+    public abstract boolean verifyMessageSignature(Message msg, Element m, MimeMessage mm,
+            OperationContext octxt);
 
     public abstract MimeMessage decryptMessage(Mailbox mailbox, MimeMessage mime, int itemId) throws ServiceException;
 
@@ -53,3 +54,4 @@ public abstract class SmimeHandler {
     public abstract void encodeCertificate(Account account, Element elem, String certData,
             SoapProtocol mResponseProtocol, List<String> emailAddresses);
 }
+
