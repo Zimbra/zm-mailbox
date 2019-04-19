@@ -1649,10 +1649,9 @@ public final class ToXML {
                 ZimbraLog.mailbox.debug(
                     "The message is signed. Forwarding it to SmimeHandler for signature verification.");
                 if (SmimeHandler.getHandler() != null) {
-                    SmimeHandler.getHandler().verifyMessageSignature(msg.getMailbox().getAccount(), m,
-                        mm, octxt.getmResponseProtocol());
-                }
-            } else {
+                    SmimeHandler.getHandler().verifyMessageSignature(msg, m, mm, octxt);
+                } 
+           } else {
                 // if the original mime message was PKCS7-signed and it was
                 // decoded and stored in cache as plain mime
                 if ((mm instanceof Mime.FixedMimeMessage)
