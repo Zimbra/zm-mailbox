@@ -14,9 +14,7 @@
  * If not, see <https://www.gnu.org/licenses/>.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.html;
-
-import static com.zimbra.common.util.TaskUtil.newDaemonThreadFactory;
+package com.zimbra.cs.html.owasp;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,6 +33,7 @@ import com.google.common.base.Charsets;
 import com.google.common.io.CharStreams;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.html.AbstractDefang;
 
 public class OwaspDefang extends AbstractDefang {
 
@@ -69,4 +68,5 @@ public class OwaspDefang extends AbstractDefang {
         }
         return sanitizedHtml;
     }
+
 }

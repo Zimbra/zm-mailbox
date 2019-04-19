@@ -20,6 +20,7 @@ import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.html.owasp.OwaspDefang;
 
 /**
  * This factory is used to determine the proper defanger based on content type for
