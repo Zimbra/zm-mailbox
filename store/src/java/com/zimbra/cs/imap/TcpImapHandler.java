@@ -59,7 +59,7 @@ final class TcpImapHandler extends ProtocolHandler {
         delegate.output = new BufferedOutputStream(connection.getOutputStream());
 
         if (!config.isServiceEnabled()) {
-            ZimbraLog.imap.debug("dropping connection because user services are disabled");
+            ZimbraLog.imap.debug("dropping TCP connection because user services are disabled");
             dropConnection();
             return false;
         }
@@ -118,11 +118,11 @@ final class TcpImapHandler extends ProtocolHandler {
             setIdle(false);
             long elapsed = ZimbraPerf.STOPWATCH_IMAP.stop(start);
             if (delegate.lastCommand != null) {
-                ZimbraLog.imap.info("%s elapsed=%d", delegate.lastCommand.toUpperCase(), elapsed);
+                ZimbraLog.imap.info("%s elapsed=%d (TCP)", delegate.lastCommand.toUpperCase(), elapsed);
                 ZimbraPerf.IMAP_TRACKER.addStat(delegate.lastCommand.toUpperCase(), start);
                 ZimbraPerf.IMAPD_TRACKER.addStat(delegate.lastCommand.toUpperCase(), start);
             } else {
-                ZimbraLog.imap.info("(unknown) elapsed=%d", elapsed);
+                ZimbraLog.imap.info("(unknown) elapsed=%d (TCP)", elapsed);
             }
             return keepGoing && (LC.imap_max_consecutive_error.intValue() <= 0 || delegate.consecutiveError < LC.imap_max_consecutive_error.intValue());
         } catch (TcpImapRequest.ImapContinuationException e) {
@@ -174,7 +174,7 @@ final class TcpImapHandler extends ProtocolHandler {
 
         // TODO in the TcpServer case, is this duplicated effort with
         // session timeout code that also drops connections?
-        ZimbraLog.imap.debug("dropping connection for inactivity");
+        ZimbraLog.imap.debug("dropping TCP connection for inactivity");
         dropConnection();
     }
 
@@ -257,7 +257,7 @@ final class TcpImapHandler extends ProtocolHandler {
             }.start();
 
             if (credentials != null && !goodbyeSent) {
-                ZimbraLog.imap.info("dropping connection for user %s (server-initiated)", credentials.getUsername());
+                ZimbraLog.imap.info("TCP:dropping connection for user %s (server-initiated)", credentials.getUsername());
             }
 
             ZimbraLog.addIpToContext(remoteIp);
@@ -280,9 +280,9 @@ final class TcpImapHandler extends ProtocolHandler {
                 }
             } catch (IOException e) {
                 if (ZimbraLog.imap.isDebugEnabled()) {
-                    ZimbraLog.imap.debug("I/O error while closing connection", e);
+                    ZimbraLog.imap.debug("TCP:I/O error while closing connection", e);
                 } else {
-                    ZimbraLog.imap.debug("I/O error while closing connection: " + e);
+                    ZimbraLog.imap.debug("TCP:I/O error while closing connection: %s", e);
                 }
             } finally {
                 ZimbraLog.clearContext();
@@ -344,7 +344,7 @@ final class TcpImapHandler extends ProtocolHandler {
             NetUtil.setSSLEnabledCipherSuites(tlsconn, config.getSslExcludedCiphers(), config.getSslIncludedCiphers());
             tlsconn.setUseClientMode(false);
             startHandshake(tlsconn);
-            ZimbraLog.imap.debug("suite: " + tlsconn.getSession().getCipherSuite());
+            ZimbraLog.imap.debug("suite: %s", tlsconn.getSession().getCipherSuite());
             input = new TcpServerInputStream(tlsconn.getInputStream());
             output = new BufferedOutputStream(tlsconn.getOutputStream());
             startedTLS = true;

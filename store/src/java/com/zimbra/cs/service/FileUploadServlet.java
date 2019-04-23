@@ -349,7 +349,7 @@ public class FileUploadServlet extends ZimbraServlet {
             // sizeMax=-1 means "no limit"
             long size = ByteUtil.copy(is, true, fi.getOutputStream(), true, sizeMax < 0 ? sizeMax : sizeMax + 1);
             if (upload.getSizeMax() >= 0 && size > upload.getSizeMax()) {
-                mLog.info("Exceeded maximum upload size of " + upload.getSizeMax() + " bytes");
+                mLog.warn("Exceeded maximum upload size of %s bytes", upload.getSizeMax());
                 throw MailServiceException.UPLOAD_TOO_LARGE(filename, "upload too large");
             }
 
