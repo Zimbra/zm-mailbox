@@ -16443,7 +16443,7 @@ public class ZAttrProvisioning {
     /**
      * If true, use owasp html sanitizer else use neko html defanger
      *
-     * @since ZCS 8.8.12
+     * @since ZCS 8.8.15
      */
     @ZAttr(id=3077)
     public static final String A_zimbraUseOwaspHtmlSanitizer = "zimbraUseOwaspHtmlSanitizer";

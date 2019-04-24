@@ -70976,7 +70976,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraUseOwaspHtmlSanitizer, or true if unset
      *
-     * @since ZCS 8.8.12
+     * @since ZCS 8.8.15
      */
     @ZAttr(id=3077)
     public boolean isUseOwaspHtmlSanitizer() {
@@ -70989,7 +70989,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraUseOwaspHtmlSanitizer new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.12
+     * @since ZCS 8.8.15
      */
     @ZAttr(id=3077)
     public void setUseOwaspHtmlSanitizer(boolean zimbraUseOwaspHtmlSanitizer) throws com.zimbra.common.service.ServiceException {
@@ -71005,7 +71005,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.12
+     * @since ZCS 8.8.15
      */
     @ZAttr(id=3077)
     public Map<String,Object> setUseOwaspHtmlSanitizer(boolean zimbraUseOwaspHtmlSanitizer, Map<String,Object> attrs) {
@@ -71019,7 +71019,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.12
+     * @since ZCS 8.8.15
      */
     @ZAttr(id=3077)
     public void unsetUseOwaspHtmlSanitizer() throws com.zimbra.common.service.ServiceException {
@@ -71034,7 +71034,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.12
+     * @since ZCS 8.8.15
      */
     @ZAttr(id=3077)
     public Map<String,Object> unsetUseOwaspHtmlSanitizer(Map<String,Object> attrs) {
