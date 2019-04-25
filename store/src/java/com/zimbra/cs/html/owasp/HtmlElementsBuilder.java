@@ -24,6 +24,8 @@ import java.util.Map;
 import java.util.Set;
 import org.owasp.html.ElementPolicy;
 
+import com.zimbra.cs.html.owasp.policies.AElementPolicy;
+import com.zimbra.cs.html.owasp.policies.AreaElementPolicy;
 import com.zimbra.cs.html.owasp.policies.DivElementPolicy;
 
 /*
@@ -41,6 +43,8 @@ public class HtmlElementsBuilder {
 
     public void setUp() {
         elementSpecificPolicies.put("div", new DivElementPolicy());
+        elementSpecificPolicies.put("a", new AElementPolicy());
+        elementSpecificPolicies.put("area", new AreaElementPolicy());
         // add any other element policies
     }
 
