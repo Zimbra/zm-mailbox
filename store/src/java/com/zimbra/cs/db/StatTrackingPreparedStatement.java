@@ -700,7 +700,10 @@ public class StatTrackingPreparedStatement implements PreparedStatement {
 
         @Override
         protected boolean retryException(SQLException sqle) {
-            return sqle.getMessage().toLowerCase().contains("deadlock");
+            if (sqle.getMessage().toLowerCase().contains("deadlock")) {
+                return true;
+            }
+            return super.retryException(sqle);
         }
     }
 }
