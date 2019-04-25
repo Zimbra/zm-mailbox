@@ -6,6 +6,7 @@ import org.owasp.html.HtmlSanitizer;
 import org.owasp.html.HtmlSanitizer.Policy;
 import org.owasp.html.HtmlStreamRenderer;
 import org.owasp.html.PolicyFactory;
+import org.owasp.html.Sanitizers;
 
 import com.zimbra.common.util.StringUtil;
 
@@ -25,6 +26,7 @@ public class OwaspHtmlSanitizer implements Callable<String> {
 
     private void instantiatePolicy() {
         POLICY_DEFINITION = OwaspPolicyProducer.getPolicyFactoryInstance(neuterImages);
+        POLICY_DEFINITION = POLICY_DEFINITION.and(Sanitizers.LINKS);
     }
 
     /**
