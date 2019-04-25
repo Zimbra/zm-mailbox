@@ -28,12 +28,16 @@ public class NoSpaceEncodedCharAttributePolicy implements AttributePolicy {
     private static final Pattern AV_JS_ENTITY = Pattern.compile(DebugConfig.defangAvJsEntity);
     private static final Pattern AV_SCRIPT_TAG = Pattern.compile(DebugConfig.defangAvScriptTag,
         Pattern.CASE_INSENSITIVE);
- 
+    private static final Pattern AV_TAB = Pattern.compile(DebugConfig.defangAvTab, Pattern.CASE_INSENSITIVE);
+
     @Override
     public String apply(String elementName, String attributeName, String value) {
         value = removeAnySpacesAndEncodedChars(value);
         value = AV_JS_ENTITY.matcher(value).replaceAll("JS-ENTITY-BLOCKED");
         value = AV_SCRIPT_TAG.matcher(value).replaceAll("SCRIPT-TAG-BLOCKED");
+        if (AV_TAB.matcher(value).find()) {
+            value = AV_TAB.matcher(value).replaceAll("");
+        }
         return value;
     }
 

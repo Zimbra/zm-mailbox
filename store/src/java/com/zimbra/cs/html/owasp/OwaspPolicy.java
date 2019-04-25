@@ -108,8 +108,6 @@ public class OwaspPolicy {
         } else {
             ZimbraLog.mailbox
                 .warn(String.format("Owasp policy file '%s' is not readable", mPolicyFile));
-            throw new Exception(
-                String.format("Owasp policy file '%s' is not readable", mPolicyFile));
         }
     }
 

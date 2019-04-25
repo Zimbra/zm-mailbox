@@ -37,6 +37,7 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.html.owasp.OwaspDefang;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
@@ -1471,10 +1472,10 @@ public class DefangFilterTest {
     @Test
     public void testzcs6871OwaspDefanger() throws Exception {
         BrowserDefang defanger2 = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML);
-        Assert.assertFalse(defanger2 instanceof OwaspHtmlSanitizer);
+        Assert.assertFalse(defanger2 instanceof OwaspDefang);
 
         Provisioning.getInstance().getConfig().setUseOwaspHtmlSanitizer(true);
         BrowserDefang defanger = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML);
-        Assert.assertTrue(defanger instanceof OwaspHtmlSanitizer);
+        Assert.assertTrue(defanger instanceof OwaspDefang);
     }
 }
