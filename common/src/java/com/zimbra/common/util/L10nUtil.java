@@ -345,7 +345,17 @@ public class L10nUtil {
     public static String getMessage(String key, HttpServletRequest request, Object... args) {
         Locale locale = null;
         if (request != null) {
-            locale = lookupLocale(request.getParameter(P_LOCALE_ID));
+            try {
+                locale = lookupLocale(request.getParameter(P_LOCALE_ID));
+            } catch (IllegalArgumentException ex) {
+                /* curl --data-binary with a .tgz file will use `Content-Type: application/x-www-form-urlencoded`
+                 * unless content type is over-ridden using e.g. -H 'Content-Type: application/octet-stream'
+                 * That can result in very noisy logging error handling - presumably looking in the "form"
+                 * for this parameter and also throwing:
+                 * org.eclipse.jetty.util.Utf8Appendable$NotUtf8Exception: Not valid UTF8! byte Ef in state 5.
+                 * As people may often be lazy when using curl, worth suppressing the errors. */
+                ZimbraLog.misc.warnQuietly("Problem getting HttpServletRequest parameter '%s'", P_LOCALE_ID, ex);
+            }
         }
         // TODO: If not specified in params, get locale from config
         if (locale == null && request != null) {
