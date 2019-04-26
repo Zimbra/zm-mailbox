@@ -2678,6 +2678,14 @@ public class ZAttrProvisioning {
     public static final String A_company = "company";
 
     /**
+     * This attribute is used to track last operation performed on user
+     *
+     * @since ZCS 8.8.12
+     */
+    @ZAttr(id=5029)
+    public static final String A_davuniqueid = "davuniqueid";
+
+    /**
      * RFC2256: descriptive information
      */
     @ZAttr(id=-1)
@@ -2988,22 +2996,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=3002)
     public static final String A_zimbraActiveSyncEhcacheMaxDiskSize = "zimbraActiveSyncEhcacheMaxDiskSize";
-
-    /**
-     * filter to decide members of the address list using gal
-     *
-     * @since ZCS 8.8.10
-     */
-    @ZAttr(id=3074)
-    public static final String A_zimbraAddressListGalFilter = "zimbraAddressListGalFilter";
-
-    /**
-     * filter to decide members of the address list using ldap
-     *
-     * @since ZCS 8.8.10
-     */
-    @ZAttr(id=3076)
-    public static final String A_zimbraAddressListLdapFilter = "zimbraAddressListLdapFilter";
 
     /**
      * access control mechanism for admin access acl: ACL based access
@@ -7914,23 +7906,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraGroupId = "zimbraGroupId";
 
     /**
-     * LDAP attribute to HAB Group Member attribute mapping
-     *
-     * @since ZCS 8.8.10
-     */
-    @ZAttr(id=3073)
-    public static final String A_zimbraHABMemberLdapAttrMap = "zimbraHABMemberLdapAttrMap";
-
-    /**
-     * seniority index of the group or group member which will determine the
-     * sorting order in the hierarchical address book
-     *
-     * @since ZCS 8.8.10
-     */
-    @ZAttr(id=3071)
-    public static final String A_zimbraHABSeniorityIndex = "zimbraHABSeniorityIndex";
-
-    /**
      * help URL for admin
      *
      * @since ZCS 5.0.7
@@ -7967,14 +7942,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=353)
     public static final String A_zimbraHideInGal = "zimbraHideInGal";
-
-    /**
-     * root group id of hierarchical address book
-     *
-     * @since ZCS 8.8.10
-     */
-    @ZAttr(id=3072)
-    public static final String A_zimbraHierarchicalAddressBookRoot = "zimbraHierarchicalAddressBookRoot";
 
     /**
      * Deprecated since: 6.0.0_BETA2. deprecated in favor for
@@ -8546,14 +8513,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1242)
     public static final String A_zimbraIsACLGroup = "zimbraIsACLGroup";
-
-    /**
-     * whether address list is active or not
-     *
-     * @since ZCS 8.8.10
-     */
-    @ZAttr(id=3075)
-    public static final String A_zimbraIsAddressListActive = "zimbraIsAddressListActive";
 
     /**
      * set to true for admin accounts
