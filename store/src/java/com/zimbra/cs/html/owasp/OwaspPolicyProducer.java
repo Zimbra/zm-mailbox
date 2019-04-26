@@ -44,6 +44,7 @@ public class OwaspPolicyProducer {
         HtmlElementsBuilder builder = new HtmlElementsBuilder(new HtmlAttributesBuilder());
         List<HtmlElement> allowedElements = builder.build();
         HtmlPolicyBuilder policyBuilder = new HtmlPolicyBuilder();
+        policyBuilder.requireRelNofollowOnLinks();
         for (HtmlElement htmlElement : allowedElements) {
             htmlElement.configure(policyBuilder, neuterImages);
         }

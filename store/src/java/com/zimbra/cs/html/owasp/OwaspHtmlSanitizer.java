@@ -1,13 +1,15 @@
 package com.zimbra.cs.html.owasp;
 
 import java.util.concurrent.Callable;
+import java.util.regex.Pattern;
+
 import org.owasp.html.Handler;
 import org.owasp.html.HtmlSanitizer;
 import org.owasp.html.HtmlSanitizer.Policy;
 import org.owasp.html.HtmlStreamRenderer;
 import org.owasp.html.PolicyFactory;
-import org.owasp.html.Sanitizers;
 
+import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.util.StringUtil;
 
 /*
@@ -16,6 +18,7 @@ import com.zimbra.common.util.StringUtil;
 public class OwaspHtmlSanitizer implements Callable<String> {
     private String html;
     private boolean neuterImages;
+    private static final Pattern AV_TAB = Pattern.compile(DebugConfig.defangAvTab, Pattern.CASE_INSENSITIVE);
 
     public OwaspHtmlSanitizer(String html, boolean neuterImages) {
         this.html = html;
@@ -26,7 +29,6 @@ public class OwaspHtmlSanitizer implements Callable<String> {
 
     private void instantiatePolicy() {
         POLICY_DEFINITION = OwaspPolicyProducer.getPolicyFactoryInstance(neuterImages);
-        POLICY_DEFINITION = POLICY_DEFINITION.and(Sanitizers.LINKS);
     }
 
     /**
@@ -40,7 +42,9 @@ public class OwaspHtmlSanitizer implements Callable<String> {
         if (StringUtil.isNullOrEmpty(html)) {
             return null;
         }
-
+        if (AV_TAB.matcher(html).find()) {
+            html = AV_TAB.matcher(html).replaceAll("");
+        }
         // create the builder into which the sanitized email will be written
         final StringBuilder htmlBuilder = new StringBuilder(html.length());
         // create the renderer that will write the sanitized HTML to the builder
