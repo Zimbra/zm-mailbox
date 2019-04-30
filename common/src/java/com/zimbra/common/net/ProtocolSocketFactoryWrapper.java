@@ -46,8 +46,19 @@ class ProtocolSocketFactoryWrapper implements ConnectionSocketFactory {
         if (context != null) {
             HttpClientContext clientContext = HttpClientContext.adapt(context);
             HttpHost  host = clientContext.getTargetHost();
-            factory.createSocket(host.getHostName(), host.getPort());
-        } 
+            if(host.getPort() == -1) {
+                if (host.getSchemeName().equalsIgnoreCase("http")) {
+                    factory.createSocket(host.getHostName(), 80);
+                } else if (host.getSchemeName().equalsIgnoreCase("https")) {
+                    factory.createSocket(host.getHostName(), 443);
+                } else {
+                    throw new IOException("Unknown scheme");
+                }
+
+            } else {
+                factory.createSocket(host.getHostName(), host.getPort());
+            }
+        }
         return factory.createSocket();
     }
 
@@ -67,11 +78,14 @@ class ProtocolSocketFactoryWrapper implements ConnectionSocketFactory {
         if (context != null) {
             HttpClientContext clientContext = HttpClientContext.adapt(context);
             timeout = clientContext.getConnection().getSocketTimeout();
-        } 
-       
+        }
+
+
         if (timeout > 0) {
-            sock.bind(localAddress);
-            sock.connect(remoteAddress, connectTimeout);
+            if (sock != null && !sock.isBound()) {
+                sock.bind(localAddress);
+                sock.connect(remoteAddress, timeout);
+            }
             return sock;
         } else {
             sock.connect(remoteAddress, connectTimeout);

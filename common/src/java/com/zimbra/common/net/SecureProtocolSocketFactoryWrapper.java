@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010, 2013, 2014, 2016, 2018 Synacor, Inc.
+ * Copyright (C) 2010, 2013, 2014, 2016, 2018, 2019 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -17,7 +17,6 @@
 package com.zimbra.common.net;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
@@ -28,32 +27,18 @@ import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.conn.socket.LayeredConnectionSocketFactory;
 import org.apache.http.protocol.HttpContext;
 
-class SecureProtocolSocketFactoryWrapper extends ProtocolSocketFactoryWrapper 
+class SecureProtocolSocketFactoryWrapper extends ProtocolSocketFactoryWrapper
 implements LayeredConnectionSocketFactory {
-    
+
     private SSLSocketFactory factory;
 
     SecureProtocolSocketFactoryWrapper(SSLSocketFactory factory) {
         super(factory);
         this.factory = factory;
     }
-    
+
     public Socket createSocket(Socket socket, String host, int port, boolean autoClose) throws IOException {
         return factory.createSocket(socket, host, port, autoClose);
-    }
-
-    /* (non-Javadoc)
-     * @see org.apache.http.conn.socket.ConnectionSocketFactory#connectSocket(int, java.net.Socket, org.apache.http.HttpHost, java.net.InetSocketAddress, java.net.InetSocketAddress, org.apache.http.protocol.HttpContext)
-     */
-    @Override
-    public Socket connectSocket(int connectTimeout, Socket sock, HttpHost host,
-        InetSocketAddress remoteAddress, InetSocketAddress localAddress, HttpContext context)
-        throws IOException {
-
-        sock.bind(localAddress);
-        sock.connect(remoteAddress, connectTimeout);
-        return sock;
-
     }
 
     /* (non-Javadoc)
@@ -64,8 +49,19 @@ implements LayeredConnectionSocketFactory {
         if (context != null) {
             HttpClientContext clientContext = HttpClientContext.adapt(context);
             HttpHost  host = clientContext.getTargetHost();
-            return factory.createSocket(host.getHostName(), host.getPort());
-        } 
+            if(host.getPort() == -1) {
+                if (host.getSchemeName().equalsIgnoreCase("http")) {
+                   return  factory.createSocket(host.getHostName(), 80);
+                } else if (host.getSchemeName().equalsIgnoreCase("https")) {
+                   return  factory.createSocket(host.getHostName(), 443);
+                } else {
+                    throw new IOException("Unknown scheme for connecting  to host, Received  +  host.toHostString()");
+                }
+            } else {
+               return  factory.createSocket(host.getHostName(), host.getPort());
+            }
+
+        }
         return factory.createSocket();
     }
 
@@ -79,7 +75,18 @@ implements LayeredConnectionSocketFactory {
             if (context != null) {
                 HttpClientContext clientContext = HttpClientContext.adapt(context);
                 HttpHost  host = clientContext.getTargetHost();
-                return factory.createSocket(host.getHostName(), host.getPort());
+
+                if(host.getPort() == -1) {
+                    if (host.getSchemeName().equalsIgnoreCase("http")) {
+                       return  factory.createSocket(host.getHostName(), 80);
+                    } else if (host.getSchemeName().equalsIgnoreCase("https")) {
+                       return  factory.createSocket(host.getHostName(), 443);
+                    } else {
+                        throw new IOException("Unknown scheme for connecting  to host, Received  +  host.toHostString()");
+                    }
+                } else {
+                   return  factory.createSocket(host.getHostName(), host.getPort());
+                }
             } else {
                 return  factory.createSocket(target, port);
             }
