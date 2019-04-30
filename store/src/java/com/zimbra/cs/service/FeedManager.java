@@ -26,9 +26,9 @@ import java.io.InputStream;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
+import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.net.UnknownHostException;
-import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -67,7 +67,6 @@ import org.apache.http.impl.client.BasicAuthCache;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.DefaultRedirectStrategy;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.util.EntityUtils;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
@@ -310,7 +309,7 @@ public class FeedManager {
 
         SocketConfig config = SocketConfig.custom().setSoTimeout(60000).build();
         clientBuilder.setDefaultSocketConfig(config);
-        
+
         ConnectionConfig connConfig = ConnectionConfig.custom().setCharset(Charset.forName(MimeConstants.P_CHARSET_UTF8)).build();
         clientBuilder.setDefaultConnectionConfig(connConfig);
 
@@ -358,15 +357,15 @@ public class FeedManager {
                         int index = user.indexOf(':');
                         String userName = user.substring(0,  index);
                         String password = user.substring(index + 1);
-                            
-                        
+
+
                         CredentialsProvider provider = new BasicCredentialsProvider();
                         UsernamePasswordCredentials credentials
                          = new UsernamePasswordCredentials(userName, password);
                         provider.setCredentials(AuthScope.ANY, credentials);
                         clientBuilder.setDefaultCredentialsProvider(provider);
                         clientBuilder.setDefaultCredentialsProvider(provider);
-                       
+
                        // Create AuthCache instance
                         AuthCache authCache = new BasicAuthCache();
                         // Generate BASIC scheme object and add it to the local auth cache
@@ -376,7 +375,7 @@ public class FeedManager {
                         // Add AuthCache to the execution context
                         context.setCredentialsProvider(provider);
                         context.setAuthCache(authCache);
-                        
+
                     }
                 }
 
@@ -398,7 +397,7 @@ public class FeedManager {
                     String lastSyncAt = DateUtils.formatDate(new Date(fsd.getLastSyncDate()));
                     get.addHeader("If-Modified-Since", lastSyncAt);
                 }
-                
+
                 HttpClient client = clientBuilder.build();
                 HttpResponse response = HttpClientUtil.executeMethod(client, get, context);
 
@@ -418,7 +417,10 @@ public class FeedManager {
                             }
                         }
                         content = new BufferedInputStream(respInputStream);
-                        expectedCharset = EntityUtils.getContentCharSet(response.getEntity());
+                        org.apache.http.entity.ContentType contentType =  org.apache.http.entity.ContentType.getOrDefault(response.getEntity());
+                        if (contentType != null && contentType.getCharset() != null) {
+                            expectedCharset = contentType.getCharset().name();
+                        }
 
                         Header lastModHdr = response.getFirstHeader("Last-Modified");
                         if (lastModHdr == null) {

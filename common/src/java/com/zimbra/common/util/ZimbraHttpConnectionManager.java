@@ -204,8 +204,7 @@ private static class ExternalConnMgrParams extends ZimbraConnMgrParams {
         this.httpConnMgr.setDefaultMaxPerRoute( zimbraConnMgrParams.getDefaultMaxConnectionsPerHost());
         this.httpConnMgr.setMaxTotal(zimbraConnMgrParams.getMaxTotalConnection());
 
-        this.httpConnMgr.setDefaultSocketConfig(zimbraConnMgrParams.socketConfig);
-
+        this.httpConnMgr.setDefaultSocketConfig(SocketConfig.custom().setSoTimeout(LC.socket_so_timeout.intValue()).build());
 
         this.defaultHttpClient = createHttpClient();
         
