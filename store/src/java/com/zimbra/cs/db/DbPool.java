@@ -21,6 +21,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.SQLTransactionRollbackException;
 import java.sql.Statement;
 import java.util.Iterator;
 import java.util.Properties;
@@ -133,6 +134,8 @@ public class DbPool {
         public void commit() throws ServiceException {
             try {
                 connection.commit();
+            } catch (SQLTransactionRollbackException re) {
+                throw ServiceException.TRANSACTION_ROLLBACK(re);
             } catch (SQLException e) {
                 throw ServiceException.FAILURE("committing database transaction", e);
             }
