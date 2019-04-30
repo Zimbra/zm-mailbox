@@ -49,21 +49,12 @@ implements LayeredConnectionSocketFactory {
         if (context != null) {
             HttpClientContext clientContext = HttpClientContext.adapt(context);
             HttpHost  host = clientContext.getTargetHost();
-            if(host.getPort() == -1) {
-                if (host.getSchemeName().equalsIgnoreCase("http")) {
-                   return  factory.createSocket(host.getHostName(), 80);
-                } else if (host.getSchemeName().equalsIgnoreCase("https")) {
-                   return  factory.createSocket(host.getHostName(), 443);
-                } else {
-                    throw new IOException("Unknown scheme for connecting  to host, Received  +  host.toHostString()");
-                }
-            } else {
-               return  factory.createSocket(host.getHostName(), host.getPort());
-            }
-
+            return createSocketFromHostInfo(host);
         }
         return factory.createSocket();
     }
+
+
 
     /* (non-Javadoc)
      * @see org.apache.http.conn.socket.LayeredConnectionSocketFactory#createLayeredSocket(java.net.Socket, java.lang.String, int, org.apache.http.protocol.HttpContext)
@@ -75,18 +66,7 @@ implements LayeredConnectionSocketFactory {
             if (context != null) {
                 HttpClientContext clientContext = HttpClientContext.adapt(context);
                 HttpHost  host = clientContext.getTargetHost();
-
-                if(host.getPort() == -1) {
-                    if (host.getSchemeName().equalsIgnoreCase("http")) {
-                       return  factory.createSocket(host.getHostName(), 80);
-                    } else if (host.getSchemeName().equalsIgnoreCase("https")) {
-                       return  factory.createSocket(host.getHostName(), 443);
-                    } else {
-                        throw new IOException("Unknown scheme for connecting  to host, Received  +  host.toHostString()");
-                    }
-                } else {
-                   return  factory.createSocket(host.getHostName(), host.getPort());
-                }
+                return createSocketFromHostInfo(host);
             } else {
                 return  factory.createSocket(target, port);
             }

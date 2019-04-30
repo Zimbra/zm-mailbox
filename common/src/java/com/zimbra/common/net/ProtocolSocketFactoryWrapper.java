@@ -19,6 +19,7 @@ package com.zimbra.common.net;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.UnknownHostException;
 
 import javax.net.SocketFactory;
 
@@ -36,7 +37,7 @@ class ProtocolSocketFactoryWrapper implements ConnectionSocketFactory {
     }
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see
      * org.apache.http.conn.socket.ConnectionSocketFactory#createSocket(org.
      * apache.http.protocol.HttpContext)
@@ -46,25 +47,14 @@ class ProtocolSocketFactoryWrapper implements ConnectionSocketFactory {
         if (context != null) {
             HttpClientContext clientContext = HttpClientContext.adapt(context);
             HttpHost  host = clientContext.getTargetHost();
-            if(host.getPort() == -1) {
-                if (host.getSchemeName().equalsIgnoreCase("http")) {
-                    factory.createSocket(host.getHostName(), 80);
-                } else if (host.getSchemeName().equalsIgnoreCase("https")) {
-                    factory.createSocket(host.getHostName(), 443);
-                } else {
-                    throw new IOException("Unknown scheme");
-                }
-
-            } else {
-                factory.createSocket(host.getHostName(), host.getPort());
-            }
+            return createSocketFromHostInfo(host);
         }
         return factory.createSocket();
     }
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see
      * org.apache.http.conn.socket.ConnectionSocketFactory#connectSocket(int,
      * java.net.Socket, org.apache.http.HttpHost, java.net.InetSocketAddress,
@@ -90,6 +80,26 @@ class ProtocolSocketFactoryWrapper implements ConnectionSocketFactory {
         } else {
             sock.connect(remoteAddress, connectTimeout);
             return sock;
+        }
+    }
+
+    /**
+     * @param host
+     * @return
+     * @throws IOException
+     * @throws UnknownHostException
+     */
+    public Socket createSocketFromHostInfo(HttpHost host) throws IOException, UnknownHostException {
+        if(host.getPort() == -1) {
+            if (host.getSchemeName().equalsIgnoreCase("http")) {
+               return  factory.createSocket(host.getHostName(), 80);
+            } else if (host.getSchemeName().equalsIgnoreCase("https")) {
+               return  factory.createSocket(host.getHostName(), 443);
+            } else {
+                throw new IOException("Unknown scheme for connecting  to host, Received  +  host.toHostString()");
+            }
+        } else {
+           return  factory.createSocket(host.getHostName(), host.getPort());
         }
     }
 
