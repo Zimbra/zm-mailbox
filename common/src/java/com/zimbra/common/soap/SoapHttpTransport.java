@@ -257,7 +257,7 @@ public class SoapHttpTransport extends SoapTransport {
             Element soapReq = generateSoapMessage(document, raw, noSession, requestedAccountId, changeToken, tokenType, nFormat, curWaitSetID);
             String soapMessage = SoapProtocol.toString(soapReq, getPrettyPrint());
 
-            method.setEntity(new StringEntity(soapMessage, ContentType.create(null, "UTF-8")));
+            method.setEntity(new StringEntity(soapMessage, ContentType.create(ContentType.APPLICATION_XML.getMimeType(), "UTF-8")));
 
             if (getRequestProtocol().hasSOAPActionHeader())
                 method.addHeader("SOAPAction", mUri);
@@ -282,7 +282,7 @@ public class SoapHttpTransport extends SoapTransport {
             if (zToken instanceof ZJWToken) {
                 method.addHeader(Constants.AUTH_HEADER, Constants.BEARER + " " + zToken.getValue());
             }
-            
+
             RequestConfig reqConfig = RequestConfig.custom().
                 setCookieSpec(cookieStore.getCookies().size() == 0 ? CookieSpecs.IGNORE_COOKIES:
                CookieSpecs.BROWSER_COMPATIBILITY).build();
@@ -292,7 +292,7 @@ public class SoapHttpTransport extends SoapTransport {
             method.addHeader("Connection", mKeepAlive ? "Keep-alive" : "Close");
 
             if (mHostConfig != null && mHostConfig.getUsername() != null && mHostConfig.getPassword() != null) {
-                
+
                 Credentials credentials = new UsernamePasswordCredentials(mHostConfig.getUsername(), mHostConfig.getPassword());
                 AuthScope authScope = new AuthScope(null, -1);
                 CredentialsProvider credsProvider = new BasicCredentialsProvider();

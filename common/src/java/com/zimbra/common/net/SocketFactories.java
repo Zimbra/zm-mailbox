@@ -76,8 +76,8 @@ public final class SocketFactories {
         register(allowUntrustedCerts ? TrustManagers.dummyTrustManager() : null);
     }
 
-    private synchronized static void register(X509TrustManager tm) {
-        if (registered) return;
+    private synchronized static Registry<ConnectionSocketFactory> register(X509TrustManager tm) {
+        if (registered) return registry;
 
         // Set default TrustManager
         TrustManagers.setDefaultTrustManager(tm);
@@ -90,6 +90,8 @@ public final class SocketFactories {
             .register(HTTPS, spsf)
             .build();
 
+
+
         // HttpURLConnection already uses system ProxySelector by default
         // Set HttpsURLConnection SSL socket factory and optional hostname verifier
         HttpsURLConnection.setDefaultSSLSocketFactory(defaultSSLSocketFactory(false));
@@ -101,6 +103,8 @@ public final class SocketFactories {
         ProxySelector.setDefault(ProxySelectors.defaultProxySelector());
 
         registered = true;
+
+        return registry;
     }
 
     public synchronized static void resetRegisteredFlag() {
@@ -219,7 +223,7 @@ public final class SocketFactories {
         return defaultSSLSocketFactory(TrustManagers.dummyTrustManager(), true);
     }
 
-    
+
     public static Registry<ConnectionSocketFactory> getRegistry() {
         return registry;
     }
