@@ -10085,12 +10085,12 @@ public class Mailbox implements MailboxStore {
                             doRollback = false;
                             throw tre;
                         } catch (Throwable t) {
-                            // Any exception during database commit is a disaster
-                            // because we don't know if the change is committed or
-                            // not.  Force the server to abort.  Next restart will
-                            // redo the operation to ensure the change is made and
-                            // committed.  (bug 2121)
-                            Zimbra.halt("Unable to commit database transaction.  Forcing server to abort.", t);
+                            ZimbraLog.mailbox.error(
+                            "!!!ERROR!!! Unable to commit database transaction.  Unknown error encountered.", t);
+                            /* Used to call Zimbra.halt() here on the basis that things could be tidied up
+                             * on restart but in a multi-replica environment, that isn't realistic, so shouting
+                             * in the logs and propagating the error. */
+                            throw t;
                         }
                     }
                     dbCommitSuccess = true;
