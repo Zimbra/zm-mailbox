@@ -314,12 +314,11 @@ public final class DbMailbox {
      * @throws ServiceException if the database creation fails */
     public static void createMailboxDatabase(DbConnection conn, int mailboxId, int groupId)
     throws ServiceException {
-        ZimbraLog.mailbox.debug("createMailboxDatabase(" + mailboxId + ")");
+        ZimbraLog.mailbox.debug("createMailboxDatabase(mailboxId=%s, groupId=%s)", mailboxId, groupId);
 
         File file = new File(LC.mailboxd_directory.value() + "/../db/create_database.sql");
 
         boolean succeeded = false;
-        PreparedStatement stmt = null;
         try {
             String dbname = getDatabaseName(groupId);
             if (Db.getInstance().databaseExists(conn, dbname)) {
@@ -333,7 +332,7 @@ public final class DbMailbox {
             Db.getInstance().precreateDatabase(dbname);
 
             // create the new database
-            ZimbraLog.mailbox.info("Creating database " + dbname);
+            ZimbraLog.mailbox.info("Creating database %s", dbname);
             Db.getInstance().registerDatabaseInterest(conn, dbname);
 
             String template = new String(ByteUtil.getContent(file));
@@ -348,7 +347,6 @@ public final class DbMailbox {
         } catch (SQLException e) {
             throw ServiceException.FAILURE("createMailboxDatabase(" + mailboxId + ")", e);
         } finally {
-            DbPool.closeStatement(stmt);
             if (succeeded) {
                 for (DbTableCallback callback : callbacks) {
                     callback.create(conn, mailboxId, groupId);

@@ -448,4 +448,16 @@ public class ServiceException extends Exception {
     public static ServiceException LOCK_FAILED(String message, Throwable cause) {
         return new ServiceException(message, LOCK_FAILED, RECEIVERS_FAULT, cause);
     }
+
+    public static class TransactionRollbackException extends ServiceException {
+        public TransactionRollbackException(Throwable cause) {
+            super("system failure: statement was automatically rolled back by the " +
+                            " database because of deadlock or other transaction serialization failures",
+                    FAILURE, RECEIVERS_FAULT, cause);
+        }
+    }
+
+    public static TransactionRollbackException TRANSACTION_ROLLBACK(Throwable cause) {
+        return new TransactionRollbackException(cause);
+    }
 }

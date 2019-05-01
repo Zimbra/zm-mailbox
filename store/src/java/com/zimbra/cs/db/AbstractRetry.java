@@ -56,12 +56,18 @@ public abstract class AbstractRetry<T> {
         SQLException sqle = null;
         while (tries < RETRY_LIMIT) {
             try {
-                return execute();
+                ExecuteResult<T> executeResult = execute();
+                if (tries > 0) {
+                    ZimbraLog.dbconn.info("connection succeeded after %s attempts", tries + 1);
+                }
+                return executeResult;
             } catch (SQLException e) {
                 if (retryException(e)) {
                     sqle = e;
                     tries++;
-                    ZimbraLog.dbconn.warn("retrying connection attempt:"+tries+" due to possibly recoverable exception: ",e);
+                    ZimbraLog.dbconn.warnQuietly(
+                            String.format("retrying connection attempt %s of %s due to possibly recoverable exception",
+                            tries, RETRY_LIMIT), e);
                     incrementTotalRetries();
                     try {
                         Thread.sleep(RETRY_DELAY);
@@ -72,6 +78,7 @@ public abstract class AbstractRetry<T> {
                 }
             }
         }
+        ZimbraLog.dbconn.warn("DB retry gave up after %s attempts.", tries, sqle);
         throw new SQLException("DB retry gave up after "+tries+" attempts.",sqle);
     }
 

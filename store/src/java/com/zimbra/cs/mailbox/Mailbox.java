@@ -45,8 +45,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -5632,27 +5630,54 @@ public class Mailbox implements MailboxStore {
             flags = flags & ~Flag.BITMASK_UNREAD;
             localMsgMarkedRead = true;
         }
-        try (final MailboxLock l = this.getWriteLockAndLockIt()) {
-            try {
-                Message message =  addMessageInternal(octxt, pm, folderId, noICal, flags, tags, conversationId,
-                        rcptEmail, dinfo, customData, dctxt, staged, callbackContext, dataSourceId);
-                if (localMsgMarkedRead && account.getPrefMailSendReadReceipts().isAlways()) {
-                    SendDeliveryReport.sendReport(account, message, true, null, null);
+        boolean msgAdded = false;
+        int max_tries = 3;
+        int tries = 1;
+        while (!msgAdded && (tries <= max_tries)) {
+            try (final MailboxLock l = this.getWriteLockAndLockIt()) {
+                try {
+                    Message message =  addMessageInternal(octxt, pm, folderId, noICal, flags, tags, conversationId,
+                            rcptEmail, dinfo, customData, dctxt, staged, callbackContext, dataSourceId);
+                    msgAdded = true;
+                    if (localMsgMarkedRead && account.getPrefMailSendReadReceipts().isAlways()) {
+                        SendDeliveryReport.sendReport(account, message, true, null, null);
+                    }
+                    if (tries > 1) {
+                        ZimbraLog.mailbox.info("AddMessage succeeded on attempt %s", tries);
+                    }
+                    return message;
+                } catch (ServiceException.TransactionRollbackException tre) {
+                    if (msgAdded) {
+                        ZimbraLog.mailbox.error("AddMessage - Exception seen although message already added", tre);
+                        throw tre;  /* strange - best to treat as an error rather than try to recover */
+                    }
+                    if (tries >= max_tries) {
+                        ZimbraLog.mailbox.error("AddMessage failed due to Database rollbacks after %s retries - %s",
+                                tries, tre.getMessage());
+                        throw tre;
+                    }
+                    ZimbraLog.mailbox.warn("Retry AddMessage %s of %s after Database rollback", tries, max_tries);
+                } finally {
+                    if (msgAdded || tries >= max_tries) {
+                        if (deleteIncoming) {
+                            sm.quietDelete(dctxt.getIncomingBlob());
+                        }
+                        if (deleteMailboxSpecificBlob) {
+                            sm.quietDelete(dctxt.getMailBoxSpecificBlob(mId));
+                            dctxt.clearMailBoxSpecificBlob(mId);
+                        }
+                        sm.quietDelete(staged);
+                    }
                 }
-                return message;
             } finally {
-                if (deleteIncoming) {
-                    sm.quietDelete(dctxt.getIncomingBlob());
+                if (msgAdded || tries >= max_tries) {
+                    ZimbraPerf.STOPWATCH_MBOX_ADD_MSG.stop(start);
                 }
-                if (deleteMailboxSpecificBlob) {
-                    sm.quietDelete(dctxt.getMailBoxSpecificBlob(mId));
-                    dctxt.clearMailBoxSpecificBlob(mId);
-                }
-                sm.quietDelete(staged);
+                tries++;
             }
-        } finally {
-            ZimbraPerf.STOPWATCH_MBOX_ADD_MSG.stop(start);
         }
+        /* should never get here */
+        throw ServiceException.FAILURE("Mailbox.AddMessage Unexpected problem - coding error", null);
     }
 
     void indexItem(MailItem item) throws ServiceException {
@@ -10049,18 +10074,23 @@ public class Mailbox implements MailboxStore {
                     redoRecorder.log(true);
                 }
                 boolean dbCommitSuccess = false;
+                boolean doRollback = true;
                 try {
                     // Commit the main transaction in database.
                     if (conn != null) {
                         try {
                             conn.commit();
+                        } catch (ServiceException.TransactionRollbackException tre) {
+                            ZimbraLog.mailbox.warn("Mailbox Transaction Rolled Back by DB", tre);
+                            doRollback = false;
+                            throw tre;
                         } catch (Throwable t) {
-                            // Any exception during database commit is a disaster
-                            // because we don't know if the change is committed or
-                            // not.  Force the server to abort.  Next restart will
-                            // redo the operation to ensure the change is made and
-                            // committed.  (bug 2121)
-                            Zimbra.halt("Unable to commit database transaction.  Forcing server to abort.", t);
+                            ZimbraLog.mailbox.error(
+                            "!!!ERROR!!! Unable to commit database transaction.  Unknown error encountered.", t);
+                            /* Used to call Zimbra.halt() here on the basis that things could be tidied up
+                             * on restart but in a multi-replica environment, that isn't realistic, so shouting
+                             * in the logs and propagating the error. */
+                            throw t;
                         }
                     }
                     dbCommitSuccess = true;
@@ -10077,9 +10107,12 @@ public class Mailbox implements MailboxStore {
                                 redoRecorder.abort();
                             }
                         }
-                        DbPool.quietRollback(conn);
+                        if (doRollback) {
+                            DbPool.quietRollback(conn);
+                        }
                         rollbackDeletes = rollbackCache(currentChange());
-                        return;
+                        /* current assumption is that code will throw an exception if we are here.
+                         * Code used to return here which could potentially mask an error. */
                     }
                 }
 
