@@ -88,8 +88,8 @@ public class RedisReadLock extends RedisLock {
                 "if type(counter) == 'number' then " +
                     "for i=counter, 1, -1 do " +
                         //write lock uuids are stored in dedicated "{lock name}:{thread}:uuid:{#}" key
-                        "uuid_key = KEYS[1] .. ':' .. key .. ':uuid:' .. i; " +
-                        "uuid = redis.call('get', uuid_key); " +
+                        "local uuid_key = KEYS[1] .. ':' .. key .. ':uuid:' .. i; " +
+                        "local uuid = redis.call('get', uuid_key); " +
                         "if uuid == nil then " +
                             //if uuid is unknown, return which thread it is
                             "table.insert(retvals, uuid_key .. ':nil'); " +

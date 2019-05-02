@@ -161,7 +161,7 @@ public abstract class RedisLock {
     }
 
     protected String getUnlockMsg() {
-        return accountId;
+        return String.format("%s:%s", accountId, uuid);
     }
 
     protected ToStringHelper toStringHelper() {
