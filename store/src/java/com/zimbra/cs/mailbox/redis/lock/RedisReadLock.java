@@ -53,8 +53,8 @@ public class RedisReadLock extends RedisLock {
               //no one is holding the lock, so set the mode to "read" and set this thread's hold count to 1
               "redis.call('hset', KEYS[1], 'mode', 'read'); " +
               "redis.call('hset', KEYS[1], ARGV[2], 1); " +
-              //set an expiration for the read hold
-              "redis.call('set', KEYS[2] .. ':1', 1); " +
+              //set an expiration for the read hold, using the uuid of the holder as the value
+              "redis.call('set', KEYS[2] .. ':1', ARGV[5]); " +
               "redis.call('pexpire', KEYS[2] .. ':1', ARGV[1]); " +
                //set an expiration for the lock hash
               "redis.call('pexpire', KEYS[1], ARGV[1]); " +
@@ -68,9 +68,9 @@ public class RedisReadLock extends RedisLock {
                //either the lock is in read mode, or the requesting thread is holding a write lock,
                //which means it's OK to acquire a read lock too
               "local ind = redis.call('hincrby', KEYS[1], ARGV[2], 1); " +
-               //set an expiration on the new read hold
-              "local key = KEYS[2] .. ':' .. ind;" +
-              "redis.call('set', key, 1); " +
+               //set an expiration on the new read hold, using the uuid of the holder as the value
+              "local key = KEYS[2] .. ':' .. ind; " +
+              "redis.call('set', key, ARGV[5]); " +
               "redis.call('pexpire', key, ARGV[1]); " +
                //update the expiration on the lock hash
               "redis.call('pexpire', KEYS[1], ARGV[1]); " +
@@ -80,12 +80,31 @@ public class RedisReadLock extends RedisLock {
               "local is_first_read_since_last_write = redis.call('sadd', KEYS[1] .. ':reads_since_last_write', ARGV[4]); " +
               "return {1, last_writer, is_first_read_since_last_write}; " +
             "end;" +
-             //a read lock cannot be acquired, so return the TTL of the lock hash
-            "return {0, redis.call('pttl', KEYS[1])};";
+            //a read lock cannot be acquired, so return the TTL of the lock hash
+            // and the uuids of all active write lock holders
+            "local retvals = {0, redis.call('pttl', KEYS[1])}; " +
+            "for n, key in ipairs(redis.call('hkeys', KEYS[1])) do " +
+                "local counter = tonumber(redis.call('hget', KEYS[1], key)); " +
+                "if type(counter) == 'number' then " +
+                    "for i=counter, 1, -1 do " +
+                        //write lock uuids are stored in dedicated "{lock name}:{thread}:uuid:{#}" key
+                        "uuid_key = KEYS[1] .. ':' .. key .. ':uuid:' .. i; " +
+                        "uuid = redis.call('get', uuid_key); " +
+                        "if uuid == nil then " +
+                            //if uuid is unknown, return which thread it is
+                            "table.insert(retvals, uuid_key .. ':nil'); " +
+                        "else " +
+                            "table.insert(retvals, uuid); " +
+                        "end; " +
+                    "end; " +
+                "end; " +
+            "end; " +
+             //return the TTL of the lock hash and the uuids of all instances holding this lock
+            "return retvals;";
 
         return execute(script, StringCodec.INSTANCE, RedisLock.LOCK_RESPONSE_CMD,
                 Arrays.<Object>asList(lockName, getReadWriteTimeoutNamePrefix()),
-                getLeaseTime(), getThreadLockName(), getWriteLockName(), lockId);
+                getLeaseTime(), getThreadLockName(), getWriteLockName(), lockId, uuid);
     }
 
     @Override
@@ -119,7 +138,7 @@ public class RedisReadLock extends RedisLock {
                     "local maxRemainTime = -3; " +
                     "local keys = redis.call('hkeys', KEYS[1]); " +
                     "for n, key in ipairs(keys) do " +
-                        "counter = tonumber(redis.call('hget', KEYS[1], key)); " +
+                        "local counter = tonumber(redis.call('hget', KEYS[1], key)); " +
                         "if type(counter) == 'number' then " +
                             "for i=counter, 1, -1 do " +
                                 "local remainTime = redis.call('pttl', KEYS[4] .. ':' .. key .. ':rwlock_timeout:' .. i); " +

@@ -17,6 +17,7 @@
 
 package com.zimbra.cs.mailbox.redis.lock;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.redisson.client.codec.Codec;
@@ -73,7 +74,7 @@ public abstract class RedisLock {
 
     protected String getThreadLockName() {
         long threadId = Thread.currentThread().getId();
-        return lockName + ":" + threadId;
+        return lockId + ":" + threadId;
     }
 
     protected long getLeaseTime() {
@@ -109,9 +110,12 @@ public abstract class RedisLock {
             if (!response.isValid()) {
                 throw ServiceException.LOCK_FAILED("invalid redis lock response", null);
             }
+            if (ZimbraLog.mailboxlock.isTraceEnabled()) {
+                ZimbraLog.mailboxlock.trace("lock response: %s", response);
+            }
             if (response.success()) {
                 if (ZimbraLog.mailboxlock.isTraceEnabled()) {
-                    ZimbraLog.mailboxlock.trace("successfully acquired %s: %s", this, context);
+                    ZimbraLog.mailboxlock.trace("successfully acquired %s from thread %s: %s", this, getThreadLockName(), context);
                 }
             } else {
                 if (ZimbraLog.mailboxlock.isTraceEnabled()) {
@@ -125,9 +129,12 @@ public abstract class RedisLock {
             if (!response.isValid()) {
                 throw ServiceException.LOCK_FAILED("invalid redis lock response", null);
             }
+            if (ZimbraLog.mailboxlock.isTraceEnabled()) {
+                ZimbraLog.mailboxlock.trace("lock response: %s", response);
+            }
             if (response.success()) {
                 if (ZimbraLog.mailboxlock.isTraceEnabled()) {
-                    ZimbraLog.mailboxlock.trace("successfully acquired %s without waiting", this);
+                    ZimbraLog.mailboxlock.trace("successfully acquired %s without waiting from thread %s", this, getThreadLockName());
                 }
                 lockChannel.remove(waitingLock);
                 return response;
@@ -174,14 +181,16 @@ public abstract class RedisLock {
         private String lastWriter;
         private boolean firstReadSinceLastWrite;
         private boolean validResponse;
+        private List<String> holderUuids;
 
         private LockResponse(boolean validResponse) {
             this.validResponse = validResponse;
         }
 
-        public LockResponse(Long ttl) {
+        public LockResponse(Long ttl, List<String> holderUuids) {
             this.ttl = ttl;
             this.validResponse = true;
+            this.holderUuids = holderUuids;
         }
 
         public LockResponse(String lastWriter, boolean firstReadSinceLastWrite) {
@@ -210,6 +219,23 @@ public abstract class RedisLock {
             return validResponse;
         }
 
+        @Override
+        public String toString() {
+            ToStringHelper helper = MoreObjects.toStringHelper(this).add("success", ttl == null);
+            if (validResponse) {
+                if (ttl == null) {
+                    helper.add("lastWriter", lastWriter);
+                    helper.add("firstRead", firstReadSinceLastWrite);
+                } else {
+                    helper.add("ttl", ttl);
+                    helper.add("holders", holderUuids);
+                }
+            } else {
+                helper.add("validResponse", false);
+            }
+            return helper.toString();
+        }
+
         private static final LockResponse INVALID_LOCK_RESPONSE = new LockResponse(false);
 
     }
@@ -223,11 +249,7 @@ public abstract class RedisLock {
 
         @Override
         public LockResponse decode(List<Object> parts, State state) {
-            if (ZimbraLog.mailboxlock.isTraceEnabled()) {
-                ZimbraLog.mailboxlock.trace("LockResponseConvertor received response %s", parts);
-            }
-            if (parts.size() < 2 || parts.size() > 3) {
-                ZimbraLog.mailboxlock.warn("invalid LockResponse: %s", parts);
+            if (parts.size() < 2) {
                 return LockResponse.INVALID_LOCK_RESPONSE;
             }
             if (parts.get(0).equals(Long.valueOf(1))) {
@@ -238,7 +260,11 @@ public abstract class RedisLock {
             } else {
                 //failed to acquire lock, returning TTL
                 Long ttl = (Long) parts.get(1);
-                return new LockResponse(ttl);
+                List<String> holderUuids = new ArrayList<>();
+                for (Object i: parts.subList(2, parts.size())) {
+                    holderUuids.add(i.toString());
+                }
+                return new LockResponse(ttl, holderUuids);
             }
         }
     }
