@@ -369,4 +369,21 @@ public class OwaspHtmlSanitizerTest {
                 .contains("<script>"));
     }
 
+    @Test
+    public void testBug101813() throws Exception {
+        String html = "<textarea><img title=\"</<!-- -->textarea><img src=x onerror=alert(1)></img>";
+        String result = new OwaspHtmlSanitizer(html, true).sanitize();
+        System.out.println(result);
+        // make sure that the javascript content is escaped
+        Assert.assertTrue(result.contains("onerror&#61;alert(1)&gt;"));
+
+        html = "<textarea><IMG title=\"</<!-- -->textarea><img src=x onerror=alert(1)></img>";
+        result = new OwaspHtmlSanitizer(html, true).sanitize();
+        Assert.assertTrue(result.contains("onerror&#61;alert(1)&gt;"));
+
+        html = "<textarea><   img title=\"</<!-- -->textarea><img src=x onerror=alert(1)></img>";
+        result = new OwaspHtmlSanitizer(html, true).sanitize();
+        Assert.assertTrue(result.contains("onerror&#61;alert(1)&gt;"));
+    }
+
 }
