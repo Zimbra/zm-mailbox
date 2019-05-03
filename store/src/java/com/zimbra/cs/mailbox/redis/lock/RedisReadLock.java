@@ -42,7 +42,7 @@ public class RedisReadLock extends RedisLock {
     }
 
     private String getWriteLockName() {
-        return lockName + ":write";
+        return getThreadLockName() + ":write";
     }
 
     @Override
