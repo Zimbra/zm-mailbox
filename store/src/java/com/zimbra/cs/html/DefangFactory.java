@@ -16,10 +16,8 @@
  */
 package com.zimbra.cs.html;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.html.owasp.OwaspDefang;
 
 /**
@@ -62,14 +60,9 @@ public class DefangFactory {
             return noopDefang;
         }
         String contentTypeLowerCase = contentType.toLowerCase();
-        try {
-            boolean isOwaspEnabled = Provisioning.getInstance().getConfig()
-                .getBooleanAttr(Provisioning.A_zimbraUseOwaspHtmlSanitizer, Boolean.TRUE);
-            if (contentTypeLowerCase.startsWith(MimeConstants.CT_TEXT_HTML) && isOwaspEnabled) {
-                return owaspDefang;
-            }
-        } catch (ServiceException e) {
-            ZimbraLog.soap.debug("Error reading attribute zimbraUseOwaspHtmlSanitizer", e);
+        boolean isOwaspEnabled = LC.zimbra_use_owasp_html_sanitizer.booleanValue();
+        if (contentTypeLowerCase.startsWith(MimeConstants.CT_TEXT_HTML) && isOwaspEnabled) {
+            return owaspDefang;
         }
         if (contentTypeLowerCase.startsWith(MimeConstants.CT_TEXT_HTML) ||
             contentTypeLowerCase.startsWith(MimeConstants.CT_APPLICATION_ZIMBRA_DOC) ||
