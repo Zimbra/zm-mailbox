@@ -59,6 +59,7 @@ public class OwaspPolicy {
     private static final Map<String, String> mConfiguredElements = new HashMap<String, String>();
     private static final Set<String> mDisallowTextElements = new HashSet<String>();
     private static final Set<String> mURLProtocols = new HashSet<String>();
+    private static final Map<String, String> mElementUrlProtocols = new HashMap<String, String>();
 
     static {
         try {
@@ -91,9 +92,10 @@ public class OwaspPolicy {
                     Element html = (Element) iter.next();
                     String element = html.attributeValue(A_ELEMENT);
                     String attributes = html.elementText(E_ATTRIBUTES);
+                    String urlProtocols = html.elementText(E_URL_PROTOCOLS);
                     attributes = attributes.replace("CORE", "id,class,title,style")
                         .replace("LANG", "dir,lang,xml:lang").replace("KBD", "accesshtml,tabindex");
-                    set(element, attributes);
+                    set(element, attributes, urlProtocols);
                 }
                 String disallowTextElements = root.elementText(E_DISALLOW_TEXT_IN);
                 mDisallowTextElements.addAll(Arrays.asList(disallowTextElements.split(COMMA)));
@@ -116,8 +118,9 @@ public class OwaspPolicy {
         return LC.zimbra_home.value() + FS + "conf" + FS + "owasp_policy.xml";
     }
 
-    private void set(String key, String value) {
+    private void set(String key, String value, String urlProtocols) {
         mConfiguredElements.put(key, value);
+        mElementUrlProtocols.put(key, urlProtocols);
     }
 
     static OwaspPolicy getInstance() {
@@ -143,6 +146,10 @@ public class OwaspPolicy {
 
     public static String getAttributes(String element) {
         return mConfiguredElements.get(element);
+    }
+
+    public static String getElementUrlProtocols(String element) {
+        return mElementUrlProtocols.get(element);
     }
 
     public static Set<String> getDisallowTextElements() {

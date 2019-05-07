@@ -30,7 +30,7 @@ import com.zimbra.cs.html.owasp.policies.SrcAttributePolicy;
 
 public class HtmlAttributesBuilder {
 
-    private Map<String, AttributePolicy> attributePolicies = new HashMap<String, AttributePolicy>();;
+    private Map<String, AttributePolicy> attributePolicies = new HashMap<String, AttributePolicy>();
 
     public HtmlAttributesBuilder() {
     }

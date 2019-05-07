@@ -301,7 +301,6 @@ public class OwaspHtmlSanitizerTest {
     public void testBug67537() throws Exception {
         String html = "<html><body><span style=\"color: rgb(255, 0, 0);\">This is RED</span></body></html>";
         String result = new OwaspHtmlSanitizer(html,true).sanitize();
-        System.out.println(result);
         Assert.assertTrue(result.contains("style=\"color:rgb( 255 , 0 , 0 )\""));
     }
 
@@ -309,7 +308,6 @@ public class OwaspHtmlSanitizerTest {
     public void testBug76500() throws Exception {
         String html = "<blockquote style=\"border-left:2px solid rgb(16, 16, 255);\">";
         String result = new OwaspHtmlSanitizer(html,true).sanitize();
-        System.out.println(result);
         Assert.assertTrue(result.contains("rgb( 16 , 16 , 255 )"));
     }
 
@@ -319,7 +317,6 @@ public class OwaspHtmlSanitizerTest {
             + "</tr><tr><td><a href=\"javascript:alert('Hello!');\">alert</a>"
             + "</td></tr></table></body></html>";
         String result = new OwaspHtmlSanitizer(html,true).sanitize();
-        System.out.println(result);
         Assert.assertTrue(result
             .contains("<body><table><tbody><tr><td><b>javascript-blocked test </b></td></tr><tr><td>alert</td></tr></tbody></table></body>"));
 
@@ -328,7 +325,6 @@ public class OwaspHtmlSanitizerTest {
             + "<a href=\"javascript:alert('Hello!');\">alert</a></td></tr></table>"
             + "</body></html>";
         result = new OwaspHtmlSanitizer(html,true).sanitize();
-        System.out.print(result);
         Assert.assertTrue(result
                 .contains("<body><table><tbody><tr><td><b>javascript-blocked test</b></td></tr><tr><td>alert</td></tr></tbody></table></body>"));
     }
@@ -346,25 +342,21 @@ public class OwaspHtmlSanitizerTest {
             + "61%73%63%72%69%70%74%3A%61%6C%65%72%74%28%31%29%22%20%6F%6E%4D%6F%75%73%65%4F%76%65%72%3D%61%6C%65%"
             + "72%74%28%5C%22%70%30%77%6E%5C%22%29%3E%4D%6F%75%73%65%20%6F%76%65%72%20%68%65%72%65%3C%2F%61%3E')\">here</a></body></html>";
         result = new OwaspHtmlSanitizer(html,true).sanitize();
-        System.out.println(result);
         Assert.assertEquals(result,
                 "<html><body>My pictures here</body></html>");
 
         html =  "<html><head></head><body><a target=\"_blank\" href=\"Neptune.txt\"></a></body></html>";
         result = new OwaspHtmlSanitizer(html,true).sanitize();
-        System.out.println(result);
         Assert.assertEquals(result,
                 "<html><head></head><body><a href=\"Neptune.txt\" target=\"_blank\" rel=\"nofollow noopener noreferrer\"></a></body></html>");
 
         html =  "<html><head></head><body><a target=\"_blank\" href=\"Neptune.pptx\"></a></body></html>";
         result = new OwaspHtmlSanitizer(html,true).sanitize();
-        System.out.println(result);
         Assert.assertEquals(result,
                 "<html><head></head><body><a href=\"Neptune.pptx\" target=\"_blank\" rel=\"nofollow noopener noreferrer\"></a></body></html>");
 
         html = "<li><a href=\"poc.zip?view=html&archseq=0\">\"/><script>alert(1);</script>AAAAAAAAAA</a></li>";
         result = new OwaspHtmlSanitizer(html,true).sanitize();
-        System.out.println(result);
         Assert.assertTrue(!result
                 .contains("<script>"));
     }
@@ -373,7 +365,6 @@ public class OwaspHtmlSanitizerTest {
     public void testBug101813() throws Exception {
         String html = "<textarea><img title=\"</<!-- -->textarea><img src=x onerror=alert(1)></img>";
         String result = new OwaspHtmlSanitizer(html, true).sanitize();
-        System.out.println(result);
         // make sure that the javascript content is escaped
         Assert.assertTrue(result.contains("onerror&#61;alert(1)&gt;"));
 
@@ -384,6 +375,147 @@ public class OwaspHtmlSanitizerTest {
         html = "<textarea><   img title=\"</<!-- -->textarea><img src=x onerror=alert(1)></img>";
         result = new OwaspHtmlSanitizer(html, true).sanitize();
         Assert.assertTrue(result.contains("onerror&#61;alert(1)&gt;"));
+    }
+
+    /**
+     * Tests to make sure we properly defang images that are neither inline/internal nor external images.
+     * @throws Exception
+     */
+    @Test
+    public void testBug64903() throws Exception {
+        String fileName = "bug_60769.txt";
+        InputStream htmlStream = getHtmlBody(fileName);
+        String html = CharStreams.toString(new InputStreamReader(htmlStream, Charsets.UTF_8));
+        String result = new OwaspHtmlSanitizer(html,true).sanitize();
+        Assert.assertFalse(result.contains("src=\"image001.gif\""));
+    }
+
+    /**
+     * Checks to make sure we actually defang external content
+     * @throws Exception
+     */
+    @Test
+    public void testBug64726() throws Exception {
+        String fileName = "bug_64726.txt";
+        InputStream htmlStream = getHtmlBody(fileName);
+        Assert.assertNotNull(htmlStream);
+        String html = CharStreams.toString(new InputStreamReader(htmlStream, Charsets.UTF_8));
+        String result = new OwaspHtmlSanitizer(html,true).sanitize();
+        // just make sure we made it here, as this was NPEing out..
+        Assert.assertNotNull(result);
+        // Make sure the input got changed
+        Assert.assertFalse(result.contains("src=\"http://www.google.com/intl/en_com/images/srpr/logo3w.png\""));
+    }
+
+    /**
+     * Checks to ensure that we're properly removing src for input tags as well.
+     * @throws Exception
+     */
+    @Test
+    public void testBug58889() throws Exception {
+        String fileName = "bug_58889.txt";
+        InputStream htmlStream = getHtmlBody(fileName);
+        Assert.assertNotNull(htmlStream);
+        String html = CharStreams.toString(new InputStreamReader(htmlStream, Charsets.UTF_8));
+        String result = new OwaspHtmlSanitizer(html,true).sanitize();
+        // just make sure we made it here, as this was NPEing out..
+        Assert.assertNotNull(result);
+        Assert.assertFalse(result.contains(" src=\"https://grepular.com/email_privacy_tester/"));
+    }
+
+    /**
+     * Checks that CDATA section in HTML is reported as a comment and removed.
+     * @throws Exception
+     */
+    @Test
+    public void testBug64974() throws Exception {
+        String html = "<html><body><![CDATA[--><a href=\"data:text/html;base64,PHNjcmlwdD4KYWxlcnQoZG9jdW1lbnQuY29va2llKQo8L3NjcmlwdD4=\">click</a]]></body></html>";
+        String result = new OwaspHtmlSanitizer(html,true).sanitize();
+        Assert.assertTrue(result.equals("<html><body>click</body></html>"));
+    }
+
+    @Test
+    /**
+     * Verify that a new line in a html based signature is maintained after passing through the defanger.
+     * @throws Exception
+     */
+    public void testBug104666() throws Exception {
+        String html = "<div></div><div></div><div id=\"5589f382-9e9b-47cd-ab09-3ea973fd4f6a\" data-marker=\"__SIG_PRE__\">"
+            + "<div>LIne 1</div>" + "</div>" + "<div>Line 2</div>" + "</div>";
+        String result = new OwaspHtmlSanitizer(html,true).sanitize();
+        Assert.assertTrue(result.contains("<div>LIne 1</div></div><div>Line 2</div>"));
+
+        html = "<div>Thanks</div><div><img src=\"/home/ews01@zdev-vm002.eng.zimbra.com/Briefcase/rupali.jpeg\" "
+                + "data-mce-src=\"/home/ews01@zdev-vm002.eng.zimbra.com/Briefcase/rupali.jpeg\"></div>";
+        result = new OwaspHtmlSanitizer(html,true).sanitize();
+        Assert.assertTrue(result.contains("data-mce-src=\"/home/ews01"));
+    }
+
+    @Test
+    /**
+     * Verify that data-mce-src attributes of img tag are maintained after passing through the defanger.
+     * @throws Exception
+     */
+    public void testBug106162() throws Exception {
+
+        String html = "<div>Thanks</div><div><img src=\"/home/ews01@zdev-vm002.eng.zimbra.com/Briefcase/rupali.jpeg\" "
+                + "data-mce-src=\"/home/ews01@zdev-vm002.eng.zimbra.com/Briefcase/rupali.jpeg\"></div>";
+        String result = new OwaspHtmlSanitizer(html,true).sanitize();
+        Assert.assertTrue(result.contains("data-mce-src=\"/home/ews01"));
+    }
+
+    @Test
+    public void testBug85478() throws Exception {
+        String html = "<a href=\"data:text/html;base64,PHNjcmlwdD5hbGVydCgiSGVsbG8hIik7PC9zY3JpcHQ+\" "
+            + "data-mce-href=\"data:text/html;base64,PHNjcmlwdD5hbGVydCgiSGVsbG8hIik7PC9zY3JpcHQ+\">Bug</a>";
+        String result = new OwaspHtmlSanitizer(html, true).sanitize();
+        // make sure that it removed the href link with 'data' URI
+        Assert.assertEquals(result, "Bug");
+
+        html = "<a href=\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAErkJggg==\" />Bug</a>";
+        result = new OwaspHtmlSanitizer(html, true).sanitize();
+        Assert.assertEquals(result, "Bug");
+
+        html = "<a target=_blank href=\"data:text/html,<script>alert(opener.document.body.innerHTML)</script>\">"
+            + " clickme in Opera/FF</a>";
+        result = new OwaspHtmlSanitizer(html, true).sanitize();
+        Assert.assertEquals(result, "<a target=\"_blank\"> clickme in Opera/FF</a>");
+
+        html = "<a target=_blank href=\"data.html\"> Data fIle</a>";
+        result = new OwaspHtmlSanitizer(html, true).sanitize();
+        Assert.assertTrue(result.contains("data.html"));
+
+        html = "<a href=\"data:;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAErkJggg==\" />Bug</a>";
+        result = new OwaspHtmlSanitizer(html, true).sanitize();
+        Assert.assertEquals(result, "Bug");
+
+        // make sure that it doesn't remove the img src with 'data' URI
+        html = "<img src=\"data:image/jpeg;base64,/9j/4AAAAAxITGlubwIQAABtbnRyUkdCI\"><br>";
+        result = new OwaspHtmlSanitizer(html, true).sanitize();
+        Assert.assertTrue(
+            result.contains("data:image/jpeg;base64,/9j/4AAAAAxITGlubwIQAABtbnRyUkdCI"));
+
+        html = "<img src=\"DaTa:image/jpeg;base64,/9j/4AAAAAxITGlubwIQAABtbnRyUkdCI\"><br>";
+        result = new OwaspHtmlSanitizer(html, true).sanitize();
+        Assert.assertTrue(
+            result.contains("DaTa:image/jpeg;base64,/9j/4AAAAAxITGlubwIQAABtbnRyUkdCI"));
+
+        html = "<a href=\"DATA:;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAErkJggg==\" />Bug</a>";
+        result = new OwaspHtmlSanitizer(html, true).sanitize();
+        Assert.assertEquals(result, "Bug");
+
+        html = "<a href=\"data\n\n:\n\ntext/html;base64,PHNjcmlwdD5hbGVydCgiSGVsbG8hIik7PC9zY3JpcHQ+\">Bug</a>";
+        result = new OwaspHtmlSanitizer(html, true).sanitize();
+        Assert.assertEquals(result, "Bug");
+
+        html = "<a href=\"data\r\n:text/html;base64,PHNjcmlwdD5hbGVydCgiSGVsbG8hIik7PC9zY3JpcHQ+\">Bug</a>";
+        result = new OwaspHtmlSanitizer(html, true).sanitize();
+        Assert.assertEquals(result, "Bug");
+
+        html = "<a href=\"data:text/html;base64,PHNjcmlwdD5hbGVydCgiSGVsbG8hIik7PC9zY3JpcHQ+\">Bug</a>";
+        result = new OwaspHtmlSanitizer(html, true).sanitize();
+        Assert.assertEquals(result, "Bug");
+
     }
 
 }
