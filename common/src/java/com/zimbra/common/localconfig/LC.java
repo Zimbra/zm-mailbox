@@ -1311,6 +1311,22 @@ public final class LC {
 
     public static final KnownKey sieve_immutable_headers = KnownKey.newKey("Received,DKIM-Signature,Authentication-Results,Received-SPF,Message-ID");
 
+    @Supported
+    @Reloadable
+    public static final KnownKey imap_max_time_to_wait_for_catchup_millis = KnownKey.newKey(30000);
+
+    //Remote IMAP
+    @Reloadable
+    public static final KnownKey imap_always_use_remote_store = KnownKey.newKey(false);
+
+    // owasp handler
+    public static final KnownKey zimbra_use_owasp_html_sanitizer = KnownKey.newKey(true);
+
+    // OAuth2 Social
+    public static final KnownKey zm_oauth_classes_handlers_yahoo = KnownKey.newKey("com.zimbra.oauth.handlers.impl.YahooOAuth2Handler");
+    public static final KnownKey zm_oauth_classes_handlers_google = KnownKey.newKey("com.zimbra.oauth.handlers.impl.GoogleOAuth2Handler");
+    public static final KnownKey zm_oauth_classes_handlers_facebook = KnownKey.newKey("com.zimbra.oauth.handlers.impl.FacebookOAuth2Handler");
+
     // Feed Manager comma-separated blacklist. addresses can be CIDR notation, or single ip. no wild-cards (default blacklist private networks)
     public static final KnownKey zimbra_feed_manager_blacklist = KnownKey.newKey("10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,fd00::/8");
 

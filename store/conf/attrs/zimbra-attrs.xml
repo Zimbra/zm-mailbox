@@ -9492,9 +9492,4 @@ TODO: delete them permanently from here
 <desc>outgoing sieve script defined by admin (not able to edit and view from the end user) applied after the end user filter rule</desc>
 </attr>
 
-<attr id="3077" name="zimbraUseOwaspHtmlSanitizer" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited"  since="8.8.15">
-  <globalConfigValue>TRUE</globalConfigValue>
-  <desc>If true, use owasp html sanitizer else use neko html defanger</desc>
-</attr>
-
 </attrs>
