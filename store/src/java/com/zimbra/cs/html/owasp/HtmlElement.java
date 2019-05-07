@@ -1,5 +1,9 @@
 package com.zimbra.cs.html.owasp;
 
+import static com.zimbra.cs.html.owasp.HtmlElementsBuilder.COMMA;
+
+import java.util.Arrays;
+import java.util.List;
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
@@ -21,10 +25,12 @@ import java.util.Set;
 
 import org.owasp.html.AttributePolicy;
 import org.owasp.html.ElementPolicy;
+import org.owasp.html.FilterUrlByProtocolAttributePolicy;
 import org.owasp.html.HtmlPolicyBuilder;
 import org.owasp.html.HtmlPolicyBuilder.AttributeBuilder;
 
 import com.google.common.base.Optional;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.html.owasp.policies.BackgroundAttributePolicy;
 import com.zimbra.cs.html.owasp.policies.NoSpaceEncodedCharAttributePolicy;
 import com.zimbra.cs.html.owasp.policies.SrcAttributePolicy;
@@ -64,11 +70,19 @@ public class HtmlElement {
             attributesBuilder = policyBuilder.allowAttributes(attribute);
             if (attributesBuilder != null) {
                 attributesBuilder.matching(new NoSpaceEncodedCharAttributePolicy());
+                String urlProtocols = OwaspPolicy.getElementUrlProtocols(element);
+                if (!StringUtil.isNullOrEmpty(urlProtocols)) {
+                    String[] allowedProtocols = urlProtocols.split(COMMA);
+                    List<String> urlList = Arrays.asList(allowedProtocols);
+                    AttributePolicy URLPolicy = new FilterUrlByProtocolAttributePolicy(urlList);
+                    attributesBuilder.matching(URLPolicy);
+                }
                 AttributePolicy attrPolicy = attributesAndPolicies.get(attribute);
                 if (attrPolicy != null) {
                     if (neuterImages && (attrPolicy instanceof SrcAttributePolicy
                         || attrPolicy instanceof BackgroundAttributePolicy)) {
                         attributesBuilder.matching(attrPolicy);
+
                     }
                 }
                 attributesBuilder.onElements(elementName);
