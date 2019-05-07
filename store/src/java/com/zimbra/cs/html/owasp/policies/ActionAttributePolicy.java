@@ -27,19 +27,16 @@ import com.zimbra.cs.servlet.ZThreadLocal;
 
 public class ActionAttributePolicy implements AttributePolicy {
 
-    /** enable same host post request for a form in email */
+    //enable same host post request for a form in email
     private static boolean sameHostFormPostCheck = DebugConfig.defang_block_form_same_host_post_req;
-    /** The Host header received in the request. */
-    private String reqVirtualHost = null;
-
-    public ActionAttributePolicy() {
-        if (ZThreadLocal.getRequestContext() != null) {
-            this.reqVirtualHost = ZThreadLocal.getRequestContext().getVirtualHost();
-        }
-    }
 
     @Override
     public String apply(String elementName, String attributeName, String value) {
+        // The Host header received in the request.
+        String reqVirtualHost = null;
+        if (ZThreadLocal.getRequestContext() != null) {
+            reqVirtualHost = ZThreadLocal.getRequestContext().getVirtualHost();
+        }
         if (sameHostFormPostCheck && reqVirtualHost != null) {
             try {
                 URL url = new URL(value);
@@ -49,9 +46,8 @@ public class ActionAttributePolicy implements AttributePolicy {
                     value = value.replace(formActionHost, "SAMEHOSTFORMPOST-BLOCKED");
                 }
             } catch (MalformedURLException e) {
-                ZimbraLog.soap.warn("Failure while trying to block malicious code. Check for URL"
-                    + " match between the host and the action URL of a FORM."
-                    + " Error parsing URL, possible relative URL." + e.getMessage());
+                ZimbraLog.soap.warn("Error parsing URL, possible relative URL." + e.getMessage());
+                value = "SAMEHOSTFORMPOST-BLOCKED";
             }
         }
         return value;

@@ -30,11 +30,12 @@ import org.junit.Test;
 import com.google.common.base.Charsets;
 import com.google.common.io.CharStreams;
 import com.zimbra.common.util.ByteUtil;
-import com.zimbra.cs.html.owasp.OwaspHtmlSanitizer;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.servlet.ZThreadLocal;
+import com.zimbra.soap.RequestContext;
 
 public class OwaspHtmlSanitizerTest {
 
@@ -518,4 +519,152 @@ public class OwaspHtmlSanitizerTest {
 
     }
 
+    @Test
+    public void testBug83999() throws IOException {
+
+        RequestContext reqContext = new RequestContext();
+        reqContext.setVirtualHost("mail.zimbra.com");
+        ZThreadLocal.setContext(reqContext);
+
+        String html = "<FORM NAME=\"buy\" ENCTYPE=\"text/plain\" " +
+                "action=\"http://mail.zimbra.com:7070/service/soap/ModifyFilterRulesRequest\" METHOD=\"POST\">";
+
+        String result = new OwaspHtmlSanitizer(html, true).sanitize();
+
+        Assert.assertTrue(result.contains("SAMEHOSTFORMPOST-BLOCKED"));
+
+        html = "<FORM NAME=\"buy\" ENCTYPE=\"text/plain\" "
+            + "action=\"http://zimbra.vmware.com:7070/service/soap/ModifyFilterRulesRequest\" METHOD=\"POST\">";
+
+        result = new OwaspHtmlSanitizer(html, true).sanitize();
+
+        Assert.assertTrue(!result.contains("SAMEHOSTFORMPOST-BLOCKED"));
+
+        html = "<FORM NAME=\"buy\" ENCTYPE=\"text/plain\" "
+            + "action=\"http://mail.zimbra.com/service/soap/ModifyFilterRulesRequest\" METHOD=\"POST\">";
+
+        result = new OwaspHtmlSanitizer(html, true).sanitize();
+        Assert.assertTrue(result.contains("SAMEHOSTFORMPOST-BLOCKED"));
+
+        html = "<FORM NAME=\"buy\" ENCTYPE=\"text/plain\" "
+            + "action=\"/service/soap/ModifyFilterRulesRequest\" METHOD=\"POST\">";
+
+        result = new OwaspHtmlSanitizer(html, true).sanitize();
+        Assert.assertTrue(result.contains("SAMEHOSTFORMPOST-BLOCKED"));
+
+        ZThreadLocal.unset();
+    }
+
+    @Test
+    public void testBug102637() throws Exception {
+        String html = "<html><body><div style=\"font-family: arial, helvetica, sans-serif; font-size: 12pt; color: #000000\">"
+            + "<div><br></div><div><a href=\"&amp;#106&amp;#097&amp;#118&amp;#097&amp;#115&amp;#099&amp;#114&amp;#105&amp;"
+            + "#112&amp;#116&amp;#058&amp;#097&amp;#108&amp;#101&amp;#114&amp;#116&amp;#040&amp;#039&amp;#088&amp;#083&amp;"
+            + "#083&amp;#039&amp;#041\" data-mce-href=\"&amp;#106&amp;#097&amp;#118&amp;#097&amp;#115&amp;#099&amp;"
+                + "#114&amp;#105&amp;#112&amp;#116&amp;#058&amp;#097&amp;#108&amp;#101&amp;#114&amp;#116&amp;#040&amp;"
+                + "#039&amp;#088&amp;#083&amp;#083&amp;#039&amp;#041\">test</a><br data-mce-bogus=\"1\"></div><div>"
+                + "<br data-mce-bogus=\"1\"></div><div>Test message<br data-mce-bogus=\"1\"></div></div></body></html>";
+        String result = new OwaspHtmlSanitizer(html, true).sanitize();
+        Assert.assertTrue(!result.contains("href"));
+    }
+
+    @Test
+    public void testBug73037() throws Exception {
+        String html = "<html><head></head><body><a target=\"_blank\"" +
+        " href=\"smb://Aurora._smb._tcp.local/untitled/folder/03 DANDIYA MIX.mp3\"></a></body></html>";
+        String hrefVal = "smb://Aurora._smb._tcp.local/untitled/folder/03%20DANDIYA%20MIX.mp3";
+        String result = new OwaspHtmlSanitizer(html, true).sanitize();
+        Assert.assertTrue(result.contains(hrefVal));
+
+        html = "<html><head></head><body><a target=\"_blank\"" +
+            " href=\"smb://Aurora._smb._tcp.local/untitled/folder/03%20DANDIYA%20MIX.mp3\"></a></body></html>";
+        result = new OwaspHtmlSanitizer(html, true).sanitize();
+        Assert.assertTrue(result.contains(hrefVal));
+
+        html = "<html><head></head><body><a target=\"_blank\"" +
+            " href=\"//Shared_srv/folder/file.txt\"></a></body></html>";
+        hrefVal = "//Shared_srv/folder/file.txt";
+        result = new OwaspHtmlSanitizer(html, true).sanitize();
+        Assert.assertTrue(result.contains(hrefVal));
+
+        html = "<html><head></head><body><a target=\"_blank\"" +
+            " href=\"//Shared_srv/folder/file with spaces.txt\"></a></body></html>";
+        hrefVal = "//Shared_srv/folder/file%20with%20spaces.txt";
+        result = new OwaspHtmlSanitizer(html, true).sanitize();
+        Assert.assertTrue(result.contains(hrefVal));
+    }
+
+    @Test
+    public void testBug73874() throws Exception {
+        String fileName = "bug_73874.txt";
+        InputStream htmlStream = getHtmlBody(fileName);
+        String html = CharStreams.toString(new InputStreamReader(htmlStream, Charsets.UTF_8));
+        String result = new OwaspHtmlSanitizer(html, true).sanitize();
+
+        // and make sure we have the the complete URL for
+        Assert.assertTrue(result
+          .contains("https://wiki.tomsawyer.com/download/thumbnails/27132023/Screen&#43;Shot&#43;2012-05-02&#43;at&#43;08.08.12&#43;"
+              + "AM.png?version&#61;1&amp;modificationDate&#61;1335967057000"));
+
+        // case where base URL does not have a trailing '/'
+        html = "<html><head><base href=\"https://wiki.tomsawyer.com\"/>"
+            + "</head><body>"
+            + "<img  width=\"100\"  src=\"/download/thumbnails/27132023/Screen+Shot+"
+            + "2012-05-02+at+08.08.12+AM.png?version=3D1&modificationDate=3D1335967057"
+            + "000\"/></body></html>";
+        result = new OwaspHtmlSanitizer(html, true).sanitize();
+        Assert.assertTrue(result
+                .contains("https://wiki.tomsawyer.com/download/thumbnails/27132023/Screen&#43;Shot&#43;2012-05-02&#43;at&#43;08.08.12&#43;"
+              + "AM.png?version&#61;3D1&amp;modificationDate&#61;3D1335967057000"));
+
+        // case where base URL has a trailing '/'
+        html = "<html><head><base href=\"https://wiki.tomsawyer.com/\" />"
+            + "</head><body>"
+            + "<img  width=\"100\"  src=\"download/thumbnails/27132023/Screen+Shot+"
+            + "2012-05-02+at+08.08.12+AM.png?version=3D1&modificationDate=3D1335967057"
+            + "000\"/></body></html>";
+        result = new OwaspHtmlSanitizer(html, true).sanitize();
+        Assert.assertTrue(result
+                .contains("https://wiki.tomsawyer.com//download/thumbnails/27132023/Screen&#43;Shot&#43;2012-05-02&#43;at&#43;08.08.12&#43;"
+              + "AM.png?version&#61;3D1&amp;modificationDate&#61;3D1335967057000"));
+
+       // case where base URL has a single parameter'/'
+        html = "<html><head><base href=\"https://wiki.tomsawyer.com/\" />"
+            + "</head><body>"
+            + "<img  width=\"100\"  src=\"download/thumbnails/27132023/Screen+Shot+"
+            + "2012-05-02+at+08.08.12+AM.png?version=3D1\"/></body></html>";
+        result = new OwaspHtmlSanitizer(html, true).sanitize();
+        Assert.assertTrue(result
+                .contains("https://wiki.tomsawyer.com//download/thumbnails/27132023/Screen&#43;Shot&#43;2012-05-02&#43;at&#43;08.08.12&#43;"
+              + "AM.png?version&#61;3D1"));
+
+     // case where base URL no parameters
+        html = "<html><head><base href=\"https://wiki.tomsawyer.com/\" />"
+            + "</head><body>"
+            + "<img  width=\"100\"  src=\"download/thumbnails/27132023/Screen+Shot+"
+            + "2012-05-02+at+08.08.12+AM.png\"/></body></html>";
+        result = new OwaspHtmlSanitizer(html, true).sanitize();
+        Assert.assertTrue(result
+                .contains("https://wiki.tomsawyer.com//download/thumbnails/27132023/Screen&#43;Shot&#43;2012-05-02&#43;at&#43;08.08.12&#43;"
+              + "AM.png"));
+
+     // case where relative URL is invalidsomething like.pngxxx.gif
+        html = "<html><head><base href=\"https://wiki.tomsawyer.com/\" />"
+            + "</head><body>"
+            + "<img  width=\"100\"  src=\"download/thumbnails/27132023/Screen+Shot.pngTest.gif\"/></body></html>";
+        result = new OwaspHtmlSanitizer(html, true).sanitize();
+        Assert.assertTrue(!result
+                .contains("https://wiki.tomsawyer.com//download/thumbnails/27132023/Screen&#43;Shot&#43;2012-05-02&#43;at&#43;08.08.12&#43;"
+              + "AM.png"));
+    }
+
+    @Test
+    public void testBug102910() throws Exception {
+        String html = "<div><img pnsrc=\"cid:1040f05975d4d4b8fcf8747be3eb9ae3c08e5cd4@zimbra\" "
+            + "data-mce-src=\"cid:1040f05975d4d4b8fcf8747be3eb9ae3c08e5cd4@zimbra\" "
+            + "src=\"cid:1040f05975d4d4b8fcf8747be3eb9ae3c08e5cd4@zimbra\"></div>";
+        String result = new OwaspHtmlSanitizer(html, true).sanitize();
+        Assert.assertTrue(!result.contains("@zimbra"));
+        Assert.assertTrue(result.contains("&#64;zimbra"));
+    }
 }

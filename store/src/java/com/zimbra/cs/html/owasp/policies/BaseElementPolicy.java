@@ -1,4 +1,5 @@
 package com.zimbra.cs.html.owasp.policies;
+
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
@@ -15,22 +16,24 @@ package com.zimbra.cs.html.owasp.policies;
  * If not, see <https://www.gnu.org/licenses/>.
  * ***** END LICENSE BLOCK *****
  */
-import org.owasp.html.AttributePolicy;
+
+import java.util.List;
+
+import org.owasp.html.ElementPolicy;
 
 import com.zimbra.cs.html.owasp.OwaspHtmlSanitizer;
 
-public class SrcAttributePolicy implements AttributePolicy {
+public class BaseElementPolicy implements ElementPolicy {
 
     @Override
-    public String apply(String elementName, String attributeName, String srcValue) {
-        String base = OwaspHtmlSanitizer.zThreadLocal.get();
-        if (base != null) {
-            if (!srcValue.startsWith("/")) {
-                srcValue = "/" + srcValue;
-            }
-            srcValue = base+srcValue;
+    public String apply(String elementName, List<String> attrs) {
+
+        final int hrefIndex = attrs.indexOf("href");
+        if (hrefIndex != -1) {
+            String hrefValue = attrs.get(hrefIndex + 1);
+            OwaspHtmlSanitizer.zThreadLocal.set(hrefValue);
         }
-        return srcValue;
+        return "base";
     }
 
 }
