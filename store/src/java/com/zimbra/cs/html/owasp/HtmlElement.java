@@ -79,8 +79,11 @@ public class HtmlElement {
                 }
                 AttributePolicy attrPolicy = attributesAndPolicies.get(attribute);
                 if (attrPolicy != null) {
-                    if (neuterImages && (attrPolicy instanceof SrcAttributePolicy
-                        || attrPolicy instanceof BackgroundAttributePolicy)) {
+                    if (attrPolicy instanceof SrcAttributePolicy || attrPolicy instanceof BackgroundAttributePolicy) {
+                        if (neuterImages) {
+                            attributesBuilder.matching(attrPolicy);
+                        }
+                    } else {
                         attributesBuilder.matching(attrPolicy);
 
                     }
