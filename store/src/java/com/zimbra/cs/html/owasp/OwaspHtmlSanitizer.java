@@ -3,6 +3,7 @@ package com.zimbra.cs.html.owasp;
 import java.util.concurrent.Callable;
 import java.util.regex.Pattern;
 
+import org.owasp.html.Encoding;
 import org.owasp.html.Handler;
 import org.owasp.html.HtmlSanitizer;
 import org.owasp.html.HtmlSanitizer.Policy;
@@ -19,6 +20,7 @@ public class OwaspHtmlSanitizer implements Callable<String> {
     private String html;
     private boolean neuterImages;
     private static final Pattern AV_TAB = Pattern.compile(DebugConfig.defangAvTab, Pattern.CASE_INSENSITIVE);
+    public static final ThreadLocal<String> zThreadLocal  = new ThreadLocal<String>(); 
 
     public OwaspHtmlSanitizer(String html, boolean neuterImages) {
         this.html = html;
@@ -61,6 +63,7 @@ public class OwaspHtmlSanitizer implements Callable<String> {
         instantiatePolicy();
         final Policy policy = POLICY_DEFINITION.apply(renderer);
         // run the html through the sanitizer
+        html = Encoding.decodeHtml(html);
         HtmlSanitizer.sanitize(html, policy);
         // return the resulting HTML from the builder
         return htmlBuilder.toString();
