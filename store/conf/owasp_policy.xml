@@ -4,11 +4,14 @@
      LANG = dir,lang,xml:lang
      KBD = accesshtml,tabindex-->
 <owasp_policy>
-  <url_protocols>cid,http,https,mailto,data</url_protocols>
+  <url_protocols>cid,http,https,mailto,data,smb</url_protocols>
   <disallow_text_in>applet,frameset,object,script,style,title</disallow_text_in>
   <html element="a">
     <attributes>KBD,charset,coords,href,hreflang,name,rel,rev,shape,target,type</attributes>
-    <url_protocols>cid,http,https,mailto</url_protocols>
+    <url_protocols>cid,http,https,mailto,smb</url_protocols>
+  </html>
+  <html element="base">
+    <attributes>href</attributes>
   </html>
   <html element="address">
     <attributes>CORE,LANG</attributes>
