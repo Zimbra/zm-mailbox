@@ -33,6 +33,7 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.StringUtil;
@@ -43,7 +44,6 @@ import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.cs.service.mail.ToXML;
 import com.zimbra.cs.servlet.ZThreadLocal;
 import com.zimbra.soap.RequestContext;
 
@@ -59,8 +59,8 @@ public class DefangFilterTest {
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
         EMAIL_BASE_DIR = MailboxTestUtil.getZimbraServerDir("") + EMAIL_BASE_DIR;
+        LC.zimbra_use_owasp_html_sanitizer.setDefault(false);
         Provisioning prov = Provisioning.getInstance();
-        prov.getConfig().setUseOwaspHtmlSanitizer(false);
         Account acct = prov.createAccount("test@in.telligent.com", "secret", new HashMap<String, Object>());
     }
 
@@ -1467,7 +1467,7 @@ public class DefangFilterTest {
      */
     @Test
     public void testzbug736Mime1() throws Exception {
-        Provisioning.getInstance().getConfig().setUseOwaspHtmlSanitizer(false);
+        LC.zimbra_use_owasp_html_sanitizer.setDefault(false);
         String fileName = "zbug736_2.txt";
         InputStream htmlStream = getHtmlBody(fileName);
         String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
@@ -1484,7 +1484,7 @@ public class DefangFilterTest {
         BrowserDefang defanger2 = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML);
         Assert.assertFalse(defanger2 instanceof OwaspDefang);
 
-        Provisioning.getInstance().getConfig().setUseOwaspHtmlSanitizer(true);
+        LC.zimbra_use_owasp_html_sanitizer.setDefault(true);
         BrowserDefang defanger = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML);
         Assert.assertTrue(defanger instanceof OwaspDefang);
     }
