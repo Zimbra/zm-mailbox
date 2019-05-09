@@ -565,7 +565,8 @@ public class OwaspHtmlSanitizerTest {
                 + "#039&amp;#088&amp;#083&amp;#083&amp;#039&amp;#041\">test</a><br data-mce-bogus=\"1\"></div><div>"
                 + "<br data-mce-bogus=\"1\"></div><div>Test message<br data-mce-bogus=\"1\"></div></div></body></html>";
         String result = new OwaspHtmlSanitizer(html, true).sanitize();
-        Assert.assertTrue(!result.contains("href"));
+        Assert.assertTrue(!result.contains("javascript:alert('XSS')"));
+        Assert.assertTrue(result.contains("&amp;#106&amp;#097&amp;#118&amp;#097&amp;#115&amp;#099&amp;#114&amp;#105&amp;#112&amp;#116&amp;#058&amp;#097&amp;#108&amp;#101&amp;#114&amp;#116&amp;#040&amp;#039&amp;#088&amp;#083&amp;#083&amp;#039&amp;#041"));
     }
 
     @Test
