@@ -1,16 +1,12 @@
 package com.zimbra.cs.html.owasp;
 
 import java.util.concurrent.Callable;
-import java.util.regex.Pattern;
 
-import org.owasp.html.Encoding;
 import org.owasp.html.Handler;
 import org.owasp.html.HtmlSanitizer;
 import org.owasp.html.HtmlSanitizer.Policy;
 import org.owasp.html.HtmlStreamRenderer;
 import org.owasp.html.PolicyFactory;
-
-import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.util.StringUtil;
 
 /*
@@ -19,7 +15,6 @@ import com.zimbra.common.util.StringUtil;
 public class OwaspHtmlSanitizer implements Callable<String> {
     private String html;
     private boolean neuterImages;
-    private static final Pattern AV_TAB = Pattern.compile(DebugConfig.defangAvTab, Pattern.CASE_INSENSITIVE);
     public static final ThreadLocal<String> zThreadLocal  = new ThreadLocal<String>(); 
 
     public OwaspHtmlSanitizer(String html, boolean neuterImages) {
@@ -43,9 +38,6 @@ public class OwaspHtmlSanitizer implements Callable<String> {
     public String sanitize() {
         if (StringUtil.isNullOrEmpty(html)) {
             return null;
-        }
-        if (AV_TAB.matcher(html).find()) {
-            html = AV_TAB.matcher(html).replaceAll("");
         }
         // create the builder into which the sanitized email will be written
         final StringBuilder htmlBuilder = new StringBuilder(html.length());
