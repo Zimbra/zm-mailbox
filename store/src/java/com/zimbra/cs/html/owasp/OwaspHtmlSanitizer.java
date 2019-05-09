@@ -63,7 +63,6 @@ public class OwaspHtmlSanitizer implements Callable<String> {
         instantiatePolicy();
         final Policy policy = POLICY_DEFINITION.apply(renderer);
         // run the html through the sanitizer
-        html = Encoding.decodeHtml(html);
         HtmlSanitizer.sanitize(html, policy);
         // return the resulting HTML from the builder
         return htmlBuilder.toString();
