@@ -29,6 +29,7 @@ import com.zimbra.cs.html.owasp.policies.AElementPolicy;
 import com.zimbra.cs.html.owasp.policies.AreaElementPolicy;
 import com.zimbra.cs.html.owasp.policies.BaseElementPolicy;
 import com.zimbra.cs.html.owasp.policies.DivElementPolicy;
+import com.zimbra.cs.html.owasp.policies.ImgElementPolicy;
 
 /*
  * Build the list of HtmlElements from policy file
@@ -48,6 +49,7 @@ public class HtmlElementsBuilder {
         elementSpecificPolicies.put("a", new AElementPolicy());
         elementSpecificPolicies.put("area", new AreaElementPolicy());
         elementSpecificPolicies.put("base", new BaseElementPolicy());
+        elementSpecificPolicies.put("img", new ImgElementPolicy());
         // add any other element policies
     }
 

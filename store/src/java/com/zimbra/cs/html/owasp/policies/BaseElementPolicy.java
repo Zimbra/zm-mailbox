@@ -33,7 +33,7 @@ public class BaseElementPolicy implements ElementPolicy {
             String hrefValue = attrs.get(hrefIndex + 1);
             OwaspHtmlSanitizer.zThreadLocal.set(hrefValue);
         }
-        return "base";
+        return null;
     }
 
 }

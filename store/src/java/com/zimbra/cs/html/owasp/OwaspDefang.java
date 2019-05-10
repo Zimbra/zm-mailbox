@@ -52,7 +52,9 @@ public class OwaspDefang extends AbstractDefang {
     public void defang(Reader reader, boolean neuterImages, Writer out) throws IOException {
         String html = CharStreams.toString(reader);
         String sanitizedHtml = runSanitizer(html, neuterImages);
-        out.write(sanitizedHtml);
+        if (sanitizedHtml != null) {
+            out.write(sanitizedHtml);
+        }
         out.close();
     }
 
