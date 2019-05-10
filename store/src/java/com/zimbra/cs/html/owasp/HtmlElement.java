@@ -1,9 +1,5 @@
 package com.zimbra.cs.html.owasp;
 
-import static com.zimbra.cs.html.owasp.HtmlElementsBuilder.COMMA;
-
-import java.util.Arrays;
-import java.util.List;
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
@@ -20,9 +16,12 @@ import java.util.List;
  * If not, see <https://www.gnu.org/licenses/>.
  * ***** END LICENSE BLOCK *****
  */
+
+import static com.zimbra.cs.html.owasp.HtmlElementsBuilder.COMMA;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import org.owasp.html.AttributePolicy;
 import org.owasp.html.ElementPolicy;
 import org.owasp.html.FilterUrlByProtocolAttributePolicy;
@@ -56,7 +55,6 @@ public class HtmlElement {
 
     public void configure(HtmlPolicyBuilder policyBuilder, boolean neuterImages) {
         String elementName = getElement();
-
         if (elementPolicy.isPresent()) {
             policyBuilder.allowElements(elementPolicy.get(), elementName);
         } else {

@@ -385,7 +385,7 @@ public class OwaspHtmlSanitizerTest {
         InputStream htmlStream = getHtmlBody(fileName);
         String html = CharStreams.toString(new InputStreamReader(htmlStream, Charsets.UTF_8));
         String result = new OwaspHtmlSanitizer(html,true).sanitize();
-        Assert.assertFalse(result.contains("src=\"image001.gif\""));
+        Assert.assertTrue(result.contains("pnsrc=\"image001.gif\""));
     }
 
     /**
