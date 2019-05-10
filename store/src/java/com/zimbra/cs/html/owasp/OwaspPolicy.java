@@ -107,6 +107,7 @@ public class OwaspPolicy {
                 throw new DocumentException(
                     String.format("Problem parsing owasp policy file '%s'", policyFile));
             }
+            ZimbraLog.mailbox.info("OWASP policy '%s' loaded", mPolicyFile);
         } else {
             ZimbraLog.mailbox
                 .warn(String.format("Owasp policy file '%s' is not readable", mPolicyFile));
@@ -137,7 +138,6 @@ public class OwaspPolicy {
      */
     static synchronized void load(String path) throws DocumentException, Exception {
         mOwaspPolicy = new OwaspPolicy(path);
-        ZimbraLog.mailbox.info("OWASP policy '%s' loaded", mPolicyFile);
     }
 
     public static Set<String> getAllowedElements() {
