@@ -41,7 +41,7 @@ public class OwaspPolicyProducer {
         .withProperties(ImmutableSet.of("float"));
 
     private static void setUp(boolean neuterImages) {
-        HtmlElementsBuilder builder = new HtmlElementsBuilder(new HtmlAttributesBuilder());
+        HtmlElementsBuilder builder = new HtmlElementsBuilder(new HtmlAttributesBuilder(), neuterImages);
         List<HtmlElement> allowedElements = builder.build();
         HtmlPolicyBuilder policyBuilder = new HtmlPolicyBuilder();
         policyBuilder.requireRelNofollowOnLinks();
