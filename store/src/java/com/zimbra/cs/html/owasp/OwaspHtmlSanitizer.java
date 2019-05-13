@@ -53,6 +53,7 @@ public class OwaspHtmlSanitizer implements Callable<String> {
             });
         // create a thread-specific policy
         instantiatePolicy();
+        OwaspHtmlSanitizer.zThreadLocal.remove();
         final Policy policy = POLICY_DEFINITION.apply(renderer);
         // run the html through the sanitizer
         HtmlSanitizer.sanitize(html, policy);

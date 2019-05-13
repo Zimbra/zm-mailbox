@@ -29,7 +29,7 @@ import com.zimbra.cs.html.owasp.policies.AElementPolicy;
 import com.zimbra.cs.html.owasp.policies.AreaElementPolicy;
 import com.zimbra.cs.html.owasp.policies.BaseElementPolicy;
 import com.zimbra.cs.html.owasp.policies.DivElementPolicy;
-import com.zimbra.cs.html.owasp.policies.ImgElementPolicy;
+import com.zimbra.cs.html.owasp.policies.ImgInputElementPolicy;
 
 /*
  * Build the list of HtmlElements from policy file
@@ -38,10 +38,12 @@ public class HtmlElementsBuilder {
 
     static final String COMMA = "(\\s)?+,(\\s)?+";
     private HtmlAttributesBuilder builder;
+    private boolean neuterImages;
     private Map<String, ElementPolicy> elementSpecificPolicies = new HashMap<String, ElementPolicy>();
 
-    public HtmlElementsBuilder(HtmlAttributesBuilder builder) {
+    public HtmlElementsBuilder(HtmlAttributesBuilder builder, boolean neuterImages) {
         this.builder = builder;
+        this.neuterImages = neuterImages;
     }
 
     public void setUp() {
@@ -49,7 +51,10 @@ public class HtmlElementsBuilder {
         elementSpecificPolicies.put("a", new AElementPolicy());
         elementSpecificPolicies.put("area", new AreaElementPolicy());
         elementSpecificPolicies.put("base", new BaseElementPolicy());
-        elementSpecificPolicies.put("img", new ImgElementPolicy());
+        if (neuterImages) {
+            elementSpecificPolicies.put("img", new ImgInputElementPolicy());
+            elementSpecificPolicies.put("input", new ImgInputElementPolicy());
+        }
         // add any other element policies
     }
 

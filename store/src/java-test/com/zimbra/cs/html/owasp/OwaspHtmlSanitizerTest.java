@@ -402,7 +402,7 @@ public class OwaspHtmlSanitizerTest {
         // just make sure we made it here, as this was NPEing out..
         Assert.assertNotNull(result);
         // Make sure the input got changed
-        Assert.assertFalse(result.contains("src=\"http://www.google.com/intl/en_com/images/srpr/logo3w.png\""));
+        Assert.assertTrue(result.contains("dfsrc=\"http://www.google.com/intl/en_com/images/srpr/logo3w.png\""));
     }
 
     /**
@@ -416,9 +416,14 @@ public class OwaspHtmlSanitizerTest {
         Assert.assertNotNull(htmlStream);
         String html = CharStreams.toString(new InputStreamReader(htmlStream, Charsets.UTF_8));
         String result = new OwaspHtmlSanitizer(html,true).sanitize();
-        // just make sure we made it here, as this was NPEing out..
         Assert.assertNotNull(result);
         Assert.assertFalse(result.contains(" src=\"https://grepular.com/email_privacy_tester/"));
+        Assert.assertTrue(result.contains("dfsrc=\"https://grepular.com/email_privacy_tester/"));
+
+        result = new OwaspHtmlSanitizer(html,false).sanitize();
+        Assert.assertNotNull(result);
+        Assert.assertTrue(result.contains(" src=\"https://grepular.com/email_privacy_tester/"));
+        Assert.assertFalse(result.contains("dfsrc=\"https://grepular.com/email_privacy_tester/"));
     }
 
     /**
@@ -623,7 +628,7 @@ public class OwaspHtmlSanitizerTest {
             + "000\"/></body></html>";
         result = new OwaspHtmlSanitizer(html, true).sanitize();
         Assert.assertTrue(result
-                .contains("https://wiki.tomsawyer.com//download/thumbnails/27132023/Screen&#43;Shot&#43;2012-05-02&#43;at&#43;08.08.12&#43;"
+                .contains("https://wiki.tomsawyer.com/download/thumbnails/27132023/Screen&#43;Shot&#43;2012-05-02&#43;at&#43;08.08.12&#43;"
               + "AM.png?version&#61;3D1&amp;modificationDate&#61;3D1335967057000"));
 
        // case where base URL has a single parameter'/'
@@ -633,7 +638,7 @@ public class OwaspHtmlSanitizerTest {
             + "2012-05-02+at+08.08.12+AM.png?version=3D1\"/></body></html>";
         result = new OwaspHtmlSanitizer(html, true).sanitize();
         Assert.assertTrue(result
-                .contains("https://wiki.tomsawyer.com//download/thumbnails/27132023/Screen&#43;Shot&#43;2012-05-02&#43;at&#43;08.08.12&#43;"
+                .contains("https://wiki.tomsawyer.com/download/thumbnails/27132023/Screen&#43;Shot&#43;2012-05-02&#43;at&#43;08.08.12&#43;"
               + "AM.png?version&#61;3D1"));
 
      // case where base URL no parameters
@@ -643,7 +648,7 @@ public class OwaspHtmlSanitizerTest {
             + "2012-05-02+at+08.08.12+AM.png\"/></body></html>";
         result = new OwaspHtmlSanitizer(html, true).sanitize();
         Assert.assertTrue(result
-                .contains("https://wiki.tomsawyer.com//download/thumbnails/27132023/Screen&#43;Shot&#43;2012-05-02&#43;at&#43;08.08.12&#43;"
+                .contains("https://wiki.tomsawyer.com/download/thumbnails/27132023/Screen&#43;Shot&#43;2012-05-02&#43;at&#43;08.08.12&#43;"
               + "AM.png"));
 
      // case where relative URL is invalidsomething like.pngxxx.gif
@@ -652,7 +657,7 @@ public class OwaspHtmlSanitizerTest {
             + "<img  width=\"100\"  src=\"download/thumbnails/27132023/Screen+Shot.pngTest.gif\"/></body></html>";
         result = new OwaspHtmlSanitizer(html, true).sanitize();
         Assert.assertTrue(!result
-                .contains("https://wiki.tomsawyer.com//download/thumbnails/27132023/Screen&#43;Shot&#43;2012-05-02&#43;at&#43;08.08.12&#43;"
+                .contains("https://wiki.tomsawyer.com/download/thumbnails/27132023/Screen&#43;Shot&#43;2012-05-02&#43;at&#43;08.08.12&#43;"
               + "AM.png"));
     }
 

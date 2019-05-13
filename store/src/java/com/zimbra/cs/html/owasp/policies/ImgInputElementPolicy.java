@@ -24,11 +24,12 @@ import org.owasp.html.ElementPolicy;
 
 import com.zimbra.common.localconfig.DebugConfig;
 
-public class ImgElementPolicy implements ElementPolicy {
+public class ImgInputElementPolicy implements ElementPolicy {
 
     private static final Pattern VALID_IMG_FILE = Pattern.compile(DebugConfig.defangValidImgFile);
     private static final Pattern VALID_INT_IMG = Pattern.compile(DebugConfig.defangValidIntImg,
         Pattern.CASE_INSENSITIVE);
+    private static final Pattern VALID_EXT_URL = Pattern.compile(DebugConfig.defangValidExtUrl, Pattern.CASE_INSENSITIVE);
     // matches the file format that convertd uses so it doesn't get removed
     private static final Pattern VALID_CONVERTD_FILE = Pattern
         .compile(DebugConfig.defangValidConvertdFile);
@@ -37,19 +38,23 @@ public class ImgElementPolicy implements ElementPolicy {
     public String apply(String elementName, List<String> attrs) {
         final int srcIndex = attrs.indexOf("src");
         if (srcIndex == -1) {
-            return "img";
+            return elementName;
         }
         String srcValue = attrs.get(srcIndex + 1);
-        if (!VALID_INT_IMG.matcher(srcValue).find() && VALID_IMG_FILE.matcher(srcValue).find()
-            && !VALID_CONVERTD_FILE.matcher(srcValue).find()) {
-            // Replace src with pnsrc
+        if (VALID_EXT_URL.matcher(srcValue).find()
+                || (!VALID_INT_IMG.matcher(srcValue).find() && !VALID_IMG_FILE.matcher(srcValue).find())) {
+            attrs.remove(srcIndex);
+            attrs.remove(srcIndex);// value
+            attrs.add("dfsrc");
+            attrs.add(srcValue);
+        } else if (!VALID_INT_IMG.matcher(srcValue).find() && VALID_IMG_FILE.matcher(srcValue).find()
+                && !VALID_CONVERTD_FILE.matcher(srcValue).find()) {
             attrs.remove(srcIndex);
             attrs.remove(srcIndex);// value
             attrs.add("pnsrc");
             attrs.add(srcValue);
         }
-        return "img";
-
+        return elementName;
     }
 
 }
