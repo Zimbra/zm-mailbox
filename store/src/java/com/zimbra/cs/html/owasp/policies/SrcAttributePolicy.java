@@ -1,4 +1,7 @@
 package com.zimbra.cs.html.owasp.policies;
+import java.net.URI;
+import java.net.URISyntaxException;
+
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
@@ -24,11 +27,30 @@ public class SrcAttributePolicy implements AttributePolicy {
     @Override
     public String apply(String elementName, String attributeName, String srcValue) {
         String base = OwaspHtmlSanitizer.zThreadLocal.get();
-        if (base != null) {
-            if (!srcValue.startsWith("/")) {
-                srcValue = "/" + srcValue;
+
+        if (base != null && srcValue != null) {
+            URI baseHrefURI = null;
+            try {
+                baseHrefURI = new URI(base);
+            } catch (URISyntaxException e) {
+                if (!base.endsWith("/"))
+                    base += "/";
             }
-            srcValue = base+srcValue;
+            if (srcValue.indexOf(":") == -1) {
+                if (!srcValue.startsWith("/")) {
+                    srcValue = "/" + srcValue;
+                }
+
+                if (baseHrefURI != null) {
+                    try {
+                        srcValue = baseHrefURI.resolve(srcValue).toString();
+                        return srcValue;
+                    } catch (IllegalArgumentException e) {
+                        // ignore and do string-logic
+                    }
+                }
+                srcValue = base + srcValue;
+            }
         }
         return srcValue;
     }
