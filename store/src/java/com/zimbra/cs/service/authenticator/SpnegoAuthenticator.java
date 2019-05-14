@@ -27,6 +27,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.eclipse.jetty.http.HttpHeader;
+import org.eclipse.jetty.security.DefaultUserIdentity;
 import org.eclipse.jetty.security.LoginService;
 import org.eclipse.jetty.security.SpnegoLoginService;
 import org.eclipse.jetty.security.SpnegoUserIdentity;
@@ -156,7 +157,9 @@ public class SpnegoAuthenticator extends SSOAuthenticator {
                 ZimbraPrincipal zimbraPrincipal = new ZimbraPrincipal(user.getName(), acct);
                 String clientName = ((SpnegoUserPrincipal)user).getName();
                 String role = clientName.substring(clientName.indexOf('@') + 1);
-                SpnegoUserIdentity spnegoUserIdentity = new SpnegoUserIdentity(identity.getSubject(), zimbraPrincipal, Arrays.asList(role));
+                String[] roles = new String[] {role};
+                DefaultUserIdentity defaultUserIdentity = new DefaultUserIdentity(identity.getSubject(), zimbraPrincipal, roles);
+                SpnegoUserIdentity spnegoUserIdentity = new SpnegoUserIdentity(identity.getSubject(), zimbraPrincipal, defaultUserIdentity);
                 Authentication authentication = new UserAuthentication(getAuthType(), spnegoUserIdentity);
                 request.setAuthentication(authentication);
                 response.addHeader(HttpHeader.WWW_AUTHENTICATE.toString(), HttpHeader.NEGOTIATE.toString() + " " + ((SpnegoUserPrincipal)user).getToken());

@@ -22,11 +22,10 @@ import java.security.Principal;
 import javax.security.auth.Subject;
 import javax.servlet.ServletRequest;
 
+import org.eclipse.jetty.security.AbstractLoginService;
 import org.eclipse.jetty.security.DefaultIdentityService;
 import org.eclipse.jetty.security.IdentityService;
 import org.eclipse.jetty.security.LoginService;
-import org.eclipse.jetty.security.MappedLoginService.KnownUser;
-import org.eclipse.jetty.security.MappedLoginService.RolePrincipal;
 import org.eclipse.jetty.server.UserIdentity;
 import org.eclipse.jetty.util.security.Credential;
 
@@ -125,11 +124,11 @@ public class ZimbraLoginService implements LoginService {
         // only need 'user' role for current implementation protecting
         // /zimbra/downloads - expand to admin if needed later
         String roleName = "user";
-        Principal userPrincipal = new KnownUser(userName, credential);
+        Principal userPrincipal = new AbstractLoginService.UserPrincipal(userName, credential);
         Subject subject = new Subject();
         subject.getPrincipals().add(userPrincipal);
         subject.getPrivateCredentials().add(credential);
-        subject.getPrincipals().add(new RolePrincipal(roleName));
+        subject.getPrincipals().add(new AbstractLoginService.RolePrincipal(roleName));
         subject.setReadOnly();
 
         UserIdentity identity = identityService.newUserIdentity(subject,
