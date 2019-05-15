@@ -3396,7 +3396,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      * @param is the input stream to post
      * @param closeIs whether to close the input stream when done
      * @param length length of inputstream, or 0/-1 if length is unknown.
-     * @param contentType optional content-type header value (defaults to "application/octect-stream")
+     * @param contentType optional content-type header value (defaults to "binary")
      * @param ignoreAndContinueOnError if true, set optional ignore=1 query string parameter
      * @param preserveAlarms if true, set optional preserveAlarms=1 query string parameter
      * @param msecTimeout connection timeout in milliseconds, or <tt>-1</tt> for no timeout
