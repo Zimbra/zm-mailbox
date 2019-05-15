@@ -929,7 +929,6 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
                 if (attendeeAvailability.getFreeBusyView() != null) {
                     	String fbResponseViewType = attendeeAvailability.getFreeBusyView().getFreeBusyViewType().get(0);
                     	String emailAddress = attendees.getMailboxData().get(i).getEmail().getAddress();
-                    	String name = attendees.getMailboxData().get(i).getEmail().getName();
                     	ZimbraLog.fb.debug("For user :%s free busy response type received is : %s", emailAddress, fbResponseViewType);
                 	
                     if (re.email == emailAddress) {
@@ -939,7 +938,7 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
                                 attendeeAvailability.getResponseMessage().getResponseCode(),
                                 attendeeAvailability.getResponseMessage().getMessageText());
                            
-                            FreeBusy npFreeBusy = FreeBusy.nodataFreeBusy(name, startTime, endTime);
+                            FreeBusy npFreeBusy = FreeBusy.nodataFreeBusy(emailAddress, startTime, endTime);
                             ret.add(npFreeBusy);
                             if (attendeeAvailability.getResponseMessage().getResponseCode().equals(ResponseCodeType.ERROR_NO_FREE_BUSY_ACCESS)) {
                                 	npFreeBusy.mList.getHead().hasPermission = false;
@@ -964,7 +963,7 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
                         // Parsing Detailed fb view response
                         if ("DetailedMerged".equals(fbResponseViewType) || "FreeBusyMerged".equals(fbResponseViewType)) {
 
-                            parseDetailedFreeBusyResponse(name, startTime, endTime, attendeeAvailability, userIntervals);
+                            parseDetailedFreeBusyResponse(emailAddress, startTime, endTime, attendeeAvailability, userIntervals);
                             ret.addAll(userIntervals);
                         } else {  // No FreeBusy view information available. returning nodata freebusy in response
 
