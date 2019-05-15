@@ -79,6 +79,9 @@ public final class RedissonClientHolder {
         clusterServersConfig.setRetryInterval(LC.redis_retry_interval.intValue());
         clusterServersConfig.setTimeout(LC.redis_connection_timeout.intValue());
         clusterServersConfig.setRetryAttempts(LC.redis_num_retries.intValue());
+        clusterServersConfig.setKeepAlive(LC.redis_keep_alive.booleanValue());
+        clusterServersConfig.setTcpNoDelay(LC.redis_tcp_no_delay.booleanValue());
+        clusterServersConfig.setPingConnectionInterval(LC.redis_ping_connection_interval_millis.intValue());
         return new RedissonRetryClient(Redisson.create(config));
     }
 
@@ -97,6 +100,9 @@ public final class RedissonClientHolder {
         singleServer.setRetryInterval(LC.redis_retry_interval.intValue());
         singleServer.setTimeout(LC.redis_connection_timeout.intValue());
         singleServer.setRetryAttempts(LC.redis_num_retries.intValue());
+        singleServer.setKeepAlive(LC.redis_keep_alive.booleanValue());
+        singleServer.setTcpNoDelay(LC.redis_tcp_no_delay.booleanValue());
+        singleServer.setPingConnectionInterval(LC.redis_ping_connection_interval_millis.intValue());
         return new RedissonRetryClient(Redisson.create(config));
     }
 

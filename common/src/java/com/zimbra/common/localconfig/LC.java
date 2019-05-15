@@ -1284,6 +1284,15 @@ public final class LC {
     public static final KnownKey redis_retry_interval = KnownKey.newKey(3000);
 
     @Supported
+    public static final KnownKey redis_ping_connection_interval_millis = KnownKey.newKey(10000);
+
+    @Supported
+    public static final KnownKey redis_keep_alive = KnownKey.newKey(true);
+
+    @Supported
+    public static final KnownKey redis_tcp_no_delay = KnownKey.newKey(true);
+
+    @Supported
     public static final KnownKey redis_num_lock_channels = KnownKey.newKey(50);
 
     @Supported
