@@ -86,7 +86,9 @@ public class RedisLockChannel implements MessageListener<String> {
     }
 
     public void remove(QueuedLockRequest waitingLock) {
-        getQueue(waitingLock.getAccountId()).remove(waitingLock);
+        if (getQueue(waitingLock.getAccountId()).remove(waitingLock) && ZimbraLog.mailboxlock.isTraceEnabled()) {
+            ZimbraLog.mailboxlock.trace("removed %s from lock queue", waitingLock);
+        }
     }
 
     public LockResponse waitForUnlock(QueuedLockRequest waitingLock, long timeoutMillis) throws ServiceException {

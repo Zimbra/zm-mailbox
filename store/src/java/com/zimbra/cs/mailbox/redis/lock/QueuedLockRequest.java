@@ -62,7 +62,7 @@ public class QueuedLockRequest {
                     if (ZimbraLog.mailboxlock.isTraceEnabled()) {
                         ZimbraLog.mailboxlock.trace("acquired semaphore for %s", lock);
                     }
-                    LockResponse resp = callback.attemptLock(timingContext);
+                    LockResponse resp = callback.attemptLock(this, timingContext);
                     if (resp.success()) {
                         return resp;
                     } else {
@@ -115,7 +115,7 @@ public class QueuedLockRequest {
 
     @FunctionalInterface
     static interface LockCallback {
-        public LockResponse attemptLock(LockTimingContext context) throws ServiceException;
+        public LockResponse attemptLock(QueuedLockRequest waitingLock, LockTimingContext context) throws ServiceException;
     }
 
 }

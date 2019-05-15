@@ -105,8 +105,13 @@ public abstract class RedisLock {
     }
 
     public LockResponse lock(boolean skipQueue) throws ServiceException {
-        QueuedLockRequest waitingLock = lockChannel.add(this, (context) -> {
-            LockResponse response = tryAcquire();
+        QueuedLockRequest waitingLock = lockChannel.add(this, (queuedLock, context) -> {
+            LockResponse response;
+            try {
+                response = tryAcquire();
+            } catch (Exception e) {
+                throw ServiceException.LOCK_FAILED(String.format("exception encountered trying to acquire %s", queuedLock), e);
+            }
             if (!response.isValid()) {
                 throw ServiceException.LOCK_FAILED("invalid redis lock response", null);
             }
@@ -125,7 +130,13 @@ public abstract class RedisLock {
             return response;
         }, skipQueue);
         if (waitingLock.canTryAcquireNow()) {
-            LockResponse response = tryAcquire();
+            LockResponse response;
+            try {
+                response = tryAcquire();
+            } catch (Exception e) {
+                lockChannel.remove(waitingLock);
+                throw ServiceException.LOCK_FAILED(String.format("exception encountered trying to acquire %s", waitingLock), e);
+            }
             if (!response.isValid()) {
                 throw ServiceException.LOCK_FAILED("invalid redis lock response", null);
             }
