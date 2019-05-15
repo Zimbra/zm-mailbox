@@ -2508,7 +2508,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      * @return the attachment id
      */
     public String uploadAttachment(String name, byte[] content, String contentType, int msTimeout) throws ServiceException {
-       
+
         MultipartEntityBuilder builder = MultipartEntityBuilder.create();
         builder.addBinaryBody("upfile",content, ContentType.create(contentType), name);
         return uploadAttachments(builder, msTimeout);
@@ -2542,7 +2542,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         ByteArrayBody part = new ByteArrayBody(content, ContentType.create(contentType), filename);
         return part;
     }
-    
+
     /**
      * Uploads HTTP post parts to <tt>FileUploadServlet</tt>.
      * @return the attachment id
@@ -2617,7 +2617,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             if (mCsrfToken != null) {
                 post.addHeader(Constants.CSRF_TOKEN, mCsrfToken);
             }
-        
+
             HttpResponse response = HttpClientUtil.executeMethod(client, post);
             statusCode = response.getStatusLine().getStatusCode();
 
@@ -2674,7 +2674,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         clientBuilder.setDefaultRequestConfig(reqConfig);
         return clientBuilder.build();
     }
-    
+
     public HttpClientBuilder getHttpClientBuilder(URI uri) {
         boolean isAdmin = uri.getPort() == LC.zimbra_admin_service_port.intValue();
         BasicCookieStore initialState = HttpClientUtil.newHttpState(getAuthToken(), uri.getHost(), isAdmin);
@@ -3267,7 +3267,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     throws ServiceException {
         HttpGet get = null;
         try {
-           
+
             get = new HttpGet(uri.toString());
             HttpClientBuilder clientBuilder = getHttpClientBuilder(uri);
             if (msecTimeout > -1) {
@@ -3404,7 +3404,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      * @param is the input stream to post
      * @param closeIs whether to close the input stream when done
      * @param length length of inputstream, or 0/-1 if length is unknown.
-     * @param contentType optional content-type header value (defaults to "application/octect-stream")
+     * @param contentType optional content-type header value (defaults to "binary")
      * @param ignoreAndContinueOnError if true, set optional ignore=1 query string parameter
      * @param preserveAlarms if true, set optional preserveAlarms=1 query string parameter
      * @param msecTimeout connection timeout in milliseconds, or <tt>-1</tt> for no timeout
@@ -3442,9 +3442,9 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             clientBuilder.setRetryHandler(new InputStreamRequestHttpRetryHandler());
             HttpClient client = clientBuilder.build();
             int statusCode;
-      
+
             MultipartEntityBuilder builder = MultipartEntityBuilder.create();
-            builder.addBinaryBody("upfile", is, ContentType.create(contentType != null ? contentType: "application/octet-stream"), null);
+            builder.addBinaryBody("upfile", is, ContentType.DEFAULT_BINARY, "file");
             HttpEntity httpEntity = builder.build();
             post.setEntity(httpEntity);
             HttpResponse response = HttpClientUtil.executeMethod(client, post);
