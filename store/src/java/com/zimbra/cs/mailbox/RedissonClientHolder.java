@@ -18,6 +18,7 @@ package com.zimbra.cs.mailbox;
 
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
+import org.redisson.codec.JsonJacksonCodec;
 import org.redisson.config.ClusterServersConfig;
 import org.redisson.config.Config;
 import org.redisson.config.SingleServerConfig;
@@ -110,6 +111,7 @@ public final class RedissonClientHolder {
         Config config = new Config();
         config.setExecutor(pool.getExecutorService());
         config.setNettyThreads(LC.redis_netty_threads.intValue());
+        config.setCodec(new JsonJacksonCodec());
         return config;
     }
 

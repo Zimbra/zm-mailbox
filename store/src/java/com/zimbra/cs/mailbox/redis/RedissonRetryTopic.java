@@ -43,13 +43,6 @@ public class RedissonRetryTopic extends RedissonRetryDecorator<RTopic> implement
         return runCommand(() -> redissonObject.addListener(listener));
     }
 
-
-    @Override
-    public void removeListener(int listenerId) {
-        runCommand(() -> { redissonObject.removeListener(listenerId); return null; });
-
-    }
-
     @Override
     public void removeAllListeners() {
         runCommand(() -> { redissonObject.removeAllListeners(); return null; });
@@ -63,5 +56,36 @@ public class RedissonRetryTopic extends RedissonRetryDecorator<RTopic> implement
     @Override
     public RFuture<Integer> addListenerAsync(StatusListener listener) {
         return runCommand(() -> redissonObject.addListenerAsync(listener));
+    }
+
+    @Override
+    public RFuture<Long> countSubscribersAsync() {
+        return runCommand(() -> redissonObject.countSubscribersAsync());
+    }
+
+    @Override
+    public RFuture<Void> removeListenerAsync(Integer... arg0) {
+        return runCommand(() -> redissonObject.removeListenerAsync(arg0));
+    }
+
+    @Override
+    public RFuture<Void> removeListenerAsync(MessageListener<?> arg0) {
+        return runCommand(() -> redissonObject.removeListenerAsync(arg0));
+    }
+
+    @Override
+    public int countListeners() {
+        return runCommand(() -> redissonObject.countListeners());
+    }
+
+    @Override
+    public long countSubscribers() {
+        return runCommand(() -> redissonObject.countSubscribers());
+    }
+
+    @Override
+    public void removeListener(Integer... arg0) {
+        runCommand(() -> { redissonObject.removeListener(arg0); return null; });
+
     }
 }

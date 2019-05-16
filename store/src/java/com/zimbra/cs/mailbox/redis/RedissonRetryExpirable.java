@@ -3,6 +3,7 @@ package com.zimbra.cs.mailbox.redis;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
+import org.redisson.api.ObjectListener;
 import org.redisson.api.RExpirable;
 import org.redisson.api.RFuture;
 import org.redisson.client.codec.Codec;
@@ -231,5 +232,36 @@ public abstract class RedissonRetryExpirable<R extends RExpirable> extends Redis
     @Override
     public RFuture<Void> restoreAsync(byte[] arg0, long arg1, TimeUnit arg2) {
         return runCommand(() -> redissonObject.restoreAsync(arg0, arg1, arg2));
+    }
+
+    @Override
+    public int addListener(ObjectListener arg0) {
+        return runCommand(() -> redissonObject.addListener(arg0));
+    }
+
+    @Override
+    public void removeListener(int arg0) {
+        runCommand(() -> { redissonObject.removeListener(arg0); return null; });
+
+    }
+
+    @Override
+    public long sizeInMemory() {
+        return runCommand(() -> redissonObject.sizeInMemory());
+    }
+
+    @Override
+    public RFuture<Integer> addListenerAsync(ObjectListener arg0) {
+        return runCommand(() -> redissonObject.addListenerAsync(arg0));
+    }
+
+    @Override
+    public RFuture<Void> removeListenerAsync(int arg0) {
+        return runCommand(() -> redissonObject.removeListenerAsync(arg0));
+    }
+
+    @Override
+    public RFuture<Long> sizeInMemoryAsync() {
+        return runCommand(() -> redissonObject.sizeInMemoryAsync());
     }
 }

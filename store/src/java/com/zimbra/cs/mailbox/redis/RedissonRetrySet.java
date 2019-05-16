@@ -4,9 +4,14 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 
+import org.redisson.api.RCountDownLatch;
 import org.redisson.api.RFuture;
 import org.redisson.api.RLock;
+import org.redisson.api.RPermitExpirableSemaphore;
+import org.redisson.api.RReadWriteLock;
+import org.redisson.api.RSemaphore;
 import org.redisson.api.RSet;
 import org.redisson.api.SortOrder;
 import org.redisson.api.mapreduce.RCollectionMapReduce;
@@ -446,5 +451,45 @@ public class RedissonRetrySet<V> extends RedissonRetryExpirable<RSet<V>> impleme
     @Override
     public Set<V> readIntersection(String... names) {
         return runCommand(() -> redissonObject.readIntersection(names));
+    }
+
+    @Override
+    public RCountDownLatch getCountDownLatch(V arg0) {
+        return runCommand(() -> redissonObject.getCountDownLatch(arg0));
+    }
+
+    @Override
+    public RLock getFairLock(V arg0) {
+        return runCommand(() -> redissonObject.getFairLock(arg0));
+    }
+
+    @Override
+    public RPermitExpirableSemaphore getPermitExpirableSemaphore(V arg0) {
+        return runCommand(() -> redissonObject.getPermitExpirableSemaphore(arg0));
+    }
+
+    @Override
+    public RReadWriteLock getReadWriteLock(V arg0) {
+        return runCommand(() -> redissonObject.getReadWriteLock(arg0));
+    }
+
+    @Override
+    public RSemaphore getSemaphore(V arg0) {
+        return runCommand(() -> redissonObject.getSemaphore(arg0));
+    }
+
+    @Override
+    public Stream<V> stream(int arg0) {
+        return runCommand(() -> redissonObject.stream(arg0));
+    }
+
+    @Override
+    public Stream<V> stream(String arg0) {
+        return runCommand(() -> redissonObject.stream(arg0));
+    }
+
+    @Override
+    public Stream<V> stream(String arg0, int arg1) {
+        return runCommand(() -> redissonObject.stream(arg0, arg1));
     }
 }

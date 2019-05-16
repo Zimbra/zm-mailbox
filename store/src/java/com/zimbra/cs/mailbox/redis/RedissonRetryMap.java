@@ -4,10 +4,13 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
+import org.redisson.api.RCountDownLatch;
 import org.redisson.api.RFuture;
 import org.redisson.api.RLock;
 import org.redisson.api.RMap;
+import org.redisson.api.RPermitExpirableSemaphore;
 import org.redisson.api.RReadWriteLock;
+import org.redisson.api.RSemaphore;
 import org.redisson.api.mapreduce.RMapReduce;
 
 public class RedissonRetryMap<K, V> extends RedissonRetryExpirable<RMap<K, V>> implements RMap<K, V> {
@@ -351,5 +354,25 @@ public class RedissonRetryMap<K, V> extends RedissonRetryExpirable<RMap<K, V>> i
     @Override
     public void putAll(Map<? extends K, ? extends V> map, int batchSize) {
         runCommand(() -> { redissonObject.putAll(map, batchSize); return null; });
+    }
+
+    @Override
+    public RCountDownLatch getCountDownLatch(K arg0) {
+        return runCommand(() -> redissonObject.getCountDownLatch(arg0));
+    }
+
+    @Override
+    public RLock getFairLock(K arg0) {
+        return runCommand(() -> redissonObject.getFairLock(arg0));
+    }
+
+    @Override
+    public RPermitExpirableSemaphore getPermitExpirableSemaphore(K arg0) {
+        return runCommand(() -> redissonObject.getPermitExpirableSemaphore(arg0));
+    }
+
+    @Override
+    public RSemaphore getSemaphore(K arg0) {
+        return runCommand(() -> redissonObject.getSemaphore(arg0));
     }
 }

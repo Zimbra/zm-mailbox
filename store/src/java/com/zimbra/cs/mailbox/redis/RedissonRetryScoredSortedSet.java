@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 import org.redisson.api.RFuture;
 import org.redisson.api.RScoredSortedSet;
@@ -825,5 +826,45 @@ public class RedissonRetryScoredSortedSet<V> extends RedissonRetryExpirable<RSco
     @Override
     public int union(org.redisson.api.RScoredSortedSet.Aggregate aggregate, Map<String, Double> nameWithWeight) {
         return runCommand(() -> redissonObject.union(aggregate, nameWithWeight));
+    }
+
+    @Override
+    public RFuture<V> takeFirstAsync() {
+        return runCommand(() -> redissonObject.takeFirstAsync());
+    }
+
+    @Override
+    public RFuture<V> takeLastAsync() {
+        return runCommand(() -> redissonObject.takeLastAsync());
+    }
+
+    @Override
+    public Stream<V> stream() {
+        return runCommand(() -> redissonObject.stream());
+    }
+
+    @Override
+    public Stream<V> stream(String arg0) {
+        return runCommand(() -> redissonObject.stream(arg0));
+    }
+
+    @Override
+    public Stream<V> stream(int arg0) {
+        return runCommand(() -> redissonObject.stream(arg0));
+    }
+
+    @Override
+    public Stream<V> stream(String arg0, int arg1) {
+        return runCommand(() -> redissonObject.stream(arg0, arg1));
+    }
+
+    @Override
+    public V takeFirst() {
+        return runCommand(() -> redissonObject.takeFirst());
+    }
+
+    @Override
+    public V takeLast() {
+        return runCommand(() -> redissonObject.takeLast());
     }
 }
