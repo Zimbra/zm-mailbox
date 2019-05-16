@@ -74,16 +74,23 @@ public class RedisItemCache extends MapItemCache<String> {
         markItemAccessed(item.getId());
     }
 
+    /* Change this if item serialization algorithm changes. */
+    private String currVersionPrefix = "%v1;";
+
     @Override
     protected String toCacheValue(MailItem item) {
-        return item.serializeUnderlyingData().toString();
+        return currVersionPrefix + item.serializeUnderlyingData().toString();
     }
 
     @Override
     protected MailItem fromCacheValue(String value) {
+        if (value == null || !value.startsWith(currVersionPrefix)) {
+            ZimbraLog.cache.debug("Dropping old cache value for mail item '%s'", value);
+            return null;
+        }
         UnderlyingData data = new UnderlyingData();
         try {
-            data.deserialize(new Metadata(value));
+            data.deserialize(new Metadata(value.substring(currVersionPrefix.length())));
             return MailItem.constructItem(mbox, data, true);
         } catch (ServiceException e) {
             ZimbraLog.cache.error("unable to get MailItem from Redis cache for account %s", mbox.getAccountId());
@@ -97,11 +104,11 @@ public class RedisItemCache extends MapItemCache<String> {
             return null;
         }
         String encoded = folderTagBucket.get();
-        if (Strings.isNullOrEmpty(encoded)) {
+        if (encoded == null || !encoded.startsWith(currVersionPrefix)) {
             return null;
         }
         try {
-            return new Metadata(encoded);
+            return new Metadata(encoded.substring(currVersionPrefix.length()));
         } catch (ServiceException e) {
             ZimbraLog.cache.error("unable to deserialize Folder/Tag metadata from Redis", e);
             return null;
@@ -143,7 +150,7 @@ public class RedisItemCache extends MapItemCache<String> {
     @Override
     protected void cacheFoldersTagsMeta(Metadata folderTagMeta) {
         if (LC.redis_cache_synchronize_folder_tag_snapshot.booleanValue()) {
-            folderTagBucket.set(folderTagMeta.toString());
+            folderTagBucket.set(currVersionPrefix + folderTagMeta.toString());
         }
     }
 
