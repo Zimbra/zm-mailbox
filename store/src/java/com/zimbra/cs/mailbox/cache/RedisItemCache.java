@@ -29,6 +29,9 @@ import com.zimbra.cs.mailbox.redis.RedisUtils;
 
 public class RedisItemCache extends MapItemCache<String> {
 
+    /* Change this if item serialization algorithm changes. */
+    private String currVersionPrefix = "%v1;";
+
     private RBucket<String> folderTagBucket;
 
     //cache that stores items locally over the course of a transaction, so multiple requests
@@ -74,9 +77,6 @@ public class RedisItemCache extends MapItemCache<String> {
         markItemAccessed(item.getId());
     }
 
-    /* Change this if item serialization algorithm changes. */
-    private String currVersionPrefix = "%v1;";
-
     @Override
     protected String toCacheValue(MailItem item) {
         return currVersionPrefix + item.serializeUnderlyingData().toString();
@@ -116,6 +116,13 @@ public class RedisItemCache extends MapItemCache<String> {
     }
 
     @Override
+    protected void cacheFoldersTagsMeta(Metadata folderTagMeta) {
+        if (LC.redis_cache_synchronize_folder_tag_snapshot.booleanValue()) {
+            folderTagBucket.set(currVersionPrefix + folderTagMeta.toString());
+        }
+    }
+
+    @Override
     public void flush() {
         localCache.clear();
     }
@@ -145,13 +152,6 @@ public class RedisItemCache extends MapItemCache<String> {
         }
         super.clear();
         lruCache.clear();
-    }
-
-    @Override
-    protected void cacheFoldersTagsMeta(Metadata folderTagMeta) {
-        if (LC.redis_cache_synchronize_folder_tag_snapshot.booleanValue()) {
-            folderTagBucket.set(currVersionPrefix + folderTagMeta.toString());
-        }
     }
 
     public static class Factory extends LocalItemCache.Factory {
