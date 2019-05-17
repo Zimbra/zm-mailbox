@@ -18,11 +18,11 @@
 package com.zimbra.cs.mailbox.redis.lock;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import org.redisson.api.RTopic;
@@ -40,7 +40,7 @@ import com.zimbra.cs.mailbox.redis.lock.RedisLock.LockResponse;
 
 public class RedisLockChannel implements MessageListener<String> {
 
-    private Map<String, LockQueue> waitingLocksQueues = new HashMap<>();
+    private Map<String, LockQueue> waitingLocksQueues = new ConcurrentHashMap<>();
     private boolean isActive = false;
     private RedisKey channelName;
     private RTopic topic;
