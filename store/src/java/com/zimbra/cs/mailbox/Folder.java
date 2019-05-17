@@ -590,7 +590,7 @@ public class Folder extends MailItem implements FolderStore, SharedState {
     }
 
     private Folder getParentFolder()  {
-        return parentLocator.getParent();
+        return parentLocator == null ? null : parentLocator.getParent();
     }
 
     /**

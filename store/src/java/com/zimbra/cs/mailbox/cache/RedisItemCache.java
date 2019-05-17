@@ -29,6 +29,9 @@ import com.zimbra.cs.mailbox.redis.RedisUtils;
 
 public class RedisItemCache extends MapItemCache<String> {
 
+    /* Change this if item serialization algorithm changes. */
+    private String currVersionPrefix = "%v1;";
+
     private RBucket<String> folderTagBucket;
 
     //cache that stores items locally over the course of a transaction, so multiple requests
@@ -76,14 +79,18 @@ public class RedisItemCache extends MapItemCache<String> {
 
     @Override
     protected String toCacheValue(MailItem item) {
-        return item.serializeUnderlyingData().toString();
+        return currVersionPrefix + item.serializeUnderlyingData().toString();
     }
 
     @Override
     protected MailItem fromCacheValue(String value) {
+        if (value == null || !value.startsWith(currVersionPrefix)) {
+            ZimbraLog.cache.debug("Dropping old cache value for mail item '%s'", value);
+            return null;
+        }
         UnderlyingData data = new UnderlyingData();
         try {
-            data.deserialize(new Metadata(value));
+            data.deserialize(new Metadata(value.substring(currVersionPrefix.length())));
             return MailItem.constructItem(mbox, data, true);
         } catch (ServiceException e) {
             ZimbraLog.cache.error("unable to get MailItem from Redis cache for account %s", mbox.getAccountId());
@@ -97,14 +104,21 @@ public class RedisItemCache extends MapItemCache<String> {
             return null;
         }
         String encoded = folderTagBucket.get();
-        if (Strings.isNullOrEmpty(encoded)) {
+        if (encoded == null || !encoded.startsWith(currVersionPrefix)) {
             return null;
         }
         try {
-            return new Metadata(encoded);
+            return new Metadata(encoded.substring(currVersionPrefix.length()));
         } catch (ServiceException e) {
             ZimbraLog.cache.error("unable to deserialize Folder/Tag metadata from Redis", e);
             return null;
+        }
+    }
+
+    @Override
+    protected void cacheFoldersTagsMeta(Metadata folderTagMeta) {
+        if (LC.redis_cache_synchronize_folder_tag_snapshot.booleanValue()) {
+            folderTagBucket.set(currVersionPrefix + folderTagMeta.toString());
         }
     }
 
@@ -138,13 +152,6 @@ public class RedisItemCache extends MapItemCache<String> {
         }
         super.clear();
         lruCache.clear();
-    }
-
-    @Override
-    protected void cacheFoldersTagsMeta(Metadata folderTagMeta) {
-        if (LC.redis_cache_synchronize_folder_tag_snapshot.booleanValue()) {
-            folderTagBucket.set(folderTagMeta.toString());
-        }
     }
 
     public static class Factory extends LocalItemCache.Factory {

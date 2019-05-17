@@ -431,6 +431,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             data.name = this.name;
             data.unreadCount = this.unreadCount;
             data.eventFlag = this.eventFlag;
+            // TODO: What about smartFolders?  Currently not supported though.
             return data;
         }
 
@@ -461,6 +462,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         }
 
         private static final String FN_ID           = "id";
+        private static final String FN_UUID         = "uuid";
         private static final String FN_TYPE         = "tp";
         private static final String FN_PARENT_ID    = "pid";
         private static final String FN_FOLDER_ID    = "fid";
@@ -503,8 +505,10 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             meta.put(FN_METADATA, metadata);
             meta.put(FN_MOD_METADATA, modMetadata);
             meta.put(FN_MOD_CONTENT, modContent);
+            meta.put(FN_UUID, uuid);
             meta.put(FN_DATE_CHANGED, dateChanged);
             meta.put(FN_EVENT_FLAG, eventFlag);
+            // TODO: What about smartFolders?  Currently not supported though.
             return meta;
         }
 
@@ -529,8 +533,10 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             this.metadata = meta.get(FN_METADATA, null);
             this.modMetadata = (int) meta.getLong(FN_MOD_METADATA, 0);
             this.modContent = (int) meta.getLong(FN_MOD_CONTENT, 0);
+            this.uuid = meta.get(FN_UUID, null);
             this.dateChanged = (int) meta.getLong(FN_DATE_CHANGED, 0);
             this.eventFlag = (byte) meta.getInt(FN_EVENT_FLAG, 0);
+            // TODO: What about smartFolders?  Currently not supported though.
         }
 
         @Override
@@ -3778,9 +3784,11 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
     private static final String CN_METADATA_VERSION = "meta_version";
     private static final String CN_VERSION      = "version";
     private static final String CN_IMAP_ID      = "imap_id";
+    private static final String CN_UUID         = "uuid";
 
     protected MoreObjects.ToStringHelper appendCommonMembers(MoreObjects.ToStringHelper helper) {
         UnderlyingData data = state.getUnderlyingData();
+        helper.omitNullValues();
         helper.add(CN_ID, mId);
         helper.add(CN_TYPE, type);
         if (data.name != null) {
@@ -3804,17 +3812,14 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         if (state.getColor() != null) {
             helper.add(CN_COLOR, color.getMappedColor());
         }
-        if (data.getSubject() != null) {
-            helper.add(CN_SUBJECT, data.getSubject());
-        }
-        if (getDigest() != null) {
-            helper.add(CN_BLOB_DIGEST, state.getBlobDigest());
-        }
+        helper.add(CN_SUBJECT, data.getSubject());
+        helper.add(CN_BLOB_DIGEST, getDigest());
         if (data.imapId > 0) {
             helper.add(CN_IMAP_ID, data.imapId);
         }
         helper.add(CN_DATE, data.date);
         helper.add(CN_REVISION, data.modContent);
+        helper.add(CN_UUID, uuid);
         return helper;
     }
 
