@@ -649,4 +649,14 @@ public class RedissonRetryClient implements RedissonClient {
     public <K, V> RStream<K, V> getStream(String arg0, Codec arg1) {
         throw new UnsupportedOperationException();
     }
+
+    @Override
+    public RLock getMultiLock(RLock... arg0) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public RLock getRedLock(RLock... arg0) {
+        throw new UnsupportedOperationException();
+    }
 }

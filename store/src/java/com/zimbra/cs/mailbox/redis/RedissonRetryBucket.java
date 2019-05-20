@@ -116,4 +116,16 @@ public class RedissonRetryBucket<V> extends RedissonRetryExpirable<RBucket<V>> i
     public V getAndSet(V newValue) {
         return runCommand(() -> redissonObject.getAndSet(newValue));
     }
+
+
+    @Override
+    public RFuture<V> getAndSetAsync(V arg0, long arg1, TimeUnit arg2) {
+        return runCommand(() -> redissonObject.getAndSetAsync(arg0, arg1, arg2));
+    }
+
+
+    @Override
+    public V getAndSet(V arg0, long arg1, TimeUnit arg2) {
+        return runCommand(() -> redissonObject.getAndSet(arg0, arg1, arg2));
+    }
 }

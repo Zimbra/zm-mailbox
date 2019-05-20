@@ -6,7 +6,7 @@ import java.util.concurrent.locks.Condition;
 import org.redisson.api.RFuture;
 import org.redisson.api.RLock;
 
-public class RedissonRetryLock extends RedissonRetryExpirable<RLock> implements RLock {
+public class RedissonRetryLock extends RedissonRetryDecorator<RLock> implements RLock {
 
     public RedissonRetryLock(RedissonInitializer<RLock> lockInitializer, RedissonRetryClient client) {
         super(lockInitializer, client);
@@ -142,5 +142,30 @@ public class RedissonRetryLock extends RedissonRetryExpirable<RLock> implements 
     @Override
     public RFuture<Integer> getHoldCountAsync() {
         return runCommand(() -> redissonObject.getHoldCountAsync());
+    }
+
+    @Override
+    public RFuture<Boolean> isLockedAsync() {
+        return runCommand(() -> redissonObject.isLockedAsync());
+    }
+
+    @Override
+    public RFuture<Long> remainTimeToLiveAsync() {
+        return runCommand(() -> redissonObject.remainTimeToLiveAsync());
+    }
+
+    @Override
+    public String getName() {
+        return redissonObject.getName();
+    }
+
+    @Override
+    public boolean isHeldByThread(long arg0) {
+        return runCommand(() -> redissonObject.isHeldByThread(arg0));
+    }
+
+    @Override
+    public long remainTimeToLive() {
+        return runCommand(() -> redissonObject.remainTimeToLive());
     }
 }

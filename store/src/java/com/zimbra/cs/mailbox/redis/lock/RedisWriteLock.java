@@ -52,6 +52,9 @@ public class RedisWriteLock extends RedisLock {
                       "redis.call('hset', KEYS[1], ARGV[2], 1); " +
                       //set the lock hash expiry to the lease time
                       "redis.call('pexpire', KEYS[1], ARGV[1]); " +
+                      //track the uuid of the holder instance in a separate key, with the same expiry
+                      "redis.call('set', KEYS[2] .. ':1', ARGV[4]); " +
+                      "redis.call('pexpire', KEYS[2] .. ':1', ARGV[1]); " +
                       //update id of last worker to acquire a write lock
                       "redis.call('set', last_write_access_key, ARGV[3]); " +
                       //delete the reads_since_last_write set
@@ -61,19 +64,48 @@ public class RedisWriteLock extends RedisLock {
                   "if (mode == 'write') then " +
                       "if (redis.call('hexists', KEYS[1], ARGV[2]) == 1) then " +
                           //if this thread is already holding a write lock, increment the hold count
-                          "redis.call('hincrby', KEYS[1], ARGV[2], 1); " +
+                          "local new_hold_count = redis.call('hincrby', KEYS[1], ARGV[2], 1); " +
                           "local currentExpire = redis.call('pttl', KEYS[1]); " +
                           "redis.call('pexpire', KEYS[1], currentExpire + ARGV[1]); " +
                           "redis.call('set', last_write_access_key, ARGV[3]); " +
                           "redis.call('del', reads_since_last_write_key); " +
+                          //track the uuid of the holder instance in a separate key, with the same expiry
+                          "local uuid_key = KEYS[2] .. ':' .. new_hold_count; " +
+                          "redis.call('set', uuid_key, ARGV[4]); " +
+                          "redis.call('pexpire', uuid_key, ARGV[1]); " +
                           "return {1, last_writer}; " +
                       "end; " +
                     "end;" +
-                     //otherwise, this thread can't obtain the lock, so return the TTL of the lock hash
-                    "return {0, redis.call('pttl', KEYS[1])};";
+                     //can't obtain a write lock, return the TTL of the lock hash and the uuids of client lock instances
+                     "local retvals = {0, redis.call('pttl', KEYS[1])}; " +
+                     "for n, key in ipairs(redis.call('hkeys', KEYS[1])) do " +
+                         "local counter = tonumber(redis.call('hget', KEYS[1], key)); " +
+                         "if type(counter) == 'number' then " +
+                             "for i=counter, 1, -1 do " +
+                                 "local uuid_key; " +
+                                 "if (mode == 'write') then " +
+                                     //client lock uuids are stored in dedicated "{lock name}:{thread}:uuid:{#}" key
+                                     "uuid_key = KEYS[1] .. ':' .. key .. ':uuid:' .. i; " +
+                                 "else " +
+                                     //client lock uuids are stored in "{lock name}:{thread}:rwlock_timeout:{#}" key
+                                     //that is also used to track reader expiration
+                                     "uuid_key = KEYS[1] .. ':' .. key .. ':rwlock_timeout:' .. i; " +
+                                 "end; "+
+                                 "local uuid = redis.call('get', uuid_key); " +
+                                 "if uuid == nil then " +
+                                 //if uuid is unknown, return which thread it is
+                                     "table.insert(retvals, uuid_key .. ':nil'); " +
+                                 "else " +
+                                     "table.insert(retvals, uuid); " +
+                                 "end; " +
+                             "end; " +
+                         "end; " +
+                     "end; " +
+                    "return retvals;";
+
         return execute(script, StringCodec.INSTANCE, RedisLock.LOCK_RESPONSE_CMD,
-            Arrays.<Object>asList(lockName),
-            getLeaseTime(), getThreadLockName(), lockId);
+            Arrays.<Object>asList(lockName, getWriterUuidPrefix()),
+            getLeaseTime(), getThreadLockName(), lockId, uuid);
     }
 
     @Override
@@ -98,6 +130,8 @@ public class RedisWriteLock extends RedisLock {
                     "else " +
                         //decrement the write hold count for this thread
                         "local counter = redis.call('hincrby', KEYS[1], ARGV[3], -1); " +
+                        //delete the client lock uuid
+                        "redis.call('del', KEYS[3] .. ':' .. (counter+1)); " +
                         "if (counter > 0) then " +
                             //if we are still holding write locks, update the TTL on the hash
                             "redis.call('pexpire', KEYS[1], ARGV[2]); " +
@@ -120,8 +154,12 @@ public class RedisWriteLock extends RedisLock {
                 "end; "
                 + "return nil;";
         return execute(script, LongCodec.INSTANCE, RedisCommands.EVAL_BOOLEAN,
-        Arrays.<Object>asList(lockName, lockChannelName),
+        Arrays.<Object>asList(lockName, lockChannelName, getWriterUuidPrefix()),
         getUnlockMsg(), getLeaseTime(), getThreadLockName());
+    }
+
+    private String getWriterUuidPrefix() {
+        return lockName + ":" + getThreadLockName() + ":uuid";
     }
 
     @Override

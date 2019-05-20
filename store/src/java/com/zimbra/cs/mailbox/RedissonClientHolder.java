@@ -18,6 +18,7 @@ package com.zimbra.cs.mailbox;
 
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
+import org.redisson.codec.JsonJacksonCodec;
 import org.redisson.config.ClusterServersConfig;
 import org.redisson.config.Config;
 import org.redisson.config.SingleServerConfig;
@@ -79,6 +80,9 @@ public final class RedissonClientHolder {
         clusterServersConfig.setRetryInterval(LC.redis_retry_interval.intValue());
         clusterServersConfig.setTimeout(LC.redis_connection_timeout.intValue());
         clusterServersConfig.setRetryAttempts(LC.redis_num_retries.intValue());
+        clusterServersConfig.setKeepAlive(LC.redis_keep_alive.booleanValue());
+        clusterServersConfig.setTcpNoDelay(LC.redis_tcp_no_delay.booleanValue());
+        clusterServersConfig.setPingConnectionInterval(LC.redis_ping_connection_interval_millis.intValue());
         return new RedissonRetryClient(Redisson.create(config));
     }
 
@@ -97,6 +101,9 @@ public final class RedissonClientHolder {
         singleServer.setRetryInterval(LC.redis_retry_interval.intValue());
         singleServer.setTimeout(LC.redis_connection_timeout.intValue());
         singleServer.setRetryAttempts(LC.redis_num_retries.intValue());
+        singleServer.setKeepAlive(LC.redis_keep_alive.booleanValue());
+        singleServer.setTcpNoDelay(LC.redis_tcp_no_delay.booleanValue());
+        singleServer.setPingConnectionInterval(LC.redis_ping_connection_interval_millis.intValue());
         return new RedissonRetryClient(Redisson.create(config));
     }
 
@@ -104,6 +111,7 @@ public final class RedissonClientHolder {
         Config config = new Config();
         config.setExecutor(pool.getExecutorService());
         config.setNettyThreads(LC.redis_netty_threads.intValue());
+        config.setCodec(new JsonJacksonCodec());
         return config;
     }
 

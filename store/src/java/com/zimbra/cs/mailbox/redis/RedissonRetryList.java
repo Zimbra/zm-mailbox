@@ -471,4 +471,24 @@ public class RedissonRetryList<V> extends RedissonRetryExpirable<RList<V>> imple
     public boolean remove(Object o, int count) {
         return runCommand(() -> redissonObject.remove(o, count));
     }
+
+    @Override
+    public RFuture<List<V>> rangeAsync(int arg0) {
+        return runCommand(() -> redissonObject.rangeAsync(arg0));
+    }
+
+    @Override
+    public RFuture<List<V>> rangeAsync(int arg0, int arg1) {
+        return runCommand(() -> redissonObject.rangeAsync(arg0, arg1));
+    }
+
+    @Override
+    public List<V> range(int arg0) {
+        return runCommand(() -> redissonObject.range(arg0));
+    }
+
+    @Override
+    public List<V> range(int arg0, int arg1) {
+        return runCommand(() -> redissonObject.range(arg0, arg1));
+    }
 }

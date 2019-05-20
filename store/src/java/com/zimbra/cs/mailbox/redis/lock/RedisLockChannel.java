@@ -18,11 +18,11 @@
 package com.zimbra.cs.mailbox.redis.lock;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import org.redisson.api.RTopic;
@@ -40,7 +40,7 @@ import com.zimbra.cs.mailbox.redis.lock.RedisLock.LockResponse;
 
 public class RedisLockChannel implements MessageListener<String> {
 
-    private Map<String, LockQueue> waitingLocksQueues = new HashMap<>();
+    private Map<String, LockQueue> waitingLocksQueues = new ConcurrentHashMap<>();
     private boolean isActive = false;
     private RedisKey channelName;
     private RTopic topic;
@@ -86,7 +86,9 @@ public class RedisLockChannel implements MessageListener<String> {
     }
 
     public void remove(QueuedLockRequest waitingLock) {
-        getQueue(waitingLock.getAccountId()).remove(waitingLock);
+        if (getQueue(waitingLock.getAccountId()).remove(waitingLock) && ZimbraLog.mailboxlock.isTraceEnabled()) {
+            ZimbraLog.mailboxlock.trace("removed %s from lock queue", waitingLock);
+        }
     }
 
     public LockResponse waitForUnlock(QueuedLockRequest waitingLock, long timeoutMillis) throws ServiceException {
@@ -98,7 +100,13 @@ public class RedisLockChannel implements MessageListener<String> {
     }
 
     @Override
-    public void onMessage(CharSequence channel, String accountId) {
+    public void onMessage(CharSequence channel, String unlockMsg) {
+        String[] parts = unlockMsg.split(":");
+        String accountId = parts[0];
+        String lockUuid = parts[1];
+        if (ZimbraLog.mailboxlock.isTraceEnabled()) {
+            ZimbraLog.mailboxlock.trace("received unlock message for acct=%s, uuid=%s", accountId, lockUuid);
+        }
         List<String> notifiedLockUuids = getQueue(accountId).notifyWaitingLocks();
         if (notifiedLockUuids.size() > 0) {
             if (ZimbraLog.mailboxlock.isTraceEnabled()) {
