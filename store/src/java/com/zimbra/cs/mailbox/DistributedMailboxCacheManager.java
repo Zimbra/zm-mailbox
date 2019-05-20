@@ -59,64 +59,58 @@ public class DistributedMailboxCacheManager extends MailboxCacheManager {
 
     RedissonClient client = RedissonClientHolder.getInstance().getRedissonClient();
 
-	private RBucket<Integer> getRedisBucket(String accountId) {
-		RBucket<Integer> mailboxKeyBucket = client.getBucket(RedisUtils.createAccountRoutedKey(accountId, "MAILBOX_ID"));
-		return mailboxKeyBucket;
-	}
-	
-	@Override
-	public void removeMailboxId(String accountId){
-		RBucket<Integer> mailboxKeyBucket;	
-		mailboxIds.remove(accountId);
-		mailboxKeyBucket = client.getBucket(RedisUtils.createAccountRoutedKey(accountId, "MAILBOX_ID"));
-    	if (mailboxKeyBucket.get() != null) {
-			mailboxKeyBucket.delete();
-		}
-	}
+    private RBucket<Integer> getRedisBucket(String accountId) {
+        RBucket<Integer> mailboxKeyBucket = client.getBucket(RedisUtils.createAccountRoutedKey(accountId, "MAILBOX_ID"));
+        return mailboxKeyBucket;
+    }
 
-	public Integer fetchMailboxKey(String accountId) {
+    @Override
+    public void removeMailboxId(String accountId){
+        RBucket<Integer> mailboxKeyBucket;
+        mailboxIds.remove(accountId);
+        mailboxKeyBucket = client.getBucket(RedisUtils.createAccountRoutedKey(accountId, "MAILBOX_ID"));
+        if (mailboxKeyBucket.get() != null) {
+            mailboxKeyBucket.delete();
+        }
+    }
 
-		getRedisBucket(accountId);
-		Integer mailboxAccID = getRedisBucket(accountId).get();
-		Integer mboxID = null;
-		
-		if (mailboxAccID != null) {
-			return mailboxAccID;
-		}
-		else {	
-			mboxID = getMailboxKeyFromDB(accountId);
-			if (mboxID != null) {
-				getRedisBucket(accountId).set(mboxID);
-			}
-			return mailboxAccID;
-		}
-	}
+    public Integer fetchMailboxKey(String accountId) {
+        Integer mailboxAccID = getRedisBucket(accountId).get();
+        if (mailboxAccID == null) {
+            Integer mboxID = getMailboxKeyFromDB(accountId);
+            if (mboxID != null) {
+                getRedisBucket(accountId).set(mboxID);
+                mailboxAccID = mboxID;
+            }
+        }
+        return mailboxAccID;
+    }
 
-	public Integer getMailboxKeyFromDB(String accountId){
-		Integer mailboxKey = null;
-		DbPool.DbConnection conn = null;
-		try {
-			try {
-				conn = DbPool.getConnection();
-				mailboxKey =  DbMailbox.getMailboxKey(conn, accountId.toLowerCase());
-			} catch (ServiceException e) {
-				ZimbraLog.mailbox.error("fetching mailbox key: %s", accountId, e);
-				throw new CacheManagerException("fetching mailbox key: ", e.getCause());
-			}
-		}finally {
-			DbPool.quietClose(conn);
-		}
-		return mailboxKey;
-	}
+    public Integer getMailboxKeyFromDB(String accountId){
+        Integer mailboxKey = null;
+        DbPool.DbConnection conn = null;
+        try {
+            try {
+                conn = DbPool.getConnection();
+                mailboxKey =  DbMailbox.getMailboxKey(conn, accountId.toLowerCase());
+            } catch (ServiceException e) {
+                ZimbraLog.mailbox.error("fetching mailbox key: %s", accountId, e);
+                throw new CacheManagerException("fetching mailbox key: ", e.getCause());
+            }
+        }finally {
+            DbPool.quietClose(conn);
+        }
+        return mailboxKey;
+    }
 
-	@Override
-	public Integer getMailboxKey(String accountId) {
+    @Override
+    public Integer getMailboxKey(String accountId) {
 
-		if (accountId == null)
-			throw new IllegalArgumentException();
+        if (accountId == null)
+            throw new IllegalArgumentException();
 
-		Integer mailboxKey = null;
-		mailboxKey = fetchMailboxKey(accountId.toLowerCase());
-		return mailboxKey;
-	}
+        Integer mailboxKey = null;
+        mailboxKey = fetchMailboxKey(accountId.toLowerCase());
+        return mailboxKey;
+    }
 }
