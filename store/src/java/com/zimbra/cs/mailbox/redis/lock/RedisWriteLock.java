@@ -92,10 +92,7 @@ public class RedisWriteLock extends RedisLock {
                                      "uuid_key = KEYS[1] .. ':' .. key .. ':rwlock_timeout:' .. i; " +
                                  "end; "+
                                  "local uuid = redis.call('get', uuid_key); " +
-                                 "if uuid == nil then " +
-                                 //if uuid is unknown, return which thread it is
-                                     "table.insert(retvals, uuid_key .. ':nil'); " +
-                                 "else " +
+                                 "if uuid ~= false then " +
                                      "table.insert(retvals, uuid); " +
                                  "end; " +
                              "end; " +
