@@ -137,6 +137,7 @@ import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.account.message.AuthRequest;
@@ -1247,6 +1248,13 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             mTransport.setMaxNotifySeq(0);
             mSize = event.getSize();
             if (root != null) {
+                try {
+                    // skip the cache update if invalid auth/zmailbox instance
+                    mailbox.getAccountId();
+                } catch (ServiceException e) {
+                    ZimbraLog.cache.error("Unable to refresh mailbox item id mappings due to missing auth info.");
+                    return;
+                }
                 mUserRoot = root;
                 addIdMappings(mUserRoot);
             }
