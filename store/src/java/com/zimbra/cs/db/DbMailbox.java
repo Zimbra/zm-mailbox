@@ -865,7 +865,7 @@ public final class DbMailbox {
         }
     }
 
-    public static final int CHANGE_CHECKPOINT_INCREMENT = Zimbra.isAlwaysOn() ? 1 : Math.max(1, LC.zimbra_mailbox_change_checkpoint_frequency.intValue());
+    public static final int CHANGE_CHECKPOINT_INCREMENT = 1;
     public static final int ITEM_CHECKPOINT_INCREMENT   = Zimbra.isAlwaysOn() ? 1 : 20;
     public static final int SEARCH_ID_CHECKPOINT_INCREMENT = Zimbra.isAlwaysOn() ? 1 : 20;
 

@@ -164,9 +164,6 @@ public final class LC {
     @Supported
     public static final KnownKey zimbra_mailbox_galsync_cache = KnownKey.newKey(10000);
 
-    @Supported
-    public static final KnownKey zimbra_mailbox_change_checkpoint_frequency = KnownKey.newKey(100);
-
     @Reloadable
     public static final KnownKey zimbra_mailbox_lock_max_waiting_threads = KnownKey.newKey(15);
 
