@@ -388,6 +388,7 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
         @Override
         public synchronized void lock(MailboxLockContext lockContext) throws ServiceException {
             if (getHoldCount() == 0) {
+                long start = System.currentTimeMillis();
                 if (log.isTraceEnabled()) {
                     log.trace("need to acquire redis lock for %s", this);
                 }
@@ -398,6 +399,11 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
                     ZimbraLog.mailboxlock.warn("unable to acquire in-memory lock after acquiring redis lock!");
                     zRedisLock.unlock();
                     throw e;
+                }
+                if (lockContext.getCaller() != null) {
+                    ZimbraLog.mailboxlock.debug("acquired distributed lock for %s (elapsed=%d)", lockContext.getCaller(), System.currentTimeMillis() - start);
+                } else {
+                    ZimbraLog.mailboxlock.debug("acquired distributed lock (elapsed=%d)", System.currentTimeMillis() - start);
                 }
                 if (!LC.lock_based_cache_invalidation_enabled.booleanValue()) {
                     return;
