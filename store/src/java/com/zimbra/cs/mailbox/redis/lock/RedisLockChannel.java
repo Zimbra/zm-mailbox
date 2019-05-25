@@ -31,6 +31,7 @@ import org.redisson.client.codec.StringCodec;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.RedissonClientHolder;
@@ -63,11 +64,11 @@ public class RedisLockChannel implements MessageListener<String> {
         return waitingLocksQueues.computeIfAbsent(accountId, k -> new LockQueue(accountId));
     }
 
-    public synchronized QueuedLockRequest add(RedisLock lock, QueuedLockRequest.LockCallback callback) {
+    public synchronized QueuedLockRequest add(RedisLock lock, QueuedLockRequest.LockCallback callback) throws ServiceException {
         return add(lock, callback, false);
     }
 
-    public synchronized QueuedLockRequest add(RedisLock lock, QueuedLockRequest.LockCallback callback, boolean skipQueue) {
+    public synchronized QueuedLockRequest add(RedisLock lock, QueuedLockRequest.LockCallback callback, boolean skipQueue) throws ServiceException {
         if (!isActive && waitingLocksQueues.isEmpty()) {
             isActive = true; //lazily activate the channel
             subscribe();
@@ -78,6 +79,8 @@ public class RedisLockChannel implements MessageListener<String> {
         if (skipQueue) {
             lockQueue.addToFront(waitingLock);
             tryAcquireNow = true;
+        } else if (lockQueue.queue.size() >= LC.zimbra_mailbox_lock_max_waiting_threads.intValue()) {
+            throw ServiceException.LOCK_FAILED("too many waiting locks");
         } else {
             tryAcquireNow = lockQueue.add(waitingLock);
         }
