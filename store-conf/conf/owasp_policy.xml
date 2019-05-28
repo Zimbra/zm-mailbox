@@ -66,7 +66,7 @@
   </html>
   <html element="img">
     <attributes>CORE,LANG,align,alt,border,height,hspace,ismap,longdesc,src,usemap,vspace,width,dfsrc,data-mce-src</attributes>
-    <url_protocols>cid,http,https,data</url_protocols>
+    <url_protocols>cid,http,https,data,doc</url_protocols>
   </html>
   <html element="ins">
     <attributes>CORE,LANG,cite</attributes>
