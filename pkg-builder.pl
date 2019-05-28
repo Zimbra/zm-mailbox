@@ -225,6 +225,7 @@ sub stage_zimbra_mbox_war($)
    make_path("$stage_base_dir/opt/zimbra/jetty_base/webapps/service");
    System("cd $stage_base_dir/opt/zimbra/jetty_base/webapps/service && jar -xf @{[getcwd()]}/store/build/service.war");
    cpy_file( "store/conf/web.xml.production", "$stage_base_dir/opt/zimbra/jetty_base/etc/service.web.xml.in" );
+   cpy_file( "store-conf/conf/logback-access.xml", "$stage_base_dir/opt/zimbra/jetty_base/resources/logback-access.xml" );
 
    return ["."];
 }
