@@ -25,11 +25,12 @@ import org.redisson.client.codec.StringCodec;
 import org.redisson.client.protocol.RedisCommands;
 
 import com.google.common.base.MoreObjects.ToStringHelper;
+import com.zimbra.common.mailbox.MailboxLockContext;
 
 public class RedisReadLock extends RedisLock {
 
-    public RedisReadLock(String accountId, String lockBaseName, String lockId) {
-        super(accountId, lockBaseName, lockId);
+    public RedisReadLock(String accountId, String lockBaseName, String lockId, MailboxLockContext lockContext) {
+        super(accountId, lockBaseName, lockId, lockContext);
     }
 
     private String getReadWriteTimeoutNamePrefix() {

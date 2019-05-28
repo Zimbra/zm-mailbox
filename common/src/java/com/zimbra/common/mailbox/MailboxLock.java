@@ -20,7 +20,7 @@ public interface MailboxLock extends AutoCloseable {
      * @return
      * @throws ServiceException
      */
-    void lock(MailboxLockContext lockContext) throws ServiceException;
+    void lock() throws ServiceException;
 
     /* override which doesn't throw any exceptions */
     @Override

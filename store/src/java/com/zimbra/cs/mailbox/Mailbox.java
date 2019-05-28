@@ -9556,19 +9556,34 @@ public class Mailbox implements MailboxStore {
         return folderStores;
     }
 
+    private static String getLockCaller() {
+        StackTraceElement elt = Thread.currentThread().getStackTrace()[3];
+        String[] classNameParts = elt.getClassName().split("\\.");
+        String className = classNameParts[classNameParts.length - 1];
+        return String.format("%s::%s", className, elt.getMethodName());
+    }
+
     @Override
     public MailboxLock getWriteLockAndLockIt() throws ServiceException {
-        return lockFactory.acquiredWriteLock(new MailboxLockContext(this));
+        return getWriteLockAndLockIt(getLockCaller());
+    }
+
+    public MailboxLock getWriteLockAndLockIt(String caller) throws ServiceException {
+        return lockFactory.acquiredWriteLock(new MailboxLockContext(this, caller));
     }
 
     @Override
     public MailboxLock getReadLockAndLockIt() throws ServiceException {
-        MailboxLockContext lockContext = new MailboxLockContext(this);
+        return getReadLockAndLockIt(getLockCaller());
+    }
+
+    public MailboxLock getReadLockAndLockIt(String caller) throws ServiceException {
+        MailboxLockContext lockContext = new MailboxLockContext(this, caller);
         return requiresWriteLock() ? lockFactory.acquiredWriteLock(lockContext) : lockFactory.acquiredReadLock(lockContext);
     }
 
     public boolean isWriteLockedByCurrentThread() throws ServiceException {
-        return lockFactory.writeLock().isWriteLockedByCurrentThread();
+        return lockFactory.writeLock(new MailboxLockContext(this)).isWriteLockedByCurrentThread();
     }
 
     @Override
@@ -9903,11 +9918,11 @@ public class Mailbox implements MailboxStore {
             myCaller = caller;
 
             boolean write = (definitelyWrite || requiresWriteLock());
-            this.lock = write ? lockFactory.writeLock() : lockFactory.readLock();
+            MailboxLockContext lockContext = new MailboxLockContext(Mailbox.this, caller);
+            this.lock = write ? lockFactory.writeLock(lockContext) : lockFactory.readLock(lockContext);
             assert recorder == null || write;
             try {
-                MailboxLockContext lockContext = new MailboxLockContext(Mailbox.this, caller);
-                this.lock.lock(lockContext);
+                this.lock.lock();
                 if (!write && requiresWriteLock()) {
                     //another call must have purged the cache.
                     //the lock.lock() call should have resulted in write lock already

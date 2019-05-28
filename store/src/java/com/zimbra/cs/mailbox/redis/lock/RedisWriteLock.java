@@ -25,11 +25,12 @@ import org.redisson.client.protocol.RedisCommands;
 
 import com.google.common.base.MoreObjects.ToStringHelper;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mailbox.MailboxLockContext;
 
 public class RedisWriteLock extends RedisLock {
 
-    public RedisWriteLock(String accountId, String lockBaseName, String lockId) {
-        super(accountId, lockBaseName, lockId);
+    public RedisWriteLock(String accountId, String lockBaseName, String lockId, MailboxLockContext lockContext) {
+        super(accountId, lockBaseName, lockId, lockContext);
     }
 
     @Override

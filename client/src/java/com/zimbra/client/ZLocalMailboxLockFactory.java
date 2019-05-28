@@ -14,26 +14,26 @@ public class ZLocalMailboxLockFactory implements MailboxLockFactory {
     }
 
     @Override
-    public MailboxLock readLock() {
+    public MailboxLock readLock(MailboxLockContext context) {
         return this.lock;
     }
 
     @Override
-    public MailboxLock writeLock() {
+    public MailboxLock writeLock(MailboxLockContext context) {
         return this.lock;
     }
 
     @Override
     public MailboxLock acquiredWriteLock(MailboxLockContext lockContext) throws ServiceException {
-        MailboxLock myLock = writeLock();
-        myLock.lock(lockContext);
+        MailboxLock myLock = writeLock(lockContext);
+        myLock.lock();
         return myLock;
     }
 
     @Override
     public MailboxLock acquiredReadLock(MailboxLockContext lockContext) throws ServiceException {
-        MailboxLock myLock = readLock();
-        myLock.lock(lockContext);
+        MailboxLock myLock = readLock(lockContext);
+        myLock.lock();
         return myLock;
     }
 
@@ -47,11 +47,11 @@ public class ZLocalMailboxLockFactory implements MailboxLockFactory {
     }
 
     @Override
-    public MailboxLock lock(boolean write) {
+    public MailboxLock lock(MailboxLockContext context, boolean write) {
         if (write) {
-            return writeLock();
+            return writeLock(context);
         }
-        return this.readLock();
+        return this.readLock(context);
     }
 
     @Override
