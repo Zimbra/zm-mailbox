@@ -37,8 +37,8 @@ public class HtmlAttributesBuilder {
 
     public void setUp() {
         attributePolicies.put("src", new SrcAttributePolicy());
-        attributePolicies.put("background", new BackgroundAttributePolicy());
         attributePolicies.put("action", new ActionAttributePolicy());
+        attributePolicies.put("background", new BackgroundAttributePolicy());
         // add any other attribute policies here
     }
 
