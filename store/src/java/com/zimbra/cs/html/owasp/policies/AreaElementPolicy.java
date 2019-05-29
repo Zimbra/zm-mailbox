@@ -21,6 +21,10 @@ import java.util.List;
 
 import org.owasp.html.ElementPolicy;
 
+import com.zimbra.cs.html.owasp.OwaspHtmlSanitizer;
+import java.net.URI;
+import java.net.URISyntaxException;
+
 public class AreaElementPolicy implements ElementPolicy {
 
     /**
@@ -28,7 +32,7 @@ public class AreaElementPolicy implements ElementPolicy {
      */
     @Override
     public String apply(String elementName, List<String> attrs) {
-        final int hrefIndex = attrs.indexOf("href");
+        int hrefIndex = attrs.indexOf("href");
         if (hrefIndex == -1) {
             //links that don't have a href don't need target="_blank"
             return "area";
@@ -46,8 +50,42 @@ public class AreaElementPolicy implements ElementPolicy {
         }
         attrs.add("target");
         attrs.add("_blank");
+
+        hrefIndex = attrs.indexOf("href");
+        hrefValue = attrs.get(hrefIndex + 1);
+        String base = OwaspHtmlSanitizer.zThreadLocal.get();
+        if (base != null && hrefValue != null) {
+            URI baseHrefURI = null;
+            try {
+                baseHrefURI = new URI(base);
+            } catch (URISyntaxException e) {
+                if (!base.endsWith("/"))
+                    base += "/";
+            }
+            if (hrefValue.indexOf(":") == -1) {
+                if (!hrefValue.startsWith("/")) {
+                    hrefValue = "/" + hrefValue;
+                }
+
+                if (baseHrefURI != null) {
+                    try {
+                        hrefValue = baseHrefURI.resolve(hrefValue).toString();
+                        attrs.remove(hrefIndex);
+                        attrs.remove(hrefIndex);// value
+                        attrs.add("href");
+                        attrs.add(hrefValue);
+                        return "area";
+                    } catch (IllegalArgumentException e) {
+                        // ignore and do string-logic
+                    }
+                }
+                hrefValue = base + hrefValue;
+                attrs.remove(hrefIndex);
+                attrs.remove(hrefIndex);// value
+                attrs.add("href");
+                attrs.add(hrefValue);
+            }
+        }
         return "area";
-
     }
-
 }
