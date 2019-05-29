@@ -101,7 +101,8 @@ public abstract class DavMethod {
     public HttpRequestBase toHttpMethod(DavContext ctxt, String targetUrl) throws IOException, DavException {
         if (ctxt.getUpload() != null && ctxt.getUpload().getSize() > 0) {
             HttpPost method = new HttpPost(targetUrl) {
-                public String getName() { return getMethodName(); }
+                @Override
+                public String getMethod() { return getMethodName(); }
             };
             HttpEntity reqEntry;
             if (ctxt.hasRequestMessage()) {
@@ -116,8 +117,9 @@ public abstract class DavMethod {
             return method;
         }
         return new HttpGet(targetUrl) {
-           
-            public String getName() { return getMethodName(); }
+
+            @Override
+            public String getMethod() { return getMethodName(); }
         };
     }
 
