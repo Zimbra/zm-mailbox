@@ -104,7 +104,7 @@ public class RedisLockChannel implements MessageListener<String> {
 
     @Override
     public void onMessage(CharSequence channel, String unlockMsg) {
-        String[] parts = unlockMsg.split(":");
+        String[] parts = unlockMsg.split("|");
         String accountId = parts[0];
         String lockUuid = parts[1];
         if (ZimbraLog.mailboxlock.isTraceEnabled()) {

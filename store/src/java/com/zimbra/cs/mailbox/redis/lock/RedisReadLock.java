@@ -29,8 +29,8 @@ import com.zimbra.common.mailbox.MailboxLockContext;
 
 public class RedisReadLock extends RedisLock {
 
-    public RedisReadLock(String accountId, String lockBaseName, String lockId, MailboxLockContext lockContext) {
-        super(accountId, lockBaseName, lockId, lockContext);
+    public RedisReadLock(String accountId, String lockBaseName, String lockNode, MailboxLockContext lockContext) {
+        super(accountId, lockBaseName, lockNode, lockContext);
     }
 
     private String getReadWriteTimeoutNamePrefix() {
@@ -59,6 +59,8 @@ public class RedisReadLock extends RedisLock {
               "redis.call('pexpire', KEYS[2] .. ':1', ARGV[1]); " +
                //set an expiration for the lock hash
               "redis.call('pexpire', KEYS[1], ARGV[1]); " +
+               //add the acquiring thread to the map of locks held by this node
+              "redis.call('hset', KEYS[3], ARGV[2], KEYS[1]); " +
                //get the name of the last mailbox worker that acquired a write lock
               "local last_writer = redis.call('get', KEYS[1] .. ':last_writer'); " +
                //add this worker's name to the set of workers that have acquired a read lock since the last write
@@ -75,6 +77,8 @@ public class RedisReadLock extends RedisLock {
               "redis.call('pexpire', key, ARGV[1]); " +
                //update the expiration on the lock hash
               "redis.call('pexpire', KEYS[1], ARGV[1]); " +
+               //add the acquiring thread to the map of locks held by this node
+              "redis.call('hset', KEYS[3], ARGV[2], KEYS[1]); " +
                //get the name of the last mailbox worker that acquired a write lock
               "local last_writer = redis.call('get', KEYS[1] .. ':last_writer'); " +
                //add this worker's name to the set of workers that have acquired a read lock since the last write
@@ -101,8 +105,8 @@ public class RedisReadLock extends RedisLock {
             "return retvals;";
 
         return execute(script, StringCodec.INSTANCE, RedisLock.LOCK_RESPONSE_CMD,
-                Arrays.<Object>asList(lockName, getReadWriteTimeoutNamePrefix()),
-                getLeaseTime(), getThreadLockName(), getWriteLockName(), lockId, uuid);
+                Arrays.<Object>asList(lockName, getReadWriteTimeoutNamePrefix(), hashtaggedNodeKey),
+                getLeaseTime(), getThreadLockName(), getWriteLockName(), lockNode, uuid);
     }
 
     @Override
@@ -126,6 +130,8 @@ public class RedisReadLock extends RedisLock {
                 "if (counter == 0) then " +
                      //if this thread is not holding any more read locks, delete its key from the hash
                     "redis.call('hdel', KEYS[1], ARGV[2]); " +
+                     //delete this thread from the map of locks held by this node
+                    "redis.call('hdel', KEYS[5], ARGV[2]); " +
                 "end;" +
                  //delete the timeout key for this hold number
                 "redis.call('del', KEYS[3] .. ':' .. (counter+1)); " +
@@ -169,7 +175,7 @@ public class RedisReadLock extends RedisLock {
         String keyPrefix = getKeyPrefix(timeoutPrefix);
 
         return execute(script, LongCodec.INSTANCE, RedisCommands.EVAL_BOOLEAN,
-                Arrays.<Object>asList(lockName, lockChannelName, timeoutPrefix, keyPrefix),
+                Arrays.<Object>asList(lockName, lockChannelName, timeoutPrefix, keyPrefix, hashtaggedNodeKey),
                 getUnlockMsg(), getThreadLockName());
     }
 

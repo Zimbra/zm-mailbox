@@ -25,19 +25,19 @@ public class RedisReadWriteLock {
 
     private String accountId;
     private String lockBaseName;
-    private String lockId;
+    private String lockNode;
 
-    public RedisReadWriteLock(String accountId, String lockBaseName, String lockId) {
+    public RedisReadWriteLock(String accountId, String lockBaseName, String lockNode) {
         this.accountId = accountId;
         this.lockBaseName = lockBaseName;
-        this.lockId = lockId;
+        this.lockNode = lockNode;
     }
 
     public RedisLock readLock(MailboxLockContext lockContext) {
-        return new RedisReadLock(accountId, lockBaseName, lockId, lockContext);
+        return new RedisReadLock(accountId, lockBaseName, lockNode, lockContext);
     }
 
     public RedisLock writeLock(MailboxLockContext lockContext) {
-        return new RedisWriteLock(accountId, lockBaseName, lockId, lockContext);
+        return new RedisWriteLock(accountId, lockBaseName, lockNode, lockContext);
     }
 }

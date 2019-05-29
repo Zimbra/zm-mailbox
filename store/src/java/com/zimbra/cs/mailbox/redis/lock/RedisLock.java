@@ -50,11 +50,12 @@ public abstract class RedisLock {
     protected RedissonRetryClient client;
     protected MailboxLockContext lockContext;
     protected String uuid; //unique for each lock instance
-    protected String lockId; //unique for each top-level RedisReadWriteLock
+    protected String lockNode; //unique for each top-level RedisReadWriteLock
+    protected String hashtaggedNodeKey;
 
     protected static RedisCommand<LockResponse> LOCK_RESPONSE_CMD = new RedisCommand<>("EVAL", new LockResponseConvertor());
 
-    public RedisLock(String accountId, String lockBaseName, String lockId, MailboxLockContext lockContext) {
+    public RedisLock(String accountId, String lockBaseName, String lockNode, MailboxLockContext lockContext) {
         this.lockChannel = RedisLockChannelManager.getInstance().getLockChannel(accountId);
         this.lockChannelName = lockChannel.getChannelName().getKey();
         this.lockName = RedisUtils.createAccountRoutedKey(lockChannel.getChannelName().getHashTag(), lockBaseName);
@@ -62,7 +63,8 @@ public abstract class RedisLock {
         this.client = (RedissonRetryClient) RedissonClientHolder.getInstance().getRedissonClient();
         this.lockContext = lockContext;
         this.uuid = generateUuid();
-        this.lockId = lockId;
+        this.lockNode = lockNode;
+        this.hashtaggedNodeKey = RedisUtils.createAccountRoutedKey(lockChannel.getChannelName().getHashTag(), lockNode);
     }
 
     private String generateUuid() {
@@ -90,7 +92,7 @@ public abstract class RedisLock {
 
     protected String getThreadLockName() {
         long threadId = Thread.currentThread().getId();
-        return lockId + ":" + threadId;
+        return lockNode + ":" + threadId;
     }
 
     protected long getLeaseTime() {
@@ -188,7 +190,7 @@ public abstract class RedisLock {
     }
 
     protected String getUnlockMsg() {
-        return String.format("%s:%s", accountId, uuid);
+        return String.format("%s|%s", accountId, uuid);
     }
 
     protected ToStringHelper toStringHelper() {

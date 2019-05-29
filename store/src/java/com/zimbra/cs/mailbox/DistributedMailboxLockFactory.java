@@ -33,7 +33,7 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
     private final String accountId;
     private final RedissonClient redisson;
     private String zimbraLockBaseName;
-    private String lockId;
+    private String lockNode;
     private RedisReadWriteLock redisLock;
     private ReentrantReadWriteLock localLock;
     private List<ReentrantReadWriteLock> waiters;
@@ -43,12 +43,12 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
         this.mailbox = mailbox;
         this.accountId = mailbox.getAccountId();
         this.redisson = RedissonClientHolder.getInstance().getRedissonClient();
-        this.lockId = MailboxClusterUtil.getMailboxWorkerName();
+        this.lockNode = MailboxClusterUtil.getMailboxWorkerName();
         try {
             zimbraLockBaseName = accountId + "-LOCK"; //actual name in redis will be hashtagged to be co-located with pubsub hannel
             this.waiters = new ArrayList<>();
             this.localLock = new ReentrantReadWriteLock();
-            this.redisLock = new RedisReadWriteLock(mailbox.getAccountId(), zimbraLockBaseName, lockId);
+            this.redisLock = new RedisReadWriteLock(mailbox.getAccountId(), zimbraLockBaseName, lockNode);
         } catch (Exception e) {
             ZimbraLog.system.fatal("Can't instantiate Redisson server", e);
         }
@@ -417,7 +417,7 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
                         ZimbraLog.cache.debug("unable to determine last mailbox worker to acquire write lock, flushing local caches");
                     }
                     mailbox.clearStaleCaches(lockContext);
-                } else if (!lastWriter.equals(lockId)) {
+                } else if (!lastWriter.equals(lockNode)) {
                     if (write) {
                         if (ZimbraLog.cache.isDebugEnabled()) {
                             ZimbraLog.cache.debug("last write lock was acquired by different mailbox worker (%s), flushing local caches prior to write lock", lastWriter);
