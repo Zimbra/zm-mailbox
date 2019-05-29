@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8"?>
+ <!--Shorthands
+     CORE = id,class,title,style
+     LANG = dir,lang,xml:lang
+     KBD = accesshtml,tabindex-->
+<owasp_policy>
+  <url_protocols>cid,http,https,mailto,data,smb</url_protocols>
+  <disallow_text_in>applet,frameset,object,script,style,title</disallow_text_in>
+  <html element="a">
+    <attributes>KBD,charset,coords,href,hreflang,name,rel,rev,shape,target,type</attributes>
+    <url_protocols>cid,http,https,mailto,smb</url_protocols>
+  </html>
+  <html element="base">
+    <attributes>href</attributes>
+  </html>
+  <html element="address">
+    <attributes>CORE,LANG</attributes>
+  </html>
+  <html element="bdo">
+    <attributes>CORE,LANG</attributes>
+  </html>
+  <html element="blockquote">
+    <attributes>CORE,LANG,cite</attributes>
+  </html>
+  <html element="body">
+    <attributes>CORE,LANG,background</attributes>
+  </html>
+  <html element="br">
+    <attributes>CORE,clear</attributes>
+  </html>
+  <html element="center">
+    <attributes>CORE,LANG</attributes>
+  </html>
+  <html element="del">
+    <attributes>CORE,LANG,cite,datetime</attributes>
+  </html>
+  <html element="div">
+    <attributes>CORE,LANG,align</attributes>
+  </html>
+  <html element="head">
+    <attributes>LANG</attributes>
+  </html>
+  <html element="h1">
+    <attributes>CORE,LANG,align</attributes>
+  </html>
+  <html element="h2">
+    <attributes>CORE,LANG,align</attributes>
+  </html>
+  <html element="h3">
+    <attributes>CORE,LANG,align</attributes>
+  </html>
+  <html element="h4">
+    <attributes>CORE,LANG,align</attributes>
+  </html>
+  <html element="h5">
+    <attributes>CORE,LANG,align</attributes>
+  </html>
+  <html element="h6">
+    <attributes>CORE,LANG,align</attributes>
+  </html>
+  <html element="hr">
+    <attributes>CORE,LANG,align,noshade,size,width</attributes>
+  </html>
+  <html element="html">
+    <attributes>LANG,xmlns</attributes>
+  </html>
+  <html element="img">
+    <attributes>CORE,LANG,align,alt,border,height,hspace,ismap,longdesc,src,usemap,vspace,width,dfsrc,data-mce-src</attributes>
+    <url_protocols>cid,http,https,data,doc</url_protocols>
+  </html>
+  <html element="ins">
+    <attributes>CORE,LANG,cite</attributes>
+  </html>
+  <html element="label">
+    <attributes>CORE,LANG,for</attributes>
+  </html>
+  <html element="p">
+    <attributes>CORE,LANG,align</attributes>
+  </html>
+  <html element="pre">
+    <attributes>CORE,LANG,width</attributes>
+  </html>
+  <html element="q">
+    <attributes>CORE,LANG,cite</attributes>
+  </html>
+  <html element="span">
+    <attributes>CORE,LANG</attributes>
+  </html>
+  <html element="style">
+    <attributes>CORE,LANG</attributes>
+  </html>
+  <html element="sub">
+    <attributes>CORE,LANG</attributes>
+  </html>
+  <html element="sup">
+    <attributes>CORE,LANG</attributes>
+  </html>
+  <html element="title">
+    <attributes></attributes>
+  </html>
+  <html element="b">
+    <attributes>CORE,LANG</attributes>
+  </html>
+  <html element="basefont">
+    <attributes>CORE,LANG,color,face,size</attributes>
+  </html>
+  <html element="big">
+    <attributes>CORE,LANG</attributes>
+  </html>
+  <html element="font">
+    <attributes>CORE,LANG,color,face,size</attributes>
+  </html>
+  <html element="i">
+    <attributes>CORE,LANG</attributes>
+  </html>
+  <html element="s">
+    <attributes>CORE,LANG</attributes>
+  </html>
+  <html element="small">
+    <attributes>CORE,LANG</attributes>
+  </html>
+  <html element="strike">
+    <attributes>CORE,LANG</attributes>
+  </html>
+  <html element="tt">
+    <attributes>CORE,LANG</attributes>
+  </html>
+  <html element="u">
+    <attributes>CORE,LANG</attributes>
+  </html>
+  <html element="dir">
+    <attributes>CORE,LANG,compact</attributes>
+  </html>
+  <html element="dl">
+    <attributes>CORE,LANG</attributes>
+  </html>
+  <html element="dt">
+    <attributes>CORE,LANG</attributes>
+  </html>
+  <html element="li">
+    <attributes>CORE,LANG,type,value</attributes>
+  </html>
+  <html element="ol">
+    <attributes>CORE,LANG,compact,start,type</attributes>
+  </html>
+  <html element="ul">
+    <attributes>CORE,LANG,compact,type</attributes>
+  </html>
+  <html element="dd">
+    <attributes>CORE,LANG</attributes>
+  </html>
+  <html element="menu">
+    <attributes>CORE,LANG,compact</attributes>
+  </html>
+  <html element="abbr">
+    <attributes>CORE,LANG</attributes>
+  </html>
+  <html element="acronym">
+    <attributes>CORE,LANG</attributes>
+  </html>
+  <html element="cite">
+    <attributes>CORE,LANG</attributes>
+  </html>
+  <html element="code">
+    <attributes>CORE,LANG</attributes>
+  </html>
+  <html element="dfn">
+    <attributes>CORE,LANG</attributes>
+    </html>
+  <html element="em">
+    <attributes>CORE,LANG</attributes>
+  </html>
+  <html element="kbd">
+    <attributes>CORE,LANG</attributes>
+    </html>
+  <html element="samp">
+    <attributes>CORE,LANG</attributes>
+  </html>
+  <html element="strong">
+    <attributes>CORE,LANG</attributes>
+  </html>
+  <html element="var">
+    <attributes>CORE,LANG</attributes>
+  </html>
+  <html element="caption">
+    <attributes>CORE,LANG,align</attributes>
+  </html>
+  <html element="col">
+    <attributes>CORE,LANG,alink,background,char,charoff,span,valign,width</attributes>
+  </html>
+  <html element="colgroup">
+    <attributes>CORE,LANG,alink,background,char,charoff,span,valign,width</attributes>
+  </html>
+  <html element="table">
+    <attributes>CORE,LANG,align,valign,background,bgcolor,border,cellpadding,cellspacing,frame,rules,summary,width</attributes>
+  </html>
+
+  <html element="tbody">
+    <attributes>CORE,LANG,align,background,char,charoff,valign</attributes>
+  </html>
+  <html element="td">
+    <attributes>CORE,LANG,abbr,align,axis,background,bgcolor,char,charoff,colspan,headers,height,nowrap,rowspan,scope,,valign,width</attributes>
+  </html>
+  <html element="tfoot">
+    <attributes>CORE,LANG,align,background,char,charoff,valign</attributes>
+  </html>
+  <html element="th">
+    <attributes>CORE,LANG,abbr,align,axis,background,bgcolor,char,charoff,colspan,headers,height,nowrap,rowspan,scope,valign,width</attributes>
+  </html>
+  <html element="thead">
+    <attributes>CORE,LANG,align,background,char,charoff,valign</attributes>
+  </html>
+  <html element="tr">
+    <attributes>CORE,LANG,align,background,bgcolor,char,charoff,valign</attributes>
+  </html>
+  <html element="area">
+    <attributes>CORE,LANG,KBD,alt,coords,href,nohref,shape,target</attributes>
+  </html>
+  <html element="button">
+    <attributes>CORE,LANG,KBD,disabled,name,type,value</attributes>
+  </html>
+  <html element="fieldset">
+    <attributes>CORE,LANG</attributes>
+  </html>
+  <html element="form">
+    <attributes>CORE,LANG,action,accept,acceptcharset,enctype,method,name,target</attributes>
+  </html>
+  <html element="input">
+    <attributes>CORE,LANG,accept,align,alt,checked,disabled,maxlength,name,readonly,size,src,type,value</attributes>
+  </html>
+  <html element="legend">
+    <attributes>CORE,LANG,align</attributes>
+  </html>
+  <html element="map">
+    <attributes>CORE,LANG,name</attributes>
+  </html>
+  <html element="optgroup">
+    <attributes>CORE,LANG,disabled,label</attributes>
+  </html>
+  <html element="option">
+    <attributes>CORE,LANG,KBD,disabled,label,selected,value</attributes>
+  </html>
+  <html element="select">
+    <attributes>CORE,LANG,KBD,disabled,multiple,name,size</attributes>
+  </html>
+  <html element="textarea">
+    <attributes>CORE,LANG,cols,disabled,name,readonly,rows</attributes>
+  </html>
+</owasp_policy>

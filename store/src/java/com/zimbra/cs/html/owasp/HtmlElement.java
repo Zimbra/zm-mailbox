@@ -30,7 +30,7 @@ import org.owasp.html.HtmlPolicyBuilder.AttributeBuilder;
 
 import com.google.common.base.Optional;
 import com.zimbra.common.util.StringUtil;
-import com.zimbra.cs.html.owasp.policies.BackgroundAttributePolicy;
+import com.zimbra.cs.html.owasp.policies.BackgroundPolicy;
 import com.zimbra.cs.html.owasp.policies.SrcAttributePolicy;
 
 /*
@@ -60,7 +60,9 @@ public class HtmlElement {
         } else {
             policyBuilder.allowElements(elementName);
         }
-
+        if (neuterImages) {
+            policyBuilder.allowElements(new BackgroundPolicy(), elementName);
+        }
         Set<String> allowedAttributes = attributesAndPolicies.keySet();
         AttributeBuilder attributesBuilder = null;
         for (String attribute : allowedAttributes) {
@@ -75,13 +77,13 @@ public class HtmlElement {
                 }
                 AttributePolicy attrPolicy = attributesAndPolicies.get(attribute);
                 if (attrPolicy != null) {
-                    if (attrPolicy instanceof SrcAttributePolicy || attrPolicy instanceof BackgroundAttributePolicy) {
-                        if (neuterImages) {
+                    if (attrPolicy instanceof SrcAttributePolicy) {
+                        if (neuterImages
+                            && (elementName.equals("img") || elementName.equals("input"))) {
                             attributesBuilder.matching(attrPolicy);
                         }
                     } else {
                         attributesBuilder.matching(attrPolicy);
-
                     }
                 }
                 attributesBuilder.onElements(elementName);
