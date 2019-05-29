@@ -6,6 +6,7 @@
 <owasp_policy>
   <url_protocols>cid,http,https,mailto,data,smb</url_protocols>
   <disallow_text_in>applet,frameset,object,script,style,title</disallow_text_in>
+  <allow_text_in></allow_text_in>
   <html element="a">
     <attributes>KBD,charset,coords,href,hreflang,name,rel,rev,shape,target,type</attributes>
     <url_protocols>cid,http,https,mailto,smb</url_protocols>
