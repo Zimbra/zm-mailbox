@@ -52,6 +52,10 @@ public class OwaspPolicyProducer {
         for (String disAllowTextElement : disallowTextElements) {
             policyBuilder.disallowTextIn(disAllowTextElement.trim());
         }
+        Set<String> allowTextElements = OwaspPolicy.getAllowTextElements();
+        for (String allowTextElement : allowTextElements) {
+            policyBuilder.allowTextIn(allowTextElement.trim());
+        }
         Set<String> urlProtocols = OwaspPolicy.getURLProtocols();
         for (String urlProtocol : urlProtocols) {
             policyBuilder.allowUrlProtocols(urlProtocol.trim());

@@ -6,244 +6,245 @@
 <owasp_policy>
   <url_protocols>cid,http,https,mailto,data,smb</url_protocols>
   <disallow_text_in>applet,frameset,object,script,style,title</disallow_text_in>
-  <html element="a">
+  <allow_text_in></allow_text_in>
+  <element name="a">
     <attributes>KBD,charset,coords,href,hreflang,name,rel,rev,shape,target,type</attributes>
     <url_protocols>cid,http,https,mailto,smb</url_protocols>
-  </html>
-  <html element="base">
+  </element>
+  <element name="base">
     <attributes>href</attributes>
-  </html>
-  <html element="address">
+  </element>
+  <element name="address">
     <attributes>CORE,LANG</attributes>
-  </html>
-  <html element="bdo">
+  </element>
+  <element name="bdo">
     <attributes>CORE,LANG</attributes>
-  </html>
-  <html element="blockquote">
+  </element>
+  <element name="blockquote">
     <attributes>CORE,LANG,cite</attributes>
-  </html>
-  <html element="body">
+  </element>
+  <element name="body">
     <attributes>CORE,LANG,background</attributes>
-  </html>
-  <html element="br">
+  </element>
+  <element name="br">
     <attributes>CORE,clear</attributes>
-  </html>
-  <html element="center">
+  </element>
+  <element name="center">
     <attributes>CORE,LANG</attributes>
-  </html>
-  <html element="del">
+  </element>
+  <element name="del">
     <attributes>CORE,LANG,cite,datetime</attributes>
-  </html>
-  <html element="div">
+  </element>
+  <element name="div">
     <attributes>CORE,LANG,align</attributes>
-  </html>
-  <html element="head">
+  </element>
+  <element name="head">
     <attributes>LANG</attributes>
-  </html>
-  <html element="h1">
+  </element>
+  <element name="h1">
     <attributes>CORE,LANG,align</attributes>
-  </html>
-  <html element="h2">
+  </element>
+  <element name="h2">
     <attributes>CORE,LANG,align</attributes>
-  </html>
-  <html element="h3">
+  </element>
+  <element name="h3">
     <attributes>CORE,LANG,align</attributes>
-  </html>
-  <html element="h4">
+  </element>
+  <element name="h4">
     <attributes>CORE,LANG,align</attributes>
-  </html>
-  <html element="h5">
+  </element>
+  <element name="h5">
     <attributes>CORE,LANG,align</attributes>
-  </html>
-  <html element="h6">
+  </element>
+  <element name="h6">
     <attributes>CORE,LANG,align</attributes>
-  </html>
-  <html element="hr">
+  </element>
+  <element name="hr">
     <attributes>CORE,LANG,align,noshade,size,width</attributes>
-  </html>
-  <html element="html">
+  </element>
+  <element name="html">
     <attributes>LANG,xmlns</attributes>
-  </html>
-  <html element="img">
+  </element>
+  <element name="img">
     <attributes>CORE,LANG,align,alt,border,height,hspace,ismap,longdesc,src,usemap,vspace,width,dfsrc,data-mce-src</attributes>
     <url_protocols>cid,http,https,data,doc</url_protocols>
-  </html>
-  <html element="ins">
+  </element>
+  <element name="ins">
     <attributes>CORE,LANG,cite</attributes>
-  </html>
-  <html element="label">
+  </element>
+  <element name="label">
     <attributes>CORE,LANG,for</attributes>
-  </html>
-  <html element="p">
+  </element>
+  <element name="p">
     <attributes>CORE,LANG,align</attributes>
-  </html>
-  <html element="pre">
+  </element>
+  <element name="pre">
     <attributes>CORE,LANG,width</attributes>
-  </html>
-  <html element="q">
+  </element>
+  <element name="q">
     <attributes>CORE,LANG,cite</attributes>
-  </html>
-  <html element="span">
+  </element>
+  <element name="span">
     <attributes>CORE,LANG</attributes>
-  </html>
-  <html element="style">
+  </element>
+  <element name="style">
     <attributes>CORE,LANG</attributes>
-  </html>
-  <html element="sub">
+  </element>
+  <element name="sub">
     <attributes>CORE,LANG</attributes>
-  </html>
-  <html element="sup">
+  </element>
+  <element name="sup">
     <attributes>CORE,LANG</attributes>
-  </html>
-  <html element="title">
+  </element>
+  <element name="title">
     <attributes></attributes>
-  </html>
-  <html element="b">
+  </element>
+  <element name="b">
     <attributes>CORE,LANG</attributes>
-  </html>
-  <html element="basefont">
+  </element>
+  <element name="basefont">
     <attributes>CORE,LANG,color,face,size</attributes>
-  </html>
-  <html element="big">
+  </element>
+  <element name="big">
     <attributes>CORE,LANG</attributes>
-  </html>
-  <html element="font">
+  </element>
+  <element name="font">
     <attributes>CORE,LANG,color,face,size</attributes>
-  </html>
-  <html element="i">
+  </element>
+  <element name="i">
     <attributes>CORE,LANG</attributes>
-  </html>
-  <html element="s">
+  </element>
+  <element name="s">
     <attributes>CORE,LANG</attributes>
-  </html>
-  <html element="small">
+  </element>
+  <element name="small">
     <attributes>CORE,LANG</attributes>
-  </html>
-  <html element="strike">
+  </element>
+  <element name="strike">
     <attributes>CORE,LANG</attributes>
-  </html>
-  <html element="tt">
+  </element>
+  <element name="tt">
     <attributes>CORE,LANG</attributes>
-  </html>
-  <html element="u">
+  </element>
+  <element name="u">
     <attributes>CORE,LANG</attributes>
-  </html>
-  <html element="dir">
+  </element>
+  <element name="dir">
     <attributes>CORE,LANG,compact</attributes>
-  </html>
-  <html element="dl">
+  </element>
+  <element name="dl">
     <attributes>CORE,LANG</attributes>
-  </html>
-  <html element="dt">
+  </element>
+  <element name="dt">
     <attributes>CORE,LANG</attributes>
-  </html>
-  <html element="li">
+  </element>
+  <element name="li">
     <attributes>CORE,LANG,type,value</attributes>
-  </html>
-  <html element="ol">
+  </element>
+  <element name="ol">
     <attributes>CORE,LANG,compact,start,type</attributes>
-  </html>
-  <html element="ul">
+  </element>
+  <element name="ul">
     <attributes>CORE,LANG,compact,type</attributes>
-  </html>
-  <html element="dd">
+  </element>
+  <element name="dd">
     <attributes>CORE,LANG</attributes>
-  </html>
-  <html element="menu">
+  </element>
+  <element name="menu">
     <attributes>CORE,LANG,compact</attributes>
-  </html>
-  <html element="abbr">
+  </element>
+  <element name="abbr">
     <attributes>CORE,LANG</attributes>
-  </html>
-  <html element="acronym">
+  </element>
+  <element name="acronym">
     <attributes>CORE,LANG</attributes>
-  </html>
-  <html element="cite">
+  </element>
+  <element name="cite">
     <attributes>CORE,LANG</attributes>
-  </html>
-  <html element="code">
+  </element>
+  <element name="code">
     <attributes>CORE,LANG</attributes>
-  </html>
-  <html element="dfn">
+  </element>
+  <element name="dfn">
     <attributes>CORE,LANG</attributes>
-    </html>
-  <html element="em">
+    </element>
+  <element name="em">
     <attributes>CORE,LANG</attributes>
-  </html>
-  <html element="kbd">
+  </element>
+  <element name="kbd">
     <attributes>CORE,LANG</attributes>
-    </html>
-  <html element="samp">
+    </element>
+  <element name="samp">
     <attributes>CORE,LANG</attributes>
-  </html>
-  <html element="strong">
+  </element>
+  <element name="strong">
     <attributes>CORE,LANG</attributes>
-  </html>
-  <html element="var">
+  </element>
+  <element name="var">
     <attributes>CORE,LANG</attributes>
-  </html>
-  <html element="caption">
+  </element>
+  <element name="caption">
     <attributes>CORE,LANG,align</attributes>
-  </html>
-  <html element="col">
+  </element>
+  <element name="col">
     <attributes>CORE,LANG,alink,background,char,charoff,span,valign,width</attributes>
-  </html>
-  <html element="colgroup">
+  </element>
+  <element name="colgroup">
     <attributes>CORE,LANG,alink,background,char,charoff,span,valign,width</attributes>
-  </html>
-  <html element="table">
+  </element>
+  <element name="table">
     <attributes>CORE,LANG,align,valign,background,bgcolor,border,cellpadding,cellspacing,frame,rules,summary,width</attributes>
-  </html>
+  </element>
 
-  <html element="tbody">
+  <element name="tbody">
     <attributes>CORE,LANG,align,background,char,charoff,valign</attributes>
-  </html>
-  <html element="td">
+  </element>
+  <element name="td">
     <attributes>CORE,LANG,abbr,align,axis,background,bgcolor,char,charoff,colspan,headers,height,nowrap,rowspan,scope,,valign,width</attributes>
-  </html>
-  <html element="tfoot">
+  </element>
+  <element name="tfoot">
     <attributes>CORE,LANG,align,background,char,charoff,valign</attributes>
-  </html>
-  <html element="th">
+  </element>
+  <element name="th">
     <attributes>CORE,LANG,abbr,align,axis,background,bgcolor,char,charoff,colspan,headers,height,nowrap,rowspan,scope,valign,width</attributes>
-  </html>
-  <html element="thead">
+  </element>
+  <element name="thead">
     <attributes>CORE,LANG,align,background,char,charoff,valign</attributes>
-  </html>
-  <html element="tr">
+  </element>
+  <element name="tr">
     <attributes>CORE,LANG,align,background,bgcolor,char,charoff,valign</attributes>
-  </html>
-  <html element="area">
+  </element>
+  <element name="area">
     <attributes>CORE,LANG,KBD,alt,coords,href,nohref,shape,target</attributes>
-  </html>
-  <html element="button">
+  </element>
+  <element name="button">
     <attributes>CORE,LANG,KBD,disabled,name,type,value</attributes>
-  </html>
-  <html element="fieldset">
+  </element>
+  <element name="fieldset">
     <attributes>CORE,LANG</attributes>
-  </html>
-  <html element="form">
+  </element>
+  <element name="form">
     <attributes>CORE,LANG,action,accept,acceptcharset,enctype,method,name,target</attributes>
-  </html>
-  <html element="input">
+  </element>
+  <element name="input">
     <attributes>CORE,LANG,accept,align,alt,checked,disabled,maxlength,name,readonly,size,src,type,value</attributes>
-  </html>
-  <html element="legend">
+  </element>
+  <element name="legend">
     <attributes>CORE,LANG,align</attributes>
-  </html>
-  <html element="map">
+  </element>
+  <element name="map">
     <attributes>CORE,LANG,name</attributes>
-  </html>
-  <html element="optgroup">
+  </element>
+  <element name="optgroup">
     <attributes>CORE,LANG,disabled,label</attributes>
-  </html>
-  <html element="option">
+  </element>
+  <element name="option">
     <attributes>CORE,LANG,KBD,disabled,label,selected,value</attributes>
-  </html>
-  <html element="select">
+  </element>
+  <element name="select">
     <attributes>CORE,LANG,KBD,disabled,multiple,name,size</attributes>
-  </html>
-  <html element="textarea">
+  </element>
+  <element name="textarea">
     <attributes>CORE,LANG,cols,disabled,name,readonly,rows</attributes>
-  </html>
+  </element>
 </owasp_policy>
