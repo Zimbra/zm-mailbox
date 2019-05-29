@@ -45,9 +45,10 @@ public class OwaspPolicy {
 
     public static final String E_OWASP_POLICY = "owasp_policy";
     public static final String E_DISALLOW_TEXT_IN = "disallow_text_in";
+    public static final String E_ALLOW_TEXT_IN = "allow_text_in";
     public static final String E_URL_PROTOCOLS = "url_protocols";
-    public static final String E_HTML = "html";
-    public static final String A_ELEMENT = "element";
+    public static final String E_ELEMENT = "element";
+    public static final String A_NAME = "name";
     public static final String A_REMOVE_TEXT = "removeText";
     public static final String E_ATTRIBUTES = "attributes";
     private static String mPolicyFile;
@@ -58,6 +59,7 @@ public class OwaspPolicy {
     private static volatile OwaspPolicy mOwaspPolicy;
     private static final Map<String, String> mConfiguredElements = new HashMap<String, String>();
     private static final Set<String> mDisallowTextElements = new HashSet<String>();
+    private static final Set<String> mAllowTextElements = new HashSet<String>();
     private static final Set<String> mURLProtocols = new HashSet<String>();
     private static final Map<String, String> mElementUrlProtocols = new HashMap<String, String>();
 
@@ -88,17 +90,19 @@ public class OwaspPolicy {
                     throw new DocumentException(
                         String.format("OWASP policy file '%s' root tag is not '%s'", mPolicyFile, E_OWASP_POLICY));
                 }
-                for (Iterator<?> iter = root.elementIterator(E_HTML); iter.hasNext();) {
-                    Element html = (Element) iter.next();
-                    String element = html.attributeValue(A_ELEMENT);
-                    String attributes = html.elementText(E_ATTRIBUTES);
-                    String urlProtocols = html.elementText(E_URL_PROTOCOLS);
+                for (Iterator<?> iter = root.elementIterator(E_ELEMENT); iter.hasNext();) {
+                    Element element = (Element) iter.next();
+                    String name = element.attributeValue(A_NAME);
+                    String attributes = element.elementText(E_ATTRIBUTES);
+                    String urlProtocols = element.elementText(E_URL_PROTOCOLS);
                     attributes = attributes.replace("CORE", "id,class,title,style")
                         .replace("LANG", "dir,lang,xml:lang").replace("KBD", "accesshtml,tabindex");
-                    set(element, attributes, urlProtocols);
+                    set(name, attributes, urlProtocols);
                 }
                 String disallowTextElements = root.elementText(E_DISALLOW_TEXT_IN);
                 mDisallowTextElements.addAll(Arrays.asList(disallowTextElements.split(COMMA)));
+                String allowTextElements = root.elementText(E_ALLOW_TEXT_IN);
+                mAllowTextElements.addAll(Arrays.asList(allowTextElements.split(COMMA)));
                 String urlProtocols = root.elementText(E_URL_PROTOCOLS);
                 mURLProtocols.addAll(Arrays.asList(urlProtocols.split(COMMA)));
             } catch (IOException | XmlParseException e) {
@@ -154,6 +158,10 @@ public class OwaspPolicy {
 
     public static Set<String> getDisallowTextElements() {
         return mDisallowTextElements;
+    }
+
+    public static Set<String> getAllowTextElements() {
+        return mAllowTextElements;
     }
 
     public static Set<String> getURLProtocols() {
