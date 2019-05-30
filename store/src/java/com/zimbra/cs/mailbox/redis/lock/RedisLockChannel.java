@@ -31,11 +31,13 @@ import org.redisson.client.codec.StringCodec;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.RedissonClientHolder;
 import com.zimbra.cs.mailbox.redis.RedisUtils.RedisKey;
 import com.zimbra.cs.mailbox.redis.lock.RedisLock.LockResponse;
+import com.zimbra.cs.mailbox.util.MailboxClusterUtil;
 
 
 public class RedisLockChannel implements MessageListener<String> {
@@ -63,11 +65,11 @@ public class RedisLockChannel implements MessageListener<String> {
         return waitingLocksQueues.computeIfAbsent(accountId, k -> new LockQueue(accountId));
     }
 
-    public synchronized QueuedLockRequest add(RedisLock lock, QueuedLockRequest.LockCallback callback) {
+    public synchronized QueuedLockRequest add(RedisLock lock, QueuedLockRequest.LockCallback callback) throws ServiceException {
         return add(lock, callback, false);
     }
 
-    public synchronized QueuedLockRequest add(RedisLock lock, QueuedLockRequest.LockCallback callback, boolean skipQueue) {
+    public synchronized QueuedLockRequest add(RedisLock lock, QueuedLockRequest.LockCallback callback, boolean skipQueue) throws ServiceException {
         if (!isActive && waitingLocksQueues.isEmpty()) {
             isActive = true; //lazily activate the channel
             subscribe();
@@ -78,6 +80,8 @@ public class RedisLockChannel implements MessageListener<String> {
         if (skipQueue) {
             lockQueue.addToFront(waitingLock);
             tryAcquireNow = true;
+        } else if (lockQueue.queue.size() >= LC.zimbra_mailbox_lock_max_waiting_threads.intValue()) {
+            throw ServiceException.LOCK_FAILED("too many waiting locks");
         } else {
             tryAcquireNow = lockQueue.add(waitingLock);
         }
@@ -101,11 +105,39 @@ public class RedisLockChannel implements MessageListener<String> {
 
     @Override
     public void onMessage(CharSequence channel, String unlockMsg) {
-        String[] parts = unlockMsg.split(":");
-        String accountId = parts[0];
-        String lockUuid = parts[1];
-        if (ZimbraLog.mailboxlock.isTraceEnabled()) {
-            ZimbraLog.mailboxlock.trace("received unlock message for acct=%s, uuid=%s", accountId, lockUuid);
+        String[] parts = unlockMsg.split("\\|");
+        String accountId;
+        if (parts.length == 2) {
+            //normal case when the unlock message is triggered by a mailbox releasing a lock
+            accountId = parts[0];
+            String lockUuid = parts[1];
+            if (ZimbraLog.mailboxlock.isTraceEnabled()) {
+                ZimbraLog.mailboxlock.trace("received unlock message for acct=%s, uuid=%s", accountId, lockUuid);
+            }
+        } else if (parts.length == 3 && parts[0].equals("SHUTDOWN")) {
+            /*
+             * Secondary case when the unlock message is triggered by the script that releases all
+             * locks during mailbox pod shutdown. In this case, there are three considerations:
+             * 1. We don't know what the releasing lock UUID was.
+             * 2. To avoid re-acquiring locks prior to shutdown, this unlock message contains the name of the pod.
+             *    If this is that pod, then ignore the message.
+             * 3. Since the shutdown script isn't targeting a specific account, it can't publish the actual account ID,
+             *    only the name of the lock it is releasing. Therefore we have to parse the ID from the lock name.
+             *    It is easier to do this here rather than in lua, which has limited string manipulation.
+             */
+            String lockName = parts[1];
+            String shutdownPodName = parts[2];
+            if (shutdownPodName.equals(MailboxClusterUtil.getMailboxWorkerName())) {
+                ZimbraLog.mailboxlock.info("ignoring unlock message, since this pod (%s) is shutting down!", shutdownPodName);
+                return;
+            }
+            //lock name is of the form {LOCK-#}-accountId-LOCK
+            lockName = lockName.substring(0, lockName.length() - 5);
+            accountId = lockName.split("}-")[1];
+            ZimbraLog.mailboxlock.info("received shutdown unlock message from pod %s for account %s", shutdownPodName, accountId);
+        } else {
+            ZimbraLog.mailboxlock.warn("unrecognized unlock message: %s", unlockMsg);
+            return;
         }
         List<String> notifiedLockUuids = getQueue(accountId).notifyWaitingLocks();
         if (notifiedLockUuids.size() > 0) {

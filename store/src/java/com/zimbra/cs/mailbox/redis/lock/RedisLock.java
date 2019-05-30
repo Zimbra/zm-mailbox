@@ -19,6 +19,7 @@ package com.zimbra.cs.mailbox.redis.lock;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import org.redisson.client.codec.Codec;
 import org.redisson.client.handler.State;
@@ -29,9 +30,11 @@ import org.redisson.command.CommandExecutor;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.MoreObjects.ToStringHelper;
+import com.google.common.base.Strings;
+import com.google.common.io.BaseEncoding;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mailbox.MailboxLockContext;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.UUIDUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.RedissonClientHolder;
 import com.zimbra.cs.mailbox.redis.RedisUtils;
@@ -39,26 +42,41 @@ import com.zimbra.cs.mailbox.redis.RedissonRetryClient;
 
 public abstract class RedisLock {
 
+    private static final Random random = new Random();
     protected String lockName;
     protected RedisLockChannel lockChannel;
     protected String lockChannelName;
     protected String accountId;
     protected RedissonRetryClient client;
+    protected MailboxLockContext lockContext;
     protected String uuid; //unique for each lock instance
-    protected String lockId; //unique for each top-level RedisReadWriteLock
+    protected String lockNode; //unique for each top-level RedisReadWriteLock
+    protected String hashtaggedNodeKey;
 
     protected static RedisCommand<LockResponse> LOCK_RESPONSE_CMD = new RedisCommand<>("EVAL", new LockResponseConvertor());
 
-    public RedisLock(String accountId, String lockBaseName, String lockId) {
+    public RedisLock(String accountId, String lockBaseName, String lockNode, MailboxLockContext lockContext) {
         this.lockChannel = RedisLockChannelManager.getInstance().getLockChannel(accountId);
         this.lockChannelName = lockChannel.getChannelName().getKey();
         this.lockName = RedisUtils.createAccountRoutedKey(lockChannel.getChannelName().getHashTag(), lockBaseName);
         this.accountId = accountId;
         this.client = (RedissonRetryClient) RedissonClientHolder.getInstance().getRedissonClient();
-        this.uuid = UUIDUtil.generateUUID();
-        this.lockId = lockId;
+        this.lockContext = lockContext;
+        this.uuid = generateUuid();
+        this.lockNode = lockNode;
+        this.hashtaggedNodeKey = RedisUtils.createAccountRoutedKey(lockChannel.getChannelName().getHashTag(), lockNode);
     }
 
+    private String generateUuid() {
+        String caller = lockContext.getCaller();
+        byte[] buffer = new byte[4];
+        random.nextBytes(buffer);
+        String uuid = BaseEncoding.base16().omitPadding().encode(buffer);
+        if (!Strings.isNullOrEmpty(caller)) {
+            uuid = String.format("%s-[%s]", uuid, caller);
+        }
+        return uuid;
+    }
 
     public String getAccountId() {
         return accountId;
@@ -74,7 +92,7 @@ public abstract class RedisLock {
 
     protected String getThreadLockName() {
         long threadId = Thread.currentThread().getId();
-        return lockId + ":" + threadId;
+        return lockNode + ":" + threadId;
     }
 
     protected long getLeaseTime() {
@@ -172,7 +190,7 @@ public abstract class RedisLock {
     }
 
     protected String getUnlockMsg() {
-        return String.format("%s:%s", accountId, uuid);
+        return String.format("%s|%s", accountId, uuid);
     }
 
     protected ToStringHelper toStringHelper() {

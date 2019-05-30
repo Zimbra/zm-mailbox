@@ -25,11 +25,12 @@ import org.redisson.client.protocol.RedisCommands;
 
 import com.google.common.base.MoreObjects.ToStringHelper;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mailbox.MailboxLockContext;
 
 public class RedisWriteLock extends RedisLock {
 
-    public RedisWriteLock(String accountId, String lockBaseName, String lockId) {
-        super(accountId, lockBaseName, lockId);
+    public RedisWriteLock(String accountId, String lockBaseName, String lockNode, MailboxLockContext lockContext) {
+        super(accountId, lockBaseName, lockNode, lockContext);
     }
 
     @Override
@@ -46,6 +47,7 @@ public class RedisWriteLock extends RedisLock {
                  // store id of last mailbox worker to acquire a write lock
                 "local last_writer = redis.call('get', last_write_access_key); " +
                 "if (mode == false) then " +
+                      "local uuid_key = KEYS[2] .. ':1'; " +
                       //no one is holding the lock, so set the mode to "write"
                       "redis.call('hset', KEYS[1], 'mode', 'write'); " +
                       //set this thread's write hold count to 1 in the lock hash
@@ -53,12 +55,14 @@ public class RedisWriteLock extends RedisLock {
                       //set the lock hash expiry to the lease time
                       "redis.call('pexpire', KEYS[1], ARGV[1]); " +
                       //track the uuid of the holder instance in a separate key, with the same expiry
-                      "redis.call('set', KEYS[2] .. ':1', ARGV[4]); " +
-                      "redis.call('pexpire', KEYS[2] .. ':1', ARGV[1]); " +
+                      "redis.call('set', uuid_key, ARGV[4]); " +
+                      "redis.call('pexpire', uuid_key, ARGV[1]); " +
                       //update id of last worker to acquire a write lock
                       "redis.call('set', last_write_access_key, ARGV[3]); " +
                       //delete the reads_since_last_write set
                       "redis.call('del', reads_since_last_write_key); " +
+                      //add the acquiring thread to the map of locks held by this node
+                      "redis.call('hset', KEYS[3], ARGV[2], KEYS[1]); " +
                       "return {1, last_writer}; " +
                   "end; " +
                   "if (mode == 'write') then " +
@@ -73,6 +77,8 @@ public class RedisWriteLock extends RedisLock {
                           "local uuid_key = KEYS[2] .. ':' .. new_hold_count; " +
                           "redis.call('set', uuid_key, ARGV[4]); " +
                           "redis.call('pexpire', uuid_key, ARGV[1]); " +
+                          //add the acquiring thread to the map of locks held by this node
+                          "redis.call('hset', KEYS[3], ARGV[2], KEYS[1]); " +
                           "return {1, last_writer}; " +
                       "end; " +
                     "end;" +
@@ -101,8 +107,8 @@ public class RedisWriteLock extends RedisLock {
                     "return retvals;";
 
         return execute(script, StringCodec.INSTANCE, RedisLock.LOCK_RESPONSE_CMD,
-            Arrays.<Object>asList(lockName, getWriterUuidPrefix()),
-            getLeaseTime(), getThreadLockName(), lockId, uuid);
+            Arrays.<Object>asList(lockName, getWriterUuidPrefix(), hashtaggedNodeKey),
+            getLeaseTime(), getThreadLockName(), lockNode, uuid);
     }
 
     @Override
@@ -136,6 +142,8 @@ public class RedisWriteLock extends RedisLock {
                         "else " +
                             //delete the lock hash entry for this thread
                             "redis.call('hdel', KEYS[1], ARGV[3]); " +
+                            //delete this thread from the map of locks held by this node
+                            "redis.call('hdel', KEYS[4], ARGV[3]); " +
                             "if (redis.call('hlen', KEYS[1]) == 1) then " +
                                 //no more holds on this lock (only the "mode" key is left),
                                 //so delete the lock hash and publish an unlock message
@@ -151,7 +159,7 @@ public class RedisWriteLock extends RedisLock {
                 "end; "
                 + "return nil;";
         return execute(script, LongCodec.INSTANCE, RedisCommands.EVAL_BOOLEAN,
-        Arrays.<Object>asList(lockName, lockChannelName, getWriterUuidPrefix()),
+        Arrays.<Object>asList(lockName, lockChannelName, getWriterUuidPrefix(), hashtaggedNodeKey),
         getUnlockMsg(), getLeaseTime(), getThreadLockName());
     }
 

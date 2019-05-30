@@ -662,7 +662,7 @@ public class TestMailboxLock {
     @Test
     public void testZMailboxReenter() throws Exception {
         final MailboxLockFactory lockFactory = new ZLocalMailboxLockFactory(1, 1);
-        assertFalse("unlocked at start", lockFactory.readLock().isLockedByCurrentThread());
+        assertFalse("unlocked at start", lockFactory.readLock(null).isLockedByCurrentThread());
         try (final MailboxLock l1 = lockFactory.acquiredReadLock(null)) {
             assertEquals("hold count [l1]", 1, l1.getHoldCount());
             assertTrue("isLockedByCurrentThread [l1]", l1.isLockedByCurrentThread());
@@ -702,7 +702,7 @@ public class TestMailboxLock {
             }
             assertEquals("hold count + 7-6", 1, l1.getHoldCount());
         }
-        assertFalse("unlocked at end", lockFactory.readLock().isLockedByCurrentThread());
+        assertFalse("unlocked at end", lockFactory.readLock(null).isLockedByCurrentThread());
     }
 
     @Test

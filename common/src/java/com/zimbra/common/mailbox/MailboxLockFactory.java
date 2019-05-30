@@ -7,9 +7,9 @@ import com.zimbra.common.service.ServiceException;
  * locking framework for an instance of the factory.
  */
 public interface MailboxLockFactory extends AutoCloseable {
-    MailboxLock readLock();
+    MailboxLock readLock(MailboxLockContext lockContext);
 
-    MailboxLock writeLock();
+    MailboxLock writeLock(MailboxLockContext lockContext);
 
     MailboxLock acquiredWriteLock(MailboxLockContext lockContext) throws ServiceException;
 
@@ -22,5 +22,5 @@ public interface MailboxLockFactory extends AutoCloseable {
     int getHoldCount() throws ServiceException;
 
     @Deprecated
-    MailboxLock lock(boolean write);
+    MailboxLock lock(MailboxLockContext lockContext, boolean write);
 }

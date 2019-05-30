@@ -48,7 +48,7 @@ public class ZLocalMailboxLock implements MailboxLock {
     }
 
     @Override
-    public void lock(MailboxLockContext lockContext) throws ServiceException {
+    public void lock() throws ServiceException {
         try {
             //First, try to enter the monitor if it's not occupied.
             //We do not wait here, since we don't want blocked threads piling up.
