@@ -1,5 +1,3 @@
-package com.zimbra.cs.html.owasp.policies;
-
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
@@ -16,6 +14,8 @@ package com.zimbra.cs.html.owasp.policies;
  * If not, see <https://www.gnu.org/licenses/>.
  * ***** END LICENSE BLOCK *****
  */
+package com.zimbra.cs.html.owasp.policies;
+
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -23,7 +23,8 @@ import org.owasp.html.AttributePolicy;
 
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.servlet.ZThreadLocal;
+import com.zimbra.cs.html.owasp.OwaspHtmlSanitizer;
+import com.zimbra.cs.html.owasp.OwaspThreadLocal;
 
 public class ActionAttributePolicy implements AttributePolicy {
 
@@ -33,9 +34,10 @@ public class ActionAttributePolicy implements AttributePolicy {
     @Override
     public String apply(String elementName, String attributeName, String value) {
         // The Host header received in the request.
+        OwaspThreadLocal threadLocalInstance = OwaspHtmlSanitizer.zThreadLocal.get();
         String reqVirtualHost = null;
-        if (ZThreadLocal.getRequestContext() != null) {
-            reqVirtualHost = ZThreadLocal.getRequestContext().getVirtualHost();
+        if (threadLocalInstance != null) {
+            reqVirtualHost = OwaspHtmlSanitizer.zThreadLocal.get().getVHost();
         }
         if (sameHostFormPostCheck && reqVirtualHost != null) {
             try {
