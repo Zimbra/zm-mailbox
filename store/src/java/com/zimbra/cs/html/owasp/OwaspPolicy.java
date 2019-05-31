@@ -1,5 +1,3 @@
-package com.zimbra.cs.html.owasp;
-
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
@@ -16,6 +14,7 @@ package com.zimbra.cs.html.owasp;
  * If not, see <https://www.gnu.org/licenses/>.
  * ***** END LICENSE BLOCK *****
  */
+package com.zimbra.cs.html.owasp;
 
 import static com.zimbra.cs.html.owasp.HtmlElementsBuilder.COMMA;
 import java.io.File;

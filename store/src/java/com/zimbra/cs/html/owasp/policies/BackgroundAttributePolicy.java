@@ -1,5 +1,3 @@
-package com.zimbra.cs.html.owasp.policies;
-
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
@@ -16,6 +14,7 @@ package com.zimbra.cs.html.owasp.policies;
  * If not, see <https://www.gnu.org/licenses/>.
  * ***** END LICENSE BLOCK *****
  */
+package com.zimbra.cs.html.owasp.policies;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -44,7 +43,7 @@ public class BackgroundAttributePolicy implements AttributePolicy {
 
     @Override
     public String apply(String elementName, String attributeName, String bgValue) {
-        String base = OwaspHtmlSanitizer.zThreadLocal.get();
+        String base = OwaspHtmlSanitizer.zThreadLocal.get().getBaseHref();
 
         if (base != null && bgValue != null) {
             URI baseHrefURI = null;
