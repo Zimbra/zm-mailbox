@@ -1,5 +1,3 @@
-package com.zimbra.cs.html.owasp.policies;
-
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
@@ -16,6 +14,7 @@ package com.zimbra.cs.html.owasp.policies;
  * If not, see <https://www.gnu.org/licenses/>.
  * ***** END LICENSE BLOCK *****
  */
+package com.zimbra.cs.html.owasp.policies;
 
 import java.util.List;
 
@@ -53,7 +52,7 @@ public class AreaElementPolicy implements ElementPolicy {
 
         hrefIndex = attrs.indexOf("href");
         hrefValue = attrs.get(hrefIndex + 1);
-        String base = OwaspHtmlSanitizer.zThreadLocal.get();
+        String base = OwaspHtmlSanitizer.zThreadLocal.get().getBaseHref();
         if (base != null && hrefValue != null) {
             URI baseHrefURI = null;
             try {
