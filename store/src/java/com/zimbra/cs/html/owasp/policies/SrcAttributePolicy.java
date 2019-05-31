@@ -1,7 +1,3 @@
-package com.zimbra.cs.html.owasp.policies;
-import java.net.URI;
-import java.net.URISyntaxException;
-
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
@@ -18,6 +14,10 @@ import java.net.URISyntaxException;
  * If not, see <https://www.gnu.org/licenses/>.
  * ***** END LICENSE BLOCK *****
  */
+package com.zimbra.cs.html.owasp.policies;
+
+import java.net.URI;
+import java.net.URISyntaxException;
 import org.owasp.html.AttributePolicy;
 
 import com.zimbra.cs.html.owasp.OwaspHtmlSanitizer;
@@ -26,7 +26,7 @@ public class SrcAttributePolicy implements AttributePolicy {
 
     @Override
     public String apply(String elementName, String attributeName, String srcValue) {
-        String base = OwaspHtmlSanitizer.zThreadLocal.get();
+        String base = OwaspHtmlSanitizer.zThreadLocal.get().getBaseHref();
 
         if (base != null && srcValue != null) {
             URI baseHrefURI = null;
