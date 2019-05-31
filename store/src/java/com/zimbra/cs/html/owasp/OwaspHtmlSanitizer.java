@@ -1,3 +1,19 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2019 Synacor, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software Foundation,
+ * version 2 of the License.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ * ***** END LICENSE BLOCK *****
+ */
 package com.zimbra.cs.html.owasp;
 
 import java.util.concurrent.Callable;
@@ -15,11 +31,13 @@ import com.zimbra.common.util.StringUtil;
 public class OwaspHtmlSanitizer implements Callable<String> {
     private String html;
     private boolean neuterImages;
-    public static final ThreadLocal<String> zThreadLocal  = new ThreadLocal<String>(); 
+    public static final ThreadLocal<OwaspThreadLocal> zThreadLocal = new ThreadLocal<OwaspThreadLocal>();
+    private String vHost;
 
-    public OwaspHtmlSanitizer(String html, boolean neuterImages) {
+    public OwaspHtmlSanitizer(String html, boolean neuterImages, String vHost) {
         this.html = html;
         this.neuterImages = neuterImages;
+        this.vHost = vHost;
     }
 
     private PolicyFactory POLICY_DEFINITION;
@@ -36,6 +54,9 @@ public class OwaspHtmlSanitizer implements Callable<String> {
      *         <code>html</code> was <code>null</code>
      */
     public String sanitize() {
+        OwaspThreadLocal threadLocalInstance = new OwaspThreadLocal();
+        threadLocalInstance.setVHost(vHost);
+        OwaspHtmlSanitizer.zThreadLocal.set(threadLocalInstance);
         if (StringUtil.isNullOrEmpty(html)) {
             return null;
         }
@@ -53,11 +74,11 @@ public class OwaspHtmlSanitizer implements Callable<String> {
             });
         // create a thread-specific policy
         instantiatePolicy();
-        OwaspHtmlSanitizer.zThreadLocal.remove();
         final Policy policy = POLICY_DEFINITION.apply(renderer);
         // run the html through the sanitizer
         HtmlSanitizer.sanitize(html, policy);
         // return the resulting HTML from the builder
+        OwaspHtmlSanitizer.zThreadLocal.remove();
         return htmlBuilder.toString();
     }
 
