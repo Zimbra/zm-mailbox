@@ -14,25 +14,27 @@
  * If not, see <https://www.gnu.org/licenses/>.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.html.owasp.policies;
+package com.zimbra.cs.html.owasp;
 
-import java.util.List;
+public class OwaspThreadLocal {
 
-import org.owasp.html.ElementPolicy;
+    private String baseHref;
 
-import com.zimbra.cs.html.owasp.OwaspHtmlSanitizer;
+    private String vHost;
 
-public class BaseElementPolicy implements ElementPolicy {
-
-    @Override
-    public String apply(String elementName, List<String> attrs) {
-
-        final int hrefIndex = attrs.indexOf("href");
-        if (hrefIndex != -1) {
-            String hrefValue = attrs.get(hrefIndex + 1);
-            OwaspHtmlSanitizer.zThreadLocal.get().setBaseHref(hrefValue);
-        }
-        return null;
+    public String getBaseHref() {
+        return baseHref;
     }
 
+    public void setBaseHref(String baseHref) {
+        this.baseHref = baseHref;
+    }
+
+    public String getVHost() {
+        return vHost;
+    }
+
+    public void setVHost(String vHost) {
+        this.vHost = vHost;
+    }
 }

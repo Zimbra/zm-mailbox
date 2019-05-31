@@ -34,6 +34,7 @@ import com.google.common.io.CharStreams;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.html.AbstractDefang;
+import com.zimbra.cs.servlet.ZThreadLocal;
 
 public class OwaspDefang extends AbstractDefang {
 
@@ -59,7 +60,11 @@ public class OwaspDefang extends AbstractDefang {
     }
 
     private String runSanitizer(String html, boolean neuterImages) {
-        Callable<String> task = new OwaspHtmlSanitizer(html, neuterImages);
+        String vHost = null;
+        if (ZThreadLocal.getRequestContext() != null) {
+            vHost = ZThreadLocal.getRequestContext().getVirtualHost();
+        }
+        Callable<String> task = new OwaspHtmlSanitizer(html, neuterImages, vHost);
         Future<String> future = executor.submit(task);
         String sanitizedHtml = null;
         try {
