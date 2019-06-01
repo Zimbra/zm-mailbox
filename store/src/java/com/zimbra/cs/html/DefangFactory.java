@@ -16,7 +16,9 @@
  */
 package com.zimbra.cs.html;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.cs.html.owasp.OwaspDefang;
 
 /**
  * This factory is used to determine the proper defanger based on content type for
@@ -27,7 +29,7 @@ import com.zimbra.common.mime.MimeConstants;
  */
 public class DefangFactory {
     /**
-     * The instance of the html defanger 
+     * The instance of the neko html defanger 
      */
     private static HtmlDefang htmlDefang = new HtmlDefang();
     
@@ -35,14 +37,20 @@ public class DefangFactory {
      * The xml defanger, used for xhtml and svg 
      */
     private static XHtmlDefang xhtmlDefang = new XHtmlDefang();
-    
+
     /**
      * This defanger does nothing. Here for
      * backwards compatibility
      */
     private static NoopDefang noopDefang = new NoopDefang();
+
+    /**
+     * The instance of the owasp html defanger
+     */
+    private static OwaspDefang owaspDefang = new OwaspDefang();
     
     /**
+     * if content type is null, returns noopDefang which does nothing
      * 
      * @param contentType
      * @return
@@ -52,6 +60,10 @@ public class DefangFactory {
             return noopDefang;
         }
         String contentTypeLowerCase = contentType.toLowerCase();
+        boolean isOwaspEnabled = LC.zimbra_use_owasp_html_sanitizer.booleanValue();
+        if (contentTypeLowerCase.startsWith(MimeConstants.CT_TEXT_HTML) && isOwaspEnabled) {
+            return owaspDefang;
+        }
         if (contentTypeLowerCase.startsWith(MimeConstants.CT_TEXT_HTML) ||
             contentTypeLowerCase.startsWith(MimeConstants.CT_APPLICATION_ZIMBRA_DOC) ||
             contentTypeLowerCase.startsWith(MimeConstants.CT_APPLICATION_ZIMBRA_SLIDES) ||
