@@ -42,6 +42,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zmime.ZMimeBodyPart;
 import com.zimbra.common.zmime.ZMimeMultipart;
@@ -326,4 +327,18 @@ public final class MailboxTestUtil {
 
         return invites.get(0);
     }
+
+    public static String getZimbraServerDir(String zimbraServerDir) {
+        String serverDir = zimbraServerDir;
+        if (StringUtil.isNullOrEmpty(serverDir)) {
+            serverDir = Strings.nullToEmpty(System.getProperty("server.dir"));
+            if (serverDir.isEmpty()) {
+                serverDir = Strings.nullToEmpty(System.getProperty("user.dir"));
+            }
+        }
+        if (!serverDir.endsWith("/")) {
+            serverDir = serverDir + "/";
+        }
+        return serverDir;
+}
 }
