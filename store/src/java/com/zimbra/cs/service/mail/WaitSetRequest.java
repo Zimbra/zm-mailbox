@@ -26,7 +26,6 @@ import java.util.concurrent.TimeUnit;
 
 import javax.servlet.http.HttpServletRequest;
 
-import com.zimbra.cs.mailbox.DistributedWaitSet;
 import org.eclipse.jetty.continuation.Continuation;
 import org.eclipse.jetty.continuation.ContinuationSupport;
 
@@ -42,6 +41,7 @@ import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.DistributedWaitSet;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -64,8 +64,6 @@ import com.zimbra.soap.type.AccountWithModifications;
 import com.zimbra.soap.type.Id;
 import com.zimbra.soap.type.IdAndType;
 import com.zimbra.soap.type.WaitSetAddSpec;
-
-import static com.google.common.collect.Iterables.isEmpty;
 
 /**
  *
@@ -268,7 +266,7 @@ public class WaitSetRequest extends MailDocumentHandler {
 
         // publish WaitSetResp to all subscribers via Redis
         final DistributedWaitSet dws = DistributedWaitSet.getInstance();
-        if (!isEmpty(cb.signalledAccounts)) {
+        if (cb.signalledAccounts != null && !cb.signalledAccounts.isEmpty()) {
             cb.signalledAccounts.forEach((accountId) -> dws.publish(accountId, resp));
         }
     }
