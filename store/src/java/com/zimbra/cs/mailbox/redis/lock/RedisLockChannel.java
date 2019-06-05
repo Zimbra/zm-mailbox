@@ -107,12 +107,13 @@ public class RedisLockChannel implements MessageListener<String> {
     public void onMessage(CharSequence channel, String unlockMsg) {
         String[] parts = unlockMsg.split("\\|");
         String accountId;
+        String releasedLock = null;
         if (parts.length == 2) {
             //normal case when the unlock message is triggered by a mailbox releasing a lock
             accountId = parts[0];
-            String lockUuid = parts[1];
+            releasedLock = parts[1];
             if (ZimbraLog.mailboxlock.isTraceEnabled()) {
-                ZimbraLog.mailboxlock.trace("received unlock message for acct=%s, uuid=%s", accountId, lockUuid);
+                ZimbraLog.mailboxlock.trace("received unlock message for acct=%s, uuid=%s", accountId, releasedLock);
             }
         } else if (parts.length == 3 && parts[0].equals("SHUTDOWN")) {
             /*
@@ -141,10 +142,8 @@ public class RedisLockChannel implements MessageListener<String> {
         }
         List<String> notifiedLockUuids = getQueue(accountId).notifyWaitingLocks();
         if (notifiedLockUuids.size() > 0) {
-            if (ZimbraLog.mailboxlock.isTraceEnabled()) {
-                ZimbraLog.mailboxlock.debug("notified %s waiting locks for account %s: %s", notifiedLockUuids.size(), accountId, Joiner.on(", ").join(notifiedLockUuids));
-            } else {
-                ZimbraLog.mailboxlock.debug("notified %s waiting locks for account %s", notifiedLockUuids.size(), accountId);
+            if (ZimbraLog.mailboxlock.isDebugEnabled()) {
+                ZimbraLog.mailboxlock.debug("notified %s waiting locks for account %s: %s (notifier=%s)", notifiedLockUuids.size(), accountId, Joiner.on(", ").join(notifiedLockUuids), releasedLock);
             }
         }
     }

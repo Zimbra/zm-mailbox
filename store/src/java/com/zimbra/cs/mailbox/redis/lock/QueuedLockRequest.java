@@ -17,6 +17,7 @@
 
 package com.zimbra.cs.mailbox.redis.lock;
 
+import java.util.List;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
@@ -33,6 +34,7 @@ public class QueuedLockRequest {
     private Semaphore semaphore;
     private LockTimingContext timingContext;
     private boolean tryAcquireNow = false;
+    private List<String> holders= null;
 
     public QueuedLockRequest(RedisLock lock, QueuedLockRequest.LockCallback callback) {
         this.lock = lock;
@@ -42,8 +44,8 @@ public class QueuedLockRequest {
     }
 
     private void lockFailed() throws ServiceException {
-        ZimbraLog.mailboxlock.warn("failed to acquire %s: %s", lock, timingContext);
-        throw ServiceException.LOCK_FAILED("unable to acquire zimbra redis lock; timeout reached");
+        ZimbraLog.mailboxlock.warn("failed to acquire %s: holders=%s, %s", lock, holders, timingContext);
+        throw ServiceException.LOCK_FAILED("unable to acquire redis lock; timeout reached");
     }
 
     public LockResponse waitForUnlock(long timeoutMillis) throws ServiceException {
@@ -54,8 +56,8 @@ public class QueuedLockRequest {
                 lockFailed();
             }
             try {
-                if (ZimbraLog.mailboxlock.isTraceEnabled()) {
-                    ZimbraLog.mailboxlock.trace("%s will wait for %s ms", this, remainingMillis);
+                if (ZimbraLog.mailboxlock.isDebugEnabled()) {
+                    ZimbraLog.mailboxlock.debug("%s will wait for %s ms (holders=%s)", this, remainingMillis, holders);
                 }
                 timingContext.attempts++;
                 if (semaphore.tryAcquire(remainingMillis, TimeUnit.MILLISECONDS)) {
@@ -101,6 +103,10 @@ public class QueuedLockRequest {
 
     public boolean canTryAcquireNow() {
         return tryAcquireNow;
+    }
+
+    public void setHolders(List<String> holders) {
+        this.holders = holders;
     }
 
     @Override

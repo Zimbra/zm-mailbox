@@ -90,7 +90,7 @@ public abstract class RedisLock {
         return lockName;
     }
 
-    protected String getThreadLockName() {
+    public String getThreadLockName() {
         long threadId = Thread.currentThread().getId();
         return lockNode + ":" + threadId;
     }
@@ -123,6 +123,7 @@ public abstract class RedisLock {
     }
 
     public LockResponse lock(boolean skipQueue) throws ServiceException {
+        ZimbraLog.mailboxlock.debug("attempting to acquire %s", this);
         QueuedLockRequest waitingLock = lockChannel.add(this, (queuedLock, context) -> {
             LockResponse response;
             try {
@@ -134,8 +135,9 @@ public abstract class RedisLock {
                 throw ServiceException.LOCK_FAILED("invalid redis lock response", null);
             }
             if (ZimbraLog.mailboxlock.isTraceEnabled()) {
-                ZimbraLog.mailboxlock.trace("lock response: %s", response);
+                ZimbraLog.mailboxlock.trace("lock response for %s: %s", uuid, response);
             }
+            queuedLock.setHolders(response.holderUuids);
             if (response.success()) {
                 if (ZimbraLog.mailboxlock.isTraceEnabled()) {
                     ZimbraLog.mailboxlock.trace("successfully acquired %s from thread %s: %s", this, getThreadLockName(), context);
@@ -159,8 +161,9 @@ public abstract class RedisLock {
                 throw ServiceException.LOCK_FAILED("invalid redis lock response", null);
             }
             if (ZimbraLog.mailboxlock.isTraceEnabled()) {
-                ZimbraLog.mailboxlock.trace("lock response: %s", response);
+                ZimbraLog.mailboxlock.trace("lock response for %s: %s", uuid, response);
             }
+            waitingLock.setHolders(response.holderUuids);
             if (response.success()) {
                 if (ZimbraLog.mailboxlock.isTraceEnabled()) {
                     ZimbraLog.mailboxlock.trace("successfully acquired %s without waiting from thread %s", this, getThreadLockName());
@@ -181,11 +184,11 @@ public abstract class RedisLock {
     }
 
     public void unlock() {
-        if (ZimbraLog.mailboxlock.isTraceEnabled()) {
-            ZimbraLog.mailboxlock.trace("releasing redis lock %s from thread %s", this, getThreadLockName());
+        if (ZimbraLog.mailboxlock.isDebugEnabled()) {
+            ZimbraLog.mailboxlock.debug("releasing redis lock %s by %s", this, getThreadLockName());
         }
         if (unlockInner() == null) {
-            ZimbraLog.mailboxlock.warn("%s attempted to release a lock it did not hold!", getThreadLockName());
+            ZimbraLog.mailboxlock.warn("%s attempted to release lock %s, which it did not hold!", getThreadLockName(), this);
         }
     }
 
