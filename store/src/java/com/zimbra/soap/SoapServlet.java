@@ -322,7 +322,18 @@ public class SoapServlet extends ZimbraServlet {
             if (e.getClass().getName().equals("org.eclipse.jetty.continuation.ContinuationThrowable"))
                 throw (Error) e;
 
-            ZimbraLog.soap.warn("handler exception", e);
+            if (e instanceof com.zimbra.common.service.ServiceException) {
+                com.zimbra.common.service.ServiceException se = (com.zimbra.common.service.ServiceException)e;
+                if (se.isReceiversFault()) {
+                    ZimbraLog.soap.warn("SoapServlet: handler exception", e);
+                } else {
+                    ZimbraLog.soap.warnQuietly("SoapServlet: %s %s",
+                            e.getMessage(), e);
+                }
+            } else {
+                ZimbraLog.soap.warn("SoapServlet: handler exception", e);
+            }
+
             Element fault = SoapProtocol.Soap12.soapFault(ServiceException.FAILURE(e.toString(), e));
             envelope = SoapProtocol.Soap12.soapEnvelope(fault);
         }

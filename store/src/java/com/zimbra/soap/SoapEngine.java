@@ -155,7 +155,12 @@ public class SoapEngine {
             LOG.info("%s%s", e.getMessage(), (msg == null ? "" : ": " + msg)); // do not log stack
             LOG.debug(msg, e); // log stack
         } else {
-            LOG.warn(msg, e);
+            if (e.isReceiversFault()) {
+                ZimbraLog.soap.warn("SoapEngine: handler exception - '%s'", msg, e);
+            } else {
+                ZimbraLog.soap.warnQuietly(String.format("SoapEngine: %s %s", e.getMessage(),
+                        msg == null ? "" : " - " + msg), e);
+            }
         }
     }
 
@@ -699,7 +704,8 @@ public class SoapEngine {
             if (e instanceof OutOfMemoryError) {
                 Zimbra.halt("handler exception", e);
             }
-            LOG.warn("handler exception", e);
+            ZimbraLog.soap.warnQuietly("SoapEngine: handler exception", e);
+
             // XXX: if the session was new, do we want to delete it?
         } finally {
             SoapTransport.clearVia();
