@@ -10167,7 +10167,12 @@ public class Mailbox implements MailboxStore {
                         itr.remove();
                     }
                     else {
-                        listener.transactionEnd(success, currentChange().depth == 0);
+                        try {
+                            listener.transactionEnd(success, currentChange().depth == 0);
+                        } catch (Exception e) {
+                            //don't  want errors here to prevent releasing lock
+                            ZimbraLog.mailbox.error("error invoking TransactionListener in transaction end!", e);
+                        }
                     }
                 }
                 lock.close();
