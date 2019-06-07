@@ -402,11 +402,7 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
                     zRedisLock.unlock();
                     throw e;
                 }
-                if (lockContext.getCaller() != null) {
-                    ZimbraLog.mailboxlock.debug("acquired distributed lock for %s (elapsed=%d)", lockContext.getCaller(), System.currentTimeMillis() - start);
-                } else {
-                    ZimbraLog.mailboxlock.debug("acquired distributed lock (elapsed=%d)", System.currentTimeMillis() - start);
-                }
+                ZimbraLog.mailboxlock.debug("acquired distributed lock %s by %s (elapsed=%d)", zRedisLock, zRedisLock.getThreadLockName(), System.currentTimeMillis() - start);
                 if (!LC.lock_based_cache_invalidation_enabled.booleanValue()) {
                     return;
                 }

@@ -112,7 +112,7 @@ public class RedisWriteLock extends RedisLock {
     }
 
     @Override
-    protected String getThreadLockName() {
+    public String getThreadLockName() {
         return super.getThreadLockName() + ":write";
     }
 

@@ -74,9 +74,9 @@ public class RedisLockChannel implements MessageListener<String> {
             isActive = true; //lazily activate the channel
             subscribe();
         }
-        QueuedLockRequest waitingLock = new QueuedLockRequest(lock, callback);
-        boolean tryAcquireNow;
         LockQueue lockQueue = getQueue(lock.getAccountId());
+        QueuedLockRequest waitingLock = new QueuedLockRequest(lock, callback, lockQueue);
+        boolean tryAcquireNow;
         if (skipQueue) {
             lockQueue.addToFront(waitingLock);
             tryAcquireNow = true;
@@ -107,12 +107,13 @@ public class RedisLockChannel implements MessageListener<String> {
     public void onMessage(CharSequence channel, String unlockMsg) {
         String[] parts = unlockMsg.split("\\|");
         String accountId;
+        String releasedLock = null;
         if (parts.length == 2) {
             //normal case when the unlock message is triggered by a mailbox releasing a lock
             accountId = parts[0];
-            String lockUuid = parts[1];
+            releasedLock = parts[1];
             if (ZimbraLog.mailboxlock.isTraceEnabled()) {
-                ZimbraLog.mailboxlock.trace("received unlock message for acct=%s, uuid=%s", accountId, lockUuid);
+                ZimbraLog.mailboxlock.trace("received unlock message for acct=%s, uuid=%s", accountId, releasedLock);
             }
         } else if (parts.length == 3 && parts[0].equals("SHUTDOWN")) {
             /*
@@ -141,15 +142,13 @@ public class RedisLockChannel implements MessageListener<String> {
         }
         List<String> notifiedLockUuids = getQueue(accountId).notifyWaitingLocks();
         if (notifiedLockUuids.size() > 0) {
-            if (ZimbraLog.mailboxlock.isTraceEnabled()) {
-                ZimbraLog.mailboxlock.debug("notified %s waiting locks for account %s: %s", notifiedLockUuids.size(), accountId, Joiner.on(", ").join(notifiedLockUuids));
-            } else {
-                ZimbraLog.mailboxlock.debug("notified %s waiting locks for account %s", notifiedLockUuids.size(), accountId);
+            if (ZimbraLog.mailboxlock.isDebugEnabled()) {
+                ZimbraLog.mailboxlock.debug("notified %s waiting locks for account %s: %s (notifier=%s)", notifiedLockUuids.size(), accountId, Joiner.on(", ").join(notifiedLockUuids), releasedLock);
             }
         }
     }
 
-    private class LockQueue {
+    class LockQueue {
 
         private String accountId;
         private LinkedList<QueuedLockRequest> queue;
@@ -237,6 +236,10 @@ public class RedisLockChannel implements MessageListener<String> {
             }
         }
 
+        public Iterator<QueuedLockRequest> getIterator() {
+            return queue.iterator();
+        }
+
         private void trace(String msg, Object... objects) {
             if (ZimbraLog.mailboxlock.isTraceEnabled()) {
                 ZimbraLog.mailboxlock.trace(msg, objects);
@@ -265,6 +268,10 @@ public class RedisLockChannel implements MessageListener<String> {
 
         public void setTimeout(long timeoutMillis) {
             timeoutTime = startTime + timeoutMillis;
+        }
+
+        public void increaseTimeout(long increaseMillis) {
+            timeoutTime += increaseMillis;
         }
 
         public long getRemainingTime() {
