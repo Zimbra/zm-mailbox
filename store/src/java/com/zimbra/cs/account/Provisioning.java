@@ -2375,6 +2375,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public abstract void deleteXMPPComponent(XMPPComponent comp) throws ServiceException;
     
     public abstract Set<String> createHabOrgUnit(Domain domain, String habOrgUnitName) throws ServiceException;
+    public abstract Set<String> listHabOrgUnit(Domain domain) throws ServiceException;
     public abstract Set<String> renameHabOrgUnit(Domain domain, String habOrgUnitName, String newHabOrgUnitName) throws ServiceException;
     public abstract void deleteHabOrgUnit(Domain domain, String habOrgUnitName) throws ServiceException;
 

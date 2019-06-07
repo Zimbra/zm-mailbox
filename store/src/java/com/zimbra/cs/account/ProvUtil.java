@@ -853,6 +853,8 @@ public class ProvUtil implements HttpDebugListener {
         UNLOCK_MAILBOX("unlockMailbox", "ulm", "{name@domain|id} [hostname (When unlocking a mailbox after a failed move attempt provide the hostname of the server that was the target for the failed move. Otherwise, do not include hostname parameter)]", Category.MAILBOX, 1, 2, Via.soap),
         CREATE_HAB_OU("createHABOrgUnit", "chou",
             "{domain} {ouName}", Category.HAB , 2, 2),
+        LIST_HAB_OU("listHABOrgUnit", "lhou",
+            "{domain}", Category.HAB , 1, 1),
         RENAME_HAB_OU("renameHABOrgUnit", "rhou",
             "{domain} {ouName} {newName}", Category.HAB , 3, 3),
         DELETE_HAB_OU("deleteHABOrgUnit", "dhou",
@@ -1612,6 +1614,9 @@ public class ProvUtil implements HttpDebugListener {
         case CREATE_HAB_OU:
             doCreateHabOrgUnit(args);
             break;
+        case LIST_HAB_OU:
+            doListHabOrgUnit(args);
+            break;
         case RENAME_HAB_OU:
             doRenameHabOrgUnit(args);
             break;
@@ -1767,6 +1772,24 @@ public class ProvUtil implements HttpDebugListener {
         } else {
             prov.createHabOrgUnit(domain, args[2]);
         }
+    }
+
+    private void doListHabOrgUnit(String[] args) throws ServiceException {
+        if (args.length != 2) {
+            usage();
+            return;
+        }
+        Domain domain = lookupDomain(args[1], prov, Boolean.FALSE);
+        Set<String> resultSet;
+        if (prov instanceof SoapProvisioning) {
+            resultSet = ((SoapProvisioning) prov).listHabOrgUnit(domain);
+        } else {
+            resultSet = prov.listHabOrgUnit(domain);
+        }
+        for (String result : resultSet) {
+            console.printf("%s\n", result);
+        }
+        return;
     }
     
     private void doRenameHabOrgUnit(String[] args)  throws ServiceException {
