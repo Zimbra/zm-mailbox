@@ -225,11 +225,16 @@ public class IndexingService {
                                 // Log an error.
                                 ZimbraLog.index.error("Could not find item %d in mailbox %d account %s",
                                         itemID.getId(), queueItem.getMailboxID(), queueItem.getAccountID(), nex);
-                                // Log a failed item for re-index batch status reporting
                                 if (queueItem.isReindex()) {
+                                    // Log a failed item for re-index batch status reporting.
+                                    // Do not add this item to indexedItems and do not out it back into the queue.
+                                    // Move on.
                                     queueAdapter.incrementFailedMailboxTaskCount(queueItem.getAccountID(), 1);
+                                } else if (queueItem.getRetries() < maxRetries) {
+                                    ZimbraLog.index.debug("Increasing the retry count and pushing to queue");
+                                    queueItem.addRetry();
+                                    queueAdapter.add(queueItem);
                                 }
-                                // Do not add this item to indexedItems and do not out it back into the queue. Move on.
                                 continue;
                             }
                         }
