@@ -4922,7 +4922,7 @@ public class Mailbox implements MailboxStore {
             if (replies != null) {
                 calItem.setReplies(replies);
             }
-            index.add(calItem);
+            index.queue(calItem, false);
 
             t.commit();
             return calItem;
@@ -5227,7 +5227,7 @@ public class Mailbox implements MailboxStore {
             }
 
             if (Invite.isOrganizerMethod(inv.getMethod())) { // Don't update the index for replies. (bug 55317)
-                index.add(calItem);
+                index.queue(calItem, false);
             }
 
             redoRecorder.setCalendarItemAttrs(calItem.getId(), calItem.getFolderId());
@@ -5667,7 +5667,7 @@ public class Mailbox implements MailboxStore {
     }
 
     void indexItem(MailItem item) throws ServiceException {
-        if(!index.add(item) && Provisioning.getInstance().getLocalServer().getMaxIndexingRetries() > 0) {
+        if(!index.queue(item, false) && Provisioning.getInstance().getLocalServer().getMaxIndexingRetries() > 0) {
             currentChange().addIndexItem(item);
         }
     }
@@ -5965,7 +5965,8 @@ public class Mailbox implements MailboxStore {
             }
 
             // step 7: queue new message for indexing
-            index.add(msg);
+            index.queue(msg, false);
+
             //update the cache so it reflects the new indexId
             cache(msg);
             success = true;
@@ -6134,7 +6135,8 @@ public class Mailbox implements MailboxStore {
             // update the content and increment the revision number
             msg.setContent(staged, pm);
 
-            index.add(msg);
+            // queue message for indexing
+            index.queue(msg, false);
 
             t.commit();
 
@@ -7190,7 +7192,7 @@ public class Mailbox implements MailboxStore {
             Note note = Note.create(noteId, getFolderById(folderId), content, location, color, null);
             redoRecorder.setNoteId(noteId);
 
-            index.add(note);
+            index.queue(note, false);
             t.commit();
             return note;
         }
@@ -7208,7 +7210,7 @@ public class Mailbox implements MailboxStore {
             checkItemChangeID(note);
 
             note.setContent(content);
-            index.add(note);
+            index.queue(note, false);
 
             t.commit();
         }
@@ -7288,7 +7290,7 @@ public class Mailbox implements MailboxStore {
                 Contact con = Contact.create(contactId, getFolderById(folderId), mblob, pc, flags, ntags, null);
                 redoRecorder.setContactId(contactId);
 
-                index.add(con);
+                index.queue(con, false);
 
                 t.commit();
                 return con;
@@ -7330,7 +7332,7 @@ public class Mailbox implements MailboxStore {
                     throw ServiceException.FAILURE("could not save contact blob", ioe);
                 }
 
-                index.add(con);
+                index.queue(con, false);
                 t.commit();
             } finally {
                 t.close();
@@ -8502,7 +8504,7 @@ public class Mailbox implements MailboxStore {
                 redoRecorder.setMessageBodyInfo(new MailboxBlobDataSource(mailboxBlob), mailboxBlob.getSize());
 
                 if (indexing) {
-                    index.add(doc);
+                    index.queue(doc, false);
                 }
 
                 t.commit();
@@ -8564,7 +8566,7 @@ public class Mailbox implements MailboxStore {
                 MailboxBlob mailboxBlob = doc.setContent(staged, pd);
                 redoRecorder.setMessageBodyInfo(new MailboxBlobDataSource(mailboxBlob), mailboxBlob.getSize());
 
-                index.add(doc);
+                index.queue(doc,false);
 
                 t.commit();
                 return doc;
@@ -8634,7 +8636,7 @@ public class Mailbox implements MailboxStore {
                 //   make sure that data actually matches the final blob in the store
                 chat.updateBlobData(mblob);
 
-                index.add(chat);
+                index.queue(chat,false);
                 t.commit();
                 return chat;
             } finally {
@@ -8687,7 +8689,7 @@ public class Mailbox implements MailboxStore {
                 chat.setContent(staged, pm);
 
                 // NOTE: msg is now uncached (will this cause problems during commit/reindex?)
-                index.add(chat);
+                index.queue(chat, false);
 
                 t.commit();
                 return chat;
@@ -9265,7 +9267,7 @@ public class Mailbox implements MailboxStore {
             String uuid = redoPlayer == null ? UUIDUtil.generateUUID() : redoPlayer.getUuid();
             Comment comment = Comment.create(this, parent, itemId, uuid, text, creatorId, null);
             redoRecorder.setItemIdAndUuid(comment.getId(), comment.getUuid());
-            index.add(comment);
+            index.queue(comment,false);
             t.commit();
             return comment;
         }

@@ -2821,7 +2821,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         copy.finishCreation(parent);
 
         if (!shareIndex) {
-            mMailbox.index.add(copy);
+            mMailbox.index.queue(copy, false);
         }
 
         return copy;
@@ -2921,7 +2921,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         }
 
         if (!shareIndex) {
-            mMailbox.index.add(copy);
+            mMailbox.index.queue(copy, false);
         }
 
         return copy;
@@ -3143,7 +3143,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         }
         // item moved out of spam, so update the index id (will be written to DB in DbMailItem.setFolder());
         if (inSpam() && !target.inSpam() && getIndexStatus() == IndexStatus.DONE) {
-            mMailbox.index.add(this);
+            mMailbox.index.queue(this, false);
         }
 
         ZimbraLog.mailop.info("moving " + getMailopContext(this) + " to " + getMailopContext(target));
