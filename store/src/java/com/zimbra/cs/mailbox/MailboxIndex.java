@@ -504,6 +504,18 @@ public final class MailboxIndex {
         return queueAdapter.add(itemLocator);
     }
 
+    /**
+     * Adds mail items to indexing queue. MailItems should already be in the database.
+     * @throws ServiceException
+     */
+    @VisibleForTesting
+    public synchronized boolean queue(MailItem item, boolean isReindexing) throws ServiceException {
+        ZimbraLog.index.debug("Queuing items %d for indexing", item.getId());
+        IndexingQueueAdapter queueAdapter = IndexingQueueAdapter.getFactory().getAdapter();
+        AddToIndexTaskLocator itemLocator = new AddToIndexTaskLocator(item, mailbox.getAccountId(), mailbox.getId(), mailbox.getSchemaGroupId(), mailbox.attachmentsIndexingEnabled(), isReindexing);
+        return queueAdapter.add(itemLocator);
+    }
+
 
     /**
      * Adds mail items to indexing queue and increases attempts counter.
