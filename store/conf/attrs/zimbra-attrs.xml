@@ -3413,6 +3413,8 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="639" name="zimbraSSLExcludeCipherSuites" type="string" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="5.0.5">
   <globalConfigValue>.*_RC4_.*</globalConfigValue>
+  <globalConfigValue>^.*_(MD5|SHA|SHA1)$</globalConfigValue>
+  <globalConfigValue>^TLS_RSA_.*</globalConfigValue>
   <desc>exact name or regular expression of cipher suites to exclude</desc>
 </attr>
 
@@ -8379,7 +8381,6 @@ TODO: delete them permanently from here
   <globalConfigValue>TLSv1</globalConfigValue>
   <globalConfigValue>TLSv1.1</globalConfigValue>
   <globalConfigValue>TLSv1.2</globalConfigValue>
-  <globalConfigValue>SSLv2Hello</globalConfigValue>
   <desc>List of SSL/TLS protocols (as documented by SunJSSE Provider Protocols and used in setEnabledProtocols) to be enabled in Jetty for HTTPS, IMAPS, POP3S, and STARTTLS (including LMTP)</desc>
 </attr>
 
