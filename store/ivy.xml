@@ -48,14 +48,14 @@
   <dependency org="com.googlecode.owasp-java-html-sanitizer" name="owasp-java-html-sanitizer" rev="20190610.1"/>
   <dependency org="org.ehcache" name="ehcache" rev="3.1.2"/>
   <dependency org="ant-1.7.0-ziputil-patched" name="ant-1.7.0-ziputil-patched" rev="1.0"/>
-  <dependency org="org.eclipse.jetty" name="jetty-continuation" rev="9.4.18.v20190429"/>
-  <dependency org="org.eclipse.jetty" name="jetty-security" rev="9.4.18.v20190429"/>
-  <dependency org="org.eclipse.jetty" name="jetty-http" rev="9.4.18.v20190429"/>
-  <dependency org="org.eclipse.jetty" name="jetty-io" rev="9.4.18.v20190429"/>
-  <dependency org="org.eclipse.jetty" name="jetty-server" rev="9.4.18.v20190429"/>
-  <dependency org="org.eclipse.jetty" name="jetty-servlet" rev="9.4.18.v20190429"/>
-  <dependency org="org.eclipse.jetty" name="jetty-servlets" rev="9.4.18.v20190429"/>
-  <dependency org="org.eclipse.jetty" name="jetty-util" rev="9.4.18.v20190429"/>
+  <dependency org="org.eclipse.jetty" name="jetty-continuation" rev="${jetty.version}"/>
+  <dependency org="org.eclipse.jetty" name="jetty-security" rev="${jetty.version}"/>
+  <dependency org="org.eclipse.jetty" name="jetty-http" rev="${jetty.version}"/>
+  <dependency org="org.eclipse.jetty" name="jetty-io" rev="${jetty.version}"/>
+  <dependency org="org.eclipse.jetty" name="jetty-server" rev="${jetty.version}"/>
+  <dependency org="org.eclipse.jetty" name="jetty-servlet" rev="${jetty.version}"/>
+  <dependency org="org.eclipse.jetty" name="jetty-servlets" rev="${jetty.version}"/>
+  <dependency org="org.eclipse.jetty" name="jetty-util" rev="${jetty.version}"/>
   <dependency org="commons-cli" name="commons-cli" rev="1.2"/>
   <dependency org="commons-pool" name="commons-pool" rev="1.6"/>
   <dependency org="commons-dbcp" name="commons-dbcp" rev="1.4"/>
