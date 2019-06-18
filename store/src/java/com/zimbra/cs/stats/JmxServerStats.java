@@ -38,7 +38,14 @@ public class JmxServerStats implements JmxServerStatsMBean {
     private DeltaCalculator mImap = new DeltaCalculator(ZimbraPerf.STOPWATCH_IMAP);
     private DeltaCalculator mPop = new DeltaCalculator(ZimbraPerf.STOPWATCH_POP);
     private DeltaCalculator mSoap = new DeltaCalculator(ZimbraPerf.STOPWATCH_SOAP);
-    private DeltaCalculator mBisSeek = new DeltaCalculator(ZimbraPerf.COUNTER_BLOB_INPUT_STREAM_SEEK_RATE); 
+    private DeltaCalculator mBisSeek = new DeltaCalculator(ZimbraPerf.COUNTER_BLOB_INPUT_STREAM_SEEK_RATE);
+
+    private DeltaCalculator mStoreCopy = new DeltaCalculator(ZimbraPerf.STOPWATCH_STORE_COPY);
+    private DeltaCalculator mStoreDel = new DeltaCalculator(ZimbraPerf.STOPWATCH_STORE_DEL);
+    private DeltaCalculator mStoreGet = new DeltaCalculator(ZimbraPerf.STOPWATCH_STORE_GET);
+    private DeltaCalculator mStoreLink = new DeltaCalculator(ZimbraPerf.STOPWATCH_STORE_LINK);
+    private DeltaCalculator mStorePut = new DeltaCalculator(ZimbraPerf.STOPWATCH_STORE_PUT);
+    private DeltaCalculator mStoreStage = new DeltaCalculator(ZimbraPerf.STOPWATCH_STORE_STAGE);
     
     private final List<Accumulator> mAccumulators;
     
@@ -50,13 +57,18 @@ public class JmxServerStats implements JmxServerStatsMBean {
         accumulators.add(mItemCache);
         accumulators.add(mMailboxCache);
         accumulators.add(mMessageCache);
-        
         accumulators.add(mAddMessage);
         accumulators.add(mImap);
         accumulators.add(mPop);
         accumulators.add(mSoap);
         accumulators.add(mBisSeek);
-        
+        accumulators.add(mStoreCopy);
+        accumulators.add(mStoreDel);
+        accumulators.add(mStoreGet);
+        accumulators.add(mStoreLink);
+        accumulators.add(mStorePut);
+        accumulators.add(mStoreStage);
+
         mAccumulators = Collections.unmodifiableList(accumulators);
     }
     
@@ -167,7 +179,31 @@ public class JmxServerStats implements JmxServerStatsMBean {
     public long getPopResponseMs() {
         return (long) mPop.getRealtimeAverage();
     }
-    
+
+    public long getStoreCopys() { return (long) ZimbraPerf.COUNTER_STORE_COPY.getTotal(); }
+
+    public long getStoreDeletes() { return (long) ZimbraPerf.COUNTER_STORE_DEL.getTotal(); }
+
+    public long getStoreGets() { return (long) ZimbraPerf.COUNTER_STORE_GET.getTotal(); }
+
+    public long getStoreLinks() { return (long) ZimbraPerf.COUNTER_STORE_LINK.getTotal(); }
+
+    public long getStorePuts() { return (long) ZimbraPerf.COUNTER_STORE_PUT.getTotal(); }
+
+    public long getStoreStages() { return (long) ZimbraPerf.COUNTER_STORE_STAGE.getTotal(); }
+
+    public long getStoreCopyMs() { return (long) mStoreCopy.getRealtimeAverage(); }
+
+    public long getStoreDeleteMs() { return (long) mStoreDel.getRealtimeAverage(); }
+
+    public long getStoreGetMs() { return (long) mStoreGet.getRealtimeAverage(); }
+
+    public long getStoreLinkMs() { return (long) mStoreLink.getRealtimeAverage(); }
+
+    public long getStorePutMs() { return (long) mStorePut.getRealtimeAverage(); }
+
+    public long getStoreStageMs() { return (long) mStoreStage.getRealtimeAverage(); }
+
     public void reset() {
         for (Accumulator accum : mAccumulators) {
             accum.reset();

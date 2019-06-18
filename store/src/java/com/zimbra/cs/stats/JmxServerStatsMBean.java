@@ -46,4 +46,16 @@ public interface JmxServerStatsMBean extends JmxStatsMBeanBase
     long getPopResponseMs();
     long getSoapRequests();
     long getSoapResponseMs();
+    long getStoreCopys();
+    long getStoreDeletes();
+    long getStoreGets();
+    long getStoreLinks();
+    long getStorePuts();
+    long getStoreStages();
+    long getStoreCopyMs();
+    long getStoreDeleteMs();
+    long getStoreGetMs();
+    long getStoreLinkMs();
+    long getStorePutMs();
+    long getStoreStageMs();
 }
