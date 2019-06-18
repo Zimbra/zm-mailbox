@@ -64,6 +64,7 @@ import com.zimbra.cs.account.auth.twofactor.TrustedDevices;
 import com.zimbra.cs.account.auth.twofactor.TwoFactorAuth;
 import com.zimbra.cs.account.krb5.Krb5Principal;
 import com.zimbra.cs.account.names.NameUtil.EmailAddress;
+import com.zimbra.cs.listeners.AuthListener;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.util.JWTUtil;
 import com.zimbra.cs.servlet.CsrfFilter;
@@ -141,7 +142,10 @@ public class Auth extends AccountDocumentHandler {
         Element jwtTokenElement = request.getOptionalElement(AccountConstants.E_JWT_TOKEN);
         boolean validationSuccess = tokenTypeAndElementValidation(tokenType, authTokenEl, jwtTokenElement);
         if (!validationSuccess) {
-            throw AuthFailedServiceException.AUTH_FAILED("auth: incorrect tokenType and Element combination");
+            AuthFailedServiceException e = AuthFailedServiceException
+                .AUTH_FAILED("auth: incorrect tokenType and Element combination");
+            AuthListener.invokeOnException(e);
+            throw e;
         }
         boolean acctAutoProvisioned = false;
         Claims claims = null;
@@ -174,7 +178,10 @@ public class Auth extends AccountDocumentHandler {
                     throw ServiceException.INVALID_REQUEST("clear text password is not allowed", null);
                 AuthToken.Usage usage = at.getUsage();
                 if (usage != Usage.AUTH && usage != Usage.TWO_FACTOR_AUTH) {
-                    throw AuthFailedServiceException.AUTH_FAILED("invalid auth token");
+                    AuthFailedServiceException e = AuthFailedServiceException
+                        .AUTH_FAILED("invalid auth token");
+                    AuthListener.invokeOnException(e);
+                    throw e;
                 }
                 Account authTokenAcct = AuthProvider.validateAuthToken(prov, at, false, usage);
                 if (verifyAccount) {
@@ -255,6 +262,7 @@ public class Auth extends AccountDocumentHandler {
                         acctAutoProvisioned = true;
                     }
                 } catch (AuthFailedServiceException e) {
+                    AuthListener.invokeOnException(e);
                     ZimbraLog.account.debug("auth failed, unable to auto provisioing acct " + acctValue, e);
                 } catch (ServiceException e) {
                     ZimbraLog.account.info("unable to auto provisioing acct " + acctValue, e);
@@ -269,6 +277,7 @@ public class Auth extends AccountDocumentHandler {
                 try {
                     result = prov.autoProvZMGProxyAccount(acctValuePassedIn, password);
                 } catch (AuthFailedServiceException e) {
+                    AuthListener.invokeOnException(e);
                     // Most likely in error with user creds
                 } catch (ServiceException e) {
                     ZimbraLog.account.info("unable to auto provision acct " + acctValuePassedIn, e);
@@ -281,7 +290,10 @@ public class Auth extends AccountDocumentHandler {
         }
 
         if (acct == null) {
-            throw AuthFailedServiceException.AUTH_FAILED(acctValue, acctValuePassedIn, "account not found");
+            AuthFailedServiceException e = AuthFailedServiceException.AUTH_FAILED(acctValue,
+                acctValuePassedIn, "account not found");
+            AuthListener.invokeOnException(e);
+            throw e;
         }
 
         AccountUtil.addAccountToLogContext(prov, acct.getId(), ZimbraLog.C_NAME, ZimbraLog.C_ID, null);
@@ -303,6 +315,7 @@ public class Auth extends AccountDocumentHandler {
                         verifyTrustedDevice(acct, trustedToken, attrs);
                         trustedDeviceOverride = true;
                     } catch (AuthFailedServiceException e) {
+                        AuthListener.invokeOnException(e);
                         ZimbraLog.account.info("trusted device not verified");
                     }
                 }
@@ -348,14 +361,20 @@ public class Auth extends AccountDocumentHandler {
                                     throw new AuthTokenException("two-factor auth token doesn't match the named account");
                                 }
                             } catch (AuthTokenException e) {
-                                throw AuthFailedServiceException.AUTH_FAILED("bad auth token");
+                                AuthFailedServiceException exception = AuthFailedServiceException
+                                    .AUTH_FAILED("bad auth token");
+                                AuthListener.invokeOnException(exception);
+                                throw exception;
                             }
                         }
                         TwoFactorAuth manager = TwoFactorAuth.getFactory().getTwoFactorAuth(acct);
                         if (twoFactorCode != null) {
                             manager.authenticate(twoFactorCode);
                         } else {
-                            throw AuthFailedServiceException.AUTH_FAILED("no two-factor code provided");
+                            AuthFailedServiceException e = AuthFailedServiceException
+                                .AUTH_FAILED("no two-factor code provided");
+                            AuthListener.invokeOnException(e);
+                            throw e;
                         }
                         if (twoFactorToken != null) {
                             try {
@@ -394,6 +413,7 @@ public class Auth extends AccountDocumentHandler {
             at.setCsrfTokenEnabled(csrfSupport);
         }
         httpReq.setAttribute(CsrfFilter.AUTH_TOKEN, at);
+        AuthListener.invokeOnSuccess(acct);
         return doResponse(request, at, zsc, context, acct, csrfSupport, trustedToken, newDeviceId);
     }
 

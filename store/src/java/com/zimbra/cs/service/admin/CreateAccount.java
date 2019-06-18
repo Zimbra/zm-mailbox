@@ -32,6 +32,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.TargetType;
+import com.zimbra.cs.listeners.AccountListener;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.CreateAccountRequest;
@@ -58,6 +59,8 @@ public class CreateAccount extends AdminDocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
+        Account account = null;
+        try {
         CreateAccountRequest req = zsc.elementToJaxb(request);
 
         String name = req.getName().toLowerCase();
@@ -67,12 +70,17 @@ public class CreateAccount extends AdminDocumentHandler {
         checkSetAttrsOnCreate(zsc, TargetType.account, name, attrs);
         checkCos(zsc, attrs);
 
-        Account account = prov.createAccount(name, req.getPassword(), attrs);
+        account = prov.createAccount(name, req.getPassword(), attrs);
 
         ZimbraLog.security.info(ZimbraLog.encodeAttrs( new String[] {"cmd", "CreateAccount","name", name}, attrs));
+        } catch (ServiceException e) {
+            AccountListener.invokeOnException(e);
+            throw e;
+        }
 
         Element response = zsc.createElement(AdminConstants.CREATE_ACCOUNT_RESPONSE);
         ToXML.encodeAccount(response, account);
+        AccountListener.invokeOnSuccess(account);
         return response;
     }
 

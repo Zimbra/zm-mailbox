@@ -100,6 +100,7 @@ import com.zimbra.cs.imap.ImapSessionManager.FolderDetails;
 import com.zimbra.cs.imap.ImapSessionManager.InitialFolderValues;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SortBy;
+import com.zimbra.cs.listeners.AuthListener;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
@@ -1689,12 +1690,13 @@ public abstract class ImapHandler {
 
             // instantiate the ImapCredentials object...
             startSession(acct, enabledHack, tag, mechanism);
-
+            AuthListener.invokeOnSuccess(acct);
         } catch (AccountServiceException.AuthFailedServiceException afe) {
             setCredentials(null);
 
             ZimbraLog.imap.info(afe.getMessage() + " (" + afe.getReason() + ')');
             sendNO(tag, command + " failed");
+            AuthListener.invokeOnException(afe);
             return true;
         } catch (ServiceException e) {
             setCredentials(null);
