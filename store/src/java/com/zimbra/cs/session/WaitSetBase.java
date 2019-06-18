@@ -22,6 +22,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.zimbra.common.util.ZimbraLog;
@@ -35,10 +39,24 @@ import com.zimbra.soap.type.IdAndType;
  * The base class defines shared functions, as well as any APIs which should be
  * package-private
  */
+@JsonTypeInfo(
+		  use = JsonTypeInfo.Id.NAME, 
+		  include = JsonTypeInfo.As.PROPERTY, 
+		  property = "type")
+@JsonSubTypes({ 
+		  @Type(value = SomeAccountsWaitSet.class, name = "someAccountWaitSet"), 
+		  @Type(value = AllAccountsWaitSet.class, name = "allAccountsWaitSet") 
+		})
 public abstract class WaitSetBase implements IWaitSet {
-    protected final String mWaitSetId;
-    protected final String mOwnerAccountId;
-    protected final Set<MailItem.Type> defaultInterest;
+    private static final long serialVersionUID = 1L;
+
+    public WaitSetBase() {
+        super();
+    }
+
+    protected String mWaitSetId;
+    protected String mOwnerAccountId;
+    protected Set<MailItem.Type> defaultInterest;
 
     protected long mLastAccessedTime = -1;
     protected WaitSetCallback mCb = null;
@@ -76,15 +94,32 @@ public abstract class WaitSetBase implements IWaitSet {
     public Set<MailItem.Type> getDefaultInterest() {
         return defaultInterest;
     }
+    public void setDefaultInterest(Set<MailItem.Type> defaultInterest) {
+        this.defaultInterest = defaultInterest;
+    }
 
+    @JsonIgnore
     @Override
     public String getOwnerAccountId() {
         return mOwnerAccountId;
     }
+    public String getmOwnerAccountId() {
+        return mOwnerAccountId;
+    }
+    public void setmOwnerAccountId(String mOwnerAccountId) {
+        this.mOwnerAccountId = mOwnerAccountId;
+    }
 
+    @JsonIgnore
     @Override
     public String getWaitSetId() {
         return mWaitSetId;
+    }
+    public String getmWaitSetId() {
+        return mWaitSetId;
+    }
+    public void setmWaitSetId(String mWaitSetId) {
+        this.mWaitSetId = mWaitSetId;
     }
 
     protected synchronized WaitSetCallback getCb() { return mCb; }
@@ -122,7 +157,6 @@ public abstract class WaitSetBase implements IWaitSet {
             ZimbraLog.session.debug("WaitSetBase.doneWaiting - saved callback NOT ours so NOT making null");
         }
     }
-
 
     protected WaitSetBase(String ownerAccountId, String waitSetId, Set<MailItem.Type> defaultInterest) {
         mOwnerAccountId = ownerAccountId;

@@ -1326,6 +1326,9 @@ public final class LC {
     public static final KnownKey redis_cache_synchronize_mailbox_state = KnownKey.newKey(false);
 
     @Supported
+    public static final KnownKey redis_cache_synchronize_waitset = KnownKey.newKey(false);
+
+    @Supported
     public static final KnownKey lock_based_cache_invalidation_enabled = KnownKey.newKey(true);
 
     @Supported

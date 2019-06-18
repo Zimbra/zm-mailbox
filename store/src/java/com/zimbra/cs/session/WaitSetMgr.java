@@ -29,15 +29,16 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.UUIDUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
-import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.cache.RedisWaitsetCache;
 import com.zimbra.cs.service.admin.AdminDocumentHandler;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -47,6 +48,8 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class WaitSetMgr {
     public static final String ALL_ACCOUNTS_ID_PREFIX = "AllWaitSet-";
+    public static final String WAITSET_PREFIX= "WaitSet-";
+    private static final boolean USE_REDIS_CACHE = LC.redis_cache_synchronize_waitset.booleanValue();
 
     private static final int MAX_WAITSETS_PER_NONADMIN_ACCOUNT = LC.zimbra_waitset_max_per_account.intValueWithinRange(1,Integer.MAX_VALUE);
     private static final TimerTask sSweeper = new TimerTask() {
@@ -93,10 +96,9 @@ public class WaitSetMgr {
         // generate an appropriate ID for the new WaitSet
         String id;
         if (allAccts) {
-//                id = ALL_ACCOUNTS_ID_PREFIX+sWaitSetNumber;
-            id = ALL_ACCOUNTS_ID_PREFIX+LdapUtil.generateUUID();
+            id = ALL_ACCOUNTS_ID_PREFIX + UUIDUtil.generateAccountAndTimeBasedUUID(ownerAccountId);
         } else {
-            id = "WaitSet-"+LdapUtil.generateUUID();
+            id = WAITSET_PREFIX + UUIDUtil.generateAccountAndTimeBasedUUID(ownerAccountId);
         }
 
         // create the proper kind of WaitSet
@@ -116,6 +118,9 @@ public class WaitSetMgr {
         synchronized(sWaitSets) {
             if (!allowMultiple) {
                 List<String> list = sWaitSetsByAccountId.get(ownerAccountId);
+                if (list == null) {
+                    list = RedisWaitsetCache.getAccountWaitsets(ownerAccountId);
+                }
                 if (list != null) {
                     if (list.size() >= MAX_WAITSETS_PER_NONADMIN_ACCOUNT) {
                         // find the least-recently-used
@@ -136,19 +141,29 @@ public class WaitSetMgr {
 
             // bookkeeping: update access time, add to static wait set maps
             ws.setLastAccessedTime(System.currentTimeMillis());
+            if (USE_REDIS_CACHE) {
+                RedisWaitsetCache.put(id, ws);
+            }
             sWaitSets.put(id, ws);
             List<String> list = sWaitSetsByAccountId.get(ownerAccountId);
             if (list == null) {
-                list = new ArrayList<String>();
-                sWaitSetsByAccountId.put(ownerAccountId, list);
+                if (USE_REDIS_CACHE) {
+                    list = RedisWaitsetCache.getAccountWaitsets(ownerAccountId);
+                }
+                if (list == null) {
+                    list = new ArrayList<String>();
+                    sWaitSetsByAccountId.put(ownerAccountId, list);
+                }
             }
             list.add(id);
-
-            // return!
-            return new Pair<String, List<WaitSetError>>(id, errors);
+            if (USE_REDIS_CACHE) {
+                RedisWaitsetCache.putAccountWaitsets(ownerAccountId, list);
+            }
         }
-    }
 
+        // return!
+        return new Pair<String, List<WaitSetError>>(id, errors);
+    }
 
     /**
      * Destroy the referenced WaitSet.
@@ -177,13 +192,22 @@ public class WaitSetMgr {
 
             //remove from the by-id map
             List<String> list = sWaitSetsByAccountId.get(ws.getOwnerAccountId());
+            if (list == null && USE_REDIS_CACHE) {
+                list = RedisWaitsetCache.getAccountWaitsets(ws.getOwnerAccountId());
+            }
             assert(list != null);
             list.remove(id);
             if (list.size() == 0) {
+                if (USE_REDIS_CACHE) {
+                    RedisWaitsetCache.removeAllWaitsetsForAccount(ws.getOwnerAccountId());
+                }
                 sWaitSetsByAccountId.remove(ws.getOwnerAccountId());
             }
 
             // remove the wait set
+            if (USE_REDIS_CACHE) {
+                RedisWaitsetCache.remove(id);
+            }
             sWaitSets.remove(id);
 
             Map<String, WaitSetAccount> toCleanup = ws.destroy();
@@ -222,7 +246,6 @@ public class WaitSetMgr {
             if (!id.startsWith(ALL_ACCOUNTS_ID_PREFIX)) {
                 throw ServiceException.INVALID_REQUEST("Called WaitSetMgr.lookupOrCreate but wasn't an 'All-' waitset ID", null);
             }
-
             IWaitSet toRet = lookup(id);
             if (toRet == null) {
                 // oops, it's gone!  Try to re-create it given the last known sequence number
@@ -230,15 +253,25 @@ public class WaitSetMgr {
                 toRet = ws;
                 ws.setLastAccessedTime(System.currentTimeMillis());
 
+                if (USE_REDIS_CACHE) {
+                    RedisWaitsetCache.put(id, ws);
+                }
                 // add the set to the two hashmaps
                 sWaitSets.put(id, ws);
                 List<String> list = sWaitSetsByAccountId.get(ownerAccountId);
                 if (list == null) {
-                    list = new ArrayList<String>();
-                    sWaitSetsByAccountId.put(ownerAccountId, list);
+                    if (USE_REDIS_CACHE) {
+                        list = RedisWaitsetCache.getAccountWaitsets(ownerAccountId);
+                    }
+                    if (list == null) {
+                        list = new ArrayList<String>();
+                        sWaitSetsByAccountId.put(ownerAccountId, list);
+                    }
                 }
                 list.add(id);
-
+                if (USE_REDIS_CACHE) {
+                    RedisWaitsetCache.putAccountWaitsets(ownerAccountId, list);
+                }
             }
             assert(toRet instanceof AllAccountsWaitSet);
             return toRet;
@@ -255,17 +288,24 @@ public class WaitSetMgr {
     }
 
     public static List<IWaitSet> getAll() {
-        synchronized(sWaitSets) {
-            List<IWaitSet> toRet = new ArrayList<IWaitSet>(sWaitSets.size());
-            toRet.addAll(sWaitSets.values());
+        List<IWaitSet> toRet = new ArrayList<IWaitSet>();
+        if (USE_REDIS_CACHE) {
+            toRet.addAll(RedisWaitsetCache.getAll());
             return toRet;
+        } else {
+            synchronized(sWaitSets) {
+                toRet.addAll(sWaitSets.values());
+                return toRet;
+            }
         }
     }
-
 
     private static WaitSetBase lookupInternal(String id) {
         synchronized(sWaitSets) {
             WaitSetBase toRet = sWaitSets.get(id);
+            if (toRet == null && USE_REDIS_CACHE) {
+                toRet = RedisWaitsetCache.get(id);
+            }
             if (toRet != null) {
                 assert(!Thread.holdsLock(toRet));
                 synchronized(toRet) {
@@ -275,8 +315,6 @@ public class WaitSetMgr {
             return toRet;
         }
     }
-
-    /**
 
      /** Called by timer in order to timeout unused WaitSets */
     private static void sweep() {
@@ -338,12 +376,23 @@ public class WaitSetMgr {
     }
 
     public static boolean isMonitoringFolderForImap(String accountId, int folderId) {
-        synchronized(sWaitSets) {
-            for (IWaitSet ws : sWaitSets.values()) {
+        if (USE_REDIS_CACHE) {
+            for (IWaitSet ws : RedisWaitsetCache.getAll()) {
                 if (ws instanceof SomeAccountsWaitSet) {
                     SomeAccountsWaitSet saWs = (SomeAccountsWaitSet) ws;
                     if (saWs.isMonitoringFolder(accountId, folderId)) {
                         return true;
+                    }
+                }
+            }
+        } else {
+            synchronized(sWaitSets) {
+                for (IWaitSet ws : sWaitSets.values()) {
+                    if (ws instanceof SomeAccountsWaitSet) {
+                        SomeAccountsWaitSet saWs = (SomeAccountsWaitSet) ws;
+                        if (saWs.isMonitoringFolder(accountId, folderId)) {
+                            return true;
+                        }
                     }
                 }
             }
