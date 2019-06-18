@@ -2219,6 +2219,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
 
         // rewrite the DB row to reflect our new view (MUST call saveData)
         reanalyze(content, size);
+        mMailbox.cache(this);
 
         return mblob;
     }
