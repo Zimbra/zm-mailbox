@@ -70,14 +70,20 @@ public class EmailToSMS implements LmtpCallback {
 	private void sendEmailSMS(Message zMsg) throws ServiceException,MessagingException {
 		Address[] recipients = zMsg.getParsedMessage().getMimeMessage().getAllRecipients();
 		String sender = zMsg.getSender();
-		String subject = "From: "+sender+"\nSubject: "+zMsg.getSubject();
 		MimeMessage mimeMsg =  zMsg.getMimeMessage(false);
 		Pair<String,String> fullTextMessage = getTextBody(mimeMsg, false);
-		String bodyMsg = "Message: "+fullTextMessage.getFirst();
+		String subject = "";
+		String bodyMsg = "";
+		if(null != fullTextMessage.getFirst() && fullTextMessage.getFirst().contains("ZIMBRA_NIC_VERIFICATION_CODE_")) {
+			bodyMsg = fullTextMessage.getFirst().replaceAll("ZIMBRA_NIC_VERIFICATION_CODE_", "");
+		} else {
+			subject = "From: "+sender+"\nSubject: "+zMsg.getSubject()+ "\n";
+			bodyMsg = "Message: "+fullTextMessage.getFirst();
+		}
 		Boolean isASCIIString = isPureAscii(bodyMsg);
 		String fullMessage = "";
 		if(isASCIIString) {
-			fullMessage = encode(subject + "\n" + bodyMsg);
+			fullMessage = encode(subject+bodyMsg);
 		} else {
 			fullMessage = fullMessage + "FEFF";
 			fullMessage = fullMessage + convertStringToUnicode(subject);
