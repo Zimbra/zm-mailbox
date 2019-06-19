@@ -22,8 +22,6 @@ import com.zimbra.cs.mailbox.TransactionAwareMap.GreedyMapGetter;
 import com.zimbra.cs.mailbox.TransactionAwareMap.MapLoader;
 import com.zimbra.cs.mailbox.TransactionCacheTracker;
 import com.zimbra.cs.mailbox.TransactionListener;
-import com.zimbra.cs.mailbox.cache.CachedObjectRegistry.CachedObjectKey;
-import com.zimbra.cs.mailbox.cache.CachedObjectRegistry.CachedObjectKeyType;
 import com.zimbra.cs.mailbox.redis.RedisBackedMap;
 
 public abstract class RedisSharedStateCache<M extends MailItem & SharedState> implements AbstractItemCache<M> {
@@ -33,7 +31,6 @@ public abstract class RedisSharedStateCache<M extends MailItem & SharedState> im
     protected RedissonClient client;
     private KnownItemIds knownItemIds;
     private TransactionCacheTracker tracker;
-    private CachedObjectRegistry cachedObjects;
 
     public RedisSharedStateCache(Mailbox mbox, AbstractItemCache<M> localCache, TransactionCacheTracker cacheTracker) {
         this.mbox = mbox;
@@ -41,7 +38,6 @@ public abstract class RedisSharedStateCache<M extends MailItem & SharedState> im
         this.client = RedissonClientHolder.getInstance().getRedissonClient();
         this.tracker = cacheTracker;
         this.knownItemIds = new KnownItemIds();
-        this.cachedObjects = cacheTracker.getCachedObjects();
         mbox.addTransactionListener(knownItemIds);
     }
 
@@ -222,17 +218,8 @@ public abstract class RedisSharedStateCache<M extends MailItem & SharedState> im
             super(objectName, CachePolicy.SINGLE_VALUE, loader);
             this.mailItemId = mailItemId;
         }
-
-        @Override
-        protected Map<K, V> loadObject() {
-            Map<K, V> mapSnapshot = super.loadObject();
-            CachedObjectKey key = new CachedObjectKey(CachedObjectKeyType.MAILITEM, mailItemId);
-            cachedObjects.addObject(key, this);
-            return mapSnapshot;
-        }
-
-
     }
+
     protected class RedisSharedState extends RedisBackedMap<String, Object> implements SharedStateAccessor {
 
         public RedisSharedState(RMap<String, Object> map, TransactionCacheTracker tracker, int mailItemId) {

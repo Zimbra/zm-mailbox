@@ -157,7 +157,6 @@ import com.zimbra.cs.mailbox.MailboxListener.ChangeNotification;
 import com.zimbra.cs.mailbox.Message.EventFlag;
 import com.zimbra.cs.mailbox.Note.Rectangle;
 import com.zimbra.cs.mailbox.Tag.NormalizedTags;
-import com.zimbra.cs.mailbox.cache.CachedObjectRegistry;
 import com.zimbra.cs.mailbox.cache.FolderCache;
 import com.zimbra.cs.mailbox.cache.ItemCache;
 import com.zimbra.cs.mailbox.cache.ItemCache.CachedTagsAndFolders;
@@ -10250,10 +10249,6 @@ public class Mailbox implements MailboxStore {
 
     public void addTransactionListener(TransactionListener listener) {
         transactionListeners.add(new WeakReference<>(listener));
-    }
-
-    public CachedObjectRegistry getCachedObjects() {
-        return cacheTracker == null ? null : cacheTracker.getCachedObjects();
     }
 
     public void clearStaleCaches(MailboxLockContext context) throws ServiceException {
