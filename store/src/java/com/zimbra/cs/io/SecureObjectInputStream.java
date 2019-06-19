@@ -21,7 +21,12 @@ import java.io.InputStream;
 import java.io.InvalidClassException;
 import java.io.ObjectInputStream;
 import java.io.ObjectStreamClass;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.util.StringUtil;
 
 /**
  * @author zimbra
@@ -36,7 +41,7 @@ public class SecureObjectInputStream extends ObjectInputStream {
      * @throws SecurityException
      */
 
-    private String acceptedClassname = null;
+    private Set<String> acceptedClassname;
     protected SecureObjectInputStream() throws IOException, SecurityException {
         super();
     }
@@ -47,6 +52,16 @@ public class SecureObjectInputStream extends ObjectInputStream {
      */
     public SecureObjectInputStream(InputStream in, String acceptedClassname) throws IOException {
         super(in);
+        this.acceptedClassname = new HashSet<String>();
+        this.acceptedClassname.add(acceptedClassname);
+    }
+
+    /**
+     * @param in
+     * @throws IOException
+     */
+    public SecureObjectInputStream(InputStream in, Set<String> acceptedClassname) throws IOException {
+        super(in);
         this.acceptedClassname = acceptedClassname;
     }
 
@@ -56,8 +71,20 @@ public class SecureObjectInputStream extends ObjectInputStream {
     @Override
     protected Class<?> resolveClass(ObjectStreamClass desc)
         throws IOException, ClassNotFoundException {
-        if (desc.getName().equals(this.acceptedClassname)) {
+
+        String acceptedClassString = LC.zimbra_deserialize_classes.value();
+        if (!StringUtil.isNullOrEmpty(acceptedClassString)) {
+            this.acceptedClassname.addAll(Arrays.asList(acceptedClassString.split(",")));
+        }
+
+        if (desc.getName().startsWith("java.") || desc.getName().startsWith("[Ljava.")) {
             return super.resolveClass(desc);
+        } else {
+            for (String className: this.acceptedClassname) {
+                if (desc.getName().equals(className)) {
+                    return super.resolveClass(desc);
+                }
+            }
         }
         throw new InvalidClassException("Unauthorized deserialization attempt", desc.getName());
     }
