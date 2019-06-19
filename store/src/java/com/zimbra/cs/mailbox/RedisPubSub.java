@@ -192,7 +192,7 @@ public class RedisPubSub extends NotificationPubSub {
     public static class Factory extends NotificationPubSub.Factory {
 
         @Override
-        protected NotificationPubSub initPubSub(Mailbox mbox) {
+        public NotificationPubSub getNotificationPubSub(Mailbox mbox) {
             RedissonClient client = RedissonClientHolder.getInstance().getRedissonClient();
             return new RedisPubSub(mbox, client);
         }
