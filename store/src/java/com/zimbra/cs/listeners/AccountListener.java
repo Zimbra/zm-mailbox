@@ -58,13 +58,24 @@ public abstract class AccountListener {
         mListeners.remove(listenerEnum);
     }
 
-    public static void invokeOnSuccess(Account acct) throws ServiceException {
+    public static void invokeOnAccountCreation(Account acct) throws ServiceException {
         ZimbraLog.account.info("Account creation successful for user: %s", acct.getName());
         // invoke listeners
         for (Map.Entry<AccountListenerId, AccountListener> listener : mListeners
             .entrySet()) {
             AccountListener listenerInstance = listener.getValue();
-            listenerInstance.onSuccess(acct);
+            listenerInstance.onAccountCreation(acct);
+        }
+
+    }
+
+    public static void invokeOnStatusChange(Account acct, String oldStatus, String newStatus) throws ServiceException {
+        ZimbraLog.account.info("Account status for %s changed from '%s' to '%s'", acct.getName(), oldStatus, newStatus);
+        // invoke listeners
+        for (Map.Entry<AccountListenerId, AccountListener> listener : mListeners
+            .entrySet()) {
+            AccountListener listenerInstance = listener.getValue();
+            listenerInstance.onStatusChange(acct, oldStatus, newStatus);
         }
 
     }
@@ -84,18 +95,28 @@ public abstract class AccountListener {
     }
 
     /**
-     * called after a successful authentication. should not throw any
+     * called after a successful account creation. should not throw any
      * exceptions.
      *
-     * @param USER_ACCOUNT authenticated user account
+     * @param USER_ACCOUNT user account created
      */
-    public abstract void onSuccess(Account acct);
+    public abstract void onAccountCreation(Account acct);
 
     /**
-     * called when auth throws ServiceException.
+     * called after an account status change. should not throw any
+     * exceptions.
      *
-     * @param USER_ACCOUNT authenticated user account
-     * @param ServiceException original exception thrown by auth
+     * @param USER_ACCOUNT user account whose status is changed
+     * @param OLD_STATUS old status of user account
+     * @param NEW_STATUS new status of user account
+     */
+    public abstract void onStatusChange(Account acct, String oldStatus, String newStatus);
+
+    /**
+     * called when CreateAccount throws ServiceException.
+     *
+     * @param USER_ACCOUNT user account
+     * @param ServiceException original exception thrown by CreateAccount
      */
     public abstract void onException(ServiceException exceptionThrown);
 
