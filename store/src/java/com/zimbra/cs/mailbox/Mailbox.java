@@ -156,8 +156,8 @@ import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.MailboxListener.ChangeNotification;
 import com.zimbra.cs.mailbox.Message.EventFlag;
 import com.zimbra.cs.mailbox.Note.Rectangle;
+import com.zimbra.cs.mailbox.NotificationPubSub.Publisher;
 import com.zimbra.cs.mailbox.Tag.NormalizedTags;
-import com.zimbra.cs.mailbox.cache.CachedObjectRegistry;
 import com.zimbra.cs.mailbox.cache.FolderCache;
 import com.zimbra.cs.mailbox.cache.ItemCache;
 import com.zimbra.cs.mailbox.cache.ItemCache.CachedTagsAndFolders;
@@ -635,9 +635,9 @@ public class Mailbox implements MailboxStore {
 
     private FolderCache mFolderCache;
     private TagCache mTagCache;
-    private FolderTagCacheReadWriteLock folderTagCacheLock = new FolderTagCacheReadWriteLock();
-    private FolderTagCacheLock ftCacheReadLock = folderTagCacheLock.readLock();
-    private FolderTagCacheLock ftCacheWriteLock = folderTagCacheLock.writeLock();
+    private final FolderTagCacheReadWriteLock folderTagCacheLock = new FolderTagCacheReadWriteLock();
+    private final FolderTagCacheLock ftCacheReadLock = folderTagCacheLock.readLock();
+    private final FolderTagCacheLock ftCacheWriteLock = folderTagCacheLock.writeLock();
     private ItemCache mItemCache = null;
     private final Map<String, Integer> mConvHashes = new ConcurrentLinkedHashMap.Builder<String, Integer>()
                     .maximumWeightedCapacity(MAX_MSGID_CACHE).build();
@@ -648,10 +648,10 @@ public class Mailbox implements MailboxStore {
     private volatile boolean open = false;
     private boolean galSyncMailbox = false;
     private volatile boolean requiresWriteLock = true;
-    private MailboxState state;
-    private NotificationPubSub.Publisher publisher;
-    private Set<WeakReference<TransactionListener>> transactionListeners;
-    private TransactionCacheTracker cacheTracker;
+    private final MailboxState state;
+    private final NotificationPubSub pubsub;
+    private final Set<WeakReference<TransactionListener>> transactionListeners;
+    private final TransactionCacheTracker cacheTracker;
 
 
     protected Mailbox(MailboxData data) {
@@ -669,7 +669,7 @@ public class Mailbox implements MailboxStore {
         addTransactionListener(cacheTracker);
         state = MailboxState.getFactory().getMailboxState(mData, cacheTracker);
         state.setLastChangeDate(System.currentTimeMillis());
-        publisher = getNotificationPubSub().getPublisher();
+        pubsub = NotificationPubSub.getFactory().getNotificationPubSub(this);
         MAX_ITEM_CACHE_SIZE = LC.zimbra_mailbox_active_cache.intValue();
     }
 
@@ -927,7 +927,7 @@ public class Mailbox implements MailboxStore {
     }
 
     boolean hasListeners(Type type) {
-        return publisher.getNumListeners(type) > 0;
+        return pubsub.getPublisher().getNumListeners(type) > 0;
     }
 
     /** Returns whether the server is keeping track of message deletes
@@ -9105,6 +9105,7 @@ public class Mailbox implements MailboxStore {
 
     private void doNotifyListeners(MailboxChange change, ChangeNotification notification) {
         long start = System.currentTimeMillis();
+        Publisher publisher = pubsub.getPublisher();
         try {
             Session source = change.octxt == null ? null : change.octxt.getSession();
             SourceSessionInfo sourceInfo = source != null ? source.toSessionInfo() : null;
@@ -10221,7 +10222,7 @@ public class Mailbox implements MailboxStore {
     }
 
     public NotificationPubSub getNotificationPubSub() {
-        return NotificationPubSub.getFactory().getNotificationPubSub(this);
+        return pubsub;
     }
 
     private FolderCache copyFolderCache() throws ServiceException {
@@ -10250,10 +10251,6 @@ public class Mailbox implements MailboxStore {
 
     public void addTransactionListener(TransactionListener listener) {
         transactionListeners.add(new WeakReference<>(listener));
-    }
-
-    public CachedObjectRegistry getCachedObjects() {
-        return cacheTracker == null ? null : cacheTracker.getCachedObjects();
     }
 
     public void clearStaleCaches(MailboxLockContext context) throws ServiceException {

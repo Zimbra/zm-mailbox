@@ -23,20 +23,17 @@ import java.util.stream.Collectors;
 
 import com.google.common.base.Joiner;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.mailbox.cache.CachedObjectRegistry;
 
 public abstract class TransactionCacheTracker implements TransactionListener {
 
     protected Mailbox mbox;
     protected ThreadLocal<Set<TransactionAware<?,?>>> touchedItems;
     private ThreadLocal<Boolean> inTransaction;
-    protected CachedObjectRegistry cachedObjects;
 
     public TransactionCacheTracker(Mailbox mbox) {
         this.mbox = mbox;
         touchedItems = ThreadLocal.withInitial(() -> new HashSet<>());
         inTransaction = ThreadLocal.withInitial(() -> false);
-        cachedObjects = new CachedObjectRegistry(mbox);
     }
 
     public void addToTracker(TransactionAware<?,?> item) {
@@ -114,9 +111,5 @@ public abstract class TransactionCacheTracker implements TransactionListener {
         }
         clearTouchedItems(touchedByThisThread);
         touchedByThisThread.clear();
-    }
-
-    public CachedObjectRegistry getCachedObjects() {
-        return cachedObjects;
     }
 }

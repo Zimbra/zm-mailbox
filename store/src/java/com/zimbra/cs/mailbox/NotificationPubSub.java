@@ -2,9 +2,7 @@ package com.zimbra.cs.mailbox;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import com.zimbra.common.mailbox.MailboxStore;
@@ -195,17 +193,6 @@ public abstract class NotificationPubSub {
 
     public static abstract class Factory {
 
-        private Map<String, NotificationPubSub> cache = new HashMap<>();
-
-        protected abstract NotificationPubSub initPubSub(Mailbox mbox);
-
-        public synchronized NotificationPubSub getNotificationPubSub(Mailbox mbox) {
-            NotificationPubSub pubsub = cache.get(mbox.getAccountId());
-            if (pubsub == null) {
-                pubsub = initPubSub(mbox);
-                cache.put(mbox.getAccountId(), pubsub);
-            }
-            return pubsub;
-        }
+        public abstract NotificationPubSub getNotificationPubSub(Mailbox mbox);
     }
 }
