@@ -43,6 +43,7 @@ import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.httpclient.URLUtil;
+import com.zimbra.cs.listeners.AccountListener;
 import com.zimbra.cs.session.AdminSession;
 import com.zimbra.cs.session.Session;
 import com.zimbra.soap.JaxbUtil;
@@ -126,25 +127,14 @@ public class ModifyAccount extends AdminDocumentHandler {
             newServer = Provisioning.getInstance().getServerByName(newServerName);
             defendAgainstServerNameHarvesting(newServer, Key.ServerBy.name, newServerName, zsc, Admin.R_listServer);
         }
-
+        String oldStatus = account.getAccountStatus(prov);
         // pass in true to checkImmutable
         prov.modifyAttrs(account, attrs, true);
-        
-        // If request is for `zimbraTwoFactorAuthEnabled = FALSE` and both zimbraFeatureTwoFactorAuthAvailable and zimbraFeatureTwoFactorAuthRequired is set to TRUE
-        // for the user, clear all the trusted devices so that the user would re-setup 2FA in the next login after LDAP updation is successful.
-        if (attrs.containsKey(Provisioning.A_zimbraTwoFactorAuthEnabled)) {
-            String value = (String) attrs.get(Provisioning.A_zimbraTwoFactorAuthEnabled);
-            if (!StringUtil.isNullOrEmpty(value) && value.equalsIgnoreCase("false") && account.isFeatureTwoFactorAuthAvailable() && account.isFeatureTwoFactorAuthRequired()) {
-                String []trustedDevices = account.getTwoFactorAuthTrustedDevices();
-                if (trustedDevices != null && trustedDevices.length > 0) {
-                    for (String encoded : trustedDevices) {
-                        account.removeTwoFactorAuthTrustedDevices(encoded);
-                    }
-                }
-            }
+        if (attrs.containsKey(Provisioning.A_zimbraAccountStatus)) {
+            String newStatus = (String) attrs.get(Provisioning.A_zimbraAccountStatus);
+            AccountListener.invokeOnStatusChange(account, oldStatus, newStatus);
         }
-        
-         
+
         // get account again, in the case when zimbraCOSId or zimbraForeignPrincipal
         // is changed, the cache object(he one we are holding on to) would'd been
         // flushed out from cache. Get the account again to get the fresh one.
