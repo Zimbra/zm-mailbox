@@ -635,9 +635,9 @@ public class Mailbox implements MailboxStore {
 
     private FolderCache mFolderCache;
     private TagCache mTagCache;
-    private FolderTagCacheReadWriteLock folderTagCacheLock = new FolderTagCacheReadWriteLock();
-    private FolderTagCacheLock ftCacheReadLock = folderTagCacheLock.readLock();
-    private FolderTagCacheLock ftCacheWriteLock = folderTagCacheLock.writeLock();
+    private final FolderTagCacheReadWriteLock folderTagCacheLock = new FolderTagCacheReadWriteLock();
+    private final FolderTagCacheLock ftCacheReadLock = folderTagCacheLock.readLock();
+    private final FolderTagCacheLock ftCacheWriteLock = folderTagCacheLock.writeLock();
     private ItemCache mItemCache = null;
     private final Map<String, Integer> mConvHashes = new ConcurrentLinkedHashMap.Builder<String, Integer>()
                     .maximumWeightedCapacity(MAX_MSGID_CACHE).build();
@@ -648,10 +648,10 @@ public class Mailbox implements MailboxStore {
     private volatile boolean open = false;
     private boolean galSyncMailbox = false;
     private volatile boolean requiresWriteLock = true;
-    private MailboxState state;
-    private NotificationPubSub pubsub;
-    private Set<WeakReference<TransactionListener>> transactionListeners;
-    private TransactionCacheTracker cacheTracker;
+    private final MailboxState state;
+    private final NotificationPubSub pubsub;
+    private final Set<WeakReference<TransactionListener>> transactionListeners;
+    private final TransactionCacheTracker cacheTracker;
 
 
     protected Mailbox(MailboxData data) {
