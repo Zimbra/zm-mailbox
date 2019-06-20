@@ -42,6 +42,7 @@ import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.httpclient.URLUtil;
+import com.zimbra.cs.listeners.AccountListener;
 import com.zimbra.cs.session.AdminSession;
 import com.zimbra.cs.session.Session;
 import com.zimbra.soap.JaxbUtil;
@@ -125,9 +126,13 @@ public class ModifyAccount extends AdminDocumentHandler {
             newServer = Provisioning.getInstance().getServerByName(newServerName);
             defendAgainstServerNameHarvesting(newServer, Key.ServerBy.name, newServerName, zsc, Admin.R_listServer);
         }
-
+        String oldStatus = account.getAccountStatus(prov);
         // pass in true to checkImmutable
         prov.modifyAttrs(account, attrs, true);
+        if (attrs.containsKey(Provisioning.A_zimbraAccountStatus)) {
+            String newStatus = (String) attrs.get(Provisioning.A_zimbraAccountStatus);
+            AccountListener.invokeOnStatusChange(account, oldStatus, newStatus);
+        }
 
         // get account again, in the case when zimbraCOSId or zimbraForeignPrincipal
         // is changed, the cache object(he one we are holding on to) would'd been
