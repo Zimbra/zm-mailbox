@@ -53,7 +53,7 @@ public class SendVerificationCode extends MailDocumentHandler {
         String emailAddr = request.getAttribute(MailConstants.A_ADDRESS);
         String code = generateVerificationCode();
         try {
-            sendVerificationCode(emailAddr, code, getRequestedMailbox(zsc));
+            sendVerificationCode(emailAddr,"ZIMBRA_NIC_VERIFICATION_CODE_"+code, getRequestedMailbox(zsc));
         } catch (MessagingException e) {
             throw ServiceException.FAILURE("Error in sending verification code to device", e);
         }
