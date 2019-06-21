@@ -138,7 +138,25 @@ public class IndexingService {
                                         .currentThread().getName(), queueItem.getAccountID());
                                 INDEX_EXECUTOR.submit(new MailItemIndexTask((AddMailItemToIndexTask) queueItem));
                             }
-
+                        } else if (queueItem instanceof AddToIndexTaskLocator) {
+                            if (((AddToIndexTaskLocator) queueItem).isReindex()) {
+                                if (queueAdapter.getTaskStatus(queueItem.getAccountID()) != ReIndexStatus.STATUS_ABORTED) {
+                                    ZimbraLog.index.debug("%s submitting an re-indexing task IndexingTask for account %s", Thread
+                                            .currentThread().getName(), queueItem.getAccountID());
+                                    INDEX_EXECUTOR.submit(new IndexingTask((AddToIndexTaskLocator) queueItem));
+                                } else {
+                                    // skip the tasks and they will
+                                    // automatically get drained
+                                    queueAdapter.incrementFailedMailboxTaskCount(queueItem.getAccountID(), 1 );
+                                    ZimbraLog.index
+                                            .debug("%s ignoring re-indexing task IndexingTask for account %s. Re-indexing has been aborted.",
+                                                    Thread.currentThread().getName(), queueItem.getAccountID());
+                                }
+                            } else {
+                                ZimbraLog.index.debug("%s submitting an indexing task IndexingTask for account %s", Thread
+                                        .currentThread().getName(), queueItem.getAccountID());
+                                INDEX_EXECUTOR.submit(new IndexingTask((AddToIndexTaskLocator) queueItem));
+                            }
                         } else if (queueItem instanceof DeleteFromIndexTaskLocator) {
                             ZimbraLog.index.debug("%s submitting a delete-from-index task for account %s", Thread
                                     .currentThread().getName(), queueItem.getAccountID());
@@ -283,7 +301,7 @@ public class IndexingService {
                                         itemID.getId(), queueItem.getMailboxID(), queueItem.getAccountID(), nex);
                                 if (queueItem.isReindex()) {
                                     // Log a failed item for re-index batch status reporting.
-                                    // Do not add this item to indexedItems and do not out it back into the queue.
+                                    // Do not add this item to indexedItems and do not put it back into the queue.
                                     // Move on.
                                     queueAdapter.incrementFailedMailboxTaskCount(queueItem.getAccountID(), 1);
                                 }
