@@ -59,6 +59,8 @@ import com.zimbra.cs.index.ZimbraIndexReader.TermFieldEnumeration;
 import com.zimbra.cs.index.ZimbraIndexSearcher;
 import com.zimbra.cs.index.ZimbraQuery;
 import com.zimbra.cs.index.ZimbraQueryResults;
+import com.zimbra.cs.index.queue.AbstractIndexingTasksLocator;
+import com.zimbra.cs.index.queue.AddMailItemToIndexTask;
 import com.zimbra.cs.index.queue.AddToIndexTaskLocator;
 import com.zimbra.cs.index.queue.DeleteFromIndexTaskLocator;
 import com.zimbra.cs.index.queue.IndexingQueueAdapter;
@@ -505,17 +507,16 @@ public final class MailboxIndex {
     }
 
     /**
-     * Adds mail item to indexing queue. MailItem should already be in the database.
+     * Adds mail item to indexing queue.
      * @throws ServiceException
      */
     @VisibleForTesting
     public synchronized boolean queue(MailItem item, boolean isReindexing) throws ServiceException {
         ZimbraLog.index.debug("Queuing item %d for indexing", item.getId());
         IndexingQueueAdapter queueAdapter = IndexingQueueAdapter.getFactory().getAdapter();
-        AddToIndexTaskLocator itemLocator = new AddToIndexTaskLocator(item, mailbox.getAccountId(), mailbox.getId(), mailbox.getSchemaGroupId(), mailbox.attachmentsIndexingEnabled(), isReindexing);
+        AbstractIndexingTasksLocator itemLocator = new AddMailItemToIndexTask(item, mailbox.getAccountId(), mailbox.getId(), mailbox.getSchemaGroupId(), mailbox.attachmentsIndexingEnabled(), isReindexing);
         return queueAdapter.add(itemLocator);
     }
-
 
     /**
      * Adds mail items to indexing queue and increases attempts counter.
