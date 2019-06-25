@@ -8,6 +8,10 @@ import org.redisson.api.RTopic;
 import org.redisson.api.RedissonClient;
 import org.redisson.api.listener.MessageListener;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.RemovalListener;
+import com.google.common.cache.RemovalNotification;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -103,15 +107,29 @@ public class RedisPubSub extends NotificationPubSub {
 
         private int listenerId;
         private RTopic channel;
-        private Map<String, Subscriber> subscriberMap;
+        private Cache<String, Subscriber> subscriberMap;
         private String name;
         private boolean active = false;
 
         public NotificationChannel(RedissonClient client, String channelName) {
             this.name = channelName;
-            this.subscriberMap = new HashMap<>();
+            this.subscriberMap = buildSubscriberMap();
             this.channel = client.getTopic(channelName);
             beginListening();
+        }
+
+        private Cache<String, Subscriber> buildSubscriberMap() {
+            CacheBuilder<String, Subscriber> builder = CacheBuilder.newBuilder()
+                    .weakValues()
+                    .removalListener(new RemovalListener<String, Subscriber>() {
+
+                        @Override
+                        public void onRemoval(RemovalNotification<String, Subscriber> notification) {
+                            ZimbraLog.pubsub.debug("removed subscriber for account %s from %s, reason=%s",
+                                    notification.getKey(), name, notification.getCause());
+                        }
+                    });
+            return builder.build();
         }
 
         public void beginListening() {
@@ -131,8 +149,8 @@ public class RedisPubSub extends NotificationPubSub {
         }
 
         public void removeSubscriber(String accountId) {
-            subscriberMap.remove(accountId);
-            if (subscriberMap.isEmpty()) {
+            subscriberMap.invalidate(accountId);
+            if (subscriberMap.asMap().isEmpty()) {
                 ZimbraLog.mailbox.info("%s has no subscribers, removing listener", name);
                 channel.removeListener(listenerId);
                 active = false;
@@ -146,7 +164,7 @@ public class RedisPubSub extends NotificationPubSub {
         @Override
         public void onMessage(CharSequence channel, NotificationMsg msg) {
             String notificationAcctId = msg.accountId;
-            Subscriber subscriber = subscriberMap.get(notificationAcctId);
+            Subscriber subscriber = subscriberMap.getIfPresent(notificationAcctId);
             if (subscriber == null) {
                 /* Not a listener for this account, not unusual, there should be another thread listening though. */
                 return;

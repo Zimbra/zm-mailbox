@@ -185,7 +185,7 @@ public abstract class MailboxCacheManager {
 
         @Override
         public Object get(Object key) {
-            return get(key, false);
+            return get(key, true);
         }
 
         public Object get(Object key, boolean trackGC) {
