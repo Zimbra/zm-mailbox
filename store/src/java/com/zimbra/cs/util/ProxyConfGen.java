@@ -773,6 +773,12 @@ class MemcacheServersVar extends ProxyConfVar {
                 mLog.error("Error resolving memcached host name: '" + serverName + "'", pce);
             }
         }
+        String MEMCACHED_SERVERS = System.getenv("MEMCACHED_SERVERS");
+        if (MEMCACHED_SERVERS != null) {
+            for (String server : MEMCACHED_SERVERS.replace("\n", " ").split(" ")) {
+                servers.add(server);
+            }
+        }
         if (servers.isEmpty()) {
             throw new ProxyConfException ("No available memcached servers could be contacted");
         }
@@ -784,8 +790,15 @@ class MemcacheServersVar extends ProxyConfVar {
         @SuppressWarnings("unchecked")
         ArrayList<String> servers = (ArrayList<String>) o;
         StringBuilder conf = new StringBuilder();
+
+        boolean indent = false;
         for (String s : servers) {
-            conf.append("  servers   ");
+            if (!indent) {
+                conf.append("servers   ");
+                indent = true;
+            } else {
+                conf.append("    servers   ");
+            }
             conf.append(s);
             conf.append(";\n");
         }
