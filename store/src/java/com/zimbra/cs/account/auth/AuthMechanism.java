@@ -39,6 +39,7 @@ import com.zimbra.cs.account.krb5.Krb5Login;
 import com.zimbra.cs.account.krb5.Krb5Principal;
 import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.account.ldap.entry.LdapEntry;
+import com.zimbra.cs.listeners.AuthListener;
 
 public abstract class AuthMechanism {
 
@@ -209,8 +210,10 @@ public abstract class AuthMechanism {
                     appPasswords.authenticate(password);
                     authDone = true;
                 } else {
-                    throw AuthFailedServiceException.AUTH_FAILED(acct.getName(),
+                    AuthFailedServiceException afe = AuthFailedServiceException.AUTH_FAILED(acct.getName(),
                             namePassedIn(authCtxt), "invalid password");
+                	AuthListener.invokeOnException(afe);
+                    throw afe;
                 }
             }
         }
@@ -249,8 +252,10 @@ public abstract class AuthMechanism {
 
             String encodedPassword = acct.getAttr(Provisioning.A_userPassword);
             if (encodedPassword == null) {
-                throw AuthFailedServiceException.AUTH_FAILED(acct.getName(),
+            	AuthFailedServiceException afse = AuthFailedServiceException.AUTH_FAILED(acct.getName(),
                         namePassedIn(authCtxt), "missing "+Provisioning.A_userPassword);
+            	AuthListener.invokeOnException(afse);
+            	throw afse;
             }
 
             if (isEncodedPassword(encodedPassword)) {
@@ -264,8 +269,10 @@ public abstract class AuthMechanism {
                         return;
                     }
                     if (!isValidEncodedPassword(refreshedPassword, password)) {
-                        throw AuthFailedServiceException.AUTH_FAILED(acct.getName(),
+                    	AuthFailedServiceException afe = AuthFailedServiceException.AUTH_FAILED(acct.getName(),
                                 namePassedIn(authCtxt), "invalid password");
+                    	AuthListener.invokeOnException(afe);
+                        throw afe;
                     }
                     return;
                 }
@@ -275,7 +282,9 @@ public abstract class AuthMechanism {
                 prov.zimbraLdapAuthenticate(acct, password, authCtxt);
                 return;  // good password, RETURN
             }
-            throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), namePassedIn(authCtxt));
+            AuthFailedServiceException afse = AuthFailedServiceException.AUTH_FAILED(acct.getName(), namePassedIn(authCtxt));
+            AuthListener.invokeOnException(afse);
+            throw afse;
         }
 
         @Override
@@ -321,16 +330,21 @@ public abstract class AuthMechanism {
                 Map<String, Object> authCtxt) throws ServiceException {
             String principal = Krb5Principal.getKrb5Principal(domain, acct);
 
-            if (principal == null)
-                throw AuthFailedServiceException.AUTH_FAILED(acct.getName(),
-                        namePassedIn(authCtxt), "cannot obtain principal for " + authMech.name() + " auth");
+            if (principal == null) {
+            	AuthFailedServiceException afse = AuthFailedServiceException.AUTH_FAILED(acct.getName(), 
+            			namePassedIn(authCtxt), "cannot obtain principal for " + authMech.name() + " auth");
+            	AuthListener.invokeOnException(afse);
+            	throw afse;
+            }
 
             if (principal != null) {
                 try {
                     Krb5Login.verifyPassword(principal, password);
                 } catch (LoginException e) {
-                    throw AuthFailedServiceException.AUTH_FAILED(acct.getName(),
+                	AuthFailedServiceException afse = AuthFailedServiceException.AUTH_FAILED(acct.getName(),
                             namePassedIn(authCtxt) + "(kerberos5 principal: " + principal + ")", e.getMessage(), e);
+                	AuthListener.invokeOnException(afse);
+                	throw afse;
                 }
             }
         }
@@ -401,10 +415,13 @@ public abstract class AuthMechanism {
         public void doAuth(LdapProv prov, Domain domain, Account acct, String password,
                 Map<String, Object> authCtxt) throws ServiceException {
 
-            if (mHandler == null)
-                throw AuthFailedServiceException.AUTH_FAILED(acct.getName(),
+            if (mHandler == null) {
+            	AuthFailedServiceException afse = AuthFailedServiceException.AUTH_FAILED(acct.getName(),
                         namePassedIn(authCtxt), "handler " + mHandlerName +
                         " for custom auth for domain " + domain.getName() + " not found");
+            	AuthListener.invokeOnException(afse);
+            	throw afse;
+            }
 
             try {
                 mHandler.authenticate(acct, password, authCtxt, mArgs);
@@ -422,7 +439,9 @@ public abstract class AuthMechanism {
                      * include msg in the response, in addition to logs.  This is because custom
                      * auth handlers might want to pass the reason back to the client.
                      */
-                    throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), namePassedIn(authCtxt)+msg, msg, e);
+                    AuthFailedServiceException afse = AuthFailedServiceException.AUTH_FAILED(acct.getName(), namePassedIn(authCtxt)+msg, msg, e);
+                    AuthListener.invokeOnException(afse);
+                    throw afse;
                 }
             }
 
