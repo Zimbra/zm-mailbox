@@ -865,9 +865,11 @@ public final class DbMailbox {
         }
     }
 
+    //id checkpoint increments are disabled in Zimbra X, since they can result
+    //in ids not being monotonically increasing, leading to collisions
     public static final int CHANGE_CHECKPOINT_INCREMENT = 1;
-    public static final int ITEM_CHECKPOINT_INCREMENT   = Zimbra.isAlwaysOn() ? 1 : 20;
-    public static final int SEARCH_ID_CHECKPOINT_INCREMENT = Zimbra.isAlwaysOn() ? 1 : 20;
+    public static final int ITEM_CHECKPOINT_INCREMENT   = 1;
+    public static final int SEARCH_ID_CHECKPOINT_INCREMENT = 1;
 
     public static Mailbox.MailboxData getMailboxStats(DbConnection conn, int mailboxId) throws ServiceException {
         // no locking check because it's a mailbox-level op done before the Mailbox object is instantiated...
