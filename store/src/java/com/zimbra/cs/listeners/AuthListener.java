@@ -23,6 +23,7 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 
 public abstract class AuthListener {
 
@@ -70,8 +71,12 @@ public abstract class AuthListener {
     }
 
     public static void invokeOnException(ServiceException exceptionThrown) {
-        ZimbraLog.account.info("Error occurred during authentication: %s",
-            exceptionThrown.getMessage());
+    	if (exceptionThrown instanceof AuthFailedServiceException) {
+    		ZimbraLog.account.info("Error occurred during authentication: %s. Reason: %s.",
+    	            exceptionThrown.getMessage(), ((AuthFailedServiceException) exceptionThrown).getReason());
+    	} else {
+    		ZimbraLog.account.info("Error occurred during authentication: %s", exceptionThrown.getMessage());
+    	}
         if (ZimbraLog.account.isDebugEnabled()) {
             ZimbraLog.account.debug(exceptionThrown);
         }

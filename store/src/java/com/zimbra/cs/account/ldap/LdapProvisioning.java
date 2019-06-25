@@ -210,6 +210,7 @@ import com.zimbra.cs.ldap.ZSearchResultEntry;
 import com.zimbra.cs.ldap.ZSearchResultEnumeration;
 import com.zimbra.cs.ldap.ZSearchScope;
 import com.zimbra.cs.ldap.unboundid.InMemoryLdapServer;
+import com.zimbra.cs.listeners.AuthListener;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -5655,7 +5656,9 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     private void ldapAuthenticate(String urls[], boolean requireStartTLS, String principal, String password)
     throws ServiceException {
         if (password == null || password.equals("")) {
-            throw AccountServiceException.AuthFailedServiceException.AUTH_FAILED("empty password");
+        	AuthFailedServiceException afe = AccountServiceException.AuthFailedServiceException.AUTH_FAILED("empty password");
+            AuthListener.invokeOnException(afe);
+        	throw afe;
         }
 
         LdapClient.externalLdapAuthenticate(urls, requireStartTLS, principal, password, "external LDAP auth");
@@ -5669,7 +5672,9 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     throws ServiceException {
 
         if (password == null || password.equals("")) {
-            throw AccountServiceException.AuthFailedServiceException.AUTH_FAILED("empty password");
+        	AuthFailedServiceException afe = AccountServiceException.AuthFailedServiceException.AUTH_FAILED("empty password");
+            AuthListener.invokeOnException(afe);
+        	throw afe;
         }
 
         ExternalLdapConfig config = new ExternalLdapConfig(url, wantStartTLS,
@@ -5703,9 +5708,13 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             ZimbraLog.account.warn(String.format(
                     "ldapAuthenticate searchFilter returned more then one result: (dn1=%s, dn2=%s, filter=%s)",
                     resultDn, tooMany, searchFilter));
-            throw AccountServiceException.AuthFailedServiceException.AUTH_FAILED("too many results from search filter!");
+            AuthFailedServiceException afse = AccountServiceException.AuthFailedServiceException.AUTH_FAILED("too many results from search filter!");
+            AuthListener.invokeOnException(afse);
+            throw afse;
         } else if (resultDn == null) {
-            throw AccountServiceException.AuthFailedServiceException.AUTH_FAILED("empty search");
+        	AuthFailedServiceException afse = AccountServiceException.AuthFailedServiceException.AUTH_FAILED("empty search");
+            AuthListener.invokeOnException(afse);
+            throw afse;
         }
         if (ZimbraLog.account.isDebugEnabled()) ZimbraLog.account.debug("search filter matched: "+resultDn);
         ldapAuthenticate(url, wantStartTLS, resultDn, password);
@@ -5851,8 +5860,10 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                 return;
             }
         } catch (ServiceException e) {
-            throw AuthFailedServiceException.AUTH_FAILED(principal,
+        	AuthFailedServiceException afse = AuthFailedServiceException.AUTH_FAILED(principal,
                     AuthMechanism.namePassedIn(authCtxt), "external LDAP auth failed, "+e.getMessage(), e);
+        	AuthListener.invokeOnException(afse);
+        	throw afse;
         }
 
         String msg = "one of the following attrs must be set "+
