@@ -355,6 +355,7 @@ public abstract class LmtpHandler extends ProtocolHandler {
             return;
         }
 
+        arg = filterOutSmtpUtf8(arg);
         if (mEnvelope.hasSender()) {
             sendReply(LmtpReply.NESTED_MAIL_COMMAND);
             return;
@@ -526,5 +527,11 @@ public abstract class LmtpHandler extends ProtocolHandler {
         } else {
             return false;
         }
+    }
+    /*
+     * If MAIL FROM have SMTPUTF8 as parameter then ignore this. Fix for NICPS-610
+     */
+    private String filterOutSmtpUtf8(String arg) {
+    	return arg.replace("smtputf8", "").replace("SMTPUTF8", "");
     }
 }
