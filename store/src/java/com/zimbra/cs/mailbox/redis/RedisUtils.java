@@ -1,6 +1,13 @@
 package com.zimbra.cs.mailbox.redis;
 
+import java.io.IOException;
+
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.ZimbraLog;
 
 public class RedisUtils {
 
@@ -36,5 +43,30 @@ public class RedisUtils {
         public String toString() {
             return getKey();
         }
+    }
+
+    public static String stringify(Object object) {
+        ObjectMapper oMapper = new ObjectMapper();
+        oMapper.setSerializationInclusion(Include.NON_NULL);
+        try {
+            String json = oMapper.writeValueAsString(object);
+            ZimbraLog.cache.debug(json);
+            return json;
+        } catch (JsonProcessingException jpe) {
+            ZimbraLog.misc.info("Error while creating json string: ", jpe);
+        }
+        return null;
+    }
+
+    public static <T> T objectify(String content, TypeReference<T> valueType) {
+        try {
+            ZimbraLog.cache.debug(content);
+            ObjectMapper oMapper = new ObjectMapper();
+            oMapper.setSerializationInclusion(Include.NON_NULL);
+            return oMapper.readValue(content, valueType);
+        } catch(IOException ioe) {
+            ZimbraLog.misc.info("Error occured while creating object from json string: ", ioe);
+        }
+        return null;
     }
 }

@@ -40,13 +40,13 @@ import com.zimbra.soap.type.IdAndType;
  * package-private
  */
 @JsonTypeInfo(
-		  use = JsonTypeInfo.Id.NAME, 
-		  include = JsonTypeInfo.As.PROPERTY, 
-		  property = "type")
+          use = JsonTypeInfo.Id.NAME, 
+          include = JsonTypeInfo.As.PROPERTY, 
+          property = "type")
 @JsonSubTypes({ 
-		  @Type(value = SomeAccountsWaitSet.class, name = "someAccountWaitSet"), 
-		  @Type(value = AllAccountsWaitSet.class, name = "allAccountsWaitSet") 
-		})
+          @Type(value = SomeAccountsWaitSet.class, name = "someAccountWaitSet"), 
+          @Type(value = AllAccountsWaitSet.class, name = "allAccountsWaitSet") 
+        })
 public abstract class WaitSetBase implements IWaitSet {
     private static final long serialVersionUID = 1L;
 
@@ -85,11 +85,9 @@ public abstract class WaitSetBase implements IWaitSet {
     public long getLastAccessedTime() {
         return mLastAccessedTime;
     }
-
     public void setLastAccessedTime(long lastAccessedTime) {
         mLastAccessedTime = lastAccessedTime;
     }
-
     @Override
     public Set<MailItem.Type> getDefaultInterest() {
         return defaultInterest;
@@ -97,7 +95,6 @@ public abstract class WaitSetBase implements IWaitSet {
     public void setDefaultInterest(Set<MailItem.Type> defaultInterest) {
         this.defaultInterest = defaultInterest;
     }
-
     @JsonIgnore
     @Override
     public String getOwnerAccountId() {
@@ -109,7 +106,6 @@ public abstract class WaitSetBase implements IWaitSet {
     public void setmOwnerAccountId(String mOwnerAccountId) {
         this.mOwnerAccountId = mOwnerAccountId;
     }
-
     @JsonIgnore
     @Override
     public String getWaitSetId() {
@@ -121,8 +117,115 @@ public abstract class WaitSetBase implements IWaitSet {
     public void setmWaitSetId(String mWaitSetId) {
         this.mWaitSetId = mWaitSetId;
     }
-
+    /**
+     * @return the currentPendingModifications
+     */
+    public Map<String, PendingModifications> getCurrentPendingModifications() {
+        return currentPendingModifications;
+    }
+    /**
+     * @param currentPendingModifications the currentPendingModifications to set
+     */
+    public void setCurrentPendingModifications(Map<String, PendingModifications> currentPendingModifications) {
+        this.currentPendingModifications = currentPendingModifications;
+    }
+    /**
+     * @return the sentPendingModifications
+     */
+    public Map<String, PendingModifications> getSentPendingModifications() {
+        return sentPendingModifications;
+    }
+    /**
+     * @param sentPendingModifications the sentPendingModifications to set
+     */
+    public void setSentPendingModifications(Map<String, PendingModifications> sentPendingModifications) {
+        this.sentPendingModifications = sentPendingModifications;
+    }
     protected synchronized WaitSetCallback getCb() { return mCb; }
+    /**
+     * @return the mCb
+     */
+    public WaitSetCallback getmCb() {
+        return mCb;
+    }
+    /**
+     * @param mCb the mCb to set
+     */
+    public void setmCb(WaitSetCallback mCb) {
+        this.mCb = mCb;
+    }
+    /**
+     * @return the mCurrentErrors
+     */
+    public List<WaitSetError> getmCurrentErrors() {
+        return mCurrentErrors;
+    }
+    /**
+     * @param mCurrentErrors the mCurrentErrors to set
+     */
+    public void setmCurrentErrors(List<WaitSetError> mCurrentErrors) {
+        this.mCurrentErrors = mCurrentErrors;
+    }
+    /**
+     * @return the mSentErrors
+     */
+    public List<WaitSetError> getmSentErrors() {
+        return mSentErrors;
+    }
+    /**
+     * @param mSentErrors the mSentErrors to set
+     */
+    public void setmSentErrors(List<WaitSetError> mSentErrors) {
+        this.mSentErrors = mSentErrors;
+    }
+    /**
+     * @return the mCurrentSignalledAccounts
+     */
+    public HashSet<String> getmCurrentSignalledAccounts() {
+        return mCurrentSignalledAccounts;
+    }
+    /**
+     * @param mCurrentSignalledAccounts the mCurrentSignalledAccounts to set
+     */
+    public void setmCurrentSignalledAccounts(HashSet<String> mCurrentSignalledAccounts) {
+        this.mCurrentSignalledAccounts = mCurrentSignalledAccounts;
+    }
+    /**
+     * @return the mCurrentSignalledSessions
+     */
+    public HashSet<WaitSetSession> getmCurrentSignalledSessions() {
+        return mCurrentSignalledSessions;
+    }
+    /**
+     * @param mCurrentSignalledSessions the mCurrentSignalledSessions to set
+     */
+    public void setmCurrentSignalledSessions(HashSet<WaitSetSession> mCurrentSignalledSessions) {
+        this.mCurrentSignalledSessions = mCurrentSignalledSessions;
+    }
+    /**
+     * @return the mSentSignalledAccounts
+     */
+    public HashSet<String> getmSentSignalledAccounts() {
+        return mSentSignalledAccounts;
+    }
+    /**
+     * @param mSentSignalledAccounts the mSentSignalledAccounts to set
+     */
+    public void setmSentSignalledAccounts(HashSet<String> mSentSignalledAccounts) {
+        this.mSentSignalledAccounts = mSentSignalledAccounts;
+    }
+    /**
+     * @return the mSentSignalledSessions
+     */
+    public HashSet<WaitSetSession> getmSentSignalledSessions() {
+        return mSentSignalledSessions;
+    }
+    /**
+     * @param mSentSignalledSessions the mSentSignalledSessions to set
+     */
+    public void setmSentSignalledSessions(HashSet<WaitSetSession> mSentSignalledSessions) {
+        this.mSentSignalledSessions = mSentSignalledSessions;
+    }
 
     /**
      * Cancel any existing callback

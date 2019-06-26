@@ -27,9 +27,12 @@ import org.redisson.api.RBuckets;
 import org.redisson.api.RKeys;
 import org.redisson.api.RedissonClient;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.mailbox.RedissonClientHolder;
+import com.zimbra.cs.mailbox.redis.RedisUtils;
 import com.zimbra.cs.session.WaitSetBase;
 import com.zimbra.cs.session.WaitSetMgr;
 
@@ -45,25 +48,41 @@ public class RedisWaitsetCache {
         client = RedissonClientHolder.getInstance().getRedissonClient();
     }
 
+    /**
+     * Used RedisUtils.stringify() and RedisUtils.objectify() methods to serialize and deserialize WaitSetBase,
+     * since JsonJacksonCodec used in Redis was not able to serialize and deserialize the WaitSetBase object.
+     * HashMap objects in WaitSetBase were not serialized correctly JsonJacksonCodec and FstCodec.
+     */
     // waitset base
 
-    private static RBucket<WaitSetBase> getBucket(String wsId) {
+    private static RBucket<String> getBucket(String wsId) {
         return client.getBucket(wsId);
     }
 
     public static WaitSetBase remove(String wsId) {
-        RBucket<WaitSetBase> bucket = getBucket(wsId);
-        return bucket.getAndDelete();
+        RBucket<String> bucket = getBucket(wsId);
+        String json = bucket.getAndDelete();
+        if (!StringUtil.isNullOrEmpty(json)) {
+            WaitSetBase ws = RedisUtils.objectify(json, new TypeReference<WaitSetBase>() {});
+            return ws;
+        }
+        return null;
     }
 
     public static WaitSetBase get(String wsId) {
-        RBucket<WaitSetBase> bucket = getBucket(wsId);
-        return bucket.get();
+        RBucket<String> bucket = getBucket(wsId);
+        String json = bucket.get();
+        if (!StringUtil.isNullOrEmpty(json)) {
+            WaitSetBase ws = RedisUtils.objectify(json, new TypeReference<WaitSetBase>() {});
+            return ws;
+        }
+        return null;
     }
 
     public static void put(String wsId, WaitSetBase ws) {
-        RBucket<WaitSetBase> bucket = getBucket(wsId);
-        bucket.set(ws, TIME_TO_LIVE, TimeUnit.MILLISECONDS);
+        RBucket<String> bucket = getBucket(wsId);
+        String json = RedisUtils.stringify(ws);
+        bucket.set(json, TIME_TO_LIVE, TimeUnit.MILLISECONDS);
     }
 
     public static List<WaitSetBase> getAll() {
@@ -74,12 +93,13 @@ public class RedisWaitsetCache {
         keys.getKeysByPattern(WaitSetMgr.ALL_ACCOUNTS_ID_PREFIX).forEach(key -> keysToGet.add(key));
 
         RBuckets rBuckets = client.getBuckets();
-        Map<String, WaitSetBase> wsMap = rBuckets.get(keysToGet.toArray(new String[] {}));
+        Map<String, String> wsMap = rBuckets.get(keysToGet.toArray(new String[] {}));
 
         wsMap.values()
             .stream()
-            .forEach(ws -> {
-                if (ws != null) {
+            .forEach(json -> {
+                if (!StringUtil.isNullOrEmpty(json)) {
+                    WaitSetBase ws = RedisUtils.objectify(json, new TypeReference<WaitSetBase>() {});
                     returnList.add(ws);
                 }
             });
@@ -88,37 +108,51 @@ public class RedisWaitsetCache {
 
     // account waitsets
 
-    private static RBucket<List<String>> getBucketForAccountWaitsets(String wsAccountId) {
+    private static RBucket<String> getBucketForAccountWaitsets(String wsAccountId) {
         return client.getBucket(wsAccountId);
     }
 
     public static List<String> removeAllWaitsetsForAccount(String accountId) {
         String wsAccountId = WAITSETS_BY_ACCOUNT_ID_PREFIX + accountId;
-        RBucket<List<String>> bucket = getBucketForAccountWaitsets(wsAccountId);
-        return bucket.getAndDelete();
+        RBucket<String> bucket = getBucketForAccountWaitsets(wsAccountId);
+        String json = bucket.getAndDelete();
+        if (!StringUtil.isNullOrEmpty(json)) {
+            List<String> list = RedisUtils.objectify(json, new TypeReference<List<String>>() {});
+            return list;
+        }
+        return null;
     }
 
     public static List<String> removeWaitsetsForAccount(String accountId, String wsId) {
         String wsAccountId = WAITSETS_BY_ACCOUNT_ID_PREFIX + accountId;
-        RBucket<List<String>> bucket = getBucketForAccountWaitsets(wsAccountId);
-        List<String> list = bucket.getAndDelete();
-        list.remove(wsId);
-        putAccountWaitsets(accountId, list);
-        return list;
+        RBucket<String> bucket = getBucketForAccountWaitsets(wsAccountId);
+        String json = bucket.getAndDelete();
+        if (!StringUtil.isNullOrEmpty(json)) {
+            List<String> list = RedisUtils.objectify(json, new TypeReference<List<String>>() {});
+            list.remove(wsId);
+            putAccountWaitsets(accountId, list);
+            return list;
+        }
+        return null;
     }
 
     public static List<String> getAccountWaitsets(String accountId) {
         accountId = WAITSETS_BY_ACCOUNT_ID_PREFIX + accountId;
-        RBucket<List<String>> bucket = getBucketForAccountWaitsets(accountId);
-        return bucket.get();
+        RBucket<String> bucket = getBucketForAccountWaitsets(accountId);
+        String json = bucket.get();
+        if (!StringUtil.isNullOrEmpty(json)) {
+            return RedisUtils.objectify(json, new TypeReference<List<String>>() {});
+        }
+        return null;
     }
 
     public static void putAccountWaitsets(String accountId, List<String> listOfWaitsets) {
         accountId = WAITSETS_BY_ACCOUNT_ID_PREFIX + accountId;
-        RBucket<List<String>> bucket = getBucketForAccountWaitsets(accountId);
+        RBucket<String> bucket = getBucketForAccountWaitsets(accountId);
         if (listOfWaitsets == null) {
             listOfWaitsets = new ArrayList<String>()	;
         }
-        bucket.set(listOfWaitsets, TIME_TO_LIVE, TimeUnit.MILLISECONDS);
+        String json = RedisUtils.stringify(listOfWaitsets);
+        bucket.set(json, TIME_TO_LIVE, TimeUnit.MILLISECONDS);
     }
 }
