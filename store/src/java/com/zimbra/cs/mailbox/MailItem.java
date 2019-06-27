@@ -831,7 +831,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
     protected MailboxBlob    mBlob;
     protected List<MailItem> mRevisions;
     protected CustomMetadataList mExtendedData;
-    protected final SynchronizableMailItemState state;
+    protected final MailItemState state;
 
     MailItem(Mailbox mbox, UnderlyingData data) throws ServiceException {
         this(mbox, data, false);
@@ -4120,7 +4120,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         return mMailboxData.accountId;
     }
 
-    protected SynchronizableMailItemState initFieldCache(UnderlyingData data) {
+    protected MailItemState initFieldCache(UnderlyingData data) {
         return new SynchronizableMailItemState(data);
     }
 }

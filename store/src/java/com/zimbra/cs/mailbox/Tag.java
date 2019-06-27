@@ -224,7 +224,7 @@ public class Tag extends MailItem implements ZimbraTag, SharedState {
     }
 
     public void setListed() throws ServiceException {
-        SynchronizableTagState fields = getState();
+        TagState fields = getState();
         if (!fields.isListed()) {
             fields.setListed(true);
             saveMetadata();
@@ -403,7 +403,7 @@ public class Tag extends MailItem implements ZimbraTag, SharedState {
     @Override
     void decodeMetadata(Metadata meta) throws ServiceException {
         super.decodeMetadata(meta);
-        SynchronizableTagState fields = getState();
+        TagState fields = getState();
         fields.setListed(meta.getBool(Metadata.FN_LISTED, false), AccessMode.LOCAL_ONLY);
 
         Metadata rp = meta.getMap(Metadata.FN_RETENTION_POLICY, true);
@@ -416,7 +416,7 @@ public class Tag extends MailItem implements ZimbraTag, SharedState {
 
     @Override
     Metadata encodeMetadata(Metadata meta) {
-        SynchronizableTagState fields = getState();
+        TagState fields = getState();
         return encodeMetadata(meta, fields.getColor(), fields.getMetadataVersion(), fields.getVersion(), fields.getRetentionPolicy(), fields.isListed());
     }
 
@@ -462,30 +462,44 @@ public class Tag extends MailItem implements ZimbraTag, SharedState {
 
     @Override
     public void attach(SharedStateAccessor accessor) {
-        getState().setSharedStateAccessor(accessor);
+        TagState state = getState();
+        if (state instanceof SynchronizableTagState) {
+            ((SynchronizableTagState) state).setSharedStateAccessor(accessor);
+        }
     }
 
     @Override
     public void detatch() {
-        getState().clearSharedStateAccessor();
+        TagState state = getState();
+        if (state instanceof SynchronizableTagState) {
+            ((SynchronizableTagState) state).clearSharedStateAccessor();
+        }
     }
 
     @Override
-    protected SynchronizableMailItemState initFieldCache(UnderlyingData data) {
+    protected MailItemState initFieldCache(UnderlyingData data) {
         return new SynchronizableTagState(data);
     }
 
-    protected SynchronizableTagState getState() {
-        return (SynchronizableTagState) state;
+    protected TagState getState() {
+        return (TagState) state;
     }
 
     @Override
     public boolean isAttached() {
-        return getState().hasSharedStateAccessor();
+        TagState state = getState();
+        if (state instanceof SynchronizableTagState) {
+            return ((SynchronizableTagState) state).hasSharedStateAccessor();
+        } else {
+            return false;
+        }
     }
 
     @Override
     public void sync() {
-        getState().syncWithSharedState(this);
+        TagState state = getState();
+        if (state instanceof SynchronizableTagState) {
+            ((SynchronizableTagState) state).syncWithSharedState(this);
+        }
     }
 }

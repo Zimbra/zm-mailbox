@@ -33,7 +33,6 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
-import com.google.common.util.concurrent.Service.State;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ZAttrProvisioning.PrefCalendarApptVisibility;
 import com.zimbra.common.calendar.ICalTimeZone;
@@ -63,7 +62,6 @@ import com.zimbra.cs.event.logger.EventLogger;
 import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.Flag.FlagInfo;
-import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
@@ -1837,11 +1835,11 @@ public class Message extends MailItem implements Classifiable {
     }
 
     @Override
-    protected SynchronizableMailItemState initFieldCache(UnderlyingData data) {
+    protected MailItemState initFieldCache(UnderlyingData data) {
         return new SynchronizableMessageState(data);
     }
 
-    protected SynchronizableMessageState getState() {
-        return (SynchronizableMessageState) state;
+    protected MessageState getState() {
+        return (MessageState) state;
     }
 }
