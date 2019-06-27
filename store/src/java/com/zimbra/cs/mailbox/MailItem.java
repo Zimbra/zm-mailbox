@@ -61,7 +61,7 @@ import com.zimbra.cs.db.DbPendingAclPush;
 import com.zimbra.cs.db.DbTag;
 import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.SortBy;
-import com.zimbra.cs.mailbox.MailItemState.AccessMode;
+import com.zimbra.cs.mailbox.IMailItemState.AccessMode;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.mailbox.Message.EventFlag;
 import com.zimbra.cs.mailbox.util.TypedIdList;

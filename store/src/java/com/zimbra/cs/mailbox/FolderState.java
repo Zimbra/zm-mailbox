@@ -3,6 +3,7 @@ package com.zimbra.cs.mailbox;
 import java.util.Map;
 
 import com.google.common.base.MoreObjects;
+import com.zimbra.cs.mailbox.IMailItemState.AccessMode;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 
 public class FolderState extends MailItemState {

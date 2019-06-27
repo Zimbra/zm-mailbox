@@ -33,7 +33,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbTag;
-import com.zimbra.cs.mailbox.MailItemState.AccessMode;
+import com.zimbra.cs.mailbox.IMailItemState.AccessMode;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.cache.SharedState;
 import com.zimbra.cs.mailbox.cache.SharedStateAccessor;

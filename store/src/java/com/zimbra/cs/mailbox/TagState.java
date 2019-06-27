@@ -3,6 +3,7 @@ package com.zimbra.cs.mailbox;
 import com.google.common.base.MoreObjects;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.mailbox.IMailItemState.AccessMode;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 
 public class TagState extends MailItemState {

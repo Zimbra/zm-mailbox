@@ -1,5 +1,6 @@
 package com.zimbra.cs.mailbox;
 
+import com.zimbra.cs.mailbox.IMailItemState.AccessMode;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.Message.EventFlag;
 

@@ -13,6 +13,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.mailbox.Flag.FlagInfo;
+import com.zimbra.cs.mailbox.IMailItemState.AccessMode;
 import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.Tag.NormalizedTags;
@@ -62,8 +63,6 @@ public class MailItemState {
     public static final String F_COLOR = "color";
     public static final String F_RIGHTS = "rights";
     public static final String F_RETENTION_POLICY = "retentionPolicy";
-
-    public static enum AccessMode { LOCAL_ONLY, REMOTE_ONLY, DEFAULT }
 
     public MailItemState(UnderlyingData data) {
         this.data = data;
