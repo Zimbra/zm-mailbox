@@ -4121,6 +4121,6 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
     }
 
     protected MailItemState initFieldCache(UnderlyingData data) {
-        return new SynchronizableMailItemState(data);
+        return new LocalMailItemState(data);
     }
 }

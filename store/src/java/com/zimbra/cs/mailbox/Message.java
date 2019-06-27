@@ -1836,7 +1836,7 @@ public class Message extends MailItem implements Classifiable {
 
     @Override
     protected MailItemState initFieldCache(UnderlyingData data) {
-        return new SynchronizableMessageState(data);
+        return new LocalMessageState(data);
     }
 
     protected MessageState getState() {

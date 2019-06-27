@@ -1828,7 +1828,11 @@ public class Folder extends MailItem implements FolderStore, SharedState {
 
     @Override
     protected MailItemState initFieldCache(UnderlyingData data) {
-        return new SynchronizableFolderState(data);
+        if (LC.redis_cache_synchronize_folders_tags.booleanValue()) {
+            return new SynchronizableFolderState(data);
+        } else {
+            return new LocalFolderState(data);
+        }
     }
 
     protected FolderState getState() {

@@ -24,6 +24,7 @@ import java.util.Set;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Sets;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.mailbox.ZimbraTag;
 import com.zimbra.common.service.ServiceException;
@@ -478,7 +479,11 @@ public class Tag extends MailItem implements ZimbraTag, SharedState {
 
     @Override
     protected MailItemState initFieldCache(UnderlyingData data) {
-        return new SynchronizableTagState(data);
+        if (LC.redis_cache_synchronize_folders_tags.booleanValue()) {
+            return new SynchronizableTagState(data);
+        } else {
+            return new LocalTagState(data);
+        }
     }
 
     protected TagState getState() {
