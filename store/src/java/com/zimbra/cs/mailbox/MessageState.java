@@ -1,10 +1,9 @@
 package com.zimbra.cs.mailbox;
 
-import com.zimbra.cs.mailbox.IMailItemState.AccessMode;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.Message.EventFlag;
 
-public class MessageState extends MailItemState {
+public class MessageState extends MailItemState implements IMessageState {
 
     public static final String F_EVENT_FLAG = "eventFlag";
 
@@ -12,15 +11,18 @@ public class MessageState extends MailItemState {
         super(data);
     }
 
+    @Override
     public EventFlag getEventFlag() {
         ItemField<EventFlag> field = getField(F_EVENT_FLAG);
         return field.get();
     }
 
+    @Override
     public void setEventFlag(EventFlag eventFlag) {
         getField(F_EVENT_FLAG).set(eventFlag, AccessMode.DEFAULT);
     }
 
+    @Override
     public void setEventFlag(EventFlag eventFlag, AccessMode accessMode) {
         getField(F_EVENT_FLAG).set(eventFlag, accessMode);
     }

@@ -3,10 +3,9 @@ package com.zimbra.cs.mailbox;
 import com.google.common.base.MoreObjects;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.mailbox.IMailItemState.AccessMode;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 
-public class TagState extends MailItemState {
+public class TagState extends MailItemState implements ITagState {
 
     private Boolean imapVisible = null;
     private Boolean listed = null;
@@ -18,6 +17,7 @@ public class TagState extends MailItemState {
         super(data);
     }
 
+    @Override
     public boolean isImapVisible() {
         Boolean val = getBoolField(F_IMAP_VISIBLE).get();
         if (val != null) {
@@ -28,14 +28,17 @@ public class TagState extends MailItemState {
         return (imapVisible != null) ? imapVisible : false;
     }
 
+    @Override
     public void setImapVisible(boolean imapVisible) {
         setImapVisible(imapVisible, AccessMode.DEFAULT);
     }
 
+    @Override
     public void setImapVisible(boolean imapVisible, AccessMode setMode) {
         getField(F_IMAP_VISIBLE).set(imapVisible, setMode);
     }
 
+    @Override
     public boolean isListed() {
         Boolean val =  getBoolField(F_LISTED).get();
         if (val != null) {
@@ -45,10 +48,12 @@ public class TagState extends MailItemState {
         return (listed != null) ? listed : false;
     }
 
+    @Override
     public void setListed(boolean listed) {
         setListed(listed, AccessMode.DEFAULT);
     }
 
+    @Override
     public void setListed(boolean listed, AccessMode setMode) {
         getField(F_LISTED).set(listed, setMode);
     }

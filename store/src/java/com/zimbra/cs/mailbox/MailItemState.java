@@ -5,15 +5,14 @@ import java.util.Map;
 
 import org.redisson.client.RedisException;
 
-import com.google.common.base.MoreObjects;
 import com.google.common.base.Joiner;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.mailbox.Flag.FlagInfo;
-import com.zimbra.cs.mailbox.IMailItemState.AccessMode;
 import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.Tag.NormalizedTags;
@@ -25,7 +24,7 @@ import com.zimbra.soap.mail.type.RetentionPolicy;
  * @author iraykin
  *
  */
-public class MailItemState {
+public class MailItemState implements IMailItemState {
 
     protected final UnderlyingData data;
     private ACL rights;
@@ -85,85 +84,111 @@ public class MailItemState {
         }
     }
 
+    @Override
     public String getName() {
         return getStringField(F_NAME).get();
     }
 
+    @Override
     public void setName(String name) {
         getField(F_NAME).set(name);
     }
 
+    @Override
     public String getSubject() {
         return getStringField(F_SUBJECT).get();
     }
 
+    @Override
     public void setSubject(String subject) {
         getField(F_SUBJECT).set(subject);
     }
 
+    @Override
     public int getParentId() { return getIntFieldValue(F_PARENT_ID); }
+    @Override
     public void setParentId(int parentId) {
         getField(F_PARENT_ID).set(parentId);
     }
 
+    @Override
     public int getFolderId() { return getIntFieldValue(F_FOLDER_ID); }
+    @Override
     public void setFolderId(int folderId) {
         getField(F_FOLDER_ID).set(folderId);
     }
 
 
+    @Override
     public int getIndexId() {
         return getIntFieldValue(F_INDEX_ID);
     }
+    @Override
     public void setIndexId(int indexId) {
         getField(F_INDEX_ID).set(indexId);
     }
 
+    @Override
     public int getImapId() { return getIntFieldValue(F_IMAP_ID); }
+    @Override
     public void setImapId(int imapId) {
         getField(F_IMAP_ID).set(imapId);
     }
 
+    @Override
     public String getPrevFolders() {
         return getStringField(F_PREV_FOLDERS).get();
     }
 
+    @Override
     public void setPrevFolders(String prevFolders) {
         getField(F_PREV_FOLDERS).set(prevFolders);
     }
 
+    @Override
     public String getLocator() {
         return getStringField(F_LOCATOR).get();
     }
 
+    @Override
     public void setLocator(String locator) {
         getField(F_LOCATOR).set(locator);
     }
 
+    @Override
     public String getBlobDigest() {
         return getStringField(F_BLOB_DIGEST).get();
     }
 
+    @Override
     public void setBlobDigest(String digest) {
         getField(F_BLOB_DIGEST).set(digest);
     }
 
+    @Override
     public int getModMetadata() { return getIntFieldValue(F_MOD_METADATA); }
+    @Override
     public void setModMetadata(int modMetadata) {
         getField(F_MOD_METADATA).set(modMetadata);
     }
 
+    @Override
     public int getModContent() { return getIntFieldValue(F_MOD_CONTENT); }
+    @Override
     public void setModContent(int modContent) {
         getField(F_MOD_CONTENT).set(modContent);
     }
 
+    @Override
     public int getDate() { return getIntFieldValue(F_DATE); }
+    @Override
     public void setDate(int date) {
         getField(F_DATE).set(date);
     }
 
+    @Override
     public int getDateChanged() { return getIntFieldValue(F_DATE_CHANGED); }
+    @Override
     public void setDateChanged(int dateChanged) {
         getField(F_DATE_CHANGED).set(dateChanged);
     }
@@ -172,31 +197,38 @@ public class MailItemState {
         return getIntField(F_FLAGS);
     }
 
+    @Override
     public int getFlags() {
         return flagField().get();
     }
 
+    @Override
     public boolean isSet(FlagInfo flag) {
         flagField().refresh();
         return data.isSet(flag);
     }
 
+    @Override
     public void setFlag(FlagInfo flag) {
         flagField().refresh().set(data.setFlag(flag).getFlags());
     }
 
+    @Override
     public void setFlag(Flag flag) {
         flagField().refresh().set(data.setFlag(flag).getFlags());
     }
 
+    @Override
     public void unsetFlag(FlagInfo flag) {
         flagField().refresh().set(data.unsetFlag(flag).getFlags());
     }
 
+    @Override
     public void unsetFlag(Flag flag) {
         flagField().refresh().set(data.unsetFlag(flag).getFlags());
     }
 
+    @Override
     public void setFlags(int flags) {
         flagField().set(data.setFlags(flags).getFlags());
     }
@@ -210,115 +242,143 @@ public class MailItemState {
         return getStringArrField(F_SMARTFOLDERS);
     }
 
+    @Override
     public String[] getTags() {
         return tagField().get();
     }
 
+    @Override
     public void setTags(String[] tags) {
         tagField().set(tags);
     }
 
+    @Override
     public void setTags(NormalizedTags tags) {
         data.setTags(tags);
         tagField().set(data.getTags(), AccessMode.REMOTE_ONLY);
         smartFolderField().set(data.getSmartFolders(), AccessMode.REMOTE_ONLY);
     }
 
+    @Override
     public String[] getSmartFolders() {
         return getStringArrField(F_SMARTFOLDERS).get();
     }
 
+    @Override
     public void setSmartFolders(String[] smartFolders) {
         getField(F_SMARTFOLDERS).set(smartFolders);
     }
 
+    @Override
     public long getSize() { return getLongFieldValue(F_SIZE); }
 
+    @Override
     public void setSize(long size) {
         getField(F_SIZE).set(size);
     }
 
+    @Override
     public int getUnreadCount() {
         return getIntFieldValue(F_UNREAD_COUNT);
     }
+    @Override
     public void setUnreadCount(int unreadCount) {
         getField(F_UNREAD_COUNT).set(unreadCount);
     }
 
+    @Override
     public Color getColor() {
         ItemField<Color> field = getField(F_COLOR);
         return field.get();
     }
 
+    @Override
     public void setColor(Color color) {
         setColor(color, AccessMode.DEFAULT);
     }
 
+    @Override
     public void setColor(Color color, AccessMode setMode) {
         ItemField<Color> field = getField(F_COLOR);
         field.set(color, setMode);
     }
 
+    @Override
     public ACL getRights() {
         ItemField<ACL> field = getField(F_RIGHTS);
         return field.get();
     }
 
+    @Override
     public void setRights(ACL rights) {
         setRights(rights, AccessMode.DEFAULT);
     }
 
+    @Override
     public void setRights(ACL rights, AccessMode setMode) {
          getField(F_RIGHTS).set(rights, setMode);
     }
 
+    @Override
     public int getVersion() {
         return getIntFieldValue(F_VERSION);
     }
+    @Override
     public void setVersion(int version) {
         setVersion(version, AccessMode.DEFAULT);
     }
 
+    @Override
     public void setVersion(int version, AccessMode setMode) {
         getField(F_VERSION).set(version, setMode);
     }
 
+    @Override
     public void incrementVersion() {
         getField(F_VERSION).set(getVersion() + 1);
     }
 
+    @Override
     public int getMetadataVersion() {
         return getIntFieldValue(F_METADATA_VERSION);
     }
 
+    @Override
     public void setMetadataVersion(int metadataVersion) {
         setMetadataVersion(metadataVersion, AccessMode.DEFAULT);
     }
 
+    @Override
     public void setMetadataVersion(int metadataVersion, AccessMode setMode) {
         getField(F_METADATA_VERSION).set(metadataVersion, setMode);
     }
 
+    @Override
     public void incrementMetadataVersion() {
         getField(F_METADATA_VERSION).set(getMetadataVersion() + 1);
     }
 
+    @Override
     public UnderlyingData getUnderlyingData() {
         return data;
     }
 
+    @Override
     public void metadataChanged(Mailbox mbox, boolean updateFolderMODSEQ) throws ServiceException {
         data.metadataChanged(mbox, updateFolderMODSEQ);
     }
 
+    @Override
     public void contentChanged(Mailbox mbox) throws ServiceException {
         data.contentChanged(mbox);
     }
 
+    @Override
     public void contentChanged(Mailbox mbox, boolean bool) throws ServiceException {
         data.contentChanged(mbox, bool);
     }
 
+    @Override
     public void saveMetadata(MailItem item, String metadata) throws ServiceException {
         DbMailItem.saveMetadata(item, metadata);
         if (sharedState != null) {
@@ -326,15 +386,18 @@ public class MailItemState {
         }
     }
 
+    @Override
     public RetentionPolicy getRetentionPolicy() {
         ItemField<RetentionPolicy> field = getField(F_RETENTION_POLICY);
         return field.get();
     }
 
+    @Override
     public void setRetentionPolicy(RetentionPolicy policy) {
         setRetentionPolicy(policy, AccessMode.DEFAULT);
     }
 
+    @Override
     public void setRetentionPolicy(RetentionPolicy policy, AccessMode setMode) {
         getField(F_RETENTION_POLICY).set(policy, setMode);
     }
