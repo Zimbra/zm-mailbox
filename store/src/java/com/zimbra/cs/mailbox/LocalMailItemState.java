@@ -8,7 +8,7 @@ import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.Tag.NormalizedTags;
 import com.zimbra.soap.mail.type.RetentionPolicy;
 
-public class LocalMailItemState implements IMailItemState {
+public class LocalMailItemState implements MailItemState {
 
     protected final UnderlyingData data;
     private ACL rights;

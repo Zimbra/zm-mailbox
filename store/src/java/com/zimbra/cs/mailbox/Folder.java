@@ -47,7 +47,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbTag;
 import com.zimbra.cs.imap.ImapSession;
-import com.zimbra.cs.mailbox.IMailItemState.AccessMode;
+import com.zimbra.cs.mailbox.MailItemState.AccessMode;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.mailbox.cache.SharedState;
 import com.zimbra.cs.mailbox.cache.SharedStateAccessor;
@@ -691,7 +691,7 @@ public class Folder extends MailItem implements FolderStore, SharedState {
             getState().setImapRECENT(-1);
         }
         // if we go negative, that's OK!  just pretend we're at 0.
-        FolderState fields = getState();
+        SynchronizableFolderState fields = getState();
         fields.setSize(Math.max(0, getSize() + countDelta));
         fields.setTotalSize(Math.max(0, getTotalSize() + sizeDelta));
         fields.setDeletedCount((int) Math.min(Math.max(0, getDeletedCount() + deletedDelta), getSize()));
@@ -715,7 +715,7 @@ public class Folder extends MailItem implements FolderStore, SharedState {
             getState().setImapRECENT(-1);
         }
 
-        FolderState fields = getState();
+        SynchronizableFolderState fields = getState();
         fields.getUnderlyingData().size = totalSize;
         fields.setTotalSize(totalSize);
         fields.setDeletedCount(deletedCount);
@@ -776,7 +776,7 @@ public class Folder extends MailItem implements FolderStore, SharedState {
      *                 counts, in which case we also initialize the IMAP
      *                 UIDNEXT and HIGHESTMODSEQ values. */
     protected void saveFolderCounts(boolean initial) throws ServiceException {
-        FolderState fields = getState();
+        SynchronizableFolderState fields = getState();
         if (initial) {
             fields.setImapUIDNEXT(mMailbox.getLastItemId() + 1);
             fields.setImapMODSEQ(mMailbox.getLastChangeID());
@@ -1562,7 +1562,7 @@ public class Folder extends MailItem implements FolderStore, SharedState {
         byte bview = (byte) meta.getLong(Metadata.FN_VIEW, -1);
         defaultView = bview >= 0 ? Type.of(bview) : view;
 
-        FolderState fields = getState();
+        SynchronizableFolderState fields = getState();
         attributes  = (byte) meta.getLong(Metadata.FN_ATTRS, 0);
         fields.setTotalSize(meta.getLong(Metadata.FN_TOTAL_SIZE, 0L), AccessMode.LOCAL_ONLY);
         fields.setImapUIDNEXT((int) meta.getLong(Metadata.FN_UIDNEXT, 0), AccessMode.LOCAL_ONLY);
@@ -1591,7 +1591,7 @@ public class Folder extends MailItem implements FolderStore, SharedState {
 
     @Override
     Metadata encodeMetadata(Metadata meta) {
-        FolderState fields = getState();
+        SynchronizableFolderState fields = getState();
         Metadata m = encodeMetadata(meta, fields.getColor(), fields.getMetadataVersion(), fields.getVersion(), mExtendedData, attributes, defaultView, fields.getRights(), syncData,
                 fields.getImapUIDNEXT(), fields.getTotalSize(), fields.getImapMODSEQ(), fields.getImapRECENT(), fields.getImapRECENTCutoff(), fields.getDeletedCount(),
                 fields.getDeletedUnreadCount(), fields.getRetentionPolicy(), activeSyncDisabled, webOfflineSyncDays);
@@ -1664,7 +1664,7 @@ public class Folder extends MailItem implements FolderStore, SharedState {
     @Override
     public String toString() {
         MoreObjects.ToStringHelper helper = MoreObjects.toStringHelper(this);
-        FolderState state = getState();
+        SynchronizableFolderState state = getState();
         helper.add(CN_NAME, state.getName());
         appendCommonMembers(helper);
         Folder parent = getParentFolder();
@@ -1821,12 +1821,12 @@ public class Folder extends MailItem implements FolderStore, SharedState {
     }
 
     @Override
-    protected MailItemState initFieldCache(UnderlyingData data) {
-        return new FolderState(data);
+    protected SynchronizableMailItemState initFieldCache(UnderlyingData data) {
+        return new SynchronizableFolderState(data);
     }
 
-    protected FolderState getState() {
-        return (FolderState) state;
+    protected SynchronizableFolderState getState() {
+        return (SynchronizableFolderState) state;
     }
 
     @Override

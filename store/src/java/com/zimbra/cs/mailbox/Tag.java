@@ -33,7 +33,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbTag;
-import com.zimbra.cs.mailbox.IMailItemState.AccessMode;
+import com.zimbra.cs.mailbox.MailItemState.AccessMode;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.cache.SharedState;
 import com.zimbra.cs.mailbox.cache.SharedStateAccessor;
@@ -224,7 +224,7 @@ public class Tag extends MailItem implements ZimbraTag, SharedState {
     }
 
     public void setListed() throws ServiceException {
-        TagState fields = getState();
+        SynchronizableTagState fields = getState();
         if (!fields.isListed()) {
             fields.setListed(true);
             saveMetadata();
@@ -403,7 +403,7 @@ public class Tag extends MailItem implements ZimbraTag, SharedState {
     @Override
     void decodeMetadata(Metadata meta) throws ServiceException {
         super.decodeMetadata(meta);
-        TagState fields = getState();
+        SynchronizableTagState fields = getState();
         fields.setListed(meta.getBool(Metadata.FN_LISTED, false), AccessMode.LOCAL_ONLY);
 
         Metadata rp = meta.getMap(Metadata.FN_RETENTION_POLICY, true);
@@ -416,7 +416,7 @@ public class Tag extends MailItem implements ZimbraTag, SharedState {
 
     @Override
     Metadata encodeMetadata(Metadata meta) {
-        TagState fields = getState();
+        SynchronizableTagState fields = getState();
         return encodeMetadata(meta, fields.getColor(), fields.getMetadataVersion(), fields.getVersion(), fields.getRetentionPolicy(), fields.isListed());
     }
 
@@ -471,12 +471,12 @@ public class Tag extends MailItem implements ZimbraTag, SharedState {
     }
 
     @Override
-    protected MailItemState initFieldCache(UnderlyingData data) {
-        return new TagState(data);
+    protected SynchronizableMailItemState initFieldCache(UnderlyingData data) {
+        return new SynchronizableTagState(data);
     }
 
-    protected TagState getState() {
-        return (TagState) state;
+    protected SynchronizableTagState getState() {
+        return (SynchronizableTagState) state;
     }
 
     @Override

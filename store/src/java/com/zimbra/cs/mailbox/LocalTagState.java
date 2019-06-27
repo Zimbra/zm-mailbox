@@ -4,7 +4,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 
-public class LocalTagState extends LocalMailItemState implements ITagState {
+public class LocalTagState extends LocalMailItemState implements TagState {
 
     private Boolean imapVisible = null;
     private Boolean listed = null;

@@ -16,7 +16,7 @@ import com.zimbra.cs.mailbox.TransactionAware.WritePolicy;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.RedissonClientHolder;
 import com.zimbra.cs.mailbox.Tag;
-import com.zimbra.cs.mailbox.TagState;
+import com.zimbra.cs.mailbox.SynchronizableTagState;
 import com.zimbra.cs.mailbox.TransactionCacheTracker;
 import com.zimbra.cs.mailbox.redis.RedisBackedMap;
 import com.zimbra.cs.mailbox.redis.RedisUtils;
@@ -71,7 +71,7 @@ public class RedisTagCache extends RedisSharedStateCache<Tag> implements TagCach
         UnderlyingData ud = mapToUnderlyingData(tagId, map);
         try {
             Tag tag = (Tag) MailItem.constructItem(mbox, ud, true);
-            tag.setIsImapVisible(boolVal(map, TagState.F_IMAP_VISIBLE));
+            tag.setIsImapVisible(boolVal(map, SynchronizableTagState.F_IMAP_VISIBLE));
             return tag;
         } catch (ServiceException e) {
             ZimbraLog.mailbox.error("unable to reconstruct Tag from Redis cache for id %d", tagId, e);

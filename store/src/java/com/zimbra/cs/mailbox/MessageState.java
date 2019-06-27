@@ -1,43 +1,13 @@
 package com.zimbra.cs.mailbox;
 
-import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.Message.EventFlag;
 
-public class MessageState extends MailItemState implements IMessageState {
 
-    public static final String F_EVENT_FLAG = "eventFlag";
+public interface MessageState extends MailItemState {
 
-    public MessageState(UnderlyingData data) {
-        super(data);
-    }
+    public abstract EventFlag getEventFlag();
 
-    @Override
-    public EventFlag getEventFlag() {
-        ItemField<EventFlag> field = getField(F_EVENT_FLAG);
-        return field.get();
-    }
+    public abstract void setEventFlag(EventFlag eventFlag);
 
-    @Override
-    public void setEventFlag(EventFlag eventFlag) {
-        getField(F_EVENT_FLAG).set(eventFlag, AccessMode.DEFAULT);
-    }
-
-    @Override
-    public void setEventFlag(EventFlag eventFlag, AccessMode accessMode) {
-        getField(F_EVENT_FLAG).set(eventFlag, accessMode);
-    }
-
-    @Override
-    protected void initFields() {
-        super.initFields();
-        addField(new ItemField<EventFlag>(F_EVENT_FLAG) {
-
-            @Override
-            protected void setLocal(EventFlag value) { if (value != null) data.eventFlag = value.getId(); }
-
-            @Override
-            protected EventFlag getLocal() { return EventFlag.of(data.eventFlag); }
-        });
-    }
-
+    public abstract void setEventFlag(EventFlag eventFlag, AccessMode accessMode);
 }

@@ -4,7 +4,7 @@ import java.util.Map;
 
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 
-public class LocalFolderState extends LocalMailItemState implements IFolderState {
+public class LocalFolderState extends LocalMailItemState implements FolderState {
 
     private long totalSize;
     private int deletedCount;
