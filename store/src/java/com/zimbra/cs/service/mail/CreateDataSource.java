@@ -258,7 +258,7 @@ public class CreateDataSource extends MailDocumentHandler {
      * Confirms that the zimbraDataSourceEmailAddress attribute is unique
      * 
      */
-    static void validateEmailAddr(Account account, Element eDataSource)
+    default static void validateEmailAddr(Account account, Element eDataSource)
     throws ServiceException {
         String dsEmailAddr = eDataSource.getAttribute(MailConstants.A_DS_EMAIL_ADDRESS, null);
         if (!StringUtil.isNullOrEmpty(dsEmailAddr)) {
