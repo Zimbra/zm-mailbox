@@ -8576,6 +8576,17 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         if (ds == null)
             throw AccountServiceException.NO_SUCH_DATA_SOURCE(dataSourceId);
 
+        List<DataSource> existing = getAllDataSources(account);
+
+        String dsEmailAddr = (String) attrs.get(A_zimbraDataSourceEmailAddress);
+        if (!StringUtil.isNullOrEmpty(dsEmailAddr)) {
+            for (DataSource datasource : existing) {
+                if (dsEmailAddr.equals(datasource.getEmailAddress())) {
+                    throw AccountServiceException.DATA_SOURCE_EXISTS(dsEmailAddr);
+                }
+            }
+        }
+
         account.setCachedData(DATA_SOURCE_LIST_CACHE_KEY, null);
 
         attrs.remove(A_zimbraDataSourceId);

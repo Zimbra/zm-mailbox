@@ -141,7 +141,37 @@ public class TestLdapProvDataSource extends LdapTest {
         deleteDataSource(acct,dataSource);
         deleteAccount(acct);
     }
-    
+
+    @Test
+    public void modifyDataSourceAlreadyExists() throws Exception {
+        String ACCT_NAME_LOCALPART = Names.makeAccountNameLocalPart(genAcctNameLocalPart());
+        String DATA_SOURCE_NAME = Names.makeDataSourceName(genDataSourceName());
+        String DATA_SOURCE_NAME_2 = Names.makeDataSourceName(genDataSourceName());
+
+        Account acct = createAccount(ACCT_NAME_LOCALPART);
+        DataSource dataSource = createDataSource(acct, DATA_SOURCE_NAME);
+        DataSource dataSource2 = createDataSource(acct, DATA_SOURCE_NAME_2);
+
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        String MODIFIED_ATTR_NAME = Provisioning.A_zimbraDataSourceEmailAddress;
+        String MODIFIED_ATTR_VALUE = dataSource.getEmailAddress();
+        attrs.put(MODIFIED_ATTR_NAME, MODIFIED_ATTR_VALUE);
+
+        boolean caughtException = false;
+        try {
+            prov.modifyDataSource(acct, dataSource2.getId(), attrs);
+        } catch (AccountServiceException e) {
+            if (AccountServiceException.DATA_SOURCE_EXISTS.equals(e.getCode())) {
+                caughtException = true;
+            }
+        }
+        assertTrue(caughtException);
+
+        deleteDataSource(acct, dataSource);
+        deleteDataSource(acct, dataSource2);
+        deleteAccount(acct);
+    }
+
     @Test
     public void renameDataSource() throws Exception {
         String ACCT_NAME_LOCALPART = Names.makeAccountNameLocalPart(genAcctNameLocalPart());
