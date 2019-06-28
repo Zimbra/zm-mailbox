@@ -29,10 +29,8 @@ import com.zimbra.common.account.ZAttrProvisioning.DataSourceAuthMechanism;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.datasource.DataSourceListner;
@@ -251,21 +249,6 @@ public class CreateDataSource extends MailDocumentHandler {
                         }
                 }
             } catch (NoSuchItemException ignored) {
-            }
-        }
-    }
-    /**
-     * Confirms that the zimbraDataSourceEmailAddress attribute is unique
-     * 
-     */
-    public static void validateDataSourceEmail(Account account, Element eDataSource)
-    throws ServiceException {
-        String dsEmailAddr = eDataSource.getAttribute(MailConstants.A_DS_EMAIL_ADDRESS, null);
-        if (!StringUtil.isNullOrEmpty(dsEmailAddr)) {
-            for (DataSource ds : account.getAllDataSources()) {
-                if (dsEmailAddr.equals(ds.getEmailAddress())) {
-                    throw AccountServiceException.DATA_SOURCE_EXISTS(dsEmailAddr);
-                }
             }
         }
     }
