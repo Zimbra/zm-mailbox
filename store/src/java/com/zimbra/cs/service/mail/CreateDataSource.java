@@ -213,7 +213,7 @@ public class CreateDataSource extends MailDocumentHandler {
     /**
      * Gets the data source element from the given request.
      */
-    static Element getDataSourceElement(Element request)
+    public static Element getDataSourceElement(Element request)
     throws ServiceException {
         List<Element> subElements = request.listElements();
         if (subElements.size() != 1) {
@@ -228,7 +228,7 @@ public class CreateDataSource extends MailDocumentHandler {
      * Confirms that the folder attribute specifies a valid folder id and is not
      * within the subtree of another datasource
      */
-    static void validateFolderId(Account account, Mailbox mbox, Element eDataSource, DataSourceType dsType)
+    public static void validateFolderId(Account account, Mailbox mbox, Element eDataSource, DataSourceType dsType)
     throws ServiceException {
         int folderId = eDataSource.getAttributeInt(MailConstants.A_FOLDER);
         String id = eDataSource.getAttribute(MailConstants.A_ID, null);
@@ -258,7 +258,7 @@ public class CreateDataSource extends MailDocumentHandler {
      * Confirms that the zimbraDataSourceEmailAddress attribute is unique
      * 
      */
-    default static void validateEmailAddr(Account account, Element eDataSource)
+    public static void validateDataSourceEmail(Account account, Element eDataSource)
     throws ServiceException {
         String dsEmailAddr = eDataSource.getAttribute(MailConstants.A_DS_EMAIL_ADDRESS, null);
         if (!StringUtil.isNullOrEmpty(dsEmailAddr)) {
@@ -270,7 +270,7 @@ public class CreateDataSource extends MailDocumentHandler {
         }
     }
 
-    static void processSmtpAttrs(Map<String, Object> dsAttrs, Element eDataSource, boolean encryptPasswordHere,
+    public static void processSmtpAttrs(Map<String, Object> dsAttrs, Element eDataSource, boolean encryptPasswordHere,
             String dsId)
             throws ServiceException {
         boolean smtpEnabled = false;

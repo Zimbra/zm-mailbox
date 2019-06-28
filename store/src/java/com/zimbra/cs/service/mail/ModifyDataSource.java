@@ -203,7 +203,7 @@ public class ModifyDataSource extends MailDocumentHandler {
 
         value = eDataSource.getAttribute(MailConstants.A_DS_EMAIL_ADDRESS, null);
         if (value != null) {
-            CreateDataSource.validateEmailAddr(account, eDataSource);
+            CreateDataSource.validateDataSourceEmail(account, eDataSource);
             dsAttrs.put(Provisioning.A_zimbraDataSourceEmailAddress, value);
         }
 
