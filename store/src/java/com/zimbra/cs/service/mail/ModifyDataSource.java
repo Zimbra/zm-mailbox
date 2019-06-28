@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2019 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -27,7 +27,9 @@ import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.datasource.DataSourceManager;
@@ -189,7 +191,7 @@ public class ModifyDataSource extends MailDocumentHandler {
             TestDataSource.testDataSourceConnection(prov, eDataSource, type, account);
         }
 
-        processCommonOptionalAttrs(dsAttrs, eDataSource);
+        processCommonOptionalAttrs(account, dsAttrs, eDataSource);
 
         prov.modifyDataSource(account, id, dsAttrs);
 
@@ -198,11 +200,12 @@ public class ModifyDataSource extends MailDocumentHandler {
         return response;
     }
 
-    public static void processCommonOptionalAttrs(Map<String, Object> dsAttrs, Element eDataSource) throws ServiceException {
+    public static void processCommonOptionalAttrs(Account account, Map<String, Object> dsAttrs, Element eDataSource) throws ServiceException {
         String value;
 
         value = eDataSource.getAttribute(MailConstants.A_DS_EMAIL_ADDRESS, null);
         if (value != null) {
+            validateDataSourceEmail(account, eDataSource);
             dsAttrs.put(Provisioning.A_zimbraDataSourceEmailAddress, value);
         }
 
@@ -249,6 +252,22 @@ public class ModifyDataSource extends MailDocumentHandler {
         		attrList.add(attrs.next().getText());
         	}
         	dsAttrs.put(Provisioning.A_zimbraDataSourceAttribute, attrList.toArray(new String[0]));
+        }
+    }
+
+    /**
+     * Confirms that the zimbraDataSourceEmailAddress attribute is unique
+     *
+     */
+    public static void validateDataSourceEmail(Account account, Element eDataSource)
+    throws ServiceException {
+        String dsEmailAddr = eDataSource.getAttribute(MailConstants.A_DS_EMAIL_ADDRESS, null);
+        if (!StringUtil.isNullOrEmpty(dsEmailAddr)) {
+            for (DataSource ds : account.getAllDataSources()) {
+                if (dsEmailAddr.equals(ds.getEmailAddress())) {
+                    throw AccountServiceException.DATA_SOURCE_EXISTS(dsEmailAddr);
+                }
+            }
         }
     }
 }
