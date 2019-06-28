@@ -69,15 +69,15 @@ public class SynchronizableMailItemState implements MailItemState {
         initFields();
     }
 
-    public void setSharedStateAccessor(SharedStateAccessor accessor) {
+    public synchronized void setSharedStateAccessor(SharedStateAccessor accessor) {
         sharedState = accessor;
     }
 
-    public boolean hasSharedStateAccessor() {
+    public synchronized boolean hasSharedStateAccessor() {
         return sharedState != null;
     }
 
-    public void clearSharedStateAccessor() {
+    public synchronized void clearSharedStateAccessor() {
         if (sharedState != null) {
             sharedState.delete();
             sharedState = null;
