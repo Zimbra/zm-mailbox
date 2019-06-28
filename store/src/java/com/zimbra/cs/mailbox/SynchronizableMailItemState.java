@@ -430,12 +430,12 @@ public class SynchronizableMailItemState implements MailItemState {
 
         protected void setSharedState(T value) {
             if (sharedState == null) {
-                ZimbraLog.cache.debug("setSharedState(%s) (name=%s) - NULL sharedState, so ignoring!%s",
+                ZimbraLog.cache.debug("setSharedState(%s) (name=%s) - NULL sharedState, so ignoring! %s",
                         value, name, SynchronizableMailItemState.this);
                 return;
             }
             if (value == null) {
-                ZimbraLog.cache.debug("setSharedState(%s) (name=%s) - NULL values not supported, so ignoring!%s",
+                ZimbraLog.cache.debug("setSharedState(%s) (name=%s) - NULL values not supported, so ignoring! %s",
                         value, name, SynchronizableMailItemState.this);
                 return;
             }
@@ -444,7 +444,7 @@ public class SynchronizableMailItemState implements MailItemState {
 
         protected T getSharedState() {
             if (sharedState == null) {
-                ZimbraLog.cache.debug("getSharedState() (name=%s) - NULL sharedState, so returning null!%s",
+                ZimbraLog.cache.debug("getSharedState() (name=%s) - NULL sharedState, so returning null! %s",
                         name, SynchronizableMailItemState.this);
                 return null;
             }
@@ -513,19 +513,19 @@ public class SynchronizableMailItemState implements MailItemState {
     protected int getIntFieldValue(String fieldName) {
         Integer retVal = getIntField(fieldName).get();
         if (retVal == null) {
-            ZimbraLog.cache.info("getIntFieldName(%s) returning null! %s", fieldName, this);
+            ZimbraLog.cache.info("getIntFieldValue(%s) returning null! %s", fieldName, this);
         }
         return retVal;
     }
 
     /**
-     * Wrapper round getIntField(fieldName).get() which logs if going to end up throwing an NPE so
+     * Wrapper round getLongField(fieldName).get() which logs if going to end up throwing an NPE so
      * that have more context for the cause of the NPE.  Of course, should never end up with a null...
      */
     protected long getLongFieldValue(String fieldName) {
         Long retVal = getLongField(fieldName).get();
         if (retVal == null) {
-            ZimbraLog.cache.info("getLongFieldName(%s) returning null! %s", fieldName, this);
+            ZimbraLog.cache.info("getLongFieldValue(%s) returning null! %s", fieldName, this);
         }
         return retVal;
     }
@@ -796,7 +796,7 @@ public class SynchronizableMailItemState implements MailItemState {
             @Override
             protected void setSharedState(String[] tags) {
                 if (sharedState == null) {
-                    ZimbraLog.cache.info("setSharedState(%s) (name=%s) - NULL sharedState, so ignoring!%s",
+                    ZimbraLog.cache.info("setSharedState(%s) (name=%s) - NULL sharedState, so ignoring! %s",
                             tags, name, SynchronizableMailItemState.this);
                     return;
                 }
@@ -831,7 +831,7 @@ public class SynchronizableMailItemState implements MailItemState {
             @Override
             protected void setSharedState(String[] smartFolders) {
                 if (sharedState == null) {
-                    ZimbraLog.cache.info("setSharedState(%s) (name=%s) - NULL sharedState, so ignoring!%s",
+                    ZimbraLog.cache.info("setSharedState(%s) (name=%s) - NULL sharedState, so ignoring! %s",
                             smartFolders, name, SynchronizableMailItemState.this);
                     return;
                 }
@@ -919,7 +919,7 @@ public class SynchronizableMailItemState implements MailItemState {
             @Override
             protected void setSharedState(Color color) {
                 if (sharedState == null) {
-                    ZimbraLog.cache.info("setSharedState(%s) (name=%s) - NULL sharedState, so ignoring!%s",
+                    ZimbraLog.cache.info("setSharedState(%s) (name=%s) - NULL sharedState, so ignoring! %s",
                             color, name, SynchronizableMailItemState.this);
                     return;
                 }
@@ -929,13 +929,13 @@ public class SynchronizableMailItemState implements MailItemState {
             @Override
             protected Color getSharedState() {
                 if (sharedState == null) {
-                    ZimbraLog.cache.info("getSharedState() (name=%s) - NULL sharedState, so returning null!%s",
+                    ZimbraLog.cache.info("getSharedState() (name=%s) - NULL sharedState, so returning null! %s",
                             name, SynchronizableMailItemState.this);
                     return null;
                 }
                 Long colorValue = sharedState.get(name);
                 if (colorValue == null) {
-                    ZimbraLog.cache.info("getSharedState() (name=%s) - returning null!%s",
+                    ZimbraLog.cache.info("getSharedState() (name=%s) - returning null! %s",
                             name, SynchronizableMailItemState.this);
                     return null;
                 }
@@ -954,7 +954,7 @@ public class SynchronizableMailItemState implements MailItemState {
             @Override
             protected void setSharedState(ACL rights) {
                 if (sharedState == null) {
-                    ZimbraLog.cache.info("setSharedState(%s) (name=%s) - NULL sharedState, so ignoring!%s",
+                    ZimbraLog.cache.info("setSharedState(%s) (name=%s) - NULL sharedState, so ignoring! %s",
                             rights, name, SynchronizableMailItemState.this);
                     return;
                 }
@@ -968,7 +968,7 @@ public class SynchronizableMailItemState implements MailItemState {
             @Override
             protected ACL getSharedState() {
                 if (sharedState == null) {
-                    ZimbraLog.cache.info("getSharedState() (name=%s) - NULL sharedState, so returning null!%s",
+                    ZimbraLog.cache.info("getSharedState() (name=%s) - NULL sharedState, so returning null! %s",
                             name, SynchronizableMailItemState.this);
                     return null;
                 }
@@ -997,7 +997,7 @@ public class SynchronizableMailItemState implements MailItemState {
             @Override
             protected void setSharedState(RetentionPolicy policy) {
                 if (sharedState == null) {
-                    ZimbraLog.cache.info("setSharedState(%s) (name=%s) - NULL sharedState, so ignoring!%s",
+                    ZimbraLog.cache.info("setSharedState(%s) (name=%s) - NULL sharedState, so ignoring! %s",
                             policy, name, SynchronizableMailItemState.this);
                     return;
                 }
@@ -1007,7 +1007,7 @@ public class SynchronizableMailItemState implements MailItemState {
             @Override
             protected RetentionPolicy getSharedState() {
                 if (sharedState == null) {
-                    ZimbraLog.cache.info("getSharedState() (name=%s) - NULL sharedState, so returning null!%s",
+                    ZimbraLog.cache.info("getSharedState() (name=%s) - NULL sharedState, so returning null! %s",
                             name, SynchronizableMailItemState.this);
                     return null;
                 }
