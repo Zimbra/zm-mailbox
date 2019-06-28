@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2019 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -29,8 +29,10 @@ import com.zimbra.common.account.ZAttrProvisioning.DataSourceAuthMechanism;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.datasource.DataSourceListner;
@@ -109,7 +111,7 @@ public class CreateDataSource extends MailDocumentHandler {
         processSmtpAttrs(dsAttrs, eDataSource, false, null);
 
         // Common optional attributes
-        ModifyDataSource.processCommonOptionalAttrs(dsAttrs, eDataSource);
+        ModifyDataSource.processCommonOptionalAttrs(account, dsAttrs, eDataSource);
 
         // POP3-specific attributes
         if (type == DataSourceType.pop3) {
@@ -249,6 +251,21 @@ public class CreateDataSource extends MailDocumentHandler {
                         }
                 }
             } catch (NoSuchItemException ignored) {
+            }
+        }
+    }
+    /**
+     * Confirms that the zimbraDataSourceEmailAddress attribute is unique
+     * 
+     */
+    static void validateEmailAddr(Account account, Element eDataSource)
+    throws ServiceException {
+        String dsEmailAddr = eDataSource.getAttribute(MailConstants.A_DS_EMAIL_ADDRESS, null);
+        if (!StringUtil.isNullOrEmpty(dsEmailAddr)) {
+            for (DataSource ds : account.getAllDataSources()) {
+                if (dsEmailAddr.equals(ds.getEmailAddress())) {
+                    throw AccountServiceException.DATA_SOURCE_EXISTS(dsEmailAddr);
+                }
             }
         }
     }
