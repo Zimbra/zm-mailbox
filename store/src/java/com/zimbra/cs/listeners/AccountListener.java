@@ -17,79 +17,79 @@
 package com.zimbra.cs.listeners;
 
 import java.util.Collections;
-import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.Map;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.listeners.ListenerUtil.Priority;
 
 public abstract class AccountListener {
 
-    // listeners will be invoked by the enum order
-    public enum AccountListenerId {
-        ACCTL_ZIMBRA;
-    }
+    private static Map<String, AccountListenerEntry> mListeners = Collections
+        .synchronizedMap(new HashMap<String, AccountListenerEntry>());
 
-    /*
-     * The collection's iterator will return the values in the order their
-     * corresponding keys appear in map, which is their natural order (the order
-     * in which the enum constants are declared).
-     */
-    private static Map<AccountListenerId, AccountListener> mListeners = Collections
-        .synchronizedMap(
-            new EnumMap<AccountListenerId, AccountListener>(AccountListenerId.class));
-
-    public static void registerListener(AccountListenerId listenerEnum,
-        AccountListener listener) {
-        AccountListener obj = mListeners.get(listenerEnum);
+    public static void registerListener(String listenerName, Priority priority,
+        AccountListener listener) throws ServiceException {
+        if (mListeners.size() == LC.zimbra_listeners_maxsize.intValue()) {
+            ZimbraLog.account.warn("Account listener limit reached, registering of %s is ignored",
+                listenerName);
+            throw ServiceException.FORBIDDEN("Account listener limit reached");
+        }
+        AccountListenerEntry obj = mListeners.get(listenerName);
         if (obj != null) {
             ZimbraLog.account.warn(
-                "listener %s is already registered, registering of %s is ignored", listenerEnum,
-                obj.getClass().getCanonicalName());
-            return;
+                "Listener %s is already registered, registering of %s is ignored", listenerName,
+                obj.getAccountListener().getClass().getCanonicalName());
+            throw ServiceException.FORBIDDEN("Account listener with this name is already registered");
         }
-        ZimbraLog.account.info("Registering Account listener: %s", listenerEnum.name());
-        mListeners.put(listenerEnum, listener);
+        ZimbraLog.account.info("Registering account listener: %s", listenerName);
+        AccountListenerEntry entry = new AccountListenerEntry(listenerName, priority, listener);
+
+        mListeners.put(listenerName, entry);
     }
-    
-    public static void deregisterListener(AccountListenerId listenerEnum) {
-        ZimbraLog.account.info("De-registering Account listener: %s", listenerEnum.name());
-        mListeners.remove(listenerEnum);
+
+    public static void deregisterListener(String listenerName) {
+        ZimbraLog.account.info("De-registering account listener: %s", listenerName);
+        mListeners.remove(listenerName);
     }
 
     public static void invokeOnAccountCreation(Account acct) throws ServiceException {
         ZimbraLog.account.info("Account creation successful for user: %s", acct.getName());
         // invoke listeners
-        for (Map.Entry<AccountListenerId, AccountListener> listener : mListeners
-            .entrySet()) {
-            AccountListener listenerInstance = listener.getValue();
-            listenerInstance.onAccountCreation(acct);
+        Map<String, AccountListenerEntry> sortedListeners = ListenerUtil.sortByPriority(mListeners);
+        for (Map.Entry<String, AccountListenerEntry> listener : sortedListeners.entrySet()) {
+            AccountListenerEntry listenerInstance = listener.getValue();
+            listenerInstance.getAccountListener().onAccountCreation(acct);
         }
-
     }
 
-    public static void invokeOnStatusChange(Account acct, String oldStatus, String newStatus) throws ServiceException {
-        ZimbraLog.account.info("Account status for %s changed from '%s' to '%s'", acct.getName(), oldStatus, newStatus);
+    public static void invokeOnStatusChange(Account acct, String oldStatus, String newStatus)
+        throws ServiceException {
+        ZimbraLog.account.info("Account status for %s changed from '%s' to '%s'", acct.getName(),
+            oldStatus, newStatus);
         // invoke listeners
-        for (Map.Entry<AccountListenerId, AccountListener> listener : mListeners
-            .entrySet()) {
-            AccountListener listenerInstance = listener.getValue();
-            listenerInstance.onStatusChange(acct, oldStatus, newStatus);
+        Map<String, AccountListenerEntry> sortedListeners = ListenerUtil.sortByPriority(mListeners);
+        for (Map.Entry<String, AccountListenerEntry> listener : sortedListeners.entrySet()) {
+            AccountListenerEntry listenerInstance = listener.getValue();
+            listenerInstance.getAccountListener().onStatusChange(acct, oldStatus, newStatus);
         }
 
     }
 
     public static void invokeOnException(ServiceException exceptionThrown) {
-        ZimbraLog.account.info("Error occurred during account creation: %s" , exceptionThrown.getMessage());
+        ZimbraLog.account.info("Error occurred during account creation: %s",
+            exceptionThrown.getMessage());
         if (ZimbraLog.account.isDebugEnabled()) {
             ZimbraLog.account.debug(exceptionThrown);
         }
         // invoke listeners
-        for (Map.Entry<AccountListenerId, AccountListener> listener : mListeners
-            .entrySet()) {
-            AccountListener listenerInstance = listener.getValue();
-            listenerInstance.onException(exceptionThrown);
+        Map<String, AccountListenerEntry> sortedListeners = ListenerUtil.sortByPriority(mListeners);
+        for (Map.Entry<String, AccountListenerEntry> listener : sortedListeners.entrySet()) {
+            AccountListenerEntry listenerInstance = listener.getValue();
+            listenerInstance.getAccountListener().onException(exceptionThrown);
         }
 
     }
@@ -103,8 +103,7 @@ public abstract class AccountListener {
     public abstract void onAccountCreation(Account acct);
 
     /**
-     * called after an account status change. should not throw any
-     * exceptions.
+     * called after an account status change. should not throw any exceptions.
      *
      * @param USER_ACCOUNT user account whose status is changed
      * @param OLD_STATUS old status of user account

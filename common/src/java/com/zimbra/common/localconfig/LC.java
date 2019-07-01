@@ -1235,6 +1235,111 @@ public final class LC {
     @Supported
     public static final KnownKey external_store_delete_max_ioexceptions = KnownKey.newKey(25);
 
+    @Supported
+    public static final KnownKey redis_service_uri = KnownKey.newKey("redis://zmc-redis:6379");
+
+    @Supported
+    public static final KnownKey redis_num_pubsub_channels = KnownKey.newKey(100);
+
+    @Supported
+    public static final KnownKey redis_cluster_scan_interval = KnownKey.newKey(2000);
+
+    @Supported
+    public static final KnownKey redis_cluster_reconnect_timeout = KnownKey.newKey(15000);
+
+    @Supported
+    public static final KnownKey redis_master_connection_pool_size = KnownKey.newKey(200);
+
+    @Supported
+    public static final KnownKey redis_master_idle_connection_pool_size = KnownKey.newKey(100);
+
+    @Supported
+    public static final KnownKey redis_subscription_connection_pool_size = KnownKey.newKey(200);
+
+    @Supported
+    public static final KnownKey redis_subscription_idle_connection_pool_size = KnownKey.newKey(100);
+
+    @Supported
+    public static final KnownKey redis_subscriptions_per_connection = KnownKey.newKey(10);
+
+    @Supported
+    public static final KnownKey redis_connection_timeout = KnownKey.newKey(10000);
+
+    @Supported
+    public static final KnownKey redis_num_retries = KnownKey.newKey(10);
+
+    @Supported
+    public static final KnownKey redis_netty_threads = KnownKey.newKey(0);
+
+    @Supported
+    public static final KnownKey redis_retry_interval = KnownKey.newKey(3000);
+
+    @Supported
+    public static final KnownKey redis_ping_connection_interval_millis = KnownKey.newKey(10000);
+
+    @Supported
+    public static final KnownKey redis_keep_alive = KnownKey.newKey(true);
+
+    @Supported
+    public static final KnownKey redis_tcp_no_delay = KnownKey.newKey(true);
+
+    @Supported
+    public static final KnownKey redis_num_lock_channels = KnownKey.newKey(50);
+
+    @Supported
+    public static final KnownKey include_redis_attrs_in_lock_debug = KnownKey.newKey(false);
+
+    @Supported
+    public static final KnownKey search_put_hits_chunk_size = KnownKey.newKey(100);
+
+    @Supported
+    public static final KnownKey mailbox_healthcheck_touchpoint_file = KnownKey.newKey("/opt/zimbra/healthcheck_touchpoint");
+
+    @Supported
+    public static final KnownKey outside_transaction_threadlocal_cache_expiry_seconds = KnownKey.newKey(30);
+
+    @Supported
+    public static final KnownKey transaction_threadlocal_cache_expiry_seconds = KnownKey.newKey(300);
+
+    @Supported
+    public static final KnownKey outside_transaction_threadlocal_cache_max_size = KnownKey.newKey(10);
+
+    @Supported
+    public static final KnownKey threadlocal_cache_cleanup_interval_seconds  = KnownKey.newKey(120);
+
+    @Supported
+    public static final KnownKey redis_cache_synchronize_item_cache = KnownKey.newKey(true);
+
+    @Supported
+    public static final KnownKey redis_cache_synchronize_folders_tags = KnownKey.newKey(false);
+
+    @Supported
+    public static final KnownKey redis_cache_synchronize_folder_tag_snapshot = KnownKey.newKey(true);
+
+    @Supported
+    public static final KnownKey redis_cache_synchronize_mailbox_state = KnownKey.newKey(false);
+
+    @Supported
+    public static final KnownKey redis_cache_synchronize_waitset = KnownKey.newKey(false);
+
+    @Supported
+    public static final KnownKey lock_based_cache_invalidation_enabled = KnownKey.newKey(true);
+
+    @Supported
+    public static final KnownKey only_flush_cache_on_first_read_after_foreign_write = KnownKey.newKey(true);
+
+    @Supported
+    public static final KnownKey folder_tag_cache_lock_timeout_seconds = KnownKey.newKey(10);
+
+    @Supported
+    public static final KnownKey disable_all_event_logging = KnownKey.newKey(true);
+
+    @Supported
+    public static final KnownKey disable_all_search_history = KnownKey.newKey(true);
+
+    @Supported
+    public static final KnownKey zimbra_listeners_maxsize = KnownKey.newKey(5);
+
     public enum PUBLIC_SHARE_VISIBILITY { samePrimaryDomain, all, none };
 
     /**
