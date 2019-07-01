@@ -1343,6 +1343,9 @@ public final class LC {
     @Supported
     public static final KnownKey disable_all_search_history = KnownKey.newKey(true);
 
+    @Supported
+    public static final KnownKey zimbra_listeners_maxsize = KnownKey.newKey(5);
+
     public enum PUBLIC_SHARE_VISIBILITY { samePrimaryDomain, all, none };
 
     /**
