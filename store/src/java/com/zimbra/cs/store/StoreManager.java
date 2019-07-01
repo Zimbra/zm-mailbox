@@ -29,11 +29,12 @@ import com.zimbra.cs.imap.ImapDaemon;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.store.file.FileBlobStore;
+import com.zimbra.cs.store.TimingStoreManager;
 import com.zimbra.cs.util.Zimbra;
 
 public abstract class StoreManager {
 
-    private static StoreManager sInstance;
+    private static TimingStoreManager sInstance;
     private static Integer diskStreamingThreshold;
 
     public static StoreManager getInstance () {
@@ -48,25 +49,17 @@ public abstract class StoreManager {
         if (sInstance == null) {
             synchronized (StoreManager.class) {
                 if (sInstance != null) {
-                    return sInstance;
+                    return (StoreManager) sInstance;
                 }
 
                 try {
-                    if (className != null && !className.equals("")) {
-                        try {
-                            sInstance = (StoreManager) Class.forName(className).newInstance();
-                        } catch (ClassNotFoundException e) {
-                            sInstance = (StoreManager) ExtensionUtil.findClass(className).newInstance();
-                        }
-                    } else {
-                        sInstance = new FileBlobStore();
-                    }
+                    sInstance = TimingStoreManager.getInstance(className);
                 } catch (Throwable t) {
                     Zimbra.halt("unable to initialize blob store", t);
                 }
             }
         }
-        return sInstance;
+        return (StoreManager) sInstance;
     }
 
     /**
@@ -74,7 +67,7 @@ public abstract class StoreManager {
      */
     public static void setInstance(StoreManager instance) {
         ZimbraLog.store.info("Setting StoreManager to " + instance.getClass().getName());
-        sInstance = instance;
+        sInstance = (TimingStoreManager) instance;
     }
 
     public static int getDiskStreamingThreshold() throws ServiceException {
