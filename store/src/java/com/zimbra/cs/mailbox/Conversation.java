@@ -729,7 +729,7 @@ public class Conversation extends MailItem {
 
             if (!indexUpdated.isEmpty()) {
                 for (MailItem msg : indexUpdated) {
-                    mMailbox.index.queue(msg,false);
+                    mMailbox.indexItem(msg);
                 }
             }
         }

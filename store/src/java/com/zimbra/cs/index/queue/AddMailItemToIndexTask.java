@@ -1,25 +1,27 @@
 package com.zimbra.cs.index.queue;
 
+import java.util.List;
+
 import com.zimbra.cs.mailbox.MailItem;
 
 public class AddMailItemToIndexTask extends AbstractIndexingTasksLocator {
-    private final MailItem mailItem;
+    private final List<MailItem> mailItems;
 
     // set to TRUE for batch re-indexing tasks
     private final boolean reindex;
 
-    public AddMailItemToIndexTask(MailItem item, String accountID, int mailboxID, int mailboxSchemaGroupId,
+    public AddMailItemToIndexTask(List<MailItem> items, String accountID, int mailboxID, int mailboxSchemaGroupId,
             boolean indexAttachments, boolean reIndex) {
         super(mailboxID, mailboxSchemaGroupId, accountID, indexAttachments);
-        mailItem = item;
+        mailItems = items;
         reindex = reIndex;
     }
 
     /**
      * @return MailItem to be indexed
      */
-    public MailItem getMailItemToAdd() {
-        return mailItem;
+    public List<MailItem> getMailItemsToAdd() {
+        return mailItems;
     }
 
     public boolean isReindex() {

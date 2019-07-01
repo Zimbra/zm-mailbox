@@ -370,7 +370,7 @@ public class Document extends MailItem {
         String oldName = getName();
         super.rename(name, target);
         if (!oldName.equalsIgnoreCase(name))
-            mMailbox.index.queue(this,false);
+            mMailbox.indexItem(this);
     }
 
     @Override

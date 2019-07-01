@@ -33,7 +33,6 @@ import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.TermQuery;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
 import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.mime.InternetAddress;
@@ -61,7 +60,6 @@ import com.zimbra.cs.index.ZimbraQuery;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.queue.AbstractIndexingTasksLocator;
 import com.zimbra.cs.index.queue.AddMailItemToIndexTask;
-import com.zimbra.cs.index.queue.AddToIndexTaskLocator;
 import com.zimbra.cs.index.queue.DeleteFromIndexTaskLocator;
 import com.zimbra.cs.index.queue.IndexingQueueAdapter;
 import com.zimbra.cs.mailbox.MailItem.TemporaryIndexingException;
@@ -492,7 +490,7 @@ public final class MailboxIndex {
     }
 
     /**
-     * Adds mail items to indexing queue. MailItems should already be in the database.
+     * Adds mail items to indexing queue.
      * @throws ServiceException
      */
     @VisibleForTesting
@@ -502,7 +500,7 @@ public final class MailboxIndex {
         }
         ZimbraLog.index.debug("Queuing %d items for indexing", items.size());
         IndexingQueueAdapter queueAdapter = IndexingQueueAdapter.getFactory().getAdapter();
-        AddToIndexTaskLocator itemLocator = new AddToIndexTaskLocator(items, mailbox.getAccountId(), mailbox.getId(), mailbox.getSchemaGroupId(), mailbox.attachmentsIndexingEnabled(), isReindexing);
+        AbstractIndexingTasksLocator itemLocator = new AddMailItemToIndexTask(items, mailbox.getAccountId(), mailbox.getId(), mailbox.getSchemaGroupId(), mailbox.attachmentsIndexingEnabled(), isReindexing);
         return queueAdapter.add(itemLocator);
     }
 
@@ -514,7 +512,9 @@ public final class MailboxIndex {
     public synchronized boolean queue(MailItem item, boolean isReindexing) throws ServiceException {
         ZimbraLog.index.debug("Queuing item %d for indexing", item.getId());
         IndexingQueueAdapter queueAdapter = IndexingQueueAdapter.getFactory().getAdapter();
-        AbstractIndexingTasksLocator itemLocator = new AddMailItemToIndexTask(item, mailbox.getAccountId(), mailbox.getId(), mailbox.getSchemaGroupId(), mailbox.attachmentsIndexingEnabled(), isReindexing);
+        List<MailItem> items = new ArrayList<>();
+        items.add(item);
+        AbstractIndexingTasksLocator itemLocator = new AddMailItemToIndexTask(items, mailbox.getAccountId(), mailbox.getId(), mailbox.getSchemaGroupId(), mailbox.attachmentsIndexingEnabled(), isReindexing);
         return queueAdapter.add(itemLocator);
     }
 
