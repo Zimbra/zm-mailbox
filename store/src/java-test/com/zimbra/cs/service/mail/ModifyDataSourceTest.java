@@ -115,6 +115,7 @@ public class ModifyDataSourceTest {
 
            try {
                 ModifyDataSource.validateDataSourceEmail(acct, ds1);
+                fail("datasource email validation failed");
             } catch (ServiceException e) {
                 String expected = "data source already exists: testuser3@testhost.com";
                 assertTrue(e.getMessage().indexOf(expected)  != -1);
