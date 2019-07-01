@@ -17,74 +17,74 @@
 package com.zimbra.cs.listeners;
 
 import java.util.Collections;
-import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.Map;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
+import com.zimbra.cs.listeners.ListenerUtil.Priority;
 
 public abstract class AuthListener {
 
-    // listeners will be invoked by the enum order
-    public enum AuthListenerId {
-        AL_ZIMBRA;
-    }
+    private static Map<String, AuthListenerEntry> mListeners = Collections
+        .synchronizedMap(new HashMap<String, AuthListenerEntry>());
 
-    /*
-     * The collection's iterator will return the values in the order their
-     * corresponding keys appear in map, which is their natural order (the order
-     * in which the enum constants are declared).
-     */
-    private static Map<AuthListenerId, AuthListener> mListeners = Collections
-        .synchronizedMap(
-            new EnumMap<AuthListenerId, AuthListener>(AuthListenerId.class));
-
-    public static void registerListener(AuthListenerId listenerEnum,
-        AuthListener listener) {
-        AuthListener obj = mListeners.get(listenerEnum);
+    public static void registerListener(String listenerName, Priority priority,
+        AuthListener listener) throws ServiceException {
+        if (mListeners.size() == LC.zimbra_listeners_maxsize.intValue()) {
+            ZimbraLog.account.warn("Auth listener limit reached, registering of %s is ignored",
+                listenerName);
+            throw ServiceException.FORBIDDEN("Auth listener limit reached");
+        }
+        AuthListenerEntry obj = mListeners.get(listenerName);
         if (obj != null) {
             ZimbraLog.account.warn(
-                "listener %s is already registered, registering of %s is ignored", listenerEnum,
-                obj.getClass().getCanonicalName());
-            return;
+                "listener %s is already registered, registering of %s is ignored", listenerName,
+                obj.getAuthListener().getClass().getCanonicalName());
+            throw ServiceException.FORBIDDEN("Auth listener with this name is already registered");
         }
-        ZimbraLog.account.info("Registering Auth listener: %s", listenerEnum.name());
-        mListeners.put(listenerEnum, listener);
+        ZimbraLog.account.info("Registering Auth listener: %s", listenerName);
+        AuthListenerEntry entry = new AuthListenerEntry(listenerName, priority, listener);
+        mListeners.put(listenerName, entry);
+
     }
 
-    public static void deregisterListener(AuthListenerId listenerEnum) {
-        ZimbraLog.account.info("De-registering Auth listener: %s", listenerEnum.name());
-        mListeners.remove(listenerEnum);
+    public static void deregisterListener(String listenerName) {
+        ZimbraLog.account.info("De-registering Auth listener: %s", listenerName);
+        mListeners.remove(listenerName);
     }
 
     public static void invokeOnSuccess(Account acct) throws ServiceException {
         ZimbraLog.account.info("Authentication successful for user: %s", acct.getName());
         // invoke listeners
-        for (Map.Entry<AuthListenerId, AuthListener> listener : mListeners
-            .entrySet()) {
-            AuthListener listenerInstance = listener.getValue();
-            listenerInstance.onSuccess(acct);
+        Map<String, AuthListenerEntry> sortedListeners = ListenerUtil.sortByPriority(mListeners);
+        for (Map.Entry<String, AuthListenerEntry> listener : sortedListeners.entrySet()) {
+            AuthListenerEntry listenerInstance = listener.getValue();
+            listenerInstance.getAuthListener().onSuccess(acct);
         }
 
     }
 
     public static void invokeOnException(ServiceException exceptionThrown) {
-    	if (exceptionThrown instanceof AuthFailedServiceException) {
-    		ZimbraLog.account.info("Error occurred during authentication: %s. Reason: %s.",
-    	            exceptionThrown.getMessage(), ((AuthFailedServiceException) exceptionThrown).getReason());
-    	} else {
-    		ZimbraLog.account.info("Error occurred during authentication: %s", exceptionThrown.getMessage());
-    	}
+        if (exceptionThrown instanceof AuthFailedServiceException) {
+            ZimbraLog.account.info("Error occurred during authentication: %s. Reason: %s.",
+                exceptionThrown.getMessage(),
+                ((AuthFailedServiceException) exceptionThrown).getReason());
+        } else {
+            ZimbraLog.account.info("Error occurred during authentication: %s",
+                exceptionThrown.getMessage());
+        }
         if (ZimbraLog.account.isDebugEnabled()) {
             ZimbraLog.account.debug(exceptionThrown);
         }
         // invoke listeners
-        for (Map.Entry<AuthListenerId, AuthListener> listener : mListeners
-            .entrySet()) {
-            AuthListener listenerInstance = listener.getValue();
-            listenerInstance.onException(exceptionThrown);
+        Map<String, AuthListenerEntry> sortedListeners = ListenerUtil.sortByPriority(mListeners);
+        for (Map.Entry<String, AuthListenerEntry> listener : sortedListeners.entrySet()) {
+            AuthListenerEntry listenerInstance = listener.getValue();
+            listenerInstance.getAuthListener().onException(exceptionThrown);
         }
 
     }
@@ -102,6 +102,7 @@ public abstract class AuthListener {
      *
      * @param USER_ACCOUNT authenticated user account
      * @param ServiceException original exception thrown by auth
+     *            
      */
     public abstract void onException(ServiceException exceptionThrown);
 
