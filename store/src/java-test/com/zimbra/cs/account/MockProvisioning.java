@@ -781,7 +781,7 @@ public final class MockProvisioning extends Provisioning {
             return result;
         }
 
-        return new ArrayList<>();
+        return new ArrayList<DataSource>();
     }
 
     @Override
