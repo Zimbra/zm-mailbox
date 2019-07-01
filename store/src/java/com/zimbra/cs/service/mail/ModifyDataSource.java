@@ -259,7 +259,7 @@ public class ModifyDataSource extends MailDocumentHandler {
      * Confirms that the zimbraDataSourceEmailAddress attribute is unique
      *
      */
-    private static void validateDataSourceEmail(Account account, Element eDataSource)
+    public static void validateDataSourceEmail(Account account, Element eDataSource)
     throws ServiceException {
         String dsEmailAddr = eDataSource.getAttribute(MailConstants.A_DS_EMAIL_ADDRESS, null);
         if (!StringUtil.isNullOrEmpty(dsEmailAddr)) {

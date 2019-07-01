@@ -62,6 +62,7 @@ public final class MockProvisioning extends Provisioning {
     private final Map<String, Account> id2account = Maps.newHashMap();
     private final Map<String, Account> name2account = Maps.newHashMap();
 
+    private static final String DATA_SOURCE_LIST_CACHE_KEY = "MockProvisioning.DATA_SOURCE_CACHE";
     private final Map<String, Domain> id2domain = Maps.newHashMap();
 
     private final Map<String, Cos> id2cos = Maps.newHashMap();
@@ -732,7 +733,19 @@ public final class MockProvisioning extends Provisioning {
 
     @Override
     public DataSource createDataSource(Account account, DataSourceType type, String dataSourceName, Map<String, Object> attrs) {
-        throw new UnsupportedOperationException();
+        attrs.put(A_zimbraDataSourceName, dataSourceName); // must be the same
+        attrs.put(Provisioning.A_zimbraDataSourceType, type.toString());
+
+        String dsId = new UUID(0L, 0L).toString();
+
+        DataSource ds = new DataSource(account, type, dataSourceName, dsId, attrs, this);
+
+        List<DataSource> dsList = getAllDataSources(account);
+        dsList.add(ds);
+
+        account.setCachedData(DATA_SOURCE_LIST_CACHE_KEY, dsList);
+
+        return ds;
     }
 
     @Override
@@ -761,7 +774,14 @@ public final class MockProvisioning extends Provisioning {
     public List<DataSource> getAllDataSources(Account account) {
         // Don't throw UnsupportedOperationException because Mailbox.updateRssDataSource()
         // calls this method.
-        return Collections.emptyList();
+        @SuppressWarnings("unchecked")
+        List<DataSource> result = (List<DataSource>) account.getCachedData(DATA_SOURCE_LIST_CACHE_KEY);
+
+        if (result != null) {
+            return result;
+        }
+
+        return new ArrayList<>();
     }
 
     @Override
