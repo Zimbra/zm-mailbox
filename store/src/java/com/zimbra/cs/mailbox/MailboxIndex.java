@@ -34,6 +34,7 @@ import org.apache.lucene.search.TermQuery;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.service.ServiceException;
@@ -584,7 +585,7 @@ public final class MailboxIndex {
                     DbSearch.Result sr = itr.next();
                     try {
                         MailItem item = mailbox.getItem(sr.getItemData());
-                        itr.set(new ItemSearchResult(item, sr.getSortValue()));
+                        itr.set(new ItemSearchResult(item, sr.getSortValue(), sr.getIndexId()));
                     } catch (ServiceException se) {
                         ZimbraLog.index.info(String.format(
                                 "Problem constructing Result for folder=%s item=%s from UnderlyingData - dropping item",
@@ -717,10 +718,12 @@ public final class MailboxIndex {
 
     private static final class ItemSearchResult extends DbSearch.Result {
         private final MailItem item;
+        private final int indexId; //index id is explicitly set because it might still be 0 on the cached MailItem
 
-        ItemSearchResult(MailItem item, Object sortkey) {
+        ItemSearchResult(MailItem item, Object sortkey, int indexId) {
             super(sortkey);
             this.item = item;
+            this.indexId = indexId;
         }
 
         @Override
@@ -730,7 +733,7 @@ public final class MailboxIndex {
 
         @Override
         public int getIndexId() {
-            return item.getIndexId();
+            return indexId;
         }
 
         @Override
