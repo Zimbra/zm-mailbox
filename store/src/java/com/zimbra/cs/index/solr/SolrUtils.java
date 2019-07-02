@@ -231,27 +231,7 @@ public class SolrUtils {
     }
 
     public static CloudSolrClient getCloudSolrClient(String zkHosts) {
-        ArrayList<String> hosts = new ArrayList<String>();
-        for (String s : zkHosts.split(",")) {
-            if (s == null || s.isEmpty()) {
-                continue;
-            }
-            if (s.startsWith("http://")) {
-                hosts.add(s.substring(7));
-            }
-            else {
-                hosts.add(s);
-            }
-        }
-        CloseableHttpClient client = ZimbraHttpClientManager.getInstance().getInternalHttpClient();
-        CloudSolrClient.Builder builder = new CloudSolrClient.Builder();
-        builder.withHttpClient(client);
-        builder.withClusterStateProvider(new ZkClientClusterStateProvider(hosts, null));
-        // Parallel updates under heavy load results in thousands of worker threads.
-        // Our updates should only go to one shard anyways, but even if they don't,
-        // Async indexing should make disabling this OK.
-        builder.withParallelUpdates(LC.solr_client_use_parallel_updates.booleanValue());
-        return builder.build();
+        return SolrClientHolder.getInstance().getClient(zkHosts);
     }
 
     public static SolrClient getSolrClient(CloseableHttpClient httpClient, String baseUrl, String coreName) {
