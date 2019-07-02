@@ -1008,17 +1008,7 @@ public class SolrIndex extends IndexStore {
             ZimbraLog.index.info("Created SolrCloudFactory");
             String zkHost = Provisioning.getInstance().getLocalServer().getIndexURL().substring("solrcloud:".length());
             CloudSolrClient client = SolrUtils.getCloudSolrClient(zkHost);
-
-            //since this helper is reused for different solr collections, we pass in a name lookup function
-            IndexNameFunc indexNameFunc = new IndexNameFunc() {
-
-                @Override
-                public String getIndexName(String accountId) throws ServiceException {
-                    return SolrUtils.getMailboxIndexName(accountId);
-                }
-            };
-
-            SolrCollectionLocator locator = new JointCollectionLocator(indexNameFunc);
+            SolrCollectionLocator locator = new MailboxJointCollectionLocator();
             solrHelper = new SolrCloudHelper(locator, client, IndexType.MAILBOX);
         }
 

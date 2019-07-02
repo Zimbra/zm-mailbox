@@ -50,6 +50,7 @@ public class JointCollectionLocator extends SolrCollectionLocator {
         return String.format("%s!%s", accountId, idJoiner.join(idParts));
     }
 
+    @FunctionalInterface
     public static interface IndexNameFunc {
         public String getIndexName(String accountId) throws ServiceException;
     }
