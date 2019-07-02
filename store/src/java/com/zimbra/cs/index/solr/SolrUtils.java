@@ -36,6 +36,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.zimbra.common.httpclient.ZimbraHttpClientManager;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -246,6 +247,10 @@ public class SolrUtils {
         CloudSolrClient.Builder builder = new CloudSolrClient.Builder();
         builder.withHttpClient(client);
         builder.withClusterStateProvider(new ZkClientClusterStateProvider(hosts, null));
+        // Parallel updates under heavy load results in thousands of worker threads.
+        // Our updates should only go to one shard anyways, but even if they don't,
+        // Async indexing should make disabling this OK.
+        builder.withParallelUpdates(LC.solr_client_use_parallel_updates.booleanValue());
         return builder.build();
     }
 
