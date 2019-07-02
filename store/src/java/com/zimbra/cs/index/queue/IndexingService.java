@@ -20,9 +20,7 @@ import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.index.IndexStore;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
-import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.IndexItemEntry;
-import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.ReIndexStatus;
 import com.zimbra.cs.util.ProvisioningUtil;
 import com.zimbra.cs.util.Zimbra;
@@ -229,7 +227,7 @@ public class IndexingService {
                 try {
                     IndexStore indexStore = IndexStore.getFactory().getIndexStore(queueItem.getAccountID());
                     conn = DbPool.getConnection(queueItem.getMailboxID(), queueItem.getMailboxSchemaGroupID());
-                    
+
                     for(MailItem mailItem: mailItems) {
                         indexItemEntries.add(new IndexItemEntry(mailItem, mailItem.generateIndexDataAsync(queueItem
                                 .attachmentIndexingEnabled())));
@@ -248,11 +246,6 @@ public class IndexingService {
                         }
                     }
                     conn.commit();
-
-                    if (MailboxManager.getInstance().isMailboxLoadedAndAvailable(queueItem.getMailboxID())) {
-                        Mailbox mailbox = MailboxManager.getInstance().getMailboxById(queueItem.getMailboxID());
-                        mailbox.batchUncache(mailItems);
-                    }
 
                     // status reporting
                     if (queueItem.isReindex()) {
@@ -358,17 +351,6 @@ public class IndexingService {
                         }
                     }
                     conn.commit();
-
-                    /*
-                     * These MailItems may already be cached on this server with
-                     * indexId==0, so we should kick them from cache now. When
-                     * they are returned by new DB search, they will have
-                     * indexIds.
-                     */
-                    if (MailboxManager.getInstance().isMailboxLoadedAndAvailable(queueItem.getMailboxID())) {
-                        Mailbox mailbox = MailboxManager.getInstance().getMailboxById(queueItem.getMailboxID());
-                        mailbox.batchUncache(indexedItems);
-                    }
 
                     // status reporting
                     if (queueItem.isReindex()) {
