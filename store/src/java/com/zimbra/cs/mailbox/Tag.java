@@ -24,6 +24,7 @@ import java.util.Set;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Sets;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.mailbox.ZimbraTag;
 import com.zimbra.common.service.ServiceException;
@@ -462,17 +463,27 @@ public class Tag extends MailItem implements ZimbraTag, SharedState {
 
     @Override
     public void attach(SharedStateAccessor accessor) {
-        getState().setSharedStateAccessor(accessor);
+        TagState state = getState();
+        if (state instanceof SynchronizableTagState) {
+            ((SynchronizableTagState) state).setSharedStateAccessor(accessor);
+        }
     }
 
     @Override
     public void detatch() {
-        getState().clearSharedStateAccessor();
+        TagState state = getState();
+        if (state instanceof SynchronizableTagState) {
+            ((SynchronizableTagState) state).clearSharedStateAccessor();
+        }
     }
 
     @Override
     protected MailItemState initFieldCache(UnderlyingData data) {
-        return new TagState(data);
+        if (LC.redis_cache_synchronize_folders_tags.booleanValue()) {
+            return new SynchronizableTagState(data);
+        } else {
+            return new LocalTagState(data);
+        }
     }
 
     protected TagState getState() {
@@ -481,11 +492,19 @@ public class Tag extends MailItem implements ZimbraTag, SharedState {
 
     @Override
     public boolean isAttached() {
-        return getState().hasSharedStateAccessor();
+        TagState state = getState();
+        if (state instanceof SynchronizableTagState) {
+            return ((SynchronizableTagState) state).hasSharedStateAccessor();
+        } else {
+            return false;
+        }
     }
 
     @Override
     public void sync() {
-        getState().syncWithSharedState(this);
+        TagState state = getState();
+        if (state instanceof SynchronizableTagState) {
+            ((SynchronizableTagState) state).syncWithSharedState(this);
+        }
     }
 }

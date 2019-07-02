@@ -1811,18 +1811,28 @@ public class Folder extends MailItem implements FolderStore, SharedState {
 
     @Override
     public void attach(SharedStateAccessor accessor) {
-        getState().setSharedStateAccessor(accessor);
+        FolderState state = getState();
+        if (state instanceof SynchronizableFolderState) {
+            ((SynchronizableFolderState) state).setSharedStateAccessor(accessor);
+        }
     }
 
 
     @Override
     public void detatch() {
-        getState().clearSharedStateAccessor();
+        FolderState state = getState();
+        if (state instanceof SynchronizableFolderState) {
+            ((SynchronizableFolderState) state).clearSharedStateAccessor();
+        }
     }
 
     @Override
     protected MailItemState initFieldCache(UnderlyingData data) {
-        return new FolderState(data);
+        if (LC.redis_cache_synchronize_folders_tags.booleanValue()) {
+            return new SynchronizableFolderState(data);
+        } else {
+            return new LocalFolderState(data);
+        }
     }
 
     protected FolderState getState() {
@@ -1831,12 +1841,20 @@ public class Folder extends MailItem implements FolderStore, SharedState {
 
     @Override
     public boolean isAttached() {
-        return getState().hasSharedStateAccessor();
+        FolderState state = getState();
+        if (state instanceof SynchronizableFolderState) {
+            return ((SynchronizableFolderState) state).hasSharedStateAccessor();
+        } else {
+            return false;
+        }
     }
 
     @Override
     public void sync() {
-        getState().syncWithSharedState(this);
+        FolderState state = getState();
+        if (state instanceof SynchronizableFolderState) {
+            ((SynchronizableFolderState) state).syncWithSharedState(this);
+        }
     }
 
     /**
