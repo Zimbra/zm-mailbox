@@ -9130,7 +9130,7 @@ public class Mailbox implements MailboxStore {
         /* Interrogating the lock to see if current thread has lock has some cost, hence why only do it if
          * have notifications. */
         try {
-            if (lock.isLockedByCurrentThread()) {
+            if (LC.notify_mbox_listeners_async_if_possible.booleanValue() && lock.isLockedByCurrentThread()) {
                 /* Still locked, even though we've probably just released a lock.  Use a separate thread
                  * to avoid delaying the outer lock.
                  */

@@ -1349,6 +1349,9 @@ public final class LC {
     @Supported
     public static final KnownKey solr_client_use_parallel_updates = KnownKey.newKey(false);
 
+    @Supported
+    public static final KnownKey notify_mbox_listeners_async_if_possible = KnownKey.newKey(true);
+
 
     public enum PUBLIC_SHARE_VISIBILITY { samePrimaryDomain, all, none };
 
