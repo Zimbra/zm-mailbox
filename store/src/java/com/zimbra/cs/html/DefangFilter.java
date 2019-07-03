@@ -21,10 +21,12 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringEscapeUtils;
@@ -463,15 +465,49 @@ public class DefangFilter extends DefaultFilter {
         DebugConfig.defangStyleUnwantedImport, Pattern.CASE_INSENSITIVE);
     private static final Pattern STYLE_UNWANTED_STRG_PATTERN = Pattern.compile(
         DebugConfig.defangStyleUnwantedStrgPattern, Pattern.CASE_INSENSITIVE);
-    
-    private static String sanitizeStyleValue(String value) {
-        // remove comments
-        value = STYLE_UNWANTED_STRG_PATTERN.matcher(value).replaceAll("");
-        value = COMMENT.matcher(value).replaceAll("");
-        // strip off unwanted functions
-        value = STYLE_UNWANTED_FUNC.matcher(value).replaceAll("");
-       // strip off any @import
-        return STYLE_UNWANTED_IMPORT.matcher(value).replaceAll("");
+
+     private static String sanitizeStyleValue(String value) {
+        String sanitizedValue = "";
+        int endIndex = 0;
+        int random = 0;
+        SecureRandom r = new SecureRandom();
+        int range = 200;
+        StringBuilder data = new StringBuilder();
+        random = r.nextInt(range) + range;
+        for (int startIndex = 0; endIndex < value.length();) {
+            endIndex = startIndex + random;
+            String valuePart;
+            if (endIndex < value.length()) {
+                valuePart = value.substring(startIndex, endIndex);
+            } else if (startIndex < value.length()) {
+                valuePart = value.substring(startIndex);
+            } else {
+                break;
+            }
+            // strip off unwanted functions
+            Matcher matcher = STYLE_UNWANTED_FUNC.matcher(valuePart);
+            StringBuffer stringBuffer = new StringBuffer();
+            while (matcher.find()) {
+                String match = matcher.group();
+                if (!match.startsWith("rgb") && !match.startsWith("media")
+                    && !match.startsWith("and")) {
+                    matcher.appendReplacement(stringBuffer, "");
+                }
+            }
+            matcher.appendTail(stringBuffer);
+            valuePart = stringBuffer.toString();
+            data.append(valuePart);
+            random = r.nextInt(range) + range;
+            startIndex = endIndex;
+        }
+
+        sanitizedValue = data.toString();
+       // remove comments
+        sanitizedValue = STYLE_UNWANTED_STRG_PATTERN.matcher(sanitizedValue).replaceAll("");
+        sanitizedValue = COMMENT.matcher(sanitizedValue).replaceAll("");
+        // strip off any @import
+        sanitizedValue = STYLE_UNWANTED_IMPORT.matcher(sanitizedValue).replaceAll("");
+        return sanitizedValue;
     }
 
     /** Ignorable whitespace. */

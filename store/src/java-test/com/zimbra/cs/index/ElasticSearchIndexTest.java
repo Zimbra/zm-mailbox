@@ -19,13 +19,11 @@ package com.zimbra.cs.index;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.commons.httpclient.HttpException;
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.methods.DeleteMethod;
-import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpRequestBase;
 import org.junit.Ignore;
-import org.junit.Test;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
@@ -48,13 +46,10 @@ public final class ElasticSearchIndexTest extends AbstractIndexStoreTest {
     @Override
     protected boolean indexStoreAvailable() {
         String indexUrl = String.format("%s?_status", LC.zimbra_index_elasticsearch_url_base.value());
-        HttpMethod method = new GetMethod(indexUrl);
+        HttpGet method = new HttpGet(indexUrl);
         try {
             ElasticSearchConnector connector = new ElasticSearchConnector();
             connector.executeMethod(method);
-        } catch (HttpException e) {
-            ZimbraLog.index.error("Problem accessing the ElasticSearch Index store", e);
-            return false;
         } catch (IOException e) {
             ZimbraLog.index.error("Problem accessing the ElasticSearch Index store", e);
             return false;
@@ -66,7 +61,7 @@ public final class ElasticSearchIndexTest extends AbstractIndexStoreTest {
     protected void cleanupForIndexStore() {
         String key = testAcct.getId();
         String indexUrl = String.format("%s%s/", LC.zimbra_index_elasticsearch_url_base.value(), key);
-        HttpMethod method = new DeleteMethod(indexUrl);
+        HttpRequestBase method = new HttpDelete(indexUrl);
         try {
             ElasticSearchConnector connector = new ElasticSearchConnector();
             int statusCode = connector.executeMethod(method);
@@ -84,8 +79,6 @@ public final class ElasticSearchIndexTest extends AbstractIndexStoreTest {
                     ZimbraLog.index.error("Problem deleting index for key=%s error=%s", key, error);
                 }
             }
-        } catch (HttpException e) {
-            ZimbraLog.index.error("Problem Deleting index with key=" + key, e);
         } catch (IOException e) {
             ZimbraLog.index.error("Problem Deleting index with key=" + key, e);
         }

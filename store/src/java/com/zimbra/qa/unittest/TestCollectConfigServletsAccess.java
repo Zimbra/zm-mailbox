@@ -22,13 +22,14 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
-import junit.framework.TestCase;
-
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpState;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.cookie.CookiePolicy;
-import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.CookieSpecs;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.BasicCookieStore;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.junit.Test;
 
 import com.zimbra.common.account.Key.AccountBy;
@@ -45,6 +46,8 @@ import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.generated.RightConsts;
 import com.zimbra.soap.admin.type.GranteeSelector.GranteeBy;
 import com.zimbra.soap.type.TargetBy;
+
+import junit.framework.TestCase;
 /**
  *
  * @author gsolovyev
@@ -88,11 +91,11 @@ public class TestCollectConfigServletsAccess extends TestCase {
     public void testConfigGlobalAdmin() throws Exception {
         ZAuthToken at = TestUtil.getAdminSoapTransport().getAuthToken();
         URI servletURI = new URI(getConfigServletUrl());
-        HttpState initialState = HttpClientUtil.newHttpState(at, servletURI.getHost(), true);
+        BasicCookieStore initialState = HttpClientUtil.newHttpState(at, servletURI.getHost(), true);
         HttpClient restClient = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
         restClient.setState(initialState);
         restClient.getParams().setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
-        GetMethod get = new GetMethod(servletURI.toString());
+        HttpGet get = new HttpGet(servletURI.toString());
         int statusCode = HttpClientUtil.executeMethod(restClient, get);
         if(statusCode == HttpStatus.SC_INTERNAL_SERVER_ERROR) {
             fail("collectconfig servlet is failing. Likely Zimbra SSH access is not properly configured. " + get.getResponseHeader("X-Zimbra-Fault-Message").getValue());
@@ -110,12 +113,17 @@ public class TestCollectConfigServletsAccess extends TestCase {
     public void testConfigDelegatedAdmin() throws Exception {
         ZAuthToken at = TestUtil.getAdminSoapTransport(TEST_ADMIN_NAME,PASSWORD).getAuthToken();
         URI servletURI = new URI(getConfigServletUrl());
-        HttpState initialState = HttpClientUtil.newHttpState(at, servletURI.getHost(), true);
-        HttpClient restClient = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
-        restClient.setState(initialState);
-        restClient.getParams().setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
-        GetMethod get = new GetMethod(servletURI.toString());
-        int statusCode = HttpClientUtil.executeMethod(restClient, get);
+        BasicCookieStore initialState = HttpClientUtil.newHttpState(at, servletURI.getHost(), true);
+        HttpClientBuilder restClientBuilder = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+        restClientBuilder.setDefaultCookieStore(initialState);
+        RequestConfig reqConfig = RequestConfig.copy(
+            ZimbraHttpConnectionManager.getInternalHttpConnMgr().getZimbraConnMgrParams().getReqConfig())
+            .setCookieSpec(CookieSpecs.BROWSER_COMPATIBILITY).build();
+        restClientBuilder.setDefaultRequestConfig(reqConfig);
+        HttpGet get = new HttpGet(servletURI.toString());
+        HttpClient restClient = restClientBuilder.build();
+        HttpResponse response = HttpClientUtil.executeMethod(restClient, get);
+        int statusCode = response.getStatusLine().getStatusCode();
         assertEquals("This request should NOT succeed. Getting status code " + statusCode, HttpStatus.SC_UNAUTHORIZED,statusCode);
     }
 
@@ -127,11 +135,11 @@ public class TestCollectConfigServletsAccess extends TestCase {
     public void testLDAPConfigGlobalAdmin() throws Exception {
         ZAuthToken at = TestUtil.getAdminSoapTransport().getAuthToken();
         URI servletURI = new URI(getLDAPConfigServletUrl());
-        HttpState initialState = HttpClientUtil.newHttpState(at, servletURI.getHost(), true);
+        BasicCookieStore initialState = HttpClientUtil.newHttpState(at, servletURI.getHost(), true);
         HttpClient restClient = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
         restClient.setState(initialState);
         restClient.getParams().setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
-        GetMethod get = new GetMethod(servletURI.toString());
+        HttpGet get = new HttpGet(servletURI.toString());
         int statusCode = HttpClientUtil.executeMethod(restClient, get);
         if(statusCode == HttpStatus.SC_INTERNAL_SERVER_ERROR) {
             fail("collectldapconfig servlet is failing. Likely Zimbra SSH access is not properly configured. " + get.getResponseHeader("X-Zimbra-Fault-Message").getValue());
@@ -148,12 +156,17 @@ public class TestCollectConfigServletsAccess extends TestCase {
     public void testLDAPConfigDelegatedAdmin() throws Exception {
         ZAuthToken at = TestUtil.getAdminSoapTransport(TEST_ADMIN_NAME,PASSWORD).getAuthToken();
         URI servletURI = new URI(getLDAPConfigServletUrl());
-        HttpState initialState = HttpClientUtil.newHttpState(at, servletURI.getHost(), true);
-        HttpClient restClient = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
-        restClient.setState(initialState);
-        restClient.getParams().setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
-        GetMethod get = new GetMethod(servletURI.toString());
-        int statusCode = HttpClientUtil.executeMethod(restClient, get);
+        BasicCookieStore initialState = HttpClientUtil.newHttpState(at, servletURI.getHost(), true);
+        HttpClientBuilder restClientBuilder = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+        restClientBuilder.setDefaultCookieStore(initialState);
+        RequestConfig reqConfig = RequestConfig.copy(
+            ZimbraHttpConnectionManager.getInternalHttpConnMgr().getZimbraConnMgrParams().getReqConfig())
+            .setCookieSpec(CookieSpecs.BROWSER_COMPATIBILITY).build();
+        restClientBuilder.setDefaultRequestConfig(reqConfig);
+        HttpGet get = new HttpGet(servletURI.toString());
+        HttpClient restClient = restClientBuilder.build();
+        HttpResponse response = HttpClientUtil.executeMethod(restClient, get);
+        int statusCode = response.getStatusLine().getStatusCode();
         assertEquals("This request should NOT succeed. Getting status code " + statusCode, HttpStatus.SC_UNAUTHORIZED,statusCode);
     }
 
@@ -164,10 +177,15 @@ public class TestCollectConfigServletsAccess extends TestCase {
     @Test
     public void testLDAPConfigNoToken() throws Exception {
         URI servletURI = new URI(getLDAPConfigServletUrl());
-        HttpClient restClient = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
-        restClient.getParams().setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
-        GetMethod get = new GetMethod(servletURI.toString());
-        int statusCode = HttpClientUtil.executeMethod(restClient, get);
+        HttpClientBuilder restClientBuilder = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+        RequestConfig reqConfig = RequestConfig.copy(
+            ZimbraHttpConnectionManager.getInternalHttpConnMgr().getZimbraConnMgrParams().getReqConfig())
+            .setCookieSpec(CookieSpecs.BROWSER_COMPATIBILITY).build();
+        restClientBuilder.setDefaultRequestConfig(reqConfig);
+        HttpGet get = new HttpGet(servletURI.toString());
+        HttpClient restClient = restClientBuilder.build();
+        HttpResponse response = HttpClientUtil.executeMethod(restClient, get);
+        int statusCode = response.getStatusLine().getStatusCode();
         assertEquals("This request should NOT succeed. Getting status code " + statusCode, HttpStatus.SC_UNAUTHORIZED,statusCode);
     }
 
@@ -178,10 +196,15 @@ public class TestCollectConfigServletsAccess extends TestCase {
     @Test
     public void testConfigNoToken() throws Exception {
         URI servletURI = new URI(getConfigServletUrl());
-        HttpClient restClient = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
-        restClient.getParams().setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
-        GetMethod get = new GetMethod(servletURI.toString());
-        int statusCode = HttpClientUtil.executeMethod(restClient, get);
+        HttpClientBuilder restClientBuilder = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+        RequestConfig reqConfig = RequestConfig.copy(
+            ZimbraHttpConnectionManager.getInternalHttpConnMgr().getZimbraConnMgrParams().getReqConfig())
+            .setCookieSpec(CookieSpecs.BROWSER_COMPATIBILITY).build();
+        restClientBuilder.setDefaultRequestConfig(reqConfig);
+        HttpGet get = new HttpGet(servletURI.toString());
+        HttpClient restClient = restClientBuilder.build();
+        HttpResponse response = HttpClientUtil.executeMethod(restClient, get);
+        int statusCode = response.getStatusLine().getStatusCode();
         assertEquals("This request should NOT succeed. Getting status code " + statusCode, HttpStatus.SC_UNAUTHORIZED,statusCode);
     }
 

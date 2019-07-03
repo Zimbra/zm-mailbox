@@ -70,7 +70,7 @@ final class NioImapHandler extends ImapHandler implements NioHandler {
                 }
             }
             if (LC.imap_max_consecutive_error.intValue() > 0 && consecutiveError >= LC.imap_max_consecutive_error.intValue()) {
-               ZimbraLog.imap.error("zimbraImapMaxConsecutiveError exceeded %d",LC.imap_max_consecutive_error.intValue());
+               ZimbraLog.imap.error("NIO:zimbraImapMaxConsecutiveError exceeded %d",LC.imap_max_consecutive_error.intValue());
                dropConnection();
             }
         }
@@ -80,7 +80,7 @@ final class NioImapHandler extends ImapHandler implements NioHandler {
     public void exceptionCaught(Throwable e) throws IOException {
         try {
             if (e instanceof javax.net.ssl.SSLException) {
-                ZimbraLog.imap.error("Error detected by SSL subsystem, dropping connection:" + e);
+                ZimbraLog.imap.error("NIO:Error detected by SSL subsystem, dropping connection:%s", e);
                 dropConnection(false);  // Bug 79904 prevent using SSL port in plain text
             } else if (e instanceof NioImapDecoder.TooBigLiteralException) {
                 NioImapDecoder.TooBigLiteralException tble = (NioImapDecoder.TooBigLiteralException) e;
@@ -141,9 +141,9 @@ final class NioImapHandler extends ImapHandler implements NioHandler {
             if (lastCommand != null) {
                 ZimbraPerf.IMAP_TRACKER.addStat(lastCommand.toUpperCase(), start);
                 ZimbraPerf.IMAPD_TRACKER.addStat(lastCommand.toUpperCase(), start);
-                ZimbraLog.imap.info("%s elapsed=%d", lastCommand.toUpperCase(), elapsed);
+                ZimbraLog.imap.info("%s elapsed=%d (NIO)", lastCommand.toUpperCase(), elapsed);
             } else {
-                ZimbraLog.imap.info("(unknown) elapsed=%d", elapsed);
+                ZimbraLog.imap.info("(unknown) elapsed=%d (NIO)", elapsed);
             }
 
         }
@@ -174,7 +174,7 @@ final class NioImapHandler extends ImapHandler implements NioHandler {
 
     @Override
     public void connectionIdle() {
-        ZimbraLog.imap.debug("dropping connection for inactivity");
+        ZimbraLog.imap.debug("dropping NIO connection for inactivity");
         dropConnection();
     }
 
@@ -205,7 +205,7 @@ final class NioImapHandler extends ImapHandler implements NioHandler {
     @Override
     protected void dropConnection(boolean sendBanner) {
         if (credentials != null && !goodbyeSent) {
-            ZimbraLog.imap.info("dropping connection for user %s (server-initiated)", credentials.getUsername());
+            ZimbraLog.imap.info("NIO:dropping connection for user %s (server-initiated)", credentials.getUsername());
         }
         if (!connection.isOpen()) {
             return; // No longer connected

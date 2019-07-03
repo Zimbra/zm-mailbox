@@ -27,15 +27,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Queue;
-import org.apache.commons.httpclient.HttpException;
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.NameValuePair;
-import org.apache.commons.httpclient.methods.DeleteMethod;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.httpclient.methods.PutMethod;
-import org.apache.commons.httpclient.methods.StringRequestEntity;
+
+import org.apache.http.HttpStatus;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.entity.StringEntity;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
@@ -115,8 +114,8 @@ public final class ElasticSearchIndex extends IndexStore {
             try {
                 ElasticSearchConnector connector = new ElasticSearchConnector();
                 JSONObject mappingInfo = createMappingInfo();
-                PutMethod putMethod = new PutMethod(ElasticSearchConnector.actualUrl(indexUrl));
-                putMethod.setRequestEntity(new StringRequestEntity(mappingInfo.toString(),
+                HttpPut putMethod = new HttpPut(ElasticSearchConnector.actualUrl(indexUrl));
+                putMethod.setEntity(new StringEntity(mappingInfo.toString(),
                         MimeConstants.CT_APPLICATION_JSON, MimeConstants.P_CHARSET_UTF8));
                 int statusCode = connector.executeMethod(putMethod);
                 if (statusCode == HttpStatus.SC_OK) {
@@ -126,8 +125,6 @@ public final class ElasticSearchIndex extends IndexStore {
                     ZimbraLog.index.error("Problem Setting mapping information for index with key=%s httpstatus=%d",
                             key, statusCode);
                 }
-            } catch (HttpException e) {
-                ZimbraLog.index.error("Problem Getting mapping information for index with key=" + key, e);
             } catch (IOException e) {
                 ZimbraLog.index.error("Problem Getting mapping information for index with key=" + key, e);
             } catch (JSONException e) {
@@ -142,7 +139,7 @@ public final class ElasticSearchIndex extends IndexStore {
      */
     private boolean refreshIndexIfNecessary() {
         String url = String.format("%s_refresh", indexUrl);
-        GetMethod method = new GetMethod(ElasticSearchConnector.actualUrl(url));
+        HttpGet method = new HttpGet(ElasticSearchConnector.actualUrl(url));
         try {
             ElasticSearchConnector connector = new ElasticSearchConnector();
             int statusCode = connector.executeMethod(method);
@@ -153,8 +150,6 @@ public final class ElasticSearchIndex extends IndexStore {
                 return false;
             }
             ZimbraLog.index.error("Problem refreshing index %s %d", url, statusCode);
-        } catch (HttpException e) {
-            ZimbraLog.index.error("Problem refreshing index %s", url, e);
         } catch (IOException e) {
             ZimbraLog.index.error("Problem refreshing index %s", url, e);
         }
@@ -324,7 +319,7 @@ public final class ElasticSearchIndex extends IndexStore {
 
     @Override
     public void deleteIndex() {
-        HttpMethod method = new DeleteMethod(ElasticSearchConnector.actualUrl(indexUrl));
+        HttpRequestBase method = new HttpDelete(ElasticSearchConnector.actualUrl(indexUrl));
         try {
             ElasticSearchConnector connector = new ElasticSearchConnector();
             int statusCode = connector.executeMethod(method);
@@ -342,8 +337,6 @@ public final class ElasticSearchIndex extends IndexStore {
                     ZimbraLog.index.error("Problem deleting index for key=%s error=%s", key, error);
                 }
             }
-        } catch (HttpException e) {
-            ZimbraLog.index.error("Problem Deleting index with key=" + key, e);
         } catch (IOException e) {
             ZimbraLog.index.error("Problem Deleting index with key=" + key, e);
         }
@@ -375,7 +368,7 @@ public final class ElasticSearchIndex extends IndexStore {
     public int getDocCount() {
         refreshIndexIfNecessary();
         String url = String.format("%s%s/docs/", indexUrl, "_stats");
-        GetMethod method = new GetMethod(ElasticSearchConnector.actualUrl(url));
+        HttpGet method = new HttpGet(ElasticSearchConnector.actualUrl(url));
         try {
             ElasticSearchConnector connector = new ElasticSearchConnector();
             int statusCode = connector.executeMethod(method);
@@ -383,8 +376,6 @@ public final class ElasticSearchIndex extends IndexStore {
                 int cnt = connector.getIntAtJsonPath(new String[] {"_all", "total", "docs", "count"}, 0);
                 return cnt;
             }
-        } catch (HttpException e) {
-            ZimbraLog.index.error("Problem getting stats for index %s", url, e);
         } catch (IOException e) {
             ZimbraLog.index.error("Problem getting stats for index %s", url, e);
         }
@@ -412,7 +403,7 @@ public final class ElasticSearchIndex extends IndexStore {
         public List<String> getIndexes() {
             List<String> indexNames = Lists.newArrayList();
             String url = String.format("%s%s", LC.zimbra_index_elasticsearch_url_base.value(), "_status");
-            GetMethod method = new GetMethod(ElasticSearchConnector.actualUrl(url));
+            HttpGet method = new HttpGet(ElasticSearchConnector.actualUrl(url));
             try {
                 ElasticSearchConnector connector = new ElasticSearchConnector();
                 int statusCode = connector.executeMethod(method);
@@ -431,8 +422,6 @@ public final class ElasticSearchIndex extends IndexStore {
                         }
                     }
                 }
-            } catch (HttpException e) {
-                ZimbraLog.index.error("Problem getting list of Elastic Search indexes", e);
             } catch (IOException e) {
                 ZimbraLog.index.error("Problem getting list of Elastic Search indexes", e);
             }
@@ -578,7 +567,7 @@ public final class ElasticSearchIndex extends IndexStore {
             for (IndexDocument doc : docs) {
                 // Note: using automatic ID generation
                 String url = String.format("%s%s/", indexUrl, indexType);
-                PostMethod method = new PostMethod(ElasticSearchConnector.actualUrl(url));
+                HttpPost method = new HttpPost(ElasticSearchConnector.actualUrl(url));
                 JSONObject jsonObj = new JSONObject();
                 // doc can be shared by multiple threads if multiple mailboxes are referenced in a single email
                 synchronized (doc) {
@@ -589,7 +578,7 @@ public final class ElasticSearchIndex extends IndexStore {
                     }
                 }
                 try {
-                    method.setRequestEntity(new StringRequestEntity(jsonObj.toString(),
+                    method.setEntity(new StringEntity(jsonObj.toString(),
                             MimeConstants.CT_APPLICATION_JSON, MimeConstants.P_CHARSET_UTF8));
                     ElasticSearchConnector connector = new ElasticSearchConnector();
                     int statusCode = connector.executeMethod(method);
@@ -597,8 +586,6 @@ public final class ElasticSearchIndex extends IndexStore {
                         ZimbraLog.index.error("Problem indexing document with id=%d httpstatus=%d",
                                 item.getId(), statusCode);
                     }
-                } catch (HttpException e) {
-                    ZimbraLog.index.error("Problem indexing document with id=%d", item.getId());
                 } catch (IOException e) {
                     ZimbraLog.index.error("Problem indexing document with id=%d", item.getId());
                 }
@@ -613,11 +600,12 @@ public final class ElasticSearchIndex extends IndexStore {
             refreshIndexIfNecessary();
             String url = String.format("%s%s/_query", indexUrl, indexType);
             for (Integer id : ids) {
-                DeleteMethod method = new DeleteMethod(ElasticSearchConnector.actualUrl(url));
-                NameValuePair[] querys = new NameValuePair[1];
+               
                 String query = String.format("%s:%s", LuceneFields.L_MAILBOX_BLOB_ID, id.toString());
-                querys[0] = new NameValuePair("q", query);
-                method.setQueryString(querys);
+                StringBuilder urlBuilder = new StringBuilder()
+                .append(ElasticSearchConnector.actualUrl(url)).append("q=")
+                .append(query);
+                HttpDelete method = new HttpDelete(ElasticSearchConnector.actualUrl(url));
                 try {
                     ElasticSearchConnector connector = new ElasticSearchConnector();
                     int statusCode = connector.executeMethod(method);
@@ -626,8 +614,6 @@ public final class ElasticSearchIndex extends IndexStore {
                     } else {
                         ZimbraLog.index.error("Problem deleting documents with id=%d httpstatus=%d", id, statusCode);
                     }
-                } catch (HttpException e) {
-                    ZimbraLog.index.error("Problem deleting documents with id=%d", id);
                 } catch (IOException e) {
                     ZimbraLog.index.error("Problem deleting documents with id=%d", id);
                 }
@@ -657,7 +643,7 @@ public final class ElasticSearchIndex extends IndexStore {
         public int numDeletedDocs() {
             refreshIndexIfNecessary();
             String url = String.format("%s%s/docs/", indexUrl, "_stats");
-            GetMethod method = new GetMethod(ElasticSearchConnector.actualUrl(url));
+            HttpGet method = new HttpGet(ElasticSearchConnector.actualUrl(url));
             try {
                 ElasticSearchConnector connector = new ElasticSearchConnector();
                 int statusCode = connector.executeMethod(method);
@@ -665,8 +651,6 @@ public final class ElasticSearchIndex extends IndexStore {
                     int cnt = connector.getIntAtJsonPath(new String[] {"_all", "total", "docs", "deleted"}, 0);
                     return cnt;
                 }
-            } catch (HttpException e) {
-                ZimbraLog.index.error("Problem getting stats for index %s", url, e);
             } catch (IOException e) {
                 ZimbraLog.index.error("Problem getting stats for index %s", url, e);
             }
@@ -694,7 +678,7 @@ public final class ElasticSearchIndex extends IndexStore {
                 List<BrowseTerm> allValues = Lists.newArrayList();
                 refreshIndexIfNecessary();
                 String url = String.format("%s_termlist/%s", indexUrl, field);
-                GetMethod method = new GetMethod(ElasticSearchConnector.actualUrl(url));
+                HttpGet method = new HttpGet(ElasticSearchConnector.actualUrl(url));
                 try {
                     ElasticSearchConnector connector = new ElasticSearchConnector();
                     int statusCode = connector.executeMethod(method);
@@ -709,8 +693,6 @@ public final class ElasticSearchIndex extends IndexStore {
                             }
                         }
                     }
-                } catch (HttpException e) {
-                    ZimbraLog.index.error("Problem getting stats for index %s", url, e);
                 } catch (IOException e) {
                     ZimbraLog.index.error("Problem getting stats for index %s", url, e);
                 }
@@ -784,7 +766,7 @@ public final class ElasticSearchIndex extends IndexStore {
                         LuceneFields.L_MAILBOX_BLOB_ID, LuceneFields.L_SORT_DATE, LuceneFields.L_VERSION };
                 String url = String.format("%s%s/%s?fields=%s", indexUrl, indexType, eDocID.getDocID(),
                         Joiner.on(',').join(storedFields));
-                GetMethod method = new GetMethod(ElasticSearchConnector.actualUrl(url));
+                HttpGet method = new HttpGet(ElasticSearchConnector.actualUrl(url));
                 try {
                     ElasticSearchConnector connector = new ElasticSearchConnector();
                     int statusCode = connector.executeMethod(method);
@@ -804,8 +786,6 @@ public final class ElasticSearchIndex extends IndexStore {
                         }
                         return document;
                     }
-                } catch (HttpException e) {
-                    ZimbraLog.index.error("Problem getting %s", url, e);
                 } catch (JSONException e) {
                     throw new IOException("Problem processing JSON representing " + url, e);
                 }
@@ -826,9 +806,9 @@ public final class ElasticSearchIndex extends IndexStore {
                 termObj.put(term.field(), term.text());
                 jsonobj.put("term", termObj);
                 String url = String.format("%s%s/_count", indexUrl, indexType);
-                PostMethod method = new PostMethod(ElasticSearchConnector.actualUrl(url));
+                HttpPost method = new HttpPost(ElasticSearchConnector.actualUrl(url));
                 try {
-                    method.setRequestEntity(new StringRequestEntity(jsonobj.toString(),
+                    method.setEntity(new StringEntity(jsonobj.toString(),
                                 MimeConstants.CT_APPLICATION_JSON, MimeConstants.P_CHARSET_UTF8));
                     ElasticSearchConnector connector = new ElasticSearchConnector();
                     refreshIndexIfNecessary();
@@ -836,8 +816,6 @@ public final class ElasticSearchIndex extends IndexStore {
                     if (statusCode == HttpStatus.SC_OK) {
                         return connector.getIntAtJsonPath(new String[] {"count"}, 0);
                     }
-                } catch (HttpException e) {
-                    ZimbraLog.index.error("Problem with docFreq %s", url, e);
                 } catch (IOException e) {
                     ZimbraLog.index.error("Problem with docFreq %s", url, e);
                 }
@@ -883,8 +861,8 @@ public final class ElasticSearchIndex extends IndexStore {
                     refreshIndexIfNecessary();
                     // Both HTTP GET and HTTP POST can be used to execute search with body.
                     // Since not all clients support GET with body, POST is allowed as well.
-                    PostMethod method = new PostMethod(ElasticSearchConnector.actualUrl(url));
-                    method.setRequestEntity(new StringRequestEntity(requestJson.toString(),
+                    HttpPost method = new HttpPost(ElasticSearchConnector.actualUrl(url));
+                    method.setEntity(new StringEntity(requestJson.toString(),
                                 MimeConstants.CT_APPLICATION_JSON, MimeConstants.P_CHARSET_UTF8));
                     ElasticSearchConnector connector = new ElasticSearchConnector();
                     int statusCode = connector.executeMethod(method);
@@ -902,8 +880,6 @@ public final class ElasticSearchIndex extends IndexStore {
                             }
                         }
                     }
-                } catch (HttpException e) {
-                    ZimbraLog.index.error("Problem with query against index %s", url, e);
                 } catch (IOException e) {
                     ZimbraLog.index.error("Problem with query against index %s", url, e);
                 } catch (JSONException e) {
@@ -944,8 +920,8 @@ public final class ElasticSearchIndex extends IndexStore {
                 try {
                     // Both HTTP GET and HTTP POST can be used to execute search with body.
                     // Since not all clients support GET with body, POST is allowed as well.
-                    PostMethod method = new PostMethod(ElasticSearchConnector.actualUrl(url));
-                    method.setRequestEntity(new StringRequestEntity(requestJson.toString(),
+                    HttpPost method = new HttpPost(ElasticSearchConnector.actualUrl(url));
+                    method.setEntity(new StringEntity(requestJson.toString(),
                                 MimeConstants.CT_APPLICATION_JSON, MimeConstants.P_CHARSET_UTF8));
                     ElasticSearchConnector connector = new ElasticSearchConnector();
                     int statusCode = connector.executeMethod(method);
@@ -963,8 +939,6 @@ public final class ElasticSearchIndex extends IndexStore {
                             }
                         }
                     }
-                } catch (HttpException e) {
-                    ZimbraLog.index.error("Problem with query against index %s", url, e);
                 } catch (IOException e) {
                     ZimbraLog.index.error("Problem with query against index %s", url, e);
                 } catch (JSONException e) {

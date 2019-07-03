@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2018 Synacor, Inc.
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2018, 2019 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -32,6 +32,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.Future;
 
+import org.apache.http.HttpException;
 import org.apache.http.HttpResponse;
 import org.apache.http.concurrent.FutureCallback;
 
@@ -109,8 +110,6 @@ import com.zimbra.soap.account.message.DeleteIdentityRequest;
 import com.zimbra.soap.account.message.EndSessionRequest;
 import com.zimbra.soap.account.message.GetDistributionListMembersRequest;
 import com.zimbra.soap.account.message.GetDistributionListMembersResponse;
-import com.zimbra.soap.account.message.GetHABRequest;
-import com.zimbra.soap.account.message.GetHABResponse;
 import com.zimbra.soap.account.message.GetIdentitiesRequest;
 import com.zimbra.soap.account.message.GetIdentitiesResponse;
 import com.zimbra.soap.account.message.ModifyIdentityRequest;
@@ -617,7 +616,7 @@ public class SoapProvisioning extends Provisioning {
             throw ServiceException.FAILURE("transport has not been initialized", null);
     }
 
-    private Element invokeRequest(Element request) throws ServiceException, IOException {
+    private Element invokeRequest(Element request) throws ServiceException, IOException, HttpException {
         if (mNeedSession) {
             return mTransport.invoke(request);
         } else {
@@ -669,7 +668,7 @@ public class SoapProvisioning extends Provisioning {
             return invokeRequest(request);
         } catch (SoapFaultException e) {
             throw e; // for now, later, try to map to more specific exception
-        } catch (IOException e) {
+        } catch (IOException | HttpException e) {
             throw ZClientException.IO_ERROR("invoke "+e.getMessage()+", server: "+serverName(), e);
         }
     }
@@ -683,7 +682,7 @@ public class SoapProvisioning extends Provisioning {
             return invokeRequest(request);
         } catch (SoapFaultException e) {
             throw e; // for now, later, try to map to more specific exception
-        } catch (IOException e) {
+        } catch (IOException | HttpException e) {
             throw ZClientException.IO_ERROR("invoke "+e.getMessage()+", server: "+serverName(), e);
         } finally {
             mTransport.setTargetAcctId(oldTarget);
@@ -703,7 +702,7 @@ public class SoapProvisioning extends Provisioning {
             return invokeRequest(request);
         } catch (SoapFaultException e) {
             throw e; // for now, later, try to map to more specific exception
-        } catch (IOException e) {
+        } catch (IOException | HttpException e) {
             throw ZClientException.IO_ERROR("invoke "+e.getMessage()+", server: "+serverName, e);
         } finally {
             if (diff) {
@@ -3113,6 +3112,15 @@ public class SoapProvisioning extends Provisioning {
         DomainSelector domSel =
             new DomainSelector(toJaxb(DomainBy.name), domain.getName());
         HABOrgUnitResponse resp = invokeJaxb(new HABOrgUnitRequest(domSel, habOrgUnitName, HabOp.create));
+        Set<String> habOrgList = new HashSet<String>();
+        habOrgList.addAll(resp.getHabOrgList());
+        return habOrgList;
+    }
+
+    @Override
+    public Set<String> listHabOrgUnit(Domain domain) throws ServiceException {
+        DomainSelector domSel = new DomainSelector(toJaxb(DomainBy.name), domain.getName());
+        HABOrgUnitResponse resp = invokeJaxb(new HABOrgUnitRequest(domSel, HabOp.list));
         Set<String> habOrgList = new HashSet<String>();
         habOrgList.addAll(resp.getHabOrgList());
         return habOrgList;

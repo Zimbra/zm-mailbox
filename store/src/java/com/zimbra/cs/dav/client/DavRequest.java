@@ -16,17 +16,23 @@
  */
 package com.zimbra.cs.dav.client;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.PutMethod;
-import org.apache.commons.httpclient.methods.RequestEntity;
+import org.apache.http.Header;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpHeaders;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.message.BasicHeader;
+import org.apache.http.protocol.HTTP;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
@@ -123,10 +129,15 @@ public class DavRequest {
         return "";
     }
 
-    public static class DocumentRequestEntity implements RequestEntity {
+    public static class DocumentRequestEntity implements HttpEntity {
         private final Document doc;
         private byte[] buffer;
+        protected Header contentType;
+        protected Header contentEncoding;
+        protected boolean chunked;
+        
         public DocumentRequestEntity(Document d) { doc = d; buffer = null; }
+        
         @Override
         public boolean isRepeatable() { return true; }
         @Override
@@ -141,9 +152,9 @@ public class DavRequest {
             }
             return buffer.length;
         }
-        @Override
-        public String getContentType() { return "text/xml"; }
-        @Override
+
+        public Header getContentType() { return new BasicHeader(HttpHeaders.CONTENT_TYPE, "text/xml"); }
+  
         public void writeRequest(OutputStream out) throws IOException {
             if (buffer != null) {
                 out.write(buffer);
@@ -155,14 +166,124 @@ public class DavRequest {
             XMLWriter writer = new XMLWriter(out, format);
             writer.write(doc);
         }
+        
         private void getContents() throws IOException {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             writeRequest(out);
             buffer = out.toByteArray();
         }
+        
+        /**
+         * The default implementation does not consume anything.
+         *
+         * @deprecated (4.1) Either use {@link #getContent()} and call {@link java.io.InputStream#close()} on that;
+         * otherwise call {@link #writeTo(OutputStream)} which is required to free the resources.
+         */
+        @Override
+        public void consumeContent() throws IOException {
+
+        }
+
+        /**
+         * Specifies the Content-Encoding header.
+         * The default implementation sets the value of the
+         * {@link #contentEncoding contentEncoding} attribute.
+         *
+         * @param contentEncoding   the new Content-Encoding header, or
+         *                          <code>null</code> to unset
+         */
+        public void setContentEncoding(final Header contentEncoding) {
+            this.contentEncoding = contentEncoding;
+        }
+
+        /**
+         * Specifies the Content-Encoding header, as a string.
+         * The default implementation calls
+         * {@link #setContentEncoding(Header) setContentEncoding(Header)}.
+         *
+         * @param ceString     the new Content-Encoding header, or
+         *                     <code>null</code> to unset
+         */
+        public void setContentEncoding(final String ceString) {
+            Header h = null;
+            if (ceString != null) {
+                h = new BasicHeader(HTTP.CONTENT_ENCODING, ceString);
+            }
+            setContentEncoding(h);
+        }
+
+
+        /**
+         * Specifies the 'chunked' flag.
+         * <p>
+         * Note that the chunked setting is a hint only.
+         * If using HTTP/1.0, chunking is never performed.
+         * Otherwise, even if chunked is false, HttpClient must
+         * use chunk coding if the entity content length is
+         * unknown (-1).
+         * <p>
+         * The default implementation sets the value of the
+         * {@link #chunked chunked} attribute.
+         *
+         * @param b         the new 'chunked' flag
+         */
+        public void setChunked(boolean b) {
+            this.chunked = b;
+        }
+
+        
+        /* (non-Javadoc)
+         * @see org.apache.http.HttpEntity#getContent()
+         */
+        @Override
+        public InputStream getContent() throws IOException, UnsupportedOperationException {
+            if (this.buffer == null) {
+                throw new IllegalStateException("Content has not been provided");
+            }
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            writeRequest(out);
+            buffer = out.toByteArray();
+            return new ByteArrayInputStream(this.buffer);
+        }
+        
+        /* (non-Javadoc)
+         * @see org.apache.http.HttpEntity#getContentEncoding()
+         */
+        @Override
+        public Header getContentEncoding() {
+            return this.contentEncoding;
+        }
+
+        /* (non-Javadoc)
+         * @see org.apache.http.HttpEntity#isChunked()
+         */
+        @Override
+        public boolean isChunked() {
+            return this.chunked;
+        }
+
+        /* (non-Javadoc)
+         * @see org.apache.http.HttpEntity#isStreaming()
+         */
+        @Override
+        public boolean isStreaming() {
+            return false;
+        }
+
+        /* (non-Javadoc)
+         * @see org.apache.http.HttpEntity#writeTo(java.io.OutputStream)
+         */
+        @Override
+        public void writeTo(final OutputStream outstream) throws IOException {
+            if (outstream == null) {
+                throw new IllegalArgumentException("Output stream may not be null");
+            }
+            writeRequest(outstream);
+        }
+
     }
 
-    public HttpMethod getHttpMethod(String baseUrl) {
+    public HttpRequestBase getHttpMethod(String baseUrl) {
         String url = mRedirectUrl;
         if (url == null) {
             // Normally, mUri is a relative URL but sometimes it is a full URL.
@@ -178,31 +299,31 @@ public class DavRequest {
         }
 
         if (mDoc == null)
-            return new GetMethod(url) {
+            return new HttpGet(url) {
                 @Override
-                public String getName() {
+                public String getMethod() {
                     return mMethod;
                 }
             };
 
-        PutMethod m = new PutMethod(url) {
-            RequestEntity re;
+        HttpPut m = new HttpPut(url) {
+            HttpEntity re;
             @Override
-            public String getName() {
+            public String getMethod() {
                 return mMethod;
             }
             @Override
-            protected RequestEntity generateRequestEntity() {
+            public HttpEntity getEntity() {
                 return re;
             }
             @Override
-            public void setRequestEntity(RequestEntity requestEntity) {
+            public void setEntity(HttpEntity requestEntity) {
                 re = requestEntity;
-                super.setRequestEntity(requestEntity);
+                super.setEntity(requestEntity);
             }
         };
         DocumentRequestEntity re = new DocumentRequestEntity(mDoc);
-        m.setRequestEntity(re);
+        m.setEntity(re);
         return m;
     }
 

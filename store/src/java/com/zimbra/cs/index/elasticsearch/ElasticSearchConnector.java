@@ -19,19 +19,20 @@ package com.zimbra.cs.index.elasticsearch;
 import java.io.IOException;
 import java.net.ConnectException;
 
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.NoHttpResponseException;
-import org.apache.commons.httpclient.methods.EntityEnclosingMethod;
-import org.apache.commons.httpclient.methods.RequestEntity;
-import org.apache.commons.httpclient.methods.StringRequestEntity;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.NoHttpResponseException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
-
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.index.IndexStoreException;
@@ -43,22 +44,23 @@ public class ElasticSearchConnector {
     public ElasticSearchConnector () {
     }
 
-    public int executeMethod(HttpMethod method) throws IndexStoreException, IOException {
+    public int executeMethod(HttpRequestBase method) throws IndexStoreException, IOException {
         String reqBody = "";
-        if (ZimbraLog.elasticsearch.isTraceEnabled() && method instanceof EntityEnclosingMethod) {
-            EntityEnclosingMethod eem = (EntityEnclosingMethod) method;
-            RequestEntity re = eem.getRequestEntity();
-            if (re instanceof StringRequestEntity) {
-                StringRequestEntity sre = (StringRequestEntity) re;
-                reqBody = Strings.nullToEmpty(sre.getContent());
+        if (ZimbraLog.elasticsearch.isTraceEnabled() && method instanceof HttpEntityEnclosingRequestBase) {
+            HttpEntityEnclosingRequestBase eem = (HttpEntityEnclosingRequestBase) method;
+            HttpEntity re = eem.getEntity();
+            if (re instanceof StringEntity) {
+                reqBody = Strings.nullToEmpty(EntityUtils.toString(re));
                 if (reqBody.length() > 0) {
                     reqBody = String.format("\nREQUEST BODY=%s", reqBody);
                 }
             }
         }
+        HttpResponse response = null;
         try {
-            HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
-            statusCode = client.executeMethod(method);
+            HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient().build();
+            response = client.execute(method);
+            statusCode = response.getStatusLine().getStatusCode();
         } catch (ConnectException ce) {
             throw new ZimbraElasticSearchDownException(ce);
         } catch (NoHttpResponseException nhre) {
@@ -69,9 +71,9 @@ public class ElasticSearchConnector {
             // them after retrying a number of times.
             throw new ZimbraElasticSearchNoResponseException(nhre);
         }
-        body = method.getResponseBodyAsString();
+        body = EntityUtils.toString(response.getEntity());
         ZimbraLog.elasticsearch.trace("ElasticSearch request:%s %s - statusCode=%d%s\nRESPONSE BODY=%s",
-                method.getName(), method.getURI(), statusCode, reqBody, body);
+                method.getMethod(), method.getURI(), statusCode, reqBody, body);
         return statusCode;
     }
 

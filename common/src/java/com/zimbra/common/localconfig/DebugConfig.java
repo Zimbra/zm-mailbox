@@ -200,7 +200,7 @@ public final class DebugConfig {
 
     public static final String defangStyleUnwantedFunc = value(
             "defang_style_unwanted_func",
-            "[\\S&&[^:]]+(?<!(rgb|and|not|media|,))\\s*\\(.*\\)");
+            "\\w+\\s*\\(.*?\\)");
     public static final String defangValidExtUrl = value(
             "defang_valid_ext_url",
             "^(https?://[\\w-].*|mailto:.*|notes:.*|smb:.*|ftp:.*|gopher:.*|news:.*|tel:.*|callto:.*|webcal:.*|feed:.*:|file:.*|#.+)");
@@ -229,6 +229,7 @@ public final class DebugConfig {
     public static final String defangStyleUnwantedImport = value(
             "defang_style_unwanted_import",
             "@import(\\s)*((\'|\")?(\\s)*(http://|https://)?([^\\s;]*)(\\s)*(\'|\")?(\\s)*;?)");
+    public static final int defangStyleValueLimit = value("defang_style_value_limit", 10000);
 
     public static final String xhtmlWhitelistedTags = value("defang_xhtml_whitelisted_tags",
         "a,abbr,acronym,blockquote,div,font,h1,h2,h3,h4,h5,h6,img,li,ol,p,span,table,td,th,tr,ul");
@@ -345,6 +346,11 @@ public final class DebugConfig {
      * sleep time between account rename and alias creation for testing mail delivery during change of primary email
      */
     public static final int sleepTimeForTestingChangePrimaryEmail = value ("change_primary_email_sleep_time", 0);
+    
+    /**
+     * time given to owasp service for html sanitization in seconds
+     */
+    public static final int owasp_html_sanitizer_timeout = value ("owasp_html_sanitizer_timeout", 15);
 
     private static boolean value(String key, boolean defaultValue) {
         String value = LC.get(key);

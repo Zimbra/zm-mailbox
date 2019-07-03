@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010, 2011, 2012, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2019 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -903,5 +903,11 @@ public final class MockProvisioning extends Provisioning {
     @Override
     public void deleteGroup(String zimbraId, boolean cascadeDelete) throws ServiceException {
         // do nothing
+    }
+
+    @Override
+    public Set<String> listHabOrgUnit(Domain domain) throws ServiceException {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

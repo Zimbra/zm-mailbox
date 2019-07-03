@@ -17,12 +17,16 @@
 package com.zimbra.qa.unittest;
 
 import java.io.IOException;
-import org.apache.commons.httpclient.Header;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpException;
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.methods.GetMethod;
+
+import org.apache.http.Header;
+import org.apache.http.HttpException;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.util.EntityUtils;
 
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -46,28 +50,28 @@ public class TestWsdlServlet extends TestCase {
 
         String url = protoHostPort + wsdlUrl;
 
-        HttpClient client = new HttpClient();
-        HttpMethod method = new GetMethod(url);
+        HttpClient client = HttpClientBuilder.create().build();
+        HttpRequestBase method = new HttpGet(url);
 
         try {
-            int respCode = HttpClientUtil.executeMethod(client, method);
-            int statusCode = method.getStatusCode();
-            String statusLine = method.getStatusLine().toString();
+            HttpResponse response = HttpClientUtil.executeMethod(client, method);
+            int statusCode = response.getStatusLine().getStatusCode();
+            String statusLine = response.getStatusLine().toString();
 
-            ZimbraLog.test.debug("respCode=" + respCode);
+            ZimbraLog.test.debug("respCode=" + response.getStatusLine().getStatusCode());
             ZimbraLog.test.debug("statusCode=" + statusCode);
             ZimbraLog.test.debug("statusLine=" + statusLine);
 
-            assertTrue("Response code", respCode == expectedCode);
+            assertTrue("Response code", response.getStatusLine().getStatusCode() == expectedCode);
             assertTrue("Status code", statusCode == expectedCode);
 
-            Header[] respHeaders = method.getResponseHeaders();
+            Header[] respHeaders = response.getAllHeaders();
             for (int i=0; i < respHeaders.length; i++) {
                 String header = respHeaders[i].toString();
                 ZimbraLog.test.debug("ResponseHeader:" + header);
             }
 
-            String respBody = method.getResponseBodyAsString();
+            String respBody = EntityUtils.toString(response.getEntity());
             // ZimbraLog.test.debug("Response Body:" + respBody);
             return respBody;
 

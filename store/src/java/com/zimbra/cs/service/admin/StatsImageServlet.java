@@ -21,31 +21,38 @@
  * */
 package com.zimbra.cs.service.admin;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpException;
-import org.apache.commons.httpclient.HttpState;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.http.HttpException;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.BasicCookieStore;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.cookie.BasicClientCookie;
+import org.apache.http.util.EntityUtils;
+
+import com.zimbra.common.httpclient.HttpClientUtil;
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.ZimbraCookie;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
-
-
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.servlet.ZimbraServlet;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.httpclient.HttpClientUtil;
-import com.zimbra.common.localconfig.LC;
 
 public class StatsImageServlet extends ZimbraServlet {
 
@@ -101,29 +108,35 @@ public class StatsImageServlet extends ZimbraServlet {
 					url.append('?').append(queryStr);
 				
 				// create an HTTP client with the same cookies
-		        HttpState state = new HttpState();
+		        BasicCookieStore cookieStore = new BasicCookieStore();
 		        try {
-		            state.addCookie(new org.apache.commons.httpclient.Cookie(logHost, ZimbraCookie.COOKIE_ZM_ADMIN_AUTH_TOKEN, authToken.getEncoded(), "/", null, false));
+		            
+		            BasicClientCookie cookie = new BasicClientCookie(ZimbraCookie.COOKIE_ZM_ADMIN_AUTH_TOKEN, authToken.getEncoded());
+                    cookie.setDomain(logHost);
+                    cookie.setPath("/");
+                    cookie.setSecure(false);
+                    cookieStore.addCookie(cookie);
 		        } catch (AuthTokenException ate) {
 		            throw ServiceException.PROXY_ERROR(ate, url.toString());
 		        }
-		        HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
-		        client.setState(state);
-		        GetMethod get = new GetMethod(url.toString());
+		        HttpClientBuilder clientBuilder = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+		        clientBuilder.setDefaultCookieStore(cookieStore);
+		        HttpGet get = new HttpGet(url.toString());
+		        HttpClient client = clientBuilder.build();
+		        HttpResponse httpResp = null;
 		        try {
-		            int statusCode = HttpClientUtil.executeMethod(client, get);
+		            httpResp = HttpClientUtil.executeMethod(client, get);
+		            int statusCode = httpResp.getStatusLine().getStatusCode();
 		            if (statusCode != HttpStatus.SC_OK)
-		                throw ServiceException.RESOURCE_UNREACHABLE(get.getStatusText(), null);
+		                throw ServiceException.RESOURCE_UNREACHABLE(httpResp.getStatusLine().getReasonPhrase(), null);
 		            
 		            resp.setContentType("image/gif");
-		            ByteUtil.copy(get.getResponseBodyAsStream(), true, resp.getOutputStream(), false);
+		            ByteUtil.copy(httpResp.getEntity().getContent(), true, resp.getOutputStream(), false);
 		            return;
-		        } catch (HttpException e) {
-		            throw ServiceException.RESOURCE_UNREACHABLE(get.getStatusText(), e);
-		        } catch (IOException e) {
-		            throw ServiceException.RESOURCE_UNREACHABLE(get.getStatusText(), e);
-                } finally {
-                    get.releaseConnection();
+		        } catch (HttpException | IOException e) {
+		            throw ServiceException.RESOURCE_UNREACHABLE(httpResp.getStatusLine().getReasonPhrase(), e);
+		        }  finally {
+                    EntityUtils.consumeQuietly(httpResp.getEntity());
                 }
 			}
         } catch (Exception ex) {

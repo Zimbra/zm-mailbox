@@ -2415,30 +2415,32 @@ public class ProxyConfGen
                 if(cmd_arg.length == 2 &&
                    cmd_arg[0].compareTo("explode") == 0) {
 
-                    if(!mGenConfPerVhn) { // explode only when GenConfPerVhn is enabled
-                        return;
+                    if( cmd_arg[1].startsWith("server(") && cmd_arg[1].endsWith(")")) {
+                        String serviceName = cmd_arg[1].substring("server(".length(), cmd_arg[1].length() - 1);
+                        if( serviceName.isEmpty() ) {
+                            throw new ProxyConfException("Missing service parameter in custom header command: " + cmdMatcher.group(2));
+                        }
+                        expandTemplateByExplodeServer(r, w, serviceName);
                     }
+                    else
+                    {
+                      if(!mGenConfPerVhn) { // explode only when GenConfPerVhn is enabled
+                        return;
+                      }
 
-                    if(cmd_arg[1].startsWith("domain(") &&cmd_arg[1].endsWith(")")) {
-                        //extract the args in "domain(arg1, arg2, ...)
-                        String arglist = cmd_arg[1].substring("domain(".length(), cmd_arg[1].length() - 1);
-                        String[] args;
-                        if(arglist.equals("")) {
-                            args = new String[0];
-                        } else {
-                            args = arglist.split(",( |\t)*");
-                        }
-                        expandTemplateByExplodeDomain(r, w, args);
-                    } else {
-                        if( cmd_arg[1].startsWith("server(") && cmd_arg[1].endsWith(")")) {
-                            String serviceName = cmd_arg[1].substring("server(".length(), cmd_arg[1].length() - 1);
-                            if( serviceName.isEmpty() ) {
-                                throw new ProxyConfException("Missing service parameter in custom header command: " + cmdMatcher.group(2));
-                            }
-                            expandTemplateByExplodeServer(r, w, serviceName);
-                        } else {
-                            throw new ProxyConfException("Illegal custom header command: " + cmdMatcher.group(2));
-                        }
+                      if(cmd_arg[1].startsWith("domain(") &&cmd_arg[1].endsWith(")")) {
+                          //extract the args in "domain(arg1, arg2, ...)
+                          String arglist = cmd_arg[1].substring("domain(".length(), cmd_arg[1].length() - 1);
+                          String[] args;
+                          if(arglist.equals("")) {
+                              args = new String[0];
+                          } else {
+                              args = arglist.split(",( |\t)*");
+                          }
+                          expandTemplateByExplodeDomain(r, w, args);
+                      } else {
+                          throw new ProxyConfException("Illegal custom header command: " + cmdMatcher.group(2));
+                      }
                     }
                 } else {
                     throw new ProxyConfException("Illegal custom header command: " + cmdMatcher.group(2));
