@@ -1303,6 +1303,9 @@ public final class LC {
     // Zimbra valid class list to de-serialize
     public static final KnownKey zimbra_deserialize_classes = KnownKey.newKey("");
 
+    // XML 1.0 invalid characters regex pattern
+    public static final KnownKey xml_invalid_chars_regex = KnownKey.newKey("\\&\\#(?:x([0-9a-fA-F]+)|([0-9]+))\\;");
+
     static {
         // Automatically set the key name with the variable name.
         for (Field field : LC.class.getFields()) {
