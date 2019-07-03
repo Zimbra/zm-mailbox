@@ -1702,7 +1702,7 @@ public class ZimletUtil {
                     cookie.setSecure(false);
                     cookie.setExpiryDate(null);
                     cookieStore.addCookie(cookie);
-                    
+
                 }
                 clientBuilder.setDefaultCookieStore(cookieStore);
 
@@ -1716,20 +1716,21 @@ public class ZimletUtil {
                 (int) TimeUnit.MILLISECONDS.convert(LC.zimlet_deploy_timeout.intValue(),
                 TimeUnit.SECONDS)).build();
             clientBuilder.setDefaultSocketConfig(config);
-            
+
             int statusCode = -1;
             try {
                 String contentType = URLConnection.getFileNameMap().getContentTypeFor(name);
                 MultipartEntityBuilder builder = MultipartEntityBuilder.create();
-                builder.addBinaryBody("upfile", data, ContentType.create(contentType), null);
+                builder.addBinaryBody("upfile", data, ContentType.create(contentType), name);
                 HttpEntity httpEntity = builder.build();
                 post.setEntity(httpEntity);
                 HttpClient client = clientBuilder.build();
-                
+
                 HttpResponse httpResp = HttpClientUtil.executeMethod(client, post);
                 statusCode = httpResp.getStatusLine().getStatusCode();
                 if (statusCode == 200) {
                     String response = EntityUtils.toString(httpResp.getEntity());
+
                     // "raw" response should be of the format
                     //   200,'null','aac04dac-b3c8-4c26-b9c2-c2534f1d6ba1:79d2722f-d4c7-4304-9961-e7bcb146fc32'
                     String[] responseParts = response.split(",", 3);
