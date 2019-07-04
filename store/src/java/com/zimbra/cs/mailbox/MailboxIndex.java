@@ -499,9 +499,13 @@ public final class MailboxIndex {
         if (items.isEmpty()) {
             return false;
         }
+        List<MailItem> clonedItems = new ArrayList<MailItem>(items.size());
+        for (MailItem item : items) {
+            clonedItems.add(item.snapshotItem());
+        }
         ZimbraLog.index.debug("Queuing %d items for indexing", items.size());
         IndexingQueueAdapter queueAdapter = IndexingQueueAdapter.getFactory().getAdapter();
-        AbstractIndexingTasksLocator itemLocator = new AddMailItemToIndexTask(items, mailbox.getAccountId(), mailbox.getId(), mailbox.getSchemaGroupId(), mailbox.attachmentsIndexingEnabled(), isReindexing);
+        AbstractIndexingTasksLocator itemLocator = new AddMailItemToIndexTask(clonedItems, mailbox.getAccountId(), mailbox.getId(), mailbox.getSchemaGroupId(), mailbox.attachmentsIndexingEnabled(), isReindexing);
         return queueAdapter.add(itemLocator);
     }
 

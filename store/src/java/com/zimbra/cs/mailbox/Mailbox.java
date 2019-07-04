@@ -501,7 +501,6 @@ public class Mailbox implements MailboxStore {
             indexItems.add(item);
             ZimbraLog.index.debug("Mailbox - addIndexItem - size after adding item is %d", indexItems.size());
         }
-        
 
         void addPendingDelete(PendingDelete info) {
             if (deletes == null) {
