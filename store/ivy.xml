@@ -44,7 +44,7 @@
   <dependency org="com.101tec" name="zkclient" rev="0.1.0"/>
   <dependency org="xerces" name="xercesImpl" rev="2.9.1-patch-01"/>
   <dependency org="net.sourceforge.nekohtml" name="nekohtml" rev="1.9.13.1z"/>
-  <dependency org="com.googlecode.owasp-java-html-sanitizer" name="owasp-java-html-sanitizer" rev="20190503.1"/>
+  <dependency org="com.googlecode.owasp-java-html-sanitizer" name="owasp-java-html-sanitizer" rev="r239"/>
   <dependency org="org.ehcache" name="ehcache" rev="3.1.2"/>
   <dependency org="ant-1.7.0-ziputil-patched" name="ant-1.7.0-ziputil-patched" rev="1.0"/>
   <dependency org="org.eclipse.jetty" name="jetty-continuation" rev="9.3.5.v20151012"/>
@@ -115,5 +115,10 @@
   <dependency org="org.apache.commons" name="commons-rng-simple" rev="1.0"/>
   <dependency org="com.google.javascript" name="closure-compiler" rev="v20180204"/>
   <dependency org="com.github.zafarkhaja" name="java-semver" rev="0.9.0"/>
+  <dependency org="org.owasp.antisamy" name="antisamy" rev="1.5.3"/>
+  <dependency org="org.apache.xmlgraphics" name="batik-css" rev="1.7"/>
+  <dependency org="org.w3c.css" name="sac" rev="1.3"/>
+  <dependency org="org.apache.xmlgraphics" name="batik-i18n" rev="1.9"/>
+  <dependency org="org.apache.xmlgraphics" name="batik-util" rev="1.8"/>
  </dependencies>
 </ivy-module>
