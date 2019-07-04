@@ -24,6 +24,7 @@ import org.owasp.html.HtmlSanitizer.Policy;
 import org.owasp.html.HtmlStreamRenderer;
 import org.owasp.html.PolicyFactory;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.cs.html.owasp.policies.StyleTagReceiver;
 
 /*
  * Task to sanitize HTML code
@@ -74,7 +75,7 @@ public class OwaspHtmlSanitizer implements Callable<String> {
             });
         // create a thread-specific policy
         instantiatePolicy();
-        final Policy policy = POLICY_DEFINITION.apply(renderer);
+        final Policy policy = POLICY_DEFINITION.apply(new StyleTagReceiver(renderer));
         // run the html through the sanitizer
         HtmlSanitizer.sanitize(html, policy);
         // return the resulting HTML from the builder

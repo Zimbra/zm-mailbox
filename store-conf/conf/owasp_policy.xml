@@ -5,8 +5,8 @@
      KBD = accesshtml,tabindex-->
 <owasp_policy>
   <url_protocols>cid,http,https,mailto,data,smb</url_protocols>
-  <disallow_text_in>applet,frameset,object,script,style,title</disallow_text_in>
-  <allow_text_in></allow_text_in>
+  <disallow_text_in>applet,frameset,object,script,title</disallow_text_in>
+  <allow_text_in>style</allow_text_in>
   <element name="a">
     <attributes>KBD,charset,coords,href,hreflang,name,rel,rev,shape,target,type</attributes>
     <url_protocols>cid,http,https,mailto,smb</url_protocols>
@@ -212,7 +212,7 @@
     <attributes>CORE,LANG,align,background,char,charoff,valign</attributes>
   </element>
   <element name="tr">
-    <attributes>CORE,LANG,align,background,bgcolor,char,charoff,valign</attributes>
+    <attributes>CORE,LANG,align,background,bgcolor,char,charoff,valign,height</attributes>
   </element>
   <element name="area">
     <attributes>CORE,LANG,KBD,alt,coords,href,nohref,shape,target</attributes>
