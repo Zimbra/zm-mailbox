@@ -60,15 +60,15 @@ public class OwaspPolicyProducer {
         for (String urlProtocol : urlProtocols) {
             policyBuilder.allowUrlProtocols(urlProtocol.trim());
         }
-        if(neuterImages) {
-            if(policyNeuterImagesTrue == null) {
-            policyNeuterImagesTrue = policyBuilder.allowStyling(CssSchema.union(CssSchema.DEFAULT, ADDITIONAL_CSS))
-            .toFactory();
+        if (neuterImages) {
+            if (policyNeuterImagesTrue == null) {
+                policyNeuterImagesTrue = policyBuilder
+                    .allowStyling(CssSchema.union(CssSchema.DEFAULT, ADDITIONAL_CSS)).toFactory();
             }
         } else {
-            if(policyNeuterImagesFalse == null) {
-            policyNeuterImagesFalse = policyBuilder.allowStyling(CssSchema.union(CssSchema.DEFAULT, ADDITIONAL_CSS))
-                .toFactory();
+            if (policyNeuterImagesFalse == null) {
+                policyNeuterImagesFalse = policyBuilder
+                    .allowStyling(CssSchema.union(CssSchema.DEFAULT, ADDITIONAL_CSS)).toFactory();
             }
         }
     }
