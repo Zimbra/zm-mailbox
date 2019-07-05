@@ -51,6 +51,12 @@ public class LocalSessionDataProvider extends SessionDataProvider {
     }
 
     @Override
+    public synchronized String getNextSessionIdSequence(Session.Type type) {
+        //synchonizing in the local case
+        return super.getNextSessionIdSequence(type);
+    }
+
+    @Override
     public int getCurrentSoapSessionSequence(String soapSessionId) {
         Integer curId = soapSequenceMap.get(soapSessionId);
         return curId == null ? 0 : curId;
