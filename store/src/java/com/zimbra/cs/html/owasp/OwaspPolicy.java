@@ -66,9 +66,7 @@ public class OwaspPolicy {
         try {
             load(null);
         } catch (Exception e) {
-            if (ZimbraLog.mailbox.isDebugEnabled()) {
-                ZimbraLog.mailbox.debug("Failed to load OWASP policy file", e);
-            }
+            ZimbraLog.mailbox.debug("Failed to load OWASP policy file", e);
             ZimbraLog.mailbox.warn("Failed to load OWASP policy file: %s", e.getMessage());
         }
     }

@@ -47,10 +47,11 @@ public class StyleTagReceiver implements HtmlStreamEventReceiver {
         try {
             URL url = myFile.toURI().toURL();
             policy = Policy.getInstance(url);
+            ZimbraLog.mailbox.info("Antisamy policy loaded");
         } catch (PolicyException | MalformedURLException e) {
+            ZimbraLog.mailbox.debug("Failed to load antisamy policy", e);
             ZimbraLog.mailbox.warn("Failed to load antisamy policy: %s", e.getMessage());
         }
-        ZimbraLog.mailbox.info("Antisamy policy loaded");
     }
 
     public StyleTagReceiver(HtmlStreamEventReceiver wrapped) {
@@ -91,8 +92,11 @@ public class StyleTagReceiver implements HtmlStreamEventReceiver {
                         .getCleanHTML();
                     sanitizedStyle = sanitizedStyle.replace(STYLE_OPENING_TAG, "")
                         .replace(STYLE_CLOSING_TAG, "");
+                    sanitizedStyle = sanitizedStyle.replace("<![CDATA[", "/*<![CDATA[*/");
+                    sanitizedStyle = sanitizedStyle.replace("]]>", "/*]]>*/");
                 } catch (ScanException | PolicyException e) {
-                    ZimbraLog.mailbox.warn("Failed to sanitize html style element");
+                    ZimbraLog.mailbox.debug("Failed to sanitize html style element", e);
+                    ZimbraLog.mailbox.warn("Failed to sanitize html style element: %s", e.getMessage());
                     sanitizedStyle = "";
                 }
             }

@@ -70,9 +70,7 @@ public class OwaspDefang extends AbstractDefang {
         try {
             sanitizedHtml = future.get(finishBefore, TimeUnit.SECONDS);
         } catch (InterruptedException | ExecutionException | TimeoutException e) {
-            if (ZimbraLog.soap.isDebugEnabled()) {
-                ZimbraLog.soap.debug("Exception during HTML sanitization", e);
-            }
+            ZimbraLog.soap.debug("Exception during HTML sanitization", e);
             ZimbraLog.soap.warn("Exception during HTML sanitization: %s", e.getMessage());
             return null;
         }
