@@ -2789,13 +2789,13 @@ public abstract class ZAttrAccount  extends MailTarget {
      * This attribute is used to enable/disable user setting options under
      * preference
      *
-     * @return zimbraAccountSettingEnabled, or false if unset
+     * @return zimbraAccountSettingEnabled, or true if unset
      *
      * @since ZCS 8.8.9
      */
     @ZAttr(id=5028)
     public boolean isAccountSettingEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraAccountSettingEnabled, false, true);
+        return getBooleanAttr(Provisioning.A_zimbraAccountSettingEnabled, true, true);
     }
 
     /**
@@ -23583,83 +23583,6 @@ public abstract class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetGalSyncAccountBasedAutoCompleteEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraGalSyncAccountBasedAutoCompleteEnabled, "");
-        return attrs;
-    }
-
-    /**
-     * seniority index of the group or group member which will determine the
-     * sorting order in the hierarchical address book
-     *
-     * @return zimbraHABSeniorityIndex, or -1 if unset
-     *
-     * @since ZCS 8.8.10
-     */
-    @ZAttr(id=3071)
-    public int getHABSeniorityIndex() {
-        return getIntAttr(Provisioning.A_zimbraHABSeniorityIndex, -1, true);
-    }
-
-    /**
-     * seniority index of the group or group member which will determine the
-     * sorting order in the hierarchical address book
-     *
-     * @param zimbraHABSeniorityIndex new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.8.10
-     */
-    @ZAttr(id=3071)
-    public void setHABSeniorityIndex(int zimbraHABSeniorityIndex) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraHABSeniorityIndex, Integer.toString(zimbraHABSeniorityIndex));
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * seniority index of the group or group member which will determine the
-     * sorting order in the hierarchical address book
-     *
-     * @param zimbraHABSeniorityIndex new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.8.10
-     */
-    @ZAttr(id=3071)
-    public Map<String,Object> setHABSeniorityIndex(int zimbraHABSeniorityIndex, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraHABSeniorityIndex, Integer.toString(zimbraHABSeniorityIndex));
-        return attrs;
-    }
-
-    /**
-     * seniority index of the group or group member which will determine the
-     * sorting order in the hierarchical address book
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.8.10
-     */
-    @ZAttr(id=3071)
-    public void unsetHABSeniorityIndex() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraHABSeniorityIndex, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * seniority index of the group or group member which will determine the
-     * sorting order in the hierarchical address book
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.8.10
-     */
-    @ZAttr(id=3071)
-    public Map<String,Object> unsetHABSeniorityIndex(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraHABSeniorityIndex, "");
         return attrs;
     }
 
