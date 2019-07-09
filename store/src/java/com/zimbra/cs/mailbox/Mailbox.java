@@ -3299,7 +3299,7 @@ public class Mailbox implements MailboxStore {
     }
 
     public int getImapRecent(OperationContext octxt, int folderId) throws ServiceException {
-        try (final MailboxTransaction t = mailboxWriteTransaction("getImapRecent", octxt)) {
+        try (final MailboxTransaction t = mailboxReadTransaction("getImapRecent", octxt)) {
             Folder folder = checkAccess(getFolderById(folderId));
             int recent = folder.getImapRECENT();
             t.commit();
@@ -3308,7 +3308,7 @@ public class Mailbox implements MailboxStore {
     }
 
     public int getImapRecentCutoff(OperationContext octxt, int folderId) throws ServiceException {
-        try (final MailboxTransaction t = mailboxWriteTransaction("getImapRecentCutoff", octxt)) {
+        try (final MailboxTransaction t = mailboxReadTransaction("getImapRecentCutoff", octxt)) {
             Folder folder = checkAccess(getFolderById(folderId));
             int cutoff = folder.getImapRECENTCutoff();
             t.commit();
