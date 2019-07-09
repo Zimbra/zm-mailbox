@@ -2789,13 +2789,13 @@ public abstract class ZAttrAccount  extends MailTarget {
      * This attribute is used to enable/disable user setting options under
      * preference
      *
-     * @return zimbraAccountSettingEnabled, or false if unset
+     * @return zimbraAccountSettingEnabled, or true if unset
      *
      * @since ZCS 8.8.9
      */
     @ZAttr(id=5028)
     public boolean isAccountSettingEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraAccountSettingEnabled, false, true);
+        return getBooleanAttr(Provisioning.A_zimbraAccountSettingEnabled, true, true);
     }
 
     /**
