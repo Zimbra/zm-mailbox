@@ -102,10 +102,10 @@ public abstract class TransactionCacheTracker implements TransactionListener {
 
     protected void clearTouchedItems() {
         Set<TransactionAware<?,?>> touchedByThisThread = touchedItems.get();
-        if (touchedByThisThread.isEmpty()) {
-            return;
+        if (!touchedByThisThread.isEmpty()) {
+            clearTouchedItems(touchedByThisThread);
+            touchedByThisThread.clear();
         }
-        clearTouchedItems(touchedByThisThread);
-        touchedByThisThread.clear();
+        touchedItems.remove();
     }
 }
