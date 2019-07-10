@@ -647,7 +647,6 @@ public class Mailbox implements MailboxStore {
     private MailboxMaintenance maintenance;
     private volatile boolean open = false;
     private boolean galSyncMailbox = false;
-    private volatile boolean requiresWriteLock = true;
     private final MailboxState state;
     private final NotificationPubSub pubsub;
     private final Set<WeakReference<TransactionListener>> transactionListeners;
@@ -702,10 +701,8 @@ public class Mailbox implements MailboxStore {
 
     public boolean requiresWriteLock() {
         //mailbox currently forced to use write lock due to one of the following
-        //1. pending tag/flag reload; i.e. cache flush or initial mailbox load
-        //2. this is an always on node (distributed lock does not support read/write currently)
-        //3. read/write disabled by LC for debugging
-        return requiresWriteLock || Zimbra.isAlwaysOn() || !LC.zimbra_mailbox_lock_readwrite.booleanValue();
+        //1. read/write disabled by LC for debugging
+        return !LC.zimbra_mailbox_lock_readwrite.booleanValue();
     }
 
     /**
@@ -1802,7 +1799,6 @@ public class Mailbox implements MailboxStore {
     private void clearFolderCache() throws ServiceException {
         try(FolderTagCacheLock lock = ftCacheReadLock.lock()) {
             mFolderCache = null;
-            requiresWriteLock = true;
         }
         // Remove from memcached cache
         try {
@@ -1815,7 +1811,6 @@ public class Mailbox implements MailboxStore {
     private void clearTagCache() throws ServiceException {
         try(FolderTagCacheLock lock = ftCacheReadLock.lock()) {
             mTagCache = null;
-            requiresWriteLock = true;
         }
         // Remove from memcached cache
         try {
@@ -1962,11 +1957,14 @@ public class Mailbox implements MailboxStore {
         if (ZimbraLog.cache.isDebugEnabled()) {
             ZimbraLog.cache.debug("loading due to initial? %s folders? %s tags? %s writeChange? %s", initial, mFolderCache == null, mTagCache == null, currentChange().writeChange);
         }
-        assert(currentChange().writeChange);
-        assert(isWriteLockedByCurrentThread());
-
         ZimbraLog.cache.info("initializing folder and tag caches for mailbox %d", getId());
-        try {
+
+        try(FolderTagCacheLock lock = ftCacheWriteLock.lock()) {
+            // check that another thread didn't just do this
+            if (mFolderCache != null && mTagCache != null) {
+                ZimbraLog.cache.debug("another thread already initialized the folder/tag caches");
+                return;
+            }
             DbMailItem.FolderTagMap folderData = new DbMailItem.FolderTagMap();
             DbMailItem.FolderTagMap tagData = new DbMailItem.FolderTagMap();
             MailboxData stats = null;
@@ -2016,11 +2014,6 @@ public class Mailbox implements MailboxStore {
 
             initFolderTagFields(folderData, tagData, initial, persist, loadedFromCache);
 
-            if (requiresWriteLock) {
-                requiresWriteLock = false;
-                ZimbraLog.mailbox.debug("consuming forceWriteMode");
-                //we've reloaded folder/tags so new callers can go back to using read
-            }
         } catch (ServiceException e) {
         	ZimbraLog.mailbox.warn("Unexpected exception whilst loading folders and tags - setting mTagCache/mFolderCache as null", e);
         	try(FolderTagCacheLock lock = ftCacheWriteLock.lock()) {
@@ -2033,53 +2026,46 @@ public class Mailbox implements MailboxStore {
 
     private void initFolderTagFields(DbMailItem.FolderTagMap folderData, DbMailItem.FolderTagMap tagData,
     		boolean initial, boolean persist, boolean loadedFromCache) throws ServiceException {
-    	/* Use temporary variables for these until we have a write lock to avoid another thread's updates
-    	 * to the corresponding fields causing inconsistencies. */
-    	FolderCache folderCache = ItemCache.getFactory().getFolderCache(this, cacheTracker);
-    	TagCache tagCache = ItemCache.getFactory().getTagCache(this, cacheTracker);
-    	try(FolderTagCacheLock lock = ftCacheWriteLock.lock()) {
-    		mFolderCache = folderCache;
-    		mTagCache = tagCache;
-    		// create the folder objects and, as a side-effect, populate the new cache
-    		for (Map.Entry<MailItem.UnderlyingData, DbMailItem.FolderTagCounts> entry : folderData.entrySet()) {
-    			Folder folder = (Folder) MailItem.constructItem(this, entry.getKey());
-    			DbMailItem.FolderTagCounts fcounts = entry.getValue();
-    			if (fcounts != null) {
-    				folder.setSize(folder.getItemCount(), fcounts.deletedCount, fcounts.totalSize, fcounts.deletedUnreadCount);
-    			}
-    		}
-    		// establish the folder hierarchy
-    		for (Folder folder : mFolderCache.values()) {
-    			Folder parent = mFolderCache.get(folder.getFolderId());
-    			// FIXME: side effect of this is that parent is marked as dirty...
-    			if (parent != null) {
-    				parent.addChild(folder, false);
-    			}
-    			// some broken upgrades ended up with CHANGE_DATE = NULL; patch it here
-    			boolean badChangeDate = folder.getChangeDate() <= 0;
-    			if (badChangeDate) {
-    				markItemModified(folder, Change.INTERNAL_ONLY);
-    				folder.metadataChanged();
-    			}
-    			// if we recalculated folder counts or had to fix CHANGE_DATE, persist those values now
-    			if (persist || badChangeDate) {
-    				folder.saveFolderCounts(initial);
-    			}
-    		}
+		mFolderCache = ItemCache.getFactory().getFolderCache(this, cacheTracker);
+		mTagCache = ItemCache.getFactory().getTagCache(this, cacheTracker);
+		// create the folder objects and, as a side-effect, populate the new cache
+		for (Map.Entry<MailItem.UnderlyingData, DbMailItem.FolderTagCounts> entry : folderData.entrySet()) {
+			Folder folder = (Folder) MailItem.constructItem(this, entry.getKey());
+			DbMailItem.FolderTagCounts fcounts = entry.getValue();
+			if (fcounts != null) {
+				folder.setSize(folder.getItemCount(), fcounts.deletedCount, fcounts.totalSize, fcounts.deletedUnreadCount);
+			}
+		}
+		// establish the folder hierarchy
+		for (Folder folder : mFolderCache.values()) {
+			Folder parent = mFolderCache.get(folder.getFolderId());
+			// FIXME: side effect of this is that parent is marked as dirty...
+			if (parent != null) {
+				parent.addChild(folder, false);
+			}
+			// some broken upgrades ended up with CHANGE_DATE = NULL; patch it here
+			boolean badChangeDate = folder.getChangeDate() <= 0;
+			if (badChangeDate) {
+				markItemModified(folder, Change.INTERNAL_ONLY);
+				folder.metadataChanged();
+			}
+			// if we recalculated folder counts or had to fix CHANGE_DATE, persist those values now
+			if (persist || badChangeDate) {
+				folder.saveFolderCounts(initial);
+			}
+		}
 
-    		// create the tag objects and, as a side-effect, populate the new
-    		// cache
-    		for (Map.Entry<MailItem.UnderlyingData, DbMailItem.FolderTagCounts> entry : tagData.entrySet()) {
-    			Tag tag = new Tag(this, entry.getKey());
-    			if (persist) {
-    				tag.saveTagCounts();
-    			}
-    		}
+		// create the tag objects and, as a side-effect, populate the new cache
+		for (Map.Entry<MailItem.UnderlyingData, DbMailItem.FolderTagCounts> entry : tagData.entrySet()) {
+			Tag tag = new Tag(this, entry.getKey());
+			if (persist) {
+				tag.saveTagCounts();
+			}
+		}
 
-    		if (!loadedFromCache && !DebugConfig.disableFoldersTagsCache) {
-    			cacheFoldersTagsWhenHaveWriteLock();
-    		}
-    	}
+		if (!loadedFromCache && !DebugConfig.disableFoldersTagsCache) {
+			cacheFoldersTagsWhenHaveWriteLock();
+		}
     }
 
     private void cacheFoldersTagsWhenHaveWriteLock() throws ServiceException {
@@ -3299,7 +3285,7 @@ public class Mailbox implements MailboxStore {
     }
 
     public int getImapRecent(OperationContext octxt, int folderId) throws ServiceException {
-        try (final MailboxTransaction t = mailboxWriteTransaction("getImapRecent", octxt)) {
+        try (final MailboxTransaction t = mailboxReadTransaction("getImapRecent", octxt)) {
             Folder folder = checkAccess(getFolderById(folderId));
             int recent = folder.getImapRECENT();
             t.commit();
@@ -3308,7 +3294,7 @@ public class Mailbox implements MailboxStore {
     }
 
     public int getImapRecentCutoff(OperationContext octxt, int folderId) throws ServiceException {
-        try (final MailboxTransaction t = mailboxWriteTransaction("getImapRecentCutoff", octxt)) {
+        try (final MailboxTransaction t = mailboxReadTransaction("getImapRecentCutoff", octxt)) {
             Folder folder = checkAccess(getFolderById(folderId));
             int cutoff = folder.getImapRECENTCutoff();
             t.commit();
@@ -9130,7 +9116,7 @@ public class Mailbox implements MailboxStore {
         /* Interrogating the lock to see if current thread has lock has some cost, hence why only do it if
          * have notifications. */
         try {
-            if (lock.isLockedByCurrentThread()) {
+            if (LC.notify_mbox_listeners_async_if_possible.booleanValue() && lock.isLockedByCurrentThread()) {
                 /* Still locked, even though we've probably just released a lock.  Use a separate thread
                  * to avoid delaying the outer lock.
                  */

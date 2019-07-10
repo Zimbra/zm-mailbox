@@ -36,6 +36,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.zimbra.common.httpclient.ZimbraHttpClientManager;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -230,23 +231,7 @@ public class SolrUtils {
     }
 
     public static CloudSolrClient getCloudSolrClient(String zkHosts) {
-        ArrayList<String> hosts = new ArrayList<String>();
-        for (String s : zkHosts.split(",")) {
-            if (s == null || s.isEmpty()) {
-                continue;
-            }
-            if (s.startsWith("http://")) {
-                hosts.add(s.substring(7));
-            }
-            else {
-                hosts.add(s);
-            }
-        }
-        CloseableHttpClient client = ZimbraHttpClientManager.getInstance().getInternalHttpClient();
-        CloudSolrClient.Builder builder = new CloudSolrClient.Builder();
-        builder.withHttpClient(client);
-        builder.withClusterStateProvider(new ZkClientClusterStateProvider(hosts, null));
-        return builder.build();
+        return SolrClientHolder.getInstance().getClient(zkHosts);
     }
 
     public static SolrClient getSolrClient(CloseableHttpClient httpClient, String baseUrl, String coreName) {

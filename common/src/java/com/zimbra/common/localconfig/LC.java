@@ -1275,7 +1275,7 @@ public final class LC {
     public static final KnownKey redis_num_retries = KnownKey.newKey(10);
 
     @Supported
-    public static final KnownKey redis_netty_threads = KnownKey.newKey(0);
+    public static final KnownKey redis_netty_threads = KnownKey.newKey(16);
 
     @Supported
     public static final KnownKey redis_retry_interval = KnownKey.newKey(3000);
@@ -1345,6 +1345,13 @@ public final class LC {
 
     @Supported
     public static final KnownKey zimbra_listeners_maxsize = KnownKey.newKey(5);
+
+    @Supported
+    public static final KnownKey solr_client_use_parallel_updates = KnownKey.newKey(false);
+
+    @Supported
+    public static final KnownKey notify_mbox_listeners_async_if_possible = KnownKey.newKey(true);
+
 
     public enum PUBLIC_SHARE_VISIBILITY { samePrimaryDomain, all, none };
 

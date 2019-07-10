@@ -216,7 +216,7 @@ public final class SessionCache {
         return sSessionMaps[type.getIndex()];
     }
 
-    protected synchronized static String getNextSessionId(Session.Type type) {
+    protected static String getNextSessionId(Session.Type type) {
         return dataProvider.getNextSessionIdSequence(type);
     }
 
