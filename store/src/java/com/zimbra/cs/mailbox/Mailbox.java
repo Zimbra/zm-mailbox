@@ -10255,6 +10255,10 @@ public class Mailbox implements MailboxStore {
         }
     }
 
+    public boolean isInTransaction() {
+        return threadChange.get() != null;
+    }
+
     private class FolderTagCacheReadWriteLock {
         private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
         private final FolderTagCacheLock readLock = new FolderTagCacheLock(lock.readLock());
