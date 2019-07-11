@@ -33,6 +33,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.listeners.AccountListener;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.soap.JaxbUtil;
@@ -78,11 +79,15 @@ public class DeleteAccount extends AdminDocumentHandler {
         if (null == id) {
             throw ServiceException.INVALID_REQUEST("missing required attribute: " + AdminConstants.E_ID, null);
         }
-
         // Confirm that the account exists and that the mailbox is located on the current host
         Account account = prov.get(AccountBy.id, id, zsc.getAuthToken());
         defendAgainstAccountHarvesting(account, AccountBy.id, id, zsc, Admin.R_deleteAccount);
-
+        try {
+            AccountListener.invokeBeforeAccountDeletion(account);
+        } catch (ServiceException e) {
+            throw ServiceException.FAILURE(
+                "Failed to delete account '" + account.getName() + "' in AccountListener", e);
+        }
         /*
          * bug 69009
          *
@@ -98,7 +103,6 @@ public class DeleteAccount extends AdminDocumentHandler {
 
         Mailbox mbox = Provisioning.onLocalServer(account) ?
                 MailboxManager.getInstance().getMailboxByAccount(account, false) : null;
-
         if (mbox != null) {
             mbox.deleteMailbox();
         }
@@ -107,7 +111,6 @@ public class DeleteAccount extends AdminDocumentHandler {
 
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
             new String[] {"cmd", "DeleteAccount","name", account.getName(), "id", account.getId()}));
-
         return zsc.jaxbToElement(new DeleteAccountResponse());
     }
 
