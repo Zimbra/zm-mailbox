@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.account.Key;
+import com.zimbra.common.account.ZAttrProvisioning.AccountStatus;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -33,6 +34,8 @@ import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.listeners.AccountListener;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.CreateAccountRequest;
 
@@ -79,7 +82,20 @@ public class CreateAccount extends AdminDocumentHandler {
 
         Element response = zsc.createElement(AdminConstants.CREATE_ACCOUNT_RESPONSE);
         ToXML.encodeAccount(response, account);
-        AccountListener.invokeOnAccountCreation(account);
+        try {
+            AccountListener.invokeOnAccountCreation(account);
+        } catch (ServiceException e) {
+            // roll-back account creation
+            prov.modifyAccountStatus(account, AccountStatus.maintenance.name());
+            Mailbox mbox = Provisioning.onLocalServer(account)
+                ? MailboxManager.getInstance().getMailboxByAccount(account, false) : null;
+            if (mbox != null) {
+                mbox.deleteMailbox();
+            }
+            prov.deleteAccount(account.getId());
+            throw ServiceException
+                .FAILURE("Failed to create account '" + account.getName() + "' in AccountListener", e);
+        }
         return response;
     }
 
