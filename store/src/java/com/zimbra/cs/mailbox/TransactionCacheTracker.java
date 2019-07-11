@@ -28,12 +28,10 @@ public abstract class TransactionCacheTracker implements TransactionListener {
 
     protected Mailbox mbox;
     protected ThreadLocal<Set<TransactionAware<?,?>>> touchedItems;
-    private ThreadLocal<Boolean> inTransaction;
 
     public TransactionCacheTracker(Mailbox mbox) {
         this.mbox = mbox;
         touchedItems = ThreadLocal.withInitial(() -> new HashSet<>());
-        inTransaction = ThreadLocal.withInitial(() -> false);
     }
 
     public void addToTracker(TransactionAware<?,?> item) {
@@ -58,14 +56,12 @@ public abstract class TransactionCacheTracker implements TransactionListener {
             processItems(touchedItems.get());
             resetChanges();
             clearTouchedItems();
-            inTransaction.set(false);
         }
     }
 
     @Override
     public void transactionBegin(boolean startChange) {
         if (startChange) {
-            inTransaction.set(true);
             if (hasChanges()) {
                 List<String> mapsWithChanges = touchedItems.get().stream()
                         .filter(item -> item.hasChanges()).map(item -> item.getName()).collect(Collectors.toList());
@@ -96,7 +92,7 @@ public abstract class TransactionCacheTracker implements TransactionListener {
     }
 
     public boolean isInTransaction() {
-        return inTransaction.get();
+        return mbox.isInTransaction();
     }
 
 
@@ -106,10 +102,10 @@ public abstract class TransactionCacheTracker implements TransactionListener {
 
     protected void clearTouchedItems() {
         Set<TransactionAware<?,?>> touchedByThisThread = touchedItems.get();
-        if (touchedByThisThread.isEmpty()) {
-            return;
+        if (!touchedByThisThread.isEmpty()) {
+            clearTouchedItems(touchedByThisThread);
+            touchedByThisThread.clear();
         }
-        clearTouchedItems(touchedByThisThread);
-        touchedByThisThread.clear();
+        touchedItems.remove();
     }
 }
