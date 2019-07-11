@@ -66,6 +66,16 @@ public abstract class AccountListener {
         }
     }
 
+    public static void invokeBeforeAccountDeletion(Account acct) throws ServiceException {
+        ZimbraLog.account.info("Account to be deleted for user: %s", acct.getName());
+        // invoke listeners
+        Map<String, AccountListenerEntry> sortedListeners = ListenerUtil.sortByPriority(mListeners);
+        for (Map.Entry<String, AccountListenerEntry> listener : sortedListeners.entrySet()) {
+            AccountListenerEntry listenerInstance = listener.getValue();
+            listenerInstance.getAccountListener().beforeAccountDeletion(acct);
+        }
+    }
+
     public static void invokeOnStatusChange(Account acct, String oldStatus, String newStatus)
         throws ServiceException {
         ZimbraLog.account.info("Account status for %s changed from '%s' to '%s'", acct.getName(),
@@ -95,12 +105,20 @@ public abstract class AccountListener {
     }
 
     /**
+     * called before account deletion. should not throw any
+     * exceptions.
+     *
+     * @param USER_ACCOUNT user account to be deleted
+     */
+    public abstract void beforeAccountDeletion(Account acct) throws ServiceException;
+
+    /**
      * called after a successful account creation. should not throw any
      * exceptions.
      *
      * @param USER_ACCOUNT user account created
      */
-    public abstract void onAccountCreation(Account acct);
+    public abstract void onAccountCreation(Account acct) throws ServiceException;
 
     /**
      * called after an account status change. should not throw any exceptions.
