@@ -2610,7 +2610,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         int statusCode;
         try {
             MultipartEntityBuilder builder = MultipartEntityBuilder.create();
-            builder.addBinaryBody("upfile", in, ContentType.create(contentType), name);
+            builder.addBinaryBody("upfile", in, ContentType.DEFAULT_BINARY, name);
             HttpEntity httpEntity = builder.build();
             post.setEntity(httpEntity);
 
