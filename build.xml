@@ -29,6 +29,11 @@
 
    <target name="test-all-plough-through" depends="set-no-halt-on-failure,test-all"/>
    <target name="test-all" unless="skipTests" depends="set-halt-on-failure,publish-local-all">
+      <mkdir dir="${basedir}/build/zimbra"/>
+      <mkdir dir="${basedir}/build/zimbra/conf"/>
+      <copy file="${basedir}/store-conf/conf/antisamy.xml" todir="${basedir}/build/zimbra/conf/"/>
+      <copy file="${basedir}/store-conf/conf/owasp_policy.xml" todir="${basedir}/build/zimbra/conf/"/>
+
       <property name="test-results-file" value="${basedir}/build/test-results.txt"/>
 
       <echo file="${test-results-file}" message="BEGIN&#xD;&#xA;" />

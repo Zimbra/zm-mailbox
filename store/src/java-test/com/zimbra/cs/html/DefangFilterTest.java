@@ -29,7 +29,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -62,6 +64,16 @@ public class DefangFilterTest {
         LC.zimbra_use_owasp_html_sanitizer.setDefault(false);
         Provisioning prov = Provisioning.getInstance();
         Account acct = prov.createAccount("test@in.telligent.com", "secret", new HashMap<String, Object>());
+    }
+
+    @Before
+    public void setUp() throws Exception {
+        MailboxTestUtil.clearData();
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        MailboxTestUtil.clearData();
     }
 
     /**
