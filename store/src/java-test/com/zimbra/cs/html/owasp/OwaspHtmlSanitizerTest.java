@@ -23,12 +23,15 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Set;
 
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.CharStreams;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mime.MPartInfo;
@@ -44,11 +47,17 @@ public class OwaspHtmlSanitizerTest {
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
         EMAIL_BASE_DIR = MailboxTestUtil.getZimbraServerDir("") + EMAIL_BASE_DIR;
-        try {
-            OwaspPolicy.load("store-conf/conf/owasp_policy.xml");
-        } catch (Exception e) {
-            OwaspPolicy.load("../store-conf/conf/owasp_policy.xml");
-        }
+        LC.zimbra_use_owasp_html_sanitizer.setDefault(true);
+    }
+
+    @Before
+    public void setUp() throws Exception {
+        MailboxTestUtil.clearData();
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        MailboxTestUtil.clearData();
     }
 
     /*
@@ -336,7 +345,7 @@ public class OwaspHtmlSanitizerTest {
         String html = "<html><head></head><body><a target=\"_blank\" href=\"Neptune.gif\"></a></body></html>";
         String result = new OwaspHtmlSanitizer(html,true,null).sanitize();
         Assert.assertTrue(result
-                .contains("<a href=\"Neptune.gif\" target=\"_blank\" rel=\"nofollow\"></a>"));
+                .contains("<a href=\"Neptune.gif\" target=\"_blank\" rel=\"nofollow noopener noreferrer\"></a>"));
 
 
         html = "<html><body>My pictures <a href=\"javascript:document.write('%3C%61%20%68%72%65%66%3D%22%6A%61%76%"
@@ -349,12 +358,12 @@ public class OwaspHtmlSanitizerTest {
         html =  "<html><head></head><body><a target=\"_blank\" href=\"Neptune.txt\"></a></body></html>";
         result = new OwaspHtmlSanitizer(html,true,null).sanitize();
         Assert.assertEquals(result,
-                "<html><head></head><body><a href=\"Neptune.txt\" target=\"_blank\" rel=\"nofollow\"></a></body></html>");
+                "<html><head></head><body><a href=\"Neptune.txt\" target=\"_blank\" rel=\"nofollow noopener noreferrer\"></a></body></html>");
 
         html =  "<html><head></head><body><a target=\"_blank\" href=\"Neptune.pptx\"></a></body></html>";
         result = new OwaspHtmlSanitizer(html,true,null).sanitize();
         Assert.assertEquals(result,
-                "<html><head></head><body><a href=\"Neptune.pptx\" target=\"_blank\" rel=\"nofollow\"></a></body></html>");
+                "<html><head></head><body><a href=\"Neptune.pptx\" target=\"_blank\" rel=\"nofollow noopener noreferrer\"></a></body></html>");
 
         html = "<li><a href=\"poc.zip?view=html&archseq=0\">\"/><script>alert(1);</script>AAAAAAAAAA</a></li>";
         result = new OwaspHtmlSanitizer(html,true,null).sanitize();
@@ -574,7 +583,7 @@ public class OwaspHtmlSanitizerTest {
     public void testBug73037() throws Exception {
         String html = "<html><head></head><body><a target=\"_blank\"" +
         " href=\"smb://Aurora._smb._tcp.local/untitled/folder/03 DANDIYA MIX.mp3\"></a></body></html>";
-        String hrefVal = "smb://Aurora._smb._tcp.local/untitled/folder/03 DANDIYA MIX.mp3";
+        String hrefVal = "smb://Aurora._smb._tcp.local/untitled/folder/03%20DANDIYA%20MIX.mp3";
         String result = new OwaspHtmlSanitizer(html, true, null).sanitize();
         Assert.assertTrue(result.contains(hrefVal));
 
@@ -592,7 +601,7 @@ public class OwaspHtmlSanitizerTest {
 
         html = "<html><head></head><body><a target=\"_blank\"" +
             " href=\"//Shared_srv/folder/file with spaces.txt\"></a></body></html>";
-        hrefVal = "//Shared_srv/folder/file with spaces.txt";
+        hrefVal = "//Shared_srv/folder/file%20with%20spaces.txt";
         result = new OwaspHtmlSanitizer(html, true, null).sanitize();
         Assert.assertTrue(result.contains(hrefVal));
     }

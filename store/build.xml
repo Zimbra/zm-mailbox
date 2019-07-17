@@ -97,6 +97,10 @@
   <target name="build-init" description="Creates directories required for compiling">
     <mkdir dir="${build.classes.dir}"/>
     <mkdir dir="${build.dir}/data"/>
+    <mkdir dir="${build.dir}/zimbra"/>
+    <mkdir dir="${build.dir}/zimbra/conf"/>
+    <copy file="${zm-mailbox.basedir}/store-conf/conf/antisamy.xml" todir="${build.dir}/zimbra/conf/"/>
+    <copy file="${zm-mailbox.basedir}/store-conf/conf/owasp_policy.xml" todir="${build.dir}/zimbra/conf/"/>
     <antcall target="make-dirs">
       <param name="base.dir" value="${dist.dir}"/>
     </antcall>
