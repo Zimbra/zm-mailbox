@@ -401,9 +401,15 @@ public class Mailbox implements MailboxStore {
         }
     }
 
-    private final class MailboxChange {
+    /**
+     * This class is static in Zimbra X to remove the number of ThreadLocalMap.Entry
+     * objects generated. We now pass in a reference to the Mailbox being processed
+     * at the beginning of each transaction.
+     */
+    private static final class MailboxChange {
         private static final int NO_CHANGE = -1;
 
+        private Mailbox mailbox;
         long timestamp = System.currentTimeMillis();
         int depth = 0;
         boolean active;
@@ -446,7 +452,8 @@ public class Mailbox implements MailboxStore {
             }
         }
 
-        boolean startChange(String caller, OperationContext ctxt, RedoableOp op, boolean write) {
+        boolean startChange(Mailbox mailbox, String caller, OperationContext ctxt, RedoableOp op, boolean write) {
+            this.mailbox = mailbox;
             active = true;
             if (depth++ == 0) {
                 octxt = ctxt;
@@ -480,7 +487,7 @@ public class Mailbox implements MailboxStore {
 
         DbConnection getConnection() throws ServiceException {
             if (conn == null) {
-                conn = DbPool.getConnection(Mailbox.this);
+                conn = DbPool.getConnection(mailbox);
                 ZimbraLog.mailbox.debug("fetching new DB connection %s", this);
             }
             return conn;
@@ -514,13 +521,13 @@ public class Mailbox implements MailboxStore {
             if (recent != NO_CHANGE || size != NO_CHANGE || contacts != NO_CHANGE) {
                 return true;
             }
-            if (itemId != NO_CHANGE && itemId / DbMailbox.ITEM_CHECKPOINT_INCREMENT > mData.lastItemId / DbMailbox.ITEM_CHECKPOINT_INCREMENT) {
+            if (itemId != NO_CHANGE && itemId / DbMailbox.ITEM_CHECKPOINT_INCREMENT > mailbox.mData.lastItemId / DbMailbox.ITEM_CHECKPOINT_INCREMENT) {
                 return true;
             }
-            if (changeId != NO_CHANGE && changeId / DbMailbox.CHANGE_CHECKPOINT_INCREMENT > mData.lastChangeId / DbMailbox.CHANGE_CHECKPOINT_INCREMENT) {
+            if (changeId != NO_CHANGE && changeId / DbMailbox.CHANGE_CHECKPOINT_INCREMENT > mailbox.mData.lastChangeId / DbMailbox.CHANGE_CHECKPOINT_INCREMENT) {
                 return true;
             }
-            if (searchId != NO_CHANGE && searchId / DbMailbox.SEARCH_ID_CHECKPOINT_INCREMENT > mData.lastSearchId / DbMailbox.SEARCH_ID_CHECKPOINT_INCREMENT) {
+            if (searchId != NO_CHANGE && searchId / DbMailbox.SEARCH_ID_CHECKPOINT_INCREMENT > mailbox.mData.lastSearchId / DbMailbox.SEARCH_ID_CHECKPOINT_INCREMENT) {
                 return true;
             }
             return false;
@@ -528,6 +535,7 @@ public class Mailbox implements MailboxStore {
 
         void reset() {
             DbPool.quietClose(conn);
+            this.mailbox = null;
             this.active = false;
             this.conn = null;
             this.octxt = null;
@@ -610,6 +618,11 @@ public class Mailbox implements MailboxStore {
             helper.add("imap", imap);
             helper.add("writeChange", writeChange);
             helper.add("recorder", recorder);
+            if (mailbox != null) {
+                helper.add("mailbox", mailbox.getId());
+            } else {
+                helper.add("mailbox", "unset");
+            }
             return helper.omitNullValues().toString();
         }
     }
@@ -630,7 +643,7 @@ public class Mailbox implements MailboxStore {
 
     private final int mId;
     private final MailboxData mData;
-    private final ThreadLocal<MailboxChange> threadChange = new ThreadLocal<MailboxChange>();
+    private static final ThreadLocal<MailboxChange> threadChange = new ThreadLocal<MailboxChange>();
 
     private FolderCache mFolderCache;
     private TagCache mTagCache;
@@ -9916,7 +9929,7 @@ public class Mailbox implements MailboxStore {
                     assert(lock.isWriteLockedByCurrentThread());
                     write = true;
                 }
-                boolean newChange = currentChange().startChange(caller, octxt, recorder, write);
+                boolean newChange = currentChange().startChange(Mailbox.this, caller, octxt, recorder, write);
                 Iterator<WeakReference<TransactionListener>> itr = Mailbox.this.transactionListeners.iterator();
                 while (itr.hasNext()) {
                     TransactionListener listener = itr.next().get();
