@@ -17,19 +17,26 @@
 
 package com.zimbra.common.util;
 
-
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.TimeUnit;
+import javax.net.ssl.SSLContext;
 
 import org.apache.http.client.config.RequestConfig;
+import org.apache.http.config.RegistryBuilder;
 import org.apache.http.config.SocketConfig;
 import org.apache.http.conn.HttpClientConnectionManager;
+import org.apache.http.conn.socket.ConnectionSocketFactory;
+import org.apache.http.conn.socket.PlainConnectionSocketFactory;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.SSLContextBuilder;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.net.SocketFactories;
-
 
 /**
  * A wrapper class for HttpConnectionManagerParams.
@@ -198,7 +205,18 @@ private static class ExternalConnMgrParams extends ZimbraConnMgrParams {
         if (SocketFactories.getRegistry() != null) {
             this.httpConnMgr = new PoolingHttpClientConnectionManager(SocketFactories.getRegistry());
         } else {
-            this.httpConnMgr = new PoolingHttpClientConnectionManager();
+            try {
+                final SSLContext sslContext = new SSLContextBuilder()
+                    .loadTrustMaterial(null, (x509CertChain, authType) -> true).build();
+                this.httpConnMgr = new PoolingHttpClientConnectionManager(RegistryBuilder
+                    .<ConnectionSocketFactory> create()
+                    .register("http", PlainConnectionSocketFactory.INSTANCE)
+                    .register("https",
+                        new SSLConnectionSocketFactory(sslContext, NoopHostnameVerifier.INSTANCE))
+                    .build());
+            } catch (KeyManagementException | NoSuchAlgorithmException | KeyStoreException e) {
+                ZimbraLog.misc.info("Error creating http connection manager, with default socket factory");
+            }
         }
         
         this.httpConnMgr.setDefaultMaxPerRoute( zimbraConnMgrParams.getDefaultMaxConnectionsPerHost());
