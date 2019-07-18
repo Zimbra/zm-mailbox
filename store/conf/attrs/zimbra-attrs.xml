@@ -9779,4 +9779,8 @@ TODO: delete them permanently from here
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Whether to allow a user to access Zimbra mobile App</desc>
 </attr>
+
+<attr id="3077" name="zimbraServiceAccountNumber" type="string" cardinality="single" flags="domainAdminModifiable" optionalIn="account" since="8.9.0">
+    <desc>Subscriber/service account number. Custom attribute for account identity.</desc>
+</attr>
 </attrs>
