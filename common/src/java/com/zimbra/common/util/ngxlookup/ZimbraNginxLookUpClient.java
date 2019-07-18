@@ -29,7 +29,7 @@ import java.util.TreeSet;
 
 import org.apache.http.HttpException;
 import org.apache.http.HttpResponse;
-import org.apache.http.HttpVersion;
+import org.apache.http.ProtocolVersion;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.util.EntityUtils;
@@ -200,8 +200,7 @@ public class ZimbraNginxLookUpClient {
                 method.addHeader("X-Proxy-Host", virtualHost);
                 HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient().build();
                 // currently we use default httpclient_internal_connmgr_connection_timeout instead of ngxConnectTimeout
-                client.getParams().setParameter("http.protocol.version", HttpVersion.HTTP_1_0);
-
+                method.setProtocolVersion(new ProtocolVersion("HTTP", 1, 1));
                 try {
                     HttpResponse response = HttpClientUtil.executeMethod(client, method);
                     int statusCode = response.getStatusLine().getStatusCode();
