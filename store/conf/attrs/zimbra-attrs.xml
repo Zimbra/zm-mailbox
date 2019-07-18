@@ -9959,4 +9959,8 @@ TODO: delete them permanently from here
 <attr id="3076" name="zimbraAddressListLdapFilter" type="string" cardinality="single" requiredIn="addressList" flags="domainAdminModifiable" since="8.8.10">
   <desc>filter to decide members of the address list using ldap</desc>
 </attr> <!-- 3076 -->
+
+<attr id="3077" name="zimbraServiceAccountNumber" type="string" cardinality="single" flags="domainAdminModifiable" optionalIn="account" since="8.9.0">
+    <desc>Subscriber/service account number. Custom attribute for account identity.</desc>
+</attr>
 </attrs>

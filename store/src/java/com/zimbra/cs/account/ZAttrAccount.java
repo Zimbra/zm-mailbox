@@ -58329,6 +58329,83 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Subscriber/service account number. Custom attribute for account
+     * identity.
+     *
+     * @return zimbraServiceAccountNumber, or null if unset
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3077)
+    public String getServiceAccountNumber() {
+        return getAttr(Provisioning.A_zimbraServiceAccountNumber, null, true);
+    }
+
+    /**
+     * Subscriber/service account number. Custom attribute for account
+     * identity.
+     *
+     * @param zimbraServiceAccountNumber new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3077)
+    public void setServiceAccountNumber(String zimbraServiceAccountNumber) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraServiceAccountNumber, zimbraServiceAccountNumber);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Subscriber/service account number. Custom attribute for account
+     * identity.
+     *
+     * @param zimbraServiceAccountNumber new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3077)
+    public Map<String,Object> setServiceAccountNumber(String zimbraServiceAccountNumber, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraServiceAccountNumber, zimbraServiceAccountNumber);
+        return attrs;
+    }
+
+    /**
+     * Subscriber/service account number. Custom attribute for account
+     * identity.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3077)
+    public void unsetServiceAccountNumber() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraServiceAccountNumber, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Subscriber/service account number. Custom attribute for account
+     * identity.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3077)
+    public Map<String,Object> unsetServiceAccountNumber(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraServiceAccountNumber, "");
+        return attrs;
+    }
+
+    /**
      * Deprecated since: 8.0.0. Manual publishing of shares by admin is no
      * longer required since now automated publishing of sharing info updates
      * to LDAP is supported. Orig desc: items an account or group has shared

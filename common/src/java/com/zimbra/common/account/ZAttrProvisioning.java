@@ -15963,6 +15963,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraServerVersionType = "zimbraServerVersionType";
 
     /**
+     * Subscriber/service account number. Custom attribute for account
+     * identity.
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3077)
+    public static final String A_zimbraServiceAccountNumber = "zimbraServiceAccountNumber";
+
+    /**
      * services that are enabled on this server
      */
     @ZAttr(id=220)
