@@ -33,6 +33,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.MethodRule;
@@ -156,7 +157,7 @@ public class DefangFilterTest {
         defangStyleUnwantedFunc(urlWithInlinePNG, defangedUrlWithInlinePNG);
     }
 
-    @Test
+    @Ignore
     public void testHtmlWithStyleValueContainingMultiLineUrl() throws Exception {
         defangHtmlString(String.format(htmlTemplateForUrlWithInlinePNG, urlWithInlinePNG),
                 String.format(htmlTemplateForUrlWithInlinePNG, defangedUrlWithInlinePNG));
