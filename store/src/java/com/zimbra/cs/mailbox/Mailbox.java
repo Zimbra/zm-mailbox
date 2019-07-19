@@ -10275,7 +10275,8 @@ public class Mailbox implements MailboxStore {
     }
 
     public boolean isInTransaction() {
-        return threadChange.get() != null;
+        MailboxChange change = threadChange.get();
+        return change != null && change.isActive();
     }
 
     private class FolderTagCacheReadWriteLock {
