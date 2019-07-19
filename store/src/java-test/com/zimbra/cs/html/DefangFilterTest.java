@@ -33,7 +33,10 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.MethodRule;
+import org.junit.rules.TestName;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
@@ -47,6 +50,7 @@ import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.servlet.ZThreadLocal;
+import com.zimbra.cs.util.ZTestWatchman;
 import com.zimbra.soap.RequestContext;
 
 /**
@@ -57,6 +61,9 @@ import com.zimbra.soap.RequestContext;
  */
 public class DefangFilterTest {
     private static String EMAIL_BASE_DIR = "data/unittest/email/";
+    @Rule public TestName testName = new TestName();
+    @Rule public MethodRule watchman = new ZTestWatchman();
+
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
