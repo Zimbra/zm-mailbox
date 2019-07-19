@@ -116,6 +116,9 @@ public class IndexingService {
                         break;
                     }
 
+                    ZimbraLog.index.debug("IndexQueueMonitor - %s - Actively task executing threads: %d, Queue size: %d",
+                            Thread.currentThread().getName(), INDEX_EXECUTOR.getActiveCount(), INDEX_EXECUTOR.getQueue().size());
+
                     try {
                         if (queueItem instanceof AddMailItemToIndexTask) {
                             if (((AddMailItemToIndexTask) queueItem).isReindex()) {
