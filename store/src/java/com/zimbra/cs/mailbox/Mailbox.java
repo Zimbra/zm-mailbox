@@ -556,7 +556,7 @@ public class Mailbox implements MailboxStore {
             this.indexItems.clear();
             this.dirty.clear();
             this.otherDirtyStuff.clear();
-            threadChange.remove();
+            MailboxChangeSingleton.getInstance().getThreadLocal().remove();
             ZimbraLog.mailbox.debug("clearing change");
         }
 
@@ -643,7 +643,6 @@ public class Mailbox implements MailboxStore {
 
     private final int mId;
     private final MailboxData mData;
-    private static final ThreadLocal<MailboxChange> threadChange = new ThreadLocal<MailboxChange>();
 
     private FolderCache mFolderCache;
     private TagCache mTagCache;
@@ -703,12 +702,7 @@ public class Mailbox implements MailboxStore {
     }
 
     private MailboxChange currentChange() {
-        MailboxChange change = threadChange.get();
-        if (change == null) {
-            change = new MailboxChange();
-            threadChange.set(change);
-        }
-        return change;
+        return MailboxChangeSingleton.getInstance().getMailboxChange();
     }
 
     public boolean requiresWriteLock() {
@@ -10275,8 +10269,8 @@ public class Mailbox implements MailboxStore {
     }
 
     public boolean isInTransaction() {
-        MailboxChange change = threadChange.get();
-        return change != null && change.isActive();
+        MailboxChange change = MailboxChangeSingleton.getInstance().getThreadLocal().get();
+        return change != null && change.isActive() && change.mailbox.getId() == getId();
     }
 
     private class FolderTagCacheReadWriteLock {
@@ -10318,6 +10312,31 @@ public class Mailbox implements MailboxStore {
         @Override
         public void close() {
             lock.unlock();
+        }
+    }
+
+    static class MailboxChangeSingleton {
+
+        private final ThreadLocal<MailboxChange> threadChange = new ThreadLocal<MailboxChange>();
+        private static MailboxChangeSingleton instance = new MailboxChangeSingleton();
+
+        private MailboxChangeSingleton() {}
+
+        public static MailboxChangeSingleton getInstance() {
+            return instance;
+        }
+
+        ThreadLocal<MailboxChange> getThreadLocal() {
+            return threadChange;
+        }
+
+        MailboxChange getMailboxChange() {
+            MailboxChange change = threadChange.get();
+            if (change == null) {
+                change = new MailboxChange();
+                threadChange.set(change);
+            }
+            return change;
         }
     }
 }
