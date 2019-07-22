@@ -13,9 +13,7 @@ import org.redisson.client.RedisException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
-import com.zimbra.common.localconfig.KnownKey;
 import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.localconfig.LC.Supported;
 import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.mailbox.MailboxLockContext;
 import com.zimbra.common.mailbox.MailboxLockFactory;
@@ -410,19 +408,17 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
                 Mailbox mailbox = (Mailbox) lockContext.getMailboxStore();
                 if (Strings.isNullOrEmpty(lastWriter)) {
                     if (ZimbraLog.cache.isDebugEnabled()) {
-                        ZimbraLog.cache.debug("unable to determine last mailbox worker to acquire write lock, flushing local caches");
+                        ZimbraLog.cache.debug("unable to determine last mailbox worker to acquire write lock for %s, flushing local caches", mailbox.getAccount().getName());
                     }
                     mailbox.clearStaleCaches(lockContext);
                 } else if (!lastWriter.equals(lockNode)) {
                     if (write) {
-                        if (ZimbraLog.cache.isDebugEnabled()) {
-                            ZimbraLog.cache.debug("last write lock was acquired by different mailbox worker (%s), flushing local caches prior to write lock", lastWriter);
-                        }
+                        ZimbraLog.cache.info("last write lock for %s was acquired by different mailbox worker (%s), flushing local caches prior to write lock (caller=%s)",
+                                mailbox.getAccount().getName(), lastWriter, lockContext.getCaller());
                         mailbox.clearStaleCaches(lockContext);
                     } else if (!LC.only_flush_cache_on_first_read_after_foreign_write.booleanValue() || response.isFirstReadSinceLastWrite()) {
-                        if (ZimbraLog.cache.isDebugEnabled()) {
-                            ZimbraLog.cache.debug("last write lock was acquired by different mailbox worker (%s), flushing local caches prior to read lock", lastWriter);
-                        }
+                        ZimbraLog.cache.info("last write lock for %s was acquired by different mailbox worker (%s), flushing local caches prior to read lock (caller=%s)",
+                                mailbox.getAccount().getName(), lastWriter, lockContext.getCaller());
                         mailbox.clearStaleCaches(lockContext);
                     } else {
                         if (ZimbraLog.cache.isDebugEnabled()) {
