@@ -25,7 +25,10 @@ import java.util.Set;
 
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.MethodRule;
+import org.junit.rules.TestName;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.CharStreams;
@@ -35,10 +38,13 @@ import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.servlet.ZThreadLocal;
+import com.zimbra.cs.util.ZTestWatchman;
 
 public class OwaspHtmlSanitizerTest {
 
     private static String EMAIL_BASE_DIR = "data/unittest/email/";
+    @Rule public TestName testName = new TestName();
+    @Rule public MethodRule watchman = new ZTestWatchman();
 
     @BeforeClass
     public static void init() throws Exception {
@@ -669,6 +675,14 @@ public class OwaspHtmlSanitizerTest {
         String result = new OwaspHtmlSanitizer(html, true, null).sanitize();
         Assert.assertTrue(!result.contains("@zimbra"));
         Assert.assertTrue(result.contains("&#64;zimbra"));
+    }
+
+    @Test
+    public void testZCS7621() throws Exception {
+        String html = "<div class=\"gmail\" style=\"display:none; width:0; overflow:hidden; float:left; max-height:0;\" align=\"center\">";
+        String result = new OwaspHtmlSanitizer(html, true, null).sanitize();
+        Assert.assertTrue(result.contains("display"));
+        Assert.assertTrue(result.contains("float"));
     }
 
 }
