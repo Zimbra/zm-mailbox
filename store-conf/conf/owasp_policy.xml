@@ -7,6 +7,7 @@
   <url_protocols>cid,http,https,mailto,data,smb</url_protocols>
   <disallow_text_in>applet,frameset,object,script,title</disallow_text_in>
   <allow_text_in>style</allow_text_in>
+  <css_whitelist>float,display</css_whitelist>
   <element name="a">
     <attributes>KBD,charset,coords,href,hreflang,name,rel,rev,shape,target,type</attributes>
     <url_protocols>cid,http,https,mailto,smb</url_protocols>
