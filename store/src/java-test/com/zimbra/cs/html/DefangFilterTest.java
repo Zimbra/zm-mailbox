@@ -33,7 +33,6 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.MethodRule;
@@ -69,7 +68,6 @@ public class DefangFilterTest {
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
         EMAIL_BASE_DIR = MailboxTestUtil.getZimbraServerDir("") + EMAIL_BASE_DIR;
-        LC.zimbra_use_owasp_html_sanitizer.setDefault(false);
         Provisioning prov = Provisioning.getInstance();
         Account acct = prov.createAccount("test@in.telligent.com", "secret", new HashMap<String, Object>());
     }
@@ -77,6 +75,7 @@ public class DefangFilterTest {
     @Before
     public void setUp() throws Exception {
         MailboxTestUtil.clearData();
+        LC.zimbra_use_owasp_html_sanitizer.setDefault(false);
     }
 
     @After
@@ -157,7 +156,7 @@ public class DefangFilterTest {
         defangStyleUnwantedFunc(urlWithInlinePNG, defangedUrlWithInlinePNG);
     }
 
-    @Ignore
+    @Test
     public void testHtmlWithStyleValueContainingMultiLineUrl() throws Exception {
         defangHtmlString(String.format(htmlTemplateForUrlWithInlinePNG, urlWithInlinePNG),
                 String.format(htmlTemplateForUrlWithInlinePNG, defangedUrlWithInlinePNG));
