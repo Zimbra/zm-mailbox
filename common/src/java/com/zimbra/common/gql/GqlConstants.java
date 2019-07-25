@@ -697,16 +697,13 @@ public class GqlConstants {
     public static final String GRANTEE_DISPLAY_NAME = "granteeDisplayName";
     public static final String MOUNTPOINT_ID = "mountpointId";
 
-    public static final String GQL_MAILBOX_METADATA = "GQLMailboxMetadata";
+    public static final String CLASS_GQL_MAILBOX_METADATA = "GQLMailboxMetadata";
+    public static final String CLASS_GQL_MAILBOX_METADATA_KEY_VALUE = "GQLMailboxMetadataKeyValue";
+    public static final String CLASS_GQL_DISCOVER_RIGHTS_INPUT = "GQLDiscoverRightsInput";
+    public static final String CLASS_GQL_DISCOVER_RIGHTS_INFO = "GQLDiscoverRightsInfo";
     public static final String METADATA = "metadata";
-    public static final String CONTAINS_KEY = "containsKey";
     public static final String IS_EMPTY = "isEmpty";
-    public static final String GET_STRING = "getString";
-    public static final String GET_LONG = "getLong";
-    public static final String GET_DOUBLE = "getDouble";
-    public static final String GET_BOOL = "getBool";
-    public static final String GET_INT = "getInt";
-    public static final String GET_SHORT = "getShort";
-    public static final String GET_LIST = "getList";
-    public static final String GET_MAP = "getMap";
+    public static final String KEY = "key";
+    public static final String GET_KEY = "getKey";
+    public static final String GET_VALUE = "getValue";
 }
