@@ -19,15 +19,16 @@ package com.zimbra.cs.service.admin;
 import java.util.List;
 import java.util.Map;
 
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapFaultException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.datasource.DataSourceManager;
@@ -67,7 +68,7 @@ public class DeleteDataSource extends AdminDocumentHandler {
         Provisioning.getInstance().deleteDataSource(account, dsId);
 
         DataSourceManager.cancelSchedule(account, dsId);
-        EventStore.getFactory().getEventStore(account.getId()).deleteEvents(dsId);
+        deleteDataSourceEvents(account.getId(), dsId);
         Element response = zsc.createElement(AdminConstants.DELETE_DATA_SOURCE_RESPONSE);
         return response;
     }
@@ -77,5 +78,21 @@ public class DeleteDataSource extends AdminDocumentHandler {
         relatedRights.add(Admin.R_adminLoginAs);
         relatedRights.add(Admin.R_adminLoginCalendarResourceAs);
         notes.add(AdminRightCheckPoint.Notes.ADMIN_LOGIN_AS);
+    }
+
+    private void deleteDataSourceEvents(String accountId, String dataSourceId) {
+        EventStore eventStore = null;
+        try {
+            eventStore = EventStore.getFactory().getEventStore(accountId);
+        } catch (ServiceException e) {
+            ZimbraLog.datasource.debug("event store not configured - no need to delete datasource-related events");
+        }
+        if (eventStore != null) {
+            try {
+                eventStore.deleteEvents(dataSourceId);
+            } catch (ServiceException e) {
+                ZimbraLog.datasource.error("error deleting datasource events for %s", dataSourceId, e);
+            }
+        }
     }
 }
