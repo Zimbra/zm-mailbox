@@ -63,7 +63,6 @@ import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.MailItemState.AccessMode;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
-import com.zimbra.cs.mailbox.Message.EventFlag;
 import com.zimbra.cs.mailbox.util.TypedIdList;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.Change;
@@ -2821,7 +2820,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         copy.finishCreation(parent);
 
         if (!shareIndex) {
-            mMailbox.index.add(copy);
+            mMailbox.indexItem(copy);
         }
 
         return copy;
@@ -2921,7 +2920,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         }
 
         if (!shareIndex) {
-            mMailbox.index.add(copy);
+            mMailbox.indexItem(copy);
         }
 
         return copy;
@@ -3143,7 +3142,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         }
         // item moved out of spam, so update the index id (will be written to DB in DbMailItem.setFolder());
         if (inSpam() && !target.inSpam() && getIndexStatus() == IndexStatus.DONE) {
-            mMailbox.index.add(this);
+            mMailbox.indexItem(this);
         }
 
         ZimbraLog.mailop.info("moving " + getMailopContext(this) + " to " + getMailopContext(target));

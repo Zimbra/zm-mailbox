@@ -39,6 +39,7 @@ public class LocalIndexingQueueAdapter extends IndexingQueueAdapter {
     @Override
     public boolean put(AbstractIndexingTasksLocator item) {
         try {
+            ZimbraLog.index.debug("LocalIndexingQueueAdapter - put - before put number of elements %d", itemQueue.size());
             itemQueue.put(item);
         } catch (InterruptedException e) {
             ZimbraLog.index.error("failed to queue items for indexing to mailbox %d", item.getMailboxID(), e);
@@ -57,6 +58,7 @@ public class LocalIndexingQueueAdapter extends IndexingQueueAdapter {
     @Override
     public boolean add(AbstractIndexingTasksLocator item) throws ServiceException {
         try {
+            ZimbraLog.index.debug("LocalIndexingQueueAdapter - add - before add number of elements %d", itemQueue.size());
             return itemQueue.add(item);
         } catch (IllegalStateException e) {
             ZimbraLog.index.debug("unable to add item for account %s to indexing queue", item.getAccountID());
@@ -74,6 +76,7 @@ public class LocalIndexingQueueAdapter extends IndexingQueueAdapter {
     @Override
     public AbstractIndexingTasksLocator take()  {
         try {
+            ZimbraLog.index.debug("LocalIndexingQueueAdapter - take - before take number of elements %d", itemQueue.size());
             return itemQueue.take();
         } catch (InterruptedException e) {
             return null;

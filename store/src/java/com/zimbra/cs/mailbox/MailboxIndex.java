@@ -33,8 +33,8 @@ import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.TermQuery;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.service.ServiceException;
@@ -59,7 +59,8 @@ import com.zimbra.cs.index.ZimbraIndexReader.TermFieldEnumeration;
 import com.zimbra.cs.index.ZimbraIndexSearcher;
 import com.zimbra.cs.index.ZimbraQuery;
 import com.zimbra.cs.index.ZimbraQueryResults;
-import com.zimbra.cs.index.queue.AddToIndexTaskLocator;
+import com.zimbra.cs.index.queue.AbstractIndexingTasksLocator;
+import com.zimbra.cs.index.queue.AddMailItemToIndexTask;
 import com.zimbra.cs.index.queue.DeleteFromIndexTaskLocator;
 import com.zimbra.cs.index.queue.IndexingQueueAdapter;
 import com.zimbra.cs.mailbox.MailItem.TemporaryIndexingException;
@@ -490,7 +491,7 @@ public final class MailboxIndex {
     }
 
     /**
-     * Adds mail items to indexing queue. MailItems should already be in the database.
+     * Adds mail items to indexing queue.
      * @throws ServiceException
      */
     @VisibleForTesting
@@ -498,12 +499,29 @@ public final class MailboxIndex {
         if (items.isEmpty()) {
             return false;
         }
+        List<MailItem> clonedItems = new ArrayList<MailItem>(items.size());
+        for (MailItem item : items) {
+            clonedItems.add(item.snapshotItem());
+        }
         ZimbraLog.index.debug("Queuing %d items for indexing", items.size());
         IndexingQueueAdapter queueAdapter = IndexingQueueAdapter.getFactory().getAdapter();
-        AddToIndexTaskLocator itemLocator = new AddToIndexTaskLocator(items, mailbox.getAccountId(), mailbox.getId(), mailbox.getSchemaGroupId(), mailbox.attachmentsIndexingEnabled(), isReindexing);
+        AbstractIndexingTasksLocator itemLocator = new AddMailItemToIndexTask(clonedItems, mailbox.getAccountId(), mailbox.getId(), mailbox.getSchemaGroupId(), mailbox.attachmentsIndexingEnabled(), isReindexing);
         return queueAdapter.add(itemLocator);
     }
 
+    /**
+     * Adds mail item to indexing queue.
+     * @throws ServiceException
+     */
+    @VisibleForTesting
+    public synchronized boolean queue(MailItem item, boolean isReindexing) throws ServiceException {
+        ZimbraLog.index.debug("Queuing item %d for indexing", item.getId());
+        IndexingQueueAdapter queueAdapter = IndexingQueueAdapter.getFactory().getAdapter();
+        List<MailItem> items = new ArrayList<>();
+        items.add(item);
+        AbstractIndexingTasksLocator itemLocator = new AddMailItemToIndexTask(items, mailbox.getAccountId(), mailbox.getId(), mailbox.getSchemaGroupId(), mailbox.attachmentsIndexingEnabled(), isReindexing);
+        return queueAdapter.add(itemLocator);
+    }
 
     /**
      * Adds mail items to indexing queue and increases attempts counter.
@@ -571,7 +589,7 @@ public final class MailboxIndex {
                     DbSearch.Result sr = itr.next();
                     try {
                         MailItem item = mailbox.getItem(sr.getItemData());
-                        itr.set(new ItemSearchResult(item, sr.getSortValue()));
+                        itr.set(new ItemSearchResult(item, sr.getSortValue(), sr.getIndexId()));
                     } catch (ServiceException se) {
                         ZimbraLog.index.info(String.format(
                                 "Problem constructing Result for folder=%s item=%s from UnderlyingData - dropping item",
@@ -704,10 +722,12 @@ public final class MailboxIndex {
 
     private static final class ItemSearchResult extends DbSearch.Result {
         private final MailItem item;
+        private final int indexId; //index id is explicitly set because it might still be 0 on the cached MailItem
 
-        ItemSearchResult(MailItem item, Object sortkey) {
+        ItemSearchResult(MailItem item, Object sortkey, int indexId) {
             super(sortkey);
             this.item = item;
+            this.indexId = indexId;
         }
 
         @Override
@@ -717,7 +737,7 @@ public final class MailboxIndex {
 
         @Override
         public int getIndexId() {
-            return item.getIndexId();
+            return indexId;
         }
 
         @Override

@@ -1291,7 +1291,7 @@ public class Message extends MailItem implements Classifiable {
             calendarItemInfos.add(info);
             status.updatedMetadata = true;
             if (status.calItem != null && (calItemIsNew || modifiedCalItem)) {
-                mMailbox.index.add(status.calItem);
+                mMailbox.indexItem(status.calItem);
             }
             success = true;
         } finally {

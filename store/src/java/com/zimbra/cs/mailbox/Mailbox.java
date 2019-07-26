@@ -496,10 +496,10 @@ public class Mailbox implements MailboxStore {
 
         /**
          * Add an item to the list of things to be queued for indexing at the end of the current transaction.
-         * This is used when immediate (in-transaction) indexing fails
          */
         void addIndexItem(MailItem item) {
             indexItems.add(item);
+            ZimbraLog.index.debug("Mailbox - addIndexItem - size after adding item is %d", indexItems.size());
         }
 
         void addPendingDelete(PendingDelete info) {
@@ -549,7 +549,6 @@ public class Mailbox implements MailboxStore {
             this.dirty.clear();
             this.otherDirtyStuff.clear();
             threadChange.remove();
-
             ZimbraLog.mailbox.debug("clearing change");
         }
 
@@ -4922,7 +4921,7 @@ public class Mailbox implements MailboxStore {
             if (replies != null) {
                 calItem.setReplies(replies);
             }
-            index.add(calItem);
+            currentChange().addIndexItem(calItem);
 
             t.commit();
             return calItem;
@@ -5227,7 +5226,7 @@ public class Mailbox implements MailboxStore {
             }
 
             if (Invite.isOrganizerMethod(inv.getMethod())) { // Don't update the index for replies. (bug 55317)
-                index.add(calItem);
+                currentChange().addIndexItem(calItem);
             }
 
             redoRecorder.setCalendarItemAttrs(calItem.getId(), calItem.getFolderId());
@@ -5667,9 +5666,8 @@ public class Mailbox implements MailboxStore {
     }
 
     void indexItem(MailItem item) throws ServiceException {
-        if(!index.add(item) && Provisioning.getInstance().getLocalServer().getMaxIndexingRetries() > 0) {
-            currentChange().addIndexItem(item);
-        }
+        ZimbraLog.index.debug("Mailbox - indexItem - adding item %d for indexing", item.getId());
+        currentChange().addIndexItem(item);
     }
 
     private Message addMessageInternal(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal,
@@ -5965,7 +5963,8 @@ public class Mailbox implements MailboxStore {
             }
 
             // step 7: queue new message for indexing
-            index.add(msg);
+            currentChange().addIndexItem(msg);
+
             //update the cache so it reflects the new indexId
             cache(msg);
             success = true;
@@ -6134,7 +6133,8 @@ public class Mailbox implements MailboxStore {
             // update the content and increment the revision number
             msg.setContent(staged, pm);
 
-            index.add(msg);
+            // queue message for indexing
+            currentChange().addIndexItem(msg);
 
             t.commit();
 
@@ -7190,7 +7190,7 @@ public class Mailbox implements MailboxStore {
             Note note = Note.create(noteId, getFolderById(folderId), content, location, color, null);
             redoRecorder.setNoteId(noteId);
 
-            index.add(note);
+            currentChange().addIndexItem(note);
             t.commit();
             return note;
         }
@@ -7208,7 +7208,7 @@ public class Mailbox implements MailboxStore {
             checkItemChangeID(note);
 
             note.setContent(content);
-            index.add(note);
+            currentChange().addIndexItem(note);
 
             t.commit();
         }
@@ -7288,7 +7288,7 @@ public class Mailbox implements MailboxStore {
                 Contact con = Contact.create(contactId, getFolderById(folderId), mblob, pc, flags, ntags, null);
                 redoRecorder.setContactId(contactId);
 
-                index.add(con);
+                currentChange().addIndexItem(con);
 
                 t.commit();
                 return con;
@@ -7330,7 +7330,7 @@ public class Mailbox implements MailboxStore {
                     throw ServiceException.FAILURE("could not save contact blob", ioe);
                 }
 
-                index.add(con);
+                currentChange().addIndexItem(con);
                 t.commit();
             } finally {
                 t.close();
@@ -8502,7 +8502,7 @@ public class Mailbox implements MailboxStore {
                 redoRecorder.setMessageBodyInfo(new MailboxBlobDataSource(mailboxBlob), mailboxBlob.getSize());
 
                 if (indexing) {
-                    index.add(doc);
+                    currentChange().addIndexItem(doc);
                 }
 
                 t.commit();
@@ -8564,7 +8564,7 @@ public class Mailbox implements MailboxStore {
                 MailboxBlob mailboxBlob = doc.setContent(staged, pd);
                 redoRecorder.setMessageBodyInfo(new MailboxBlobDataSource(mailboxBlob), mailboxBlob.getSize());
 
-                index.add(doc);
+                currentChange().addIndexItem(doc);
 
                 t.commit();
                 return doc;
@@ -8634,7 +8634,7 @@ public class Mailbox implements MailboxStore {
                 //   make sure that data actually matches the final blob in the store
                 chat.updateBlobData(mblob);
 
-                index.add(chat);
+                currentChange().addIndexItem(chat);
                 t.commit();
                 return chat;
             } finally {
@@ -8687,7 +8687,7 @@ public class Mailbox implements MailboxStore {
                 chat.setContent(staged, pm);
 
                 // NOTE: msg is now uncached (will this cause problems during commit/reindex?)
-                index.add(chat);
+                currentChange().addIndexItem(chat);
 
                 t.commit();
                 return chat;
@@ -9265,7 +9265,7 @@ public class Mailbox implements MailboxStore {
             String uuid = redoPlayer == null ? UUIDUtil.generateUUID() : redoPlayer.getUuid();
             Comment comment = Comment.create(this, parent, itemId, uuid, text, creatorId, null);
             redoRecorder.setItemIdAndUuid(comment.getId(), comment.getUuid());
-            index.add(comment);
+            currentChange().addIndexItem(comment);
             t.commit();
             return comment;
         }
@@ -10144,6 +10144,11 @@ public class Mailbox implements MailboxStore {
                 deletes = currentChange().deletes; // keep a reference for cleanup
                                                    // deletes outside the lock
 
+                //If all goes well push the items to be indexed for async indexing.
+                //Has to be part of lock
+                ZimbraLog.index.debug("Mailbox - close - push %d items for async indexing", currentChange().indexItems.size());
+                index.queue(currentChange().indexItems, false);
+
                 // We are finally done with database and redo commits. Cache update comes last.
                 changeNotification = commitCache(currentChange(), lock);
             } finally {
@@ -10162,6 +10167,7 @@ public class Mailbox implements MailboxStore {
                         }
                     }
                 }
+
                 lock.close();
                 // notify listeners outside lock as can take significant time
                 if (changeNotification != null) {
