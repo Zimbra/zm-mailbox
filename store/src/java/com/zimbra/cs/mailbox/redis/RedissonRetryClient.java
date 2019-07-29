@@ -115,7 +115,7 @@ public class RedissonRetryClient implements RedissonClient {
             ZimbraLog.mailbox.info("restarting redisson client (version %d)", clientVersion);
             Config config = client.getConfig();
             client.shutdown();
-            int maxWaitMillis = LC.redis_cluster_reconnect_timeout.intValue();
+            int maxWaitMillis = LC.redis_cluster_reconnect_timeout_millis.intValue();
             boolean success = waitForCluster(config, maxWaitMillis);
             if (!success) {
                 ZimbraLog.mailbox.warn("unable to restart redisson client after %d ms", maxWaitMillis);

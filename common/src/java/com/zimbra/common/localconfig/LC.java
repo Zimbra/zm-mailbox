@@ -1270,7 +1270,7 @@ public final class LC {
     public static final KnownKey redis_cluster_scan_interval = KnownKey.newKey(2000);
 
     @Supported
-    public static final KnownKey redis_cluster_reconnect_timeout = KnownKey.newKey(15000);
+    public static final KnownKey redis_cluster_reconnect_timeout_millis = KnownKey.newKey(60000);
 
     @Supported
     public static final KnownKey redis_master_connection_pool_size = KnownKey.newKey(200);
