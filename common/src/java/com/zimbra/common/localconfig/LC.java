@@ -1417,6 +1417,11 @@ public final class LC {
     public static final KnownKey zm_oauth_classes_handlers_yahoo = KnownKey.newKey("com.zimbra.oauth.handlers.impl.YahooOAuth2Handler");
     public static final KnownKey zm_oauth_classes_handlers_google = KnownKey.newKey("com.zimbra.oauth.handlers.impl.GoogleOAuth2Handler");
     public static final KnownKey zm_oauth_classes_handlers_facebook = KnownKey.newKey("com.zimbra.oauth.handlers.impl.FacebookOAuth2Handler");
+    public static final KnownKey zm_oauth_classes_handlers_outlook = KnownKey.newKey("com.zimbra.oauth.handlers.impl.OutlookOAuth2Handler");
+    public static final KnownKey zm_oauth_classes_handlers_twitter = KnownKey.newKey("com.zimbra.oauth.handlers.impl.TwitterOAuth2Handler");
+    public static final KnownKey zm_oauth_classes_handlers_slack = KnownKey.newKey("com.zimbra.oauth.handlers.impl.SlackOAuth2Handler");
+    public static final KnownKey zm_oauth_classes_handlers_zoom = KnownKey.newKey("com.zimbra.oauth.handlers.impl.ZoomOAuth2Handler");
+    public static final KnownKey zm_oauth_classes_handlers_dropbox = KnownKey.newKey("com.zimbra.oauth.handlers.impl.DropboxOAuth2Handler");
 
 
     // Feed Manager comma-separated blacklist. addresses can be CIDR notation, or single ip. no wild-cards (default blacklist private networks)
