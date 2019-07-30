@@ -166,6 +166,7 @@ public final class ReIndex extends AdminDocumentHandler {
             int statusCode = ReIndexStatus.STATUS_IDLE;
             for(ReindexMailboxInfo e : mailboxSelectors) {
                 Account account = prov.getAccount(e.getAccountId());
+
                 int accountStatusCode = ReIndexStatus.STATUS_IDLE;
                 Element mboxStatus = response.addNonUniqueElement(AdminConstants.E_MAILBOX);
                 mboxStatus.addAttribute(AdminConstants.A_ACCOUNTID, account.getId());
@@ -191,9 +192,9 @@ public final class ReIndex extends AdminDocumentHandler {
                     }
                     ReIndexStatus status = mbox.index.getReIndexStatus();
                     accountStatusCode = status.getStatus();
-                    totalSucceeded += status.getSucceeded();
-                    totalFailed += status.getFailed();
-                    totalRemaining += (status.getTotal() - status.getProcessed());
+                    totalSucceeded = status.getSucceeded();
+                    totalFailed = status.getFailed();
+                    totalRemaining = (status.getTotal() - status.getProcessed());
                     addProgressInfo(mboxStatus, status);
                 }
                 //for legacy SOAP clients, if any mailboxes are still re-indexing - set overall status string to 'running'

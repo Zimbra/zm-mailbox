@@ -246,13 +246,13 @@ public class IndexingService {
                 conn.commit();
                 // status reporting
                 if (queueItem.isReindex()) {
-                    queueAdapter.incrementSucceededMailboxTaskCount(queueItem.getAccountID(), 1);
+                    queueAdapter.incrementSucceededMailboxTaskCount(queueItem.getAccountID(), mailItems.size());
                 }
-                ZimbraLog.index.debug("%s processed %d items", Thread.currentThread().getName(), 1);
+                ZimbraLog.index.debug("%s processed %d items", Thread.currentThread().getName(), mailItems.size());
             } catch (Exception e) {
                 ZimbraLog.index.error("MailItemIndexTask - exception - ", e);
                 if (queueItem.isReindex()) {
-                    queueAdapter.incrementFailedMailboxTaskCount(queueItem.getAccountID(), 1);
+                    queueAdapter.incrementFailedMailboxTaskCount(queueItem.getAccountID(), mailItems.size());
                 }
             } finally {
                 DbPool.quietClose(conn);
