@@ -30,6 +30,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.HttpClientBuilder;
 
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ZAttrProvisioning;
@@ -148,7 +149,7 @@ public class SaveDocument extends DocDocumentHandler {
                 String inlineContent = docElem.getAttribute(MailConstants.E_CONTENT);
                 doc = new Doc(inlineContent, explicitName, explicitCtype, description);
             }
-            
+
             // set content-type based on file extension.
             setDocContentType(doc);
 
@@ -278,9 +279,10 @@ public class SaveDocument extends DocDocumentHandler {
         }
 
         String url = UserServlet.getRestUrl(acct) + "?auth=co&id=" + itemId + "&part=" + partId;
-        HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient().build();
+        HttpClientBuilder clientBuilder = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
         HttpGet get = new HttpGet(url);
-        authtoken.encode(client, get, false, acct.getAttr(ZAttrProvisioning.A_zimbraMailHost));
+        authtoken.encode(clientBuilder, get, false, acct.getAttr(ZAttrProvisioning.A_zimbraMailHost));
+        HttpClient client = clientBuilder.build();
         try {
             HttpResponse httpResp = HttpClientUtil.executeMethod(client, get);
             int statusCode = httpResp.getStatusLine().getStatusCode();
