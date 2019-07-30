@@ -53,6 +53,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.HttpClientBuilder;
 
 import com.google.common.base.Strings;
 import com.zimbra.client.ZMailbox;
@@ -305,10 +306,11 @@ public class FileUploadServlet extends ZimbraServlet {
                ContentServlet.PARAM_EXPUNGE + "=true";
 
         // create an HTTP client with auth cookie to fetch the file from the remote ContentServlet
-        HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient().build();
+        HttpClientBuilder clientBuilder = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
         HttpGet get = new HttpGet(url);
 
-        authtoken.encode(client, get, false, hostname);
+        authtoken.encode(clientBuilder, get, false, hostname);
+        HttpClient client = clientBuilder.build();
         try {
             // fetch the remote item
             HttpResponse httpResp = HttpClientUtil.executeMethod(client, get);

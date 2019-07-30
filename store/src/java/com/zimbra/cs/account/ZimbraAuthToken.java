@@ -424,10 +424,32 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
         cookie.setPath("/");
         cookie.setSecure(false);
         state.addCookie(cookie);
-        
+
         HttpClientBuilder clientBuilder = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
         clientBuilder.setDefaultCookieStore(state);
-        
+
+        RequestConfig reqConfig = RequestConfig.copy(
+            ZimbraHttpConnectionManager.getInternalHttpConnMgr().getZimbraConnMgrParams().getReqConfig())
+            .setCookieSpec(CookieSpecs.BROWSER_COMPATIBILITY).build();
+
+        clientBuilder.setDefaultRequestConfig(reqConfig);
+    }
+
+
+    @Override
+    public void encode(HttpClientBuilder clientBuilder, HttpRequestBase method, boolean isAdminReq, String cookieDomain)
+    throws ServiceException {
+        String origAuthData = AuthTokenUtil.getOrigAuthData(this);
+
+        BasicCookieStore state = new BasicCookieStore();
+        BasicClientCookie cookie = new BasicClientCookie( ZimbraCookie.authTokenCookieName(isAdminReq), origAuthData);
+        cookie.setDomain(cookieDomain);
+        cookie.setPath("/");
+        cookie.setSecure(false);
+        state.addCookie(cookie);
+
+        clientBuilder.setDefaultCookieStore(state);
+
         RequestConfig reqConfig = RequestConfig.copy(
             ZimbraHttpConnectionManager.getInternalHttpConnMgr().getZimbraConnMgrParams().getReqConfig())
             .setCookieSpec(CookieSpecs.BROWSER_COMPATIBILITY).build();
@@ -438,7 +460,7 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
     @Override
     public void encode(BasicCookieStore state, boolean isAdminReq, String cookieDomain) throws ServiceException {
         String origAuthData = AuthTokenUtil.getOrigAuthData(this);
-        
+
         BasicClientCookie cookie = new BasicClientCookie( ZimbraCookie.authTokenCookieName(isAdminReq), origAuthData);
         cookie.setDomain(cookieDomain);
         cookie.setPath("/");

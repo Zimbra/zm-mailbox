@@ -236,7 +236,7 @@ public class ZimbraJWToken extends AuthToken {
     public int getValidityValue() {
         return properties.getValidityValue();
     }
-    
+
 
     @Override
     public void encode(HttpClient client, HttpRequestBase method, boolean isAdminReq, String cookieDomain)
@@ -252,7 +252,7 @@ public class ZimbraJWToken extends AuthToken {
         state.addCookie(cookie);
         HttpClientBuilder clientBuilder = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
         clientBuilder.setDefaultCookieStore(state);
-        
+
         RequestConfig reqConfig = RequestConfig.copy(
             ZimbraHttpConnectionManager.getInternalHttpConnMgr().getZimbraConnMgrParams().getReqConfig())
             .setCookieSpec(CookieSpecs.BROWSER_COMPATIBILITY).build();
@@ -347,5 +347,30 @@ public class ZimbraJWToken extends AuthToken {
     @Override
     public void resetProxyAuthToken() {
         properties.setProxyAuthToken(null);
+    }
+
+    /* (non-Javadoc)
+     * @see com.zimbra.cs.account.AuthToken#encode(org.apache.http.impl.client.HttpClientBuilder, boolean, java.lang.String)
+     */
+    @Override
+    public void encode(HttpClientBuilder clientBuilder, HttpRequestBase method, boolean isAdminReq, String cookieDomain)
+        throws ServiceException {
+        String jwt = properties.getEncoded();
+        method.addHeader(Constants.AUTH_HEADER, Constants.BEARER + " " + jwt);
+        String jwtSalt = JWTUtil.getJWTSalt(jwt);
+        BasicCookieStore state = new BasicCookieStore();
+        BasicClientCookie cookie = new BasicClientCookie( ZimbraCookie.COOKIE_ZM_JWT, jwtSalt);
+        cookie.setDomain(cookieDomain);
+        cookie.setPath("/");
+        cookie.setSecure(false);
+        state.addCookie(cookie);
+        clientBuilder.setDefaultCookieStore(state);
+
+        RequestConfig reqConfig = RequestConfig.copy(
+            ZimbraHttpConnectionManager.getInternalHttpConnMgr().getZimbraConnMgrParams().getReqConfig())
+            .setCookieSpec(CookieSpecs.BROWSER_COMPATIBILITY).build();
+
+        clientBuilder.setDefaultRequestConfig(reqConfig);
+
     }
 }
