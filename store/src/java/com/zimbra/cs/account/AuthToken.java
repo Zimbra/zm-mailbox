@@ -242,7 +242,7 @@ public abstract class AuthToken {
      * @throws ServiceException
      */
     public void encode(HttpClientBuilder clientBuilder, HttpRequestBase method, boolean isAdminReq, String cookieDomain) throws ServiceException{
-
+        // EMpty method which can be implemented by  extending classes, avoiding changing existing signature
     }
     public abstract void encodeAuthResp(Element parent, boolean isAdmin) throws ServiceException;
 
