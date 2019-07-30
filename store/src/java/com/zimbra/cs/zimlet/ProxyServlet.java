@@ -96,7 +96,7 @@ public class ProxyServlet extends ZimbraServlet {
         return allowedDomains;
     }
 
-    private boolean checkPermissionOnTarget(URL target, AuthToken auth) {
+    protected boolean checkPermissionOnTarget(URL target, AuthToken auth) {
         String host = target.getHost().toLowerCase();
         ZimbraLog.zimlet.debug("checking allowedDomains permission on target host: "+host);
         Set<String> domains;
@@ -120,7 +120,7 @@ public class ProxyServlet extends ZimbraServlet {
         return false;
     }
 
-    private boolean canProxyHeader(String header) {
+    protected boolean canProxyHeader(String header) {
         if (header == null) return false;
         header = header.toLowerCase();
         if (header.startsWith("accept") ||
@@ -138,7 +138,7 @@ public class ProxyServlet extends ZimbraServlet {
         return true;
     }
 
-    private byte[] copyPostedData(HttpServletRequest req) throws IOException {
+    protected byte[] copyPostedData(HttpServletRequest req) throws IOException {
         int size = req.getContentLength();
         if (req.getMethod().equalsIgnoreCase("GET") || size <= 0) {
             return null;
@@ -185,9 +185,9 @@ public class ProxyServlet extends ZimbraServlet {
         return req.getServerPort() == LC.zimbra_admin_service_port.intValue();
     }
 
-    private static final String DEFAULT_CTYPE = "text/xml";
+    protected static final String DEFAULT_CTYPE = "text/xml";
 
-    private void doProxy(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+    protected void doProxy(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         ZimbraLog.clearContext();
         boolean isAdmin = isAdminRequest(req);
         AuthToken authToken = isAdmin ?
