@@ -71,6 +71,7 @@ import org.redisson.config.Config;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.mailbox.util.MailboxClusterUtil.LivenessProbeOverride;
 
 public class RedissonRetryClient implements RedissonClient {
 
@@ -114,19 +115,21 @@ public class RedissonRetryClient implements RedissonClient {
 
     public synchronized void restart() {
         clientLock.writeLock().lock();
-        try {
-            ZimbraLog.mailbox.info("restarting redisson client (version %d)", clientVersion);
-            Config config = client.getConfig();
-            client.shutdown();
-            int maxWaitMillis = LC.redis_cluster_reconnect_timeout_millis.intValue();
-            boolean success = waitForCluster(config, maxWaitMillis);
-            if (!success) {
-                ZimbraLog.mailbox.warn("unable to restart redisson client after %d ms", maxWaitMillis);
-            } else {
-                ZimbraLog.mailbox.info("new redisson client created (version=%d)", clientVersion);
+        try (LivenessProbeOverride override = new LivenessProbeOverride()) {
+            try {
+                ZimbraLog.mailbox.info("restarting redisson client (version %d)", clientVersion);
+                Config config = client.getConfig();
+                client.shutdown();
+                int maxWaitMillis = LC.redis_cluster_reconnect_timeout_millis.intValue();
+                boolean success = waitForCluster(config, maxWaitMillis);
+                if (!success) {
+                    ZimbraLog.mailbox.warn("unable to restart redisson client after %d ms", maxWaitMillis);
+                } else {
+                    ZimbraLog.mailbox.info("new redisson client created (version=%d)", clientVersion);
+                }
+            } finally {
+                clientLock.writeLock().unlock();
             }
-        } finally {
-            clientLock.writeLock().unlock();
         }
     }
 

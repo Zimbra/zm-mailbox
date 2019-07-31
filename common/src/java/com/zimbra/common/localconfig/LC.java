@@ -1374,6 +1374,9 @@ public final class LC {
     @Supported
     public static final KnownKey contact_search_min_chars_for_wildcard_query = KnownKey.newKey(10);
 
+    @Supported
+    public static final KnownKey mailbox_liveness_probe_override_file = KnownKey.newKey("/opt/zimbra/PASS-LIVENESS");
+
     public enum PUBLIC_SHARE_VISIBILITY { samePrimaryDomain, all, none };
 
     /**
