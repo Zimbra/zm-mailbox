@@ -68,7 +68,7 @@ public abstract class RedissonRetryDecorator<R> {
 
     protected void checkClientVersion() {
         if (clientVersion != client.getClientVersion()) {
-            ZimbraLog.mailbox.debug("detected old client version (%d < %d), re-initializing decorated object", clientVersion, client.getClientVersion());
+            ZimbraLog.mailbox.debug("detected old client version (%d < %d), re-initializing %s", clientVersion, client.getClientVersion(), this.getClass().getSimpleName());
             initialize();
             clientVersion = client.getClientVersion();
         }
