@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.base.Strings;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
@@ -49,6 +50,9 @@ public abstract class EventStore {
     }
 
     public static Factory getFactory() throws ServiceException {
+        if (LC.disable_all_event_logging.booleanValue()) {
+            throw ServiceException.FAILURE("The event system is disabled", null);
+        }
         if (factory == null) {
             String factoryClassName = null;
             String eventURL = Provisioning.getInstance().getLocalServer().getEventBackendURL();
