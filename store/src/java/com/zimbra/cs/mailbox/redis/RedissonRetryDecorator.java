@@ -52,7 +52,7 @@ public abstract class RedissonRetryDecorator<R> {
         };
     }
 
-    private void initialize() {
+    protected void initialize() {
         redissonObject = client.runInitializer(initializer);
     }
 

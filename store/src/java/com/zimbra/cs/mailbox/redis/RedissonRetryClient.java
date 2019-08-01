@@ -1,5 +1,10 @@
 package com.zimbra.cs.mailbox.redis;
 
+import java.lang.ref.WeakReference;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -78,10 +83,12 @@ public class RedissonRetryClient implements RedissonClient {
     private RedissonClient client;
     private int clientVersion;
     private ReadWriteLock clientLock = new ReentrantReadWriteLock();
+    private final Set<WeakReference<RedissonRetryTopic>> channels;
 
     public RedissonRetryClient(RedissonClient client) {
         this.client = client;
         clientVersion = 1;
+        channels = Collections.newSetFromMap(new ConcurrentHashMap<>());
     }
 
     public int getClientVersion() {
@@ -93,6 +100,10 @@ public class RedissonRetryClient implements RedissonClient {
     }
 
     private boolean waitForCluster(Config redissonConfig, int maxWaitMillis) {
+        /*
+         * We use a 1s delay here as opposed to a tighter loop because a client retry is likely caused
+         * by one or more redis hosts rebooting - which, in the worst case, can take a bit of time.
+         */
         int waitMillis = 1000;
         int waited = 0;
         int attempt = 0;
@@ -113,6 +124,21 @@ public class RedissonRetryClient implements RedissonClient {
         return false;
     }
 
+    private void initializePubSubChannels() {
+        if (!channels.isEmpty()) {
+            ZimbraLog.mailbox.debug("re-initializing %s existing pubsub channels", channels.size());
+            Iterator<WeakReference<RedissonRetryTopic>> iter = channels.iterator();
+            while (iter.hasNext()) {
+                RedissonRetryTopic channel = iter.next().get();
+                if (channel == null) {
+                    iter.remove();
+                } else {
+                    channel.initialize();
+                }
+            }
+        }
+    }
+
     public synchronized void restart() {
         clientLock.writeLock().lock();
         try (LivenessProbeOverride override = new LivenessProbeOverride()) {
@@ -126,6 +152,8 @@ public class RedissonRetryClient implements RedissonClient {
                     ZimbraLog.mailbox.warn("unable to restart redisson client after %d ms", maxWaitMillis);
                 } else {
                     ZimbraLog.mailbox.info("new redisson client created (version=%d)", clientVersion);
+                    //re-initialize pubsub channels up front, other redisson objects get re-initialized lazily
+                    initializePubSubChannels();
                 }
             } finally {
                 clientLock.writeLock().unlock();
@@ -174,12 +202,16 @@ public class RedissonRetryClient implements RedissonClient {
 
     @Override
     public RTopic getTopic(String name) {
-        return new RedissonRetryTopic(client -> client.getTopic(name), this);
+        RedissonRetryTopic topic = new RedissonRetryTopic(client -> client.getTopic(name), this);
+        channels.add(new WeakReference<>(topic));
+        return topic;
     }
 
     @Override
     public RTopic getTopic(String name, Codec codec) {
-        return new RedissonRetryTopic(client -> client.getTopic(name, codec), this);
+        RedissonRetryTopic topic = new RedissonRetryTopic(client -> client.getTopic(name, codec), this);
+        channels.add(new WeakReference<>(topic));
+        return topic;
     }
 
     @Override
