@@ -54,7 +54,8 @@ public class GetDomainInfo extends AdminDocumentHandler {
             ZAttrProvisioning.A_zimbraSkinForegroundColor,
             ZAttrProvisioning.A_zimbraSkinSecondaryColor,
             ZAttrProvisioning.A_zimbraSkinSelectionColor,
-            ZAttrProvisioning.A_zimbraSkinFavicon);
+            ZAttrProvisioning.A_zimbraSkinFavicon,
+            ZAttrProvisioning.A_zimbraFeatureResetPasswordStatus);
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
