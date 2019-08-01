@@ -361,6 +361,8 @@ public final class MailboxIndex {
         if(queueAdapter == null) {
             throw ServiceException.FAILURE("Indexing Queue Adapter is not properly configured", null);
         }
+        ZimbraLog.index.debug("MailboxIndex - abortReIndex - going to set abort status for account id: %s",
+                mailbox.getAccountId());
         queueAdapter.setTaskStatus(mailbox.getAccountId(), ReIndexStatus.STATUS_ABORTED);
 
         return new ReIndexStatus(queueAdapter.getTotalMailboxTaskCount(mailbox.getAccountId()),
