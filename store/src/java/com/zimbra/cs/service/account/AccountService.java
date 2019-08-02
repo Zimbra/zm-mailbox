@@ -49,6 +49,9 @@ public class AccountService implements DocumentService {
         dispatcher.registerHandler(AccountConstants.CHANGE_PASSWORD_REQUEST, new ChangePassword());
         dispatcher.registerHandler(AccountConstants.END_SESSION_REQUEST, new EndSession());
 
+        //client info
+        dispatcher.registerHandler(AccountConstants.CLIENT_INFO_REQUEST, new ClientInfo());
+
         // oauth
         dispatcher.registerHandler(AccountConstants.GET_OAUTH_CONSUMERS_REQUEST, new GetOAuthConsumers());
         dispatcher.registerHandler(AccountConstants.REVOKE_OAUTH_CONSUMER_REQUEST, new RevokeOAuthConsumer());
