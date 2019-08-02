@@ -23,6 +23,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapFaultException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
@@ -78,9 +79,26 @@ public class DeleteDataSource extends MailDocumentHandler {
             }
             DbDataSource.deleteAllMappings(dsrc);
             DataSourceManager.cancelSchedule(account, dataSourceId);
-            EventStore.getFactory().getEventStore(account.getId()).deleteEvents(dataSourceId);
+            deleteDataSourceEvents(account.getId(), dataSourceId);
         }
         Element response = zsc.createElement(MailConstants.DELETE_DATA_SOURCE_RESPONSE);
         return response;
+    }
+
+    private void deleteDataSourceEvents(String accountId, String dataSourceId) {
+        EventStore eventStore = null;
+        try {
+            eventStore = EventStore.getFactory().getEventStore(accountId);
+        } catch (ServiceException e) {
+            ZimbraLog.datasource.debug("event store not configured - no need to delete datasource-related events");
+        }
+        if (eventStore != null) {
+            try {
+                eventStore.deleteEvents(dataSourceId);
+            } catch (ServiceException e) {
+                ZimbraLog.datasource.error("error deleting datasource events for %s", dataSourceId, e);
+            }
+        }
+
     }
 }

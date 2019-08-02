@@ -2184,10 +2184,18 @@ public class Mailbox implements MailboxStore {
                             ZimbraLog.store.warn("Unable to delete message data", iox);
                         }
                     }
+                    EventStore eventStore = null;
                     try {
-                        EventStore.getFactory().getEventStore(getAccountId()).deleteEvents();
+                        eventStore = EventStore.getFactory().getEventStore(getAccountId());
                     } catch (ServiceException e) {
-                        ZimbraLog.event.warn("Unable to delete event data for account %s", getAccountId(), e);
+                        ZimbraLog.mailbox.debug("event backend is not configured, not deleting events during mailbox deletion");
+                    }
+                    if (eventStore != null) {
+                        try {
+                            eventStore.deleteEvents();
+                        } catch (ServiceException e) {
+                            ZimbraLog.event.warn("Unable to delete event data for account %s", getAccountId(), e);
+                        }
                     }
                 }
             } finally {
