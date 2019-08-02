@@ -92,14 +92,17 @@ public class RedissonRetryClient implements RedissonClient {
     }
 
     private boolean waitForCluster(Config redissonConfig, int maxWaitMillis) {
-        int waitMillis = 250;
+        int waitMillis = 1000;
         int waited = 0;
+        int attempt = 0;
         while (waited <= maxWaitMillis) {
             try {
+                ZimbraLog.mailbox.info("waiting for redis cluster to become available (attempt %s)", ++attempt);
                 client = Redisson.create(redissonConfig);
                 clientVersion++;
                 return true;
             } catch (RedisException e) {
+                ZimbraLog.mailbox.info("redis cluster not ready after %s attempts: %s", ++attempt, e.getMessage());
                 try {
                     Thread.sleep(waitMillis);
                 } catch (InterruptedException e1) {}
