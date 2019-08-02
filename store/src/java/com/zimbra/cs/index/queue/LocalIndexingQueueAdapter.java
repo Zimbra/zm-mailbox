@@ -184,6 +184,7 @@ public class LocalIndexingQueueAdapter extends IndexingQueueAdapter {
 
     @Override
     public void setTaskStatus(String accountId, int status) {
+        ZimbraLog.index.debug("LocalIndexingQueueAdapter - setTaskStatus - going to update task status for account id %s as %d", accountId, status);
         taskStatus.put(accountId, status);
     }
 

@@ -129,7 +129,7 @@ public class IndexingService {
                                 } else {
                                     // skip the tasks and they will
                                     // automatically get drained
-                                    queueAdapter.incrementFailedMailboxTaskCount(queueItem.getAccountID(), 1 );
+                                    queueAdapter.incrementFailedMailboxTaskCount(queueItem.getAccountID(), ((AddMailItemToIndexTask) queueItem).getMailItemsToAdd().size() );
                                     ZimbraLog.index
                                             .debug("%s ignoring re-indexing task MailItemIndexTask for account %s. Re-indexing has been aborted.",
                                                     Thread.currentThread().getName(), queueItem.getAccountID());
@@ -218,41 +218,54 @@ public class IndexingService {
             queueItem = item;
         }
 
+        private boolean handleAbortForReindexIfSet()
+        {
+            if (queueItem.isReindex() && queueAdapter.getTaskStatus(queueItem.getAccountID()) == ReIndexStatus.STATUS_ABORTED) {
+                queueAdapter.incrementFailedMailboxTaskCount(queueItem.getAccountID(), queueItem.getMailItemsToAdd().size() );
+                ZimbraLog.index.debug("IndexingService - MailItemIndexTask - %s ignoring reindexing task for account %s.",
+                                Thread.currentThread().getName(), queueItem.getAccountID());
+                return true;
+            }
+            ZimbraLog.index.debug("Task Status for account %s is %d",queueItem.getAccountID() , queueAdapter.getTaskStatus(queueItem.getAccountID()));
+            return false;
+        }
+
         @Override
         public void run() {
+            ZimbraLog.index.debug("MailItemIndexTask - Started indexing task %s with %d mailItems", Thread.currentThread().getName(), queueItem.getMailItemsToAdd().size());
             DbConnection conn = null;
             List<IndexItemEntry> indexItemEntries = new ArrayList<IndexItemEntry>();
-            List<MailItem> mailItems = queueItem.getMailItemsToAdd();
-            ZimbraLog.index.debug("MailItemIndexTask - Started indexing task %s with %d mailItems", Thread.currentThread().getName(), mailItems.size());
             try {
-                IndexStore indexStore = IndexStore.getFactory().getIndexStore(queueItem.getAccountID());
-                conn = DbPool.getConnection(queueItem.getMailboxID(), queueItem.getMailboxSchemaGroupID());
-                for(MailItem mailItem: mailItems) {
-                    indexItemEntries.add(new IndexItemEntry(mailItem, mailItem.generateIndexDataAsync(queueItem
-                            .attachmentIndexingEnabled())));
-                }
-                if (indexItemEntries.size() > 0) {
-                    indexStore.openIndexer().add(indexItemEntries);
-                    List<Integer> indexedIds = new ArrayList<Integer>();
-                    for (IndexItemEntry entry : indexItemEntries) {
-                        indexedIds.add(entry.getItem().getId());
+                if (!handleAbortForReindexIfSet()){
+                    IndexStore indexStore = IndexStore.getFactory().getIndexStore(queueItem.getAccountID());
+                    conn = DbPool.getConnection(queueItem.getMailboxID(), queueItem.getMailboxSchemaGroupID());
+                    for(MailItem mailItem: queueItem.getMailItemsToAdd()) {
+                        indexItemEntries.add(new IndexItemEntry(mailItem, mailItem.generateIndexDataAsync(queueItem
+                                .attachmentIndexingEnabled())));
                     }
-                    if (indexedIds.size() > 0) {
-                        DbMailItem.setIndexIds(conn, queueItem.getMailboxSchemaGroupID(), queueItem.getMailboxID(),
-                                indexedIds, Provisioning.getInstance().getAccountById(queueItem.getAccountID())
-                                        .isDumpsterEnabled());
+                    if (indexItemEntries.size() > 0) {
+                        indexStore.openIndexer().add(indexItemEntries);
+                        List<Integer> indexedIds = new ArrayList<Integer>();
+                        for (IndexItemEntry entry : indexItemEntries) {
+                            indexedIds.add(entry.getItem().getId());
+                        }
+                        if (indexedIds.size() > 0) {
+                            DbMailItem.setIndexIds(conn, queueItem.getMailboxSchemaGroupID(), queueItem.getMailboxID(),
+                                    indexedIds, Provisioning.getInstance().getAccountById(queueItem.getAccountID())
+                                            .isDumpsterEnabled());
+                        }
+                    }
+                    conn.commit();
+                    // status reporting
+                    if (queueItem.isReindex()) {
+                        queueAdapter.incrementSucceededMailboxTaskCount(queueItem.getAccountID(), queueItem.getMailItemsToAdd().size());
                     }
                 }
-                conn.commit();
-                // status reporting
-                if (queueItem.isReindex()) {
-                    queueAdapter.incrementSucceededMailboxTaskCount(queueItem.getAccountID(), 1);
-                }
-                ZimbraLog.index.debug("%s processed %d items", Thread.currentThread().getName(), 1);
+                ZimbraLog.index.debug("%s processed %d items", Thread.currentThread().getName(), queueItem.getMailItemsToAdd().size());
             } catch (Exception e) {
                 ZimbraLog.index.error("MailItemIndexTask - exception - ", e);
                 if (queueItem.isReindex()) {
-                    queueAdapter.incrementFailedMailboxTaskCount(queueItem.getAccountID(), 1);
+                    queueAdapter.incrementFailedMailboxTaskCount(queueItem.getAccountID(), queueItem.getMailItemsToAdd().size());
                 }
             } finally {
                 DbPool.quietClose(conn);
