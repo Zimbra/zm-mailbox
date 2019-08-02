@@ -90,6 +90,8 @@ public final class JaxbUtil {
             com.zimbra.soap.account.message.CheckLicenseResponse.class,
             com.zimbra.soap.account.message.CheckRightsRequest.class,
             com.zimbra.soap.account.message.CheckRightsResponse.class,
+            com.zimbra.soap.account.message.ClientInfoRequest.class,
+            com.zimbra.soap.account.message.ClientInfoResponse.class,
             com.zimbra.soap.account.message.CreateAppSpecificPasswordRequest.class,
             com.zimbra.soap.account.message.CreateAppSpecificPasswordResponse.class,
             com.zimbra.soap.account.message.CreateDistributionListRequest.class,
