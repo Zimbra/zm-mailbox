@@ -86,6 +86,28 @@ public abstract class ExtensionHttpHandler {
     }
 
     /**
+     * Processes HTTP PUT requests.
+     * @param req
+     * @param resp
+     * @throws IOException
+     * @throws ServletException
+     */
+    public void doPut(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
+        throw new ServletException("HTTP PUT requests are not supported");
+    }
+
+    /**
+     * Processes HTTP DELETE requests.
+     * @param req
+     * @param resp
+     * @throws IOException
+     * @throws ServletException
+     */
+    public void doDelete(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
+        throw new ServletException("HTTP DELETE requests are not supported");
+    }
+
+    /**
      * Called to initialize the handler. If initialization fails, the handler is not registered.
      * @param ext the extension to which this handler belongs
      * @throws ServiceException

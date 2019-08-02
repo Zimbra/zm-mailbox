@@ -427,17 +427,6 @@
   </servlet>
 
   <servlet>
-    <servlet-name>SmxProxyServlet</servlet-name>
-    <servlet-class>com.zimbra.cs.zimlet.SmxProxyServlet</servlet-class>
-    <async-supported>true</async-supported>
-    <init-param>
-      <param-name>allowed.ports</param-name>
-      <param-value>80, 443, 7070</param-value>
-    </init-param>
-    <load-on-startup>8</load-on-startup>
-  </servlet>
-
-  <servlet>
     <servlet-name>DavServlet</servlet-name>
     <servlet-class>com.zimbra.cs.dav.service.DavServlet</servlet-class>
     <async-supported>true</async-supported>
@@ -668,11 +657,6 @@
   <servlet-mapping>
     <servlet-name>ProxyServlet</servlet-name>
     <url-pattern>/proxy/*</url-pattern>
-  </servlet-mapping>
-
-  <servlet-mapping>
-    <servlet-name>SmxProxyServlet</servlet-name>
-    <url-pattern>/smxproxy/*</url-pattern>
   </servlet-mapping>
 
   <servlet-mapping>
