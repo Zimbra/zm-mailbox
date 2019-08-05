@@ -63,6 +63,7 @@ public class RawAuth implements Auth {
         }
     }
 
+
     private static final String GET_AUTH_TOKEN = "get_auth_token";
     private static final String GET_AUTH = "get_auth";
 
@@ -96,13 +97,13 @@ public class RawAuth implements Auth {
         Response res;
         try {
             res = doGet(GET_AUTH_TOKEN, nvp);
-            String token = res.getRequiredField(AUTH_TOKEN); 
+            String token = res.getRequiredField(AUTH_TOKEN);
             debug("Got getToken response: token = %s", token);
             return token;
         } catch (HttpException e) {
             throw new IOException("Unexpected error: ",e);
         }
-        
+
     }
 
     public static RawAuth authenticate(String appId, String token)
@@ -166,7 +167,7 @@ public class RawAuth implements Auth {
         HttpGet httpget = new HttpGet(uri+"?"+ URLEncodedUtils.format(paramsList, "utf-8"));
         HttpResponse httpResp = HttpClientUtil.executeMethod(httpget);
         int rc = httpResp.getStatusLine().getStatusCode();
-        
+
             Response res = new Response(httpResp);
             String error = res.getField(ERROR);
             // Request can sometimes fail even with a 200 status code, so always

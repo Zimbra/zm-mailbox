@@ -257,6 +257,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     /* Generally set "accountId" explicitly when using another user's auth token, as don't have GetAccountInfo
      * capability which is what is normally used to get the account ID.  Note that not always set.
      */
+
     private String accountId = null;
     /* As above, generally set "name" explicitly when using another user's auth token */
     private String name = null;

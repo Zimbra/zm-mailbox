@@ -67,15 +67,14 @@ public class HttpClientUtil {
                 .setDefaultCookieStore(cookieStore)
                 .build ();
             return httpClient.execute(method);
-           
+
         }
         return client.execute(method);
     }
-    
+
     public static HttpResponse executeMethod(HttpClient client, HttpRequestBase method, HttpClientContext context) throws HttpException, IOException {
         return client.execute(method, context);
     }
-
 
     public static BasicCookieStore newHttpState(ZAuthToken authToken, String host, boolean isAdmin) {
         BasicCookieStore cookieStore = new BasicCookieStore();

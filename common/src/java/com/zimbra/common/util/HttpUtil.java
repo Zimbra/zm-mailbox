@@ -414,7 +414,7 @@ public final class HttpUtil {
                 URL urlTemp = new URL(url);
                 if (urlTemp.getUserInfo() != null) {
                     // UserInfo format username:password
-                    //  chnage to username: 
+                    //  chnage to username:
                     String userInfo  = urlTemp.getUserInfo();
                     int index = userInfo.indexOf(":");
                     String newUserInfo = userInfo;
@@ -652,7 +652,6 @@ public final class HttpUtil {
      * @param tralingSlash
      * @return
      */
-
     public static URI getUriFromFragments(String[] fragments, String queryString, boolean leadingSlash, boolean tralingSlash) {
         StringBuilder sb = new StringBuilder();
         if (leadingSlash) {

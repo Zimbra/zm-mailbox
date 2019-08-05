@@ -557,7 +557,6 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
         return AuthTokenProperties.C_TYPE_ZMG_APP.equals(properties.getType());
     }
 
-
     static class ByteKey implements SecretKey {
         private static final long serialVersionUID = -7237091299729195624L;
         private final byte[] mKey;

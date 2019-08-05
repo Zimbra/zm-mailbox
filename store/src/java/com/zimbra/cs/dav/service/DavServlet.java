@@ -801,7 +801,6 @@ public class DavServlet extends ZimbraServlet {
                 ctxt.getResponse().addHeader(h, hdrValue);
             }
         }
-
         ctxt.getResponse().setStatus(statusCode);
         ctxt.setStatus(statusCode);
         try (InputStream in = httpResponse.getEntity().getContent()) {
