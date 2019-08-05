@@ -21,6 +21,7 @@ import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.TimeUnit;
+
 import javax.net.ssl.SSLContext;
 
 import org.apache.http.client.config.RequestConfig;
@@ -275,6 +276,10 @@ private static class ExternalConnMgrParams extends ZimbraConnMgrParams {
      */
     public HttpClientBuilder getDefaultHttpClient() {
         return defaultHttpClient;
+    }
+
+    public void closeIdleConnections () {
+        this.httpConnMgr.closeIdleConnections(0, TimeUnit.MILLISECONDS);
     }
 
     private String getName() {
