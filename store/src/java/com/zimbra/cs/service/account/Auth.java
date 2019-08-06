@@ -20,6 +20,7 @@
  */
 package com.zimbra.cs.service.account;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -34,6 +35,7 @@ import org.apache.commons.lang.StringUtils;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ZAttrProvisioning.AutoProvAuthMech;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
@@ -115,6 +117,11 @@ public class Auth extends AccountDocumentHandler {
                 }
             }
             acct = prov.get(acctBy, acctValue);
+            if (Arrays.asList(acct.getAliases()).contains(acctValue) 
+                    && !LC.alias_login_enabled.booleanValue()) {
+                ZimbraLog.account.debug("Alias login not enabled. '%s' is the alias account for [ %s ]", acctValue, acct.getMail());
+                throw AuthFailedServiceException.AUTH_FAILED(acctValue, acctValuePassedIn, "alias login not enabled for account");
+            }
         }
 
         TrustedDeviceToken trustedToken = null;
