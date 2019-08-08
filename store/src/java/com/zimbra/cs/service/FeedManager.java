@@ -365,7 +365,7 @@ public class FeedManager {
                          = new UsernamePasswordCredentials(userName, password);
                         provider.setCredentials(AuthScope.ANY, credentials);
                         clientBuilder.setDefaultCredentialsProvider(provider);
-                        clientBuilder.setDefaultCredentialsProvider(provider);
+
 
                        // Create AuthCache instance
                         AuthCache authCache = new BasicAuthCache();
