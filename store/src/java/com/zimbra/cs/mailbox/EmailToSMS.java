@@ -76,7 +76,10 @@ public class EmailToSMS implements LmtpCallback {
 		String bodyMsg = "";
 		if(null != fullTextMessage.getFirst() && fullTextMessage.getFirst().contains("ZIMBRA_NIC_VERIFICATION_CODE_")) {
 			bodyMsg = fullTextMessage.getFirst().replaceAll("ZIMBRA_NIC_VERIFICATION_CODE_", "");
-		} else {
+		} else if (null != fullTextMessage.getFirst() && fullTextMessage.getFirst().startsWith("Appointment Reminder")) {
+			subject = "";
+			bodyMsg = fullTextMessage.getFirst();
+		}else {
 			subject = "From: "+sender+"\nSubject: "+zMsg.getSubject()+ "\n";
 			bodyMsg = "Message: "+fullTextMessage.getFirst();
 		}
