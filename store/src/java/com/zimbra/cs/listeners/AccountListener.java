@@ -105,29 +105,28 @@ public abstract class AccountListener {
     }
 
     /**
-     * called before account deletion. should not throw any
-     * exceptions.
+     * called before account deletion.
      *
      * @param USER_ACCOUNT user account to be deleted
      */
     public abstract void beforeAccountDeletion(Account acct) throws ServiceException;
 
     /**
-     * called after a successful account creation. should not throw any
-     * exceptions.
+     * called after a successful account creation.
      *
      * @param USER_ACCOUNT user account created
      */
     public abstract void onAccountCreation(Account acct) throws ServiceException;
 
     /**
-     * called after an account status change. should not throw any exceptions.
+     * called after an account status change.
      *
      * @param USER_ACCOUNT user account whose status is changed
      * @param OLD_STATUS old status of user account
      * @param NEW_STATUS new status of user account
+     * @throws ServiceException
      */
-    public abstract void onStatusChange(Account acct, String oldStatus, String newStatus);
+    public abstract void onStatusChange(Account acct, String oldStatus, String newStatus) throws ServiceException;
 
     /**
      * called when CreateAccount throws ServiceException.
