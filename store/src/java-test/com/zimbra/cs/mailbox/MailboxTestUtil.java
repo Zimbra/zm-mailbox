@@ -285,33 +285,6 @@ import com.zimbra.soap.DocumentHandler;
         }
     }
 
-<<<<<<< HEAD
-    public static void cleanupIndexStore(Mailbox mbox) {
-        IndexStore index = mbox.index.getIndexStore();
-        if (index instanceof ElasticSearchIndex) {
-            String key = mbox.getAccountId();
-            String indexUrl = String.format("%s%s/", LC.zimbra_index_elasticsearch_url_base.value(), key);
-            HttpRequestBase method = new HttpDelete(indexUrl);
-            try {
-                ElasticSearchConnector connector = new ElasticSearchConnector();
-                int statusCode = connector.executeMethod(method);
-                if (statusCode == HttpStatus.SC_OK) {
-                    boolean ok = connector.getBooleanAtJsonPath(new String[] {"ok"}, false);
-                    boolean acknowledged = connector.getBooleanAtJsonPath(new String[] {"acknowledged"}, false);
-                    if (!ok || !acknowledged) {
-                        ZimbraLog.index.debug("Delete index status ok=%b acknowledged=%b", ok, acknowledged);
-                    }
-                } else {
-                    String error = connector.getStringAtJsonPath(new String[] {"error"});
-                    if (error != null && error.startsWith("IndexMissingException")) {
-                        ZimbraLog.index.debug("Unable to delete index for key=%s.  Index is missing", key);
-                    } else {
-                        ZimbraLog.index.error("Problem deleting index for key=%s error=%s", key, error);
-                    }
-                }
-            } catch (IOException e) {
-                ZimbraLog.index.error("Problem Deleting index with key=" + key, e);
-=======
     private static void deleteIndexDir(String dir) throws IOException, InterruptedException {
         File f = new File("../ZimbraServer/build/test/solr/", dir);
         try {
@@ -323,7 +296,6 @@ import com.zimbra.soap.DocumentHandler;
                 FileUtils.deleteDirectory(f);
             } catch (IOException e2) {
                 ZimbraLog.test.error("cannot delete SOLR directory " + f.getAbsolutePath());
->>>>>>> 4c0efa19ed... updated unit tests with API changes
             }
         }
     }
