@@ -37,7 +37,7 @@ public class DefangFactory {
      * The xml defanger, used for xhtml and svg 
      */
     private static XHtmlDefang xhtmlDefang = new XHtmlDefang();
-
+    
     /**
      * This defanger does nothing. Here for
      * backwards compatibility
