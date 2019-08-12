@@ -323,7 +323,6 @@ public final class ToXML {
             // them when they try to delete something within the retention period
             canDelete = canAdminister || (perms != null && perms.indexOf(ACL.ABBR_DELETE) != -1);
         }
-
         if (canAdminister) {
             // return full ACLs for folders we have admin rights on
             if (needToOutput(fields, Change.ACL)) {
@@ -586,6 +585,8 @@ public final class ToXML {
         if (needToOutput(fields, Change.SHAREDREM)) {
             el.addAttribute(MailConstants.A_REMINDER, false);  // feature backed out (bug 57437)
         }
+        String perms = encodeEffectivePermissions(mpt, octx);
+        el.addAttribute(MailConstants.A_RIGHTS, perms);
         return el;
     }
 
