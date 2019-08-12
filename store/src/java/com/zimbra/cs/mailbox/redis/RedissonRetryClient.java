@@ -59,6 +59,7 @@ import org.redisson.api.RQueue;
 import org.redisson.api.RRateLimiter;
 import org.redisson.api.RReadWriteLock;
 import org.redisson.api.RRemoteService;
+import org.redisson.api.RRingBuffer;
 import org.redisson.api.RScheduledExecutorService;
 import org.redisson.api.RScoredSortedSet;
 import org.redisson.api.RScript;
@@ -377,6 +378,11 @@ public class RedissonRetryClient implements RedissonClient {
     @Override
     public RScript getScript(Codec arg0) {
         return new RedissonRetryScript(client -> client.getScript(arg0), this);
+    }
+
+    @Override
+    public String getId() {
+        return client.getId();
     }
 
     //RedissonClient interface methods below are not currently used anywhere in the codebase,
@@ -753,6 +759,16 @@ public class RedissonRetryClient implements RedissonClient {
 
     @Override
     public RLock getRedLock(RLock... arg0) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public <V> RRingBuffer<V> getRingBuffer(String arg0) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public <V> RRingBuffer<V> getRingBuffer(String arg0, Codec arg1) {
         throw new UnsupportedOperationException();
     }
 }
