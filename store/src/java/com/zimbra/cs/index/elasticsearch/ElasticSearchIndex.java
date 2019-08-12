@@ -156,6 +156,7 @@ public final class ElasticSearchIndex extends IndexStore {
         return false;
     }
 
+
     private JSONObject createMappingInfo() throws JSONException {
         JSONObject topLevel = new JSONObject();
         JSONObject settings = new JSONObject();
@@ -600,7 +601,7 @@ public final class ElasticSearchIndex extends IndexStore {
             refreshIndexIfNecessary();
             String url = String.format("%s%s/_query", indexUrl, indexType);
             for (Integer id : ids) {
-               
+
                 String query = String.format("%s:%s", LuceneFields.L_MAILBOX_BLOB_ID, id.toString());
                 StringBuilder urlBuilder = new StringBuilder()
                 .append(ElasticSearchConnector.actualUrl(url)).append("q=")

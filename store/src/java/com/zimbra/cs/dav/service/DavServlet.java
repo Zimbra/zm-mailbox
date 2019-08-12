@@ -788,7 +788,7 @@ public class DavServlet extends ZimbraServlet {
         }
 
         for (String h : PROXY_RESPONSE_HEADERS) {
-            for (Header hval : method.getHeaders(h)) {
+            for (Header hval : httpResponse.getHeaders(h)) {
                 String hdrValue = hval.getValue();
                 if (DavProtocol.HEADER_LOCATION.equals(h)) {
                     int pfxLastSlashPos = prefix.lastIndexOf('/');
@@ -801,7 +801,6 @@ public class DavServlet extends ZimbraServlet {
                 ctxt.getResponse().addHeader(h, hdrValue);
             }
         }
-
         ctxt.getResponse().setStatus(statusCode);
         ctxt.setStatus(statusCode);
         try (InputStream in = httpResponse.getEntity().getContent()) {

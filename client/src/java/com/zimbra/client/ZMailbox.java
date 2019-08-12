@@ -2497,7 +2497,11 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         for (int i = 0; i < files.length; i++) {
             File file = files[i];
             String contentType = URLConnection.getFileNameMap().getContentTypeFor(file.getName());
-            builder.addBinaryBody("upfile", file, ContentType.create(contentType, "UTF-8"), file.getName());
+            if (contentType != null) {
+                builder.addBinaryBody("upfile", file, ContentType.create(contentType, "UTF-8"), file.getName());
+            } else {
+                builder.addBinaryBody("upfile", file, ContentType.DEFAULT_BINARY, file.getName());
+            }
         }
 
         return uploadAttachments(builder, msTimeout);
@@ -2528,7 +2532,11 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         for (String name : attachments.keySet()) {
             byte[] content = attachments.get(name);
             String contentType = URLConnection.getFileNameMap().getContentTypeFor(name);
-            builder.addBinaryBody(name, content, ContentType.create(contentType), name);
+            if (contentType != null) {
+                builder.addBinaryBody(name, content, ContentType.create(contentType), name);
+            } else {
+                builder.addBinaryBody(name, content, ContentType.DEFAULT_BINARY, name);
+            }
         }
 
         return uploadAttachments(builder, msTimeout);

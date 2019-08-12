@@ -264,7 +264,7 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
         }
         return getServerInfo(email) != null;
     }
-    
+
     private long getTimeInterval(String attr, String accountId, long defaultValue) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         if (accountId != null) {
@@ -275,7 +275,7 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
         }
         return prov.getConfig().getTimeInterval(attr, defaultValue);
     }
-    
+
     @Override
     public long cachedFreeBusyStartTime(String accountId) {
         Calendar cal = GregorianCalendar.getInstance();
@@ -314,7 +314,7 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
         cal.set(Calendar.SECOND, 0);
         return cal.getTimeInMillis();
     }
-    
+
     @Override
     public long cachedFreeBusyStartTime() {
         return cachedFreeBusyStartTime(null);
@@ -394,7 +394,7 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 
         Credentials cred = new UsernamePasswordCredentials(info.authUsername, info.authPassword);
         CredentialsProvider credsProvider = new BasicCredentialsProvider();
-        credsProvider .setCredentials(AuthScope.ANY, cred); 
+        credsProvider .setCredentials(AuthScope.ANY, cred);
         clientBuilder.setDefaultCredentialsProvider(credsProvider);
 
         Registry<AuthSchemeProvider> authSchemeRegistry = RegistryBuilder.<AuthSchemeProvider>create()
@@ -556,6 +556,7 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
             EntityUtils.consumeQuietly(response.getEntity());
         }
     }
+
 
     public static class ExchangeUserFreeBusy extends FreeBusy {
         /*
