@@ -86,12 +86,12 @@ public class HttpClientUtil {
             RequestConfig config = RequestConfig.custom().setProxy(proxy).build();
             UsernamePasswordCredentials credentials = new UsernamePasswordCredentials(proxyConfig.getUsername(), proxyConfig.getPassword());
             CredentialsProvider credsProvider = new BasicCredentialsProvider();
-            credsProvider.setCredentials(new AuthScope (proxy),credentials);
+            credsProvider.setCredentials(new AuthScope(proxy),credentials);
             httpClient = clientBuilder
-                .setDefaultCredentialsProvider (credsProvider)
+                .setDefaultCredentialsProvider(credsProvider)
                 .setDefaultRequestConfig(config)
                 .setDefaultCookieStore(cookieStore)
-                .build ();
+                .build();
             return httpClient.execute(method);
 
         }
