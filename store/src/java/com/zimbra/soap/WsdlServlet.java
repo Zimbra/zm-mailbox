@@ -136,7 +136,7 @@ public class WsdlServlet extends ZimbraServlet {
     private static String getSoapURL(Domain domain) {
         try {
             return URLUtil.getPublicURLForDomain(Provisioning.getInstance().getLocalServer(),
-                    domain, "", true);
+                    domain, AccountConstants.USER_SERVICE_URI, true);
         } catch (ServiceException e) {
             return WsdlServiceInfo.localhostSoapHttpURL;
         }

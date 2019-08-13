@@ -208,7 +208,7 @@ public class URLUtil {
     public static String getPublicAdminConsoleURLForDomain(Server server, Domain domain) throws ServiceException {
         String publicAdminUrl = getAdminConsoleProxyUrl(server, domain);
         if (publicAdminUrl == null) {
-            publicAdminUrl = URLUtil.getAdminURL(server, server.getAdminURL());
+            publicAdminUrl = URLUtil.getAdminURL(server, AdminConstants.ADMIN_SERVICE_URI);
         }
         return publicAdminUrl;
     }
@@ -244,7 +244,7 @@ public class URLUtil {
         if (printPort) {
             buf.append(":").append(port);
         }
-        buf.append(server.getAdminURL());
+        buf.append(AdminConstants.ADMIN_SERVICE_URI);
         return buf.toString();
 
     }
