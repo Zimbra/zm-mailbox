@@ -585,8 +585,6 @@ public final class ToXML {
         if (needToOutput(fields, Change.SHAREDREM)) {
             el.addAttribute(MailConstants.A_REMINDER, false);  // feature backed out (bug 57437)
         }
-        String perms = encodeEffectivePermissions(mpt, octx);
-        el.addAttribute(MailConstants.A_RIGHTS, perms);
         return el;
     }
 
