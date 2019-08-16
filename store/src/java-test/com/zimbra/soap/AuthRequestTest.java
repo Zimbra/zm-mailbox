@@ -27,6 +27,7 @@ import java.util.HashMap;
 import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.rules.TestName;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -43,6 +44,7 @@ import com.zimbra.cs.service.mail.ServiceTestUtil;
 import com.zimbra.soap.account.message.AuthRequest;
 import com.zimbra.soap.account.type.PreAuth;
 import com.zimbra.soap.type.AccountSelector;
+import com.zimbra.cs.util.ZTestWatchman;
 
 import junit.framework.Assert;
 
@@ -60,6 +62,8 @@ public class AuthRequestTest {
     private static final String account = "testAlias@zimbra.com";
     private static final String defaultPwd = "test123";
     private static final String accountAlias = "alias@zimbra.com";
+    @Rule public TestName testName = new TestName();
+    @Rule public MethodRule watchman = new ZTestWatchman();
 
     @BeforeClass
     public static void init() throws Exception {
