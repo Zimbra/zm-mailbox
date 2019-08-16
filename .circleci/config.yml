@@ -5,7 +5,7 @@ version: 2
 references:
    default_environment_settings: &default_environment_settings
       docker:
-        - image: circleci/build-image:ubuntu-14.04-XXL-upstart-1189-5614f37
+        - image: circleci/openjdk:8-jdk
       environment:
         - ANT_OPTS: -Dzimbra.buildinfo.version=8.7.6_GA
         - BUILD: "/home/ubuntu"
