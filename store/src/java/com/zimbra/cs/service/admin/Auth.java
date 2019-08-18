@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2019 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -118,7 +118,7 @@ public class Auth extends AdminDocumentHandler {
             if (name == null && acctEl == null)
                 throw ServiceException.INVALID_REQUEST("missing <name> or <account>", null);
 
-            String password = request.getAttribute(AdminConstants.E_PASSWORD);
+            String password = request.getAttribute(AdminConstants.E_PASSWORD, null);
             String twoFactorCode = request.getAttribute(AccountConstants.E_TWO_FACTOR_CODE, null);
             Element virtualHostEl = request.getOptionalElement(AccountConstants.E_VIRTUAL_HOST);
             String virtualHost = virtualHostEl == null ? null : virtualHostEl.getText().toLowerCase();
