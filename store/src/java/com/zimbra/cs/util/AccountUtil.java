@@ -24,7 +24,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
@@ -59,6 +58,7 @@ import com.zimbra.common.zmime.ZMimeBodyPart;
 import com.zimbra.common.zmime.ZMimeMultipart;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Domain;
@@ -67,7 +67,6 @@ import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.TokenUtil;
-import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -387,7 +386,7 @@ public class AccountUtil {
         }
 
         /**
-         * 
+         *
          * @param account
          * @param internalOnly only match internal addresses, i.e. ignore zimbraAllowFromAddress values
          * @param matchSendAs match sendAs/sendAsDistList addresses granted
@@ -551,15 +550,15 @@ public class AccountUtil {
             ZimbraLog.addToContext(nameKey, acct.getName());
         }
     }
-    
+
     /**
      * Check if given account is a galsync account
      * @param account to lookup
      * @return true if account is galsync account, false otherwise.
      */
-    
+
     public static boolean isGalSyncAccount(Account account) {
-        boolean isGalSync = false;    	
+        boolean isGalSync = false;
         try {
             Domain domain = Provisioning.getInstance().getDomain(account);
             if (domain != null) {
@@ -835,27 +834,14 @@ public class AccountUtil {
     }
 
     public static void checkAliasLoginAllowed(Account acct, String loginEmailAddr) throws ServiceException {
-        boolean allowed = true;
-        String [] accountAliases = acct.getAliases();
-        boolean lc_alias_login_enabled = LC.alias_login_enabled.booleanValue();
-        if (acct != null && loginEmailAddr != null && accountAliases.length > 0) {
-            if (loginEmailAddr.indexOf("@") == -1) {
-                for (String alias : accountAliases) {
-                    if (loginEmailAddr.equals(alias.substring(0, alias.indexOf("@")))
-                            && !lc_alias_login_enabled) {
-                        allowed = false;
-                        break;
-                    }
-                }
-            } else {
-                if (Arrays.asList(accountAliases).contains(loginEmailAddr) && !lc_alias_login_enabled) {
-                    allowed = false;
-                }
-            }
-            if (!allowed) {
-                ZimbraLog.account.debug("Alias login not enabled. '%s' is the alias account", loginEmailAddr);
+        if (LC.alias_login_enabled.booleanValue()) {
+            return;
+        }
+
+        String accountName = acct.getName();
+        if (!accountName.equals(loginEmailAddr) && !accountName.contains(loginEmailAddr)) {
+            ZimbraLog.account.debug("Alias login not enabled. '%s' is the alias account", loginEmailAddr);
                 throw AuthFailedServiceException.AUTH_FAILED(loginEmailAddr, loginEmailAddr, "alias login not enabled.");
-            }
         }
     }
 }
