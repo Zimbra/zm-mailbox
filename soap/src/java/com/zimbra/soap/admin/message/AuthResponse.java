@@ -23,12 +23,18 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.google.common.base.MoreObjects;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
 
+import io.leangen.graphql.annotations.GraphQLNonNull;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_AUTH_RESPONSE)
+@GraphQLType(name=GqlConstants.CLASS_AUTH_RESPONSE, description="Response to account authentication request.")
 public class AuthResponse {
 
     /**
@@ -57,7 +63,11 @@ public class AuthResponse {
 
     public void setAuthToken(String authToken) { this.authToken = authToken; }
     public void setLifetime(long lifetime) { this.lifetime = lifetime; }
+    @GraphQLNonNull
+    @GraphQLQuery(name=GqlConstants.AUTH_TOKEN, description="The authorization token")
     public String getAuthToken() { return authToken; }
+    @GraphQLNonNull
+    @GraphQLQuery(name=GqlConstants.LIFETIME, description="Lifetime of the token")
     public long getLifetime() { return lifetime; }
 
     public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
@@ -74,6 +84,7 @@ public class AuthResponse {
     /**
      * @return the csrfToken
      */
+    @GraphQLQuery(name=GqlConstants.CSRF_TOKEN, description="The csrf token returned if the client says it is csrf enabled")
     public String getCsrfToken() {
         return csrfToken;
     }

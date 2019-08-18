@@ -149,6 +149,14 @@ public class AuthRequest {
         return virtualHost;
     }
 
+    public String getTwoFactorCode() {
+        return twoFactorCode;
+    }
+
+    public void setTwoFactorCode(String twoFactorCode) {
+        this.twoFactorCode = twoFactorCode;
+    }
+
     /**
      * @return the csrfSupported
      */
