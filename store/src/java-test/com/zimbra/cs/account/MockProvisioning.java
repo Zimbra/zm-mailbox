@@ -32,11 +32,13 @@ import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.AlwaysOnClusterBy;
 import com.zimbra.common.account.Key.ShareLocatorBy;
 import com.zimbra.common.account.Key.UCServiceBy;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.NamedEntry.Visitor;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.auth.AuthContext.Protocol;
@@ -125,10 +127,18 @@ public final class MockProvisioning extends Provisioning {
     }
 
     @Override
-    public Account get(AccountBy keyType, String key) {
+    public Account get(AccountBy keyType, String key) throws ServiceException {
         switch (keyType) {
             case name:
-                return name2account.get(key);
+                if (name2account.get(key) != null) {
+                    return name2account.get(key);
+                } else {
+                    for (Account acct : name2account.values()) {
+                        if (Arrays.asList(acct.getAliases()).contains(key)) {
+                            return acct;
+                        }
+                    }
+                }
             case id:
             default:
                 return id2account.get(key);
@@ -356,8 +366,12 @@ public final class MockProvisioning extends Provisioning {
     }
 
     @Override
-    public void authAccount(Account acct, String password, Protocol proto, Map<String, Object> authCtxt) {
-
+    public void authAccount(Account acct, String password, Protocol proto, Map<String, Object> authCtxt) throws ServiceException {
+        String accountNamePassedIn = (String) authCtxt.get(AuthContext.AC_ACCOUNT_NAME_PASSEDIN);
+        if (!LC.alias_login_enabled.booleanValue() &&
+                Arrays.asList(acct.getAliases()).contains(authCtxt.get(AuthContext.AC_ACCOUNT_NAME_PASSEDIN))) {
+            throw AuthFailedServiceException.AUTH_FAILED(accountNamePassedIn, accountNamePassedIn, "alias login not enabled.");
+        }
     }
 
     @Override
