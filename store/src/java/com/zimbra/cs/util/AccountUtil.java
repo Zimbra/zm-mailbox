@@ -834,14 +834,22 @@ public class AccountUtil {
     }
 
     public static void checkAliasLoginAllowed(Account acct, String loginEmailAddr) throws ServiceException {
-        if (LC.alias_login_enabled.booleanValue()) {
-            return;
-        }
-
         String accountName = acct.getName();
-        if (!accountName.equals(loginEmailAddr) && !accountName.contains(loginEmailAddr)) {
-            ZimbraLog.account.debug("Alias login not enabled. '%s' is the alias account", loginEmailAddr);
+        if (!LC.alias_login_enabled.booleanValue()) {
+            if (accountName.indexOf('@') != -1 && loginEmailAddr.indexOf('@') != -1 &&
+                    !accountName.equalsIgnoreCase(loginEmailAddr)) {
+                ZimbraLog.account.debug("Alias login not enabled. '%s' is the alias account", loginEmailAddr);
                 throw AuthFailedServiceException.AUTH_FAILED(loginEmailAddr, loginEmailAddr, "alias login not enabled.");
+            } else {
+                String acctLocalPart = EmailUtil.getLocalPartAndDomain(accountName) == null ?
+                        accountName : EmailUtil.getLocalPartAndDomain(accountName)[0];
+                String loginEmailLocalPart = EmailUtil.getLocalPartAndDomain(loginEmailAddr) == null ?
+                        loginEmailAddr : EmailUtil.getLocalPartAndDomain(loginEmailAddr)[0];
+                if (!acctLocalPart.equalsIgnoreCase(loginEmailLocalPart)) {
+                    ZimbraLog.account.debug("Alias login not enabled. '%s' is the alias account", loginEmailAddr);
+                    throw AuthFailedServiceException.AUTH_FAILED(loginEmailAddr, loginEmailAddr, "alias login not enabled.");
+                }
+            }
         }
     }
 }
