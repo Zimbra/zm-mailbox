@@ -60,7 +60,7 @@ public class Krb5Login {
                         ZimbraLog.account.debug("Kerberos(krb5) Login Context subject and principal are not null. Safely logging out.");
                     lc.logout();
                     } else {
-                        ZimbraLog.account.debug("Kerberos(krb5) Login Context subject and principal are null. Cannot safely logging out.");
+                        ZimbraLog.account.debug("Kerberos(krb5) Login Context subject and principal are null. Cannot safely log out.");
                     }
                 } catch (LoginException le) {
                     ZimbraLog.account.warn("krb5 logout failed", le);
@@ -215,11 +215,13 @@ public class Krb5Login {
     public static class Krb5Config extends AppConfigurationEntry
     {
         private Map<String, String> mOptions;
+
         public static final AppConfigurationEntry.LoginModuleControlFlag
-        DEFAULT_CONTROL_FLAG =
-        AppConfigurationEntry.LoginModuleControlFlag.REQUIRED;
+            DEFAULT_CONTROL_FLAG =
+            AppConfigurationEntry.LoginModuleControlFlag.REQUIRED;
+
         private static final String DEFAULT_LOGIN_MODULE_NAME =
-        "com.sun.security.auth.module.Krb5LoginModule";
+                "com.sun.security.auth.module.Krb5LoginModule";
 
         private Krb5Config(String loginModuleName, LoginModuleControlFlag controlFlag, Map<String, ?> options) {
             super(loginModuleName, controlFlag, options);
