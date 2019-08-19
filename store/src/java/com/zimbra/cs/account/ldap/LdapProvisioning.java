@@ -215,6 +215,7 @@ import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.service.util.JWEUtil;
 import com.zimbra.cs.service.util.ResetPasswordUtil;
 import com.zimbra.cs.service.util.SortBySeniorityIndexThenName;
+import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.zimlet.ZimletException;
 import com.zimbra.cs.zimlet.ZimletUtil;
@@ -5858,6 +5859,9 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             Map<String, Object> authCtxt)
     throws ServiceException {
         synchronized (acct) {
+            //Checking alias login allowed or not
+            String accountNamePassedIn = (String) authCtxt.get(AuthContext.AC_ACCOUNT_NAME_PASSEDIN);
+            AccountUtil.checkAliasLoginAllowed(acct, accountNamePassedIn);
             LdapLockoutPolicy lockoutPolicy = new LdapLockoutPolicy(this, acct);
             if (lockoutPolicy.isLockedOut() && !isRecoveryCodeBasedAuth(authCtxt)) {
                 try {
