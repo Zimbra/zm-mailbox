@@ -149,6 +149,24 @@ public class AuthRequest {
         return virtualHost;
     }
 
+    public String getTwoFactorCode() {
+        return twoFactorCode;
+    }
+
+    public void setTwoFactorCode(String twoFactorCode) {
+        this.twoFactorCode = twoFactorCode;
+    }
+
+    public void setPersistAuthTokenCookie(ZmBoolean persistAuthTokenCookie) {
+        this.persistAuthTokenCookie = persistAuthTokenCookie;
+    }
+
+    public void setCsrfSupported(ZmBoolean csrfSupported) {
+        this.csrfSupported = csrfSupported;
+    }
+
+
+
     /**
      * @return the csrfSupported
      */
