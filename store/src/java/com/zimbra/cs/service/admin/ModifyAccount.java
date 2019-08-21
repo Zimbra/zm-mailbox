@@ -26,6 +26,7 @@ import java.util.Map;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.CacheEntryBy;
+import com.zimbra.common.account.ZAttrProvisioning.AccountStatus;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -131,7 +132,13 @@ public class ModifyAccount extends AdminDocumentHandler {
         prov.modifyAttrs(account, attrs, true);
         if (attrs.containsKey(Provisioning.A_zimbraAccountStatus)) {
             String newStatus = (String) attrs.get(Provisioning.A_zimbraAccountStatus);
-            AccountListener.invokeOnStatusChange(account, oldStatus, newStatus);
+            try {
+                AccountListener.invokeOnStatusChange(account, oldStatus, newStatus);
+            } catch (ServiceException se) {
+                ZimbraLog.account.error(se.getMessage());
+                account.setAccountStatus(AccountStatus.fromString(oldStatus));
+                throw se;
+            }
         }
 
         // get account again, in the case when zimbraCOSId or zimbraForeignPrincipal
