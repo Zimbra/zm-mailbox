@@ -133,7 +133,7 @@ public class ModifyAccount extends AdminDocumentHandler {
         if (attrs.containsKey(Provisioning.A_zimbraAccountStatus)) {
             String newStatus = (String) attrs.get(Provisioning.A_zimbraAccountStatus);
             try {
-                AccountListener.invokeOnStatusChange(account, oldStatus, newStatus);
+                AccountListener.invokeOnStatusChange(account, oldStatus, newStatus, zsc);
             } catch (ServiceException se) {
                 ZimbraLog.account.error(se.getMessage());
                 account.setAccountStatus(AccountStatus.fromString(oldStatus));

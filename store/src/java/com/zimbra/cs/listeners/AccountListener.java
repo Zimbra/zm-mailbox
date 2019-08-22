@@ -22,9 +22,11 @@ import java.util.Map;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.listeners.ListenerUtil.Priority;
+import com.zimbra.soap.ZimbraSoapContext;
 
 public abstract class AccountListener {
 
@@ -66,12 +68,44 @@ public abstract class AccountListener {
         }
     }
 
+    public static void invokeOnAccountCreation(Account acct, ZimbraSoapContext zsc) throws ServiceException {
+        ZimbraLog.account.info("Account creation successful for user: %s", acct.getName());
+        String requestVia = zsc.getVia();
+        // invoke listeners
+        Map<String, AccountListenerEntry> sortedListeners = ListenerUtil.sortByPriority(mListeners);
+        for (Map.Entry<String, AccountListenerEntry> listener : sortedListeners.entrySet()) {
+            AccountListenerEntry listenerInstance = listener.getValue();
+            if (!notifyCaller(requestVia, listenerInstance.getListenerName())) {
+                ZimbraLog.account.debug("Account creation request received from \"%s\", no need to call \"%s\".", requestVia,
+                        listenerInstance.getListenerName());
+                continue;
+            }
+            listenerInstance.getAccountListener().onAccountCreation(acct);
+        }
+    }
+
     public static void invokeBeforeAccountDeletion(Account acct) throws ServiceException {
         ZimbraLog.account.info("Account to be deleted for user: %s", acct.getName());
         // invoke listeners
         Map<String, AccountListenerEntry> sortedListeners = ListenerUtil.sortByPriority(mListeners);
         for (Map.Entry<String, AccountListenerEntry> listener : sortedListeners.entrySet()) {
             AccountListenerEntry listenerInstance = listener.getValue();
+            listenerInstance.getAccountListener().beforeAccountDeletion(acct);
+        }
+    }
+
+    public static void invokeBeforeAccountDeletion(Account acct, ZimbraSoapContext zsc) throws ServiceException {
+        ZimbraLog.account.info("Account to be deleted for user: %s", acct.getName());
+        String requestVia = zsc.getVia();
+        // invoke listeners
+        Map<String, AccountListenerEntry> sortedListeners = ListenerUtil.sortByPriority(mListeners);
+        for (Map.Entry<String, AccountListenerEntry> listener : sortedListeners.entrySet()) {
+            AccountListenerEntry listenerInstance = listener.getValue();
+            if (!notifyCaller(requestVia, listenerInstance.getListenerName())) {
+                ZimbraLog.account.debug("Account deletion request received from \"%s\", no need to call \"%s\".", requestVia,
+                        listenerInstance.getListenerName());
+                continue;
+            }
             listenerInstance.getAccountListener().beforeAccountDeletion(acct);
         }
     }
@@ -86,7 +120,24 @@ public abstract class AccountListener {
             AccountListenerEntry listenerInstance = listener.getValue();
             listenerInstance.getAccountListener().onStatusChange(acct, oldStatus, newStatus);
         }
+    }
 
+    public static void invokeOnStatusChange(Account acct, String oldStatus, String newStatus, ZimbraSoapContext zsc)
+            throws ServiceException {
+        ZimbraLog.account.info("Account status for %s changed from '%s' to '%s'", acct.getName(),
+            oldStatus, newStatus);
+        String requestVia = zsc.getVia();
+        // invoke listeners
+        Map<String, AccountListenerEntry> sortedListeners = ListenerUtil.sortByPriority(mListeners);
+        for (Map.Entry<String, AccountListenerEntry> listener : sortedListeners.entrySet()) {
+            AccountListenerEntry listenerInstance = listener.getValue();
+            if (!notifyCaller(requestVia, listenerInstance.getListenerName())) {
+                ZimbraLog.account.debug("Account status change request received from \"%s\", no need to call \"%s\".", requestVia,
+                        listenerInstance.getListenerName());
+                continue;
+            }
+            listenerInstance.getAccountListener().onStatusChange(acct, oldStatus, newStatus);
+        }
     }
 
     public static void invokeOnException(ServiceException exceptionThrown) {
@@ -136,4 +187,13 @@ public abstract class AccountListener {
      */
     public abstract void onException(ServiceException exceptionThrown);
 
+    private static boolean notifyCaller(String requestVia, String listenerName) {
+        boolean notify = true;
+        if (!StringUtil.isNullOrEmpty(requestVia)) {
+            if (listenerName.toLowerCase().contains(requestVia.toLowerCase())) {
+                notify = false;
+            }
+        }
+        return notify;
+    }
 }
