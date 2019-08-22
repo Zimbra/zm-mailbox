@@ -83,7 +83,7 @@ public class CreateAccount extends AdminDocumentHandler {
         Element response = zsc.createElement(AdminConstants.CREATE_ACCOUNT_RESPONSE);
         ToXML.encodeAccount(response, account);
         try {
-            AccountListener.invokeOnAccountCreation(account);
+            AccountListener.invokeOnAccountCreation(account, zsc);
         } catch (ServiceException e) {
             // roll-back account creation
             prov.modifyAccountStatus(account, AccountStatus.maintenance.name());
