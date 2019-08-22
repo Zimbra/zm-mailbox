@@ -176,7 +176,15 @@ public final class ZimbraSoapContext {
     public ZimbraSoapContext(AuthToken authToken, String accountId,
             SoapProtocol reqProtocol, SoapProtocol respProtocol, int hopCount)
         throws ServiceException {
+        this(authToken, accountId, reqProtocol, respProtocol, hopCount, null);
+    }
 
+    /**
+     * Added via as new constructor argument for smx/idbridge
+     */
+    public ZimbraSoapContext(AuthToken authToken, String accountId,
+            SoapProtocol reqProtocol, SoapProtocol respProtocol, int hopCount, String via)
+        throws ServiceException {
         mAuthToken = authToken;
         mRawAuthToken = authToken.toZAuthToken();
         mAuthTokenAccountId = authToken.getAccountId();
@@ -185,9 +193,9 @@ public final class ZimbraSoapContext {
         mResponseProtocol = respProtocol;
         mSessionEnabled = false;
         mHopCount = hopCount;
-
-        mUserAgent = mRequestIP = mVia = null;
+        mUserAgent = mRequestIP = null;
         soapRequestId = null;
+        mVia = via;
     }
 
     /**
@@ -996,7 +1004,7 @@ public final class ZimbraSoapContext {
      *
      * @return {@code via} header value
      */
-    String getVia() {
+    public String getVia() {
         return mVia;
     }
 
