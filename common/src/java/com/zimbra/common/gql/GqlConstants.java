@@ -705,4 +705,7 @@ public class GqlConstants {
     public static final String DO_PERSIST_COOKIE = "doPersistCookie";
     public static final String IS_CSRF_SUPPORTED = "isCsrfSupported";
     public static final String CSRF_TOKEN = "csrfToken";
+
+    // GetAccount - admin api
+    public static final String APPLY_COS = "applyCos";
 }
