@@ -806,7 +806,7 @@ public class DavServlet extends ZimbraServlet {
         }
         ctxt.getResponse().setStatus(statusCode);
         ctxt.setStatus(statusCode);
-        if (httpResponse.getEntity() != null && httpResponse.getEntity() != null)
+        if (httpResponse.getEntity() != null && httpResponse.getEntity().getContent() != null)
         {
             try (InputStream in = httpResponse.getEntity().getContent()) {
                 switch (statusCode) {
