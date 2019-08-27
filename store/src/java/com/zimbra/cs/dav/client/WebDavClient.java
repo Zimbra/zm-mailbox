@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 
+
 import org.apache.http.Consts;
 import org.apache.http.Header;
 import org.apache.http.HttpException;
@@ -132,6 +133,12 @@ public class WebDavClient {
             }
         }
         return ret;
+    }
+
+    public HttpResponse  sendCustomRequest(DavRequest req) throws IOException, DavException, HttpException {
+        ZimbraLog.dav.debug("Send Request 1 : \n",req.getMethod().toString());
+        HttpResponse response = executeFollowRedirect(req);
+        return response;
     }
 
     public HttpInputStream sendRequest(DavRequest req) throws IOException, DavException, HttpException {
@@ -278,6 +285,7 @@ public class WebDavClient {
         m.addHeader("Depth", depth);
         logRequestInfo(m, bodyForLogging);
         HttpResponse response = client.execute(m, context);
+
         logResponseInfo(response);
 
         return response;

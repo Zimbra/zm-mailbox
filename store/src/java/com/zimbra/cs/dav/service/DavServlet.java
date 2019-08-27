@@ -402,10 +402,13 @@ public class DavServlet extends ZimbraServlet {
                     resp.setStatus(ctxt.getStatus());
                 }
             }
+
             if (!ctxt.isResponseSent()) {
+
                 logResponseInfo(resp);
             }
         } catch (DavException e) {
+
             if (e.getCause() instanceof MailServiceException.NoSuchItemException ||
                     e.getStatus() == HttpServletResponse.SC_NOT_FOUND)
                 ZimbraLog.dav.info(ctxt.getUri()+" not found");
@@ -803,43 +806,48 @@ public class DavServlet extends ZimbraServlet {
         }
         ctxt.getResponse().setStatus(statusCode);
         ctxt.setStatus(statusCode);
-        try (InputStream in = httpResponse.getEntity().getContent()) {
-            switch (statusCode) {
-            case DavProtocol.STATUS_MULTI_STATUS:
-                // rewrite the <href> element in the response to point to local mountpoint.
-                try {
-                    Document response = W3cDomUtil.parseXMLToDom4jDocUsingSecureProcessing(in);
-                    Element top = response.getRootElement();
-                    for (Object responseObj : top.elements(DavElements.E_RESPONSE)) {
-                        if (!(responseObj instanceof Element)) {
-                            continue;
+        if (httpResponse.getEntity() != null && httpResponse.getEntity() != null)
+        {
+            try (InputStream in = httpResponse.getEntity().getContent()) {
+                switch (statusCode) {
+                case DavProtocol.STATUS_MULTI_STATUS:
+                    // rewrite the <href> element in the response to point to local mountpoint.
+                    try {
+                        Document response = W3cDomUtil.parseXMLToDom4jDocUsingSecureProcessing(in);
+                        Element top = response.getRootElement();
+                        for (Object responseObj : top.elements(DavElements.E_RESPONSE)) {
+                            if (!(responseObj instanceof Element)) {
+                                continue;
+                            }
+                            Element href = ((Element)responseObj).element(DavElements.E_HREF);
+                            String v = href.getText();
+                            v = URLDecoder.decode(v);
+                            // Bug:106438, because v contains URL encoded value(%40) for '@' the comparison fails
+                            if (v.startsWith(newPrefix)) {
+                                href.setText(prefix + v.substring(newPrefix.length()+1));
+                            }
                         }
-                        Element href = ((Element)responseObj).element(DavElements.E_HREF);
-                        String v = href.getText();
-                        v = URLDecoder.decode(v);
-                        // Bug:106438, because v contains URL encoded value(%40) for '@' the comparison fails
-                        if (v.startsWith(newPrefix)) {
-                            href.setText(prefix + v.substring(newPrefix.length()+1));
+                        if (ZimbraLog.dav.isDebugEnabled()) {
+                            ZimbraLog.dav.debug("PROXY RESPONSE:\n%s", new String(DomUtil.getBytes(response), "UTF-8"));
                         }
+                        DomUtil.writeDocumentToStream(response, ctxt.getResponse().getOutputStream());
+                        ctxt.responseSent();
+                    } catch (XmlParseException e) {
+                        ZimbraLog.dav.warn("proxy request failed", e);
+                        return false;
                     }
-                    if (ZimbraLog.dav.isDebugEnabled()) {
-                        ZimbraLog.dav.debug("PROXY RESPONSE:\n%s", new String(DomUtil.getBytes(response), "UTF-8"));
+                    break;
+                default:
+                    if (in != null) {
+                        ByteUtil.copy(in, true, ctxt.getResponse().getOutputStream(), false);
                     }
-                    DomUtil.writeDocumentToStream(response, ctxt.getResponse().getOutputStream());
                     ctxt.responseSent();
-                } catch (XmlParseException e) {
-                    ZimbraLog.dav.warn("proxy request failed", e);
-                    return false;
+                    break;
                 }
-                break;
-            default:
-                if (in != null) {
-                    ByteUtil.copy(in, true, ctxt.getResponse().getOutputStream(), false);
-                }
-                ctxt.responseSent();
-                break;
+                return true;
             }
-            return true;
         }
+
+        return true;
     }
 }
