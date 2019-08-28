@@ -1291,6 +1291,8 @@ public final class LC {
     // owasp handler
     public static final KnownKey zimbra_use_owasp_html_sanitizer = KnownKey.newKey(true);
 
+    public static final KnownKey enable_delegated_admin_ldap_access = KnownKey.newKey(true);
+
     // OAuth2 Social
     public static final KnownKey zm_oauth_classes_handlers_yahoo = KnownKey.newKey("com.zimbra.oauth.handlers.impl.YahooOAuth2Handler");
     public static final KnownKey zm_oauth_classes_handlers_google = KnownKey.newKey("com.zimbra.oauth.handlers.impl.GoogleOAuth2Handler");
