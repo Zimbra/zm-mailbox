@@ -10274,6 +10274,9 @@ public class Mailbox implements MailboxStore {
         if (!LC.redis_cache_synchronize_mailbox_state.booleanValue()) {
             state.reload();
         }
+        if (!LC.redis_cache_synchronize_item_cache.booleanValue()) {
+            clearItemCache();
+        }
     }
 
     public boolean isInTransaction() {
