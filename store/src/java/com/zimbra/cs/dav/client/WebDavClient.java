@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2008, 2009, 2010, 2013, 2014, 2015, 2016, 2018 Synacor, Inc.
+ * Copyright (C) 2008, 2009, 2010, 2013, 2014, 2015, 2016, 2018, 2019 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -21,7 +21,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
-
 
 import org.apache.http.Consts;
 import org.apache.http.Header;
@@ -136,7 +135,6 @@ public class WebDavClient {
     }
 
     public HttpResponse  sendCustomRequest(DavRequest req) throws IOException, DavException, HttpException {
-        ZimbraLog.dav.debug("Send Request 1 : \n",req.getMethod().toString());
         HttpResponse response = executeFollowRedirect(req);
         return response;
     }
@@ -287,7 +285,6 @@ public class WebDavClient {
         HttpResponse response = client.execute(m, context);
 
         logResponseInfo(response);
-
         return response;
     }
 

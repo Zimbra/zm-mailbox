@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2019 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -402,13 +402,10 @@ public class DavServlet extends ZimbraServlet {
                     resp.setStatus(ctxt.getStatus());
                 }
             }
-
             if (!ctxt.isResponseSent()) {
-
                 logResponseInfo(resp);
             }
         } catch (DavException e) {
-
             if (e.getCause() instanceof MailServiceException.NoSuchItemException ||
                     e.getStatus() == HttpServletResponse.SC_NOT_FOUND)
                 ZimbraLog.dav.info(ctxt.getUri()+" not found");
