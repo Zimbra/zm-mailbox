@@ -1314,7 +1314,7 @@ public final class LC {
     public static final KnownKey threadlocal_cache_cleanup_interval_seconds  = KnownKey.newKey(120);
 
     @Supported
-    public static final KnownKey redis_cache_synchronize_item_cache = KnownKey.newKey(true);
+    public static final KnownKey redis_cache_synchronize_item_cache = KnownKey.newKey(false);
 
     @Supported
     public static final KnownKey redis_cache_synchronize_folders_tags = KnownKey.newKey(false);
