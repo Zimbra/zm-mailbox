@@ -140,6 +140,16 @@ public class ModifyAccount extends AdminDocumentHandler {
                 throw se;
             }
         }
+        if (attrs.containsKey(Provisioning.A_givenName) || attrs.containsKey(Provisioning.A_sn)) {
+            String firstName = (String) attrs.get(Provisioning.A_givenName);
+            String lastName = (String) attrs.get(Provisioning.A_sn);
+            try {
+                AccountListener.invokeOnNameChange(account, firstName, lastName, zsc);
+            } catch (ServiceException se) {
+                ZimbraLog.account.error(se.getMessage());
+                throw se;
+            }
+        }
 
         // get account again, in the case when zimbraCOSId or zimbraForeignPrincipal
         // is changed, the cache object(he one we are holding on to) would'd been
