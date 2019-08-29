@@ -59,7 +59,7 @@ public abstract class AccountListener {
     }
 
     public static void invokeOnAccountCreation(Account acct) throws ServiceException {
-        ZimbraLog.account.info("Account creation successful for user: %s", acct.getName());
+        ZimbraLog.account.debug("Account creation successful for user: %s", acct.getName());
         // invoke listeners
         Map<String, AccountListenerEntry> sortedListeners = ListenerUtil.sortByPriority(mListeners);
         for (Map.Entry<String, AccountListenerEntry> listener : sortedListeners.entrySet()) {
@@ -69,7 +69,7 @@ public abstract class AccountListener {
     }
 
     public static void invokeOnAccountCreation(Account acct, ZimbraSoapContext zsc) throws ServiceException {
-        ZimbraLog.account.info("Account creation successful for user: %s", acct.getName());
+        ZimbraLog.account.debug("Account creation successful for user: %s", acct.getName());
         String requestVia = zsc.getVia();
         // invoke listeners
         Map<String, AccountListenerEntry> sortedListeners = ListenerUtil.sortByPriority(mListeners);
@@ -85,7 +85,7 @@ public abstract class AccountListener {
     }
 
     public static void invokeBeforeAccountDeletion(Account acct) throws ServiceException {
-        ZimbraLog.account.info("Account to be deleted for user: %s", acct.getName());
+        ZimbraLog.account.debug("Account to be deleted for user: %s", acct.getName());
         // invoke listeners
         Map<String, AccountListenerEntry> sortedListeners = ListenerUtil.sortByPriority(mListeners);
         for (Map.Entry<String, AccountListenerEntry> listener : sortedListeners.entrySet()) {
@@ -95,7 +95,7 @@ public abstract class AccountListener {
     }
 
     public static void invokeBeforeAccountDeletion(Account acct, ZimbraSoapContext zsc) throws ServiceException {
-        ZimbraLog.account.info("Account to be deleted for user: %s", acct.getName());
+        ZimbraLog.account.debug("Account to be deleted for user: %s", acct.getName());
         String requestVia = zsc.getVia();
         // invoke listeners
         Map<String, AccountListenerEntry> sortedListeners = ListenerUtil.sortByPriority(mListeners);
@@ -112,7 +112,7 @@ public abstract class AccountListener {
 
     public static void invokeOnStatusChange(Account acct, String oldStatus, String newStatus)
         throws ServiceException {
-        ZimbraLog.account.info("Account status for %s changed from '%s' to '%s'", acct.getName(),
+        ZimbraLog.account.debug("Account status for %s changed from '%s' to '%s'", acct.getName(),
             oldStatus, newStatus);
         // invoke listeners
         Map<String, AccountListenerEntry> sortedListeners = ListenerUtil.sortByPriority(mListeners);
@@ -124,7 +124,7 @@ public abstract class AccountListener {
 
     public static void invokeOnStatusChange(Account acct, String oldStatus, String newStatus, ZimbraSoapContext zsc)
             throws ServiceException {
-        ZimbraLog.account.info("Account status for %s changed from '%s' to '%s'", acct.getName(),
+        ZimbraLog.account.debug("Account status for %s changed from '%s' to '%s'", acct.getName(),
             oldStatus, newStatus);
         String requestVia = zsc.getVia();
         // invoke listeners
@@ -140,8 +140,26 @@ public abstract class AccountListener {
         }
     }
 
+    public static void invokeOnNameChange(Account acct, String firstName, String lastname, ZimbraSoapContext zsc)
+            throws ServiceException {
+        ZimbraLog.account.debug("Account name changed for %s. First Name: %s, Last Name: %s", acct.getName(),
+                firstName, lastname);
+        String requestVia = zsc.getVia();
+        // invoke listeners
+        Map<String, AccountListenerEntry> sortedListeners = ListenerUtil.sortByPriority(mListeners);
+        for (Map.Entry<String, AccountListenerEntry> listener : sortedListeners.entrySet()) {
+            AccountListenerEntry listenerInstance = listener.getValue();
+            if (!notifyCaller(requestVia, listenerInstance.getListenerName())) {
+                ZimbraLog.account.debug("Account name change request received from \"%s\", no need to call \"%s\".", requestVia,
+                        listenerInstance.getListenerName());
+                continue;
+            }
+            listenerInstance.getAccountListener().onNameChange(acct, firstName, lastname);
+        }
+    }
+
     public static void invokeOnException(ServiceException exceptionThrown) {
-        ZimbraLog.account.info("Error occurred during account creation: %s",
+        ZimbraLog.account.debug("Error occurred during account creation: %s",
             exceptionThrown.getMessage());
         if (ZimbraLog.account.isDebugEnabled()) {
             ZimbraLog.account.debug(exceptionThrown);
@@ -178,6 +196,16 @@ public abstract class AccountListener {
      * @throws ServiceException
      */
     public abstract void onStatusChange(Account acct, String oldStatus, String newStatus) throws ServiceException;
+
+    /**
+     * called after an account name change.
+     *
+     * @param USER_ACCOUNT user account whose status is changed
+     * @param FIRST_NAME new first name of user account
+     * @param LAST_NAME new last name of user account
+     * @throws ServiceException
+     */
+    public abstract void onNameChange(Account acct, String firstName, String lastName) throws ServiceException;
 
     /**
      * called when CreateAccount throws ServiceException.
