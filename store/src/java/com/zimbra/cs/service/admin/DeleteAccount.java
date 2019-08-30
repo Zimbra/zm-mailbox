@@ -82,12 +82,8 @@ public class DeleteAccount extends AdminDocumentHandler {
         // Confirm that the account exists and that the mailbox is located on the current host
         Account account = prov.get(AccountBy.id, id, zsc.getAuthToken());
         defendAgainstAccountHarvesting(account, AccountBy.id, id, zsc, Admin.R_deleteAccount);
-        try {
-            AccountListener.invokeBeforeAccountDeletion(account, zsc);
-        } catch (ServiceException e) {
-            throw ServiceException.FAILURE(
-                "Failed to delete account '" + account.getName() + "' in AccountListener", e);
-        }
+
+        String accountStatus = account.getAccountStatus(prov);
         /*
          * bug 69009
          *
@@ -101,13 +97,36 @@ public class DeleteAccount extends AdminDocumentHandler {
          */
         prov.modifyAccountStatus(account, AccountStatus.maintenance.name());
 
-        Mailbox mbox = Provisioning.onLocalServer(account) ?
-                MailboxManager.getInstance().getMailboxByAccount(account, false) : null;
-        if (mbox != null) {
-            mbox.deleteMailbox();
+        try {
+            AccountListener.invokeBeforeAccountDeletion(account, zsc);
+        } catch (ServiceException e) {
+            ZimbraLog.account.warn("AccountListener deletion failed, restoring account status back to \"%s\" from maintenance.", accountStatus);
+            // reset the old status of account
+            prov.modifyAccountStatus(account, AccountStatus.fromString(accountStatus).name());
+            throw ServiceException.FAILURE(
+                "Failed to delete account '" + account.getName() + "' in AccountListener", e);
         }
 
-        prov.deleteAccount(id);
+        try {
+            Mailbox mbox = Provisioning.onLocalServer(account) ?
+                    MailboxManager.getInstance().getMailboxByAccount(account, false) : null;
+            if (mbox != null) {
+                mbox.deleteMailbox();
+            }
+            prov.deleteAccount(id);
+        } catch (ServiceException se) {
+            ZimbraLog.account.warn("Account deletion failed, restoring account status back to \"%s\" from maintenance.", accountStatus);
+            // reset the old status of account
+            prov.modifyAccountStatus(account, AccountStatus.fromString(accountStatus).name());
+            try {
+                // invoke create account call on account listener.
+                AccountListener.invokeOnAccountCreation(account, zsc);
+            } catch (ServiceException rse) {
+                ZimbraLog.account.debug("AccountListener restore account failed for %s. %s", account.getMail(), rse.getCause());
+                throw rse;
+            }
+            throw se;
+        }
 
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
             new String[] {"cmd", "DeleteAccount","name", account.getName(), "id", account.getId()}));
