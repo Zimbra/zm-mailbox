@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.listeners;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -84,41 +85,26 @@ public abstract class AccountListener {
         }
     }
 
-    public static void invokeBeforeAccountDeletion(Account acct) throws ServiceException {
-        ZimbraLog.account.debug("Account to be deleted for user: %s", acct.getName());
-        // invoke listeners
-        Map<String, AccountListenerEntry> sortedListeners = ListenerUtil.sortByPriority(mListeners);
-        for (Map.Entry<String, AccountListenerEntry> listener : sortedListeners.entrySet()) {
-            AccountListenerEntry listenerInstance = listener.getValue();
-            listenerInstance.getAccountListener().beforeAccountDeletion(acct);
-        }
-    }
-
     public static void invokeBeforeAccountDeletion(Account acct, ZimbraSoapContext zsc) throws ServiceException {
         ZimbraLog.account.debug("Account to be deleted for user: %s", acct.getName());
+        ArrayList<AccountListenerEntry> notifiedListeners = new ArrayList<AccountListenerEntry>();
         String requestVia = zsc.getVia();
-        // invoke listeners
-        Map<String, AccountListenerEntry> sortedListeners = ListenerUtil.sortByPriority(mListeners);
-        for (Map.Entry<String, AccountListenerEntry> listener : sortedListeners.entrySet()) {
-            AccountListenerEntry listenerInstance = listener.getValue();
-            if (!notifyCaller(requestVia, listenerInstance.getListenerName())) {
-                ZimbraLog.account.debug("Account deletion request received from \"%s\", no need to call \"%s\".", requestVia,
-                        listenerInstance.getListenerName());
-                continue;
+        try {
+            // invoke listeners
+            Map<String, AccountListenerEntry> sortedListeners = ListenerUtil.sortByPriority(mListeners);
+            for (Map.Entry<String, AccountListenerEntry> listener : sortedListeners.entrySet()) {
+                AccountListenerEntry listenerInstance = listener.getValue();
+                if (!notifyCaller(requestVia, listenerInstance.getListenerName())) {
+                    ZimbraLog.account.debug("Account deletion request received from \"%s\", no need to call \"%s\".", requestVia,
+                            listenerInstance.getListenerName());
+                    continue;
+                }
+                listenerInstance.getAccountListener().beforeAccountDeletion(acct);
+                notifiedListeners.add(listenerInstance);
             }
-            listenerInstance.getAccountListener().beforeAccountDeletion(acct);
-        }
-    }
-
-    public static void invokeOnStatusChange(Account acct, String oldStatus, String newStatus)
-        throws ServiceException {
-        ZimbraLog.account.debug("Account status for %s changed from '%s' to '%s'", acct.getName(),
-            oldStatus, newStatus);
-        // invoke listeners
-        Map<String, AccountListenerEntry> sortedListeners = ListenerUtil.sortByPriority(mListeners);
-        for (Map.Entry<String, AccountListenerEntry> listener : sortedListeners.entrySet()) {
-            AccountListenerEntry listenerInstance = listener.getValue();
-            listenerInstance.getAccountListener().onStatusChange(acct, oldStatus, newStatus);
+        } catch (ServiceException se) {
+            rollbackAccountDeletion(notifiedListeners, acct);
+            throw se;
         }
     }
 
@@ -126,17 +112,24 @@ public abstract class AccountListener {
             throws ServiceException {
         ZimbraLog.account.debug("Account status for %s changed from '%s' to '%s'", acct.getName(),
             oldStatus, newStatus);
+        ArrayList<AccountListenerEntry> notifiedListeners = new ArrayList<AccountListenerEntry>();
         String requestVia = zsc.getVia();
-        // invoke listeners
-        Map<String, AccountListenerEntry> sortedListeners = ListenerUtil.sortByPriority(mListeners);
-        for (Map.Entry<String, AccountListenerEntry> listener : sortedListeners.entrySet()) {
-            AccountListenerEntry listenerInstance = listener.getValue();
-            if (!notifyCaller(requestVia, listenerInstance.getListenerName())) {
-                ZimbraLog.account.debug("Account status change request received from \"%s\", no need to call \"%s\".", requestVia,
-                        listenerInstance.getListenerName());
-                continue;
+        try {
+            // invoke listeners
+            Map<String, AccountListenerEntry> sortedListeners = ListenerUtil.sortByPriority(mListeners);
+            for (Map.Entry<String, AccountListenerEntry> listener : sortedListeners.entrySet()) {
+                AccountListenerEntry listenerInstance = listener.getValue();
+                if (!notifyCaller(requestVia, listenerInstance.getListenerName())) {
+                    ZimbraLog.account.debug("Account status change request received from \"%s\", no need to call \"%s\".", requestVia,
+                            listenerInstance.getListenerName());
+                    continue;
+                }
+                listenerInstance.getAccountListener().onStatusChange(acct, oldStatus, newStatus);
+                notifiedListeners.add(listenerInstance);
             }
-            listenerInstance.getAccountListener().onStatusChange(acct, oldStatus, newStatus);
+        } catch (ServiceException se) {
+            rollbackChangedStatus(notifiedListeners, acct, oldStatus, newStatus);
+            throw se;
         }
     }
 
@@ -144,17 +137,24 @@ public abstract class AccountListener {
             throws ServiceException {
         ZimbraLog.account.debug("Account name changed for %s. First Name: %s, Last Name: %s", acct.getName(),
                 firstName, lastname);
+        ArrayList<AccountListenerEntry> notifiedListeners = new ArrayList<AccountListenerEntry>();
         String requestVia = zsc.getVia();
-        // invoke listeners
-        Map<String, AccountListenerEntry> sortedListeners = ListenerUtil.sortByPriority(mListeners);
-        for (Map.Entry<String, AccountListenerEntry> listener : sortedListeners.entrySet()) {
-            AccountListenerEntry listenerInstance = listener.getValue();
-            if (!notifyCaller(requestVia, listenerInstance.getListenerName())) {
-                ZimbraLog.account.debug("Account name change request received from \"%s\", no need to call \"%s\".", requestVia,
-                        listenerInstance.getListenerName());
-                continue;
+        try {
+            // invoke listeners
+            Map<String, AccountListenerEntry> sortedListeners = ListenerUtil.sortByPriority(mListeners);
+            for (Map.Entry<String, AccountListenerEntry> listener : sortedListeners.entrySet()) {
+                AccountListenerEntry listenerInstance = listener.getValue();
+                if (!notifyCaller(requestVia, listenerInstance.getListenerName())) {
+                    ZimbraLog.account.debug("Account name change request received from \"%s\", no need to call \"%s\".", requestVia,
+                            listenerInstance.getListenerName());
+                    continue;
+                }
+                listenerInstance.getAccountListener().onNameChange(acct, firstName, lastname);
+                notifiedListeners.add(listenerInstance);
             }
-            listenerInstance.getAccountListener().onNameChange(acct, firstName, lastname);
+        } catch (ServiceException se) {
+            rollbackNameChange(notifiedListeners, acct, acct.getGivenName(), acct.getSn());
+            throw se;
         }
     }
 
@@ -223,5 +223,50 @@ public abstract class AccountListener {
             }
         }
         return notify;
+    }
+
+    private static void rollbackChangedStatus(ArrayList<AccountListenerEntry> notifiedListeners, Account acct, String oldStatus, String newStatus) {
+        if (!notifiedListeners.isEmpty()) {
+            for(int i = 0; i < notifiedListeners.size(); i++)
+            {
+                AccountListenerEntry listenerInstance = notifiedListeners.get(i);
+                ZimbraLog.account.debug("Rollback account listener status change request from \"%s\".", listenerInstance.getListenerName());
+                try {
+                    listenerInstance.getAccountListener().onStatusChange(acct, newStatus, oldStatus);
+                } catch (ServiceException se) {
+                    ZimbraLog.account.debug("Rollback account listener status change failed from \"%s\". %s", listenerInstance.getListenerName(), se.getMessage());
+                }
+            }
+        }
+    }
+
+    private static void rollbackNameChange(ArrayList<AccountListenerEntry> notifiedListeners, Account acct, String firstName, String lastName) {
+        if (!notifiedListeners.isEmpty()) {
+            for(int i = 0; i < notifiedListeners.size(); i++)
+            {
+                AccountListenerEntry listenerInstance = notifiedListeners.get(i);
+                ZimbraLog.account.debug("Rollback account listener name change request from \"%s\".", listenerInstance.getListenerName());
+                try {
+                    listenerInstance.getAccountListener().onNameChange(acct, firstName, lastName);
+                } catch (ServiceException se) {
+                    ZimbraLog.account.debug("Rollback account listener name change failed from \"%s\". %s", listenerInstance.getListenerName(), se.getMessage());
+                }
+            }
+        }
+    }
+
+    private static void rollbackAccountDeletion(ArrayList<AccountListenerEntry> notifiedListeners, Account acct) {
+        if (!notifiedListeners.isEmpty()) {
+            for(int i = 0; i < notifiedListeners.size(); i++)
+            {
+                AccountListenerEntry listenerInstance = notifiedListeners.get(i);
+                ZimbraLog.account.debug("Rollback account listener delete request from \"%s\".", listenerInstance.getListenerName());
+                try {
+                    listenerInstance.getAccountListener().onAccountCreation(acct);
+                } catch (ServiceException se) {
+                    ZimbraLog.account.debug("Rollback account listener delete failed from \"%s\". %s", listenerInstance.getListenerName(), se.getMessage());
+                }
+            }
+        }
     }
 }

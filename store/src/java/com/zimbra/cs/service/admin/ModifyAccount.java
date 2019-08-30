@@ -128,8 +128,7 @@ public class ModifyAccount extends AdminDocumentHandler {
             defendAgainstServerNameHarvesting(newServer, Key.ServerBy.name, newServerName, zsc, Admin.R_listServer);
         }
         String oldStatus = account.getAccountStatus(prov);
-        // pass in true to checkImmutable
-        prov.modifyAttrs(account, attrs, true);
+
         if (attrs.containsKey(Provisioning.A_zimbraAccountStatus)) {
             String newStatus = (String) attrs.get(Provisioning.A_zimbraAccountStatus);
             try {
@@ -147,8 +146,47 @@ public class ModifyAccount extends AdminDocumentHandler {
                 AccountListener.invokeOnNameChange(account, firstName, lastName, zsc);
             } catch (ServiceException se) {
                 ZimbraLog.account.error(se.getMessage());
+                // roll back status change account listener updates, if within same request
+                if (attrs.containsKey(Provisioning.A_zimbraAccountStatus)) {
+                    String newStatus = (String) attrs.get(Provisioning.A_zimbraAccountStatus);
+                    try {
+                        AccountListener.invokeOnStatusChange(account, newStatus, oldStatus, zsc);
+                    } catch (ServiceException sse) {
+                        ZimbraLog.account.error(se.getMessage());
+                        throw se;
+                    }
+                }
                 throw se;
             }
+        }
+
+        try {
+            // pass in true to checkImmutable
+            prov.modifyAttrs(account, attrs, true);
+        } catch (ServiceException se) {
+            ZimbraLog.account.debug("Exception occured while modifying account in zimbra for %s, roll back listener updates.", account.getMail());
+            // roll back status change updates
+            if (attrs.containsKey(Provisioning.A_zimbraAccountStatus)) {
+                String newStatus = (String) attrs.get(Provisioning.A_zimbraAccountStatus);
+                ZimbraLog.account.debug("Listener rollback for account status change of from \"%s\" to \"%s\".", newStatus, oldStatus);
+                try {
+                    AccountListener.invokeOnStatusChange(account, newStatus, oldStatus, zsc);
+                } catch (ServiceException sse) {
+                    ZimbraLog.account.error(sse.getMessage());
+                    throw sse;
+                }
+            }
+            // roll back name change updates
+            if (attrs.containsKey(Provisioning.A_givenName) || attrs.containsKey(Provisioning.A_sn)) {
+                try {
+                    ZimbraLog.account.debug("Listener rollback for account name change. First name: %s Last name:  %s.", account.getGivenName(), account.getSn());
+                    AccountListener.invokeOnNameChange(account, account.getGivenName(), account.getSn(), zsc);
+                } catch (ServiceException nse) {
+                    ZimbraLog.account.error(nse.getMessage());
+                    throw nse;
+                }
+            }
+            throw se;
         }
 
         // get account again, in the case when zimbraCOSId or zimbraForeignPrincipal
