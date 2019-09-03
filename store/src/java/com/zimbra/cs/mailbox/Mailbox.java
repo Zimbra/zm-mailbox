@@ -1667,15 +1667,8 @@ public class Mailbox implements MailboxStore {
     private void clearItemCache() {
         if (currentChange().isActive()) {
             currentChange().itemCache.clear();
-        } else {
+        } else if (mItemCache != null) {
             mItemCache.clear();
-        }
-        try {
-            if (Zimbra.isAlwaysOn()) {
-                DbMailbox.incrementItemcacheCheckpoint(this);
-            }
-        } catch (ServiceException e) {
-            ZimbraLog.mailbox.error("error while clearing item cache", e);
         }
     }
 
