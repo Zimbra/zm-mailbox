@@ -9,7 +9,6 @@ import org.redisson.api.RMap;
 import org.redisson.api.RScoredSortedSet;
 import org.redisson.api.RedissonClient;
 
-import com.google.common.base.Strings;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -204,5 +203,11 @@ public class RedisItemCache extends MapItemCache<String> {
         public RedisCacheTracker getTransactionCacheTracker(Mailbox mbox) {
             return new RedisCacheTracker(mbox);
         }
+    }
+
+    @Override
+    public void uncacheChildren(MailItem parent) {
+        // We cannot currently efficiently perform this operation with items
+        // cached in redis.
     }
 }

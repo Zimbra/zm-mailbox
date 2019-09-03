@@ -1,14 +1,17 @@
 package com.zimbra.cs.mailbox.cache;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.TransactionCacheTracker;
-import com.zimbra.common.localconfig.LC;
 
 public class LocalItemCache extends MapItemCache<MailItem> {
 
@@ -66,5 +69,42 @@ public class LocalItemCache extends MapItemCache<MailItem> {
     }
 
     @Override
-    public void trim(int numItems) {}
+    public void trim(int numItems) {
+        int excess = size() - numItems;
+        if (excess <= 0) {
+            return;
+        }
+        MailItem[] overflow = new MailItem[excess];
+        int i = 0;
+        for (MailItem item : values()) {
+            overflow[i++] = item;
+            if (i >= excess) {
+                break;
+            }
+        }
+        while (--i >= 0) {
+            if (size() <= numItems) {
+                return;
+            }
+
+            remove(overflow[i]);
+            uncacheChildren(overflow[i]);
+        }
+    }
+
+    @Override
+    public void uncacheChildren(MailItem parent) {
+        List<MailItem> children = new ArrayList<>();
+        for (MailItem cached: values()) {
+            if (cached.getParentId() == parent.getId()) {
+                children.add(cached);
+            }
+        }
+        if (!children.isEmpty()) {
+            for (MailItem child: children) {
+                remove(child);
+                uncacheChildren(child);
+            }
+        }
+    }
 }

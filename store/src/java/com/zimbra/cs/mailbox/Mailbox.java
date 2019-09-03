@@ -1741,13 +1741,7 @@ public class Mailbox implements MailboxStore {
 
         ZimbraLog.cache.debug("uncached %s %d in mailbox %d", item.getType(), item.getId(), getId());
 
-        /*
-         * With the item cache stored in redis, uncacheChildren is very inefficient.
-         * Since the cache is unbounded, itemCache.values() requires pulling an arbitrarily high number of
-         * items into memory (even if it was bounded, it would still be an inefficient operation).
-         * Temporarily commenting this out shouldn't do any damage other than keeping stale hash entries in redis.
-         * uncacheChildren(item);
-         */
+        uncacheChildren(item);
     }
 
     /** Removes an item from the <code>Mailbox</code>'s item cache.
@@ -1778,7 +1772,8 @@ public class Mailbox implements MailboxStore {
 
         Collection<? extends MailItem> cached;
         if (!(parent instanceof Folder)) {
-            cached = getItemCache().values();
+            getItemCache().uncacheChildren(parent);
+            return;
         } else if (mFolderCache != null) {
             try(FolderTagCacheLock lock = ftCacheReadLock.lock()) {
                 cached = mFolderCache.values();

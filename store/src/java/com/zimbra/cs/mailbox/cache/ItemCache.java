@@ -3,7 +3,6 @@ package com.zimbra.cs.mailbox.cache;
 import java.util.Collection;
 import java.util.List;
 
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
@@ -62,6 +61,10 @@ public abstract class ItemCache {
     protected abstract void cacheFoldersTagsMeta(Metadata folderTagMeta);
 
     public abstract void trim(int numItems);
+
+    public abstract int size();
+
+    public abstract void uncacheChildren(MailItem parent);
 
     public CachedTagsAndFolders getTagsAndFolders() {
         Metadata folderTagMeta = getCachedTagsAndFolders();
