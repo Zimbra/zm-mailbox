@@ -159,8 +159,9 @@ import com.zimbra.cs.mailbox.Note.Rectangle;
 import com.zimbra.cs.mailbox.NotificationPubSub.Publisher;
 import com.zimbra.cs.mailbox.Tag.NormalizedTags;
 import com.zimbra.cs.mailbox.cache.FolderCache;
+import com.zimbra.cs.mailbox.cache.FolderTagSnapshotCache;
+import com.zimbra.cs.mailbox.cache.FolderTagSnapshotCache.CachedTagsAndFolders;
 import com.zimbra.cs.mailbox.cache.ItemCache;
-import com.zimbra.cs.mailbox.cache.ItemCache.CachedTagsAndFolders;
 import com.zimbra.cs.mailbox.cache.LocalFolderCache;
 import com.zimbra.cs.mailbox.cache.TagCache;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
@@ -646,6 +647,7 @@ public class Mailbox implements MailboxStore {
 
     private FolderCache mFolderCache;
     private TagCache mTagCache;
+    private FolderTagSnapshotCache folderTagSnapshot;
     private final FolderTagCacheReadWriteLock folderTagCacheLock = new FolderTagCacheReadWriteLock();
     private final FolderTagCacheLock ftCacheReadLock = folderTagCacheLock.readLock();
     private final FolderTagCacheLock ftCacheWriteLock = folderTagCacheLock.writeLock();
@@ -681,6 +683,7 @@ public class Mailbox implements MailboxStore {
         state.setLastChangeDate(System.currentTimeMillis());
         pubsub = NotificationPubSub.getFactory().getNotificationPubSub(this);
         MAX_ITEM_CACHE_SIZE = LC.zimbra_mailbox_active_cache.intValue();
+        folderTagSnapshot = ItemCache.getFactory().getFolderTagSnapshotCache(this);
     }
 
     public void setGalSyncMailbox(boolean galSyncMailbox) {
@@ -1964,7 +1967,7 @@ public class Mailbox implements MailboxStore {
             MailboxData stats = null;
 
             boolean loadedFromCache = false;
-            CachedTagsAndFolders cachedTagsAndFolders = mItemCache.getTagsAndFolders();
+            CachedTagsAndFolders cachedTagsAndFolders = folderTagSnapshot.getTagsAndFolders();
 
             if (cachedTagsAndFolders != null) {
                 loadedFromCache = true;
@@ -2066,7 +2069,7 @@ public class Mailbox implements MailboxStore {
         try(FolderTagCacheLock lock = ftCacheReadLock.lock()) {
         	List<Folder> folderList = new ArrayList<>(mFolderCache.values());
         	List<Tag> tagList = new ArrayList<>(mTagCache.values());
-        	mItemCache.cacheTagsAndFolders(folderList, tagList);
+                folderTagSnapshot.cacheTagsAndFolders(folderList, tagList);
         }
     }
 

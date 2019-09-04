@@ -11,12 +11,9 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.TransactionCacheTracker;
 
 public class LocalItemCache extends MapItemCache<MailItem> {
-
-    private Metadata folderTagMeta = null;
 
     public LocalItemCache(Mailbox mbox, Map<Integer, MailItem> itemMap, Map<String, Integer> uuidMap) {
         super(mbox, itemMap, uuidMap);
@@ -30,16 +27,6 @@ public class LocalItemCache extends MapItemCache<MailItem> {
     @Override
     protected MailItem fromCacheValue(MailItem value) {
         return value;
-    }
-
-    @Override
-    protected Metadata getCachedTagsAndFolders() {
-        return folderTagMeta;
-    }
-
-    @Override
-    protected void cacheFoldersTagsMeta(Metadata folderTagMeta) {
-        this.folderTagMeta = folderTagMeta;
     }
 
     public static class Factory implements ItemCache.Factory {
@@ -79,6 +66,11 @@ public class LocalItemCache extends MapItemCache<MailItem> {
         public TransactionCacheTracker getTransactionCacheTracker(Mailbox mbox) {
             //no need for transaction tracker for local case
             return null;
+        }
+
+        @Override
+        public FolderTagSnapshotCache getFolderTagSnapshotCache(Mailbox mbox) {
+            return new LocalFolderTagSnapshotCache(mbox);
         }
     }
 
