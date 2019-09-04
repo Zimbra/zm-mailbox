@@ -67,12 +67,15 @@ public class HtmlElement {
         for (String attribute : allowedAttributes) {
             attributesBuilder = policyBuilder.allowAttributes(attribute);
             if (attributesBuilder != null) {
-                String urlProtocols = OwaspPolicy.getElementUrlProtocols(element);
-                if (!StringUtil.isNullOrEmpty(urlProtocols)) {
-                    String[] allowedProtocols = urlProtocols.split(COMMA);
-                    List<String> urlList = Arrays.asList(allowedProtocols);
-                    AttributePolicy URLPolicy = new FilterUrlByProtocolAttributePolicy(urlList);
-                    attributesBuilder.matching(URLPolicy);
+                Set<String> urlProtocolAttributes = OwaspPolicy.getElementUrlProtocolAttributes();
+                if(urlProtocolAttributes.contains(attribute) ) {
+	                String urlProtocols = OwaspPolicy.getElementUrlProtocols(element);
+	                if (!StringUtil.isNullOrEmpty(urlProtocols)) {
+	                    String[] allowedProtocols = urlProtocols.split(COMMA);
+	                    List<String> urlList = Arrays.asList(allowedProtocols);
+	                    AttributePolicy URLPolicy = new FilterUrlByProtocolAttributePolicy(urlList);
+	                    attributesBuilder.matching(URLPolicy);
+	                }
                 }
                 AttributePolicy attrPolicy = attributesAndPolicies.get(attribute);
                 if (attrPolicy != null) {
