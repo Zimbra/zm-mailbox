@@ -685,4 +685,10 @@ public class OwaspHtmlSanitizerTest {
         Assert.assertTrue(result.contains("float"));
     }
 
+    @Test
+    public void testZCS7784() throws Exception {
+        String html = "<img class=\"gmail\" style=\"display:none; width:0; overflow:hidden;\" src=\"https://localhost:8443/service/home/~/?auth=co&loc=en_US&id=285&part=2.2\" >";
+        String result = new OwaspHtmlSanitizer(html, true, null).sanitize();
+        Assert.assertTrue(result.contains("style"));
+    }
 }

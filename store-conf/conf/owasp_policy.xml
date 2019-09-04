@@ -5,6 +5,7 @@
      KBD = accesshtml,tabindex-->
 <owasp_policy>
   <url_protocols>cid,http,https,mailto,data,smb</url_protocols>
+  <url_protocol_attributes>href,src</url_protocol_attributes>
   <disallow_text_in>applet,frameset,object,script,title</disallow_text_in>
   <allow_text_in>style</allow_text_in>
   <css_whitelist>float,display</css_whitelist>
