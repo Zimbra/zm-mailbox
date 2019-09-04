@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
+import com.googlecode.concurrentlinkedhashmap.EvictionListener;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem;
@@ -46,8 +47,21 @@ public class LocalItemCache extends MapItemCache<MailItem> {
         @Override
         public ItemCache getItemCache(Mailbox mbox, TransactionCacheTracker cacheTracker) {
             int cacheCapacity = LC.zimbra_mailbox_active_cache.intValue();
-            Map<Integer, MailItem> itemMap = new ConcurrentLinkedHashMap.Builder<Integer, MailItem>().maximumWeightedCapacity(cacheCapacity).build();
             Map<String, Integer> uuidMap = new ConcurrentHashMap<>(cacheCapacity);
+            Map<Integer, MailItem> itemMap = new ConcurrentLinkedHashMap.Builder<Integer, MailItem>()
+                    .maximumWeightedCapacity(cacheCapacity)
+                    .listener(new EvictionListener<Integer, MailItem>() {
+                        @Override
+                        public void onEviction(Integer id, MailItem item) {
+                            if (ZimbraLog.cache.isTraceEnabled() ) {
+                                ZimbraLog.cache.trace("mailbox %s: evicting %s id=%s from item cache", item.getMailboxId(), item.getType(), id);
+                            }
+                            String uuid = item.getUuid();
+                            if (uuid != null) {
+                                uuidMap.remove(uuid);
+                            }
+                        }
+                    }).build();
             return new LocalItemCache(mbox, itemMap, uuidMap);
         }
 
