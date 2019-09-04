@@ -16,23 +16,16 @@
  */
 package com.zimbra.cs.service.account;
 
-import com.zimbra.common.account.Key;
-import com.zimbra.common.account.ZAttrProvisioning;
+import java.util.Map;
+
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
-
-import com.google.common.collect.ImmutableSet;
 import com.zimbra.soap.account.message.ClientInfoRequest;
-import com.zimbra.soap.account.message.ClientInfoResponse;
-
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Set;
 
 
 /**
@@ -40,59 +33,29 @@ import java.util.Set;
  */
 public class ClientInfo extends AccountDocumentHandler {
 
-    private static final Set<String> bootstrapInfoAttrs = ImmutableSet.of(
-            ZAttrProvisioning.A_zimbraSkinLogoURL,
-            ZAttrProvisioning.A_zimbraSkinLogoAppBanner,
-            ZAttrProvisioning.A_zimbraSkinLogoLoginBanner,
-            ZAttrProvisioning.A_zimbraWebClientLoginURL,
-            ZAttrProvisioning.A_zimbraWebClientLogoutURL,
-            ZAttrProvisioning.A_zimbraWebClientStaySignedInDisabled,
-            ZAttrProvisioning.A_zimbraSkinBackgroundColor,
-            ZAttrProvisioning.A_zimbraSkinForegroundColor,
-            ZAttrProvisioning.A_zimbraSkinSecondaryColor,
-            ZAttrProvisioning.A_zimbraSkinSelectionColor,
-            ZAttrProvisioning.A_zimbraSkinFavicon,
-            ZAttrProvisioning.A_zimbraFeatureResetPasswordStatus);
-
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Provisioning prov = Provisioning.getInstance();
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
         ClientInfoRequest req = JaxbUtil.elementToJaxb(request);
 
-        ClientInfoResponse response = new ClientInfoResponse();
-        Domain domain = findDomain(req.getHostname());
+        Domain domain = Provisioning.getInstance().get(req.getDomain());
+
+        Element parent =  zsc.createElement(AccountConstants.CLIENT_INFO_RESPONSE);
         if (domain != null) {
-            response.setFeatureResetPasswordStatus(domain.getFeatureResetPasswordStatusAsString());
-            response.setSkinBackgroundColor(domain.getSkinBackgroundColor());
-            response.setSkinFavicon(domain.getSkinFavicon());
-            response.setSkinForegroundColor(domain.getSkinForegroundColor());
-            response.setSkinLogoAppBanner(domain.getSkinLogoAppBanner());
-            response.setSkinLogoLoginBanner(domain.getSkinLogoLoginBanner());
-            response.setSkinLogoURL(domain.getSkinLogoURL());
-            response.setSkinSecondaryColor(domain.getSkinSecondaryColor());
-            response.setSkinSelectionColor(domain.getSkinSelectionColor());
-            response.setWebClientLoginURL(domain.getWebClientLoginURL());
-            response.setWebClientLogoutURL(domain.getWebClientLogoutURL());
-            response.setWebClientStaySignedInDisabled(domain.isWebClientStaySignedInDisabled());
+            ToXML.encodeAttr(parent, Provisioning.A_zimbraFeatureResetPasswordStatus, domain.getFeatureResetPasswordStatusAsString());
+            ToXML.encodeAttr(parent, Provisioning.A_zimbraSkinBackgroundColor, domain.getSkinBackgroundColor());
+            ToXML.encodeAttr(parent, Provisioning.A_zimbraSkinFavicon, domain.getSkinFavicon());
+            ToXML.encodeAttr(parent, Provisioning.A_zimbraSkinForegroundColor, domain.getSkinForegroundColor());
+            ToXML.encodeAttr(parent, Provisioning.A_zimbraSkinLogoAppBanner, domain.getSkinLogoAppBanner());
+            ToXML.encodeAttr(parent, Provisioning.A_zimbraSkinLogoLoginBanner, domain.getSkinLogoLoginBanner());
+            ToXML.encodeAttr(parent, Provisioning.A_zimbraSkinLogoURL, domain.getSkinLogoURL());
+            ToXML.encodeAttr(parent, Provisioning.A_zimbraSkinSecondaryColor, domain.getSkinSecondaryColor());
+            ToXML.encodeAttr(parent, Provisioning.A_zimbraSkinSelectionColor, domain.getSkinSelectionColor());
+            ToXML.encodeAttr(parent, Provisioning.A_zimbraWebClientLoginURL, domain.getWebClientLoginURL());
+            ToXML.encodeAttr(parent, Provisioning.A_zimbraWebClientLogoutURL, domain.getWebClientLogoutURL());
+            ToXML.encodeAttr(parent, Provisioning.A_zimbraWebClientStaySignedInDisabled, String.valueOf(domain.isWebClientStaySignedInDisabled()));
         }
-        return JaxbUtil.jaxbToElement(response);
-    }
-
-    protected Domain findDomain(String name) throws ServiceException {
-        Provisioning prov = Provisioning.getInstance();
-        Domain domain = null;
-
-        String[] split = name.split("\\.");
-        while (split.length > 1) {
-            String partial = String.join(".", split);
-            domain = prov.getDomain(Key.DomainBy.virtualHostname, partial, true);
-            if (domain != null) {
-                break;
-            }
-            split = Arrays.copyOfRange(split, 1, split.length);
-        }
-        return domain;
+        return parent;
     }
 
     @Override
