@@ -17,6 +17,8 @@
 package com.zimbra.soap.account.message;
 
 import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.admin.type.DomainSelector;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -27,18 +29,30 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement(name=AccountConstants.E_CLIENT_INFO_REQUEST)
 public class ClientInfoRequest {
 
-    public ClientInfoRequest() {
+    /**
+     * @zm-api-field-description Domain
+     */
+    @XmlElement(name=AdminConstants.E_DOMAIN /* domain */, required=true)
+    private DomainSelector domain;
 
+    public ClientInfoRequest() {
+        this(null);
+    }
+    public ClientInfoRequest(DomainSelector domain) {
+        this.domain = domain;
     }
 
     /**
-     * @zm-api-field-tag hostname
-     * @zm-api-field-description Hostname for which to retrieve client related attributes
+     * @return the domain
      */
-    @XmlElement(name=AccountConstants.E_HOSTNAME /* hostname */, required=true)
-    private String hostname;
+    public DomainSelector getDomain() {
+        return domain;
+    }
 
-    public String getHostname() { return this.hostname; }
+    /**
+     * @param domain the domain to set
+     */
+    public void setDomain(DomainSelector domain) {
+        this.domain = domain;
+    }
 }
-
-
