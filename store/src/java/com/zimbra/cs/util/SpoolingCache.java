@@ -62,6 +62,7 @@ public class SpoolingCache<K extends Serializable> implements Iterable<K> {
                 oos = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(diskcache)));
             }
             oos.writeObject(item);
+            oos.reset();
         }
         size++;
     }
