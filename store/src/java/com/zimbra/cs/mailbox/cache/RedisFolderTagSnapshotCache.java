@@ -15,7 +15,6 @@ public class RedisFolderTagSnapshotCache extends FolderTagSnapshotCache {
 
     private RBucket<String> folderTagBucket;
 
-
     public RedisFolderTagSnapshotCache(Mailbox mbox) {
         super(mbox);
         initFolderTagBucket();

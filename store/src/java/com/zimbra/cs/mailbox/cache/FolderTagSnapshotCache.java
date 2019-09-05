@@ -17,7 +17,6 @@ public abstract class FolderTagSnapshotCache {
     private static final String KEY_TAGS = "tags";
     protected Mailbox mbox;
 
-
     public FolderTagSnapshotCache(Mailbox mbox) {
         this.mbox = mbox;
         ZimbraLog.mailbox.info("Using %s for Folder/Tag snapshot cache", this.getClass().getSimpleName());
@@ -58,7 +57,6 @@ public abstract class FolderTagSnapshotCache {
     protected abstract Metadata getCachedTagsAndFolders();
 
     protected abstract void cacheFoldersTagsMeta(Metadata folderTagMeta);
-
 
     public static class CachedTagsAndFolders extends Pair<List<Metadata>, List<Metadata>>{
 

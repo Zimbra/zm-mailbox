@@ -1766,29 +1766,25 @@ public class Mailbox implements MailboxStore {
             return;
         }
 
-        Collection<? extends MailItem> cached;
         if (!(parent instanceof Folder)) {
             getItemCache().uncacheChildren(parent);
             return;
         } else if (mFolderCache != null) {
             try(FolderTagCacheLock lock = ftCacheReadLock.lock()) {
-                cached = mFolderCache.values();
-            }
-        } else {
-            return;
-        }
+                Collection<? extends MailItem> cached = mFolderCache.values();
+                int parentId = parent.getId();
+                List<MailItem> children = new ArrayList<MailItem>();
+                for (MailItem item : cached) {
+                    if (item.getParentId() == parentId) {
+                        children.add(item);
+                    }
+                }
 
-        int parentId = parent.getId();
-        List<MailItem> children = new ArrayList<MailItem>();
-        for (MailItem item : cached) {
-            if (item.getParentId() == parentId) {
-                children.add(item);
-            }
-        }
-
-        if (!children.isEmpty()) {
-            for (MailItem child : children) {
-                uncache(child);
+                if (!children.isEmpty()) {
+                    for (MailItem child : children) {
+                        uncache(child);
+                    }
+                }
             }
         }
     }
