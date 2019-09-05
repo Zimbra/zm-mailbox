@@ -66,7 +66,6 @@ public class OwaspPolicy {
     private static final Set<String> mURLProtocols = new HashSet<String>();
     private static final Set<String> mURLProtocolAttrs = new HashSet<String>();
     private static final Map<String, String> mElementUrlProtocols = new HashMap<String, String>();
-    private static final Map<String, String> mElementUrlProtocolAttrs = new HashMap<String, String>();
 
     static {
         try {
