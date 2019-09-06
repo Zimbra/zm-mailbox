@@ -221,6 +221,17 @@
   </servlet>
 
   <servlet>
+    <servlet-name>AdminExtensionDispatcherServlet</servlet-name>
+    <servlet-class>com.zimbra.cs.extension.AdminExtensionDispatcherServlet</servlet-class>
+    <async-supported>true</async-supported>
+    <load-on-startup>2</load-on-startup>
+    <init-param>
+      <param-name>allowed.ports</param-name>
+      <param-value>%%zimbraAdminPort%%</param-value>
+    </init-param>
+  </servlet>
+
+  <servlet>
     <servlet-name>OAuthRequestToken</servlet-name>
     <servlet-class>com.zimbra.cs.account.oauth.OAuthRequestTokenServlet</servlet-class>
     <async-supported>true</async-supported>
@@ -547,6 +558,11 @@
   <servlet-mapping>
     <servlet-name>ExtensionDispatcherServlet</servlet-name>
     <url-pattern>/extension/*</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>AdminExtensionDispatcherServlet</servlet-name>
+    <url-pattern>/admin/extension/*</url-pattern>
   </servlet-mapping>
 
   <servlet-mapping>
