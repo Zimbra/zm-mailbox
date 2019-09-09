@@ -26,7 +26,9 @@ import org.apache.lucene.search.TermQuery;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.LuceneQueryOperation;
 import com.zimbra.cs.index.NoTermQueryOperation;
@@ -43,6 +45,7 @@ public final class ContactQuery extends Query {
     private final String text;
     private final String withWildcard;
     private boolean contactsSearchInfixQuerySupported;
+    private boolean searchEdgeNgramFields;
 
 	public ContactQuery(String text) {
 	    contactsSearchInfixQuerySupported = true;
@@ -52,8 +55,17 @@ public final class ContactQuery extends Query {
 //		contactsSearchInfixQuerySupported = true;
 //	}
     	this.text = text;
-    	this.withWildcard = buildWildcardQuery(text);
+        this.searchEdgeNgramFields = shouldSearchEdgeNgrams(text);
+        if (!searchEdgeNgramFields) {
+            this.withWildcard = buildWildcardQuery(text);
+        } else {
+            this.withWildcard = null;
+        }
     }
+
+	private boolean shouldSearchEdgeNgrams(String text) {
+	    return text.replace("*","").length() < LC.contact_search_min_chars_for_wildcard_query.intValue();
+	}
 
 	private String buildWildcardQuery(String text) {
 		List<String> tokensWithWildcards = new LinkedList<String>();
@@ -100,10 +112,23 @@ public final class ContactQuery extends Query {
         LuceneQueryOperation op = new LuceneQueryOperation();
         String contactFieldSearchClause = toQueryString(LuceneFields.L_CONTACT_DATA, withWildcard);
         BooleanQuery.Builder builder = new BooleanQuery.Builder();
-        builder.add(new TermQuery(new Term(LuceneFields.L_CONTACT_DATA, withWildcard)), Occur.SHOULD);
-        String searchableToField = SolrUtils.getSearchFieldName(LuceneFields.L_H_TO);
-        builder.add(new TermQuery(new Term(searchableToField, withWildcard)), Occur.SHOULD);
-        op.addClause(contactFieldSearchClause, builder.build(), evalBool(bool));
+        TermQuery contactFieldClause;
+        TermQuery toFieldClause;
+        if (searchEdgeNgramFields) {
+            String ngramContactField = SolrUtils.getNgramFieldName(LuceneFields.L_CONTACT_DATA);
+            String ngramToField = SolrUtils.getNgramFieldName(LuceneFields.L_H_TO);
+            contactFieldClause = new TermQuery(new Term(ngramContactField, text));
+            toFieldClause = new TermQuery(new Term(ngramToField, text));
+        } else {
+            contactFieldClause = new TermQuery(new Term(LuceneFields.L_CONTACT_DATA, withWildcard));
+            String searchableToField = SolrUtils.getSearchFieldName(LuceneFields.L_H_TO);
+            toFieldClause = new TermQuery(new Term(searchableToField, withWildcard));
+        }
+        builder.add(contactFieldClause, Occur.SHOULD);
+        builder.add(toFieldClause, Occur.SHOULD);
+        BooleanQuery query = builder.build();
+        ZimbraLog.search.info("contact search for %s compiles to %s", text, query.toString());
+        op.addClause(contactFieldSearchClause, query, evalBool(bool));
         return op;
     }
 

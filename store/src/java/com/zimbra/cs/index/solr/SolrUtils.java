@@ -435,6 +435,10 @@ public class SolrUtils {
         return field + "_search";
     }
 
+    public static String getNgramFieldName(String field) {
+        return field + "_ngrams";
+    }
+
     private static abstract class InitialCollectionSpec {
         private final String configSetName;
         private final int numShards;
