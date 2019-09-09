@@ -256,10 +256,6 @@ public class SolrIndex extends IndexStore {
                     toSearchField(LuceneFields.L_H_TO),
                     toSearchField(LuceneFields.L_H_CC),
                     toSearchField(LuceneFields.L_FILENAME)};
-        } else if (field.equals(LuceneFields.L_CONTACT_DATA)) {
-            return new String[]{
-                    LuceneFields.L_CONTACT_DATA,
-                    toSearchField(LuceneFields.L_H_TO)};
         } else {
             return new String[] { field };
         }
@@ -273,7 +269,7 @@ public class SolrIndex extends IndexStore {
                 origField.equals(LuceneFields.L_H_TO) ||
                 origField.equals(LuceneFields.L_H_CC) ||
                 origField.equals(LuceneFields.L_FILENAME)) {
-            return origField + "_search";
+            return SolrUtils.getSearchFieldName(origField);
         }
         else {
             return origField;

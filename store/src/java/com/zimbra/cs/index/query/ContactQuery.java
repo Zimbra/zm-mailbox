@@ -20,6 +20,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.lucene.index.Term;
+import org.apache.lucene.search.BooleanClause.Occur;
+import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.TermQuery;
 
 import com.google.common.base.Joiner;
@@ -29,6 +31,7 @@ import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.LuceneQueryOperation;
 import com.zimbra.cs.index.NoTermQueryOperation;
 import com.zimbra.cs.index.QueryOperation;
+import com.zimbra.cs.index.solr.SolrUtils;
 import com.zimbra.cs.mailbox.Mailbox;
 
 /**
@@ -95,7 +98,12 @@ public final class ContactQuery extends Query {
     		return new NoTermQueryOperation();
     	}
         LuceneQueryOperation op = new LuceneQueryOperation();
-        op.addClause(toQueryString(LuceneFields.L_CONTACT_DATA, withWildcard), new TermQuery(new Term(LuceneFields.L_CONTACT_DATA, withWildcard)), evalBool(bool));
+        String contactFieldSearchClause = toQueryString(LuceneFields.L_CONTACT_DATA, withWildcard);
+        BooleanQuery.Builder builder = new BooleanQuery.Builder();
+        builder.add(new TermQuery(new Term(LuceneFields.L_CONTACT_DATA, withWildcard)), Occur.SHOULD);
+        String searchableToField = SolrUtils.getSearchFieldName(LuceneFields.L_H_TO);
+        builder.add(new TermQuery(new Term(searchableToField, withWildcard)), Occur.SHOULD);
+        op.addClause(contactFieldSearchClause, builder.build(), evalBool(bool));
         return op;
     }
 

@@ -1,7 +1,6 @@
 package com.zimbra.cs.index.solr;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -18,7 +17,6 @@ import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.CloudSolrClient;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.client.solrj.impl.HttpSolrClient.RemoteSolrException;
-import org.apache.solr.client.solrj.impl.ZkClientClusterStateProvider;
 import org.apache.solr.client.solrj.request.CollectionAdminRequest;
 import org.apache.solr.client.solrj.request.CollectionAdminRequest.Create;
 import org.apache.solr.client.solrj.request.CoreAdminRequest;
@@ -431,6 +429,10 @@ public class SolrUtils {
     public static TermQuery getMatchAllTokensNestedQuery(String field, String fieldValue) {
         String value = String.format("\"{!edismax mm=100%% qf=%s}%s\"", field, ClientUtils.escapeQueryChars(fieldValue));
         return new TermQuery(new Term("_query_", value));
+    }
+
+    public static String getSearchFieldName(String field) {
+        return field + "_search";
     }
 
     private static abstract class InitialCollectionSpec {
