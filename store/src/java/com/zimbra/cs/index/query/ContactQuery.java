@@ -46,8 +46,8 @@ public final class ContactQuery extends Query {
     private final String withWildcard;
     private boolean searchEdgeNgramFields;
 
-	public ContactQuery(String text) {
-    	this.text = text;
+    public ContactQuery(String text) {
+        this.text = text;
         this.searchEdgeNgramFields = shouldSearchEdgeNgrams(text);
         if (!searchEdgeNgramFields) {
             this.withWildcard = buildWildcardQuery(text);
@@ -56,40 +56,40 @@ public final class ContactQuery extends Query {
         }
     }
 
-	private boolean shouldSearchEdgeNgrams(String text) {
-	    return text.replace("*","").length() < LC.contact_search_min_chars_for_wildcard_query.intValue();
-	}
+    private boolean shouldSearchEdgeNgrams(String text) {
+        return text.replace("*","").length() < LC.contact_search_min_chars_for_wildcard_query.intValue();
+    }
 
-	private String buildWildcardQuery(String text) {
-		List<String> tokensWithWildcards = new LinkedList<String>();
-		String[] tokens = text.split("\\s");
-		for (int i = 0; i < tokens.length; i++) {
-			String token = tokens[i];
-				//  "keyword"  -->  "keyword*"
-				// "*keyword*" -->  "keyword*"
-				// "*keyword"  --> "*keyword"
-				//  "keyword*" -->  "keyword*"
-				if (!token.startsWith("*") && !token.endsWith("*")) {
-					tokensWithWildcards.add(token + "*");
-				} else if (token.startsWith("*") && token.endsWith("*")) {
-					tokensWithWildcards.add(token.substring(1, token.length()));
-				} else {
-					tokensWithWildcards.add(token);
-				}
-		}
-		return Joiner.on(" ").join(tokensWithWildcards);
-	}
+    private String buildWildcardQuery(String text) {
+        List<String> tokensWithWildcards = new LinkedList<String>();
+        String[] tokens = text.split("\\s");
+        for (int i = 0; i < tokens.length; i++) {
+            String token = tokens[i];
+                //  "keyword"  -->  "keyword*"
+                // "*keyword*" -->  "keyword*"
+                // "*keyword"  --> "*keyword"
+                //  "keyword*" -->  "keyword*"
+                if (!token.startsWith("*") && !token.endsWith("*")) {
+                    tokensWithWildcards.add(token + "*");
+                } else if (token.startsWith("*") && token.endsWith("*")) {
+                    tokensWithWildcards.add(token.substring(1, token.length()));
+                } else {
+                    tokensWithWildcards.add(token);
+                }
+        }
+        return Joiner.on(" ").join(tokensWithWildcards);
+    }
 
-	@Override
+    @Override
     public boolean hasTextOperation() {
         return true;
     }
 
     @Override
     public QueryOperation compile(Mailbox mbox, boolean bool) throws ServiceException {
-    	if (text.length() == 0) {
-    		return new NoTermQueryOperation();
-    	}
+        if (text.length() == 0) {
+            return new NoTermQueryOperation();
+        }
         LuceneQueryOperation op = new LuceneQueryOperation();
         String contactFieldSearchClause = toQueryString(LuceneFields.L_CONTACT_DATA, withWildcard);
         BooleanQuery.Builder builder = new BooleanQuery.Builder();
@@ -120,9 +120,9 @@ public final class ContactQuery extends Query {
 
     @Override
     void sanitizedDump(StringBuilder out) {
-    	int numWordsInQuery = text.split("\\s").length;
+        int numWordsInQuery = text.split("\\s").length;
         out.append("CONTACT:").append(text);
-    	out.append(":");
+        out.append(":");
         out.append(Strings.repeat("$TEXT,", numWordsInQuery));
         if (out.charAt(out.length()-1) == ',') {
             out.deleteCharAt(out.length()-1);
