@@ -44,16 +44,9 @@ import com.zimbra.cs.mailbox.Mailbox;
 public final class ContactQuery extends Query {
     private final String text;
     private final String withWildcard;
-    private boolean contactsSearchInfixQuerySupported;
     private boolean searchEdgeNgramFields;
 
 	public ContactQuery(String text) {
-	    contactsSearchInfixQuerySupported = true;
-//	try {
-//		contactsSearchInfixQuerySupported = Provisioning.getInstance().getConfig().isContactsSearchInfixQuerySupported();
-//	} catch (ServiceException e) {
-//		contactsSearchInfixQuerySupported = true;
-//	}
     	this.text = text;
         this.searchEdgeNgramFields = shouldSearchEdgeNgrams(text);
         if (!searchEdgeNgramFields) {
@@ -72,17 +65,6 @@ public final class ContactQuery extends Query {
 		String[] tokens = text.split("\\s");
 		for (int i = 0; i < tokens.length; i++) {
 			String token = tokens[i];
-			if (contactsSearchInfixQuerySupported) {
-				//  "keyword"  --> "*keyword*"
-				// "*keyword*" --> "*keyword*"
-				// "*keyword"  --> "*keyword"
-				//  "keyword*" -->  "keyword*"
-				if (!token.startsWith("*") && !token.endsWith("*")) {
-					tokensWithWildcards.add("*" + token + "*");
-				} else {
-					tokensWithWildcards.add(token);
-				}
-			} else {
 				//  "keyword"  -->  "keyword*"
 				// "*keyword*" -->  "keyword*"
 				// "*keyword"  --> "*keyword"
@@ -94,7 +76,6 @@ public final class ContactQuery extends Query {
 				} else {
 					tokensWithWildcards.add(token);
 				}
-			}
 		}
 		return Joiner.on(" ").join(tokensWithWildcards);
 	}
