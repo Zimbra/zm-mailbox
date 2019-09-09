@@ -9963,4 +9963,8 @@ TODO: delete them permanently from here
 <attr id="3077" name="zimbraServiceAccountNumber" type="string" cardinality="single" flags="domainAdminModifiable" optionalIn="account" since="8.9.0">
     <desc>Subscriber/service account number. Custom attribute for account identity.</desc>
 </attr>
+
+<attr id="3078" name="zimbraAccountSuspensionReason" type="string" cardinality="single" flags="domainAdminModifiable" optionalIn="account" since="8.9.0">
+    <desc>Account Suspension reason. It describes the actual cause for account suspension if any and it must be updated with account status.</desc>
+</attr>
 </attrs>

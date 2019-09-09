@@ -2989,6 +2989,83 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Account Suspension reason. It describes the actual cause for account
+     * suspension if any and it must be updated with account status.
+     *
+     * @return zimbraAccountSuspensionReason, or null if unset
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3078)
+    public String getAccountSuspensionReason() {
+        return getAttr(Provisioning.A_zimbraAccountSuspensionReason, null, true);
+    }
+
+    /**
+     * Account Suspension reason. It describes the actual cause for account
+     * suspension if any and it must be updated with account status.
+     *
+     * @param zimbraAccountSuspensionReason new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3078)
+    public void setAccountSuspensionReason(String zimbraAccountSuspensionReason) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAccountSuspensionReason, zimbraAccountSuspensionReason);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Account Suspension reason. It describes the actual cause for account
+     * suspension if any and it must be updated with account status.
+     *
+     * @param zimbraAccountSuspensionReason new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3078)
+    public Map<String,Object> setAccountSuspensionReason(String zimbraAccountSuspensionReason, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAccountSuspensionReason, zimbraAccountSuspensionReason);
+        return attrs;
+    }
+
+    /**
+     * Account Suspension reason. It describes the actual cause for account
+     * suspension if any and it must be updated with account status.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3078)
+    public void unsetAccountSuspensionReason() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAccountSuspensionReason, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Account Suspension reason. It describes the actual cause for account
+     * suspension if any and it must be updated with account status.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3078)
+    public Map<String,Object> unsetAccountSuspensionReason(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAccountSuspensionReason, "");
+        return attrs;
+    }
+
+    /**
      * lifetime of newly created admin auth tokens. Must be in valid duration
      * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
      * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
