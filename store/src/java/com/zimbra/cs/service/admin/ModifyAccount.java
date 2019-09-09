@@ -30,6 +30,7 @@ import com.zimbra.common.account.ZAttrProvisioning.AccountStatus;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
@@ -129,15 +130,32 @@ public class ModifyAccount extends AdminDocumentHandler {
         }
         String oldStatus = account.getAccountStatus(prov);
 
+        String oldSuspendReason = account.getAccountSuspensionReason();
         if (attrs.containsKey(Provisioning.A_zimbraAccountStatus)) {
             String newStatus = (String) attrs.get(Provisioning.A_zimbraAccountStatus);
+            //clearing account suspension reason if new status is active and old status other than active.
+            if (!oldStatus.equals(AccountStatus.active.toString())
+                    && newStatus.equals(AccountStatus.active.toString())) {
+                attrs.put(Provisioning.A_zimbraAccountSuspensionReason, "");
+            }
+            if ((newStatus.equals(AccountStatus.locked.toString()) || newStatus.equals(AccountStatus.lockout.toString()))
+                    && attrs.containsKey(Provisioning.A_zimbraAccountSuspensionReason)) {
+                account.setAccountSuspensionReason((String) attrs.get(Provisioning.A_zimbraAccountSuspensionReason));
+            }
             try {
                 AccountListener.invokeOnStatusChange(account, oldStatus, newStatus, zsc);
             } catch (ServiceException se) {
                 ZimbraLog.account.error(se.getMessage());
                 account.setAccountStatus(AccountStatus.fromString(oldStatus));
+                if (!StringUtil.isNullOrEmpty(oldSuspendReason)) {
+                    account.setAccountSuspensionReason(oldSuspendReason);
+                }
                 throw se;
             }
+        }
+        if (!attrs.containsKey(Provisioning.A_zimbraAccountStatus) && attrs.containsKey(Provisioning.A_zimbraAccountSuspensionReason)) {
+            ZimbraLog.account.info("Account Modify request having suspension reason without account status, ignoring updation");
+            attrs.remove(Provisioning.A_zimbraAccountSuspensionReason);
         }
         if (attrs.containsKey(Provisioning.A_givenName) || attrs.containsKey(Provisioning.A_sn)) {
             String firstName = (String) attrs.get(Provisioning.A_givenName);
@@ -149,6 +167,9 @@ public class ModifyAccount extends AdminDocumentHandler {
                 // roll back status change account listener updates, if within same request
                 if (attrs.containsKey(Provisioning.A_zimbraAccountStatus)) {
                     String newStatus = (String) attrs.get(Provisioning.A_zimbraAccountStatus);
+                    if (attrs.containsKey(Provisioning.A_zimbraAccountSuspensionReason) && !StringUtil.isNullOrEmpty(oldSuspendReason)) {
+                        account.setAccountSuspensionReason(oldSuspendReason);
+                    }
                     try {
                         AccountListener.invokeOnStatusChange(account, newStatus, oldStatus, zsc);
                     } catch (ServiceException sse) {
@@ -169,6 +190,10 @@ public class ModifyAccount extends AdminDocumentHandler {
             if (attrs.containsKey(Provisioning.A_zimbraAccountStatus)) {
                 String newStatus = (String) attrs.get(Provisioning.A_zimbraAccountStatus);
                 ZimbraLog.account.debug("Listener rollback for account status change of from \"%s\" to \"%s\".", newStatus, oldStatus);
+                if (attrs.containsKey(Provisioning.A_zimbraAccountSuspensionReason)
+                        && !StringUtil.isNullOrEmpty(oldSuspendReason)) {
+                    account.setAccountSuspensionReason(oldSuspendReason);
+                }
                 try {
                     AccountListener.invokeOnStatusChange(account, newStatus, oldStatus, zsc);
                 } catch (ServiceException sse) {
