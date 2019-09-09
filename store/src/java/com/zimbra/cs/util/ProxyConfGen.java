@@ -698,7 +698,8 @@ class WebAdminUpstreamAdminClientServersVar extends ProxyConfVar {
     public WebAdminUpstreamAdminClientServersVar() {
         super("web.admin.upstream.:servers", null, null, ProxyConfValueType.CUSTOM,
                 ProxyConfOverride.CUSTOM,
-                "List of upstream HTTPS Admin client servers used by Web Proxy");
+                "List of upstream HTTPS Admin client servers used by Web Proxy. " +
+                "Can be overridden by zimbra_admin_soap_service LC.");
     }
 
     @Override
@@ -706,14 +707,26 @@ class WebAdminUpstreamAdminClientServersVar extends ProxyConfVar {
         ArrayList<String> directives = new ArrayList<String>();
         String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyAdminPortAttribute, "");
 
-        List<Server> adminclientservers = mProv.getAllAdminClientServers();
-        for (Server server : adminclientservers) {
-            String serverName = server.getAttr(
-                    Provisioning.A_zimbraServiceHostname, "");
+        // The zimbra_admin_soap_service value, if not empty, must be registered as a _server_ in LDAP
+        String adminSoapService = LC.zimbra_admin_soap_service.value();
+        if (adminSoapService.length() > 0) {
+            Server server = mProv.getServerByName(adminSoapService);
+            if (server != null) {
+                directives.add(generateServerDirective(server, adminSoapService, portName));
+                mLog.debug("Added service to HTTPS Admin client upstream: %s", adminSoapService);
+            } else {
+                mLog.error("Server lookup error. Server name: '%s'", adminSoapService);
+            }
+        } else {
+            List<Server> adminclientservers = mProv.getAllAdminClientServers();
+            for (Server server : adminclientservers) {
+                String serverName = server.getAttr(
+                        Provisioning.A_zimbraServiceHostname, "");
 
-            if (isValidUpstream(server, serverName)) {
-                directives.add(generateServerDirective(server, serverName, portName));
-                mLog.debug("Added server to HTTPS Admin client upstream: " + serverName);
+                if (isValidUpstream(server, serverName)) {
+                    directives.add(generateServerDirective(server, serverName, portName));
+                    mLog.debug("Added server to HTTPS Admin client upstream: %s", serverName);
+                }
             }
         }
         mValue = directives;
@@ -967,24 +980,36 @@ class WebSSLUpstreamServersVar extends ServersVar {
     	super("web.ssl.upstream.:servers", Provisioning.A_zimbraReverseProxyHttpSSLPortAttribute,
     			"List of upstream HTTPS servers used by Web Proxy (i.e. servers " +
     			"for which zimbraReverseProxyLookupTarget is true, and whose " +
-    			"mail mode is https|mixed|both)");
+                "mail mode is https|mixed|both). Can be overridden by zimbra_soap_server LC.");
     }
 
     @Override
     public void update() throws ServiceException {
     	ArrayList<String> directives = new ArrayList<String>();
-    	String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyHttpSSLPortAttribute, "");
+        String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyHttpSSLPortAttribute, "");
 
-    	List<Server> mailclientservers = mProv.getAllMailClientServers();
-    	for (Server server : mailclientservers) {
-    		String serverName = server.getAttr(
-    				Provisioning.A_zimbraServiceHostname, "");
 
-    		if (isValidUpstream(server, serverName)) {
-    			directives.add(generateServerDirective(server, serverName, portName));
-    			mLog.debug("Added server to HTTPS mailstore upstream: " + serverName);
-    		}
-    	}
+        String soapService = LC.zimbra_soap_service.value();
+        if (soapService.length() > 0) {
+            Server server = mProv.getServerByName(soapService);
+            if (server != null) {
+                directives.add(generateServerDirective(server, soapService, portName));
+                mLog.debug("Added service to HTTPS mailstore upstream: %s", soapService);
+            } else {
+                mLog.error("Server lookup error. Server name: '%s'", soapService);
+            }
+        } else {
+            List<Server> mailclientservers = mProv.getAllMailClientServers();
+            for (Server server : mailclientservers) {
+                String serverName = server.getAttr(
+                        Provisioning.A_zimbraServiceHostname, "");
+
+                if (isValidUpstream(server, serverName)) {
+                    directives.add(generateServerDirective(server, serverName, portName));
+                    mLog.debug("Added server to HTTPS mailstore upstream: %s", serverName);
+                }
+            }
+        }
     	mValue = directives;
     }
 }

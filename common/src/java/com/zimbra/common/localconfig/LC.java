@@ -121,11 +121,23 @@ public final class LC {
     @Supported
     public static final KnownKey zimbra_admin_service_port = KnownKey.newKey(7071);
 
+    /**
+     *  If specified, ProxyConfGen uses this value when configuring the zimbra_admin upstream.
+     */
+    @Supported
+    public static final KnownKey zimbra_admin_soap_service = KnownKey.newKey("zmc-mls");
+
     @Supported
     public static final KnownKey zimbra_mail_service_port = KnownKey.newKey(80);
 
     @Supported
     public static final KnownKey zimbra_admin_service_scheme = KnownKey.newKey("https://");
+
+    /**
+     *  If specified, ProxyConfGen uses this value when configuring the zimbra_ssl upstream.
+     */
+    @Supported
+    public static final KnownKey zimbra_soap_service = KnownKey.newKey("zmc-mls");
 
     @Supported
     public static final KnownKey zimbra_zmprov_default_to_ldap = KnownKey.newKey(false);
