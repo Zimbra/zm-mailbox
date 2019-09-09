@@ -25,6 +25,8 @@ import java.util.Map;
 
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ZAttrProvisioning.AccountStatus;
+import com.zimbra.common.localconfig.DebugConfig;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -96,11 +98,12 @@ public class DeleteAccount extends AdminDocumentHandler {
          * so mail delivery and any user action is blocked.
          */
         prov.modifyAccountStatus(account, AccountStatus.maintenance.name());
+        boolean rollbackOnFailure = LC.rollback_on_account_listener_failure.booleanValue();
 
         try {
-            AccountListener.invokeBeforeAccountDeletion(account, zsc);
+            AccountListener.invokeBeforeAccountDeletion(account, zsc, rollbackOnFailure);
         } catch (ServiceException e) {
-            ZimbraLog.account.warn("AccountListener deletion failed, restoring account status back to \"%s\" from maintenance.", accountStatus);
+            ZimbraLog.account.warn("Account deletion failed, restoring account status back to \"%s\" from maintenance.", accountStatus);
             // reset the old status of account
             prov.modifyAccountStatus(account, AccountStatus.fromString(accountStatus).name());
             throw ServiceException.FAILURE(
@@ -115,15 +118,19 @@ public class DeleteAccount extends AdminDocumentHandler {
             }
             prov.deleteAccount(id);
         } catch (ServiceException se) {
-            ZimbraLog.account.warn("Account deletion failed, restoring account status back to \"%s\" from maintenance.", accountStatus);
-            // reset the old status of account
-            prov.modifyAccountStatus(account, AccountStatus.fromString(accountStatus).name());
-            try {
-                // invoke create account call on account listener.
-                AccountListener.invokeOnAccountCreation(account, zsc);
-            } catch (ServiceException rse) {
-                ZimbraLog.account.debug("AccountListener restore account failed for %s. %s", account.getMail(), rse.getCause());
-                throw rse;
+            if (rollbackOnFailure) {
+                ZimbraLog.account.warn("Account deletion failed, restoring account status back to \"%s\" from maintenance.", accountStatus);
+                // reset the old status of account
+                prov.modifyAccountStatus(account, AccountStatus.fromString(accountStatus).name());
+                try {
+                    // invoke create account call on account listener.
+                    AccountListener.invokeOnAccountCreation(account, zsc);
+                } catch (ServiceException rse) {
+                    ZimbraLog.account.debug("AccountListener restore account failed for %s. %s", account.getMail(), rse.getCause());
+                    throw rse;
+                }
+            } else {
+                ZimbraLog.account.warn("No rollback on account listener for zimbra account delete failure, there may be inconsistency in account. %s", se.getMessage());
             }
             throw se;
         }

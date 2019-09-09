@@ -1427,6 +1427,9 @@ public final class LC {
     // XML 1.0 invalid characters regex pattern
     public static final KnownKey xml_invalid_chars_regex = KnownKey.newKey("\\&\\#(?:x([0-9a-fA-F]+)|([0-9]+))\\;");
 
+    // account listener rollback handler on failure
+    public static final KnownKey rollback_on_account_listener_failure = KnownKey.newKey(true);
+
     static {
         // Automatically set the key name with the variable name.
         for (Field field : LC.class.getFields()) {

@@ -27,6 +27,7 @@ import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.CacheEntryBy;
 import com.zimbra.common.account.ZAttrProvisioning.AccountStatus;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -47,7 +48,6 @@ import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.listeners.AccountListener;
 import com.zimbra.cs.session.AdminSession;
 import com.zimbra.cs.session.Session;
-import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.ModifyAccountRequest;
 import com.zimbra.soap.admin.type.CacheEntryType;
@@ -129,6 +129,7 @@ public class ModifyAccount extends AdminDocumentHandler {
             defendAgainstServerNameHarvesting(newServer, Key.ServerBy.name, newServerName, zsc, Admin.R_listServer);
         }
         String oldStatus = account.getAccountStatus(prov);
+        boolean rollbackOnFailure = LC.rollback_on_account_listener_failure.booleanValue();
 
         String oldSuspendReason = account.getAccountSuspensionReason();
         if (attrs.containsKey(Provisioning.A_zimbraAccountStatus)) {
@@ -143,7 +144,7 @@ public class ModifyAccount extends AdminDocumentHandler {
                 account.setAccountSuspensionReason((String) attrs.get(Provisioning.A_zimbraAccountSuspensionReason));
             }
             try {
-                AccountListener.invokeOnStatusChange(account, oldStatus, newStatus, zsc);
+                AccountListener.invokeOnStatusChange(account, oldStatus, newStatus, zsc, rollbackOnFailure);
             } catch (ServiceException se) {
                 ZimbraLog.account.error(se.getMessage());
                 account.setAccountStatus(AccountStatus.fromString(oldStatus));
@@ -161,21 +162,25 @@ public class ModifyAccount extends AdminDocumentHandler {
             String firstName = (String) attrs.get(Provisioning.A_givenName);
             String lastName = (String) attrs.get(Provisioning.A_sn);
             try {
-                AccountListener.invokeOnNameChange(account, firstName, lastName, zsc);
+                AccountListener.invokeOnNameChange(account, firstName, lastName, zsc, rollbackOnFailure);
             } catch (ServiceException se) {
                 ZimbraLog.account.error(se.getMessage());
-                // roll back status change account listener updates, if within same request
-                if (attrs.containsKey(Provisioning.A_zimbraAccountStatus)) {
-                    String newStatus = (String) attrs.get(Provisioning.A_zimbraAccountStatus);
-                    if (attrs.containsKey(Provisioning.A_zimbraAccountSuspensionReason) && !StringUtil.isNullOrEmpty(oldSuspendReason)) {
-                        account.setAccountSuspensionReason(oldSuspendReason);
+                if (rollbackOnFailure) {
+                    // roll back status change account listener updates, if within same request
+                    if (attrs.containsKey(Provisioning.A_zimbraAccountStatus)) {
+                        String newStatus = (String) attrs.get(Provisioning.A_zimbraAccountStatus);
+                        if (attrs.containsKey(Provisioning.A_zimbraAccountSuspensionReason) && !StringUtil.isNullOrEmpty(oldSuspendReason)) {
+                            account.setAccountSuspensionReason(oldSuspendReason);
+                        }
+                        try {
+                            AccountListener.invokeOnStatusChange(account, newStatus, oldStatus, zsc, rollbackOnFailure);
+                        } catch (ServiceException sse) {
+                            ZimbraLog.account.error(se.getMessage());
+                            throw se;
+                        }
                     }
-                    try {
-                        AccountListener.invokeOnStatusChange(account, newStatus, oldStatus, zsc);
-                    } catch (ServiceException sse) {
-                        ZimbraLog.account.error(se.getMessage());
-                        throw se;
-                    }
+                } else {
+                    ZimbraLog.account.warn("No rollback on account listener for zimbra account status change failure, there may be inconsistency in account. %s", se.getMessage());
                 }
                 throw se;
             }
@@ -185,31 +190,35 @@ public class ModifyAccount extends AdminDocumentHandler {
             // pass in true to checkImmutable
             prov.modifyAttrs(account, attrs, true);
         } catch (ServiceException se) {
-            ZimbraLog.account.debug("Exception occured while modifying account in zimbra for %s, roll back listener updates.", account.getMail());
-            // roll back status change updates
-            if (attrs.containsKey(Provisioning.A_zimbraAccountStatus)) {
-                String newStatus = (String) attrs.get(Provisioning.A_zimbraAccountStatus);
-                ZimbraLog.account.debug("Listener rollback for account status change of from \"%s\" to \"%s\".", newStatus, oldStatus);
-                if (attrs.containsKey(Provisioning.A_zimbraAccountSuspensionReason)
-                        && !StringUtil.isNullOrEmpty(oldSuspendReason)) {
-                    account.setAccountSuspensionReason(oldSuspendReason);
+            if (rollbackOnFailure) {
+                ZimbraLog.account.debug("Exception occured while modifying account in zimbra for %s, roll back listener updates.", account.getMail());
+                // roll back status change updates
+                if (attrs.containsKey(Provisioning.A_zimbraAccountStatus)) {
+                    String newStatus = (String) attrs.get(Provisioning.A_zimbraAccountStatus);
+                    ZimbraLog.account.debug("Listener rollback for account status change of from \"%s\" to \"%s\".", newStatus, oldStatus);
+                    if (attrs.containsKey(Provisioning.A_zimbraAccountSuspensionReason)
+                            && !StringUtil.isNullOrEmpty(oldSuspendReason)) {
+                        account.setAccountSuspensionReason(oldSuspendReason);
+                    }
+                    try {
+                        AccountListener.invokeOnStatusChange(account, newStatus, oldStatus, zsc, rollbackOnFailure);
+                    } catch (ServiceException sse) {
+                        ZimbraLog.account.error(sse.getMessage());
+                        throw sse;
+                    }
                 }
-                try {
-                    AccountListener.invokeOnStatusChange(account, newStatus, oldStatus, zsc);
-                } catch (ServiceException sse) {
-                    ZimbraLog.account.error(sse.getMessage());
-                    throw sse;
+                // roll back name change updates
+                if (attrs.containsKey(Provisioning.A_givenName) || attrs.containsKey(Provisioning.A_sn)) {
+                    try {
+                        ZimbraLog.account.debug("Listener rollback for account name change. First name: %s Last name:  %s.", account.getGivenName(), account.getSn());
+                        AccountListener.invokeOnNameChange(account, account.getGivenName(), account.getSn(), zsc, rollbackOnFailure);
+                    } catch (ServiceException nse) {
+                        ZimbraLog.account.error(nse.getMessage());
+                        throw nse;
+                    }
                 }
-            }
-            // roll back name change updates
-            if (attrs.containsKey(Provisioning.A_givenName) || attrs.containsKey(Provisioning.A_sn)) {
-                try {
-                    ZimbraLog.account.debug("Listener rollback for account name change. First name: %s Last name:  %s.", account.getGivenName(), account.getSn());
-                    AccountListener.invokeOnNameChange(account, account.getGivenName(), account.getSn(), zsc);
-                } catch (ServiceException nse) {
-                    ZimbraLog.account.error(nse.getMessage());
-                    throw nse;
-                }
+            } else {
+                ZimbraLog.account.warn("No rollback on account listener for zimbra modify account failure, there may be inconsistency in account. %s", se.getMessage());
             }
             throw se;
         }

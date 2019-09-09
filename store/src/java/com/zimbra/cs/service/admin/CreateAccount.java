@@ -22,6 +22,7 @@ import java.util.Map;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.ZAttrProvisioning.AccountStatus;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -62,6 +63,7 @@ public class CreateAccount extends AdminDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
         Account account = null;
+        boolean rollbackOnFailure = LC.rollback_on_account_listener_failure.booleanValue();
         try {
         CreateAccountRequest req = zsc.elementToJaxb(request);
 
@@ -85,16 +87,20 @@ public class CreateAccount extends AdminDocumentHandler {
         try {
             AccountListener.invokeOnAccountCreation(account, zsc);
         } catch (ServiceException e) {
-            // roll-back account creation
-            prov.modifyAccountStatus(account, AccountStatus.maintenance.name());
-            Mailbox mbox = Provisioning.onLocalServer(account)
-                ? MailboxManager.getInstance().getMailboxByAccount(account, false) : null;
-            if (mbox != null) {
-                mbox.deleteMailbox();
+            if (rollbackOnFailure) {
+                // roll-back account creation
+                prov.modifyAccountStatus(account, AccountStatus.maintenance.name());
+                Mailbox mbox = Provisioning.onLocalServer(account)
+                    ? MailboxManager.getInstance().getMailboxByAccount(account, false) : null;
+                if (mbox != null) {
+                    mbox.deleteMailbox();
+                }
+                prov.deleteAccount(account.getId());
+                throw ServiceException
+                    .FAILURE("Failed to create account '" + account.getName() + "' in AccountListener", e);
+            } else {
+                ZimbraLog.account.warn("No rollback on zimbra create account for account listener failure, there may be inconsistency in accounts. %s", e.getMessage());
             }
-            prov.deleteAccount(account.getId());
-            throw ServiceException
-                .FAILURE("Failed to create account '" + account.getName() + "' in AccountListener", e);
         }
         return response;
     }
