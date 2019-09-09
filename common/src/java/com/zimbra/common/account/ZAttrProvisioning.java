@@ -2921,6 +2921,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraAccountStatus = "zimbraAccountStatus";
 
     /**
+     * Account Suspension reason. It describes the actual cause for account
+     * suspension if any and it must be updated with account status.
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3078)
+    public static final String A_zimbraAccountSuspensionReason = "zimbraAccountSuspensionReason";
+
+    /**
      * Zimbra access control list
      *
      * @since ZCS 5.0.7
