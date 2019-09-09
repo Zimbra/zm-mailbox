@@ -85,7 +85,7 @@ public abstract class AccountListener {
         }
     }
 
-    public static void invokeBeforeAccountDeletion(Account acct, ZimbraSoapContext zsc) throws ServiceException {
+    public static void invokeBeforeAccountDeletion(Account acct, ZimbraSoapContext zsc, boolean rollbackOnFailure) throws ServiceException {
         ZimbraLog.account.debug("Account to be deleted for user: %s", acct.getName());
         ArrayList<AccountListenerEntry> notifiedListeners = new ArrayList<AccountListenerEntry>();
         String requestVia = zsc.getVia();
@@ -103,12 +103,16 @@ public abstract class AccountListener {
                 notifiedListeners.add(listenerInstance);
             }
         } catch (ServiceException se) {
-            rollbackAccountDeletion(notifiedListeners, acct);
+            if (rollbackOnFailure) {
+                rollbackAccountDeletion(notifiedListeners, acct);
+            } else {
+                ZimbraLog.account.warn("No rollback on account listener for zimbra delete account failure, there may be inconsistency in account. %s", se.getMessage());
+            }
             throw se;
         }
     }
 
-    public static void invokeOnStatusChange(Account acct, String oldStatus, String newStatus, ZimbraSoapContext zsc)
+    public static void invokeOnStatusChange(Account acct, String oldStatus, String newStatus, ZimbraSoapContext zsc, boolean rollbackOnFailure)
             throws ServiceException {
         ZimbraLog.account.debug("Account status for %s changed from '%s' to '%s'", acct.getName(),
             oldStatus, newStatus);
@@ -128,12 +132,16 @@ public abstract class AccountListener {
                 notifiedListeners.add(listenerInstance);
             }
         } catch (ServiceException se) {
-            rollbackChangedStatus(notifiedListeners, acct, oldStatus, newStatus);
+            if (rollbackOnFailure) {
+                rollbackChangedStatus(notifiedListeners, acct, oldStatus, newStatus);
+            } else {
+                ZimbraLog.account.warn("No rollback on account listener for zimbra modify account failure, there may be inconsistency in account. %s", se.getMessage());
+            }
             throw se;
         }
     }
 
-    public static void invokeOnNameChange(Account acct, String firstName, String lastname, ZimbraSoapContext zsc)
+    public static void invokeOnNameChange(Account acct, String firstName, String lastname, ZimbraSoapContext zsc, boolean rollbackOnFailure)
             throws ServiceException {
         ZimbraLog.account.debug("Account name changed for %s. First Name: %s, Last Name: %s", acct.getName(),
                 firstName, lastname);
@@ -153,7 +161,11 @@ public abstract class AccountListener {
                 notifiedListeners.add(listenerInstance);
             }
         } catch (ServiceException se) {
-            rollbackNameChange(notifiedListeners, acct, acct.getGivenName(), acct.getSn());
+            if (rollbackOnFailure) {
+                rollbackNameChange(notifiedListeners, acct, acct.getGivenName(), acct.getSn());
+            } else {
+                ZimbraLog.account.warn("No rollback on account listener for zimbra account nanme change failure, there may be inconsistency in account. %s", se.getMessage());
+            }
             throw se;
         }
     }
