@@ -203,7 +203,7 @@ public class RedissonRetryClient implements RedissonClient {
 
     @Override
     public void shutdown() {
-        client.shutdown();
+        client.shutdown(0, 2, TimeUnit.SECONDS);
     }
 
     @Override
