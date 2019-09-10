@@ -339,8 +339,8 @@ public class DbPool {
         }
         Integer mboxId = mbox != null ? mbox.getId() : -1; //-1 == zimbra db and/or initialization where mbox isn't known yet
         int tries = 0;
-        int maxRetries = 30;
-        final int RETRY_SECONDS = 1;
+        int maxRetries = LC.dbpool_connection_max_retries.intValue();
+        final int RETRY_SECONDS = LC.dbpool_connection_retry_seconds.intValue();
         DbConnection conn = null;
         while (tries < maxRetries) {
             try {
@@ -367,7 +367,7 @@ public class DbPool {
                     conn = new DbConnection(dbconn, mboxId);
                     Db.getInstance().postOpen(conn);
                 } catch (SQLTransientException exp) {
-                    ZimbraLog.sqltrace.info("Failure and retry #" + tries +  " with exception " + exp.getMessage());
+                    ZimbraLog.sqltrace.info("Failure and retry %d with exception %s", tries, exp.getMessage());
                     if (tries >= maxRetries) {
                         ZimbraLog.sqltrace.info("Failed to get db connection after %d attempts, giving up", tries);
                         throw ServiceException.FAILURE("getting database connection", exp);
@@ -416,8 +416,8 @@ public class DbPool {
             throw ServiceException.FAILURE("Database connection pool not initialized.", null);
         }
         int tries = 0;
-        int maxRetries = 30;
-        final int RETRY_SECONDS = 1;
+        int maxRetries = LC.dbpool_connection_max_retries.intValue();
+        final int RETRY_SECONDS = LC.dbpool_connection_retry_seconds.intValue();
         DbConnection conn = null;
         while (tries < maxRetries) {
             try {
@@ -447,7 +447,7 @@ public class DbPool {
                     conn = new DbConnection(dbconn, mboxId);
                     Db.getInstance().postOpen(conn);
                 } catch (SQLTransientException exp) {
-                    ZimbraLog.sqltrace.info("Failure and retry #" + tries +  " with exception " + exp.getMessage());
+                    ZimbraLog.sqltrace.info("Failure and retry %d with exception %s", tries, exp.getMessage());
                     if (tries >= maxRetries) {
                         ZimbraLog.sqltrace.info("Failed to get db connection after %d attempts, giving up", tries);
                         throw ServiceException.FAILURE("getting database connection", exp);
