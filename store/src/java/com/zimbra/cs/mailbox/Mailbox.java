@@ -159,8 +159,9 @@ import com.zimbra.cs.mailbox.Note.Rectangle;
 import com.zimbra.cs.mailbox.NotificationPubSub.Publisher;
 import com.zimbra.cs.mailbox.Tag.NormalizedTags;
 import com.zimbra.cs.mailbox.cache.FolderCache;
+import com.zimbra.cs.mailbox.cache.FolderTagSnapshotCache;
+import com.zimbra.cs.mailbox.cache.FolderTagSnapshotCache.CachedTagsAndFolders;
 import com.zimbra.cs.mailbox.cache.ItemCache;
-import com.zimbra.cs.mailbox.cache.ItemCache.CachedTagsAndFolders;
 import com.zimbra.cs.mailbox.cache.LocalFolderCache;
 import com.zimbra.cs.mailbox.cache.TagCache;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
@@ -646,6 +647,7 @@ public class Mailbox implements MailboxStore {
 
     private FolderCache mFolderCache;
     private TagCache mTagCache;
+    private FolderTagSnapshotCache folderTagSnapshot;
     private final FolderTagCacheReadWriteLock folderTagCacheLock = new FolderTagCacheReadWriteLock();
     private final FolderTagCacheLock ftCacheReadLock = folderTagCacheLock.readLock();
     private final FolderTagCacheLock ftCacheWriteLock = folderTagCacheLock.writeLock();
@@ -681,6 +683,7 @@ public class Mailbox implements MailboxStore {
         state.setLastChangeDate(System.currentTimeMillis());
         pubsub = NotificationPubSub.getFactory().getNotificationPubSub(this);
         MAX_ITEM_CACHE_SIZE = LC.zimbra_mailbox_active_cache.intValue();
+        folderTagSnapshot = ItemCache.getFactory().getFolderTagSnapshotCache(this);
     }
 
     public void setGalSyncMailbox(boolean galSyncMailbox) {
@@ -1667,15 +1670,8 @@ public class Mailbox implements MailboxStore {
     private void clearItemCache() {
         if (currentChange().isActive()) {
             currentChange().itemCache.clear();
-        } else {
+        } else if (mItemCache != null) {
             mItemCache.clear();
-        }
-        try {
-            if (Zimbra.isAlwaysOn()) {
-                DbMailbox.incrementItemcacheCheckpoint(this);
-            }
-        } catch (ServiceException e) {
-            ZimbraLog.mailbox.error("error while clearing item cache", e);
         }
     }
 
@@ -1741,13 +1737,7 @@ public class Mailbox implements MailboxStore {
 
         ZimbraLog.cache.debug("uncached %s %d in mailbox %d", item.getType(), item.getId(), getId());
 
-        /*
-         * With the item cache stored in redis, uncacheChildren is very inefficient.
-         * Since the cache is unbounded, itemCache.values() requires pulling an arbitrarily high number of
-         * items into memory (even if it was bounded, it would still be an inefficient operation).
-         * Temporarily commenting this out shouldn't do any damage other than keeping stale hash entries in redis.
-         * uncacheChildren(item);
-         */
+        uncacheChildren(item);
     }
 
     /** Removes an item from the <code>Mailbox</code>'s item cache.
@@ -1776,28 +1766,25 @@ public class Mailbox implements MailboxStore {
             return;
         }
 
-        Collection<? extends MailItem> cached;
         if (!(parent instanceof Folder)) {
-            cached = getItemCache().values();
+            getItemCache().uncacheChildren(parent);
+            return;
         } else if (mFolderCache != null) {
             try(FolderTagCacheLock lock = ftCacheReadLock.lock()) {
-                cached = mFolderCache.values();
-            }
-        } else {
-            return;
-        }
+                Collection<? extends MailItem> cached = mFolderCache.values();
+                int parentId = parent.getId();
+                List<MailItem> children = new ArrayList<MailItem>();
+                for (MailItem item : cached) {
+                    if (item.getParentId() == parentId) {
+                        children.add(item);
+                    }
+                }
 
-        int parentId = parent.getId();
-        List<MailItem> children = new ArrayList<MailItem>();
-        for (MailItem item : cached) {
-            if (item.getParentId() == parentId) {
-                children.add(item);
-            }
-        }
-
-        if (!children.isEmpty()) {
-            for (MailItem child : children) {
-                uncache(child);
+                if (!children.isEmpty()) {
+                    for (MailItem child : children) {
+                        uncache(child);
+                    }
+                }
             }
         }
     }
@@ -1976,7 +1963,7 @@ public class Mailbox implements MailboxStore {
             MailboxData stats = null;
 
             boolean loadedFromCache = false;
-            CachedTagsAndFolders cachedTagsAndFolders = mItemCache.getTagsAndFolders();
+            CachedTagsAndFolders cachedTagsAndFolders = folderTagSnapshot.getTagsAndFolders();
 
             if (cachedTagsAndFolders != null) {
                 loadedFromCache = true;
@@ -2078,7 +2065,7 @@ public class Mailbox implements MailboxStore {
         try(FolderTagCacheLock lock = ftCacheReadLock.lock()) {
         	List<Folder> folderList = new ArrayList<>(mFolderCache.values());
         	List<Tag> tagList = new ArrayList<>(mTagCache.values());
-        	mItemCache.cacheTagsAndFolders(folderList, tagList);
+                folderTagSnapshot.cacheTagsAndFolders(folderList, tagList);
         }
     }
 
@@ -10273,6 +10260,9 @@ public class Mailbox implements MailboxStore {
         }
         if (!LC.redis_cache_synchronize_mailbox_state.booleanValue()) {
             state.reload();
+        }
+        if (!LC.redis_cache_synchronize_item_cache.booleanValue()) {
+            clearItemCache();
         }
     }
 

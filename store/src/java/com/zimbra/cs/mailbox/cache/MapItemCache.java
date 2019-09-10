@@ -78,6 +78,11 @@ public abstract class MapItemCache<T> extends ItemCache {
     }
 
     @Override
+    public int size() {
+        return mapById.size();
+    }
+
+    @Override
     public void clear() {
         mapById.clear();
         uuid2id.clear();

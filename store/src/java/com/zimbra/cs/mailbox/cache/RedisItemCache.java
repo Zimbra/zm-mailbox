@@ -4,12 +4,10 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.redisson.api.RBucket;
 import org.redisson.api.RMap;
 import org.redisson.api.RScoredSortedSet;
 import org.redisson.api.RedissonClient;
 
-import com.google.common.base.Strings;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -30,26 +28,17 @@ import com.zimbra.cs.mailbox.redis.RedisUtils;
 public class RedisItemCache extends MapItemCache<String> {
 
     /* Change this if item serialization algorithm changes. */
-    private String currVersionPrefix = "%v1;";
-
-    private RBucket<String> folderTagBucket;
+    public static final String CURR_VERSION_PREFIX = "%v1;";
 
     //cache that stores items locally over the course of a transaction, so multiple requests
     //for the same item ID will yield the same object
     private Map<Integer, MailItem> localCache;
     private RedisBackedLRUItemCache lruCache;
-    private RedissonClient client;
 
     public RedisItemCache(Mailbox mbox, Map<Integer, String> itemMap, Map<String, Integer> uuidMap, RedisBackedLRUItemCache lruCache) {
         super(mbox, itemMap, uuidMap);
-        this.client = RedissonClientHolder.getInstance().getRedissonClient();
         this.localCache = new ConcurrentHashMap<>();
         this.lruCache = lruCache;
-        initFolderTagBucket();
-    }
-
-    private void initFolderTagBucket() {
-        folderTagBucket = client.getBucket(RedisUtils.createAccountRoutedKey(mbox.getAccountId(), "FOLDERS_TAGS"));
     }
 
     private void markItemAccessed(int id) {
@@ -79,46 +68,22 @@ public class RedisItemCache extends MapItemCache<String> {
 
     @Override
     protected String toCacheValue(MailItem item) {
-        return currVersionPrefix + item.serializeUnderlyingData().toString();
+        return CURR_VERSION_PREFIX + item.serializeUnderlyingData().toString();
     }
 
     @Override
     protected MailItem fromCacheValue(String value) {
-        if (value == null || !value.startsWith(currVersionPrefix)) {
+        if (value == null || !value.startsWith(CURR_VERSION_PREFIX)) {
             ZimbraLog.cache.debug("Dropping old cache value for mail item '%s'", value);
             return null;
         }
         UnderlyingData data = new UnderlyingData();
         try {
-            data.deserialize(new Metadata(value.substring(currVersionPrefix.length())));
+            data.deserialize(new Metadata(value.substring(CURR_VERSION_PREFIX.length())));
             return MailItem.constructItem(mbox, data, true);
         } catch (ServiceException e) {
             ZimbraLog.cache.error("unable to get MailItem from Redis cache for account %s", mbox.getAccountId());
             return null;
-        }
-    }
-
-    @Override
-    protected Metadata getCachedTagsAndFolders() {
-        if (!LC.redis_cache_synchronize_folder_tag_snapshot.booleanValue()) {
-            return null;
-        }
-        String encoded = folderTagBucket.get();
-        if (encoded == null || !encoded.startsWith(currVersionPrefix)) {
-            return null;
-        }
-        try {
-            return new Metadata(encoded.substring(currVersionPrefix.length()));
-        } catch (ServiceException e) {
-            ZimbraLog.cache.error("unable to deserialize Folder/Tag metadata from Redis", e);
-            return null;
-        }
-    }
-
-    @Override
-    protected void cacheFoldersTagsMeta(Metadata folderTagMeta) {
-        if (LC.redis_cache_synchronize_folder_tag_snapshot.booleanValue()) {
-            folderTagBucket.set(currVersionPrefix + folderTagMeta.toString());
         }
     }
 
@@ -201,8 +166,23 @@ public class RedisItemCache extends MapItemCache<String> {
         }
 
         @Override
+        public FolderTagSnapshotCache getFolderTagSnapshotCache(Mailbox mbox) {
+            if (LC.redis_cache_synchronize_folder_tag_snapshot.booleanValue()) {
+                return new RedisFolderTagSnapshotCache(mbox);
+            } else {
+                return new LocalFolderTagSnapshotCache(mbox);
+            }
+        }
+
+        @Override
         public RedisCacheTracker getTransactionCacheTracker(Mailbox mbox) {
             return new RedisCacheTracker(mbox);
         }
+    }
+
+    @Override
+    public void uncacheChildren(MailItem parent) {
+        // We cannot currently efficiently perform this operation with items
+        // cached in redis.
     }
 }
