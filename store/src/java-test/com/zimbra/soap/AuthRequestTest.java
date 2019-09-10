@@ -26,7 +26,9 @@ import java.util.HashMap;
 
 import org.junit.After;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.MethodRule;
 import org.junit.rules.TestName;
 
 import com.zimbra.common.localconfig.LC;
@@ -41,6 +43,7 @@ import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.service.account.Auth;
 import com.zimbra.cs.service.mail.SendMsgTest.DirectInsertionMailboxManager;
 import com.zimbra.cs.service.mail.ServiceTestUtil;
+import com.zimbra.cs.util.ZTestWatchman;
 import com.zimbra.soap.account.message.AuthRequest;
 import com.zimbra.soap.account.type.PreAuth;
 import com.zimbra.soap.type.AccountSelector;
