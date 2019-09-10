@@ -28,7 +28,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.LuceneQueryOperation;
 import com.zimbra.cs.index.NoTermQueryOperation;
@@ -44,16 +43,10 @@ import com.zimbra.cs.mailbox.Mailbox;
 public final class ContactQuery extends Query {
     private final String text;
     private final String withWildcard;
-    private boolean searchEdgeNgramFields;
 
     public ContactQuery(String text) {
         this.text = text;
-        this.searchEdgeNgramFields = shouldSearchEdgeNgrams(text);
-        if (!searchEdgeNgramFields) {
-            this.withWildcard = buildWildcardQuery(text);
-        } else {
-            this.withWildcard = null;
-        }
+        this.withWildcard = buildWildcardQuery(text);
     }
 
     private boolean shouldSearchEdgeNgrams(String text) {
@@ -65,6 +58,9 @@ public final class ContactQuery extends Query {
         String[] tokens = text.split("\\s");
         for (int i = 0; i < tokens.length; i++) {
             String token = tokens[i];
+            if (shouldSearchEdgeNgrams(token)) {
+                tokensWithWildcards.add(token); // no need for wildcard, will match edge n-grams
+            } else {
                 //  "keyword"  -->  "keyword*"
                 // "*keyword*" -->  "keyword*"
                 // "*keyword"  --> "*keyword"
@@ -76,6 +72,7 @@ public final class ContactQuery extends Query {
                 } else {
                     tokensWithWildcards.add(token);
                 }
+            }
         }
         return Joiner.on(" ").join(tokensWithWildcards);
     }
@@ -91,24 +88,19 @@ public final class ContactQuery extends Query {
             return new NoTermQueryOperation();
         }
         LuceneQueryOperation op = new LuceneQueryOperation();
-        String contactFieldSearchClause = toQueryString(LuceneFields.L_CONTACT_DATA, withWildcard);
         BooleanQuery.Builder builder = new BooleanQuery.Builder();
-        TermQuery contactFieldClause;
-        TermQuery toFieldClause;
-        if (searchEdgeNgramFields) {
-            String ngramContactField = SolrUtils.getNgramFieldName(LuceneFields.L_CONTACT_DATA);
-            String ngramToField = SolrUtils.getNgramFieldName(LuceneFields.L_H_TO);
-            contactFieldClause = new TermQuery(new Term(ngramContactField, text));
-            toFieldClause = new TermQuery(new Term(ngramToField, text));
-        } else {
-            contactFieldClause = new TermQuery(new Term(LuceneFields.L_CONTACT_DATA, withWildcard));
-            String searchableToField = SolrUtils.getSearchFieldName(LuceneFields.L_H_TO);
-            toFieldClause = new TermQuery(new Term(searchableToField, withWildcard));
-        }
+        /*
+         * To get efficient prefix query behavior, we use edge n-gram tokenized fields here,
+         * suffixed with "_ngrams" in the solr schema.
+         */
+        String ngramContactField = SolrUtils.getNgramFieldName(LuceneFields.L_CONTACT_DATA);
+        String ngramToField = SolrUtils.getNgramFieldName(LuceneFields.L_H_TO);
+        TermQuery contactFieldClause = new TermQuery(new Term(ngramContactField, withWildcard));
+        TermQuery toFieldClause = new TermQuery(new Term(ngramToField, withWildcard));
         builder.add(contactFieldClause, Occur.SHOULD);
         builder.add(toFieldClause, Occur.SHOULD);
         BooleanQuery query = builder.build();
-        ZimbraLog.search.info("contact search for %s compiles to %s", text, query.toString());
+        String contactFieldSearchClause = toQueryString(LuceneFields.L_CONTACT_DATA, withWildcard);
         op.addClause(contactFieldSearchClause, query, evalBool(bool));
         return op;
     }
