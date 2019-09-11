@@ -22,6 +22,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLTransactionRollbackException;
+import java.sql.SQLTransientException;
 import java.sql.Statement;
 import java.util.Iterator;
 import java.util.Properties;
@@ -337,128 +338,163 @@ public class DbPool {
             throw ServiceException.FAILURE("Database connection pool not initialized.", null);
         }
         Integer mboxId = mbox != null ? mbox.getId() : -1; //-1 == zimbra db and/or initialization where mbox isn't known yet
-        try {
-            Db.getInstance().preOpen(mboxId);
-            long start = ZimbraPerf.STOPWATCH_DB_CONN.start();
-
-            // If the connection pool is overutilized, warn about potential leaks
-            PoolingDataSource pool = getPool();
-            checkPoolUsage();
-
-            Connection dbconn = null;
-            DbConnection conn = null;
+        int tries = 0;
+        int maxRetries = LC.dbpool_connection_max_retries.intValue();
+        final int RETRY_SECONDS = LC.dbpool_connection_retry_seconds.intValue();
+        DbConnection conn = null;
+        while (tries < maxRetries) {
             try {
-                dbconn = getConn(pool);
+                tries++;
+                Db.getInstance().preOpen(mboxId);
+                long start = ZimbraPerf.STOPWATCH_DB_CONN.start();
 
-                if (dbconn.getAutoCommit() != false)
-                    dbconn.setAutoCommit(false);
+                // If the connection pool is overutilized, warn about potential leaks
+                PoolingDataSource pool = getPool();
+                checkPoolUsage();
 
-                // We want READ COMMITTED transaction isolation level for duplicate
-                // handling code in BucketBlobStore.newBlobInfo().
-                if (Db.supports(Db.Capability.READ_COMMITTED_ISOLATION))
-                    dbconn.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
-
-                conn = new DbConnection(dbconn, mboxId);
-                Db.getInstance().postOpen(conn);
-            } catch (SQLException e) {
+                Connection dbconn = null;
                 try {
-                    if (dbconn != null && !dbconn.isClosed())
-                        dbconn.close();
-                } catch (SQLException e2) {
-                    ZimbraLog.sqltrace.warn("DB connection close caught exception", e);
+                    dbconn = getConn(pool);
+
+                    if (dbconn.getAutoCommit() != false)
+                        dbconn.setAutoCommit(false);
+
+                    // We want READ COMMITTED transaction isolation level for duplicate
+                    // handling code in BucketBlobStore.newBlobInfo().
+                    if (Db.supports(Db.Capability.READ_COMMITTED_ISOLATION))
+                        dbconn.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
+
+                    conn = new DbConnection(dbconn, mboxId);
+                    Db.getInstance().postOpen(conn);
+                } catch (SQLTransientException exp) {
+                    ZimbraLog.sqltrace.info("Failure and retry %d with exception %s", tries, exp.getMessage());
+                    if (tries >= maxRetries) {
+                        ZimbraLog.sqltrace.info("Failed to get db connection after %d attempts, giving up", tries);
+                        throw ServiceException.FAILURE("getting database connection", exp);
+                    }
+                    try {
+                        ZimbraLog.sqltrace.info("Failed to get db connection on attempt %d, sleeping %d", tries, RETRY_SECONDS);
+                        Thread.sleep(RETRY_SECONDS * 1000);
+                    } catch (InterruptedException iex) {
+                    }
+                } catch (SQLException e) {
+                    try {
+                        if (dbconn != null && !dbconn.isClosed())
+                            dbconn.close();
+                    } catch (SQLException e2) {
+                        ZimbraLog.sqltrace.warn("DB connection close caught exception", e);
+                    }
+                    throw ServiceException.FAILURE("getting database connection", e);
                 }
-                throw ServiceException.FAILURE("getting database connection", e);
-            }
 
-            // If we're debugging, update the counter with the current stack trace
-            if (ZimbraLog.dbconn.isDebugEnabled()) {
-                Throwable t = new Throwable();
-                conn.setStackTrace(t);
+                // If we're debugging, update the counter with the current stack trace
+                if (ZimbraLog.dbconn.isDebugEnabled()) {
+                    Throwable t = new Throwable();
+                    conn.setStackTrace(t);
 
-                String stackTrace = SystemUtil.getStackTrace(t);
-                synchronized (sConnectionStackCounter) {
-                    sConnectionStackCounter.increment(stackTrace);
+                    String stackTrace = SystemUtil.getStackTrace(t);
+                    synchronized (sConnectionStackCounter) {
+                        sConnectionStackCounter.increment(stackTrace);
+                    }
                 }
-            }
-            if (mbox != null)
-                Db.registerDatabaseInterest(conn, mbox);
+                if (mbox != null)
+                    Db.registerDatabaseInterest(conn, mbox);
 
-            ZimbraPerf.STOPWATCH_DB_CONN.stop(start);
-            return conn;
-        } catch (ServiceException se) {
-            //if connection open fails unlock
-            Db.getInstance().abortOpen(mboxId);
-            throw se;
+                ZimbraPerf.STOPWATCH_DB_CONN.stop(start);
+                return conn;
+            } catch (ServiceException se) {
+                //if connection open fails unlock
+                Db.getInstance().abortOpen(mboxId);
+                throw se;
+            }
         }
+        return conn;
     }
 
     public static DbConnection getConnection(Integer mboxId, Integer schemaGroupId) throws ServiceException {
         if (!isInitialized()) {
             throw ServiceException.FAILURE("Database connection pool not initialized.", null);
         }
-        try {
-            if(mboxId == null) {
-                mboxId = -1; //-1 == zimbra db and/or initialization where mbox isn't known yet
-            }
-            Db.getInstance().preOpen(mboxId);
-            long start = ZimbraPerf.STOPWATCH_DB_CONN.start();
-
-            // If the connection pool is overutilized, warn about potential leaks
-            PoolingDataSource pool = getPool();
-            checkPoolUsage();
-
-            Connection dbconn = null;
-            DbConnection conn = null;
+        int tries = 0;
+        int maxRetries = LC.dbpool_connection_max_retries.intValue();
+        final int RETRY_SECONDS = LC.dbpool_connection_retry_seconds.intValue();
+        DbConnection conn = null;
+        while (tries < maxRetries) {
             try {
-                dbconn = getConn(pool);
-
-                if (dbconn.getAutoCommit() != false)
-                    dbconn.setAutoCommit(false);
-
-                // We want READ COMMITTED transaction isolation level for duplicate
-                // handling code in BucketBlobStore.newBlobInfo().
-                if (Db.supports(Db.Capability.READ_COMMITTED_ISOLATION))
-                    dbconn.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
-
-                conn = new DbConnection(dbconn, mboxId);
-                Db.getInstance().postOpen(conn);
-            } catch (SQLException e) {
-                try {
-                    if (dbconn != null && !dbconn.isClosed())
-                        dbconn.close();
-                } catch (SQLException e2) {
-                    ZimbraLog.sqltrace.warn("DB connection close caught exception", e);
+                tries++;
+                if(mboxId == null) {
+                    mboxId = -1; //-1 == zimbra db and/or initialization where mbox isn't known yet
                 }
-                throw ServiceException.FAILURE("getting database connection", e);
-            }
+                Db.getInstance().preOpen(mboxId);
+                long start = ZimbraPerf.STOPWATCH_DB_CONN.start();
 
-            // If we're debugging, update the counter with the current stack trace
-            if (ZimbraLog.dbconn.isDebugEnabled()) {
-                Throwable t = new Throwable();
-                conn.setStackTrace(t);
+                // If the connection pool is overutilized, warn about potential leaks
+                PoolingDataSource pool = getPool();
+                checkPoolUsage();
 
-                String stackTrace = SystemUtil.getStackTrace(t);
-                synchronized (sConnectionStackCounter) {
-                    sConnectionStackCounter.increment(stackTrace);
-                }
-            }
-
-            if(schemaGroupId != null) {
-                String dbName = DbMailbox.getDatabaseName(schemaGroupId);
+                Connection dbconn = null;
                 try {
-                    Db.getInstance().registerDatabaseInterest(conn, dbName);
+                    dbconn = getConn(pool);
+
+                    if (dbconn.getAutoCommit() != false)
+                        dbconn.setAutoCommit(false);
+
+                    // We want READ COMMITTED transaction isolation level for duplicate
+                    // handling code in BucketBlobStore.newBlobInfo().
+                    if (Db.supports(Db.Capability.READ_COMMITTED_ISOLATION))
+                        dbconn.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
+
+                    conn = new DbConnection(dbconn, mboxId);
+                    Db.getInstance().postOpen(conn);
+                } catch (SQLTransientException exp) {
+                    ZimbraLog.sqltrace.info("Failure and retry %d with exception %s", tries, exp.getMessage());
+                    if (tries >= maxRetries) {
+                        ZimbraLog.sqltrace.info("Failed to get db connection after %d attempts, giving up", tries);
+                        throw ServiceException.FAILURE("getting database connection", exp);
+                    }
+                    try {
+                        ZimbraLog.sqltrace.info("Failed to get db connection on attempt %d, sleeping %d", tries, RETRY_SECONDS);
+                        Thread.sleep(RETRY_SECONDS * 1000);
+                    } catch (InterruptedException iex) {
+                    }
                 } catch (SQLException e) {
-                    throw ServiceException.FAILURE("error registering interest in database " +dbName, e);
+                    try {
+                        if (dbconn != null && !dbconn.isClosed())
+                            dbconn.close();
+                    } catch (SQLException e2) {
+                        ZimbraLog.sqltrace.warn("DB connection close caught exception", e);
+                    }
                 }
-            }
 
-            ZimbraPerf.STOPWATCH_DB_CONN.stop(start);
-            return conn;
-        } catch (ServiceException se) {
-            //if connection open fails unlock
-            Db.getInstance().abortOpen(mboxId);
-            throw se;
+                // If we're debugging, update the counter with the current stack trace
+                if (ZimbraLog.dbconn.isDebugEnabled()) {
+                    Throwable t = new Throwable();
+                    conn.setStackTrace(t);
+
+                    String stackTrace = SystemUtil.getStackTrace(t);
+                    synchronized (sConnectionStackCounter) {
+                        sConnectionStackCounter.increment(stackTrace);
+                    }
+                }
+
+                if(schemaGroupId != null) {
+                    String dbName = DbMailbox.getDatabaseName(schemaGroupId);
+                    try {
+                        Db.getInstance().registerDatabaseInterest(conn, dbName);
+                    } catch (SQLException e) {
+                        throw ServiceException.FAILURE("error registering interest in database " +dbName, e);
+                    }
+                }
+
+                ZimbraPerf.STOPWATCH_DB_CONN.stop(start);
+                return conn;
+            } catch (ServiceException se) {
+                //if connection open fails unlock
+                Db.getInstance().abortOpen(mboxId);
+                throw se;
+            }
         }
+        return conn;
     }
 
     /**

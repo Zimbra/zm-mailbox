@@ -82,6 +82,12 @@ public final class LC {
     public static final KnownKey zimbra_mysql_shutdown_timeout = KnownKey.newKey(60);
 
     @Supported
+    public static final KnownKey dbpool_connection_max_retries = KnownKey.newKey(30);
+
+    @Supported
+    public static final KnownKey dbpool_connection_retry_seconds = KnownKey.newKey(1);
+
+    @Supported
     public static final KnownKey zimbra_ldap_userdn = KnownKey.newKey("uid=zimbra,cn=admins,cn=zimbra");
 
     @Supported
