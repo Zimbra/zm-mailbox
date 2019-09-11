@@ -100,7 +100,7 @@ public final class ContactQuery extends Query {
         builder.add(contactFieldClause, Occur.SHOULD);
         builder.add(toFieldClause, Occur.SHOULD);
         BooleanQuery query = builder.build();
-        String contactFieldSearchClause = toQueryString(LuceneFields.L_CONTACT_DATA, withWildcard);
+        String contactFieldSearchClause = toQueryString(LuceneFields.L_CONTACT_DATA, text);
         op.addClause(contactFieldSearchClause, query, evalBool(bool));
         return op;
     }
