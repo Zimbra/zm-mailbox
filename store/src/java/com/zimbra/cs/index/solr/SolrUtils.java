@@ -33,9 +33,9 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.zimbra.common.httpclient.ZimbraHttpClientManager;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -55,6 +55,12 @@ public class SolrUtils {
     private static final Pattern wildcard = Pattern.compile("(?<!\\\\)\\*");
     private static final Set<Character> escapeChars = Sets.newHashSet('\\', '+', '-', '!', '(', ')', ':',
             '^', '[', ']', '\"', '{', '}', '~', '?', '|', '&',  ';', '/');
+
+    private static final Set<String> edgeNgramTokenizedFields = Sets.newHashSet(
+            LuceneFields.L_H_TO,
+            LuceneFields.L_H_FROM,
+            LuceneFields.L_H_CC,
+            LuceneFields.L_CONTACT_DATA);
 
     public static boolean isWildcardQuery(String text) {
         return wildcard.matcher(text).find();
@@ -437,6 +443,22 @@ public class SolrUtils {
 
     public static String getNgramFieldName(String field) {
         return field + "_ngrams";
+    }
+
+    public static boolean shouldSearchEdgeNgrams(String text) {
+        return text.replace("*","").length() < LC.contact_search_min_chars_for_wildcard_query.intValue();
+    }
+
+    public static Pair<String, String> getWildcardQueryTarget(String field, String query) {
+        if (edgeNgramTokenizedFields.contains(field)) {
+            // check if any of the wildcard tokens is short enough to warrant searching the ngram-tokenized field
+            for (String part: query.split("\\s")) {
+                if (part.contains("*") && shouldSearchEdgeNgrams(part)) {
+                    return new Pair<>(getNgramFieldName(field), query.replace("*", ""));
+                }
+            }
+        }
+        return new Pair<>(field, query);
     }
 
     private static abstract class InitialCollectionSpec {

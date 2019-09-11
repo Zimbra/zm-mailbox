@@ -26,7 +26,6 @@ import org.apache.lucene.search.TermQuery;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.LuceneQueryOperation;
@@ -49,16 +48,12 @@ public final class ContactQuery extends Query {
         this.withWildcard = buildWildcardQuery(text);
     }
 
-    private boolean shouldSearchEdgeNgrams(String text) {
-        return text.replace("*","").length() < LC.contact_search_min_chars_for_wildcard_query.intValue();
-    }
-
     private String buildWildcardQuery(String text) {
         List<String> tokensWithWildcards = new LinkedList<String>();
         String[] tokens = text.split("\\s");
         for (int i = 0; i < tokens.length; i++) {
             String token = tokens[i];
-            if (shouldSearchEdgeNgrams(token)) {
+            if (SolrUtils.shouldSearchEdgeNgrams(token)) {
                 tokensWithWildcards.add(token); // no need for wildcard, will match edge n-grams
             } else {
                 //  "keyword"  -->  "keyword*"
