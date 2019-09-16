@@ -48,6 +48,7 @@ import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.PurgeMessagesRequest;
 import com.zimbra.soap.admin.message.PurgeMessagesResponse;
 import com.zimbra.soap.admin.type.MailboxWithMailboxId;
+import com.zimbra.soap.admin.type.PurgeMessagesStatus;
 
 /**
  * @author dkarp
@@ -66,8 +67,9 @@ public class PurgeMessages extends AdminDocumentHandler {
             Provisioning prov = Provisioning.getInstance();
             for (String acctId : accounts) {
                 Account acct = prov.get(AccountBy.id, acctId);
-                if (acct == null)
+                if (acct == null) {
                     throw AccountServiceException.NO_SUCH_ACCOUNT(acctId);
+                }
                 checkAccountRight(zsc, acct, Admin.R_purgeMessages);
             }
 
@@ -81,23 +83,30 @@ public class PurgeMessages extends AdminDocumentHandler {
         PurgeMessagesResponse purgeResponse = new PurgeMessagesResponse();
         for (int i = 0; i < accounts.length; i++) {
             Account account = Provisioning.getInstance().getAccountById(accounts[i]);
-            if (account == null)
+            if (account == null) {
                 continue;
-            MailboxWithMailboxId mboxResp;
+            }
+            PurgeMessagesStatus mboxResp;
             if (Provisioning.onLocalServer(account)) { // local
                 Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account, false);
-                if (mbox == null)
+                if (mbox == null) {
                     continue;
-                mbox.purgeMessages(null);
-                mboxResp = new MailboxWithMailboxId(mbox.getId(), account.getId(), Long.valueOf(mbox.getSize()));
+                }
+                boolean purgedAll = mbox.purgeMessages(null);
+                if (account.isFeatureSearchHistoryEnabled()) {
+                    mbox.purgeSearchHistory(null);
+                }
+                mboxResp = new PurgeMessagesStatus(mbox.getId(), account.getId(), Long.valueOf(mbox.getSize()), purgedAll);
             } else { // remote
                 Server server = account.getServer();
-                if (server == null)
+                if (server == null) {
                     continue;
+                }
                 SoapProvisioning soapProvisioning = SoapProvisioning.getAdminInstance();
                 mboxResp = soapProvisioning.purgeMessages(account);
-                if (mboxResp == null)
+                if (mboxResp == null) {
                     continue;
+                }
                 mboxResp.setAccountId(account.getId());
             }
             purgeResponse.addMailbox(mboxResp);
