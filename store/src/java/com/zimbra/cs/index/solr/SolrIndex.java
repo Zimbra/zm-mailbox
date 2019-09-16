@@ -72,7 +72,6 @@ import com.zimbra.cs.index.ZimbraIndexSearcher;
 import com.zimbra.cs.index.ZimbraScoreDoc;
 import com.zimbra.cs.index.ZimbraTermsFilter;
 import com.zimbra.cs.index.ZimbraTopDocs;
-import com.zimbra.cs.index.solr.JointCollectionLocator.IndexNameFunc;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox.IndexItemEntry;
 import com.zimbra.cs.util.IOUtil;
@@ -193,36 +192,20 @@ public class SolrIndex extends IndexStore {
             return query;
         }
         //must be BooleanQuery
-        HashMap<String, ArrayList<String>> dismaxTermsByField = new HashMap<String,ArrayList<String>>();
-        HashMap<String, Occur> DismaxOccurByField = new HashMap<String, Occur>();
         Occur occur = null;
         BooleanQuery.Builder builder = new BooleanQuery.Builder();
         for (BooleanClause clause : (BooleanQuery) query) {
             Query clauseQuery = clause.getQuery();
-            String op = "";
             occur = clause.getOccur();
-            if (occur == Occur.MUST_NOT) {
-                op = "-";
-            }
             if (clauseQuery instanceof TermQuery) {
+                // quote/escape terms as necessary, in preparation for being converted to dismax form
                 String field = ((TermQuery) clauseQuery).getTerm().field();
                 String term = ((TermQuery) clauseQuery).getTerm().text();
                 if (!SolrUtils.isWildcardQuery(term)) {
                     if (SolrUtils.containsWhitespace(term)) {
-                        term = String.format("%s\"%s\"", op, term);
-                    } else {
-                        term = op+term;
+                        term = String.format("\"%s\"", term);
                     }
-                    if (dismaxTermsByField.containsKey(field)) {
-                        dismaxTermsByField.get(field).add(term);
-                    } else {
-                        ArrayList<String> terms = new ArrayList<String>();
-                        terms.add(term);
-                        dismaxTermsByField.put(field, terms);
-                    }
-                    //if we are pushing a + or - to the inside of the clause, then we need to add + to the outside
-                    Occur occurAfterDistributing = occur == Occur.SHOULD? Occur.SHOULD: Occur.MUST;
-                    DismaxOccurByField.put(field, occurAfterDistributing);
+                    builder.add(new TermQuery(new Term(field, term)), occur);
                 } else {
                     //complex phrase query doesn't get combined with other terms
                     TermQuery quoted = new TermQuery(new Term(field, SolrUtils.quoteText(term)));
@@ -233,16 +216,6 @@ public class SolrIndex extends IndexStore {
                 Query optimized = optimizeQueryOps(clauseQuery);
                 builder.add(optimized, occur);
             }
-        }
-        //after term queries on this level have been gathered group them by field
-        for (String field: dismaxTermsByField.keySet()) {
-            List<String> terms = dismaxTermsByField.get(field);
-            String allTerms = Joiner.on(" ").join(terms);
-            TermQuery combined = new TermQuery(new Term(field, allTerms));
-            //a tricky issue here is deciding which Occur value to use.
-            //if we moved MUST or MUST_NOT values inside, we should use a MUST,
-            //otherwise we can use a SHOULD, lest we risk making an optional term required.
-            builder.add(combined, DismaxOccurByField.get(field));
         }
         return builder.build();
     }
