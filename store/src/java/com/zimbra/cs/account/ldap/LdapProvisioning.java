@@ -5869,8 +5869,10 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     throws ServiceException {
         synchronized (acct) {
             //Checking alias login allowed or not
-            String accountNamePassedIn = (String) authCtxt.get(AuthContext.AC_ACCOUNT_NAME_PASSEDIN);
-            AccountUtil.checkAliasLoginAllowed(acct, accountNamePassedIn);
+            if (authCtxt != null && authCtxt.get(AuthContext.AC_ACCOUNT_NAME_PASSEDIN) != null) {
+                String accountNamePassedIn = (String) authCtxt.get(AuthContext.AC_ACCOUNT_NAME_PASSEDIN);
+                AccountUtil.checkAliasLoginAllowed(acct, accountNamePassedIn);
+            }
             LdapLockoutPolicy lockoutPolicy = new LdapLockoutPolicy(this, acct);
             if (lockoutPolicy.isLockedOut() && !isRecoveryCodeBasedAuth(authCtxt)) {
                 try {
