@@ -48,6 +48,11 @@ public class DistributedMailboxCacheManager extends MailboxCacheManager {
     }
 
     @Override
+    public Map<String, Integer> getAccountIdToMailboxIdMap() {
+        return listMailboxes();
+    }
+
+    @Override
     public Set<String> getAccountIds(){
         return listMailboxes().keySet();
     }
