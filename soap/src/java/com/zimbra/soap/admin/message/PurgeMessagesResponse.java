@@ -29,7 +29,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.google.common.collect.Lists;
 
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.admin.type.MailboxWithMailboxId;
+import com.zimbra.soap.admin.type.PurgeMessagesStatus;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_PURGE_MESSAGES_RESPONSE)
@@ -39,13 +39,13 @@ public class PurgeMessagesResponse {
      * @zm-api-field-description Information about mailboxes where aged messages have been purged
      */
     @XmlElement(name=AdminConstants.E_MAILBOX, required=false)
-    private List <MailboxWithMailboxId> mailboxes = Lists.newArrayList();
+    private List <PurgeMessagesStatus> mailboxes = Lists.newArrayList();
 
     public PurgeMessagesResponse() {
     }
 
     public PurgeMessagesResponse setMailboxes(
-            Collection<MailboxWithMailboxId> mailboxes) {
+            Collection<PurgeMessagesStatus> mailboxes) {
         this.mailboxes.clear();
         if (mailboxes != null) {
             this.mailboxes.addAll(mailboxes);
@@ -53,12 +53,12 @@ public class PurgeMessagesResponse {
         return this;
     }
 
-    public PurgeMessagesResponse addMailbox(MailboxWithMailboxId attr) {
+    public PurgeMessagesResponse addMailbox(PurgeMessagesStatus attr) {
         mailboxes.add(attr);
         return this;
     }
 
-    public List<MailboxWithMailboxId> getMailboxes() {
+    public List<PurgeMessagesStatus> getMailboxes() {
         return Collections.unmodifiableList(mailboxes);
     }
 }
