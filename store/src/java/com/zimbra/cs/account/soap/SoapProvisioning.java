@@ -17,25 +17,6 @@
 
 package com.zimbra.cs.account.soap;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.concurrent.Future;
-
-import org.apache.http.HttpException;
-import org.apache.http.HttpResponse;
-import org.apache.http.concurrent.FutureCallback;
-
 import com.google.common.collect.Lists;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
@@ -100,7 +81,6 @@ import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.accesscontrol.ViaGrantImpl;
 import com.zimbra.cs.account.auth.AuthContext;
-import com.zimbra.cs.account.soap.SoapProvisioning.ReIndexInfo.Progress;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.soap.JaxbUtil;
@@ -299,6 +279,7 @@ import com.zimbra.soap.admin.type.MailboxByAccountIdSelector;
 import com.zimbra.soap.admin.type.MailboxWithMailboxId;
 import com.zimbra.soap.admin.type.PackageRightsInfo;
 import com.zimbra.soap.admin.type.PackageSelector;
+import com.zimbra.soap.admin.type.PurgeMessagesStatus;
 import com.zimbra.soap.admin.type.ReindexMailboxInfo;
 import com.zimbra.soap.admin.type.ReindexProgressInfo;
 import com.zimbra.soap.admin.type.RightInfo;
@@ -310,6 +291,24 @@ import com.zimbra.soap.type.AccountSelector;
 import com.zimbra.soap.type.GalSearchType;
 import com.zimbra.soap.type.GranteeType;
 import com.zimbra.soap.type.TargetBy;
+import org.apache.http.HttpException;
+import org.apache.http.HttpResponse;
+import org.apache.http.concurrent.FutureCallback;
+
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.concurrent.Future;
 
 public class SoapProvisioning extends Provisioning {
 
@@ -2568,16 +2567,19 @@ public class SoapProvisioning extends Provisioning {
         invokeJaxb(new DeleteMailboxRequest(accountId));
     }
 
-    public MailboxWithMailboxId purgeMessages(Account account) throws ServiceException {
-        Server server = account.getServer();
-        String serviceHost = server.getAttr(A_zimbraServiceHostname);
-        PurgeMessagesResponse resp = invokeJaxb(new PurgeMessagesRequest(account.getId()), serviceHost);
-        if (resp.getMailboxes().isEmpty())
+    public PurgeMessagesStatus purgeMessages(String accountId, String serviceHost) throws ServiceException {
+        PurgeMessagesResponse resp = invokeJaxb(new PurgeMessagesRequest(accountId), serviceHost);
+        if (resp.getMailboxes().isEmpty()) {
             return null;
-        else
+        } else {
             return resp.getMailboxes().get(0);
+        }
     }
 
+    public PurgeMessagesStatus purgeMessages(Account account) throws ServiceException {
+        Server server = account.getServer();
+        return purgeMessages(account.getId(), server.getAttr(A_zimbraServiceHostname));
+    }
 
     //
     // rights

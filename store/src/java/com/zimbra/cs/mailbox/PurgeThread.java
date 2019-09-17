@@ -17,19 +17,26 @@
 package com.zimbra.cs.mailbox;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import com.zimbra.common.account.Key;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.callback.CallbackUtil;
+import com.zimbra.cs.account.soap.SoapProvisioning;
+import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.util.Config;
 import com.zimbra.cs.util.Zimbra;
+import com.zimbra.soap.admin.type.PurgeMessagesStatus;
 
 /**
  * Iterates all the mailboxes in the system, purges them one at a time
@@ -80,11 +87,7 @@ extends Thread {
      */
     public synchronized static boolean isRunning() {
         synchronized (THREAD_CONTROL_LOCK) {
-            if (sPurgeThread != null) {
-                return true;
-            } else {
-                return false;
-            }
+            return (sPurgeThread != null);
         }
     }
 
@@ -116,87 +119,147 @@ extends Thread {
         try {
             Thread.sleep(sleepTime);
         } catch (InterruptedException e) {
-            ZimbraLog.purge.info("Shutting down purge thread.");
+            ZimbraLog.purge.info("Shutting down purge thread - initial sleep was interrupted.");
             sPurgeThread = null;
             return;
         }
 
+        // purgePendingMailboxes is the set of mailboxes which have not been purged since time X where X is
+        // zimbraLastPurgeMaxDuration ago (default value 30 days)
         Set<Integer> purgePendingMailboxes = new HashSet<Integer>();
-        while (true) {
-            List<Integer> mailboxIds = getMailboxIds();
-            boolean slept = false;
-
-            for (int i = 0; i < mailboxIds.size(); i++) {
-                int mailboxId = mailboxIds.get(i);
-                if (mShutdownRequested) {
-                    ZimbraLog.purge.info("Shutting down purge thread.");
-                    sPurgeThread = null;
-                    return;
+        SoapProvisioning soapProv = new SoapProvisioning();
+        try {
+            soapProv.soapSetURI(URLUtil.getAdminURL("localhost"));
+            while (true) {
+                Map<String, Integer> acctIdsToMboxId = getAccountIdToMailboxIdMap();
+                Map<Integer, String> mboxIdToAcctId = new HashMap<>(acctIdsToMboxId.size());
+                for (Map.Entry<String, Integer> entry : acctIdsToMboxId.entrySet()) {
+                    mboxIdToAcctId.put(entry.getValue(), entry.getKey());
                 }
-                ZimbraLog.addMboxToContext(mailboxId);
-
-                // Purge the next mailbox
-                boolean attemptedPurge = false;
-                try {
-                    MailboxManager mm = MailboxManager.getInstance();
-                    if (mm.isMailboxLoadedAndAvailable(mailboxId) || purgePendingMailboxes.contains(mailboxId)) {
-                        attemptedPurge = true;
-                        Mailbox mbox = mm.getMailboxById(mailboxId);
-                        Account account = mbox.getAccount();
-                        Provisioning prov = Provisioning.getInstance();
-                        if (!Provisioning.ACCOUNT_STATUS_MAINTENANCE.equals(account.getAccountStatus(prov)) &&
-                                !account.isIsExternalVirtualAccount()) {
-                            ZimbraLog.addAccountNameToContext(account.getName());
-                            boolean purgedAll = mbox.purgeMessages(null);
-                            if (!purgedAll) {
-                                ZimbraLog.purge.info("Not all messages were purged.  Scheduling mailbox to be purged again.");
-                                mailboxIds.add(mailboxId);
-                            }
-                            ZimbraLog.purge.debug("Purging search history for mailbox %d", mailboxId);
-                            mbox.purgeSearchHistory(null);
-                            Config.setInt(Config.KEY_PURGE_LAST_MAILBOX_ID, mbox.getId());
-                        } else {
-                            ZimbraLog.purge.debug("Skipping mailbox %d because the account is in maintenance status or is an external virtual account.", mailboxId);
-                        }
-                    } else {
-                        ZimbraLog.purge.debug("Skipping mailbox %d because it is not loaded into memory.", mailboxId);
+                List<Integer> mailboxIds = sortMailboxIdsInPurgeOrder(acctIdsToMboxId.values());
+                boolean slept = false;
+                int numMailboxIds = mailboxIds.size();
+                int numPurges = 0;
+                for (int i = 0; i < mailboxIds.size(); i++) {
+                    Integer mailboxId = mailboxIds.get(i);
+                    if (mShutdownRequested) {
+                        ZimbraLog.purge.info("Shutting down purge thread. - mShutdownRequested set");
+                        sPurgeThread = null;
+                        return;
                     }
-                } catch (ServiceException se) {
-                    if (ServiceException.WRONG_HOST.equals(se.getCode())) {
-                        if (ZimbraLog.purge.isDebugEnabled()) {
-                            ZimbraLog.purge.debug("not purging mailbox moved to other host ", se);
-                        } else {
-                            ZimbraLog.purge.info("not purging mailbox %d; account moved to another host", mailboxId);
-                        }
-                    } else {
-                        ZimbraLog.purge.warn("Unable to purge mailbox %d", mailboxId, se);
+                    String accountId = mboxIdToAcctId.get(mailboxId);
+                    if (accountId == null) {
+                        ZimbraLog.purge.info("Unable to map mailbox ID=%s to account - ignoring", mailboxId);
+                        continue;
                     }
-                } catch (OutOfMemoryError oome) {
-                    Zimbra.halt("Ran out of memory while purging mailboxes", oome);
-                } catch (Throwable t) {
-                    ZimbraLog.purge.warn("Unable to purge mailbox %d", mailboxId, t);
+                    // Purge the next mailbox
+                    if (attemptPurge(mailboxId, accountId, purgePendingMailboxes.contains(mailboxId), mailboxIds)) {
+                        // Sleep after every purge attempt.
+                        sleep();
+                        slept = true;
+                        numPurges++;
+                    }
                 }
-
-                ZimbraLog.clearContext();
-                if (attemptedPurge) {
-                    // Sleep after every purge attempt.
+                // If nothing's getting purged, sleep to avoid a tight loop
+                if (!slept) {
                     sleep();
-                    slept = true;
                 }
-           }
 
-            // If nothing's getting purged, sleep to avoid a tight loop
-            if (!slept) {
-                sleep();
+                try {
+                    long lastPurgeMaxDuration = Provisioning.getInstance().getLocalServer().getLastPurgeMaxDuration();
+                    purgePendingMailboxes = MailboxManager.getInstance().getPurgePendingMailboxes(
+                            System.currentTimeMillis() - lastPurgeMaxDuration);
+                } catch (ServiceException e) {
+                    ZimbraLog.purge.warn("Unable to get purge pending mailboxes ", e);
+                }
+                ZimbraLog.purge.info("Purge thread iteration: purged=%d numMboxes=%d reschedules=%d purgePending=%d",
+                        numPurges, numMailboxIds, mailboxIds.size() - numMailboxIds, purgePendingMailboxes.size());
             }
-
-            try {
-                long lastPurgeMaxDuration = Provisioning.getInstance().getLocalServer().getLastPurgeMaxDuration();
-                purgePendingMailboxes = MailboxManager.getInstance().getPurgePendingMailboxes(System.currentTimeMillis() - lastPurgeMaxDuration);
-            } catch (ServiceException e) {
-                ZimbraLog.purge.warn("Unable to get purge pending mailboxes ", e);
+        } finally {
+            if (soapProv != null) {
+                synchronized (soapProv) {
+                    try {
+                        soapProv.soapLogOut();
+                    } catch (ServiceException se) {
+                        ZimbraLog.purge.debug("Problem logging out for SoapProvisioning", se);
+                    }
+                }
             }
         }
+    }
+
+    /**
+     * @param mailboxId Mailbox ID of mailbox to be purged
+     * @param accountId Account ID associated with the mailbox
+     * @param isPurgePending True if this mailbox hasn't been purged for at least lastPurgeMaxDuration.
+     *                       This means we should potentially try to purge the mailbox even if it isn't loaded.
+     * @param mailboxIds list of mailboxes we are currently processing.  May be appended to if purge incomplete
+     * @return true if a purge was attempted for this mailbox
+     */
+    private boolean attemptPurge(Integer mailboxId, String accountId, boolean isPurgePending,
+                                 List<Integer> mailboxIds) {
+        ZimbraLog.addMboxToContext(mailboxId);
+        boolean attemptedPurge = false;
+        try {
+            MailboxManager mm = MailboxManager.getInstance();
+            if (mm.isMailboxLoadedAndAvailable(mailboxId) || isPurgePending) {
+                Provisioning prov = Provisioning.getInstance();
+                Account account = prov.get(Key.AccountBy.id, accountId);
+                if (account == null) {
+                    ZimbraLog.purge.info("Unable to get account for accountId='%s', skipping mailbox %d",
+                            accountId, mailboxId);
+                    return false;
+                }
+                if (account.isIsExternalVirtualAccount()) {
+                    ZimbraLog.purge.info("Skip mailbox %d - account '%s' is an external virtual account",
+                            mailboxId, account);
+                    return false;
+                }
+                if (Provisioning.ACCOUNT_STATUS_MAINTENANCE.equals(account.getAccountStatus(prov))) {
+                    ZimbraLog.purge.info("Skip mailbox %d - account '%s' is in maintenance", mailboxId, account);
+                    return false;
+                }
+                if (!Provisioning.isMyIpAddress(Provisioning.affinityServer(account))) {
+                    /* PurgeThread currently runs on all mailboxes, so only purging messages for
+                     * accounts who have affinity for this server on basis that other mailboxes will handle their
+                     * accounts.  If design changes to have a dedicated pod, can use PurgeMessageRequest SOAP calls.
+                     * Previous commit in git history contains code which does this should we want to use it
+                     * in the future. */
+                    return false;
+                }
+                attemptedPurge = true;
+                ZimbraLog.addAccountNameToContext(account.getName());
+                Mailbox mbox = mm.getMailboxById(mailboxId);
+                boolean purgedAll = mbox.purgeMessages(null);
+                if (!purgedAll) {
+                    ZimbraLog.purge.info("Not all messages were purged.  Scheduling mailbox to be purged again.");
+                    mailboxIds.add(mailboxId);
+                }
+                if (account.isFeatureSearchHistoryEnabled()) {
+                    ZimbraLog.purge.debug("Purging search history for mailbox %d account %s",
+                            mailboxId, accountId);
+                    mbox.purgeSearchHistory(null);
+                }
+                Config.setInt(Config.KEY_PURGE_LAST_MAILBOX_ID, mailboxId);
+            }
+        } catch (ServiceException se) {
+            if (ServiceException.WRONG_HOST.equals(se.getCode())) {
+                if (ZimbraLog.purge.isDebugEnabled()) {
+                    ZimbraLog.purge.debug("not purging mailbox moved to other host ", se);
+                } else {
+                    ZimbraLog.purge.info("not purging mailbox %d; account moved to another host", mailboxId);
+                }
+            } else {
+                ZimbraLog.purge.warn("Unable to purge mailbox %d", mailboxId, se);
+            }
+        } catch (OutOfMemoryError oome) {
+            Zimbra.halt("Ran out of memory while purging mailboxes", oome);
+        } catch (Throwable t) {
+            ZimbraLog.purge.warn("Unable to purge mailbox %d", mailboxId, t);
+        }
+
+        ZimbraLog.clearContext();
+        return attemptedPurge;
     }
 
     /**
@@ -238,29 +301,30 @@ extends Thread {
         return sSleepInterval;
     }
 
+    private Map<String, Integer> getAccountIdToMailboxIdMap() {
+        try {
+            return MailboxManager.getInstance().cacheManager.getAccountIdToMailboxIdMap();
+        } catch (ServiceException e) {
+            ZimbraLog.purge.warn("Unable to get account id to mailbox id map", e);
+            return Collections.emptyMap();
+        }
+    }
+
     /**
-     * Returns all the mailbox id's in purge order, starting with the one
+     * Returns all the mailbox ids in purge order, starting with the one
      * after {@link Config#KEY_PURGE_LAST_MAILBOX_ID}.
      */
-    private List<Integer> getMailboxIds() {
-        List<Integer> mailboxIds = new ArrayList<Integer>();
-
-        try {
-            mailboxIds = CallbackUtil.getSortedMailboxIdList();
-            // Reorder id's so that we start with the one after the last purged
-            int lastId = Config.getInt(Config.KEY_PURGE_LAST_MAILBOX_ID, 0);
-            for (int i = 0; i < mailboxIds.size(); i++) {
-                if (mailboxIds.get(i) > lastId) {
-                    Collections.rotate(mailboxIds, -i);
-                    break;
-                }
+    private List<Integer> sortMailboxIdsInPurgeOrder(Collection<Integer> mailboxIds) {
+        // Reorder ids so that we start with the one after the last purged
+        List<Integer> list = new ArrayList(mailboxIds);
+        Collections.sort(list);
+        int lastId = Config.getInt(Config.KEY_PURGE_LAST_MAILBOX_ID, 0);
+        for (int i = 0; i < list.size(); i++) {
+            if (list.get(i) > lastId) {
+                Collections.rotate(list, -i);
+                break;
             }
-
-        } catch (ServiceException e) {
-            ZimbraLog.purge.warn("Unable to get mailbox id's", e);
-            return Collections.emptyList();
         }
-
-        return mailboxIds;
+        return list;
     }
 }

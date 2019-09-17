@@ -16,15 +16,23 @@
  */
 package com.zimbra.cs.account;
 
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import org.apache.http.HttpException;
 
 import javax.mail.internet.InternetAddress;
 
@@ -36,12 +44,15 @@ import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.UCServiceBy;
 import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.account.ZAttrProvisioning;
+import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ExceptionToString;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
@@ -52,6 +63,7 @@ import com.zimbra.cs.account.ldap.entry.LdapDistributionList;
 import com.zimbra.cs.account.names.NameUtil;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.gal.GalSearchParams;
+import com.zimbra.cs.httpclient.HttpProxyUtil;
 import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.util.AccountUtil;
@@ -72,6 +84,9 @@ import com.zimbra.soap.type.AutoProvPrincipalBy;
 import com.zimbra.soap.type.GalSearchType;
 import com.zimbra.soap.type.NamedElement;
 import com.zimbra.soap.type.TargetBy;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.HttpClientBuilder;
 
 /**
  * @since Sep 23, 2004
@@ -1511,6 +1526,79 @@ public abstract class Provisioning extends ZAttrProvisioning {
                     onLocalSvr, isLocal, target, localhost, account.getName()));
         }
         return onLocalSvr;
+    }
+
+    /**
+     * @param key a search key acceptable to the MLS service.  Currently "email" or "zimbraId".
+     * @param value the value to be searched by key
+     * @return  The IP address of server currently assigned to the given account for processing requests
+     */
+    private static String affinityServer(String key, String value) throws ServiceException {
+        HttpClientBuilder clientBuilder = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+        HttpProxyUtil.configureProxy(clientBuilder);
+        String url = null;
+        try {
+            url = String.format("https://zmc-mls:7072/search?%s=%s",
+                    URLEncoder.encode(key, StandardCharsets.UTF_8.toString()),
+                    URLEncoder.encode(value, StandardCharsets.UTF_8.toString()));
+            HttpGet method = new HttpGet(url);
+            HttpResponse response =  HttpClientUtil.executeMethod(clientBuilder.build(), method);
+            byte[] buf = ByteUtil.getContent(response.getEntity().getContent(), 0);
+            return new String(buf, "UTF-8");
+        } catch (IOException | HttpException ex) {
+            ZimbraLog.misc.info("Problem getting Affinity server for %s=%s", key, value, ex);
+        }
+        return null;
+    }
+
+    /**
+     * @param emailAddress The email address for an account
+     * @return  The IP address of server currently assigned to the given account for processing requests
+     */
+    public static String affinityServerForEmail(String emailAddress) throws ServiceException {
+        return affinityServer("email", emailAddress);
+    }
+
+    /**
+     * @param zimbraId The zimbra ID for an account
+     * @return  The IP address of server currently assigned to the given account for processing requests
+     */
+    public static String affinityServerForZimbraId(String zimbraId) throws ServiceException {
+        return affinityServer("zimbraId", zimbraId);
+    }
+
+    /** @return  The IP address of server currently assigned to the given account for processing requests */
+    public static String affinityServer(Account account) throws ServiceException {
+        if (account == null) {
+            return null;
+        }
+        return affinityServer("email", account.getName());
+    }
+
+    /** @return true if this server is associated with the given IP address */
+    public static boolean isMyIpAddress(String ipAddress) {
+        if (ipAddress == null) {
+            ZimbraLog.misc.info("Problem - asked if null IP address is mine!  Returning false");
+            return false;
+        }
+        try {
+            Enumeration e = NetworkInterface.getNetworkInterfaces();
+            while(e.hasMoreElements())
+            {
+                NetworkInterface n = (NetworkInterface) e.nextElement();
+                Enumeration ee = n.getInetAddresses();
+                while (ee.hasMoreElements())
+                {
+                    InetAddress i = (InetAddress) ee.nextElement();
+                    if (ipAddress.equals(i.getHostAddress())) {
+                        return true;
+                    }
+                }
+            }
+        } catch (SocketException ex) {
+            ZimbraLog.misc.info("Problem checking if IP address '%s' belongs to me", ipAddress, ex);
+        }
+        return false;
     }
 
     public static boolean canUseLocalIMAP(Account account) throws ServiceException {

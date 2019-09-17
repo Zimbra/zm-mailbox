@@ -57,6 +57,8 @@ public abstract class MailboxCacheManager {
         return new MailboxMap(LC.zimbra_mailbox_manager_hardref_cache.intValue());
     }
 
+    public abstract Map<String, Integer> getAccountIdToMailboxIdMap();
+
     public abstract List<Integer> getMailboxIds();
 
     public abstract  Set<String> getAccountIds();
