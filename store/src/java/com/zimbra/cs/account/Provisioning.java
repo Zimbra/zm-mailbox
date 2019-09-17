@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -1534,10 +1536,12 @@ public abstract class Provisioning extends ZAttrProvisioning {
     private static String affinityServer(String key, String value) throws ServiceException {
         HttpClientBuilder clientBuilder = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
         HttpProxyUtil.configureProxy(clientBuilder);
-        String url = String.format("https://zmc-mls:7072/search?%s=%s", key, value);
-
-        HttpGet method = new HttpGet(url);
+        String url = null;
         try {
+            url = String.format("https://zmc-mls:7072/search?%s=%s",
+                    URLEncoder.encode(key, StandardCharsets.UTF_8.toString()),
+                    URLEncoder.encode(value, StandardCharsets.UTF_8.toString()));
+            HttpGet method = new HttpGet(url);
             HttpResponse response =  HttpClientUtil.executeMethod(clientBuilder.build(), method);
             byte[] buf = ByteUtil.getContent(response.getEntity().getContent(), 0);
             return new String(buf, "UTF-8");
@@ -1592,7 +1596,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
                 }
             }
         } catch (SocketException ex) {
-            ZimbraLog.misc.info("Problem checking if IP address %s is 1 of mine", ipAddress, ex);
+            ZimbraLog.misc.info("Problem checking if IP address '%s' belongs to me", ipAddress, ex);
         }
         return false;
     }
