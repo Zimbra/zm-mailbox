@@ -199,7 +199,7 @@ public class CheckSpelling extends MailDocumentHandler {
         if (ignoreAllCaps) {
             nvps.add(new BasicNameValuePair("ignoreAllCaps", "on"));
         }
-        post.setEntity(new UrlEncodedFormEntity(nvps));
+        post.setEntity(new UrlEncodedFormEntity(nvps, "UTF-8"));
         HttpClient http = ZimbraHttpConnectionManager.getExternalHttpConnMgr().newHttpClient().build();
         ServerResponse response = new ServerResponse();
         HttpResponse httpResp = null;
