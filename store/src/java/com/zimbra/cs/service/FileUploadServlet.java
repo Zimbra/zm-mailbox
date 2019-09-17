@@ -39,7 +39,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.fileupload.DefaultFileItem;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileUploadBase;
 import org.apache.commons.fileupload.FileUploadException;
@@ -54,6 +53,7 @@ import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.tika.Tika;
 
 import com.google.common.base.Strings;
 import com.zimbra.client.ZMailbox;
@@ -678,10 +678,6 @@ public class FileUploadServlet extends ZimbraServlet {
             filename = new ContentDisposition(req.getHeader("Content-Disposition")).getParameter("filename");
         }
 
-        if (filename.endsWith(".har")) {
-            contentType = MimeConstants.CT_APPLICATION_JSON;
-        }
-
         if (filename == null || filename.trim().equals("")) {
             mLog.info("Rejecting upload with no name.");
             drainRequestStream(req);
@@ -715,8 +711,21 @@ public class FileUploadServlet extends ZimbraServlet {
         }
         List<FileItem> items = new ArrayList<FileItem>(1);
         items.add(fi);
-
         Upload up = new Upload(acct.getId(), fi, filename);
+
+        if (filename.endsWith(".har")) {
+            File file = ((DiskFileItem) fi).getStoreLocation();
+            try {
+                Tika tika = new Tika();
+                String mimeType = tika.detect(file);
+                if (mimeType != null) {
+                    up.contentType = mimeType;
+                }
+            } catch (IOException e) {
+                mLog.warn("Failed to detect file content type");
+            }
+        }
+
         mLog.info("Received plain: %s", up);
         synchronized (mPending) {
             mPending.put(up.uuid, up);
