@@ -21,9 +21,11 @@ import org.apache.lucene.search.TermQuery;
 
 import com.google.common.base.Strings;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Pair;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.LuceneQueryOperation;
 import com.zimbra.cs.index.QueryOperation;
+import com.zimbra.cs.index.solr.SolrUtils;
 import com.zimbra.cs.mailbox.Mailbox;
 
 /**
@@ -77,10 +79,21 @@ public class TextQuery extends Query {
 
     @Override
     public QueryOperation compile(Mailbox mbox, boolean bool) throws ServiceException {
-    	LuceneQueryOperation op = new LuceneQueryOperation();
-    	String solrQuery = quick? text + "*": text;
-    	op.addClause(toQueryString(field, text), new TermQuery(new Term(field, solrQuery)), evalBool(bool));
-    	return op;
+        LuceneQueryOperation op = new LuceneQueryOperation();
+        String solrQuery = quick? text + "*": text;
+        String queryField;
+        String queryString;
+        if (solrQuery.contains("*")) {
+            // route to edge n-gram tokenized fields if possible
+            Pair<String, String> wildcardQueryInfo = SolrUtils.getWildcardQueryTarget(field, solrQuery);
+            queryField = wildcardQueryInfo.getFirst();
+            queryString = wildcardQueryInfo.getSecond();
+        } else {
+            queryField = field;
+            queryString = solrQuery;
+        }
+        op.addClause(toQueryString(field, text), new TermQuery(new Term(queryField, queryString)), evalBool(bool));
+        return op;
     }
 
     @Override
@@ -95,7 +108,7 @@ public class TextQuery extends Query {
 
     @Override
     public void sanitizedDump(StringBuilder out) {
-    	int numWordsInQuery = text.split("\\s").length;
+        int numWordsInQuery = text.split("\\s").length;
         out.append(field);
         out.append(":");
         out.append(Strings.repeat("$TEXT,", numWordsInQuery));
