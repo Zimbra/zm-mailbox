@@ -54,7 +54,10 @@ public final class ContactQuery extends Query {
         for (int i = 0; i < tokens.length; i++) {
             String token = tokens[i];
             if (SolrUtils.shouldSearchEdgeNgrams(token)) {
-                tokensWithWildcards.add(token); // no need for wildcard, will match edge n-grams
+                token = token.replace("*", ""); // in case a wildcard was part of the query
+                if (token.length() > 0) {
+                    tokensWithWildcards.add(token); // no need for wildcard, will match edge n-grams
+                }
             } else {
                 //  "keyword"  -->  "keyword*"
                 // "*keyword*" -->  "keyword*"
