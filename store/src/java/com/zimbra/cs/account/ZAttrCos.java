@@ -14840,6 +14840,150 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * Whether to allow a user to access Zimbra X desktop
+     *
+     * @return zimbraFeatureZXDesktopEnabled, or false if unset
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3080)
+    public boolean isFeatureZXDesktopEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureZXDesktopEnabled, false, true);
+    }
+
+    /**
+     * Whether to allow a user to access Zimbra X desktop
+     *
+     * @param zimbraFeatureZXDesktopEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3080)
+    public void setFeatureZXDesktopEnabled(boolean zimbraFeatureZXDesktopEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureZXDesktopEnabled, zimbraFeatureZXDesktopEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to allow a user to access Zimbra X desktop
+     *
+     * @param zimbraFeatureZXDesktopEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3080)
+    public Map<String,Object> setFeatureZXDesktopEnabled(boolean zimbraFeatureZXDesktopEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureZXDesktopEnabled, zimbraFeatureZXDesktopEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to allow a user to access Zimbra X desktop
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3080)
+    public void unsetFeatureZXDesktopEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureZXDesktopEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to allow a user to access Zimbra X desktop
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3080)
+    public Map<String,Object> unsetFeatureZXDesktopEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureZXDesktopEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Whether to allow a user to access Zimbra X web client
+     *
+     * @return zimbraFeatureZXWebEnabled, or false if unset
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3079)
+    public boolean isFeatureZXWebEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureZXWebEnabled, false, true);
+    }
+
+    /**
+     * Whether to allow a user to access Zimbra X web client
+     *
+     * @param zimbraFeatureZXWebEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3079)
+    public void setFeatureZXWebEnabled(boolean zimbraFeatureZXWebEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureZXWebEnabled, zimbraFeatureZXWebEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to allow a user to access Zimbra X web client
+     *
+     * @param zimbraFeatureZXWebEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3079)
+    public Map<String,Object> setFeatureZXWebEnabled(boolean zimbraFeatureZXWebEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureZXWebEnabled, zimbraFeatureZXWebEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to allow a user to access Zimbra X web client
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3079)
+    public void unsetFeatureZXWebEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureZXWebEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to allow a user to access Zimbra X web client
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3079)
+    public Map<String,Object> unsetFeatureZXWebEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureZXWebEnabled, "");
+        return attrs;
+    }
+
+    /**
      * Zimbra Assistant enabled
      *
      * @return zimbraFeatureZimbraAssistantEnabled, or true if unset
