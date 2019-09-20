@@ -59,6 +59,16 @@ public abstract class AccountListener {
         mListeners.remove(listenerName);
     }
 
+    public static void invokeBeforeAccountCreation(String email, Map<String, Object> attrs) throws ServiceException {
+        ZimbraLog.account.debug("Invoking listeners before account creation %s", email);
+        // invoke listeners
+        Map<String, AccountListenerEntry> sortedListeners = ListenerUtil.sortByPriority(mListeners);
+        for (Map.Entry<String, AccountListenerEntry> listener : sortedListeners.entrySet()) {
+            AccountListenerEntry listenerInstance = listener.getValue();
+            listenerInstance.getAccountListener().beforeAccountCreation(email, attrs);
+        }
+    }
+
     public static void invokeOnAccountCreation(Account acct) throws ServiceException {
         ZimbraLog.account.debug("Account creation successful for user: %s", acct.getName());
         // invoke listeners
@@ -191,6 +201,14 @@ public abstract class AccountListener {
      * @param USER_ACCOUNT user account to be deleted
      */
     public abstract void beforeAccountDeletion(Account acct) throws ServiceException;
+
+    /**
+     * called before a successful account creation.
+     *
+     * @param email - email address of account to be created
+     * @param attrs - map of attributes to be applied on account
+     */
+    public abstract void beforeAccountCreation(String email, Map<String, Object> attrs) throws ServiceException;
 
     /**
      * called after a successful account creation.
