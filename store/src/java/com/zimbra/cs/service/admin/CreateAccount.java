@@ -65,18 +65,20 @@ public class CreateAccount extends AdminDocumentHandler {
         Account account = null;
         boolean rollbackOnFailure = LC.rollback_on_account_listener_failure.booleanValue();
         try {
-        CreateAccountRequest req = zsc.elementToJaxb(request);
+            CreateAccountRequest req = zsc.elementToJaxb(request);
 
-        String name = req.getName().toLowerCase();
-        Map<String, Object> attrs = req.getAttrsAsOldMultimap(true /* ignoreEmptyValues */);
+            String name = req.getName().toLowerCase();
+            Map<String, Object> attrs = req.getAttrsAsOldMultimap(true /* ignoreEmptyValues */);
 
-        checkDomainRightByEmail(zsc, name, Admin.R_createAccount);
-        checkSetAttrsOnCreate(zsc, TargetType.account, name, attrs);
-        checkCos(zsc, attrs);
+            checkDomainRightByEmail(zsc, name, Admin.R_createAccount);
+            checkSetAttrsOnCreate(zsc, TargetType.account, name, attrs);
+            checkCos(zsc, attrs);
 
-        account = prov.createAccount(name, req.getPassword(), attrs);
+            AccountListener.invokeBeforeAccountCreation(name, attrs);
 
-        ZimbraLog.security.info(ZimbraLog.encodeAttrs( new String[] {"cmd", "CreateAccount","name", name}, attrs));
+            account = prov.createAccount(name, req.getPassword(), attrs);
+
+            ZimbraLog.security.info(ZimbraLog.encodeAttrs( new String[] {"cmd", "CreateAccount","name", name}, attrs));
         } catch (ServiceException e) {
             AccountListener.invokeOnException(e);
             throw e;
