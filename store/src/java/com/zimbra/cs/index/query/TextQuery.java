@@ -87,7 +87,7 @@ public class TextQuery extends Query {
         }
         if (LC.search_disable_standalone_wildcard_query.booleanValue()) {
             if (text.equals("*")) {
-                if(field.equals(LuceneFields.L_CONTENT) && evalBool(bool)) {
+                if((field.equals(LuceneFields.L_CONTENT) || field.equals(LuceneFields.L_H_SUBJECT)) && evalBool(bool)) {
                     return new DBQueryOperation();
                 } else {
                     return new NoTermQueryOperation();
