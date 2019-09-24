@@ -219,8 +219,8 @@ import com.zimbra.cs.service.util.SortBySeniorityIndexThenName;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.zimlet.ZimletException;
 import com.zimbra.cs.zimlet.ZimletUtil;
-import com.zimbra.soap.account.type.HABGroupMember;
 import com.zimbra.soap.account.type.AddressListInfo;
+import com.zimbra.soap.account.type.HABGroupMember;
 import com.zimbra.soap.admin.type.CacheEntryType;
 import com.zimbra.soap.admin.type.CountObjectsType;
 import com.zimbra.soap.admin.type.DataSourceType;
@@ -1896,7 +1896,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             bases[0] = options.getHabRootGroupDn();
         } else {
 	    bases = getSearchBases(domain, types);
-	} 
+	}
 
         /*
          * filter
@@ -8200,6 +8200,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         }
     }
 
+    @Override
     public void changeHABGroupParent(String oldDn, String newParentDn) throws ServiceException {
         ZLdapContext zlc = null;
         try {
@@ -9189,6 +9190,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                 filter = filterFactory.allNonSystemAccounts();
                 break;
             case internalUserAccount:
+            case internalUserAccountX:
                 types.add(ObjectType.accounts);
                 filter = filterFactory.allNonSystemInternalAccounts();
                 break;
@@ -9668,7 +9670,8 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
         return groups;
     }
-    
+
+    @Override
     public List getAllHabGroups(Domain domain,  String rootDn) throws ServiceException {
         SearchDirectoryOptions searchOpts = new SearchDirectoryOptions(domain);
         searchOpts.setFilter(mDIT.filterHabGroupsByDn());
@@ -10958,7 +10961,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         ZLdapContext zlc = null;
         try {
             zlc = LdapClient.getContext(LdapServerType.REPLICA, LdapUsage.GET_GROUP_MEMBER);
-            String[] memberEmails = null; 
+            String[] memberEmails = null;
             DistributionList dl = get(DistributionListBy.id, group.getId());
             memberEmails =  dl.getMultiAttr(Provisioning.A_zimbraMailForwardingAddress);
 
@@ -11005,6 +11008,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         return members;
     }
 
+    @Override
     public boolean dlIsInDynamicHABGroup(DynamicGroup group, List<String> dlsToCheck) {
         ZLdapContext zlc = null;
         try {
@@ -11267,7 +11271,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         } finally {
             LdapClient.closeContext(zlc);
         }
-        
+
         return habOrgList;
     }
 
@@ -11319,12 +11323,12 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             LdapClient.closeContext(zlc);
         }
     }
-    
+
     /**
      * @param habOrgUnitName  organizational unit name
      * @param domainDn the domain distinguishedd name
      * @return true if the ou has groups or false if empty
-     * @throws ServiceException 
+     * @throws ServiceException
      */
     private static boolean isEmptyOu(String habOrgUnitName, String domainDn) throws ServiceException {
         ZLdapContext zlc = null;
@@ -11351,9 +11355,9 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         }
         return empty;
     }
-    
+
     /**
-     * 
+     *
      * @param domain domain for which HAB org unit list is requested
      * @return HAB org unit list under the given domain
      * @throws ServiceException
@@ -11367,19 +11371,19 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             String filter = "(objectClass=organizationalUnit)";
             String returnAttrs[] = new String[]{"ou"};
             ZLdapFilter zFilter = ZLdapFilterFactory.getInstance().fromFilterString(FilterId.ANY_ENTRY, filter);
-            
+
             ZSearchControls searchControls = ZSearchControls.createSearchControls(
-                    ZSearchScope.SEARCH_SCOPE_SUBTREE, ZSearchControls.SIZE_UNLIMITED, 
+                    ZSearchScope.SEARCH_SCOPE_SUBTREE, ZSearchControls.SIZE_UNLIMITED,
                     returnAttrs);
-            
+
             ZSearchResultEnumeration ne = zlc.searchDir(domainDn, zFilter, searchControls);
-            
+
             while(ne.hasMore()) {
                 habList.add(ne.next().getAttributes().getAttrString("ou"));
-               
+
             }
             ZimbraLog.misc.debug("The HAB orgunits under:%s, are: (%s)", domain.getName(), habList);
-           
+
         } catch (ServiceException e) {
             throw ServiceException.FAILURE(String.format("Unable to delete HAB org unit: %s for domain=%s",domain.getName(), domain.getName()), e);
         } finally {
@@ -11387,9 +11391,9 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         }
         return habList;
     }
-    
+
     /**
-     * 
+     *
      * @param ouName organizational unit name
      * @param baseDn distinguishedd name
      * @return the dn with ou
@@ -11400,11 +11404,12 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         sb.append(ouName);
         sb.append(",");
         sb.append(baseDn);
-        
+
         return sb.toString();
     }
 
-  
+
+    @Override
     public String createAddressList(Domain domain, String name, String desc, Map<String, Object> attrs) throws ServiceException {
         String domainDn = ((LdapEntry)domain).getDN();
         Set<String> oc = new HashSet<String>();
@@ -11438,10 +11443,10 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         }
 
         return zimbraIdStr;
-   } 
+   }
 
     /**
-     * 
+     *
      * @param id id of the address list
      * @return AddressList object
      * @throws ServiceException if an error occurs while querying LDAP.
