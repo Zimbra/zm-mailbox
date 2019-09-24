@@ -582,11 +582,6 @@ public class ZInternetHeader {
         fields.add(currElement);
         return fields.getAll();
     }
-    
-    public static boolean allowInvalidEncoding(String charset) {
-        
-        return ("iso-8859-1".equalsIgnoreCase(charset) || "us-ascii".equalsIgnoreCase(charset)) ;
-    }
 
     public static boolean allowInvalidEncoding(String charset) {
 
