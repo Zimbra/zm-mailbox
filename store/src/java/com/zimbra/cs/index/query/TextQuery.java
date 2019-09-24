@@ -20,10 +20,13 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.search.TermQuery;
 
 import com.google.common.base.Strings;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
+import com.zimbra.cs.index.DBQueryOperation;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.LuceneQueryOperation;
+import com.zimbra.cs.index.NoTermQueryOperation;
 import com.zimbra.cs.index.QueryOperation;
 import com.zimbra.cs.index.solr.SolrUtils;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -79,6 +82,18 @@ public class TextQuery extends Query {
 
     @Override
     public QueryOperation compile(Mailbox mbox, boolean bool) throws ServiceException {
+        if (text.length() == 0) {
+            return new NoTermQueryOperation();
+        }
+        if (LC.search_disable_standalone_wildcard_query.booleanValue()) {
+            if (text.equals("*")) {
+                if((field.equals(LuceneFields.L_CONTENT) || field.equals(LuceneFields.L_H_SUBJECT)) && evalBool(bool)) {
+                    return new DBQueryOperation();
+                } else {
+                    return new NoTermQueryOperation();
+                }
+            }
+        }
         LuceneQueryOperation op = new LuceneQueryOperation();
         String solrQuery = quick? text + "*": text;
         String queryField;
