@@ -224,7 +224,6 @@ public class SpamExtract {
 
     private static void extract(String authToken, Account account, Server server, String query, File outdir, boolean delete, boolean raw) throws ServiceException, HttpException, SoapFaultException, IOException {
         String soapURL = getSoapURL(server, false);
-        String serverURL = getServerURL(server, false).toString();
 
         URL restURL = getServerURL(server, false);
         HttpClientBuilder hc = HttpClientBuilder.create();   // CLI only, don't need conn mgr
@@ -289,7 +288,7 @@ public class SpamExtract {
                     LOG.debug("adding id %s", mid);
                     ids.add(mid);
                     if (ids.size() >= BATCH_SIZE || !iter.hasNext()) {
-                        StringBuilder path = new StringBuilder(serverURL + "/service/user/" + account.getName() + "/?fmt=tgz&list=" + StringUtils.join(ids, ","));
+                        StringBuilder path = new StringBuilder(restURL.toString() + "/service/user/" + account.getName() + "/?fmt=tgz&list=" + StringUtils.join(ids, ","));
                         LOG.debug("sending request for path %s", path.toString());
                         List<String> extractedIds = extractMessages(hc, gm, path.toString(), outdir, raw);
                         if (ids.size() > extractedIds.size()) {
