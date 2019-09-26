@@ -25,6 +25,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -222,6 +224,7 @@ public class SpamExtract {
 
     private static void extract(String authToken, Account account, Server server, String query, File outdir, boolean delete, boolean raw) throws ServiceException, HttpException, SoapFaultException, IOException {
         String soapURL = getSoapURL(server, false);
+        String serverURL = getServerURL(server, false).toString();
 
         URL restURL = getServerURL(server, false);
         HttpClientBuilder hc = HttpClientBuilder.create();   // CLI only, don't need conn mgr
@@ -286,7 +289,7 @@ public class SpamExtract {
                     LOG.debug("adding id %s", mid);
                     ids.add(mid);
                     if (ids.size() >= BATCH_SIZE || !iter.hasNext()) {
-                        StringBuilder path = new StringBuilder("/service/user/" + account.getName() + "/?fmt=tgz&list=" + StringUtils.join(ids, ","));
+                        StringBuilder path = new StringBuilder(serverURL + "/service/user/" + account.getName() + "/?fmt=tgz&list=" + StringUtils.join(ids, ","));
                         LOG.debug("sending request for path %s", path.toString());
                         List<String> extractedIds = extractMessages(hc, gm, path.toString(), outdir, raw);
                         if (ids.size() > extractedIds.size()) {
@@ -363,6 +366,13 @@ public class SpamExtract {
       
         if (LOG.isDebugEnabled()) {
             LOG.debug("Fetching " + path);
+        }
+
+        try {
+            URI uri = new URI(path);
+            gm.setURI(uri);
+        } catch(URISyntaxException e) {
+            LOG.warn("exception occurred in URI path", e);
         }
         HttpResponse httpResp = HttpClientUtil.executeMethod(client, gm);
         if (httpResp.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
