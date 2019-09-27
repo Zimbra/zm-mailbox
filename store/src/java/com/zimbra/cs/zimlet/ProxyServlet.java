@@ -29,6 +29,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.http.Header;
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpException;
 import org.apache.http.HttpResponse;
 import org.apache.http.auth.AuthScope;
@@ -315,7 +316,12 @@ public class ProxyServlet extends ZimbraServlet {
             Header ctHeader = httpResp.getFirstHeader("Content-Type");
             String contentType = ctHeader == null || ctHeader.getValue() == null ? DEFAULT_CTYPE : ctHeader.getValue();
 
-            InputStream targetResponseBody = httpResp.getEntity().getContent();
+            // getEntity may return null if no response body (e.g. HTTP 204)
+            InputStream targetResponseBody = null;
+            HttpEntity targetResponseEntity = httpResp.getEntity();
+            if (targetResponseEntity != null) {
+                targetResponseBody = targetResponseEntity.getContent();
+            }
 
             if (asUpload) {
                 String filename = req.getParameter(FILENAME_PARAM);
