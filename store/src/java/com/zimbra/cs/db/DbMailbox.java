@@ -513,7 +513,7 @@ public final class DbMailbox {
             stmt.setInt(pos++, mbox.getLastItemId());
             stmt.setInt(pos++, mbox.getContactCount());
             stmt.setInt(pos++, mbox.getLastChangeID());
-            stmt.setLong(pos++, mbox.getSize());
+            stmt.setLong(pos++, mbox.getMailItemsSize());
             stmt.setInt(pos++, mbox.getRecentMessageCount());
             stmt.setInt(pos++, mbox.getId());
             stmt.executeUpdate();
