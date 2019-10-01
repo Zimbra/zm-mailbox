@@ -139,26 +139,32 @@ public class RedissonRetryClient implements RedissonClient {
         }
     }
 
-    public synchronized void restart() {
-        clientLock.writeLock().lock();
-        try (LivenessProbeOverride override = new LivenessProbeOverride()) {
-            try {
-                ZimbraLog.mailbox.info("restarting redisson client (version %d)", clientVersion);
-                Config config = client.getConfig();
-                client.shutdown();
-                int maxWaitMillis = LC.redis_cluster_reconnect_timeout_millis.intValue();
-                boolean success = waitForCluster(config, maxWaitMillis);
-                if (!success) {
-                    ZimbraLog.mailbox.warn("unable to restart redisson client after %d ms", maxWaitMillis);
-                } else {
-                    ZimbraLog.mailbox.info("new redisson client created (version=%d)", clientVersion);
-                    //re-initialize pubsub channels up front, other redisson objects get re-initialized lazily
-                    initializePubSubChannels();
+    public synchronized int restart(int clientVersionAtFailure) {
+        if (clientVersionAtFailure < clientVersion) {
+            ZimbraLog.mailbox.debug("another thread already re-initialized the redisson client (failed at version %s, current version=%s)",
+                    clientVersionAtFailure, clientVersion);
+        } else {
+            clientLock.writeLock().lock();
+            try (LivenessProbeOverride override = new LivenessProbeOverride()) {
+                try {
+                    ZimbraLog.mailbox.info("restarting redisson client (version %d)", clientVersion);
+                    Config config = client.getConfig();
+                    client.shutdown();
+                    int maxWaitMillis = LC.redis_cluster_reconnect_timeout_millis.intValue();
+                    boolean success = waitForCluster(config, maxWaitMillis);
+                    if (!success) {
+                        ZimbraLog.mailbox.warn("unable to restart redisson client after %d ms", maxWaitMillis);
+                    } else {
+                        ZimbraLog.mailbox.info("new redisson client created (version=%d)", clientVersion);
+                        //re-initialize pubsub channels up front, other redisson objects get re-initialized lazily
+                        initializePubSubChannels();
+                    }
+                } finally {
+                    clientLock.writeLock().unlock();
                 }
-            } finally {
-                clientLock.writeLock().unlock();
             }
         }
+        return clientVersion;
     }
 
     public <R> R runInitializer(RedissonRetryDecorator.RedissonInitializer<R> initializer) {

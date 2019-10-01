@@ -31,7 +31,6 @@ public abstract class RedissonRetryDecorator<R> {
         onFailure = new RequestWithRetry.OnFailureAction() {
             @Override
             public void run() throws Exception {
-                ZimbraLog.mailbox.info("detected redis failure (version %d), will re-initialize redisson client", clientVersion);
                 reconnect(clientVersion);
             }
         };
@@ -42,7 +41,7 @@ public abstract class RedissonRetryDecorator<R> {
             public synchronized boolean exceptionMatches(Exception e) {
                 boolean isRedisException = false;
                 if (e instanceof RedisException && !(e instanceof RedissonShutdownException) && !(e instanceof RedisResponseTimeoutException)) {
-                    ZimbraLog.mailbox.warn("caught %s in ExceptionHandler, will attempt to re-initialize redisson client", e.getClass().getName(), e);
+                    ZimbraLog.mailbox.debug("caught %s in ExceptionHandler, will attempt to re-initialize redisson client", e.getClass().getName(), e);
                     isRedisException = true;
                 } else {
                     ZimbraLog.mailbox.warn("caught %s in ExceptionHandler, but it is not the right exception type", e.getClass().getName(), e);
@@ -57,12 +56,7 @@ public abstract class RedissonRetryDecorator<R> {
     }
 
     private synchronized void reconnect(int clientVersionAtFailure) {
-        if (clientVersionAtFailure < client.getClientVersion()) {
-            //another thread already re-initialized the redisson client
-            return;
-        }
-        client.restart();
-        clientVersion = client.getClientVersion();
+        clientVersion = client.restart(clientVersionAtFailure);
         initialize();
     }
 
