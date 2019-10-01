@@ -7012,6 +7012,22 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureZimbraAssistantEnabled = "zimbraFeatureZimbraAssistantEnabled";
 
     /**
+     * Whether to allow a user to access Zimbra X desktop
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3080)
+    public static final String A_zimbraFeatureZXDesktopEnabled = "zimbraFeatureZXDesktopEnabled";
+
+    /**
+     * Whether to allow a user to access Zimbra X web client
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3079)
+    public static final String A_zimbraFeatureZXWebEnabled = "zimbraFeatureZXWebEnabled";
+
+    /**
      * whether crash reporting is enabled in the Android client
      *
      * @since ZCS 8.0.0

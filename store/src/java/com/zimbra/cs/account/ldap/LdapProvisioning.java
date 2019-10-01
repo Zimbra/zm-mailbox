@@ -8204,6 +8204,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         }
     }
 
+    @Override
     public void changeHABGroupParent(String oldDn, String newParentDn) throws ServiceException {
         ZLdapContext zlc = null;
         try {
@@ -9193,6 +9194,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                 filter = filterFactory.allNonSystemAccounts();
                 break;
             case internalUserAccount:
+            case internalUserAccountX:
                 types.add(ObjectType.accounts);
                 filter = filterFactory.allNonSystemInternalAccounts();
                 break;
@@ -9672,7 +9674,8 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
         return groups;
     }
-    
+
+    @Override
     public List getAllHabGroups(Domain domain,  String rootDn) throws ServiceException {
         SearchDirectoryOptions searchOpts = new SearchDirectoryOptions(domain);
         searchOpts.setFilter(mDIT.filterHabGroupsByDn());
@@ -11371,19 +11374,19 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             String filter = "(objectClass=organizationalUnit)";
             String returnAttrs[] = new String[]{"ou"};
             ZLdapFilter zFilter = ZLdapFilterFactory.getInstance().fromFilterString(FilterId.ANY_ENTRY, filter);
-            
+
             ZSearchControls searchControls = ZSearchControls.createSearchControls(
                     ZSearchScope.SEARCH_SCOPE_SUBTREE, ZSearchControls.SIZE_UNLIMITED, 
                     returnAttrs);
-            
+
             ZSearchResultEnumeration ne = zlc.searchDir(domainDn, zFilter, searchControls);
-            
+
             while(ne.hasMore()) {
                 habList.add(ne.next().getAttributes().getAttrString("ou"));
                
             }
             ZimbraLog.misc.debug("The HAB orgunits under:%s, are: (%s)", domain.getName(), habList);
-           
+
         } catch (ServiceException e) {
             throw ServiceException.FAILURE(String.format("Unable to delete HAB org unit: %s for domain=%s",domain.getName(), domain.getName()), e);
         } finally {
@@ -11408,7 +11411,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         return sb.toString();
     }
 
-  
+    @Override
     public String createAddressList(Domain domain, String name, String desc, Map<String, Object> attrs) throws ServiceException {
         String domainDn = ((LdapEntry)domain).getDN();
         Set<String> oc = new HashSet<String>();

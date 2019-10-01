@@ -9762,4 +9762,14 @@ TODO: delete them permanently from here
   <desc>filter to decide members of the address list using ldap</desc>
 </attr>
 
+<attr id="3079" name="zimbraFeatureZXWebEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.9.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>Whether to allow a user to access Zimbra X web client</desc>
+</attr>
+
+<attr id="3080" name="zimbraFeatureZXDesktopEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.9.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>Whether to allow a user to access Zimbra X desktop</desc>
+</attr>
+
 </attrs>
