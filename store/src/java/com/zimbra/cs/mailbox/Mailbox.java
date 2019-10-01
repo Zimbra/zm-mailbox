@@ -1419,8 +1419,12 @@ public class Mailbox implements MailboxStore {
     /** Returns the total (uncompressed) size of the mailbox's contents. */
     @Override
     public long getSize() {
-        long additionalSize = getAdditionalSize();
-        return (currentChange().size == MailboxChange.NO_CHANGE ? mData.size : currentChange().size) + additionalSize;
+        return getMailItemsSize() + getAdditionalSize();
+    }
+
+    /** Returns only the mailbox size without the addictional size */
+    public long getMailItemsSize() {
+        return (currentChange().size == MailboxChange.NO_CHANGE ? mData.size : currentChange().size);
     }
 
     private long getAdditionalSize() {
@@ -1458,7 +1462,7 @@ public class Mailbox implements MailboxStore {
     public void checkSizeChange(long newSize) throws ServiceException {
         Account acct = getAccount();
         long acctQuota = AccountUtil.getEffectiveQuota(acct);
-        if (acctQuota != 0 && newSize + getAdditionalSize() > acctQuota) {
+        if (acctQuota != 0 && newSize > acctQuota) {
             throw MailServiceException.QUOTA_EXCEEDED(acctQuota);
         }
         Domain domain = Provisioning.getInstance().getDomain(acct);
