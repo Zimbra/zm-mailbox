@@ -1267,7 +1267,7 @@ public final class LC {
     public static final KnownKey redis_num_pubsub_channels = KnownKey.newKey(100);
 
     @Supported
-    public static final KnownKey redis_cluster_scan_interval = KnownKey.newKey(2000);
+    public static final KnownKey redis_cluster_scan_interval = KnownKey.newKey(1000);
 
     @Supported
     public static final KnownKey redis_cluster_reconnect_timeout_millis = KnownKey.newKey(60000);
