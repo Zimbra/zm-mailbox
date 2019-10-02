@@ -45,7 +45,7 @@ public abstract class RedissonRetryDecorator<R> {
             public synchronized boolean exceptionMatches(Exception e) {
                 boolean isRedisException = false;
                 if (e instanceof RedisException && !(e instanceof RedissonShutdownException) && !(e instanceof RedisResponseTimeoutException)) {
-                    ZimbraLog.mailbox.debug("caught %s in ExceptionHandler, will attempt to re-initialize redisson client", e.getClass().getName(), e);
+                    ZimbraLog.mailbox.info("caught %s in ExceptionHandler, will attempt to re-initialize redisson client", e.getClass().getName(), e);
                     isRedisException = true;
                 } else {
                     ZimbraLog.mailbox.warn("caught %s in ExceptionHandler, but it is not the right exception type", e.getClass().getName(), e);
@@ -66,7 +66,7 @@ public abstract class RedissonRetryDecorator<R> {
 
     protected void checkClientVersion() {
         if (clientVersion != client.getClientVersion()) {
-            ZimbraLog.mailbox.info("detected old client version (%d < %d), re-initializing %s", clientVersion, client.getClientVersion(), this.getClass().getSimpleName());
+            ZimbraLog.mailbox.debug("detected old client version (%d < %d), re-initializing %s", clientVersion, client.getClientVersion(), this.getClass().getSimpleName());
             initialize();
             clientVersion = client.getClientVersion();
         }
