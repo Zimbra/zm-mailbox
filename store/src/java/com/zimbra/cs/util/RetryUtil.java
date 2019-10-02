@@ -23,7 +23,7 @@ public class RetryUtil {
             } catch (Exception e) {
                 if (exceptionHandler.exceptionMatches(e)) {
                     try {
-                        onFailureAction.run();
+                        onFailureAction.run(e);
                     } catch (Exception e2) {
                         String errorMsg = String.format("error invoking OnFailureAction %s", command.getClass().getName());
                         throw ServiceException.FAILURE(errorMsg, e2);
@@ -42,7 +42,7 @@ public class RetryUtil {
         }
 
         public static interface OnFailureAction {
-            public void run() throws Exception;
+            public void run(Exception e) throws Exception;
         }
 
         public static interface Command<T> {

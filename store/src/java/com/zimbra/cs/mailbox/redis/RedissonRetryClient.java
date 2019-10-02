@@ -1,10 +1,13 @@
 package com.zimbra.cs.mailbox.redis;
 
 import java.lang.ref.WeakReference;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -137,6 +140,45 @@ public class RedissonRetryClient implements RedissonClient {
                 }
             }
         }
+    }
+
+    public synchronized void waitForClusterOK() {
+        int maxWaitMillis = LC.redis_cluster_reconnect_timeout_millis.intValue();
+        int waited = 0;
+        int waitMillis = 1000;
+        Collection<Node> nodes = getNodesGroup().getNodes();
+        long start = System.currentTimeMillis();
+        // for now, loop over currently-known nodes until we get cluster_state:ok from one of them
+        clientLock.writeLock().lock();
+        try {
+            ZimbraLog.mailbox.info("waiting until redis cluster_state is OK...");
+            while (waited <= maxWaitMillis) {
+                for (Node node: nodes) {
+                    try {
+                        Map<String, String> info = node.clusterInfoAsync().get();
+                        String clusterState = info.get("cluster_state");
+                        if (clusterState != null && clusterState.equals("ok")) {
+                            ZimbraLog.mailbox.info("redis cluster is OK again after %sms", System.currentTimeMillis() - start);
+                            return;
+                        } else {
+                            try {
+                                Thread.sleep(waitMillis);
+                                waited += waitMillis;
+                            } catch (InterruptedException e1) {}
+                        }
+                    } catch (InterruptedException | ExecutionException e) {
+                        try {
+                            Thread.sleep(waitMillis);
+                            waited += waitMillis;
+                        } catch (InterruptedException e1) {}
+                    }
+                }
+            }
+            ZimbraLog.mailbox.warn("redis cluster is not OK after %sms!", maxWaitMillis);
+        } finally {
+            clientLock.writeLock().unlock();
+        }
+
     }
 
     public synchronized int restart(int clientVersionAtFailure) {

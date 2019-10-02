@@ -34,8 +34,13 @@ public abstract class RedissonRetryDecorator<R> {
 
         onFailure = new RequestWithRetry.OnFailureAction() {
             @Override
-            public void run() throws Exception {
-                reconnect(clientVersion);
+            public void run(Exception e) throws Exception {
+                if (e instanceof RedisException && e.getMessage().contains("CLUSTERDOWN")) {
+                    client.waitForClusterOK();
+                } else {
+                    ZimbraLog.mailbox.info("caught %s in ExceptionHandler, will attempt to re-initialize redisson client", e.getClass().getName(), e);
+                    reconnect(clientVersion);
+                }
             }
         };
 
@@ -45,7 +50,6 @@ public abstract class RedissonRetryDecorator<R> {
             public synchronized boolean exceptionMatches(Exception e) {
                 boolean isRedisException = false;
                 if (e instanceof RedisException && !(e instanceof RedissonShutdownException) && !(e instanceof RedisResponseTimeoutException)) {
-                    ZimbraLog.mailbox.info("caught %s in ExceptionHandler, will attempt to re-initialize redisson client", e.getClass().getName(), e);
                     isRedisException = true;
                 } else {
                     ZimbraLog.mailbox.warn("caught %s in ExceptionHandler, but it is not the right exception type", e.getClass().getName(), e);
@@ -63,6 +67,7 @@ public abstract class RedissonRetryDecorator<R> {
         clientVersion = client.restart(clientVersionAtFailure);
         initialize();
     }
+
 
     protected void checkClientVersion() {
         if (clientVersion != client.getClientVersion()) {
