@@ -176,6 +176,10 @@ public class RedissonRetryClient implements RedissonClient {
         }
     }
 
+    ReadWriteLock getClientLock() {
+        return clientLock;
+    }
+
     @Override
     public <K, V> RMap<K, V> getMap(String name) {
         return new RedissonRetryMap<K, V>(client -> client.getMap(name), this);

@@ -1,5 +1,7 @@
 package com.zimbra.cs.mailbox.redis;
 
+import java.util.concurrent.locks.ReadWriteLock;
+
 import org.redisson.RedissonShutdownException;
 import org.redisson.api.RedissonClient;
 import org.redisson.client.RedisException;
@@ -21,11 +23,13 @@ public abstract class RedissonRetryDecorator<R> {
     private RedissonInitializer<R> initializer;
     protected int clientVersion;
     private ActivityTracker tracker = ZimbraPerf.REDIS_TRACKER;
+    private ReadWriteLock clientLock;
 
     public RedissonRetryDecorator(RedissonInitializer<R> initializer, RedissonRetryClient client) {
         this.client = client;
         this.clientVersion = client.getClientVersion();
         this.initializer = initializer;
+        this.clientLock = client.getClientLock();
         initialize();
 
         onFailure = new RequestWithRetry.OnFailureAction() {
@@ -62,16 +66,16 @@ public abstract class RedissonRetryDecorator<R> {
 
     protected void checkClientVersion() {
         if (clientVersion != client.getClientVersion()) {
-            ZimbraLog.mailbox.debug("detected old client version (%d < %d), re-initializing %s", clientVersion, client.getClientVersion(), this.getClass().getSimpleName());
+            ZimbraLog.mailbox.info("detected old client version (%d < %d), re-initializing %s", clientVersion, client.getClientVersion(), this.getClass().getSimpleName());
             initialize();
             clientVersion = client.getClientVersion();
         }
     }
 
     protected <T> T runCommand(Command<T> command) {
-        checkClientVersion();
         long startTime = System.currentTimeMillis();
-        RequestWithRetry<T> withRetry = new RequestWithRetry<>(command, exceptionHandler, onFailure);
+        Command<T> wrapped = new WrappedCommand<>(command, clientLock, this);
+        RequestWithRetry<T> withRetry = new RequestWithRetry<>(wrapped, exceptionHandler, onFailure);
         try {
             T result = withRetry.execute();
             String caller = Thread.currentThread().getStackTrace()[2].getMethodName();
@@ -90,5 +94,29 @@ public abstract class RedissonRetryDecorator<R> {
 
     protected interface RedissonInitializer<R> {
         public R init(RedissonClient client);
+    }
+
+    protected static class WrappedCommand<T> implements Command<T> {
+
+        private Command<T> command;
+        private ReadWriteLock lock;
+        private RedissonRetryDecorator<?> object;
+
+        public WrappedCommand(Command<T> command, ReadWriteLock lock, RedissonRetryDecorator<?> object) {
+            this.command = command;
+            this.lock = lock;
+            this.object = object;
+        }
+
+        @Override
+        public T execute() throws Exception {
+            lock.readLock().lock();
+            object.checkClientVersion();
+            try {
+                return command.execute();
+            } finally {
+                lock.readLock().unlock();
+            }
+        }
     }
 }
