@@ -184,7 +184,7 @@ public class RedissonRetryClient implements RedissonClient {
 
     }
 
-    public synchronized int restart(int clientVersionAtFailure) {
+    public synchronized int restart(int clientVersionAtFailure, Throwable cause) {
         if (clientVersionAtFailure < clientVersion) {
             ZimbraLog.mailbox.debug("another thread already re-initialized the redisson client (failed at version %s, current version=%s)",
                     clientVersionAtFailure, clientVersion);
@@ -192,7 +192,7 @@ public class RedissonRetryClient implements RedissonClient {
             clientLock.writeLock().lock();
             try (LivenessProbeOverride override = new LivenessProbeOverride()) {
                 try {
-                    ZimbraLog.mailbox.info("restarting redisson client (version %d)", clientVersion);
+                    ZimbraLog.mailbox.info("restarting redisson client (version %d)", clientVersion, cause);
                     Config config = client.getConfig();
                     client.shutdown();
                     int maxWaitMillis = LC.redis_cluster_reconnect_timeout_millis.intValue();

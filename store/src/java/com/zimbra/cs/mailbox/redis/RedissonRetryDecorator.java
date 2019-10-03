@@ -38,8 +38,7 @@ public abstract class RedissonRetryDecorator<R> {
                 if (e instanceof RedisException && e.getMessage().contains("CLUSTERDOWN")) {
                     client.waitForClusterOK();
                 } else {
-                    ZimbraLog.mailbox.info("caught %s in ExceptionHandler, will attempt to re-initialize redisson client", e.getClass().getName(), e);
-                    reconnect(clientVersion);
+                    reconnect(clientVersion, e);
                 }
             }
         };
@@ -63,8 +62,8 @@ public abstract class RedissonRetryDecorator<R> {
         redissonObject = client.runInitializer(initializer);
     }
 
-    private synchronized void reconnect(int clientVersionAtFailure) {
-        clientVersion = client.restart(clientVersionAtFailure);
+    private synchronized void reconnect(int clientVersionAtFailure, Throwable cause) {
+        clientVersion = client.restart(clientVersionAtFailure, cause);
         initialize();
     }
 
