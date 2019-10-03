@@ -4,6 +4,7 @@ import java.lang.ref.WeakReference;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -74,6 +75,7 @@ import org.redisson.api.RedissonClient;
 import org.redisson.api.TransactionOptions;
 import org.redisson.client.RedisException;
 import org.redisson.client.codec.Codec;
+import org.redisson.client.protocol.RedisCommand;
 import org.redisson.command.CommandExecutor;
 import org.redisson.config.Config;
 
@@ -99,7 +101,7 @@ public class RedissonRetryClient implements RedissonClient {
     }
 
     public CommandExecutor getCommandExecutor() {
-        return ((Redisson) client).getCommandExecutor();
+        return new RedissonRetryCommandExecutor(client -> ((Redisson) client).getCommandExecutor(), this);
     }
 
     private boolean waitForCluster(Config redissonConfig, int maxWaitMillis) {
@@ -220,6 +222,10 @@ public class RedissonRetryClient implements RedissonClient {
 
     ReadWriteLock getClientLock() {
         return clientLock;
+    }
+
+    public <T> T evalWrite(String key, Codec codec, RedisCommand<T> evalCommandType, String script, List<Object> keys, Object... params) {
+        return getCommandExecutor().evalWrite(key, codec, evalCommandType, script, keys, params);
     }
 
     @Override
