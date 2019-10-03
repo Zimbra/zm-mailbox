@@ -46,12 +46,14 @@ import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.disk.DiskFileItem;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
-import org.apache.commons.httpclient.Header;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpException;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.http.Header;
+import org.apache.http.HttpException;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.HttpClientBuilder;
 
 import com.google.common.base.Strings;
 import com.zimbra.client.ZMailbox;
@@ -305,23 +307,26 @@ public class FileUploadServlet extends ZimbraServlet {
                ContentServlet.PARAM_EXPUNGE + "=true";
 
         // create an HTTP client with auth cookie to fetch the file from the remote ContentServlet
-        HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
-        GetMethod get = new GetMethod(url);
-        authtoken.encode(client, get, false, hostname);
+        HttpClientBuilder clientBuilder = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+        HttpGet get = new HttpGet(url);
+
+        authtoken.encode(clientBuilder, get, false, hostname);
+        HttpClient client = clientBuilder.build();
         try {
             // fetch the remote item
-            int statusCode = HttpClientUtil.executeMethod(client, get);
+            HttpResponse httpResp = HttpClientUtil.executeMethod(client, get);
+            int statusCode = httpResp.getStatusLine().getStatusCode();
             if (statusCode != HttpStatus.SC_OK)
                 return null;
 
             // metadata is encoded in the response's HTTP headers
-            Header ctHeader = get.getResponseHeader("Content-Type");
+            Header ctHeader = httpResp.getFirstHeader("Content-Type");
             String contentType = ctHeader == null ? "text/plain" : ctHeader.getValue();
-            Header cdispHeader = get.getResponseHeader("Content-Disposition");
+            Header cdispHeader = httpResp.getFirstHeader("Content-Disposition");
             String filename = cdispHeader == null ? "unknown" : new ContentDisposition(cdispHeader.getValue()).getParameter("filename");
 
             // store the fetched upload along with original uploadId
-            Upload up = saveUpload(get.getResponseBodyAsStream(), filename, contentType, accountId);
+            Upload up = saveUpload(httpResp.getEntity().getContent(), filename, contentType, accountId);
             synchronized (mProxiedUploadIds) {
                 mProxiedUploadIds.put(uploadId, up.uuid);
             }
@@ -350,7 +355,7 @@ public class FileUploadServlet extends ZimbraServlet {
             // sizeMax=-1 means "no limit"
             long size = ByteUtil.copy(is, true, fi.getOutputStream(), true, sizeMax < 0 ? sizeMax : sizeMax + 1);
             if (upload.getSizeMax() >= 0 && size > upload.getSizeMax()) {
-                mLog.info("Exceeded maximum upload size of " + upload.getSizeMax() + " bytes");
+                mLog.warn("Exceeded maximum upload size of %s bytes", upload.getSizeMax());
                 throw MailServiceException.UPLOAD_TOO_LARGE(filename, "upload too large");
             }
 

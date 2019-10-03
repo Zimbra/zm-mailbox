@@ -30,6 +30,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.http.HttpException;
+
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.mime.ContentDisposition;
@@ -244,6 +246,8 @@ public class ContentServlet extends ZimbraServlet {
             resp.sendError(HttpServletResponse.SC_NOT_FOUND, L10nUtil.getMessage(MsgKey.errNoSuchItem, req));
         } catch (ServiceException e) {
             returnError(resp, e);
+        } catch (HttpException e) {
+            throw new IOException("Unknown error", e);
         } finally {
             ZimbraLog.clearContext();
         }
@@ -287,6 +291,8 @@ public class ContentServlet extends ZimbraServlet {
                 FileUploadServlet.deleteUpload(up);
         } catch (ServiceException e) {
             returnError(resp, e);
+        } catch (HttpException e) {
+            throw new IOException("Unknown error", e);
         }
     }
 

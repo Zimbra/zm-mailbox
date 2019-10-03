@@ -195,20 +195,21 @@ public class ToXML {
 
     public static Element encodeLocale(Element parent, Locale locale, Locale inLocale) {
         Element e = parent.addNonUniqueElement(AccountConstants.E_LOCALE);
-		String id = locale.toString();
+        String id = locale.toString();
 
-		// name in the locale itself
-		String name = L10nUtil.getMessage(L10nUtil.L10N_MSG_FILE_BASENAME, id, Locale.getDefault());
-		if (name == null) {
-		    name = locale.getDisplayName(inLocale);
-		}
+        // name in the locale itself, if it is present.
+        String name = L10nUtil.getMessage(false /* shoutIfMissing */,
+                L10nUtil.L10N_MSG_FILE_BASENAME, id, Locale.getDefault());
+        if (name == null) {
+            name = locale.getDisplayName(inLocale);
+        }
 
-		// name in the locale of choice
-		String localName = locale.getDisplayName(inLocale);
+        // name in the locale of choice
+        String localName = locale.getDisplayName(inLocale);
 
-		e.addAttribute(AccountConstants.A_ID, id);
-		e.addAttribute(AccountConstants.A_NAME, name != null ? name : id);
-		e.addAttribute(AccountConstants.A_LOCAL_NAME, localName != null ? localName : id);
+        e.addAttribute(AccountConstants.A_ID, id);
+        e.addAttribute(AccountConstants.A_NAME, name != null ? name : id);
+        e.addAttribute(AccountConstants.A_LOCAL_NAME, localName != null ? localName : id);
         return e;
     }
 

@@ -37,7 +37,7 @@ import io.leangen.graphql.annotations.GraphQLQuery;
 import io.leangen.graphql.annotations.types.GraphQLType;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@GraphQLType(name=GqlConstants.CLASS_CONTACT_GROUP_MEMBER, description="Contact group member")
+@GraphQLType(name=GqlConstants.CLASS_MAIL_CONTACT_GROUP_MEMBER, description="Contact group member")
 public class ContactGroupMember
 implements ContactGroupMemberInterface {
 

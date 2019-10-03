@@ -33,10 +33,12 @@ import java.util.TimeZone;
 
 import javax.xml.bind.Marshaller;
 
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpException;
-import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.httpclient.methods.StringRequestEntity;
+import org.apache.http.HttpException;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.dom4j.Document;
 import org.dom4j.io.DocumentResult;
 import org.junit.After;
@@ -629,12 +631,13 @@ public class TestJaxb {
 
     private Object sendReq(String requestBody, String requestCommand)
     throws HttpException, IOException, ServiceException {
-        HttpClient client = new HttpClient();
-        PostMethod post = new PostMethod(TestUtil.getSoapUrl() + requestCommand);
-        post.setRequestEntity(new StringRequestEntity(requestBody, "application/soap+xml", "UTF-8"));
-        int respCode = HttpClientUtil.executeMethod(client, post);
+        HttpClient client = HttpClientBuilder.create().build();
+        HttpPost post = new HttpPost(TestUtil.getSoapUrl() + requestCommand);
+        post.setEntity(new StringEntity(requestBody, "application/soap+xml", "UTF-8"));
+        HttpResponse response = HttpClientUtil.executeMethod(client, post);
+        int respCode = response.getStatusLine().getStatusCode();
         Assert.assertEquals(200, respCode);
-        Element envelope = W3cDomUtil.parseXML(post.getResponseBodyAsStream());
+        Element envelope = W3cDomUtil.parseXML(response.getEntity().getContent());
         SoapProtocol proto = SoapProtocol.determineProtocol(envelope);
         Element doc = proto.getBodyElement(envelope);
         return JaxbUtil.elementToJaxb(doc);
@@ -642,12 +645,13 @@ public class TestJaxb {
 
     private Element sendReqExpectingFail(String requestBody, String requestCommand, int expectedRespCode)
     throws HttpException, IOException, ServiceException {
-        HttpClient client = new HttpClient();
-        PostMethod post = new PostMethod(TestUtil.getSoapUrl() + requestCommand);
-        post.setRequestEntity(new StringRequestEntity(requestBody, "application/soap+xml", "UTF-8"));
-        int respCode = HttpClientUtil.executeMethod(client, post);
+        HttpClient client = HttpClientBuilder.create().build();
+        HttpPost post = new HttpPost(TestUtil.getSoapUrl() + requestCommand);
+        post.setEntity(new StringEntity(requestBody, "application/soap+xml", "UTF-8"));
+        HttpResponse response = HttpClientUtil.executeMethod(client, post);
+        int respCode = response.getStatusLine().getStatusCode();
         Assert.assertEquals(expectedRespCode, respCode);
-        return W3cDomUtil.parseXML(post.getResponseBodyAsStream());
+        return W3cDomUtil.parseXML(response.getEntity().getContent());
     }
 
     public BrowseResponse doBrowseRequest(BrowseRequest browseRequest) throws Exception {

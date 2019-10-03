@@ -249,7 +249,7 @@ public abstract class SoapCLI {
         } catch (UnknownHostException e) {
             // UnknownHostException's error message is not clear; rethrow with a more descriptive message
             throw new IOException("Unknown host: " + mHost);
-        }
+        } 
     }
 
     /**

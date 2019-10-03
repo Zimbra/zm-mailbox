@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2018 Synacor, Inc.
+ * Copyright (C) 2018, 2019 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -47,7 +47,7 @@ public class HABOrgUnitRequest {
     @XmlEnum
     public enum HabOp {
         // case must match
-        create, rename, delete;
+        create, rename, delete, list;
 
         public static HabOp fromString(String s) throws ServiceException {
             try {
@@ -70,7 +70,7 @@ public class HABOrgUnitRequest {
      * @zm-api-field-tag name
      * @zm-api-field-description HAB org unit name
      */
-    @XmlAttribute(name = AdminConstants.A_NAME /* name */, required = true)
+    @XmlAttribute(name = AdminConstants.A_NAME /* name */, required = false)
     private String name;
 
     /**
@@ -98,6 +98,11 @@ public class HABOrgUnitRequest {
        
    }
 
+    public HABOrgUnitRequest(DomainSelector domainSelector, HabOp op) {
+        this.domainSelector = domainSelector;
+        this.op = op;
+    }
+   
     public HABOrgUnitRequest(DomainSelector domainSelector, String habOrgUnitName, 
         String newHabOrgUnitName, HabOp op) {
         this.domainSelector = domainSelector;

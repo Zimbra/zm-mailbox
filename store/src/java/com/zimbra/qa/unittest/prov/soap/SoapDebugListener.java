@@ -16,12 +16,13 @@
  */
 package com.zimbra.qa.unittest.prov.soap;
 
-import org.apache.commons.httpclient.Cookie;
-import org.apache.commons.httpclient.Header;
-import org.apache.commons.httpclient.HttpState;
-import org.apache.commons.httpclient.URI;
-import org.apache.commons.httpclient.URIException;
-import org.apache.commons.httpclient.methods.PostMethod;
+import java.net.URI;
+import java.util.List;
+
+import org.apache.http.Header;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.cookie.Cookie;
+import org.apache.http.impl.client.BasicCookieStore;
 
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapHttpTransport.HttpDebugListener;
@@ -53,7 +54,7 @@ public class SoapDebugListener implements HttpDebugListener {
     }
     
     @Override
-    public void receiveSoapMessage(PostMethod postMethod, Element envelope) {
+    public void receiveSoapMessage(HttpPost postMethod, Element envelope) {
         if (level == Level.OFF) {
             return;
         }
@@ -62,7 +63,7 @@ public class SoapDebugListener implements HttpDebugListener {
         System.out.println("=== Response ===");
         
         if (Level.needsHeader(level)) {
-            Header[] headers = postMethod.getResponseHeaders();
+            Header[] headers = postMethod.getAllHeaders();
             for (Header header : headers) {
                 System.out.println(header.toString().trim()); // trim the ending crlf
             }
@@ -75,7 +76,7 @@ public class SoapDebugListener implements HttpDebugListener {
     }
 
     @Override
-    public void sendSoapMessage(PostMethod postMethod, Element envelope, HttpState httpState) {
+    public void sendSoapMessage(HttpPost postMethod, Element envelope, BasicCookieStore httpState) {
         if (level == Level.OFF) {
             return;
         }
@@ -84,15 +85,13 @@ public class SoapDebugListener implements HttpDebugListener {
         System.out.println("=== Request ===");
         
         if (Level.needsHeader(level)) {
-            try {
-                URI uri = postMethod.getURI();
-                System.out.println(uri.toString());
-            } catch (URIException e) {
-                e.printStackTrace();
-            }
+            
+            URI uri = postMethod.getURI();
+            System.out.println(uri.toString());
+            
             
             // headers
-            Header[] headers = postMethod.getRequestHeaders();
+            Header[] headers = postMethod.getAllHeaders();
             for (Header header : headers) {
                 System.out.println(header.toString().trim()); // trim the ending crlf
             }
@@ -100,7 +99,7 @@ public class SoapDebugListener implements HttpDebugListener {
             
             //cookies
             if (httpState != null) {
-                Cookie[] cookies = httpState.getCookies();
+                List<Cookie> cookies = httpState.getCookies();
                 for (Cookie cookie : cookies) {
                     System.out.println("Cookie: " + cookie.toString());
                 }

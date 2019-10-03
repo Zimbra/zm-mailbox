@@ -16,16 +16,21 @@
  */
 package com.zimbra.qa.unittest.prov.soap;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpException;
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.methods.GetMethod;
+
+import org.apache.http.HttpException;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -63,8 +68,8 @@ import com.zimbra.qa.unittest.prov.Verify;
 import com.zimbra.soap.admin.message.AutoProvAccountRequest;
 import com.zimbra.soap.admin.message.AutoProvAccountResponse;
 import com.zimbra.soap.admin.message.AutoProvTaskControlRequest;
-import com.zimbra.soap.admin.message.AutoProvTaskControlResponse;
 import com.zimbra.soap.admin.message.AutoProvTaskControlRequest.Action;
+import com.zimbra.soap.admin.message.AutoProvTaskControlResponse;
 import com.zimbra.soap.admin.message.AutoProvTaskControlResponse.Status;
 import com.zimbra.soap.admin.type.AccountInfo;
 import com.zimbra.soap.admin.type.CountObjectsType;
@@ -347,16 +352,16 @@ public class TestAutoProvision extends SoapTest {
         // do the preauth servlet request
         String url = TestUtil.getBaseUrl() + preAuthUrl;
         
-        HttpClient client = new HttpClient();
-        HttpMethod method = new GetMethod(url);
+        HttpClient client = HttpClientBuilder.create().build();
+        HttpGet method = new HttpGet(url);
         
         boolean ok = false;
         try {
-            int respCode = HttpClientUtil.executeMethod(client, method);
-            int statusCode = method.getStatusCode();
-            String statusLine = method.getStatusLine().toString();
+            HttpResponse response = HttpClientUtil.executeMethod(client, method);
+            int statusCode = response.getStatusLine().getStatusCode();
+            String statusLine = response.getStatusLine().getReasonPhrase();
             
-            ok = (respCode == 200);
+            ok = (statusCode == 200);
             
             /*
             System.out.println("respCode=" + respCode);

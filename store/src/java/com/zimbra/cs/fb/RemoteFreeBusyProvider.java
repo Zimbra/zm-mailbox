@@ -29,11 +29,14 @@ import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
-import com.zimbra.cs.servlet.ZimbraServlet;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.http.HttpException;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.impl.client.HttpClientBuilder;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.calendar.ZCalendar.ICalTok;
 import com.zimbra.common.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.common.calendar.ZCalendar.ZComponent;
@@ -50,12 +53,11 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.httpclient.HttpProxyUtil;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.mail.ToXML;
+import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.ProxyTarget;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -107,7 +109,7 @@ public class RemoteFreeBusyProvider extends FreeBusyProvider {
     public List<FreeBusy> getResults() {
         ArrayList<FreeBusy> fbList = new ArrayList<FreeBusy>();
         for (Request req : mRequestList) {
-            HttpMethod method = null;
+            HttpRequestBase method = null;
             Account acct = (Account)req.data;
             try {
                 StringBuilder targetUrl = new StringBuilder();
@@ -132,15 +134,15 @@ public class RemoteFreeBusyProvider extends FreeBusyProvider {
                         targetUrl.append(URLEncoder.encode(authToken, "UTF-8"));
                     } catch (UnsupportedEncodingException e) {}
                 }
-                HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
-                HttpProxyUtil.configureProxy(client);
-                method = new GetMethod(targetUrl.toString());
+                HttpClientBuilder clientBuilder = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+                HttpProxyUtil.configureProxy(clientBuilder);
+                method = new HttpGet(targetUrl.toString());
                 String fbMsg;
                 try {
-                    HttpClientUtil.executeMethod(client, method);
-                    byte[] buf = ByteUtil.getContent(method.getResponseBodyAsStream(), 0);
+                    HttpResponse response =  HttpClientUtil.executeMethod(clientBuilder.build(), method);
+                    byte[] buf = ByteUtil.getContent(response.getEntity().getContent(), 0);
                     fbMsg = new String(buf, "UTF-8");
-                } catch (IOException ex) {
+                } catch (IOException | HttpException ex) {
                     // ignore this recipient and go on
                     fbMsg = null;
                 }

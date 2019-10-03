@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2010, 2013, 2014, 2016, 2018 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -19,29 +19,34 @@ package com.zimbra.common.httpclient;
 
 import java.io.IOException;
 
-import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.methods.EntityEnclosingMethod;
-import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
-import org.apache.commons.httpclient.methods.RequestEntity;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpEntityEnclosingRequest;
+import org.apache.http.HttpRequest;
+import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
+import org.apache.http.protocol.HttpContext;
 
+public class InputStreamRequestHttpRetryHandler extends DefaultHttpRequestRetryHandler {
 
-public class InputStreamRequestHttpRetryHandler extends DefaultHttpMethodRetryHandler {
-
+    @Override
     /**
      * Same as default, but returns false if method is an unbuffered input stream request 
      * This avoids HttpMethodDirector masking real IO exception with bogus 'Unbuffered content cannot be retried' exception
      */
-    @Override
-    public boolean retryMethod(HttpMethod method, IOException exception,
-            int executionCount) {
-        boolean canRetry = super.retryMethod(method, exception, executionCount);
-        if (canRetry && method instanceof EntityEnclosingMethod) {
-            RequestEntity reqEntity = ((EntityEnclosingMethod) method).getRequestEntity();
-            if (reqEntity instanceof InputStreamRequestEntity) {
-                return ((InputStreamRequestEntity) reqEntity).isRepeatable();
+    public boolean retryRequest(IOException exception, int executionCount, HttpContext context) {
+
+        boolean canRetry = super.retryRequest(exception, executionCount, context);
+
+        HttpClientContext clientContext = HttpClientContext.adapt(context);
+        HttpRequest request = clientContext.getRequest();
+        boolean idempotent = !(request instanceof HttpEntityEnclosingRequest);
+        if (canRetry && idempotent) {
+            HttpEntity reqEntity = ((HttpEntityEnclosingRequest) request).getEntity();
+            if (reqEntity.isRepeatable()) {
+                canRetry = true;
             }
         }
         return canRetry;
+
     }
 }

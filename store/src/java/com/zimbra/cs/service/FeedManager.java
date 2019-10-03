@@ -26,8 +26,10 @@ import java.io.InputStream;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
+import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.net.UnknownHostException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -45,17 +47,26 @@ import javax.mail.internet.MimePart;
 import javax.mail.internet.ParseException;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.httpclient.Header;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpException;
-import org.apache.commons.httpclient.HttpURL;
-import org.apache.commons.httpclient.HttpsURL;
-import org.apache.commons.httpclient.URIException;
-import org.apache.commons.httpclient.UsernamePasswordCredentials;
-import org.apache.commons.httpclient.auth.AuthScope;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.params.HttpMethodParams;
-import org.apache.commons.httpclient.util.DateParseException;
+import org.apache.http.Header;
+import org.apache.http.HttpException;
+import org.apache.http.HttpHost;
+import org.apache.http.HttpResponse;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.AuthCache;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.client.utils.DateUtils;
+import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.config.ConnectionConfig;
+import org.apache.http.config.SocketConfig;
+import org.apache.http.impl.auth.BasicScheme;
+import org.apache.http.impl.client.BasicAuthCache;
+import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.impl.client.DefaultRedirectStrategy;
+import org.apache.http.impl.client.HttpClientBuilder;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
@@ -165,7 +176,7 @@ public class FeedManager {
         public BufferedInputStream content;
         public final String expectedCharset;
         public final long lastModified;
-        private GetMethod getMethod = null;
+        private HttpGet getMethod = null;
 
         public RemoteDataInfo(int statusCode, int redirects,
                 BufferedInputStream content, String expectedCharset, long lastModified) {
@@ -175,10 +186,10 @@ public class FeedManager {
             this.expectedCharset = expectedCharset;
             this.lastModified = lastModified;
         }
-        public GetMethod getGetMethod() {
+        public HttpGet getGetMethod() {
             return getMethod;
         }
-        public void setGetMethod(GetMethod getMethod) {
+        public void setGetMethod(HttpGet getMethod) {
             this.getMethod = getMethod;
         }
         public void cleanup() {
@@ -266,7 +277,7 @@ public class FeedManager {
      * @param url The target
      * @return True if address is blocked for feed manager
      */
-    protected static boolean isBlockedFeedAddress(HttpURL url) {
+    protected static boolean isBlockedFeedAddress(URIBuilder url) {
         String blacklistString = LC.zimbra_feed_manager_blacklist.value();
         List<String> blacklist = new ArrayList<String>();
         if (!StringUtil.isNullOrEmpty(blacklistString)) {
@@ -279,8 +290,8 @@ public class FeedManager {
                 || targetAddress.isLoopbackAddress()
                 || blacklist.stream()
                     .anyMatch(ip -> isAddressInRange(targetAddress, ip));
-        } catch (URIException | UnknownHostException e) {
-            ZimbraLog.misc.warn("unable to parse feed manager target url host: %s", url);
+        } catch (UnknownHostException e) {
+            ZimbraLog.misc.warn("unable to identify feed manager target url host: %s", url);
         }
         return false;
     }
@@ -289,18 +300,20 @@ public class FeedManager {
     throws ServiceException, HttpException, IOException {
         assert !Strings.isNullOrEmpty(url);
 
-        HttpClient client = ZimbraHttpConnectionManager.getExternalHttpConnMgr().newHttpClient();
-        HttpProxyUtil.configureProxy(client);
+        HttpClientBuilder clientBuilder = ZimbraHttpConnectionManager.getExternalHttpConnMgr().newHttpClient();
+        HttpProxyUtil.configureProxy(clientBuilder);
 
         // cannot set connection timeout because it'll affect all HttpClients associated with the conn mgr.
         // see comments in ZimbraHttpConnectionManager
         // client.setConnectionTimeout(10000);
 
-        HttpMethodParams params = new HttpMethodParams();
-        params.setParameter(HttpMethodParams.HTTP_CONTENT_CHARSET, MimeConstants.P_CHARSET_UTF8);
-        params.setSoTimeout(60000);
+        SocketConfig config = SocketConfig.custom().setSoTimeout(60000).build();
+        clientBuilder.setDefaultSocketConfig(config);
 
-        GetMethod get = null;
+        ConnectionConfig connConfig = ConnectionConfig.custom().setCharset(Charset.forName(MimeConstants.P_CHARSET_UTF8)).build();
+        clientBuilder.setDefaultConnectionConfig(connConfig);
+
+        HttpGet get = null;
         BufferedInputStream content = null;
         long lastModified = 0;
         String expectedCharset = MimeConstants.P_CHARSET_UTF8;
@@ -317,16 +330,23 @@ public class FeedManager {
                     throw ServiceException.INVALID_REQUEST("url must begin with http: or https:", null);
                 }
 
-                HttpURL httpurl = lcurl.startsWith("https:") ? new HttpsURL(url) : new HttpURL(url);
+                // Add AuthCache to the execution context
+                HttpClientContext context = HttpClientContext.create();
+                URIBuilder httpurl;
+                try {
+                    httpurl = new  URIBuilder(url);
+                } catch (URISyntaxException e1) {
+                    throw ServiceException.INVALID_REQUEST("invalid url for feed: " + url, e1);
+                }
+
                 // validate target address (also handles followed `location` header addresses)
                 if (isBlockedFeedAddress(httpurl)) {
                     throw ServiceException.INVALID_REQUEST(String.format("invalid url for feed: %s", url), null);
                 }
-
                 // username and password are encoded in the URL as http://user:pass@host/...
                 if (url.indexOf('@') != -1) {
-                    if (httpurl.getUser() != null) {
-                        String user = httpurl.getUser();
+                    if (httpurl.getUserInfo() != null) {
+                        String user = httpurl.getUserInfo();
                         if (user.indexOf('%') != -1) {
                             try {
                                 user = URLDecoder.decode(user, "UTF-8");
@@ -334,61 +354,81 @@ public class FeedManager {
                                 Zimbra.halt("out of memory", e);
                             } catch (Throwable t) { }
                         }
-                        UsernamePasswordCredentials creds = new UsernamePasswordCredentials(user, httpurl.getPassword());
-                        client.getParams().setAuthenticationPreemptive(true);
-                        client.getState().setCredentials(AuthScope.ANY, creds);
+                        int index = user.indexOf(':');
+                        String userName = user.substring(0,  index);
+                        String password = user.substring(index + 1);
+
+
+                        CredentialsProvider provider = new BasicCredentialsProvider();
+                        UsernamePasswordCredentials credentials
+                         = new UsernamePasswordCredentials(userName, password);
+                        provider.setCredentials(AuthScope.ANY, credentials);
+                        clientBuilder.setDefaultCredentialsProvider(provider);
+                        clientBuilder.setDefaultCredentialsProvider(provider);
+
+                       // Create AuthCache instance
+                        AuthCache authCache = new BasicAuthCache();
+                        // Generate BASIC scheme object and add it to the local auth cache
+                        BasicScheme basicAuth = new BasicScheme();
+                        authCache.put(new HttpHost(httpurl.getHost()), basicAuth);
+
+                        // Add AuthCache to the execution context
+                        context.setCredentialsProvider(provider);
+                        context.setAuthCache(authCache);
+
                     }
                 }
 
                 try {
-                    get = new GetMethod(url);
+                    get = new HttpGet(url);
                 } catch (OutOfMemoryError e) {
                     Zimbra.halt("out of memory", e);  return null;
                 } catch (Throwable t) {
                     ZimbraLog.misc.warnQuietly(String.format("invalid url for feed: %s", url), t);
                     throw ServiceException.INVALID_REQUEST("invalid url for feed: " + url, null);
                 }
-                get.setParams(params);
-                get.setFollowRedirects(true);
-                get.setDoAuthentication(true);
-                get.addRequestHeader("User-Agent", HTTP_USER_AGENT);
-                get.addRequestHeader("Accept", HTTP_ACCEPT);
-                if (fsd != null && fsd.getLastSyncDate() > 0) {
-                    String lastSyncAt = org.apache.commons.httpclient.util.DateUtil.formatDate(new Date(fsd.getLastSyncDate()));
-                    get.addRequestHeader("If-Modified-Since", lastSyncAt);
-                }
-                HttpClientUtil.executeMethod(client, get);
 
-                Header locationHeader = get.getResponseHeader("location");
+                DefaultRedirectStrategy redirectStrategy = new DefaultRedirectStrategy();
+                clientBuilder.setRedirectStrategy(redirectStrategy);
+
+                get.addHeader("User-Agent", HTTP_USER_AGENT);
+                get.addHeader("Accept", HTTP_ACCEPT);
+                if (fsd != null && fsd.getLastSyncDate() > 0) {
+                    String lastSyncAt = DateUtils.formatDate(new Date(fsd.getLastSyncDate()));
+                    get.addHeader("If-Modified-Since", lastSyncAt);
+                }
+
+                HttpClient client = clientBuilder.build();
+                HttpResponse response = HttpClientUtil.executeMethod(client, get, context);
+
+                Header locationHeader = response.getFirstHeader("location");
                 if (locationHeader != null) {
                     // update our target URL and loop again to do another HTTP GET
                     url = locationHeader.getValue();
                     get.releaseConnection();
                 } else {
-                    statusCode = get.getStatusCode();
+                    statusCode = response.getStatusLine().getStatusCode();
                     if (statusCode == HttpServletResponse.SC_OK) {
-                        Header contentEncoding = get.getResponseHeader("Content-Encoding");
-                        InputStream respInputStream = get.getResponseBodyAsStream();
+                        Header contentEncoding = response.getFirstHeader("Content-Encoding");
+                        InputStream respInputStream = response.getEntity().getContent();
                         if (contentEncoding != null) {
                             if (contentEncoding.getValue().indexOf("gzip") != -1) {
                                 respInputStream = new GZIPInputStream(respInputStream);
                             }
                         }
                         content = new BufferedInputStream(respInputStream);
-                        expectedCharset = get.getResponseCharSet();
+                        org.apache.http.entity.ContentType contentType =  org.apache.http.entity.ContentType.getOrDefault(response.getEntity());
+                        if (contentType != null && contentType.getCharset() != null) {
+                            expectedCharset = contentType.getCharset().name();
+                        }
 
-                        Header lastModHdr = get.getResponseHeader("Last-Modified");
+                        Header lastModHdr = response.getFirstHeader("Last-Modified");
                         if (lastModHdr == null) {
-                            lastModHdr = get.getResponseHeader("Date");
+                            lastModHdr = response.getFirstHeader("Date");
                         }
                         if (lastModHdr != null) {
-                            try {
-                                Date d = org.apache.commons.httpclient.util.DateUtil.parseDate(lastModHdr.getValue());
-                                lastModified = d.getTime();
-                            } catch (DateParseException e) {
-                                ZimbraLog.misc.warn("unable to parse Last-Modified/Date header: " + lastModHdr.getValue(), e);
-                                lastModified = System.currentTimeMillis();
-                            }
+                            Date d = DateUtils.parseDate(lastModHdr.getValue());
+                            lastModified = d.getTime();
                         } else {
                             lastModified = System.currentTimeMillis();
                         }
@@ -396,7 +436,7 @@ public class FeedManager {
                         ZimbraLog.misc.debug("Remote data at " + url + " not modified since last sync");
                         return new RemoteDataInfo(statusCode, redirects, null, expectedCharset, lastModified);
                     } else {
-                        throw ServiceException.RESOURCE_UNREACHABLE(get.getStatusLine().toString(), null);
+                        throw ServiceException.RESOURCE_UNREACHABLE(response.getStatusLine().toString(), null);
                     }
                     break;
                 }

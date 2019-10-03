@@ -577,10 +577,12 @@ public final class LC {
             " -Dorg.apache.jasper.compiler.disablejsr199=true" +
             " -XX:+UseG1GC" +
             " -XX:SoftRefLRUPolicyMSPerMB=1" +
+            " -XX:+UnlockExperimentalVMOptions" +
+            " -XX:G1NewSizePercent=15" +
+            " -XX:G1MaxNewSizePercent=45" +
             " -XX:-OmitStackTraceInFastThrow" +
             " -verbose:gc" +
-            " -Xlog:gc*=debug,safepoint=info:file=/opt/zimbra/log/gc.log:time:filecount=20,filesize=10m" +
-            " --module-path /opt/zimbra/jetty/common/endorsed");
+            " -Xlog:gc*=info,safepoint=info:file=/opt/zimbra/log/gc.log:time:filecount=20,filesize=10m");
     @Supported
     public static final KnownKey mailboxd_pidfile = KnownKey.newKey("${zimbra_log_directory}/mailboxd.pid");
 
@@ -1286,14 +1288,27 @@ public final class LC {
     @Reloadable
     public static final KnownKey imap_always_use_remote_store = KnownKey.newKey(false);
 
+    // owasp handler
+    public static final KnownKey zimbra_use_owasp_html_sanitizer = KnownKey.newKey(true);
+
+    public static final KnownKey enable_delegated_admin_ldap_access = KnownKey.newKey(true);
+
     // OAuth2 Social
     public static final KnownKey zm_oauth_classes_handlers_yahoo = KnownKey.newKey("com.zimbra.oauth.handlers.impl.YahooOAuth2Handler");
     public static final KnownKey zm_oauth_classes_handlers_google = KnownKey.newKey("com.zimbra.oauth.handlers.impl.GoogleOAuth2Handler");
     public static final KnownKey zm_oauth_classes_handlers_facebook = KnownKey.newKey("com.zimbra.oauth.handlers.impl.FacebookOAuth2Handler");
 
+    // alias login
+    public static final KnownKey alias_login_enabled = KnownKey.newKey(true);
 
     // Feed Manager comma-separated blacklist. addresses can be CIDR notation, or single ip. no wild-cards (default blacklist private networks)
     public static final KnownKey zimbra_feed_manager_blacklist = KnownKey.newKey("10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,fd00::/8");
+
+    // Zimbra valid class list to de-serialize
+    public static final KnownKey zimbra_deserialize_classes = KnownKey.newKey("");
+
+    // XML 1.0 invalid characters regex pattern
+    public static final KnownKey xml_invalid_chars_regex = KnownKey.newKey("\\&\\#(?:x([0-9a-fA-F]+)|([0-9]+))\\;");
 
     static {
         // Automatically set the key name with the variable name.

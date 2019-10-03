@@ -24,6 +24,7 @@ import java.util.Set;
 
 import org.apache.commons.lang.BooleanUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.http.HttpException;
 
 import com.google.common.base.Strings;
 import com.zimbra.common.account.Key;
@@ -32,6 +33,7 @@ import com.zimbra.common.account.ZAttrProvisioning.GalMode;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.Element.ContainerException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.SoapHttpTransport;
@@ -461,7 +463,7 @@ public class GalSearchControl {
             try {
                 if (!proxyGalAccountSearch(galAcct, false))
                     throw new GalAccountNotConfiguredException();
-            } catch (IOException e) {
+            } catch (IOException | HttpException e) {
                 ZimbraLog.gal.warn("remote search on GalSync account failed for " + galAcct.getName(), e);
                 // let the request fallback to ldap based search
                 throw new GalAccountNotConfiguredException();
@@ -480,7 +482,7 @@ public class GalSearchControl {
             try {
                 if (!proxyGalAccountSearch(galAcct, true))
                     throw new GalAccountNotConfiguredException();
-            } catch (IOException e) {
+            } catch (IOException | HttpException e) {
                 ZimbraLog.gal.warn("remote sync on GalSync account failed for " + galAcct.getName(), e);
                 // remote server may be down, return the same sync token so that client can try again.
                 mParams.getResultCallback().setNewToken(mParams.getGalSyncToken());
@@ -663,7 +665,7 @@ public class GalSearchControl {
         callback.setHasMoreResult(hasMore);
     }
 
-    private boolean proxyGalAccountSearch(Account galSyncAcct, boolean sync) throws IOException, ServiceException {
+    private boolean proxyGalAccountSearch(Account galSyncAcct, boolean sync) throws IOException, ServiceException, ContainerException, HttpException {
         try {
             Provisioning prov = Provisioning.getInstance();
             String serverUrl = URLUtil.getAdminURL(prov.getServerByName(galSyncAcct.getMailHost()));

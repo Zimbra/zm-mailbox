@@ -27,9 +27,11 @@ import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLHandshakeException;
 import javax.net.ssl.SSLPeerUnverifiedException;
 
-import org.apache.commons.httpclient.ConnectTimeoutException;
-import org.apache.commons.httpclient.NoHttpResponseException;
-import org.apache.commons.httpclient.ProtocolException;
+import org.apache.http.NoHttpResponseException;
+import org.apache.http.ProtocolException;
+import org.apache.http.conn.ConnectTimeoutException;
+
+
 
 @SuppressWarnings("serial")
 public class RemoteServiceException extends ServiceException {

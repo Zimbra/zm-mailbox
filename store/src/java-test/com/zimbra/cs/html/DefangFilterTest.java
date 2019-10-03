@@ -27,16 +27,19 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Matcher;
 
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.html.owasp.OwaspDefang;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
@@ -54,8 +57,9 @@ public class DefangFilterTest {
     private static String EMAIL_BASE_DIR = "data/unittest/email/";
     @BeforeClass
     public static void init() throws Exception {
-        MailboxTestUtil.initServer("store/");
-        EMAIL_BASE_DIR = MailboxTestUtil.getZimbraServerDir("store/") + EMAIL_BASE_DIR;
+        MailboxTestUtil.initServer();
+        EMAIL_BASE_DIR = MailboxTestUtil.getZimbraServerDir("") + EMAIL_BASE_DIR;
+        LC.zimbra_use_owasp_html_sanitizer.setDefault(false);
         Provisioning prov = Provisioning.getInstance();
         Account acct = prov.createAccount("test@in.telligent.com", "secret", new HashMap<String, Object>());
     }
@@ -81,7 +85,16 @@ public class DefangFilterTest {
     }
 
     public void defangStyleUnwantedFunc(String styleValue, String expected) throws Exception {
-        String after = DefangFilter.STYLE_UNWANTED_FUNC.matcher(styleValue).replaceAll("");
+        Matcher matcher = DefangFilter.STYLE_UNWANTED_FUNC.matcher(styleValue);
+        StringBuffer stringBuffer = new StringBuffer();
+        while (matcher.find()) {
+            String match = matcher.group();
+            if(!match.startsWith("rgb")&&!match.startsWith("media")&&!match.startsWith("and")) {
+                matcher.appendReplacement(stringBuffer, "");
+            }
+        }
+        matcher.appendTail(stringBuffer);
+        String after = stringBuffer.toString();
         Assert.assertEquals("StyleUnwantedFunc result", expected, after);
     }
 
@@ -1453,10 +1466,25 @@ public class DefangFilterTest {
      */
     @Test
     public void testzbug736Mime1() throws Exception {
+        LC.zimbra_use_owasp_html_sanitizer.setDefault(false);
         String fileName = "zbug736_2.txt";
         InputStream htmlStream = getHtmlBody(fileName);
         String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
             true);
         Assert.assertTrue(result != null);
+    }
+
+    /**
+     * Checking zimbraUseOwaspHtmlSanitizer is true
+     * @throws Exception
+     */
+    @Test
+    public void testzcs6871OwaspDefanger() throws Exception {
+        BrowserDefang defanger2 = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML);
+        Assert.assertFalse(defanger2 instanceof OwaspDefang);
+
+        LC.zimbra_use_owasp_html_sanitizer.setDefault(true);
+        BrowserDefang defanger = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML);
+        Assert.assertTrue(defanger instanceof OwaspDefang);
     }
 }

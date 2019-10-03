@@ -20,11 +20,17 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.httpclient.NameValuePair;
-import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.http.HttpException;
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.utils.URLEncodedUtils;
+import org.apache.http.message.BasicNameValuePair;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
@@ -83,13 +89,20 @@ public class RawAuth implements Auth {
     public static String getToken(String appId, String user, String pass)
         throws AuthenticationException, IOException {
         debug("Sending getToken request: appId = %s, user = %s", appId, user);
-        Response res = doGet(GET_AUTH_TOKEN,
-            new NameValuePair(APPID, appId),
-            new NameValuePair(LOGIN, user),
-            new NameValuePair(PASSWD, pass));
-        String token = res.getRequiredField(AUTH_TOKEN);
-        debug("Got getToken response: token = %s", token);
-        return token;
+        List<NameValuePair> nvp = new ArrayList<NameValuePair>();
+        nvp.add(new BasicNameValuePair(APPID, appId));
+        nvp.add(new BasicNameValuePair(LOGIN, user));
+        nvp.add(new BasicNameValuePair(PASSWD, pass));
+        Response res;
+        try {
+            res = doGet(GET_AUTH_TOKEN, nvp);
+            String token = res.getRequiredField(AUTH_TOKEN); 
+            debug("Got getToken response: token = %s", token);
+            return token;
+        } catch (HttpException e) {
+            throw new IOException("Unexpected error: ",e);
+        }
+        
     }
 
     public static RawAuth authenticate(String appId, String token)
@@ -127,60 +140,68 @@ public class RawAuth implements Auth {
 
     private void authenticate(String token)
         throws AuthenticationException, IOException {
-        Response res = doGet(GET_AUTH, new NameValuePair(APPID, appId),
-                                       new NameValuePair(TOKEN, token));
-        cookie = res.getRequiredField(COOKIE);
-        wssId = res.getRequiredField(WSSID);
-        String s = res.getRequiredField(EXPIRATION);
+        List<NameValuePair> nvp = new ArrayList<NameValuePair>();
+        nvp.add(new BasicNameValuePair(APPID, appId));
+        nvp.add(new BasicNameValuePair(TOKEN, token));
         try {
-            expiration = System.currentTimeMillis() + Long.parseLong(s) * Constants.MILLIS_PER_SECOND;
-        } catch (NumberFormatException e) {
-            throw new IOException(
-                "Invalid integer value for field '" + EXPIRATION + "': " + s);
+            Response res = doGet(GET_AUTH, nvp);
+            cookie = res.getRequiredField(COOKIE);
+            wssId = res.getRequiredField(WSSID);
+            String s = res.getRequiredField(EXPIRATION);
+            try {
+                expiration = System.currentTimeMillis() + Long.parseLong(s) * Constants.MILLIS_PER_SECOND;
+            } catch (NumberFormatException e) {
+                throw new IOException(
+                    "Invalid integer value for field '" + EXPIRATION + "': " + s);
+            }
+        } catch (HttpException e) {
+            throw new IOException("Unexpected error: ",e);
         }
     }
 
-    private static Response doGet(String action, NameValuePair... params)
-        throws AuthenticationException, IOException {
+    private static Response doGet(String action, List<NameValuePair> paramsList)
+        throws AuthenticationException, IOException, HttpException {
         String uri = LC.yauth_baseuri.value() + '/' + action;
-        GetMethod method = new GetMethod(uri);
-        method.setQueryString(params);
-        int rc = HttpClientUtil.executeMethod(method);
-        Response res = new Response(method);
-        String error = res.getField(ERROR);
-        // Request can sometimes fail even with a 200 status code, so always
-        // check for "Error" attribute in response.
-        if (rc == 200 && error == null) {
-            return res;
-        }
-        if (rc == 999) {
-            // Yahoo service temporarily unavailable (error code text not included)
-            throw new AuthenticationException(
-                ErrorCode.TEMP_ERROR, "Unable to process request at this time");
-        }
-        ErrorCode code = error != null ?
-            ErrorCode.get(error) : ErrorCode.GENERIC_ERROR;
-        String description = res.getField(ERROR_DESCRIPTION);
-        if (description == null) {
-            description = code.getDescription();
-        }
-        AuthenticationException e = new AuthenticationException(code, description);
-        e.setCaptchaUrl(res.getField(CAPTCHA_URL));
-        e.setCaptchaData(res.getField(CAPTCHA_DATA));
-        throw e;
+
+        HttpGet httpget = new HttpGet(uri+"?"+ URLEncodedUtils.format(paramsList, "utf-8"));
+        HttpResponse httpResp = HttpClientUtil.executeMethod(httpget);
+        int rc = httpResp.getStatusLine().getStatusCode();
+        
+            Response res = new Response(httpResp);
+            String error = res.getField(ERROR);
+            // Request can sometimes fail even with a 200 status code, so always
+            // check for "Error" attribute in response.
+            if (rc == 200 && error == null) {
+                return res;
+            }
+            if (rc == 999) {
+                // Yahoo service temporarily unavailable (error code text not included)
+                throw new AuthenticationException(
+                    ErrorCode.TEMP_ERROR, "Unable to process request at this time");
+            }
+            ErrorCode code = error != null ?
+                ErrorCode.get(error) : ErrorCode.GENERIC_ERROR;
+            String description = res.getField(ERROR_DESCRIPTION);
+            if (description == null) {
+                description = code.getDescription();
+            }
+            AuthenticationException e = new AuthenticationException(code, description);
+            e.setCaptchaUrl(res.getField(CAPTCHA_URL));
+            e.setCaptchaData(res.getField(CAPTCHA_DATA));
+            throw e;
     }
 
     private static class Response {
         final Map<String, String> attributes;
 
-        Response(GetMethod method) throws IOException {
-            debug("Response status: %s", method.getStatusLine());
+        Response(HttpResponse resp) throws IOException {
+            debug("Response status: %s", resp.getStatusLine());
             attributes = new HashMap<String, String>();
             InputStream is = null;
             try {
-                is = method.getResponseBodyAsStream();
+                is = resp.getEntity().getContent();
 	            BufferedReader br = new BufferedReader(
-	                new InputStreamReader(is, method.getResponseCharSet()));
+	                new InputStreamReader(is, resp.getEntity().getContentEncoding().getValue()));
 	            String line;
 	            while ((line = br.readLine()) != null) {
 	                debug("Response line: %s", line);

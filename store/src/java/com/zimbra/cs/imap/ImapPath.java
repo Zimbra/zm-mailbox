@@ -639,17 +639,19 @@ public class ImapPath implements Comparable<ImapPath> {
         }
         try {
             // you cannot access your own mailbox via the /home/username mechanism
-            if (mOwner != null && belongsTo(mCredentials))
+            if (mOwner != null && belongsTo(mCredentials)) {
                 return false;
+            }
             getFolder();
             if (folder !=null) {
-                int folderId = asItemId().getId();
-                // the mailbox root folder is not visible
-                if (folderId == Mailbox.ID_FOLDER_USER_ROOT && mScope != Scope.REFERENCE) {
+                /* the mailbox root folder is not visible (although note that if a whole mailbox has been
+                 * shared then the mountpoint used to represent that uses the user root folder as its
+                 * target and that SHOULD be allowed  - ZBUG-795) */
+                if (mItemId.getId() == Mailbox.ID_FOLDER_USER_ROOT && mScope != Scope.REFERENCE) {
                     return false;
                 }
                 // hide spam folder unless anti-spam feature is enabled.
-                if (folderId == Mailbox.ID_FOLDER_SPAM && !getOwnerAccount().isFeatureAntispamEnabled()) {
+                if (asItemId().getId() == Mailbox.ID_FOLDER_SPAM && !getOwnerAccount().isFeatureAntispamEnabled()) {
                     return false;
                 }
                 boolean isMailFolders = Provisioning.getInstance().getLocalServer().isImapDisplayMailFoldersOnly();

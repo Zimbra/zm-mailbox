@@ -38,7 +38,7 @@ public class ZInternetHeaderTest {
     private static String RAW_HEADER_COMBINED = "=?utf-8?B?V1NVUzog5pu05paw44OX44Ot44Kw44Op44Og44Gu54q25oWL" +
             "44Gu5qaC6KaB44KSIEJXU1VTVk1TViDjgYvjgonlj5fkv6HjgZfjgb7j" +
             "gZfjgZ8=?=";
-    private static String ZBUG536 = "=?iso-8859-1?B?QVBBRCAtIFN0YXRzIEFQQUQgLSBE6WJ1dCBldCBmaW4gZOljaXNpb24gZW50cmUgcG91ciBsZSBt\n" + 
+    private static String ZBUG536 = "=?iso-8859-1?B?QVBBRCAtIFN0YXRzIEFQQUQgLSBE6WJ1dCBldCBmaW4gZOljaXNpb24gZW50cmUgcG91ciBsZSBt\n" +
         "  b2lzIGRlIEp1aW4gMjAxOA==?=";
     private static String DECODED_HEADER = "WSUS: 更新プログラムの状態の概要を BWSUSVMSV から受信しました";
     private static String RAW_HEADER_FRENCH1 = "[FSU] Fwd: XXXXXX] =?UTF-8?Q?r=C3=A9ponse_=C3=A0?= la lettre du =?UTF-8?Q?pr=C3=A9sident=2E?=";
@@ -67,6 +67,8 @@ public class ZInternetHeaderTest {
     private static String EXP_INVALID2 = "abc(=?charset?= =?UTF-8?Q?a?=)";
     private static String RAW_INVALID3 = "=?euc-jp?B?=1B?=";
     private static String EXP_INVALID3 = "=?euc-jp?B?=1B?=";
+    private static String ZBUG1022 ="=?UTF-8?Q?Memo Manager Data Import ATA.SDOA.AMMP512.D042419.T0943.xm?=\n" +
+        " =?UTF-8?Q?l APR 24-2019 08:10 AM (GMT - 5:00).?=";
 
     /**
      * Created this test file using an external Python script.  Each line of the file contains the following elements,
@@ -163,10 +165,15 @@ public class ZInternetHeaderTest {
         decodedHeader = ZInternetHeader.decode("=?us-ascii?Q?a b c?=");
         Assert.assertEquals("a b c", decodedHeader);
     }
-    
     @Test
     public void testMultilineZBUG536Subject() {
         String decodedHeader = ZInternetHeader.decode(ZBUG536);
         Assert.assertEquals("APAD - Stats APAD - Début et fin décision entre pour le mois de Juin 2018", decodedHeader);
+    }
+
+    @Test
+    public void testMultilineUTF8ZBUG1022Subject() {
+        String decodedHeader = ZInternetHeader.decode(ZBUG1022);
+        Assert.assertEquals("Memo Manager Data Import ATA.SDOA.AMMP512.D042419.T0943.xml APR 24-2019 08:10 AM (GMT - 5:00).", decodedHeader);
     }
 }

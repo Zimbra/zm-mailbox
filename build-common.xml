@@ -316,6 +316,9 @@
                     <exclude name="**/Abstract*Test.java"/>
                     <exclude name="**/mailbox/ContactTest.java"/>
                     <exclude name="**/filter/FileIntoCopyTest.java"/>
+                    <exclude name="**/cs/redolog/op/CreateMessageTest.java"/>
+                    <exclude name="**/cs/service/mail/SearchActionTest.java"/>
+                    <exclude name="**/cs/filter/RuleManagerWithCustomActionFilterTest.java"/>
                 </fileset>
             </batchtest>
           </junit>

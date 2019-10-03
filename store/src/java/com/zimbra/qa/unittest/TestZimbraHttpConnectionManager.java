@@ -16,27 +16,37 @@
  */
 package com.zimbra.qa.unittest;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 /*
  * for SimpleHttpServer
  */
-import java.net.*;
-import java.io.*;
-import java.util.*;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.StringTokenizer;
 
-import org.junit.AfterClass;
+import org.apache.http.Header;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.config.SocketConfig;
+import org.apache.http.entity.InputStreamEntity;
+import org.apache.http.impl.client.DefaultRedirectStrategy;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import org.apache.commons.httpclient.Header;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
-import org.apache.commons.httpclient.methods.PostMethod;
-
 import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
@@ -56,13 +66,13 @@ public class TestZimbraHttpConnectionManager {
     }
     
 
-    public static void dumpResponse(int respCode, HttpMethod method, String prefix) throws IOException {
+    public static void dumpResponse(int respCode, HttpResponse response, String prefix) throws IOException {
         
         prefix = prefix + " - ";
         
         // status
-        int statusCode = method.getStatusCode();
-        String statusLine = method.getStatusLine().toString();
+        int statusCode =response.getStatusLine().getStatusCode();
+        String statusLine = response.getStatusLine().toString();
         
         System.out.println(prefix + "respCode=" + respCode);
         System.out.println(prefix + "statusCode=" + statusCode);
@@ -70,7 +80,8 @@ public class TestZimbraHttpConnectionManager {
         
         // headers
         System.out.println(prefix + "Headers");
-        Header[] respHeaders = method.getResponseHeaders();
+        Header[] respHeaders = response.getAllHeaders();
+
         for (int i=0; i < respHeaders.length; i++) {
             String header = respHeaders[i].toString();
             // trim the CRLF at the end to save space
@@ -78,7 +89,7 @@ public class TestZimbraHttpConnectionManager {
         }
         
         // body
-        byte[] bytes = ByteUtil.getContent(method.getResponseBodyAsStream(), 0);
+        byte[] bytes = ByteUtil.getContent(response.getEntity().getContent(), 0);
         System.out.println(prefix + bytes.length + " bytes read");
         System.out.println(new String(bytes));
     }
@@ -90,17 +101,17 @@ public class TestZimbraHttpConnectionManager {
     private static class TestGetThread extends Thread {
         
         private HttpClient mHttpClient;
-        private GetMethod mMethod;
+        private HttpGet mMethod;
         private int mId;
         
-        public TestGetThread(HttpClient httpClient, GetMethod method, int id) {
+        public TestGetThread(HttpClient httpClient, HttpGet method, int id) {
             mHttpClient = httpClient;
             mMethod = method;
             mId = id;
         }
         
         /**
-         * Executes the GetMethod and prints some status information.
+         * Executes the HttpGet and prints some status information.
          */
         public void run() {
             long startTime = System.currentTimeMillis();
@@ -109,7 +120,8 @@ public class TestZimbraHttpConnectionManager {
             try {
                 System.out.println(mId + " - about to get something from " + mMethod.getURI());
                 // execute the method
-                int respCode = HttpClientUtil.executeMethod(mHttpClient, mMethod);
+                HttpResponse response = HttpClientUtil.executeMethod(mHttpClient, mMethod);
+                int respCode = response.getStatusLine().getStatusCode();
                 
                 System.out.println(mId + " - get executed");
                 // get the response body as an array of bytes
@@ -160,9 +172,9 @@ public class TestZimbraHttpConnectionManager {
         // create a thread for each URI
         TestGetThread[] threads = new TestGetThread[urisToGet.length];
         for (int i = 0; i < threads.length; i++) {
-            GetMethod get = new GetMethod(urisToGet[i]);
-            get.setFollowRedirects(true);
-            threads[i] = new TestGetThread(connMgr.newHttpClient(), get, i + 1);
+            HttpGet get = new HttpGet(urisToGet[i]);
+            HttpClientBuilder builder = connMgr.newHttpClient().setRedirectStrategy(new DefaultRedirectStrategy());
+            threads[i] = new TestGetThread(builder.build(), get, i + 1);
         }
         
         ZimbraHttpConnectionManager.startReaperThread(); // comment out to reproduce the CLOSE_WAIT
@@ -545,20 +557,20 @@ public class TestZimbraHttpConnectionManager {
         SimpleHttpServer.start(serverPort);
         
         // HttpClient httpClient = ZimbraHttpConnectionManager.getExternalHttpConnMgr().newHttpClient();
-        HttpClient httpClient = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+        HttpClientBuilder clientBuilder = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
         
-        GetMethod method = new GetMethod(uri);
+        HttpGet method = new HttpGet(uri);
         
-        // method.getParams().setParameter(HttpConnectionParams.SO_TIMEOUT, Integer.valueOf(soTimeout));
-        method.getParams().setSoTimeout(soTimeout); 
+        SocketConfig config = SocketConfig.custom().setSoTimeout(soTimeout).build();
+        clientBuilder.setDefaultSocketConfig(config);
+        HttpClient httpClient = clientBuilder.build();
         
         long startTime = System.currentTimeMillis();
         long endTime;
         try {
-            // int respCode = HttpClientUtil.executeMethod(httpClient, method);
-            int respCode = httpClient.executeMethod(method);
-            
-            dumpResponse(respCode, method, "");
+            HttpResponse response = HttpClientUtil.executeMethod(httpClient, method);
+            int respCode  = response.getStatusLine().getStatusCode();
+            dumpResponse(respCode, response, "");
             Assert.fail(); // nope, it should have timed out
         } catch (java.net.SocketTimeoutException e) {
             // good, just what we want
@@ -595,17 +607,17 @@ public class TestZimbraHttpConnectionManager {
         // start a http server for testing
         SimpleHttpServer.start(serverPort);
         
-        HttpClient httpClient = ZimbraHttpConnectionManager.getExternalHttpConnMgr().newHttpClient();
+        HttpClient httpClient = ZimbraHttpConnectionManager.getExternalHttpConnMgr().newHttpClient().build();
         
-        GetMethod method = new GetMethod(uri);
+        HttpGet method = new HttpGet(uri);
         
         long startTime = System.currentTimeMillis();
         long endTime;
         try {
-            // int respCode = HttpClientUtil.executeMethod(httpClient, method);
-            int respCode = httpClient.executeMethod(method);
+            HttpResponse response = HttpClientUtil.executeMethod(httpClient, method);
+            int respCode = response.getStatusLine().getStatusCode();
             
-            dumpResponse(respCode, method, "");
+            dumpResponse(respCode, response, "");
             Assert.fail(); // nope, it should have timed out
         } catch (java.net.SocketTimeoutException e) {
             // good, just what we want
@@ -638,10 +650,12 @@ public class TestZimbraHttpConnectionManager {
         SimpleHttpServer.start(serverPort);
 
         // post the exported content to the target server
-        HttpClient httpClient = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
-        PostMethod method = new PostMethod(uri);
-        method.getParams().setSoTimeout(soTimeout); // infinite wait because it can take a long time to import a large mailbox
-        
+        HttpClientBuilder httpClientBuilder = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+        HttpPost method = new HttpPost(uri);
+        SocketConfig config = SocketConfig.custom().setSoTimeout(soTimeout).build();
+        httpClientBuilder.setDefaultSocketConfig(config);
+         // infinite wait because it can take a long time to import a large mailbox
+        HttpClient httpClient = httpClientBuilder.build();
         File file = new File(resourceToPost);
         FileInputStream fis = null;
         
@@ -649,12 +663,12 @@ public class TestZimbraHttpConnectionManager {
         long endTime;
         try {
             fis = new FileInputStream(file);
-            InputStreamRequestEntity isre =
-                new InputStreamRequestEntity(fis, file.length(), MimeConstants.CT_APPLICATION_OCTET_STREAM);
-            method.setRequestEntity(isre);
-            int respCode = httpClient.executeMethod(method);
-            
-            dumpResponse(respCode, method, "");
+            InputStreamEntity isre =
+                new InputStreamEntity(fis, file.length(), org.apache.http.entity.ContentType.create(MimeConstants.CT_APPLICATION_OCTET_STREAM));
+            method.setEntity(isre);
+            HttpResponse httpResp = httpClient.execute(method);
+            int respCode = httpResp.getStatusLine().getStatusCode();
+            dumpResponse(respCode, httpResp, "");
             Assert.fail(); // nope, it should have timed out
         } catch (java.net.SocketTimeoutException e) {
             e.printStackTrace();
@@ -694,15 +708,15 @@ public class TestZimbraHttpConnectionManager {
         ZimbraHttpConnectionManager connMgr = ZimbraHttpConnectionManager.getExternalHttpConnMgr();
         
         // first thread
-        GetMethod method1 = new GetMethod("http://localhost:" + serverPort + path + qp);
-        TestGetThread thread1 = new TestGetThread(connMgr.newHttpClient(), method1, 1);
+        HttpGet method1 = new HttpGet("http://localhost:" + serverPort + path + qp);
+        TestGetThread thread1 = new TestGetThread(connMgr.newHttpClient().build(), method1, 1);
         thread1.start();  // this thread will hog the only one connection this conn mgr can offer for 10 seconds
         
         Thread.sleep(1000); // wait one second let thread one get a head start to grab the one and only connection
         
         // second thread
-        GetMethod method2 = new GetMethod("http://localhost:" + serverPort + path + qp);
-        TestGetThread thread2 = new TestGetThread(connMgr.newHttpClient(), method1, 2);
+        HttpGet method2 = new HttpGet("http://localhost:" + serverPort + path + qp);
+        TestGetThread thread2 = new TestGetThread(connMgr.newHttpClient().build(), method1, 2);
         thread2.start(); // this thread should timeout (ConnectionPoolTimeoutException) after 5000 milli seconds, 
                          // because zmlocalconfig -e httpclient_client_connection_timeout_external=5000 
         
@@ -766,10 +780,10 @@ public class TestZimbraHttpConnectionManager {
         
     }
     
-    private void runTest(HttpClient httpClient, String id, boolean authPreemp) {
+    private void runTest(HttpClientBuilder httpClientBuilder, String id, boolean authPreemp) {
         
-        GetMethod method = new GetMethod("http://localhost:7070/");
-        
+        HttpGet method = new HttpGet("http://localhost:7070/");
+        HttpClient httpClient = httpClientBuilder.build();
         long startTime = System.currentTimeMillis();
         long endTime;
         
@@ -777,11 +791,12 @@ public class TestZimbraHttpConnectionManager {
             System.out.println(id + " - about to get something from " + method.getURI());
             // execute the method
             
-            if (authPreemp) {
-                httpClient.getParams().setAuthenticationPreemptive(true);
-            }
+//            if (authPreemp) {
+//                httpClient.getParams().setParameter(arg0, arg1)
+//                //.setAuthenticationPreemptive(true);
+//            }
             
-            int respCode = HttpClientUtil.executeMethod(httpClient, method);
+            HttpResponse reponse = HttpClientUtil.executeMethod(httpClient, method);
             
             System.out.println(id + " - get executed");
             // get the response body as an array of bytes
@@ -822,15 +837,14 @@ public class TestZimbraHttpConnectionManager {
         
         String uri = "http://phoebe.mbp:7070/service/soap/AuthRequest";
         
-        HttpClient httpClient = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+        HttpClient httpClient = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient().build();
         
-        GetMethod method = new GetMethod(uri);
+        HttpGet method = new HttpGet(uri);
         
         try {
-            // int respCode = HttpClientUtil.executeMethod(httpClient, method);
-            int respCode = httpClient.executeMethod(method);
-            
-            dumpResponse(respCode, method, "");
+            HttpResponse response = HttpClientUtil.executeMethod(httpClient, method);
+            int respCode = response.getStatusLine().getStatusCode();
+            dumpResponse(respCode, response, "");
             Assert.fail(); // nope, it should have timed out
         } catch (Exception e) {
             e.printStackTrace();

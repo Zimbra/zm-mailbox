@@ -21,13 +21,15 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 
+import org.apache.http.HttpException;
+
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.soap.Element.XMLElement;
+import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.cs.httpclient.URLUtil;
 
 public class FbCli {
@@ -73,7 +75,7 @@ public class FbCli {
         mTransport = new SoapHttpTransport(adminUrl);
     }
 
-    public Collection<FbProvider> getAllFreeBusyProviders() throws ServiceException, IOException {
+    public Collection<FbProvider> getAllFreeBusyProviders() throws ServiceException, IOException, HttpException {
         ArrayList<FbProvider> providers = new ArrayList<FbProvider>();
         try {
             auth();
@@ -95,7 +97,7 @@ public class FbCli {
         return providers;
     }
 
-    public Collection<FbQueue> getFreeBusyQueueInfo(String provider) throws ServiceException, IOException {
+    public Collection<FbQueue> getFreeBusyQueueInfo(String provider) throws ServiceException, IOException, HttpException {
         ArrayList<FbQueue> queues = new ArrayList<FbQueue>();
         try {
             auth();
@@ -117,7 +119,7 @@ public class FbCli {
         return queues;
     }
 
-    public void pushFreeBusyForDomain(String domain) throws ServiceException, IOException {
+    public void pushFreeBusyForDomain(String domain) throws ServiceException, IOException, HttpException {
         try {
             auth();
             XMLElement req = new XMLElement(AdminConstants.PUSH_FREE_BUSY_REQUEST);
@@ -128,7 +130,7 @@ public class FbCli {
         }
     }
 
-    public void pushFreeBusyForAccounts(Collection<String> accounts) throws ServiceException, IOException {
+    public void pushFreeBusyForAccounts(Collection<String> accounts) throws ServiceException, IOException, HttpException {
         try {
             auth();
             XMLElement req = new XMLElement(AdminConstants.PUSH_FREE_BUSY_REQUEST);
@@ -140,7 +142,7 @@ public class FbCli {
         }
     }
 
-    public void purgeFreeBusyQueue(String provider) throws ServiceException, IOException {
+    public void purgeFreeBusyQueue(String provider) throws ServiceException, IOException, HttpException {
         try {
             auth();
             XMLElement req = new XMLElement(AdminConstants.PURGE_FREE_BUSY_QUEUE_REQUEST);
@@ -152,7 +154,7 @@ public class FbCli {
         }
     }
 
-    private void auth() throws ServiceException, IOException {
+    private void auth() throws ServiceException, IOException, HttpException {
         XMLElement req = new XMLElement(AdminConstants.AUTH_REQUEST);
         req.addElement(AdminConstants.E_NAME).setText(LC.zimbra_ldap_user.value());
         req.addElement(AdminConstants.E_PASSWORD).setText(LC.zimbra_ldap_password.value());

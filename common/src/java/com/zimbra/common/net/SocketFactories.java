@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010, 2012, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2010, 2012, 2013, 2014, 2016, 2018 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -24,9 +24,12 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
-import org.apache.commons.httpclient.protocol.Protocol;
-import org.apache.commons.httpclient.protocol.ProtocolSocketFactory;
-import org.apache.commons.httpclient.protocol.SecureProtocolSocketFactory;
+import org.apache.http.config.Registry;
+import org.apache.http.config.RegistryBuilder;
+import org.apache.http.conn.socket.ConnectionSocketFactory;
+import org.apache.http.conn.socket.LayeredConnectionSocketFactory;
+
+
 
 /*
  * Factory class for various SocketFactory types.
@@ -35,6 +38,7 @@ public final class SocketFactories {
     private static NetConfig config = NetConfig.getInstance();
 
     private static boolean registered;
+    private static Registry<ConnectionSocketFactory> registry;
 
     private static final String HTTPS = "https";
     private static final String HTTP = "http";
@@ -72,17 +76,21 @@ public final class SocketFactories {
         register(allowUntrustedCerts ? TrustManagers.dummyTrustManager() : null);
     }
 
-    private synchronized static void register(X509TrustManager tm) {
-        if (registered) return;
+    private synchronized static Registry<ConnectionSocketFactory> register(X509TrustManager tm) {
+        if (registered) return registry;
 
         // Set default TrustManager
         TrustManagers.setDefaultTrustManager(tm);
 
         // Register Apache Commons HTTP/HTTPS protocol socket factories
-        ProtocolSocketFactory psf = defaultProtocolSocketFactory();
-        Protocol.registerProtocol(HTTP, new Protocol(HTTP, psf, 80));
-        ProtocolSocketFactory spsf = defaultSecureProtocolSocketFactory();
-        Protocol.registerProtocol(HTTPS, new Protocol(HTTPS, spsf, 443));
+        ConnectionSocketFactory psf = defaultProtocolSocketFactory();
+        LayeredConnectionSocketFactory spsf = defaultSecureProtocolSocketFactory();
+        registry = RegistryBuilder.<ConnectionSocketFactory>create()
+            .register(HTTP, psf)
+            .register(HTTPS, spsf)
+            .build();
+
+
 
         // HttpURLConnection already uses system ProxySelector by default
         // Set HttpsURLConnection SSL socket factory and optional hostname verifier
@@ -95,6 +103,8 @@ public final class SocketFactories {
         ProxySelector.setDefault(ProxySelectors.defaultProxySelector());
 
         registered = true;
+
+        return registry;
     }
 
     public synchronized static void resetRegisteredFlag() {
@@ -107,7 +117,7 @@ public final class SocketFactories {
      * @param sf the SocketFactory
      * @return a ProtocolSocketFactory wrapping the SocketFactory
      */
-    public static ProtocolSocketFactory protocolSocketFactory(SocketFactory sf) {
+    public static ConnectionSocketFactory protocolSocketFactory(SocketFactory sf) {
         return new ProtocolSocketFactoryWrapper(sf);
     }
 
@@ -116,7 +126,7 @@ public final class SocketFactories {
      *
      * @return ProtocolSocketFactory wrapping the default SocketFactory
      */
-    public static ProtocolSocketFactory defaultProtocolSocketFactory() {
+    public static ConnectionSocketFactory defaultProtocolSocketFactory() {
         return protocolSocketFactory(defaultSocketFactory());
     }
 
@@ -127,7 +137,7 @@ public final class SocketFactories {
      * @param ssf the SSLSocketFactory
      * @return a SecureProtocolSocketFactory wrapping the SSLSocketFactory
      */
-    public static SecureProtocolSocketFactory secureProtocolSocketFactory(SSLSocketFactory ssf) {
+    public static LayeredConnectionSocketFactory secureProtocolSocketFactory(SSLSocketFactory ssf) {
         return new SecureProtocolSocketFactoryWrapper(ssf);
     }
 
@@ -136,7 +146,7 @@ public final class SocketFactories {
      *
      * @return a SecureProtocolSocketFactory wrapping the default SSLSocketFactory
      */
-    public static SecureProtocolSocketFactory defaultSecureProtocolSocketFactory() {
+    public static LayeredConnectionSocketFactory defaultSecureProtocolSocketFactory() {
         return secureProtocolSocketFactory(defaultSSLSocketFactory());
     }
 
@@ -145,7 +155,7 @@ public final class SocketFactories {
      *
      * @return a SecureProtocolSocketFactory trusting all certificates
      */
-    public static SecureProtocolSocketFactory dummySecureProtocolSocketFactory() {
+    public static LayeredConnectionSocketFactory dummySecureProtocolSocketFactory() {
         return secureProtocolSocketFactory(dummySSLSocketFactory());
     }
 
@@ -212,4 +222,11 @@ public final class SocketFactories {
     public static SSLSocketFactory dummySSLSocketFactory() {
         return defaultSSLSocketFactory(TrustManagers.dummyTrustManager(), true);
     }
+
+
+    public static Registry<ConnectionSocketFactory> getRegistry() {
+        return registry;
+    }
+    
+    
 }

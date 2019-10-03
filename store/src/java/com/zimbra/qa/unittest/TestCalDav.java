@@ -44,17 +44,20 @@ import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
-import org.apache.commons.httpclient.Header;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.methods.ByteArrayRequestEntity;
-import org.apache.commons.httpclient.methods.DeleteMethod;
-import org.apache.commons.httpclient.methods.EntityEnclosingMethod;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.httpclient.methods.PutMethod;
 import org.apache.commons.io.IOUtils;
+import org.apache.http.Header;
+import org.apache.http.HttpException;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -341,43 +344,43 @@ public class TestCalDav {
             "END:VEVENT\r\n" +
             "END:VCALENDAR\r\n";
 
-    public static class MkColMethod extends EntityEnclosingMethod {
+    public static class MkColMethod extends HttpEntityEnclosingRequestBase {
         @Override
-        public String getName() {
+        public String getMethod() {
             return "MKCOL";
         }
         public  MkColMethod(String uri) {
-            super(uri);
+            super();
         }
     }
 
-    public static class PropPatchMethod extends EntityEnclosingMethod {
+    public static class PropPatchMethod extends HttpEntityEnclosingRequestBase {
         @Override
-        public String getName() {
+        public String getMethod() {
             return "PROPPATCH";
         }
         public  PropPatchMethod(String uri) {
-            super(uri);
+            super();
         }
     }
 
-    public static class PropFindMethod extends EntityEnclosingMethod {
+    public static class PropFindMethod extends HttpEntityEnclosingRequestBase {
         @Override
-        public String getName() {
+        public String getMethod() {
             return "PROPFIND";
         }
         public  PropFindMethod(String uri) {
-            super(uri);
+            super();
         }
     }
 
-    public static class ReportMethod extends EntityEnclosingMethod {
+    public static class ReportMethod extends HttpEntityEnclosingRequestBase {
         @Override
-        public String getName() {
+        public String getMethod() {
             return "REPORT";
         }
         public  ReportMethod(String uri) {
-            super(uri);
+            super();
         }
     }
 
@@ -497,19 +500,19 @@ public class TestCalDav {
         public byte[] responseBodyBytes;
         public final String methodName;
 
-        public HttpMethodExecutor(HttpClient client, HttpMethod method, int expectedCode) throws IOException {
-            methodName = method.getName();
+        public HttpMethodExecutor(HttpClient client, HttpRequestBase method, int expectedCode) throws Exception {
+            methodName = method.getMethod();
             try {
-                respCode = HttpClientUtil.executeMethod(client, method);
-                statusCode = method.getStatusCode();
-                statusLine = method.getStatusLine().toString();
+                HttpResponse httpResp = HttpClientUtil.executeMethod(client, method);
+                statusCode = httpResp.getStatusLine().getStatusCode();
+                statusLine = httpResp.getStatusLine().getReasonPhrase();
 
-                respHeaders = method.getResponseHeaders();
+                respHeaders = httpResp.getAllHeaders();
                 StringBuilder hdrsSb = new StringBuilder();
                 for (Header hdr : respHeaders) {
                     hdrsSb.append(hdr.toString());
                 }
-                try (InputStream responseStream = method.getResponseBodyAsStream()) {
+                try (InputStream responseStream = httpResp.getEntity().getContent()) {
                     if (responseStream == null) {
                         responseBodyBytes = null;
                         ZimbraLog.test.debug("RESPONSE (no content):\n%s\n%s\n\n", statusLine, hdrsSb);
@@ -521,7 +524,7 @@ public class TestCalDav {
                 }
                 assertEquals("Response code", expectedCode, respCode);
                 assertEquals("Status code", expectedCode, statusCode);
-            } catch (IOException e) {
+            } catch (IOException | HttpException  e) {
                 ZimbraLog.test.debug("Exception thrown", e);
                 fail("Unexpected Exception" + e);
                 throw e;
@@ -530,9 +533,14 @@ public class TestCalDav {
             }
         }
 
-        public static HttpMethodExecutor execute(HttpClient client, HttpMethod method, int expectedCode)
+        public static HttpMethodExecutor execute(HttpClient client, HttpRequestBase method, int expectedCode)
                 throws IOException {
-            return new HttpMethodExecutor(client, method, expectedCode);
+            try {
+                return new HttpMethodExecutor(client, method, expectedCode);
+            } catch (Exception e) {
+                // TODO Auto-generated catch block
+                throw new IOException("unexpected error " + e.getMessage());
+            }
         }
 
         public String getHeaderValue(String hdrName) {
@@ -577,8 +585,8 @@ public class TestCalDav {
     public void testBadBasicAuth() throws Exception {
         assertNotNull("Test account object", dav1);
         String calFolderUrl = getFolderUrl(dav1, "Calendar");
-        HttpClient client = new HttpClient();
-        GetMethod method = new GetMethod(calFolderUrl);
+        HttpClient client = HttpClientBuilder.create().build();
+        HttpGet method = new HttpGet(calFolderUrl);
         addBasicAuthHeaderForUser(method, dav1, "badPassword");
         HttpMethodExecutor.execute(client, method, HttpStatus.SC_UNAUTHORIZED);
     }
@@ -587,16 +595,16 @@ public class TestCalDav {
     public void testPostToSchedulingOutbox() throws Exception {
         assertNotNull("Test account object", dav1);
         String url = getSchedulingOutboxUrl(dav1, dav1);
-        HttpClient client = new HttpClient();
-        PostMethod method = new PostMethod(url);
+        HttpClient client = HttpClientBuilder.create().build();
+        HttpPost method = new HttpPost(url);
         addBasicAuthHeaderForUser(method, dav1);
-        method.addRequestHeader("Content-Type", "text/calendar");
-        method.addRequestHeader("Originator", "mailto:" + dav1.getName());
-        method.addRequestHeader("Recipient", "mailto:" + dav2.getName());
-        method.addRequestHeader("Recipient", "mailto:" + dav3.getName());
+        method.addHeader("Content-Type", "text/calendar");
+        method.addHeader("Originator", "mailto:" + dav1.getName());
+        method.addHeader("Recipient", "mailto:" + dav2.getName());
+        method.addHeader("Recipient", "mailto:" + dav3.getName());
 
-        method.setRequestEntity(new ByteArrayRequestEntity(exampleCancelIcal(dav1, dav2, dav3).getBytes(),
-                MimeConstants.CT_TEXT_CALENDAR));
+        method.setEntity(new ByteArrayEntity(exampleCancelIcal(dav1, dav2, dav3).getBytes(),
+            org.apache.http.entity.ContentType.create(MimeConstants.CT_TEXT_CALENDAR)));
 
         HttpMethodExecutor.execute(client, method, HttpStatus.SC_OK);
     }
@@ -605,27 +613,27 @@ public class TestCalDav {
     public void testBadPostToSchedulingOutbox() throws Exception {
         assertNotNull("Test account object", dav2);
         String url = getSchedulingOutboxUrl(dav2, dav2);
-        HttpClient client = new HttpClient();
-        PostMethod method = new PostMethod(url);
+        HttpClient client = HttpClientBuilder.create().build();
+        HttpPost method = new HttpPost(url);
         addBasicAuthHeaderForUser(method, dav2);
-        method.addRequestHeader("Content-Type", "text/calendar");
-        method.addRequestHeader("Originator", "mailto:" + dav2.getName());
-        method.addRequestHeader("Recipient", "mailto:" + dav3.getName());
+        method.addHeader("Content-Type", "text/calendar");
+        method.addHeader("Originator", "mailto:" + dav2.getName());
+        method.addHeader("Recipient", "mailto:" + dav3.getName());
 
-        method.setRequestEntity(new ByteArrayRequestEntity(exampleCancelIcal(dav1, dav2, dav3).getBytes(),
-                MimeConstants.CT_TEXT_CALENDAR));
+        method.setEntity(new ByteArrayEntity(exampleCancelIcal(dav1, dav2, dav3).getBytes(),
+            org.apache.http.entity.ContentType.create(MimeConstants.CT_TEXT_CALENDAR)));
 
         HttpMethodExecutor.execute(client, method, HttpStatus.SC_BAD_REQUEST);
     }
 
-    public static void addBasicAuthHeaderForUser(HttpMethod method, Account acct, String password)
+    public static void addBasicAuthHeaderForUser(HttpRequestBase method, Account acct, String password)
     throws UnsupportedEncodingException {
         String basicAuthEncoding = DatatypeConverter.printBase64Binary(
                 String.format("%s:%s", acct.getName(), password).getBytes("UTF-8"));
-        method.addRequestHeader("Authorization", "Basic " + basicAuthEncoding);
+        method.addHeader("Authorization", "Basic " + basicAuthEncoding);
     }
 
-    public static void addBasicAuthHeaderForUser(HttpMethod method, Account acct) throws UnsupportedEncodingException {
+    public static void addBasicAuthHeaderForUser(HttpRequestBase method, Account acct) throws UnsupportedEncodingException {
         addBasicAuthHeaderForUser(method, acct, "test123");
     }
 
@@ -670,16 +678,21 @@ public class TestCalDav {
         return getFullUrl(UrlNamespace.getCalendarProxyWriteUrl(target, target));
     }
 
-    public static Document doMethodYieldingMultiStatus(EntityEnclosingMethod method, Account acct,
+    public static Document doMethodYieldingMultiStatus(HttpEntityEnclosingRequestBase method, Account acct,
             String body) throws IOException, XmlParseException {
         addBasicAuthHeaderForUser(method, acct);
-        HttpClient client = new HttpClient();
+        HttpClient client = HttpClientBuilder.create().build();
         TestCalDav.HttpMethodExecutor executor;
-        method.addRequestHeader("Content-Type", MimeConstants.CT_TEXT_XML);
-        method.setRequestEntity(new ByteArrayRequestEntity(body.getBytes(),
-                MimeConstants.CT_TEXT_XML));
-        executor = new TestCalDav.HttpMethodExecutor(client, method, HttpStatus.SC_MULTI_STATUS);
-        return executor.getResponseDoc(DavElements.P_MULTISTATUS);
+        method.addHeader("Content-Type", MimeConstants.CT_TEXT_XML);
+        method.setEntity(new ByteArrayEntity(body.getBytes(),
+            org.apache.http.entity.ContentType.create(MimeConstants.CT_TEXT_XML)));
+        try {
+            executor = new TestCalDav.HttpMethodExecutor(client, method, HttpStatus.SC_MULTI_STATUS);
+            return executor.getResponseDoc(DavElements.P_MULTISTATUS);
+        } catch (Exception e) {
+            throw new IOException("Unexpected error" + e);
+        }
+        
     }
 
     public static Document calendarQuery(String url, Account acct) throws IOException, XmlParseException {
@@ -820,12 +833,13 @@ public class TestCalDav {
     public void checkPropFindSupportedReportSet(Account user, String fullurl, String shorturl) throws Exception {
         PropFindMethod method = new PropFindMethod(fullurl);
         addBasicAuthHeaderForUser(method, user);
-        HttpClient client = new HttpClient();
+        HttpClient client = HttpClientBuilder.create().build();
         TestCalDav.HttpMethodExecutor executor;
         String respBody;
         Element respElem;
-        method.addRequestHeader("Content-Type", MimeConstants.CT_TEXT_XML);
-        method.setRequestEntity(new ByteArrayRequestEntity(propFindSupportedReportSet.getBytes(), MimeConstants.CT_TEXT_XML));
+        method.addHeader("Content-Type", MimeConstants.CT_TEXT_XML);
+        method.setEntity(new ByteArrayEntity(propFindSupportedReportSet.getBytes(), 
+            org.apache.http.entity.ContentType.create(MimeConstants.CT_TEXT_XML)));
         executor = new TestCalDav.HttpMethodExecutor(client, method, HttpStatus.SC_MULTI_STATUS);
         respBody = new String(executor.responseBodyBytes, MimeConstants.P_CHARSET_UTF8);
         respElem = Element.XMLElement.parseXML(respBody);
@@ -885,11 +899,11 @@ public class TestCalDav {
     throws Exception {
         PropFindMethod method = new PropFindMethod(fullurl);
         addBasicAuthHeaderForUser(method, user);
-        HttpClient client = new HttpClient();
+        HttpClient client = HttpClientBuilder.create().build();
         TestCalDav.HttpMethodExecutor executor;
-        method.addRequestHeader("Content-Type", MimeConstants.CT_TEXT_XML);
-        method.setRequestEntity(new ByteArrayRequestEntity(propFindSupportedCalendarComponentSet.getBytes(),
-                MimeConstants.CT_TEXT_XML));
+        method.addHeader("Content-Type", MimeConstants.CT_TEXT_XML);
+        method.setEntity(new ByteArrayEntity(propFindSupportedCalendarComponentSet.getBytes(),
+            org.apache.http.entity.ContentType.create(MimeConstants.CT_TEXT_XML)));
         executor = new TestCalDav.HttpMethodExecutor(client, method, HttpStatus.SC_MULTI_STATUS);
         Document doc = executor.getResponseDoc();
         XPath xpath = XPathFactory.newInstance().newXPath();
@@ -959,12 +973,13 @@ public class TestCalDav {
         String davBaseName = "clientInvented.now";
         String calFolderUrl = getFolderUrl(dav1, "Calendar");
         String url = String.format("%s%s", calFolderUrl, davBaseName);
-        HttpClient client = new HttpClient();
-        PutMethod putMethod = new PutMethod(url);
+        HttpClient client = HttpClientBuilder.create().build();
+        HttpPut putMethod = new HttpPut(url);
         addBasicAuthHeaderForUser(putMethod, dav1);
-        putMethod.addRequestHeader("Content-Type", "text/calendar");
+        putMethod.addHeader("Content-Type", "text/calendar");
 
-        putMethod.setRequestEntity(new ByteArrayRequestEntity(simpleEvent(dav1), MimeConstants.CT_TEXT_CALENDAR));
+        putMethod.setEntity(new ByteArrayEntity(simpleEvent(dav1), 
+            org.apache.http.entity.ContentType.create(MimeConstants.CT_TEXT_CALENDAR)));
         if (DebugConfig.enableDAVclientCanChooseResourceBaseName) {
             HttpMethodExecutor.execute(client, putMethod, HttpStatus.SC_CREATED);
         } else {
@@ -980,63 +995,71 @@ public class TestCalDav {
         TestCalDav.HttpMethodExecutor executor;
         String respBody;
         Element respElem;
-        propFindMethod.addRequestHeader("Content-Type", MimeConstants.CT_TEXT_XML);
-        propFindMethod.addRequestHeader("Depth", "1");
-        propFindMethod.setRequestEntity(new ByteArrayRequestEntity(propFindEtagResType.getBytes(),
-                MimeConstants.CT_TEXT_XML));
-        executor = new TestCalDav.HttpMethodExecutor(client, propFindMethod, HttpStatus.SC_MULTI_STATUS);
-        respBody = new String(executor.responseBodyBytes, MimeConstants.P_CHARSET_UTF8);
-        respElem = Element.XMLElement.parseXML(respBody);
-        assertEquals("name of top element in propfind response", DavElements.P_MULTISTATUS, respElem.getName());
-        assertTrue("propfind response should have child elements", respElem.hasChildren());
-        Iterator<Element> iter = respElem.elementIterator();
-        boolean hasCalendarHref = false;
-        boolean hasCalItemHref = false;
-        List<String> hrefs = Lists.newArrayList();
-        while (iter.hasNext()) {
-            Element child = iter.next();
-            if (DavElements.P_RESPONSE.equals(child.getName())) {
-                Iterator<Element> hrefIter = child.elementIterator(DavElements.P_HREF);
-                while (hrefIter.hasNext()) {
-                    Element href = hrefIter.next();
-                    String hrefText = href.getText();
-                    hrefs.add(hrefText);
-                    calFolderUrl.endsWith(hrefText);
-                    hasCalendarHref = hasCalendarHref || calFolderUrl.endsWith(hrefText);
-                    hasCalItemHref = hasCalItemHref || url.endsWith(hrefText);
+        propFindMethod.addHeader("Content-Type", MimeConstants.CT_TEXT_XML);
+        propFindMethod.addHeader("Depth", "1");
+        propFindMethod.setEntity(new ByteArrayEntity(propFindEtagResType.getBytes(),
+            org.apache.http.entity.ContentType.create(MimeConstants.CT_TEXT_XML)));
+        try {
+            executor = new TestCalDav.HttpMethodExecutor(client, propFindMethod, HttpStatus.SC_MULTI_STATUS);
+            respBody = new String(executor.responseBodyBytes, MimeConstants.P_CHARSET_UTF8);
+            respElem = Element.XMLElement.parseXML(respBody);
+            assertEquals("name of top element in propfind response", DavElements.P_MULTISTATUS, respElem.getName());
+            assertTrue("propfind response should have child elements", respElem.hasChildren());
+            Iterator<Element> iter = respElem.elementIterator();
+            boolean hasCalendarHref = false;
+            boolean hasCalItemHref = false;
+            List<String> hrefs = Lists.newArrayList();
+            while (iter.hasNext()) {
+                Element child = iter.next();
+                if (DavElements.P_RESPONSE.equals(child.getName())) {
+                    Iterator<Element> hrefIter = child.elementIterator(DavElements.P_HREF);
+                    while (hrefIter.hasNext()) {
+                        Element href = hrefIter.next();
+                        String hrefText = href.getText();
+                        hrefs.add(hrefText);
+                        calFolderUrl.endsWith(hrefText);
+                        hasCalendarHref = hasCalendarHref || calFolderUrl.endsWith(hrefText);
+                        hasCalItemHref = hasCalItemHref || url.endsWith(hrefText);
+                    }
                 }
             }
-        }
-        assertTrue(
+            assertTrue(
                 String.format("PROPFIND RESPONSE should contain href for '%s' - only contained hrefs:%s",
                         calFolderUrl, Joiner.on(',').join(hrefs)), hasCalendarHref);
-        assertTrue(
+            assertTrue(
                 String.format("PROPFIND RESPONSE should contain href for '%s' - only contained hrefs:%s",
                         url, Joiner.on(',').join(hrefs)), hasCalItemHref);
-        doDeleteMethod(url, dav1, HttpStatus.SC_NO_CONTENT);
+            doDeleteMethod(url, dav1, HttpStatus.SC_NO_CONTENT);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
+        
+       
 
     public HttpMethodExecutor doIcalPut(String url, Account authAcct, byte[] vcalendar, int expected)
     throws IOException {
-        HttpClient client = new HttpClient();
-        PutMethod putMethod = new PutMethod(url);
+        HttpClient client = HttpClientBuilder.create().build();
+        HttpPut putMethod = new HttpPut(url);
         addBasicAuthHeaderForUser(putMethod, authAcct);
-        putMethod.addRequestHeader("Content-Type", "text/calendar");
+        putMethod.addHeader("Content-Type", "text/calendar");
 
-        putMethod.setRequestEntity(new ByteArrayRequestEntity(vcalendar, MimeConstants.CT_TEXT_CALENDAR));
+        putMethod.setEntity(new ByteArrayEntity(vcalendar, 
+            org.apache.http.entity.ContentType.create(MimeConstants.CT_TEXT_CALENDAR)));
         return HttpMethodExecutor.execute(client, putMethod, expected);
     }
 
     public HttpMethodExecutor doGetMethod(String url, Account authAcct, int expected) throws IOException {
-        HttpClient client = new HttpClient();
-        GetMethod getMethod = new GetMethod(url);
+        HttpClient client = HttpClientBuilder.create().build();
+        HttpGet getMethod = new HttpGet(url);
         addBasicAuthHeaderForUser(getMethod, authAcct);
         return HttpMethodExecutor.execute(client, getMethod, expected);
     }
 
     public HttpMethodExecutor doDeleteMethod(String url, Account authAcct, int expected) throws IOException {
-        HttpClient client = new HttpClient();
-        DeleteMethod deleteMethod = new DeleteMethod(url);
+        HttpClient client = HttpClientBuilder.create().build();
+        HttpDelete deleteMethod = new HttpDelete(url);
         addBasicAuthHeaderForUser(deleteMethod, authAcct);
         return HttpMethodExecutor.execute(client, deleteMethod, expected);
     }
@@ -1106,31 +1129,31 @@ public class TestCalDav {
         TestUtil.getZMailbox(DAV2); // Force creation of mailbox - shouldn't be needed
         String calFolderUrl = getFolderUrl(dav1, "Calendar");
         String url = String.format("%s%s.ics", calFolderUrl, androidSeriesMeetingUid);
-        HttpClient client = new HttpClient();
-        PutMethod putMethod = new PutMethod(url);
+        HttpClient client = HttpClientBuilder.create().build();
+        HttpPut putMethod = new HttpPut(url);
         addBasicAuthHeaderForUser(putMethod, dav1);
-        putMethod.addRequestHeader("Content-Type", "text/calendar");
+        putMethod.addHeader("Content-Type", "text/calendar");
 
         String body = androidSeriesMeetingTemplate.replace("%%ORG%%", dav1.getName())
                 .replace("%%ATT%%", dav2.getName())
                 .replace("%%UID%%", androidSeriesMeetingUid);
-        putMethod.setRequestEntity(new ByteArrayRequestEntity(body.getBytes(), MimeConstants.CT_TEXT_CALENDAR));
+        putMethod.setEntity(new ByteArrayEntity(body.getBytes(), org.apache.http.entity.ContentType.create(MimeConstants.CT_TEXT_CALENDAR)));
         HttpMethodExecutor.execute(client, putMethod, HttpStatus.SC_CREATED);
 
         String inboxhref = TestCalDav.waitForNewSchedulingRequestByUID(dav2, androidSeriesMeetingUid);
         assertTrue("Found meeting request for newly created item", inboxhref.contains(androidSeriesMeetingUid));
 
-        GetMethod getMethod = new GetMethod(url);
+        HttpGet getMethod = new HttpGet(url);
         addBasicAuthHeaderForUser(getMethod, dav1);
         HttpMethodExecutor exe = HttpMethodExecutor.execute(client, getMethod, HttpStatus.SC_OK);
         exe.getNonNullHeaderValue(DavProtocol.HEADER_ETAG, "GET of Calendar item");
 
         // Check that we fail if the etag is wrong
-        putMethod = new PutMethod(url);
+        putMethod = new HttpPut(url);
         addBasicAuthHeaderForUser(putMethod, dav1);
-        putMethod.addRequestHeader("Content-Type", "text/calendar");
-        putMethod.addRequestHeader(DavProtocol.HEADER_IF_MATCH, "willNotMatch");
-        putMethod.setRequestEntity(new ByteArrayRequestEntity(body.getBytes(), MimeConstants.CT_TEXT_CALENDAR));
+        putMethod.addHeader("Content-Type", "text/calendar");
+        putMethod.addHeader(DavProtocol.HEADER_IF_MATCH, "willNotMatch");
+        putMethod.setEntity(new ByteArrayEntity(body.getBytes(), org.apache.http.entity.ContentType.create(MimeConstants.CT_TEXT_CALENDAR)));
         HttpMethodExecutor.execute(client, putMethod, HttpStatus.SC_PRECONDITION_FAILED);
 
         PropFindMethod propFindMethod = new PropFindMethod(getFolderUrl(dav1, "Calendar"));
@@ -1138,10 +1161,10 @@ public class TestCalDav {
         TestCalDav.HttpMethodExecutor executor;
         String respBody;
         Element respElem;
-        propFindMethod.addRequestHeader("Content-Type", MimeConstants.CT_TEXT_XML);
-        propFindMethod.addRequestHeader("Depth", "1");
-        propFindMethod.setRequestEntity(new ByteArrayRequestEntity(propFindEtagResType.getBytes(),
-                MimeConstants.CT_TEXT_XML));
+        propFindMethod.addHeader("Content-Type", MimeConstants.CT_TEXT_XML);
+        propFindMethod.addHeader("Depth", "1");
+        propFindMethod.setEntity(new ByteArrayEntity(propFindEtagResType.getBytes(),
+            org.apache.http.entity.ContentType.create(MimeConstants.CT_TEXT_XML)));
         executor = new TestCalDav.HttpMethodExecutor(client, propFindMethod, HttpStatus.SC_MULTI_STATUS);
         respBody = new String(executor.responseBodyBytes, MimeConstants.P_CHARSET_UTF8);
         respElem = Element.XMLElement.parseXML(respBody);
@@ -1165,7 +1188,7 @@ public class TestCalDav {
         assertTrue("propfind response contained entry for calendar", hasCalendarHref);
         assertTrue("propfind response contained entry for calendar entry ", hasCalItemHref);
 
-        DeleteMethod deleteMethod = new DeleteMethod(url);
+        HttpDelete deleteMethod = new HttpDelete(url);
         addBasicAuthHeaderForUser(deleteMethod, dav1);
         HttpMethodExecutor.execute(client, deleteMethod, HttpStatus.SC_NO_CONTENT);
     }
@@ -1245,7 +1268,7 @@ public class TestCalDav {
         url.append(DavServlet.DAV_PATH).append("/").append(dav1.getName()).append("/simpleMkcol/");
         MkColMethod method = new MkColMethod(url.toString());
         addBasicAuthHeaderForUser(method, dav1);
-        HttpClient client = new HttpClient();
+        HttpClient client = HttpClientBuilder.create().build();
         HttpMethodExecutor.execute(client, method, HttpStatus.SC_CREATED);
     }
 
@@ -1276,30 +1299,30 @@ public class TestCalDav {
 
     public HttpMethodExecutor doFreeBusyCheck(Account organizer, List<Account> attendees, Date start, Date end)
     throws ServiceException, IOException {
-        HttpClient client = new HttpClient();
+        HttpClient client = HttpClientBuilder.create().build();
         String outboxurl = getSchedulingOutboxUrl(organizer, organizer);
-        PostMethod postMethod = new PostMethod(outboxurl);
-        postMethod.addRequestHeader("Content-Type", "text/calendar");
-        postMethod.addRequestHeader("Originator", "mailto:" + organizer.getName());
+        HttpPost postMethod = new HttpPost(outboxurl);
+        postMethod.addHeader("Content-Type", "text/calendar");
+        postMethod.addHeader("Originator", "mailto:" + organizer.getName());
         for (Account attendee : attendees) {
-            postMethod.addRequestHeader("Recipient", "mailto:" + attendee.getName());
+            postMethod.addHeader("Recipient", "mailto:" + attendee.getName());
         }
 
         addBasicAuthHeaderForUser(postMethod, organizer);
         String fbIcal = makeFreeBusyRequestIcal(organizer, attendees, start, end);
-        postMethod.setRequestEntity(new ByteArrayRequestEntity(fbIcal.getBytes(), MimeConstants.CT_TEXT_CALENDAR));
+        postMethod.setEntity(new ByteArrayEntity(fbIcal.getBytes(), org.apache.http.entity.ContentType.create(MimeConstants.CT_TEXT_CALENDAR)));
 
         return HttpMethodExecutor.execute(client, postMethod, HttpStatus.SC_OK);
     }
 
     public HttpMethodExecutor doPropPatch(Account account, String url, String body)
     throws IOException {
-        HttpClient client = new HttpClient();
+        HttpClient client = HttpClientBuilder.create().build();
         PropPatchMethod propPatchMethod = new PropPatchMethod(url);
         addBasicAuthHeaderForUser(propPatchMethod, account);
-        propPatchMethod.addRequestHeader("Content-Type", MimeConstants.CT_TEXT_XML);
-        propPatchMethod.setRequestEntity(
-                new ByteArrayRequestEntity(body.getBytes(), MimeConstants.CT_TEXT_XML));
+        propPatchMethod.addHeader("Content-Type", MimeConstants.CT_TEXT_XML);
+        propPatchMethod.setEntity(
+                new ByteArrayEntity(body.getBytes(), org.apache.http.entity.ContentType.create(MimeConstants.CT_TEXT_XML)));
         return HttpMethodExecutor.execute(client, propPatchMethod, HttpStatus.SC_MULTI_STATUS);
     }
 
@@ -1465,13 +1488,13 @@ public class TestCalDav {
         String calFolderUrl = getFolderUrl(dav1, "Calendar");
         String delurl = waitForItemInCalendarCollectionByUID(calFolderUrl, dav1, uid, true, 5000);
         StringBuilder sb = getLocalServerRoot().append(delurl);
-        DeleteMethod delMethod = new DeleteMethod(sb.toString());
+        HttpDelete delMethod = new HttpDelete(sb.toString());
         addBasicAuthHeaderForUser(delMethod, dav1);
         if (suppressReply) {
-            delMethod.addRequestHeader(DavProtocol.HEADER_SCHEDULE_REPLY, "F");
+            delMethod.addHeader(DavProtocol.HEADER_SCHEDULE_REPLY, "F");
         }
 
-        HttpClient client = new HttpClient();
+        HttpClient client = HttpClientBuilder.create().build();
         HttpMethodExecutor.execute(client, delMethod, HttpStatus.SC_NO_CONTENT);
         List<ZMessage> msgs;
         if (suppressReply) {
@@ -1598,43 +1621,55 @@ public class TestCalDav {
         href = href.replaceAll("@", "%40");
         ReportMethod method = new ReportMethod(url);
         addBasicAuthHeaderForUser(method, acct);
-        HttpClient client = new HttpClient();
+        HttpClient client = HttpClientBuilder.create().build();
         TestCalDav.HttpMethodExecutor executor;
-        method.addRequestHeader("Content-Type", MimeConstants.CT_TEXT_XML);
-        method.setRequestEntity( new ByteArrayRequestEntity(TestCalDav.expandPropertyGroupMemberSet.getBytes(),
-                MimeConstants.CT_TEXT_XML));
-        executor = new TestCalDav.HttpMethodExecutor(client, method, HttpStatus.SC_MULTI_STATUS);
-        Document doc =  executor.getResponseDoc(DavElements.P_MULTISTATUS);
-        XPath xpath = XPathFactory.newInstance().newXPath();
-        xpath.setNamespaceContext(TestCalDav.NamespaceContextForXPath.forCalDAV());
-        XPathExpression xPathExpr;
+        method.addHeader("Content-Type", MimeConstants.CT_TEXT_XML);
+        method.setEntity( new ByteArrayEntity(TestCalDav.expandPropertyGroupMemberSet.getBytes(),
+            org.apache.http.entity.ContentType.create(MimeConstants.CT_TEXT_XML)));
         try {
-            String xpathS = "/D:multistatus/D:response/D:href/text()";
-            xPathExpr = xpath.compile(xpathS);
-            String text = (String) xPathExpr.evaluate(doc, XPathConstants.STRING);
-            assertEquals("HREF for response", href, text);
+            executor = new TestCalDav.HttpMethodExecutor(client, method, HttpStatus.SC_MULTI_STATUS);
+            Document doc =  executor.getResponseDoc(DavElements.P_MULTISTATUS);
+            XPath xpath = XPathFactory.newInstance().newXPath();
+            xpath.setNamespaceContext(TestCalDav.NamespaceContextForXPath.forCalDAV());
+            XPathExpression xPathExpr;
+            try {
+                String xpathS = "/D:multistatus/D:response/D:href/text()";
+                xPathExpr = xpath.compile(xpathS);
+                String text = (String) xPathExpr.evaluate(doc, XPathConstants.STRING);
+                assertEquals("HREF for response", href, text);
 
-            xpathS = "/D:multistatus/D:response/D:propstat/D:prop/D:group-member-set/D:response/D:href/text()";
-            xPathExpr = xpath.compile(xpathS);
-            text = (String) xPathExpr.evaluate(doc, XPathConstants.STRING);
-            assertEquals("HREF for sharee", UrlNamespace.getPrincipalUrl(member).replaceAll("@", "%40"), text);
-        } catch (XPathExpressionException e1) {
-            ZimbraLog.test.debug("xpath problem", e1);
+                xpathS = "/D:multistatus/D:response/D:propstat/D:prop/D:group-member-set/D:response/D:href/text()";
+                xPathExpr = xpath.compile(xpathS);
+                text = (String) xPathExpr.evaluate(doc, XPathConstants.STRING);
+                assertEquals("HREF for sharee", UrlNamespace.getPrincipalUrl(member).replaceAll("@", "%40"), text);
+            } catch (XPathExpressionException e1) {
+                ZimbraLog.test.debug("xpath problem", e1);
+            }
+            return doc;
+        } catch (Exception e) {
+            throw new IOException("Exception", e);
         }
-        return doc;
+       
+        
     }
 
     public static Document delegateForExpandProperty(Account acct)
     throws IOException, ServiceException {
         ReportMethod method = new ReportMethod(getPrincipalUrl(acct));
         addBasicAuthHeaderForUser(method, acct);
-        HttpClient client = new HttpClient();
+        HttpClient client = HttpClientBuilder.create().build();
         TestCalDav.HttpMethodExecutor executor;
-        method.addRequestHeader("Content-Type", MimeConstants.CT_TEXT_XML);
-        method.setRequestEntity(
-                new ByteArrayRequestEntity(expandPropertyDelegateFor.getBytes(), MimeConstants.CT_TEXT_XML));
-        executor = new TestCalDav.HttpMethodExecutor(client, method, HttpStatus.SC_MULTI_STATUS);
-        return executor.getResponseDoc(DavElements.P_MULTISTATUS);
+        method.addHeader("Content-Type", MimeConstants.CT_TEXT_XML);
+        method.setEntity(
+                new ByteArrayEntity(expandPropertyDelegateFor.getBytes(),
+                    org.apache.http.entity.ContentType.create(MimeConstants.CT_TEXT_XML)));
+        try {
+            executor = new TestCalDav.HttpMethodExecutor(client, method, HttpStatus.SC_MULTI_STATUS);
+            return executor.getResponseDoc(DavElements.P_MULTISTATUS);
+        }  catch (Exception e) {
+            throw new IOException("Unexpected error", e);
+        }
+        
     }
 
     public static CreateMountpointResponse createCalendarMountPoint(ZMailbox mboxSharee, Account sharer)
@@ -1658,15 +1693,20 @@ public class TestCalDav {
     throws IOException, XmlParseException {
         PropPatchMethod method = new PropPatchMethod(url);
         addBasicAuthHeaderForUser(method, acct);
-        HttpClient client = new HttpClient();
+        HttpClient client = HttpClientBuilder.create().build();
         TestCalDav.HttpMethodExecutor executor;
-        method.addRequestHeader("Content-Type", MimeConstants.CT_TEXT_XML);
+        method.addHeader("Content-Type", MimeConstants.CT_TEXT_XML);
         String body = TestCalDav.propPatchGroupMemberSetTemplate.replace("%%MEMBER%%",
                 UrlNamespace.getPrincipalUrl(memberAcct, memberAcct));
-        method.setRequestEntity(
-                new ByteArrayRequestEntity(body.getBytes(), MimeConstants.CT_TEXT_XML));
-        executor = new TestCalDav.HttpMethodExecutor(client, method, HttpStatus.SC_MULTI_STATUS);
-        return executor.getResponseDoc( DavElements.P_MULTISTATUS);
+        method.setEntity(
+                new ByteArrayEntity(body.getBytes(), org.apache.http.entity.ContentType.create(MimeConstants.CT_TEXT_XML)));
+        try {
+            executor = new TestCalDav.HttpMethodExecutor(client, method, HttpStatus.SC_MULTI_STATUS);
+            return executor.getResponseDoc( DavElements.P_MULTISTATUS);
+        } catch (Exception e) {
+            throw new IOException("Unexpected error", e);
+        }
+        
     }
 
     @BeforeClass

@@ -26,6 +26,8 @@ import java.util.HashMap;
 
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+
+import org.apache.http.HttpException;
 import org.dom4j.Element;
 
 import com.zimbra.common.auth.ZAuthToken;
@@ -106,11 +108,12 @@ public abstract class LmcSoapRequest {
      * This method will side-effect the LmcSession object assigned with
      * setSession, changing the session ID if the server changed it.
      * @param targetURL - the URL of the SOAP service to send the request to
+     * @throws HttpException 
      * @exception lotsOfthem
      */
     public LmcSoapResponse invoke(String targetURL)
         throws LmcSoapClientException, IOException, SoapFaultException,
-               ServiceException, SoapParseException
+               ServiceException, SoapParseException, HttpException
     {
         LmcSoapResponse result = null;
 

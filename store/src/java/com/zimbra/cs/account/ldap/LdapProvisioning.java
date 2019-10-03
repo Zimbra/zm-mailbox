@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2018 Synacor, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2018, 2019 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -202,7 +202,6 @@ import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.ZLdapFilterFactory;
 import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 import com.zimbra.cs.ldap.ZLdapSchema;
-import com.zimbra.cs.ldap.ZModificationList;
 import com.zimbra.cs.ldap.ZMutableEntry;
 import com.zimbra.cs.ldap.ZSearchControls;
 import com.zimbra.cs.ldap.ZSearchResultEntry;
@@ -216,6 +215,7 @@ import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.service.util.JWEUtil;
 import com.zimbra.cs.service.util.ResetPasswordUtil;
 import com.zimbra.cs.service.util.SortBySeniorityIndexThenName;
+import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.zimlet.ZimletException;
 import com.zimbra.cs.zimlet.ZimletUtil;
@@ -3668,7 +3668,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         deleteDomain(zimbraId, false);
     }
 
-    public List<String> getEmptyAliasDomainIds(ZLdapContext zlc, Domain targetDomain, boolean suboridinateCheck)
+    public List<String> getEmptyAliasDomainIds(ZLdapContext zlc, Domain targetDomain, boolean subordinateCheck)
     throws ServiceException {
         List<String> aliasDomainIds = new ArrayList<String>();
 
@@ -3692,9 +3692,9 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                 String acctBaseDn = mDIT.domainDNToAccountBaseDN(aliasDomainDn);
                 String dynGroupsBaseDn = mDIT.domainDNToDynamicGroupsBaseDN(aliasDomainDn);
 
-                if (suboridinateCheck && (hasSubordinates(zlc, acctBaseDn) || hasSubordinates(zlc, dynGroupsBaseDn))) {
+                if (subordinateCheck && (hasSubordinates(zlc, acctBaseDn) || hasSubordinates(zlc, dynGroupsBaseDn))) {
                     throw ServiceException.FAILURE("alias domain " + aliasDomainName +
-                            " of doamin " + targetDomain.getName() + " is not empty", null);
+                            " of domain " + targetDomain.getName() + " is not empty", null);
                 }
 
                 if (aliasDomainId != null) {
@@ -3733,7 +3733,10 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         String acctBaseDn = null;
         String dynGroupsBaseDn = null;
         try {
-            domain = (LdapDomain) getDomainById(zimbraId, zlc);
+            // bypass the cached Domain data, in case a subdomain exists and deletion
+            // of the domain transforms into attribute removal, in which case attributes
+            // might be missing from a stale cached Domain object
+            domain = (LdapDomain) getDomainByIdInternal(zimbraId, zlc, GetFromDomainCacheOption.NEGATIVE);
             if (domain == null) {
                 throw AccountServiceException.NO_SUCH_DOMAIN(zimbraId);
             }
@@ -3767,11 +3770,13 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                 // remove from cache before nuking all attrs
                 domainCache.remove(domain);
                 // assume subdomains exist and turn into plain dc object
-                Map<String, String> attrs = new HashMap<String, String>();
-                attrs.put("-"+A_objectClass, "zimbraDomain");
+                Map<String, Object> attrs = new HashMap<String, Object>();
+                List<String> objClasses = new ArrayList<String>();
+                objClasses.addAll(Arrays.asList("zimbraDomain", "amavisAccount", "DKIM"));
+                attrs.put("-"+A_objectClass, objClasses);
                 // remove all zimbra attrs
                 for (String key : domain.getAttrs(false).keySet()) {
-                    if (key.startsWith("zimbra"))
+                    if (key.startsWith("zimbra") || key.startsWith("amavis") || key.startsWith("DKIM"))
                         attrs.put(key, "");
                 }
                 // cannot invoke callback here.  If another domain attr is added in a callback,
@@ -3779,6 +3784,10 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                 // schema violation naming error(zimbraDomain is removed, thus there cannot be
                 // any zimbraAttrs left) and the modify will fail.
                 modifyAttrs(domain, attrs, false, false);
+
+                // necessary to remove the cached object re-created/refreshed by
+                // refreshEntry() down the line from modifyAttrs()?
+                domainCache.remove(domain);
             }
 
             String defaultDomain = getConfig().getAttr(A_zimbraDefaultDomainName, null);
@@ -5859,6 +5868,11 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             Map<String, Object> authCtxt)
     throws ServiceException {
         synchronized (acct) {
+            //Checking alias login allowed or not
+            if (authCtxt != null && authCtxt.get(AuthContext.AC_ACCOUNT_NAME_PASSEDIN) != null) {
+                String accountNamePassedIn = (String) authCtxt.get(AuthContext.AC_ACCOUNT_NAME_PASSEDIN);
+                AccountUtil.checkAliasLoginAllowed(acct, accountNamePassedIn);
+            }
             LdapLockoutPolicy lockoutPolicy = new LdapLockoutPolicy(this, acct);
             if (lockoutPolicy.isLockedOut() && !isRecoveryCodeBasedAuth(authCtxt)) {
                 try {
@@ -6264,6 +6278,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             setLdapPassword(acct, null, newPassword);
             // modify the password
             modifyAttrs(acct, attrs);
+            ZimbraLog.account.info("password changed for %s", acct.getName());
         } catch(ServiceException se){
             ChangePasswordListener.invokeOnException(acct, newPassword, ctxts, se);
             throw se;
@@ -8440,14 +8455,6 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         List<DataSource> existing = getAllDataSources(account);
         if (existing.size() >= account.getLongAttr(A_zimbraDataSourceMaxNumEntries, 20)) {
             throw AccountServiceException.TOO_MANY_DATA_SOURCES();
-        }
-        String dsEmailAddr = (String) dataSourceAttrs.get(A_zimbraDataSourceEmailAddress);
-        if (!StringUtil.isNullOrEmpty(dsEmailAddr)) {
-            for (DataSource ds : existing) {
-                if (dsEmailAddr.equals(ds.getEmailAddress())) {
-                    throw AccountServiceException.DATA_SOURCE_EXISTS(dsEmailAddr);
-                }
-            }
         }
 
         dataSourceAttrs.put(A_zimbraDataSourceName, dsName); // must be the same
@@ -11275,6 +11282,18 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             LdapClient.closeContext(zlc);
         }
         
+        return habOrgList;
+    }
+
+    @Override
+    public Set<String> listHabOrgUnit(Domain domain) throws ServiceException {
+        Set<String> habOrgList = null;
+        try {
+            habOrgList = getAllHabOrgUnitInADomain(domain);
+        } catch (ServiceException e) {
+            throw ServiceException.FAILURE(
+                String.format("Unable to list HAB org units for domain=%s", domain.getName()), e);
+        }
         return habOrgList;
     }
 

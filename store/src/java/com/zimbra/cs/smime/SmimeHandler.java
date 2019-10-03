@@ -54,3 +54,4 @@ public abstract class SmimeHandler {
     public abstract void encodeCertificate(Account account, Element elem, String certData,
             SoapProtocol mResponseProtocol, List<String> emailAddresses);
 }
+
