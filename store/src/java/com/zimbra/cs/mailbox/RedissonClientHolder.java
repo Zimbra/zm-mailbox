@@ -30,12 +30,13 @@ import com.zimbra.cs.mailbox.redis.RedissonRetryClient;
 
 public final class RedissonClientHolder {
 
-    private final RedissonRetryClient client;
+    private volatile RedissonRetryClient client;
+
     private static class InstanceHolder {
         public static RedissonClientHolder instance = new RedissonClientHolder();
     }
 
-    private RedissonClientHolder() {
+    private RedissonRetryClient initClient() {
         String uri = null;
         try {
             uri = LC.redis_service_uri.value();
@@ -59,7 +60,7 @@ public final class RedissonClientHolder {
                         uri, ex);
                 newClient = getClientForStandalone(uri, pool);
             }
-            client = newClient;
+            return newClient;
         } catch (Exception ex) {
             ZimbraLog.system.fatal("Cannot setup RedissonClient to connect to %s", uri, ex);
             throw ex;
@@ -120,6 +121,15 @@ public final class RedissonClientHolder {
     }
 
     public RedissonClient getRedissonClient() {
-        return client;
+        RedissonRetryClient clientRef = client;
+        if (clientRef == null) {
+            synchronized (this) {
+                clientRef = client;
+                if (clientRef == null) {
+                    client = clientRef = initClient();
+                }
+            }
+        }
+        return clientRef;
     }
 }
