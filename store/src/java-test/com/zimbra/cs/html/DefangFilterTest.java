@@ -1429,7 +1429,6 @@ public class DefangFilterTest {
         result = DefangFilter.removeAnySpacesAndEncodedChars(html);
         Assert.assertTrue(result.startsWith("javascript:"));
     }
-
     /**
      * Check span does not contain repetition on "'" character
      * @throws Exception
