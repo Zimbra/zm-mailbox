@@ -1291,13 +1291,13 @@ public final class LC {
     public static final KnownKey redis_connection_timeout = KnownKey.newKey(10000);
 
     @Supported
-    public static final KnownKey redis_num_retries = KnownKey.newKey(10);
+    public static final KnownKey redis_num_retries = KnownKey.newKey(3);
 
     @Supported
     public static final KnownKey redis_netty_threads = KnownKey.newKey(16);
 
     @Supported
-    public static final KnownKey redis_retry_interval = KnownKey.newKey(3000);
+    public static final KnownKey redis_retry_interval = KnownKey.newKey(1500);
 
     @Supported
     public static final KnownKey redis_ping_connection_interval_millis = KnownKey.newKey(0);
