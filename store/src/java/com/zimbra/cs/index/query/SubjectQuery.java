@@ -41,11 +41,15 @@ public final class SubjectQuery extends Query {
     }
 
     public static Query create(String text) {
+        return create(text, false);
+    }
+
+    public static Query create(String text, boolean isPhraseQuery) {
         Comparison comp = Comparison.fromPrefix(text);
         if (comp != null) {
             return new SubjectQuery(text, comp);
         } else {
-            return new TextQuery(LuceneFields.L_H_SUBJECT, text);
+            return new TextQuery(LuceneFields.L_H_SUBJECT, text, isPhraseQuery);
         }
     }
 
