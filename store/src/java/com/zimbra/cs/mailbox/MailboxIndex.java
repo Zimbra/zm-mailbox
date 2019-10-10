@@ -504,6 +504,7 @@ public final class MailboxIndex {
         List<MailItem> clonedItems = new ArrayList<MailItem>(items.size());
         for (MailItem item : items) {
             clonedItems.add(item.snapshotItem());
+            item.state.setIndexId(item.getId());
         }
         ZimbraLog.index.debug("Queuing %d items for indexing", items.size());
         IndexingQueueAdapter queueAdapter = IndexingQueueAdapter.getFactory().getAdapter();
