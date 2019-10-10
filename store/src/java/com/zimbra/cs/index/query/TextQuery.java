@@ -117,15 +117,15 @@ public class TextQuery extends Query {
             queryString = solrQuery;
         }
         org.apache.lucene.search.Query query;
-        if (queryField.equals(LuceneFields.L_CONTENT)) {
-            // also search subject, to/from/cc, filename
+        String[] additionalFields = getAdditionalFields(queryField);
+        if (queryString.contains("*")) {
+            query = new ZimbraWildcardQuery(queryString, queryField).addFields(additionalFields);
+        } else if (additionalFields != null) {
             BooleanQuery.Builder builder = new BooleanQuery.Builder();
-            builder.add(getQuery(LuceneFields.L_CONTENT, queryString), Occur.SHOULD);
-            builder.add(getQuery(LuceneFields.L_H_SUBJECT, queryString), Occur.SHOULD);
-            builder.add(getQuery(SolrUtils.getSearchFieldName(LuceneFields.L_H_TO), queryString), Occur.SHOULD);
-            builder.add(getQuery(SolrUtils.getSearchFieldName(LuceneFields.L_H_FROM), queryString), Occur.SHOULD);
-            builder.add(getQuery(SolrUtils.getSearchFieldName(LuceneFields.L_H_CC), queryString), Occur.SHOULD);
-            builder.add(getQuery(SolrUtils.getSearchFieldName(LuceneFields.L_FILENAME), queryString), Occur.SHOULD);
+            builder.add(getQuery(queryField, queryString), Occur.SHOULD);
+            for (String field: additionalFields) {
+                builder.add(getQuery(field, queryString), Occur.SHOULD);
+            }
             query = builder.build();
         } else {
             query = getQuery(queryField, queryString);
@@ -142,6 +142,19 @@ public class TextQuery extends Query {
         }
     }
 
+    private static String[] getAdditionalFields(String searchField) {
+        if (searchField.equals(LuceneFields.L_CONTENT)) {
+            return new String[] {
+                    LuceneFields.L_H_SUBJECT,
+                    SolrUtils.getSearchFieldName(LuceneFields.L_H_TO),
+                    SolrUtils.getSearchFieldName(LuceneFields.L_H_FROM),
+                    SolrUtils.getSearchFieldName(LuceneFields.L_H_CC),
+                    SolrUtils.getSearchFieldName(LuceneFields.L_FILENAME)
+            };
+        } else {
+            return null;
+        }
+    }
     @Override
     public void dump(StringBuilder out) {
         out.append(field);
