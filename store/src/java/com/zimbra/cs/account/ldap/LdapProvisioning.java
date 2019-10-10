@@ -58,6 +58,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.service.ServiceException.Argument;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.UnmodifiableBloomFilter;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.L10nUtil;
@@ -263,6 +264,8 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     private final INamedEntryCache<XMPPComponent> xmppComponentCache;
     private final INamedEntryCache<LdapZimlet> zimletCache;
 
+    private final UnmodifiableBloomFilter<String> commonPasswordFilter;
+
     private LdapConfig cachedGlobalConfig = null;
     private GlobalGrant cachedGlobalGrant = null;
     private static final Random sPoolRandom = new Random();
@@ -313,6 +316,9 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         xmppComponentCache = cache.xmppComponentCache();
         zimletCache = cache.zimletCache();
         alwaysOnClusterCache = cache.alwaysOnClusterCache();
+
+        commonPasswordFilter = UnmodifiableBloomFilter
+            .createLazyFilterFromFile(LC.common_passwords_txt.value());
 
         setDIT();
         setHelper(new ZLdapHelper(this));
@@ -6075,6 +6081,27 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         return cos.getAttr(name);
     }
 
+    private boolean getBoolean(Account acct, Cos cos, ZMutableEntry entry, String name,
+        boolean defaultValue) throws ServiceException {
+        if (acct != null) {
+            return acct.getBooleanAttr(name, defaultValue);
+        }
+
+        try {
+            String v = entry.getAttrString(name);
+            if (v != null) {
+                try {
+                    return Boolean.parseBoolean(v);
+                } catch (NumberFormatException e) {
+                    return defaultValue;
+                }
+            }
+        } catch (ServiceException ne) {
+            throw ServiceException.FAILURE(ne.getMessage(), ne);
+        }
+
+        return cos.getBooleanAttr(name, defaultValue);
+    }
 
     /**
      * called to check password strength. Should pass in either an Account, or Cos/Attributes (during creation).
@@ -6097,6 +6124,13 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         if (maxLength > 0 && password.length() > maxLength) {
             throw AccountServiceException.INVALID_PASSWORD("too long",
                     new Argument(Provisioning.A_zimbraPasswordMaxLength, maxLength, Argument.Type.NUM));
+        }
+
+        if (getBoolean(acct, cos, entry, Provisioning.A_zimbraPasswordBlockCommonEnabled, false)
+            && commonPasswordFilter.mightContain(password)) {
+            throw AccountServiceException
+                .INVALID_PASSWORD(Provisioning.A_zimbraPasswordBlockCommonEnabled
+                    + " password is known to be too common");
         }
 
         int minUpperCase = getInt(acct, cos, entry, Provisioning.A_zimbraPasswordMinUpperCaseChars, 0);

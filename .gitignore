@@ -15,3 +15,4 @@ store/tmp/
 *.iml
 out
 *.msg
+common-passwords.txt

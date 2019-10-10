@@ -257,6 +257,7 @@ sub stage_zimbra_mbox_conf()
    cpy_file( "store-conf/conf/globs2.zimbra",                      "$stage_base_dir/opt/zimbra/conf/globs2.zimbra" );
    cpy_file( "store-conf/conf/spnego_java_options.in",             "$stage_base_dir/opt/zimbra/conf/spnego_java_options.in" );
    cpy_file( "store-conf/conf/contacts/zimbra-contact-fields.xml", "$stage_base_dir/opt/zimbra/conf/zimbra-contact-fields.xml" );
+   cpy_file( "store-conf/conf/common-passwords.txt",               "$stage_base_dir/opt/zimbra/conf/common-passwords.txt" );
 
    return ["store-conf/conf"];
 }

@@ -1457,6 +1457,9 @@ public final class LC {
     // account listener rollback handler on failure
     public static final KnownKey rollback_on_account_listener_failure = KnownKey.newKey(true);
 
+    // list file for blocking common passwords
+    public static final KnownKey common_passwords_txt = KnownKey.newKey("${zimbra_home}/conf/common-passwords.txt");
+
     static {
         // Automatically set the key name with the variable name.
         for (Field field : LC.class.getFields()) {

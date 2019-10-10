@@ -9977,4 +9977,9 @@ TODO: delete them permanently from here
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Whether to allow a user to access Zimbra X desktop</desc>
 </attr>
+
+<attr id="3081" name="zimbraPasswordBlockCommonEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="8.9.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>whether or not blocking common passwords is enabled</desc>
+</attr>
 </attrs>
