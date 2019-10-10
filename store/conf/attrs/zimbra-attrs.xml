@@ -9840,4 +9840,7 @@ TODO: delete them permanently from here
 	<defaultExternalCOSValue>TRUE</defaultExternalCOSValue>
 	<desc>This attribute is used to enable/disable user setting options under preference</desc>
 </attr>
+<attr id="5029" name="davuniqueid" type="string" cardinality="single" optionalIn="account" flags="accountInfo" since="8.8.12">
+	<desc>This attribute is used to track last operation performed on user</desc>
+</attr>
 </attrs>
