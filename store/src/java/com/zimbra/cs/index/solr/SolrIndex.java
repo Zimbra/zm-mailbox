@@ -43,7 +43,6 @@ import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.SolrException;
 import org.apache.solr.common.SolrInputDocument;
-import org.apache.solr.common.params.DisMaxParams;
 import org.apache.solr.common.params.FacetParams;
 
 import com.google.common.base.Joiner;
@@ -173,192 +172,6 @@ public class SolrIndex extends IndexStore {
         return false;
     }
 
-    protected Query optimizeQueryOps(Query query) {
-        if (query instanceof TermQuery) {
-            String term = ((TermQuery) query).getTerm().text();
-            String field = ((TermQuery) query).getTerm().field();
-            if (!SolrUtils.isWildcardQuery(term)) {
-                if (SolrUtils.containsWhitespace(term)) {
-                    return new TermQuery(new Term(field, SolrUtils.quoteText(term)));
-                } else {
-                    return new TermQuery(new Term(field, term));
-                }
-            } else {
-                //complex phrase queries don't need a boolean operator in the term
-                return new TermQuery(new Term(field, SolrUtils.quoteText(term)));
-            }
-        }
-        if (!(query instanceof BooleanQuery)) {
-            return query;
-        }
-        //must be BooleanQuery
-        Occur occur = null;
-        BooleanQuery.Builder builder = new BooleanQuery.Builder();
-        for (BooleanClause clause : (BooleanQuery) query) {
-            Query clauseQuery = clause.getQuery();
-            occur = clause.getOccur();
-            if (clauseQuery instanceof TermQuery) {
-                // quote/escape terms as necessary, in preparation for being converted to dismax form
-                String field = ((TermQuery) clauseQuery).getTerm().field();
-                String term = ((TermQuery) clauseQuery).getTerm().text();
-                if (!SolrUtils.isWildcardQuery(term)) {
-                    if (SolrUtils.containsWhitespace(term)) {
-                        term = String.format("\"%s\"", term);
-                    }
-                    builder.add(new TermQuery(new Term(field, term)), occur);
-                } else {
-                    //complex phrase query doesn't get combined with other terms
-                    TermQuery quoted = new TermQuery(new Term(field, SolrUtils.quoteText(term)));
-                    builder.add(quoted, occur);
-                }
-            } else {
-                //non-term queries get optimized recursively
-                Query optimized = optimizeQueryOps(clauseQuery);
-                builder.add(optimized, occur);
-            }
-        }
-        return builder.build();
-    }
-
-    private String[] getSearchedFields(String field) {
-        if (field.equals(LuceneFields.L_CONTENT)) {
-            return new String[]{
-                    LuceneFields.L_H_SUBJECT,
-                    LuceneFields.L_CONTENT,
-                    toSearchField(LuceneFields.L_H_FROM),
-                    toSearchField(LuceneFields.L_H_TO),
-                    toSearchField(LuceneFields.L_H_CC),
-                    toSearchField(LuceneFields.L_FILENAME)};
-        } else {
-            return new String[] { field };
-        }
-    }
-
-    private static String toSearchField(String origField) {
-        /*From/to/cc fields are copied to a "*_search" field that includes a ReversedWildcardFilterFactory.
-          Regular searches should use these fields; facet queries should use the original field as to not
-          include the reversed tokens in the facet results */
-        if (origField.equals(LuceneFields.L_H_FROM) ||
-                origField.equals(LuceneFields.L_H_TO) ||
-                origField.equals(LuceneFields.L_H_CC) ||
-                origField.equals(LuceneFields.L_FILENAME)) {
-            return SolrUtils.getSearchFieldName(origField);
-        }
-        else {
-            return origField;
-        }
-    }
-
-    private String booleanQueryToString(BooleanQuery query, ReferencedQueryParams referencedParams) {
-        /*
-         * Check for common case when we use a BooleanQuery to wrap multiple terms in a single TermQuery,
-         * so that we can specify whether they should be treated like AND or OR
-         */
-        if (query.clauses().size() == 1) {
-            BooleanClause clause = query.clauses().get(0);
-            if (clause.getQuery() instanceof TermQuery) {
-                boolean isOrQuery = clause.getOccur() == Occur.SHOULD;
-                return termQueryToString((TermQuery)clause.getQuery(), referencedParams, isOrQuery);
-            }
-        }
-        StringBuilder sb = new StringBuilder();
-        sb.append("(");
-        for (BooleanClause clause : query) {
-            Query clauseQuery = clause.getQuery();
-            if(clauseQuery != null) {
-                Occur occur = clause.getOccur();
-                if(occur != null) {
-                    switch (occur) {
-                        case MUST:
-                            sb.append("+");
-                            break;
-                        case MUST_NOT:
-                            sb.append("-");
-                            break;
-                        default:
-                            break;
-                    }
-                }
-                sb.append(queryToString(clauseQuery, referencedParams));
-            }
-            sb.append(" ");
-         }
-        sb.append(")");
-        return sb.toString();
-    }
-
-    protected String queryToString(Query query, ReferencedQueryParams referencedParams) {
-        if (query instanceof TermQuery) {
-            return termQueryToString((TermQuery)query, referencedParams);
-        } else if (query instanceof BooleanQuery) {
-            return booleanQueryToString((BooleanQuery)query, referencedParams);
-        } else {
-            LocalParams lp = new LocalParams("lucene");
-            lp.addParam("q.op", "OR");
-            referencedParams.add(lp, query.toString());
-            return lp.encode();
-        }
-    }
-
-    private String termQueryToString(TermQuery query, ReferencedQueryParams referencedParams) {
-        return termQueryToString(query, referencedParams, false);
-    }
-
-    private String termQueryToString(TermQuery query, ReferencedQueryParams referencedParams, boolean orQuery) {
-        String field = query.getTerm().field();
-        String text = query.getTerm().text();
-        if (SolrUtils.isWildcardQuery(query.getTerm().text())) {
-            String[] searchedFields = getSearchedFields(field);
-            LocalParams localParams = buildWildcardLocalParams(searchedFields);
-            referencedParams.add(localParams, text);
-            return localParams.encode();
-        }
-        String[] searchedFields = getSearchedFields(field);
-        assert(searchedFields != null);
-        String weightedFields = getDismaxWeightedFieldString(field, searchedFields);
-        LocalParams localParams = buildDismaxLocalParams(weightedFields, orQuery);
-        referencedParams.add(localParams, text);
-        return localParams.encode();
-    }
-
-    private LocalParams buildDismaxLocalParams(String weightedFields, boolean orQuery) {
-        LocalParams lp = new LocalParams("edismax");
-        lp.addParam(DisMaxParams.QF, weightedFields);
-        lp.addParam(DisMaxParams.PF, weightedFields);
-        lp.addParam(DisMaxParams.MM, orQuery ? "1" : "100%");
-        lp.addParam(DisMaxParams.TIE, "0.1");
-        return lp;
-    }
-
-    private LocalParams buildWildcardLocalParams(String[] searchedFields) {
-        LocalParams lp = new LocalParams("zimbrawildcard");
-        lp.addParam("fields", Joiner.on(" ").join(searchedFields));
-        lp.addParam("maxExpansions", String.valueOf(LC.zimbra_index_wildcard_max_terms_expanded.intValue()));
-        return lp;
-    }
-
-    private String getDismaxWeightedFieldString(String originalField, String[] fields) {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < fields.length; i++ ) {
-            String field = fields[i];
-            int fieldWeight = getDismaxFieldWeight(originalField, field);
-            sb.append(fieldWeight != 1? String.format("%s^%d", field, fieldWeight): field).append(" ");
-        }
-        return sb.toString();
-    }
-
-    private int getDismaxFieldWeight(String originalField, String field) {
-        if (originalField.equals("l.content")) {
-            switch (field) {
-            case "subject":
-                return 2;
-            default:
-                return 1;
-            }
-        }
-        return 1;
-    }
-
     protected void addTermsFilter(SolrQuery query, Collection<Term> terms) {
         if(terms == null || terms.size() < 1) {
             return;
@@ -482,15 +295,10 @@ public class SolrIndex extends IndexStore {
                 Collections.addAll(sortFields, sort.getSort());
             }
             query = escapeSpecialChars(query);
-            if (!(query instanceof DisjunctionMaxQuery)) {
-                query = optimizeQueryOps(query);
-            }
-
             ReferencedQueryParams referencedQueryParams = new ReferencedQueryParams();
-            String szq = queryToString(query, referencedQueryParams);
             SolrQuery q = solrHelper.newQuery(accountId);
             referencedQueryParams.setAsParams(q);
-            q.setQuery(szq).setRows(n);
+            q.setQuery(query.toString()).setRows(n);
 
             if(filter != null) {
                 addTermsFilter(q, filter.getTerms());
