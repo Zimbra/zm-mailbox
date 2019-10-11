@@ -674,11 +674,11 @@ public final class QueryParser {
             case FIELD:
                 return createFieldQuery(field.image, term, text);
             case CONTACT:
-                return new ContactQuery(text);
+                return new ContactQuery(text, isPhraseQuery(term));
             case CONTENT:
                 if (types.contains(MailItem.Type.CONTACT)) { // combine with CONTACT query
                     List<Query> clauses = new ArrayList<Query>(3);
-                    clauses.add(new ContactQuery(text));
+                    clauses.add(new ContactQuery(text, isPhraseQuery(term)));
                     clauses.add(new ConjQuery(ConjQuery.Conjunction.OR));
                     clauses.add(createContentQuery(text, isPhraseQuery(term)));
                     return new SubQuery(clauses);
