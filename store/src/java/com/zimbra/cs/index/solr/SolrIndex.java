@@ -229,13 +229,13 @@ public class SolrIndex extends IndexStore {
                 ZimbraSolrDocumentID solrID = (ZimbraSolrDocumentID) docID;
                 SolrQuery q = new SolrQuery().setQuery(String.format("%s:%s", solrID.getIDFIeld(), solrID.getDocID())).setRows(1);
                 q.setFields(MESSAGE_FETCH_FIELDS);
-                ZimbraLog.index.debug(String.format("retrieving document by query %s ",q.toString()));
+                ZimbraLog.search.debug(String.format("retrieving document by query %s ",q.toString()));
                 try {
                     QueryResponse resp = (QueryResponse) solrHelper.executeQueryRequest(accountId, q);
                     SolrDocument solrDoc = resp.getResults().get(0);
                     return buildFullDocument(solrDoc);
                 } catch (SolrException e) {
-                    ZimbraLog.index.error("Solr problem geting document %s, from mailbox %s",docID.toString(), accountId,e);
+                    ZimbraLog.search.error("Solr problem geting document %s, from mailbox %s",docID.toString(), accountId,e);
                 }
                 return null;
             }
@@ -317,7 +317,7 @@ public class SolrIndex extends IndexStore {
                 q.addSort(sortField.getField(), sortField.getReverse() ? SolrQuery.ORDER.desc : SolrQuery.ORDER.asc);
             }
 
-            ZimbraLog.index.debug("Searching Solr:Query='%s'->SolrQuery='%s' filter='%s'",
+            ZimbraLog.search.debug("Searching Solr:Query='%s'->SolrQuery='%s' filter='%s'",
                     query, q, filter);
             try {
                 QueryResponse resp = (QueryResponse) solrHelper.executeQueryRequest(accountId, q);
