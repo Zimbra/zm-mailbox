@@ -47,7 +47,7 @@ public abstract class RedisLock {
     protected RedisLockChannel lockChannel;
     protected String lockChannelName;
     protected String accountId;
-    protected RedissonRetryClient client;
+    protected CommandExecutor redisCommandExecutor;
     protected MailboxLockContext lockContext;
     protected String uuid; //unique for each lock instance
     protected String lockNode; //unique for each top-level RedisReadWriteLock
@@ -60,7 +60,7 @@ public abstract class RedisLock {
         this.lockChannelName = lockChannel.getChannelName().getKey();
         this.lockName = RedisUtils.createAccountRoutedKey(lockChannel.getChannelName().getHashTag(), lockBaseName);
         this.accountId = accountId;
-        this.client = (RedissonRetryClient) RedissonClientHolder.getInstance().getRedissonClient();
+        this.redisCommandExecutor = ((RedissonRetryClient) RedissonClientHolder.getInstance().getRedissonClient()).getCommandExecutor();
         this.lockContext = lockContext;
         this.uuid = generateUuid();
         this.lockNode = lockNode;
@@ -179,8 +179,7 @@ public abstract class RedisLock {
     }
 
     protected <T> T execute(String script, Codec codec, RedisCommand<T> commandType, List<Object> keys, Object... values) {
-        CommandExecutor executor = client.getCommandExecutor();
-        return executor.evalWrite(lockName, codec, commandType, script, keys, values);
+        return redisCommandExecutor.evalWrite(lockName, codec, commandType, script, keys, values);
     }
 
     public void unlock() {

@@ -109,7 +109,7 @@
   <dependency org="com.fasterxml.jackson.dataformat" name="jackson-dataformat-smile" rev="2.9.2" />
   <dependency org="com.fasterxml.jackson.dataformat" name="jackson-dataformat-yaml" rev="2.9.2"/>
   <dependency org="com.fasterxml.jackson.module" name="jackson-module-jaxb-annotations" rev="2.8.9"/>
-  <dependency org="org.redisson" name="redisson-all" rev="3.10.7"/>
+  <dependency org="org.redisson" name="redisson-all" rev="3.11.4"/>
   <dependency org="org.apache.commons" name="commons-text" rev="1.1"/>
   <dependency org="org.apache.commons" name="commons-lang3" rev="3.7"/>
   <dependency org="org.apache.commons" name="commons-rng-client-api" rev="1.0"/>

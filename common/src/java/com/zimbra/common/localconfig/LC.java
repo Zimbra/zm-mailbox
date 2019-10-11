@@ -1267,10 +1267,10 @@ public final class LC {
     public static final KnownKey redis_num_pubsub_channels = KnownKey.newKey(100);
 
     @Supported
-    public static final KnownKey redis_cluster_scan_interval = KnownKey.newKey(2000);
+    public static final KnownKey redis_cluster_scan_interval = KnownKey.newKey(1000);
 
     @Supported
-    public static final KnownKey redis_cluster_reconnect_timeout = KnownKey.newKey(15000);
+    public static final KnownKey redis_cluster_reconnect_timeout_millis = KnownKey.newKey(60000);
 
     @Supported
     public static final KnownKey redis_master_connection_pool_size = KnownKey.newKey(200);
@@ -1291,13 +1291,13 @@ public final class LC {
     public static final KnownKey redis_connection_timeout = KnownKey.newKey(10000);
 
     @Supported
-    public static final KnownKey redis_num_retries = KnownKey.newKey(10);
+    public static final KnownKey redis_num_retries = KnownKey.newKey(3);
 
     @Supported
     public static final KnownKey redis_netty_threads = KnownKey.newKey(16);
 
     @Supported
-    public static final KnownKey redis_retry_interval = KnownKey.newKey(3000);
+    public static final KnownKey redis_retry_interval = KnownKey.newKey(1500);
 
     @Supported
     public static final KnownKey redis_ping_connection_interval_millis = KnownKey.newKey(0);
@@ -1373,6 +1373,9 @@ public final class LC {
 
     @Supported
     public static final KnownKey contact_search_min_chars_for_wildcard_query = KnownKey.newKey(10);
+
+    @Supported
+    public static final KnownKey mailbox_liveness_probe_override_file = KnownKey.newKey("/tmp/PASS-LIVENESS");
 
     public enum PUBLIC_SHARE_VISIBILITY { samePrimaryDomain, all, none };
 

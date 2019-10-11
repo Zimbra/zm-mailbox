@@ -1,5 +1,14 @@
 package com.zimbra.cs.mailbox.redis;
 
+import java.lang.ref.WeakReference;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -50,6 +59,7 @@ import org.redisson.api.RQueue;
 import org.redisson.api.RRateLimiter;
 import org.redisson.api.RReadWriteLock;
 import org.redisson.api.RRemoteService;
+import org.redisson.api.RRingBuffer;
 import org.redisson.api.RScheduledExecutorService;
 import org.redisson.api.RScoredSortedSet;
 import org.redisson.api.RScript;
@@ -66,21 +76,25 @@ import org.redisson.api.RedissonClient;
 import org.redisson.api.TransactionOptions;
 import org.redisson.client.RedisException;
 import org.redisson.client.codec.Codec;
+import org.redisson.client.protocol.RedisCommand;
 import org.redisson.command.CommandExecutor;
 import org.redisson.config.Config;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.mailbox.util.MailboxClusterUtil.LivenessProbeOverride;
 
 public class RedissonRetryClient implements RedissonClient {
 
     private RedissonClient client;
     private int clientVersion;
     private ReadWriteLock clientLock = new ReentrantReadWriteLock();
+    private final Set<WeakReference<RedissonRetryTopic>> channels;
 
     public RedissonRetryClient(RedissonClient client) {
         this.client = client;
         clientVersion = 1;
+        channels = Collections.newSetFromMap(new ConcurrentHashMap<>());
     }
 
     public int getClientVersion() {
@@ -88,18 +102,25 @@ public class RedissonRetryClient implements RedissonClient {
     }
 
     public CommandExecutor getCommandExecutor() {
-        return ((Redisson) client).getCommandExecutor();
+        return new RedissonRetryCommandExecutor(client -> ((Redisson) client).getCommandExecutor(), this);
     }
 
     private boolean waitForCluster(Config redissonConfig, int maxWaitMillis) {
-        int waitMillis = 250;
+        /*
+         * We use a 1s delay here as opposed to a tighter loop because a client retry is likely caused
+         * by one or more redis hosts rebooting - which, in the worst case, can take a bit of time.
+         */
+        int waitMillis = 1000;
         int waited = 0;
+        int attempt = 0;
         while (waited <= maxWaitMillis) {
             try {
+                ZimbraLog.mailbox.info("waiting for redis cluster to become available (attempt %s)", ++attempt);
                 client = Redisson.create(redissonConfig);
                 clientVersion++;
                 return true;
             } catch (RedisException e) {
+                ZimbraLog.mailbox.info("redis cluster not ready after %s attempts: %s", ++attempt, e.getMessage());
                 try {
                     Thread.sleep(waitMillis);
                 } catch (InterruptedException e1) {}
@@ -109,22 +130,86 @@ public class RedissonRetryClient implements RedissonClient {
         return false;
     }
 
-    public synchronized void restart() {
+    private void initializePubSubChannels() {
+        if (!channels.isEmpty()) {
+            ZimbraLog.mailbox.debug("re-initializing %s existing pubsub channels", channels.size());
+            Iterator<WeakReference<RedissonRetryTopic>> iter = channels.iterator();
+            while (iter.hasNext()) {
+                RedissonRetryTopic channel = iter.next().get();
+                if (channel == null) {
+                    iter.remove();
+                } else {
+                    channel.initialize();
+                }
+            }
+        }
+    }
+
+    public synchronized void waitForClusterOK() {
+        int maxWaitMillis = LC.redis_cluster_reconnect_timeout_millis.intValue();
+        int waited = 0;
+        int waitMillis = 1000;
+        Collection<Node> nodes = getNodesGroup().getNodes();
+        long start = System.currentTimeMillis();
+        // for now, loop over currently-known nodes until we get cluster_state:ok from one of them
         clientLock.writeLock().lock();
         try {
-            ZimbraLog.mailbox.info("restarting redisson client (version %d)", clientVersion);
-            Config config = client.getConfig();
-            client.shutdown();
-            int maxWaitMillis = LC.redis_cluster_reconnect_timeout.intValue();
-            boolean success = waitForCluster(config, maxWaitMillis);
-            if (!success) {
-                ZimbraLog.mailbox.warn("unable to restart redisson client after %d ms", maxWaitMillis);
-            } else {
-                ZimbraLog.mailbox.info("new redisson client created (version=%d)", clientVersion);
+            ZimbraLog.mailbox.info("waiting until redis cluster_state is OK...");
+            while (waited <= maxWaitMillis) {
+                for (Node node: nodes) {
+                    try {
+                        Map<String, String> info = node.clusterInfoAsync().get();
+                        String clusterState = info.get("cluster_state");
+                        if (clusterState != null && clusterState.equals("ok")) {
+                            ZimbraLog.mailbox.info("redis cluster is OK again after %sms", System.currentTimeMillis() - start);
+                            return;
+                        } else {
+                            try {
+                                Thread.sleep(waitMillis);
+                                waited += waitMillis;
+                            } catch (InterruptedException e1) {}
+                        }
+                    } catch (InterruptedException | ExecutionException e) {
+                        try {
+                            Thread.sleep(waitMillis);
+                            waited += waitMillis;
+                        } catch (InterruptedException e1) {}
+                    }
+                }
             }
+            ZimbraLog.mailbox.warn("redis cluster is not OK after %sms!", maxWaitMillis);
         } finally {
             clientLock.writeLock().unlock();
         }
+
+    }
+
+    public synchronized int restart(int clientVersionAtFailure, Throwable cause) {
+        if (clientVersionAtFailure < clientVersion) {
+            ZimbraLog.mailbox.debug("another thread already re-initialized the redisson client (failed at version %s, current version=%s)",
+                    clientVersionAtFailure, clientVersion);
+        } else {
+            clientLock.writeLock().lock();
+            try (LivenessProbeOverride override = new LivenessProbeOverride()) {
+                try {
+                    ZimbraLog.mailbox.info("restarting redisson client (version %d)", clientVersion, cause);
+                    Config config = client.getConfig();
+                    client.shutdown();
+                    int maxWaitMillis = LC.redis_cluster_reconnect_timeout_millis.intValue();
+                    boolean success = waitForCluster(config, maxWaitMillis);
+                    if (!success) {
+                        ZimbraLog.mailbox.warn("unable to restart redisson client after %d ms", maxWaitMillis);
+                    } else {
+                        ZimbraLog.mailbox.info("new redisson client created (version=%d)", clientVersion);
+                        //re-initialize pubsub channels up front, other redisson objects get re-initialized lazily
+                        initializePubSubChannels();
+                    }
+                } finally {
+                    clientLock.writeLock().unlock();
+                }
+            }
+        }
+        return clientVersion;
     }
 
     public <R> R runInitializer(RedissonRetryDecorator.RedissonInitializer<R> initializer) {
@@ -134,6 +219,14 @@ public class RedissonRetryClient implements RedissonClient {
         } finally {
             clientLock.readLock().unlock();
         }
+    }
+
+    ReadWriteLock getClientLock() {
+        return clientLock;
+    }
+
+    public <T> T evalWrite(String key, Codec codec, RedisCommand<T> evalCommandType, String script, List<Object> keys, Object... params) {
+        return getCommandExecutor().evalWrite(key, codec, evalCommandType, script, keys, params);
     }
 
     @Override
@@ -168,12 +261,16 @@ public class RedissonRetryClient implements RedissonClient {
 
     @Override
     public RTopic getTopic(String name) {
-        return new RedissonRetryTopic(client -> client.getTopic(name), this);
+        RedissonRetryTopic topic = new RedissonRetryTopic(client -> client.getTopic(name), this);
+        channels.add(new WeakReference<>(topic));
+        return topic;
     }
 
     @Override
     public RTopic getTopic(String name, Codec codec) {
-        return new RedissonRetryTopic(client -> client.getTopic(name, codec), this);
+        RedissonRetryTopic topic = new RedissonRetryTopic(client -> client.getTopic(name, codec), this);
+        channels.add(new WeakReference<>(topic));
+        return topic;
     }
 
     @Override
@@ -281,6 +378,11 @@ public class RedissonRetryClient implements RedissonClient {
     @Override
     public RScript getScript(Codec arg0) {
         return new RedissonRetryScript(client -> client.getScript(arg0), this);
+    }
+
+    @Override
+    public String getId() {
+        return client.getId();
     }
 
     //RedissonClient interface methods below are not currently used anywhere in the codebase,
@@ -657,6 +759,16 @@ public class RedissonRetryClient implements RedissonClient {
 
     @Override
     public RLock getRedLock(RLock... arg0) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public <V> RRingBuffer<V> getRingBuffer(String arg0) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public <V> RRingBuffer<V> getRingBuffer(String arg0, Codec arg1) {
         throw new UnsupportedOperationException();
     }
 }
