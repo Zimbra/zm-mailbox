@@ -17,6 +17,8 @@
 package com.zimbra.cs.index.query;
 
 import org.apache.lucene.index.Term;
+import org.apache.lucene.search.BooleanClause.Occur;
+import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.TermQuery;
 
 import com.google.common.base.Strings;
@@ -107,7 +109,21 @@ public class TextQuery extends Query {
             queryField = field;
             queryString = solrQuery;
         }
-        op.addClause(toQueryString(field, text), new TermQuery(new Term(queryField, queryString)), evalBool(bool));
+        org.apache.lucene.search.Query query;
+        if (queryField.equals(LuceneFields.L_CONTENT)) {
+            // also search subject, to/from/cc, filename
+            BooleanQuery.Builder builder = new BooleanQuery.Builder();
+            builder.add(new TermQuery(new Term(LuceneFields.L_CONTENT, queryString)), Occur.SHOULD);
+            builder.add(new TermQuery(new Term(LuceneFields.L_H_SUBJECT, queryString)), Occur.SHOULD);
+            builder.add(new TermQuery(new Term(SolrUtils.getSearchFieldName(LuceneFields.L_H_TO), queryString)), Occur.SHOULD);
+            builder.add(new TermQuery(new Term(SolrUtils.getSearchFieldName(LuceneFields.L_H_FROM), queryString)), Occur.SHOULD);
+            builder.add(new TermQuery(new Term(SolrUtils.getSearchFieldName(LuceneFields.L_H_CC), queryString)), Occur.SHOULD);
+            builder.add(new TermQuery(new Term(SolrUtils.getSearchFieldName(LuceneFields.L_FILENAME), queryString)), Occur.SHOULD);
+            query = builder.build();
+        } else {
+            query = new TermQuery(new Term(queryField, queryString));
+        }
+        op.addClause(toQueryString(field, text), query, evalBool(bool));
         return op;
     }
 
