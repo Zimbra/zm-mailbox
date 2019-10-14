@@ -2392,7 +2392,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <deprecateDesc>deprecated</deprecateDesc>
 </attr>
 
-<attr id="453" name="zimbraPrefClientType" type="enum" value="standard,advanced" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="453" name="zimbraPrefClientType" type="enum" value="standard,advanced,zimbrax" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
   <defaultCOSValue>advanced</defaultCOSValue>
   <desc>user preference of client type</desc>
 </attr>
