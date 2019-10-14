@@ -3,6 +3,8 @@ package com.zimbra.cs.index.query;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.solr.parser.SolrQueryParserBase.MagicFieldName;
+
 import com.google.common.base.Joiner;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.index.solr.SolrIndex.LocalParams;
@@ -45,7 +47,7 @@ public class ZimbraWildcardQuery extends org.apache.lucene.search.Query {
         lp.addParam("fields", Joiner.on(" ").join(fields));
         lp.addParam("v", queryString);
         lp.addParam("maxExpansions", String.valueOf(LC.zimbra_index_wildcard_max_terms_expanded.intValue()));
-        return String.format("_query_:\"%s\"", lp.encode());
+        return String.format("%s:\"%s\"", MagicFieldName.QUERY, lp.encode());
     }
 
 }
