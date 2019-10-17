@@ -21,16 +21,18 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.base.Strings;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.SoapProtocol;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.util.IOUtil;
-import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.soap.SoapProtocol;
 
 /**
  * A wrapper around a remote search (a search on data in another account).
@@ -90,13 +92,13 @@ final class RemoteQueryOperation extends FilterQueryOperation {
         Server remoteServer = prov.getServer(acct);
 
         String queryString = operation.toQueryString();
+        String server = Strings.isNullOrEmpty(LC.zimbra_soap_service.value()) ? remoteServer.getName() : LC.zimbra_soap_service.value();
         if (ZimbraLog.search.isDebugEnabled()) {
             ZimbraLog.search.debug("RemoteQuery=\"%s\" target=%s server=%s",
-                    queryString, queryTarget, remoteServer.getName());
+                    queryString, queryTarget, server);
         }
-
         results = new ProxiedQueryResults(proto, authToken, queryTarget.toString(),
-                remoteServer.getName(), params, queryString, params.getFetchMode());
+                server, params, queryString, params.getFetchMode());
     }
 
     @Override
