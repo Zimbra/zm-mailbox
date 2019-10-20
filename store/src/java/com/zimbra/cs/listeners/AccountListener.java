@@ -174,7 +174,36 @@ public abstract class AccountListener {
             if (rollbackOnFailure) {
                 rollbackNameChange(notifiedListeners, acct, acct.getGivenName(), acct.getSn());
             } else {
-                ZimbraLog.account.warn("No rollback on account listener for zimbra account nanme change failure, there may be inconsistency in account. %s", se.getMessage());
+                ZimbraLog.account.warn("No rollback on account listener for zimbra account name change failure, there may be inconsistency in account %s", se.getMessage());
+            }
+            throw se;
+        }
+    }
+
+    public static void invokeOnSANChange(Account acct, String serviceAcctNumber, ZimbraSoapContext zsc, boolean rollbackOnFailure) throws ServiceException {
+        ZimbraLog.account.debug("Account SAN changed for %s. new SAN: %s", acct.getName(),
+                serviceAcctNumber);
+        ArrayList<AccountListenerEntry> notifiedListeners = new ArrayList<AccountListenerEntry>();
+        String requestVia = zsc.getVia();
+        try {
+            // invoke listeners
+            Map<String, AccountListenerEntry> sortedListeners = ListenerUtil.sortByPriority(mListeners);
+            for (Map.Entry<String, AccountListenerEntry> listener : sortedListeners.entrySet()) {
+                AccountListenerEntry listenerInstance = listener.getValue();
+                if (!notifyCaller(requestVia, listenerInstance.getListenerName())) {
+                    ZimbraLog.account.debug("Account SAN change request received from \"%s\", no need to call \"%s\".", requestVia,
+                            listenerInstance.getListenerName());
+                    continue;
+                }
+                listenerInstance.getAccountListener().onSANChange(acct, serviceAcctNumber);
+                notifiedListeners.add(listenerInstance);
+            }
+        } catch (ServiceException se) {
+            if (rollbackOnFailure) {
+                String oldServiceAccountNumber = acct.getServiceAccountNumber();
+                rollbackSANChange(notifiedListeners, acct, oldServiceAccountNumber);
+            } else {
+                ZimbraLog.account.warn("No rollback on account listener for zimbra account SAN update failure, there may be inconsistency in account. %s", se.getMessage());
             }
             throw se;
         }
@@ -238,6 +267,14 @@ public abstract class AccountListener {
     public abstract void onNameChange(Account acct, String firstName, String lastName) throws ServiceException;
 
     /**
+     * called on SAN(Service Account Number) update request
+     *
+     * @param USER_ACCOUNT user account whose SAN is to be updated
+     * @param SERVICE_ACCOUNT_NUMBER new SAN to be updated
+     */
+    public abstract void onSANChange(Account acct, String serviceAcctNumber) throws ServiceException;
+
+    /**
      * called when CreateAccount throws ServiceException.
      *
      * @param USER_ACCOUNT user account
@@ -295,6 +332,22 @@ public abstract class AccountListener {
                     listenerInstance.getAccountListener().onAccountCreation(acct);
                 } catch (ServiceException se) {
                     ZimbraLog.account.debug("Rollback account listener delete failed from \"%s\". %s", listenerInstance.getListenerName(), se.getMessage());
+                }
+            }
+        }
+    }
+
+    private static void rollbackSANChange(ArrayList<AccountListenerEntry> notifiedListeners, Account acct,
+            String oldServiceAccountNumber) {
+        if (!notifiedListeners.isEmpty()) {
+            for(int i = 0; i < notifiedListeners.size(); i++)
+            {
+                AccountListenerEntry listenerInstance = notifiedListeners.get(i);
+                ZimbraLog.account.debug("Rollback account listener SAN update request from \"%s\".", listenerInstance.getListenerName());
+                try {
+                    listenerInstance.getAccountListener().onSANChange(acct, oldServiceAccountNumber);
+                } catch (ServiceException se) {
+                    ZimbraLog.account.debug("Rollback account listener SAN update failed from \"%s\". %s", listenerInstance.getListenerName(), se.getMessage());
                 }
             }
         }
