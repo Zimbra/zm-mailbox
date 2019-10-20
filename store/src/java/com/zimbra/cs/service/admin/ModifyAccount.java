@@ -158,6 +158,34 @@ public class ModifyAccount extends AdminDocumentHandler {
             ZimbraLog.account.info("Account Modify request having suspension reason without account status, ignoring updation");
             attrs.remove(Provisioning.A_zimbraAccountSuspensionReason);
         }
+
+        if (attrs.containsKey(Provisioning.A_zimbraServiceAccountNumber)) {
+            String newServiceAcctNum = (String) attrs.get(Provisioning.A_zimbraServiceAccountNumber);
+            try {
+                AccountListener.invokeOnSANChange(account, newServiceAcctNum, zsc, rollbackOnFailure);
+            } catch (ServiceException se) {
+                ZimbraLog.account.error(se.getMessage());
+                if (rollbackOnFailure) {
+                    // roll back status change account listener updates, if within same request
+                    if (attrs.containsKey(Provisioning.A_zimbraAccountStatus)) {
+                        String newStatus = (String) attrs.get(Provisioning.A_zimbraAccountStatus);
+                        if (attrs.containsKey(Provisioning.A_zimbraAccountSuspensionReason) && !StringUtil.isNullOrEmpty(oldSuspendReason)) {
+                            account.setAccountSuspensionReason(oldSuspendReason);
+                        }
+                        try {
+                            AccountListener.invokeOnStatusChange(account, newStatus, oldStatus, zsc, rollbackOnFailure);
+                        } catch (ServiceException sse) {
+                            ZimbraLog.account.error(se.getMessage());
+                            throw se;
+                        }
+                    }
+                } else {
+                    ZimbraLog.account.warn("No rollback on account listener for zimbra account SAN change failure, there may be inconsistency in account. %s", se.getMessage());
+                }
+                throw se;
+            }
+        }
+
         if (attrs.containsKey(Provisioning.A_givenName) || attrs.containsKey(Provisioning.A_sn)) {
             String firstName = (String) attrs.get(Provisioning.A_givenName);
             String lastName = (String) attrs.get(Provisioning.A_sn);
@@ -174,6 +202,16 @@ public class ModifyAccount extends AdminDocumentHandler {
                         }
                         try {
                             AccountListener.invokeOnStatusChange(account, newStatus, oldStatus, zsc, rollbackOnFailure);
+                        } catch (ServiceException sse) {
+                            ZimbraLog.account.error(se.getMessage());
+                            throw se;
+                        }
+                    }
+                    // roll back SAN change account listener updates, if within same request
+                    if (attrs.containsKey(Provisioning.A_zimbraServiceAccountNumber)) {
+                        String oldSAN = account.getServiceAccountNumber();
+                        try {
+                            AccountListener.invokeOnSANChange(account, oldSAN, zsc, rollbackOnFailure);
                         } catch (ServiceException sse) {
                             ZimbraLog.account.error(se.getMessage());
                             throw se;
