@@ -72,7 +72,12 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.MetadataList;
 import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.pubsub.PubSubService;
+import com.zimbra.cs.pubsub.message.FlushCacheMsg;
 import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.soap.admin.type.CacheEntrySelector;
+import com.zimbra.soap.admin.type.CacheEntryType;
+import com.zimbra.soap.admin.type.CacheSelector;
 import com.zimbra.soap.admin.type.DataSourceType;
 
 public class AccountUtil {
@@ -830,5 +835,11 @@ public class AccountUtil {
         String path = "/service/extuserprov/?p=" + encoded;
         return ZimbraServlet.getServiceUrl(account.getServer(),
             Provisioning.getInstance().getDomain(account), path);
+    }
+
+    public static void broadcastFlushCache(Account account) {
+        CacheSelector selector = new CacheSelector(false, CacheEntryType.account.name());
+        selector.addEntry(new CacheEntrySelector(CacheEntrySelector.CacheEntryBy.id, account.getId()));
+        PubSubService.getInstance().publish(PubSubService.BROADCAST, new FlushCacheMsg(selector));
     }
 }
