@@ -84,27 +84,30 @@ public class ExtensionUtil {
                     " is null, no extensions loaded");
             return;
         }
-        File extDir = new File(LC.zimbra_extension_directory.value());
-        ZimbraLog.extensions.info("Loading extensions from " + extDir.getPath());
+        String extensionDirsPath = LC.zimbra_extension_directory.value();
+        for (String extensionDir : extensionDirsPath.split(":")) {
+            File extDir = new File(extensionDir);
+            ZimbraLog.extensions.info("Loading extensions from " + extDir.getPath());
 
-        File[] extDirs = extDir.listFiles();
-        if (extDirs == null) {
-            return;
-        }
-        for (File dir : extDirs) {
-            if (!dir.isDirectory()) {
-                ZimbraLog.extensions.warn("ignored non-directory in extensions directory: " + dir);
-                continue;
+            File[] extDirs = extDir.listFiles();
+            if (extDirs == null) {
+                return;
             }
+            for (File dir : extDirs) {
+                if (!dir.isDirectory()) {
+                    ZimbraLog.extensions.warn("ignored non-directory in extensions directory: " + dir);
+                    continue;
+                }
 
-            ZimbraExtensionClassLoader zcl = new ZimbraExtensionClassLoader(
-                    dirListToURLs(dir), sExtParentClassLoader);
-            if (!zcl.hasExtensions()) {
-                ZimbraLog.extensions.warn("no " + ZimbraExtensionClassLoader.ZIMBRA_EXTENSION_CLASS + " found, ignored: " + dir);
-                continue;
+                ZimbraExtensionClassLoader zcl = new ZimbraExtensionClassLoader(
+                        dirListToURLs(dir), sExtParentClassLoader);
+                if (!zcl.hasExtensions()) {
+                    ZimbraLog.extensions.warn("no " + ZimbraExtensionClassLoader.ZIMBRA_EXTENSION_CLASS + " found, ignored: " + dir);
+                    continue;
+                }
+
+                sClassLoaders.add(zcl);
             }
-
-            sClassLoaders.add(zcl);
         }
     }
 
