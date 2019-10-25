@@ -44,24 +44,28 @@ public final class AddrQuery extends SubQuery {
     }
 
     public static AddrQuery create(Set<Address> addrs, String text) {
+        return create(addrs, text, false);
+    }
+
+    public static AddrQuery create(Set<Address> addrs, String text, boolean isPhraseQuery) {
         List<Query> clauses = new ArrayList<Query>();
 
         if (addrs.contains(Address.FROM)) {
-            clauses.add(new TextQuery(LuceneFields.L_H_FROM, text));
+            clauses.add(new TextQuery(LuceneFields.L_H_FROM, text, isPhraseQuery));
         }
 
         if (addrs.contains(Address.TO)) {
             if (!clauses.isEmpty()) {
                 clauses.add(new ConjQuery(ConjQuery.Conjunction.OR));
             }
-            clauses.add(new TextQuery(LuceneFields.L_H_TO, text));
+            clauses.add(new TextQuery(LuceneFields.L_H_TO, text, isPhraseQuery));
         }
 
         if (addrs.contains(Address.CC)) {
             if (!clauses.isEmpty()) {
                 clauses.add(new ConjQuery(ConjQuery.Conjunction.OR));
             }
-            clauses.add(new TextQuery(LuceneFields.L_H_CC, text));
+            clauses.add(new TextQuery(LuceneFields.L_H_CC, text, isPhraseQuery));
         }
 
         return new AddrQuery(clauses);

@@ -41,11 +41,15 @@ public final class SenderQuery extends Query {
     }
 
     public static Query create(String text) {
+        return create(text, false);
+    }
+
+    public static Query create(String text, boolean isPhraseQuery) {
         if (text.length() > 1 &&
                 (text.startsWith(Comparison.LT.toString()) || text.startsWith(Comparison.GT.toString()))) {
             return new SenderQuery(text);
         } else {
-            return new TextQuery(LuceneFields.L_H_FROM, text);
+            return new TextQuery(LuceneFields.L_H_FROM, text, isPhraseQuery);
         }
     }
 

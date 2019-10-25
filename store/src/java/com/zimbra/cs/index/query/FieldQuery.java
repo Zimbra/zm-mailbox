@@ -37,8 +37,12 @@ public final class FieldQuery extends TextQuery {
 
     private static final Pattern NUMERIC_QUERY_REGEX = Pattern.compile("(<|>|<=|>=)?-?\\d+");
 
-    private FieldQuery(String name, String value) {
-        super(LuceneFields.L_FIELD, String.format("%s:%s", name, value == null ? "" : value));
+    private FieldQuery(String name, String value, boolean isPhraseQuery) {
+        super(LuceneFields.L_FIELD, String.format("%s:%s", name, value == null ? "" : value), isPhraseQuery);
+    }
+
+    public static Query create(Mailbox mbox, String name, String value) throws ServiceException {
+        return create(mbox, name, value, false);
     }
 
     /**
@@ -49,17 +53,18 @@ public final class FieldQuery extends TextQuery {
      * @param mbox mailbox
      * @param name structured field name
      * @param value field value
+     * @param isPhraseQuery whether the query text represents a phrase query
      * @return new {@link FieldQuery} or {@link NumericRangeFieldQuery}
      * @throws ServiceException error on wildcard expansion
      */
-    public static Query create(Mailbox mbox, String name, String value) throws ServiceException {
+    public static Query create(Mailbox mbox, String name, String value, boolean isPhraseQuery) throws ServiceException {
         if (NUMERIC_QUERY_REGEX.matcher(value).matches()) {
             try {
                 return new NumericRangeFieldQuery(name, value);
             } catch (NumberFormatException e) { // fall back to text query
             }
         }
-        return new FieldQuery(name, value);
+        return new FieldQuery(name, value, isPhraseQuery);
     }
 
     private static final class NumericRangeFieldQuery extends Query {

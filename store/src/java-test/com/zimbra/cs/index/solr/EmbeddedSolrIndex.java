@@ -192,11 +192,6 @@ public class EmbeddedSolrIndex extends SolrIndex {
     }
 
     @Override
-    protected synchronized Query optimizeQueryOps(Query query) {
-        return super.optimizeQueryOps(query);
-    }
-
-    @Override
     protected synchronized void addTermsFilter(SolrQuery query, Collection<Term> terms) {
         super.addTermsFilter(query, terms);
     }

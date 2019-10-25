@@ -22,6 +22,7 @@ import java.util.List;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.PhraseQuery;
 import org.apache.lucene.search.TermQuery;
 
 import com.google.common.base.Joiner;
@@ -40,23 +41,29 @@ import com.zimbra.cs.mailbox.Mailbox;
  * @author ysasaki
  */
 public final class ContactQuery extends Query {
-    private final String text;
-    private final String withWildcard;
+    private final String originalQueryString;
+    private final String queryString;
+    private final boolean isPhraseQuery;
+    private boolean isWildcardQuery;
 
-    public ContactQuery(String text) {
-        this.text = text;
-        this.withWildcard = buildWildcardQuery(text);
+    public ContactQuery(String queryString) {
+        this(queryString, false);
     }
 
-    private String buildWildcardQuery(String text) {
-        List<String> tokensWithWildcards = new LinkedList<String>();
-        String[] tokens = text.split("\\s");
-        for (int i = 0; i < tokens.length; i++) {
-            String token = tokens[i];
+    public ContactQuery(String queryString, boolean isPhraseQuery) {
+        this.originalQueryString = queryString;
+        this.queryString = rewriteQueryString(originalQueryString);
+        this.isPhraseQuery = isPhraseQuery;
+    }
+
+    private String rewriteQueryString(String queryString) {
+        List<String> tokens = new LinkedList<String>();
+        boolean hasWildcardToken = false;
+        for (String token: queryString.split("\\s")) {
             if (SolrUtils.shouldSearchEdgeNgrams(token)) {
                 token = token.replace("*", ""); // in case a wildcard was part of the query
                 if (token.length() > 0) {
-                    tokensWithWildcards.add(token); // no need for wildcard, will match edge n-grams
+                    tokens.add(token); // no need for wildcard, will match edge n-grams
                 }
             } else {
                 //  "keyword"  -->  "keyword*"
@@ -64,15 +71,17 @@ public final class ContactQuery extends Query {
                 // "*keyword"  --> "*keyword"
                 //  "keyword*" -->  "keyword*"
                 if (!token.startsWith("*") && !token.endsWith("*")) {
-                    tokensWithWildcards.add(token + "*");
+                    tokens.add(token + "*");
                 } else if (token.startsWith("*") && token.endsWith("*")) {
-                    tokensWithWildcards.add(token.substring(1, token.length()));
+                    tokens.add(token.substring(1, token.length()));
                 } else {
-                    tokensWithWildcards.add(token);
+                    tokens.add(token);
                 }
+                hasWildcardToken = true;
             }
         }
-        return Joiner.on(" ").join(tokensWithWildcards);
+        isWildcardQuery = hasWildcardToken;
+        return Joiner.on(" ").join(tokens);
     }
 
     @Override
@@ -82,7 +91,7 @@ public final class ContactQuery extends Query {
 
     @Override
     public QueryOperation compile(Mailbox mbox, boolean bool) throws ServiceException {
-        if (text.length() == 0) {
+        if (queryString.length() == 0) {
             return new NoTermQueryOperation();
         }
         LuceneQueryOperation op = new LuceneQueryOperation();
@@ -93,25 +102,37 @@ public final class ContactQuery extends Query {
          */
         String ngramContactField = SolrUtils.getNgramFieldName(LuceneFields.L_CONTACT_DATA);
         String ngramToField = SolrUtils.getNgramFieldName(LuceneFields.L_H_TO);
-        TermQuery contactFieldClause = new TermQuery(new Term(ngramContactField, withWildcard));
-        TermQuery toFieldClause = new TermQuery(new Term(ngramToField, withWildcard));
-        builder.add(contactFieldClause, Occur.SHOULD);
-        builder.add(toFieldClause, Occur.SHOULD);
-        BooleanQuery query = builder.build();
-        String contactFieldSearchClause = toQueryString(LuceneFields.L_CONTACT_DATA, text);
+        org.apache.lucene.search.Query query;
+        if (isWildcardQuery) {
+            query = new ZimbraWildcardQuery(queryString, ngramContactField, ngramToField);
+        } else {
+            org.apache.lucene.search.Query contactFieldClause;
+            org.apache.lucene.search.Query toFieldClause;
+            if (isPhraseQuery) {
+                contactFieldClause = new PhraseQuery(ngramContactField, queryString);
+                toFieldClause = new PhraseQuery(ngramToField, queryString);
+            } else {
+                contactFieldClause = new TermQuery(new Term(ngramContactField, queryString));
+                toFieldClause = new TermQuery(new Term(ngramToField, queryString));
+            }
+            builder.add(contactFieldClause, Occur.SHOULD);
+            builder.add(toFieldClause, Occur.SHOULD);
+            query = builder.build();
+        }
+        String contactFieldSearchClause = toQueryString(LuceneFields.L_CONTACT_DATA, originalQueryString);
         op.addClause(contactFieldSearchClause, query, evalBool(bool));
         return op;
     }
 
     @Override
     void dump(StringBuilder out) {
-        out.append("CONTACT:").append(text);
+        out.append("CONTACT:").append(originalQueryString);
     }
 
     @Override
     void sanitizedDump(StringBuilder out) {
-        int numWordsInQuery = text.split("\\s").length;
-        out.append("CONTACT:").append(text);
+        int numWordsInQuery = originalQueryString.split("\\s").length;
+        out.append("CONTACT:").append(originalQueryString);
         out.append(":");
         out.append(Strings.repeat("$TEXT,", numWordsInQuery));
         if (out.charAt(out.length()-1) == ',') {

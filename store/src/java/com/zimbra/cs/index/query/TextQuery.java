@@ -17,6 +17,9 @@
 package com.zimbra.cs.index.query;
 
 import org.apache.lucene.index.Term;
+import org.apache.lucene.search.BooleanClause.Occur;
+import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.PhraseQuery;
 import org.apache.lucene.search.TermQuery;
 
 import com.google.common.base.Strings;
@@ -41,15 +44,21 @@ public class TextQuery extends Query {
     private final String field;
     private final String text;
     private boolean quick = false;
+    private boolean isPhraseQuery;
 
     /**
      * A single search term. If text has multiple words, it is treated as a phrase (full exact match required) text may
      * end in a *, which wildcards the last term.
      */
 
-    public TextQuery(String field, String text) {
+    public TextQuery(String field, String text, boolean isPhraseQuery) {
         this.field = field;
         this.text = text;
+        this.isPhraseQuery = isPhraseQuery;
+    }
+
+    public TextQuery(String field, String text) {
+        this(field, text, false);
     }
 
     /**
@@ -107,10 +116,45 @@ public class TextQuery extends Query {
             queryField = field;
             queryString = solrQuery;
         }
-        op.addClause(toQueryString(field, text), new TermQuery(new Term(queryField, queryString)), evalBool(bool));
+        org.apache.lucene.search.Query query;
+        String[] additionalFields = getAdditionalFields(queryField);
+        if (queryString.contains("*")) {
+            query = new ZimbraWildcardQuery(queryString, queryField).addFields(additionalFields);
+        } else if (additionalFields != null) {
+            BooleanQuery.Builder builder = new BooleanQuery.Builder();
+            builder.add(getQuery(queryField, queryString), Occur.SHOULD);
+            for (String field: additionalFields) {
+                builder.add(getQuery(field, queryString), Occur.SHOULD);
+            }
+            query = builder.build();
+        } else {
+            query = getQuery(queryField, queryString);
+        }
+        op.addClause(toQueryString(field, text), query, evalBool(bool));
         return op;
     }
 
+    private org.apache.lucene.search.Query getQuery(String field, String queryString) {
+        if (isPhraseQuery) {
+            return new PhraseQuery(field, queryString);
+        } else {
+            return new TermQuery(new Term(field, queryString));
+        }
+    }
+
+    private static String[] getAdditionalFields(String searchField) {
+        if (searchField.equals(LuceneFields.L_CONTENT)) {
+            return new String[] {
+                    LuceneFields.L_H_SUBJECT,
+                    SolrUtils.getSearchFieldName(LuceneFields.L_H_TO),
+                    SolrUtils.getSearchFieldName(LuceneFields.L_H_FROM),
+                    SolrUtils.getSearchFieldName(LuceneFields.L_H_CC),
+                    SolrUtils.getSearchFieldName(LuceneFields.L_FILENAME)
+            };
+        } else {
+            return null;
+        }
+    }
     @Override
     public void dump(StringBuilder out) {
         out.append(field);
