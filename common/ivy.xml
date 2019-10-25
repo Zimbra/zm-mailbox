@@ -36,5 +36,6 @@
   <dependency org="org.eclipse.jetty" name="jetty-util" rev="9.4.18.v20190429" />
   <dependency org="zimbra" name="zm-native" rev="latest.integration" />
   <dependency org="ant-contrib" name="ant-contrib" rev="1.0b3" />
+  <dependency org="com.fasterxml.jackson.core" name="jackson-annotations" rev="2.9.2"/>
  </dependencies>
 </ivy-module>

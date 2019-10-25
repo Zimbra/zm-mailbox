@@ -771,4 +771,5 @@ public class RedissonRetryClient implements RedissonClient {
     public <V> RRingBuffer<V> getRingBuffer(String arg0, Codec arg1) {
         throw new UnsupportedOperationException();
     }
+
 }
