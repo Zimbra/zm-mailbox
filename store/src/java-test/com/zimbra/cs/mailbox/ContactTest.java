@@ -87,11 +87,11 @@ public final class ContactTest {
 
     @Rule public TestName testName = new TestName();
     @Rule public MethodRule watchman = new ZTestWatchman();
-    
+
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
-        
+
     }
 
     @Before
@@ -340,6 +340,15 @@ public final class ContactTest {
     }
 
     @Test
+    public void testZCS6232WithNullEmail() throws Exception {
+        Account account = Provisioning.getInstance().getAccountByName("test6232@zimbra.com");
+        // mocking the group not to have view permission
+        PowerMockito.stub(PowerMockito.method(GalGroupInfoProvider.class, "getGroupInfo"))
+            .toReturn(GroupInfo.IS_GROUP);
+        Assert.assertTrue(ToXML.hasDLViewRight(null, account, account));
+    }
+
+    @Test
     public void testTruncatedContactsTgzImport() throws IOException {
         File file = new File(MailboxTestUtil.getZimbraServerDir("") + "src/java-test/Truncated.tgz");
         System.out.println(file.getAbsolutePath());
@@ -358,7 +367,7 @@ public final class ContactTest {
         }
         Assert.assertTrue(errorCaught);
     }
-    
+
     @After
     public void tearDown() {
         try {
