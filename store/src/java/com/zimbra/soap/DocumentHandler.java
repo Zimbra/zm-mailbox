@@ -599,7 +599,7 @@ public abstract class DocumentHandler {
             preProxy(request, context);
             // executing remotely; find our target and proxy there
             HttpServletRequest httpreq = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
-            ProxyTarget proxy = new ProxyTarget(server.getId(), zsc.getAuthToken(), httpreq);
+            ServerProxyTarget proxy = new ServerProxyTarget(server.getId(), zsc.getAuthToken(), httpreq);
             if (proxyTimeout >= 0) {
                 proxy.setTimeouts(proxyTimeout);
             }
@@ -610,12 +610,12 @@ public abstract class DocumentHandler {
         return response;
     }
 
-    public static Element proxyWithNotification(Element request, ProxyTarget proxy, ZimbraSoapContext zscProxy, ZimbraSoapContext zscInbound)
+    public static Element proxyWithNotification(Element request, ServerProxyTarget proxy, ZimbraSoapContext zscProxy, ZimbraSoapContext zscInbound)
     throws ServiceException {
         return proxyWithNotification(request, proxy, zscProxy, getReferencedSession(zscInbound));
     }
 
-    public static Element proxyWithNotification(Element request, ProxyTarget proxy, ZimbraSoapContext zscProxy, Session localSession)
+    public static Element proxyWithNotification(Element request, ServerProxyTarget proxy, ZimbraSoapContext zscProxy, Session localSession)
     throws ServiceException {
         Server server = proxy.getServer();
         boolean isLocal = getLocalHostId().equalsIgnoreCase(server.getId());
@@ -725,7 +725,7 @@ public abstract class DocumentHandler {
         LOCAL_HOST = "";
         LOCAL_HOST_ID = "";
     }
-    
+
     protected void clearConfigCacheOnAllServers(String accountId)
     {
         ZimbraLog.filter.debug("DocumentHandler.clearConfigCacheOnAllServers Going to execute clearConfigCacheOnAllServers with accountId: %s", accountId);

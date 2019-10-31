@@ -17,10 +17,7 @@
 package com.zimbra.soap;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Random;
@@ -413,7 +410,7 @@ public final class ZimbraSoapContext {
         if (targetServerId != null) {
             HttpServletRequest req = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
             if (req != null) {
-                mProxyTarget = new ProxyTarget(targetServerId, mAuthToken, req);
+                mProxyTarget = new ServerProxyTarget(targetServerId, mAuthToken, req);
                 mIsProxyRequest = !mProxyTarget.isTargetLocal();
             } else {
                 sLog.warn("Missing SERVLET_REQUEST key in request context");

@@ -82,6 +82,7 @@ import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ProxyTarget;
+import com.zimbra.soap.ServerProxyTarget;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.mail.type.PendingFolderModifications;
 import com.zimbra.soap.type.AccountWithModifications;
@@ -805,7 +806,7 @@ public class SoapSession extends Session {
                 ZimbraSoapContext zscProxy = new ZimbraSoapContext(zsc, mAuthenticatedAccountId);
                 zscProxy.setProxySession(rsi.mSessionId);
 
-                ProxyTarget proxy = new ProxyTarget(server, zscProxy.getAuthToken(), URLUtil.getSoapURL(server, false));
+                ProxyTarget proxy = new ServerProxyTarget(server, zscProxy.getAuthToken(), URLUtil.getSoapURL(server, false));
                 proxy.disableRetries().setTimeouts(10 * Constants.MILLIS_PER_SECOND);
                 Pair<Element, Element> envelope = proxy.execute(noop.detach(), zscProxy);
                 handleRemoteNotifications(server, envelope.getFirst(), true, true);
@@ -1302,7 +1303,7 @@ public class SoapSession extends Session {
                 ZimbraSoapContext zscProxy = new ZimbraSoapContext(zsc, accountId);
                 zscProxy.setProxySession(getRemoteSessionId(server));
 
-                ProxyTarget proxy = new ProxyTarget(server, zscProxy.getAuthToken(), URLUtil.getSoapURL(server, false));
+                ProxyTarget proxy = new ServerProxyTarget(server, zscProxy.getAuthToken(), URLUtil.getSoapURL(server, false));
                 proxy.disableRetries().setTimeouts(10 * Constants.MILLIS_PER_SECOND);
                 Pair<Element, Element> envelope = proxy.execute(noop.detach(), zscProxy);
                 handleRemoteNotifications(server, envelope.getFirst(), true, true);

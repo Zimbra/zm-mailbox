@@ -22,7 +22,6 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.dom4j.QName;
 
-import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
@@ -33,58 +32,66 @@ import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
-import com.zimbra.cs.httpclient.URLUtil;
 
 /**
  * @since 2005. 3. 3.
  */
-public final class ProxyTarget {
+public abstract class ProxyTarget {
 
-    private final Server mServer;
+
     private final AuthToken mAuthToken;
-    private final String mURL;
+    private String mURL = null;
     public static final String GQL_URI = "/service/extension/graphql";
     public static final String SOAP_URI = "/service/soap";
 
     private int mMaxAttempts = 0;
     private long mTimeout = -1;
+    protected int requestPort;
+    private int localAdminPort;
+    private String requestStr;
 
-    public ProxyTarget(String serverId, AuthToken authToken, HttpServletRequest req) throws ServiceException {
-        Provisioning prov = Provisioning.getInstance();
-        mServer = prov.get(Key.ServerBy.id, serverId);
-        if (mServer == null)
-            throw AccountServiceException.NO_SUCH_SERVER(serverId);
+
+    public ProxyTarget(AuthToken authToken, HttpServletRequest req) throws ServiceException {
 
         mAuthToken = AuthToken.getCsrfUnsecuredAuthToken(authToken);
-        String url;
-        String requestStr = req.getRequestURI();
+        requestStr = req.getRequestURI();
         //workaround to proxy graphql requests
         if(GQL_URI.equals(requestStr)) {
             requestStr = SOAP_URI;
         }
         String qs = req.getQueryString();
-        if (qs != null)
+        if (qs != null) {
             requestStr = requestStr + "?" + qs;
-
-        int localAdminPort = prov.getLocalServer().getIntAttr(Provisioning.A_zimbraAdminPort, 0);
-        if (!prov.isOfflineProxyServer(mServer) && req.getLocalPort() == localAdminPort) {
-            url = URLUtil.getAdminURL(mServer, requestStr, true);
-        } else {
-            url = URLUtil.getServiceURL(mServer, requestStr, false);
         }
+        requestPort = req.getLocalPort();
+        localAdminPort = Provisioning.getInstance().getLocalServer().getAdminPort();
+    }
 
+    public ProxyTarget(AuthToken authToken, String url) {
+        mAuthToken = AuthToken.getCsrfUnsecuredAuthToken(authToken);
         mURL = url;
     }
 
-    public ProxyTarget(Server server, AuthToken authToken, String url) {
-        mServer = server;
-        mAuthToken = AuthToken.getCsrfUnsecuredAuthToken(authToken);
-        mURL = url;
+    protected boolean isAdminRequest() {
+        return requestPort == localAdminPort;
+    }
+
+    protected abstract String buildAdminUrl(String requestStr) throws ServiceException;
+
+    protected abstract String buildServiceUrl(String requestStr) throws ServiceException;
+
+    private String getUrl() throws ServiceException {
+        if (mURL == null) {
+            if (isAdminRequest()) {
+                mURL = buildAdminUrl(requestStr);
+            } else {
+                mURL = buildServiceUrl(requestStr);
+            }
+        }
+        return mURL;
     }
 
     /** Instructs the proxy's underlying {@link SoapHttpTransport} to attempt
@@ -100,24 +107,18 @@ public final class ProxyTarget {
         mTimeout = timeoutMsecs;  return this;
     }
 
-    public Server getServer() {
-        return mServer;
-    }
 
-    public boolean isTargetLocal() throws ServiceException {
-        Server localServer = Provisioning.getInstance().getLocalServer();
-        return mServer.getId().equals(localServer.getId());
-    }
+    public abstract boolean isTargetLocal() throws ServiceException;
 
     public Element dispatch(Element request) throws ServiceException {
         SoapProtocol proto = request instanceof Element.JSONElement ? SoapProtocol.SoapJS : SoapProtocol.Soap12;
-        SoapHttpTransport transport = new SoapHttpTransport(mURL);
+        SoapHttpTransport transport = new SoapHttpTransport(getUrl());
         try {
             transport.setAuthToken(mAuthToken.toZAuthToken());
             transport.setRequestProtocol(proto);
             return transport.invokeWithoutSession(request);
         } catch (IOException e) {
-            throw ServiceException.PROXY_ERROR(e, mURL);
+            throw ServiceException.PROXY_ERROR(e, getUrl());
         } finally {
             transport.shutdown();
         }
@@ -128,6 +129,10 @@ public final class ProxyTarget {
     }
 
     public Pair<Element, Element> execute(Element request, ZimbraSoapContext zsc) throws ServiceException {
+        return execute(request, zsc, false);
+    }
+
+    public Pair<Element, Element> execute(Element request, ZimbraSoapContext zsc, boolean excludeAccountDetails) throws ServiceException {
         if (zsc == null)
             return new Pair<Element, Element>(null, dispatch(request));
 
@@ -140,7 +145,6 @@ public final class ProxyTarget {
          * was supplied.  The server handler rejects a context which has account information but no authentication
          * info - see ZimbraSoapContext constructor - solution is to exclude the account info from the context.
          */
-        boolean excludeAccountDetails = false;
         if (AccountConstants.CHANGE_PASSWORD_REQUEST.equals(request.getQName()) || MailConstants.RECOVER_ACCOUNT_REQUEST.equals(request.getQName())) {
             excludeAccountDetails = true;
         }
@@ -148,7 +152,7 @@ public final class ProxyTarget {
 
         SoapHttpTransport transport = null;
         try {
-            transport = new SoapHttpTransport(mURL);
+            transport = new SoapHttpTransport(getUrl());
             transport.setTargetAcctId(zsc.getRequestedAccountId());
             if (mMaxAttempts > 0)
                 transport.setRetryCount(mMaxAttempts);
@@ -171,7 +175,7 @@ public final class ProxyTarget {
             Element body = transport.extractBodyElement(response);
             return new Pair<Element, Element>(transport.getZimbraContext(), body);
         } catch (IOException e) {
-            throw ServiceException.PROXY_ERROR(e, mURL);
+            throw ServiceException.PROXY_ERROR(e, getUrl());
         } finally {
             if (transport != null)
                 transport.shutdown();
@@ -205,6 +209,12 @@ public final class ProxyTarget {
 
     @Override
     public String toString() {
-        return "ProxyTarget(url=" + mURL + ")";
+        String url;
+        try {
+            url = getUrl();
+            return "ProxyTarget(url=" + url + ")";
+        } catch (ServiceException e) {
+            return "ProxyTarget(error building url)";
+        }
     }
 }
