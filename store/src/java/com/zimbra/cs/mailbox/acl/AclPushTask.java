@@ -40,6 +40,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.ZimbraApplication;
 
 /**
@@ -129,7 +130,8 @@ public class AclPushTask extends TimerTask {
                         currentItemIdsProcessed.put(mboxId, itemsProcessed);
                     }
                 }
-                account.setSharedItem(updatedSharedItems.toArray(new String[updatedSharedItems.size()]));         
+                account.setSharedItem(updatedSharedItems.toArray(new String[updatedSharedItems.size()]));
+                AccountUtil.broadcastFlushCache(account);
             } // for
             DbPendingAclPush.deleteEntries(now);
             

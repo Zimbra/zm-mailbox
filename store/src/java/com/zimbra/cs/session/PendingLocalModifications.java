@@ -38,6 +38,7 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxNotificationInfo;
 import com.zimbra.cs.mailbox.Metadata;
 
@@ -221,11 +222,18 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
             ChangeMeta changeMeta = entry.getValue();
             Object what = null;
             Object preModifyObj = null;
+            // if this is a remote item, we have to grab that account's mailbox
+            Mailbox itemMailbox;
+            if (!keyMeta.accountId.equals(mbox.getAccountId())) {
+                itemMailbox = MailboxManager.getInstance().getMailboxByAccountId(keyMeta.accountId);
+            } else {
+                itemMailbox = mbox;
+            }
             if (changeMeta.whatType == ChangeMeta.ObjectType.MAILITEM) {
                 Metadata meta = new Metadata(changeMeta.metaWhat);
                 MailItem.UnderlyingData ud = new MailItem.UnderlyingData();
                 ud.deserialize(meta);
-                what = MailItem.constructItem(mbox, ud, true);
+                what = MailItem.constructItem(itemMailbox, ud, true);
                 if (what instanceof Folder) {
                     Folder folder = ((Folder) what);
                     folder.setParentId(folder.getFolderId());
@@ -234,7 +242,7 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
                 what = MailItem.Type.of(changeMeta.metaWhat);
             } else if (changeMeta.whatType == ChangeMeta.ObjectType.MAILBOX) {
                 Long mboxSize = Long.valueOf(changeMeta.metaWhat);
-                what = new MailboxNotificationInfo(mbox.getAccountId(), mboxSize);
+                what = new MailboxNotificationInfo(itemMailbox.getAccountId(), mboxSize);
             } else {
                 ZimbraLog.session.warn("Unexpected mailbox change type received: %s", changeMeta.whatType);
                 continue;
@@ -244,7 +252,7 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
                 Metadata meta = new Metadata(changeMeta.metaPreModifyObj);
                 MailItem.UnderlyingData ud = new MailItem.UnderlyingData();
                 ud.deserialize(meta);
-                preModifyObj = MailItem.constructItem(mbox, ud, true);
+                preModifyObj = MailItem.constructItem(itemMailbox, ud, true);
                 if (preModifyObj instanceof Folder) {
                     Folder folder = ((Folder) preModifyObj);
                     folder.setParentId(folder.getFolderId());
@@ -252,7 +260,7 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
             } else if (changeMeta.preModifyObjType == ChangeMeta.ObjectType.MAILITEMTYPE) {
                 preModifyObj = MailItem.Type.of(changeMeta.metaPreModifyObj);
             } else if (changeMeta.preModifyObjType == ChangeMeta.ObjectType.MAILBOX) {
-                what = mbox;
+                what = itemMailbox;
             } else if (changeMeta.preModifyObjType != null ){
                 ZimbraLog.session.warn("Unexpected mailbox change type received: %s", changeMeta.preModifyObjType);
                 continue;
@@ -351,15 +359,22 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
             Iterator<Entry<String, String>> iter = snapshot.created.entrySet().iterator();
             while (iter.hasNext()) {
                 Entry<String, String> entry = iter.next();
+                ModificationKeyMeta keyMeta = ModificationKeyMeta.fromString(entry.getKey());
                 Metadata meta = new Metadata(entry.getValue());
+                // if this is a remote item, we have to grab that account's mailbox
+                Mailbox itemMailbox;
+                if (!keyMeta.accountId.equals(mbox.getAccountId())) {
+                    itemMailbox = MailboxManager.getInstance().getMailboxByAccountId(keyMeta.accountId);
+                } else {
+                    itemMailbox = mbox;
+                }
                 MailItem.UnderlyingData ud = new MailItem.UnderlyingData();
                 ud.deserialize(meta);
-                MailItem item = MailItem.constructItem(mbox, ud, true);
+                MailItem item = MailItem.constructItem(itemMailbox, ud, true);
                 if (item instanceof Folder) {
                     Folder folder = ((Folder) item);
                     folder.setParentId(folder.getFolderId());
                 }
-                ModificationKeyMeta keyMeta = ModificationKeyMeta.fromString(entry.getKey());
                 PendingModifications.ModificationKey key = new PendingModifications.ModificationKey(
                         keyMeta.accountId, keyMeta.itemId);
                 pms.created.put(key, item);

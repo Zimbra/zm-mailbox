@@ -17,6 +17,8 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.RedissonClientHolder;
 import com.zimbra.cs.session.PendingLocalModifications.PendingModificationSnapshot;
 import com.zimbra.cs.session.SoapSession.QueuedNotifications;
+import com.zimbra.cs.session.SoapSession.RemoteNotifications;
+import com.zimbra.cs.session.SoapSession.RemoteNotificationsSnapshot;
 
 public class RedisSessionDataProvider extends SessionDataProvider {
 
@@ -106,20 +108,27 @@ public class RedisSessionDataProvider extends SessionDataProvider {
         private static class SerializableNotification {
             private String authAcctId;
             private PendingModificationSnapshot snapshot;
+            private RemoteNotificationsSnapshot remote;
             private int sequence;
 
             public SerializableNotification() {}
 
-            public SerializableNotification(String acctId, PendingModificationSnapshot snapshot, int sequence) {
+            public SerializableNotification(String acctId, PendingModificationSnapshot snapshot, int sequence, RemoteNotifications remote) {
                 this.authAcctId = acctId;
                 this.snapshot = snapshot;
                 this.sequence = sequence;
+                if (remote != null) {
+                    this.remote = new RemoteNotificationsSnapshot(remote);
+                }
             }
 
             private QueuedNotifications toNotifications(Mailbox mbox) throws ServiceException {
                 QueuedNotifications q = new QueuedNotifications(authAcctId, sequence);
                 if (snapshot != null) {
                     q.addNotification(PendingLocalModifications.fromSnapshot(mbox, snapshot));
+                }
+                if (remote != null) {
+                    q.addNotification(remote.toNotifications());
                 }
                 return q;
             }
@@ -131,7 +140,8 @@ public class RedisSessionDataProvider extends SessionDataProvider {
                 PendingModificationSnapshot snapshot = notifications.mMailboxChanges == null ? null : notifications.mMailboxChanges.toSnapshot();
                 //TODO: handle remote notifications
                 int seq = notifications.getSequence();
-                list.add(new SerializableNotification(authAcctId, snapshot, seq));
+                RemoteNotifications remote = notifications.mRemoteChanges;
+                list.add(new SerializableNotification(authAcctId, snapshot, seq, remote));
             } catch (ServiceException e) {
                 ZimbraLog.session.error("unable to push QueuedNotifications to redis", e);
             }

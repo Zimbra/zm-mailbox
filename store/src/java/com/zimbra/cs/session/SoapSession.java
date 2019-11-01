@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.session;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -38,8 +39,10 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.ContainerException;
 import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.SoapParseException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.soap.SoapTransport;
+import com.zimbra.common.soap.XmlParseException;
 import com.zimbra.common.soap.ZimbraNamespace;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Pair;
@@ -62,7 +65,6 @@ import com.zimbra.cs.mailbox.Mailbox.FolderNode;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxNotificationInfo;
 import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.mailbox.Message.EventFlag;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.OperationContextData;
@@ -190,7 +192,7 @@ public class SoapSession extends Session {
                 return true;
             }
 
-            try (final MailboxLock l = mbox.getWriteLockAndLockIt()) {
+            try (final MailboxLock l = mbox.getReadLockAndLockIt()) {
                 if (!force && (mNextFolderCheck < 0 || mNextFolderCheck > now)) {
                     return mVisibleFolderIds != null;
                 }
@@ -339,6 +341,8 @@ public class SoapSession extends Session {
         List<Element> modified;
         List<Element> activities;
 
+        public RemoteNotifications() {}
+
         public RemoteNotifications(Element eNotify) {
             if (eNotify == null)
                 return;
@@ -391,6 +395,70 @@ public class SoapSession extends Session {
             if (modified != null && !modified.isEmpty())  return true;
             if (activities != null && !activities.isEmpty())  return true;
             return false;
+        }
+    }
+
+    public static class RemoteNotificationsSnapshot {
+
+        private List<String> created = new ArrayList<>();
+        private List<String> modified = new ArrayList<>();
+        private List<String> activities = new ArrayList<>();
+        private String deleted;
+        private int count;
+
+        public RemoteNotificationsSnapshot() {}
+
+        public RemoteNotificationsSnapshot(RemoteNotifications remote) {
+            marshal(remote.created, created);
+            marshal(remote.modified, modified);
+            marshal(remote.activities, activities);
+            deleted = remote.deleted;
+            count = remote.count;
+        }
+
+        private void marshal(List<Element> source, List<String> dest) {
+            if (source == null) {
+                return;
+            }
+            for (Element elt: source) {
+                StringBuilder sb = new StringBuilder();
+                try {
+                    elt.marshal(sb);
+                    String marshalled = sb.toString();
+                    dest.add(marshalled);
+                } catch (IOException e) {
+                    ZimbraLog.session.error("error marshalling JSON for remote notifications", e);
+                }
+            }
+        }
+
+        private List<Element> unmarshal(List<String> source) {
+            if (source == null || source.isEmpty()) {
+                return null;
+            }
+            List<Element> elements = new ArrayList<>(source.size());
+            for (String str: source) {
+                try {
+                    if (str.startsWith("{")) {
+                        elements.add(Element.parseJSON(str));
+                    } else {
+                        elements.add(Element.parseXML(str));
+                    }
+                } catch (SoapParseException | XmlParseException e) {
+                    ZimbraLog.session.error("error parsing remote notifications", e);
+                }
+            }
+            return elements;
+        }
+
+        public RemoteNotifications toNotifications() {
+            RemoteNotifications rn = new RemoteNotifications();
+            rn.deleted = deleted;
+            rn.count = count;
+            rn.created = unmarshal(created);
+            rn.modified = unmarshal(modified);
+            rn.activities = unmarshal(activities);
+            return rn;
         }
     }
 
