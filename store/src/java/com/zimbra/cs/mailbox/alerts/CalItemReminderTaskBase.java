@@ -63,7 +63,12 @@ public abstract class CalItemReminderTaskBase extends ScheduledTask {
         Integer invId = new Integer(getProperty(INV_ID_PROP_NAME));
         Integer compNum = new Integer(getProperty(COMP_NUM_PROP_NAME));
         Invite invite = calItem.getInvite(invId, compNum);
-        if (invite != null && invite.getAlarms() != null && invite.getAlarms().size() > 2) {
+        if (invite == null) {
+            ZimbraLog.scheduler.warn("Invite with id %s and comp num %s does not exist", invId, compNum);
+	        ZimbraLog.scheduler.info("Trying reminder sms");
+			sendReminderSMS(calItem);
+			return null;
+        } else if (invite != null && invite.getAlarms() != null && invite.getAlarms().size() > 2) {
         	String domain = null;
         	for (int i = invite.getAlarms().size() - 1; invite.getAlarms().get(i).getAttendees().size() > 0 && i >= 0; i--) {
         		domain = invite.getAlarms().get(i).getAttendees().get(0).getAddress().split("@")[1];
@@ -74,11 +79,6 @@ public abstract class CalItemReminderTaskBase extends ScheduledTask {
     				break;
     			}
     		}
-        } else {
-        	ZimbraLog.scheduler.warn("Invite with id %s and comp num %s does not exist", invId, compNum);
-	        ZimbraLog.scheduler.info("Trying reminder sms");
-			sendReminderSMS(calItem);
-			return null;
         }
         sendReminder(calItem, invite);
         return calItem;
