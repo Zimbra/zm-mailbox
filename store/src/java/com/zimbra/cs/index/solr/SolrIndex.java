@@ -770,8 +770,7 @@ public class SolrIndex extends IndexStore {
         @Override
         public IndexStore getIndexStore(String accountId) throws ServiceException {
             CloseableHttpClient httpClient = ZimbraHttpClientManager.getInstance().getInternalHttpClient();
-            String indexName = SolrUtils.getMailboxIndexName(accountId);
-            SolrCollectionLocator locator = new JointCollectionLocator(indexName);
+            SolrCollectionLocator locator = new MultiCollectionLocator();
             String baseUrl = Provisioning.getInstance().getLocalServer().getIndexURL().substring("solr:".length());
             StandaloneSolrHelper requestHelper = new StandaloneSolrHelper(locator, httpClient, IndexType.MAILBOX, baseUrl);
             return new SolrIndex(accountId, requestHelper);
@@ -785,7 +784,7 @@ public class SolrIndex extends IndexStore {
             ZimbraLog.index.info("Created SolrCloudFactory");
             String zkHost = Provisioning.getInstance().getLocalServer().getIndexURL().substring("solrcloud:".length());
             CloudSolrClient client = SolrUtils.getCloudSolrClient(zkHost);
-            SolrCollectionLocator locator = new MailboxJointCollectionLocator();
+            SolrCollectionLocator locator = new MultiCollectionLocator();
             solrHelper = new SolrCloudHelper(locator, client, IndexType.MAILBOX);
         }
 

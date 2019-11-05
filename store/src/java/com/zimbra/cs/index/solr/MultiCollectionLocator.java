@@ -13,7 +13,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.LuceneFields;
 
-public class MultiCollectionsLocator extends SolrCollectionLocator {
+public class MultiCollectionLocator extends SolrCollectionLocator {
 
     @Override
     String getCollectionName(String accountId) throws ServiceException {

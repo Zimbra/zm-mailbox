@@ -57,8 +57,7 @@ import com.zimbra.cs.event.analytics.contact.ContactAnalytics.ContactFrequencyGr
 import com.zimbra.cs.event.analytics.contact.ContactAnalytics.ContactFrequencyTimeRange;
 import com.zimbra.cs.event.analytics.contact.ContactFrequencyGraphDataPoint;
 import com.zimbra.cs.index.LuceneFields;
-import com.zimbra.cs.index.solr.JointCollectionLocator;
-import com.zimbra.cs.index.solr.JointCollectionLocator.IndexNameFunc;
+import com.zimbra.cs.index.solr.MultiCollectionLocator;
 import com.zimbra.cs.index.solr.SolrCloudHelper;
 import com.zimbra.cs.index.solr.SolrCollectionLocator;
 import com.zimbra.cs.index.solr.SolrRequestHelper;
@@ -388,15 +387,7 @@ public abstract class SolrEventStore extends EventStore {
         protected abstract SolrRequestHelper getRequestHelper() throws ServiceException;
 
         protected SolrCollectionLocator getCollectionLocator() throws ServiceException {
-
-            IndexNameFunc indexNameFunc = new IndexNameFunc() {
-                @Override
-                public String getIndexName(String accountId) throws ServiceException {
-                    return SolrUtils.getEventIndexName(accountId);
-                }
-            };
-
-            SolrCollectionLocator locator = new JointCollectionLocator(indexNameFunc);
+            SolrCollectionLocator locator = new MultiCollectionLocator();
             return locator;
         }
 
