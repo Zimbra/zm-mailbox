@@ -71,7 +71,7 @@ public abstract class SolrEventStoreTestBase {
     protected abstract SolrDocumentList executeRequest(String coreOrCollection, QueryRequest req) throws Exception;
 
     protected static String getAccountCollectionName(String accountId) {
-        return new AccountCollectionLocator(ACCOUNT_COLLECTION_PREFIX).getIndexName(accountId);
+        return new AccountCollectionLocator(ACCOUNT_COLLECTION_PREFIX).getCollectionName(accountId);
     }
 
     protected SolrDocumentList queryEvents(String collection) throws Exception {

@@ -25,7 +25,7 @@ public class JointCollectionLocator extends SolrCollectionLocator {
     }
 
     @Override
-    public String getIndexName(String accountId) throws ServiceException {
+    public String getCollectionName(String accountId) throws ServiceException {
         return indexName != null ? indexName : nameFunc.getIndexName(accountId);
     }
 

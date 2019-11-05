@@ -39,14 +39,14 @@ public class SolrCloudHelper extends SolrRequestHelper {
     @Override
     public void executeUpdateRequest(String accountId, UpdateRequest request)
             throws ServiceException {
-        request.setParam(CoreAdminParams.COLLECTION, locator.getIndexName(accountId));
-        SolrUtils.executeCloudRequestWithRetry(accountId, cloudClient, request, locator.getIndexName(accountId), indexType);
+        request.setParam(CoreAdminParams.COLLECTION, locator.getCollectionName(accountId));
+        SolrUtils.executeCloudRequestWithRetry(accountId, cloudClient, request, locator.getCollectionName(accountId), indexType);
     }
 
     @Override
     public SolrResponse executeQueryRequest(String accountId, SolrQuery query) throws ServiceException {
         QueryRequest queryRequest = new QueryRequest(query, METHOD.POST);
-        String collectionName = locator.getIndexName(accountId);
+        String collectionName = locator.getCollectionName(accountId);
         return SolrUtils.executeCloudRequestWithRetry(accountId, cloudClient, queryRequest, collectionName, indexType);
     }
 

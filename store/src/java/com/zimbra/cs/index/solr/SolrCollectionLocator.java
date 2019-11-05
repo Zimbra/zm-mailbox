@@ -16,7 +16,7 @@ public abstract class SolrCollectionLocator {
     /**
      * Return the name of the Solr collection used to store documents for the given account ID
      */
-    abstract String getIndexName(String accountId) throws ServiceException;
+    abstract String getCollectionName(String accountId) throws ServiceException;
 
     /**
      * Optionally post-process the Solr document appropriately

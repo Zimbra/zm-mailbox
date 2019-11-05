@@ -31,7 +31,7 @@ public class StandaloneSolrHelper extends SolrRequestHelper {
 
     @Override
     protected void executeUpdateRequest(String accountId, UpdateRequest request) throws ServiceException {
-        String coreName = locator.getIndexName(accountId);
+        String coreName = locator.getCollectionName(accountId);
         try(SolrClient solrClient = SolrUtils.getSolrClient(httpClient, baseUrl, coreName)) {
             SolrUtils.executeRequestWithRetry(accountId, solrClient, request, baseUrl, coreName, indexType);
         } catch (IOException e) {
@@ -41,7 +41,7 @@ public class StandaloneSolrHelper extends SolrRequestHelper {
 
     @Override
     public SolrResponse executeQueryRequest(String accountId, SolrQuery query) throws ServiceException {
-        String coreName = locator.getIndexName(accountId);
+        String coreName = locator.getCollectionName(accountId);
         try(SolrClient solrClient = SolrUtils.getSolrClient(httpClient, baseUrl, coreName)) {
             QueryRequest queryRequest = new QueryRequest(query, METHOD.POST);
             return SolrUtils.executeRequestWithRetry(accountId, solrClient, queryRequest, baseUrl, coreName, indexType);
@@ -52,7 +52,7 @@ public class StandaloneSolrHelper extends SolrRequestHelper {
 
     @Override
     public void deleteIndex(String accountId) throws ServiceException {
-        String coreName = locator.getIndexName(accountId);
+        String coreName = locator.getCollectionName(accountId);
         try(SolrClient solrClient = SolrUtils.getSolrClient(httpClient, baseUrl, coreName)) {
             SolrUtils.deleteStandaloneIndex(solrClient, baseUrl, coreName);
         } catch (IOException e) {
