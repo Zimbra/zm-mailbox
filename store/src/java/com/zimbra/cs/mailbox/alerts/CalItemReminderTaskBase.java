@@ -74,6 +74,11 @@ public abstract class CalItemReminderTaskBase extends ScheduledTask {
     				break;
     			}
     		}
+        } else {
+        	ZimbraLog.scheduler.warn("Invite with id %s and comp num %s does not exist", invId, compNum);
+	        ZimbraLog.scheduler.info("Trying reminder sms");
+			sendReminderSMS(calItem);
+			return null;
         }
         sendReminder(calItem, invite);
         return calItem;
