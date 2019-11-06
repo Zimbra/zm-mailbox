@@ -39,6 +39,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
 
@@ -114,6 +115,9 @@ abstract class ImapHandler {
     // ID response parameters
     private static final String ID_PARAMS = "\"NAME\" \"Zimbra\" \"VERSION\" \"" + BuildInfo.VERSION +
         "\" \"RELEASE\" \"" + BuildInfo.RELEASE + "\"";
+
+    private static Map<String, Set<String>> processedDeletes =
+            new ConcurrentHashMap<String, Set<String>>();
 
     static final char[] LINE_SEPARATOR       = { '\r', '\n' };
     static final byte[] LINE_SEPARATOR_BYTES = { '\r', '\n' };
@@ -4161,10 +4165,7 @@ abstract class ImapHandler {
     private final int SUGGESTED_COPY_BATCH_SIZE = 50;
 
     boolean doCOPY(String tag, String sequenceSet, ImapPath path, boolean byUID) throws IOException, ImapException {
-        checkCommandThrottle(new CopyCommand(sequenceSet, path));
-        if (!checkState(tag, State.SELECTED)) {
-            return true;
-        }
+        CopyCommand commandP = new CopyCommand(sequenceSet, path);
         String command = (byUID ? "UID COPY" : "COPY");
         String copyuid = "";
         List<MailItem> copies = new ArrayList<MailItem>();
@@ -4174,6 +4175,18 @@ abstract class ImapHandler {
             throw new ImapSessionClosedException();
         }
         Mailbox mbox = i4folder.getMailbox();
+
+        commandP.setProcessedList(processedDeletes.get(mbox.getAccountId()));
+
+        try {
+            checkCommandThrottle(commandP);
+        } catch (ImapThrottledException e) {
+            sendOK(tag, copyuid + command + " completed");
+        }
+
+        if (!checkState(tag, State.SELECTED)) {
+            return true;
+        }
 
         Set<ImapMessage> i4set;
         mbox.lock.lock();
@@ -4315,6 +4328,19 @@ abstract class ImapHandler {
         //                to cascade several COPY commands together."
         sendNotifications(true, false);
         sendOK(tag, copyuid + command + " completed");
+
+        if (commandP.isCopyToTrash()) {
+            ZimbraLog.imap.info("IMAP:::Copy is to trash adding to processed List." );
+            Set<String> processedList = new HashSet<String>();
+            if (processedDeletes.get(mbox.getAccountId()) == null) {
+                processedList.add(sequenceSet);
+                processedDeletes.put(mbox.getAccountId(), processedList);
+            } else {
+                processedList = processedDeletes.get(mbox.getAccountId());
+                processedList.add(sequenceSet);
+                processedDeletes.put(mbox.getAccountId(), processedList);
+            }
+        }
         return true;
     }
 
