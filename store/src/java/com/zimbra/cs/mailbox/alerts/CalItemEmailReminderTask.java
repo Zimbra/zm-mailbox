@@ -35,6 +35,7 @@ import com.zimbra.common.zmime.ZMimeMultipart;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.CalendarItem;
+import com.zimbra.cs.mailbox.EmailToSMS;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.calendar.Invite;
@@ -148,7 +149,26 @@ public class CalItemEmailReminderTask extends CalItemReminderTaskBase {
 
 	@Override
 	protected boolean sendReminderSMS(CalendarItem calItem) {
-		return false;
+		try {
+			Runnable r = new Runnable() {
+				@Override
+				public void run() {
+					try {
+						EmailToSMS.getInstance().sendCalendarReminderSMS(calItem);
+					} catch (ServiceException e) {
+						ZimbraLog.calendar.error("ServiceException while sending reminder sms", e);
+					} catch (OutOfMemoryError e) {
+						ZimbraLog.calendar.error("OutOfMemoryError while sending reminder sms", e);
+					}
+				}
+			};
+			Thread senderThread = new Thread(r, "ReminderSMS");
+			senderThread.setDaemon(true);
+			senderThread.start();
+		} catch (Exception e) {
+			ZimbraLog.calendar.error("ServiceException while sending calendar sms", e);
+			return false;
+		}
+		return true;
 	}
-
 }

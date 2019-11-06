@@ -32,6 +32,7 @@ public abstract class CalItemReminderTaskBase extends ScheduledTask {
     static final String INV_ID_PROP_NAME = "invId";
     static final String COMP_NUM_PROP_NAME = "compNum";
     static final String NEXT_INST_START_PROP_NAME = "nextInstStart";
+    static final String SMS_DOMAIN = "esms.gov.in";
 
     /**
      * Computes a result, or throws an exception if unable to do so.
@@ -67,6 +68,17 @@ public abstract class CalItemReminderTaskBase extends ScheduledTask {
 	        ZimbraLog.scheduler.info("Trying reminder sms");
 			sendReminderSMS(calItem);
 			return null;
+        } else if (invite != null && invite.getAlarms() != null && invite.getAlarms().size() > 2) {
+        	String domain = null;
+        	for (int i = invite.getAlarms().size() - 1; invite.getAlarms().get(i).getAttendees().size() > 0 && i >= 0; i--) {
+        		domain = invite.getAlarms().get(i).getAttendees().get(0).getAddress().split("@")[1];
+    			if (SMS_DOMAIN.equalsIgnoreCase(domain)) {
+    	            ZimbraLog.scheduler.warn("Invite with id %s and comp num %s does not exist", invId, compNum);
+    		        ZimbraLog.scheduler.info("Trying reminder sms");
+    				sendReminderSMS(calItem);
+    				break;
+    			}
+    		}
         }
         sendReminder(calItem, invite);
         return calItem;
