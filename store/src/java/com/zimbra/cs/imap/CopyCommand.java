@@ -17,10 +17,16 @@
 
 package com.zimbra.cs.imap;
 
+import java.util.Set;
+
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
+
 public class CopyCommand extends ImapCommand {
 
     private ImapPath destPath;
     private String sequenceSet;
+    private  Set<String> processedList;
 
     public CopyCommand(String sequenceSet, ImapPath destPath) {
         super();
@@ -54,6 +60,7 @@ public class CopyCommand extends ImapCommand {
                 return false;
             }
         } else if (!sequenceSet.equals(other.sequenceSet)) {
+            ZimbraLog.imap.info("IMAP::: Seq 1 " + sequenceSet + "\n" + "other: " + other.sequenceSet);
             return false;
         }
         if (destPath == null) {
@@ -61,8 +68,71 @@ public class CopyCommand extends ImapCommand {
                 return false;
             }
         } else if (!destPath.equals(other.destPath)) {
+            ZimbraLog.imap.info("Dest path " + destPath + " 2: " +other.destPath );
             return false;
         }
         return true;
     }
+
+    public boolean isCopyToTrash() {
+        try {
+            return this.destPath.getFolder().getFolderIdAsString().contains("3");
+        } catch (ServiceException e) {
+            return false;
+        }
+    }
+
+
+
+
+    public void setProcessedList(Set<String> processedList) {
+        this.processedList = processedList;
+    }
+
+    @Override
+    protected boolean isDuplicate(ImapCommand command) {
+        return this.getClass().equals(command.getClass()) && this.hasSameParams(command);
+    }
+
+
+    @Override
+    protected boolean throttle(ImapCommand previousCommand) {
+        ZimbraLog.imap.info("IMAP::: Checking copy command for throttle. :" + processedList);
+
+        try {
+            if (this.destPath.getFolder().getFolderIdAsString().contains("3")) {
+                CopyCommand c = this;
+                if (processedList != null) {
+                    ZimbraLog.imap.info("List processed" + processedList.contains(c.sequenceSet));
+                    ZimbraLog.imap.info("IMAP:::Copy is for trash so checking in processed list.");
+                     return processedList.contains(c.sequenceSet);
+                }
+                return false;
+            } else {
+                ZimbraLog.imap.info("IMAP:::Copy is not for trash.");
+                return false;
+            }
+        } catch (ServiceException e) {
+            return false;
+        }
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("CopyCommand [");
+        if (destPath != null) {
+            builder.append("destPath=");
+            builder.append(destPath);
+            builder.append(", ");
+        }
+        if (sequenceSet != null) {
+            builder.append("sequenceSet=");
+            builder.append(sequenceSet);
+        }
+        builder.append("]");
+        return builder.toString();
+    }
+
+
 }

@@ -53,7 +53,7 @@ public class ImapCommandThrottle {
             return false;
         } else if (command.throttle(lastCommand)) {
             // commands can implement their own throttle mechanism
-            ZimbraLog.imap.debug("throttled by command");
+            ZimbraLog.imap.debug("throttled by command " + command.getClass().getCanonicalName());
             return true;
         } else if (isCommandRepeated(command)) {
             repeats++;

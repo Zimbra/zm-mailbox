@@ -40,6 +40,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
 
@@ -137,7 +138,7 @@ public abstract class ImapHandler {
         "SORT", "THREAD=ORDEREDSUBJECT", "UIDPLUS", "UNSELECT", "WITHIN", "XLIST"
     ));
 
-    private static final long MAXIMUM_IDLE_PROCESSING_MILLIS = 15 * Constants.MILLIS_PER_SECOND;
+    private static final long MAXIMUM_IDLE_PROCESSING_MILLIS = 5 * Constants.MILLIS_PER_SECOND;
 
     // ID response parameters
     private static final String ID_PARAMS = "\"NAME\" \"Zimbra\" \"VERSION\" \"" + BuildInfo.VERSION +
@@ -148,6 +149,10 @@ public abstract class ImapHandler {
     private static final String IMAP_INSERT_RIGHTS = "ick";
     private static final String IMAP_DELETE_RIGHTS = "xted";
     private static final String IMAP_ADMIN_RIGHTS  = "a";
+
+    private static Map<String, Set<String>> processedDeletes =
+        new ConcurrentHashMap<String, Set<String>>();
+
 
     /* All the supported IMAP rights, concatenated together into a single string. */
     private static final String IMAP_CONCATENATED_RIGHTS = IMAP_READ_RIGHTS + IMAP_WRITE_RIGHTS +
@@ -519,6 +524,7 @@ public abstract class ImapHandler {
                     ImapPath path = new ImapPath(req.readFolder(), credentials);
                     checkEOF(tag, req);
                     return isProxied ? imapProxy.proxy(req) : doCOPY(tag, sequence, path, byUID);
+
                 } else if (command.equals("CLOSE")) {
                     checkEOF(tag, req);
                     return doCLOSE(tag);
@@ -4333,18 +4339,35 @@ public abstract class ImapHandler {
      */
     protected boolean doCOPY(String tag, String sequenceSet, ImapPath path, boolean byUID)
             throws IOException, ImapException {
-        checkCommandThrottle(new CopyCommand(sequenceSet, path));
-        if (!checkState(tag, State.SELECTED)) {
-            return true;
-        }
+
+        CopyCommand commandP = new CopyCommand(sequenceSet, path);
         String command = (byUID ? "UID COPY" : "COPY");
         String copyuid = "";
-
         ImapFolder i4folder = getSelectedFolder();
         if (i4folder == null) {
             throw new ImapSessionClosedException();
         }
         MailboxStore mbox = i4folder.getMailbox();
+
+        try {
+            commandP.setProcessedList(processedDeletes.get(mbox.getAccountId()));
+
+        }  catch ( ServiceException e) {
+
+        }
+
+        try {
+            checkCommandThrottle(commandP);
+        } catch (ImapThrottledException e) {
+            sendOK(tag, copyuid + command + " completed");
+        }
+
+        if (!checkState(tag, State.SELECTED)) {
+            return true;
+        }
+
+
+
         Set<ImapMessage> i4set;
         mbox.lock(false);
         try {
@@ -4458,6 +4481,23 @@ public abstract class ImapHandler {
         //                to cascade several COPY commands together."
         sendNotifications(true, false);
         sendOK(tag, copyuid + command + " completed");
+
+        if (commandP.isCopyToTrash()) {
+            ZimbraLog.imap.info("IMAP:::Copy is to trash adding to processed List." );
+            try {
+                Set<String> processedList = new HashSet<String>();
+                if (processedDeletes.get(mbox.getAccountId()) == null) {
+                    processedList.add(sequenceSet);
+                    processedDeletes.put(mbox.getAccountId(), processedList);
+                } else {
+                    processedList = processedDeletes.get(mbox.getAccountId());
+                    processedList.add(sequenceSet);
+                    processedDeletes.put(mbox.getAccountId(), processedList);
+                }
+            } catch (ServiceException e) {
+
+            }
+        }
         return true;
     }
 
