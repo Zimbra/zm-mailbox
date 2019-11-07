@@ -84,6 +84,10 @@ public class CopyCommand extends ImapCommand {
         }
     }
 
+    public boolean isCopyToTrashProcessed() {
+        return throttle(null);
+    }
+
     public void setProcessedList(Set<String> processedList) {
         this.processedList = processedList;
     }
@@ -95,22 +99,17 @@ public class CopyCommand extends ImapCommand {
 
     @Override
     protected boolean throttle(ImapCommand previousCommand) {
-        ZimbraLog.imap.info("IMAP::: Checking copy command for throttle. :" + processedList);
-
-        try {
-            if (((Folder) this.destPath.getFolder()).getFolderId() == Mailbox.ID_FOLDER_TRASH) {
-                CopyCommand c = this;
-                if (processedList != null) {
-                    ZimbraLog.imap.info("List processed" + processedList.contains(c.sequenceSet));
-                    ZimbraLog.imap.info("IMAP:::Copy is for trash so checking in processed list.");
-                     return processedList.contains(c.sequenceSet);
-                }
-                return false;
-            } else {
-                ZimbraLog.imap.info("IMAP:::Copy is not for trash.");
-                return false;
+        //We are using the throttle command here to address the issue seen with some new Apple mail clients.
+        ZimbraLog.imap.debug("IMAP::: Checking copy command for throttle. :" + processedList);
+        if (isCopyToTrash()) {
+            CopyCommand c = this;
+            if (processedList != null) {
+                ZimbraLog.imap.info("List processed" + processedList.contains(c.sequenceSet));
+                return processedList.contains(c.sequenceSet);
             }
-        } catch (ServiceException e) {
+            return false;
+        } else {
+            ZimbraLog.imap.debug("IMAP:::Copy is not for trash.");
             return false;
         }
     }

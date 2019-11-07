@@ -39,7 +39,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.TreeMap;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
 
@@ -51,6 +50,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.io.Closeables;
+import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZGrant;
 import com.zimbra.client.ZMailbox;
@@ -116,8 +116,9 @@ abstract class ImapHandler {
     private static final String ID_PARAMS = "\"NAME\" \"Zimbra\" \"VERSION\" \"" + BuildInfo.VERSION +
         "\" \"RELEASE\" \"" + BuildInfo.RELEASE + "\"";
 
-    private static Map<String, Set<String>> processedDeletes =
-            new ConcurrentHashMap<String, Set<String>>();
+    Map<String, Set<String>> processedDeletes =new ConcurrentLinkedHashMap.Builder<String, Set<String>>()
+            .maximumWeightedCapacity(1000)
+            .build();
 
     static final char[] LINE_SEPARATOR       = { '\r', '\n' };
     static final byte[] LINE_SEPARATOR_BYTES = { '\r', '\n' };
@@ -4181,7 +4182,13 @@ abstract class ImapHandler {
         try {
             checkCommandThrottle(commandP);
         } catch (ImapThrottledException e) {
-            sendOK(tag, copyuid + command + " completed");
+            //  ZBUG-1212 We are using the throttle command logic here to address the issue seen with some new Apple mail client
+            // repeatedly sending UID COPY to server as previous request took a longer time//connection was broken to server
+            if (commandP.isCopyToTrash() && commandP.isCopyToTrashProcessed()) {
+                sendOK(tag, copyuid + command + " completed");
+            } else {
+                throw e;
+            }
         }
 
         if (!checkState(tag, State.SELECTED)) {
