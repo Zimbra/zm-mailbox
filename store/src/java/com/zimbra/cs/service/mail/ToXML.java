@@ -1654,8 +1654,8 @@ public final class ToXML {
                     "The message is signed. Forwarding it to SmimeHandler for signature verification.");
                 if (SmimeHandler.getHandler() != null) {
                     SmimeHandler.getHandler().verifyMessageSignature(msg, m, mm, octxt);
-                } 
-           } else {
+                }
+            } else {
                 // if the original mime message was PKCS7-signed and it was
                 // decoded and stored in cache as plain mime
                 if ((mm instanceof Mime.FixedMimeMessage)
@@ -3293,6 +3293,14 @@ throws ServiceException {
             alarmObj.toXml(alarmElem);
         }
         return alarmElem;
+    }
+    
+    public static Element encodeOutOfOffice(Element response, String email, Boolean isOutOfOffice) {
+        Element cn = response.addElement(MailConstants.E_MATCH);
+        cn.addAttribute(MailConstants.A_EMAIL, IDNUtil.toUnicode(email));
+        cn.addAttribute(MailConstants.A_ISOUTOFOFFICE, isOutOfOffice);
+
+        return response;
     }
 
     public static Element encodeFreeBusy(Element parent, FreeBusy fb) {
