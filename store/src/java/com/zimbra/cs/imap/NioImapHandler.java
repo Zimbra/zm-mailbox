@@ -18,6 +18,7 @@ package com.zimbra.cs.imap;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.Map;
 
 import org.apache.mina.filter.codec.ProtocolDecoderException;
 import org.apache.mina.filter.codec.RecoverableProtocolDecoderException;
@@ -160,6 +161,23 @@ final class NioImapHandler extends ImapHandler implements NioHandler {
      */
     @Override
     public void connectionClosed() {
+        try {
+            setLoggingContext();
+            String summary = new String();
+            for (Map.Entry<String, Integer> entry : commandCount.entrySet()) {
+                String result = entry.getKey() + "=" + entry.getValue();
+                summary += summary.isEmpty() ? result : ", " + result;
+            }
+            ZimbraLog.imap.info("[" + summary + "]" +
+                " MailboxSize:" + mailboxSize + "->" + getMailboxSize()+
+                " InboxNumMsgs:" + inboxNumMessages + "->" + getInboxNumMessages() +
+                " TrashNumMsgs:" + trashNumMessages + "->" + getTrashNumMessages() +
+                " read[" + connection.getReadBytes() +
+                "] write[" + connection.getWrittenBytes() +
+                "] time[" + connection.getSessionDuration() + "]");
+        } catch (Exception ignore) {
+        }
+
         if (request != null) {
             request.cleanup();
             request = null;

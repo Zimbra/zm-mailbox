@@ -24,6 +24,7 @@ import com.zimbra.cs.server.NioOutputStream;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.Map;
 
 import org.apache.mina.filter.codec.RecoverableProtocolDecoderException;
 
@@ -46,6 +47,21 @@ final class NioPop3Handler extends Pop3Handler implements NioHandler {
 
     @Override
     public void connectionClosed() throws IOException {
+        try {
+            setLoggingContext();
+            String summary = new String();
+            for (Map.Entry<String, Integer> entry : commandCount.entrySet()) {
+                String result = entry.getKey() + "=" + entry.getValue();
+                summary += summary.isEmpty() ? result : ", " + result;
+            }
+            ZimbraLog.pop.info("[" + summary + "]" +
+                " MailboxSize:" + mailboxSize + "->" + getMailboxSize() +
+                " InboxNumMsgs:" + inboxNumMsgs + "->" + getInboxNumMessages() +
+                " read[" + connection.getReadBytes() +
+                "] write[" + connection.getWrittenBytes() +
+                "] time[" + connection.getSessionDuration() + "]");
+        } catch (Exception ignore) {
+        }
         connection.close();
     }
 

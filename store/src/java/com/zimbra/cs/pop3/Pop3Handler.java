@@ -23,6 +23,8 @@ import java.io.OutputStream;
 import java.io.PushbackInputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import org.apache.commons.codec.binary.Base64;
 
@@ -88,11 +90,21 @@ abstract class Pop3Handler {
     private int expire;
 
     private final ServerThrottle throttle;
+    protected Map<String, Integer> commandCount;
+    protected long mailboxSize;
+    protected long inboxNumMsgs;
 
     Pop3Handler(Pop3Config config) {
         this.config = config;
         startedTLS = config.isSslEnabled();
         throttle = ServerThrottle.getThrottle(config.getProtocol());
+        commandCount = new LinkedHashMap<String, Integer>();
+        commandCount.put("TOP", 0);
+        commandCount.put("RETR",0);
+        commandCount.put("DELE",0);
+        commandCount.put("QUIT",0);
+        mailboxSize = 0;
+        inboxNumMsgs = 0;
     }
 
     abstract void startTLS() throws IOException;
@@ -264,6 +276,7 @@ abstract class Pop3Handler {
         case 'd':
         case 'D':
             if ("DELE".equalsIgnoreCase(command)) {
+                incrementCommandCounter("DELE");
                 doDELE(arg);
                 return true;
             }
@@ -292,6 +305,7 @@ abstract class Pop3Handler {
         case 'q':
         case 'Q':
             if ("QUIT".equalsIgnoreCase(command)) {
+                incrementCommandCounter("QUIT");
                 doQUIT();
                 return false;
             }
@@ -299,6 +313,7 @@ abstract class Pop3Handler {
         case 'r':
         case 'R':
             if ("RETR".equalsIgnoreCase(command)) {
+                incrementCommandCounter("RETR");
                 doRETR(arg);
                 return true;
             } else if ("RSET".equalsIgnoreCase(command)) {
@@ -319,6 +334,7 @@ abstract class Pop3Handler {
         case 't':
         case 'T':
             if ("TOP".equalsIgnoreCase(command)) {
+                incrementCommandCounter("TOP");
                 doTOP(arg);
                 return true;
             }
@@ -580,6 +596,8 @@ abstract class Pop3Handler {
             if (expire > 0 && expire < MIN_EXPIRE_DAYS) {
                 expire = MIN_EXPIRE_DAYS;
             }
+            mailboxSize = getMailboxSize();
+            inboxNumMsgs = getInboxNumMessages();
         } catch (ServiceException e) {
             String code = e.getCode();
             if (code.equals(AccountServiceException.NO_SUCH_ACCOUNT) || code.equals(AccountServiceException.AUTH_FAILED)
@@ -790,4 +808,19 @@ abstract class Pop3Handler {
         return sb.toString();
     }
 
+    private void incrementCommandCounter(String commandName) {
+        try {
+            String command = commandName.toUpperCase();
+            commandCount.put(command, Math.incrementExact(commandCount.get(command)));
+        } catch (Exception ignore) {
+        }
+    }
+
+    protected long getMailboxSize() throws ServiceException{
+        return mailbox.getMailboxSize();
+    }
+
+    protected long getInboxNumMessages() throws ServiceException {
+        return mailbox.getInboxNumMessages();
+    }
 }
