@@ -18,6 +18,7 @@ package com.zimbra.cs.server;
 
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
+import java.util.Date;
 
 import javax.security.sasl.SaslServer;
 
@@ -101,4 +102,17 @@ public final class NioConnection {
         session.close(false);
     }
 
+    public long getWrittenBytes() {
+        return session.getWrittenBytes();
+    }
+
+    public long getReadBytes() {
+        return session.getReadBytes();
+    }
+
+    public long getSessionDuration() {
+        Date now = new Date();
+        long creationTime = session.getCreationTime();
+        return now.getTime() - creationTime;
+    }
 }

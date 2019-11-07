@@ -41,6 +41,7 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.TreeMap;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.mail.MessagingException;
@@ -237,6 +238,11 @@ public abstract class ImapHandler {
     private Set<ImapExtension> activeExtensions;
     private final ServerThrottle reqThrottle;
     private final ImapCommandThrottle commandThrottle;
+    protected Map<String, Integer> commandCount;
+    private static final Pattern PAT_STORE_FLAG_DELETED = Pattern.compile("^*STORE\\s+.*([-+]FLAGS)(?:\\.SILENT)?.*\\\\DELETED\\s?", Pattern.CASE_INSENSITIVE);
+    protected long mailboxSize;
+    protected int inboxNumMessages;
+    protected int trashNumMessages;
 
     private static final Set<String> THROTTLED_COMMANDS = ImmutableSet.of(
             "APPEND", "COPY", "CREATE", "EXAMINE", "FETCH", "LIST",
@@ -255,6 +261,21 @@ public abstract class ImapHandler {
         startedTLS = config.isSslEnabled();
         reqThrottle = ServerThrottle.getThrottle(config.getProtocol());
         commandThrottle = new ImapCommandThrottle(LC.imap_throttle_command_limit.intValue());
+        commandCount = new LinkedHashMap<String, Integer>();
+        commandCount.put("FETCH", 0);
+        commandCount.put("STORE",0);
+        commandCount.put("STORE +FLAGS \\DELETED",0);
+        commandCount.put("STORE -FLAGS \\DELETED",0);
+        commandCount.put("EXPUNGE",0);
+        commandCount.put("APPEND",0);
+        commandCount.put("SEARCH",0);
+        commandCount.put("COPY",0);
+        commandCount.put("CREATE",0);
+        commandCount.put("DELETE",0);
+        commandCount.put("LOGOUT",0);
+        mailboxSize = 0;
+        inboxNumMessages = 0;
+        trashNumMessages = 0;
     }
 
     protected abstract void sendLine(String line, boolean flush) throws IOException;
@@ -512,6 +533,7 @@ public abstract class ImapHandler {
                         appends.add(AppendMessage.parse(this, tag, req));
                     } while (!req.eof() && extensionEnabled("MULTIAPPEND"));
                     checkEOF(tag, req);
+                    incrementCommandCounter("APPEND", req);
                     return doAPPEND(tag, path, appends);
                 }
                 break;
@@ -525,6 +547,7 @@ public abstract class ImapHandler {
                     req.skipSpace();
                     ImapPath path = new ImapPath(req.readFolder(), credentials);
                     checkEOF(tag, req);
+                    incrementCommandCounter("COPY", req);
                     return isProxied ? imapProxy.proxy(req) : doCOPY(tag, sequence, path, byUID);
                 } else if (command.equals("CLOSE")) {
                     checkEOF(tag, req);
@@ -533,6 +556,7 @@ public abstract class ImapHandler {
                     req.skipSpace();
                     ImapPath path = new ImapPath(req.readFolder(), credentials);
                     checkEOF(tag, req);
+                    incrementCommandCounter("CREATE", req);
                     return doCREATE(tag, path);
                 } else if (command.equals("CHECK")) {
                     checkEOF(tag, req);
@@ -544,6 +568,7 @@ public abstract class ImapHandler {
                     req.skipSpace();
                     ImapPath path = new ImapPath(req.readFolder(), credentials, ImapPath.Scope.NAME);
                     checkEOF(tag, req);
+                    incrementCommandCounter("DELETE", req);
                     return doDELETE(tag, path);
                 } else if (command.equals("DELETEACL") && extensionEnabled("ACL")) {
                     req.skipSpace();
@@ -562,6 +587,7 @@ public abstract class ImapHandler {
                         sequence = req.readSequence();
                     }
                     checkEOF(tag, req);
+                    incrementCommandCounter("EXPUNGE", req);
                     return isProxied ? imapProxy.proxy(req) : doEXPUNGE(tag, byUID, sequence);
                 } else if (command.equals("EXAMINE")) {
                     byte params = 0;  QResyncInfo qri = null;
@@ -624,6 +650,7 @@ public abstract class ImapHandler {
                         req.skipChar(')');
                     }
                     checkEOF(tag, req);
+                    incrementCommandCounter("FETCH", req);
                     return isProxied ? imapProxy.proxy(req) : doFETCH(tag, sequence, attributes, parts, byUID, modseq);
                 }
                 break;
@@ -666,6 +693,7 @@ public abstract class ImapHandler {
                     return doLOGIN(tag, user, pass);
                 } else if (command.equals("LOGOUT")) {
                     checkEOF(tag, req);
+                    incrementCommandCounter("LOGOUT", req);
                     return doLOGOUT(tag);
                 } else if (command.equals("LIST")) {
                     Set<String> patterns = new LinkedHashSet<String>(2);
@@ -815,6 +843,7 @@ public abstract class ImapHandler {
                     req.skipSpace();
                     List<String> flags = req.readFlags();
                     checkEOF(tag, req);
+                    incrementCommandCounter("STORE", req);
                     return isProxied ? imapProxy.proxy(req) : doSTORE(tag, sequence, flags, operation, silent, modseq, byUID);
                 } else if (command.equals("SELECT")) {
                     byte params = 0;
@@ -857,6 +886,7 @@ public abstract class ImapHandler {
                     }
                     ImapSearch i4search = req.readSearch(charset);
                     checkEOF(tag, req);
+                    incrementCommandCounter("SEARCH", req);
                     return isProxied ? imapProxy.proxy(req) : doSEARCH(tag, i4search, byUID, options);
                 } else if (command.equals("STARTTLS") && extensionEnabled("STARTTLS")) {
                     checkEOF(tag, req);
@@ -1745,6 +1775,9 @@ public abstract class ImapHandler {
         if (!account.getName().equalsIgnoreCase(LC.zimbra_ldap_user.value())) {
             credentials.getImapMailboxStore().beginTrackingImap();
         }
+        mailboxSize = getMailboxSize();
+        inboxNumMessages = getInboxNumMessages();
+        trashNumMessages = getTrashNumMessages();
         ZimbraLog.addAccountNameToContext(credentials.getUsername());
         ZimbraLog.imap.info("user %s authenticated, mechanism=%s%s",
                 credentials.getUsername(), mechanism == null ? "LOGIN" : mechanism, startedTLS ? " [TLS]" : "");
@@ -4800,5 +4833,36 @@ public abstract class ImapHandler {
             }
         } catch (Exception ignore) {
         }
+    }
+
+    private void incrementCommandCounter(String commandName, ImapRequest req) {
+        try {
+            String command = commandName.toUpperCase();
+            commandCount.put(command, Math.incrementExact(commandCount.get(command)));
+
+            Matcher matcher;
+            if ("STORE".equals(command)) {
+                matcher = PAT_STORE_FLAG_DELETED.matcher(req.toString());
+                if (matcher.find()) {
+                    if (matcher.group(1) != null) {
+                        command = "STORE " + matcher.group(1) + " \\DELETED";
+                        commandCount.put(command, Math.incrementExact(commandCount.get(command)));
+                    }
+                }
+            }
+        } catch (Exception ignore) {
+        }
+    }
+
+    protected long getMailboxSize() throws ServiceException {
+        return credentials.getImapMailboxStore().getMailboxStore().getSize();
+    }
+
+    protected int getInboxNumMessages() throws ServiceException {
+        return credentials.getMailbox().getFolderByPath(null, "/Inbox").getImapMessageCount();
+    }
+
+    protected int getTrashNumMessages() throws ServiceException {
+        return credentials.getMailbox().getFolderByPath(null, "/Trash").getImapMessageCount();
     }
 }

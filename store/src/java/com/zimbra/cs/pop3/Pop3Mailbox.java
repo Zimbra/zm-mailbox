@@ -267,4 +267,13 @@ final class Pop3Mailbox {
         mbox.setTags(opContext, msgId, MailItem.Type.MESSAGE, flags, MailItem.TAG_UNCHANGED);
     }
 
+    long getMailboxSize() throws ServiceException {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxById(id);
+        return mbox.getSize();
+    }
+
+    long getInboxNumMessages() throws ServiceException {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxById(id);
+        return mbox.getFolderById(null, Mailbox.ID_FOLDER_INBOX).getItemCount();
+    }
 }
