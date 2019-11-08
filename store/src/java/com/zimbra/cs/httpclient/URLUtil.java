@@ -123,6 +123,11 @@ public class URLUtil {
     }
 
 
+    public static String getAdminURL(String ip, int port, String path, boolean checkPort) throws ServiceException {
+        StringBuffer sb = new StringBuffer(128);
+        sb.append(LC.zimbra_admin_service_scheme.value()).append(ip).append(":").append(port).append(path);
+        return sb.toString();
+    }
     /**
      * Returns absolute URL with scheme, host, and port for admin app on server.
      * Admin app only runs over SSL. Uses port from localconfig.
@@ -275,6 +280,15 @@ public class URLUtil {
         buf.append(":").append(port);
         buf.append(path);
     	return buf.toString();
+    }
+
+    public static String getServiceURL(String ip, int port, String path, boolean useSSL) throws ServiceException {
+        String proto = PROTO_HTTPS;
+        StringBuilder buf = new StringBuilder();
+        buf.append(proto).append("://").append(ip);
+        buf.append(":").append(port);
+        buf.append(path);
+        return buf.toString();
     }
 
     public static boolean reverseProxiedMode(Server server) throws ServiceException {

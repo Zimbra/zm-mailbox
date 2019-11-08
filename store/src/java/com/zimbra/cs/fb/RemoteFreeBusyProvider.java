@@ -59,7 +59,7 @@ import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.mail.ToXML;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.soap.DocumentHandler;
-import com.zimbra.soap.ProxyTarget;
+import com.zimbra.soap.ServerProxyTarget;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class RemoteFreeBusyProvider extends FreeBusyProvider {
@@ -180,7 +180,7 @@ public class RemoteFreeBusyProvider extends FreeBusyProvider {
     public boolean registerForMailboxChanges(String accountId) {
         return false;
     }
-    
+
     @Override
     public long cachedFreeBusyStartTime() {
         return 0;
@@ -190,7 +190,7 @@ public class RemoteFreeBusyProvider extends FreeBusyProvider {
     public long cachedFreeBusyEndTime() {
         return 0;
     }
-    
+
     @Override
     public long cachedFreeBusyStartTime(String accountId) {
         return 0;
@@ -274,7 +274,7 @@ public class RemoteFreeBusyProvider extends FreeBusyProvider {
         Server server = prov.getServer(acct);
 
         // executing remotely; find out target and proxy there
-        ProxyTarget proxy = new ProxyTarget(server.getId(), zsc.getAuthToken(), mHttpReq);
+        ServerProxyTarget proxy = new ServerProxyTarget(server.getId(), zsc.getAuthToken(), mHttpReq);
         Element response = DocumentHandler.proxyWithNotification(request.detach(), proxy, zscTarget, zsc);
         return response;
     }

@@ -17,6 +17,10 @@
 
 package com.zimbra.cs.index;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
 import com.google.common.base.MoreObjects;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
@@ -31,12 +35,8 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.soap.DocumentHandler;
-import com.zimbra.soap.ProxyTarget;
+import com.zimbra.soap.ServerProxyTarget;
 import com.zimbra.soap.ZimbraSoapContext;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
 /**
  * Represents the results of a query made on a remote server. This class takes
@@ -269,7 +269,7 @@ public final class ProxiedQueryResults extends ZimbraQueryResultsImpl {
         if (baseurl == null) {
             baseurl = URLUtil.getAdminURL(targetServer, AdminConstants.ADMIN_SERVICE_URI, true);
         }
-        ProxyTarget proxy = new ProxyTarget(targetServer, authToken, baseurl + MailConstants.SEARCH_REQUEST.getName());
+        ServerProxyTarget proxy = new ServerProxyTarget(targetServer, authToken, baseurl + MailConstants.SEARCH_REQUEST.getName());
         if (mTimeout != -1) {
             proxy.setTimeouts(mTimeout);
         }
