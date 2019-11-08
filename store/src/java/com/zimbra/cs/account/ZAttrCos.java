@@ -47407,6 +47407,82 @@ public abstract class ZAttrCos extends NamedEntry {
         return attrs;
     }
 
+    /**
+     * This attribute is used to enable/disable out of office functionality
+     * at the time of mail compose
+     *
+     * @return zimbraOutOfOfficeComposeEnabled, or false if unset
+     *
+     * @since ZCS 8.8.15
+     */
+    @ZAttr(id=5029)
+    public boolean isOutOfOfficeComposeEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraOutOfOfficeComposeEnabled, false, true);
+    }
+
+    /**
+     * This attribute is used to enable/disable out of office functionality
+     * at the time of mail compose
+     *
+     * @param zimbraOutOfOfficeComposeEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.15
+     */
+    @ZAttr(id=5029)
+    public void setOutOfOfficeComposeEnabled(boolean zimbraOutOfOfficeComposeEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOutOfOfficeComposeEnabled, zimbraOutOfOfficeComposeEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute is used to enable/disable out of office functionality
+     * at the time of mail compose
+     *
+     * @param zimbraOutOfOfficeComposeEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.15
+     */
+    @ZAttr(id=5029)
+    public Map<String,Object> setOutOfOfficeComposeEnabled(boolean zimbraOutOfOfficeComposeEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOutOfOfficeComposeEnabled, zimbraOutOfOfficeComposeEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * This attribute is used to enable/disable out of office functionality
+     * at the time of mail compose
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.15
+     */
+    @ZAttr(id=5029)
+    public void unsetOutOfOfficeComposeEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOutOfOfficeComposeEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute is used to enable/disable out of office functionality
+     * at the time of mail compose
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.15
+     */
+    @ZAttr(id=5029)
+    public Map<String,Object> unsetOutOfOfficeComposeEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOutOfOfficeComposeEnabled, "");
+        return attrs;
+    }
     ///// END-AUTO-GEN-REPLACE
 
 }

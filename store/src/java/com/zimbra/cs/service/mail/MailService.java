@@ -154,6 +154,7 @@ public final class MailService implements DocumentService {
         dispatcher.registerHandler(MailConstants.SEND_INVITE_REPLY_REQUEST, new SendInviteReply());
         dispatcher.registerHandler(MailConstants.ICAL_REPLY_REQUEST, new ICalReply());
         dispatcher.registerHandler(MailConstants.GET_FREE_BUSY_REQUEST, new GetFreeBusy());
+        dispatcher.registerHandler(MailConstants.GET_OUT_OF_OFFICE_REQUEST, new GetOutOfOffice());
         dispatcher.registerHandler(MailConstants.GET_WORKING_HOURS_REQUEST, new GetWorkingHours());
         dispatcher.registerHandler(MailConstants.GET_ICAL_REQUEST, new GetICal());
         dispatcher.registerHandler(MailConstants.ANNOUNCE_ORGANIZER_CHANGE_REQUEST, new AnnounceOrganizerChange());

@@ -17761,6 +17761,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1447)
     public static final String A_zimbraZookeeperClientServerList = "zimbraZookeeperClientServerList";
+	
+	/**
+	 * This attribute is used to enable/disable out of office functionality
+	 * at the time of mail compose
+	 * 
+	 * @since ZCS 8.8.15
+	 */
+	@ZAttr(id=5029)
+	public static final String A_zimbraOutOfOfficeComposeEnabled = "zimbraOutOfOfficeComposeEnabled";
 
     ///// END-AUTO-GEN-REPLACE
 }
