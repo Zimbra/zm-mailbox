@@ -21,7 +21,6 @@ import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 
 public class CopyCommand extends ImapCommand {
@@ -78,8 +77,10 @@ public class CopyCommand extends ImapCommand {
 
     public boolean isCopyToTrash() {
         try {
-            return ((Folder) this.destPath.getFolder()).getFolderId() == Mailbox.ID_FOLDER_TRASH;
+            return this.destPath.asItemId().getId() == Mailbox.ID_FOLDER_TRASH;
         } catch (ServiceException e) {
+            ZimbraLog.imap.error("Exception occured while getting destination path id");
+            ZimbraLog.imap.debug("Exception occured while getting destination path id", e);
             return false;
         }
     }
