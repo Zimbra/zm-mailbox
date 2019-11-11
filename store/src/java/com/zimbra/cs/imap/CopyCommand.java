@@ -17,17 +17,13 @@
 
 package com.zimbra.cs.imap;
 
-import java.util.Set;
-
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Mailbox;
 
 public class CopyCommand extends ImapCommand {
 
     private ImapPath destPath;
     private String sequenceSet;
-    private  Set<String> processedList;
 
     public CopyCommand(String sequenceSet, ImapPath destPath) {
         super();
@@ -61,7 +57,6 @@ public class CopyCommand extends ImapCommand {
                 return false;
             }
         } else if (!sequenceSet.equals(other.sequenceSet)) {
-            ZimbraLog.imap.info("IMAP::: Seq 1 " + sequenceSet + "\n" + "other: " + other.sequenceSet);
             return false;
         }
         if (destPath == null) {
@@ -69,7 +64,6 @@ public class CopyCommand extends ImapCommand {
                 return false;
             }
         } else if (!destPath.equals(other.destPath)) {
-            ZimbraLog.imap.info("Dest path " + destPath + " 2: " +other.destPath );
             return false;
         }
         return true;
@@ -88,11 +82,6 @@ public class CopyCommand extends ImapCommand {
         return throttle(null);
     }
 
-
-    public void setProcessedList(Set<String> processedList) {
-        this.processedList = processedList;
-    }
-
     @Override
     protected boolean isDuplicate(ImapCommand command) {
         return this.getClass().equals(command.getClass()) && this.hasSameParams(command);
@@ -101,20 +90,7 @@ public class CopyCommand extends ImapCommand {
 
     @Override
     protected boolean throttle(ImapCommand previousCommand) {
-
-        //We are using the throttle command here to address the issue seen with some new Apple mail clients.
-        ZimbraLog.imap.debug("IMAP::: Checking copy command for throttle. :" + processedList);
-        if (isCopyToTrash()) {
-            CopyCommand c = this;
-            if (processedList != null) {
-                ZimbraLog.imap.info("List processed" + processedList.contains(c.sequenceSet));
-                 return processedList.contains(c.sequenceSet);
-            }
-            return false;
-        } else {
-            ZimbraLog.imap.debug("IMAP:::Copy is not for trash.");
-            return false;
-        }
+        return false;
     }
 
     @Override

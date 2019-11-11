@@ -153,6 +153,9 @@ public abstract class ImapHandler {
     Map<String, Set<String>> processedDeletes = new ConcurrentLinkedHashMap.Builder<String, Set<String>>()
         .maximumWeightedCapacity(1000)
         .build();
+    Map<String, Set<String>> deletesInProcess = new ConcurrentLinkedHashMap.Builder<String, Set<String>>()
+        .maximumWeightedCapacity(1000)
+        .build();
 
     /* All the supported IMAP rights, concatenated together into a single string. */
     private static final String IMAP_CONCATENATED_RIGHTS = IMAP_READ_RIGHTS + IMAP_WRITE_RIGHTS +
@@ -4349,24 +4352,31 @@ public abstract class ImapHandler {
         }
         MailboxStore mbox = i4folder.getMailbox();
 
-        try {
-            commandP.setProcessedList(processedDeletes.get(mbox.getAccountId()));
-
-        }  catch ( ServiceException e) {
-
-        }
-
-        try {
-            checkCommandThrottle(commandP);
-        } catch (ImapThrottledException e) {
-            //  ZBUG-1212 We are using the throttle command logic here to address the issue seen with some new Apple mail client
-            // repeatedly sending UID COPY to server as previous request took a longer time//connection was broken to server
-            if (commandP.isCopyToTrash() && commandP.isCopyToTrashProcessed()) {
-                sendOK(tag, copyuid + command + " completed");
-            } else {
-                throw e;
+        if (commandP.isCopyToTrash() &&  !commandP.isCopyToTrashProcessed()) {
+            ZimbraLog.imap.debug("IMAP::: Checking copy to trash is processed or in process. :" );
+            try {
+//                commandP.setProcessedList(processedDeletes.get(mbox.getAccountId()));
+                if (deletesInProcess.get(mbox.getAccountId()) != null &&
+                    deletesInProcess.get(mbox.getAccountId()).contains(sequenceSet))   {
+                    ZimbraLog.imap.debug("IMAP::: Copy to trash in process. :" + deletesInProcess.get(mbox.getAccountId()));
+                    sendNO(tag, "COPY rejected because it is in process.");
+                }
+                ZimbraLog.imap.debug("IMAP::: New Copy to trash, adding to in process list.");
+                if (deletesInProcess.get(mbox.getAccountId()) != null) {
+                    deletesInProcess.get(mbox.getAccountId()).add(sequenceSet);
+                } else {
+                    Set<String> trashDelSet = new HashSet<String>();
+                    trashDelSet.add(sequenceSet);
+                    deletesInProcess.put(mbox.getAccountId(), trashDelSet) ;
+                }
+            }  catch ( ServiceException e) {
+                ZimbraLog.imap.errorQuietly("Error fetching accountId from mailbox:" , e);
             }
+        } else  if (commandP.isCopyToTrash() && commandP.isCopyToTrashProcessed()) {
+                sendOK(tag, copyuid + command + " completed");
         }
+
+        checkCommandThrottle(commandP);
 
         if (!checkState(tag, State.SELECTED)) {
             return true;
@@ -4491,6 +4501,9 @@ public abstract class ImapHandler {
         if (commandP.isCopyToTrash()) {
             ZimbraLog.imap.info("IMAP:::Copy is to trash adding to processed List." );
             try {
+                if (deletesInProcess.get(mbox.getAccountId()) != null) {
+                    deletesInProcess.get(mbox.getAccountId()).remove(sequenceSet);
+                }
                 Set<String> processedList = new HashSet<String>();
                 if (processedDeletes.get(mbox.getAccountId()) == null) {
                     processedList.add(sequenceSet);
@@ -4501,7 +4514,7 @@ public abstract class ImapHandler {
                     processedDeletes.put(mbox.getAccountId(), processedList);
                 }
             } catch (ServiceException e) {
-
+                ZimbraLog.imap.errorQuietly("Error fetching accountId from mailbox:" , e);
             }
         }
         return true;
