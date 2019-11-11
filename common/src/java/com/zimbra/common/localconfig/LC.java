@@ -1305,6 +1305,9 @@ public final class LC {
     @Supported
     public static final KnownKey smime_truststore_password = KnownKey.newKey("${mailboxd_truststore_password}");
 
+    // Mapsize of map that holds list of accounts for which items in
+    public static final KnownKey max_imap_size_of_map_tohold_deletes_inprocess = KnownKey.newKey(1000);
+
     static {
         // Automatically set the key name with the variable name.
         for (Field field : LC.class.getFields()) {
