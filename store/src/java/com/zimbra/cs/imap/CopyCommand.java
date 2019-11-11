@@ -17,9 +17,6 @@
 
 package com.zimbra.cs.imap;
 
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.mailbox.Mailbox;
-
 public class CopyCommand extends ImapCommand {
 
     private ImapPath destPath;
@@ -38,6 +35,10 @@ public class CopyCommand extends ImapCommand {
         result = prime * result + ((sequenceSet == null) ? 0 : sequenceSet.hashCode());
         result = prime * result + ((destPath == null) ? 0 : destPath.hashCode());
         return result;
+    }
+
+    public ImapPath getDestPath() {
+        return destPath;
     }
 
     @Override
@@ -67,19 +68,6 @@ public class CopyCommand extends ImapCommand {
             return false;
         }
         return true;
-    }
-
-    public boolean isCopyToTrash() {
-        try {
-            return this.destPath.getFolder().getFolderIdAsString().equals(String.valueOf(Mailbox.ID_FOLDER_TRASH));
-        } catch (ServiceException e) {
-            return false;
-        }
-    }
-
-
-    public boolean isCopyToTrashProcessed() {
-        return throttle(null);
     }
 
     @Override
