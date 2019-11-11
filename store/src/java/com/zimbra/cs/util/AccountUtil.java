@@ -58,6 +58,7 @@ import com.zimbra.common.zmime.ZMimeBodyPart;
 import com.zimbra.common.zmime.ZMimeMultipart;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Domain;
@@ -390,7 +391,7 @@ public class AccountUtil {
         }
 
         /**
-         * 
+         *
          * @param account
          * @param internalOnly only match internal addresses, i.e. ignore zimbraAllowFromAddress values
          * @param matchSendAs match sendAs/sendAsDistList addresses granted
@@ -554,15 +555,15 @@ public class AccountUtil {
             ZimbraLog.addToContext(nameKey, acct.getName());
         }
     }
-    
+
     /**
      * Check if given account is a galsync account
      * @param account to lookup
      * @return true if account is galsync account, false otherwise.
      */
-    
+
     public static boolean isGalSyncAccount(Account account) {
-        boolean isGalSync = false;    	
+        boolean isGalSync = false;
         try {
             Domain domain = Provisioning.getInstance().getDomain(account);
             if (domain != null) {
@@ -841,5 +842,25 @@ public class AccountUtil {
         CacheSelector selector = new CacheSelector(false, CacheEntryType.account.name());
         selector.addEntry(new CacheEntrySelector(CacheEntrySelector.CacheEntryBy.id, account.getId()));
         PubSubService.getInstance().publish(PubSubService.BROADCAST, new FlushCacheMsg(selector));
+    }
+
+    public static void checkAliasLoginAllowed(Account acct, String loginEmailAddr) throws ServiceException {
+        String accountName = acct.getName();
+        if (!LC.alias_login_enabled.booleanValue()) {
+            if (accountName.indexOf('@') != -1 && loginEmailAddr.indexOf('@') != -1 &&
+                    !accountName.equalsIgnoreCase(loginEmailAddr)) {
+                ZimbraLog.account.debug("Alias login not enabled. '%s' is the alias account", loginEmailAddr);
+                throw AuthFailedServiceException.AUTH_FAILED(loginEmailAddr, loginEmailAddr, "alias login not enabled.");
+            } else {
+                String acctLocalPart = EmailUtil.getLocalPartAndDomain(accountName) == null ?
+                        accountName : EmailUtil.getLocalPartAndDomain(accountName)[0];
+                String loginEmailLocalPart = EmailUtil.getLocalPartAndDomain(loginEmailAddr) == null ?
+                        loginEmailAddr : EmailUtil.getLocalPartAndDomain(loginEmailAddr)[0];
+                if (!acctLocalPart.equalsIgnoreCase(loginEmailLocalPart)) {
+                    ZimbraLog.account.debug("Alias login not enabled. '%s' is the alias account", loginEmailAddr);
+                    throw AuthFailedServiceException.AUTH_FAILED(loginEmailAddr, loginEmailAddr, "alias login not enabled.");
+                }
+            }
+        }
     }
 }

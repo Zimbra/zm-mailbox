@@ -48,6 +48,7 @@ public class OwaspPolicy {
     public static final String E_ALLOW_TEXT_IN = "allow_text_in";
     public static final String E_CSS_WHITELIST = "css_whitelist";
     public static final String E_URL_PROTOCOLS = "url_protocols";
+    public static final String E_URL_PROTOCOL_Attrs = "url_protocol_attributes";
     public static final String E_ELEMENT = "element";
     public static final String A_NAME = "name";
     public static final String A_REMOVE_TEXT = "removeText";
@@ -63,6 +64,7 @@ public class OwaspPolicy {
     private static final Set<String> mAllowTextElements = new HashSet<String>();
     private static final Set<String> mCssWhitelist = new HashSet<String>();
     private static final Set<String> mURLProtocols = new HashSet<String>();
+    private static final Set<String> mURLProtocolAttrs = new HashSet<String>();
     private static final Map<String, String> mElementUrlProtocols = new HashMap<String, String>();
 
     static {
@@ -115,6 +117,10 @@ public class OwaspPolicy {
                 String urlProtocols = root.elementText(E_URL_PROTOCOLS);
                 if (!StringUtil.isNullOrEmpty(urlProtocols)) {
                     mURLProtocols.addAll(Arrays.asList(urlProtocols.split(COMMA)));
+                }
+                String urlProtocolAttrs = root.elementText(E_URL_PROTOCOL_Attrs);
+                if (!StringUtil.isNullOrEmpty(urlProtocolAttrs)) {
+                    mURLProtocolAttrs.addAll(Arrays.asList(urlProtocolAttrs.split(COMMA)));
                 }
             } catch (IOException | XmlParseException e) {
                 ZimbraLog.mailbox
@@ -184,4 +190,7 @@ public class OwaspPolicy {
         return mURLProtocols;
     }
 
+    public static Set<String> getElementUrlProtocolAttributes() {
+        return mURLProtocolAttrs;
+    }
 }
