@@ -341,7 +341,6 @@ import com.zimbra.cs.util.ZTestWatchman;
     @Test
     public void testZCS6232WithNullEmail() throws Exception {
         Account account = Provisioning.getInstance().getAccountByName("test6232@zimbra.com");
-        // mocking the group not to have view permission
         PowerMockito.stub(PowerMockito.method(GalGroupInfoProvider.class, "getGroupInfo"))
             .toReturn(GroupInfo.IS_GROUP);
         Assert.assertTrue(ToXML.hasDLViewRight(null, account, account));
