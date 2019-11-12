@@ -39,6 +39,7 @@ import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE;
+import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class GrantRights extends AccountDocumentHandler {
@@ -64,6 +65,7 @@ public class GrantRights extends AccountDocumentHandler {
             for (ZimbraACE ace : granted) {
                 ToXML.encodeACE(response, ace);
             }
+            AccountUtil.broadcastFlushCache(account);
         }
 
         return response;
