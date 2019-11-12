@@ -15,7 +15,7 @@ public class AccountCollectionLocator extends SolrCollectionLocator {
     }
 
     @Override
-    public String getIndexName(String accountId) {
+    public String getCollectionName(String accountId) {
         return String.format("%s_%s",corePrefix, accountId);
     }
 

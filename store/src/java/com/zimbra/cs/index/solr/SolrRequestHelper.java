@@ -51,7 +51,7 @@ public abstract class SolrRequestHelper implements Closeable {
     public abstract SolrResponse executeQueryRequest(String accountId, SolrQuery query) throws ServiceException;
 
     public String getCoreName(String accountId) throws ServiceException {
-        return locator.getIndexName(accountId);
+        return locator.getCollectionName(accountId);
     }
 
     public boolean needsAccountFilter() {

@@ -267,6 +267,12 @@ public final class LC {
     public static final KnownKey zimbra_index_rfc822address_max_token_length = KnownKey.newKey(256);
     public static final KnownKey zimbra_index_rfc822address_max_token_count = KnownKey.newKey(512);
 
+    @Supported
+    public static final KnownKey zimbra_index_num_collections = KnownKey.newKey(1);
+
+    @Supported
+    public static final KnownKey zimbra_index_collections_prefix = KnownKey.newKey("mailbox_index_");
+
     public static final KnownKey zimbra_rights_delegated_admin_supported = KnownKey.newKey(true);
 
     @Supported
