@@ -40,6 +40,7 @@ import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.httpclient.URLUtil;
 
 public class GalSyncAccountUtil {
@@ -95,12 +96,18 @@ public class GalSyncAccountUtil {
 	private String mUsername;
 	private String mPassword;
 	private String mAdminURL;
+	private String mAdminAffinityURL;
 	private ZAuthToken mAuth;
 	private SoapHttpTransport mTransport;
 
-	private GalSyncAccountUtil() {
-        String server = LC.zimbra_zmprov_default_soap_server.value();
+	private GalSyncAccountUtil() throws ServiceException {
+
+        String server = LC.zimbra_zmprov_default_soap_server.value(); 
+        String adminSoapService = LC.zimbra_admin_soap_service.value();
+        Server affinityServer = Provisioning.getInstance().getServerByName(adminSoapService);
+
         mAdminURL = URLUtil.getAdminURL(server);
+        mAdminAffinityURL = URLUtil.getAdminURL(affinityServer);
         mUsername = LC.zimbra_ldap_user.value();
         mPassword = LC.zimbra_ldap_password.value();
 	}
@@ -128,7 +135,7 @@ public class GalSyncAccountUtil {
 		checkArgs();
         mTransport = null;
         try {
-            mTransport = new SoapHttpTransport(mAdminURL);
+            mTransport = new SoapHttpTransport(mAdminAffinityURL);
             auth();
             mTransport.setAuthToken(mAuth);
     		XMLElement req = new XMLElement(AdminConstants.SYNC_GAL_ACCOUNT_REQUEST);
