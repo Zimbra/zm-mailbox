@@ -792,6 +792,9 @@ public final class LC {
     public static final KnownKey zimbra_class_jsieve_comparators_octet = KnownKey.newKey("com.zimbra.cs.filter.ZimbraOctet");
     public static final KnownKey zimbra_class_two_factor_auth_factory = KnownKey.newKey("com.zimbra.cs.account.auth.twofactor.TwoFactorAuth$DefaultFactory");
 
+    // ZCS-8181 if below flag is false, do not update zimbraAppSpecificPassword attr
+    //          with last authentication time during authentication of app specific password.
+    public static final KnownKey zimbra_two_factor_apppassword_authtime = KnownKey.newKey(true);
     // XXX REMOVE AND RELEASE NOTE
     public static final KnownKey data_source_trust_self_signed_certs = KnownKey.newKey(false);
     public static final KnownKey data_source_fetch_size = KnownKey.newKey(5);
