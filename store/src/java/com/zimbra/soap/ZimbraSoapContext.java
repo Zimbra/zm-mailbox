@@ -1076,4 +1076,8 @@ public final class ZimbraSoapContext {
     public SoapProtocol getmResponseProtocol() {
         return mResponseProtocol;
     }
+
+    public void setmRequestedAccountId(String mRequestedAccountId) {
+        this.mRequestedAccountId = mRequestedAccountId;
+    }
 }
