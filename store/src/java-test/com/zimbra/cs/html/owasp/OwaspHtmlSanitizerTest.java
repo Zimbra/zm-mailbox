@@ -334,7 +334,7 @@ public class OwaspHtmlSanitizerTest {
             + "</td></tr></table></body></html>";
         String result = new OwaspHtmlSanitizer(html,true,null).sanitize();
         Assert.assertTrue(result
-            .contains("<body><table><tr><td><b>javascript-blocked test </b></td></tr><tr><td>alert</td></tr></table></body>"));
+            .contains("<body><table><tbody><tr><td><b>javascript-blocked test </b></td></tr><tr><td>alert</td></tr></tbody></table></body>"));
 
         html = "<html><head><base href=\"http://lbpe.wikispaces.com/\" /></head><body>"
             + "<table><tr><td><B>javascript-blocked test</B></td></tr><tr><td>"
@@ -342,7 +342,7 @@ public class OwaspHtmlSanitizerTest {
             + "</body></html>";
         result = new OwaspHtmlSanitizer(html,true,null).sanitize();
         Assert.assertTrue(result
-                .contains("<body><table><tr><td><b>javascript-blocked test</b></td></tr><tr><td>alert</td></tr></table></body>"));
+                .contains("<body><table><tbody><tr><td><b>javascript-blocked test</b></td></tr><tr><td>alert</td></tr></tbody></table></body>"));
     }
     
     @Test
@@ -699,5 +699,13 @@ public class OwaspHtmlSanitizerTest {
         String html = "<img class=\"gmail\" style=\"display:none; width:0; overflow:hidden;\" src=\"https://localhost:8443/service/home/~/?auth=co&loc=en_US&id=285&part=2.2\" >";
         String result = new OwaspHtmlSanitizer(html, true, null).sanitize();
         Assert.assertTrue(result.contains("style"));
+    }
+
+    @Test
+    public void testZBUG1215() throws Exception {
+        String html = "<div id=\"noticias\"><div class=\"bloque\">BLOQUESSS</div></div>";
+        String result = new OwaspHtmlSanitizer(html, true, null).sanitize();
+        // check that the id and class attributes are not removed
+        Assert.assertTrue(result.equals(html));
     }
 }
