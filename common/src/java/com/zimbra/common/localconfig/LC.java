@@ -794,7 +794,7 @@ public final class LC {
 
     // ZCS-8181 if below flag is false, do not update zimbraAppSpecificPassword attr
     //          with last authentication time during authentication of app specific password.
-    public static final KnownKey zimbra_two_factor_apppassword_update_authtime = KnownKey.newKey(true);
+    public static final KnownKey zimbra_two_factor_apppasswd_update_authtime = KnownKey.newKey(true);
     // XXX REMOVE AND RELEASE NOTE
     public static final KnownKey data_source_trust_self_signed_certs = KnownKey.newKey(false);
     public static final KnownKey data_source_fetch_size = KnownKey.newKey(5);
