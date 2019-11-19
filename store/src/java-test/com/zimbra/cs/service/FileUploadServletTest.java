@@ -118,6 +118,9 @@ public class FileUploadServletTest {
     private List<Upload> uploadForm(byte[] form) throws Exception {
         URL url = new URL("http://localhost:7070/service/upload?fmt=extended");
         MockHttpServletRequest req = new MockHttpServletRequest(form, url, "multipart/form-data; boundary=" + boundary);
+        HashMap<String, String> headersMap = new HashMap<String, String>();
+        headersMap.put("Content-length", Integer.toString(form.length));
+        req.headers = headersMap;
         MockHttpServletResponse resp = new MockHttpServletResponse();
         return servlet.handleMultipartUpload(req, resp, "extended", testAccount, false, null, true);
     }
