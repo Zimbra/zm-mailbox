@@ -355,6 +355,11 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
     public abstract ZLdapFilter CMBSearchAccountsOnlyWithArchive();
     public abstract ZLdapFilter CMBSearchNonSystemResourceAccountsOnly();
 
+    public abstract ZLdapFilter allNonSystemInternalAccountsOnCos(String cosId);
+    public abstract ZLdapFilter allNonSystemInternalEwsDisabledAccountsOnCos(String cosId);
+    public abstract ZLdapFilter allNonSystemInternalEwsAccountsOnCos(String cosId);
+    public abstract ZLdapFilter allNonSystemInternalEwsAccountsOnDefaultCos();
+
     /*
      * alias
      */

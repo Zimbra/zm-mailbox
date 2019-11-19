@@ -311,6 +311,4 @@ public class LdapUtil {
         }
         return sb.toString();
     }
-
 }
-

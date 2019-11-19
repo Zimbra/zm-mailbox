@@ -33,15 +33,16 @@ public enum CountObjectsType {
     accountOnUCService(false, true),
     cosOnUCService(false, true),
     domainOnUCService(false, true),
-    
+
     // for license counting
     internalUserAccount(true, false),
     internalArchivingAccount(true, false),
-    internalUserAccountX(true, false);
-    
+    internalUserAccountX(true, false),
+    internalUserAccountEws(true, false);
+
     private boolean allowsDomain;
     private boolean allowsUCService;
-    
+
     private CountObjectsType(boolean allowsDomain, boolean allowsUCService) {
         this.allowsDomain = allowsDomain;
         this.allowsUCService = allowsUCService;

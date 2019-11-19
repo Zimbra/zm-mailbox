@@ -56,7 +56,6 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     private static Filter FILTER_ALL_DYNAMIC_GROUP_DYNAMIC_UNITS;
     private static Filter FILTER_ALL_DYNAMIC_GROUP_STATIC_UNITS;
     private static Filter FILTER_ALL_GROUPS;
-    private static Filter FILTER_HAB_GROUPS;
     private static Filter FILTER_ALL_HAB_GROUPS;
     private static Filter FILTER_ALL_IDENTITIES;
     private static Filter FILTER_ALL_MIME_ENTRIES;
@@ -265,8 +264,6 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                 Filter.createORFilter(
                         FILTER_ALL_DYNAMIC_GROUPS,
                         FILTER_ALL_DISTRIBUTION_LISTS);
-        FILTER_HAB_GROUPS =
-            Filter.createANDFilter(FILTER_ALL_HAB_GROUPS);
 
         FILTER_ALL_INTERNAL_ACCOUNTS = Filter.createANDFilter(
             FILTER_ALL_ACCOUNTS,
@@ -432,6 +429,66 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
         return new UBIDLdapFilter(
                 FilterId.ALL_NON_SYSTEM_INTERNAL_ACCOUNTS,
                 FILTER_ALL_NON_SYSTEM_INTERNAL_ACCOUNTS);
+    }
+
+    @Override
+    public ZLdapFilter allNonSystemInternalAccountsOnCos(String cosId) {
+        Filter filter = Filter.createANDFilter(
+                FILTER_ALL_ACCOUNTS,
+                Filter.createNOTFilter(FILTER_IS_SYSTEM_RESOURCE),
+                Filter.createNOTFilter(FILTER_ALL_CALENDAR_RESOURCES),
+                Filter.createNOTFilter(FILTER_IS_EXTERNAL_ACCOUNT),
+                Filter.createEqualityFilter(Provisioning.A_zimbraCOSId, cosId)
+        );
+        return new UBIDLdapFilter(
+                FilterId.ALL_NON_SYSTEM_INTERNAL_ACCOUNTS,
+                filter);
+    }
+
+    @Override
+    public ZLdapFilter allNonSystemInternalEwsDisabledAccountsOnCos(String cosId) {
+        Filter filter = Filter.createANDFilter(
+                FILTER_ALL_ACCOUNTS,
+                Filter.createNOTFilter(FILTER_IS_SYSTEM_RESOURCE),
+                Filter.createNOTFilter(FILTER_ALL_CALENDAR_RESOURCES),
+                Filter.createNOTFilter(FILTER_IS_EXTERNAL_ACCOUNT),
+                Filter.createEqualityFilter(Provisioning.A_zimbraCOSId, cosId),
+                Filter.createPresenceFilter(Provisioning.A_zimbraFeatureEwsEnabled),
+                Filter.createEqualityFilter(Provisioning.A_zimbraFeatureEwsEnabled, LdapConstants.LDAP_FALSE)
+        );
+        return new UBIDLdapFilter(
+                FilterId.ALL_NON_SYSTEM_INTERNAL_ACCOUNTS,
+                filter);
+    }
+
+    @Override
+    public ZLdapFilter allNonSystemInternalEwsAccountsOnCos(String cosId) {
+        Filter filter = Filter.createANDFilter(FILTER_ALL_ACCOUNTS,
+                Filter.createNOTFilter(FILTER_IS_SYSTEM_RESOURCE),
+                Filter.createNOTFilter(FILTER_ALL_CALENDAR_RESOURCES),
+                Filter.createNOTFilter(FILTER_IS_EXTERNAL_ACCOUNT),
+                Filter.createEqualityFilter(Provisioning.A_zimbraCOSId, cosId),
+                Filter.createPresenceFilter(Provisioning.A_zimbraFeatureEwsEnabled),
+                Filter.createEqualityFilter(Provisioning.A_zimbraFeatureEwsEnabled, LdapConstants.LDAP_TRUE)
+        );
+        return new UBIDLdapFilter(
+                FilterId.ALL_NON_SYSTEM_INTERNAL_ACCOUNTS,
+                filter);
+    }
+
+    @Override
+    public ZLdapFilter allNonSystemInternalEwsAccountsOnDefaultCos() {
+        Filter filter = Filter.createANDFilter(FILTER_ALL_ACCOUNTS,
+                Filter.createNOTFilter(FILTER_IS_SYSTEM_RESOURCE),
+                Filter.createNOTFilter(FILTER_ALL_CALENDAR_RESOURCES),
+                Filter.createNOTFilter(FILTER_IS_EXTERNAL_ACCOUNT),
+                Filter.createNOTFilter(Filter.createPresenceFilter(Provisioning.A_zimbraCOSId)),
+                Filter.createPresenceFilter(Provisioning.A_zimbraFeatureEwsEnabled),
+                Filter.createEqualityFilter(Provisioning.A_zimbraFeatureEwsEnabled, LdapConstants.LDAP_TRUE)
+        );
+        return new UBIDLdapFilter(
+                FilterId.ALL_NON_SYSTEM_INTERNAL_ACCOUNTS,
+                filter);
     }
 
     @Override

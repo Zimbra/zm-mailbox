@@ -219,8 +219,8 @@ import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.zimlet.ZimletException;
 import com.zimbra.cs.zimlet.ZimletUtil;
-import com.zimbra.soap.account.type.HABGroupMember;
 import com.zimbra.soap.account.type.AddressListInfo;
+import com.zimbra.soap.account.type.HABGroupMember;
 import com.zimbra.soap.admin.type.CacheEntryType;
 import com.zimbra.soap.admin.type.CountObjectsType;
 import com.zimbra.soap.admin.type.DataSourceType;
@@ -530,10 +530,22 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     protected void modifyAttrsInternal(Entry entry, ZLdapContext initZlc,
             Map<String, ? extends Object> attrs, boolean storeEphemeralInLdap)
             throws ServiceException {
+        boolean incEwsCount = false, decEwsCount = false;
         if (entry instanceof Account && !(entry instanceof CalendarResource)) {
             Account acct = (Account) entry;
             validate(ProvisioningValidator.MODIFY_ACCOUNT_CHECK_DOMAIN_COS_AND_FEATURE,
                     acct.getAttr(A_zimbraMailDeliveryAddress), attrs, acct);
+            if (attrs.containsKey(Provisioning.A_zimbraFeatureEwsEnabled)) {
+                boolean newVal = Boolean.parseBoolean(String.valueOf(attrs.get(Provisioning.A_zimbraFeatureEwsEnabled)));
+                if (newVal && !acct.isFeatureEwsEnabled()) {
+                    incEwsCount = true;
+                } else if (!newVal && acct.isFeatureEwsEnabled()) {
+                    decEwsCount = true;
+                }
+                if (incEwsCount) {
+                    validate(ProvisioningValidator.MODIFY_ACCOUNT_EWS_COUNT_VALIDATE);
+                }
+            }
         }
         if (!storeEphemeralInLdap) {
             Map<String, AttributeInfo> ephemeralAttrMap = AttributeManager.getInstance().getEphemeralAttrs();
@@ -565,6 +577,11 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             }
         }
         modifyLdapAttrs(entry, initZlc, attrs);
+        if (incEwsCount) {
+            validate(ProvisioningValidator.MODIFY_ACCOUNT_EWS_COUNT_INCR);
+        } else if (decEwsCount) {
+            validate(ProvisioningValidator.MODIFY_ACCOUNT_EWS_COUNT_DECR);
+        }
     }
 
     private void modifyEphemeralAttrs(Entry entry, Map<String, Object> attrs, Map<String, AttributeInfo> ephemeralAttrMap) throws ServiceException {
@@ -1895,8 +1912,8 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             bases = new String[1];
             bases[0] = options.getHabRootGroupDn();
         } else {
-	    bases = getSearchBases(domain, types);
-	} 
+            bases = getSearchBases(domain, types);
+        }
 
         /*
          * filter
@@ -3663,7 +3680,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         deleteDomain(zimbraId, true);
     }
 
-	@Override
+    @Override
     public void deleteDomainAfterRename(String zimbraId) throws ServiceException {
         deleteDomain(zimbraId, false);
     }
@@ -9198,6 +9215,42 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                 types.add(ObjectType.accounts);
                 filter = filterFactory.allNonSystemInternalAccounts();
                 break;
+            case internalUserAccountEws:
+                types.add(ObjectType.accounts);
+                List<Cos> coses = getAllCos();
+                String []bases = getSearchBases(domain, types);
+                long count = 0L;
+                for (Cos cos : coses) {
+                    String cosId = cos.getId();
+                    if (cos.isFeatureEwsEnabled()) {
+                        ZimbraLog.system.debug("Cos -> %s : EWS -> %s", cos.getName(), String.valueOf(true));
+                        // count total number of accounts on cos
+                        filter = filterFactory.allNonSystemInternalAccountsOnCos(cosId);
+                        for (String base : bases) {
+                            count += countObjects(base, filter);
+                        }
+                        ZimbraLog.system.debug("Cos -> %s : count -> %s", cos.getName(), String.valueOf(count));
+                        // deduct count of accounts that have ews feature disabled
+                        filter = filterFactory.allNonSystemInternalEwsDisabledAccountsOnCos(cosId);
+                        for (String base : bases) {
+                            count -= countObjects(base, filter);
+                        }
+                        ZimbraLog.system.debug("Cos -> %s : count -> %s", cos.getName(), String.valueOf(count));
+                    } else {
+                        ZimbraLog.system.debug("Cos -> %s : EWS -> %s", cos.getName(), String.valueOf(false));
+                        filter = filterFactory.allNonSystemInternalEwsAccountsOnCos(cosId);
+                        for (String base : bases) {
+                            count += countObjects(base, filter);
+                        }
+                    }
+                    ZimbraLog.system.debug("Final : Cos -> %s : count -> %s", cos.getName(), String.valueOf(count));
+                }
+                filter = filterFactory.allNonSystemInternalEwsAccountsOnDefaultCos();
+                for (String base : bases) {
+                    count += countObjects(base, filter);
+                }
+                ZimbraLog.system.debug("Final : count -> %s", String.valueOf(count));
+                return count;
             case internalArchivingAccount:
                 types.add(ObjectType.accounts);
                 filter = filterFactory.allNonSystemArchivingAccounts();
@@ -11524,5 +11577,4 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             LdapClient.closeContext(zlc);
         }
     }
-
 }
