@@ -4352,10 +4352,10 @@ abstract class ImapHandler {
         sendOK(tag, copyuid + command + " completed");
 
         if (isCopyToTrash(commandP)) {
-            ZimbraLog.imap.info("IMAP:::Before Proceesed list" + processedDeletes.get(accountId));
-            ZimbraLog.imap.info("IMAP:::Before Deletes in process" + deletesInProcess.get(accountId));
+            ZimbraLog.imap.debug("IMAP:::Before Proceesed list" + processedDeletes.get(accountId));
+            ZimbraLog.imap.debug("IMAP:::Before Deletes in process" + deletesInProcess.get(accountId));
 
-            ZimbraLog.imap.info("IMAP:::Copy is to trash adding to processed List." );
+            ZimbraLog.imap.debug("IMAP:::Copy is to trash adding to processed List." );
             if (deletesInProcess.get(accountId) != null) {
                 deletesInProcess.get(accountId).remove(sequenceSet);
             }
@@ -4369,10 +4369,10 @@ abstract class ImapHandler {
                 processedDeletes.put(accountId, processedList);
             }
 
-            ZimbraLog.imap.info("IMAP:::after  Proceesed list" + processedDeletes.get(accountId));
-            ZimbraLog.imap.info("IMAP::: After Deletes in process" + deletesInProcess.get(accountId));
-            ZimbraLog.imap.info(deletesInProcess);
-            ZimbraLog.imap.info(processedDeletes);
+            ZimbraLog.imap.debug("IMAP:::after  Proceesed list" + processedDeletes.get(accountId));
+            ZimbraLog.imap.debug("IMAP::: After Deletes in process" + deletesInProcess.get(accountId));
+            ZimbraLog.imap.debug(deletesInProcess);
+            ZimbraLog.imap.debug(processedDeletes);
         }
         return true;
     }
