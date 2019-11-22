@@ -1380,7 +1380,7 @@ public final class LC {
     public static final KnownKey notify_mbox_listeners_async_if_possible = KnownKey.newKey(true);
 
     @Supported
-    public static final KnownKey contact_search_min_chars_for_wildcard_query = KnownKey.newKey(10);
+    public static final KnownKey contact_search_min_chars_for_wildcard_query = KnownKey.newKey(6);
 
     @Supported
     public static final KnownKey mailbox_liveness_probe_override_file = KnownKey.newKey("/tmp/PASS-LIVENESS");
