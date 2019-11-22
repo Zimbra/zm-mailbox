@@ -16,12 +16,17 @@
  */
 package com.zimbra.cs.index.query;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.PhraseQuery;
 import org.apache.lucene.search.TermQuery;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -108,6 +113,9 @@ public class TextQuery extends Query {
         String queryField;
         String queryString;
         if (solrQuery.contains("*")) {
+            if (LC.search_disable_leading_wildcard_query.booleanValue()) {
+                solrQuery = stripLeadingWildcards(solrQuery);
+            }
             // route to edge n-gram tokenized fields if possible
             Pair<String, String> wildcardQueryInfo = SolrUtils.getWildcardQueryTarget(field, solrQuery);
             queryField = wildcardQueryInfo.getFirst();
@@ -155,6 +163,23 @@ public class TextQuery extends Query {
             return null;
         }
     }
+
+    private String stripLeadingWildcards(String queryStr) {
+        if (isPhraseQuery) {
+            List<String> parts = new ArrayList<>();
+            for (String part: queryStr.split("\\s")) {
+                if (part.startsWith("*")) {
+                    parts.add(StringUtils.stripStart(part, "*"));
+                } else {
+                    parts.add(part);
+                }
+            }
+            return Joiner.on(" ").join(parts);
+        } else {
+            return StringUtils.stripStart(queryStr, "*");
+        }
+    }
+
     @Override
     public void dump(StringBuilder out) {
         out.append(field);

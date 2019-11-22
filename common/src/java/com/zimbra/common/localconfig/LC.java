@@ -839,6 +839,8 @@ public final class LC {
     public static final KnownKey search_dbfirst_term_percentage_cutoff = KnownKey.newKey(0.8F);
     public static final KnownKey search_tagged_item_count_join_query_cutoff = KnownKey.newKey(1000); //beyond this limit server will not use join in the query while fetching unread items
     public static final KnownKey search_disable_standalone_wildcard_query = KnownKey.newKey(true);
+    public static final KnownKey search_disable_leading_wildcard_query = KnownKey.newKey(true);
+
 
     public static final KnownKey zmstat_interval = KnownKey.newKey(30);
     public static final KnownKey zmstat_disk_interval = KnownKey.newKey(600);

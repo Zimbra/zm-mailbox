@@ -19,6 +19,7 @@ package com.zimbra.cs.index.query;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
@@ -27,6 +28,7 @@ import org.apache.lucene.search.TermQuery;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.LuceneQueryOperation;
@@ -68,12 +70,14 @@ public final class ContactQuery extends Query {
             } else {
                 //  "keyword"  -->  "keyword*"
                 // "*keyword*" -->  "keyword*"
-                // "*keyword"  --> "*keyword"
+                // "*keyword"  -->  "*keyword" if leading wildcard support is enabled, otherwise "keyword"
                 //  "keyword*" -->  "keyword*"
                 if (!token.startsWith("*") && !token.endsWith("*")) {
                     tokens.add(token + "*");
                 } else if (token.startsWith("*") && token.endsWith("*")) {
                     tokens.add(token.substring(1, token.length()));
+                } else if (token.startsWith("*") && LC.search_disable_leading_wildcard_query.booleanValue()) {
+                    tokens.add(StringUtils.stripStart(token, "*"));
                 } else {
                     tokens.add(token);
                 }
