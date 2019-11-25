@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2019 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -88,6 +88,9 @@ abstract class Pop3Handler {
     // Message specific data
     private String currentCommandLine;
     private int expire;
+
+    // Custom UID string
+    private Boolean useCustomPop3UID = false;
 
     private final ServerThrottle throttle;
     protected Map<String, Integer> commandCount;
@@ -598,6 +601,7 @@ abstract class Pop3Handler {
             }
             mailboxSize = getMailboxSize();
             inboxNumMsgs = getInboxNumMessages();
+            useCustomPop3UID = acct.getBooleanAttr(Provisioning.A_zimbraFeatureCustomUIDEnabled, false);
         } catch (ServiceException e) {
             String code = e.getCode();
             if (code.equals(AccountServiceException.NO_SUCH_ACCOUNT) || code.equals(AccountServiceException.AUTH_FAILED)
@@ -671,14 +675,14 @@ abstract class Pop3Handler {
         }
         if (msg != null) {
             Pop3Message pm = mailbox.getPop3Msg(msg);
-            sendOK(msg + " " + pm.getId() + "." + pm.getDigest());
+            sendOK(msg + " " + pm.getUid(useCustomPop3UID));
         } else {
             sendOK(mailbox.getNumMessages() + " messages", false);
             int totNumMsgs = mailbox.getTotalNumMessages();
             for (int n=0; n < totNumMsgs; n++) {
                 Pop3Message pm = mailbox.getMsg(n);
                 if (!pm.isDeleted()) {
-                    sendLine((n+1) + " " + pm.getId() + "." + pm.getDigest(), false);
+                    sendLine((n+1) + " " + pm.getUid(useCustomPop3UID), false);
                 }
             }
             sendLine(TERMINATOR, true);

@@ -112,6 +112,7 @@ public final class Metadata {
     public static final String FN_USER_AGENT       = "ua";
     public static final String FN_UIDNEXT          = "unxt";
     public static final String FN_URL              = "url";
+    public static final String FN_POP3_UID         = "p3uid";
     @Deprecated
     public static final String FN_MD_VERSION       = "v"; // metadata version; frozen but needs to be encoded for legacy clients
     public static final String FN_METADATA_VERSION = "mdver";  // version for the item's metadata

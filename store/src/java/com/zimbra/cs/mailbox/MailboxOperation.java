@@ -111,7 +111,8 @@ public enum MailboxOperation {
     SetDisableActiveSync(91),
     SetWebOfflineSyncDays(92),
     DeleteConfig(93),
-    View(94);
+    View(94),
+    SetPop3Uid(95);
 
     private MailboxOperation(int c) {
         code = c;

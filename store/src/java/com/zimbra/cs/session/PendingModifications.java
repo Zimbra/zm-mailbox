@@ -89,6 +89,7 @@ public abstract class PendingModifications<T extends ZimbraMailItem> {
         public static final int DISABLE_ACTIVESYNC = 0x04000000;
         public static final int INTERNAL_ONLY    = 0x10000000;
         public static final int MODSEQ           = 0x20000000;
+        public static final int POP3UID          = 0x40000000;
         public static final int ALL_FIELDS       = ~0;
 
         public Object what;

@@ -3659,7 +3659,7 @@ public class DbMailItem {
         try {
             String dateConstraint = popDate < 0 ? "" : " AND date > ?";
             stmt = conn.prepareStatement(
-                    "SELECT mi.id, mi.size, mi.blob_digest FROM " + getMailItemTableName(mbox, " mi") +
+                    "SELECT mi.id, mi.size, mi.blob_digest, mi.metadata FROM " + getMailItemTableName(mbox, " mi") +
                     " WHERE " + IN_THIS_MAILBOX_AND + DbUtil.whereIn("folder_id", folders.size()) +
                     " AND type = " + MailItem.Type.MESSAGE.toByte() + " AND " +
                     Db.getInstance().bitAND("flags", String.valueOf(Flag.BITMASK_DELETED | Flag.BITMASK_POPPED)) +
@@ -3680,7 +3680,12 @@ public class DbMailItem {
             rs = stmt.executeQuery();
 
             while (rs.next()) {
-                result.add(new Pop3Message(rs.getInt(1), rs.getLong(2), rs.getString(3)));
+                Metadata md = null;
+                String buf = DbMailItem.decodeMetadata(rs.getString(4));
+                if (buf != null) {
+                    md = new Metadata(buf);
+                }
+                result.add(new Pop3Message(rs.getInt(1), rs.getLong(2), rs.getString(3), md));
             }
             return result;
         } catch (SQLException e) {
