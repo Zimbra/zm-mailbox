@@ -6,8 +6,8 @@
  <dependencies>
   <dependency org="junit" name="junit" rev="4.8.2" />
   <dependency org="xmlunit" name="xmlunit" rev="1.6"/>
-  <dependency org="com.google.guava" name="guava" rev="23.0"/>
   <dependency org="org.dom4j" name="dom4j" rev="${dom4j.version}" />
+  <dependency org="com.google.guava" name="guava" rev="${com.google.guava.version}"/>
   <dependency org="io.leangen.graphql" name="spqr" rev="0.9.7"/>
   <!-- Without this, dom4j pulls in an ancient version of xerces -->
   <dependency org="xerces" name="xercesImpl" rev="2.9.1-patch-01"/>

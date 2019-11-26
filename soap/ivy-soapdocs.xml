@@ -6,7 +6,7 @@
     <dependency org="org.freemarker" name="freemarker" rev="2.3.19"/>
     <dependency org="commons-lang" name="commons-lang" rev="2.6"/>
     <dependency org="commons-cli" name="commons-cli" rev="1.2"/>
-    <dependency org="com.google.guava" name="guava" rev="13.0.1"/>
+    <dependency org="com.google.guava" name="guava" rev="${com.google.guava.version}"/>
     <dependency org="com.sun" name="tools" rev="1.6.0">
        <artifact name="tools" type="jar" url="file:///${java.home}/../lib/tools.jar"/>
     </dependency>

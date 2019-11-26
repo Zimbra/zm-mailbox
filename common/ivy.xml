@@ -25,7 +25,7 @@
   <dependency org="org.jfree" name="jcommon" rev="1.0.23" />
   <dependency org="org.json" name="json" rev="20090211" />
   <dependency org="net.spy" name="spymemcached" rev="2.12.1"/>
-  <dependency org="com.google.guava" name="guava" rev="23.0" />
+  <dependency org="com.google.guava" name="guava" rev="${com.google.guava.version}" />
   <dependency org="org.python" name="jython-standalone" rev="2.5.2" />
   <dependency org="commons-cli" name="commons-cli" rev="1.2" />
   <dependency org="com.ibm.icu" name="icu4j" rev="4.8.1.1" />
