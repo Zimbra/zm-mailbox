@@ -30,6 +30,8 @@ import com.zimbra.cs.listeners.ListenerUtil.Priority;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public abstract class AccountListener {
+    private static final String SMX_VIA_HEADER = "smx";
+    private static final String IDBRIDGE_VIA_HEADER = "idbridge";
 
     private static Map<String, AccountListenerEntry> mListeners = Collections
         .synchronizedMap(new HashMap<String, AccountListenerEntry>());
@@ -284,11 +286,16 @@ public abstract class AccountListener {
 
     private static boolean notifyCaller(String requestVia, String listenerName) {
         boolean notify = true;
-        if (!StringUtil.isNullOrEmpty(requestVia)) {
-            if (listenerName.toLowerCase().contains(requestVia.toLowerCase())) {
+        if (!StringUtil.isNullOrEmpty(requestVia) && !StringUtil.isNullOrEmpty(listenerName)) {
+            if (requestVia.toLowerCase().contains(SMX_VIA_HEADER) && listenerName.toLowerCase().contains(SMX_VIA_HEADER)) {
+                notify = false;
+            }
+
+            if (requestVia.toLowerCase().contains(IDBRIDGE_VIA_HEADER) && listenerName.toLowerCase().contains(IDBRIDGE_VIA_HEADER)) {
                 notify = false;
             }
         }
+
         return notify;
     }
 
