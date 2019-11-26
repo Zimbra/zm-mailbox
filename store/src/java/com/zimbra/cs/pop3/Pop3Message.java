@@ -48,6 +48,11 @@ public final class Pop3Message {
         this.uid = msg.getPop3Uid();
     }
 
+    @Deprecated
+    public Pop3Message(int id, long size, String digest) {
+       this(id, size, digest, null);
+    }
+
     public Pop3Message(int id, long size, String digest, Metadata metadata) {
         this.id = id;
         this.size = size;
