@@ -48,7 +48,7 @@ public class GetPop3UID extends MailDocumentHandler {
         HashMap<String, StringBuilder> remote = new HashMap<String, StringBuilder>();
         ItemAction.partitionItems(zsc, ids, local, remote);
 
-        Element response = zsc.createElement(MailConstants.GET_POP3_UID_REQUEST);
+        Element response = zsc.createElement(MailConstants.GET_POP3_UID_RESPONSE);
 
         if (remote.size() > 0) {
             List<Element> responses = proxyRemote(request, remote, context);
