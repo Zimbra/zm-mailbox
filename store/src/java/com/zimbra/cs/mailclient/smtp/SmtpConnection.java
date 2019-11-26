@@ -288,7 +288,7 @@ public final class SmtpConnection extends MailConnection {
                     serverExtensions.add(extName);
                     if (extName.equals(AUTH)) {
                         // Parse auth mechanisms.
-                        Splitter splitter = Splitter.on(CharMatcher.WHITESPACE).trimResults().omitEmptyStrings();
+                        Splitter splitter = Splitter.on(CharMatcher.whitespace()).trimResults().omitEmptyStrings();
                         for (String mechanism : splitter.split(matcher.group(2))) {
                             serverAuthMechanisms.add(mechanism.toUpperCase());
                         }

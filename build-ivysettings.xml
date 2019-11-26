@@ -4,6 +4,7 @@
   <property name="httpclient.httpcore.version" value="4.4.11"/>
   <property name="httpclient.async.version" value="4.1.4"/>
   <property name="dom4j.version" value="2.1.1"/>
+  <property name="com.google.guava.version" value="28.1-jre"/>
 <settings defaultResolver="chain-resolver" />
   <caches defaultCacheDir="${dev.home}/.ivy2/cache"/>
   <resolvers>

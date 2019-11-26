@@ -306,7 +306,7 @@ public class ContactAutoComplete {
         }
     }
 
-    private static final Splitter TOKEN_SPLITTER = Splitter.on(CharMatcher.WHITESPACE).omitEmptyStrings().trimResults();
+    private static final Splitter TOKEN_SPLITTER = Splitter.on(CharMatcher.whitespace()).omitEmptyStrings().trimResults();
     public static final int FOLDER_ID_GAL = 0;
     public static final int FOLDER_ID_UNKNOWN = -1;
     public static final int FOLDER_ID_MOUNTPOINT_SUBFOLDER = -2;
