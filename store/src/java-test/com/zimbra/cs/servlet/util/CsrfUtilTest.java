@@ -184,7 +184,7 @@ public class CsrfUtilTest {
             assertEquals(false, validToken);
 
 
-        } catch (ServiceException  e) {
+        } catch (Exception  e) {
             fail("Should not throw exception.");
         }
     }
