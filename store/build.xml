@@ -295,7 +295,7 @@
     <ivy:install organisation="org.springframework" module="spring-beans" revision="5.1.10.RELEASE" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
     <ivy:install organisation="org.springframework" module="spring-context" revision="5.1.10.RELEASE" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
     <ivy:install organisation="org.springframework" module="spring-core" revision="5.1.10.RELEASE" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-    <ivy:install organisation="org.springframework" module="spring-expression" revision="3.0.7.RELEASE" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+    <ivy:install organisation="org.springframework" module="spring-expression" revision="5.1.10.RELEASE" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
     <ivy:install organisation="org.apache.ws.xmlschema" module="xmlschema-core" revision="2.0.3" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
     <ivy:install organisation="org.apache.cxf" module="cxf-core" revision="3.3.4" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
   	<ivy:install organisation="org.apache.cxf" module="cxf-rt-bindings-soap" revision="3.3.4" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
