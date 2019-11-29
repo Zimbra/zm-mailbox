@@ -171,6 +171,24 @@ public class CsrfUtilTest {
         }
     }
 
+    @Test
+    public final void testIsValidCsrfTokenForAccountWithNullAuthToken() {
+        try {
+            Account acct = Provisioning.getInstance().getAccountByName(
+                "test@zimbra.com");
+            AuthToken authToken = new ZimbraAuthToken(acct);
+
+            String csrfToken1 = CsrfUtil.generateCsrfToken(acct.getId(),
+                AUTH_TOKEN_EXPR, CSRFTOKEN_SALT, authToken);
+            boolean validToken = CsrfUtil.isValidCsrfToken(csrfToken1, null);
+            assertEquals(false, validToken);
+
+
+        } catch (Exception  e) {
+            fail("Should not throw exception.");
+        }
+    }
+
 
     @Test
     public final void testIsCsrfRequestWhenCsrfCheckIsTurnedOn() {

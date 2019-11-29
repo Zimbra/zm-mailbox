@@ -255,7 +255,7 @@ public final class CsrfUtil {
     }
 
     public static boolean isValidCsrfToken(String csrfToken, AuthToken authToken) {
-        if (StringUtil.isNullOrEmpty(csrfToken)) {
+        if (StringUtil.isNullOrEmpty(csrfToken) || null == authToken) {
             return false;
         }
 
