@@ -1307,6 +1307,9 @@ public final class LC {
     // Feed Manager comma-separated blacklist. addresses can be CIDR notation, or single ip. no wild-cards (default blacklist private networks)
     public static final KnownKey zimbra_feed_manager_blacklist = KnownKey.newKey("10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,fd00::/8");
 
+    // Feed Manager comma-separated whitelist (exceptions to the blacklist). addresses can be CIDR notation, or single ip. no wild-cards
+    public static final KnownKey zimbra_feed_manager_whitelist = KnownKey.newKey("");
+
     // Zimbra valid class list to de-serialize
     public static final KnownKey zimbra_deserialize_classes = KnownKey.newKey("");
 
