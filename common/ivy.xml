@@ -13,7 +13,7 @@
   <dependency org="org.apache.httpcomponents" name="httpasyncclient" rev="${httpclient.async.version}"/>
   <dependency org="org.apache.httpcomponents" name="httpcore" rev="${httpclient.httpcore.version}"/> 
   <dependency org="org.apache.httpcomponents" name="httpcore-nio" rev="${httpclient.httpcore.version}"/>
-  <dependency org="dom4j" name="dom4j" rev="1.5.2" />
+  <dependency org="org.dom4j" name="dom4j" rev="${dom4j.version}" />
   <dependency org="ical4j" name="ical4j" rev="0.9.16-patched" />
   <dependency org="junit" name="junit" rev="4.8.2" />
   <dependency org="log4j" name="log4j" rev="1.2.16" />
