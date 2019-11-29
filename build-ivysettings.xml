@@ -3,6 +3,7 @@
   <property name="httpclient.version" value="4.5.8"/>
   <property name="httpclient.httpcore.version" value="4.4.11"/>
   <property name="httpclient.async.version" value="4.1.4"/>
+  <property name="dom4j.version" value="2.1.1"/>
 <settings defaultResolver="chain-resolver" />
   <caches defaultCacheDir="${dev.home}/.ivy2/cache"/>
   <resolvers>
