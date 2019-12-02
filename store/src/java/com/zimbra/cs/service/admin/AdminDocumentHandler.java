@@ -21,8 +21,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.servlet.http.HttpServletRequest;
-
 import com.google.common.base.Joiner;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
@@ -34,7 +32,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.EmailUtil;
-import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.AccessManager.AttrRightChecker;
@@ -60,9 +57,6 @@ import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.names.NameUtil;
 import com.zimbra.cs.session.Session;
 import com.zimbra.soap.DocumentHandler;
-import com.zimbra.soap.IpProxyTarget;
-import com.zimbra.soap.ProxyTarget;
-import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.type.CosSelector;
 import com.zimbra.soap.admin.type.CosSelector.CosBy;
@@ -1058,14 +1052,5 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
         }
         checkRight(zsc, server, Admin.R_getServer);
         return server;
-    }
-
-    private Element proxyToAccountHostIp(String accountHostIp, Element request, Map<String, Object> context, ZimbraSoapContext zsc)
-            throws ServiceException {
-        AuthToken authToken = zsc.getAuthToken();
-        HttpServletRequest httpreq = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
-        ProxyTarget target = new IpProxyTarget(accountHostIp, authToken, httpreq);
-        Pair<Element, Element> envelope = target.execute(request.detach(), zsc, true);
-        return envelope.getSecond().detach();
     }
 }
