@@ -33,6 +33,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.service.AuthProvider;
+import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 
 import java.util.Map;
@@ -88,7 +89,7 @@ public class ChangePassword extends AccountDocumentHandler {
 		    prov.changePassword(acct, oldPassword, newPassword);
         }
         AuthToken at = AuthProvider.getAuthToken(acct);
-
+        AccountUtil.broadcastFlushCache(acct);
         Element response = zsc.createElement(AccountConstants.CHANGE_PASSWORD_RESPONSE);
         at.encodeAuthResp(response, false);
         response.addAttribute(AccountConstants.E_LIFETIME, at.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);
