@@ -735,4 +735,13 @@ public abstract class DocumentHandler {
         selector.addEntry(ceSel);
         PubSubService.getInstance().publish(PubSubService.BROADCAST, new FlushCacheMsg(selector));
     }
+
+    protected Element proxyToAccountHostIp(String accountHostIp, Element request, Map<String, Object> context, ZimbraSoapContext zsc)
+            throws ServiceException {
+        AuthToken authToken = zsc.getAuthToken();
+        HttpServletRequest httpreq = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
+        ProxyTarget target = new IpProxyTarget(accountHostIp, authToken, httpreq);
+        Pair<Element, Element> envelope = target.execute(request.detach(), zsc, true);
+        return envelope.getSecond().detach();
+    }
 }
