@@ -89,7 +89,7 @@
   <dependency org="org.apache.commons" name="commons-csv" rev="1.2"/>
   <dependency org="ch.ethz.ganymed" name="ganymed-ssh2" rev="build210" />
   <dependency org="ant-tar-patched" name="ant-tar-patched" rev="1.0" />
-  <dependency org="com.yahoo.platform.yui" name="yuicompressor" rev="2.4.2-zimbra" />
+  <dependency org="com.yahoo.platform.yui" name="yuicompressor" rev="2.4.8" />
   <dependency org="org.hsqldb" name="hsqldb" rev="2.2.9" />
   <dependency org="org.hsqldb" name="sqltool" rev="2.2.9" />
   <dependency org="org.easymock" name="easymock" rev="3.0" />
