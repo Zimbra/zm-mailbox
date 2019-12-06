@@ -148,7 +148,11 @@ public class EmailToSMS implements LmtpCallback {
 				strBuff.append("-");strBuff.append(simpleDateFormat.format(invite.getEndTime().getDate()));
 				strBuff.append(", Location: ");
 				strBuff.append(invite.getLocation());
-				strBuff.append(" (Calendar)");
+				if (calItem.getType() == MailItem.Type.APPOINTMENT) {
+					strBuff.append(" (Calendar)");
+				} else {
+					strBuff.append(" (Task)");
+				}
 			}
 			String sender = acct.getName();
 			String message = strBuff.toString();
@@ -282,7 +286,7 @@ public class EmailToSMS implements LmtpCallback {
 		return out;
 	}
 
-	public static boolean isPureAscii(String v) {
+	public static synchronized boolean isPureAscii(String v) {
 		return asciiEncoder.canEncode(v);
 	}
 }
