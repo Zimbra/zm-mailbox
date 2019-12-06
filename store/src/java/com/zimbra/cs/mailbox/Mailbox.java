@@ -285,7 +285,6 @@ import com.zimbra.cs.store.StoreManager.StoreFeature;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.AccountUtil.AccountAddressMatcher;
 import com.zimbra.cs.util.SpoolingCache;
-import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.soap.mail.type.Policy;
 import com.zimbra.soap.mail.type.RetentionPolicy;
@@ -10113,6 +10112,8 @@ public class Mailbox implements MailboxStore {
                         }
                         if (doRollback) {
                             DbPool.quietRollback(conn);
+                            //not sure what the state of the DB is, so force a state reload next time
+                            state.reloadOnNextAccess();
                         }
                         rollbackDeletes = rollbackCache(currentChange());
                         /* current assumption is that code will throw an exception if we are here.

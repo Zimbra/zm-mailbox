@@ -28,6 +28,7 @@ public abstract class MailboxState {
     protected MailboxData data;
     private Map<MailboxField, SynchronizedField<?>> fieldMap = new HashMap<>();
     protected TransactionCacheTracker cacheTracker;
+    private boolean needReload = false;
     static {
         setFactory(new RedisMailboxState.Factory());
     }
@@ -39,6 +40,9 @@ public abstract class MailboxState {
     }
 
     protected void init() {
+        if (needReload) {
+            needReload = false;
+        }
         for (MailboxField fieldType: MailboxField.values()) {
             fieldMap.put(fieldType, initField(fieldType));
         }
@@ -213,8 +217,16 @@ public abstract class MailboxState {
         }
     }
 
+    public void reloadOnNextAccess() {
+        this.needReload = true;
+    }
+
     @SuppressWarnings("unchecked")
     private <T> SynchronizedField<T> getField(MailboxField field) {
+        if (needReload) {
+            ZimbraLog.cache.info("mailbox state might be stale, reloading...");
+            reload();
+        }
         return (SynchronizedField<T>) fieldMap.get(field);
     }
 
