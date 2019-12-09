@@ -71,15 +71,15 @@ public abstract class CalItemReminderTaskBase extends ScheduledTask {
 			return null;
         } else if (invite != null && invite.getAlarms() != null && invite.getAlarms().size() >= 2) {
         	String domain = null;
-        	for (int i = 0; i < invite.getAlarms().size() - 1 && invite.getAlarms().get(i).getAttendees().size() > 0; i++) {
-        		domain = invite.getAlarms().get(i).getAttendees().get(0).getAddress().split("@")[1];
+            for (int i = invite.getAlarms().size() - 1; invite.getAlarms().get(i).getAttendees().size() > 0 && i >= 0; i--) {
+                domain = invite.getAlarms().get(i).getAttendees().get(0).getAddress().split("@")[1];
     			if (SMS_DOMAIN.equalsIgnoreCase(domain)) {
     	            ZimbraLog.scheduler.warn("Invite with id %s and comp num %s does not exist", invId, compNum);
     	            if (calItem.getType() == MailItem.Type.APPOINTMENT) {
     	            	ZimbraLog.scheduler.info("Trying reminder sms for Calendar Appointment");
     	            } else {
     	            	ZimbraLog.scheduler.info("Trying reminder sms for Task");
-    	            }
+                    }
     				sendReminderSMS(calItem);
     			} else if (invite.getAlarms().get(i).getAction().equals("EMAIL") && !SMS_DOMAIN.equalsIgnoreCase(domain)) {
     				sendReminder(calItem, invite);
