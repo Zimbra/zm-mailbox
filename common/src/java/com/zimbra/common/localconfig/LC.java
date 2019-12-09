@@ -1385,6 +1385,9 @@ public final class LC {
     @Supported
     public static final KnownKey mailbox_liveness_probe_override_file = KnownKey.newKey("/tmp/PASS-LIVENESS");
 
+    @Supported
+    public static final KnownKey solr_cache_term_filter_queries = KnownKey.newKey(false);
+
     public enum PUBLIC_SHARE_VISIBILITY { samePrimaryDomain, all, none };
 
     /**
