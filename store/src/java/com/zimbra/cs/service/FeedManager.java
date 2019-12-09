@@ -273,27 +273,39 @@ public class FeedManager {
     }
 
     /**
-     * Returns true if target address is link-local, loopback, or blacklisted.
+     * Returns true if target address is not whitelisted,
+     * and is link-local, loopback, or blacklisted.
      * @param url The target
      * @return True if address is blocked for feed manager
      */
     protected static boolean isBlockedFeedAddress(URIBuilder url) {
+        InetAddress targetAddress;
+        try {
+            targetAddress = InetAddress.getByName(url.getHost());
+        } catch (UnknownHostException e) {
+            ZimbraLog.misc.warn("unable to identify feed manager target url host: %s", url);
+            return false;
+        }
+
+        String whitelistString = LC.zimbra_feed_manager_whitelist.value();
+        List<String> whitelist = new ArrayList<String>();
+        if (!StringUtil.isNullOrEmpty(whitelistString)) {
+            whitelist.addAll(Arrays.asList(whitelistString.trim().split(",")));
+        }
+        if (whitelist.stream().anyMatch(ip -> isAddressInRange(targetAddress, ip))) {
+            return false;
+        }
+
         String blacklistString = LC.zimbra_feed_manager_blacklist.value();
         List<String> blacklist = new ArrayList<String>();
         if (!StringUtil.isNullOrEmpty(blacklistString)) {
-            blacklist.addAll(Arrays.asList(blacklistString.split(",")));
+            blacklist.addAll(Arrays.asList(blacklistString.trim().split(",")));
         }
-        try {
-            InetAddress targetAddress = InetAddress.getByName(url.getHost());
-            return targetAddress.isAnyLocalAddress()
-                || targetAddress.isLinkLocalAddress()
-                || targetAddress.isLoopbackAddress()
-                || blacklist.stream()
-                    .anyMatch(ip -> isAddressInRange(targetAddress, ip));
-        } catch (UnknownHostException e) {
-            ZimbraLog.misc.warn("unable to identify feed manager target url host: %s", url);
-        }
-        return false;
+        return targetAddress.isAnyLocalAddress()
+            || targetAddress.isLinkLocalAddress()
+            || targetAddress.isLoopbackAddress()
+            || blacklist.stream()
+                .anyMatch(ip -> isAddressInRange(targetAddress, ip));
     }
 
     private static RemoteDataInfo retrieveRemoteData(String url, Folder.SyncData fsd)
@@ -341,7 +353,12 @@ public class FeedManager {
 
                 // validate target address (also handles followed `location` header addresses)
                 if (isBlockedFeedAddress(httpurl)) {
-                    throw ServiceException.INVALID_REQUEST(String.format("invalid url for feed: %s", url), null);
+                    ZimbraLog.misc.info(
+                        "Feed ip address blocked: %s. See localconfig for comma-separated ip list configuration: "
+                        + "zimbra_feed_manager_blacklist, zimbra_feed_manager_whitelist",
+                        url);
+                    throw ServiceException.INVALID_REQUEST(
+                        String.format("Address for feed is blocked: %s. See mailbox logs for details.", url), null);
                 }
                 // username and password are encoded in the URL as http://user:pass@host/...
                 if (url.indexOf('@') != -1) {
