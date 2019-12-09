@@ -257,7 +257,13 @@ public abstract class Element implements Cloneable {
 
     public QName getQName() {
         String uri = getNamespaceURI(mPrefix);
-        return uri == null ? QName.get(mName) : QName.get(getQualifiedName(), uri);
+        QName returnValue = null;
+        try {
+            returnValue = (uri == null) ? QName.get(mName) : QName.get(getQualifiedName(), uri);
+        } catch (Exception e) {
+            ZimbraLog.soap.error("Caught IllegalArgumentException: ", e);
+        }
+        return returnValue;
     }
 
     public static QName getQName(String qualifiedName) {
