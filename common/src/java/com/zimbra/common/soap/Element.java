@@ -260,7 +260,7 @@ public abstract class Element implements Cloneable {
         QName returnValue = null;
         try {
             returnValue = (uri == null) ? QName.get(mName) : QName.get(getQualifiedName(), uri);
-        } catch (Exception e) {
+        } catch (IllegalArgumentException e) {
             ZimbraLog.soap.error("Caught IllegalArgumentException: ", e);
         }
         return returnValue;
