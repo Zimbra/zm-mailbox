@@ -25,6 +25,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.ReindexMailboxInfo;
+import com.zimbra.soap.type.ZmBoolean;
 
 /**
  * @zm-api-command-auth-required true
@@ -60,6 +61,13 @@ public class ReIndexRequest {
     private final ReindexMailboxInfo mbox;
 
     /**
+     * @zm-api-field-tag isDeleteOnly
+     * @zm-api-field-description Just delete index without reindexing. It cannot be canceled.</b>
+     */
+    @XmlAttribute(name=AdminConstants.A_DELETE_ONLY, required=false)
+    private ZmBoolean isDeleteOnly;
+
+    /**
      * no-argument constructor wanted by JAXB
      */
      @SuppressWarnings("unused")
@@ -74,4 +82,9 @@ public class ReIndexRequest {
 
     public String getAction() { return action; }
     public ReindexMailboxInfo getMbox() { return mbox; }
+
+    public void setDeleteOnly(Boolean deleteOnly) {
+        this.isDeleteOnly = ZmBoolean.fromBool(deleteOnly);
+    }
+    public boolean getDeleteOnly() {return ZmBoolean.toBool(isDeleteOnly); }
 }

@@ -8185,6 +8185,78 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Whether the index should create
+     *
+     * @return zimbraCreateIndex, or true if unset
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=9005)
+    public boolean isCreateIndex() {
+        return getBooleanAttr(Provisioning.A_zimbraCreateIndex, true, true);
+    }
+
+    /**
+     * Whether the index should create
+     *
+     * @param zimbraCreateIndex new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=9005)
+    public void setCreateIndex(boolean zimbraCreateIndex) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCreateIndex, zimbraCreateIndex ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether the index should create
+     *
+     * @param zimbraCreateIndex new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=9005)
+    public Map<String,Object> setCreateIndex(boolean zimbraCreateIndex, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCreateIndex, zimbraCreateIndex ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether the index should create
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=9005)
+    public void unsetCreateIndex() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCreateIndex, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether the index should create
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=9005)
+    public Map<String,Object> unsetCreateIndex(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCreateIndex, "");
+        return attrs;
+    }
+
+    /**
      * time object was created
      *
      * <p>Use getCreateTimestampAsString to access value as a string.

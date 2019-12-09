@@ -134,7 +134,7 @@ public final class ReIndex extends AdminDocumentHandler {
                     }
                     mbox.index.startReIndexById(ids);
                 } else {
-                    mbox.index.startReIndex();
+                    mbox.index.startReIndex(req.getDeleteOnly());
                 }
 
                 response.addAttribute(AdminConstants.A_STATUS, STATUS_STARTED);
@@ -148,6 +148,9 @@ public final class ReIndex extends AdminDocumentHandler {
                 response.addAttribute(AdminConstants.A_STATUS, STATUS_IDLE);
             }
         } else if (ACTION_CANCEL.equalsIgnoreCase(action)) {
+            if (req.getDeleteOnly()) {
+                throw ServiceException.INVALID_REQUEST("Can't cancel deleting index.", null);
+            }
             MailboxIndex.ReIndexStatus status = mbox.index.cancelReIndex();
             if (status != null) {
                 response.addAttribute(AdminConstants.A_STATUS, STATUS_CANCELLED);

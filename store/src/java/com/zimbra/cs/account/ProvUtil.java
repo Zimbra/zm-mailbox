@@ -593,6 +593,9 @@ public class ProvUtil implements HttpDebugListener {
         DELETE_DOMAIN("deleteDomain", "dd", "{domain|id}", Category.DOMAIN, 1, 1),
         DELETE_IDENTITY(
                "deleteIdentity", "did", "{name@domain|id} {identity-name}", Category.ACCOUNT, 2, 2),
+        DELETE_INDEX_MAILBOX(
+               "deleteIndexMailbox", "dim",
+               "{name@domain|id} {start|status}", Category.MAILBOX, 2, 2),
         DELETE_SIGNATURE(
                "deleteSignature", "dsig", "{name@domain|id} {signature-name}", Category.ACCOUNT, 2, 2),
         DELETE_SERVER(
@@ -1349,6 +1352,9 @@ public class ProvUtil implements HttpDebugListener {
         case DELETE_IDENTITY:
             prov.deleteIdentity(lookupAccount(args[1]), args[2]);
             break;
+        case DELETE_INDEX_MAILBOX:
+            doDeleteIndexMailbox(args);
+            break;
         case DELETE_SIGNATURE:
             account = lookupAccount(args[1]);
             prov.deleteSignature(account, lookupSignatureId(account, args[2]));
@@ -1990,6 +1996,17 @@ public class ProvUtil implements HttpDebugListener {
             console.printf("progress: numSucceeded=%d, numFailed=%d, numRemaining=%d\n", progress.getNumSucceeded(),
                     progress.getNumFailed(), progress.getNumRemaining());
         }
+    }
+
+    private void doDeleteIndexMailbox(String[] args) throws ServiceException {
+        if (!(prov instanceof SoapProvisioning)) {
+            throwSoapOnly();
+        }
+        SoapProvisioning sp = (SoapProvisioning) prov;
+        Account acct = lookupAccount(args[1]);
+        ReIndexInfo info = sp.reIndex(acct, args[2], null, null, true);
+        ReIndexInfo.Progress progress = info.getProgress();
+        console.printf("status: %s\n", info.getStatus());
     }
 
     private void doCompactIndexMailbox(String[] args) throws ServiceException {

@@ -1615,4 +1615,8 @@ public final class AdminConstants {
             "com_zextras_client", "com_zimbra_connect_classic", "com_zimbra_connect_modern", "com_zextras_docs",
             "com_zimbra_docs_modern", "com_zimbra_drive_modern", "com_zextras_drive", "com_zextras_drive_open",
             "com_zextras_chat_open", "com_zextras_talk", "zimbra-zimlet-briefcase-edit-lool");
+
+    // ReIndex
+    public static final String A_DELETE_ONLY = "deleteOnly";
+
 }

@@ -110,6 +110,28 @@ public final class MailboxIndex {
     boolean indexingSuspended = false;
     int numMaybeIndexDeferredItemsCalls = 0;
 
+    public boolean needCreateIndex() throws ServiceException {
+        boolean createIndex = mailbox.getAccount().getBooleanAttr(Provisioning.A_zimbraCreateIndex, true);
+        return createIndex;
+    }
+
+    public boolean needToStartReIndexThread() throws ServiceException {
+        boolean isZimbraFeatureDelayedIndexEnabled = mailbox.getAccount().getBooleanAttr(Provisioning.A_zimbraFeatureDelayedIndexEnabled, false);
+        boolean createIndex = mailbox.getAccount().getBooleanAttr(Provisioning.A_zimbraCreateIndex, true);
+
+        try {
+            if (true == createIndex &&
+                false == mailbox.index.getIndexStore().isIndexExist()) { // Index files are empty
+                return true;
+            } else {
+                return false;
+            }
+        } catch (IOException e) {
+            ZimbraLog.index.error("Failed to start reindex thread (index files IO error)");
+        }
+        return false;
+    }
+
     MailboxIndex(Mailbox mbox) {
         mailbox = mbox;
         String analyzerName;
@@ -167,8 +189,15 @@ public final class MailboxIndex {
         // no need to index if the search doesn't involve Lucene
         if (!params.isQuick() && query.hasTextOperation() && getDeferredCount(types) > 0) {
             try {
-                // don't wait if an indexing is in progress by other thread
-                indexDeferredItems(types, new BatchStatus(), false);
+                MailboxIndex.ReIndexStatus status = mailbox.index.getReIndexStatus();
+                if (needToStartReIndexThread()) {
+                        // Start re-indexing thread so that the search request doesn't wait for
+                        // the indexing task
+                        mailbox.index.startReIndex();
+                } else {
+                    // don't wait if an indexing is in progress by other thread
+                    indexDeferredItems(types, new BatchStatus(), false);
+                }
             } catch (ServiceException e) {
                 ZimbraLog.index.error("Failed to index deferred items", e);
             }
@@ -392,6 +421,10 @@ public final class MailboxIndex {
      */
     private void indexDeferredItems(Set<MailItem.Type> types, BatchStatus status, boolean wait)
             throws ServiceException {
+        if (!needCreateIndex()) {
+            ZimbraLog.index.debug("index skipping");
+            return;
+        }
         assert(mailbox.lock.isUnlocked());
         if ((indexStore != null) && indexStore.isPendingDelete()) {
             ZimbraLog.index.debug("index delete is in progress by other thread, skipping");
@@ -429,7 +462,14 @@ public final class MailboxIndex {
      * a WARN message is logged, but it won't be retried.
      */
     public void startReIndex() throws ServiceException {
-        startReIndex(new ReIndexTask(mailbox, null));
+        startReIndex(false);
+    }
+    public void startReIndex(boolean isDeleteOnlyRequest) throws ServiceException {
+        if (true == isDeleteOnlyRequest) {
+            startReIndex(new ReIndexTask(mailbox, null, true));
+        } else {
+            startReIndex(new ReIndexTask(mailbox, null));
+        }
     }
 
     public void startReIndexById(Collection<Integer> ids) throws ServiceException {
@@ -513,10 +553,19 @@ public final class MailboxIndex {
     private class ReIndexTask extends IndexTask {
         private final Collection<Integer> ids;
         private final ReIndexStatus status = new ReIndexStatus();
+        private boolean isDeleteOnly = false;
+        public boolean getDeleteOnly() { return isDeleteOnly; }
+        public void setDeleteOnly(boolean flag) { this.isDeleteOnly = flag; }
 
         ReIndexTask(Mailbox mbox, Collection<Integer> ids) {
             super(mbox);
             this.ids = ids;
+        }
+
+        ReIndexTask(Mailbox mbox, Collection<Integer> ids, Boolean isDeleteOnly) {
+            super(mbox);
+            this.ids = ids;
+            this.isDeleteOnly = isDeleteOnly;
         }
 
         @Override
@@ -582,6 +631,10 @@ public final class MailboxIndex {
                     clearDeferredIds();
                 } finally {
                     mailbox.lock.release();
+                }
+                if (isDeleteOnly) {
+                    ZimbraLog.index.info("Skipped re-indexing all items");
+                    return;
                 }
                 ZimbraLog.index.info("Re-indexing all items");
                 indexDeferredItems(EnumSet.noneOf(MailItem.Type.class), status, true);

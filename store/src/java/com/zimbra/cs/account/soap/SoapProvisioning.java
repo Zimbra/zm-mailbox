@@ -1419,6 +1419,12 @@ public class SoapProvisioning extends Provisioning {
     public ReIndexInfo reIndex(Account acct, String action, ReIndexBy by,
             String[] values)
     throws ServiceException {
+        return reIndex(acct, action, by, values, false);
+    }
+
+    public ReIndexInfo reIndex(Account acct, String action, ReIndexBy by,
+            String[] values, boolean deleteOnly)
+    throws ServiceException {
         Server server = getServer(acct);
         ReindexMailboxInfo mbox = new ReindexMailboxInfo(acct.getId());
         if (by != null) {
@@ -1430,6 +1436,7 @@ public class SoapProvisioning extends Provisioning {
             }
         }
         ReIndexRequest req = new ReIndexRequest(action, mbox);
+        req.setDeleteOnly(deleteOnly);
         ReIndexResponse resp = this.invokeJaxb(req,
                 server.getAttr(A_zimbraServiceHostname));
         ReIndexInfo.Progress progress = null;
