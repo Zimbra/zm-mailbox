@@ -43,7 +43,7 @@ import com.zimbra.soap.mail.type.Uid;
  * POP3 UIDL command depends on the LDAP attribute zimbraFeatureCustomUIDEnabled.
  */
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name=AccountConstants.E_MODIFY_PREFS_REQUEST)
+@XmlRootElement(name=MailConstants.E_SET_POP3_UID_REQUEST)
 public class SetPop3UIDRequest {
 
 	@ZimbraKeyValuePairs

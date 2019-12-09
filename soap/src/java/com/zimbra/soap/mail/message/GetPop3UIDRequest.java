@@ -36,7 +36,7 @@ import com.zimbra.soap.mail.type.IdsAttr;
  * command depends on the LDAP attribute zimbraFeatureCustomUIDEnabled.
  */
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name=MailConstants.E_GET_MSG_METADATA_REQUEST)
+@XmlRootElement(name=MailConstants.E_GET_POP3_UID_REQUEST)
 public class GetPop3UIDRequest {
 
     /**
