@@ -100,11 +100,16 @@ public abstract class DocumentHandler {
         return LOCAL_HOST;
     }
 
-    public static String getLocalHostId() {
-        if (LOCAL_HOST_ID.length() == 0) {
-            getLocalHost();
-        }
-        return LOCAL_HOST_ID;
+    public static String getLocalHostId() throws ServiceException {
+    	if (LOCAL_HOST_ID.length() == 0) {
+    		String hostname = getLocalHost();
+    		if (hostname == null) {
+    			throw ServiceException.PROXY_ERROR(AccountServiceException.NO_SUCH_SERVER(""), "");
+    		}
+    		Server server = Provisioning.getInstance().get(Key.ServerBy.name, hostname);
+    		LOCAL_HOST_ID = server.getId();
+    	}
+    	return LOCAL_HOST_ID;
     }
 
     public void preProxy(Element request, Map<String, Object> context) throws ServiceException {}
@@ -438,34 +443,23 @@ public abstract class DocumentHandler {
     }
 
 
-    /** Returns the {@link Server} object where an Account (specified by ID)
-     *  is homed.  This is similar to {@link Provisioning#getServer(Account),
-     *  except that the account is specified by ID and exceptions are thrown
-     *  on failure rather than returning null.
+    /** Returns the {@link PodIP} object where an Account (specified by ID)
+     *  is homed.
      *
      * @param acctId  The Zimbra ID of the account.
      * @throws ServiceException  The following error codes are possible:<ul>
      *    <li><tt>account.NO_SUCH_ACCOUNT</tt> - if there is no Account
      *        with the specified ID
-     *    <li><tt>account.PROXY_ERROR</tt> - if the Server associated
-     *        with the Account does not exist</ul> */
-    protected static Server getServer(String acctId) throws ServiceException {
+     **/
+    protected static String getPodIP(String acctId) throws ServiceException {
         Account acct = Provisioning.getInstance().get(AccountBy.id, acctId);
         if (acct == null) {
             throw AccountServiceException.NO_SUCH_ACCOUNT(acctId);
         }
-
-        String hostname = acct.getAttr(Provisioning.A_zimbraMailHost);
-        if (hostname == null) {
-            throw ServiceException.PROXY_ERROR(AccountServiceException.NO_SUCH_SERVER(""), "");
-        }
-        Server server = Provisioning.getInstance().get(Key.ServerBy.name, hostname);
-        if (server == null) {
-            throw ServiceException.PROXY_ERROR(AccountServiceException.NO_SUCH_SERVER(hostname), "");
-        }
-        return server;
+        String affinityIp = Provisioning.affinityServer(acct);
+        return affinityIp;
     }
-
+    
     protected static String getXPath(Element request, String[] xpath) {
         int depth = 0;
         while (depth < xpath.length - 1 && request != null) {
@@ -496,6 +490,20 @@ public abstract class DocumentHandler {
         request.addAttribute(xpath[depth], value);
     }
 
+    protected Account getAccount(Provisioning prov, AccountBy accountBy, String value, AuthToken authToken)
+            throws ServiceException {
+        Account acct = null;
+
+        // first try getting it from master if not in cache
+        try {
+            acct = prov.get(accountBy, value, true, authToken);
+        } catch (ServiceException e) {
+            // try the replica
+            acct = prov.get(accountBy, value, false, authToken);
+        }
+        return acct;
+    }
+    
     protected Element proxyIfNecessary(Element request, Map<String, Object> context) throws ServiceException {
         // if the "target account" is remote and the command is non-admin, proxy.
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
@@ -527,7 +535,7 @@ public abstract class DocumentHandler {
         // and an incremented hop count
         ZimbraSoapContext zscTarget = new ZimbraSoapContext(zsc, acctId);
 
-        return proxyRequest(request, context, getServer(acctId), zscTarget);
+        return proxyRequest(request, context, getPodIP(acctId), zscTarget);
     }
 
     protected Element proxyRequest(Element request, Map<String, Object> context, AuthToken authToken, String acctId)
@@ -538,7 +546,7 @@ public abstract class DocumentHandler {
         // and an incremented hop count
         ZimbraSoapContext zscTarget = new ZimbraSoapContext(zsc, authToken, acctId, null);
 
-        return proxyRequest(request, context, getServer(acctId), zscTarget);
+        return proxyRequest(request, context, getPodIP(acctId), zscTarget);
     }
 
     protected Element proxyRequest(Element request, Map<String, Object> context, Server server)
@@ -547,18 +555,19 @@ public abstract class DocumentHandler {
 
         // new context for proxied request has an incremented hop count
         ZimbraSoapContext pxyCtxt = new ZimbraSoapContext(zsc);
-        return proxyRequest(request, context, server, pxyCtxt);
+        String serverIP = pxyCtxt.getRequestIP();
+        return proxyRequest(request, context, serverIP, pxyCtxt);
     }
 
     protected String getProxyAuthToken(String requestedAccountId, Map<String, Object> context) throws ServiceException {
         return Provisioning.getInstance().getProxyAuthToken(requestedAccountId, context);
     }
 
-    protected Element proxyRequest(Element request, Map<String, Object> context, Server server, ZimbraSoapContext zsc)
+    protected Element proxyRequest(Element request, Map<String, Object> context, String podIP, ZimbraSoapContext zsc)
     throws ServiceException {
         // figure out whether we can just re-dispatch or if we need to proxy via HTTP
         SoapEngine engine = (SoapEngine) context.get(SoapEngine.ZIMBRA_ENGINE);
-        boolean isLocal = getLocalHostId().equalsIgnoreCase(server.getId());
+        boolean isLocal = Provisioning.isMyIpAddress(podIP);
 
         //reset proxy token if proxying locally; it could previously be set to wrong account
         if (isLocal) {
@@ -586,8 +595,8 @@ public abstract class DocumentHandler {
             contextTarget.put(SoapEngine.ZIMBRA_ENGINE, engine);
             contextTarget.put(SoapEngine.ZIMBRA_CONTEXT, zsc);
             if (ZimbraLog.soap.isDebugEnabled()) {
-                ZimbraLog.soap.debug("Proxying request locally: targetServer=%s (id=%s) localHost=%s (id=%s)",
-                        server.getName(), server.getId(), LOCAL_HOST, LOCAL_HOST_ID);
+                ZimbraLog.soap.debug("Proxying request locally: targetServerIP=%s localHost=%s (id=%s)",
+                		podIP, LOCAL_HOST, LOCAL_HOST_ID);
             }
             response = engine.dispatchRequest(request, contextTarget, zsc);
             if (zsc.getResponseProtocol().isFault(response)) {
@@ -599,7 +608,7 @@ public abstract class DocumentHandler {
             preProxy(request, context);
             // executing remotely; find our target and proxy there
             HttpServletRequest httpreq = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
-            ServerProxyTarget proxy = new ServerProxyTarget(server.getId(), zsc.getAuthToken(), httpreq);
+            IpProxyTarget proxy = new IpProxyTarget(podIP, zsc.getAuthToken(), httpreq);
             if (proxyTimeout >= 0) {
                 proxy.setTimeouts(proxyTimeout);
             }
@@ -610,15 +619,15 @@ public abstract class DocumentHandler {
         return response;
     }
 
-    public static Element proxyWithNotification(Element request, ServerProxyTarget proxy, ZimbraSoapContext zscProxy, ZimbraSoapContext zscInbound)
+    public static Element proxyWithNotification(Element request, IpProxyTarget proxy, ZimbraSoapContext zscProxy, ZimbraSoapContext zscInbound)
     throws ServiceException {
         return proxyWithNotification(request, proxy, zscProxy, getReferencedSession(zscInbound));
     }
 
-    public static Element proxyWithNotification(Element request, ServerProxyTarget proxy, ZimbraSoapContext zscProxy, Session localSession)
+    public static Element proxyWithNotification(Element request, IpProxyTarget proxy, ZimbraSoapContext zscProxy, Session localSession)
     throws ServiceException {
-        Server server = proxy.getServer();
-        boolean isLocal = getLocalHostId().equalsIgnoreCase(server.getId());
+        String affinityIp = proxy.getIp();
+        boolean isLocal = Provisioning.isMyIpAddress(affinityIp);
 
         if (isLocal) {
             zscProxy.resetProxyAuthToken();
@@ -633,7 +642,7 @@ public abstract class DocumentHandler {
             if (!(localSession instanceof SoapSession) || localSession.getMailbox() == null) {
                 zscProxy.disableNotifications();
             } else if (!isLocal) {
-                zscProxy.setProxySession(((SoapSession) localSession).getRemoteSessionId(server));
+                zscProxy.setProxySession(((SoapSession) localSession).getRemoteSessionId(affinityIp));
             } else {
                 zscProxy.setProxySession(localSession.getSessionId());
             }
@@ -642,7 +651,7 @@ public abstract class DocumentHandler {
         Pair<Element, Element> envelope = proxy.execute(request, zscProxy);
         // if we've got a SOAP session, handle the returned notifications and session ID
         if (localSession instanceof SoapSession && zscProxy.isNotificationEnabled())
-            ((SoapSession) localSession).handleRemoteNotifications(server, envelope.getFirst());
+            ((SoapSession) localSession).handleRemoteNotifications(affinityIp, envelope.getFirst());
         return envelope.getSecond().detach();
     }
 
