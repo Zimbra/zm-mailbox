@@ -23,6 +23,7 @@
  */
 package com.zimbra.cs.httpclient;
 
+import com.zimbra.common.account.Key;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
@@ -54,6 +55,10 @@ public class URLUtil {
      */
     public static String getSoapURL(Server server, boolean preferSSL) throws ServiceException {
         return URLUtil.getServiceURL(server, AccountConstants.USER_SERVICE_URI, preferSSL);
+    }
+    
+    public static String getSoapURL(String podIP, int port, boolean preferSSL) throws ServiceException {
+        return URLUtil.getServiceURL(podIP, port, AccountConstants.USER_SERVICE_URI, preferSSL);
     }
 
     public static String getSoapPublicURL(Server server, Domain domain, boolean preferSSL) throws ServiceException {
@@ -282,6 +287,26 @@ public class URLUtil {
     	return buf.toString();
     }
 
+    public static int getServiceURLPort(String hostname, boolean useSSL) throws ServiceException {
+    	Server server = Provisioning.getInstance().get(Key.ServerBy.name, hostname);
+    	if (hostname == null)
+    		throw ServiceException.INVALID_REQUEST("server " + server.getName() + " does not have " + Provisioning.A_zimbraServiceHostname, null);
+
+    	String modeString = server.getAttr(Provisioning.A_zimbraMailMode, null);
+    	if (modeString == null)
+    		throw ServiceException.INVALID_REQUEST("server " + server.getName() + " does not have " + Provisioning.A_zimbraMailMode + " set, maybe it is not a store server?", null);
+    	MailMode mailMode = Provisioning.MailMode.fromString(modeString);
+
+    	int port;
+    	if ((mailMode != MailMode.http && useSSL) || mailMode == MailMode.https) {
+    		port = server.getIntAttr(Provisioning.A_zimbraMailSSLPort, DEFAULT_HTTPS_PORT);
+    	} else {
+    		port = server.getIntAttr(Provisioning.A_zimbraMailPort, DEFAULT_HTTP_PORT);
+    	}
+
+    	return port;
+    }
+    
     public static String getServiceURL(String ip, int port, String path, boolean useSSL) throws ServiceException {
         String proto = PROTO_HTTPS;
         StringBuilder buf = new StringBuilder();
