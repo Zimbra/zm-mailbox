@@ -184,7 +184,7 @@ public class GetShareInfo  extends AccountDocumentHandler {
          */
         request.addAttribute(AccountConstants.A_INTERNAL, true);
 
-        Element response = proxyRequest(request, context, getServer(ownerId));
+        Element response = proxyRequest(request, context, ownerId);
         for (Element eShare : response.listElements(AccountConstants.E_SHARE)) {
             ShareInfoData sid = ShareInfoData.fromXML(eShare);
             visitor.visit(sid);
