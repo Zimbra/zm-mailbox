@@ -15,6 +15,15 @@ public class IpProxyTarget extends ProxyTarget {
         super(authToken, req);
         this.ip = targetIp;
     }
+    
+    public IpProxyTarget(String targetIp, AuthToken authToken, String url) {
+        super(authToken, url);
+        this.ip = targetIp;
+    }
+
+    public String getIp() {
+        return ip;
+    }
 
     @Override
     public boolean isTargetLocal() {
