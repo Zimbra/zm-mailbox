@@ -23,6 +23,7 @@ import java.util.List;
 
 import com.google.common.base.MoreObjects;
 import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -30,12 +31,15 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.httpclient.URLUtil;
+import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.DocumentHandler;
-import com.zimbra.soap.ServerProxyTarget;
+import com.zimbra.soap.IpProxyTarget;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -207,13 +211,57 @@ public final class ProxiedQueryResults extends ZimbraQueryResultsImpl {
 
     @Override
     public String toString() {
-        String url;
-        try {
-            url = URLUtil.getAdminURL(Provisioning.getInstance().get(Key.ServerBy.name, server));
-        } catch (ServiceException ex) {
-            url = server;
-        }
-        return MoreObjects.toStringHelper(this).add("url", url).add("acctId", targetAcctId).toString();
+    	String url;
+    	try {
+    		url = URLUtil.getAdminURL(Provisioning.getInstance().get(Key.ServerBy.name, server));
+    	} catch (ServiceException ex) {
+    		url = server;
+    	}
+    	return MoreObjects.toStringHelper(this).add("url", url).add("acctId", targetAcctId).toString();
+    }
+
+    private static String LOCAL_HOST = "";
+
+    public static String getLocalHost() {
+    	synchronized (LOCAL_HOST) {
+    		if (LOCAL_HOST.length() == 0) {
+    			try {
+    				Server localServer = Provisioning.getInstance().getLocalServer();
+    				LOCAL_HOST = localServer.getAttr(Provisioning.A_zimbraServiceHostname);
+    			} catch (Exception e) {
+    				Zimbra.halt("could not fetch local server name from LDAP for request proxying");
+    			}
+    		}
+    	}
+    	return LOCAL_HOST;
+    }
+
+    private int getPort() throws ServiceException {
+    	int port = 0;
+    	String hostname = getLocalHost();
+    	if (hostname == null) {
+    		throw ServiceException.PROXY_ERROR(AccountServiceException.NO_SUCH_SERVER(""), "");
+    	}
+
+    	try {
+    		port = URLUtil.getServiceURLPort(hostname, false);
+    	} catch (ServiceException exp) {
+    	}    	
+    	return port;
+    }
+    
+    private Account getAccount(Provisioning prov, AccountBy accountBy, String value, AuthToken authToken)  
+    		throws ServiceException {
+    	Account acct = null;
+
+    	// first try getting it from master if not in cache
+    	try {
+    		acct = prov.get(accountBy, value, true, authToken);
+    	} catch (ServiceException e) {
+    		// try the replica
+    		acct = prov.get(accountBy, value, false, authToken);
+    	}
+    	return acct;
     }
 
     /**
@@ -260,16 +308,19 @@ public final class ProxiedQueryResults extends ZimbraQueryResultsImpl {
         }
 
         // call the remote server now!
-        Server targetServer = Provisioning.getInstance().get(Key.ServerBy.name, server);
+        Provisioning prov = Provisioning.getInstance();
+        Account acct = getAccount(prov, AccountBy.id, targetAcctId, authToken);
+        String targetServer = Provisioning.affinityServer(acct);
+
         String baseurl = null;
         try {
-            baseurl = URLUtil.getSoapURL(targetServer, false);
+            baseurl = URLUtil.getSoapURL(targetServer, getPort(), false);
         } catch (ServiceException e) {
         }
         if (baseurl == null) {
-            baseurl = URLUtil.getAdminURL(targetServer, AdminConstants.ADMIN_SERVICE_URI, true);
+            baseurl = URLUtil.getAdminURL(targetServer, getPort(), AdminConstants.ADMIN_SERVICE_URI, true);
         }
-        ServerProxyTarget proxy = new ServerProxyTarget(targetServer, authToken, baseurl + MailConstants.SEARCH_REQUEST.getName());
+        IpProxyTarget proxy = new IpProxyTarget(targetServer, authToken, baseurl + MailConstants.SEARCH_REQUEST.getName());
         if (mTimeout != -1) {
             proxy.setTimeouts(mTimeout);
         }
