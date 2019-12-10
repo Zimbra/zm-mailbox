@@ -588,18 +588,6 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
             if (acctId != null) {
                 Account acct = getAccount(prov, AccountBy.id, acctId, zsc.getAuthToken());
 
-                if (acct != null) {
-                    String affinityIp = Provisioning.affinityServer(acct);
-                    if (!Provisioning.isMyIpAddress(affinityIp)) {
-                        //TODO: This bypasses the standard proxyRequest mechanism, which relies on Server objects.
-                        // Eventually we should update proxyRequest to be aware of mailbox affinity, at which point
-                        // we won't need this this special case. Since admin requests don't need remote notifications,
-                        // we can get away with using proxyToAccountHostIp.
-                        ZimbraLog.soap.info("Proxying request for %s to affinity server at %s", acct.getId(), affinityIp);
-                        return proxyToAccountHostIp(affinityIp, request, context, zsc);
-                    }
-                }
-
                 if (acct != null && !Provisioning.onLocalServer(acct, reasons)) {
                     ZimbraLog.soap.info("Proxying request: ProxiedAccountPath=%s reason: %s",
                             Joiner.on("/").join(xpath), reasons.getReason());
