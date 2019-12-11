@@ -24,6 +24,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.ScheduledTask;
 import com.zimbra.cs.mailbox.calendar.Invite;
+import com.zimbra.cs.mailbox.calendar.Alarm.Action;
 
 /**
  */
@@ -81,7 +82,7 @@ public abstract class CalItemReminderTaskBase extends ScheduledTask {
     	            	ZimbraLog.scheduler.info("Trying reminder sms for Task");
                     }
     				sendReminderSMS(calItem);
-    			} else if (invite.getAlarms().get(i).getAction().equals("EMAIL") && !SMS_DOMAIN.equalsIgnoreCase(domain)) {
+    			} else if (Action.EMAIL.equals(invite.getAlarms().get(i).getAction()) && !SMS_DOMAIN.equalsIgnoreCase(domain)) {
     				sendReminder(calItem, invite);
     			}
     		}
