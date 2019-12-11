@@ -350,6 +350,18 @@ public class SolrUtils {
         return lp;
     }
 
+    private static LocalParams getIdPostFilterLocalParams(String accountId, String field) {
+        LocalParams lp = new LocalParams("zimbraids");
+        lp.addParam("f", field);
+        lp.addParam("a", accountId);
+        return lp;
+    }
+
+    public static String getZimbraIdPostFilter(String accountId, String field, Collection<String> values) {
+        LocalParams lp = getIdPostFilterLocalParams(accountId, field);
+        return String.format("%s%s", lp.encode(), Joiner.on(",").join(values));
+    }
+
     public static String getTermsFilter(String field, Collection<String> values) {
         LocalParams lp = getTermsFilterLocalParams(field);
         return String.format("%s%s", lp.encode(), Joiner.on(",").join(values));

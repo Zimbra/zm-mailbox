@@ -183,7 +183,7 @@ public class SolrIndex extends IndexStore {
         for (Map.Entry<String, Collection<String>> entry: byField.asMap().entrySet()) {
             String field = entry.getKey();
             Collection<String> values = entry.getValue();
-            query.addFilterQuery(SolrUtils.getTermsFilter(field, values));
+            query.addFilterQuery(SolrUtils.getZimbraIdPostFilter(accountId, field, values));
         }
     }
 
