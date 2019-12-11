@@ -134,7 +134,7 @@ public abstract class MailDocumentHandler extends DocumentHandler {
             zscTarget.recordMountpointTraversal();
         }
         Provisioning prov = Provisioning.getInstance();
-        Account acct = getAccount(prov, AccountBy.id, acctId, zsc.getAuthToken());
+        Account acct = prov.getAccount(prov, AccountBy.id, acctId, zsc.getAuthToken());
         String affinityIp = Provisioning.affinityServer(acct);
 
         return proxyRequest(request, context, affinityIp, zscTarget);

@@ -75,27 +75,6 @@ public class ContactBackup extends AdminDocumentHandler {
         resp.setServers(servers);
         return zsc.jaxbToElement(resp);
     }
-    
-    /** @return the IP address of the pod */
-    public static String myIpAddress() {
-    	String podIp = null;
-    	try {
-    		Enumeration e = NetworkInterface.getNetworkInterfaces();
-    		while(e.hasMoreElements())
-    		{
-    			NetworkInterface n = (NetworkInterface) e.nextElement();
-    			Enumeration ee = n.getInetAddresses();
-    			while (ee.hasMoreElements())
-    			{
-    				InetAddress i = (InetAddress) ee.nextElement();
-    				podIp = i.getHostAddress();
-    			}
-    		}
-    	} catch (SocketException ex) {
-    		ZimbraLog.misc.info("Problem checking if IP address '%s' belongs to me", podIp, ex);
-    	}
-    	return podIp;
-    }
 
     protected List<ContactBackupServer> stopContactBackup(List<ServerSelector> selectors, Map<String, Object> context, ZimbraSoapContext zsc) throws ServiceException {
         List<ServerSelector> selectorsToIterate = setEffectiveSelectors(selectors);
@@ -123,7 +102,7 @@ public class ContactBackup extends AdminDocumentHandler {
                 list.add(serverSelector);
                 ContactBackupRequest req = new ContactBackupRequest(Operation.stop, list);
                 Element request = JaxbUtil.jaxbToElement(req);
-                Element response = proxyRequest(request, context, myIpAddress(), zsc);
+                Element response = proxyRequest(request, context, Provisioning.myIpAddress(), zsc);
                 ContactBackupResponse resp = JaxbUtil.elementToJaxb(response);
                 servers.addAll(resp.getServers());
             }
@@ -156,7 +135,7 @@ public class ContactBackup extends AdminDocumentHandler {
                 list.add(serverSelector);
                 ContactBackupRequest req = new ContactBackupRequest(Operation.start, list);
                 Element request = JaxbUtil.jaxbToElement(req);
-                Element response = proxyRequest(request, context, myIpAddress(), zsc);
+                Element response = proxyRequest(request, context, Provisioning.myIpAddress(), zsc);
                 ContactBackupResponse resp = JaxbUtil.elementToJaxb(response);
                 servers.addAll(resp.getServers());
             }

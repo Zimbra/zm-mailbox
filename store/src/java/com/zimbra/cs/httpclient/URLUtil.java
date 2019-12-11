@@ -29,10 +29,12 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.MailMode;
 import com.zimbra.cs.account.Server;
+import com.zimbra.soap.DocumentHandler;
 
 /**
  * @author jhahm
@@ -289,12 +291,13 @@ public class URLUtil {
 
     public static int getServiceURLPort(String hostname, boolean useSSL) throws ServiceException {
     	Server server = Provisioning.getInstance().get(Key.ServerBy.name, hostname);
-    	if (hostname == null)
+    	if (hostname == null) {
     		throw ServiceException.INVALID_REQUEST("server " + server.getName() + " does not have " + Provisioning.A_zimbraServiceHostname, null);
-
+    	}
     	String modeString = server.getAttr(Provisioning.A_zimbraMailMode, null);
-    	if (modeString == null)
+    	if (modeString == null) {
     		throw ServiceException.INVALID_REQUEST("server " + server.getName() + " does not have " + Provisioning.A_zimbraMailMode + " set, maybe it is not a store server?", null);
+    	}
     	MailMode mailMode = Provisioning.MailMode.fromString(modeString);
 
     	int port;
@@ -319,5 +322,19 @@ public class URLUtil {
     public static boolean reverseProxiedMode(Server server) throws ServiceException {
         String referMode = server.getAttr(Provisioning.A_zimbraMailReferMode, "wronghost");
         return Provisioning.MAIL_REFER_MODE_REVERSE_PROXIED.equals(referMode);
+    }
+
+    public static int getPort() throws ServiceException {
+    	int port = 0;
+    	String hostname = DocumentHandler.getLocalHost();
+    	if (hostname == null) {
+    		throw ServiceException.PROXY_ERROR(AccountServiceException.NO_SUCH_SERVER(""), "");
+    	}
+
+    	try {
+    		port = getServiceURLPort(hostname, false);
+    	} catch (ServiceException exp) {
+    	}   	
+    	return port;
     }
 }

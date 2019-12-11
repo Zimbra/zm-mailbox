@@ -64,7 +64,7 @@ public class RemoteSoapSession extends SoapSession {
     }
 
     @Override
-    public String getRemoteSessionId(String podIP) {
+    public String getRemoteSessionId(String acctId, String podIP) {
         return null;
     }
 

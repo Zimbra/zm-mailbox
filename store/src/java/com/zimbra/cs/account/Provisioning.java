@@ -1601,6 +1601,44 @@ public abstract class Provisioning extends ZAttrProvisioning {
         return false;
     }
 
+    /** @return the IP address of the pod */
+    public static String myIpAddress() {
+    	String podIp = null;
+    	try {
+    		Enumeration e = NetworkInterface.getNetworkInterfaces();
+    		while(e.hasMoreElements())
+    		{
+    			NetworkInterface n = (NetworkInterface) e.nextElement();
+    			Enumeration ee = n.getInetAddresses();
+    			while (ee.hasMoreElements())
+    			{
+    				InetAddress i = (InetAddress) ee.nextElement();
+    				podIp = i.getHostAddress();
+    				if (podIp != null) {
+    					break;
+    				}
+    			}
+    		}
+    	} catch (SocketException ex) {
+    		ZimbraLog.misc.info("Problem determining the IP address", ex);
+    	}
+    	return podIp;
+    }
+    
+    public Account getAccount(Provisioning prov, AccountBy accountBy, String value, AuthToken authToken)  
+    		throws ServiceException {
+    	Account acct = null;
+
+    	// first try getting it from master if not in cache
+    	try {
+    		acct = prov.get(accountBy, value, true, authToken);
+    	} catch (ServiceException e) {
+    		// try the replica
+    		acct = prov.get(accountBy, value, false, authToken);
+    	}
+    	return acct;
+    }
+    
     public static boolean canUseLocalIMAP(Account account) throws ServiceException {
         if(account == null) {
             return false;

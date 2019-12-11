@@ -86,18 +86,18 @@ public abstract class DocumentHandler {
     private static String LOCAL_HOST_ID = "";
 
     public static String getLocalHost() {
-        synchronized (LOCAL_HOST) {
-            if (LOCAL_HOST.length() == 0) {
-                try {
-                    Server localServer = Provisioning.getInstance().getLocalServer();
-                    LOCAL_HOST = localServer.getAttr(Provisioning.A_zimbraServiceHostname);
-                    LOCAL_HOST_ID = localServer.getId();
-                } catch (Exception e) {
-                    Zimbra.halt("could not fetch local server name from LDAP for request proxying");
-                }
-            }
-        }
-        return LOCAL_HOST;
+    	synchronized (LOCAL_HOST) {
+    		if (LOCAL_HOST.length() == 0) {
+    			try {
+    				Server localServer = Provisioning.getInstance().getLocalServer();
+    				LOCAL_HOST = localServer.getAttr(Provisioning.A_zimbraServiceHostname);
+    				LOCAL_HOST_ID = localServer.getId();
+    			} catch (Exception e) {
+    				ZimbraLog.session.warn("could not fetch local server name from LDAP for request proxying");
+    			}
+    		}
+    	}
+    	return LOCAL_HOST;
     }
 
     public static String getLocalHostId() throws ServiceException {
@@ -489,20 +489,6 @@ public abstract class DocumentHandler {
         }
         request.addAttribute(xpath[depth], value);
     }
-
-    protected Account getAccount(Provisioning prov, AccountBy accountBy, String value, AuthToken authToken)
-            throws ServiceException {
-        Account acct = null;
-
-        // first try getting it from master if not in cache
-        try {
-            acct = prov.get(accountBy, value, true, authToken);
-        } catch (ServiceException e) {
-            // try the replica
-            acct = prov.get(accountBy, value, false, authToken);
-        }
-        return acct;
-    }
     
     protected Element proxyIfNecessary(Element request, Map<String, Object> context) throws ServiceException {
         // if the "target account" is remote and the command is non-admin, proxy.
@@ -642,7 +628,7 @@ public abstract class DocumentHandler {
             if (!(localSession instanceof SoapSession) || localSession.getMailbox() == null) {
                 zscProxy.disableNotifications();
             } else if (!isLocal) {
-                zscProxy.setProxySession(((SoapSession) localSession).getRemoteSessionId(affinityIp));
+                zscProxy.setProxySession(((SoapSession) localSession).getRemoteSessionId(zscProxy.getRequestedAccountId(), affinityIp));
             } else {
                 zscProxy.setProxySession(localSession.getSessionId());
             }

@@ -50,10 +50,8 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.mailbox.Comment;
@@ -327,9 +325,10 @@ public class SoapSession extends Session {
     }
 
     private class RemoteSessionInfo {
-        final String mServerIp, mSessionId;
+        final String mSessionId;
         final long mLastRequest;
         long mLastFailedPing;
+        String mServerIp;
 
         RemoteSessionInfo(String sessionId, String serverIp, long lastPoll) {
             mSessionId = sessionId;  mServerIp = serverIp;  mLastRequest = lastPoll;
@@ -704,17 +703,20 @@ public class SoapSession extends Session {
         forceRefresh = force;
     }
 
-
-    public synchronized String getRemoteSessionId(String podIP) {
-        if (mailbox == null || remoteSessions == null || podIP == null) {
-            return null;
-        }
-        for (RemoteSessionInfo rsi : remoteSessions) {
-            if (rsi.mServerIp.equals(podIP)) {
-                return rsi.mSessionId;
-            }
-        }
-        return null;
+    //If we need to look up a session info, we should re-fetch the IP from the MLS.
+    public synchronized String getRemoteSessionId(String acctId, String podIP) throws ServiceException {
+    	if (mailbox == null || remoteSessions == null || podIP == null) {
+    		return null;
+    	}
+    	Provisioning prov = Provisioning.getInstance();
+    	Account acct = prov.get(Key.AccountBy.id, acctId);    
+    	for (RemoteSessionInfo rsi : remoteSessions) {
+    		rsi.mServerIp = Provisioning.affinityServer(acct);
+    		if (rsi.mServerIp.equals(podIP)) {	
+    			return rsi.mSessionId;
+    		}
+    	}
+    	return null;
     }
 
     protected boolean registerRemoteSessionId(String podIP, String sessionId) {
@@ -805,7 +807,7 @@ public class SoapSession extends Session {
                 ZimbraSoapContext zscProxy = new ZimbraSoapContext(zsc, mAuthenticatedAccountId);
                 zscProxy.setProxySession(rsi.mSessionId);
 
-                ProxyTarget proxy = new IpProxyTarget(podIp, zscProxy.getAuthToken(), URLUtil.getSoapURL(podIp, getPort(), false));
+                ProxyTarget proxy = new IpProxyTarget(podIp, zscProxy.getAuthToken(), URLUtil.getSoapURL(podIp, URLUtil.getPort(), false));
                 proxy.disableRetries().setTimeouts(10 * Constants.MILLIS_PER_SECOND);
                 Pair<Element, Element> envelope = proxy.execute(noop.detach(), zscProxy);
                 handleRemoteNotifications(podIp, envelope.getFirst(), true, true);
@@ -1279,36 +1281,6 @@ public class SoapSession extends Session {
             }
         }
     }
-
-    private static String LOCAL_HOST = "";
-    
-    public static String getLocalHost() {
-        synchronized (LOCAL_HOST) {
-            if (LOCAL_HOST.length() == 0) {
-                try {
-                    Server localServer = Provisioning.getInstance().getLocalServer();
-                    LOCAL_HOST = localServer.getAttr(Provisioning.A_zimbraServiceHostname);
-                } catch (Exception e) {
-                    Zimbra.halt("could not fetch local server name from LDAP for request proxying");
-                }
-            }
-        }
-        return LOCAL_HOST;
-    }
-
-    private int getPort() throws ServiceException {
-    	int port = 0;
-    	String hostname = getLocalHost();
-    	if (hostname == null) {
-    		throw ServiceException.PROXY_ERROR(AccountServiceException.NO_SUCH_SERVER(""), "");
-    	}
-
-    	try {
-    		port = URLUtil.getServiceURLPort(hostname, false);
-    	} catch (ServiceException exp) {
-    	}   	
-    	return port;
-    }
     
     private Map<String, Element> fetchRemoteHierarchies(OperationContext octxt, ZimbraSoapContext zsc, Map<String, String> remoteServers) {
         Map<String, Element> hierarchies = new HashMap<String, Element>();
@@ -1330,9 +1302,9 @@ public class SoapSession extends Session {
 
             try {
                 ZimbraSoapContext zscProxy = new ZimbraSoapContext(zsc, accountId);
-                zscProxy.setProxySession(getRemoteSessionId(podIP));
+                zscProxy.setProxySession(getRemoteSessionId(accountId, podIP));
 
-                ProxyTarget proxy = new IpProxyTarget(podIP, zscProxy.getAuthToken(), URLUtil.getSoapURL(podIP, getPort(), false));
+                ProxyTarget proxy = new IpProxyTarget(podIP, zscProxy.getAuthToken(), URLUtil.getSoapURL(podIP, URLUtil.getPort(), false));
                 proxy.disableRetries().setTimeouts(10 * Constants.MILLIS_PER_SECOND);
                 Pair<Element, Element> envelope = proxy.execute(noop.detach(), zscProxy);
                 handleRemoteNotifications(podIP, envelope.getFirst(), true, true);

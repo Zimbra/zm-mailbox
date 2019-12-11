@@ -220,50 +220,6 @@ public final class ProxiedQueryResults extends ZimbraQueryResultsImpl {
     	return MoreObjects.toStringHelper(this).add("url", url).add("acctId", targetAcctId).toString();
     }
 
-    private static String LOCAL_HOST = "";
-
-    public static String getLocalHost() {
-    	synchronized (LOCAL_HOST) {
-    		if (LOCAL_HOST.length() == 0) {
-    			try {
-    				Server localServer = Provisioning.getInstance().getLocalServer();
-    				LOCAL_HOST = localServer.getAttr(Provisioning.A_zimbraServiceHostname);
-    			} catch (Exception e) {
-    				Zimbra.halt("could not fetch local server name from LDAP for request proxying");
-    			}
-    		}
-    	}
-    	return LOCAL_HOST;
-    }
-
-    private int getPort() throws ServiceException {
-    	int port = 0;
-    	String hostname = getLocalHost();
-    	if (hostname == null) {
-    		throw ServiceException.PROXY_ERROR(AccountServiceException.NO_SUCH_SERVER(""), "");
-    	}
-
-    	try {
-    		port = URLUtil.getServiceURLPort(hostname, false);
-    	} catch (ServiceException exp) {
-    	}    	
-    	return port;
-    }
-    
-    private Account getAccount(Provisioning prov, AccountBy accountBy, String value, AuthToken authToken)  
-    		throws ServiceException {
-    	Account acct = null;
-
-    	// first try getting it from master if not in cache
-    	try {
-    		acct = prov.get(accountBy, value, true, authToken);
-    	} catch (ServiceException e) {
-    		// try the replica
-    		acct = prov.get(accountBy, value, false, authToken);
-    	}
-    	return acct;
-    }
-
     /**
      * Always does a request -- caller is responsible for checking to see if this is necessary or not
      */
@@ -309,16 +265,16 @@ public final class ProxiedQueryResults extends ZimbraQueryResultsImpl {
 
         // call the remote server now!
         Provisioning prov = Provisioning.getInstance();
-        Account acct = getAccount(prov, AccountBy.id, targetAcctId, authToken);
+        Account acct = prov.getAccount(prov, AccountBy.id, targetAcctId, authToken);
         String targetServer = Provisioning.affinityServer(acct);
 
         String baseurl = null;
         try {
-            baseurl = URLUtil.getSoapURL(targetServer, getPort(), false);
+            baseurl = URLUtil.getSoapURL(targetServer, URLUtil.getPort(), false);
         } catch (ServiceException e) {
         }
         if (baseurl == null) {
-            baseurl = URLUtil.getAdminURL(targetServer, getPort(), AdminConstants.ADMIN_SERVICE_URI, true);
+            baseurl = URLUtil.getAdminURL(targetServer, URLUtil.getPort(), AdminConstants.ADMIN_SERVICE_URI, true);
         }
         IpProxyTarget proxy = new IpProxyTarget(targetServer, authToken, baseurl + MailConstants.SEARCH_REQUEST.getName());
         if (mTimeout != -1) {
