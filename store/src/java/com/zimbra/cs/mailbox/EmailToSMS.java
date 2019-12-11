@@ -41,7 +41,7 @@ public class EmailToSMS implements LmtpCallback {
 
 	private static final EmailToSMS sInstance = new EmailToSMS();
 	private static final String smsDomain = "esms.gov.in";
-	private static CharsetEncoder asciiEncoder = Charset.forName("US-ASCII").newEncoder();
+	private CharsetEncoder asciiEncoder = Charset.forName("US-ASCII").newEncoder();
 
 	private EmailToSMS() {
 	}
@@ -135,7 +135,11 @@ public class EmailToSMS implements LmtpCallback {
 		if(!StringUtil.isNullOrEmpty(senderMobileNo)) {
 			Invite[] invites = calItem.getInvites();
 			StringBuffer strBuff = new StringBuffer();
-			strBuff.append("Appointment Reminder: ");
+			if (calItem.getType() == MailItem.Type.APPOINTMENT) {
+				strBuff.append("Appointment Reminder: ");
+			} else {
+				strBuff.append("Task Reminder: ");
+			}
 			strBuff.append(calItem.getSubject());
 			TimeZone tz = Util.getAccountTimeZone(acct);
 			Locale locale = acct.getLocale();
@@ -148,7 +152,11 @@ public class EmailToSMS implements LmtpCallback {
 				strBuff.append("-");strBuff.append(simpleDateFormat.format(invite.getEndTime().getDate()));
 				strBuff.append(", Location: ");
 				strBuff.append(invite.getLocation());
-				strBuff.append(" (Calendar)");
+				if (calItem.getType() == MailItem.Type.APPOINTMENT) {
+					strBuff.append(" (Calendar)");
+				} else {
+					strBuff.append(" (Task)");
+				}
 			}
 			String sender = acct.getName();
 			String message = strBuff.toString();
@@ -282,7 +290,7 @@ public class EmailToSMS implements LmtpCallback {
 		return out;
 	}
 
-	public static boolean isPureAscii(String v) {
+	public boolean isPureAscii(String v) {
 		return asciiEncoder.canEncode(v);
 	}
 }

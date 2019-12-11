@@ -19,6 +19,7 @@ package com.zimbra.cs.mailbox.alerts;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.CalendarItem;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.ScheduledTask;
@@ -68,19 +69,23 @@ public abstract class CalItemReminderTaskBase extends ScheduledTask {
 	        ZimbraLog.scheduler.info("Trying reminder sms");
 			sendReminderSMS(calItem);
 			return null;
-        } else if (invite != null && invite.getAlarms() != null && invite.getAlarms().size() > 2) {
+        } else if (invite != null && invite.getAlarms() != null && invite.getAlarms().size() >= 2) {
         	String domain = null;
-        	for (int i = invite.getAlarms().size() - 1; invite.getAlarms().get(i).getAttendees().size() > 0 && i >= 0; i--) {
-        		domain = invite.getAlarms().get(i).getAttendees().get(0).getAddress().split("@")[1];
+            for (int i = invite.getAlarms().size() - 1; invite.getAlarms().get(i).getAttendees().size() > 0 && i >= 0; i--) {
+                domain = invite.getAlarms().get(i).getAttendees().get(0).getAddress().split("@")[1];
     			if (SMS_DOMAIN.equalsIgnoreCase(domain)) {
     	            ZimbraLog.scheduler.warn("Invite with id %s and comp num %s does not exist", invId, compNum);
-    		        ZimbraLog.scheduler.info("Trying reminder sms");
+    	            if (calItem.getType() == MailItem.Type.APPOINTMENT) {
+    	            	ZimbraLog.scheduler.info("Trying reminder sms for Calendar Appointment");
+    	            } else {
+    	            	ZimbraLog.scheduler.info("Trying reminder sms for Task");
+                    }
     				sendReminderSMS(calItem);
-    				break;
+    			} else if (invite.getAlarms().get(i).getAction().equals("EMAIL") && !SMS_DOMAIN.equalsIgnoreCase(domain)) {
+    				sendReminder(calItem, invite);
     			}
     		}
         }
-        sendReminder(calItem, invite);
         return calItem;
     }
 
