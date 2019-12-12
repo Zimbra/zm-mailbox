@@ -26,7 +26,6 @@ import com.zimbra.common.soap.ZimbraNamespace;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.LruMap;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.iochannel.CrossServerNotification;
 import com.zimbra.cs.iochannel.MessageChannel;
 import com.zimbra.cs.iochannel.MessageChannelException;

@@ -25,7 +25,6 @@ import javax.servlet.http.HttpServletRequest;
 import org.dom4j.QName;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -49,7 +48,6 @@ import com.zimbra.cs.session.AdminSession;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.SoapSession;
-import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.ZimbraSoapContext.SessionInfo;
 import com.zimbra.soap.admin.type.CacheEntrySelector;
 import com.zimbra.soap.admin.type.CacheEntryType;
@@ -100,14 +98,9 @@ public abstract class DocumentHandler {
     	return LOCAL_HOST;
     }
 
-    public static String getLocalHostId() throws ServiceException {
+    public static String getLocalHostId() {
     	if (LOCAL_HOST_ID.length() == 0) {
-    		String hostname = getLocalHost();
-    		if (hostname == null) {
-    			throw ServiceException.PROXY_ERROR(AccountServiceException.NO_SUCH_SERVER(""), "");
-    		}
-    		Server server = Provisioning.getInstance().get(Key.ServerBy.name, hostname);
-    		LOCAL_HOST_ID = server.getId();
+    		getLocalHost();
     	}
     	return LOCAL_HOST_ID;
     }
