@@ -467,6 +467,9 @@ public abstract class EphemeralStore {
             return getBackendURL(backendType);
         }
 
+        public EphemeralStore getNewStore() throws ServiceException {
+            throw ServiceException.UNSUPPORTED();
+        }
         public abstract EphemeralStore getStore();
         public abstract void startup();
         public abstract void shutdown();
