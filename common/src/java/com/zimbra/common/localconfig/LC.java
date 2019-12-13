@@ -678,6 +678,7 @@ public final class LC {
 
     public static final KnownKey imap_max_request_size = KnownKey.newKey(10 * 1024);
     public static final KnownKey imap_max_nesting_in_search_request = KnownKey.newKey(100);
+    public static final KnownKey imap_max_items_in_copy = KnownKey.newKey(1000);
 
     @Supported
     @Reloadable

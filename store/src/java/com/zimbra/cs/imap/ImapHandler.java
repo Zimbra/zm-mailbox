@@ -481,6 +481,10 @@ public abstract class ImapHandler {
         boolean byUID = false;
         req.skipSpace();
         String command = lastCommand = req.readATOM();
+        if (req instanceof NioImapRequest) {
+            ((NioImapRequest)req).checkSize(command.length());
+        }
+
         do {
             if (!THROTTLED_COMMANDS.contains(command)) {
                 commandThrottle.reset(); //we received a command that isn't throttle-aware; reset throttle counter for next pass
@@ -4354,6 +4358,10 @@ public abstract class ImapHandler {
             throw ipe;
         } finally {
             mbox.unlock();
+        }
+
+        if (i4set.size() > LC.imap_max_items_in_copy.intValue()) {
+            sendNO(tag, "COPY rejected, too many items in copy request");
         }
         // RFC 2180 4.4.1: "The server MAY disallow the COPY of messages in a multi-
         //                  accessed mailbox that contains expunged messages."
