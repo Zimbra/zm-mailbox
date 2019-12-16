@@ -4362,6 +4362,7 @@ public abstract class ImapHandler {
 
         if (i4set.size() > LC.imap_max_items_in_copy.intValue()) {
             sendNO(tag, "COPY rejected, too many items in copy request");
+            return true;
         }
         // RFC 2180 4.4.1: "The server MAY disallow the COPY of messages in a multi-
         //                  accessed mailbox that contains expunged messages."
