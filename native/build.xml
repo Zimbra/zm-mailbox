@@ -2,7 +2,7 @@
 
     <import file="../build-common.xml" />
 
-    <target name="all" depends="publish-local,generate-native-headers"/>
+    <target name="all" depends="publish-local"/>
 
     <target name="jar" depends="compile" description="Creates the jar file">
         <antcall target="zimbra-jar">
@@ -38,7 +38,7 @@
     <pathelement location="${build.dir}/classes" />
   </path>
 
-   <target name="generate-native-headers" depends="compile" description="Java to Native">
+   <target name="generate-native-headers" depends="compile,resolve" description="Java to Native">
    </target>
 
    <target name="clean" description="Removes build files and undeploys extension">
