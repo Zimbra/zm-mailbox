@@ -1,0 +1,123 @@
+<?xml version="1.0"?>
+<!-- =============================================================== -->
+<!-- Configure the Jetty SetUIDServer                                 -->
+<!-- this configuration file should be used in combination with      -->
+<!-- other configuration files.  e.g.                                -->
+<!--    java -jar start.jar etc/jetty-setuid.xml etc/jetty.xml       -->
+<!-- =============================================================== -->
+<Configure id="Server" class="org.eclipse.jetty.server.Server">
+
+  <Call class="com.zimbra.common.handlers.PrivilegedHandler" name="openPorts">
+    <Arg>
+      <Map>
+        <Entry>
+          <Item>zimbraLmtpBindAddress</Item>
+          <Item><New class="java.lang.String"><Arg><Property name="zimbraLmtpBindAddress" default=""/></Arg></New></Item>
+        </Entry>
+        <Entry>
+          <Item>zimbraLmtpBindPort</Item>
+          <Item><New class="java.lang.Integer"><Arg><Property name="zimbraLmtpBindPort" default="7025"/></Arg></New></Item>
+        </Entry>
+        <Entry>
+          <Item>zimbraImapServerEnabled</Item>
+          <Item><New class="java.lang.Boolean"><Arg><Property name="zimbraImapServerEnabled" default="false"/></Arg></New></Item>
+        </Entry>
+        <Entry>
+          <Item>zimbraLmtpServerEnabled</Item>
+          <Item><New class="java.lang.Boolean"><Arg><Property name="zimbraLmtpServerEnabled" default="false"/></Arg></New></Item>
+        </Entry>
+        <Entry>
+          <Item>zimbraImapBindAddress</Item>
+          <Item><New class="java.lang.String"><Arg><Property name="zimbraImapBindAddress" default=""/></Arg></New></Item>
+        </Entry>
+        <Entry>
+          <Item>zimbraImapBindPort</Item>
+          <Item><New class="java.lang.Integer"><Arg><Property name="zimbraImapBindPort" default="143"/></Arg></New></Item>
+        </Entry>
+        <Entry>
+          <Item>zimbraImapSSLServerEnabled</Item>
+          <Item><New class="java.lang.Boolean"><Arg><Property name="zimbraImapSSLServerEnabled" default="false"/></Arg></New></Item>
+        </Entry>
+        <Entry>
+          <Item>zimbraImapSSLBindAddress</Item>
+          <Item><New class="java.lang.String"><Arg><Property name="zimbraImapSSLBindAddress" default=""/></Arg></New></Item>
+        </Entry>
+        <Entry>
+          <Item>zimbraImapSSLBindPort</Item>
+          <Item><New class="java.lang.Integer"><Arg><Property name="zimbraImapSSLBindPort" default="993"/></Arg></New></Item>
+        </Entry>
+        <Entry>
+          <Item>zimbraPop3ServerEnabled</Item>
+          <Item><New class="java.lang.Boolean"><Arg><Property name="zimbraPop3ServerEnabled" default="false"/></Arg></New></Item>
+        </Entry>
+        <Entry>
+          <Item>zimbraPop3BindAddress</Item>
+          <Item><New class="java.lang.String"><Arg><Property name="zimbraPop3BindAddress" default=""/></Arg></New></Item>
+        </Entry>
+        <Entry>
+          <Item>zimbraPop3BindPort</Item>
+          <Item><New class="java.lang.Integer"><Arg><Property name="zimbraPop3BindPort" default="110"/></Arg></New></Item>
+        </Entry>
+        <Entry>
+          <Item>zimbraPop3SSLServerEnabled</Item>
+          <Item><New class="java.lang.Boolean"><Arg><Property name="zimbraPop3SSLServerEnabled" default="false"/></Arg></New></Item>
+        </Entry>
+        <Entry>
+          <Item>zimbraPop3SSLBindAddress</Item>
+          <Item><New class="java.lang.String"><Arg><Property name="zimbraPop3SSLBindAddress" default=""/></Arg></New></Item>
+        </Entry>
+        <Entry>
+          <Item>zimbraPop3SSLBindPort</Item>
+          <Item><New class="java.lang.Integer"><Arg><Property name="zimbraPop3SSLBindPort" default="995"/></Arg></New></Item>
+        </Entry>
+        <Entry>
+          <Item>zimbraSSLExcludeCipherSuites</Item>
+          <Item><New class="java.lang.String"><Arg><Property name="zimbraSSLExcludeCipherSuites" default=""/></Arg></New></Item>
+        </Entry>
+        <Entry>
+          <Item>zimbraSSLIncludeCipherSuites</Item>
+          <Item><New class="java.lang.String"><Arg><Property name="zimbraSSLIncludeCipherSuites" default=""/></Arg></New></Item>
+        </Entry>
+        <Entry>
+          <Item>zimbraMailboxdSSLProtocols</Item>
+          <Item><New class="java.lang.String"><Arg><Property name="zimbraMailboxdSSLProtocols" default=""/></Arg></New></Item>
+        </Entry>
+        <Entry>
+          <Item>nio_imap_enabled</Item>
+          <Item><New class="java.lang.Boolean"><Arg><Property name="nio_imap_enabled" default="false"/></Arg></New></Item>
+        </Entry>
+        <Entry>
+          <Item>mailboxd_keystore</Item>
+          <Item><New class="java.lang.String"><Arg><Property name="mailboxd_keystore" default="/opt/zimbra/jetty/etc/keystore"/></Arg></New></Item>
+        </Entry>
+        <Entry>
+          <Item>mailboxd_keystore_password</Item>
+          <Item><New class="java.lang.String"><Arg><Property name="mailboxd_keystore_password" default=""/></Arg></New></Item>
+        </Entry>
+        <Entry>
+          <Item>mailboxd_truststore_password</Item>
+          <Item><New class="java.lang.String"><Arg><Property name="mailboxd_truststore_password" default=""/></Arg></New></Item>
+        </Entry>
+      </Map>
+    </Arg>
+  </Call>
+
+  <Call name="addLifeCycleListener">
+    <Arg>
+      <New class="org.eclipse.jetty.setuid.SetUIDListener">
+        <Set name="startServerAsPrivileged"><Property name="jetty.startServerAsPrivileged" default="false"/></Set>
+        <Set name="umask">23</Set>
+        <Set name="username">zimbra</Set>
+        <Set name="groupname">zimbra</Set>
+  
+        <Set name="RLimitNoFiles">
+            <New class="org.eclipse.jetty.setuid.RLimit">
+              <Set name="soft">65536</Set>
+              <Set name="hard">65536</Set>
+            </New>
+        </Set>
+
+      </New>
+    </Arg>
+  </Call>
+</Configure>

@@ -1,0 +1,32 @@
+zimbraLmtpBindAddress=%%zimbraLmtpBindAddress%%
+zimbraLmtpBindPort=%%zimbraLmtpBindPort%%
+zimbraLmtpServerEnabled=%%truefalse VAR:zimbraLmtpServerEnabled%%
+
+zimbraPop3ServerEnabled=%%truefalse VAR:zimbraPop3ServerEnabled%%
+zimbraPop3BindAddress=%%zimbraPop3BindAddress%%
+zimbraPop3BindPort=%%zimbraPop3BindPort%%
+
+zimbraPop3SSLServerEnabled=%%truefalse VAR:zimbraPop3SSLServerEnabled%%
+zimbraPop3SSLBindAddress=%%zimbraPop3SSLBindAddress%%
+zimbraPop3SSLBindPort=%%zimbraPop3SSLBindPort%%
+
+zimbraImapServerEnabled=%%truefalse VAR:zimbraImapServerEnabled%%
+zimbraImapBindAddress=%%zimbraImapBindAddress%%
+zimbraImapBindPort=%%zimbraImapBindPort%%
+
+zimbraImapSSLServerEnabled=%%truefalse VAR:zimbraImapSSLServerEnabled%%
+zimbraImapSSLBindAddress=%%zimbraImapSSLBindAddress%%
+zimbraImapSSLBindPort=%%zimbraImapSSLBindPort%%
+
+zimbraSSLExcludeCipherSuites=%%zimbraSSLExcludeCipherSuites%%
+zimbraSSLIncludeCipherSuites=%%zimbraSSLIncludeCipherSuites%%
+zimbraMailboxdSSLProtocols=%%zimbraMailboxdSSLProtocols%%
+
+nio_imap_enabled=%%truefalse LOCAL:nio_imap_enabled%%
+
+mailboxd_keystore=@@mailboxd_keystore@@
+mailboxd_keystore_password=@@mailboxd_keystore_password@@
+mailboxd_truststore_password=@@mailboxd_truststore_password@@
+
+zimbra_uid=@@zimbra_uid@@
+zimbra_gid=@@zimbra_gid@@
