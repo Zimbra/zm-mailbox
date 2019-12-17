@@ -38,20 +38,7 @@
     <pathelement location="${build.dir}/classes" />
   </path>
 
-   <target name="generate-native-headers" depends="check-java-version,compile,resolve" description="Java to Native"
-unless="java10+">
-            <javah class="com.zimbra.znative.IO" outputfile="${build.dir}/IO.h" classpathref="build.class.path"/>
-            <javah class="com.zimbra.znative.Process" outputfile="${build.dir}/Process.h" classpathref="build.class.path" />
-            <javah class="com.zimbra.znative.ProcessorUsage" outputfile="${build.dir}/ProcessorUsage.h" classpathref="build.class.path" />
-            <javah class="com.zimbra.znative.ResourceUsage" outputfile="${build.dir}/ResourceUsage.h" classpathref="build.class.path" />
-            <javah class="com.zimbra.znative.Util" outputfile="${build.dir}/Util.h" classpathref="build.class.path" />
-            <javah class="com.zimbra.znative.ProxyInfo" outputfile="${build.dir}/ProxyInfo.h" classpathref="build.class.path" />
-   </target>
-
-   <target name="check-java-version">
-    <condition property="java10+">
-      <javaversion atleast="10"/>
-    </condition>
+   <target name="generate-native-headers" depends="compile,resolve" description="Java to Native">
    </target>
 
    <target name="clean" description="Removes build files and undeploys extension">
