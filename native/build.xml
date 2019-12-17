@@ -38,7 +38,7 @@
     <pathelement location="${build.dir}/classes" />
   </path>
 
-   <target name="generate-native-headers" depends="compile,resolve" description="Java to Native">
+   <target name="generate-native-headers" depends="compile" description="Java to Native">
    </target>
 
    <target name="clean" description="Removes build files and undeploys extension">
