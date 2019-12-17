@@ -425,7 +425,8 @@ public class UserServlet extends ZimbraServlet {
 
         if (context.targetAccount != null && !Provisioning.onLocalServer(context.targetAccount)) {
             try {
-                proxyServletRequest(req, resp, Provisioning.getInstance().getServer(context.targetAccount), getProxyAuthToken(context));
+            	String affinityIp = Provisioning.affinityServer(context.targetAccount);
+                proxyServletRequest(req, resp, affinityIp, getProxyAuthToken(context));
             } catch (HttpException e) {
                 throw new IOException("Unknown error", e);
             }
@@ -788,7 +789,8 @@ public class UserServlet extends ZimbraServlet {
         if (targetAccount == null)
             throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, L10nUtil.getMessage(MsgKey.errNoSuchAccount, req));
         try {
-            proxyServletRequest(req, resp, prov.getServer(targetAccount), uri, getProxyAuthToken(context));
+        	    String affinityIp = Provisioning.affinityServer(targetAccount);
+            proxyServletRequest(req, resp, affinityIp, uri, getProxyAuthToken(context));
         } catch (HttpException e) {
             throw new IOException("Unknown error", e);
         }
@@ -875,8 +877,8 @@ public class UserServlet extends ZimbraServlet {
                 folder = folder.substring(1);
         }
 
-        Server server = Provisioning.getInstance().getServer(target);
-        StringBuffer url = new StringBuffer(getProxyUrl(null, server, SERVLET_PATH + getAccountPath(target)));
+        String affinityIp = Provisioning.affinityServer(target);
+        StringBuffer url = new StringBuffer(getProxyUrl(null, affinityIp, SERVLET_PATH + getAccountPath(target)));
         if (folder.length() > 0)
             url.append("/").append(folder);
         url.append("/?").append(QP_AUTH).append('=').append(AUTH_COOKIE);
