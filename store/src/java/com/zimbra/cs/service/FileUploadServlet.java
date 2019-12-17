@@ -64,6 +64,7 @@ import org.apache.tika.Tika;
 import com.google.common.base.Strings;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.ContentDisposition;
@@ -370,10 +371,12 @@ public class FileUploadServlet extends ZimbraServlet {
         }
         // the first half of the upload id is the server id where it lives
         Server server = Provisioning.getInstance().get(Key.ServerBy.id, getUploadServerId(uploadId));
-        String url = AccountUtil.getBaseUri(server);
+        Provisioning prov = Provisioning.getInstance();
+        Account acct = prov.getAccount(prov, AccountBy.id, accountId, authtoken);
+        String affinityIp = Provisioning.affinityServer(acct);
+        String url = AccountUtil.getBaseUri(server, affinityIp);
         if (url == null)
             return null;
-        String hostname = server.getServiceHostname();
         url += ContentServlet.SERVLET_PATH + ContentServlet.PREFIX_PROXY + '?' +
                ContentServlet.PARAM_UPLOAD_ID + '=' + uploadId + '&' +
                ContentServlet.PARAM_EXPUNGE + "=true";
@@ -382,7 +385,7 @@ public class FileUploadServlet extends ZimbraServlet {
         HttpClientBuilder clientBuilder = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
         HttpGet get = new HttpGet(url);
 
-        authtoken.encode(clientBuilder, get, false, hostname);
+        authtoken.encode(clientBuilder, get, false, affinityIp);
         HttpClient client = clientBuilder.build();
         try {
             // fetch the remote item

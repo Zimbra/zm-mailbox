@@ -297,31 +297,37 @@ public class ZimbraServlet extends HttpServlet {
     throws IOException, ServiceException, HttpException {
         Provisioning prov = Provisioning.getInstance();
         Account acct = prov.get(AccountBy.id, accountId);
+        String affinityIp = Provisioning.affinityServer(acct);
         if (acct == null) {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "no such user");
             return;
         }
-        proxyServletRequest(req, resp, prov.getServer(acct), null);
+        proxyServletRequest(req, resp, affinityIp, null);
     }
 
-    public static void proxyServletRequest(HttpServletRequest req, HttpServletResponse resp, Server server, AuthToken authToken)
+    public static void proxyServletRequest(HttpServletRequest req, HttpServletResponse resp, String podIp, AuthToken authToken)
     throws IOException, ServiceException, HttpException {
         String uri = req.getRequestURI();
         String qs = req.getQueryString();
         if (qs != null) {
             uri += '?' + qs;
         }
-        proxyServletRequest(req, resp, server, uri, authToken);
+        proxyServletRequest(req, resp, podIp, uri, authToken);
     }
+    
+	public static void proxyServletRequest(HttpServletRequest req, HttpServletResponse resp, Server server, String uri,
+			AuthToken authToken) throws IOException, ServiceException, HttpException {
+		proxyServletRequest(req, resp, Provisioning.myIpAddress(), uri, authToken);
+	}
 
-    public static void proxyServletRequest(HttpServletRequest req, HttpServletResponse resp, Server server, String uri, AuthToken authToken)
+    public static void proxyServletRequest(HttpServletRequest req, HttpServletResponse resp, String podIp, String uri, AuthToken authToken)
     throws IOException, ServiceException, HttpException {
-        if (server == null) {
+        if (podIp == null) {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "cannot find remote server");
             return;
         }
         HttpRequestBase method;
-        String url = getProxyUrl(req, server, uri);
+        String url = getProxyUrl(req, podIp, uri);
         mLog.debug("Proxy URL = %s", url);
         if (req.getMethod().equalsIgnoreCase("GET")) {
             method = new HttpGet(url);
@@ -483,29 +489,28 @@ public class ZimbraServlet extends HttpServlet {
     }
 
     public static String getServiceUrl(Account acct, String path) throws ServiceException {
-        Provisioning prov = Provisioning.getInstance();
-        Server server = prov.getServer(acct);
+        String affinityIp = Provisioning.affinityServer(acct);
 
-        if (server == null) {
-            throw ServiceException.FAILURE("unable to retrieve server for account" + acct.getName(), null);
+        if (affinityIp == null) {
+            throw ServiceException.FAILURE("unable to retrieve pod for account" + acct.getName(), null);
         }
 
-        return getServiceUrl(server, prov.getDomain(acct), path + getAccountPath(acct));
+        return URLUtil.getServiceURL(affinityIp, path + getAccountPath(acct), true);
     }
 
 
-    public static String getServiceUrl(Server server, Domain domain, String path) throws ServiceException {
-        return URLUtil.getPublicURLForDomain(server, domain, path, true);
+    public static String getServiceUrl(String podIp, String path) throws ServiceException {
+        return URLUtil.getServiceURL(podIp, path, true);
     }
 
-    protected static String getProxyUrl(HttpServletRequest req, Server server, String path) throws ServiceException {
+    protected static String getProxyUrl(HttpServletRequest req, String podIp, String path) throws ServiceException {
         int servicePort = (req == null) ? -1 : req.getLocalPort();
         Provisioning prov = Provisioning.getInstance();
         Server localServer = prov.getLocalServer();
-        if (!prov.isOfflineProxyServer(server) && servicePort == localServer.getIntAttr(Provisioning.A_zimbraAdminPort, 0))
-            return URLUtil.getAdminURL(server, path);
+        if (!prov.isOfflineProxyServer(podIp) && servicePort == localServer.getIntAttr(Provisioning.A_zimbraAdminPort, 0))
+            return URLUtil.getAdminURL(podIp, path);
         else
-            return URLUtil.getServiceURL(server, path, servicePort == localServer.getIntAttr(Provisioning.A_zimbraMailSSLPort, 0));
+            return URLUtil.getServiceURL(podIp, path, servicePort == localServer.getIntAttr(Provisioning.A_zimbraMailSSLPort, 0));
     }
 
     protected void returnError(HttpServletResponse resp, ServiceException e) {
