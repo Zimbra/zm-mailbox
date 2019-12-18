@@ -28,6 +28,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -89,6 +90,9 @@ public class GetPrefs extends AccountDocumentHandler  {
                 // Fixup for time zone id.  Always use canonical (Olson ZoneInfo) ID.
                 if (key.equals(Provisioning.A_zimbraPrefTimeZoneId))
                     value = TZIDMapper.canonicalize((String) value);
+                else if(Provisioning.A_zimbraPrefFromAddress.equals(key)) {
+                	value = IDNUtil.toUnicode(value.toString());
+                }
                 prefs.addKeyValuePair(key, (String) value, AccountConstants.E_PREF, AccountConstants.A_NAME);
             }
         }
