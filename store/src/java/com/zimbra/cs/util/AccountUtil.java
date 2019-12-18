@@ -480,12 +480,11 @@ public class AccountUtil {
 
         try {
             Server server = Provisioning.getInstance().getServer(account);
-            String affinityIp = Provisioning.affinityServer(account);
             if (server == null) {
                 ZimbraLog.account.warn("no server associated with acccount " + account.getName());
                 return null;
             }
-            return getBaseUri(server, affinityIp);
+            return getBaseUri(server, Provisioning.affinityServer(account));
         } catch (ServiceException e) {
             ZimbraLog.account.warn("error fetching SOAP URI for account " + account.getName(), e);
             return null;
@@ -805,8 +804,7 @@ public class AccountUtil {
     }
 
     public static String getExtUserLoginURL(Account owner) throws ServiceException {
-    	    String affinityIp = Provisioning.affinityServer(owner);
-        return ZimbraServlet.getServiceUrl(affinityIp, "?virtualacctdomain=" + owner.getDomainName());
+        return ZimbraServlet.getServiceUrl(Provisioning.affinityServer(owner), "?virtualacctdomain=" + owner.getDomainName());
     }
 
     public static String getShareAcceptURL(Account account, int folderId, String externalUserEmail)
@@ -833,8 +831,7 @@ public class AccountUtil {
         String hmac = TokenUtil.getHmac(data, key.getKey());
         String encoded = key.getVersion() + "_" + hmac + "_" + data;
         String path = "/service/extuserprov/?p=" + encoded;
-        String affinityIp = Provisioning.affinityServer(account);
-        return ZimbraServlet.getServiceUrl(affinityIp, path);
+        return ZimbraServlet.getServiceUrl(Provisioning.affinityServer(account), path);
     }
 
     public static void broadcastFlushCache(Account account) {
