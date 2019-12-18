@@ -25,6 +25,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.convert.ConversionException;
 import com.zimbra.cs.index.Fragment;
 import com.zimbra.cs.index.IndexDocument;
@@ -78,7 +79,7 @@ public final class ParsedDocument {
         this.contentType = ctype;
         this.filename = StringUtil.sanitizeFilename(filename);
         this.createdDate = createdDate;
-        this.creator = creator;
+        this.creator = IDNUtil.toUnicode(creator);
         this.description = description;
         this.descEnabled = descEnabled;
         if (LC.documents_disable_instant_parsing.booleanValue() == false)
