@@ -9,10 +9,6 @@
       <ant dir="./store-conf"  target="common-passwords" inheritAll="true"/>
     </target>
 
-    <target name="generate-native-lib">
-      <exec dir="./native" executable="make"          failonerror="true"/>
-    </target>
-
    <target name="publish-local-all">
       <ant dir="./native" target="publish-local" inheritAll="true"/>
       <ant dir="./common" target="publish-local" inheritAll="true"/>
@@ -94,6 +90,49 @@
    </target>
 
    <target name="pkg-after-plough-through-tests" depends="test-all-plough-through,pkg"/>
+
+    <property name="DOCKER_REPO_PUSH_NS" value="zms" />
+    <property name="DOCKER_MAILBOX_BUILD_TAG" value="1.0" />
+    <property name="DOCKER_PUSH_TAG" value="${DOCKER_MAILBOX_BUILD_TAG}" />
+    <target name="build-image" depends="all">
+        <copy todir="native/build/" overwrite="true">
+            <fileset dir="native/build" />
+            <globmapper from="zm-native-*.jar" to="zimbra-native.jar" />
+        </copy>
+        <copy todir="common/build/" overwrite="true">
+            <fileset dir="common/build" />
+            <globmapper from="zm-common-*.jar" to="zimbracommon.jar" />
+        </copy>
+        <copy todir="soap/build/" overwrite="true">
+            <fileset dir="soap/build" />
+            <globmapper from="zm-soap-*.jar" to="zimbrasoap.jar" />
+        </copy>
+        <copy todir="client/build/" overwrite="true">
+            <fileset dir="client/build" />
+            <globmapper from="zm-client-*.jar" to="zimbraclient.jar" />
+        </copy>
+        <copy todir="store/build/" overwrite="true">
+            <fileset dir="store/build" />
+            <globmapper from="zm-store-*.jar" to="zimbrastore.jar" />
+        </copy>
+        <exec executable="docker">
+            <arg value="build" />
+            <arg value="--build-arg" />
+            <arg value="DOCKER_REPO_NS=${DOCKER_REPO_PUSH_NS}" />
+            <arg value="--cache-from" />
+            <arg value="${DOCKER_REPO_PUSH_NS}/zms-mailbox:${DOCKER_MAILBOX_BUILD_TAG}" />
+            <arg value="--tag" />
+            <arg value="${DOCKER_REPO_PUSH_NS}/zms-mailbox:${DOCKER_MAILBOX_BUILD_TAG}" />
+            <arg value="." />
+        </exec>
+    </target>
+
+    <target name="push-image" depends="build-image">
+        <exec executable="docker">
+            <arg value="push" />
+            <arg value="${DOCKER_REPO_PUSH_NS}/zms-mailbox:${DOCKER_PUSH_TAG}" />
+        </exec>
+    </target>
 
    <target name="clean" depends="clean-ant,clean-pkg">
       <exec dir="./native" executable="make" failonerror="true"><arg value="clean"/></exec>
