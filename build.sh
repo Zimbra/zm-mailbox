@@ -1,9 +1,28 @@
 #!/bin/bash
 
+DOCKER_REPO_NS="$1"
+DOCKER_BUILD_TAG="$2"
+LIBS_REPO_BRANCH="$3"
+
+if [ -z "$1" ]
+  then
+    DOCKER_REPO_NS="zms"
+fi
+
+if [ -z "$2" ]
+  then
+    DOCKER_BUILD_TAG="1.0"
+fi
+
+if [ -z "$3" ]
+  then
+    LIBS_REPO_BRANCH="develop"
+fi
+
 # Generate store/build/dist/conf/attrs/zimbra-attrs-schema
 ant create-version-ldap -f store/build.xml
 
-# Generate store/build/service webapp
+# Generate service webapp at store/build/service 
 ant war -f store/build.xml -Dzimbra.buildinfo.version=8.9.0
 mkdir store/build/service
 cp store/build/service.war store/build/service/
@@ -12,9 +31,6 @@ cd ../../..
 
 # Generate store-conf/build/zms/mailbox-conf
 ant build-mailbox-conf -f store-conf/build.xml
-
-# Generate store-conf/build/zms/jetty-conf
-ant build-jetty-conf -f store-conf/build.xml
 
 # Generate core jars
 rm -rf native/build/*.jar
@@ -33,5 +49,18 @@ mv `ls soap/build/*.jar` soap/build/zimbrasoap.jar
 mv `ls client/build/*.jar` client/build/zimbraclient.jar
 mv `ls store/build/*.jar` store/build/zimbrastore.jar
 
+# Generate native lib
+ant generate-native-headers -f native/build.xml -Dzimbra.buildinfo.version=8.9.0
+ant generate-native-lib
+
+mkdir build
+cd build
+git clone -b ${LIBS_REPO_BRANCH} --single-branch  https://${GITHUB_ACCESS_TOKEN}:@github.com/ZimbraOS/zm-jython.git
+git clone -b ${LIBS_REPO_BRANCH} --single-branch  https://${GITHUB_ACCESS_TOKEN}:@github.com/ZimbraOS/zm-build.git
+cd ..
+
 # Build mailbox components docker image
-docker build -t zms-mailbox-components .
+docker build -t ${DOCKER_REPO_NS}/zms-mailbox:${DOCKER_BUILD_TAG} .
+
+rm -rf build/zm-jython
+rm -rf build/zm-build

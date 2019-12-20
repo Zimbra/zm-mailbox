@@ -9,6 +9,10 @@
       <ant dir="./store-conf"  target="common-passwords" inheritAll="true"/>
     </target>
 
+    <target name="generate-native-lib">
+      <exec dir="./native" executable="make"          failonerror="true"/>
+    </target>
+
    <target name="publish-local-all">
       <ant dir="./native" target="publish-local" inheritAll="true"/>
       <ant dir="./common" target="publish-local" inheritAll="true"/>
