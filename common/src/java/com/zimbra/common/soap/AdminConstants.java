@@ -1618,5 +1618,6 @@ public final class AdminConstants {
 
     // ReIndex
     public static final String A_DELETE_ONLY = "deleteOnly";
+    public static final String A_ENABLE_INDEXING = "enableIndexing";
 
 }

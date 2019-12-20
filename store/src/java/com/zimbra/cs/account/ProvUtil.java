@@ -2004,7 +2004,7 @@ public class ProvUtil implements HttpDebugListener {
         }
         SoapProvisioning sp = (SoapProvisioning) prov;
         Account acct = lookupAccount(args[1]);
-        ReIndexInfo info = sp.reIndex(acct, args[2], null, null, true);
+        ReIndexInfo info = sp.reIndex(acct, args[2], null, null, true, false);
         ReIndexInfo.Progress progress = info.getProgress();
         console.printf("status: %s\n", info.getStatus());
     }

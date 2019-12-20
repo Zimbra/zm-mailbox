@@ -68,6 +68,13 @@ public class ReIndexRequest {
     private ZmBoolean isDeleteOnly;
 
     /**
+     * @zm-api-field-tag enableIndexing
+     * @zm-api-field-description Set zimbraDelayedIndexStatus to indexing when zimbraFeatureDelayedIndexEnabled is TRUE.</b>
+     */
+    @XmlAttribute(name=AdminConstants.A_ENABLE_INDEXING, required=false)
+    private ZmBoolean enableIndexing;
+
+    /**
      * no-argument constructor wanted by JAXB
      */
      @SuppressWarnings("unused")
@@ -78,6 +85,8 @@ public class ReIndexRequest {
     public ReIndexRequest(String action, ReindexMailboxInfo mbox) {
         this.action = action;
         this.mbox = mbox;
+        this.isDeleteOnly = ZmBoolean.fromBool(false);
+        this.enableIndexing = ZmBoolean.fromBool(false);
     }
 
     public String getAction() { return action; }
@@ -87,4 +96,9 @@ public class ReIndexRequest {
         this.isDeleteOnly = ZmBoolean.fromBool(deleteOnly);
     }
     public boolean getDeleteOnly() {return ZmBoolean.toBool(isDeleteOnly); }
+
+    public void setEnableIndexing(Boolean enableIndexing) {
+        this.enableIndexing = ZmBoolean.fromBool(enableIndexing);
+    }
+    public boolean getEnableIndexing() {return ZmBoolean.toBool(enableIndexing); }
 }

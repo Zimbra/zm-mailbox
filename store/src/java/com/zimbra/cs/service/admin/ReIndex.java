@@ -134,7 +134,7 @@ public final class ReIndex extends AdminDocumentHandler {
                     }
                     mbox.index.startReIndexById(ids);
                 } else {
-                    mbox.index.startReIndex(req.getDeleteOnly());
+                    mbox.index.startReIndex(req.getDeleteOnly(), req.getEnableIndexing());
                 }
 
                 response.addAttribute(AdminConstants.A_STATUS, STATUS_STARTED);
