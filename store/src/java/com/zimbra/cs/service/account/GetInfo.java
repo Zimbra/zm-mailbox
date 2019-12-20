@@ -70,6 +70,9 @@ import com.zimbra.cs.zimlet.ZimletUtil;
 import com.zimbra.soap.SoapEngine;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.account.type.Prop;
+import com.zimbra.cs.account.IDNUtil;
+import com.google.common.base.Strings;
+
 
 /**
  * @since May 26, 2004
@@ -337,6 +340,24 @@ public class GetInfo extends AccountDocumentHandler  {
                     }
                 }
             }
+
+	if (key.equals("zimbraMailAlias") && value != null && !value.toString().isEmpty()) {
+
+                if (value instanceof String[]) {
+                    String sa[] = (String[]) value;
+                    for (int i = 0; i < sa.length; i++) {
+                        if (!Strings.isNullOrEmpty(sa[i])) {
+                            sa[i] = IDNUtil.toUnicode(sa[i]);
+                        }
+                    }
+                    value = sa;
+
+                } else {
+                    value = IDNUtil.toUnicodeEmail(value.toString());
+                }
+
+            }
+
 
             ToXML.encodeAttr(response, key, value);
         }
