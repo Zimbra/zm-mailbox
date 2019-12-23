@@ -53,14 +53,5 @@ mv `ls store/build/*.jar` store/build/zimbrastore.jar
 ant generate-native-headers -f native/build.xml -Dzimbra.buildinfo.version=8.9.0
 ant generate-native-lib
 
-mkdir build
-cd build
-git clone -b ${LIBS_REPO_BRANCH} --single-branch  https://${GITHUB_ACCESS_TOKEN}:@github.com/ZimbraOS/zm-jython.git
-git clone -b ${LIBS_REPO_BRANCH} --single-branch  https://${GITHUB_ACCESS_TOKEN}:@github.com/ZimbraOS/zm-build.git
-cd ..
-
 # Build mailbox components docker image
 docker build -t ${DOCKER_REPO_NS}/zms-mailbox:${DOCKER_BUILD_TAG} .
-
-rm -rf build/zm-jython
-rm -rf build/zm-build

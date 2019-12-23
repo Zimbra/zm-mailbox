@@ -17,9 +17,3 @@ COPY store/build/zimbrastore.jar opt/zimbra/lib/jars/zimbrastore.jar
 
 # Copy native lib to /opt/zimbra/lib
 COPY native/build/libzimbra-native.so opt/zimbra/lib/
-
-# Copy jylibs
-COPY build/zm-jython/jylibs/ opt/zimbra/common/lib/jylibs/
-
-# Copy perl libs
-COPY build/zm-build/lib/Zimbra/ opt/zimbra/common/lib/perl5/Zimbra/
