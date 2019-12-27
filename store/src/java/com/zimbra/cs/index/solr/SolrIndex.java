@@ -173,6 +173,10 @@ public class SolrIndex extends IndexStore {
     }
 
     protected void addTermsFilter(SolrQuery query, Collection<Term> terms) {
+        addTermsFilter(query, terms, false);
+    }
+
+    protected void addTermsFilter(SolrQuery query, Collection<Term> terms, boolean usePostFilter) {
         if(terms == null || terms.size() < 1) {
             return;
         }
@@ -183,7 +187,13 @@ public class SolrIndex extends IndexStore {
         for (Map.Entry<String, Collection<String>> entry: byField.asMap().entrySet()) {
             String field = entry.getKey();
             Collection<String> values = entry.getValue();
-            query.addFilterQuery(SolrUtils.getTermsFilter(field, values));
+            String filterQuery;
+            if (usePostFilter) {
+                filterQuery = SolrUtils.getZimbraIdPostFilter(accountId, field, values);
+            } else {
+                filterQuery = SolrUtils.getTermsFilter(field, values);
+            }
+            query.addFilterQuery(filterQuery);
         }
     }
 
@@ -248,7 +258,7 @@ public class SolrIndex extends IndexStore {
                 SolrQuery q = solrHelper.newQuery(accountId).setQuery("*:*").setRows(0);
                 if (SolrUtils.isWildcardQuery(term.text()) || SolrUtils.containsWhitespace(term.text())) {
                     //can't use a terms filter
-                    q.addFilterQuery(termToQuery(escapeSpecialChars(term)));
+                q.addFilterQuery(termToQuery(escapeSpecialChars(term)));
                 } else {
                     addTermsFilter(q, Arrays.asList(term));
                 }
@@ -301,7 +311,7 @@ public class SolrIndex extends IndexStore {
             q.setQuery(query.toString()).setRows(n);
 
             if(filter != null) {
-                addTermsFilter(q, filter.getTerms());
+                addTermsFilter(q, filter.getTerms(), true);
             }
 
             String[] fields = fetchFields != null ? new String[fetchFields.length + 2] : new String[2];

@@ -26,6 +26,7 @@ import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.common.SolrException;
 import org.apache.solr.common.cloud.ClusterStateUtil;
 import org.apache.solr.common.params.CollectionParams.CollectionAction;
+import org.apache.solr.common.params.CommonParams;
 import org.apache.solr.common.params.CoreAdminParams;
 import org.apache.solr.common.params.ModifiableSolrParams;
 
@@ -43,6 +44,7 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.SolrStopwordManager;
 import com.zimbra.cs.index.solr.SolrIndex.IndexType;
+import com.zimbra.cs.index.solr.SolrIndex.LocalParams;
 import com.zimbra.cs.util.ProvisioningUtil;
 import com.zimbra.cs.util.RetryUtil;
 import com.zimbra.cs.util.RetryUtil.RequestWithRetry;
@@ -339,11 +341,34 @@ public class SolrUtils {
         }
     }
 
+    private static LocalParams getTermsFilterLocalParams(String field) {
+        LocalParams lp = new LocalParams("terms");
+        lp.addParam("f", field);
+        if (!LC.solr_cache_term_filter_queries.booleanValue()) {
+            lp.addParam(CommonParams.CACHE, "false");
+        }
+        return lp;
+    }
+
+    private static LocalParams getIdPostFilterLocalParams(String accountId, String field) {
+        LocalParams lp = new LocalParams("zimbraids");
+        lp.addParam("f", field);
+        lp.addParam("a", accountId);
+        return lp;
+    }
+
+    public static String getZimbraIdPostFilter(String accountId, String field, Collection<String> values) {
+        LocalParams lp = getIdPostFilterLocalParams(accountId, field);
+        return String.format("%s%s", lp.encode(), Joiner.on(",").join(values));
+    }
+
     public static String getTermsFilter(String field, Collection<String> values) {
-        return String.format("{!terms f=%s}%s", field, Joiner.on(",").join(values));
+        LocalParams lp = getTermsFilterLocalParams(field);
+        return String.format("%s%s", lp.encode(), Joiner.on(",").join(values));
     }
     public static String getTermsFilter(String field, String... values) {
-        return String.format("{!terms f=%s}%s", field, Joiner.on(",").join(values));
+        LocalParams lp = getTermsFilterLocalParams(field);
+        return String.format("%s%s", lp.encode(), Joiner.on(",").join(values));
     }
 
     public static String getAccountFilter(String accountId) {
