@@ -127,10 +127,26 @@ public final class MailboxIndex {
             if (!mailbox.getAccount().isFeatureDelayedIndexEnabled() &&
                 !mailbox.index.getIndexStore().isIndexExist()) { // Index files are empty
                 return true;
-            } else if (mailbox.getAccount().isFeatureDelayedIndexEnabled()
-                    && DelayedIndexStatus.waitingForSearch.toString().equals(mailbox.getAccount().getDelayedIndexStatusAsString())) {
-                // TODO: check if there is a case that search() is called via non-user behavior (i.e. by server process)
+            } else if (mailbox.getAccount().isFeatureDelayedIndexEnabled() &&
+                DelayedIndexStatus.waitingForSearch.toString().equals(mailbox.getAccount().getDelayedIndexStatusAsString())) {
                 return true;
+            } else if (mailbox.getAccount().isFeatureMobileSyncEnabled() &&
+                mailbox.getAccount().isFeatureDelayedIndexEnabled() &&
+                (mailbox.getAccount().getDelayedIndexStatus() == null ||
+                 DelayedIndexStatus.suppressed.toString().equals(mailbox.getAccount().getDelayedIndexStatusAsString()))) {
+                /* Mobile NG module doesn't call Account.authAccount(String, AuthContext.Protocol)
+                 * when Mobile Password is used.
+                 *
+                 * Standard mobile module has a cache of authentication result with no timeout by default.
+                 * It is valid until mailboxd is restarted.
+                 */
+                StackTraceElement[] ste = new Throwable().getStackTrace();
+                for (int i = 0; i < ste.length; i++) {
+                    if (ste[i].getClassName().startsWith("com.zextras.modules.mobile") ||
+                        ste[i].getClassName().startsWith("com.zimbra.zimbrasync")) {
+                        return true;
+                    }
+                }
             }
         } catch (IOException e) {
             ZimbraLog.index.error("Failed to start reindex thread (index files IO error)");
@@ -470,11 +486,15 @@ public final class MailboxIndex {
     public void startReIndex() throws ServiceException {
         startReIndex(false, false);
     }
-    public void startReIndex(boolean isDeleteOnlyRequest, boolean enableIndexing) throws ServiceException {
-        if (isDeleteOnlyRequest && enableIndexing) {
+    public void startReIndex(boolean isDeleteOnly, boolean enableIndexing) throws ServiceException {
+        if (isDeleteOnly && enableIndexing) {
             throw ServiceException.INVALID_REQUEST("cannot specify deleteOnly with enableIndexing option", null);
+        } else if (isDeleteOnly &&
+            !(mailbox.getAccount().isFeatureDelayedIndexEnabled() &&
+             !DelayedIndexStatus.indexing.toString().equals(mailbox.getAccount().getDelayedIndexStatusAsString()))) {
+            throw ServiceException.INVALID_REQUEST("deleting index is allowed only when zimbraFeatureDelayedIndexEnabled is TRUE and zimbraDelayedIndexStatus is suppressed or waitingForSearch", null);
         }
-        startReIndex(new ReIndexTask(mailbox, null, isDeleteOnlyRequest, enableIndexing));
+        startReIndex(new ReIndexTask(mailbox, null, isDeleteOnly, enableIndexing));
     }
 
     public void startReIndexById(Collection<Integer> ids) throws ServiceException {

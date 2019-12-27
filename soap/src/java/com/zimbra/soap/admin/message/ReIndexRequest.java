@@ -61,14 +61,14 @@ public class ReIndexRequest {
     private final ReindexMailboxInfo mbox;
 
     /**
-     * @zm-api-field-tag isDeleteOnly
+     * @zm-api-field-tag delete-only
      * @zm-api-field-description Just delete index without reindexing. It cannot be canceled.</b>
      */
     @XmlAttribute(name=AdminConstants.A_DELETE_ONLY, required=false)
     private ZmBoolean isDeleteOnly;
 
     /**
-     * @zm-api-field-tag enableIndexing
+     * @zm-api-field-tag enable-indexing
      * @zm-api-field-description Set zimbraDelayedIndexStatus to indexing when zimbraFeatureDelayedIndexEnabled is TRUE.</b>
      */
     @XmlAttribute(name=AdminConstants.A_ENABLE_INDEXING, required=false)
