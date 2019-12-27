@@ -17,6 +17,8 @@
 
 package com.zimbra.soap;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -38,6 +40,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.Reasons;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -483,13 +486,33 @@ public abstract class DocumentHandler {
         request.addAttribute(xpath[depth], value);
     }
     
+    public static boolean onLocalServer(Account account) throws ServiceException {
+        return onLocalServer(account, null);
+    }
+    
+	public static boolean onLocalServer(Account account, Reasons reasons) throws ServiceException {
+		String targetIp = Provisioning.affinityServer(account);
+		String localIp = null;
+		try {
+			localIp = InetAddress.getLocalHost().getHostAddress().trim();
+		} catch (UnknownHostException e) {
+			ZimbraLog.misc.warn("Unknown Host Exception", e);
+		}
+		boolean isLocal = (targetIp != null && targetIp.equalsIgnoreCase(localIp));
+		if (!isLocal && reasons != null) {
+			reasons.addReason(String.format("isLocal=%b target=%s localhost=%s account=%s", isLocal, targetIp, localIp,
+					account.getName()));
+		}
+		return isLocal;
+	}
+	
     protected Element proxyIfNecessary(Element request, Map<String, Object> context) throws ServiceException {
         // if the "target account" is remote and the command is non-admin, proxy.
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         String acctId = zsc.getRequestedAccountId();
         Provisioning.Reasons reasons = new Provisioning.Reasons();
         if (acctId != null && zsc.getProxyTarget() == null && !isAdminCommand() &&
-                !Provisioning.onLocalServer(getRequestedAccount(zsc), reasons)) {
+                !onLocalServer(getRequestedAccount(zsc), reasons)) {
             if (null == zsc.getSoapRequestId()) {
                 zsc.setNewSoapRequestId();
             }
