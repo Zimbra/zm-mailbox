@@ -381,7 +381,7 @@ public final class ParseMimeMessage {
             }
             // attachments go into the toplevel "mixed" part
             if (isMultipart && attachElem != null) {
-                handleAttachments(attachElem, mmp, ctxt, null, Part.ATTACHMENT, attachMessageFromCache);
+                handleAttachments(attachElem, mmp, ctxt, null, Part.ATTACHMENT, attachMessageFromCache, zsc);
             }
 
             // <m> attributes: id, f[lags], s[ize], d[ate], cid(conv-id), l(parent folder)
@@ -462,12 +462,13 @@ public final class ParseMimeMessage {
     }
 
     private static void handleAttachments(Element attachElem, MimeMultipart mmp,
-        ParseMessageContext ctxt, String contentID, String contentDisposition)
+        ParseMessageContext ctxt, String contentID, String contentDisposition, ZimbraSoapContext zsc)
         throws ServiceException, MessagingException, IOException {
-        handleAttachments(attachElem, mmp, ctxt, contentID, contentDisposition, false);
+        handleAttachments(attachElem, mmp, ctxt, contentID, contentDisposition, false, zsc);
     }
 
-    private static void handleAttachments(Element attachElem, MimeMultipart mmp, ParseMessageContext ctxt, String contentID, String contentDisposition, boolean attachFromMessageCache)
+    private static void handleAttachments(Element attachElem, MimeMultipart mmp, ParseMessageContext ctxt, String contentID, String contentDisposition,
+            boolean attachFromMessageCache, ZimbraSoapContext zsc)
     throws ServiceException, MessagingException, IOException {
         if (contentID != null) {
             contentID = '<' + contentID + '>';
@@ -492,7 +493,7 @@ public final class ParseMimeMessage {
                 if (attachType.equals(MailConstants.E_MIMEPART)) {
                     ItemId iid = new ItemId(elem.getAttribute(MailConstants.A_MESSAGE_ID), ctxt.zsc);
                     String part = elem.getAttribute(MailConstants.A_PART);
-                    attachPart(mmp, iid, part, contentID, ctxt, contentDisposition);
+                    attachPart(mmp, iid, part, contentID, ctxt, contentDisposition, zsc);
                 } else if (attachType.equals(MailConstants.E_MSG)) {
                     ItemId iid = new ItemId(elem.getAttribute(MailConstants.A_ID), ctxt.zsc);
                     attachMessage(mmp, iid, contentID, ctxt, attachFromMessageCache);
@@ -538,7 +539,7 @@ public final class ParseMimeMessage {
 
         Element inline = elem.getOptionalElement(MailConstants.E_ATTACH);
         if (inline != null) {
-            handleAttachments(inline, mmp, ctxt, elem.getAttribute(MailConstants.A_CONTENT_ID, null), Part.INLINE);
+            handleAttachments(inline, mmp, ctxt, elem.getAttribute(MailConstants.A_CONTENT_ID, null), Part.INLINE, null);
             return;
         }
 
@@ -831,7 +832,7 @@ public final class ParseMimeMessage {
     }
 
 
-    private static void attachPart(MimeMultipart mmp, ItemId iid, String part, String contentID, ParseMessageContext ctxt, String contentDisposition)
+    private static void attachPart(MimeMultipart mmp, ItemId iid, String part, String contentID, ParseMessageContext ctxt, String contentDisposition, ZimbraSoapContext zsc)
     throws IOException, MessagingException, ServiceException {
         if (!iid.isLocal()) {
             Map<String, String> params = new HashMap<String, String>(3);
@@ -841,11 +842,23 @@ public final class ParseMimeMessage {
         }
 
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(iid.getAccountId());
-        MimeMessage mm;
+        MimeMessage mm = null;
         if (iid.hasSubpart()) {
             mm = mbox.getCalendarItemById(ctxt.octxt, iid.getId()).getSubpartMessage(iid.getSubpartId());
         } else {
-            mm = mbox.getMessageById(ctxt.octxt, iid.getId()).getMimeMessage();
+            try {
+                mm = mbox.getMessageById(ctxt.octxt, iid.getId()).getMimeMessage();
+            } catch(ServiceException se) {
+                if (se instanceof MailServiceException.NoSuchItemException &&
+                        se.getCode().equals(MailServiceException.NO_SUCH_MSG) && zsc != null) {
+                    Account loggedInAcct = zsc.getAuthToken().getAccount();
+                    ZimbraLog.account.debug("Item not found in %s mailbox, searching for item in the logged in user %s mailbox", zsc.getRequestedAccountId(), loggedInAcct.getMail());
+                    mbox = MailboxManager.getInstance().getMailboxByAccountId(loggedInAcct.getId());
+                    mm = mbox.getMessageById(ctxt.octxt, iid.getId()).getMimeMessage();
+                } else {
+                    throw ServiceException.FAILURE(se.getMessage(), se.getCause());
+                }
+            }
         }
         MimePart mp = Mime.getMimePart(mm, part);
         if (mp == null) {

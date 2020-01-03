@@ -48,7 +48,7 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class ItemId implements java.io.Serializable {
     private static final long serialVersionUID = -9044615129495573523L;
 
-    private final String mAccountId;
+    private String mAccountId;
     private final int    mId;
     private int    mSubpartId = -1;
 
@@ -97,6 +97,10 @@ public class ItemId implements java.io.Serializable {
     public String getAccountId()  { return mAccountId; }
     public int getId()            { return mId; }
     public int getSubpartId()     { return mSubpartId; }
+
+    public void setAccountId(String accountId) {
+        this.mAccountId = accountId;
+    }
 
     public boolean hasSubpart()   { return mSubpartId >= 0; }
 
