@@ -181,10 +181,6 @@ public class SoapSession extends Session {
                 prov.get(AccountBy.id, authedAcctId), prov.get(AccountBy.id, targetAcctId),
                 getParentSession().asAdmin());
         }
-
-        public MailboxLock getReadLockAndLockIt() throws ServiceException {
-            return null;
-        }
         
         private boolean calculateVisibleFolders(boolean force) throws ServiceException {
             long now = System.currentTimeMillis();
@@ -196,7 +192,7 @@ public class SoapSession extends Session {
                 return true;
             }
 
-            try (final MailboxLock l = getReadLockAndLockIt()) {
+            try (final MailboxLock l = mbox.getReadLockAndLockIt()) {
                 if (!force && (mNextFolderCheck < 0 || mNextFolderCheck > now)) {
                     return mVisibleFolderIds != null;
                 }
@@ -663,7 +659,7 @@ public class SoapSession extends Session {
         }
         // delegate sessions are only for mailboxes on the local host
         try {
-            if (!Provisioning.onLocalServer(Provisioning.getInstance().get(Key.AccountBy.id, targetAccountId))) {
+            if (!DocumentHandler.onLocalServer(Provisioning.getInstance().get(Key.AccountBy.id, targetAccountId))) {
                 return null;
             }
         } catch (ServiceException e) {
