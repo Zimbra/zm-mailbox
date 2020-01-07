@@ -72,4 +72,5 @@ RUN chown -R root:root /opt/zimbra/mailboxd/common/lib \
     && chown -R zimbra:zimbra db \
     && chown zimbra:zimbra -R conf jetty_base log db extensions-extra zimlets-deployed \
     && chmod -R +x bin libexec \
-    && chown root:root jetty mailboxd jetty_base/common
+    && chown root:root jetty mailboxd jetty_base/common \
+    && chmod 444 /opt/zimbra/lib/jars/* && chmod 755 /opt/zimbra/lib/*.so && chmod 664 /opt/zimbra/lib/*.nar
