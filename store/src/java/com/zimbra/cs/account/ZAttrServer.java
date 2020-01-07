@@ -19444,7 +19444,7 @@ public abstract class ZAttrServer extends NamedEntry {
      */
     @ZAttr(id=1657)
     public String[] getMailboxdSSLProtocols() {
-        String[] value = getMultiAttr(Provisioning.A_zimbraMailboxdSSLProtocols, true, true); return value.length > 0 ? value : new String[] {"TLSv1","TLSv1.1","TLSv1.2"};
+        String[] value = getMultiAttr(Provisioning.A_zimbraMailboxdSSLProtocols, true, true); return value.length > 0 ? value : new String[] {"TLSv1.2"};
     }
 
     /**
