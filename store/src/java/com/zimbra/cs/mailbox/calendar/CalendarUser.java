@@ -52,7 +52,7 @@ public abstract class CalendarUser {
     private String mLanguage;
     private List<ZParameter> mXParams = new ArrayList<ZParameter>();
 
-    public String getAddress() { return mAddress; }
+    public String getAddress() { return IDNUtil.toUnicode(mAddress); }
     public void setAddress(String a) { mAddress = getMailToAddress(a); }
 
     public boolean hasCn() { return !StringUtil.isNullOrEmpty(mCn); }
@@ -273,7 +273,7 @@ public abstract class CalendarUser {
             if (address.toLowerCase().startsWith("mailto:"))
                 address = address.substring(7);  // 7 = len("mailto:")
             if (address.length() > 0)
-                return IDNUtil.toUnicode(address);
+                return address;
         }
         return null;
     }
