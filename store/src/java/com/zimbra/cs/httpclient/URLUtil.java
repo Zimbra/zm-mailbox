@@ -129,7 +129,14 @@ public class URLUtil {
         return sb.toString();
     }
 
-
+    public static String getAdminURL(String podIp, String path) throws ServiceException {
+		Server localServer = Provisioning.getInstance().getLocalServer();
+		int port = localServer.getIntAttr(Provisioning.A_zimbraAdminPort, 0);
+		StringBuffer sb = new StringBuffer(128);
+		sb.append(LC.zimbra_admin_service_scheme.value()).append(podIp).append(":").append(port).append(path);
+		return sb.toString();
+    }
+    
     public static String getAdminURL(String ip, int port, String path, boolean checkPort) throws ServiceException {
         StringBuffer sb = new StringBuffer(128);
         sb.append(LC.zimbra_admin_service_scheme.value()).append(ip).append(":").append(port).append(path);
@@ -288,6 +295,12 @@ public class URLUtil {
         buf.append(path);
     	return buf.toString();
     }
+    
+	public static String getServiceURL(String podIP, String path, boolean useSSL) throws ServiceException {
+		Server localServer = Provisioning.getInstance().getLocalServer();
+		int port = getServicePort(localServer, useSSL);
+		return getServiceURL(podIP, port, path, useSSL);
+	}
 
 	public static MailMode getModeString(Server server) throws ServiceException {
 		String modeString = server.getAttr(Provisioning.A_zimbraMailMode, null);

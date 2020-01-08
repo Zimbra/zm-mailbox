@@ -715,8 +715,8 @@ public class DavServlet extends ZimbraServlet {
         if (acct == null) {
             return false;
         }
-        Server server = prov.getServer(acct);
-        if (server == null) {
+        String affinityIp = Provisioning.affinityServer(acct);
+        if (affinityIp == null) {
             return false;
         }
 
@@ -749,9 +749,9 @@ public class DavServlet extends ZimbraServlet {
         }
 
         // build proxy request
-        String url = getProxyUrl(ctxt.getRequest(), server, DAV_PATH) + HttpUtil.urlEscape("/" + acct.getName() + path + "/" + (extraPath == null ? "" : extraPath));
+        String url = getProxyUrl(ctxt.getRequest(), affinityIp, DAV_PATH) + HttpUtil.urlEscape("/" + acct.getName() + path + "/" + (extraPath == null ? "" : extraPath));
         BasicCookieStore state = new BasicCookieStore();
-        authToken.encode(state, false, server.getAttr(Provisioning.A_zimbraServiceHostname));
+        authToken.encode(state, false, affinityIp);
         HttpClientBuilder clientBuilder = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
         clientBuilder.setDefaultCookieStore(state);
         HttpClient client = clientBuilder.build();

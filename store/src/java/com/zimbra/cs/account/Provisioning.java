@@ -2704,6 +2704,10 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public boolean isOfflineProxyServer(Server server) {
         return false;
     }
+    
+    public boolean isOfflineProxyServer(String podIp) {
+        return false;
+    }
 
     public boolean allowsPingRemote() {
         return true;

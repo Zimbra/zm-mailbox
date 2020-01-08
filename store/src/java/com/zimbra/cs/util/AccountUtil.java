@@ -484,28 +484,27 @@ public class AccountUtil {
                 ZimbraLog.account.warn("no server associated with acccount " + account.getName());
                 return null;
             }
-            return getBaseUri(server);
+            return getBaseUri(server, Provisioning.affinityServer(account));
         } catch (ServiceException e) {
             ZimbraLog.account.warn("error fetching SOAP URI for account " + account.getName(), e);
             return null;
         }
     }
 
-    public static String getBaseUri(Server server) {
-        if (server == null)
+    public static String getBaseUri(Server server, String podIp) {
+        if (podIp == null)
             return null;
 
-        String host = server.getAttr(Provisioning.A_zimbraServiceHostname);
         String mode = server.getAttr(Provisioning.A_zimbraMailMode, "http");
         int port = server.getIntAttr(Provisioning.A_zimbraMailPort, 0);
         if (port > 0 && !mode.equalsIgnoreCase("https") && !mode.equalsIgnoreCase("redirect")) {
-            return "http://" + host + ':' + port;
+            return "http://" + podIp + ':' + port;
         } else if (!mode.equalsIgnoreCase("http")) {
             port = server.getIntAttr(Provisioning.A_zimbraMailSSLPort, 0);
             if (port > 0)
-                return "https://" + host + ':' + port;
+                return "https://" + podIp + ':' + port;
         }
-        ZimbraLog.account.warn("no service port available on host " + host);
+        ZimbraLog.account.warn("no service port available on host " + podIp);
         return null;
     }
 
@@ -805,9 +804,7 @@ public class AccountUtil {
     }
 
     public static String getExtUserLoginURL(Account owner) throws ServiceException {
-        return ZimbraServlet.getServiceUrl(owner.getServer(),
-            Provisioning.getInstance().getDomain(owner),
-            "?virtualacctdomain=" + owner.getDomainName());
+        return ZimbraServlet.getServiceUrl(Provisioning.affinityServer(owner), "?virtualacctdomain=" + owner.getDomainName());
     }
 
     public static String getShareAcceptURL(Account account, int folderId, String externalUserEmail)
@@ -834,8 +831,7 @@ public class AccountUtil {
         String hmac = TokenUtil.getHmac(data, key.getKey());
         String encoded = key.getVersion() + "_" + hmac + "_" + data;
         String path = "/service/extuserprov/?p=" + encoded;
-        return ZimbraServlet.getServiceUrl(account.getServer(),
-            Provisioning.getInstance().getDomain(account), path);
+        return ZimbraServlet.getServiceUrl(Provisioning.affinityServer(account), path);
     }
 
     public static void broadcastFlushCache(Account account) {

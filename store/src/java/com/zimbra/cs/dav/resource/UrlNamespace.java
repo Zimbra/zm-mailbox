@@ -388,16 +388,13 @@ public class UrlNamespace {
         return getAbsoluteUrl(user, DavServlet.DAV_PATH + "/" + user.getName() + path);
     }
 
-    private static String getAbsoluteUrl(Account user, String path) throws ServiceException {
-        Provisioning prov = Provisioning.getInstance();
-        Domain domain = null;
-        Server server = prov.getLocalServer();
-        if (user != null) {
-            domain = prov.getDomain(user);
-            server = prov.getServer(user);
-        }
-        return DavServlet.getServiceUrl(server, domain, path);
-    }
+	private static String getAbsoluteUrl(Account user, String path) throws ServiceException {
+		String affinityIp = null;
+		if (user != null) {
+			affinityIp = Provisioning.affinityServer(user);
+		}
+		return DavServlet.getServiceUrl(affinityIp, path);
+	}
 
     public static void addToRenamedResource(String user, String path, DavResource rsc) {
         synchronized (sRenamedResourceMap) {
