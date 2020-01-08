@@ -98,7 +98,7 @@ public class ContactBackup extends AdminDocumentHandler {
                 list.add(serverSelector);
                 ContactBackupRequest req = new ContactBackupRequest(Operation.stop, list);
                 Element request = JaxbUtil.jaxbToElement(req);
-                Element response = proxyRequest(request, context, server, zsc);
+                Element response = proxyRequest(request, context, Provisioning.myIpAddress(), zsc);
                 ContactBackupResponse resp = JaxbUtil.elementToJaxb(response);
                 servers.addAll(resp.getServers());
             }
@@ -131,7 +131,7 @@ public class ContactBackup extends AdminDocumentHandler {
                 list.add(serverSelector);
                 ContactBackupRequest req = new ContactBackupRequest(Operation.start, list);
                 Element request = JaxbUtil.jaxbToElement(req);
-                Element response = proxyRequest(request, context, server, zsc);
+                Element response = proxyRequest(request, context, Provisioning.myIpAddress(), zsc);
                 ContactBackupResponse resp = JaxbUtil.elementToJaxb(response);
                 servers.addAll(resp.getServers());
             }

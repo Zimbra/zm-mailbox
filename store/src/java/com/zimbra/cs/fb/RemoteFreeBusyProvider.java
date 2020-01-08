@@ -52,14 +52,13 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.httpclient.HttpProxyUtil;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.mail.ToXML;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.soap.DocumentHandler;
-import com.zimbra.soap.ServerProxyTarget;
+import com.zimbra.soap.IpProxyTarget;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class RemoteFreeBusyProvider extends FreeBusyProvider {
@@ -271,10 +270,10 @@ public class RemoteFreeBusyProvider extends FreeBusyProvider {
         ZimbraSoapContext zscTarget = new ZimbraSoapContext(zsc, acctId);
         Provisioning prov = Provisioning.getInstance();
         Account acct = prov.get(Key.AccountBy.id, acctId);
-        Server server = prov.getServer(acct);
+        String affinityIp = Provisioning.affinityServer(acct);
 
         // executing remotely; find out target and proxy there
-        ServerProxyTarget proxy = new ServerProxyTarget(server.getId(), zsc.getAuthToken(), mHttpReq);
+        IpProxyTarget proxy = new IpProxyTarget(affinityIp, zsc.getAuthToken(), mHttpReq);
         Element response = DocumentHandler.proxyWithNotification(request.detach(), proxy, zscTarget, zsc);
         return response;
     }

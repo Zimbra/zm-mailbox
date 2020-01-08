@@ -23,6 +23,7 @@ import java.util.List;
 
 import com.google.common.base.MoreObjects;
 import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -30,12 +31,12 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.soap.DocumentHandler;
-import com.zimbra.soap.ServerProxyTarget;
+import com.zimbra.soap.IpProxyTarget;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -207,13 +208,13 @@ public final class ProxiedQueryResults extends ZimbraQueryResultsImpl {
 
     @Override
     public String toString() {
-        String url;
-        try {
-            url = URLUtil.getAdminURL(Provisioning.getInstance().get(Key.ServerBy.name, server));
-        } catch (ServiceException ex) {
-            url = server;
-        }
-        return MoreObjects.toStringHelper(this).add("url", url).add("acctId", targetAcctId).toString();
+    	String url;
+    	try {
+    		url = URLUtil.getAdminURL(Provisioning.getInstance().get(Key.ServerBy.name, server));
+    	} catch (ServiceException ex) {
+    		url = server;
+    	}
+    	return MoreObjects.toStringHelper(this).add("url", url).add("acctId", targetAcctId).toString();
     }
 
     /**
@@ -260,16 +261,19 @@ public final class ProxiedQueryResults extends ZimbraQueryResultsImpl {
         }
 
         // call the remote server now!
-        Server targetServer = Provisioning.getInstance().get(Key.ServerBy.name, server);
+        Provisioning prov = Provisioning.getInstance();
+        Account acct = prov.getAccount(prov, AccountBy.id, targetAcctId, authToken);
+        String targetServer = Provisioning.affinityServer(acct);
+
         String baseurl = null;
         try {
-            baseurl = URLUtil.getSoapURL(targetServer, false);
+            baseurl = URLUtil.getSoapURL(targetServer, URLUtil.getPort(), false);
         } catch (ServiceException e) {
         }
         if (baseurl == null) {
-            baseurl = URLUtil.getAdminURL(targetServer, AdminConstants.ADMIN_SERVICE_URI, true);
+            baseurl = URLUtil.getAdminURL(targetServer, URLUtil.getPort(), AdminConstants.ADMIN_SERVICE_URI, true);
         }
-        ServerProxyTarget proxy = new ServerProxyTarget(targetServer, authToken, baseurl + MailConstants.SEARCH_REQUEST.getName());
+        IpProxyTarget proxy = new IpProxyTarget(targetServer, authToken, baseurl + MailConstants.SEARCH_REQUEST.getName());
         if (mTimeout != -1) {
             proxy.setTimeouts(mTimeout);
         }

@@ -32,9 +32,13 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import org.apache.http.HttpException;
 
 import javax.mail.internet.InternetAddress;
+
+import org.apache.http.HttpException;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.HttpClientBuilder;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
@@ -68,8 +72,8 @@ import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.Zimbra;
-import com.zimbra.soap.account.type.HABGroupMember;
 import com.zimbra.soap.account.type.AddressListInfo;
+import com.zimbra.soap.account.type.HABGroupMember;
 import com.zimbra.soap.admin.type.CacheEntryType;
 import com.zimbra.soap.admin.type.CmdRightsInfo;
 import com.zimbra.soap.admin.type.CountObjectsType;
@@ -84,9 +88,6 @@ import com.zimbra.soap.type.AutoProvPrincipalBy;
 import com.zimbra.soap.type.GalSearchType;
 import com.zimbra.soap.type.NamedElement;
 import com.zimbra.soap.type.TargetBy;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.HttpClientBuilder;
 
 /**
  * @since Sep 23, 2004
@@ -1601,6 +1602,44 @@ public abstract class Provisioning extends ZAttrProvisioning {
         return false;
     }
 
+    public Account getAccount(Provisioning prov, AccountBy accountBy, String value, AuthToken authToken)  
+    		throws ServiceException {
+    	Account acct = null;
+
+    	// first try getting it from master if not in cache
+    	try {
+    		acct = prov.get(accountBy, value, true, authToken);
+    	} catch (ServiceException e) {
+    		// try the replica
+    		acct = prov.get(accountBy, value, false, authToken);
+    	}
+    	return acct;
+    }
+    
+    /** @return the IP address of the pod */
+    public static String myIpAddress() {
+    	String podIp = null;
+    	try {
+    		Enumeration<NetworkInterface> e = NetworkInterface.getNetworkInterfaces();
+    		while(e.hasMoreElements())
+    		{
+    			NetworkInterface n = (NetworkInterface) e.nextElement();
+    			Enumeration<InetAddress> ee = n.getInetAddresses();
+    			while (ee.hasMoreElements())
+    			{
+    				InetAddress i = (InetAddress) ee.nextElement();
+    				podIp = i.getHostAddress();
+    				if (podIp != null) {
+    					break;
+    				}
+    			}
+    		}
+    	} catch (SocketException ex) {
+    		ZimbraLog.misc.info("Problem determining the IP address", ex);
+    	}
+    	return podIp;
+    }
+    
     public static boolean canUseLocalIMAP(Account account) throws ServiceException {
         if(account == null) {
             return false;
