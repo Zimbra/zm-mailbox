@@ -59529,7 +59529,7 @@ public abstract class ZAttrConfig extends Entry {
      */
     @ZAttr(id=1653)
     public String[] getReverseProxySSLProtocols() {
-        String[] value = getMultiAttr(Provisioning.A_zimbraReverseProxySSLProtocols, true, true); return value.length > 0 ? value : new String[] {"TLSv1","TLSv1.1","TLSv1.2"};
+        String[] value = getMultiAttr(Provisioning.A_zimbraReverseProxySSLProtocols, true, true); return value.length > 0 ? value : new String[] {"TLSv1.2"};
     }
 
     /**
