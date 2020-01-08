@@ -26,6 +26,7 @@ import java.util.List;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
+import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.common.service.ServiceException;
@@ -272,7 +273,7 @@ public abstract class CalendarUser {
             if (address.toLowerCase().startsWith("mailto:"))
                 address = address.substring(7);  // 7 = len("mailto:")
             if (address.length() > 0)
-                return address;
+                return IDNUtil.toUnicode(address);
         }
         return null;
     }
