@@ -59,7 +59,8 @@ COPY store/build/service.war /opt/zimbra/jetty_base/webapps/service/
 RUN cd /opt/zimbra/jetty_base/webapps/service/ && jar -xf service.war && rm -rf service.war
 RUN cp /opt/zimbra/jetty_base/webapps/zimbraAdmin/WEB-INF/web.xml /opt/zimbra/jetty_base/etc/zimbraAdmin.web.xml.in \
     && cp /opt/zimbra/jetty_base/webapps/zimbraAdmin/WEB-INF/jetty-env.xml /opt/zimbra/jetty_base/etc/zimbraAdmin-jetty-env.xml.in \
-    && cp -f /opt/zimbra/conf/zmlogrotate.mailbox /etc/logrotate.d/zimbra.mailbox
+    && cp -f /opt/zimbra/conf/zmlogrotate.mailbox /etc/logrotate.d/zimbra.mailbox \
+    && touch /opt/zimbra.platform && echo "@@BUILD_PLATFORM@@" >> /opt/zimbra.platform
 # Copy native lib to /opt/zimbra/lib & core jars to /opt/zimbra/lib/jars
 COPY native/build/libzimbra-native.so /opt/zimbra/lib/
 COPY native/build/zimbra-native.jar /opt/zimbra/lib/jars/
