@@ -28,14 +28,16 @@ N.B : **`zms-extension:1.0`** image is also used currently for all required exte
 * Below is the ant target needs to be invoked to build and push mailbox docker image to Zimbra dev docker registry.
 
 ```
-ant clean push-image -Dzimbra.buildinfo.version=<build version> -Dzimbra.buildinfo.release=<timestamp>  -Dzimbra.buildinfo.date=<timestamp> -DDOCKER_REPO_PUSH_NS=<registry name> -DDOCKER_MAILBOX_BUILD_TAG=<tag number>
+ant clean push-image -Dzimbra.buildinfo.version=<build version with build number> -Dzimbra.buildinfo.release=<timestamp>  -Dzimbra.buildinfo.date=<timestamp> -Dzimbra.buildinfo.host=`./hostname.pl` -DDOCKER_REPO_PUSH_NS=<registry name> -DDOCKER_MAILBOX_BUILD_TAG=<tag number>
 ```
 e.g
 ```
-ant clean push-image -Dzimbra.buildinfo.version=8.9.0_GA -Dzimbra.buildinfo.release=`date +'%Y%m%d%H%M%S'` -Dzimbra.buildinfo.date=`date +'%Y%m%d%H%M%S'` -DDOCKER_REPO_PUSH_NS=dev-registry.zimbra-docker-registry.tk -DDOCKER_MAILBOX_BUILD_TAG=1.2.1
+ant clean push-image -Dzimbra.buildinfo.version=8.9.0_GA_1011 -Dzimbra.buildinfo.release=20200113114806 -Dzimbra.buildinfo.date=20200113-1150 -Dzimbra.buildinfo.host=test.com -DDOCKER_REPO_PUSH_NS=dev-registry.zimbra-docker-registry.tk -DDOCKER_MAILBOX_BUILD_TAG=1.2.1
 ```
 
 * If this argument `-DDOCKER_REPO_PUSH_NS=dev-registry.zimbra-docker-registry.tk` and `-DDOCKER_MAILBOX_BUILD_TAG=1.2.1` would not be provided from the command line
   to the ant target then the docker image will be created  with default value `zms/zms-base:1.0` and the `docker push` might fail. So to push the docker image to the zimbra dev
   docker registry this argument `-DDOCKER_REPO_PUSH_NS=dev-registry.zimbra-docker-registry.tk` must be passed.
+* If this argument `-Dzimbra.buildinfo.host` would not be passed then the `host` value in `GetVersionInfoRespone` would come as `${zimbra.server.hostname}`.
+* `hostname.pl` returns the hostanme where the image would build and use this directly in the ant target like this -Dzimbra.buildinfo.host=`./hostname.pl`(use backquote(`)).
 * If any dependent image tag would change then it needs to be updated in the mailbox `Dockerfile` before image build.
