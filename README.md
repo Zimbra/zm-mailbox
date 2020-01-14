@@ -12,7 +12,7 @@ feature/ha   | [![CircleCI](https://circleci.com/gh/Zimbra/zm-mailbox/tree/featu
 
 Github Repository Name | Image Name | Tag
 ------ | ------ | ------
-zms-base | zm-docker | 1.0
+zm-docker | zms-base | 1.0
 zm-core-utils | zms-core-utils | 1.0
 zm-zcs-lib | zms-zcs-lib | 1.0
 zm-jetty-conf | zms-jetty-conf | 1.0
