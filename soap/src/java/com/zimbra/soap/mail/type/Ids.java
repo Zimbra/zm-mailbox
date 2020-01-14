@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2019 Synacor, Inc.
+ * Copyright (C) 2020 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -15,53 +15,42 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.mail.message;
+package com.zimbra.soap.mail.type;
 
-import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
 
+import com.google.common.base.Objects;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.mail.type.Ids;
 
-/**
- * @zm-api-command-auth-required true
- * @zm-api-command-admin-auth-required false
- * @zm-api-command-description Get UID value which is set by SetPop3UIDRequest
- * <br />
- * This request returns the value set by the SetPop3UIDRequest.  Even you see
- * some custom value by this GetPop3UIDRequest, the actual output of POP3 UIDL
- * command depends on the LDAP attribute zimbraFeatureCustomUIDEnabled.
- */
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name=MailConstants.E_GET_POP3_UID_REQUEST)
-public class GetPop3UIDRequest {
+public class Ids {
 
     /**
-     * @zm-api-field-description Message specification
+     * @zm-api-field-tag ids
+     * @zm-api-field-description IDs
      */
-    @XmlElement(name=MailConstants.E_MSG /* m */, required=true)
-    private final Ids msgIds;
+    @XmlElement(name=MailConstants.A_IDS /* ids */, required=true)
+    private final String ids;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private GetPop3UIDRequest() {
-        this((Ids) null);
+    private Ids() {
+        this((String) null);
     }
 
-    public GetPop3UIDRequest(Ids msgIds) {
-        this.msgIds = msgIds;
+    public Ids(String ids) {
+        this.ids = ids;
     }
 
-    public Ids getMsgIds() { return msgIds; }
+    public String getIds() { return ids; }
 
     public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
-            .add("msgIds", msgIds);
+            .add("ids", ids);
     }
 
     @Override
