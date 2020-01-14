@@ -29,7 +29,6 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.json.jackson.annotate.ZimbraKeyValuePairs;
 import com.zimbra.soap.mail.type.Uid;

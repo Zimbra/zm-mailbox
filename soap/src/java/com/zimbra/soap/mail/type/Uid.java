@@ -31,8 +31,8 @@ import com.zimbra.soap.base.KeyAndValue;
 public class Uid implements KeyAndValue {
 
     /**
-     * @zm-api-field-tag message id
-     * @zm-api-field-description uid value
+     * @zm-api-field-tag message-id
+     * @zm-api-field-description Message ID
      */
     @XmlAttribute(name=MailConstants.A_ID, required=true)
     private String msgid;

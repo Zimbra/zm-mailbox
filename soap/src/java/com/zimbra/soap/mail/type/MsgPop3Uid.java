@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2019 Synacor, Inc.
+ * Copyright (C) 2020 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -15,53 +15,53 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.mail.message;
+package com.zimbra.soap.mail.type;
 
-import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlAttribute;
 
+import com.google.common.base.Objects;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.mail.type.IdsAttr;
 
-/**
- * @zm-api-command-auth-required true
- * @zm-api-command-admin-auth-required false
- * @zm-api-command-description Get UID value which is set by SetPop3UIDRequest
- * <br />
- * This request returns the value set by the SetPop3UIDRequest.  Even you see
- * some custom value by this GetPop3UIDRequest, the actual output of POP3 UIDL
- * command depends on the LDAP attribute zimbraFeatureCustomUIDEnabled.
- */
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name=MailConstants.E_GET_POP3_UID_REQUEST)
-public class GetPop3UIDRequest {
+public class MsgPop3Uid {
 
     /**
-     * @zm-api-field-description Message specification
+     * @zm-api-field-tag message-id
+     * @zm-api-field-description Message ID
      */
-    @XmlElement(name=MailConstants.E_MSG /* m */, required=true)
-    private final IdsAttr msgIds;
+    @XmlAttribute(name=MailConstants.A_ID /* id */, required=true)
+    private final String id;
+
+    /**
+     * @zm-api-field-tag pop3-uid
+     * @zm-api-field-description POP3 UID value
+     */
+    @XmlAttribute(name=MailConstants.A_UID /* part */, required=true)
+    private String uid;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private GetPop3UIDRequest() {
-        this((IdsAttr) null);
+    private MsgPop3Uid() {
+        this((String) null);
     }
 
-    public GetPop3UIDRequest(IdsAttr msgIds) {
-        this.msgIds = msgIds;
+    public MsgPop3Uid(String id) {
+        this.id = id;
     }
 
-    public IdsAttr getMsgIds() { return msgIds; }
+    public void setUid(String uid) { this.uid = uid; }
+
+    public String getId() { return id; }
+    public String getUid() { return uid; }
 
     public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
-            .add("msgIds", msgIds);
+            .add("uid", uid)
+            .add("id", id);
     }
 
     @Override
