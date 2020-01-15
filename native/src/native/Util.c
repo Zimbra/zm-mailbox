@@ -22,7 +22,7 @@
 #include <string.h>
 #include <sys/times.h>
 
-#include "Util.h"
+#include "com_zimbra_znative_Util.h"
 #include "zjniutil.h"
 
 JNIEXPORT jlong JNICALL

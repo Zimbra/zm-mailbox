@@ -22,7 +22,7 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 
-#include "ResourceUsage.h"
+#include "com_zimbra_znative_ResourceUsage.h"
 #include "zjniutil.h"
 
 JNIEXPORT void JNICALL

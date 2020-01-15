@@ -273,7 +273,7 @@ sub stage_zimbra_common_mbox_native_lib()
 {
    my $stage_base_dir = shift;
 
-   # cpy_file( "native/build/libzimbra-native.so", "$stage_base_dir/opt/zimbra/lib/libzimbra-native.so" );
+   cpy_file( "native/build/libzimbra-native.so", "$stage_base_dir/opt/zimbra/lib/libzimbra-native.so" );
 
    return ["native"];
 }

@@ -24,7 +24,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include "IO.h"
+#include "com_zimbra_znative_IO.h"
 #include "zjniutil.h"
 
 JNIEXPORT void JNICALL 

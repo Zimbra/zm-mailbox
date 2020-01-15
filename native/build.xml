@@ -39,6 +39,12 @@
   </path>
 
    <target name="generate-native-headers" depends="compile,resolve" description="Java to Native">
+      <javac srcdir="src/java/com/zimbra/znative" nativeHeaderDir="${build.dir}" classpathref="build.class.path" destdir="${build.dir}" includes="IO.java" />
+      <javac srcdir="src/java/com/zimbra/znative" nativeHeaderDir="${build.dir}" classpathref="build.class.path" destdir="${build.dir}" includes="Process.java" />
+      <javac srcdir="src/java/com/zimbra/znative" nativeHeaderDir="${build.dir}" classpathref="build.class.path" destdir="${build.dir}" includes="ProcessorUsage.java" />
+      <javac srcdir="src/java/com/zimbra/znative" nativeHeaderDir="${build.dir}" classpathref="build.class.path" destdir="${build.dir}" includes="ResourceUsage.java" />
+      <javac srcdir="src/java/com/zimbra/znative" nativeHeaderDir="${build.dir}" classpathref="build.class.path" destdir="${build.dir}" includes="Util.java" />
+      <javac srcdir="src/java/com/zimbra/znative" nativeHeaderDir="${build.dir}" classpathref="build.class.path" destdir="${build.dir}" includes="ProxyInfo.java" />
    </target>
 
    <target name="clean" description="Removes build files and undeploys extension">
