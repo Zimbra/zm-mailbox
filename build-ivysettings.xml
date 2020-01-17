@@ -11,8 +11,13 @@
         <artifact pattern= "${dev.home}/.zcs-deps/[organisation]/[module]/[module]-[revision].[ext]" />
         <artifact pattern= "${dev.home}/.zcs-deps/[organisation]-[revision].[ext]" />
         <artifact pattern= "${dev.home}/.zcs-deps/[organisation].[ext]" />
-
       </filesystem>
+      <url name="maven-https-org">
+        <artifact pattern="https://repo1.maven.org/maven2/[organization]/[module]/[revision]/[artifact]-[revision].[ext]" />
+      </url>
+      <url name="maven-https-orgPath">
+        <artifact pattern="https://repo1.maven.org/maven2/[orgPath]/[module]/[revision]/[artifact]-[revision].[ext]" />
+      </url>
       <ibiblio name="maven" m2compatible="true" usepoms="false"/>
       <ibiblio name="maven-redhat" root="https://maven.repository.redhat.com/ga/" pattern="[organisation]/[module]/[revision]/[module]-[revision].[ext]"/>
       <url name="zimbra">
