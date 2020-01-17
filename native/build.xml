@@ -2,7 +2,7 @@
 
     <import file="../build-common.xml" />
 
-    <target name="all" depends="publish-local"/>
+    <target name="all" depends="publish-local,generate-native-headers"/>
 
     <target name="jar" depends="compile" description="Creates the jar file">
         <antcall target="zimbra-jar">
