@@ -409,10 +409,13 @@ public final class ZimbraSoapContext {
         String targetServerId = ctxt == null ? null : ctxt.getAttribute(HeaderConstants.E_TARGET_SERVER, null);
         if (targetServerId != null) {
             HttpServletRequest req = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
-            if (req != null) {
-                mProxyTarget = new ServerProxyTarget(targetServerId, mAuthToken, req);
-                mIsProxyRequest = !mProxyTarget.isTargetLocal();
-            } else {
+			if (req != null) {
+				String value = eAccount.getText();
+				Account account = prov.get(AccountBy.id, value, mAuthToken);
+				String affinityIp = Provisioning.affinityServer(account);
+				mProxyTarget = new IpProxyTarget(affinityIp, mAuthToken, req);
+				mIsProxyRequest = !mProxyTarget.isTargetLocal();
+			} else {
                 sLog.warn("Missing SERVLET_REQUEST key in request context");
             }
         }
