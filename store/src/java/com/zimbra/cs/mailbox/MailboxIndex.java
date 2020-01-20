@@ -458,38 +458,10 @@ public final class MailboxIndex {
         if (ids.isEmpty()) {
             return;
         }
-        if(!Zimbra.started()) {
-            ZimbraLog.index.debug("Application is not started yet. Queueing items for deleting from index instead of deleting immediately.");
-            IndexingQueueAdapter queueAdapter = IndexingQueueAdapter.getFactory().getAdapter();
-            DeleteFromIndexTaskLocator itemLocator = new DeleteFromIndexTaskLocator(ids, mailbox.getAccountId(), mailbox.getId(), mailbox.getSchemaGroupId());
-            queueAdapter.put(itemLocator);
-        } else {
-            Indexer indexer;
-            try {
-                indexer = indexStore.openIndexer();
-            } catch (IndexPendingDeleteException e) {
-                ZimbraLog.index.debug("delete of ids from index aborted as it is pending delete");
-                System.currentTimeMillis();
-                return;
-            } catch (IOException | ServiceException e) {
-                ZimbraLog.index.warn("Failed to open Indexer", e);
-                System.currentTimeMillis();
-                return;
-            }
-
-            try {
-                indexer.deleteDocument(ids);
-            } catch (IOException | ServiceException e) {
-                ZimbraLog.index.warn("Failed to delete index documents", e);
-            } finally {
-                try {
-                    indexer.close();
-                } catch (IOException e) {
-                    ZimbraLog.index.error("Failed to close Indexer", e);
-                    return;
-                }
-            }
-        }
+        ZimbraLog.index.debug("Queuing %d items for deletion", ids.size());
+        IndexingQueueAdapter queueAdapter = IndexingQueueAdapter.getFactory().getAdapter();
+        DeleteFromIndexTaskLocator itemLocator = new DeleteFromIndexTaskLocator(ids, mailbox.getAccountId(), mailbox.getId(), mailbox.getSchemaGroupId());
+        queueAdapter.put(itemLocator);
     }
 
     /**
