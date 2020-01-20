@@ -72,6 +72,7 @@ import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.Zimbra;
+import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.account.type.AddressListInfo;
 import com.zimbra.soap.account.type.HABGroupMember;
 import com.zimbra.soap.admin.type.CacheEntryType;
@@ -1518,15 +1519,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     }
 
     public static boolean onLocalServer(Account account, Reasons reasons) throws ServiceException {
-        String target = account.getAttr(Provisioning.A_zimbraMailHost);
-        String localhost = getInstance().getLocalServer().getAttr(Provisioning.A_zimbraServiceHostname);
-        boolean isLocal = (target != null && target.equalsIgnoreCase(localhost));
-        boolean onLocalSvr =  (isLocal || isAlwaysOn(account));
-        if (!onLocalSvr && reasons != null) {
-            reasons.addReason(String.format("onLocalSvr=%b isLocal=%b target=%s localhost=%s account=%s",
-                    onLocalSvr, isLocal, target, localhost, account.getName()));
-        }
-        return onLocalSvr;
+    	    return DocumentHandler.onLocalServer(account, reasons);
     }
 
     /**
