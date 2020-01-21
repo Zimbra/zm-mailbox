@@ -8,11 +8,14 @@ import org.apache.solr.parser.SolrQueryParserBase.MagicFieldName;
 import com.google.common.base.Joiner;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.index.solr.SolrIndex.LocalParams;
+import com.zimbra.cs.index.solr.SolrUtils;
 
 public class ZimbraWildcardQuery extends org.apache.lucene.search.Query {
 
     private String queryString;
     private List<String> fields;
+    private boolean expandAll;
+    private int maxNgramSize;
 
     public ZimbraWildcardQuery(String queryString, String...fields) {
         this.queryString = queryString;
@@ -27,6 +30,14 @@ public class ZimbraWildcardQuery extends org.apache.lucene.search.Query {
             }
         }
         return this;
+    }
+
+    public void setExpandAll(boolean expandAll) {
+        this.expandAll = expandAll;
+    }
+
+    public void setMaxNgramSize(int maxNgramSize) {
+        this.maxNgramSize = maxNgramSize;
     }
 
     @Override
@@ -47,7 +58,13 @@ public class ZimbraWildcardQuery extends org.apache.lucene.search.Query {
         lp.addParam("fields", Joiner.on(" ").join(fields));
         lp.addParam("v", queryString);
         lp.addParam("maxExpansions", String.valueOf(LC.zimbra_index_wildcard_max_terms_expanded.intValue()));
-        return String.format("%s:\"%s\"", MagicFieldName.QUERY, lp.encode());
+        if (expandAll) {
+            lp.addParam("expandAll", "true");
+        }
+        if (maxNgramSize > 0) {
+            lp.addParam("maxNgramSize", String.valueOf(maxNgramSize));
+        }
+        return String.format("%s:\"%s\"", MagicFieldName.QUERY, SolrUtils.escapeQuotes(lp.encode()));
     }
 
 }

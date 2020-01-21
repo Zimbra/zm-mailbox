@@ -16,17 +16,6 @@
  */
 package com.zimbra.cs.index.query;
 
-import java.util.LinkedList;
-import java.util.List;
-
-import org.apache.commons.lang.StringUtils;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.search.BooleanClause.Occur;
-import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.search.PhraseQuery;
-import org.apache.lucene.search.TermQuery;
-
-import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -43,49 +32,14 @@ import com.zimbra.cs.mailbox.Mailbox;
  * @author ysasaki
  */
 public final class ContactQuery extends Query {
-    private final String originalQueryString;
     private final String queryString;
-    private final boolean isPhraseQuery;
-    private boolean isWildcardQuery;
 
     public ContactQuery(String queryString) {
         this(queryString, false);
     }
 
     public ContactQuery(String queryString, boolean isPhraseQuery) {
-        this.originalQueryString = queryString;
-        this.queryString = rewriteQueryString(originalQueryString);
-        this.isPhraseQuery = isPhraseQuery;
-    }
-
-    private String rewriteQueryString(String queryString) {
-        List<String> tokens = new LinkedList<String>();
-        boolean hasWildcardToken = false;
-        for (String token: queryString.split("\\s")) {
-            if (SolrUtils.shouldSearchEdgeNgrams(token)) {
-                token = token.replace("*", ""); // in case a wildcard was part of the query
-                if (token.length() > 0) {
-                    tokens.add(token); // no need for wildcard, will match edge n-grams
-                }
-            } else {
-                //  "keyword"  -->  "keyword*"
-                // "*keyword*" -->  "keyword*"
-                // "*keyword"  -->  "*keyword" if leading wildcard support is enabled, otherwise "keyword"
-                //  "keyword*" -->  "keyword*"
-                if (!token.startsWith("*") && !token.endsWith("*")) {
-                    tokens.add(token + "*");
-                } else if (token.startsWith("*") && token.endsWith("*")) {
-                    tokens.add(token.substring(1, token.length()));
-                } else if (token.startsWith("*") && LC.search_disable_leading_wildcard_query.booleanValue()) {
-                    tokens.add(StringUtils.stripStart(token, "*"));
-                } else {
-                    tokens.add(token);
-                }
-                hasWildcardToken = true;
-            }
-        }
-        isWildcardQuery = hasWildcardToken;
-        return Joiner.on(" ").join(tokens);
+        this.queryString = queryString;
     }
 
     @Override
@@ -99,44 +53,34 @@ public final class ContactQuery extends Query {
             return new NoTermQueryOperation();
         }
         LuceneQueryOperation op = new LuceneQueryOperation();
-        BooleanQuery.Builder builder = new BooleanQuery.Builder();
         /*
          * To get efficient prefix query behavior, we use edge n-gram tokenized fields here,
          * suffixed with "_ngrams" in the solr schema.
+         * The zimbra wildcard query parser is passed 'expandAll' flag so that
+         * every token is treated as prefix match (pre zimbra-x, this would happen locally).
+         * The 'maxNgramSize' parameter makes the query parser aware of when to actually use
+         * a wildcard for prefix matches.
          */
         String ngramContactField = SolrUtils.getNgramFieldName(LuceneFields.L_CONTACT_DATA);
         String ngramToField = SolrUtils.getNgramFieldName(LuceneFields.L_H_TO);
-        org.apache.lucene.search.Query query;
-        if (isWildcardQuery) {
-            query = new ZimbraWildcardQuery(queryString, ngramContactField, ngramToField);
-        } else {
-            org.apache.lucene.search.Query contactFieldClause;
-            org.apache.lucene.search.Query toFieldClause;
-            if (isPhraseQuery) {
-                contactFieldClause = new PhraseQuery(ngramContactField, queryString);
-                toFieldClause = new PhraseQuery(ngramToField, queryString);
-            } else {
-                contactFieldClause = new TermQuery(new Term(ngramContactField, queryString));
-                toFieldClause = new TermQuery(new Term(ngramToField, queryString));
-            }
-            builder.add(contactFieldClause, Occur.SHOULD);
-            builder.add(toFieldClause, Occur.SHOULD);
-            query = builder.build();
-        }
-        String contactFieldSearchClause = toQueryString(LuceneFields.L_CONTACT_DATA, originalQueryString);
+        ZimbraWildcardQuery query = new ZimbraWildcardQuery(queryString, ngramContactField, ngramToField);
+        query.setExpandAll(true);
+        int maxNgramSize = LC.contact_search_min_chars_for_wildcard_query.intValue() - 1;
+        query.setMaxNgramSize(maxNgramSize);
+        String contactFieldSearchClause = toQueryString(LuceneFields.L_CONTACT_DATA, queryString);
         op.addClause(contactFieldSearchClause, query, evalBool(bool));
         return op;
     }
 
     @Override
     void dump(StringBuilder out) {
-        out.append("CONTACT:").append(originalQueryString);
+        out.append("CONTACT:").append(queryString);
     }
 
     @Override
     void sanitizedDump(StringBuilder out) {
-        int numWordsInQuery = originalQueryString.split("\\s").length;
-        out.append("CONTACT:").append(originalQueryString);
+        int numWordsInQuery = queryString.split("\\s").length;
+        out.append("CONTACT:").append(queryString);
         out.append(":");
         out.append(Strings.repeat("$TEXT,", numWordsInQuery));
         if (out.charAt(out.length()-1) == ',') {
