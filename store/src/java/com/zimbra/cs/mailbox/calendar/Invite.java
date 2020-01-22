@@ -69,6 +69,7 @@ import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.Fragment;
@@ -1425,7 +1426,7 @@ public class Invite {
     private boolean thisAcctIsOrganizer(Account acct) throws ServiceException {
         if (hasOrganizer()) {
             AccountAddressMatcher acctMatcher = new AccountAddressMatcher(acct);
-            String addr = getOrganizer().getAddress();
+            String addr = IDNUtil.toAscii(getOrganizer().getAddress());
             boolean isOrg = acctMatcher.matches(addr);
             if (!isOrg && acct != null) {
                 // bug 41638: Let's also check if address matches zimbraPrefFromAddress.
