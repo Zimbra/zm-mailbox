@@ -955,7 +955,7 @@ public final class LC {
      * Bug: 47051 Known key for the CLI utilities SOAP HTTP transport timeout.
      * The default value is set to 0 i.e. no timeout.
      */
-    public static final KnownKey cli_httpclient_soaphttptransport_so_timeout  = KnownKey.newKey(0);
+    public static final KnownKey cli_httpclient_soaphttptransport_so_timeout  = KnownKey.newKey(Integer.MAX_VALUE);
 
 
     public static final KnownKey httpclient_convertd_so_timeout = KnownKey.newKey(-1);

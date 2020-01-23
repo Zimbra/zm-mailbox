@@ -284,10 +284,13 @@ public class SoapHttpTransport extends SoapTransport {
                 method.addHeader(Constants.AUTH_HEADER, Constants.BEARER + " " + zToken.getValue());
             }
 
+            ZimbraLog.soap.trace("Httpclient timeout: %s" , mTimeout);
             RequestConfig reqConfig = RequestConfig.custom().
                 setCookieSpec(cookieStore.getCookies().size() == 0 ? CookieSpecs.IGNORE_COOKIES:
-               CookieSpecs.BROWSER_COMPATIBILITY).build();
-            SocketConfig socketConfig = SocketConfig.custom().setSoTimeout(LC.httpclient_external_connmgr_so_timeout.intValue())
+               CookieSpecs.BROWSER_COMPATIBILITY)
+                .setSocketTimeout(mTimeout)
+                .build();
+            SocketConfig socketConfig = SocketConfig.custom().setSoTimeout(mTimeout)
                 .setTcpNoDelay(LC.httpclient_external_connmgr_tcp_nodelay.booleanValue()).build();
             method.setProtocolVersion(HttpVersion.HTTP_1_1);
             method.addHeader("Connection", mKeepAlive ? "Keep-alive" : "Close");
@@ -296,6 +299,7 @@ public class SoapHttpTransport extends SoapTransport {
             client = mClientBuilder.setDefaultRequestConfig(reqConfig)
                .setDefaultSocketConfig(socketConfig)
                .setDefaultCookieStore(cookieStore).build();
+            ZimbraLog.soap.trace("Httpclient request config timeout: %s" , reqConfig.getSocketTimeout());
 
             if (mHostConfig != null && mHostConfig.getUsername() != null && mHostConfig.getPassword() != null) {
 
