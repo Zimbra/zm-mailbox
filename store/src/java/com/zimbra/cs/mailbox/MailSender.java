@@ -659,17 +659,12 @@ public class MailSender {
                 if (DebugConfig.disableOutgoingFilter) {
                     DeliveryOptions dopt = new DeliveryOptions().setFolderId(sentFolderId).setNoICal(true).setFlags(flags).setConversationId(convId);
                     Message msg = mbox.addMessage(octxt, pm, dopt, null);
-                    RollbackData rollback = new RollbackData(msg);
-                    rollbacks.add(rollback);
-                    returnItemId = rollback.msgId;
+                    rollbacks.add(new RollbackData(msg));
                 } else {
                     List<ItemId> addedItemIds =
                             RuleManager.applyRulesToOutgoingMessage(octxtTarget, mbox, pm, sentFolderId, true, flags, null, convId);
                     for (ItemId itemId : addedItemIds) {
                         rollbacks.add(new RollbackData(mbox, itemId.getId()));
-                        if (returnItemId == null) {
-                            returnItemId = itemId;
-                        }
                     }
                 }
             }
