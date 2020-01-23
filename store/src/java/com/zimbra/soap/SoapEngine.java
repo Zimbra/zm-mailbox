@@ -31,9 +31,6 @@ import javax.xml.stream.XMLStreamReader;
 import org.eclipse.jetty.continuation.ContinuationSupport;
 
 import com.google.common.base.Strings;
-import com.zimbra.common.account.Key;
-import com.zimbra.common.account.ProvisioningConstants;
-import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -54,10 +51,8 @@ import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
-import com.zimbra.cs.account.accesscontrol.generated.RightConsts;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.GuestAccount;
-import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -332,22 +327,6 @@ public class SoapEngine {
         Element ectxt = soapProto.getHeader(envelope, HeaderConstants.CONTEXT);
         try {
             zsc = new ZimbraSoapContext(ectxt, doc.getQName(), handler, context, soapProto);
-            if (doc.getName().equals("SendMsgRequest")) {
-                Element msgEle = doc.getElement(MailConstants.E_MSG);
-                String identityId = msgEle.getAttribute(MailConstants.A_IDENTITY_ID, null);
-                if (identityId != null) {
-                    Identity identity = Provisioning.getInstance().get(DocumentHandler.getOperationContext(zsc, context)
-                            .getAuthenticatedUser(), Key.IdentityBy.id, identityId);
-                    if (identity != null &&
-                            !identity.getAttr(Provisioning.A_zimbraPrefIdentityName).equals(ProvisioningConstants.DEFAULT_IDENTITY_NAME) &&
-                            !StringUtil.isNullOrEmpty(identity.getAttr(Provisioning.A_zimbraPrefFromAddressType)) &&
-                            (identity.getAttr(Provisioning.A_zimbraPrefFromAddressType).equals(RightConsts.RT_sendAs) ||
-                                    identity.getAttr(Provisioning.A_zimbraPrefFromAddressType).equals(RightConsts.RT_sendOnBehalfOf))) {
-                        Account targetAccount = Provisioning.getInstance().get(AccountBy.name, identity.getAttr(Provisioning.A_zimbraPrefFromAddress));
-                        zsc.setmRequestedAccountId(targetAccount.getId());
-                    }
-                }
-            }
         } catch (ServiceException e) {
             return soapFaultEnv(soapProto, "unable to construct SOAP context", e);
         }
