@@ -206,24 +206,7 @@ public class SendMsg extends MailDocumentHandler {
                }
 
                if (iidDraft != null) {
-                   String loggedInAccountId = zsc.getAuthtokenAccountId();
-                   String requestedAcctId = zsc.getRequestedAccountId();
-                   if (loggedInAccountId.equals(requestedAcctId)) {
-                       deleteDraft(iidDraft, octxt, mbox, zsc);
-                   } else {
-                       /** ZBUG-1292
-                        * This is to delete the message from draft in case the message is sent by Persona email
-                        * which is different than the logged in user email, because in this case the draft is
-                        * saved in the logged in user account mailbox.
-                        */
-                       iidDraft.setAccountId(loggedInAccountId);
-                       zsc.setmRequestedAccountId(loggedInAccountId);
-                       mbox = MailboxManager.getInstance().getMailboxByAccountId(loggedInAccountId);
-                       deleteDraft(iidDraft, octxt, mbox, zsc);
-                   }
-                   iidDraft.setAccountId(requestedAcctId);
-                   zsc.setmRequestedAccountId(requestedAcctId);
-                   mbox = MailboxManager.getInstance().getMailboxByAccountId(requestedAcctId);
+                   deleteDraft(iidDraft, octxt, mbox, zsc);
                }
 
                Element response = zsc.createElement(respQname);
