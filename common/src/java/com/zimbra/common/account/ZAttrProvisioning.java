@@ -6715,6 +6715,22 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureMobileSyncEnabled = "zimbraFeatureMobileSyncEnabled";
 
     /**
+     * Whether to allow a user to access Zimbra modern desktop
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3082)
+    public static final String A_zimbraFeatureModernDesktopEnabled = "zimbraFeatureModernDesktopEnabled";
+
+    /**
+     * Whether to allow a user to access Zimbra modern mobile UI
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3081)
+    public static final String A_zimbraFeatureModernMobileUIEnabled = "zimbraFeatureModernMobileUIEnabled";
+
+    /**
      * Whether user can create address books
      *
      * @since ZCS 5.0.4
