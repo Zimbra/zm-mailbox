@@ -49,6 +49,7 @@ import org.apache.http.impl.cookie.BasicClientCookie;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.httpclient.HttpClientUtil;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapProtocol;
@@ -87,6 +88,8 @@ public class ZimbraServlet extends HttpServlet {
 
     public static final String QP_ZAUTHTOKEN = "zauthtoken";
     public static final String QP_ZJWT = "zjwt";
+
+    private static final RemoteIP.TrustedIPs TRUST_ALL_IPS = new RemoteIP.TrustedIPs().setTrustAllIPs(true);
 
     protected String getRealmHeader(String realm)  {
         if (realm == null)
@@ -314,7 +317,7 @@ public class ZimbraServlet extends HttpServlet {
         }
         proxyServletRequest(req, resp, podIp, uri, authToken);
     }
-    
+
 	public static void proxyServletRequest(HttpServletRequest req, HttpServletResponse resp, Server server, String uri,
 			AuthToken authToken) throws IOException, ServiceException, HttpException {
 		proxyServletRequest(req, resp, Provisioning.myIpAddress(), uri, authToken);
@@ -369,7 +372,7 @@ public class ZimbraServlet extends HttpServlet {
         }
         return false;
     }
-    
+
     // TO DO HTTP
     private static boolean hasJWTSaltCookie(BasicCookieStore state) {
         List<Cookie>  cookies = state == null? null : state.getCookies();
@@ -395,7 +398,7 @@ public class ZimbraServlet extends HttpServlet {
         if (cookies != null) {
             for (int i = 0; i < cookies.length; i++) {
                 if ((cookies[i].getName().equals(ZimbraCookie.COOKIE_ZM_AUTH_TOKEN) && hasZMAuth) ||
-                        (hasJwtSalt && cookies[i].getName().equals(ZimbraCookie.COOKIE_ZM_JWT))) 
+                        (hasJwtSalt && cookies[i].getName().equals(ZimbraCookie.COOKIE_ZM_JWT)))
                     continue;
                 BasicClientCookie cookie = new BasicClientCookie(cookies[i].getName(), cookies[i].getValue());
                 cookie.setDomain(hostname);
@@ -451,7 +454,7 @@ public class ZimbraServlet extends HttpServlet {
         if (responseStream == null || resp.getOutputStream() == null)
             return;
         ByteUtil.copy(httpResp.getEntity().getContent(), false, resp.getOutputStream(), false);
-        
+
     }
 
     protected boolean isAdminRequest(HttpServletRequest req) throws ServiceException {
@@ -535,6 +538,9 @@ public class ZimbraServlet extends HttpServlet {
     }
 
     public static RemoteIP.TrustedIPs getTrustedIPs() {
+        if (LC.trust_all_originating_ips.booleanValue()) {
+            return TRUST_ALL_IPS;
+        }
         try {
             Server server = Provisioning.getInstance().getLocalServer();
             return new RemoteIP.TrustedIPs(server.getMultiAttr(Provisioning.A_zimbraMailTrustedIP));

@@ -1392,6 +1392,9 @@ public final class LC {
     @Supported
     public static final KnownKey solr_cache_term_filter_queries = KnownKey.newKey(false);
 
+    @Supported
+    public static final KnownKey trust_all_originating_ips = KnownKey.newKey(true);
+
     public enum PUBLIC_SHARE_VISIBILITY { samePrimaryDomain, all, none };
 
     /**

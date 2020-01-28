@@ -162,6 +162,9 @@ public class RemoteIP {
         private static final String IP_LOCALHOST = "127.0.0.1";
 
         private Set<String> mTrustedIPs = new HashSet<String>();
+        private boolean trustAllIPs = false;
+
+        public TrustedIPs() {}
 
         public TrustedIPs(String[] ips) {
             if (ips != null) {
@@ -172,8 +175,13 @@ public class RemoteIP {
             }
         }
 
+        public TrustedIPs setTrustAllIPs(boolean trustAllIPs) {
+            this.trustAllIPs = trustAllIPs;
+            return this;
+        }
+
         public boolean isIpTrusted(String ip) {
-            return isLocalhost(ip) || mTrustedIPs.contains(ip);
+            return trustAllIPs || isLocalhost(ip) || mTrustedIPs.contains(ip);
         }
 
         private static boolean isLocalhost(String ip) {
@@ -182,9 +190,11 @@ public class RemoteIP {
 
         @Override
         public String toString() {
-            return "TrustedIPs [mTrustedIPs=" + mTrustedIPs + "]";
+            if (trustAllIPs) {
+                return "TrustedIPs [all IPs trusted]";
+            } else {
+                return "TrustedIPs [mTrustedIPs=" + mTrustedIPs + "]";
+            }
         }
-
     }
-
 }
