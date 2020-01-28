@@ -9764,9 +9764,10 @@ TODO: delete them permanently from here
   <desc>Whether to allow a user to access Zimbra X web client</desc>
 </attr>
 
-<attr id="3080" name="zimbraFeatureZXDesktopEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.9.0">
+<attr id="3080" name="zimbraFeatureZXDesktopEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.9.0" deprecatedSince="8.9.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Whether to allow a user to access Zimbra X desktop</desc>
+  <deprecateDesc>deprecated with attribute zimbraFeatureModernDesktopEnabled</deprecateDesc>
 </attr>
 
 <attr id="3081" name="zimbraFeatureModernMobileUIEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.9.0">
