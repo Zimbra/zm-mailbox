@@ -6693,6 +6693,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureMarkMailForwardedAsRead = "zimbraFeatureMarkMailForwardedAsRead";
 
     /**
+     * Whether to allow a user to access Zimbra mobile App
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3081)
+    public static final String A_zimbraFeatureMobileAppEnabled = "zimbraFeatureMobileAppEnabled";
+
+    /**
      * Whether to enable Zimbra Mobile Gateway feature
      *
      * @since ZCS 8.7.0,9.0.0
@@ -6721,14 +6729,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=3082)
     public static final String A_zimbraFeatureModernDesktopEnabled = "zimbraFeatureModernDesktopEnabled";
-
-    /**
-     * Whether to allow a user to access Zimbra modern mobile UI
-     *
-     * @since ZCS 8.9.0
-     */
-    @ZAttr(id=3081)
-    public static final String A_zimbraFeatureModernMobileUIEnabled = "zimbraFeatureModernMobileUIEnabled";
 
     /**
      * Whether user can create address books
@@ -7030,7 +7030,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureZimbraAssistantEnabled = "zimbraFeatureZimbraAssistantEnabled";
 
     /**
-     * Whether to allow a user to access Zimbra X desktop
+     * Deprecated since: 8.9.0. deprecated with attribute
+     * zimbraFeatureModernDesktopEnabled. Orig desc: Whether to allow a user
+     * to access Zimbra X desktop
      *
      * @since ZCS 8.9.0
      */
