@@ -10422,6 +10422,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMobileSyncRedoMaxAttempts = "zimbraMobileSyncRedoMaxAttempts";
 
     /**
+     * Whether to permit syncing shared mail folders
+     *
+     * @since ZCS 8.5.0
+     */
+    @ZAttr(id=4001)
+    public static final String A_zimbraMobileSyncSharedMailFolderEnabled = "zimbraMobileSyncSharedMailFolderEnabled";
+
+    /**
      * whether to enable tombstone syncing. If disabled, changes of
      * tombstones won&#039;t be synced to device
      *

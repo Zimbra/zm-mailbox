@@ -9769,4 +9769,9 @@ TODO: delete them permanently from here
   <desc>Whether to allow a user to access Zimbra X desktop</desc>
 </attr>
 
+<attr id="4001" name="zimbraMobileSyncSharedMailFolderEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="8.5.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>Whether to permit syncing shared mail folders</desc>
+</attr>
+
 </attrs>
