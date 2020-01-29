@@ -9787,4 +9787,9 @@ TODO: delete them permanently from here
 <attr id="3078" name="zimbraAccountSuspensionReason" type="string" cardinality="single" flags="domainAdminModifiable" optionalIn="account" since="8.9.0">
     <desc>Account Suspension reason. It describes the actual cause for account suspension if any and it must be updated with account status.</desc>
 </attr>
+
+<attr id="4001" name="zimbraMobileShareMailEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="9.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>Whether to permit syncing shared mail folders</desc>
+</attr>
 </attrs>
