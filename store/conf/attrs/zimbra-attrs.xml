@@ -9903,9 +9903,12 @@ TODO: delete them permanently from here
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>Whether or not to log document accessed time</desc>
 </attr>
-
 <attr id="4000" name="zimbraMailAttachmentMaxSize" type="long" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="9.1.0">
   <defaultCOSValue>0</defaultCOSValue>
   <desc>Maximum size in bytes for e-mail attachment.</desc>
+</attr>
+<attr id="4001" name="zimbraMobileShareMailEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="9.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>Whether to permit syncing shared mail folders</desc>
 </attr>
 </attrs>

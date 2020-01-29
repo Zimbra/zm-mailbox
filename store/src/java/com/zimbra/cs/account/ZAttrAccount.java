@@ -34160,6 +34160,78 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Whether to permit syncing shared mail folders
+     *
+     * @return zimbraMobileShareMailEnabled, or false if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=4001)
+    public boolean isMobileShareMailEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraMobileShareMailEnabled, false, true);
+    }
+
+    /**
+     * Whether to permit syncing shared mail folders
+     *
+     * @param zimbraMobileShareMailEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=4001)
+    public void setMobileShareMailEnabled(boolean zimbraMobileShareMailEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileShareMailEnabled, zimbraMobileShareMailEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to permit syncing shared mail folders
+     *
+     * @param zimbraMobileShareMailEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=4001)
+    public Map<String,Object> setMobileShareMailEnabled(boolean zimbraMobileShareMailEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileShareMailEnabled, zimbraMobileShareMailEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to permit syncing shared mail folders
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=4001)
+    public void unsetMobileShareMailEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileShareMailEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to permit syncing shared mail folders
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=4001)
+    public Map<String,Object> unsetMobileShareMailEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileShareMailEnabled, "");
+        return attrs;
+    }
+
+    /**
      * indicates whether the application can forward original email as RFC
      * 822 .eml attachment. Note: this setting is applicable only to the
      * devices using activesync smart forward for forwarding email messages.
