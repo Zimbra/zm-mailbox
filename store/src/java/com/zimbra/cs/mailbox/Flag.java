@@ -126,6 +126,10 @@ public final class Flag extends Tag {
             return bitmask;
         }
 
+        public char getChar() {
+            return this.ch;
+        }
+
         @Override
         public String toString() {
             return flagName;

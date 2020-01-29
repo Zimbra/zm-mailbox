@@ -2883,9 +2883,16 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     }
 
     public ZMessage getMessage(ZGetMessageParams params) throws ServiceException {
+        return getMessage(params, false);
+    }
+
+    public ZMessage getMessage(ZGetMessageParams params, boolean inCacheOnly) throws ServiceException {
         try (final MailboxLock l = getReadLockAndLockIt()) {
             CachedMessage cm = mMessageCache.get(params.getId());
             if (cm == null || !cm.params.equals(params)) {
+                if (inCacheOnly) {
+                    return null;
+                }
                 Element req = newRequestElement(MailConstants.GET_MSG_REQUEST);
                 Element msgEl = req.addUniqueElement(MailConstants.E_MSG);
                 msgEl.addAttribute(MailConstants.A_ID, params.getId());
@@ -2935,6 +2942,38 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         params.setRawContent(raw);
         params.setMax(max);
         return getMessage(params);
+    }
+
+    private ZMessage getMessageFromCache(String id, boolean raw, Integer max) throws ServiceException {
+        ZGetMessageParams params = new ZGetMessageParams();
+        params.setId(id);
+        params.setRawContent(raw);
+        params.setMax(max);
+        return getMessage(params, true);
+    }
+
+    public ZMessage getMessageFromCache(String id) throws ServiceException {
+        return getMessageFromCache(id, false, null);
+    }
+
+    public List<ZMessage> getMessagesByIds(String ids) throws ServiceException {
+        List<ZMessage> list = new ArrayList<ZMessage>();
+        if (!StringUtil.isNullOrEmpty(ids)) {
+            String[] idsArray = ids.split(",");
+            for (String id : idsArray) {
+                ZMessage msg = null;
+                try {
+                    msg = getMessageById(id, false, null);
+                } catch (ServiceException se) {
+                    ZimbraLog.sync.debug("Exception occured while fetching msg for id = %s", id);
+                    ZimbraLog.sync.debug(se);
+                }
+                if (msg != null) {
+                    list.add(msg);
+                }
+            }
+        }
+        return list;
     }
 
     public ZMessage getMessageById(String id) throws ServiceException {

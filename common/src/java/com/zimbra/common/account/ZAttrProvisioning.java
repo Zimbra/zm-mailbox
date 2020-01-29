@@ -10674,6 +10674,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMobileShareContactEnabled = "zimbraMobileShareContactEnabled";
 
     /**
+     * Whether to permit syncing shared mail folders
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=4001)
+    public static final String A_zimbraMobileShareMailEnabled = "zimbraMobileShareMailEnabled";
+
+    /**
      * indicates whether the application can forward original email as RFC
      * 822 .eml attachment. Note: this setting is applicable only to the
      * devices using activesync smart forward for forwarding email messages.
