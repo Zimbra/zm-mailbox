@@ -27,6 +27,11 @@ public class VolumeMailboxBlob extends MailboxBlob {
         this.blob = blob;
     }
 
+    protected VolumeMailboxBlob(Mailbox mbox, int itemId, long revision, String locator, VolumeBlob blob) {
+        super(mbox, itemId, revision, locator);
+        this.blob = blob;
+    }
+
     @Override
     public MailboxBlob setSize(long size) {
         super.setSize(size);

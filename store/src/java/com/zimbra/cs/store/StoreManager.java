@@ -225,6 +225,21 @@ public abstract class StoreManager {
     throws IOException, ServiceException;
 
     /**
+     * Create a copy in destMbox mailbox with message ID of destMsgId that
+     * points to srcBlob.
+     * Implementations may choose to use linking where appropriate (i.e. files on same filesystem)
+     * @param src
+     * @param destMbox
+     * @param destMsgId mail_item.id value for message in destMbox
+     * @param destRevision mail_item.mod_content value for message in destMbox
+     * @return MailboxBlob object representing the copied blob
+     * @throws IOException
+     * @throws ServiceException
+     */
+    public abstract MailboxBlob copy(MailboxBlob src, Mailbox destMbox, int destMsgId, long destRevision)
+    throws IOException, ServiceException;
+
+    /**
      * Create a link in destMbox mailbox with message ID of destMsgId that
      * points to srcBlob.
      * If staging creates permanent blobs, this just needs to return mailbox blob with pointer to location of staged blob
@@ -241,6 +256,22 @@ public abstract class StoreManager {
     throws IOException, ServiceException;
 
     /**
+     * Create a link in destMbox mailbox with message ID of destMsgId that
+     * points to srcBlob.
+     * If staging creates permanent blobs, this just needs to return mailbox blob with pointer to location of staged blob
+     * If staging is done to temporary area such as our incoming directory this operation finishes it
+     * @param src
+     * @param destMbox
+     * @param destMsgId mail_item.id value for message in destMbox
+     * @param destRevision mail_item.mod_content value for message in destMbox
+     * @return MailboxBlob object representing the linked blob
+     * @throws IOException
+     * @throws ServiceException
+     */
+    public abstract MailboxBlob link(StagedBlob src, Mailbox destMbox, int destMsgId, long destRevision)
+    throws IOException, ServiceException;
+
+    /**
      * Rename a blob to a blob in mailbox directory.
      * This effectively makes the StagedBlob permanent, implementations may not need to do anything if the stage operation creates permanent items
      * @param src
@@ -252,6 +283,20 @@ public abstract class StoreManager {
      * @throws ServiceException
      */
     public abstract MailboxBlob renameTo(StagedBlob src, Mailbox destMbox, int destMsgId, int destRevision)
+    throws IOException, ServiceException;
+
+    /**
+     * Rename a blob to a blob in mailbox directory.
+     * This effectively makes the StagedBlob permanent, implementations may not need to do anything if the stage operation creates permanent items
+     * @param src
+     * @param destMbox
+     * @param destMsgId mail_item.id value for message in destMbox
+     * @param destRevision mail_item.mod_content value for message in destMbox
+     * @return MailboxBlob object representing the renamed blob
+     * @throws IOException
+     * @throws ServiceException
+     */
+    public abstract MailboxBlob renameTo(StagedBlob src, Mailbox destMbox, int destMsgId, long destRevision)
     throws IOException, ServiceException;
 
     /**
@@ -352,6 +397,34 @@ public abstract class StoreManager {
     throws ServiceException {
         return getMailboxBlob(mbox, itemId, revision, locator, true);
     }
+
+    /**
+     * Find the MailboxBlob in mailbox mbox with matching item ID.
+     * @param mbox
+     * @param itemId mail_item.id value for item
+     * @param revision mail_item.mod_content value for item
+     * @return the <code>MailboxBlob</code>, or <code>null</code> if the file
+     * does not exist
+     *
+     * @throws ServiceException
+     */
+    public MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, long revision, String locator)
+    throws ServiceException {
+        return getMailboxBlob(mbox, itemId, revision, locator, true);
+    }
+
+    /**
+     * Find the MailboxBlob in int mailboxId, String accountId with matching item ID.
+     * @param mbox
+     * @param itemId mail_item.id value for item
+     * @param revision mail_item.mod_content value for item
+     * @return the <code>MailboxBlob</code>, or <code>null</code> if the file
+     * does not exist
+     *
+     * @throws ServiceException
+     */
+    public abstract MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, long revision, String locator, boolean validate)
+    throws ServiceException;
 
     /**
      * Find the MailboxBlob in int mailboxId, String accountId with matching item ID.
