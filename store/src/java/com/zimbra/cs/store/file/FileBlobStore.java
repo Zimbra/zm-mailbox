@@ -437,4 +437,66 @@ public final class FileBlobStore extends StoreManager {
     private static void ensureParentDirExists(File file) throws IOException {
         ensureDirExists(file.getParentFile());
     }
+
+	@Override
+	public MailboxBlob copy(MailboxBlob src, Mailbox destMbox, int destMsgId, long destRevision) throws IOException, ServiceException {
+	    // TODO Auto-generated method stub
+	    return null;
+	}
+
+	@Override
+	public MailboxBlob link(StagedBlob src, Mailbox destMbox, int destMsgId, long destRevision)
+		throws IOException, ServiceException {
+	    // TODO Auto-generated method stub
+	    return null;
+	}
+
+	@Override
+	public MailboxBlob renameTo(StagedBlob src, Mailbox destMbox, int destMsgId, long destRevision) throws IOException, ServiceException {
+	    // TODO Auto-generated method stub
+	    return null;
+	}
+
+	@Override
+	public MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, long revision, String locator, boolean validate) throws ServiceException {
+	    short volumeId = Short.valueOf(locator);
+	    File file = getMailboxBlobFile(mbox, itemId, revision, volumeId, validate);
+	    if (file == null) {
+	        return null;
+	    }
+	    return new VolumeMailboxBlob(mbox, itemId, revision, locator, new VolumeBlob(file, volumeId));
+	}
+
+	private File getMailboxBlobFile(Mailbox mbox, int itemId, long revision, short volumeId, boolean check) throws ServiceException {
+	    File file = new File(getBlobPath(mbox, itemId, revision, volumeId));
+	    if (!check || file.exists()) {
+	        return file;
+	    }
+	    // fallback for very very *very* old installs where blob paths were based on item id only
+	    file = new File(getBlobPath(mbox, itemId, -1, volumeId));
+	    return (file.exists() ? file : null);
+	}
+
+	public static String getBlobPath(Mailbox mbox, int itemId, long revision, short volumeId) throws ServiceException {
+	    return getBlobPath(mbox.getId(), itemId, revision, volumeId);
+	}
+
+	public static String getBlobPath(int mboxId, int itemId, long revision, short volumeId) throws ServiceException {
+	    Volume vol = MANAGER.getVolume(volumeId);
+	    String path = vol.getBlobDir(mboxId, itemId);
+	    int buflen = path.length() + 15 + (revision < 0 ? 0 : 11);
+
+	    StringBuilder sb = new StringBuilder(buflen);
+	    sb.append(path).append(File.separator);
+	    appendFilename(sb, itemId, revision);
+	    return sb.toString();
+	}
+
+	public static void appendFilename(StringBuilder sb, int itemId, long revision) {
+	    sb.append(itemId);
+	    if (revision >= 0) {
+	        sb.append('-').append(revision);
+	    }
+        sb.append(".msg");
+	}
 }
