@@ -77,7 +77,7 @@ public abstract class MailDocumentHandler extends DocumentHandler {
             return iid;
         }
 
-        if (!checkMountpoint || !DocumentHandler.onLocalServer(acct)) {
+        if (!checkMountpoint || !Provisioning.onLocalServer(acct)) {
             return null;
         }
         Mailbox mbox = getRequestedMailbox(zsc);

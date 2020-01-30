@@ -21,6 +21,7 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.URLEncoder;
+import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -1519,7 +1520,19 @@ public abstract class Provisioning extends ZAttrProvisioning {
     }
 
     public static boolean onLocalServer(Account account, Reasons reasons) throws ServiceException {
-    	    return DocumentHandler.onLocalServer(account, reasons);
+        String targetIp = Provisioning.affinityServer(account);
+        String localIp = null;
+        try {
+            localIp = InetAddress.getLocalHost().getHostAddress().trim();
+        } catch (UnknownHostException e) {
+            ZimbraLog.misc.warn("Unknown Host Exception", e);
+        }
+        boolean isLocal = (targetIp != null && targetIp.equalsIgnoreCase(localIp));
+        if (!isLocal && reasons != null) {
+            reasons.addReason(String.format("isLocal=%b target=%s localhost=%s account=%s", isLocal, targetIp, localIp,
+                    account.getName()));
+        }
+        return isLocal;
     }
 
     /**

@@ -659,7 +659,7 @@ public class SoapSession extends Session {
         }
         // delegate sessions are only for mailboxes on the local host
         try {
-            if (!DocumentHandler.onLocalServer(Provisioning.getInstance().get(Key.AccountBy.id, targetAccountId))) {
+            if (!Provisioning.onLocalServer(Provisioning.getInstance().get(Key.AccountBy.id, targetAccountId))) {
                 return null;
             }
         } catch (ServiceException e) {
