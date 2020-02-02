@@ -97,6 +97,7 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.soap.SoapProvisioning;
+import com.zimbra.cs.account.soap.SoapProvisioning.ManageIndexType;
 import com.zimbra.cs.imap.ImapCredentials.EnabledHack;
 import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
 import com.zimbra.cs.imap.ImapMessage.ImapMessageSet;
@@ -1779,9 +1780,9 @@ public abstract class ImapHandler {
         }
 
         if (account.isFeatureDelayedIndexEnabled()
-                && !DelayedIndexStatus.indexing.toString().equals(account.getDelayedIndexStatusAsString())) {
+                && !DelayedIndexStatus.indexing.equals(account.getDelayedIndexStatus())) {
             SoapProvisioning sp = SoapProvisioning.getAdminInstance();
-            sp.reIndex(account, "start", null, null, false, true);
+            sp.manageIndex(account, "start", ManageIndexType.enableIndexing);
         }
 
         mailboxSize = getMailboxSize();

@@ -111,6 +111,7 @@ import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning.IndexStatsInfo;
 import com.zimbra.cs.account.soap.SoapProvisioning.MailboxInfo;
+import com.zimbra.cs.account.soap.SoapProvisioning.ManageIndexType;
 import com.zimbra.cs.account.soap.SoapProvisioning.MemcachedClientConfig;
 import com.zimbra.cs.account.soap.SoapProvisioning.QuotaUsage;
 import com.zimbra.cs.account.soap.SoapProvisioning.ReIndexBy;
@@ -593,9 +594,6 @@ public class ProvUtil implements HttpDebugListener {
         DELETE_DOMAIN("deleteDomain", "dd", "{domain|id}", Category.DOMAIN, 1, 1),
         DELETE_IDENTITY(
                "deleteIdentity", "did", "{name@domain|id} {identity-name}", Category.ACCOUNT, 2, 2),
-        DELETE_INDEX_MAILBOX(
-               "deleteIndexMailbox", "dim",
-               "{name@domain|id} {start|status}", Category.MAILBOX, 2, 2),
         DELETE_SIGNATURE(
                "deleteSignature", "dsig", "{name@domain|id} {signature-name}", Category.ACCOUNT, 2, 2),
         DELETE_SERVER(
@@ -723,6 +721,9 @@ public class ProvUtil implements HttpDebugListener {
         HELP("help", "?", "commands",
                Category.MISC, 0, 1),
         LDAP(".ldap", ".l"),
+        MANAGE_INDEX_MAILBOX(
+                "manageIndexMailbox", "mim",
+                "{name@domain|id} {start|status|cancel} {deleteIndex|enableIndexing}", Category.MAILBOX, 3, 3),
         MODIFY_ACCOUNT("modifyAccount", "ma",
                "{name@domain|id} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 3, Integer.MAX_VALUE),
         MODIFY_ALWAYSONCLUSTER(
@@ -1352,9 +1353,6 @@ public class ProvUtil implements HttpDebugListener {
         case DELETE_IDENTITY:
             prov.deleteIdentity(lookupAccount(args[1]), args[2]);
             break;
-        case DELETE_INDEX_MAILBOX:
-            doDeleteIndexMailbox(args);
-            break;
         case DELETE_SIGNATURE:
             account = lookupAccount(args[1]);
             prov.deleteSignature(account, lookupSignatureId(account, args[2]));
@@ -1542,6 +1540,9 @@ public class ProvUtil implements HttpDebugListener {
             break;
         case REINDEX_MAILBOX:
             doReIndexMailbox(args);
+            break;
+        case MANAGE_INDEX_MAILBOX:
+            doManageIndexMailbox(args);
             break;
         case COMPACT_INBOX_MAILBOX:
             doCompactIndexMailbox(args);
@@ -1998,15 +1999,25 @@ public class ProvUtil implements HttpDebugListener {
         }
     }
 
-    private void doDeleteIndexMailbox(String[] args) throws ServiceException {
+    private void doManageIndexMailbox(String[] args) throws ServiceException {
         if (!(prov instanceof SoapProvisioning)) {
             throwSoapOnly();
         }
         SoapProvisioning sp = (SoapProvisioning) prov;
         Account acct = lookupAccount(args[1]);
-        ReIndexInfo info = sp.reIndex(acct, args[2], null, null, true, false);
+        ManageIndexType type = null;
+        try {
+            type = ManageIndexType.valueOf(args[3]);
+        } catch (IllegalArgumentException e) {
+            throw ServiceException.INVALID_REQUEST("invalid argument", null);
+        }
+        ReIndexInfo info = sp.manageIndex(acct, args[2], type);
         ReIndexInfo.Progress progress = info.getProgress();
         console.printf("status: %s\n", info.getStatus());
+        if (progress != null) {
+            console.printf("progress: numSucceeded=%d, numFailed=%d, numRemaining=%d\n", progress.getNumSucceeded(),
+                    progress.getNumFailed(), progress.getNumRemaining());
+        }
     }
 
     private void doCompactIndexMailbox(String[] args) throws ServiceException {

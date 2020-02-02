@@ -149,6 +149,7 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(AdminConstants.GET_ATTRIBUTE_INFO_REQUEST, new GetAttributeInfo());
 
         dispatcher.registerHandler(AdminConstants.REINDEX_REQUEST, new ReIndex());
+        dispatcher.registerHandler(AdminConstants.MANAGE_INDEX_REQUEST, new ManageIndex());
         dispatcher.registerHandler(AdminConstants.COMPACT_INDEX_REQUEST, new CompactIndex());
         dispatcher.registerHandler(AdminConstants.GET_INDEX_STATS_REQUEST, new GetIndexStats());
         dispatcher.registerHandler(AdminConstants.VERIFY_INDEX_REQUEST, new VerifyIndex());

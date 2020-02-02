@@ -253,6 +253,8 @@ public final class AdminConstants {
 
     public static final String E_REINDEX_REQUEST = "ReIndexRequest";
     public static final String E_REINDEX_RESPONSE = "ReIndexResponse";
+    public static final String E_MANAGE_INDEX_REQUEST = "ManageIndexRequest";
+    public static final String E_MANAGE_INDEX_RESPONSE = "ManageIndexResponse";
     public static final String E_COMPACT_INDEX_REQUEST = "CompactIndexRequest";
     public static final String E_COMPACT_INDEX_RESPONSE = "CompactIndexResponse";
     public static final String E_GET_INDEX_STATS_REQUEST = "GetIndexStatsRequest";
@@ -760,6 +762,8 @@ public final class AdminConstants {
 
     public static final QName REINDEX_REQUEST = QName.get(E_REINDEX_REQUEST, NAMESPACE);
     public static final QName REINDEX_RESPONSE = QName.get(E_REINDEX_RESPONSE, NAMESPACE);
+    public static final QName MANAGE_INDEX_REQUEST = QName.get(E_MANAGE_INDEX_REQUEST, NAMESPACE);
+    public static final QName MANAGE_INDEX_RESPONSE = QName.get(E_MANAGE_INDEX_RESPONSE, NAMESPACE);
     public static final QName COMPACT_INDEX_REQUEST = QName.get(E_COMPACT_INDEX_REQUEST, NAMESPACE);
     public static final QName COMPACT_INDEX_RESPONSE = QName.get(E_COMPACT_INDEX_RESPONSE, NAMESPACE);
     public static final QName GET_INDEX_STATS_REQUEST = QName.get(E_GET_INDEX_STATS_REQUEST, NAMESPACE);
@@ -1617,7 +1621,7 @@ public final class AdminConstants {
             "com_zextras_chat_open", "com_zextras_talk", "zimbra-zimlet-briefcase-edit-lool");
 
     // ReIndex
-    public static final String A_DELETE_ONLY = "deleteOnly";
+    public static final String A_DELETE_INDEX = "deleteIndex";
     public static final String A_ENABLE_INDEXING = "enableIndexing";
 
 }

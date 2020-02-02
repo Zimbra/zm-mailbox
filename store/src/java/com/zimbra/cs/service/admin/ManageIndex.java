@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2020 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -16,12 +16,9 @@
  */
 package com.zimbra.cs.service.admin;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import com.google.common.base.Splitter;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
@@ -30,23 +27,14 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
-import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxIndex;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
-import com.zimbra.soap.admin.message.ReIndexRequest;
-import com.zimbra.soap.admin.type.ReindexMailboxInfo;
+import com.zimbra.soap.admin.message.ManageIndexRequest;
+import com.zimbra.soap.admin.type.MailboxByAccountIdSelector;
 
-/**
- * Admin operation handler for {@code reIndexMailbox(rim)}.
- *
- * @author tim
- * @author ysasaki
- */
-public final class ReIndex extends AdminDocumentHandler {
+public final class ManageIndex extends AdminDocumentHandler {
 
     private static final String ACTION_START = "start";
     private static final String ACTION_STATUS = "status";
@@ -86,12 +74,12 @@ public final class ReIndex extends AdminDocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        ReIndexRequest req = zsc.elementToJaxb(request);
+        ManageIndexRequest req = zsc.elementToJaxb(request);
 
         String action = req.getAction();
 
-        ReindexMailboxInfo reIndexMboxInfo = req.getMbox();
-        String accountId = reIndexMboxInfo.getAccountId();
+        MailboxByAccountIdSelector selector = req.getMbox();
+        String accountId = selector.getId();
 
         Provisioning prov = Provisioning.getInstance();
         Account account = prov.get(AccountBy.id, accountId, zsc.getAuthToken());
@@ -102,41 +90,19 @@ public final class ReIndex extends AdminDocumentHandler {
             throw ServiceException.FAILURE("mailbox not found for account " + accountId, null);
         }
 
-        Element response = zsc.createElement(AdminConstants.REINDEX_RESPONSE);
+        boolean deleteIndex = req.getDeleteIndex();
+        boolean enableIndexing = req.getEnableIndexing();
+        if (deleteIndex == enableIndexing) {
+            throw ServiceException.INVALID_REQUEST("deleteIndex and enableIndexing must be exclusive", null);
+        }
+
+        Element response = zsc.createElement(AdminConstants.MANAGE_INDEX_RESPONSE);
 
         if (ACTION_START.equalsIgnoreCase(action)) {
             if (mbox.index.isReIndexInProgress()) {
                 response.addAttribute(AdminConstants.A_STATUS, STATUS_RUNNING);
             } else {
-                String typesStr = reIndexMboxInfo.getTypes();
-                String idsStr = reIndexMboxInfo.getIds();
-
-                if (typesStr != null && idsStr != null) {
-                    ServiceException.INVALID_REQUEST("Can't specify both 'types' and 'ids'", null);
-                }
-
-                if (typesStr != null) {
-                    Set<MailItem.Type> types;
-                    try {
-                        types = MailItem.Type.setOf(typesStr);
-                    } catch (IllegalArgumentException e) {
-                        throw MailServiceException.INVALID_TYPE(e.getMessage());
-                    }
-                    mbox.index.startReIndexByType(types);
-                } else if (idsStr != null) {
-                    Set<Integer> ids = new HashSet<Integer>();
-                    for (String id : Splitter.on(',').trimResults().split(idsStr)) {
-                        try {
-                            ids.add(Integer.parseInt(id));
-                        } catch (NumberFormatException e) {
-                            ServiceException.INVALID_REQUEST("invalid item ID: " + id, e);
-                        }
-                    }
-                    mbox.index.startReIndexById(ids);
-                } else {
-                    mbox.index.startReIndex();
-                }
-
+                mbox.index.startReIndex(deleteIndex, enableIndexing);
                 response.addAttribute(AdminConstants.A_STATUS, STATUS_STARTED);
             }
         } else if (ACTION_STATUS.equalsIgnoreCase(action)) {
@@ -148,6 +114,9 @@ public final class ReIndex extends AdminDocumentHandler {
                 response.addAttribute(AdminConstants.A_STATUS, STATUS_IDLE);
             }
         } else if (ACTION_CANCEL.equalsIgnoreCase(action)) {
+            if (deleteIndex) {
+                throw ServiceException.INVALID_REQUEST("Can't cancel deleting index.", null);
+            }
             MailboxIndex.ReIndexStatus status = mbox.index.cancelReIndex();
             if (status != null) {
                 response.addAttribute(AdminConstants.A_STATUS, STATUS_CANCELLED);

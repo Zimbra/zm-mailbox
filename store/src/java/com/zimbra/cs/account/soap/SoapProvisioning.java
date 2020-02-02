@@ -1419,12 +1419,6 @@ public class SoapProvisioning extends Provisioning {
     public ReIndexInfo reIndex(Account acct, String action, ReIndexBy by,
             String[] values)
     throws ServiceException {
-        return reIndex(acct, action, by, values, false, false);
-    }
-
-    public ReIndexInfo reIndex(Account acct, String action, ReIndexBy by,
-            String[] values, boolean deleteOnly, boolean enableIndexing)
-    throws ServiceException {
         Server server = getServer(acct);
         ReindexMailboxInfo mbox = new ReindexMailboxInfo(acct.getId());
         if (by != null) {
@@ -1436,10 +1430,30 @@ public class SoapProvisioning extends Provisioning {
             }
         }
         ReIndexRequest req = new ReIndexRequest(action, mbox);
-        req.setDeleteOnly(deleteOnly);
-        req.setEnableIndexing(enableIndexing);
         ReIndexResponse resp = this.invokeJaxb(req,
                 server.getAttr(A_zimbraServiceHostname));
+        ReIndexInfo.Progress progress = null;
+        ReindexProgressInfo progInfo = resp.getProgress();
+        if (progInfo != null) {
+            progress = new ReIndexInfo.Progress(progInfo.getNumSucceeded(),
+                    progInfo.getNumFailed(),
+                    progInfo.getNumRemaining());
+        }
+        return new ReIndexInfo(resp.getStatus(), progress);
+    }
+
+    public static enum ManageIndexType {
+        deleteIndex, enableIndexing;
+    }
+
+    public ReIndexInfo manageIndex(Account acct, String action, ManageIndexType type)
+    throws ServiceException {
+        Server server = getServer(acct);
+        MailboxByAccountIdSelector mbox = new MailboxByAccountIdSelector(acct.getId());
+        ManageIndexRequest req = new ManageIndexRequest(action, mbox);
+        req.setDeleteIndex(type == ManageIndexType.deleteIndex);
+        req.setEnableIndexing(type == ManageIndexType.enableIndexing);
+        ManageIndexResponse resp = this.invokeJaxb(req, server.getAttr(A_zimbraServiceHostname));
         ReIndexInfo.Progress progress = null;
         ReindexProgressInfo progInfo = resp.getProgress();
         if (progInfo != null) {

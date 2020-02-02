@@ -116,7 +116,7 @@ public final class MailboxIndex {
         if (!delayedIndexEnabled) {
             return true;
         }
-        if (DelayedIndexStatus.indexing.toString().equals(mailbox.getAccount().getDelayedIndexStatusAsString())) {
+        if (DelayedIndexStatus.indexing.equals(mailbox.getAccount().getDelayedIndexStatus())) {
             return true;
         }
         return false;
@@ -128,12 +128,12 @@ public final class MailboxIndex {
                 !mailbox.index.getIndexStore().isIndexExist()) { // Index files are empty
                 return true;
             } else if (mailbox.getAccount().isFeatureDelayedIndexEnabled() &&
-                DelayedIndexStatus.waitingForSearch.toString().equals(mailbox.getAccount().getDelayedIndexStatusAsString())) {
+                DelayedIndexStatus.waitingForSearch.equals(mailbox.getAccount().getDelayedIndexStatus())) {
                 return true;
             } else if (mailbox.getAccount().isFeatureMobileSyncEnabled() &&
                 mailbox.getAccount().isFeatureDelayedIndexEnabled() &&
                 (mailbox.getAccount().getDelayedIndexStatus() == null ||
-                 DelayedIndexStatus.suppressed.toString().equals(mailbox.getAccount().getDelayedIndexStatusAsString()))) {
+                 DelayedIndexStatus.suppressed.equals(mailbox.getAccount().getDelayedIndexStatus()))) {
                 /* Mobile NG module doesn't call Account.authAccount(String, AuthContext.Protocol)
                  * when Mobile Password is used.
                  *
@@ -491,7 +491,7 @@ public final class MailboxIndex {
             throw ServiceException.INVALID_REQUEST("cannot specify deleteOnly with enableIndexing option", null);
         } else if (isDeleteOnly &&
             !(mailbox.getAccount().isFeatureDelayedIndexEnabled() &&
-             !DelayedIndexStatus.indexing.toString().equals(mailbox.getAccount().getDelayedIndexStatusAsString()))) {
+             !DelayedIndexStatus.indexing.equals(mailbox.getAccount().getDelayedIndexStatus()))) {
             throw ServiceException.INVALID_REQUEST("deleting index is allowed only when zimbraFeatureDelayedIndexEnabled is TRUE and zimbraDelayedIndexStatus is suppressed or waitingForSearch", null);
         }
         startReIndex(new ReIndexTask(mailbox, null, isDeleteOnly, enableIndexing));

@@ -592,6 +592,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.MailQueueActionResponse.class,
             com.zimbra.soap.admin.message.MailQueueFlushRequest.class,
             com.zimbra.soap.admin.message.MailQueueFlushResponse.class,
+            com.zimbra.soap.admin.message.ManageIndexRequest.class,
+            com.zimbra.soap.admin.message.ManageIndexResponse.class,
             com.zimbra.soap.admin.message.MigrateAccountRequest.class,
             com.zimbra.soap.admin.message.MigrateAccountResponse.class,
             com.zimbra.soap.admin.message.ModifyAccountRequest.class,
