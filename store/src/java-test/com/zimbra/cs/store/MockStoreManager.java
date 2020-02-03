@@ -114,6 +114,10 @@ public final class MockStoreManager extends StoreManager {
     private String blobKey(Mailbox mbox, int itemId, int revision) {
         return mbox.getId() + "-" + itemId + "-" + revision;
     }
+    
+    private String blobKey(Mailbox mbox, int itemId, long revision) {
+        return mbox.getId() + "-" + itemId + "-" + revision;
+    }
 
     @Override
     public MailboxBlob copy(MailboxBlob src, Mailbox destMbox, int destItemId, int destRevision) {
@@ -188,7 +192,12 @@ public final class MockStoreManager extends StoreManager {
     public boolean deleteStore(Mailbox mbox, Iterable<MailboxBlob.MailboxBlobInfo> mblobs) throws IOException {
         assert mblobs != null : "we require a blob iterator for testing purposes";
         for (MailboxBlob.MailboxBlobInfo mbinfo : mblobs) {
-            delete(getMailboxBlob(mbox, mbinfo.itemId, mbinfo.revision, mbinfo.locator, true));
+            try {
+                delete(getMailboxBlob(mbox, mbinfo.itemId, mbinfo.revision, mbinfo.locator, true));
+            } catch (ServiceException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
         }
         return true;
     }
@@ -326,5 +335,33 @@ public final class MockStoreManager extends StoreManager {
 
             return mockblob;
         }
+    }
+
+    @Override
+    public MailboxBlob copy(MailboxBlob src, Mailbox destMbox, int destMsgId, long destRevision)
+            throws IOException, ServiceException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public MailboxBlob link(StagedBlob src, Mailbox destMbox, int destMsgId, long destRevision)
+            throws IOException, ServiceException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public MailboxBlob renameTo(StagedBlob src, Mailbox destMbox, int destMsgId, long destRevision)
+            throws IOException, ServiceException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, long revision, String locator, boolean validate)
+            throws ServiceException {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

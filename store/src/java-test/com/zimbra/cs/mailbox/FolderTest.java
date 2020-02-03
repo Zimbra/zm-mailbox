@@ -147,7 +147,7 @@ public final class FolderTest {
         int changeId = mbox.getLastChangeID();
         Folder inbox = mbox.getFolderById(null, Mailbox.ID_FOLDER_INBOX);
         int modMetadata = inbox.getModifiedSequence();
-        int modContent = inbox.getSavedSequence();
+        long modContent = inbox.getSavedSequence();
         Assert.assertEquals(0, inbox.getImapRECENTCutoff());
 
         mbox.recordImapSession(Mailbox.ID_FOLDER_INBOX);
