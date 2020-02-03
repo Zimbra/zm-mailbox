@@ -44,6 +44,15 @@ public abstract class MailboxBlob {
             this.locator = locator;
             this.digest = digest;
         }
+
+        public MailboxBlobInfo(String accountId, int mailboxId, int itemId, long revision, String locator, String digest) {
+            this.accountId = accountId;
+            this.mailboxId = mailboxId;
+            this.itemId = itemId;
+            this.revision = revision;
+            this.locator = locator;
+            this.digest = digest;
+        }
     }
 
     private final Mailbox mailbox;
