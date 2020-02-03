@@ -155,7 +155,7 @@ public final class LC {
 
     @Supported
     public static final KnownKey localized_client_msgs_directory =
-        KnownKey.newKey("${mailboxd_directory}/webapps/zimbra/WEB-INF/classes/messages");
+        KnownKey.newKey("${mailboxd_directory}/webapps/zimbraAdmin/WEB-INF/classes/messages");
 
     @Supported
     public static final KnownKey skins_directory = KnownKey.newKey("${mailboxd_directory}/webapps/zimbra/skins");

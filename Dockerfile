@@ -60,7 +60,7 @@ RUN cd /opt/zimbra/jetty_base/webapps/service/ && jar -xf service.war && rm -rf 
 RUN cp /opt/zimbra/jetty_base/webapps/zimbraAdmin/WEB-INF/web.xml /opt/zimbra/jetty_base/etc/zimbraAdmin.web.xml.in \
     && cp /opt/zimbra/jetty_base/webapps/zimbraAdmin/WEB-INF/jetty-env.xml /opt/zimbra/jetty_base/etc/zimbraAdmin-jetty-env.xml.in \
     && cp -f /opt/zimbra/conf/zmlogrotate.mailbox /etc/logrotate.d/zimbra.mailbox \
-    && touch /opt/zimbra.platform && echo "@@BUILD_PLATFORM@@" >> /opt/zimbra.platform
+    && touch /opt/zimbra/.platform && echo "@@BUILD_PLATFORM@@" >> /opt/zimbra/.platform
 # Copy native lib to /opt/zimbra/lib & core jars to /opt/zimbra/lib/jars
 COPY native/build/libzimbra-native.so /opt/zimbra/lib/
 COPY native/build/zimbra-native.jar /opt/zimbra/lib/jars/
@@ -73,5 +73,5 @@ RUN chown -R root:root /opt/zimbra/mailboxd/common/lib \
     && chown -R zimbra:zimbra db \
     && chown zimbra:zimbra -R conf jetty_base log db extensions-extra zimlets-deployed \
     && chmod -R +x bin libexec \
-    && chown root:root jetty mailboxd jetty_base/common \
+    && chown -h root:root jetty mailboxd jetty_base/common \
     && chmod 444 /opt/zimbra/lib/jars/* && chmod 755 /opt/zimbra/lib/*.so && chmod 664 /opt/zimbra/lib/*.nar
