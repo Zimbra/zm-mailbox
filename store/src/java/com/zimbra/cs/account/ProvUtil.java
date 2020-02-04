@@ -721,9 +721,9 @@ public class ProvUtil implements HttpDebugListener {
         HELP("help", "?", "commands",
                Category.MISC, 0, 1),
         LDAP(".ldap", ".l"),
-        MANAGE_INDEX_MAILBOX(
-                "manageIndexMailbox", "mim",
-                "{name@domain|id} {start|status|cancel} {deleteIndex|enableIndexing}", Category.MAILBOX, 3, 3),
+        MANAGE_MAILBOX_INDEX(
+                "manageMailboxIndex", "mmi",
+                "{name@domain|id} {disableIndexing|enableIndexing}", Category.MAILBOX, 2, 2),
         MODIFY_ACCOUNT("modifyAccount", "ma",
                "{name@domain|id} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 3, Integer.MAX_VALUE),
         MODIFY_ALWAYSONCLUSTER(
@@ -1541,8 +1541,8 @@ public class ProvUtil implements HttpDebugListener {
         case REINDEX_MAILBOX:
             doReIndexMailbox(args);
             break;
-        case MANAGE_INDEX_MAILBOX:
-            doManageIndexMailbox(args);
+        case MANAGE_MAILBOX_INDEX:
+            doManageMailboxIndex(args);
             break;
         case COMPACT_INBOX_MAILBOX:
             doCompactIndexMailbox(args);
@@ -1999,7 +1999,7 @@ public class ProvUtil implements HttpDebugListener {
         }
     }
 
-    private void doManageIndexMailbox(String[] args) throws ServiceException {
+    private void doManageMailboxIndex(String[] args) throws ServiceException {
         if (!(prov instanceof SoapProvisioning)) {
             throwSoapOnly();
         }
@@ -2007,17 +2007,12 @@ public class ProvUtil implements HttpDebugListener {
         Account acct = lookupAccount(args[1]);
         ManageIndexType type = null;
         try {
-            type = ManageIndexType.valueOf(args[3]);
+            type = ManageIndexType.valueOf(args[2]);
         } catch (IllegalArgumentException e) {
             throw ServiceException.INVALID_REQUEST("invalid argument", null);
         }
-        ReIndexInfo info = sp.manageIndex(acct, args[2], type);
-        ReIndexInfo.Progress progress = info.getProgress();
-        console.printf("status: %s\n", info.getStatus());
-        if (progress != null) {
-            console.printf("progress: numSucceeded=%d, numFailed=%d, numRemaining=%d\n", progress.getNumSucceeded(),
-                    progress.getNumFailed(), progress.getNumRemaining());
-        }
+        String status = sp.manageIndex(acct, type);
+        console.printf("status: %s\n", status);
     }
 
     private void doCompactIndexMailbox(String[] args) throws ServiceException {

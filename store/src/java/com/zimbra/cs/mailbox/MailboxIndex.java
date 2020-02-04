@@ -51,6 +51,7 @@ import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.AccessBoundedRegex;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.soap.SoapProvisioning.ManageIndexType;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
@@ -214,7 +215,7 @@ public final class MailboxIndex {
                 if (needToReIndex()) {
                     // Start re-indexing thread so that the search request doesn't wait for the indexing task
                     if (mailbox.index.getReIndexStatus() == null) {
-                        mailbox.index.startReIndex(false, true);
+                        mailbox.index.startReIndex(ManageIndexType.enableIndexing);
                     }
                 } else {
                     // don't wait if an indexing is in progress by other thread
@@ -484,17 +485,10 @@ public final class MailboxIndex {
      * a WARN message is logged, but it won't be retried.
      */
     public void startReIndex() throws ServiceException {
-        startReIndex(false, false);
+        startReIndex((ManageIndexType)null);
     }
-    public void startReIndex(boolean isDeleteOnly, boolean enableIndexing) throws ServiceException {
-        if (isDeleteOnly && enableIndexing) {
-            throw ServiceException.INVALID_REQUEST("cannot specify deleteOnly with enableIndexing option", null);
-        } else if (isDeleteOnly &&
-            !(mailbox.getAccount().isFeatureDelayedIndexEnabled() &&
-             !DelayedIndexStatus.indexing.equals(mailbox.getAccount().getDelayedIndexStatus()))) {
-            throw ServiceException.INVALID_REQUEST("deleting index is allowed only when zimbraFeatureDelayedIndexEnabled is TRUE and zimbraDelayedIndexStatus is suppressed or waitingForSearch", null);
-        }
-        startReIndex(new ReIndexTask(mailbox, null, isDeleteOnly, enableIndexing));
+    public void startReIndex(ManageIndexType type) throws ServiceException {
+        startReIndex(new ReIndexTask(mailbox, null, type));
     }
 
     public void startReIndexById(Collection<Integer> ids) throws ServiceException {
@@ -586,11 +580,11 @@ public final class MailboxIndex {
             this.ids = ids;
         }
 
-        ReIndexTask(Mailbox mbox, Collection<Integer> ids, boolean isDeleteOnly, boolean enableIndexing) {
+        ReIndexTask(Mailbox mbox, Collection<Integer> ids, ManageIndexType type) {
             super(mbox);
             this.ids = ids;
-            this.isDeleteOnly = isDeleteOnly;
-            this.enableIndexing = enableIndexing;
+            this.isDeleteOnly = ManageIndexType.disableIndexing.equals(type);
+            this.enableIndexing = ManageIndexType.enableIndexing.equals(type);
         }
 
         @Override
@@ -658,7 +652,18 @@ public final class MailboxIndex {
                     mailbox.lock.release();
                 }
                 if (isDeleteOnly) {
-                    ZimbraLog.index.info("Skipped re-indexing all items");
+                    if (mailbox.getContactCount() > 0) {
+                        // In case the account has set a sieve rule which contains "Address in" in its condition
+                        mailbox.getAccount().setFeatureDelayedIndexEnabled(false);
+                        indexDeferredItems(EnumSet.of(MailItem.Type.CONTACT), status, true);
+                        ZimbraLog.index.info("Re-indexing contacts");
+                    } else {
+                        ZimbraLog.index.info("Skipped re-indexing all items");
+                    }
+                    mailbox.getAccount().setFeatureDelayedIndexEnabled(true);
+                    mailbox.getAccount().setDelayedIndexStatus(DelayedIndexStatus.suppressed);
+                    ZimbraLog.index.info("set zimbraFeatureDelayedIndexEnabled to TRUE and "
+                            + "zimbraDelayedIndexStatus to suppressed");
                     return;
                 }
                 if (enableIndexing && mailbox.getAccount().isFeatureDelayedIndexEnabled()) {

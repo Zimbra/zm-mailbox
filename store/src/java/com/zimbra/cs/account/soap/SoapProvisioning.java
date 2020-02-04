@@ -222,6 +222,8 @@ import com.zimbra.soap.admin.message.GetUCServiceResponse;
 import com.zimbra.soap.admin.message.HABOrgUnitRequest;
 import com.zimbra.soap.admin.message.HABOrgUnitRequest.HabOp;
 import com.zimbra.soap.admin.message.HABOrgUnitResponse;
+import com.zimbra.soap.admin.message.ManageIndexRequest;
+import com.zimbra.soap.admin.message.ManageIndexResponse;
 import com.zimbra.soap.admin.message.ModifyHABGroupRequest;
 import com.zimbra.soap.admin.message.PurgeMessagesRequest;
 import com.zimbra.soap.admin.message.PurgeMessagesResponse;
@@ -1443,25 +1445,20 @@ public class SoapProvisioning extends Provisioning {
     }
 
     public static enum ManageIndexType {
-        deleteIndex, enableIndexing;
+        disableIndexing, enableIndexing;
     }
 
-    public ReIndexInfo manageIndex(Account acct, String action, ManageIndexType type)
+    public String manageIndex(Account acct, ManageIndexType type)
     throws ServiceException {
         Server server = getServer(acct);
         MailboxByAccountIdSelector mbox = new MailboxByAccountIdSelector(acct.getId());
-        ManageIndexRequest req = new ManageIndexRequest(action, mbox);
-        req.setDeleteIndex(type == ManageIndexType.deleteIndex);
-        req.setEnableIndexing(type == ManageIndexType.enableIndexing);
-        ManageIndexResponse resp = this.invokeJaxb(req, server.getAttr(A_zimbraServiceHostname));
-        ReIndexInfo.Progress progress = null;
-        ReindexProgressInfo progInfo = resp.getProgress();
-        if (progInfo != null) {
-            progress = new ReIndexInfo.Progress(progInfo.getNumSucceeded(),
-                    progInfo.getNumFailed(),
-                    progInfo.getNumRemaining());
+        String action = null;
+        if (type != null) {
+            action = type.toString();
         }
-        return new ReIndexInfo(resp.getStatus(), progress);
+        ManageIndexRequest req = new ManageIndexRequest(action, mbox);
+        ManageIndexResponse resp = this.invokeJaxb(req, server.getAttr(A_zimbraServiceHostname));
+        return resp.getStatus();
     }
 
     public String compactIndex(Account acct, String action)

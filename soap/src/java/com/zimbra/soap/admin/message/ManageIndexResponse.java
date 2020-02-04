@@ -20,11 +20,9 @@ package com.zimbra.soap.admin.message;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.admin.type.ReindexProgressInfo;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_MANAGE_INDEX_RESPONSE)
@@ -32,34 +30,22 @@ public class ManageIndexResponse {
 
     /**
      * @zm-api-field-tag status
-     * @zm-api-field-description Status - one of <b>started|running|cancelled|idle</b>
+     * @zm-api-field-description <b>started</b> when action is accepted
      */
     @XmlAttribute(name=AdminConstants.A_STATUS, required=true)
     private final String status;
-
-    /**
-     * @zm-api-field-description Information about management progress
-     */
-    @XmlElement(name=AdminConstants.E_PROGRESS, required=false)
-    private final ReindexProgressInfo progress;
 
     /**
      * no-argument constructor wanted by JAXB
      */
      @SuppressWarnings("unused")
     private ManageIndexResponse() {
-        this((String) null, (ReindexProgressInfo)null);
+        this((String)null);
     }
 
     public ManageIndexResponse(String status) {
-        this(status, (ReindexProgressInfo)null);
-    }
-
-    public ManageIndexResponse(String status, ReindexProgressInfo progress) {
         this.status = status;
-        this.progress = progress;
     }
 
     public String getStatus() { return status; }
-    public ReindexProgressInfo getProgress() { return progress; }
 }

@@ -1782,7 +1782,7 @@ public abstract class ImapHandler {
         if (account.isFeatureDelayedIndexEnabled()
                 && !DelayedIndexStatus.indexing.equals(account.getDelayedIndexStatus())) {
             SoapProvisioning sp = SoapProvisioning.getAdminInstance();
-            sp.manageIndex(account, "start", ManageIndexType.enableIndexing);
+            sp.manageIndex(account, ManageIndexType.enableIndexing);
         }
 
         mailboxSize = getMailboxSize();

@@ -27,8 +27,8 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.account.soap.SoapProvisioning.ManageIndexType;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailboxIndex;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.ManageIndexRequest;
@@ -36,14 +36,7 @@ import com.zimbra.soap.admin.type.MailboxByAccountIdSelector;
 
 public final class ManageIndex extends AdminDocumentHandler {
 
-    private static final String ACTION_START = "start";
-    private static final String ACTION_STATUS = "status";
-    private static final String ACTION_CANCEL = "cancel";
-
     private static final String STATUS_STARTED = "started";
-    private static final String STATUS_RUNNING = "running";
-    private static final String STATUS_IDLE = "idle";
-    private static final String STATUS_CANCELLED = "cancelled";
 
     private static final String[] TARGET_ACCOUNT_PATH = new String[] {
         AdminConstants.E_MAILBOX, AdminConstants.A_ACCOUNTID
@@ -90,52 +83,21 @@ public final class ManageIndex extends AdminDocumentHandler {
             throw ServiceException.FAILURE("mailbox not found for account " + accountId, null);
         }
 
-        boolean deleteIndex = req.getDeleteIndex();
-        boolean enableIndexing = req.getEnableIndexing();
-        if (deleteIndex == enableIndexing) {
-            throw ServiceException.INVALID_REQUEST("deleteIndex and enableIndexing must be exclusive", null);
-        }
-
         Element response = zsc.createElement(AdminConstants.MANAGE_INDEX_RESPONSE);
 
-        if (ACTION_START.equalsIgnoreCase(action)) {
+        try {
+            ManageIndexType type = ManageIndexType.valueOf(action);
             if (mbox.index.isReIndexInProgress()) {
-                response.addAttribute(AdminConstants.A_STATUS, STATUS_RUNNING);
-            } else {
-                mbox.index.startReIndex(deleteIndex, enableIndexing);
-                response.addAttribute(AdminConstants.A_STATUS, STATUS_STARTED);
+                throw ServiceException.ALREADY_IN_PROGRESS("rejected the request because re-index, disable-indexing or "
+                        + "enable-indexing was running. Please check re-index status is idle and try again.");
             }
-        } else if (ACTION_STATUS.equalsIgnoreCase(action)) {
-            MailboxIndex.ReIndexStatus status = mbox.index.getReIndexStatus();
-            if (status != null) {
-                addProgressInfo(response, status);
-                response.addAttribute(AdminConstants.A_STATUS, STATUS_RUNNING);
-            } else {
-                response.addAttribute(AdminConstants.A_STATUS, STATUS_IDLE);
-            }
-        } else if (ACTION_CANCEL.equalsIgnoreCase(action)) {
-            if (deleteIndex) {
-                throw ServiceException.INVALID_REQUEST("Can't cancel deleting index.", null);
-            }
-            MailboxIndex.ReIndexStatus status = mbox.index.cancelReIndex();
-            if (status != null) {
-                response.addAttribute(AdminConstants.A_STATUS, STATUS_CANCELLED);
-                addProgressInfo(response, status);
-            } else {
-                response.addAttribute(AdminConstants.A_STATUS, STATUS_IDLE);
-            }
-        } else {
+            mbox.index.startReIndex(type);
+            response.addAttribute(AdminConstants.A_STATUS, STATUS_STARTED);
+        } catch (IllegalArgumentException | NullPointerException e) {
             throw ServiceException.INVALID_REQUEST("Unknown action: " + action, null);
         }
 
         return response;
-    }
-
-    private void addProgressInfo(Element response, MailboxIndex.ReIndexStatus status) {
-        Element prog = response.addElement(AdminConstants.E_PROGRESS);
-        prog.addAttribute(AdminConstants.A_NUM_SUCCEEDED, status.getProcessed() - status.getFailed());
-        prog.addAttribute(AdminConstants.A_NUM_FAILED, status.getFailed());
-        prog.addAttribute(AdminConstants.A_NUM_REMAINING, status.getTotal() - status.getProcessed());
     }
 
     @Override
