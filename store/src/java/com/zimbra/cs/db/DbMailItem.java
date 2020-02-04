@@ -1314,6 +1314,11 @@ public class DbMailItem {
     }
 
     public static int updateLocatorAndDigest(DbConnection conn, Mailbox mbox, String tableName, String idColumn, int itemId,
+            long revision, String locator, String digest) throws ServiceException {
+        return updateLocatorAndDigest(conn, mbox, tableName, idColumn, itemId, revision, locator, digest);
+    }
+
+    public static int updateLocatorAndDigest(DbConnection conn, Mailbox mbox, String tableName, String idColumn, int itemId,
             int revision, String locator, String digest) throws ServiceException {
         PreparedStatement stmt = null;
         try {
