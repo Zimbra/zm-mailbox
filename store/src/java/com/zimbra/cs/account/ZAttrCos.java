@@ -25848,6 +25848,78 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * Whether to permit syncing shared calendar folders
+     *
+     * @return zimbraMobileShareCalendarEnabled, or false if unset
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=4002)
+    public boolean isMobileShareCalendarEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraMobileShareCalendarEnabled, false, true);
+    }
+
+    /**
+     * Whether to permit syncing shared calendar folders
+     *
+     * @param zimbraMobileShareCalendarEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=4002)
+    public void setMobileShareCalendarEnabled(boolean zimbraMobileShareCalendarEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileShareCalendarEnabled, zimbraMobileShareCalendarEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to permit syncing shared calendar folders
+     *
+     * @param zimbraMobileShareCalendarEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=4002)
+    public Map<String,Object> setMobileShareCalendarEnabled(boolean zimbraMobileShareCalendarEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileShareCalendarEnabled, zimbraMobileShareCalendarEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to permit syncing shared calendar folders
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=4002)
+    public void unsetMobileShareCalendarEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileShareCalendarEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to permit syncing shared calendar folders
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=4002)
+    public Map<String,Object> unsetMobileShareCalendarEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileShareCalendarEnabled, "");
+        return attrs;
+    }
+
+    /**
      * Whether to permit syncing shared contact folders
      *
      * @return zimbraMobileShareContactEnabled, or false if unset
