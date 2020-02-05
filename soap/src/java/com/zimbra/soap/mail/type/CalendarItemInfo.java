@@ -222,6 +222,14 @@ public class CalendarItemInfo {
     public List<Invitation> getInvites() {
         return Collections.unmodifiableList(invites);
     }
+    public Invitation getInviteFromId(int id) {
+        for (Invitation inv : invites) {
+            if (inv.getId() == id) {
+                return inv;
+            }
+        }
+        return null;
+    }
     public List<CalendarReply> getCalendarReplies() {
         return Collections.unmodifiableList(calendarReplies);
     }
