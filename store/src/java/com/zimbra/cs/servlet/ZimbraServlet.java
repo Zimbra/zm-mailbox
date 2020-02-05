@@ -36,6 +36,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.http.Header;
 import org.apache.http.HttpException;
 import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -416,6 +417,7 @@ public class ZimbraServlet extends HttpServlet {
             String hname = (String) enm.nextElement(), hlc = hname.toLowerCase();
             if (hlc.equals("x-zimbra-hopcount"))
                 try { hopcount = Math.max(Integer.parseInt(req.getHeader(hname)), 0); } catch (NumberFormatException e) { }
+            else if (hlc.equalsIgnoreCase("content-length")) { }
             else if (hlc.startsWith("x-") || hlc.startsWith("content-") || hlc.equals("authorization"))
                 method.addHeader(hname, req.getHeader(hname));
         }
@@ -432,10 +434,18 @@ public class ZimbraServlet extends HttpServlet {
         int statusCode = -1;
         HttpClient client = clientBuilder.build();
         HttpResponse httpResp = null;
-        for (int retryCount = 3; statusCode == -1 && retryCount > 0; retryCount--) {
-            httpResp = HttpClientUtil.executeMethod(client, method);
-            statusCode = httpResp.getStatusLine().getStatusCode();
+        
+        try {
+            for (int retryCount = 3; statusCode == -1 && retryCount > 0; retryCount--) {
+                httpResp = HttpClientUtil.executeMethod(client, method);
+                statusCode = httpResp.getStatusLine().getStatusCode();
+            }
+        } catch (ClientProtocolException exp) {
+            mLog.warn("HttpClient Exception", exp);
+            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Client Protocol Exception");
+            return;
         }
+		
         if (statusCode == -1) {
             resp.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, "retry limit reached");
             return;
@@ -500,7 +510,6 @@ public class ZimbraServlet extends HttpServlet {
 
         return URLUtil.getServiceURL(affinityIp, path + getAccountPath(acct), true);
     }
-
 
     public static String getServiceUrl(String podIp, String path) throws ServiceException {
         return URLUtil.getServiceURL(podIp, path, true);
