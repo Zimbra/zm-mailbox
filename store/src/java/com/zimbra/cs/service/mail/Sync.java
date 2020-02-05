@@ -46,7 +46,6 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.service.util.SyncToken;
 import com.zimbra.cs.session.PendingModifications.Change;
-import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.mail.message.SyncRequest;
 

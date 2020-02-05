@@ -21,7 +21,6 @@ import java.util.Map;
 
 import org.json.JSONException;
 
-import com.zimbra.client.event.ZModifyEvent;
 import com.zimbra.client.event.ZModifyTagEvent;
 import com.zimbra.common.mailbox.ZimbraTag;
 import com.zimbra.common.service.ServiceException;
