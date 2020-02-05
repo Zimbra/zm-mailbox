@@ -128,6 +128,8 @@ public final class MailService implements DocumentService {
 
         dispatcher.registerHandler(MailConstants.GET_APPT_SUMMARIES_REQUEST, new GetApptSummaries());
         dispatcher.registerHandler(MailConstants.GET_APPOINTMENT_REQUEST, new GetAppointment());
+        dispatcher.registerHandler(MailConstants.GET_APPOINTMENT_IDS_IN_RANGE_REQUEST, new GetAppointmentIdsInRange());
+        dispatcher.registerHandler(MailConstants.GET_APPOINTMENT_IDS_SINCE_REQUEST, new GetAppointmentIdsSince());
         dispatcher.registerHandler(MailConstants.SET_APPOINTMENT_REQUEST, new SetAppointment());
         dispatcher.registerHandler(MailConstants.CREATE_APPOINTMENT_REQUEST, new CreateAppointment());
         dispatcher.registerHandler(MailConstants.CREATE_APPOINTMENT_EXCEPTION_REQUEST, new CreateAppointmentException());

@@ -17,6 +17,15 @@
 
 package com.zimbra.client;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+
+import org.json.JSONException;
+
 import com.zimbra.common.calendar.CalendarUtil;
 import com.zimbra.common.calendar.Geo;
 import com.zimbra.common.calendar.ZCalendar.ZParameter;
@@ -25,14 +34,6 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ListUtil;
 import com.zimbra.common.zclient.ZClientException;
-import org.json.JSONException;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
 
 public class ZInvite implements ToZJSONObject {
 
@@ -1717,7 +1718,17 @@ public class ZInvite implements ToZJSONObject {
             else
                 return ZWeekDay.values()[ord];
         }
-        
+        public int getWeekDay(boolean sundayFirst) {
+            if (sundayFirst) {
+                return getOrdinal();
+            } else {
+                int ret = getOrdinal() - 1;
+                if (ret < 0) {
+                    ret = 6;
+                }
+                return ret;
+            }
+        }
         public boolean isSunday() { return equals(SU); }
         public boolean isMonday() { return equals(MO); }
         public boolean isTuesday() { return equals(TU); }
