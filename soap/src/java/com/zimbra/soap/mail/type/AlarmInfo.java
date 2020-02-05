@@ -17,10 +17,11 @@
 
 package com.zimbra.soap.mail.type;
 
-import com.google.common.base.MoreObjects;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
 
@@ -29,6 +30,9 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.AlarmInfoInterface;
@@ -327,5 +331,93 @@ public class AlarmInfo implements AlarmInfoInterface {
         List <AlarmInfoInterface> newList = Lists.newArrayList();
         Iterables.addAll(newList, params);
         return newList;
+    }
+
+    /**
+     * Returns the alarm trigger time in millis.
+     * Both start and end times of the appointment/task instance are required because the alarm
+     * may be specified relative to either start or end time.
+     * @param instStart start time of the appointment/task instance
+     * @param instEnd end time of the appointment/task instance
+     * @return
+     */
+    @GraphQLIgnore
+    public long getTriggerTime(long instStart, long instEnd) {
+        if (trigger == null) {
+            return instStart;// start time is the trigger time, if trigger not found
+        }
+        if (trigger.getAbsolute() != null) {
+            DateAttr da = trigger.getAbsolute();
+            LocalDateTime ldt = LocalDateTime.parse(da.getDate(), DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'"));
+            return ldt.toInstant(ZoneOffset.UTC).toEpochMilli();
+        } else if (trigger.getRelative() != null) {
+            DurationInfo di = trigger.getRelative();
+            String rel = di.getRelated();
+            if ("END".equals(rel)) {
+                Instant ednInst = Instant.ofEpochMilli(instEnd);
+                if (di.getDurationNegative() != null && di.getDurationNegative()) {
+                    if (di.getWeeks() != null) {
+                        return ednInst.minus(di.getWeeks().intValue(), ChronoUnit.WEEKS).toEpochMilli();
+                    } else if (di.getDays() != null) {
+                        return ednInst.minus(di.getDays().intValue(), ChronoUnit.DAYS).toEpochMilli();
+                    } else if (di.getHours() != null) {
+                        return ednInst.minus(di.getHours().intValue(), ChronoUnit.HOURS).toEpochMilli();
+                    } else if (di.getMinutes() != null) {
+                        return ednInst.minus(di.getMinutes().intValue(), ChronoUnit.MINUTES).toEpochMilli();
+                    } else if (di.getSeconds() != null) {
+                        return ednInst.minus(di.getSeconds().intValue(), ChronoUnit.SECONDS).toEpochMilli();
+                    } else {
+                        return instEnd;
+                    }
+                } else {
+                    if (di.getWeeks() != null) {
+                        return ednInst.plus(di.getWeeks().intValue(), ChronoUnit.WEEKS).toEpochMilli();
+                    } else if (di.getDays() != null) {
+                        return ednInst.plus(di.getDays().intValue(), ChronoUnit.DAYS).toEpochMilli();
+                    } else if (di.getHours() != null) {
+                        return ednInst.plus(di.getHours().intValue(), ChronoUnit.HOURS).toEpochMilli();
+                    } else if (di.getMinutes() != null) {
+                        return ednInst.plus(di.getMinutes().intValue(), ChronoUnit.MINUTES).toEpochMilli();
+                    } else if (di.getSeconds() != null) {
+                        return ednInst.plus(di.getSeconds().intValue(), ChronoUnit.SECONDS).toEpochMilli();
+                    } else {
+                        return instEnd;
+                    }
+                }
+            } else {
+                Instant startInst = Instant.ofEpochMilli(instStart);
+                if (di.getDurationNegative() != null && di.getDurationNegative()) {
+                    if (di.getWeeks() != null) {
+                        return startInst.minus(di.getWeeks().intValue(), ChronoUnit.WEEKS).toEpochMilli();
+                    } else if (di.getDays() != null) {
+                        return startInst.minus(di.getDays().intValue(), ChronoUnit.DAYS).toEpochMilli();
+                    } else if (di.getHours() != null) {
+                        return startInst.minus(di.getHours().intValue(), ChronoUnit.HOURS).toEpochMilli();
+                    } else if (di.getMinutes() != null) {
+                        return startInst.minus(di.getMinutes().intValue(), ChronoUnit.MINUTES).toEpochMilli();
+                    } else if (di.getSeconds() != null) {
+                        return startInst.minus(di.getSeconds().intValue(), ChronoUnit.SECONDS).toEpochMilli();
+                    } else {
+                        return instStart;
+                    }
+                } else {
+                    if (di.getWeeks() != null) {
+                        return startInst.plus(di.getWeeks().intValue(), ChronoUnit.WEEKS).toEpochMilli();
+                    } else if (di.getDays() != null) {
+                        return startInst.plus(di.getDays().intValue(), ChronoUnit.DAYS).toEpochMilli();
+                    } else if (di.getHours() != null) {
+                        return startInst.plus(di.getHours().intValue(), ChronoUnit.HOURS).toEpochMilli();
+                    } else if (di.getMinutes() != null) {
+                        return startInst.plus(di.getMinutes().intValue(), ChronoUnit.MINUTES).toEpochMilli();
+                    } else if (di.getSeconds() != null) {
+                        return startInst.plus(di.getSeconds().intValue(), ChronoUnit.SECONDS).toEpochMilli();
+                    } else {
+                        return instStart;
+                    }
+                }
+            }
+        } else {
+            return instStart;// start time is the trigger time, if trigger type is neither absolute nor relative
+        }
     }
 }
