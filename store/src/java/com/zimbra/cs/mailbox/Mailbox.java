@@ -4820,6 +4820,47 @@ public class Mailbox implements MailboxStore {
         }
     }
 
+    /**
+     * @param start     start time of range, in milliseconds. {@code -1} means to leave the start time unconstrained.
+     * @param end       end time of range, in milliseconds. {@code -1} means to leave the end time unconstrained.
+     */
+    public Map<Integer, Integer> listCalendarItemIdsAndDateForRange(OperationContext octxt, MailItem.Type type, long start, long end,
+                    int folderId) throws ServiceException {
+        if (folderId == ID_AUTO_INCREMENT) {
+            return new HashMap<Integer, Integer>();
+        }
+        boolean success = false;
+        try (final MailboxTransaction t = mailboxReadTransaction("listCalendarItemsForRange", octxt)) {
+            // if they specified a folder, make sure it actually exists
+            getFolderById(folderId);
+
+            // get the list of all visible calendar items in the specified folder
+            Map<Integer, Integer> map = DbMailItem.listCalendarItemIdsAndDates(this, type, start, end, folderId, null);
+            success = true;
+            return map;
+        }
+    }
+
+    /**
+     * @param lastSync  last synced time of appointment - int - date in seconds from epoch
+     */
+    public Map<Integer, Integer> listCalendarItemIdsAndDateForRange(OperationContext octxt, MailItem.Type type, int lastSync,
+                    int folderId) throws ServiceException {
+        if (folderId == ID_AUTO_INCREMENT) {
+            return new HashMap<Integer, Integer>();
+        }
+        boolean success = false;
+        try (final MailboxTransaction t = mailboxReadTransaction("listCalendarItemsForRange", octxt)) {
+            // if they specified a folder, make sure it actually exists
+            getFolderById(folderId);
+
+            // get the list of all visible calendar items in the specified folder
+            Map<Integer, Integer> map = DbMailItem.listCalendarItemIdsAndDates(this, type, lastSync, folderId, null);
+            success = true;
+            return map;
+        }
+    }
+
     public List<CalendarItem> getCalendarItems(OperationContext octxt, MailItem.Type type, int folderId)
             throws ServiceException {
         return getCalendarItemsForRange(octxt, type, -1, -1, folderId, null);
@@ -5037,6 +5078,11 @@ public class Mailbox implements MailboxStore {
 
     public CalendarDataResult getCalendarSummaryForRange(OperationContext octxt, int folderId, MailItem.Type type,
                     long start, long end) throws ServiceException {
+        return getCalendarSummaryForRange(octxt, folderId, type, start, end, true);
+    }
+
+    public CalendarDataResult getCalendarSummaryForRange(OperationContext octxt, int folderId, MailItem.Type type,
+                    long start, long end, boolean followLimit) throws ServiceException {
         lock.lock(false);
         try {
             Folder folder = getFolderById(folderId);
