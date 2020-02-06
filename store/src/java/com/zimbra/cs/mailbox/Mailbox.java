@@ -10150,7 +10150,9 @@ public class Mailbox implements MailboxStore {
                 //If all goes well push the items to be indexed for async indexing.
                 //Has to be part of lock
                 ZimbraLog.index.debug("Mailbox - close - push %d items for async indexing", currentChange().indexItems.size());
-                index.queue(currentChange().indexItems, false);
+                if (index.isIndexingEnabled()) {
+                    index.queue(currentChange().indexItems, false);
+                }
 
                 // We are finally done with database and redo commits. Cache update comes last.
                 changeNotification = commitCache(currentChange(), lock);

@@ -34,7 +34,7 @@ import org.apache.lucene.search.TermQuery;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
-import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.account.ZAttrProvisioning.DelayedIndexStatus;
 import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.service.ServiceException;
@@ -470,7 +470,7 @@ public final class MailboxIndex {
      */
     @VisibleForTesting
     public synchronized boolean queue(List<MailItem> items, boolean isReindexing) throws ServiceException {
-        if (items.isEmpty()) {
+        if (items.isEmpty() || !isIndexingEnabled()) {
             return false;
         }
         List<MailItem> clonedItems = new ArrayList<MailItem>(items.size());
@@ -490,6 +490,9 @@ public final class MailboxIndex {
      */
     @VisibleForTesting
     public synchronized boolean queue(MailItem item, boolean isReindexing) throws ServiceException {
+        if (!isIndexingEnabled()) {
+            return false;
+        }
         ZimbraLog.index.debug("Queuing item %d for indexing", item.getId());
         IndexingQueueAdapter queueAdapter = IndexingQueueAdapter.getFactory().getAdapter();
         List<MailItem> items = new ArrayList<>();
@@ -693,6 +696,14 @@ public final class MailboxIndex {
             }
         }
         return true;
+    }
+
+    public boolean isIndexingEnabled() throws ServiceException {
+        if (!mailbox.getAccount().isFeatureDelayedIndexEnabled()) {
+            return true;
+        } else {
+            return mailbox.getAccount().getDelayedIndexStatus() == DelayedIndexStatus.indexing;
+        }
     }
 
     private static final class ItemSearchResult extends DbSearch.Result {
