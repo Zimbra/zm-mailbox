@@ -68,6 +68,7 @@ import com.zimbra.common.zmime.ZMimeBodyPart;
 import com.zimbra.common.zmime.ZMimeMultipart;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.filter.jsieve.ActionFlag;
 import com.zimbra.cs.filter.jsieve.Require;
@@ -519,7 +520,8 @@ public final class FilterUtil {
             charset = MimeConstants.P_CHARSET_UTF8;
         }
 
-        SMTPMessage report = new SMTPMessage(JMSession.getSmtpSession());
+        Domain domain = Provisioning.getInstance().getDomain(owner);
+        SMTPMessage report = new SMTPMessage(JMSession.getSmtpSession(domain));
 
         // add the forwarded header account names to detect the mail loop between accounts
         for (String headerFwdAccountName : Mime.getHeaders(mimeMessage, HEADER_FORWARDED)) {

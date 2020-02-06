@@ -33,6 +33,7 @@ import javax.activation.DataHandler;
 import javax.activation.DataSource;
 import javax.mail.Address;
 import javax.mail.MessagingException;
+import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
@@ -432,7 +433,8 @@ public abstract class AutoProvision {
         String toAddr = acct.getName();
 
         try {
-            SMTPMessage out = new SMTPMessage(JMSession.getSmtpSession());
+            Domain domain = Provisioning.getInstance().getDomain(acct);
+            SMTPMessage out = new SMTPMessage(JMSession.getSmtpSession(domain));
 
             InternetAddress addr = null;
             try {
