@@ -248,6 +248,8 @@ public final class AdminConstants {
 
     public static final String E_REINDEX_REQUEST = "ReIndexRequest";
     public static final String E_REINDEX_RESPONSE = "ReIndexResponse";
+    public static final String E_MANAGE_INDEX_REQUEST = "ManageIndexRequest";
+    public static final String E_MANAGE_INDEX_RESPONSE = "ManageIndexResponse";
     public static final String E_COMPACT_INDEX_REQUEST = "CompactIndexRequest";
     public static final String E_COMPACT_INDEX_RESPONSE = "CompactIndexResponse";
     public static final String E_GET_INDEX_STATS_REQUEST = "GetIndexStatsRequest";
@@ -755,6 +757,8 @@ public final class AdminConstants {
 
     public static final QName REINDEX_REQUEST = QName.get(E_REINDEX_REQUEST, NAMESPACE);
     public static final QName REINDEX_RESPONSE = QName.get(E_REINDEX_RESPONSE, NAMESPACE);
+    public static final QName MANAGE_INDEX_REQUEST = QName.get(E_MANAGE_INDEX_REQUEST, NAMESPACE);
+    public static final QName MANAGE_INDEX_RESPONSE = QName.get(E_MANAGE_INDEX_RESPONSE, NAMESPACE);
     public static final QName COMPACT_INDEX_REQUEST = QName.get(E_COMPACT_INDEX_REQUEST, NAMESPACE);
     public static final QName COMPACT_INDEX_RESPONSE = QName.get(E_COMPACT_INDEX_RESPONSE, NAMESPACE);
     public static final QName GET_INDEX_STATS_REQUEST = QName.get(E_GET_INDEX_STATS_REQUEST, NAMESPACE);
@@ -1057,7 +1061,7 @@ public final class AdminConstants {
     public static final QName MODIFY_OUTGOING_FILTER_RULES_RESPONSE = QName.get(E_MODIFY_OUTGOING_FILTER_RULES_RESPONSE, NAMESPACE);
     public static final QName CONTACT_BACKUP_REQUEST = QName.get(E_CONTACT_BACKUP_REQUEST, NAMESPACE);
     public static final QName CONTACT_BACKUP_RESPONSE = QName.get(E_CONTACT_BACKUP_RESPONSE, NAMESPACE);
-    
+
     //HAB
     public static final String E_HAB_ORG_UNIT_REQUEST = "HABOrgUnitRequest";
     public static final String E_HAB_ORG_UNIT_RESPONSE = "HABOrgUnitResponse";
@@ -1542,7 +1546,7 @@ public final class AdminConstants {
     public static final String A_FORCE_DELETE = "forceDelete";
     public static final String E_MEMBERS = "members";
     public static final String A_CASCADE_DELETE = "cascadeDelete";
-    
+
     // address list
     public static final String E_CREATE_ADDRESS_LIST_REQUEST = "CreateAddressListRequest";
     public static final String E_CREATE_ADDRESS_LIST_RESPONSE = "CreateAddressListResponse";
@@ -1552,4 +1556,7 @@ public final class AdminConstants {
     public static final String E_GAL_FILTER = "galFilter";
     public static final String E_LDAP_FILTER = "ldapFilter";
     public static final String A_CLEAR_FILTER = "clearFilter";
+
+    public static final String A_ENABLE_INDEXING = "enableIndexing";
+    public static final String A_DISABLE_INDEXING = "disableIndexing";
 }
