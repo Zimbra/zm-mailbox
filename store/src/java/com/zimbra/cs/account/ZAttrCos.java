@@ -9332,6 +9332,83 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * Whether the &quot;delayed index&quot; feature is enabled. If FALSE,
+     * index is always generated
+     *
+     * @return zimbraFeatureDelayedIndexEnabled, or false if unset
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=9003)
+    public boolean isFeatureDelayedIndexEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureDelayedIndexEnabled, false, true);
+    }
+
+    /**
+     * Whether the &quot;delayed index&quot; feature is enabled. If FALSE,
+     * index is always generated
+     *
+     * @param zimbraFeatureDelayedIndexEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=9003)
+    public void setFeatureDelayedIndexEnabled(boolean zimbraFeatureDelayedIndexEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureDelayedIndexEnabled, zimbraFeatureDelayedIndexEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether the &quot;delayed index&quot; feature is enabled. If FALSE,
+     * index is always generated
+     *
+     * @param zimbraFeatureDelayedIndexEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=9003)
+    public Map<String,Object> setFeatureDelayedIndexEnabled(boolean zimbraFeatureDelayedIndexEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureDelayedIndexEnabled, zimbraFeatureDelayedIndexEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether the &quot;delayed index&quot; feature is enabled. If FALSE,
+     * index is always generated
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=9003)
+    public void unsetFeatureDelayedIndexEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureDelayedIndexEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether the &quot;delayed index&quot; feature is enabled. If FALSE,
+     * index is always generated
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=9003)
+    public Map<String,Object> unsetFeatureDelayedIndexEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureDelayedIndexEnabled, "");
+        return attrs;
+    }
+
+    /**
      * enable end-user mail discarding defined in mail filters features
      *
      * @return zimbraFeatureDiscardInFiltersEnabled, or true if unset

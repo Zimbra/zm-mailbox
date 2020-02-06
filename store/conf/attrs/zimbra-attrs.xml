@@ -9987,4 +9987,21 @@ TODO: delete them permanently from here
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Whether to permit syncing shared mail folders</desc>
 </attr>
+
+<attr id="9003" name="zimbraFeatureDelayedIndexEnabled" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountInfo,accountCosDomainInherited" since="8.8.8">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>Whether the "delayed index" feature is enabled. If FALSE, index is always generated</desc>
+</attr>
+
+<attr id="9004" name="zimbraDelayedIndexStatus" type="enum" value="suppressed,waitingForSearch,indexing" cardinality="single" optionalIn="account" flags="accountInfo" since="8.8.8">
+  <desc>Whether MBS generates index data of the account's mailbox. The key works only when zimbraFeatureDelayedIndexEnabled is TRUE.
+    suppressed       - Not generate index. (default)
+                       When administrator accesses the account via admin console, it changes to "waitingForSearch".
+                       When the account logs in via SOAP, IMAP or MobileSync protocol, it changes to "indexing".
+    waitingForSearch - Not generate index.
+                       When administrator executes text search on the account, it changes to "indexing".
+                       When the account logs in via SOAP, IMAP or MobileSync protocol, it changes to "indexing".
+    indexing         - Generate index
+  </desc>
+</attr>
 </attrs>

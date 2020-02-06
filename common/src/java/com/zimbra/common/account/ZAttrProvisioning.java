@@ -298,6 +298,24 @@ public class ZAttrProvisioning {
         public boolean isSsl() { return this == ssl;}
     }
 
+    public static enum DelayedIndexStatus {
+        suppressed("suppressed"),
+        waitingForSearch("waitingForSearch"),
+        indexing("indexing");
+        private String mValue;
+        private DelayedIndexStatus(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static DelayedIndexStatus fromString(String s) throws ServiceException {
+            for (DelayedIndexStatus value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isSuppressed() { return this == suppressed;}
+        public boolean isWaitingForSearch() { return this == waitingForSearch;}
+        public boolean isIndexing() { return this == indexing;}
+    }
+
     public static enum DistributionListSubscriptionPolicy {
         ACCEPT("ACCEPT"),
         REJECT("REJECT"),
@@ -5549,6 +5567,23 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDefaultSortByRelevance = "zimbraDefaultSortByRelevance";
 
     /**
+     * Whether MBS generates index data of the account&#039;s mailbox. The
+     * key works only when zimbraFeatureDelayedIndexEnabled is TRUE.
+     * suppressed - Not generate index. (default) When administrator accesses
+     * the account via admin console, it changes to
+     * &quot;waitingForSearch&quot;. When the account logs in via SOAP, IMAP
+     * or MobileSync protocol, it changes to &quot;indexing&quot;.
+     * waitingForSearch - Not generate index. When administrator executes
+     * text search on the account, it changes to &quot;indexing&quot;. When
+     * the account logs in via SOAP, IMAP or MobileSync protocol, it changes
+     * to &quot;indexing&quot;. indexing - Generate index
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=9004)
+    public static final String A_zimbraDelayedIndexStatus = "zimbraDelayedIndexStatus";
+
+    /**
      * allowed passcode lockout duration. Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
@@ -6548,6 +6583,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=2014)
     public static final String A_zimbraFeatureDataSourcePurgingEnabled = "zimbraFeatureDataSourcePurgingEnabled";
+
+    /**
+     * Whether the &quot;delayed index&quot; feature is enabled. If FALSE,
+     * index is always generated
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=9003)
+    public static final String A_zimbraFeatureDelayedIndexEnabled = "zimbraFeatureDelayedIndexEnabled";
 
     /**
      * enable end-user mail discarding defined in mail filters features
