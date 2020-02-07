@@ -17,6 +17,8 @@
 
 package com.zimbra.cs.service.mail;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
@@ -26,6 +28,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+
+import javax.sql.rowset.serial.SerialException;
 
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMailbox.ZGetMiniCalResult;
@@ -102,7 +106,13 @@ public class GetMiniCal extends CalendarRequest {
 
         Provisioning prov = Provisioning.getInstance();
         MailboxManager mboxMgr = MailboxManager.getInstance();
-        Server localServer = prov.getLocalServer();
+        String localIp = null;
+        try {
+            localIp = InetAddress.getLocalHost().getHostAddress().trim();
+        } catch (UnknownHostException e) {
+            ZimbraLog.misc.warn("Unknown Host Exception", e);
+            throw ServiceException.NOT_FOUND(" Unknown Host Exception");
+        }
 
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
         Map<ItemId, Resolved> resolved = resolveMountpoints(octxt, mbox, folderIids);
@@ -116,16 +126,16 @@ public class GetMiniCal extends CalendarRequest {
                 addError(response, ifmt.formatItemId(requestedIid), res.error.getCode(), res.error.getMessage());
             }
         }
-        Map<Server, Map<String /* account id */, List<Integer> /* folder ids */>> groupedByServer =
+        Map<String, Map<String /* account id */, List<Integer> /* folder ids */>> groupedByServer =
             Search.groupByServer(groupFoldersByAccount(resolved));
 
         // Look up in calendar cache first.
         if (LC.calendar_cache_enabled.booleanValue()) {
             CalSummaryCache calCache = CalendarCacheManager.getInstance().getSummaryCache();
             Calendar cal = new GregorianCalendar(tz);
-            for (Iterator<Map.Entry<Server, Map<String, List<Integer>>>> serverIter = groupedByServer.entrySet().iterator();
+            for (Iterator<Map.Entry<String, Map<String, List<Integer>>>> serverIter = groupedByServer.entrySet().iterator();
                  serverIter.hasNext(); ) {
-                Map.Entry<Server, Map<String, List<Integer>>> serverMapEntry = serverIter.next();
+                Map.Entry<String, Map<String, List<Integer>>> serverMapEntry = serverIter.next();
                 Map<String, List<Integer>> accountFolders = serverMapEntry.getValue();
                 // for each account
                 for (Iterator<Map.Entry<String, List<Integer>>> acctIter = accountFolders.entrySet().iterator();
@@ -167,10 +177,10 @@ public class GetMiniCal extends CalendarRequest {
         }
 
         // For any remaining calendars, we have to get the data the hard way.
-        for (Map.Entry<Server, Map<String, List<Integer>>> serverMapEntry : groupedByServer.entrySet()) {
-            Server server = serverMapEntry.getKey();
+        for (Map.Entry<String, Map<String, List<Integer>>> serverMapEntry : groupedByServer.entrySet()) {
+            String serverIp = serverMapEntry.getKey();
             Map<String, List<Integer>> accountFolders = serverMapEntry.getValue();
-            if (server.equals(localServer)) {  // local server
+            if (serverIp.equals(localIp)) {  // local server
                 for (Map.Entry<String, List<Integer>> entry : accountFolders.entrySet()) {
                     String acctId = entry.getKey();
                     List<Integer> folderIds = entry.getValue();

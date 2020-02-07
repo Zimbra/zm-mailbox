@@ -18,6 +18,8 @@
 package com.zimbra.cs.service.mail;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -369,10 +371,15 @@ public class Search extends MailDocumentHandler  {
         }
 
         Provisioning prov = Provisioning.getInstance();
-        MailboxManager mboxMgr = MailboxManager.getInstance();
-        Server localServer = prov.getLocalServer();
+        MailboxManager mboxMgr = MailboxManager.getInstance(); 
+        String localIp = null;
+        try {
+            localIp = InetAddress.getLocalHost().getHostAddress().trim();
+        } catch (UnknownHostException e) {
+            ZimbraLog.misc.warn("Unknown Host Exception", e);
+        }
 
-        Map<Server, Map<String /* account id */, List<Integer> /* folder ids */>> groupedByServer =
+        Map<String, Map<String /* account id */, List<Integer> /* folder ids */>> groupedByServer =
             groupByServer(ItemId.groupFoldersByAccount(octxt, mbox, folderIids));
 
         // Look up in calendar cache first.
@@ -380,9 +387,9 @@ public class Search extends MailDocumentHandler  {
             CalSummaryCache calCache = CalendarCacheManager.getInstance().getSummaryCache();
             long rangeStart = params.getCalItemExpandStart();
             long rangeEnd = params.getCalItemExpandEnd();
-            for (Iterator<Map.Entry<Server, Map<String, List<Integer>>>> serverIter = groupedByServer.entrySet().iterator();
+            for (Iterator<Map.Entry<String, Map<String, List<Integer>>>> serverIter = groupedByServer.entrySet().iterator();
                  serverIter.hasNext(); ) {
-                Map.Entry<Server, Map<String, List<Integer>>> serverMapEntry = serverIter.next();
+                Map.Entry<String, Map<String, List<Integer>>> serverMapEntry = serverIter.next();
                 Map<String, List<Integer>> accountFolders = serverMapEntry.getValue();
                 // for each account
                 for (Iterator<Map.Entry<String, List<Integer>>> acctIter = accountFolders.entrySet().iterator();
@@ -429,10 +436,10 @@ public class Search extends MailDocumentHandler  {
         }
 
         // For any remaining calendars, we have to get the data the hard way.
-        for (Map.Entry<Server, Map<String, List<Integer>>> serverMapEntry : groupedByServer.entrySet()) {
-            Server server = serverMapEntry.getKey();
+        for (Map.Entry<String, Map<String, List<Integer>>> serverMapEntry : groupedByServer.entrySet()) {
+            String serverIp = serverMapEntry.getKey();
             Map<String, List<Integer>> accountFolders = serverMapEntry.getValue();
-            if (server.equals(localServer)) {  // local server
+            if (serverIp.equals(localIp)) {  // local server
                 for (Map.Entry<String, List<Integer>> entry : accountFolders.entrySet()) {
                     String acctId = entry.getKey();
                     List<Integer> folderIds = entry.getValue();
@@ -544,11 +551,11 @@ public class Search extends MailDocumentHandler  {
         }
     }
 
-    static Map<Server, Map<String /* account id */, List<Integer> /* folder ids */>> groupByServer(
+    static Map<String, Map<String /* account id */, List<Integer> /* folder ids */>> groupByServer(
             Map<String /* account id */, List<Integer> /* folder ids */> acctFolders)
     throws ServiceException {
-        Map<Server, Map<String /* account id */, List<Integer> /* folder ids */>> groupedByServer =
-            new HashMap<Server, Map<String, List<Integer>>>();
+        Map<String, Map<String /* account id */, List<Integer> /* folder ids */>> groupedByServer =
+            new HashMap<String, Map<String, List<Integer>>>();
         Provisioning prov = Provisioning.getInstance();
         for (Map.Entry<String, List<Integer>> entry : acctFolders.entrySet()) {
             String acctId = entry.getKey();
@@ -558,15 +565,15 @@ public class Search extends MailDocumentHandler  {
                 ZimbraLog.calendar.warn("Skipping unknown account " + acctId + " during calendar search");
                 continue;
             }
-            Server server = prov.getServer(acct);
-            if (server == null) {
+            String podIp = Provisioning.affinityServer(acct);
+            if (podIp == null) {
                 ZimbraLog.calendar.warn("Skipping account " + acctId + " during calendar search because its home server is unknown");
                 continue;
             }
-            Map<String, List<Integer>> map = groupedByServer.get(server);
+            Map<String, List<Integer>> map = groupedByServer.get(podIp);
             if (map == null) {
                 map = new HashMap<String, List<Integer>>();
-                groupedByServer.put(server, map);
+                groupedByServer.put(podIp, map);
             }
             map.put(acctId, folderIds);
         }
