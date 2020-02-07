@@ -301,12 +301,16 @@ public final class MailboxIndex {
         return success;
     }
 
+    public synchronized boolean startReIndexByType(Set<MailItem.Type> types, OperationContext ctxt) throws ServiceException {
+        return startReIndexByType(types, ctxt, false);
+    }
+
     /**
      * Add mail items of specified type to re-indexing queue
      * @param types
      * @throws ServiceException
      */
-    public synchronized boolean startReIndexByType(Set<MailItem.Type> types, OperationContext ctxt) throws ServiceException {
+    public synchronized boolean startReIndexByType(Set<MailItem.Type> types, OperationContext ctxt, boolean skipIndexingEnabledCheck) throws ServiceException {
         boolean success = false;
         //Step 1: get items (does not matter whether we get these from cache or DB at this step)
         List<MailItem> items = new ArrayList<MailItem>();
@@ -342,7 +346,7 @@ public final class MailboxIndex {
                     for(int i=0;i<batchSize && ix < items.size(); i++, ix++) {
                         batch.add(items.get(ix));
                     }
-                    success = queue(batch, true);
+                    success = queue(batch, true, skipIndexingEnabledCheck);
                     if(!success) {
                         queueAdapter.setTaskStatus(mailbox.getAccountId(), ReIndexStatus.STATUS_QUEUE_FULL);
                         queueAdapter.incrementFailedMailboxTaskCount(mailbox.getAccountId(), items.size()-numAdded);
@@ -469,8 +473,13 @@ public final class MailboxIndex {
      * @throws ServiceException
      */
     @VisibleForTesting
+
     public synchronized boolean queue(List<MailItem> items, boolean isReindexing) throws ServiceException {
-        if (items.isEmpty() || !isIndexingEnabled()) {
+        return queue(items, isReindexing, false);
+    }
+
+    private synchronized boolean queue(List<MailItem> items, boolean isReindexing, boolean skipIndexingEnabledCheck) throws ServiceException {
+        if (items.isEmpty() || (!skipIndexingEnabledCheck && !isIndexingEnabled())) {
             return false;
         }
         List<MailItem> clonedItems = new ArrayList<MailItem>(items.size());
