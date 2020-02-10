@@ -1534,6 +1534,17 @@ public abstract class Provisioning extends ZAttrProvisioning {
         return isLocal;
     }
 
+    public static String getLocalIp() throws ServiceException {
+        String localIp = null;
+        try {
+            localIp = InetAddress.getLocalHost().getHostAddress().trim();
+        } catch (UnknownHostException e) {
+            ZimbraLog.misc.warn("Unknown Host Exception", e);
+            throw ServiceException.NOT_FOUND(" Unknown Host Exception");
+        }
+        return localIp;
+    }
+    
     /**
      * @param key a search key acceptable to the MLS service.  Currently "email" or "zimbraId".
      * @param value the value to be searched by key

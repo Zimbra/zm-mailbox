@@ -18,8 +18,6 @@
 package com.zimbra.cs.service.mail;
 
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -27,10 +25,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
-import com.google.common.base.Joiner;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
@@ -44,7 +42,6 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.event.logger.EventLogger;
 import com.zimbra.cs.index.ConversationHit;
 import com.zimbra.cs.index.MessageHit;
@@ -372,12 +369,7 @@ public class Search extends MailDocumentHandler  {
 
         Provisioning prov = Provisioning.getInstance();
         MailboxManager mboxMgr = MailboxManager.getInstance(); 
-        String localIp = null;
-        try {
-            localIp = InetAddress.getLocalHost().getHostAddress().trim();
-        } catch (UnknownHostException e) {
-            ZimbraLog.misc.warn("Unknown Host Exception", e);
-        }
+        String localIp = Provisioning.getLocalIp();
 
         Map<String, Map<String /* account id */, List<Integer> /* folder ids */>> groupedByServer =
             groupByServer(ItemId.groupFoldersByAccount(octxt, mbox, folderIids));

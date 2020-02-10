@@ -17,8 +17,6 @@
 
 package com.zimbra.cs.service.mail;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
@@ -28,8 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-
-import javax.sql.rowset.serial.SerialException;
 
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMailbox.ZGetMiniCalResult;
@@ -47,7 +43,6 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -106,13 +101,7 @@ public class GetMiniCal extends CalendarRequest {
 
         Provisioning prov = Provisioning.getInstance();
         MailboxManager mboxMgr = MailboxManager.getInstance();
-        String localIp = null;
-        try {
-            localIp = InetAddress.getLocalHost().getHostAddress().trim();
-        } catch (UnknownHostException e) {
-            ZimbraLog.misc.warn("Unknown Host Exception", e);
-            throw ServiceException.NOT_FOUND(" Unknown Host Exception");
-        }
+        String localIp = Provisioning.getLocalIp();
 
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
         Map<ItemId, Resolved> resolved = resolveMountpoints(octxt, mbox, folderIids);
