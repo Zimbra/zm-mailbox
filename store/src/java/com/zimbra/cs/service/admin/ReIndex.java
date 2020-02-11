@@ -57,7 +57,6 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.ReIndexStatus;
 import com.zimbra.cs.util.ProvisioningUtil;
-import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.ReIndexRequest;
@@ -251,6 +250,10 @@ public final class ReIndex extends AdminDocumentHandler {
                     ReIndexStatus status;
                     if (mbox == null) {
                         throw ServiceException.FAILURE("mailbox not found for account " + account.getId(), null);
+                    }
+                    if (!mbox.index.isIndexingEnabled()) {
+                        ZimbraLog.index.debug("not re-indexing mailbox %s because indexing is suppressed", mbox.getAccountId());
+                        continue;
                     }
                     String typesStr = reIndexMboxInfo.getTypes();
                     String idsStr = reIndexMboxInfo.getIds();
