@@ -23,7 +23,7 @@
 #include <stdlib.h>
 #include <grp.h>
 
-#include "Process.h"
+#include "com_zimbra_znative_Process.h"
 #include "zjniutil.h"
 
 JNIEXPORT jint JNICALL

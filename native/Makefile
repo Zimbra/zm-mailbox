@@ -36,21 +36,21 @@ $(BUILD)/%.o: $(SRC)/native/%.c
 $(BUILD)/%.o: $(SRC)/jetty-setuid/%.c
 	$(CC) $(CF) $(MACDEF) $(JAVAINC) -I$(BUILD) -Wall -Wmissing-prototypes -c -o $@ $<
 
-$(BUILD)/Process.o: $(SRC)/native/Process.c $(BUILD)/Process.h $(SRC)/native/zjniutil.h
+$(BUILD)/Process.o: $(SRC)/native/Process.c $(BUILD)/com_zimbra_znative_Process.h $(SRC)/native/zjniutil.h
 
-$(BUILD)/ProcessorUsage.o: $(SRC)/native/ProcessorUsage.c $(BUILD)/ProcessorUsage.h $(SRC)/native/zjniutil.h
+$(BUILD)/ProcessorUsage.o: $(SRC)/native/ProcessorUsage.c $(BUILD)/com_zimbra_znative_ProcessorUsage.h $(SRC)/native/zjniutil.h
 
-$(BUILD)/ResourceUsage.o: $(SRC)/native/ResourceUsage.c $(BUILD)/ResourceUsage.h $(SRC)/native/zjniutil.h
+$(BUILD)/ResourceUsage.o: $(SRC)/native/ResourceUsage.c $(BUILD)/com_zimbra_znative_ResourceUsage.h $(SRC)/native/zjniutil.h
 
-$(BUILD)/Util.o: $(SRC)/native/Util.c $(BUILD)/Util.h $(SRC)/native/zjniutil.h
+$(BUILD)/Util.o: $(SRC)/native/Util.c $(BUILD)/com_zimbra_znative_Util.h $(SRC)/native/zjniutil.h
 
 $(BUILD)/zjniutil.o: $(SRC)/native/zjniutil.c $(SRC)/native/zjniutil.h
 
-$(BUILD)/IO.o: $(SRC)/native/IO.c $(BUILD)/IO.h $(SRC)/native/zjniutil.h
+$(BUILD)/IO.o: $(SRC)/native/IO.c $(BUILD)/com_zimbra_znative_IO.h $(SRC)/native/zjniutil.h
 
 $(BUILD)/org_mortbay_setuid_SetUID.o: $(SRC)/jetty-setuid/org_mortbay_setuid_SetUID.c $(SRC)/jetty-setuid/org_mortbay_setuid_SetUID.h
 
-$(BUILD)/$(PROXY_INFO).o: $(SRC)/native/$(PROXY_INFO).c $(BUILD)/ProxyInfo.h $(SRC)/native/zjniutil.h
+$(BUILD)/$(PROXY_INFO).o: $(SRC)/native/$(PROXY_INFO).c $(BUILD)/com_zimbra_znative_ProxyInfo.h $(SRC)/native/zjniutil.h
 
 #
 # Hack to copy to destination for use on incremental builds on linux / mac dev environments.

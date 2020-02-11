@@ -21,7 +21,7 @@
 #include <string.h>
 #include <sys/times.h>
 
-#include "ProcessorUsage.h"
+#include "com_zimbra_znative_ProcessorUsage.h"
 #include "zjniutil.h"
 
 JNIEXPORT void JNICALL

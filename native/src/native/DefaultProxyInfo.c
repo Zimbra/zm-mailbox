@@ -18,7 +18,7 @@
 
 #include <jni.h>
 
-#include "ProxyInfo.h"
+#include "com_zimbra_znative_ProxyInfo.h"
 
 #define UNSUPPORTED_OPERATION "java/lang/UnsupportedOperationException"
 
