@@ -41,6 +41,7 @@ import javax.mail.internet.MimeMultipart;
 
 import org.apache.commons.codec.binary.Hex;
 
+import com.sun.mail.smtp.SMTPMessage;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.localconfig.LC;
@@ -859,4 +860,16 @@ public class AccountUtil {
             }
         }
     }
+
+    /**
+     * 
+     * @param acct
+     * @return SMTPMessage object
+     * @throws ServiceException
+     * @throws MessagingException
+     */
+    public static SMTPMessage getSmtpMessageObj(Account acct) throws ServiceException, MessagingException {
+        return new SMTPMessage(JMSession.getSmtpSession(Provisioning.getInstance().getDomain(acct)));
+    }
 }
+   
