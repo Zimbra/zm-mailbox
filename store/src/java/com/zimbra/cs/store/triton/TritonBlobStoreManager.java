@@ -324,28 +324,4 @@ public class TritonBlobStoreManager extends SisStore implements ExternalResumabl
             default: return super.supports(feature);
         }
     }
-
-	@Override
-	public MailboxBlob copy(MailboxBlob src, Mailbox destMbox, int destMsgId, long destRevision) throws IOException, ServiceException {
-	    // TODO Auto-generated method stub
-	    return null;
-	}
-
-	@Override
-	public MailboxBlob link(StagedBlob src, Mailbox destMbox, int destMsgId, long destRevision) throws IOException, ServiceException {
-	    // TODO Auto-generated method stub
-	    return null;
-	}
-
-	@Override
-	public MailboxBlob renameTo(StagedBlob src, Mailbox destMbox, int destMsgId, long destRevision) throws IOException, ServiceException {
-	    // TODO Auto-generated method stub
-	    return null;
-	}
-
-	@Override
-	public MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, long revision, String locator, boolean validate) throws ServiceException {
-	    // TODO Auto-generated method stub
-	    return null;
-	}
 }

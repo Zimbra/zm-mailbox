@@ -120,14 +120,31 @@ public final class MockStoreManager extends StoreManager {
     }
 
     @Override
-    public MailboxBlob copy(MailboxBlob src, Mailbox destMbox, int destItemId, int destRevision) {
+    public MailboxBlob copy(MailboxBlob src, Mailbox destMbox, int destItemId, long destRevision) {
         MockMailboxBlob blob = new MockMailboxBlob(destMbox, destItemId, destRevision, src.getLocator(), ((MockMailboxBlob) src).content);
         blobs.put(blobKey(destMbox, destItemId, destRevision), blob);
         return blob;
     }
 
     @Override
+    public MailboxBlob copy(MailboxBlob src, Mailbox destMbox, int destItemId, int destRevision) {
+        return copy(src, destMbox, destItemId, (long) destRevision);
+    }
+
+    @Override
+    public MailboxBlob link(StagedBlob src, Mailbox destMbox, int destItemId, long destRevision) {
+        MockMailboxBlob blob = new MockMailboxBlob(destMbox, destItemId, destRevision, src.getLocator(), ((MockStagedBlob) src).content);
+        blobs.put(blobKey(destMbox, destItemId, destRevision), blob);
+        return blob;
+    }
+
+    @Override
     public MailboxBlob link(StagedBlob src, Mailbox destMbox, int destItemId, int destRevision) {
+        return link(src, destMbox, destItemId, (long) destRevision);
+    }
+
+    @Override
+    public MailboxBlob renameTo(StagedBlob src, Mailbox destMbox, int destItemId, long destRevision) {
         MockMailboxBlob blob = new MockMailboxBlob(destMbox, destItemId, destRevision, src.getLocator(), ((MockStagedBlob) src).content);
         blobs.put(blobKey(destMbox, destItemId, destRevision), blob);
         return blob;
@@ -135,9 +152,7 @@ public final class MockStoreManager extends StoreManager {
 
     @Override
     public MailboxBlob renameTo(StagedBlob src, Mailbox destMbox, int destItemId, int destRevision) {
-        MockMailboxBlob blob = new MockMailboxBlob(destMbox, destItemId, destRevision, src.getLocator(), ((MockStagedBlob) src).content);
-        blobs.put(blobKey(destMbox, destItemId, destRevision), blob);
-        return blob;
+        return renameTo(src, destMbox, destItemId, (long) destRevision);
     }
 
     @Override
@@ -174,8 +189,13 @@ public final class MockStoreManager extends StoreManager {
     }
 
     @Override
-    public MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, int revision, String locator, boolean validate) {
+    public MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, long revision, String locator, boolean validate) {
         return blobs.get(blobKey(mbox, itemId, revision));
+    }
+
+    @Override
+    public MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, int revision, String locator, boolean validate) {
+        return getMailboxBlob(mbox, itemId, (long) revision, locator, validate);
     }
 
     @Override
@@ -192,12 +212,7 @@ public final class MockStoreManager extends StoreManager {
     public boolean deleteStore(Mailbox mbox, Iterable<MailboxBlob.MailboxBlobInfo> mblobs) throws IOException {
         assert mblobs != null : "we require a blob iterator for testing purposes";
         for (MailboxBlob.MailboxBlobInfo mbinfo : mblobs) {
-            try {
-                delete(getMailboxBlob(mbox, mbinfo.itemId, mbinfo.revision, mbinfo.locator, true));
-            } catch (ServiceException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
+            delete(getMailboxBlob(mbox, mbinfo.itemId, mbinfo.revision, mbinfo.locator, true));
         }
         return true;
     }
@@ -294,7 +309,7 @@ public final class MockStoreManager extends StoreManager {
         final byte[] content;
         MockLocalBlob blob = null;
 
-        MockMailboxBlob(Mailbox mbox, int itemId, int revision, String locator, byte[] data) {
+        MockMailboxBlob(Mailbox mbox, int itemId, long revision, String locator, byte[] data) {
             super(mbox, itemId, revision, locator);
             content = data;
         }
@@ -335,33 +350,5 @@ public final class MockStoreManager extends StoreManager {
 
             return mockblob;
         }
-    }
-
-    @Override
-    public MailboxBlob copy(MailboxBlob src, Mailbox destMbox, int destMsgId, long destRevision)
-            throws IOException, ServiceException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public MailboxBlob link(StagedBlob src, Mailbox destMbox, int destMsgId, long destRevision)
-            throws IOException, ServiceException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public MailboxBlob renameTo(StagedBlob src, Mailbox destMbox, int destMsgId, long destRevision)
-            throws IOException, ServiceException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, long revision, String locator, boolean validate)
-            throws ServiceException {
-        // TODO Auto-generated method stub
-        return null;
     }
 }

@@ -34,6 +34,10 @@ public class ExternalMailboxBlob extends MailboxBlob {
         super(mbox, itemId, revision, locator);
     }
 
+    protected ExternalMailboxBlob(Mailbox mbox, int itemId, long revision, String locator) {
+        super(mbox, itemId, revision, locator);
+    }
+
     @Override
     public Blob getLocalBlob() throws IOException {
         ExternalStoreManager sm = (ExternalStoreManager) StoreManager.getInstance();

@@ -107,6 +107,20 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
     }
 
     @Override
+    public MailboxBlob copy(MailboxBlob src, Mailbox destMbox, int destItemId, long destRevision)
+    throws IOException, ServiceException {
+        //default implementation does not handle de-duping
+        //stores which de-dupe need to override this method appropriately
+        InputStream is = getContent(src);
+        try {
+            StagedBlob staged = stage(is, src.getSize(), destMbox);
+            return link(staged, destMbox, destItemId, destRevision);
+        } finally {
+            ByteUtil.closeStream(is);
+        }
+    }
+
+    @Override
     public boolean delete(Blob blob) throws IOException {
         return blob.getFile().delete();
     }
@@ -212,6 +226,12 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
     }
 
     @Override
+    public MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, long revision, String locator, boolean validate) throws ServiceException {
+        ExternalMailboxBlob mblob = new ExternalMailboxBlob(mbox, itemId, revision, locator);
+        return (!validate || mblob.validateBlob()) ? mblob : null;
+    }
+
+    @Override
     public MailboxBlob link(StagedBlob src, Mailbox destMbox, int destMsgId, int destRevision) throws IOException,
     ServiceException {
         // link is a noop
@@ -219,7 +239,25 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
     }
 
     @Override
+    public MailboxBlob link(StagedBlob src, Mailbox destMbox, int destMsgId, long destRevision) throws IOException,
+    ServiceException {
+        // link is a noop
+        return renameTo(src, destMbox, destMsgId, destRevision);
+    }
+
+    @Override
     public MailboxBlob renameTo(StagedBlob src, Mailbox destMbox, int destMsgId, int destRevision) throws IOException,
+    ServiceException {
+        // rename is a noop
+        ExternalStagedBlob staged = (ExternalStagedBlob) src;
+        staged.markInserted();
+
+        MailboxBlob mblob = new ExternalMailboxBlob(destMbox, destMsgId, destRevision, staged.getLocator());
+        return mblob.setSize(staged.getSize()).setDigest(staged.getDigest());
+    }
+
+    @Override
+    public MailboxBlob renameTo(StagedBlob src, Mailbox destMbox, int destMsgId, long destRevision) throws IOException,
     ServiceException {
         // rename is a noop
         ExternalStagedBlob staged = (ExternalStagedBlob) src;

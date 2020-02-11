@@ -76,34 +76,6 @@ public class HttpStoreManagerTest extends AbstractExternalStoreManagerTest {
                 return parts[parts.length - 1];
             }
         }
-
-        @Override
-        public MailboxBlob copy(MailboxBlob src, Mailbox destMbox, int destMsgId, long destRevision)
-                throws IOException, ServiceException {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
-        @Override
-        public MailboxBlob link(StagedBlob src, Mailbox destMbox, int destMsgId, long destRevision)
-                throws IOException, ServiceException {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
-        @Override
-        public MailboxBlob renameTo(StagedBlob src, Mailbox destMbox, int destMsgId, long destRevision)
-                throws IOException, ServiceException {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
-        @Override
-        public MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, long revision, String locator, boolean validate)
-                throws ServiceException {
-            // TODO Auto-generated method stub
-            return null;
-        }
     }
 
     @Override

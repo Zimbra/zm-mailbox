@@ -130,6 +130,13 @@ public final class FileBlobStore extends StoreManager {
         return link(src.getLocalBlob(), destMbox, destItemId, destRevision, volume.getId());
     }
 
+    @Override
+    public MailboxBlob copy(MailboxBlob src, Mailbox destMbox, int destItemId, long destRevision) throws IOException, ServiceException {
+        Volume volume = MANAGER.getCurrentMessageVolume();
+        //FileBlobStore optimizes copy by using link where possible
+        return link(src.getLocalBlob(), destMbox, destItemId, destRevision, volume.getId());
+    }
+
     /**
      * Create a copy of a blob in volume/path specified by dest* parameters.
      * Note this method is not part of the StoreManager interface
@@ -200,7 +207,20 @@ public final class FileBlobStore extends StoreManager {
         return link(blob, destMbox, destItemId, destRevision, volume.getId());
     }
 
+    @Override
+    public MailboxBlob link(StagedBlob src, Mailbox destMbox, int destItemId, long destRevision)
+    throws IOException, ServiceException {
+        Volume volume = MANAGER.getCurrentMessageVolume();
+        VolumeBlob blob = ((VolumeStagedBlob) src).getLocalBlob();
+        return link(blob, destMbox, destItemId, destRevision, volume.getId());
+    }
+
     public VolumeMailboxBlob link(Blob src, Mailbox destMbox, int destItemId, int destRevision, short destVolumeId)
+            throws IOException, ServiceException {
+        return link(src, destMbox, destItemId, (long)destRevision, destVolumeId);
+    }
+
+    public VolumeMailboxBlob link(Blob src, Mailbox destMbox, int destItemId, long destRevision, short destVolumeId)
     throws IOException, ServiceException {
         File srcFile = src.getFile();
         if (!srcFile.exists()) {
@@ -264,7 +284,12 @@ public final class FileBlobStore extends StoreManager {
     }
 
     @Override
-    public VolumeMailboxBlob renameTo(StagedBlob src, Mailbox destMbox, int destItemId, int destRevision)
+    public VolumeMailboxBlob renameTo(StagedBlob src, Mailbox destMbox, int destMsgId, int destRevision) throws IOException, ServiceException {
+        return renameTo(src, destMbox, destMsgId, (long) destRevision);
+    }
+
+    @Override
+    public VolumeMailboxBlob renameTo(StagedBlob src, Mailbox destMbox, int destItemId, long destRevision)
     throws IOException, ServiceException {
         Volume volume = MANAGER.getCurrentMessageVolume();
         VolumeBlob blob = ((VolumeStagedBlob) src).getLocalBlob();
@@ -437,25 +462,6 @@ public final class FileBlobStore extends StoreManager {
     private static void ensureParentDirExists(File file) throws IOException {
         ensureDirExists(file.getParentFile());
     }
-
-	@Override
-	public MailboxBlob copy(MailboxBlob src, Mailbox destMbox, int destMsgId, long destRevision) throws IOException, ServiceException {
-	    // TODO Auto-generated method stub
-	    return null;
-	}
-
-	@Override
-	public MailboxBlob link(StagedBlob src, Mailbox destMbox, int destMsgId, long destRevision)
-		throws IOException, ServiceException {
-	    // TODO Auto-generated method stub
-	    return null;
-	}
-
-	@Override
-	public MailboxBlob renameTo(StagedBlob src, Mailbox destMbox, int destMsgId, long destRevision) throws IOException, ServiceException {
-	    // TODO Auto-generated method stub
-	    return null;
-	}
 
 	@Override
 	public MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, long revision, String locator, boolean validate) throws ServiceException {

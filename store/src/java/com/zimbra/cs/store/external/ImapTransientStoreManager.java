@@ -87,33 +87,4 @@ public class ImapTransientStoreManager extends ExternalStoreManager {
             return File.createTempFile(mbox.getAccountId(), ".msg", baseDirectory);
         }
     }
-
-	@Override
-	public MailboxBlob copy(MailboxBlob src, Mailbox destMbox, int destMsgId, long destRevision)
-			throws IOException, ServiceException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public MailboxBlob link(StagedBlob src, Mailbox destMbox, int destMsgId, long destRevision)
-			throws IOException, ServiceException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public MailboxBlob renameTo(StagedBlob src, Mailbox destMbox, int destMsgId, long destRevision)
-			throws IOException, ServiceException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, long revision, String locator, boolean validate)
-			throws ServiceException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
 }
