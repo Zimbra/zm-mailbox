@@ -108,7 +108,6 @@ public class SendDeliveryReport extends MailDocumentHandler {
             InternetAddress[] recipients = Mime.parseAddressHeader(mm, "Disposition-Notification-To");
             if (recipients == null || recipients.length == 0)
                 return;
-
             Domain domain = Provisioning.getInstance().getDomain(authAccount);
             Session smtpSession = JMSession.getSmtpSession(domain);
             SMTPMessage report = new SMTPMessage(smtpSession);

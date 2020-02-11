@@ -673,9 +673,7 @@ public class DistributionListAction extends DistributionListDocumentHandler {
 
         private void sendMessage() throws ServiceException {
             try {
-                Domain domain = Provisioning.getInstance().getDomain(ownerAcct);
-                SMTPMessage out = new SMTPMessage(JMSession.getSmtpSession(domain));
-
+                SMTPMessage out = AccountUtil.getSmtpMessageObj(ownerAcct);
                 Address fromAddr = AccountUtil.getFriendlyEmailAddress(ownerAcct);
 
                 Address replyToAddr = fromAddr;

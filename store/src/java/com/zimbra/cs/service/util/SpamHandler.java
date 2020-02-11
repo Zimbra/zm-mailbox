@@ -56,6 +56,7 @@ import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mime.MailboxBlobDataSource;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.store.MailboxBlob;
+import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
 
 public class SpamHandler {
@@ -89,8 +90,7 @@ public class SpamHandler {
         String isSpamString = sr.isSpam ? config.getSpamReportTypeSpam() : config.getSpamReportTypeHam();
 
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(sr.mailboxId);
-        Domain domain = Provisioning.getInstance().getDomain(mbox.getAccount());
-        SMTPMessage out = new SMTPMessage(JMSession.getSmtpSession(domain));
+        SMTPMessage out = AccountUtil.getSmtpMessageObj(mbox.getAccount());
 
         Message msg = mbox.getMessageById(null, sr.messageId);
 

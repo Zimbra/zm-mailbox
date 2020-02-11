@@ -286,7 +286,7 @@ public class Notification implements LmtpCallback {
 
         // Send the message
         try {
-            SMTPMessage out = new SMTPMessage(JMSession.getSmtpSession());
+            SMTPMessage out = AccountUtil.getSmtpMessageObj(account);
 
             // Set From and Reply-To.
             out.setFrom(AccountUtil.getFromAddress(account));
@@ -651,8 +651,7 @@ public class Notification implements LmtpCallback {
                         attached.saveChanges();
                     }
 
-                    Domain domain = Provisioning.getInstance().getDomain(account);
-                    SMTPMessage out = new SMTPMessage(JMSession.getSmtpSession(domain));
+                    SMTPMessage out = AccountUtil.getSmtpMessageObj(account);
                     out.setHeader("Auto-Submitted", "auto-replied (zimbra; intercept)");
                     InternetAddress address = new JavaMailInternetAddress(from);
                     out.setFrom(address);

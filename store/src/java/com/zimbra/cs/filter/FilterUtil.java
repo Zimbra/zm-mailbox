@@ -520,9 +520,7 @@ public final class FilterUtil {
             charset = MimeConstants.P_CHARSET_UTF8;
         }
 
-        Domain domain = Provisioning.getInstance().getDomain(owner);
-        SMTPMessage report = new SMTPMessage(JMSession.getSmtpSession(domain));
-
+        SMTPMessage report = AccountUtil.getSmtpMessageObj(owner);
         // add the forwarded header account names to detect the mail loop between accounts
         for (String headerFwdAccountName : Mime.getHeaders(mimeMessage, HEADER_FORWARDED)) {
             report.addHeader(HEADER_FORWARDED, headerFwdAccountName);
