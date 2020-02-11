@@ -45,6 +45,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zmime.ZMimeBodyPart;
 import com.zimbra.common.zmime.ZMimeMultipart;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.util.AccountUtil;
@@ -169,7 +170,7 @@ public class SubscribeDistributionList extends DistributionListDocumentHandler {
 
         private void sendMessage(String[] owners) throws ServiceException {
             try {
-                SMTPMessage out = new SMTPMessage(JMSession.getSmtpSession());
+                SMTPMessage out = AccountUtil.getSmtpMessageObj(requestingAcct);
 
                 Address fromAddr = AccountUtil.getFriendlyEmailAddress(requestingAcct);
 

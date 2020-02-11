@@ -228,7 +228,7 @@ public final class JMSession {
      *
      * @param domain the domain, or {@code null} to use server settings
      */
-    private static Session getSmtpSession(Domain domain) throws MessagingException {
+    public static Session getSmtpSession(Domain domain) throws MessagingException {
         Server server;
         try {
             server = Provisioning.getInstance().getLocalServer();

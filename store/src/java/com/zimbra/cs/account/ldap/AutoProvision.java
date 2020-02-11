@@ -33,6 +33,7 @@ import javax.activation.DataHandler;
 import javax.activation.DataSource;
 import javax.mail.Address;
 import javax.mail.MessagingException;
+import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
@@ -76,6 +77,7 @@ import com.zimbra.cs.ldap.ZLdapFilterFactory;
 import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 import com.zimbra.cs.ldap.ZSearchResultEntry;
 import com.zimbra.cs.ldap.ZSearchScope;
+import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
 
 public abstract class AutoProvision {
@@ -432,7 +434,7 @@ public abstract class AutoProvision {
         String toAddr = acct.getName();
 
         try {
-            SMTPMessage out = new SMTPMessage(JMSession.getSmtpSession());
+            SMTPMessage out = AccountUtil.getSmtpMessageObj(acct);
 
             InternetAddress addr = null;
             try {
