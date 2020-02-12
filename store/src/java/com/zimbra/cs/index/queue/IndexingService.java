@@ -16,6 +16,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
+import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.IndexStore;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
@@ -240,8 +241,11 @@ public class IndexingService {
                     IndexStore indexStore = IndexStore.getFactory().getIndexStore(queueItem.getAccountID());
                     conn = DbPool.getConnection(queueItem.getMailboxID(), queueItem.getMailboxSchemaGroupID());
                     for(MailItem mailItem: queueItem.getMailItemsToAdd()) {
-                        indexItemEntries.add(new IndexItemEntry(mailItem, mailItem.generateIndexDataAsync(queueItem
-                                .attachmentIndexingEnabled())));
+                        List<IndexDocument> docs = mailItem.generateIndexDataAsync(queueItem
+                                .attachmentIndexingEnabled());
+                        if (docs.size() > 0) {
+                            indexItemEntries.add(new IndexItemEntry(mailItem, docs));
+                        }
                     }
                     if (indexItemEntries.size() > 0) {
                         indexStore.openIndexer().add(indexItemEntries);
