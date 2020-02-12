@@ -57,6 +57,7 @@ import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZSharedFolder;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.ZAttrProvisioning.DelayedIndexStatus;
 import com.zimbra.common.calendar.WellKnownTimeZones;
 import com.zimbra.common.localconfig.ConfigException;
 import com.zimbra.common.localconfig.DebugConfig;
@@ -93,6 +94,8 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.auth.AuthContext;
+import com.zimbra.cs.account.soap.SoapProvisioning;
+import com.zimbra.cs.account.soap.SoapProvisioning.ManageIndexType;
 import com.zimbra.cs.event.logger.EventLogger;
 import com.zimbra.cs.imap.ImapCredentials.EnabledHack;
 import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
@@ -1744,6 +1747,10 @@ public abstract class ImapHandler {
         setCredentials(new ImapCredentials(account, hack));
         if (!account.getName().equalsIgnoreCase(LC.zimbra_ldap_user.value())) {
             credentials.getImapMailboxStore().beginTrackingImap();
+        }
+        if (account.isFeatureDelayedIndexEnabled() && account.getDelayedIndexStatus() != DelayedIndexStatus.indexing) {
+            SoapProvisioning sp = SoapProvisioning.getAdminInstance();
+            sp.manageIndex(account, ManageIndexType.enableIndexing);
         }
         ZimbraLog.addAccountNameToContext(credentials.getUsername());
         ZimbraLog.imap.info("user %s authenticated, mechanism=%s%s",
