@@ -29,4 +29,18 @@ public class DelayedIndexUtil {
         };
         deleteIndex.start();
     }
+
+    public static void asyncReIndex(Mailbox mbox, OperationContext octxt) {
+        Thread reIndex = new Thread() {
+            @Override
+            public void run() {
+                try {
+                    mbox.index.startReIndex(octxt);
+                } catch (ServiceException e) {
+                    ZimbraLog.index.error("problem re-indexing mailbox %s", e);
+                }
+            }
+        };
+        reIndex.start();
+    }
 }

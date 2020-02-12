@@ -99,7 +99,7 @@ public final class ManageIndex extends AdminDocumentHandler {
             break;
         case ENABLE_INDEXING:
             account.setDelayedIndexStatus(DelayedIndexStatus.indexing);
-            mbox.index.startReIndex(octxt);
+            DelayedIndexUtil.asyncReIndex(mbox, octxt);
             break;
         default:
             break;
