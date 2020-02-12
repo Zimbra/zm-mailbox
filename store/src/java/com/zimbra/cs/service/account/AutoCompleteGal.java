@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2013, 2014, 2016, 2020 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -57,8 +57,14 @@ public class AutoCompleteGal extends GalDocumentHandler {
         params.setLimit(account.getContactAutoCompleteMaxResults());
         params.setNeedCanExpand(needCanExpand);
         params.setResponseName(AccountConstants.AUTO_COMPLETE_GAL_RESPONSE);
-        if (galAcctId != null)
-            params.setGalSyncAccount(Provisioning.getInstance().getAccountById(galAcctId));
+        if (galAcctId != null) {
+            Account galAccount = Provisioning.getInstance().getAccountById(galAcctId);
+            if (galAccount != null && (!account.getDomainId().equals(galAccount.getDomainId()))) {
+                throw ServiceException
+                    .PERM_DENIED("can not access galsync account of different domain");
+            }
+            params.setGalSyncAccount(galAccount);
+        }
         GalSearchControl gal = new GalSearchControl(params);
         gal.autocomplete();
         return params.getResultCallback().getResponse();
