@@ -53,6 +53,7 @@ import com.zimbra.cs.index.IndexStore;
 import com.zimbra.cs.index.Indexer;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.LuceneQueryOperation.LuceneResultsChunk;
+import com.zimbra.cs.index.MailboxIndexUtil;
 import com.zimbra.cs.index.ReSortingQueryResults;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SortBy;
@@ -108,8 +109,13 @@ public final class MailboxIndex {
     public ZimbraQueryResults search(SoapProtocol proto, OperationContext octx, SearchParams params)
             throws ServiceException {
         assert(octx != null);
-
         ZimbraQuery query = new ZimbraQuery(octx, proto, mailbox, params);
+        if (query.hasTextOperation() && needToReIndex() && !isReIndexInProgress()) {
+        // Start re-indexing thread so that the search request doesn't wait for the indexing task
+            ZimbraLog.index.info("async recreating index; results may not be available immediately");
+            mailbox.getAccount().setDelayedIndexStatus(DelayedIndexStatus.indexing);
+            MailboxIndexUtil.asyncReIndexMailbox(mailbox, octx);
+        }
         return search(query);
     }
 
@@ -713,6 +719,14 @@ public final class MailboxIndex {
             return true;
         } else {
             return mailbox.getAccount().getDelayedIndexStatus() == DelayedIndexStatus.indexing;
+        }
+    }
+
+    public boolean needToReIndex() throws ServiceException {
+        if (!mailbox.getAccount().isFeatureDelayedIndexEnabled()) {
+            return false;
+        } else {
+            return mailbox.getAccount().getDelayedIndexStatus() == DelayedIndexStatus.waitingForSearch;
         }
     }
 
