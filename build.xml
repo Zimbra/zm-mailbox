@@ -91,7 +91,7 @@
 
    <target name="pkg-after-plough-through-tests" depends="test-all-plough-through,pkg"/>
 
-    <property name="DOCKER_REPO_PUSH_NS" value="zms" />
+    <property name="DOCKER_REPO_PUSH_NS" value="zimbra" />
     <property name="DOCKER_MAILBOX_BUILD_TAG" value="1.0" />
     <property name="DOCKER_PUSH_TAG" value="${DOCKER_MAILBOX_BUILD_TAG}" />
     <target name="build-image" depends="all">
