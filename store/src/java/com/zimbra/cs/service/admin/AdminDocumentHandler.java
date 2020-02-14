@@ -588,7 +588,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
             if (acctId != null) {
                 Account acct = getAccount(prov, AccountBy.id, acctId, zsc.getAuthToken());
 
-                if (acct != null && !DocumentHandler.onLocalServer(acct, reasons)) {
+                if (acct != null && !Provisioning.onLocalServer(acct, reasons)) {
                     ZimbraLog.soap.info("Proxying request: ProxiedAccountPath=%s reason: %s",
                             Joiner.on("/").join(xpath), reasons.getReason());
                     return proxyRequest(request, context, acctId);
@@ -601,7 +601,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
                 Account acct = getAccount(prov, AccountBy.fromString(acctElt.getAttribute(AdminConstants.A_BY)),
                         acctElt.getText(), zsc.getAuthToken());
 
-                if (acct != null && !DocumentHandler.onLocalServer(acct, reasons)) {
+                if (acct != null && !Provisioning.onLocalServer(acct, reasons)) {
                     ZimbraLog.soap.info("Proxying request: ProxiedAccountElementPath=%s acctElt=%s reason: %s",
                             Joiner.on("/").join(xpath), acctElt.toString(), reasons.getReason());
                     return proxyRequest(request, context, acct.getId());
@@ -613,7 +613,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
             String rsrcId = (xpath != null ? getXPath(request, xpath) : null);
             if (rsrcId != null) {
                 CalendarResource rsrc = getCalendarResource(prov, Key.CalendarResourceBy.id, rsrcId);
-                if (rsrc != null && !DocumentHandler.onLocalServer(rsrc, reasons)) {
+                if (rsrc != null && !Provisioning.onLocalServer(rsrc, reasons)) {
                     ZimbraLog.soap.info("Proxying request: ProxiedResourcePath=%s rsrcId=%s reason: %s",
                             Joiner.on("/").join(xpath), rsrcId, reasons.getReason());
                     return proxyRequest(request, context, rsrcId);
@@ -626,7 +626,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
                 CalendarResource rsrc = getCalendarResource(prov,
                         Key.CalendarResourceBy.fromString(resourceElt.getAttribute(AdminConstants.A_BY)),
                         resourceElt.getText());
-                if (rsrc != null && !DocumentHandler.onLocalServer(rsrc, reasons)) {
+                if (rsrc != null && !Provisioning.onLocalServer(rsrc, reasons)) {
                     ZimbraLog.soap.info("Proxying request: ProxiedResourceElementPath=%s resourceElt=%s reason: %s",
                             Joiner.on("/").join(xpath), resourceElt.toString(), reasons.getReason());
                     return proxyRequest(request, context, rsrc.getId());
