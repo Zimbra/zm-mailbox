@@ -73,7 +73,8 @@ public class AccountConstants {
     public static final String E_GET_SHARE_INFO_RESPONSE = "GetShareInfoResponse";
     public static final String E_GET_WHITE_BLACK_LIST_REQUEST = "GetWhiteBlackListRequest";
     public static final String E_GET_WHITE_BLACK_LIST_RESPONSE = "GetWhiteBlackListResponse";
-    public static final String E_MODIFY_ACCOUNT_REQUEST = "ModifyAccountRequest";
+    public static final String E_GET_VC_MEETING_INFO_REQUEST = "GetVCMeetingInfoRequest";
+	public static final String E_MODIFY_ACCOUNT_REQUEST = "ModifyAccountRequest";
     public static final String E_MODIFY_ACCOUNT_RESPONSE = "ModifyAccountResponse";
     public static final String E_MODIFY_PREFS_REQUEST = "ModifyPrefsRequest";
     public static final String E_MODIFY_PREFS_RESPONSE = "ModifyPrefsResponse";
@@ -230,6 +231,7 @@ public class AccountConstants {
     public static final QName GET_SHARE_INFO_RESPONSE = QName.get(E_GET_SHARE_INFO_RESPONSE, NAMESPACE);
     public static final QName GET_WHITE_BLACK_LIST_REQUEST = QName.get(E_GET_WHITE_BLACK_LIST_REQUEST, NAMESPACE);
     public static final QName GET_WHITE_BLACK_LIST_RESPONSE = QName.get(E_GET_WHITE_BLACK_LIST_RESPONSE, NAMESPACE);
+	public static final QName GET_VC_MEETING_INFO_REQUEST = QName.get(E_GET_VC_MEETING_INFO_REQUEST, NAMESPACE);
     public static final QName MODIFY_ACCOUNT_REQUEST = QName.get(E_MODIFY_ACCOUNT_REQUEST, NAMESPACE);
     public static final QName MODIFY_ACCOUNT_RESPONSE = QName.get(E_MODIFY_ACCOUNT_RESPONSE, NAMESPACE);
     public static final QName MODIFY_PREFS_REQUEST = QName.get(E_MODIFY_PREFS_REQUEST, NAMESPACE);
