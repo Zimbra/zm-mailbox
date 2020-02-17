@@ -39,8 +39,8 @@ import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.store.file.BlobConsistencyChecker.BlobInfo;
 import com.zimbra.soap.admin.message.ExportAndDeleteItemsRequest;
-import com.zimbra.soap.admin.type.ExportAndDeleteMailboxSpec;
 import com.zimbra.soap.admin.type.ExportAndDeleteItemSpec;
+import com.zimbra.soap.admin.type.ExportAndDeleteMailboxSpec;
 
 public class BlobConsistencyUtil {
 
@@ -243,6 +243,9 @@ public class BlobConsistencyUtil {
         request.addAttribute(AdminConstants.A_CHECK_SIZE, !skipSizeCheck);
         request.addAttribute(AdminConstants.A_REPORT_USED_BLOBS, outputUsedBlobs || usedBlobWriter != null);
 
+        if (prov.isExpired()) {
+            prov.soapZimbraAdminAuthenticate();
+        }
         Element response = prov.invoke(request);
         for (Element mboxEl : response.listElements(AdminConstants.E_MAILBOX)) {
             // Print results.
