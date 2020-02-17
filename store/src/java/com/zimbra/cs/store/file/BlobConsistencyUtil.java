@@ -200,9 +200,6 @@ public class BlobConsistencyUtil {
         	DbPool.startup();
         	for (int mboxId : mailboxIds) {
         		System.out.println("Checking mailbox " + mboxId + ".");
-                if (prov.isExpired()) {
-                  prov.soapZimbraAdminAuthenticate();
-                }
         		checkMailbox(mboxId, prov);
         	}
         }  finally{
@@ -246,6 +243,9 @@ public class BlobConsistencyUtil {
         request.addAttribute(AdminConstants.A_CHECK_SIZE, !skipSizeCheck);
         request.addAttribute(AdminConstants.A_REPORT_USED_BLOBS, outputUsedBlobs || usedBlobWriter != null);
 
+        if (prov.isExpired()) {
+            prov.soapZimbraAdminAuthenticate();
+        }
         Element response = prov.invoke(request);
         for (Element mboxEl : response.listElements(AdminConstants.E_MAILBOX)) {
             // Print results.
