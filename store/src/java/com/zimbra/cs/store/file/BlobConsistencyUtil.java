@@ -39,8 +39,8 @@ import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.store.file.BlobConsistencyChecker.BlobInfo;
 import com.zimbra.soap.admin.message.ExportAndDeleteItemsRequest;
-import com.zimbra.soap.admin.type.ExportAndDeleteMailboxSpec;
 import com.zimbra.soap.admin.type.ExportAndDeleteItemSpec;
+import com.zimbra.soap.admin.type.ExportAndDeleteMailboxSpec;
 
 public class BlobConsistencyUtil {
 
@@ -200,6 +200,9 @@ public class BlobConsistencyUtil {
         	DbPool.startup();
         	for (int mboxId : mailboxIds) {
         		System.out.println("Checking mailbox " + mboxId + ".");
+                if (prov.isExpired()) {
+                  prov.soapZimbraAdminAuthenticate();
+                }
         		checkMailbox(mboxId, prov);
         	}
         }  finally{
