@@ -37,6 +37,10 @@ public class CopyCommand extends ImapCommand {
         return result;
     }
 
+    public ImapPath getDestPath() {
+        return destPath;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
@@ -65,4 +69,34 @@ public class CopyCommand extends ImapCommand {
         }
         return true;
     }
+
+    @Override
+    protected boolean isDuplicate(ImapCommand command) {
+        return this.getClass().equals(command.getClass()) && this.hasSameParams(command);
+    }
+
+
+    @Override
+    protected boolean throttle(ImapCommand previousCommand) {
+        return false;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("CopyCommand [");
+        if (destPath != null) {
+            builder.append("destPath=");
+            builder.append(destPath);
+            builder.append(", ");
+        }
+        if (sequenceSet != null) {
+            builder.append("sequenceSet=");
+            builder.append(sequenceSet);
+        }
+        builder.append("]");
+        return builder.toString();
+    }
+
+
 }

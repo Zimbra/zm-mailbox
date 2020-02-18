@@ -1322,6 +1322,9 @@ public final class LC {
     // XML 1.0 invalid characters regex pattern
     public static final KnownKey xml_invalid_chars_regex = KnownKey.newKey("\\&\\#(?:x([0-9a-fA-F]+)|([0-9]+))\\;");
 
+    // Mapsize of map that holds list of accounts for which items in
+    public static final KnownKey max_imap_size_of_map_tohold_deletes_inprocess = KnownKey.newKey(1000);
+
     static {
         // Automatically set the key name with the variable name.
         for (Field field : LC.class.getFields()) {

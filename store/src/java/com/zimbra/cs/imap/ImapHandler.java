@@ -53,6 +53,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZSharedFolder;
 import com.zimbra.common.account.Key;
@@ -148,6 +149,14 @@ public abstract class ImapHandler {
     private static final String IMAP_INSERT_RIGHTS = "ick";
     private static final String IMAP_DELETE_RIGHTS = "xted";
     private static final String IMAP_ADMIN_RIGHTS  = "a";
+    private static final int max_size_of_map_with_deletes_inprocess = LC.max_imap_size_of_map_tohold_deletes_inprocess.intValue();
+
+    Map<String, Set<String>> processedDeletes = new ConcurrentLinkedHashMap.Builder<String, Set<String>>()
+        .maximumWeightedCapacity(max_size_of_map_with_deletes_inprocess)
+        .build();
+    Map<String, Set<String>> deletesInProcess = new ConcurrentLinkedHashMap.Builder<String, Set<String>>()
+        .maximumWeightedCapacity(max_size_of_map_with_deletes_inprocess)
+        .build();
 
     /* All the supported IMAP rights, concatenated together into a single string. */
     private static final String IMAP_CONCATENATED_RIGHTS = IMAP_READ_RIGHTS + IMAP_WRITE_RIGHTS +
@@ -523,6 +532,7 @@ public abstract class ImapHandler {
                     ImapPath path = new ImapPath(req.readFolder(), credentials);
                     checkEOF(tag, req);
                     return isProxied ? imapProxy.proxy(req) : doCOPY(tag, sequence, path, byUID);
+
                 } else if (command.equals("CLOSE")) {
                     checkEOF(tag, req);
                     return doCLOSE(tag);
@@ -4376,18 +4386,48 @@ public abstract class ImapHandler {
      */
     protected boolean doCOPY(String tag, String sequenceSet, ImapPath path, boolean byUID)
             throws IOException, ImapException {
-        checkCommandThrottle(new CopyCommand(sequenceSet, path));
-        if (!checkState(tag, State.SELECTED)) {
-            return true;
-        }
+
+        CopyCommand commandP = new CopyCommand(sequenceSet, path);
         String command = (byUID ? "UID COPY" : "COPY");
         String copyuid = "";
-
         ImapFolder i4folder = getSelectedFolder();
         if (i4folder == null) {
             throw new ImapSessionClosedException();
         }
         MailboxStore mbox = i4folder.getMailbox();
+
+        if (isCopyToTrash(commandP) &&  !isCopyToTrashProcessed(mbox, sequenceSet)) {
+            ZimbraLog.imap.debug("IMAP::: Checking copy to trash is processed or in process. :" );
+            try {
+                if (deletesInProcess.get(mbox.getAccountId()) != null &&
+                    deletesInProcess.get(mbox.getAccountId()).contains(sequenceSet))   {
+                    ZimbraLog.imap.debug("IMAP::: Copy to trash in process. :" + deletesInProcess.get(mbox.getAccountId()));
+                    sendNO(tag, "COPY rejected because it is in process.");
+                }
+                ZimbraLog.imap.debug("IMAP::: New Copy to trash, adding to in process list.");
+                if (deletesInProcess.get(mbox.getAccountId()) != null) {
+                    deletesInProcess.get(mbox.getAccountId()).add(sequenceSet);
+                } else {
+                    Set<String> trashDelSet = new HashSet<String>();
+                    trashDelSet.add(sequenceSet);
+                    deletesInProcess.put(mbox.getAccountId(), trashDelSet) ;
+                }
+            }  catch ( ServiceException e) {
+                ZimbraLog.imap.errorQuietly("doCOPY::Error fetching accountId from mailbox:" , e);
+            }
+        } else  if (isCopyToTrash(commandP) && isCopyToTrashProcessed(mbox, sequenceSet)) {
+                sendOK(tag, copyuid + command + " completed");
+                sendNotifications(true, false);
+        }
+
+        checkCommandThrottle(commandP);
+
+        if (!checkState(tag, State.SELECTED)) {
+            return true;
+        }
+
+
+
         Set<ImapMessage> i4set;
         mbox.lock(false);
         try {
@@ -4506,6 +4546,26 @@ public abstract class ImapHandler {
         //                to cascade several COPY commands together."
         sendNotifications(true, false);
         sendOK(tag, copyuid + command + " completed");
+
+        if (isCopyToTrash(commandP)) {
+            ZimbraLog.imap.info("IMAP:::Copy is to trash adding to processed List." );
+            try {
+                if (deletesInProcess.get(mbox.getAccountId()) != null) {
+                    deletesInProcess.get(mbox.getAccountId()).remove(sequenceSet);
+                }
+                Set<String> processedList = new HashSet<String>();
+                if (processedDeletes.get(mbox.getAccountId()) == null) {
+                    processedList.add(sequenceSet);
+                    processedDeletes.put(mbox.getAccountId(), processedList);
+                } else {
+                    processedList = processedDeletes.get(mbox.getAccountId());
+                    processedList.add(sequenceSet);
+                    processedDeletes.put(mbox.getAccountId(), processedList);
+                }
+            } catch (ServiceException e) {
+                ZimbraLog.imap.errorQuietly("doCOPY:movetoProcessed:Error fetching accountId from mailbox:" , e);
+            }
+        }
         return true;
     }
 
@@ -4730,6 +4790,28 @@ public abstract class ImapHandler {
                 setCredentials(null);
             }
         } catch (Exception ignore) {
+        }
+    }
+
+    public boolean isCopyToTrashProcessed(MailboxStore mbox, String sequenceSet) {
+        try {
+            if (processedDeletes.get(mbox.getAccountId()) != null &&
+                processedDeletes.get(mbox.getAccountId()).contains(sequenceSet)) {
+                return true;
+            }
+            return false;
+        } catch (ServiceException e) {
+            ZimbraLog.imap.errorQuietly("isCopyToTrashProcessed: Error fecthing account Id from mailbox", e);
+            return false;
+        }
+    }
+
+    public boolean isCopyToTrash(CopyCommand copyCmd) {
+        try {
+            return copyCmd.getDestPath().getFolder().getFolderIdAsString().equals(String.valueOf(Mailbox.ID_FOLDER_TRASH));
+        } catch (ServiceException e) {
+            ZimbraLog.imap.errorQuietly("isCopyToTrash:Error fecthing folder id", e);
+            return false;
         }
     }
 }
