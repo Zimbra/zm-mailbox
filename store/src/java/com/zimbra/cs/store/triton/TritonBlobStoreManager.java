@@ -47,8 +47,6 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.store.Blob;
-import com.zimbra.cs.store.MailboxBlob;
-import com.zimbra.cs.store.StagedBlob;
 import com.zimbra.cs.store.external.ExternalResumableIncomingBlob;
 import com.zimbra.cs.store.external.ExternalResumableUpload;
 import com.zimbra.cs.store.external.ExternalUploadedBlob;

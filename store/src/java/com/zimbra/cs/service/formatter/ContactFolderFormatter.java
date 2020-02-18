@@ -110,7 +110,7 @@ public class ContactFolderFormatter extends Formatter {
         // revision
         out.write(MailConstants.A_REVISION.getBytes("UTF-8"));
         out.write(FIELD_DELIMITER);
-        out.write(Long.toString(item.getSavedSequence()).getBytes("UTF-8"));
+        out.write(Integer.toString(item.getSavedSequence()).getBytes("UTF-8"));
         out.write(FIELD_DELIMITER);
         // fileAsStr
         try {

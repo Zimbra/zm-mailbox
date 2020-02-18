@@ -1417,7 +1417,7 @@ public final class ToXML {
             boolean encodeMissingBlobs, MsgContent wantContent, int fields)
     throws ServiceException {
         Mailbox mbox = msg.getMailbox();
-        long changeId = msg.getSavedSequence();
+        int changeId = msg.getSavedSequence();
         while (true) {
             try {
                 return encodeMessageAsMPHelper(false /* bestEffort */, parent, ifmt, octxt, msg, part, maxSize,
@@ -1817,7 +1817,7 @@ public final class ToXML {
         final int MAX_RETRIES = LC.calendar_item_get_max_retries.intValue();
         Element elem = null;
         Mailbox mbox = calItem.getMailbox();
-        long changeId = calItem.getSavedSequence();
+        int changeId = calItem.getSavedSequence();
         int numTries = 0;
         while (numTries < MAX_RETRIES) {
             numTries++;

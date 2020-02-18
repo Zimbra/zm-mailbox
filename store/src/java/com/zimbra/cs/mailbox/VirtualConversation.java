@@ -88,7 +88,7 @@ public class VirtualConversation extends Conversation {
         data.folderId = Mailbox.ID_FOLDER_CONVERSATIONS;
         data.setSubject(msg.getSubject());
         data.date = (int) (msg.getDate() / 1000);
-        data.modMetadata = (int) msg.getSavedSequence();
+        data.modMetadata = msg.getSavedSequence();
         data.modContent = msg.getSavedSequence();
         data.size = 1;
         data.unreadCount = msg.getUnreadCount();

@@ -32,20 +32,11 @@ public abstract class MailboxBlob {
         public String accountId;
         public int mailboxId;
         public int itemId;
-        public long revision;
+        public int revision;
         public String locator;
         public String digest;
 
         public MailboxBlobInfo(String accountId, int mailboxId, int itemId, int revision, String locator, String digest) {
-            this.accountId = accountId;
-            this.mailboxId = mailboxId;
-            this.itemId = itemId;
-            this.revision = revision;
-            this.locator = locator;
-            this.digest = digest;
-        }
-
-        public MailboxBlobInfo(String accountId, int mailboxId, int itemId, long revision, String locator, String digest) {
             this.accountId = accountId;
             this.mailboxId = mailboxId;
             this.itemId = itemId;
@@ -58,7 +49,7 @@ public abstract class MailboxBlob {
     private final Mailbox mailbox;
 
     private final int itemId;
-    private final long revision;
+    private final int revision;
     private final String locator;
     protected Long size;
     protected String digest;
@@ -70,18 +61,11 @@ public abstract class MailboxBlob {
         this.locator = locator;
     }
 
-    protected MailboxBlob(Mailbox mbox, int itemId, long revision, String locator) {
-        this.mailbox = mbox;
-        this.itemId = itemId;
-        this.revision = revision;
-        this.locator = locator;
-    }
-
     public int getItemId() {
         return itemId;
     }
 
-    public long getRevision() {
+    public int getRevision() {
         return revision;
     }
 

@@ -55,7 +55,7 @@ public class RenameTest {
     @Test
     public void renameModContentTest() throws Exception {
         int id = doc.getId();
-        long mod_content = doc.getSavedSequence();
+        int mod_content = doc.getSavedSequence();
         mbox.rename(null, id, doc.getType(), "newdoc.txt", folder.getId());
         mbox.purge(MailItem.Type.UNKNOWN);
         MailItem newdoc = mbox.getItemById(null, id, MailItem.Type.UNKNOWN, false);

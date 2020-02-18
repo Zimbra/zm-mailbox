@@ -1691,7 +1691,7 @@ public class Folder extends MailItem implements FolderStore {
      **/
     @Override
     public int getUIDValidity() {
-        return (int) Math.max(getSavedSequence(), 1);
+        return Math.max(getSavedSequence(), 1);
     }
 
     @Override
