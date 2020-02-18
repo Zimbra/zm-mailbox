@@ -59,7 +59,7 @@ public final class DbVolumeBlobs {
             stmt.setShort(pos++, vol.getId());
             stmt.setInt(pos++, mbox.getId());
             stmt.setInt(pos++, item.getId());
-            stmt.setLong(pos++, item.getSavedSequence());
+            stmt.setInt(pos++, item.getSavedSequence());
             stmt.setString(pos++, item.getDigest());
             stmt.setBoolean(pos++, false);
             stmt.executeUpdate();
@@ -82,7 +82,7 @@ public final class DbVolumeBlobs {
             stmt.setShort(pos++, volId);
             stmt.setInt(pos++, info.mailboxId);
             stmt.setInt(pos++, info.itemId);
-            stmt.setLong(pos++, info.revision);
+            stmt.setInt(pos++, info.revision);
             stmt.setString(pos++, info.digest);
             stmt.setBoolean(pos++, false);
             stmt.executeUpdate();

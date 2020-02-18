@@ -308,7 +308,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         public String metadata;
         public int modMetadata;
         public int dateChanged; /* Seconds since 1970-01-01 00:00:00 UTC */
-        public long modContent;
+        public int modContent;
         public String uuid;
 
         public String getSubject() {
@@ -985,7 +985,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
     /** Returns the change ID corresponding to the last time the item's
      *  content was modified.  For immutable objects (e.g. received messages),
      *  this will be the same change ID as when the item was created. */
-    public long getSavedSequence() {
+    public int getSavedSequence() {
         return mData.modContent;
     }
 
@@ -2169,7 +2169,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
                 // monotonically increasing in the revisions list. (f(n) <= f(n+1))
 
                 // Filter out blobs that are still in use; mark the rest for deletion.
-                long oldestRemainingSavedSequence =
+                int oldestRemainingSavedSequence =
                     revisions.isEmpty() ? mData.modContent : revisions.get(0).getSavedSequence();
                 for (MailItem revision : toPurge) {
                     if (revision.getSavedSequence() < oldestRemainingSavedSequence) {
@@ -2253,7 +2253,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
                 // monotonically increasing in the revisions list. (f(n) <= f(n+1))
 
                 // Filter out blobs that are still in use; mark the rest for deletion.
-                long oldestRemainingSavedSequence =
+                int oldestRemainingSavedSequence =
                     revisions.isEmpty() ? item.mData.modContent : revisions.get(0).getSavedSequence();
                 for (MailItem revision : toPurge) {
                     if (revision.getSavedSequence() < oldestRemainingSavedSequence) {

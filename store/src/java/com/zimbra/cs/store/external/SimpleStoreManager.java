@@ -33,8 +33,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.store.MailboxBlob;
-import com.zimbra.cs.store.StagedBlob;
 
 /**
  * Example implementation of ExternalStoreManager which writes to a flat directory structure

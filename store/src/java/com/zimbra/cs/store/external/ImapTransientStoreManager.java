@@ -26,8 +26,6 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.store.MailboxBlob;
-import com.zimbra.cs.store.StagedBlob;
 
 /**
  * Simple ExternalStoreManager implementation that is intended for use in storing
@@ -87,4 +85,5 @@ public class ImapTransientStoreManager extends ExternalStoreManager {
             return File.createTempFile(mbox.getAccountId(), ".msg", baseDirectory);
         }
     }
+
 }

@@ -194,7 +194,7 @@ public class DbMailItem {
             } else {
                 stmt.setNull(pos++, Types.INTEGER);
             }
-            stmt.setLong(pos++, data.modContent);
+            stmt.setInt(pos++, data.modContent);
             stmt.setString(pos++, data.uuid);
             int num = stmt.executeUpdate();
             if (num != 1) {
@@ -982,7 +982,7 @@ public class DbMailItem {
             stmt.setString(pos++, checkMetadataLength(metadata));
             stmt.setInt(pos++, mbox.getOperationChangeID());
             stmt.setInt(pos++, mbox.getOperationTimestamp());
-            stmt.setLong(pos++, item.getSavedSequence());
+            stmt.setInt(pos++, item.getSavedSequence());
             pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, item.getId());
             stmt.executeUpdate();
@@ -1011,7 +1011,7 @@ public class DbMailItem {
             } else {
                 stmt.setNull(pos++, Types.INTEGER);
             }
-            stmt.setLong(pos++, item.getSavedSequence());
+            stmt.setInt(pos++, item.getSavedSequence());
             pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, item.getId());
             stmt.executeUpdate();
@@ -1136,7 +1136,7 @@ public class DbMailItem {
             stmt.setString(pos++, checkMetadataLength(metadata.toString()));
             stmt.setInt(pos++, mailbox.getOperationChangeID());
             stmt.setInt(pos++, mailbox.getOperationTimestamp());
-            stmt.setLong(pos++, item.getSavedSequence());
+            stmt.setInt(pos++, item.getSavedSequence());
             stmt.setString(pos++, item.getLocator());
             pos = setMailboxId(stmt, mailbox, pos);
             stmt.setInt(pos++, item.getId());
@@ -1311,11 +1311,6 @@ public class DbMailItem {
         } finally {
             DbPool.closeStatement(stmt);
         }
-    }
-
-    public static int updateLocatorAndDigest(DbConnection conn, Mailbox mbox, String tableName, String idColumn, int itemId,
-            long revision, String locator, String digest) throws ServiceException {
-        return updateLocatorAndDigest(conn, mbox, tableName, idColumn, itemId, revision, locator, digest);
     }
 
     public static int updateLocatorAndDigest(DbConnection conn, Mailbox mbox, String tableName, String idColumn, int itemId,
@@ -3995,7 +3990,7 @@ public class DbMailItem {
         data.name = rs.getString(CI_NAME + offset);
         data.metadata = decodeMetadata(rs.getString(CI_METADATA + offset));
         data.modMetadata = rs.getInt(CI_MODIFIED + offset);
-        data.modContent = rs.getLong(CI_SAVED + offset);
+        data.modContent = rs.getInt(CI_SAVED + offset);
         data.dateChanged = rs.getInt(CI_MODIFY_DATE + offset);
         // make sure to handle NULL column values
         if (data.parentId == 0) {
