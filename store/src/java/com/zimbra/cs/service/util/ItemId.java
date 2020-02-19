@@ -107,7 +107,7 @@ public class ItemId implements java.io.Serializable {
         Account acctTarget = Provisioning.getInstance().get(AccountBy.id, mAccountId);
         if (acctTarget == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(mAccountId);
-        return DocumentHandler.getLocalHost().equalsIgnoreCase(acctTarget.getAttr(Provisioning.A_zimbraMailHost));
+        return Provisioning.getLocalIp().equalsIgnoreCase(Provisioning.affinityServer(acctTarget));
     }
 
     /** Returns whether the item belongs to the mailbox owned by the passed-in

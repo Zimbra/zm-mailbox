@@ -154,11 +154,11 @@ public class FileUploadServlet extends ZimbraServlet {
         Upload(String acctId, FileItem attachment, String filename) throws ServiceException {
             assert(attachment != null); // TODO: Remove null checks in mainline.
 
-
             String localServer = Provisioning.getInstance().getLocalServer().getId();
+            String localIp = Provisioning.getLocalIp();
             accountId = acctId;
             time      = System.currentTimeMillis();
-            uuid      = localServer + UPLOAD_PART_DELIMITER + LdapUtil.generateUUID();
+            uuid      = localServer + UPLOAD_PART_DELIMITER + LdapUtil.generateUUID() + UPLOAD_PART_DELIMITER + localIp;
             name      = FileUtil.trimFilename(filename);
             // Force FileItem to be a deterministic filename
             physical_filename  = String.format(UPLOAD_FILENAME_FORMAT, getUploadDir(), accountId, uuid);
@@ -311,9 +311,16 @@ public class FileUploadServlet extends ZimbraServlet {
     static String getUploadServerId(String uploadId) throws ServiceException {
         // uploadId is in the format of {serverId}:{uuid of the upload}
         String[] parts = null;
-        if (uploadId == null || (parts = uploadId.split(UPLOAD_PART_DELIMITER)).length != 2)
+        if (uploadId == null || (parts = uploadId.split(UPLOAD_PART_DELIMITER)).length != 3)
             throw ServiceException.INVALID_REQUEST("invalid upload ID: " + uploadId, null);
         return parts[0];
+    }
+
+    static String getUploadServerIp(String uploadId) throws ServiceException {
+        String[] parts = null;
+        if (uploadId == null || (parts = uploadId.split(UPLOAD_PART_DELIMITER)).length != 3)
+            throw ServiceException.INVALID_REQUEST("invalid upload ID: " + uploadId, null);
+        return parts[2];
     }
 
     /** Returns whether the specified upload resides on this server.
@@ -322,8 +329,10 @@ public class FileUploadServlet extends ZimbraServlet {
      * @throws ServiceException if the upload id is malformed or if there is
      *         an error accessing LDAP. */
     static boolean isLocalUpload(String uploadId) throws ServiceException {
-        String serverId = getUploadServerId(uploadId);
-        return Provisioning.getInstance().getLocalServer().getId().equals(serverId);
+        int index = uploadId.lastIndexOf(UPLOAD_PART_DELIMITER);
+        String serverIp = uploadId.substring(index+1, uploadId.length()).trim();
+        String localIp = Provisioning.getLocalIp();
+        return localIp.equals(serverIp);
     }
 
     public static Upload fetchUpload(String accountId, String uploadId, AuthToken authtoken) throws ServiceException {
@@ -371,10 +380,8 @@ public class FileUploadServlet extends ZimbraServlet {
         }
         // the first half of the upload id is the server id where it lives
         Server server = Provisioning.getInstance().get(Key.ServerBy.id, getUploadServerId(uploadId));
-        Provisioning prov = Provisioning.getInstance();
-        Account acct = prov.getAccount(prov, AccountBy.id, accountId, authtoken);
-        String affinityIp = Provisioning.affinityServer(acct);
-        String url = AccountUtil.getBaseUri(server, affinityIp);
+        String uploadServerIp = getUploadServerIp(uploadId);
+        String url = AccountUtil.getBaseUri(server, uploadServerIp);
         if (url == null)
             return null;
         url += ContentServlet.SERVLET_PATH + ContentServlet.PREFIX_PROXY + '?' +
@@ -385,7 +392,7 @@ public class FileUploadServlet extends ZimbraServlet {
         HttpClientBuilder clientBuilder = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
         HttpGet get = new HttpGet(url);
 
-        authtoken.encode(clientBuilder, get, false, affinityIp);
+        authtoken.encode(clientBuilder, get, false, uploadServerIp);
         HttpClient client = clientBuilder.build();
         try {
             // fetch the remote item
