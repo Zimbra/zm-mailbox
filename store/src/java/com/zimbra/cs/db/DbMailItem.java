@@ -4207,7 +4207,7 @@ public class DbMailItem {
             }
             return map;
         } catch (SQLException e) {
-            throw ServiceException.FAILURE("listing calendar items for mailbox " + mbox.getId(), e);
+            throw ServiceException.FAILURE("listing calendar items for mailbox " + mbox.getId() + " failed", e);
         } finally {
             DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);
@@ -4268,7 +4268,7 @@ public class DbMailItem {
             throws SQLException {
         boolean folderSpecified = folderId != Mailbox.ID_AUTO_INCREMENT;
 
-        String lastSyncConstrint = " AND mi.change_date > ?";
+        String lastSyncConstraint = " AND mi.change_date > ?";
         String typeConstraint = type == MailItem.Type.UNKNOWN ? "type IN " + CALENDAR_TYPES : typeIn(type);
 
         String excludeFolderPart = "";
@@ -4278,7 +4278,7 @@ public class DbMailItem {
 
         PreparedStatement stmt = conn.prepareStatement("SELECT " + fields +
                 " FROM " + getCalendarItemTableName(mbox, "ci") + ", " + getMailItemTableName(mbox, "mi") +
-                " WHERE mi.id = ci.item_id" + lastSyncConstrint + " AND mi." + typeConstraint +
+                " WHERE mi.id = ci.item_id" + lastSyncConstraint + " AND mi." + typeConstraint +
                 (DebugConfig.disableMailboxGroups? "" : " AND ci.mailbox_id = ? AND mi.mailbox_id = ci.mailbox_id") +
                 (folderSpecified ? " AND folder_id = ?" : "") + excludeFolderPart);
 
