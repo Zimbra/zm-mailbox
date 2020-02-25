@@ -688,6 +688,28 @@ public class MailboxManager {
         }
     }
 
+    public int[] getMailboxIdsOnThisPod() {
+        synchronized (this) {
+            Map<String, Integer> map = cacheManager.getAccountIdToMailboxIdMap();
+            List<Integer> ids = new ArrayList<>();
+            for (Map.Entry<String, Integer> entry: map.entrySet()) {
+                String accountId = entry.getKey();
+                int mboxId = entry.getValue();
+                boolean isLocal = false;
+                try {
+                    isLocal = Provisioning.onLocalServer(accountId);
+                } catch (ServiceException e) {
+                    ZimbraLog.mailbox.warn("unable to determine if account %s has affinity on this host", accountId, e);
+                    continue;
+                }
+                if (isLocal) {
+                    ids.add(mboxId);
+                }
+            }
+            return ids.stream().mapToInt(i -> i).toArray();
+        }
+
+    }
     public Set<Integer> getPurgePendingMailboxes(long time) throws ServiceException {
         DbConnection conn = null;
         try {
