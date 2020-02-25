@@ -296,7 +296,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     /** do not fixup return attrs for searchObject, onlt used from LdapUpgrade */
     public static final int SO_NO_FIXUP_RETURNATTRS = 0x400;
-    
+
     /** return distribution lists from searchAccounts/searchDirectory */
     public static final int SD_HAB_FLAG = 0x12;
 
@@ -1520,18 +1520,22 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     public static boolean onLocalServer(Account account, Reasons reasons) throws ServiceException {
         String targetIp = Provisioning.affinityServer(account);
-        String localIp = null;
-        try {
-            localIp = InetAddress.getLocalHost().getHostAddress().trim();
-        } catch (UnknownHostException e) {
-            ZimbraLog.misc.warn("Unknown Host Exception", e);
-        }
-        boolean isLocal = (targetIp != null && targetIp.equalsIgnoreCase(localIp));
+        String localIp = getLocalIp();
+        boolean isLocal = ipIsLocal(targetIp, localIp);
         if (!isLocal && reasons != null) {
             reasons.addReason(String.format("isLocal=%b target=%s localhost=%s account=%s", isLocal, targetIp, localIp,
                     account.getName()));
         }
         return isLocal;
+    }
+
+    private static boolean ipIsLocal(String targetIp, String localIp) {
+        return targetIp != null && targetIp.equalsIgnoreCase(localIp);
+    }
+
+    public static boolean onLocalServer(String accountId) throws ServiceException {
+        String targetIp = Provisioning.affinityServer("zimbraId", accountId);
+        return ipIsLocal(targetIp, getLocalIp());
     }
 
     public static String getLocalIp() throws ServiceException {
@@ -1544,7 +1548,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
         }
         return localIp;
     }
-    
+
     /**
      * @param key a search key acceptable to the MLS service.  Currently "email" or "zimbraId".
      * @param value the value to be searched by key
@@ -1618,7 +1622,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
         return false;
     }
 
-    public Account getAccount(Provisioning prov, AccountBy accountBy, String value, AuthToken authToken)  
+    public Account getAccount(Provisioning prov, AccountBy accountBy, String value, AuthToken authToken)
     		throws ServiceException {
     	Account acct = null;
 
@@ -1631,7 +1635,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     	}
     	return acct;
     }
-    
+
     /** @return the IP address of the pod */
     public static String myIpAddress() {
     	String podIp = null;
@@ -1639,11 +1643,11 @@ public abstract class Provisioning extends ZAttrProvisioning {
     		Enumeration<NetworkInterface> e = NetworkInterface.getNetworkInterfaces();
     		while(e.hasMoreElements())
     		{
-    			NetworkInterface n = (NetworkInterface) e.nextElement();
+    			NetworkInterface n = e.nextElement();
     			Enumeration<InetAddress> ee = n.getInetAddresses();
     			while (ee.hasMoreElements())
     			{
-    				InetAddress i = (InetAddress) ee.nextElement();
+    				InetAddress i = ee.nextElement();
     				podIp = i.getHostAddress();
     				if (podIp != null) {
     					break;
@@ -1655,7 +1659,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     	}
     	return podIp;
     }
-    
+
     public static boolean canUseLocalIMAP(Account account) throws ServiceException {
         if(account == null) {
             return false;
@@ -2516,7 +2520,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public abstract List<XMPPComponent> getAllXMPPComponents() throws ServiceException;
 
     public abstract void deleteXMPPComponent(XMPPComponent comp) throws ServiceException;
-    
+
     public abstract Set<String> createHabOrgUnit(Domain domain, String habOrgUnitName) throws ServiceException;
     public abstract Set<String> listHabOrgUnit(Domain domain) throws ServiceException;
     public abstract Set<String> renameHabOrgUnit(Domain domain, String habOrgUnitName, String newHabOrgUnitName) throws ServiceException;
@@ -2720,7 +2724,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public boolean isOfflineProxyServer(Server server) {
         return false;
     }
-    
+
     public boolean isOfflineProxyServer(String podIp) {
         return false;
     }
@@ -2856,7 +2860,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public void removeConfigSMIMEConfig(String configName) throws ServiceException {
         throw ServiceException.UNSUPPORTED();
     }
-    
+
     public AddressList getAddressList(String id) throws ServiceException {
         throw ServiceException.UNSUPPORTED();
     }
@@ -2864,7 +2868,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public AddressListInfo getAddressListByName(String name, Domain domain) throws ServiceException {
         throw ServiceException.UNSUPPORTED();
     }
-    
+
 
     public List<AddressListInfo> getAllAddressLists(Domain domain, boolean activeOnly) throws ServiceException {
         throw ServiceException.UNSUPPORTED();
@@ -2904,7 +2908,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     /**
      * @param domain
-     * @param rootDn 
+     * @param rootDn
      * @return
      */
     public List<LdapDistributionList> getAllHabGroups(Domain domain, String rootDn) throws ServiceException {
