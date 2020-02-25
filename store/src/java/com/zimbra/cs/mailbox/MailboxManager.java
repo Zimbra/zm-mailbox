@@ -992,4 +992,16 @@ public class MailboxManager {
             maintenance.removeAllowedThread(Thread.currentThread());
         }
     }
+
+    public String getAccountIdByMailboxId(int mailboxId) throws ServiceException {
+        // we don't maintain a map of mailboxIDs -> accountIDs, so just get it from
+        // the DB directly
+        DbPool.DbConnection conn = null;
+        try {
+            conn = DbPool.getConnection();
+            return DbMailbox.getAccountIdByMailboxId(conn, mailboxId);
+        }finally {
+            DbPool.quietClose(conn);
+        }
+    }
 }

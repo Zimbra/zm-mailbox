@@ -45,7 +45,6 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxVersion;
 import com.zimbra.cs.mailbox.Metadata;
-import com.zimbra.cs.util.Zimbra;
 
 /**
  * @since Oct 28, 2004
@@ -1343,6 +1342,27 @@ public final class DbMailbox {
             return null;
         } catch (SQLException e) {
             throw ServiceException.FAILURE("fetching mailboxId", e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+    }
+
+    public static String getAccountIdByMailboxId(DbConnection conn, Integer mailboxId) throws ServiceException {
+
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            stmt = conn.prepareStatement("SELECT account_id FROM mailbox WHERE id = ?");
+            int pos = 1;
+            stmt.setInt(pos++, mailboxId);
+            rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getString(1);
+            }
+            return null;
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE(String.format("error fetching account ID for mailbox %s", mailboxId), e);
         } finally {
             DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);
