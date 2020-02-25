@@ -3,10 +3,14 @@ package com.zimbra.cs.mailbox.util;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 
 import com.google.common.io.Files;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.UUIDUtil;
 import com.zimbra.common.util.ZimbraLog;
 
@@ -25,6 +29,20 @@ public class MailboxClusterUtil {
 
     public static String getMailboxWorkerName() {
         return mailboxWorkerName;
+    }
+
+
+    public static String[] getAllMailboxPodIPs() throws ServiceException {
+        return getAllMailboxPodIPs("zmc-mailbox");
+    }
+
+    public static String[] getAllMailboxPodIPs(String mboxServiceName) throws ServiceException {
+        try {
+            InetAddress[] addrs = InetAddress.getAllByName(mboxServiceName);
+            return Arrays.stream(addrs).map(addr -> addr.getHostAddress().trim()).toArray(String[]::new);
+        } catch (UnknownHostException e) {
+            throw ServiceException.NOT_FOUND(String.format("Error resolving IPs for %s", mboxServiceName), e);
+        }
     }
 
     /**
