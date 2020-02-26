@@ -185,8 +185,6 @@ CREATE TABLE mobile_devices (
    phone_number        VARCHAR(64),
    unapproved_appl_list VARCHAR(512),
    approved_appl_list   VARCHAR(512),
-   added_to_quarantine  BOOLEAN DEFAULT 0,
-   quarantine_status    VARCHAR(64) NULL,
 
    CONSTRAINT pk_mobile_devices PRIMARY KEY (mailbox_id, device_id),
    CONSTRAINT fk_mobile_mailbox_id FOREIGN KEY (mailbox_id) REFERENCES mailbox(id) ON DELETE CASCADE,

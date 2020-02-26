@@ -1551,9 +1551,4 @@ public final class AdminConstants {
     public static final String E_GAL_FILTER = "galFilter";
     public static final String E_LDAP_FILTER = "ldapFilter";
     public static final String A_CLEAR_FILTER = "clearFilter";
-
-    //ABQ constants
-    public static final String ENABLE_ABQ = "enable_abq";
-    public static final String ABQ_NOTIFICATION_EMAIL = "abq_notification_email";
-    public static final String ABQ_NOTIFICATION_INTERVAL = "abq_notification_interval";
 }
