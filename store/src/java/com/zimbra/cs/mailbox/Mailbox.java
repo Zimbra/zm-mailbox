@@ -4806,7 +4806,8 @@ public class Mailbox implements MailboxStore {
             return new HashMap<Integer, Integer>();
         }
         boolean success = false;
-        try (final MailboxTransaction t = mailboxReadTransaction("listCalendarItemsForRange", octxt)) {
+        try {
+            beginReadTransaction("listCalendarItemIdsAndDateForRange", octxt);
             // if they specified a folder, make sure it actually exists
             getFolderById(folderId);
 
@@ -4814,6 +4815,8 @@ public class Mailbox implements MailboxStore {
             Map<Integer, Integer> map = DbMailItem.listCalendarItemIdsAndDates(this, type, start, end, folderId, null);
             success = true;
             return map;
+        } finally {
+            endTransaction(success);
         }
     }
 
@@ -4826,7 +4829,8 @@ public class Mailbox implements MailboxStore {
             return new HashMap<Integer, Integer>();
         }
         boolean success = false;
-        try (final MailboxTransaction t = mailboxReadTransaction("listCalendarItemsForRange", octxt)) {
+        try {
+            beginReadTransaction("listCalendarItemIdsAndDateForRange", octxt);
             // if they specified a folder, make sure it actually exists
             getFolderById(folderId);
 
@@ -4834,6 +4838,8 @@ public class Mailbox implements MailboxStore {
             Map<Integer, Integer> map = DbMailItem.listCalendarItemIdsAndDates(this, type, lastSync, folderId, null);
             success = true;
             return map;
+        } finally {
+            endTransaction(success);
         }
     }
 
