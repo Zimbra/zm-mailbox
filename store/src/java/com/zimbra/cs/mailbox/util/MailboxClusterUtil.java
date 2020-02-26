@@ -20,7 +20,7 @@ public class MailboxClusterUtil {
     static {
         try {
             mailboxWorkerName = Files.asCharSource(new File("/var/run/pod-info/pod-name"), Charset.defaultCharset()).read();
-            ZimbraLog.mailbox.info("mailbox worker name is %s", mailboxWorkerName);
+            ZimbraLog.mailbox.debug("mailbox worker name is %s", mailboxWorkerName);
         } catch (IOException e) {
             mailboxWorkerName = String.format("zmc-mailbox-%s", UUIDUtil.generateUUID());
             ZimbraLog.mailbox.warn("Unable to determine mailbox worker name! Generated name '%s' instead", mailboxWorkerName);
