@@ -1014,32 +1014,6 @@ class WebSSLUpstreamServersVar extends ServersVar {
     }
 }
 
-class WebAdminUpstreamServersVar extends ServersVar {
-	public WebAdminUpstreamServersVar() {
-		super("web.admin.upstream.:servers", Provisioning.A_zimbraReverseProxyAdminPortAttribute,
-				"List of upstream admin console servers used by Web Proxy (i.e. servers " +
-				"for which zimbraReverseProxyLookupTarget is true");
-	}
-
-	@Override
-	public void update() throws ServiceException {
-		ArrayList<String> directives = new ArrayList<String>();
-		String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyAdminPortAttribute, "");
-
-		List<Server> mailclientservers = mProv.getAllMailClientServers();
-		for (Server server : mailclientservers) {
-			String serverName = server.getAttr(
-					Provisioning.A_zimbraServiceHostname, "");
-
-			if (isValidUpstream(server, serverName)) {
-				directives.add(generateServerDirective(server, serverName, portName));
-				mLog.debug("Added server to HTTPS Admin mailstore upstream: " + serverName);
-			}
-		}
-		mValue = directives;
-	}
-}
-
 class WebEwsUpstreamServersVar extends ServersVar {
 
 	public WebEwsUpstreamServersVar() {
@@ -2965,7 +2939,7 @@ public class ProxyConfGen
         mConfVars.put("web.admin.uport", new ProxyConfVar("web.admin.uport", Provisioning.A_zimbraAdminPort, new Integer(7071), ProxyConfValueType.INTEGER, ProxyConfOverride.SERVER, "Admin console upstream port"));
         mConfVars.put("web.admin.upstream.name", new ProxyConfVar("web.admin.upstream.name", null, ZIMBRA_ADMIN_CONSOLE_UPSTREAM_NAME, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG, "Symbolic name for admin console upstream cluster"));
         mConfVars.put("web.admin.upstream.adminclient.name", new ProxyConfVar("web.admin.upstream.adminclient.name", null, ZIMBRA_ADMIN_CONSOLE_CLIENT_UPSTREAM_NAME, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG, "Symbolic name for admin client console upstream cluster"));
-        mConfVars.put("web.admin.upstream.:servers", new WebAdminUpstreamServersVar());
+        mConfVars.put("web.admin.upstream.:servers", new WebAdminUpstreamAdminClientServersVar());
         mConfVars.put("web.admin.upstream.adminclient.:servers", new WebAdminUpstreamAdminClientServersVar());
         mConfVars.put("web.upstream.noop.timeout", new TimeoutVar("web.upstream.noop.timeout", "zimbra_noop_max_timeout", 1200, ProxyConfOverride.LOCALCONFIG, 20, "the response timeout for NoOpRequest"));
         mConfVars.put("web.upstream.waitset.timeout", new TimeoutVar("web.upstream.waitset.timeout", "zimbra_waitset_max_request_timeout", 1200, ProxyConfOverride.LOCALCONFIG, 20, "the response timeout for WaitSetRequest"));
