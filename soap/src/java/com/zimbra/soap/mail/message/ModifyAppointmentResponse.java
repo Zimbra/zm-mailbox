@@ -22,7 +22,6 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.gql.GqlConstants;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.CreateCalendarItemResponse;
 
 import io.leangen.graphql.annotations.types.GraphQLType;
