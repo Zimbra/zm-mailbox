@@ -237,6 +237,7 @@ import com.zimbra.soap.mail.message.TestDataSourceResponse;
 import com.zimbra.soap.mail.type.ActionResult;
 import com.zimbra.soap.mail.type.ActionSelector;
 import com.zimbra.soap.mail.type.ContactFrequencyGraphSpec;
+import com.zimbra.soap.mail.type.CalendarItemInfo;
 import com.zimbra.soap.mail.type.ContactSpec;
 import com.zimbra.soap.mail.type.Content;
 import com.zimbra.soap.mail.type.Folder;
@@ -245,6 +246,7 @@ import com.zimbra.soap.mail.type.IMAPItemInfo;
 import com.zimbra.soap.mail.type.ImapCursorInfo;
 import com.zimbra.soap.mail.type.ImapMessageInfo;
 import com.zimbra.soap.mail.type.ImportContact;
+import com.zimbra.soap.mail.type.Invitation;
 import com.zimbra.soap.mail.type.ModifyContactSpec;
 import com.zimbra.soap.mail.type.NewContactAttr;
 import com.zimbra.soap.mail.type.NewContactGroupMember;
@@ -6870,5 +6872,25 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
 
     public void unsetCurWaitSetID() {
         mCurWaitSetID = null;
+    }
+
+    public Invitation getDefaultInvite(CalendarItemInfo calItemInfo) throws ServiceException {
+        if (calItemInfo == null) {
+            return null;
+        }
+        List<Invitation> list =  calItemInfo.getInvites();
+        if (list == null || list.isEmpty()) {
+            return null;
+        }
+        Invitation invitation = list.get(0);
+        if (list.size() > 1 && invitation.getInviteComponent().getRecurrence() == null) {
+            for (Invitation inv : list) {
+                if (inv.getInviteComponent().getRecurrence() != null) {
+                    invitation = inv;
+                    break;
+                }
+            }
+        }
+        return invitation;
     }
 }
