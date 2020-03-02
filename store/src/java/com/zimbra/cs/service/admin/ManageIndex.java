@@ -119,8 +119,8 @@ public final class ManageIndex extends AdminDocumentHandler {
     }
 
     private static enum Action {
-        ENABLE_INDEXING("enableIndexing"),
-        DISABLE_INDEXING("disableIndexing");
+        ENABLE_INDEXING(AdminConstants.A_ENABLE_INDEXING),
+        DISABLE_INDEXING(AdminConstants.A_DISABLE_INDEXING);
 
         private String str;
 
