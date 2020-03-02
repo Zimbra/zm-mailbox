@@ -506,7 +506,6 @@ public class Mailbox implements MailboxStore {
          */
         void addIndexItem(MailItem item) {
             indexItems.add(item);
-            ZimbraLog.index.debug("Mailbox - addIndexItem - size after adding item is %d", indexItems.size());
         }
 
         void addPendingDelete(PendingDelete info) {
@@ -5671,7 +5670,6 @@ public class Mailbox implements MailboxStore {
     }
 
     void indexItem(MailItem item) throws ServiceException {
-        ZimbraLog.index.debug("Mailbox - indexItem - adding item %d for indexing", item.getId());
         currentChange().addIndexItem(item);
     }
 
@@ -10153,8 +10151,11 @@ public class Mailbox implements MailboxStore {
 
                 //If all goes well push the items to be indexed for async indexing.
                 //Has to be part of lock
-                ZimbraLog.index.debug("Mailbox - close - push %d items for async indexing", currentChange().indexItems.size());
-                if (index.isIndexingEnabled()) {
+                if (index.isIndexingEnabled() && currentChange().indexItems.size() > 0) {
+                    if (ZimbraLog.index.isDebugEnabled()) {
+                        int[] ids = currentChange().indexItems.stream().mapToInt(mi -> mi.getId()).toArray();
+                        ZimbraLog.index.debug("Mailbox - close - pushing %d items for async indexing: %s", ids.length, Arrays.toString(ids));
+                    }
                     index.queue(currentChange().indexItems, false);
                 }
 
