@@ -99,7 +99,7 @@ public class MailboxIndexUtil {
                 params.setOrderBy(Arrays.asList(new String[]{"date desc"}));
                 //slide day-long time window from most recent to oldest message
                 while(mostRecent >= oldest) {
-                    Long dayBefore = mostRecent - Constants.MILLIS_PER_DAY;
+                    Long dayBefore = mostRecent - Constants.SECONDS_PER_DAY;
                     long interval = ProvisioningUtil.getTimeIntervalServerAttribute(ZAttrProvisioning.A_zimbraIndexingQueuePollingInterval, 500L);
                     long maxWait = ProvisioningUtil.getTimeIntervalServerAttribute(ZAttrProvisioning.A_zimbraIndexingQueueTimeout, 10000L);
                     for(MailboxReIndexSpec mboxSpec : mailboxes) {
