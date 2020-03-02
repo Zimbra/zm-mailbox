@@ -107,8 +107,6 @@ import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.auth.twofactor.TOTPAuthenticator;
 import com.zimbra.common.auth.twofactor.TwoFactorOptions.Encoding;
-import com.zimbra.common.calendar.ICalTimeZone;
-import com.zimbra.common.calendar.WellKnownTimeZones;
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.httpclient.InputStreamRequestHttpRetryHandler;
 import com.zimbra.common.localconfig.LC;
@@ -6755,24 +6753,10 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         mCurWaitSetID = null;
     }
 
-    public ICalTimeZone getTimeZone() throws ServiceException {
-        String tzid = getAccountInfo(false).getPrefs().getTimeZoneId();
-        ICalTimeZone timezone = WellKnownTimeZones.getTimeZoneById(tzid);
-        if (timezone == null) {
-            return ICalTimeZone.getUTC();
-        }
-        return timezone;
-    }
-
-    public boolean isAttachmentsIndexingEnabled() throws ServiceException {
-        List<String> vals = getAccountInfo(false).getAttrs().get("zimbraAttachmentsIndexingEnabled");
-        if (vals == null || vals.isEmpty()) {
-            return true; // true by default
-        }
-        return Boolean.valueOf(vals.get(0));
-    }
-
     public Invitation getDefaultInvite(CalendarItemInfo calItemInfo) throws ServiceException {
+        if (calItemInfo == null) {
+            return null;
+        }
         List<Invitation> list =  calItemInfo.getInvites();
         if (list == null || list.isEmpty()) {
             return null;
