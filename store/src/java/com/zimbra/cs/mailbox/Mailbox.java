@@ -4409,11 +4409,15 @@ public class Mailbox implements MailboxStore {
         }
     }
 
-    public Pair<Long, Long> getSearchableItemDateBoundaries(OperationContext octxt)
+    public Pair<Long, Long> getSearchableItemDateBoundaries(OperationContext octxt) throws ServiceException {
+        return getSearchableItemDateBoundaries(octxt, null);
+    }
+
+    public Pair<Long, Long> getSearchableItemDateBoundaries(OperationContext octxt, Set<MailItem.Type> types)
             throws ServiceException {
         try (final MailboxTransaction t = mailboxReadTransaction("getSearchableItemDateBoundaries", octxt)) {
-            Long oldDate = DbMailItem.getOldestSearchableItemDate(this, this.getOperationConnection());
-            Long recentDate = DbMailItem.getMostRecentSearchableItemDate(this, this.getOperationConnection());
+            Long oldDate = DbMailItem.getOldestSearchableItemDate(this, types, this.getOperationConnection());
+            Long recentDate = DbMailItem.getMostRecentSearchableItemDate(this, types, this.getOperationConnection());
 
             t.commit();
             return new Pair<Long,Long>(oldDate,recentDate);

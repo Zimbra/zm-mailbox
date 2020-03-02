@@ -46,6 +46,7 @@ import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.EncoderException;
 import org.apache.commons.codec.net.BCodec;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.base.Supplier;
 import com.google.common.collect.HashMultimap;
@@ -72,6 +73,7 @@ import com.zimbra.cs.mailbox.Flag.FlagInfo;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailItem.PendingDelete;
+import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -4810,8 +4812,8 @@ public class DbMailItem {
      * @return
      * @throws ServiceException
      */
-    public static long getOldestSearchableItemDate(Mailbox mbox, DbConnection conn) throws ServiceException {
-        return getOldNewSarchableItemDate(mbox, conn, true);
+    public static long getOldestSearchableItemDate(Mailbox mbox,  Set<Type> types, DbConnection conn) throws ServiceException {
+        return getOldNewSarchableItemDate(mbox, types, conn, true);
     }
 
     /**
@@ -4821,11 +4823,11 @@ public class DbMailItem {
      * @return
      * @throws ServiceException
      */
-    public static long getMostRecentSearchableItemDate(Mailbox mbox, DbConnection conn) throws ServiceException {
-        return getOldNewSarchableItemDate(mbox, conn, false);
+    public static long getMostRecentSearchableItemDate(Mailbox mbox, Set<Type> types, DbConnection conn) throws ServiceException {
+        return getOldNewSarchableItemDate(mbox, types, conn, false);
     }
 
-    public static Long getOldNewSarchableItemDate(Mailbox mbox, DbConnection conn, Boolean oldest) throws ServiceException {
+    public static Long getOldNewSarchableItemDate(Mailbox mbox, Set<Type> types, DbConnection conn, Boolean oldest) throws ServiceException {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         StringBuilder buf = new StringBuilder();
@@ -4833,7 +4835,14 @@ public class DbMailItem {
         buf.append(getMailItemTableName(mbox, false));
         buf.append(" WHERE ");
         buf.append(IN_THIS_MAILBOX_AND);
-        buf.append("type NOT IN " + NON_SEARCHABLE_TYPES);
+        if (types == null) {
+            buf.append("type NOT IN " + NON_SEARCHABLE_TYPES);
+        } else {
+            buf.append("type IN (");
+            List<Byte> typeBytes = types.stream().map(t -> t.toByte()).collect(Collectors.toList());
+            buf.append(Joiner.on(",").join(typeBytes));
+            buf.append(") ");
+        }
         buf.append(" ORDER by date ");
         if(oldest) {
             buf.append(" asc ");
