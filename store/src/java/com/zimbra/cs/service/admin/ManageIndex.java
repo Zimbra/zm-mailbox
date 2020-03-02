@@ -30,7 +30,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
-import com.zimbra.cs.index.DelayedIndexUtil;
+import com.zimbra.cs.index.MailboxIndexUtil;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.OperationContext;
@@ -97,12 +97,12 @@ public final class ManageIndex extends AdminDocumentHandler {
             ZimbraLog.index.info("disabling indexing for %s and deleting index", account.getName());
             account.setFeatureDelayedIndexEnabled(true);
             account.setDelayedIndexStatus(DelayedIndexStatus.suppressed);
-            DelayedIndexUtil.asyncDeleteIndex(mbox, octxt);
+            MailboxIndexUtil.asyncDeleteIndex(mbox, octxt);
             break;
         case ENABLE_INDEXING:
             ZimbraLog.index.info("enabling indexing for %s and recreating index", account.getName());
             account.setDelayedIndexStatus(DelayedIndexStatus.indexing);
-            DelayedIndexUtil.asyncReIndex(mbox, octxt);
+            MailboxIndexUtil.asyncReIndexMailbox(mbox, octxt);
             break;
         default:
             break;

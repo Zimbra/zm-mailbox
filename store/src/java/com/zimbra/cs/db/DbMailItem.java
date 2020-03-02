@@ -4520,6 +4520,11 @@ public class DbMailItem {
             return this;
         }
 
+        public void clearTypes() {
+            excludedTypes.clear();
+            includedTypes.clear();
+        }
+
         public QueryParams setOrderBy(List<String> orders) {
             orderBy.clear();
             orderBy.addAll(orders);

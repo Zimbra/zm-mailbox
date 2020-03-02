@@ -17,10 +17,6 @@
 package com.zimbra.cs.service.admin;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -28,15 +24,11 @@ import java.util.Set;
 
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.util.Constants;
-import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
@@ -48,15 +40,14 @@ import com.zimbra.cs.account.SearchDirectoryOptions.SortOpt;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
-import com.zimbra.cs.db.DbMailItem.QueryParams;
-import com.zimbra.cs.index.queue.IndexingQueueAdapter;
+import com.zimbra.cs.index.MailboxIndexUtil;
+import com.zimbra.cs.index.MailboxIndexUtil.MailboxReIndexSpec;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.ReIndexStatus;
-import com.zimbra.cs.util.ProvisioningUtil;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.ReIndexRequest;
@@ -225,8 +216,8 @@ public final class ReIndex extends AdminDocumentHandler {
             int succeeded = 0;
             int failed = 0;
             int remaining = 0;
+            List<MailboxReIndexSpec> mailboxesToReindexByTime = Lists.newArrayList();
             //filter out remote accounts and proxy requests to their home servers
-            List<Mailbox> mailboxesToReindexByTime = Lists.newArrayList();
             for(ReindexMailboxInfo reIndexMboxInfo : mailboxSelectors) {
                 Account account = prov.getAccount(reIndexMboxInfo.getAccountId());
                 Element mboxStatus = response.addNonUniqueElement(AdminConstants.E_MAILBOX);
@@ -266,12 +257,12 @@ public final class ReIndex extends AdminDocumentHandler {
                         Set<MailItem.Type> types;
                         try {
                             types = MailItem.Type.setOf(typesStr);
+                            mailboxesToReindexByTime.add(new MailboxReIndexSpec(mbox, types));
                         } catch (IllegalArgumentException e) {
                             throw MailServiceException.INVALID_TYPE(e.getMessage());
                         }
-                        mbox.index.startReIndexByType(types, octxt);
-                        status = mbox.index.getReIndexStatus();
-                    } else if (idsStr != null) {
+                    }
+                    if (idsStr != null) {
                         Set<Integer> ids = new HashSet<Integer>();
                         for (String id : Splitter.on(',').trimResults().split(idsStr)) {
                             try {
@@ -283,101 +274,14 @@ public final class ReIndex extends AdminDocumentHandler {
                         mbox.index.startReIndexById(ids);
                         status = mbox.index.getReIndexStatus();
                     } else {
-                        mailboxesToReindexByTime.add(mbox);
+                        mailboxesToReindexByTime.add(new MailboxReIndexSpec(mbox));
                         status = new ReIndexStatus(0,0,0,ReIndexStatus.STATUS_RUNNING);
                     }
                     addProgressInfo(mboxStatus, status);
                 }
             }
 
-            //start a separate thread that will queue up items for re-indexing
-            Thread reindexer = new Thread() {
-                @Override
-                public void run() {
-                    //create a map of oldest and newest dates, so we can avoid querying a mailbox for days that are outside of it's lifetime
-                    HashMap<String,Long> oldestDates = Maps.newHashMap();
-                    HashMap<String,Long> newestDates = Maps.newHashMap();
-                    Long oldest = Long.MAX_VALUE;
-                    Long mostRecent = 0L;
-                    for(Mailbox mbox : mailboxesToReindexByTime) {
-                        String accountId = mbox.getAccountId();
-                        try {
-                            Pair<Long,Long> dateBoundaries = mbox.getSearchableItemDateBoundaries(octxt);
-                            Long oldDate = dateBoundaries.getFirst();
-                            Long recentDate = dateBoundaries.getSecond();
-
-                            if(recentDate < oldDate) {
-                                //this mailbox is empty
-                                IndexingQueueAdapter queueAdapter = IndexingQueueAdapter.getFactory().getAdapter();
-                                if(queueAdapter == null) {
-                                    throw ServiceException.FAILURE("Indexing Queue Adapter is not properly configured", null);
-                                }
-                                queueAdapter.deleteMailboxTaskCounts(accountId);
-                                queueAdapter.setTaskStatus(accountId, ReIndexStatus.STATUS_DONE);
-                            } else {
-                                newestDates.put(accountId, recentDate);
-                                oldestDates.put(accountId, oldDate);
-                                if(oldDate < oldest) {
-                                    oldest = oldDate;
-                                }
-                                if(recentDate > mostRecent) {
-                                    mostRecent = recentDate;
-                                }
-                            }
-                        } catch (ServiceException e) {
-                            ZimbraLog.index.error("Failed to queue items for re-indexing by date for account %s", accountId, e);
-                        }
-                    }
-
-                    //within each day, index newest messages first
-                    QueryParams params = new QueryParams();
-                    params.setOrderBy(Arrays.asList(new String[]{"date desc"}));
-                    params.setExcludedTypes(EnumSet.of(MailItem.Type.FOLDER, MailItem.Type.SEARCHFOLDER, MailItem.Type.MOUNTPOINT,
-                            MailItem.Type.TAG, MailItem.Type.CONVERSATION));
-                    //slide day-long time window from most recent to oldest message
-                    while(mostRecent >= oldest) {
-                        Long dayBefore = mostRecent - Constants.MILLIS_PER_DAY;
-                        long interval = ProvisioningUtil.getTimeIntervalServerAttribute(ZAttrProvisioning.A_zimbraIndexingQueuePollingInterval, 500L);
-                        long maxWait = ProvisioningUtil.getTimeIntervalServerAttribute(ZAttrProvisioning.A_zimbraIndexingQueueTimeout, 10000L);
-                        for(Mailbox mbox : mailboxesToReindexByTime) {
-                            String accountId = mbox.getAccountId();
-                            //check if current time window overlaps with the range of this account's mail items dates
-                            if( !(oldestDates.get(accountId) > mostRecent || newestDates.get(accountId) < dayBefore) ) {
-                                //generated SQL query has non-inclusive boundaries
-                                params.setDateAfter((int) (dayBefore-1L));
-                                params.setDateBefore((int) (mostRecent+1L));
-                                try {
-                                    while(maxWait > 0) {
-                                        List<Integer> ids = mbox.getItemIdList(octxt, params);
-                                        if(ids.isEmpty()) {
-                                            break;
-                                        }
-                                        if(mbox.index.startReIndexById(ids)) {
-                                            ZimbraLog.index.debug("Queued %d items for re-indexing for account %s for date range %tD - %tD", ids.size(), accountId, new Date(dayBefore), new Date(mostRecent));
-                                            break;
-                                        } else {
-                                            //queue is full. Wait for space to free up
-                                            try {
-                                                Thread.sleep(interval);
-                                            } catch (InterruptedException e) {
-                                                break;
-                                            }
-                                            maxWait-=interval;
-                                            continue;
-                                        }
-                                    }
-                                } catch (ServiceException e) {
-                                    ZimbraLog.index.error("Failed to queue items for re-indexing by date. Start date: %d, end date: %d, accountId: %s", dayBefore, mostRecent, accountId, e);
-                                }
-                            }
-                        }
-                        //move the window down by one day
-                        mostRecent = dayBefore;
-                    }
-                }
-            };
-            reindexer.setName("ReIndByDate-InitiatedBy-" + zsc.getAuthToken().getAccount().getName());
-            reindexer.start();
+            MailboxIndexUtil.asyncReIndexMailboxes(mailboxesToReindexByTime, octxt);
 
             //legacy SOAP clients expect "started" in status string when sending ReIndexRequest with action='start'
             Element prog = response.addUniqueElement(AdminConstants.E_PROGRESS);
