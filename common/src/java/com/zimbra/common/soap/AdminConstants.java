@@ -1551,4 +1551,23 @@ public final class AdminConstants {
     public static final String E_GAL_FILTER = "galFilter";
     public static final String E_LDAP_FILTER = "ldapFilter";
     public static final String A_CLEAR_FILTER = "clearFilter";
+
+    //ABQ constants
+    public static final String ABQ_MODE = "abq_mode";
+    public static final String ABQ_ADMIN_EMAIL_LIST = "abq_admin_email_list";
+    public static final String ABQ_NOTIFICATION_INTERVAL = "abq_notification_interval";
+    public static final String ABQ_LAST_NOTIFICATION_TIME = "abq_last_notification_time";
+    public static final String DEFAULT_ABQ_NOTIFICATION_INTERVAL = "8h";
+    public static final ABQ_MODE_ENUM DEFAULT_ABQ_MODE = ABQ_MODE_ENUM.disabled;
+    public enum ABQ_MODE_ENUM {
+        permissive,
+        interactive,
+        strict,
+        disabled
+    };
+    public enum ABQ_DEVICE_STATUS {
+        allowed,
+        quarantined,
+        blocked
+    };
 }
