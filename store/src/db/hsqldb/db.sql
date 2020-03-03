@@ -218,14 +218,13 @@ CREATE TABLE current_sessions (
 
 CREATE TABLE abq_devices (
    device_id       VARCHAR(64) NOT NULL,
-   account_id      VARCHAR(127) NOT NULL,
-   status          VARCHAR(64),
+   account_id      VARCHAR(127),
+   status          ENUM('allowed', 'quarantined', 'blocked'),
    created_time    DATETIME,
    created_by      VARCHAR(255),
    modified_time   DATETIME,
    modified_by     VARCHAR(255),
 
-   CONSTRAINT pk_abq_devices PRIMARY KEY (device_id, account_id),
-   CONSTRAINT fk_abq_devices_device_id FOREIGN KEY (device_id) REFERENCES mobile_devices(device_id) ON DELETE CASCADE,
-   CONSTRAINT fk_abq_devices_account_id FOREIGN KEY (account_id) REFERENCES mailbox(account_id) ON DELETE CASCADE
+   CONSTRAINT pk_abq_devices PRIMARY KEY (device_id),
+   CONSTRAINT fk_abq_devices_device_id FOREIGN KEY (device_id) REFERENCES mobile_devices(device_id) ON DELETE CASCADE
 );
