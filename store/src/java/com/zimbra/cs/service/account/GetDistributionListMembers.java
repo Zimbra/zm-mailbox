@@ -30,7 +30,6 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Group.GroupOwner;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.gal.GalGroupMembers;
 import com.zimbra.cs.gal.GalGroupMembers.DLMembers;
 import com.zimbra.cs.gal.GalGroupMembers.DLMembersResult;
@@ -169,27 +168,29 @@ public class GetDistributionListMembers extends GalDocumentHandler {
         // The isOwner/isMember/isHideInGal check will be executed on the
         // home server of the group, which has the most up-to-date data.
 
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);      
         boolean local = proxiedToHomeOfInternalGroup || Provisioning.onLocalServer(group);
         if (local) {
             // do it locally
             return getMembersFromLdap(account, group);
         } else {
-            Server server = group.getServer();
-            if (server == null) {
+            String targetPod = Provisioning.affinityServerForZimbraId(group.getId());
+            ZimbraSoapContext pxyCtxt = new ZimbraSoapContext(zsc);
+            if (targetPod == null) {
                 // just execute locally
                 ZimbraLog.account.warn(
-                        "unable to find home server (%s) for group %s, getting members from LDAP on local server",
-                        group.getAttr(Provisioning.A_zimbraMailHost), group.getName());
+                        "unable to find home pod (%s) for group %s, getting members from LDAP on local server",
+                        targetPod, group.getName());
                 // do it locally
                 return getMembersFromLdap(account, group);
             } else {
-                // proxy to the home server of the group
+                // proxy to the home pod of the group
                 ZimbraLog.account.info("Proxying request: dl.name=%s reason: target=%s",
-                        group.getName(), server.getName());
+                        group.getName(), targetPod);
 
                 request.addAttribute(A_PROXIED_TO_HOME_OF_GROUP, true);
                 try {
-                    Element resp = proxyRequest(request, context, server);
+                    Element resp = proxyRequest(request, context, targetPod, pxyCtxt);
                     return new ProxiedDLMembers(resp);
                 } catch (ServiceException e) {
                     // delete attribute to avoid confusion in future proxied requests
