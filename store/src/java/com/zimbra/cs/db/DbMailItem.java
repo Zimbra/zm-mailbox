@@ -4381,7 +4381,7 @@ public class DbMailItem {
             throws SQLException {
         boolean folderSpecified = folderId != Mailbox.ID_AUTO_INCREMENT;
 
-        String lastSyncConstraint = " AND mi.change_date > ?";
+        String lastSyncConstraint = " AND mi.mod_metadata > ?";
         String typeConstraint = type == MailItem.Type.UNKNOWN ? "type IN " + CALENDAR_TYPES : typeIn(type);
 
         String excludeFolderPart = "";
