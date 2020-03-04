@@ -196,7 +196,6 @@ CREATE TABLE mobile_devices (
    approved_appl_list   VARCHAR(512),
 
    CONSTRAINT pk_mobile_devices PRIMARY KEY (mailbox_id, device_id),
-   INDEX i_device_id (device_id),
    CONSTRAINT fk_mobile_mailbox_id FOREIGN KEY (mailbox_id) REFERENCES mailbox(id) ON DELETE CASCADE,
 );
 
@@ -219,12 +218,11 @@ CREATE TABLE current_sessions (
 CREATE TABLE abq_devices (
    device_id       VARCHAR(64) NOT NULL,
    account_id      VARCHAR(127),
-   status          ENUM('allowed', 'quarantined', 'blocked'),
+   status          VARCHAR(20) check (status in ('allowed', 'quarantined', 'blocked')),
    created_time    DATETIME,
    created_by      VARCHAR(255),
    modified_time   DATETIME,
    modified_by     VARCHAR(255),
 
-   CONSTRAINT pk_abq_devices PRIMARY KEY (device_id),
-   CONSTRAINT fk_abq_devices_device_id FOREIGN KEY (device_id) REFERENCES mobile_devices(device_id) ON DELETE CASCADE
+   CONSTRAINT pk_abq_devices PRIMARY KEY (device_id)
 );
