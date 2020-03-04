@@ -34,7 +34,7 @@ import org.apache.lucene.search.TermQuery;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
-import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.account.ZAttrProvisioning.DelayedIndexStatus;
 import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.service.ServiceException;
@@ -301,12 +301,16 @@ public final class MailboxIndex {
         return success;
     }
 
+    public synchronized boolean startReIndexByType(Set<MailItem.Type> types, OperationContext ctxt) throws ServiceException {
+        return startReIndexByType(types, ctxt, false);
+    }
+
     /**
      * Add mail items of specified type to re-indexing queue
      * @param types
      * @throws ServiceException
      */
-    public synchronized boolean startReIndexByType(Set<MailItem.Type> types, OperationContext ctxt) throws ServiceException {
+    public synchronized boolean startReIndexByType(Set<MailItem.Type> types, OperationContext ctxt, boolean skipIndexingEnabledCheck) throws ServiceException {
         boolean success = false;
         //Step 1: get items (does not matter whether we get these from cache or DB at this step)
         List<MailItem> items = new ArrayList<MailItem>();
@@ -342,7 +346,7 @@ public final class MailboxIndex {
                     for(int i=0;i<batchSize && ix < items.size(); i++, ix++) {
                         batch.add(items.get(ix));
                     }
-                    success = queue(batch, true);
+                    success = queue(batch, true, skipIndexingEnabledCheck);
                     if(!success) {
                         queueAdapter.setTaskStatus(mailbox.getAccountId(), ReIndexStatus.STATUS_QUEUE_FULL);
                         queueAdapter.incrementFailedMailboxTaskCount(mailbox.getAccountId(), items.size()-numAdded);
@@ -469,8 +473,13 @@ public final class MailboxIndex {
      * @throws ServiceException
      */
     @VisibleForTesting
+
     public synchronized boolean queue(List<MailItem> items, boolean isReindexing) throws ServiceException {
-        if (items.isEmpty()) {
+        return queue(items, isReindexing, false);
+    }
+
+    private synchronized boolean queue(List<MailItem> items, boolean isReindexing, boolean skipIndexingEnabledCheck) throws ServiceException {
+        if (items.isEmpty() || (!skipIndexingEnabledCheck && !isIndexingEnabled())) {
             return false;
         }
         List<MailItem> clonedItems = new ArrayList<MailItem>(items.size());
@@ -490,6 +499,9 @@ public final class MailboxIndex {
      */
     @VisibleForTesting
     public synchronized boolean queue(MailItem item, boolean isReindexing) throws ServiceException {
+        if (!isIndexingEnabled()) {
+            return false;
+        }
         ZimbraLog.index.debug("Queuing item %d for indexing", item.getId());
         IndexingQueueAdapter queueAdapter = IndexingQueueAdapter.getFactory().getAdapter();
         List<MailItem> items = new ArrayList<>();
@@ -693,6 +705,14 @@ public final class MailboxIndex {
             }
         }
         return true;
+    }
+
+    public boolean isIndexingEnabled() throws ServiceException {
+        if (!mailbox.getAccount().isFeatureDelayedIndexEnabled()) {
+            return true;
+        } else {
+            return mailbox.getAccount().getDelayedIndexStatus() == DelayedIndexStatus.indexing;
+        }
     }
 
     private static final class ItemSearchResult extends DbSearch.Result {

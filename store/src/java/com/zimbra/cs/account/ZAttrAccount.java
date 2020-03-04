@@ -9782,6 +9782,209 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Whether MBS generates index data of the account&#039;s mailbox. The
+     * key works only when zimbraFeatureDelayedIndexEnabled is TRUE.
+     * suppressed - Not generate index. (default) When administrator accesses
+     * the account via admin console, it changes to
+     * &quot;waitingForSearch&quot;. When the account logs in via SOAP, IMAP
+     * or MobileSync protocol, it changes to &quot;indexing&quot;.
+     * waitingForSearch - Not generate index. When administrator executes
+     * text search on the account, it changes to &quot;indexing&quot;. When
+     * the account logs in via SOAP, IMAP or MobileSync protocol, it changes
+     * to &quot;indexing&quot;. indexing - Generate index
+     *
+     * <p>Valid values: [suppressed, waitingForSearch, indexing]
+     *
+     * @return zimbraDelayedIndexStatus, or null if unset and/or has invalid value
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=9004)
+    public ZAttrProvisioning.DelayedIndexStatus getDelayedIndexStatus() {
+        try { String v = getAttr(Provisioning.A_zimbraDelayedIndexStatus, true, true); return v == null ? null : ZAttrProvisioning.DelayedIndexStatus.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+    }
+
+    /**
+     * Whether MBS generates index data of the account&#039;s mailbox. The
+     * key works only when zimbraFeatureDelayedIndexEnabled is TRUE.
+     * suppressed - Not generate index. (default) When administrator accesses
+     * the account via admin console, it changes to
+     * &quot;waitingForSearch&quot;. When the account logs in via SOAP, IMAP
+     * or MobileSync protocol, it changes to &quot;indexing&quot;.
+     * waitingForSearch - Not generate index. When administrator executes
+     * text search on the account, it changes to &quot;indexing&quot;. When
+     * the account logs in via SOAP, IMAP or MobileSync protocol, it changes
+     * to &quot;indexing&quot;. indexing - Generate index
+     *
+     * <p>Valid values: [suppressed, waitingForSearch, indexing]
+     *
+     * @return zimbraDelayedIndexStatus, or null if unset
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=9004)
+    public String getDelayedIndexStatusAsString() {
+        return getAttr(Provisioning.A_zimbraDelayedIndexStatus, null, true);
+    }
+
+    /**
+     * Whether MBS generates index data of the account&#039;s mailbox. The
+     * key works only when zimbraFeatureDelayedIndexEnabled is TRUE.
+     * suppressed - Not generate index. (default) When administrator accesses
+     * the account via admin console, it changes to
+     * &quot;waitingForSearch&quot;. When the account logs in via SOAP, IMAP
+     * or MobileSync protocol, it changes to &quot;indexing&quot;.
+     * waitingForSearch - Not generate index. When administrator executes
+     * text search on the account, it changes to &quot;indexing&quot;. When
+     * the account logs in via SOAP, IMAP or MobileSync protocol, it changes
+     * to &quot;indexing&quot;. indexing - Generate index
+     *
+     * <p>Valid values: [suppressed, waitingForSearch, indexing]
+     *
+     * @param zimbraDelayedIndexStatus new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=9004)
+    public void setDelayedIndexStatus(ZAttrProvisioning.DelayedIndexStatus zimbraDelayedIndexStatus) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDelayedIndexStatus, zimbraDelayedIndexStatus.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether MBS generates index data of the account&#039;s mailbox. The
+     * key works only when zimbraFeatureDelayedIndexEnabled is TRUE.
+     * suppressed - Not generate index. (default) When administrator accesses
+     * the account via admin console, it changes to
+     * &quot;waitingForSearch&quot;. When the account logs in via SOAP, IMAP
+     * or MobileSync protocol, it changes to &quot;indexing&quot;.
+     * waitingForSearch - Not generate index. When administrator executes
+     * text search on the account, it changes to &quot;indexing&quot;. When
+     * the account logs in via SOAP, IMAP or MobileSync protocol, it changes
+     * to &quot;indexing&quot;. indexing - Generate index
+     *
+     * <p>Valid values: [suppressed, waitingForSearch, indexing]
+     *
+     * @param zimbraDelayedIndexStatus new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=9004)
+    public Map<String,Object> setDelayedIndexStatus(ZAttrProvisioning.DelayedIndexStatus zimbraDelayedIndexStatus, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDelayedIndexStatus, zimbraDelayedIndexStatus.toString());
+        return attrs;
+    }
+
+    /**
+     * Whether MBS generates index data of the account&#039;s mailbox. The
+     * key works only when zimbraFeatureDelayedIndexEnabled is TRUE.
+     * suppressed - Not generate index. (default) When administrator accesses
+     * the account via admin console, it changes to
+     * &quot;waitingForSearch&quot;. When the account logs in via SOAP, IMAP
+     * or MobileSync protocol, it changes to &quot;indexing&quot;.
+     * waitingForSearch - Not generate index. When administrator executes
+     * text search on the account, it changes to &quot;indexing&quot;. When
+     * the account logs in via SOAP, IMAP or MobileSync protocol, it changes
+     * to &quot;indexing&quot;. indexing - Generate index
+     *
+     * <p>Valid values: [suppressed, waitingForSearch, indexing]
+     *
+     * @param zimbraDelayedIndexStatus new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=9004)
+    public void setDelayedIndexStatusAsString(String zimbraDelayedIndexStatus) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDelayedIndexStatus, zimbraDelayedIndexStatus);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether MBS generates index data of the account&#039;s mailbox. The
+     * key works only when zimbraFeatureDelayedIndexEnabled is TRUE.
+     * suppressed - Not generate index. (default) When administrator accesses
+     * the account via admin console, it changes to
+     * &quot;waitingForSearch&quot;. When the account logs in via SOAP, IMAP
+     * or MobileSync protocol, it changes to &quot;indexing&quot;.
+     * waitingForSearch - Not generate index. When administrator executes
+     * text search on the account, it changes to &quot;indexing&quot;. When
+     * the account logs in via SOAP, IMAP or MobileSync protocol, it changes
+     * to &quot;indexing&quot;. indexing - Generate index
+     *
+     * <p>Valid values: [suppressed, waitingForSearch, indexing]
+     *
+     * @param zimbraDelayedIndexStatus new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=9004)
+    public Map<String,Object> setDelayedIndexStatusAsString(String zimbraDelayedIndexStatus, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDelayedIndexStatus, zimbraDelayedIndexStatus);
+        return attrs;
+    }
+
+    /**
+     * Whether MBS generates index data of the account&#039;s mailbox. The
+     * key works only when zimbraFeatureDelayedIndexEnabled is TRUE.
+     * suppressed - Not generate index. (default) When administrator accesses
+     * the account via admin console, it changes to
+     * &quot;waitingForSearch&quot;. When the account logs in via SOAP, IMAP
+     * or MobileSync protocol, it changes to &quot;indexing&quot;.
+     * waitingForSearch - Not generate index. When administrator executes
+     * text search on the account, it changes to &quot;indexing&quot;. When
+     * the account logs in via SOAP, IMAP or MobileSync protocol, it changes
+     * to &quot;indexing&quot;. indexing - Generate index
+     *
+     * <p>Valid values: [suppressed, waitingForSearch, indexing]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=9004)
+    public void unsetDelayedIndexStatus() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDelayedIndexStatus, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether MBS generates index data of the account&#039;s mailbox. The
+     * key works only when zimbraFeatureDelayedIndexEnabled is TRUE.
+     * suppressed - Not generate index. (default) When administrator accesses
+     * the account via admin console, it changes to
+     * &quot;waitingForSearch&quot;. When the account logs in via SOAP, IMAP
+     * or MobileSync protocol, it changes to &quot;indexing&quot;.
+     * waitingForSearch - Not generate index. When administrator executes
+     * text search on the account, it changes to &quot;indexing&quot;. When
+     * the account logs in via SOAP, IMAP or MobileSync protocol, it changes
+     * to &quot;indexing&quot;. indexing - Generate index
+     *
+     * <p>Valid values: [suppressed, waitingForSearch, indexing]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=9004)
+    public Map<String,Object> unsetDelayedIndexStatus(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDelayedIndexStatus, "");
+        return attrs;
+    }
+
+    /**
      * allowed passcode lockout duration. Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
@@ -14744,6 +14947,83 @@ public abstract class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetFeatureDataSourcePurgingEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureDataSourcePurgingEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Whether the &quot;delayed index&quot; feature is enabled. If FALSE,
+     * index is always generated
+     *
+     * @return zimbraFeatureDelayedIndexEnabled, or false if unset
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=9003)
+    public boolean isFeatureDelayedIndexEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureDelayedIndexEnabled, false, true);
+    }
+
+    /**
+     * Whether the &quot;delayed index&quot; feature is enabled. If FALSE,
+     * index is always generated
+     *
+     * @param zimbraFeatureDelayedIndexEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=9003)
+    public void setFeatureDelayedIndexEnabled(boolean zimbraFeatureDelayedIndexEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureDelayedIndexEnabled, zimbraFeatureDelayedIndexEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether the &quot;delayed index&quot; feature is enabled. If FALSE,
+     * index is always generated
+     *
+     * @param zimbraFeatureDelayedIndexEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=9003)
+    public Map<String,Object> setFeatureDelayedIndexEnabled(boolean zimbraFeatureDelayedIndexEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureDelayedIndexEnabled, zimbraFeatureDelayedIndexEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether the &quot;delayed index&quot; feature is enabled. If FALSE,
+     * index is always generated
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=9003)
+    public void unsetFeatureDelayedIndexEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureDelayedIndexEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether the &quot;delayed index&quot; feature is enabled. If FALSE,
+     * index is always generated
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=9003)
+    public Map<String,Object> unsetFeatureDelayedIndexEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureDelayedIndexEnabled, "");
         return attrs;
     }
 

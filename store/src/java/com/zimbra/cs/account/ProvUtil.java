@@ -111,6 +111,7 @@ import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning.IndexStatsInfo;
 import com.zimbra.cs.account.soap.SoapProvisioning.MailboxInfo;
+import com.zimbra.cs.account.soap.SoapProvisioning.ManageIndexType;
 import com.zimbra.cs.account.soap.SoapProvisioning.MemcachedClientConfig;
 import com.zimbra.cs.account.soap.SoapProvisioning.QuotaUsage;
 import com.zimbra.cs.account.soap.SoapProvisioning.ReIndexBy;
@@ -720,6 +721,9 @@ public class ProvUtil implements HttpDebugListener {
         HELP("help", "?", "commands",
                Category.MISC, 0, 1),
         LDAP(".ldap", ".l"),
+        MANAGE_MAILBOX_INDEX(
+                "manageMailboxIndex", "mmi",
+                "{name@domain|id} {disableIndexing|enableIndexing}", Category.MAILBOX, 2, 2),
         MODIFY_ACCOUNT("modifyAccount", "ma",
                "{name@domain|id} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 3, Integer.MAX_VALUE),
         MODIFY_ALWAYSONCLUSTER(
@@ -1535,6 +1539,9 @@ public class ProvUtil implements HttpDebugListener {
         case REINDEX_MAILBOX:
             doReIndexMailbox(args);
             break;
+        case MANAGE_MAILBOX_INDEX:
+            doManageMailboxIndex(args);
+            break;
         case COMPACT_INBOX_MAILBOX:
             doCompactIndexMailbox(args);
             break;
@@ -1759,14 +1766,14 @@ public class ProvUtil implements HttpDebugListener {
             }
         }
     }
-    
+
     private void doCreateHabOrgUnit(String[] args) throws ServiceException {
-        if(args.length != 3) { 
+        if(args.length != 3) {
             usage();
             return;
         }
         Domain domain = lookupDomain(args[1], prov, Boolean.FALSE);
-        
+
         if (prov instanceof SoapProvisioning) {
             ((SoapProvisioning) prov).createHabOrgUnit(domain, args[2]);
         } else {
@@ -1791,9 +1798,9 @@ public class ProvUtil implements HttpDebugListener {
         }
         return;
     }
-    
+
     private void doRenameHabOrgUnit(String[] args)  throws ServiceException {
-        if(args.length != 4) { 
+        if(args.length != 4) {
             usage();
             return;
         }
@@ -1804,9 +1811,9 @@ public class ProvUtil implements HttpDebugListener {
             prov.renameHabOrgUnit(domain, args[2], args[3]);
         }
     }
-    
+
     private void doDeleteHabOrgUnit(String[] args)  throws ServiceException {
-        if(args.length != 3) { 
+        if(args.length != 3) {
             usage();
             return;
         }
@@ -1819,7 +1826,7 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     private void doGetHab(String[] args)  throws ServiceException {
-        if(args.length != 2) { 
+        if(args.length != 2) {
             usage();
             return;
         }
@@ -1835,7 +1842,7 @@ public class ProvUtil implements HttpDebugListener {
         if (!(prov instanceof SoapProvisioning)) {
             throwSoapOnly();
         }
-        //{habRootGrpId} {habParentGrpId} {targetHabParentGrpId} 
+        //{habRootGrpId} {habParentGrpId} {targetHabParentGrpId}
         if (args.length == 4) {
             ((SoapProvisioning) prov).modifyHabGroup(args[1], args[2], args[3]);
         } else if (args.length == 3) {
@@ -1845,13 +1852,13 @@ public class ProvUtil implements HttpDebugListener {
             return;
         }
     }
-    
+
     private void modifyHabGroupSeniority(String[] args)  throws ServiceException {
         if (!(prov instanceof SoapProvisioning)) {
             throwSoapOnly();
         }
-        
-        //{habGrpId} {seniorityIndex} 
+
+        //{habGrpId} {seniorityIndex}
         if (args.length == 3) {
             ((SoapProvisioning) prov).modifyHabGroupSeniority(args[1], args[2]);
         } else {
@@ -1976,6 +1983,22 @@ public class ProvUtil implements HttpDebugListener {
             console.printf("progress: numSucceeded=%d, numFailed=%d, numRemaining=%d\n", progress.getNumSucceeded(),
                     progress.getNumFailed(), progress.getNumRemaining());
         }
+    }
+
+    private void doManageMailboxIndex(String[] args) throws ServiceException {
+        if (!(prov instanceof SoapProvisioning)) {
+            throwSoapOnly();
+        }
+        SoapProvisioning sp = (SoapProvisioning) prov;
+        Account acct = lookupAccount(args[1]);
+        ManageIndexType type = null;
+        try {
+            type = ManageIndexType.valueOf(args[2]);
+        } catch (IllegalArgumentException e) {
+            throw ServiceException.INVALID_REQUEST("invalid argument", null);
+        }
+        String status = sp.manageIndex(acct, type);
+        console.printf("status: %s\n", status);
     }
 
     private void doCompactIndexMailbox(String[] args) throws ServiceException {
@@ -3908,7 +3931,7 @@ public class ProvUtil implements HttpDebugListener {
                 }
             } catch (ArgException | HttpException e) {
                 usage();
-            } 
+            }
         }
     }
 
@@ -5635,7 +5658,7 @@ public class ProvUtil implements HttpDebugListener {
         console.println("========== SOAP SEND ==========");
 
         if (debugLevel == SoapDebugLevel.high) {
-            
+
                 URI uri = postMethod.getURI();
                 console.println(uri.toString());
                 Header[] headers = postMethod.getAllHeaders();
