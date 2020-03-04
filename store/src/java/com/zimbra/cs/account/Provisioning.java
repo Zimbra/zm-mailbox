@@ -1731,9 +1731,9 @@ public abstract class Provisioning extends ZAttrProvisioning {
         return isAlwaysOn;
     }
 
-    public static boolean onLocalServer(Group group) throws ServiceException {
-        String target    = group.getAttr(Provisioning.A_zimbraMailHost);
-        String localhost = getInstance().getLocalServer().getAttr(Provisioning.A_zimbraServiceHostname);
+    public static boolean onLocalServer(Group group) throws ServiceException {      
+        String target = Provisioning.affinityServerForZimbraId(group.getId());     
+        String localhost = getLocalIp();
         return (target != null && target.equalsIgnoreCase(localhost));
     }
 
@@ -1752,7 +1752,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public abstract List<Server> getAllServers(String service, String clusterId) throws ServiceException;
 
     public List<Server> getAllWebClientServers() throws ServiceException {
-        List<Server> mailboxservers = getAllServers(Provisioning.SERVICE_MAILBOX);
+        List<Server> mailboxservers = getAllServers(Provisioning.SERVICE_MAILBOX); 
         List<Server> webclientservers = getAllServers(Provisioning.SERVICE_WEBCLIENT);
 
         for (Server server : mailboxservers) {

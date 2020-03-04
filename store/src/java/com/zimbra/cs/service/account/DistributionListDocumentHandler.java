@@ -49,10 +49,11 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.httpclient.URLUtil;
+import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.account.type.DistributionListSubscribeOp;
 import com.zimbra.soap.admin.type.CacheEntryType;
 
@@ -64,17 +65,18 @@ public abstract class DistributionListDocumentHandler extends AccountDocumentHan
     @Override
     protected Element proxyIfNecessary(Element request, Map<String, Object> context)
     throws ServiceException {
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
         try {
             Group group = getGroupBasic(request, Provisioning.getInstance());
 
             if (!Provisioning.onLocalServer(group)) {
-                Server server = group.getServer();
-                if (server == null) {
+                String targetPod = Provisioning.affinityServerForZimbraId(group.getId());
+                ZimbraSoapContext pxyCtxt = new ZimbraSoapContext(zsc);
+                if (targetPod == null) {
                     throw ServiceException.PROXY_ERROR(
-                            AccountServiceException.NO_SUCH_SERVER(
-                            group.getAttr(Provisioning.A_zimbraMailHost)), "");
+                            AccountServiceException.NO_SUCH_SERVER, "");
                 }
-                return proxyRequest(request, context, server);
+                return proxyRequest(request, context, targetPod, pxyCtxt);
             } else {
                 // execute locally
                 return null;
