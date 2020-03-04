@@ -9,7 +9,6 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
-import org.apache.solr.client.solrj.SolrClient;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -23,6 +22,7 @@ import com.zimbra.cs.index.ZimbraTermsFilter;
 import com.zimbra.cs.index.ZimbraTopDocs;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxIndex.ItemIndexDeletionInfo;
 
 public class MockSolrIndex extends SolrIndex {
 
@@ -200,7 +200,12 @@ public class MockSolrIndex extends SolrIndex {
         }
 
         @Override
-        public void deleteDocument(List<Integer> ids) throws IOException,ServiceException {
+        public void deleteDocument(List<ItemIndexDeletionInfo> ids) throws IOException,ServiceException {
+            return;
+        }
+
+        @Override
+        public void deleteDocumentById(List<Integer> ids) throws IOException, ServiceException {
             return;
         }
 

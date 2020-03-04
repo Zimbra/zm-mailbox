@@ -1,7 +1,6 @@
 package com.zimbra.cs.index.queue;
 
 import static org.junit.Assert.assertEquals;
-import org.junit.Ignore;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -13,6 +12,7 @@ import java.util.UUID;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assume;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.zimbra.cs.account.Account;
@@ -22,6 +22,7 @@ import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxIndex.ItemIndexDeletionInfo;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mailbox.MockMailItem;
@@ -97,7 +98,7 @@ import com.zimbra.cs.mailbox.ReIndexStatus;
         Account account = Provisioning.getInstance().getAccountById(MockProvisioning.DEFAULT_ACCOUNT_ID);
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         Integer itemId = 1;
-        adapter.put(new DeleteFromIndexTaskLocator(itemId, account.getId(), mbox.getId(), mbox.getSchemaGroupId()));
+        adapter.put(new DeleteFromIndexTaskLocator(new ItemIndexDeletionInfo(itemId, 1), account.getId(), mbox.getId(), mbox.getSchemaGroupId()));
 
         // verify that message is in the queue
         assertTrue("item queue should not be empty", adapter.hasMoreItems());
@@ -132,9 +133,9 @@ import com.zimbra.cs.mailbox.ReIndexStatus;
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         Integer itemId1 = 1;
         Integer itemId2 = 2;
-        ArrayList<Integer> itemIds = new ArrayList<Integer>();
-        itemIds.add(itemId1);
-        itemIds.add(itemId2);
+        ArrayList<ItemIndexDeletionInfo> itemIds = new ArrayList<ItemIndexDeletionInfo>();
+        itemIds.add(new ItemIndexDeletionInfo(itemId1, 1));
+        itemIds.add(new ItemIndexDeletionInfo(itemId2, 1));
         adapter.put(new DeleteFromIndexTaskLocator(itemIds, account.getId(), mbox.getId(), mbox.getSchemaGroupId()));
 
         // verify that message is in the queue

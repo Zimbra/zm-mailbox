@@ -17,7 +17,6 @@
 package com.zimbra.cs.index;
 
 import java.io.IOException;
-import org.junit.Ignore;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -29,7 +28,6 @@ import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.MultiPhraseQuery;
 import org.apache.lucene.search.PhraseQuery;
-import org.apache.lucene.search.PhraseQuery.Builder;
 import org.apache.lucene.search.PrefixQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
@@ -42,6 +40,7 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableMap;
@@ -479,7 +478,7 @@ import com.zimbra.cs.mime.ParsedContact;
         searcher.close();
 
         indexer = index.openIndexer();
-        indexer.deleteDocument(Collections.singletonList(contact1.getId()));
+        indexer.deleteDocumentById(Collections.singletonList(contact1.getId()));
         indexer.close();
 
         searcher = index.openSearcher();
@@ -566,7 +565,7 @@ import com.zimbra.cs.mime.ParsedContact;
             checkNextTerm(fields, new Term(LuceneFields.L_CONTACT_DATA, "zimbra"));
             checkNextTerm(fields, new Term(LuceneFields.L_CONTACT_DATA, "zimbra.com"));
             checkAtEnd(fields, LuceneFields.L_CONTACT_DATA);
-        } 
+        }
         try (TermFieldEnumeration fields = searcher.getIndexReader()
             .getTermsForField(LuceneFields.L_CONTENT)) {
             // l.content values:
