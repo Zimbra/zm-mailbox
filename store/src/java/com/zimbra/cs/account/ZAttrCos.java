@@ -11393,7 +11393,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.9.0
      */
-    @ZAttr(id=3081)
+    @ZAttr(id=3083)
     public boolean isFeatureMobileAppEnabled() {
         return getBooleanAttr(Provisioning.A_zimbraFeatureMobileAppEnabled, false, true);
     }
@@ -11406,7 +11406,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.9.0
      */
-    @ZAttr(id=3081)
+    @ZAttr(id=3083)
     public void setFeatureMobileAppEnabled(boolean zimbraFeatureMobileAppEnabled) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureMobileAppEnabled, zimbraFeatureMobileAppEnabled ? TRUE : FALSE);
@@ -11422,7 +11422,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.9.0
      */
-    @ZAttr(id=3081)
+    @ZAttr(id=3083)
     public Map<String,Object> setFeatureMobileAppEnabled(boolean zimbraFeatureMobileAppEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureMobileAppEnabled, zimbraFeatureMobileAppEnabled ? TRUE : FALSE);
@@ -11436,7 +11436,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.9.0
      */
-    @ZAttr(id=3081)
+    @ZAttr(id=3083)
     public void unsetFeatureMobileAppEnabled() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureMobileAppEnabled, "");
@@ -11451,7 +11451,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.9.0
      */
-    @ZAttr(id=3081)
+    @ZAttr(id=3083)
     public Map<String,Object> unsetFeatureMobileAppEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureMobileAppEnabled, "");

@@ -6697,7 +6697,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.9.0
      */
-    @ZAttr(id=3081)
+    @ZAttr(id=3083)
     public static final String A_zimbraFeatureMobileAppEnabled = "zimbraFeatureMobileAppEnabled";
 
     /**
