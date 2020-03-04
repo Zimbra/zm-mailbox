@@ -43,6 +43,14 @@ public interface Indexer extends Closeable {
     void deleteDocument(List<ItemIndexDeletionInfo> ids) throws IOException, ServiceException;
 
     /**
+     * Deletes index documents.
+     *
+     * @param ids list of item IDs to delete
+     * @throws ServiceException
+     */
+    void deleteDocumentById(List<Integer> ids) throws IOException, ServiceException;
+
+    /**
      * Index an IndexDocument derived from a search history item
      */
     void addSearchHistoryDocument(IndexDocument doc) throws IOException, ServiceException;

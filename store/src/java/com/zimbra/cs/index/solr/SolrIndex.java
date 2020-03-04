@@ -588,6 +588,12 @@ public class SolrIndex extends IndexStore {
         public void close() throws IOException {}
 
         @Override
+        public void deleteDocumentById(List<Integer> ids) throws IOException, ServiceException {
+            deleteDocument(ids, LuceneFields.L_MAILBOX_BLOB_ID);
+        }
+
+
+        @Override
         public void deleteDocument(List<ItemIndexDeletionInfo> deleteInfo) throws IOException, ServiceException {
             String route = String.format("%s!", accountId);
             int[] itemIds = deleteInfo.stream().mapToInt(i -> i.getItemId()).toArray();
