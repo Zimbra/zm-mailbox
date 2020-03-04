@@ -9770,13 +9770,13 @@ TODO: delete them permanently from here
   <deprecateDesc>deprecated with attribute zimbraFeatureModernDesktopEnabled</deprecateDesc>
 </attr>
 
-<attr id="3081" name="zimbraFeatureMobileAppEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.9.0">
-  <defaultCOSValue>FALSE</defaultCOSValue>
-  <desc>Whether to allow a user to access Zimbra mobile App</desc>
-</attr>
-
 <attr id="3082" name="zimbraFeatureModernDesktopEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.9.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Whether to allow a user to access Zimbra modern desktop</desc>
+</attr>
+
+<attr id="3083" name="zimbraFeatureMobileAppEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.9.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>Whether to allow a user to access Zimbra mobile App</desc>
 </attr>
 </attrs>
