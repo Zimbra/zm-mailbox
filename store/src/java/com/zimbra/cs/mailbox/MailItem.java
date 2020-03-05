@@ -3600,6 +3600,10 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
     abstract Metadata encodeMetadata(Metadata meta);
 
     static Metadata encodeMetadata(Metadata meta, Color color, ACL rights, int metaVersion, int version, CustomMetadataList extended) {
+        return encodeMetadata(meta, color, rights, metaVersion, version, 0, extended);
+    }
+
+    static Metadata encodeMetadata(Metadata meta, Color color, ACL rights, int metaVersion, int version, int numIndexDocs, CustomMetadataList extended) {
         if (color != null && color.getMappedColor() != DEFAULT_COLOR) {
             meta.put(Metadata.FN_COLOR, color.toMetadata());
         }
@@ -3616,6 +3620,10 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         }
         if (rights != null) {
             meta.put(Metadata.FN_RIGHTS_MAP, rights.encode());
+        }
+
+        if (numIndexDocs > 0) {
+            meta.put(Metadata.FN_NUM_INDEX_DOCS, numIndexDocs);
         }
         return meta;
     }
@@ -3670,6 +3678,10 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             if (!isTagged(Flag.FlagInfo.NO_INHERIT)) {
                 alterTag(mMailbox.getFlagById(Flag.ID_NO_INHERIT), true);
             }
+        }
+        int numIndexDocs = meta.getInt(Metadata.FN_NUM_INDEX_DOCS, 0);
+        if (numIndexDocs > 0) {
+            this.numIndexDocs = numIndexDocs;
         }
     }
 
