@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2020 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -151,6 +151,10 @@ public final class AdminConstants {
     public static final String E_MODIFY_CONFIG_RESPONSE = "ModifyConfigResponse";
     public static final String E_GET_ALL_CONFIG_REQUEST = "GetAllConfigRequest";
     public static final String E_GET_ALL_CONFIG_RESPONSE = "GetAllConfigResponse";
+
+    public static final String E_ABQ_CONFIG_REQUEST = "ABQConfigRequest";
+    public static final String E_ABQ_CONFIG_RESPONSE = "ABQConfigResponse";
+    public static final String E_ABQ_CONFIG_APPEND = "append";
 
     public static final String E_GET_SERVICE_STATUS_REQUEST = "GetServiceStatusRequest";
     public static final String E_GET_SERVICE_STATUS_RESPONSE = "GetServiceStatusResponse";
@@ -658,6 +662,9 @@ public final class AdminConstants {
     public static final QName MODIFY_CONFIG_RESPONSE = QName.get(E_MODIFY_CONFIG_RESPONSE, NAMESPACE);
     public static final QName GET_ALL_CONFIG_REQUEST = QName.get(E_GET_ALL_CONFIG_REQUEST, NAMESPACE);
     public static final QName GET_ALL_CONFIG_RESPONSE = QName.get(E_GET_ALL_CONFIG_RESPONSE, NAMESPACE);
+
+    public static final QName ABQ_CONFIG_REQUEST = QName.get(E_ABQ_CONFIG_REQUEST, NAMESPACE);
+    public static final QName ABQ_CONFIG_RESPONSE = QName.get(E_ABQ_CONFIG_RESPONSE, NAMESPACE);
 
     public static final QName GET_SERVICE_STATUS_REQUEST = QName.get(E_GET_SERVICE_STATUS_REQUEST, NAMESPACE);
     public static final QName GET_SERVICE_STATUS_RESPONSE = QName.get(E_GET_SERVICE_STATUS_RESPONSE, NAMESPACE);
@@ -1563,8 +1570,12 @@ public final class AdminConstants {
         permissive,
         interactive,
         strict,
-        disabled
-    };
+        disabled;
+
+        public static ABQ_MODE_ENUM fromString(String s) {
+            return ABQ_MODE_ENUM.valueOf(s);
+        }
+    }
     public enum ABQ_DEVICE_STATUS {
         allowed,
         quarantined,

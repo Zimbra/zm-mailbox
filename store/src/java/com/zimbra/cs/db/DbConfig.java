@@ -56,24 +56,37 @@ public class DbConfig {
     private Timestamp mDbModified;
 
     public static DbConfig set(DbConnection conn, String name, String value) throws ServiceException {
+        return set(conn, name, value, null);
+    }
+
+    public static DbConfig set(DbConnection conn, String name, String value, String description) throws ServiceException {
 
         Timestamp modified = new Timestamp(System.currentTimeMillis());
 
         PreparedStatement stmt = null;
         try {
             // Try update first
-            stmt = conn.prepareStatement("UPDATE config SET value = ?, modified = ? WHERE name = ?");
-            stmt.setString(1, value);
-            stmt.setTimestamp(2, modified);
-            stmt.setString(3, name);
+            if (description != null) {
+                stmt = conn.prepareStatement("UPDATE config SET value = ?, modified = ?, description = ? WHERE name = ?");
+                stmt.setString(1, value);
+                stmt.setTimestamp(2, modified);
+                stmt.setString(3, description);
+                stmt.setString(4, name);
+            } else {
+                stmt = conn.prepareStatement("UPDATE config SET value = ?, modified = ? WHERE name = ?");
+                stmt.setString(1, value);
+                stmt.setTimestamp(2, modified);
+                stmt.setString(3, name);
+            }
             int numRows = stmt.executeUpdate();
 
             // If update didn't affect any rows, do an insert
             if (numRows == 0) {
-                stmt = conn.prepareStatement("INSERT INTO config(name, value, modified) VALUES (?, ?, ?)");
+                stmt = conn.prepareStatement("INSERT INTO config(name, value, modified, description) VALUES (?, ?, ?, ?)");
                 stmt.setString(1, name);
                 stmt.setString(2, value);
                 stmt.setTimestamp(3, modified);
+                stmt.setString(4, description);
                 stmt.executeUpdate();
             }
         } catch (SQLException e) {
