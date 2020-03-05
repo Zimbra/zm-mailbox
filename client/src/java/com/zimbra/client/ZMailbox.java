@@ -176,6 +176,8 @@ import com.zimbra.soap.mail.message.CreateDataSourceResponse;
 import com.zimbra.soap.mail.message.CreateSearchFolderRequest;
 import com.zimbra.soap.mail.message.CreateSearchFolderResponse;
 import com.zimbra.soap.mail.message.DeleteDataSourceRequest;
+import com.zimbra.soap.mail.message.GetAppointmentIdsSinceRequest;
+import com.zimbra.soap.mail.message.GetAppointmentIdsSinceResponse;
 import com.zimbra.soap.mail.message.GetAppointmentRequest;
 import com.zimbra.soap.mail.message.GetAppointmentResponse;
 import com.zimbra.soap.mail.message.GetDataSourcesRequest;
@@ -218,6 +220,7 @@ import com.zimbra.soap.mail.message.TestDataSourceRequest;
 import com.zimbra.soap.mail.message.TestDataSourceResponse;
 import com.zimbra.soap.mail.type.ActionResult;
 import com.zimbra.soap.mail.type.ActionSelector;
+import com.zimbra.soap.mail.type.CalendarItemInfo;
 import com.zimbra.soap.mail.type.ContactSpec;
 import com.zimbra.soap.mail.type.Content;
 import com.zimbra.soap.mail.type.Folder;
@@ -226,6 +229,7 @@ import com.zimbra.soap.mail.type.IMAPItemInfo;
 import com.zimbra.soap.mail.type.ImapCursorInfo;
 import com.zimbra.soap.mail.type.ImapMessageInfo;
 import com.zimbra.soap.mail.type.ImportContact;
+import com.zimbra.soap.mail.type.Invitation;
 import com.zimbra.soap.mail.type.ModifyContactSpec;
 import com.zimbra.soap.mail.type.NewContactAttr;
 import com.zimbra.soap.mail.type.NewContactGroupMember;
@@ -2829,10 +2833,17 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     }
 
     public ZMessage getMessage(ZGetMessageParams params) throws ServiceException {
+        return getMessage(params, false);
+    }
+
+    public ZMessage getMessage(ZGetMessageParams params, boolean inCacheOnly) throws ServiceException {
         lock();
         try {
             CachedMessage cm = mMessageCache.get(params.getId());
             if (cm == null || !cm.params.equals(params)) {
+                if (inCacheOnly) {
+                    return null;
+                }
                 Element req = newRequestElement(MailConstants.GET_MSG_REQUEST);
                 Element msgEl = req.addUniqueElement(MailConstants.E_MSG);
                 msgEl.addAttribute(MailConstants.A_ID, params.getId());
@@ -2884,6 +2895,38 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         params.setRawContent(raw);
         params.setMax(max);
         return getMessage(params);
+    }
+
+    private ZMessage getMessageFromCache(String id, boolean raw, Integer max) throws ServiceException {
+        ZGetMessageParams params = new ZGetMessageParams();
+        params.setId(id);
+        params.setRawContent(raw);
+        params.setMax(max);
+        return getMessage(params, true);
+    }
+
+    public ZMessage getMessageFromCache(String id) throws ServiceException {
+        return getMessageFromCache(id, false, null);
+    }
+
+    public List<ZMessage> getMessagesByIds(String ids) throws ServiceException {
+        List<ZMessage> list = new ArrayList<ZMessage>();
+        if (!StringUtil.isNullOrEmpty(ids)) {
+            String[] idsArray = ids.split(",");
+            for (String id : idsArray) {
+                ZMessage msg = null;
+                try {
+                    msg = getMessageById(id, false, null);
+                } catch (ServiceException se) {
+                    ZimbraLog.sync.debug("Exception occured while fetching msg for id = %s", id);
+                    ZimbraLog.sync.debug(se);
+                }
+                if (msg != null) {
+                    list.add(msg);
+                }
+            }
+        }
+        return list;
     }
 
     public ZMessage getMessageById(String id) throws ServiceException {
@@ -5623,6 +5666,15 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         return resp == null ? null : resp.getItem();
     }
 
+    public com.zimbra.soap.mail.type.CalendarItemInfo getRemoteCalItemByID(String requestedAccountId, String id,
+            boolean includeInvites, boolean includeContent, boolean sync)
+                    throws ServiceException {
+        GetAppointmentResponse resp = invokeJaxbOnTargetAccount(
+                GetAppointmentRequest.createForIdInvitesContent(id, includeInvites, includeContent, sync),
+                requestedAccountId);
+        return resp == null ? null : resp.getItem();
+    }
+
     public void clearMessageCache() {
         mMessageCache.clear();
     }
@@ -6446,9 +6498,20 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     @Override
     public List<Integer> getIdsOfModifiedItemsInFolder(OpContext octxt, int lastSync, int folderId)
     throws ServiceException {
-        GetModifiedItemsIDsRequest req = new GetModifiedItemsIDsRequest(folderId, lastSync);
+        GetModifiedItemsIDsRequest req = new GetModifiedItemsIDsRequest(String.valueOf(folderId), lastSync);
         GetModifiedItemsIDsResponse resp = invokeJaxb(req);
-        return resp.getIds();
+        return resp.getMids();
+    }
+
+    /**
+     *  Will not return modified folders or tags
+     * @return a List of IDs of all caller-visible MailItems modified and deleted since the checkpoint
+     */
+    public Pair<List<Integer>, List<Integer>> getIdsOfModifiedAndDeletedItemsInFolder(int lastSync, int folderId)
+    throws ServiceException {
+        GetAppointmentIdsSinceRequest req = new GetAppointmentIdsSinceRequest(String.valueOf(folderId), lastSync);
+        GetAppointmentIdsSinceResponse resp = invokeJaxb(req);
+        return new Pair<List<Integer>, List<Integer>>(resp.getMids(), resp.getDids());
     }
 
     public Set<String> listIMAPSubscriptions() throws ServiceException {
@@ -6688,5 +6751,25 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
 
     public void unsetCurWaitSetID() {
         mCurWaitSetID = null;
+    }
+
+    public Invitation getDefaultInvite(CalendarItemInfo calItemInfo) throws ServiceException {
+        if (calItemInfo == null) {
+            return null;
+        }
+        List<Invitation> list =  calItemInfo.getInvites();
+        if (list == null || list.isEmpty()) {
+            return null;
+        }
+        Invitation invitation = list.get(0);
+        if (list.size() > 1 && invitation.getInviteComponent().getRecurrence() == null) {
+            for (Invitation inv : list) {
+                if (inv.getInviteComponent().getRecurrence() != null) {
+                    invitation = inv;
+                    break;
+                }
+            }
+        }
+        return invitation;
     }
 }

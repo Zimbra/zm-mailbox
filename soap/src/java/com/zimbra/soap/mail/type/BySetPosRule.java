@@ -18,12 +18,17 @@
 package com.zimbra.soap.mail.type;
 
 import com.google.common.base.MoreObjects;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.soap.base.BySetPosRuleInterface;
 
 import io.leangen.graphql.annotations.GraphQLInputField;
@@ -65,6 +70,18 @@ public class BySetPosRule implements BySetPosRuleInterface {
 
     @Override
     public String getList() { return list; }
+
+    public List<Integer> getAsList() {
+        if (StringUtil.isNullOrEmpty(list)) {
+            return null;
+        }
+        String[] arr = list.split(",");
+        List<Integer> toReturn = new ArrayList<Integer>();
+        for (String a : arr) {
+            toReturn.add(Integer.valueOf(a));
+        }
+        return toReturn;
+    }
 
     @Override
     public String toString() {

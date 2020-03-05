@@ -10400,12 +10400,28 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMobileSearchMimeSupportEnabled = "zimbraMobileSearchMimeSupportEnabled";
 
     /**
+     * Whether to permit syncing shared calendar folders
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=4002)
+    public static final String A_zimbraMobileShareCalendarEnabled = "zimbraMobileShareCalendarEnabled";
+
+    /**
      * Whether to permit syncing shared contact folders
      *
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1570)
     public static final String A_zimbraMobileShareContactEnabled = "zimbraMobileShareContactEnabled";
+
+    /**
+     * Whether to permit syncing shared mail folders
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=4001)
+    public static final String A_zimbraMobileShareMailEnabled = "zimbraMobileShareMailEnabled";
 
     /**
      * indicates whether the application can forward original email as RFC
