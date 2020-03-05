@@ -1737,6 +1737,14 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         return null;
     }
 
+    protected List<IndexDocument> checkNumIndexDocs(List<IndexDocument> docs) {
+        int expected = state.getNumIndexDocs();
+        int actual = docs == null ? 0 : docs.size();
+        if (expected != actual) {
+            ZimbraLog.index.warn("mbox %s - incorrect numIndexDocs for %s %s: (expected=%s, actual=%s)", mMailboxData.id, getType(), mId, expected, actual);
+        }
+        return docs;
+    }
 
     /** Returns the item's parent.  Returns <tt>null</tt> if the item
      *  does not have a parent.

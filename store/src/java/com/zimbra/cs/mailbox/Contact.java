@@ -716,7 +716,7 @@ public class Contact extends MailItem {
         data.date = mbox.getOperationTimestamp();
         data.setFlags(flags | (pc.hasAttachment() ? Flag.BITMASK_ATTACHED : 0));
         data.setTags(ntags);
-        data.metadata = encodeMetadata(DEFAULT_COLOR_RGB, 1, 1, custom, pc.getFields(), pc.getAttachments());
+        data.metadata = encodeMetadata(DEFAULT_COLOR_RGB, 1, 1, custom, pc.getFields(), pc.getAttachments(), pc.getNumIndexDocs(mbox.attachmentsIndexingEnabled()));
         data.contentChanged(mbox);
 
         if (ZimbraLog.mailop.isInfoEnabled()) {
@@ -753,7 +753,7 @@ public class Contact extends MailItem {
             if (pc.hasTemporaryAnalysisFailure()) {
                 throw new TemporaryIndexingException();
             }
-            return pc.getLuceneDocuments(getAccount(), indexAttachments);
+            return checkNumIndexDocs(pc.getLuceneDocuments(getAccount(), indexAttachments));
         } catch (ServiceException e) {
             ZimbraLog.index.error("Failed to index contact id=%d", getId());
             return Collections.emptyList();
@@ -784,6 +784,7 @@ public class Contact extends MailItem {
         if (pc.hasAttachment()) {
             state.setFlag(Flag.FlagInfo.ATTACHED);
         }
+        updateIndexedDocCount(pc.getNumIndexDocs(getMailbox().attachmentsIndexingEnabled()));
         saveData(new DbMailItem(mMailbox).setSender(getFileAsString(contactFields)));
     }
 
@@ -847,16 +848,16 @@ public class Contact extends MailItem {
 
     @Override
     Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, state.getColor(), state.getMetadataVersion(), state.getVersion(), mExtendedData, contactFields, attachments);
+        return encodeMetadata(meta, state.getColor(), state.getMetadataVersion(), state.getVersion(), mExtendedData, contactFields, attachments, state.getNumIndexDocs());
     }
 
-    private static String encodeMetadata(Color color, int metaVersion, int version, CustomMetadata custom, Map<String, String> fields, List<Attachment> attachments) {
+    private static String encodeMetadata(Color color, int metaVersion, int version, CustomMetadata custom, Map<String, String> fields, List<Attachment> attachments, int numIndexDocs) {
         CustomMetadataList extended = (custom == null ? null : custom.asList());
-        return encodeMetadata(new Metadata(), color, metaVersion, version, extended, fields, attachments).toString();
+        return encodeMetadata(new Metadata(), color, metaVersion, version, extended, fields, attachments, numIndexDocs).toString();
     }
 
     static Metadata encodeMetadata(Metadata meta, Color color, int metaVersion, int version, CustomMetadataList extended,
-                                   Map<String, String> fields, List<Attachment> attachments) {
+                                   Map<String, String> fields, List<Attachment> attachments, int numIndexDocs) {
         meta.put(Metadata.FN_FIELDS, new Metadata(fields));
         if (attachments != null && !attachments.isEmpty()) {
             MetadataList mlist = new MetadataList();
@@ -864,7 +865,7 @@ public class Contact extends MailItem {
                 mlist.add(attach.asMetadata());
             meta.put(Metadata.FN_ATTACHMENTS, mlist);
         }
-        return MailItem.encodeMetadata(meta, color, null, metaVersion, version, extended);
+        return MailItem.encodeMetadata(meta, color, null, metaVersion, version, numIndexDocs, extended);
     }
 
     @Override

@@ -228,4 +228,8 @@ public final class ParsedDocument {
         return temporaryAnalysisFailure;
     }
 
+    public int getNumIndexDocs() {
+        return 1;
+    }
+
 }

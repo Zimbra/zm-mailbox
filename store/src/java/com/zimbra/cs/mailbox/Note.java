@@ -173,7 +173,7 @@ public class Note extends MailItem {
         }
         data.date = mbox.getOperationTimestamp();
         data.setSubject(content);
-        data.metadata = encodeMetadata(color, 1, 1, custom, location);
+        data.metadata = encodeMetadata(color, 1, 1, custom, location, 1);
         data.contentChanged(mbox);
         ZimbraLog.mailop.info("Adding Note: id=%d, folderId=%d, folderName=%s.",
                 data.id, folder.getId(), folder.getName());
@@ -195,7 +195,7 @@ public class Note extends MailItem {
 
     @Override
     public List<IndexDocument> generateIndexDataAsync(boolean indexAttachments) {
-        return generateIndexData();
+        return checkNumIndexDocs(generateIndexData());
     }
 
     void setContent(String content) throws ServiceException {
@@ -251,17 +251,17 @@ public class Note extends MailItem {
 
     @Override
     Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, state.getColor(), state.getMetadataVersion(), state.getVersion(), mExtendedData, mBounds);
+        return encodeMetadata(meta, state.getColor(), state.getMetadataVersion(), state.getVersion(), mExtendedData, mBounds, state.getNumIndexDocs());
     }
 
-    private static String encodeMetadata(Color color, int metaVersion, int version, CustomMetadata custom, Rectangle bounds) {
+    private static String encodeMetadata(Color color, int metaVersion, int version, CustomMetadata custom, Rectangle bounds, int numIndexDocs) {
         CustomMetadataList extended = (custom == null ? null : custom.asList());
-        return encodeMetadata(new Metadata(), color, metaVersion, version, extended, bounds).toString();
+        return encodeMetadata(new Metadata(), color, metaVersion, version, extended, bounds, numIndexDocs).toString();
     }
 
-    static Metadata encodeMetadata(Metadata meta, Color color, int metaVersion, int version, CustomMetadataList extended, Rectangle bounds) {
+    static Metadata encodeMetadata(Metadata meta, Color color, int metaVersion, int version, CustomMetadataList extended, Rectangle bounds, int numIndexDocs) {
         meta.put(Metadata.FN_BOUNDS, bounds);
-        return MailItem.encodeMetadata(meta, color, null, metaVersion, version, extended);
+        return MailItem.encodeMetadata(meta, color, null, metaVersion, version, numIndexDocs, extended);
     }
 
 

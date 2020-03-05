@@ -286,7 +286,31 @@ public abstract class CalendarItem extends MailItem {
     public List<IndexDocument> generateIndexDataAsync(boolean indexAttachments) throws TemporaryIndexingException {
         List<IndexDocument> docs = null;
         docs = getIndexDocuments(indexAttachments);
-        return docs;
+        return checkNumIndexDocs(docs);
+    }
+
+    private static int getNumIndexDocs(List<Invite> invites, boolean attachmentIndexingEnabled) throws ServiceException {
+        int numDocs = 0;
+        for (Invite inv: invites) {
+            int delta;
+            if (inv.getDontIndexMimeMessage()) {
+                delta = 1;
+            } else {
+                MimeMessage mm = inv.getMimeMessage();
+                if (mm != null) {
+                    ParsedMessage pm = new ParsedMessage(mm, attachmentIndexingEnabled);
+                    delta = pm.getNumIndexDocs();
+                } else {
+                    delta = 1; // no blob
+                }
+            }
+            numDocs += delta;
+        }
+        return numDocs;
+    }
+
+    private int getNumIndexDocs() throws ServiceException {
+        return getNumIndexDocs(mInvites, getMailbox().attachmentsIndexingEnabled());
     }
 
     protected List<IndexDocument> getIndexDocuments(boolean indexAttachments) throws TemporaryIndexingException{
@@ -514,6 +538,8 @@ public abstract class CalendarItem extends MailItem {
         Account account = mbox.getAccount();
         firstInvite.updateMyPartStat(account, firstInvite.getPartStat());
 
+        int initialNumIndexDocs = getNumIndexDocs(invites, mbox.attachmentsIndexingEnabled());
+
         UnderlyingData data = new UnderlyingData();
         data.id = id;
         data.type = type.toByte();
@@ -527,7 +553,7 @@ public abstract class CalendarItem extends MailItem {
         data.setTags(ntags);
         data.setSubject(subject);
         data.metadata = encodeMetadata(DEFAULT_COLOR_RGB, 1, 1, custom, uid, startTime, endTime, recur,
-                                       invites, firstInvite.getTimeZoneMap(), new ReplyList(), null);
+                                       invites, firstInvite.getTimeZoneMap(), new ReplyList(), null, initialNumIndexDocs);
         data.contentChanged(mbox, false);
 
         if (!firstInvite.hasRecurId()) {
@@ -905,20 +931,20 @@ public abstract class CalendarItem extends MailItem {
 
     @Override Metadata encodeMetadata(Metadata meta) {
         return encodeMetadata(meta, state.getColor(), state.getMetadataVersion(), state.getVersion(), mExtendedData, mUid, mStartTime, mEndTime,
-                              mRecurrence, mInvites, mTzMap, mReplyList, mAlarmData);
+                              mRecurrence, mInvites, mTzMap, mReplyList, mAlarmData, state.getNumIndexDocs());
     }
 
     private static String encodeMetadata(Color color, int metaVersion, int version, CustomMetadata custom, String uid, long startTime, long endTime,
                                          Recurrence.IRecurrence recur, List<Invite> invs, TimeZoneMap tzmap,
-                                         ReplyList replyList, AlarmData alarmData) {
+                                         ReplyList replyList, AlarmData alarmData, int numIndexDocs) {
         CustomMetadataList extended = (custom == null ? null : custom.asList());
         return encodeMetadata(new Metadata(), color, metaVersion, version, extended, uid, startTime, endTime, recur,
-                              invs, tzmap, replyList, alarmData).toString();
+                              invs, tzmap, replyList, alarmData, numIndexDocs).toString();
     }
 
     static Metadata encodeMetadata(Metadata meta, Color color, int metaVersion, int version, CustomMetadataList extended,
                                    String uid, long startTime, long endTime, Recurrence.IRecurrence recur,
-                                   List<Invite> invs, TimeZoneMap tzmap, ReplyList replyList, AlarmData alarmData) {
+                                   List<Invite> invs, TimeZoneMap tzmap, ReplyList replyList, AlarmData alarmData, int numIndexDocs) {
         if (tzmap != null)
             meta.put(Metadata.FN_TZMAP, Util.encodeAsMetadata(tzmap));
 
@@ -940,7 +966,7 @@ public abstract class CalendarItem extends MailItem {
         if (alarmData != null)
             meta.put(Metadata.FN_ALARM_DATA, alarmData.encodeMetadata());
 
-        return MailItem.encodeMetadata(meta, color, null, metaVersion, version, extended);
+        return MailItem.encodeMetadata(meta, color, null, metaVersion, version, numIndexDocs, extended);
     }
 
     /**
@@ -2517,6 +2543,7 @@ public abstract class CalendarItem extends MailItem {
             subject = firstInvite.getName();
         }
         state.setSubject(Strings.nullToEmpty(subject));
+        updateIndexedDocCount(getNumIndexDocs());
         saveData(new DbMailItem(mMailbox));
     }
 

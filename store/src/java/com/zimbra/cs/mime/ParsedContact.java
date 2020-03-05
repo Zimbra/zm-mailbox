@@ -669,6 +669,24 @@ public final class ParsedContact {
         return indexDocs;
     }
 
+    public int getNumIndexDocs(boolean indexAttachments) {
+        int numDocs = 1;
+        if (indexAttachments && contactAttachments != null) {
+            for (Attachment attach: contactAttachments) {
+                String ctype = attach.getContentType();
+                try {
+                    MimeHandler handler = MimeHandlerManager.getMimeHandler(ctype, attach.getFilename());
+                    if (handler.isIndexingEnabled() && !DebugConfig.disableIndexingAttachmentsSeparately) {
+                        numDocs++;
+                    }
+                } catch (MimeHandlerException e) {
+                    ZimbraLog.index.warn("error trying to determine numIndexDocs; count may be wrong", e);
+                }
+            }
+        }
+        return numDocs;
+    }
+
     private void analyzeAttachment(Attachment attach, StringBuilder contentText, boolean indexAttachments)
     throws MimeHandlerException, ObjectHandlerException, ServiceException {
         String ctype = attach.getContentType();

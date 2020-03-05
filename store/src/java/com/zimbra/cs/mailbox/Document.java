@@ -158,7 +158,7 @@ public class Document extends MailItem {
 
     @Override
     public List<IndexDocument> generateIndexDataAsync(boolean indexAttachments) throws TemporaryIndexingException {
-        return this.generateIndexData();
+        return checkNumIndexDocs(this.generateIndexData());
     }
 
     @Override
@@ -238,7 +238,7 @@ public class Document extends MailItem {
         data.setSubject(name);
         data.setBlobDigest(pd.getDigest());
         data.metadata = encodeMetadata(meta, DEFAULT_COLOR_RGB, 1, 1, extended, mimeType, pd.getCreator(),
-                skipParsing ? null : pd.getFragment(), null, 0, pd.getDescription(), pd.isDescriptionEnabled(), null).toString();
+                skipParsing ? null : pd.getFragment(), null, 0, pd.getDescription(), pd.isDescriptionEnabled(), null, pd.getNumIndexDocs()).toString();
         data.setFlags(flags);
        return data;
     }
@@ -300,12 +300,12 @@ public class Document extends MailItem {
     @Override
     Metadata encodeMetadata(Metadata meta) {
         return encodeMetadata(meta, state.getColor(), state.getMetadataVersion(), state.getVersion(), mExtendedData, contentType, creator, fragment, lockOwner,
-                lockTimestamp, description, descEnabled, state.getRights());
+                lockTimestamp, description, descEnabled, state.getRights(), state.getNumIndexDocs());
     }
 
     static Metadata encodeMetadata(Metadata meta, Color color, int metaVersion, int version, CustomMetadataList extended,
             String mimeType, String creator, String fragment, String lockowner, long lockts, String description,
-            boolean descEnabled, ACL rights) {
+            boolean descEnabled, ACL rights, int numIndexDocs) {
         if (meta == null) {
             meta = new Metadata();
         }
@@ -316,7 +316,7 @@ public class Document extends MailItem {
         meta.put(Metadata.FN_LOCK_TIMESTAMP, lockts);
         meta.put(Metadata.FN_DESCRIPTION, description);
         meta.put(Metadata.FN_DESC_ENABLED, descEnabled);
-        return MailItem.encodeMetadata(meta, color, rights, metaVersion, version, extended);
+        return MailItem.encodeMetadata(meta, color, rights, metaVersion, version, numIndexDocs, extended);
     }
 
     private static final String CN_FRAGMENT  = "fragment";
