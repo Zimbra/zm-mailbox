@@ -3,6 +3,7 @@ package com.zimbra.cs.index.queue;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.zimbra.cs.mailbox.MailboxIndex.ItemIndexDeletionInfo;
 
 
 /**
@@ -11,21 +12,21 @@ import com.google.common.collect.Lists;
  *
  */
 public class DeleteFromIndexTaskLocator extends AbstractIndexingTasksLocator {
-    private final List<Integer> itemIds;
+    private final List<ItemIndexDeletionInfo> itemIds;
 
-    public DeleteFromIndexTaskLocator(Integer itemId, String accountID, int mailboxID, int mailboxSchemaGroupID) {
+    public DeleteFromIndexTaskLocator(ItemIndexDeletionInfo itemId, String accountID, int mailboxID, int mailboxSchemaGroupID) {
         super(mailboxID, mailboxSchemaGroupID, accountID);
         itemIds = Lists.newArrayList();
         itemIds.add(itemId);
     }
 
-    public DeleteFromIndexTaskLocator(List<Integer> itemIds, String accountID, int mailboxID, int mailboxSchemaGroupID) {
+    public DeleteFromIndexTaskLocator(List<ItemIndexDeletionInfo> itemIds, String accountID, int mailboxID, int mailboxSchemaGroupID) {
         super(mailboxID, mailboxSchemaGroupID, accountID);
         this.itemIds = Lists.newArrayList();
         this.itemIds.addAll(itemIds);
     }
 
-    public List<Integer> getItemIds() {
+    public List<ItemIndexDeletionInfo> getItemIds() {
         return itemIds;
     }
 }

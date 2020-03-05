@@ -77,6 +77,7 @@ import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxIndex.ItemIndexDeletionInfo;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Message.EventFlag;
 import com.zimbra.cs.mailbox.Metadata;
@@ -3111,7 +3112,7 @@ public class DbMailItem {
     }
 
     static final String LEAF_NODE_FIELDS = "id, size, type, unread, folder_id, parent_id, blob_digest," +
-                                           " mod_content, mod_metadata, flags, index_id, locator, tag_names, uuid";
+                                           " mod_content, mod_metadata, flags, index_id, locator, tag_names, uuid, metadata";
 
     private static final int LEAF_CI_ID           = 1;
     private static final int LEAF_CI_SIZE         = 2;
@@ -3127,6 +3128,7 @@ public class DbMailItem {
     private static final int LEAF_CI_LOCATOR      = 12;
     private static final int LEAF_CI_TAGS         = 13;
     private static final int LEAF_CI_UUID         = 14;
+    private static final int LEAF_CI_METADATA     = 15;
 
     public static PendingDelete getLeafNodes(Folder folder) throws ServiceException {
         Mailbox mbox = folder.getMailbox();
@@ -3445,14 +3447,20 @@ public class DbMailItem {
                 int indexId = rs.getInt(LEAF_CI_INDEX_ID);
                 boolean indexed = !rs.wasNull();
                 if (indexed) {
+                    String metadata = decodeMetadata(rs.getString(LEAF_CI_METADATA));
+                    int numIndexDocs = 0;
+                    if (metadata != null) {
+                        Metadata md = new Metadata(metadata);
+                        numIndexDocs = md.getInt(Metadata.FN_NUM_INDEX_DOCS, 0);
+                    }
                     if (info.sharedIndex == null) {
-                        info.sharedIndex = new HashSet<Integer>();
+                        info.sharedIndex = new HashSet<ItemIndexDeletionInfo>();
                     }
                     boolean shared = (flags & Flag.BITMASK_COPIED) != 0;
                     if (shared) {
-                        info.sharedIndex.add(indexId);
+                        info.sharedIndex.add(new ItemIndexDeletionInfo(indexId, numIndexDocs));
                     } else {
-                        info.indexIds.add(indexId > MailItem.IndexStatus.STALE.id() ? indexId : id);
+                        info.indexIds.add(new ItemIndexDeletionInfo(indexId > MailItem.IndexStatus.STALE.id() ? indexId : id, numIndexDocs));
                     }
                 }
             }
@@ -3583,7 +3591,7 @@ public class DbMailItem {
         if (info.sharedIndex == null || info.sharedIndex.isEmpty()) {
             return;
         }
-        List<Integer> indexIDs = new ArrayList<Integer>(info.sharedIndex);
+        List<ItemIndexDeletionInfo> indexIDs = new ArrayList<ItemIndexDeletionInfo>(info.sharedIndex);
 
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
@@ -3596,11 +3604,11 @@ public class DbMailItem {
                 int pos = 1;
                 pos = setMailboxId(stmt, mbox, pos);
                 for (int index = i; index < i + count; index++) {
-                    stmt.setInt(pos++, indexIDs.get(index));
+                    stmt.setInt(pos++, indexIDs.get(index).getItemId());
                 }
                 rs = stmt.executeQuery();
                 while (rs.next()) {
-                    info.sharedIndex.remove(rs.getInt(1));
+                    info.sharedIndex.remove(new ItemIndexDeletionInfo(rs.getInt(1), 0));
                 }
                 rs.close(); rs = null;
                 stmt.close(); stmt = null;

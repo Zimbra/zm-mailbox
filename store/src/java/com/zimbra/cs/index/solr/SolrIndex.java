@@ -73,6 +73,7 @@ import com.zimbra.cs.index.ZimbraTermsFilter;
 import com.zimbra.cs.index.ZimbraTopDocs;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox.IndexItemEntry;
+import com.zimbra.cs.mailbox.MailboxIndex.ItemIndexDeletionInfo;
 import com.zimbra.cs.util.IOUtil;
 
 /**
@@ -587,8 +588,32 @@ public class SolrIndex extends IndexStore {
         public void close() throws IOException {}
 
         @Override
-        public void deleteDocument(List<Integer> ids) throws IOException, ServiceException {
-            deleteDocument(ids, LuceneFields.L_MAILBOX_BLOB_ID);
+        public void deleteDocument(List<ItemIndexDeletionInfo> deleteInfo) throws IOException, ServiceException {
+            String route = String.format("%s!", accountId);
+            int[] itemIds = deleteInfo.stream().mapToInt(i -> i.getItemId()).toArray();
+            UpdateRequest req = new UpdateRequest();
+            int numDeleted = 0;
+            for (ItemIndexDeletionInfo info : deleteInfo) {
+                int itemId = info.getItemId();
+                int numIndexDocs = info.getNumIndexDocs();
+                if (numIndexDocs > 0) {
+                    for (int part = 1; part <= numIndexDocs; part++) {
+                        String docId = solrHelper.getSolrId(accountId, itemId, part);
+                        req.deleteById(docId, route);
+                        numDeleted++;
+                    }
+                } else {
+                    ZimbraLog.index.warn("numIndexDocs for item %s is %s, skipping", itemId, numIndexDocs);
+                }
+            }
+            if (numDeleted > 0) {
+                try {
+                    solrHelper.executeUpdate(accountId, req);
+                    ZimbraLog.index.debug("Deleted index documents for items %s (%s docs)", Arrays.toString(itemIds), numDeleted);
+                } catch (ServiceException e) {
+                    ZimbraLog.index.error("Problem deleting index documents for items %s (%s docs)", Arrays.toString(itemIds), numDeleted);
+                }
+            }
         }
 
         @Override

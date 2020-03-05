@@ -61,8 +61,9 @@ import com.zimbra.cs.db.DbPendingAclPush;
 import com.zimbra.cs.db.DbTag;
 import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.SortBy;
-import com.zimbra.cs.mailbox.MailItemState.AccessMode;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
+import com.zimbra.cs.mailbox.MailItemState.AccessMode;
+import com.zimbra.cs.mailbox.MailboxIndex.ItemIndexDeletionInfo;
 import com.zimbra.cs.mailbox.util.TypedIdList;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.Change;
@@ -830,6 +831,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
     protected MailboxBlob    mBlob;
     protected List<MailItem> mRevisions;
     protected CustomMetadataList mExtendedData;
+    protected int             numIndexDocs;
     protected final MailItemState state;
 
     MailItem(Mailbox mbox, UnderlyingData data) throws ServiceException {
@@ -3225,13 +3227,13 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         public Set<Integer> modifiedIds = new HashSet<Integer>(2);
 
         /** The document ids that need to be removed from the index. */
-        public final List<Integer> indexIds = new ArrayList<Integer>(1);
+        public final List<ItemIndexDeletionInfo> indexIds = new ArrayList<ItemIndexDeletionInfo>(1);
 
         /** The ids of all items with the {@link Flag#BITMASK_COPIED} flag being
          *  deleted.  Items in <tt>sharedIndex</tt> whose last copies are
          *  being removed are added to {@link #indexIds} via a call to
          *  {@link DbMailItem#resolveSharedIndex}. */
-        public Set<Integer> sharedIndex;
+        public Set<ItemIndexDeletionInfo> sharedIndex;
 
         /** The {@link com.zimbra.cs.store.Blob}s for all items being deleted that have content
          *  persisted in the store. */
@@ -3271,7 +3273,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
                     (cascadeIds == null ? cascadeIds = new ArrayList<Integer>(other.cascadeIds.size()) : cascadeIds).addAll(other.cascadeIds);
                 }
                 if (other.sharedIndex != null) {
-                    (sharedIndex == null ? sharedIndex = new HashSet<Integer>(other.sharedIndex.size()) : sharedIndex).addAll(other.sharedIndex);
+                    (sharedIndex == null ? sharedIndex = new HashSet<ItemIndexDeletionInfo>(other.sharedIndex.size()) : sharedIndex).addAll(other.sharedIndex);
                 }
 
                 for (Map.Entry<Integer, DbMailItem.LocationCount> entry : other.folderCounts.entrySet()) {
@@ -3519,9 +3521,9 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             if (getIndexStatus() != IndexStatus.NO) {
                 int indexId = getIndexStatus() == IndexStatus.DONE ? getIndexId() : mId;
                 if (isTagged(Flag.FlagInfo.COPIED)) {
-                    info.sharedIndex = Sets.newHashSet(indexId);
+                    info.sharedIndex = Sets.newHashSet(new ItemIndexDeletionInfo(indexId, numIndexDocs));
                 } else {
-                    info.indexIds.add(indexId);
+                    info.indexIds.add(new ItemIndexDeletionInfo(indexId, numIndexDocs));
                 }
             }
 

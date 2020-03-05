@@ -40,6 +40,7 @@ import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.AccessBoundedRegex;
+import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
@@ -458,7 +459,7 @@ public final class MailboxIndex {
     /**
      * Deletes index documents. The caller doesn't necessarily hold the mailbox lock.
      */
-    synchronized void delete(List<Integer> ids) {
+    synchronized void delete(List<ItemIndexDeletionInfo> ids) {
         if (ids.isEmpty()) {
             return;
         }
@@ -743,6 +744,31 @@ public final class MailboxIndex {
         @Override
         public MailItem getItem() {
             return item;
+        }
+    }
+
+    public static class ItemIndexDeletionInfo extends Pair<Integer, Integer> {
+
+        public ItemIndexDeletionInfo(Integer itemId, Integer numIndexDocs) {
+            super(itemId, numIndexDocs);
+        }
+
+        public int getItemId() {
+            return getFirst();
+        }
+
+        public int getNumIndexDocs() {
+            return getSecond();
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            // compare only by item id, so that it's easy to remove from PendingDelete.sharedIndex list
+            if (other instanceof ItemIndexDeletionInfo) {
+                return ((ItemIndexDeletionInfo) other).getItemId() == getItemId();
+            } else {
+                return false;
+            }
         }
     }
 }
