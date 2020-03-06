@@ -47,6 +47,13 @@ public abstract class RedissonRetryDecorator<R> {
 
             @Override
             public synchronized boolean exceptionMatches(Exception e) {
+                // first check for signs of an InterruptedException:
+                // 1. e is a RedisException (NOT a subclass of it)
+                // 2. there is no cause
+                if (e instanceof RedisException && e.getClass().equals(RedisException.class) && e.getCause() == null) {
+                    ZimbraLog.mailbox.info("redis operation was interrupted, not retrying");
+                    return false;
+                }
                 boolean isRedisException = false;
                 if (e instanceof RedisException && !(e instanceof RedissonShutdownException) && !(e instanceof RedisResponseTimeoutException)) {
                     isRedisException = true;
