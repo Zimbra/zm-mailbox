@@ -13,6 +13,7 @@ import com.zimbra.cs.stats.ActivityTracker;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.util.RetryUtil.RequestWithRetry;
 import com.zimbra.cs.util.RetryUtil.RequestWithRetry.Command;
+import com.zimbra.cs.util.RetryUtil.RequestWithRetry.RetryExceptionAction;
 
 public abstract class RedissonRetryDecorator<R> {
 
@@ -46,21 +47,20 @@ public abstract class RedissonRetryDecorator<R> {
         exceptionHandler = new RequestWithRetry.ExceptionHandler() {
 
             @Override
-            public synchronized boolean exceptionMatches(Exception e) {
+            public synchronized RetryExceptionAction handleException(Exception e) {
                 // first check for signs of an InterruptedException:
                 // 1. e is a RedisException (NOT a subclass of it)
                 // 2. there is no cause
                 if (e instanceof RedisException && e.getClass().equals(RedisException.class) && e.getCause() == null) {
                     ZimbraLog.mailbox.info("redis operation was interrupted, not retrying");
-                    return false;
+                    return RetryExceptionAction.reThrow(new InterruptedException());
                 }
-                boolean isRedisException = false;
                 if (e instanceof RedisException && !(e instanceof RedissonShutdownException) && !(e instanceof RedisResponseTimeoutException)) {
-                    isRedisException = true;
+                    return RetryExceptionAction.SHOULD_RETRY;
                 } else {
-                    ZimbraLog.mailbox.warn("caught %s in ExceptionHandler, but it is not the right exception type", e.getClass().getName(), e);
+                    ZimbraLog.mailbox.warn("caught %s in ExceptionHandler, but it is not the right exception type for client restart", e.getClass().getName(), e);
+                    return RetryExceptionAction.reThrow(e);
                 }
-                return isRedisException;
             }
         };
     }
