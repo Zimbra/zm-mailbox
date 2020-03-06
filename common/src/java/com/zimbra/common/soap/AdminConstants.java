@@ -532,6 +532,13 @@ public final class AdminConstants {
     public static final String E_GET_ALL_SKINS_REQUEST = "GetAllSkinsRequest";
     public static final String E_GET_ALL_SKINS_RESPONSE = "GetAllSkinsResponse";
 
+    //ABQ
+    public static final String E_ABQ_DEVICE_REQUEST = "AbqDeviceRequest";
+    public static final String E_DEVICE_ID = "deviceId";
+    public static final String E_ACCOUNT_ID = "accountId";
+
+    public static final String E_ABQ_DEVICE_RESPONSE = "AbqDeviceResponse";  
+    public static final QName ABQ_DEVICE_REQUEST = QName.get(E_ABQ_DEVICE_REQUEST, NAMESPACE);
 
     public static final QName PING_REQUEST = QName.get(E_PING_REQUEST, NAMESPACE);
     public static final QName PING_RESPONSE = QName.get(E_PING_RESPONSE, NAMESPACE);
