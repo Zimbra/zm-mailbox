@@ -129,6 +129,15 @@ CREATE TABLE config (
    modified     TIMESTAMP
 );
 
+INSERT INTO config (name, value, description, modified)
+  VALUES ('abq_mode', 'disabled', 'Whether ABQ mode is on/off', CURRENT_TIMESTAMP);
+INSERT INTO config (name, description, modified)
+  VALUES ('abq_admin_email_list', 'ABQ admin email list', CURRENT_TIMESTAMP);
+INSERT INTO config (name, value, description, modified)
+  VALUES ('abq_notification_interval', '8h', 'ABQ notification interval', CURRENT_TIMESTAMP);
+INSERT INTO config (name, description, modified)
+  VALUES ('abq_last_notification_time', 'ABQ last notification time', CURRENT_TIMESTAMP);
+
 CREATE TABLE table_maintenance (
    database_name       VARCHAR(64) NOT NULL,
    table_name          VARCHAR(64) NOT NULL,
@@ -206,4 +215,14 @@ CREATE TABLE current_sessions (
 	PRIMARY KEY (id, server_id)
 ); 
 
+CREATE TABLE abq_devices (
+   device_id       VARCHAR(64) NOT NULL,
+   account_id      VARCHAR(127),
+   status          VARCHAR(20) check (status in ('allowed', 'quarantined', 'blocked')),
+   created_time    DATETIME,
+   created_by      VARCHAR(255),
+   modified_time   DATETIME,
+   modified_by     VARCHAR(255),
 
+   CONSTRAINT pk_abq_devices PRIMARY KEY (device_id)
+);
