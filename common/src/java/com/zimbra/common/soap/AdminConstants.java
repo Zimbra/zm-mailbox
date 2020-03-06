@@ -534,11 +534,14 @@ public final class AdminConstants {
 
     //ABQ
     public static final String E_ABQ_DEVICE_REQUEST = "AbqDeviceRequest";
+    public static final String E_ABQ_DEVICE_RESPONSE = "AbqDeviceResponse";
     public static final String E_DEVICE_ID = "deviceId";
     public static final String E_ACCOUNT_ID = "accountId";
+    public static final String E_CREATED_TIME = "createdTime";
+    public static final String E_CREATED_BY = "createdBy";
 
-    public static final String E_ABQ_DEVICE_RESPONSE = "AbqDeviceResponse";  
     public static final QName ABQ_DEVICE_REQUEST = QName.get(E_ABQ_DEVICE_REQUEST, NAMESPACE);
+    public static final QName ABQ_DEVICE_RESPONSE = QName.get(E_ABQ_DEVICE_RESPONSE, NAMESPACE);
 
     public static final QName PING_REQUEST = QName.get(E_PING_REQUEST, NAMESPACE);
     public static final QName PING_RESPONSE = QName.get(E_PING_RESPONSE, NAMESPACE);
@@ -1575,6 +1578,10 @@ public final class AdminConstants {
     public enum ABQ_DEVICE_STATUS {
         allowed,
         quarantined,
-        blocked
-    };
+        blocked;
+
+        public static ABQ_DEVICE_STATUS fromString(String s) {
+            return ABQ_DEVICE_STATUS.valueOf(s);
+        }
+    }
 }

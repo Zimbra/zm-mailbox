@@ -29,26 +29,25 @@ import com.zimbra.common.soap.AdminConstants;
 public class AbqDeviceRequest {
     
     /**
-     * @zm-api-field-tag value-of-device-id
-     * @zm-api-field-description Device ID
+     * @zm-api-field-tag device-id
+     * @zm-api-field-description ABQ Device device_id
      */
     @XmlAttribute(name=AdminConstants.E_DEVICE_ID /* deviceId */, required=true)
     private String deviceId = "";
     
     /**
-     * @zm-api-field-tag value-of-device-id
-     * @zm-api-field-description Device ID
+     * @zm-api-field-tag account_id
+     * @zm-api-field-description ABQ Device account_id
      */
     @XmlAttribute(name=AdminConstants.E_ACCOUNT_ID /* accountId */, required=false)
     private String accountId = null;
     
-    public AbqDeviceRequest(String deviceId, String accountId) {
-        this.accountId = accountId;
-    }
-    
-    public AbqDeviceRequest(String deviceId) {
-        this.deviceId = deviceId;
-    }
+    /**
+     * @zm-api-field-tag status
+     * @zm-api-field-description ABQ Device status
+     */
+    @XmlAttribute(name=AdminConstants.E_STATUS /* status */, required=false)
+    private String status;
 
     public String getDeviceId() {
         return deviceId;
@@ -64,5 +63,13 @@ public class AbqDeviceRequest {
 
     public void setAccountId(String accountId) {
         this.accountId = accountId;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }
