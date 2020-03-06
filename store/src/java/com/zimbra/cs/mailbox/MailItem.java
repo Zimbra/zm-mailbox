@@ -831,7 +831,6 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
     protected MailboxBlob    mBlob;
     protected List<MailItem> mRevisions;
     protected CustomMetadataList mExtendedData;
-    protected int             numIndexDocs;
     protected final MailItemState state;
 
     MailItem(Mailbox mbox, UnderlyingData data) throws ServiceException {
@@ -3520,6 +3519,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             getFolderId() == Mailbox.ID_FOLDER_DRAFTS || (inSpam() && !getMailbox().useDumpsterForSpam())) {
             if (getIndexStatus() != IndexStatus.NO) {
                 int indexId = getIndexStatus() == IndexStatus.DONE ? getIndexId() : mId;
+                int numIndexDocs = state.getNumIndexDocs();
                 if (isTagged(Flag.FlagInfo.COPIED)) {
                     info.sharedIndex = Sets.newHashSet(new ItemIndexDeletionInfo(indexId, numIndexDocs));
                 } else {
@@ -3681,7 +3681,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         }
         int numIndexDocs = meta.getInt(Metadata.FN_NUM_INDEX_DOCS, 0);
         if (numIndexDocs > 0) {
-            this.numIndexDocs = numIndexDocs;
+            state.setNumIndexDocs(numIndexDocs, AccessMode.LOCAL_ONLY);
         }
     }
 
