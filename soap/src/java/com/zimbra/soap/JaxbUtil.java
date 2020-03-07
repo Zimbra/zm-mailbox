@@ -388,6 +388,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.FlushCacheResponse.class,
             com.zimbra.soap.admin.message.GenCSRRequest.class,
             com.zimbra.soap.admin.message.GenCSRResponse.class,
+            com.zimbra.soap.admin.message.GetABQDevicesListRequest.class,
+            com.zimbra.soap.admin.message.GetABQDevicesListResponse.class,
             com.zimbra.soap.admin.message.GetAccountInfoRequest.class,
             com.zimbra.soap.admin.message.GetAccountInfoResponse.class,
             com.zimbra.soap.admin.message.GetAccountLoggersRequest.class,

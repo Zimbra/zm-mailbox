@@ -51,7 +51,7 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxVersion;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.util.Zimbra;
-
+import com.zimbra.soap.admin.type.ABQDevice;
 /**
  * @since Oct 28, 2004
  */
@@ -1396,5 +1396,44 @@ public final class DbMailbox {
             DbPool.quietClose(conn);
         }
         return true;
+    }
+
+    public static List<ABQDevice> getAbqDevices(String status) throws ServiceException {
+        String all_device_query = "select device_id, account_id, status, created_time, created_by, modified_time, modified_by from abq_devices";
+        String device_wise_query = "select device_id, account_id, status, created_time, created_by, modified_time, modified_by from abq_devices where status = ?";
+        DbConnection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        List<ABQDevice> deviceList = new ArrayList<ABQDevice>();
+        try {
+            conn = DbPool.getConnection();
+            if (StringUtil.isNullOrEmpty(status)) {
+                ZimbraLog.account.debug("Getting all ABQ devices");
+                stmt = conn.prepareStatement(all_device_query);
+            } else {
+                ZimbraLog.account.debug("Getting ABQ device list for status : %s", status);
+                stmt = conn.prepareStatement(device_wise_query);
+                stmt.setString(1, status);
+            }
+            rs = stmt.executeQuery();
+            while(rs.next()) {
+                ABQDevice device = new ABQDevice();
+                device.setDevice_id(rs.getString(1));
+                device.setAccount_id(rs.getString(2));
+                device.setStatus(rs.getString(3));
+                device.setCreated_on(rs.getString(4));
+                device.setCreated_by(rs.getString(5));
+                device.setModified_on(rs.getString(6));
+                device.setModified_by(rs.getString(7));
+                deviceList.add(device);
+            }
+        } catch (SQLException se) {
+            throw ServiceException.FAILURE("failed to get ABQ device list", se);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+            DbPool.quietClose(conn);
+        }
+        return deviceList;
     }
 }

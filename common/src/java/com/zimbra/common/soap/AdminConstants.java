@@ -1104,6 +1104,12 @@ public final class AdminConstants {
     public static final QName GET_ADDRESS_LIST_INFO_RESPONSE = QName.get(E_GET_ADDRESS_LIST_INFO_RESPONSE, NAMESPACE);
 
 
+    //ABQ
+    public static final String E_GET_ABQ_DEVICES_LIST_REQUEST = "GetABQDevicesListRequest";
+    public static final String E_GET_ABQ_DEVICES_LIST_RESPONSE = "GetABQDevicesListResponse";
+    public static final QName GET_ABQ_DEVICES_LIST_REQUEST = QName.get(E_GET_ABQ_DEVICES_LIST_REQUEST, NAMESPACE);
+    public static final QName GET_ABQ_DEVICES_LIST_RESPONSE = QName.get(E_GET_ABQ_DEVICES_LIST_RESPONSE, NAMESPACE);
+
     // DumpSessions
     public static final String E_SESSION = "session";
     public static final String A_ZIMBRA_ID = "zid";
@@ -1604,5 +1610,14 @@ public final class AdminConstants {
         public static ABQ_DEVICE_STATUS fromString(String s) {
             return ABQ_DEVICE_STATUS.valueOf(s);
         }
-    }
+    };
+
+    public static final String E_ABQ_DEVICE = "abqevice";
+    public static final String A_DEVICE_ID = "devid";
+    public static final String A_ACCOUNT_ID = "accid";
+    public static final String A_DEVICE_STATUS = "ds";
+    public static final String A_CREATED_ON = "cd";
+    public static final String A_CREATED_BY = "cb";
+    public static final String A_MODIFIED_ON = "md";
+    public static final String A_MODIFIED_BY = "mb";
 }
