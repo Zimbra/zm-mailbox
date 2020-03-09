@@ -34,7 +34,6 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.TargetType;
@@ -45,7 +44,6 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.CreateGalSyncAccountRequest;
 import com.zimbra.soap.admin.type.DataSourceType;
@@ -119,9 +117,10 @@ public class CreateGalSyncAccount extends AdminDocumentHandler {
         }
 
         if (!Provisioning.onLocalServer(account)) {
-            String host = account.getMailHost();
-            Server server = prov.getServerByName(host);
-            return proxyRequest(request, context, server);
+            String acctId = account.getId();
+            String affinityIp = Provisioning.affinityServerForZimbraId(acctId);
+            ZimbraSoapContext pxyCtxt = new ZimbraSoapContext(zsc);         
+            return proxyRequest(request, context, affinityIp, pxyCtxt);
         }
         addDataSource(request, zsc, account, domain, folder, name, type);
 
