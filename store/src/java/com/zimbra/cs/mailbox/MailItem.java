@@ -2433,6 +2433,13 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         throw ServiceException.FAILURE("reanalysis of " + getType() + "s not supported", null);
     }
 
+    protected void updateIndexedDocCount(int newCount) {
+        int curCount = state.getNumIndexDocs();
+        if (curCount != newCount) {
+            ZimbraLog.index.debug("updating numIndexDocs for %s %s: %s -> %s", getType(), mId, curCount, newCount);
+            state.setNumIndexDocs(newCount);
+        }
+    }
     @SuppressWarnings("unused") void detach() throws ServiceException  { }
 
     /** Updates the item's unread state.  Persists the change to the
