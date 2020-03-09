@@ -51,6 +51,7 @@ import com.zimbra.cs.util.RetryUtil.RequestWithRetry;
 import com.zimbra.cs.util.RetryUtil.RequestWithRetry.Command;
 import com.zimbra.cs.util.RetryUtil.RequestWithRetry.ExceptionHandler;
 import com.zimbra.cs.util.RetryUtil.RequestWithRetry.OnFailureAction;
+import com.zimbra.cs.util.RetryUtil.RequestWithRetry.RetryExceptionAction;
 
 public class SolrUtils {
     private static final Pattern whitespace = Pattern.compile("\\s");
@@ -273,8 +274,12 @@ public class SolrUtils {
         ExceptionHandler exceptionHandler = new RetryUtil.RequestWithRetry.ExceptionHandler() {
 
             @Override
-            public boolean exceptionMatches(Exception e) {
-                return ((e instanceof RemoteSolrException) && e.getMessage().toLowerCase().contains("not found"));
+            public RetryExceptionAction handleException(Exception e) {
+                if((e instanceof RemoteSolrException) && e.getMessage().toLowerCase().contains("not found")) {
+                    return RetryExceptionAction.SHOULD_RETRY;
+                } else {
+                    return RetryExceptionAction.reThrow(e);
+                }
             }
         };
 
@@ -302,8 +307,12 @@ public class SolrUtils {
         ExceptionHandler exceptionHandler = new RetryUtil.RequestWithRetry.ExceptionHandler() {
 
             @Override
-            public boolean exceptionMatches(Exception e) {
-                return ((e instanceof SolrException) && e.getMessage().toLowerCase().contains("collection not found"));
+            public RetryExceptionAction handleException(Exception e) {
+                if((e instanceof SolrException) && e.getMessage().toLowerCase().contains("collection not found")) {
+                    return RetryExceptionAction.SHOULD_RETRY;
+                } else {
+                    return RetryExceptionAction.reThrow(e);
+                }
             }
         };
 

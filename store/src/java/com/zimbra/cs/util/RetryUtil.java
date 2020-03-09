@@ -21,7 +21,8 @@ public class RetryUtil {
             try {
                 return command.execute();
             } catch (Exception e) {
-                if (exceptionHandler.exceptionMatches(e)) {
+                RetryExceptionAction action = exceptionHandler.handleException(e);
+                if (action.doRetry()) {
                     try {
                         onFailureAction.run(e);
                     } catch (Exception e2) {
@@ -36,7 +37,7 @@ public class RetryUtil {
                     }
                 } else {
                     String errorMsg = String.format("unexpected error running command %s", command.getClass().getName());
-                    throw ServiceException.FAILURE(errorMsg, e);
+                    throw ServiceException.FAILURE(errorMsg, action.getExceptionToThrow());
                 }
             }
         }
@@ -50,7 +51,32 @@ public class RetryUtil {
         }
 
         public static interface ExceptionHandler {
-            public boolean exceptionMatches(Exception e);
+            public RetryExceptionAction handleException(Exception e);
+        }
+
+        public static class RetryExceptionAction {
+
+            private boolean shouldRetry;
+            private Throwable toThrow;
+
+            public static final RetryExceptionAction SHOULD_RETRY = new RetryExceptionAction(true, null);
+
+            private RetryExceptionAction(boolean shouldRetry, Throwable toThrow) {
+                this.shouldRetry = shouldRetry;
+                this.toThrow = toThrow;
+            }
+
+            public static RetryExceptionAction reThrow(Exception toThrow) {
+                return new RetryExceptionAction(false, toThrow);
+            }
+
+            public boolean doRetry() {
+                return shouldRetry;
+            }
+
+            public Throwable getExceptionToThrow() {
+                return toThrow;
+            }
         }
     }
 }

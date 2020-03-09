@@ -155,7 +155,11 @@ public abstract class RedisLock {
                 response = tryAcquire();
             } catch (Exception e) {
                 lockChannel.remove(waitingLock);
-                throw ServiceException.LOCK_FAILED(String.format("exception encountered trying to acquire %s", waitingLock), e);
+                if (e.getCause() instanceof InterruptedException) {
+                    throw ServiceException.INTERRUPTED(String.format("thread interrupted while acquiring %s", waitingLock));
+                } else {
+                    throw ServiceException.LOCK_FAILED(String.format("exception encountered trying to acquire %s", waitingLock), e);
+                }
             }
             if (!response.isValid()) {
                 throw ServiceException.LOCK_FAILED("invalid redis lock response", null);
