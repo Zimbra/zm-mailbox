@@ -17,8 +17,6 @@
 
 package com.zimbra.soap;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -40,7 +38,6 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.Reasons;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -455,7 +452,7 @@ public abstract class DocumentHandler {
         String affinityIp = Provisioning.affinityServer(acct);
         return affinityIp;
     }
-    
+
     protected static String getXPath(Element request, String[] xpath) {
         int depth = 0;
         while (depth < xpath.length - 1 && request != null) {
@@ -485,7 +482,7 @@ public abstract class DocumentHandler {
         }
         request.addAttribute(xpath[depth], value);
     }
-	
+
     protected Element proxyIfNecessary(Element request, Map<String, Object> context) throws ServiceException {
         // if the "target account" is remote and the command is non-admin, proxy.
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
@@ -533,12 +530,7 @@ public abstract class DocumentHandler {
 
     protected Element proxyRequest(Element request, Map<String, Object> context, Server server)
     throws ServiceException {
-        ZimbraSoapContext zsc = getZimbraSoapContext(context);
-
-        // new context for proxied request has an incremented hop count
-        ZimbraSoapContext pxyCtxt = new ZimbraSoapContext(zsc);
-        String serverIP = pxyCtxt.getRequestIP();
-        return proxyRequest(request, context, serverIP, pxyCtxt);
+        throw ServiceException.PROXY_ERROR("proxying by Server values is not supported!", server.getName());
     }
 
     protected String getProxyAuthToken(String requestedAccountId, Map<String, Object> context) throws ServiceException {
