@@ -163,7 +163,7 @@ public final class ReIndex extends AdminDocumentHandler {
 
                 //proxy requests for accounts that don't reside on this server
                 if (!Provisioning.onLocalServer(account)) {
-                    ReIndexResponse resp = proxyRequest(account.getId(), account.getMailHost(), action, context);
+                    ReIndexResponse resp = proxyRequest(account.getId(), action, context);
                     List<ReindexProgressInfo> mailboxProgress = resp.getMbox();
                     if(mailboxProgress != null && !mailboxProgress.isEmpty()) {
                         ReindexProgressInfo progressInfo = mailboxProgress.get(0);
@@ -225,7 +225,7 @@ public final class ReIndex extends AdminDocumentHandler {
 
                 //proxy requests for accounts that don't reside on this server
                 if (!Provisioning.onLocalServer(account)) {
-                    ReIndexResponse resp = proxyRequest(account.getId(), account.getMailHost(), action, context);
+                    ReIndexResponse resp = proxyRequest(account.getId(), action, context);
                     List<ReindexProgressInfo> mailboxProgress = resp.getMbox();
                     if(mailboxProgress != null && !mailboxProgress.isEmpty()) {
                         ReindexProgressInfo progressInfo = mailboxProgress.get(0);
@@ -299,7 +299,7 @@ public final class ReIndex extends AdminDocumentHandler {
                 Account account = prov.getAccount(reIndexMboxInfo.getAccountId());
                 mboxStatus.addAttribute(AdminConstants.A_ACCOUNTID, account.getId());
                 if (!Provisioning.onLocalServer(account)) {
-                    ReIndexResponse resp = proxyRequest(account.getId(), account.getMailHost(), action, context);
+                    ReIndexResponse resp = proxyRequest(account.getId(), action, context);
                     List<ReindexProgressInfo> mailboxProgress = resp.getMbox();
                     if(mailboxProgress != null && !mailboxProgress.isEmpty()) {
                         ReindexProgressInfo progressInfo = mailboxProgress.get(0);
@@ -348,11 +348,11 @@ public final class ReIndex extends AdminDocumentHandler {
         mboxElement.addAttribute(AdminConstants.A_STATUS_CODE, status.getStatus());
     }
 
-    private ReIndexResponse proxyRequest(String accountId, String host, String action, Map<String, Object> context) throws ServiceException {
+    private ReIndexResponse proxyRequest(String accountId, String action, Map<String, Object> context) throws ServiceException {
         ReindexMailboxInfo mboxInfo = new ReindexMailboxInfo(accountId);
         ReIndexRequest r = new ReIndexRequest(action, Lists.newArrayList(mboxInfo));
         ReIndexResponse resp = (ReIndexResponse)JaxbUtil.elementToJaxb(
-                proxyRequest(JaxbUtil.jaxbToElement(r), context, Provisioning.getInstance().getServerByName(host)));
+                proxyRequest(JaxbUtil.jaxbToElement(r), context, accountId));
         return resp;
     }
 
