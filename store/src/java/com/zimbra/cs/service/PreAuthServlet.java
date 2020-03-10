@@ -349,12 +349,6 @@ public class PreAuthServlet extends ZimbraServlet {
                 redirectUrl = server.getAttr(Provisioning.A_zimbraAdminURL, DEFAULT_ADMIN_URL);
             } else {
                 redirectUrl = server.getAttr(Provisioning.A_zimbraMailURL, DEFAULT_MAIL_URL);
-                // NB: do we really have to add the mail app to the end?
-                if (redirectUrl.charAt(redirectUrl.length() - 1) == '/') {
-                    redirectUrl += "mail";
-                } else {
-                    redirectUrl += "/mail";
-                }
             }
             if (sb.length() > 0) {
                 resp.sendRedirect(redirectUrl + "?" + sb.toString());
