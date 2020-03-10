@@ -18,14 +18,13 @@ package com.zimbra.cs.service.account;
 
 import java.util.Map;
 
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.service.AuthProvider;
-import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public abstract class GalDocumentHandler extends AccountDocumentHandler {
@@ -103,8 +102,7 @@ public abstract class GalDocumentHandler extends AccountDocumentHandler {
                              * which is the galsync account.  We should preserve those in 
                              * the original request when proxying.
                              */
-                            Server server = acct.getServer();
-                            return proxyRequest(request, context, server);
+                            return proxyRequest(request, context, acctId);
                         }
                     } else {
                         // galAcctId is on local server

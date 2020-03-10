@@ -29,10 +29,8 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
-import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.AddGalSyncDataSourceRequest;
 import com.zimbra.soap.admin.type.GalMode;
@@ -81,9 +79,7 @@ public class AddGalSyncDataSource extends AdminDocumentHandler {
         }
 
         if (!Provisioning.onLocalServer(account)) {
-            String host = account.getMailHost();
-            Server server = prov.getServerByName(host);
-            return proxyRequest(request, context, server);
+            return proxyRequest(request, context, account.getId());
         }
 
         CreateGalSyncAccount.addDataSource(request, zsc, account, domain, folder, name, type);
