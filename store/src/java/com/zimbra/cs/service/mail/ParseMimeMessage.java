@@ -457,7 +457,7 @@ public final class ParseMimeMessage {
         } catch (MessagingException e) {
             throw ServiceException.FAILURE("MessagingException", e);
         } catch (IOException e) {
-            throw ServiceException.FAILURE("IOExecption", e);
+            throw ServiceException.FAILURE("IOException", e);
         }
     }
 
