@@ -2450,8 +2450,7 @@ public class SoapProvisioning extends Provisioning {
     }
 
     public PurgeMessagesStatus purgeMessages(Account account) throws ServiceException {
-        Server server = account.getServer();
-        return purgeMessages(account.getId(), server.getAttr(A_zimbraServiceHostname));
+        return purgeMessages(account.getId(), Provisioning.affinityServer(account));
     }
 
     //
