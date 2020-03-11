@@ -579,6 +579,10 @@ public class AttributeInfo {
         return hasFlag(AttributeFlag.ephemeral);
     }
 
+    public Boolean isDb() {
+        return hasFlag(AttributeFlag.db);
+    }
+
     public Boolean isDynamic() {
         return hasFlag(AttributeFlag.dynamic);
     }

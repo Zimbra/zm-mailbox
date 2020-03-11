@@ -30,6 +30,7 @@ public enum AttributeFlag {
     ephemeral,
     dynamic,
     expirable,
-    octopus  // for tracking octopus specific attributes
+    octopus,  // for tracking octopus specific attributes
+    db
 
 }

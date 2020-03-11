@@ -465,7 +465,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>set to true for admin accounts</desc>
 </attr>
 
-<attr id="32" name="zimbraMailSieveScript" type="string" cardinality="single" optionalIn="account" callback="MailSieveScript">
+<attr id="32" name="zimbraMailSieveScript" type="string" cardinality="single" optionalIn="account" callback="MailSieveScript" flags="db">
   <desc>sieve script generated from user filter rules</desc>
 </attr>
 
@@ -9346,7 +9346,7 @@ TODO: delete them permanently from here
   <desc>Drive own or next cloud URL.</desc>
 </attr>
 
-<attr id="2111" name="zimbraSieveRejectMailEnabled" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited" since="8.7.8">
+<attr id="2111" name="zimbraSieveRejectMailEnabled" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited,db" since="8.7.8">
 <defaultCOSValue>TRUE</defaultCOSValue>
 <desc>Whether to enable the Sieve "reject" action defined in RFC 5429.</desc>
 </attr>

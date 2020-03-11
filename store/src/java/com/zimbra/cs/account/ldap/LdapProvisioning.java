@@ -20,6 +20,10 @@ package com.zimbra.cs.account.ldap;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.security.SecureRandom;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -53,6 +57,7 @@ import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.common.account.Key.UCServiceBy;
 import com.zimbra.common.account.ProvisioningConstants;
+import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.service.ServiceException.Argument;
@@ -161,6 +166,11 @@ import com.zimbra.cs.account.ldap.entry.LdapZimlet;
 import com.zimbra.cs.account.names.NameUtil;
 import com.zimbra.cs.account.names.NameUtil.EmailAddress;
 import com.zimbra.cs.datasource.DataSourceManager;
+import com.zimbra.cs.db.Db;
+import com.zimbra.cs.db.DbConfig;
+import com.zimbra.cs.db.DbPool;
+import com.zimbra.cs.db.DbTag;
+import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.ephemeral.EphemeralInput;
 import com.zimbra.cs.ephemeral.EphemeralKey;
 import com.zimbra.cs.ephemeral.EphemeralLocation;
@@ -209,6 +219,8 @@ import com.zimbra.cs.ldap.ZSearchResultEnumeration;
 import com.zimbra.cs.ldap.ZSearchScope;
 import com.zimbra.cs.ldap.unboundid.InMemoryLdapServer;
 import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mime.MimeTypeInfo;
@@ -530,8 +542,9 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     protected void modifyAttrsInternal(Entry entry, ZLdapContext initZlc,
             Map<String, ? extends Object> attrs, boolean storeEphemeralInLdap)
             throws ServiceException {
+        Account acct = null;
         if (entry instanceof Account && !(entry instanceof CalendarResource)) {
-            Account acct = (Account) entry;
+            acct = (Account) entry;
             validate(ProvisioningValidator.MODIFY_ACCOUNT_CHECK_DOMAIN_COS_AND_FEATURE,
                     acct.getAttr(A_zimbraMailDeliveryAddress), attrs, acct);
         }
@@ -564,7 +577,102 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                 modifyEphemeralAttrs(entry, ephemeralAttrs, ephemeralAttrMap);
             }
         }
+
+        if (entry instanceof Account) {
+        Map<String, AttributeInfo> dbAttrMap = AttributeManager.getInstance().getDbAttrs();
+        Map<String, Object> dbAttrs = new HashMap<String, Object>();
+        List<String> toRemove = null; // remove after iteration to avoid ConcurrentModificationException
+        for (Map.Entry<String, ? extends Object> e: attrs.entrySet()) {
+            String key = e.getKey();
+            String attrName;
+            if (key.startsWith("+") || key.startsWith("-")) {
+                attrName = key.substring(1);
+            } else {
+                attrName = key;
+            }
+            if (dbAttrMap.containsKey(attrName.toLowerCase())) {
+                dbAttrs.put(key, e.getValue());
+                if (null == toRemove) {
+                    toRemove = Lists.newArrayListWithExpectedSize(3); // only 3 ephemeral attrs currently
+                }
+                toRemove.add(key);
+            }
+        }
+        if (null != toRemove) {
+            for (String key : toRemove) {
+                attrs.remove(key);
+            }
+        }
+        if (!dbAttrs.isEmpty()) {
+            modifyDbAttrs(acct == null?null:acct.getId(), dbAttrs, dbAttrMap);
+        }
+        }
+
         modifyLdapAttrs(entry, initZlc, attrs);
+        if (entry instanceof Account) {
+        Set<String> dbAttrMap  =  AttributeManager.getInstance().getDbAttributeNames();
+        for(String dbAttr : dbAttrMap ) {
+            DbConnection conn = DbPool.getConnection();
+            PreparedStatement stmt = null;
+            ResultSet rs = null;
+            try {
+                String value = null;
+                stmt = conn.prepareStatement("SELECT * FROM sieve WHERE account_id = ? and name = ?");
+                stmt.setString(1, acct.getId());
+                stmt.setString(2, dbAttr);
+                rs = stmt.executeQuery();
+                if (rs.next())
+                    value = rs.getString(3);
+                if(value != null) {
+                    Map<String, Object> acctAttrs =  acct.getAttrs();
+                    acctAttrs.put(dbAttr, value);
+                    entry.setAttrs(acctAttrs);
+                 }
+            } catch (SQLException e) {
+                throw ServiceException.FAILURE("getting sieve entry: " + dbAttr, e);
+            } finally {
+                DbPool.closeResults(rs);
+                DbPool.closeStatement(stmt);
+            }
+        }
+        extendLifeInCacheOrFlush(entry);
+        }
+    }
+
+    private void modifyDbAttrs(String accountId, Map<String, Object> attrs, Map<String, AttributeInfo> dbAttrMap) throws ServiceException {
+        for (Map.Entry<String, Object> e: attrs.entrySet()) {
+            String key = e.getKey();
+            Object value = e.getValue();
+            boolean doAdd = key.charAt(0) == '+';
+            boolean doRemove = key.charAt(0) == '-';
+            if (doAdd || doRemove) {
+                key = key.substring(1);
+                if (attrs.containsKey(key))
+                    throw ServiceException.INVALID_REQUEST("can't mix +attrName/-attrName with attrName", null);
+            }
+            AttributeInfo ai = dbAttrMap.get(key.toLowerCase());
+            if (ai == null) { continue; }
+            if (value instanceof Collection) {
+                Collection values = (Collection) value;
+                if (values.size() == 0) {
+                    ZimbraLog.ephemeral.warn("Db attribute %s doesn't support deletion by key; only deletion by key+value is supported", key);
+                    continue;
+                } else {
+                    for (Object v : values) {
+                        if (v == null) { continue; }
+                        String s = v.toString();
+                        handleDbAttrChange(accountId, key, s, ai, doAdd, doRemove);
+                    }
+                }
+            } else if (value instanceof Map) {
+                throw ServiceException.FAILURE("Map is not a supported value type", null);
+            } else if (value != null) {
+                String s = value.toString();
+                handleDbAttrChange(accountId, key, s, ai, doAdd, doRemove);
+            } else {
+                ZimbraLog.ephemeral.warn("Db attribute %s doesn't support deletion by key; only deletion by key+value is supported", key);
+            }
+        }
     }
 
     private void modifyEphemeralAttrs(Entry entry, Map<String, Object> attrs, Map<String, AttributeInfo> ephemeralAttrMap) throws ServiceException {
@@ -609,6 +717,79 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                 handleEphemeralAttrChange(store, key, s, location, ai, converter, doAdd, doRemove);
             } else {
                 ZimbraLog.ephemeral.warn("Ephemeral attribute %s doesn't support deletion by key; only deletion by key+value is supported", key);
+            }
+        }
+    }
+
+    private void handleDbAttrChange(String accountId, String key, String value, AttributeInfo ai, boolean doAdd,
+        boolean doRemove) throws ServiceException {
+        ZimbraLog.mailbox.info("value["+value+"]");
+        if (doAdd) {
+            DbConnection conn = DbPool.getConnection();
+            PreparedStatement stmt = null;
+            PreparedStatement stmt1 = null;
+            try {
+                // Try update first
+                stmt = conn.prepareStatement("UPDATE zimbra.sieve SET value = ?, WHERE name = ? and account_id = ?");
+                stmt.setString(1, accountId);
+                stmt.setString(2, value);
+                stmt.setString(3, key);
+                int numRows = stmt.executeUpdate();
+
+                // If update didn't affect any rows, do an insert
+                if (numRows == 0) {
+                    stmt1 = conn.prepareStatement("INSERT INTO zimbra.sieve(account_id, name, value) VALUES (?, ?, ?)");
+                    stmt1.setString(1, accountId);
+                    stmt1.setString(2, key);
+                    stmt1.setString(3, value);
+                    stmt1.executeUpdate();
+                }
+            } catch (SQLException e) {
+                throw ServiceException.FAILURE("updating sieve entry: " + key, e);
+            } finally {
+                DbPool.closeStatement(stmt);
+                DbPool.closeStatement(stmt1);
+            }
+
+        } else if (doRemove) {
+            DbConnection conn = DbPool.getConnection();
+            PreparedStatement stmt = null;
+            try {
+                stmt = conn.prepareStatement("DELETE FROM zimbra.sieve WHERE name = " + key +" AND account_id = "+accountId);
+                stmt.executeUpdate();
+            } catch (SQLException e) {
+                throw ServiceException.FAILURE("deleting sieve entry: " + key, e);
+            } finally {
+                DbPool.closeStatement(stmt);
+            }
+        } else {
+            DbConnection conn = DbPool.getConnection();
+            PreparedStatement stmt = null;
+            PreparedStatement stmt1 = null;
+            try {
+                // Try update first
+                stmt = conn.prepareStatement("UPDATE zimbra.sieve SET value = ? WHERE name = ? and account_id = ?");
+                stmt.setString(1, value);
+                stmt.setString(2, key);
+                stmt.setString(3, accountId);
+                int numRows = stmt.executeUpdate();
+
+                // If update didn't affect any rows, do an insert
+                if (numRows == 0) {
+                    stmt1 = conn.prepareStatement("INSERT INTO zimbra.sieve(account_id, name, value) VALUES (?, ?, ?)");
+                    stmt1.setString(1, accountId);
+                    stmt1.setString(2, key);
+                    stmt1.setString(3, value);
+                    stmt1.executeUpdate();
+                }
+            } catch (SQLException e) {
+                DbPool.quietRollback(conn);
+                throw ServiceException.FAILURE("updating sieve entry: " + key, e);
+            } finally {
+                conn.commit();
+                DbPool.closeStatement(stmt);
+                DbPool.closeStatement(stmt1);
+                DbPool.quietClose(conn);
             }
         }
     }
@@ -6539,6 +6720,32 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         Account acct = (isAccount) ? new LdapAccount(dn, emailAddress, attrs, null, this) :
             new LdapCalendarResource(dn, emailAddress, attrs, null, this);
 
+        Set<String> dbAttrMap  =  AttributeManager.getInstance().getDbAttributeNames();
+        for(String dbAttr : dbAttrMap ) {
+            DbConnection conn = DbPool.getConnection();
+            PreparedStatement stmt = null;
+            ResultSet rs = null;
+            try {
+                String value = null;
+                stmt = conn.prepareStatement("SELECT * FROM sieve WHERE account_id = ? and name = ?");
+                stmt.setString(1, acct.getId());
+                stmt.setString(2, dbAttr);
+                rs = stmt.executeQuery();
+                if (rs.next())
+                    value = rs.getString(3);
+                if(value != null) {
+                    Map<String, Object> acctAttrs =  acct.getAttrs();
+                    acctAttrs.put(dbAttr, value);
+                     acct.setAttrs(acctAttrs);
+                 }
+            } catch (SQLException e) {
+                throw ServiceException.FAILURE("getting sieve entry: " + dbAttr, e);
+            } finally {
+                DbPool.closeResults(rs);
+                DbPool.closeStatement(stmt);
+            }
+        }
+    
         setAccountDefaults(acct, makeObjOpt);
 
         return acct;

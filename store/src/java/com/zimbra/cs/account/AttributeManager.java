@@ -134,6 +134,9 @@ public class AttributeManager {
 
     private final Map<String, AttributeInfo> mEphemeralAttrs = new HashMap<String, AttributeInfo>(); //lowercased
     private final Set<String> mEphemeralAttrsSet = new HashSet<String>(); // not lowercased
+    private final Map<String, AttributeInfo> mDbAttrs = new HashMap<String, AttributeInfo>(); //lowercased
+    private final Set<String> mDbAttrsSet = new HashSet<String>(); // not lowercased
+
     private final Map<EntryType, Map<String, AttributeInfo>> mNonDynamicEphemeralAttrs = new HashMap<EntryType, Map<String, AttributeInfo>>(); // ephemeral attributes that can be retrieved as part of Entry.getAttrs()
 
     /*
@@ -216,6 +219,10 @@ public class AttributeManager {
         return mEphemeralAttrsSet.contains(attrName);
     }
 
+    public boolean isDb(String attrName) {
+        return mDbAttrsSet.contains(attrName);
+    }
+
     public boolean isDynamic(String attrName) {
         AttributeInfo ai = mEphemeralAttrs.get(attrName.toLowerCase());
         if (ai != null) {
@@ -266,6 +273,10 @@ public class AttributeManager {
             if (!info.isDynamic()) {
                 addNonDynamicEphemeralAttr(info);
             }
+        }
+        if (info.isDb()) {
+            mDbAttrs.put(info.mName.toLowerCase(), info);
+            mDbAttrsSet.add(info.mName);
         }
     }
 
@@ -657,6 +668,11 @@ public class AttributeManager {
                 if (!info.isDynamic()) {
                     addNonDynamicEphemeralAttr(info);
                 }
+            }
+
+            if (flags != null && flags.contains(AttributeFlag.db)) {
+                mDbAttrs.put(canonicalName, info);
+                mDbAttrsSet.add(name);
             }
         }
    }
@@ -1246,6 +1262,14 @@ public class AttributeManager {
 
     public Set<String> getEphemeralAttributeNames() {
         return mEphemeralAttrsSet;
+    }
+
+    public Map<String, AttributeInfo> getDbAttrs() {
+        return mDbAttrs;
+    }
+
+    public Set<String> getDbAttributeNames() {
+        return mDbAttrsSet;
     }
 
     boolean hasFlag(AttributeFlag flag, String attr) {
