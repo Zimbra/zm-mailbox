@@ -32,9 +32,7 @@ import com.zimbra.common.util.MapUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.service.DavServlet;
@@ -307,10 +305,10 @@ public class UrlNamespace {
             return true;
         try {
             Provisioning prov = Provisioning.getInstance();
-            Server mine = prov.getServer(thisOne);
-            Server theirs = prov.getServer(thatOne);
+            String mine = Provisioning.affinityServer(thisOne);
+            String theirs = Provisioning.affinityServer(thatOne);
             if (mine != null && theirs != null)
-                return mine.getId().equals(theirs.getId());
+                return mine.equals(theirs);
         } catch (Exception e) {
             ZimbraLog.dav.warn("can't get domain or server for %s %s", thisOne.getId(), thatOne.getId(), e);
         }
