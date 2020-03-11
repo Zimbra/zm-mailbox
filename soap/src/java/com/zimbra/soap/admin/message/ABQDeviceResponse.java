@@ -17,7 +17,6 @@
 
 package com.zimbra.soap.admin.message;
 
-import com.google.common.base.MoreObjects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -27,7 +26,47 @@ import com.zimbra.common.soap.AdminConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_ABQ_DEVICE_RESPONSE)
-public class AbqDeviceResponse {
+public class ABQDeviceResponse {
 
+    /**
+     * @zm-api-field-tag device-id
+     * @zm-api-field-description ABQ Device device_id
+     */
+    @XmlAttribute(name=AdminConstants.E_DEVICE_ID /* deviceId */, required=true)
+    private String deviceId = "";
     
+    /**
+     * @zm-api-field-tag message
+     * @zm-api-field-description ABQ Device message
+     */
+    @XmlAttribute(name=AdminConstants.E_MESSAGE /* s */, required=true)
+    private String message = "";
+
+    /**
+     * @return the deviceId
+     */
+    public String getDeviceId() {
+        return deviceId;
+    }
+
+    /**
+     * @param deviceId, sets the deviceId
+     */
+    public void setDeviceId(String deviceId) {
+        this.deviceId = deviceId;
+    }
+
+    /**
+     * @return the message
+     */
+    public String getMessage() {
+        return message;
+    }
+
+    /**
+     * @param message, sets the message
+     */
+    public void setMessage(String message) {
+        this.message = message;
+    }
 }

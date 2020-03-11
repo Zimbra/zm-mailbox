@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2020 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -15,6 +15,9 @@
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.common.soap;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import org.dom4j.Namespace;
 import org.dom4j.QName;
@@ -533,12 +536,10 @@ public final class AdminConstants {
     public static final String E_GET_ALL_SKINS_RESPONSE = "GetAllSkinsResponse";
 
     //ABQ
-    public static final String E_ABQ_DEVICE_REQUEST = "AbqDeviceRequest";
-    public static final String E_ABQ_DEVICE_RESPONSE = "AbqDeviceResponse";
+    public static final String E_ABQ_DEVICE_REQUEST = "ABQDeviceRequest";
+    public static final String E_ABQ_DEVICE_RESPONSE = "ABQDeviceResponse";
     public static final String E_DEVICE_ID = "deviceId";
     public static final String E_ACCOUNT_ID = "accountId";
-    public static final String E_CREATED_TIME = "createdTime";
-    public static final String E_CREATED_BY = "createdBy";
 
     public static final QName ABQ_DEVICE_REQUEST = QName.get(E_ABQ_DEVICE_REQUEST, NAMESPACE);
     public static final QName ABQ_DEVICE_RESPONSE = QName.get(E_ABQ_DEVICE_RESPONSE, NAMESPACE);
@@ -1575,10 +1576,19 @@ public final class AdminConstants {
         strict,
         disabled
     };
+    public static final ABQ_DEVICE_STATUS DEFAULT_ABQ_STATUS = ABQ_DEVICE_STATUS.quarantined;
     public enum ABQ_DEVICE_STATUS {
         allowed,
         quarantined,
         blocked;
+
+        public static List<String> getAllowedStatus() {
+            List<String> statusList = new ArrayList<String>();
+            for (ABQ_DEVICE_STATUS status : ABQ_DEVICE_STATUS.values()) {
+                statusList.add(status.toString());
+            }
+            return statusList;
+        }
 
         public static ABQ_DEVICE_STATUS fromString(String s) {
             return ABQ_DEVICE_STATUS.valueOf(s);

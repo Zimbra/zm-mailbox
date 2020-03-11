@@ -20,14 +20,35 @@ package com.zimbra.soap.admin.message;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlEnum;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_ABQ_DEVICE_REQUEST)
-public class AbqDeviceRequest {
-    
+public class ABQDeviceRequest {
+    @XmlEnum
+    public enum ABQDeviceOperation {
+        // case must match
+        add, modify, remove;
+
+        public static ABQDeviceOperation fromString(String s) throws ServiceException {
+            try {
+                return ABQDeviceOperation.valueOf(s);
+            } catch (IllegalArgumentException e) {
+                throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
+            }
+        }
+    }
+
+    /**
+     * @zm-api-field-tag op
+     * @zm-api-field-description op can be either add, modify, remove
+     */
+    @XmlAttribute(name=AdminConstants.A_OP /* op */, required=true)
+    private ABQDeviceOperation op;
     /**
      * @zm-api-field-tag device-id
      * @zm-api-field-description ABQ Device device_id
@@ -47,28 +68,60 @@ public class AbqDeviceRequest {
      * @zm-api-field-description ABQ Device status
      */
     @XmlAttribute(name=AdminConstants.E_STATUS /* status */, required=false)
-    private String status;
+    private String status = AdminConstants.DEFAULT_ABQ_STATUS.toString();
 
+    /**
+     * @return the op
+     */
+    public ABQDeviceOperation getOp() {
+        return op;
+    }
+
+    /**
+     * @param op, the op to set
+     */
+    public void setOp(ABQDeviceOperation op) {
+        this.op = op;
+    }
+
+    /**
+     * @return the deviceId
+     */
     public String getDeviceId() {
         return deviceId;
     }
 
+    /**
+     * @param deviceId, sets the deviceId
+     */
     public void setDeviceId(String deviceId) {
         this.deviceId = deviceId;
     }
 
+    /**
+     * @return the accountId
+     */
     public String getAccountId() {
         return accountId;
     }
 
+    /**
+     * @param accountId, sets the accountId
+     */
     public void setAccountId(String accountId) {
         this.accountId = accountId;
     }
 
+    /**
+     * @return the status
+     */
     public String getStatus() {
         return status;
     }
 
+    /**
+     * @param status, sets the status
+     */
     public void setStatus(String status) {
         this.status = status;
     }

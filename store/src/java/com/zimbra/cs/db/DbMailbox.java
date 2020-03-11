@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2020 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -24,6 +24,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
+
+import java.util.Arrays;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -35,6 +38,9 @@ import java.util.Set;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+
+import com.zimbra.common.soap.AdminConstants.ABQ_DEVICE_STATUS;
+
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -1296,5 +1302,107 @@ public final class DbMailbox {
         }
 
         return groups;
+    }
+
+    public static boolean addAbqDevice(String deviceId, String accountId, String status, String createdBy) throws ServiceException {
+        DbConnection conn = null;
+        PreparedStatement stmt = null;
+        try {
+            if (status == null || ABQ_DEVICE_STATUS.getAllowedStatus().contains(status)) {
+                conn = DbPool.getConnection();
+                // check if db entry is already exist
+                ResultSet rs = null;
+                if (accountId == null) {
+                    stmt = conn.prepareStatement("SELECT * From abq_devices WHERE device_id = ? AND account_id IS NULL");
+                    stmt.setString(1, deviceId);
+                } else {
+                    stmt = conn.prepareStatement("SELECT * From abq_devices WHERE device_id = ? AND account_id = ?");
+                    stmt.setString(1, deviceId);
+                    stmt.setString(2, accountId);
+                }
+                rs =  stmt.executeQuery();
+                if (rs.next()) {
+                    throw ServiceException.FAILURE(String.format("Db entry already exist for device_id = %s with account_id = %s", deviceId, accountId), null);
+                }
+                stmt.close();
+
+                stmt = conn.prepareStatement("INSERT INTO abq_devices(device_id, account_id, status, created_by, created_time) VALUES (?, ?, ?, ?, NOW())");
+                stmt.setString(1, deviceId);
+                stmt.setString(2, accountId);
+                stmt.setString(3, status);
+                stmt.setString(4, createdBy);
+                stmt.executeUpdate();
+                stmt.close();
+                conn.commit();
+            } else {
+                throw ServiceException.FAILURE(String.format("Not a valid device status. Either ignore the status or you can send valid values from the list : %s", Arrays.asList(ABQ_DEVICE_STATUS.values()).toString()), null);
+            }
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("failed to write abq_devices entry: ", e);
+        } finally {
+            DbPool.closeStatement(stmt);
+            DbPool.quietClose(conn);
+        }
+        return true;
+    }
+
+    public static boolean updateAbqDevice(String deviceId, String accountId, String status, String modifiedBy) throws ServiceException {
+        DbConnection conn = null;
+        PreparedStatement stmt = null;
+        try {
+            if (status == null || ABQ_DEVICE_STATUS.getAllowedStatus().contains(status)) {
+                conn = DbPool.getConnection();
+                if (accountId == null) {
+                    stmt = conn.prepareStatement("UPDATE abq_devices SET status = ?, modified_by = ?, modified_time = NOW() WHERE device_id = ? AND account_id IS NULL");
+                    stmt.setString(1, status);
+                    stmt.setString(2, modifiedBy);
+                    stmt.setString(3, deviceId);
+                } else {
+                    stmt = conn.prepareStatement("UPDATE abq_devices SET status = ?, modified_by = ?, modified_time = NOW() WHERE device_id = ? AND account_id = ?");
+                    stmt.setString(1, status);
+                    stmt.setString(2, modifiedBy);
+                    stmt.setString(3, deviceId);
+                    stmt.setString(4, accountId);
+                }
+
+                stmt.executeUpdate();
+                stmt.close();
+                conn.commit();
+            } else {
+                throw ServiceException.FAILURE(String.format("Not a valid device status. Either ignore the status or you can send valid values from the list : %s", Arrays.asList(ABQ_DEVICE_STATUS.values()).toString()), null);
+            }
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("failed to update abq_devices entry: ", e);
+        } finally {
+            DbPool.closeStatement(stmt);
+            DbPool.quietClose(conn);
+        }
+        return true;
+    }
+
+    public static boolean removeAbqDevice(String deviceId, String accountId) throws ServiceException {
+        DbConnection conn = null;
+        PreparedStatement stmt = null;
+        try {
+            conn = DbPool.getConnection();
+            if (accountId == null) {
+                stmt = conn.prepareStatement("DELETE FROM abq_devices WHERE device_id = ?");
+                stmt.setString(1, deviceId);
+            } else {
+                stmt = conn.prepareStatement("DELETE FROM abq_devices WHERE device_id = ? AND account_id = ?");
+                stmt.setString(1, deviceId);
+                stmt.setString(2, accountId);
+            }
+
+            stmt.executeUpdate();
+            stmt.close();
+            conn.commit();
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("failed to delete abq_devices entry: ", e);
+        } finally {
+            DbPool.closeStatement(stmt);
+            DbPool.quietClose(conn);
+        }
+        return true;
     }
 }
