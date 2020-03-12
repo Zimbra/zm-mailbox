@@ -87,7 +87,6 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.httpclient.URLUtil;
-import com.zimbra.cs.service.admin.FlushCache;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.WebClientServiceUtil;
 import com.zimbra.cs.zimlet.ZimletPresence.Presence;
@@ -544,14 +543,15 @@ public class ZimletUtil {
     }
 
     public static void flushDiskCache(Map<String, Object> context) throws ServiceException {
-        if (WebClientServiceUtil.isServerInSplitMode()) {
-            List<Server> allServers = Provisioning.getInstance().getAllServers();
-            for (Server server : allServers) {
-                if (!server.hasMailClientService()) {
-                    WebClientServiceUtil.sendFlushZimletRequestToUiNode(server);
-                }
-            }
-        }
+        // Commenting out for now, since it erroneously assumes a split UI
+//        if (WebClientServiceUtil.isServerInSplitMode()) {
+//            List<Server> allServers = Provisioning.getInstance().getAllServers();
+//            for (Server server : allServers) {
+//                if (!server.hasMailClientService()) {
+//                    WebClientServiceUtil.sendFlushZimletRequestToUiNode(server);
+//                }
+//            }
+//        }
     }
 
     public static void flushAllZimletsCache() {
