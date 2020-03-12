@@ -38,7 +38,6 @@ import com.sun.mail.smtp.SMTPMessage;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.CacheEntryBy;
-import com.zimbra.common.account.Key.ServerBy;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
@@ -50,7 +49,6 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -165,12 +163,11 @@ public abstract class DistributionListDocumentHandler extends AccountDocumentHan
                     if (prov.onLocalServer(acct)) {
                         // localAccts.add(new CacheEntry(CacheEntryBy.id, acct.getId()));
                     } else {
-                        Server server = acct.getServer();
-                        String serverName = server.getName();
-                        List<CacheEntry> acctsOnServer = remoteAccts.get(serverName);
+                        String affinityIp = Provisioning.affinityServer(acct);
+                        List<CacheEntry> acctsOnServer = remoteAccts.get(affinityIp);
                         if (acctsOnServer == null) {
                             acctsOnServer = Lists.newArrayList();
-                            remoteAccts.put(serverName, acctsOnServer);
+                            remoteAccts.put(affinityIp, acctsOnServer);
                         }
                         acctsOnServer.add(new CacheEntry(CacheEntryBy.id, acct.getId()));
                     }
@@ -204,18 +201,17 @@ public abstract class DistributionListDocumentHandler extends AccountDocumentHan
         SoapProvisioning soapProv = new SoapProvisioning();
         String adminUrl = null;
         for (Map.Entry<String, List<CacheEntry>> acctsOnServer : remoteAccts.entrySet()) {
-            String serverName = acctsOnServer.getKey();
+            String affinityIp = acctsOnServer.getKey();
             List<CacheEntry> accts = acctsOnServer.getValue();
 
             try {
-                Server server = prov.get(ServerBy.name, serverName);
-                adminUrl = URLUtil.getAdminURL(server, AdminConstants.ADMIN_SERVICE_URI, true);
+                adminUrl = URLUtil.getAdminURL(affinityIp, URLUtil.getPort(), AdminConstants.ADMIN_SERVICE_URI, true);
                 soapProv.soapSetURI(adminUrl);
                 soapProv.soapZimbraAdminAuthenticate();
                 soapProv.flushCache(CacheEntryType.account, accts.toArray(new CacheEntry[accts.size()]));
 
             } catch (ServiceException e) {
-                ZimbraLog.account.warn("unable to flush account cache on remote server: " + serverName, e);
+                ZimbraLog.account.warn("unable to flush account cache on remote server: " + affinityIp, e);
             }
         }
     }
