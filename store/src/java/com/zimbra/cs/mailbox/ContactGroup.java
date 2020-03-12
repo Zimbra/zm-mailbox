@@ -632,9 +632,7 @@ public class ContactGroup {
         private Element fetchRemoteContact(AuthToken authToken, Account ownerAcct, 
                 ItemId contactId, SoapProtocol proxyProtocol)
         throws ServiceException {
-            Provisioning prov = Provisioning.getInstance();
-            
-            String serverUrl = URLUtil.getAdminURL(prov.getServerByName(ownerAcct.getMailHost()));
+            String serverUrl = URLUtil.getAdminURL(Provisioning.affinityServer(ownerAcct));
             SoapHttpTransport transport = new SoapHttpTransport(serverUrl);
             transport.setAuthToken(authToken.toZAuthToken());
             transport.setTargetAcctId(ownerAcct.getId());

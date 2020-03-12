@@ -12,7 +12,6 @@ import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -41,8 +40,7 @@ public class SearchAction extends MailDocumentHandler {
         SearchActionRequest req = zsc.elementToJaxb(request);
         SearchRequest searchRequest = req.getSearchRequest();
         Account acct = mbox.getAccount();
-        Server server = Provisioning.getInstance().getServer(acct);
-        String url = URLUtil.getSoapURL(server, false);
+        String url = URLUtil.getSoapURL(Provisioning.affinityServer(acct), URLUtil.getPort(), false);
         com.zimbra.soap.mail.message.SearchResponse resp = null;
         Element searchResponse;
         SoapHttpTransport transport = new SoapHttpTransport(url);
@@ -61,7 +59,7 @@ public class SearchAction extends MailDocumentHandler {
         SearchActionResponse searchActionResponse = new SearchActionResponse();
         return zsc.jaxbToElement(searchActionResponse);
     }
-    
+
     public static void performAction(BulkAction action, SearchRequest searchRequest, List<SearchHit> searchHits, Mailbox mbox, OperationContext octxt) throws ServiceException, AuthTokenException, IOException, HttpException {
         switch(action.getOp()) {
         case move :
@@ -122,8 +120,7 @@ public class SearchAction extends MailDocumentHandler {
         List<SearchHit> searchHits, Mailbox mbox, String op)
         throws ServiceException, AuthTokenException, IOException, HttpException {
         Account acct = mbox.getAccount();
-        Server server = Provisioning.getInstance().getServer(acct);
-        String url = URLUtil.getSoapURL(server, false);
+        String url = URLUtil.getSoapURL(Provisioning.affinityServer(acct), URLUtil.getPort(), false);
         SoapHttpTransport transport = new SoapHttpTransport(url);
         transport.setAuthToken(AuthProvider.getAuthToken(acct).getEncoded());
         transport.setTargetAcctId(acct.getId());

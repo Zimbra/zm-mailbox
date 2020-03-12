@@ -667,8 +667,8 @@ public class GalSearchControl {
 
     private boolean proxyGalAccountSearch(Account galSyncAcct, boolean sync) throws IOException, ServiceException, ContainerException, HttpException {
         try {
-            Provisioning prov = Provisioning.getInstance();
-            String serverUrl = URLUtil.getAdminURL(prov.getServerByName(galSyncAcct.getMailHost()));
+            String podIP = Provisioning.affinityServer(galSyncAcct);
+            String serverUrl = URLUtil.getAdminURL(podIP);
             SoapHttpTransport transport = new SoapHttpTransport(serverUrl);
             AuthToken auth = mParams.getAuthToken();
             transport.setAuthToken((auth == null) ? AuthProvider.getAdminAuthToken().toZAuthToken() : auth.toZAuthToken());
