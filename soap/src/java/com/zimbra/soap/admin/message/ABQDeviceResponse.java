@@ -32,7 +32,7 @@ public class ABQDeviceResponse {
      * @zm-api-field-tag device-id
      * @zm-api-field-description ABQ Device device_id
      */
-    @XmlAttribute(name=AdminConstants.E_DEVICE_ID /* deviceId */, required=true)
+    @XmlAttribute(name=AdminConstants.E_ABQ_DEVICE_ID /* deviceId */, required=true)
     private String deviceId = "";
     
     /**

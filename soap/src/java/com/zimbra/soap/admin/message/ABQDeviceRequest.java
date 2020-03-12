@@ -38,7 +38,7 @@ public class ABQDeviceRequest {
             try {
                 return ABQDeviceOperation.valueOf(s);
             } catch (IllegalArgumentException e) {
-                throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
+                throw ServiceException.INVALID_REQUEST("unknown key: " + s, e);
             }
         }
     }
@@ -53,7 +53,7 @@ public class ABQDeviceRequest {
      * @zm-api-field-tag device-id
      * @zm-api-field-description ABQ Device device_id
      */
-    @XmlAttribute(name=AdminConstants.E_DEVICE_ID /* deviceId */, required=true)
+    @XmlAttribute(name=AdminConstants.E_ABQ_DEVICE_ID /* deviceId */, required=true)
     private String deviceId = "";
     
     /**

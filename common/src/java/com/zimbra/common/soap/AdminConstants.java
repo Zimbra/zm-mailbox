@@ -538,7 +538,7 @@ public final class AdminConstants {
     //ABQ
     public static final String E_ABQ_DEVICE_REQUEST = "ABQDeviceRequest";
     public static final String E_ABQ_DEVICE_RESPONSE = "ABQDeviceResponse";
-    public static final String E_DEVICE_ID = "deviceId";
+    public static final String E_ABQ_DEVICE_ID = "deviceId";
     public static final String E_ACCOUNT_ID = "accountId";
 
     public static final QName ABQ_DEVICE_REQUEST = QName.get(E_ABQ_DEVICE_REQUEST, NAMESPACE);

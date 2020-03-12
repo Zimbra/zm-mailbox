@@ -1308,35 +1308,31 @@ public final class DbMailbox {
         DbConnection conn = null;
         PreparedStatement stmt = null;
         try {
-            if (status == null || ABQ_DEVICE_STATUS.getAllowedStatus().contains(status)) {
-                conn = DbPool.getConnection();
-                // check if db entry is already exist
-                ResultSet rs = null;
-                if (accountId == null) {
-                    stmt = conn.prepareStatement("SELECT * From abq_devices WHERE device_id = ? AND account_id IS NULL");
-                    stmt.setString(1, deviceId);
-                } else {
-                    stmt = conn.prepareStatement("SELECT * From abq_devices WHERE device_id = ? AND account_id = ?");
-                    stmt.setString(1, deviceId);
-                    stmt.setString(2, accountId);
-                }
-                rs =  stmt.executeQuery();
-                if (rs.next()) {
-                    throw ServiceException.FAILURE(String.format("Db entry already exist for device_id = %s with account_id = %s", deviceId, accountId), null);
-                }
-                stmt.close();
-
-                stmt = conn.prepareStatement("INSERT INTO abq_devices(device_id, account_id, status, created_by, created_time) VALUES (?, ?, ?, ?, NOW())");
+            conn = DbPool.getConnection();
+            // check if db entry is already exist
+            ResultSet rs = null;
+            if (accountId == null) {
+                stmt = conn.prepareStatement("SELECT * From abq_devices WHERE device_id = ? AND account_id IS NULL");
+                stmt.setString(1, deviceId);
+            } else {
+                stmt = conn.prepareStatement("SELECT * From abq_devices WHERE device_id = ? AND account_id = ?");
                 stmt.setString(1, deviceId);
                 stmt.setString(2, accountId);
-                stmt.setString(3, status);
-                stmt.setString(4, createdBy);
-                stmt.executeUpdate();
-                stmt.close();
-                conn.commit();
-            } else {
-                throw ServiceException.FAILURE(String.format("Not a valid device status. Either ignore the status or you can send valid values from the list : %s", Arrays.asList(ABQ_DEVICE_STATUS.values()).toString()), null);
             }
+            rs =  stmt.executeQuery();
+            if (rs.next()) {
+                throw ServiceException.FAILURE(String.format("Db entry already exist for device_id = %s with account_id = %s", deviceId, accountId), null);
+            }
+            stmt.close();
+
+            stmt = conn.prepareStatement("INSERT INTO abq_devices(device_id, account_id, status, created_by, created_time) VALUES (?, ?, ?, ?, NOW())");
+            stmt.setString(1, deviceId);
+            stmt.setString(2, accountId);
+            stmt.setString(3, status);
+            stmt.setString(4, createdBy);
+            stmt.executeUpdate();
+            stmt.close();
+            conn.commit();
         } catch (SQLException e) {
             throw ServiceException.FAILURE("failed to write abq_devices entry: ", e);
         } finally {
@@ -1350,27 +1346,23 @@ public final class DbMailbox {
         DbConnection conn = null;
         PreparedStatement stmt = null;
         try {
-            if (status == null || ABQ_DEVICE_STATUS.getAllowedStatus().contains(status)) {
-                conn = DbPool.getConnection();
-                if (accountId == null) {
-                    stmt = conn.prepareStatement("UPDATE abq_devices SET status = ?, modified_by = ?, modified_time = NOW() WHERE device_id = ? AND account_id IS NULL");
-                    stmt.setString(1, status);
-                    stmt.setString(2, modifiedBy);
-                    stmt.setString(3, deviceId);
-                } else {
-                    stmt = conn.prepareStatement("UPDATE abq_devices SET status = ?, modified_by = ?, modified_time = NOW() WHERE device_id = ? AND account_id = ?");
-                    stmt.setString(1, status);
-                    stmt.setString(2, modifiedBy);
-                    stmt.setString(3, deviceId);
-                    stmt.setString(4, accountId);
-                }
-
-                stmt.executeUpdate();
-                stmt.close();
-                conn.commit();
+            conn = DbPool.getConnection();
+            if (accountId == null) {
+                stmt = conn.prepareStatement("UPDATE abq_devices SET status = ?, modified_by = ?, modified_time = NOW() WHERE device_id = ? AND account_id IS NULL");
+                stmt.setString(1, status);
+                stmt.setString(2, modifiedBy);
+                stmt.setString(3, deviceId);
             } else {
-                throw ServiceException.FAILURE(String.format("Not a valid device status. Either ignore the status or you can send valid values from the list : %s", Arrays.asList(ABQ_DEVICE_STATUS.values()).toString()), null);
+                stmt = conn.prepareStatement("UPDATE abq_devices SET status = ?, modified_by = ?, modified_time = NOW() WHERE device_id = ? AND account_id = ?");
+                stmt.setString(1, status);
+                stmt.setString(2, modifiedBy);
+                stmt.setString(3, deviceId);
+                stmt.setString(4, accountId);
             }
+
+            stmt.executeUpdate();
+            stmt.close();
+            conn.commit();
         } catch (SQLException e) {
             throw ServiceException.FAILURE("failed to update abq_devices entry: ", e);
         } finally {
