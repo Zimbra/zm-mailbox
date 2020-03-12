@@ -367,8 +367,7 @@ public class MailboxManager {
         Account account = Provisioning.getInstance().get(AccountBy.id, accountId);
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(accountId);
-        if (!skipMailHostCheck && !Provisioning.onLocalServer(account))
-            throw ServiceException.WRONG_HOST(account.getMailHost(), null);
+        checkHost(account, skipMailHostCheck);
         return account;
     }
 
@@ -423,6 +422,19 @@ public class MailboxManager {
         return getMailboxById(mailboxId, FetchMode.DO_NOT_AUTOCREATE, skipMailHostCheck);
     }
 
+    private void checkHost(Account account, boolean skipMailHostCheck) throws ServiceException {
+        if (!skipMailHostCheck && !Provisioning.onLocalServer(account)) {
+            // The host check here makes sure that sessions that were
+            // already connected at the time of mailbox move are not
+            // allowed to continue working with this mailbox which is
+            // essentially a soft-deleted copy.  The WRONG_HOST
+            // exception forces the clients to reconnect to the new
+            // server.
+            //throw ServiceException.WRONG_HOST(account.getMailHost(), null);
+            ZimbraLog.mailbox.warn("operation sent to wrong pod (you want '" + Provisioning.affinityServer(account) + "')");
+        }
+    }
+    
     protected Mailbox getMailboxById(int mailboxId, FetchMode fetchMode, boolean skipMailHostCheck)
     throws ServiceException {
         // see bug 19088 - we do NOT want to call this while holding the mgr lock, because
@@ -467,16 +479,7 @@ public class MailboxManager {
             Account account = mbox.getAccount();
             boolean isGalSyncAccount = AccountUtil.isGalSyncAccount(account);
             mbox.setGalSyncMailbox(isGalSyncAccount);
-
-            if (!skipMailHostCheck && !Provisioning.onLocalServer(account)) {
-                // The host check here makes sure that sessions that were
-                // already connected at the time of mailbox move are not
-                // allowed to continue working with this mailbox which is
-                // essentially a soft-deleted copy.  The WRONG_HOST
-                // exception forces the clients to reconnect to the new
-                // server.
-                throw ServiceException.WRONG_HOST(account.getMailHost(), null);
-            }
+            checkHost(account, skipMailHostCheck);
 
             synchronized (this) {
                 // avoid the race condition by re-checking the cache and using that data (if any)
@@ -807,8 +810,7 @@ public class MailboxManager {
     private Mailbox createMailbox(OperationContext octxt, Account account, boolean skipMailHostCheck) throws ServiceException {
         if (account == null)
             throw ServiceException.FAILURE("createMailbox: must specify an account", null);
-        if (!skipMailHostCheck && !Provisioning.onLocalServer(account))
-            throw ServiceException.WRONG_HOST(account.getMailHost(), null);
+        checkHost(account, skipMailHostCheck);
 
         // the awkward structure here is to avoid calling getMailboxById while holding the lock
         Mailbox mbox = null;
