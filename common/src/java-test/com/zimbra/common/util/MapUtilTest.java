@@ -17,6 +17,8 @@
 
 package com.zimbra.common.util;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -32,9 +34,13 @@ public class MapUtilTest {
     @Test
     public void newValueListMap() throws ExecutionException {
         LoadingCache<Integer, List<String>> map = MapUtil.newValueListMap();
-        map.get(1).add("a");
-        map.get(1).add("b");
-        map.get(2).add("c");
+        List<String> list1 = new ArrayList<String>();
+        list1.add("a");
+        list1.add("b");
+        List<String> list2 = new ArrayList<String>();
+        list2.add("c");
+        map.put(1, list1);
+        map.put(2, list2);
         
         assertEquals(2, map.size());
         
@@ -51,9 +57,13 @@ public class MapUtilTest {
     @Test
     public void newValueSetMap() throws ExecutionException {
         LoadingCache<Integer, Set<String>> map = MapUtil.newValueSetMap();
-        map.get(1).add("a");
-        map.get(1).add("b");
-        map.get(2).add("c");
+        Set<String> set1 = new HashSet<String>();
+        set1.add("a");
+        set1.add("b");
+        Set<String> set2 = new HashSet<String>();
+        set2.add("c");
+        map.put(1, set1);
+        map.put(2, set2);
         
         assertEquals(2, map.size());
         
