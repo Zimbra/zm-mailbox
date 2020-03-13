@@ -93,11 +93,16 @@ public final class Config {
 
     public static synchronized void setString(String name, String value)
     throws ServiceException {
+        setString(name, value, null);
+    }
+
+    public static synchronized void setString(String name, String value, String description)
+            throws ServiceException {
         initConfig();
         DbConnection conn = null;
         try {
             conn = DbPool.getConnection();
-            DbConfig c = DbConfig.set(conn, name, value);
+            DbConfig c = DbConfig.set(conn, name, value, description);
             mConfigMap.put(name, c);
             conn.commit();
         } finally {
