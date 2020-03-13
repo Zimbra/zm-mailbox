@@ -16,6 +16,9 @@
  */
 package com.zimbra.common.soap;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.dom4j.Namespace;
 import org.dom4j.QName;
 
@@ -536,6 +539,14 @@ public final class AdminConstants {
     public static final String E_GET_ALL_SKINS_REQUEST = "GetAllSkinsRequest";
     public static final String E_GET_ALL_SKINS_RESPONSE = "GetAllSkinsResponse";
 
+    //ABQ
+    public static final String E_ABQ_DEVICE_REQUEST = "ABQDeviceRequest";
+    public static final String E_ABQ_DEVICE_RESPONSE = "ABQDeviceResponse";
+    public static final String E_ABQ_DEVICE_ID = "deviceId";
+    public static final String E_ACCOUNT_ID = "accountId";
+
+    public static final QName ABQ_DEVICE_REQUEST = QName.get(E_ABQ_DEVICE_REQUEST, NAMESPACE);
+    public static final QName ABQ_DEVICE_RESPONSE = QName.get(E_ABQ_DEVICE_RESPONSE, NAMESPACE);
 
     public static final QName PING_REQUEST = QName.get(E_PING_REQUEST, NAMESPACE);
     public static final QName PING_RESPONSE = QName.get(E_PING_RESPONSE, NAMESPACE);
@@ -1576,9 +1587,22 @@ public final class AdminConstants {
             return ABQ_MODE_ENUM.valueOf(s);
         }
     }
+    public static final ABQ_DEVICE_STATUS DEFAULT_ABQ_STATUS = ABQ_DEVICE_STATUS.quarantined;
     public enum ABQ_DEVICE_STATUS {
         allowed,
         quarantined,
-        blocked
-    };
+        blocked;
+
+        public static List<String> getAllowedStatus() {
+            List<String> statusList = new ArrayList<String>();
+            for (ABQ_DEVICE_STATUS status : ABQ_DEVICE_STATUS.values()) {
+                statusList.add(status.toString());
+            }
+            return statusList;
+        }
+
+        public static ABQ_DEVICE_STATUS fromString(String s) {
+            return ABQ_DEVICE_STATUS.valueOf(s);
+        }
+    }
 }

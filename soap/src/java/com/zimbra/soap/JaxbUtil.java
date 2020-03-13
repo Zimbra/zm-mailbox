@@ -214,6 +214,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.AbortHsmResponse.class,
             com.zimbra.soap.admin.message.AbortXMbxSearchRequest.class,
             com.zimbra.soap.admin.message.AbortXMbxSearchResponse.class,
+            com.zimbra.soap.admin.message.ABQDeviceRequest.class,
+            com.zimbra.soap.admin.message.ABQDeviceResponse.class,
             com.zimbra.soap.admin.message.ActivateLicenseRequest.class,
             com.zimbra.soap.admin.message.ActivateLicenseResponse.class,
             com.zimbra.soap.admin.message.AddAccountAliasRequest.class,
