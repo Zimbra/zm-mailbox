@@ -60,22 +60,22 @@ public final class RecoverAccount extends MailDocumentHandler {
             ZimbraLog.passwordreset.debug("%s Account not found for %s", LOG_OPERATION, email);
             throw ForgetPasswordException.CONTACT_ADMIN("Something went wrong. Please contact your administrator.");
         }
-        ResetPasswordUtil.validateFeatureResetPasswordStatus(user);
-        if (user.getPrefPasswordRecoveryAddressStatus() == null
-                || !user.getPrefPasswordRecoveryAddressStatus().isVerified()) {
-            ZimbraLog.passwordreset.debug("%s Verified recovery email is not found for %s", LOG_OPERATION, email);
-            throw ForgetPasswordException.CONTACT_ADMIN("Something went wrong. Please contact your administrator.");
-        }
-        Channel channel = req.getChannel();
-        ChannelProvider provider = ChannelProvider.getProviderForChannel(channel);
-        String recoveryAccount = provider.getRecoveryAccount(user);
-        if (StringUtil.isNullOrEmpty(recoveryAccount)) {
-            ZimbraLog.passwordreset.debug("%s Recovery account missing or unverified for %s", LOG_OPERATION, email);
-            throw ForgetPasswordException.CONTACT_ADMIN("Something went wrong. Please contact your administrator.");
-        }
 
         Element response = proxyIfNecessary(request, context, user);
         if (response == null) {
+            ResetPasswordUtil.validateFeatureResetPasswordStatus(user);
+            if (user.getPrefPasswordRecoveryAddressStatus() == null
+                    || !user.getPrefPasswordRecoveryAddressStatus().isVerified()) {
+                ZimbraLog.passwordreset.debug("%s Verified recovery email is not found for %s", LOG_OPERATION, email);
+                throw ForgetPasswordException.CONTACT_ADMIN("Something went wrong. Please contact your administrator.");
+            }
+            Channel channel = req.getChannel();
+            ChannelProvider provider = ChannelProvider.getProviderForChannel(channel);
+            String recoveryAccount = provider.getRecoveryAccount(user);
+            if (StringUtil.isNullOrEmpty(recoveryAccount)) {
+                ZimbraLog.passwordreset.debug("%s Recovery account missing or unverified for %s", LOG_OPERATION, email);
+                throw ForgetPasswordException.CONTACT_ADMIN("Something went wrong. Please contact your administrator.");
+            }
             RecoverAccountResponse resp = new RecoverAccountResponse();
             switch (op) {
             case GET_RECOVERY_ACCOUNT:
