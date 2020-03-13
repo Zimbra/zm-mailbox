@@ -6,8 +6,8 @@
  <dependencies>
   <dependency org="junit" name="junit" rev="4.8.2" />
   <dependency org="xmlunit" name="xmlunit" rev="1.6"/>
-  <dependency org="com.google.guava" name="guava" rev="23.0"/>
-  <dependency org="dom4j" name="dom4j" rev="1.5.2" />
+  <dependency org="org.dom4j" name="dom4j" rev="${dom4j.version}" />
+  <dependency org="com.google.guava" name="guava" rev="${com.google.guava.version}"/>
   <dependency org="io.leangen.graphql" name="spqr" rev="0.9.7"/>
   <!-- Without this, dom4j pulls in an ancient version of xerces -->
   <dependency org="xerces" name="xercesImpl" rev="2.9.1-patch-01"/>
@@ -18,10 +18,10 @@
   <dependency org="commons-cli" name="commons-cli" rev="1.2" />
   <dependency org="org.freemarker" name="freemarker" rev="2.3.23"/>
   <dependency org="log4j" name="log4j" rev="1.2.16" />
-  <dependency org="com.fasterxml.jackson.core" name="jackson-core" rev="2.9.2"/>
-  <dependency org="com.fasterxml.jackson.core" name="jackson-databind" rev="2.9.2"/>
+  <dependency org="com.fasterxml.jackson.core" name="jackson-core" rev="2.10.1"/>
+  <dependency org="com.fasterxml.jackson.core" name="jackson-databind" rev="2.10.1"/>
   <dependency org="com.fasterxml.jackson.module" name="jackson-module-jaxb-annotations" rev="2.8.9"/>
-  <dependency org="com.fasterxml.jackson.core" name="jackson-annotations" rev="2.9.2"/>
+  <dependency org="com.fasterxml.jackson.core" name="jackson-annotations" rev="2.10.1"/>
   <dependency org="com.fasterxml.jackson.dataformat" name="jackson-dataformat-xml" rev="2.9.2"/>
   <dependency org="org.apache.james" name="apache-jsieve-core" rev="0.5"/>
   <dependency org="zimbra" name="zm-common" rev="latest.integration" />
