@@ -83,6 +83,7 @@ public class AccountConstants {
     public static final String E_MODIFY_WHITE_BLACK_LIST_RESPONSE = "ModifyWhiteBlackListResponse";
     public static final String E_MODIFY_ZIMLET_PREFS_REQUEST = "ModifyZimletPrefsRequest";
     public static final String E_MODIFY_ZIMLET_PREFS_RESPONSE = "ModifyZimletPrefsResponse";
+    public static final String E_GET_LOGIN_DETAILS_REQUEST = "GetLoginDetailsRequest";
 
     // GAL
     public static final String E_AUTO_COMPLETE_GAL_REQUEST = "AutoCompleteGalRequest";
@@ -210,6 +211,7 @@ public class AccountConstants {
     public static final QName REVOKE_TRUSTED_DEVICE_RESPONSE = QName.get(E_REVOKE_TRUSTED_DEVICE_RESPONSE, NAMESPACE);
     public static final QName REVOKE_OTHER_TRUSTED_DEVICES_REQUEST = QName.get(E_REVOKE_OTHER_TRUSTED_DEVICES_REQUEST, NAMESPACE);
     public static final QName REVOKE_OTHER_TRUSTED_DEVICES_RESPONSE = QName.get(E_REVOKE_OTHER_TRUSTED_DEVICES_RESPONSE, NAMESPACE);
+    public static final QName GET_LOGIN_DETAILS_REQUEST = QName.get(E_GET_LOGIN_DETAILS_REQUEST, NAMESPACE);
 
     // prefs
     public static final QName GET_PREFS_REQUEST = QName.get(E_GET_PREFS_REQUEST, NAMESPACE);
@@ -477,6 +479,8 @@ public class AccountConstants {
     public static final String A_TOKEN_TYPE = "tokenType";
     public static final String E_JWT_TOKEN = "jwtToken";
     public static final String A_OFFSET = "offset";
+    public static final String A_LOGIN_FROM_TIME = "fromtime";
+    public static final String A_LOGIN_TO_TIME = "totime";
 
     // account ACLs
     public static final String A_ACCESSKEY = "key";
