@@ -9993,6 +9993,22 @@ TODO: delete them permanently from here
   <desc>Whether to permit syncing shared calendar folders</desc>
 </attr>
 
+<attr id="4003" name="zimbraDelayedIndexInactiveAccountAge" type="duration" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited" since="9.0.0">
+  <defaultCOSValue>30d</defaultCOSValue>
+  <desc>The amount of time that an account has to be inactive for in order for its index to be deleted and its zimbraDelayedIndexStatus set to "suppressed".
+  A value of 0 means that auto-deletion of index data is disabled.</desc>
+</attr>
+
+<attr id="4004" name="zimbraSolrBatchDeletionInterval" type="duration" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited,domainAdminModifiable" since="9.0.0">
+  <globalConfigValue>1h</globalConfigValue>
+  <desc>Amount of time between batched Solr delete-by-query operations</desc>
+</attr>
+
+<attr id="4005" name="zimbraMaxSolrBatchDeletionSize" type="integer" cardinality="single" optionalIn="globalConfig,server" min="0" flags="serverInherited,domainAdminModifiable" since="9.0.0">
+  <globalConfigValue>1000</globalConfigValue>
+  <desc>Maximum number of clauses in batched Solr delete-by-query operations; 0 means no limit</desc>
+</attr>
+
 <attr id="9003" name="zimbraFeatureDelayedIndexEnabled" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountInfo,accountCosDomainInherited" since="8.8.8">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Whether the "delayed index" feature is enabled. If FALSE, index is always generated</desc>

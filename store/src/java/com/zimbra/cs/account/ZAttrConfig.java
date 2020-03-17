@@ -32439,6 +32439,83 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Maximum number of clauses in batched Solr delete-by-query operations;
+     * 0 means no limit
+     *
+     * @return zimbraMaxSolrBatchDeletionSize, or 1000 if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4005)
+    public int getMaxSolrBatchDeletionSize() {
+        return getIntAttr(Provisioning.A_zimbraMaxSolrBatchDeletionSize, 1000, true);
+    }
+
+    /**
+     * Maximum number of clauses in batched Solr delete-by-query operations;
+     * 0 means no limit
+     *
+     * @param zimbraMaxSolrBatchDeletionSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4005)
+    public void setMaxSolrBatchDeletionSize(int zimbraMaxSolrBatchDeletionSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMaxSolrBatchDeletionSize, Integer.toString(zimbraMaxSolrBatchDeletionSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of clauses in batched Solr delete-by-query operations;
+     * 0 means no limit
+     *
+     * @param zimbraMaxSolrBatchDeletionSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4005)
+    public Map<String,Object> setMaxSolrBatchDeletionSize(int zimbraMaxSolrBatchDeletionSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMaxSolrBatchDeletionSize, Integer.toString(zimbraMaxSolrBatchDeletionSize));
+        return attrs;
+    }
+
+    /**
+     * Maximum number of clauses in batched Solr delete-by-query operations;
+     * 0 means no limit
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4005)
+    public void unsetMaxSolrBatchDeletionSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMaxSolrBatchDeletionSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of clauses in batched Solr delete-by-query operations;
+     * 0 means no limit
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4005)
+    public Map<String,Object> unsetMaxSolrBatchDeletionSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMaxSolrBatchDeletionSize, "");
+        return attrs;
+    }
+
+    /**
      * port number on which memcached server should listen
      *
      * <p>Use getMemcachedBindPortAsString to access value as a string.
@@ -71443,6 +71520,118 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetSoapRequestMaxSize(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSoapRequestMaxSize, "");
+        return attrs;
+    }
+
+    /**
+     * Amount of time between batched Solr delete-by-query operations. Must
+     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * <p>Use getSolrBatchDeletionIntervalAsString to access value as a string.
+     *
+     * @see #getSolrBatchDeletionIntervalAsString()
+     *
+     * @return zimbraSolrBatchDeletionInterval in millseconds, or 3600000 (1h)  if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4004)
+    public long getSolrBatchDeletionInterval() {
+        return getTimeInterval(Provisioning.A_zimbraSolrBatchDeletionInterval, 3600000L, true);
+    }
+
+    /**
+     * Amount of time between batched Solr delete-by-query operations. Must
+     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @return zimbraSolrBatchDeletionInterval, or "1h" if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4004)
+    public String getSolrBatchDeletionIntervalAsString() {
+        return getAttr(Provisioning.A_zimbraSolrBatchDeletionInterval, "1h", true);
+    }
+
+    /**
+     * Amount of time between batched Solr delete-by-query operations. Must
+     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param zimbraSolrBatchDeletionInterval new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4004)
+    public void setSolrBatchDeletionInterval(String zimbraSolrBatchDeletionInterval) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSolrBatchDeletionInterval, zimbraSolrBatchDeletionInterval);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Amount of time between batched Solr delete-by-query operations. Must
+     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param zimbraSolrBatchDeletionInterval new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4004)
+    public Map<String,Object> setSolrBatchDeletionInterval(String zimbraSolrBatchDeletionInterval, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSolrBatchDeletionInterval, zimbraSolrBatchDeletionInterval);
+        return attrs;
+    }
+
+    /**
+     * Amount of time between batched Solr delete-by-query operations. Must
+     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4004)
+    public void unsetSolrBatchDeletionInterval() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSolrBatchDeletionInterval, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Amount of time between batched Solr delete-by-query operations. Must
+     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4004)
+    public Map<String,Object> unsetSolrBatchDeletionInterval(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSolrBatchDeletionInterval, "");
         return attrs;
     }
 
