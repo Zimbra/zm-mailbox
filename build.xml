@@ -120,9 +120,9 @@
             <arg value="--build-arg" />
             <arg value="DOCKER_REPO_NS=${DOCKER_REPO_PUSH_NS}" />
             <arg value="--cache-from" />
-            <arg value="${DOCKER_REPO_PUSH_NS}/zms-mailbox:${DOCKER_MAILBOX_BUILD_TAG}" />
+            <arg value="${DOCKER_REPO_PUSH_NS}/zmc-mailbox-network:${DOCKER_MAILBOX_BUILD_TAG}" />
             <arg value="--tag" />
-            <arg value="${DOCKER_REPO_PUSH_NS}/zms-mailbox:${DOCKER_MAILBOX_BUILD_TAG}" />
+            <arg value="${DOCKER_REPO_PUSH_NS}/zmc-mailbox-network:${DOCKER_MAILBOX_BUILD_TAG}" />
             <arg value="." />
         </exec>
     </target>
@@ -130,8 +130,24 @@
     <target name="push-image" depends="build-image">
         <exec executable="docker">
             <arg value="push" />
-            <arg value="${DOCKER_REPO_PUSH_NS}/zms-mailbox:${DOCKER_PUSH_TAG}" />
+            <arg value="${DOCKER_REPO_PUSH_NS}/zmc-mailbox-network:${DOCKER_PUSH_TAG}" />
         </exec>
+    </target>
+
+    <property name="EXTENSION_COMMON_BUILD_TAG" value="1.0.0" />
+    <target name="build-extension-common-core" depends="publish-local-all">
+      <exec executable="/bin/bash" failonerror="true">
+        <arg value="./extension-common-core/build-extension-common.sh"/>
+        <arg value="${EXTENSION_COMMON_BUILD_TAG}"/>
+      </exec>
+    </target>
+
+    <property name="EXTENSION_NETWORK_BUILD_TAG" value="1.0.0" />
+    <target name="build-extension-network-core" depends="publish-local-all">
+      <exec executable="/bin/bash" failonerror="true">
+        <arg value="./extension-network-core/build-core-extension-network.sh"/>
+        <arg value="${EXTENSION_NETWORK_BUILD_TAG}"/>
+      </exec>
     </target>
 
    <target name="clean" depends="clean-ant,clean-pkg">
