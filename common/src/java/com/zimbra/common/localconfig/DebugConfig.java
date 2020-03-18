@@ -346,11 +346,15 @@ public final class DebugConfig {
      * sleep time between account rename and alias creation for testing mail delivery during change of primary email
      */
     public static final int sleepTimeForTestingChangePrimaryEmail = value ("change_primary_email_sleep_time", 0);
-    
+
     /**
      * time given to owasp service for html sanitization in seconds
      */
     public static final int owasp_html_sanitizer_timeout = value ("owasp_html_sanitizer_timeout", 15);
+
+    public static final boolean delayedIndexingIgnoresZClient = value("delayed_indexing_ignores_zclient", false);
+
+    public static final boolean delayedIndexingIgnoresEmptyUserAgent = value("delayed_indexing_ignores_empty_user_agent", true);
 
     private static boolean value(String key, boolean defaultValue) {
         String value = LC.get(key);

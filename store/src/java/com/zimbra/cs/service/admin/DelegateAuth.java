@@ -37,6 +37,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.index.MailboxIndexUtil;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -101,7 +102,9 @@ public class DelegateAuth extends AdminDocumentHandler {
         AuthToken at = AuthProvider.getAuthToken(account, expires, false, adminAcct);
         at.encodeAuthResp(response, true);
         response.addAttribute(AdminConstants.E_LIFETIME, lifetime, Element.Disposition.CONTENT);
-        handleDelayedIndex(account);
+        if (MailboxIndexUtil.isUserAgentAllowedForChangingIndexStatus(zsc.getUserAgent())) {
+            handleDelayedIndex(account);
+        }
         return response;
     }
 
