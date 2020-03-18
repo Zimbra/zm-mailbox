@@ -135,7 +135,7 @@ public class DbVolumeBlobsTest {
         Message msg = mbox.addMessage(null, new ParsedMessage("From: from1@zimbra.com\r\nTo: to1@zimbra.com".getBytes(), false), opt, null);
 
         Volume vol = VolumeManager.getInstance().getCurrentMessageVolume();
-        MailboxBlobInfo blobInfo = new MailboxBlobInfo(null, mbox.getId(), msg.getId(), msg.getSavedSequence(), String.valueOf(vol.getId()), null);
+        MailboxBlobInfo blobInfo = new MailboxBlobInfo(null, mbox.getId(), msg.getId(), msg.getSavedSequenceLong(), String.valueOf(vol.getId()), null);
         DbVolumeBlobs.addBlobReference(conn, blobInfo);
         try {
             DbVolumeBlobs.addBlobReference(conn, blobInfo);

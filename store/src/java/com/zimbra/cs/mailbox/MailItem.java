@@ -308,7 +308,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         public String metadata;
         public int modMetadata;
         public int dateChanged; /* Seconds since 1970-01-01 00:00:00 UTC */
-        public int modContent;
+        public long modContent;
         public String uuid;
 
         public String getSubject() {
@@ -986,6 +986,10 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
      *  content was modified.  For immutable objects (e.g. received messages),
      *  this will be the same change ID as when the item was created. */
     public int getSavedSequence() {
+        return (int) mData.modContent;
+    }
+
+    public long getSavedSequenceLong() {
         return mData.modContent;
     }
 
@@ -2026,7 +2030,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         markItemModified(Change.CONTENT  | Change.DATE | Change.IMAP_UID | Change.SIZE);
 
         // delete the old blob *unless* we've already rewritten it in this transaction
-        if (getSavedSequence() != mMailbox.getOperationChangeID()) {
+        if (getSavedSequenceLong() != mMailbox.getOperationChangeID()) {
             if (!canAccess(ACL.RIGHT_WRITE)) {
                 throw ServiceException.PERM_DENIED("you do not have the necessary permissions on the item");
             }
@@ -2036,7 +2040,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
                 List<MailItem> revisions = loadRevisions();
                 if (!revisions.isEmpty()) {
                     MailItem lastRev = revisions.get(revisions.size() - 1);
-                    if (lastRev.getSavedSequence() == getSavedSequence()) {
+                    if (lastRev.getSavedSequenceLong() == getSavedSequenceLong()) {
                         delete = false;
                     }
                 }
@@ -2068,9 +2072,9 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             StoreManager sm = StoreManager.getInstance();
             // under windows, a rename will fail if the incoming file is open
             if (SystemUtil.ON_WINDOWS)
-                mblob = sm.link(staged, mMailbox, mId, getSavedSequence());
+                mblob = sm.link(staged, mMailbox, mId, getSavedSequenceLong());
             else
-                mblob = sm.renameTo(staged, mMailbox, mId, getSavedSequence());
+                mblob = sm.renameTo(staged, mMailbox, mId, getSavedSequenceLong());
             mMailbox.markOtherItemDirty(mblob);
         }
         mBlob = null;
@@ -2169,10 +2173,10 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
                 // monotonically increasing in the revisions list. (f(n) <= f(n+1))
 
                 // Filter out blobs that are still in use; mark the rest for deletion.
-                int oldestRemainingSavedSequence =
-                    revisions.isEmpty() ? mData.modContent : revisions.get(0).getSavedSequence();
+                long oldestRemainingSavedSequence =
+                    revisions.isEmpty() ? mData.modContent : revisions.get(0).getSavedSequenceLong();
                 for (MailItem revision : toPurge) {
-                    if (revision.getSavedSequence() < oldestRemainingSavedSequence) {
+                    if (revision.getSavedSequenceLong() < oldestRemainingSavedSequence) {
                         mMailbox.updateSize(-revision.getSize());
                         folder.updateSize(0, 0, -revision.getSize());
                         revision.markBlobForDeletion();
@@ -2253,10 +2257,10 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
                 // monotonically increasing in the revisions list. (f(n) <= f(n+1))
 
                 // Filter out blobs that are still in use; mark the rest for deletion.
-                int oldestRemainingSavedSequence =
-                    revisions.isEmpty() ? item.mData.modContent : revisions.get(0).getSavedSequence();
+                long oldestRemainingSavedSequence =
+                    revisions.isEmpty() ? item.mData.modContent : revisions.get(0).getSavedSequenceLong();
                 for (MailItem revision : toPurge) {
-                    if (revision.getSavedSequence() < oldestRemainingSavedSequence) {
+                    if (revision.getSavedSequenceLong() < oldestRemainingSavedSequence) {
                         item.mMailbox.updateSize(-revision.getSize());
                         folder.updateSize(0, 0, -revision.getSize());
                         revision.markBlobForDeletion();
@@ -2659,7 +2663,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
                 MailboxBlob srcRevBlob = revision.getBlob();
                 String revLocator = null;
                 if (srcRevBlob != null) {
-                    MailboxBlob copyRevBlob = sm.copy(srcRevBlob, mMailbox, copyId, revision.getSavedSequence());
+                    MailboxBlob copyRevBlob = sm.copy(srcRevBlob, mMailbox, copyId, revision.getSavedSequenceLong());
                     mMailbox.markOtherItemDirty(copyRevBlob);
                     revLocator = copyRevBlob.getLocator();
                 }
@@ -3382,7 +3386,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
                 try {
                     info.blobs.add(revision.getBlob());
                 } catch (Exception e) {
-                    ZimbraLog.mailbox.error("missing blob for id: " + mId + ", change: " + revision.getSavedSequence());
+                    ZimbraLog.mailbox.error("missing blob for id: " + mId + ", change: " + revision.getSavedSequenceLong());
                 }
             }
         }

@@ -303,7 +303,7 @@ public class CacheToXML {
         calItemElem.addAttribute(MailConstants.A_DATE, calItemData.getDate());
         calItemElem.addAttribute(MailConstants.A_CHANGE_DATE, calItemData.getChangeDate() / 1000);  // as seconds
         calItemElem.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, calItemData.getModMetadata());
-        calItemElem.addAttribute(MailConstants.A_REVISION, calItemData.getModContent());
+        calItemElem.addAttribute(MailConstants.A_REVISION, calItemData.getModContentLong());
 
         int calItemId = calItemData.getCalItemId();
         encodeInstanceData(calItemElem, ifmt, calItemId, defaultData, null,

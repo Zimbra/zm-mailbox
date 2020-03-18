@@ -85,7 +85,7 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
     private int mImapMessageCount;
     private String mParentId;
     private int mModifiedSequence;
-    private int mContentSequence;
+    private long mContentSequence;
     private int mImapUIDNEXT;
     private int mImapMODSEQ;
     private String mAbsolutePath;
@@ -276,7 +276,7 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
         mImapMessageCount = (int) e.getAttributeLong(MailConstants.A_IMAP_NUM, mMessageCount);
         mDefaultView = View.fromString(e.getAttribute(MailConstants.A_DEFAULT_VIEW, null));
         mModifiedSequence = (int) e.getAttributeLong(MailConstants.A_MODIFIED_SEQUENCE, -1);
-        mContentSequence = (int) e.getAttributeLong(MailConstants.A_REVISION, -1);
+        mContentSequence = e.getAttributeLong(MailConstants.A_REVISION, -1);
         mImapUIDNEXT = (int) e.getAttributeLong(MailConstants.A_IMAP_UIDNEXT, -1);
         mImapMODSEQ = (int) e.getAttributeLong(MailConstants.A_IMAP_MODSEQ, -1);
         mRemoteURL = e.getAttribute(MailConstants.A_URL, null);
@@ -530,7 +530,7 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
      * @see Folder#getSavedSequence()
      **/
     @Override
-    public int getUIDValidity() {
+    public long getUIDValidity() {
         return getContentSequence();
     }
 
@@ -777,7 +777,7 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
 
     /** Returns the sequence number for the last change in the folder's location or name.
      */
-    public int getContentSequence() {
+    public long getContentSequence() {
         return mContentSequence;
     }
 

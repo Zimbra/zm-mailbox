@@ -93,7 +93,7 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
     };
 
     @Override
-    public MailboxBlob copy(MailboxBlob src, Mailbox destMbox, int destItemId, int destRevision)
+    public MailboxBlob copy(MailboxBlob src, Mailbox destMbox, int destItemId, long destRevision)
     throws IOException, ServiceException {
         //default implementation does not handle de-duping
         //stores which de-dupe need to override this method appropriately
@@ -206,20 +206,20 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
     }
 
     @Override
-    public MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, int revision, String locator, boolean validate) throws ServiceException {
+    public MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, long revision, String locator, boolean validate) throws ServiceException {
         ExternalMailboxBlob mblob = new ExternalMailboxBlob(mbox, itemId, revision, locator);
         return (!validate || mblob.validateBlob()) ? mblob : null;
     }
 
     @Override
-    public MailboxBlob link(StagedBlob src, Mailbox destMbox, int destMsgId, int destRevision) throws IOException,
+    public MailboxBlob link(StagedBlob src, Mailbox destMbox, int destMsgId, long destRevision) throws IOException,
     ServiceException {
         // link is a noop
         return renameTo(src, destMbox, destMsgId, destRevision);
     }
 
     @Override
-    public MailboxBlob renameTo(StagedBlob src, Mailbox destMbox, int destMsgId, int destRevision) throws IOException,
+    public MailboxBlob renameTo(StagedBlob src, Mailbox destMbox, int destMsgId, long destRevision) throws IOException,
     ServiceException {
         // rename is a noop
         ExternalStagedBlob staged = (ExternalStagedBlob) src;

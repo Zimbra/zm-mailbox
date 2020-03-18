@@ -80,7 +80,7 @@ public class RestoreContacts extends MailDocumentHandler {
                             + MailConstants.A_CONTACTS_RESTORE_RESOLVE + "=" + resolve;
                     }
                     File file = new File(FileBlobStore.getBlobPath(mbox, doc.getId(),
-                        doc.getSavedSequence(), Short.valueOf(doc.getLocator())));
+                        doc.getSavedSequenceLong(), Short.valueOf(doc.getLocator())));
                     if (!file.exists()) {
                         throw ServiceException
                             .INVALID_REQUEST(FILE_NOT_FOUND + contactBackupFileName, null);

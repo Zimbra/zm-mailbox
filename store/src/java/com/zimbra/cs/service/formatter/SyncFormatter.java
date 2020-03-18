@@ -80,7 +80,7 @@ public class SyncFormatter extends Formatter {
         hdrs.add(new Pair<String, String>("X-Zimbra-Received", item.getDate() + ""));
         hdrs.add(new Pair<String, String>("X-Zimbra-Modified", item.getChangeDate() + ""));
         hdrs.add(new Pair<String, String>("X-Zimbra-Change", item.getModifiedSequence() + ""));
-        hdrs.add(new Pair<String, String>("X-Zimbra-Revision", item.getSavedSequence() + ""));
+        hdrs.add(new Pair<String, String>("X-Zimbra-Revision", item.getSavedSequenceLong() + ""));
         if (item instanceof Message)
             hdrs.add(new Pair<String, String>("X-Zimbra-Conv", ((Message) item).getConversationId() + ""));
         return hdrs;

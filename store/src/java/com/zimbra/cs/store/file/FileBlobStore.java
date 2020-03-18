@@ -123,7 +123,7 @@ public final class FileBlobStore extends StoreManager {
     }
 
     @Override
-    public VolumeMailboxBlob copy(MailboxBlob src, Mailbox destMbox, int destItemId, int destRevision)
+    public VolumeMailboxBlob copy(MailboxBlob src, Mailbox destMbox, int destItemId, long destRevision)
     throws IOException, ServiceException {
         Volume volume = MANAGER.getCurrentMessageVolume();
         //FileBlobStore optimizes copy by using link where possible
@@ -193,14 +193,14 @@ public final class FileBlobStore extends StoreManager {
     }
 
     @Override
-    public VolumeMailboxBlob link(StagedBlob src, Mailbox destMbox, int destItemId, int destRevision)
+    public VolumeMailboxBlob link(StagedBlob src, Mailbox destMbox, int destItemId, long destRevision)
     throws IOException, ServiceException {
         Volume volume = MANAGER.getCurrentMessageVolume();
         VolumeBlob blob = ((VolumeStagedBlob) src).getLocalBlob();
         return link(blob, destMbox, destItemId, destRevision, volume.getId());
     }
 
-    public VolumeMailboxBlob link(Blob src, Mailbox destMbox, int destItemId, int destRevision, short destVolumeId)
+    public VolumeMailboxBlob link(Blob src, Mailbox destMbox, int destItemId, long destRevision, short destVolumeId)
     throws IOException, ServiceException {
         File srcFile = src.getFile();
         if (!srcFile.exists()) {
@@ -264,7 +264,7 @@ public final class FileBlobStore extends StoreManager {
     }
 
     @Override
-    public VolumeMailboxBlob renameTo(StagedBlob src, Mailbox destMbox, int destItemId, int destRevision)
+    public VolumeMailboxBlob renameTo(StagedBlob src, Mailbox destMbox, int destItemId, long destRevision)
     throws IOException, ServiceException {
         Volume volume = MANAGER.getCurrentMessageVolume();
         VolumeBlob blob = ((VolumeStagedBlob) src).getLocalBlob();
@@ -354,7 +354,7 @@ public final class FileBlobStore extends StoreManager {
     }
 
     @Override
-    public MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, int revision, String locator, boolean validate) throws ServiceException {
+    public MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, long revision, String locator, boolean validate) throws ServiceException {
         short volumeId = Short.valueOf(locator);
         File file = getMailboxBlobFile(mbox, itemId, revision, volumeId, validate);
         if (file == null) {
@@ -388,7 +388,7 @@ public final class FileBlobStore extends StoreManager {
         return true;
     }
 
-    private File getMailboxBlobFile(Mailbox mbox, int itemId, int revision, short volumeId, boolean check)
+    private File getMailboxBlobFile(Mailbox mbox, int itemId, long revision, short volumeId, boolean check)
     throws ServiceException {
         File file = new File(getBlobPath(mbox, itemId, revision, volumeId));
         if (!check || file.exists()) {
@@ -399,11 +399,11 @@ public final class FileBlobStore extends StoreManager {
         return (file.exists() ? file : null);
     }
 
-    public static String getBlobPath(Mailbox mbox, int itemId, int revision, short volumeId) throws ServiceException {
+    public static String getBlobPath(Mailbox mbox, int itemId, long revision, short volumeId) throws ServiceException {
         return getBlobPath(mbox.getId(), itemId, revision, volumeId);
     }
 
-    public static String getBlobPath(int mboxId, int itemId, int revision, short volumeId) throws ServiceException {
+    public static String getBlobPath(int mboxId, int itemId, long revision, short volumeId) throws ServiceException {
         Volume vol = MANAGER.getVolume(volumeId);
         String path = vol.getBlobDir(mboxId, itemId);
         int buflen = path.length() + 15 + (revision < 0 ? 0 : 11);
@@ -414,7 +414,7 @@ public final class FileBlobStore extends StoreManager {
         return sb.toString();
     }
 
-    public static void appendFilename(StringBuilder sb, int itemId, int revision) {
+    public static void appendFilename(StringBuilder sb, int itemId, long revision) {
         sb.append(itemId);
         if (revision >= 0) {
             sb.append('-').append(revision);

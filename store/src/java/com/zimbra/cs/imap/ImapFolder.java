@@ -71,7 +71,7 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
     private transient Map<Integer, ImapMessage> messageIds;
 
     private final ItemIdentifier folderIdentifier;
-    private final int uidValidity;
+    private final long uidValidity;
     private String query;
     private Set<MailItem.Type> typeConstraint = ImapHandler.ITEM_TYPES;
     private final List<ImapMessage> sequence = new ArrayList<ImapMessage>();
@@ -264,7 +264,7 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
 
     /** Returns the folder's IMAP UID validity value.
      * @see #getUIDValidity(Folder) */
-    protected int getUIDValidity() {
+    protected long getUIDValidity() {
         return uidValidity;
     }
 
@@ -319,7 +319,7 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
     /** Returns the UID Validity Value for the {@link FolderStore}.  This is the
      *  folder's <tt>MOD_CONTENT</tt> change sequence number.
      * @see Folder#getSavedSequence() */
-    protected static int getUIDValidity(FolderStore folder) {
+    protected static long getUIDValidity(FolderStore folder) {
         return folder.getUIDValidity();
     }
 
