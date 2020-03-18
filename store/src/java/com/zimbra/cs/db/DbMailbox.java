@@ -44,6 +44,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxVersion;
 import com.zimbra.cs.mailbox.Metadata;
+import com.zimbra.cs.util.Zimbra;
 
 /**
  * @since Oct 28, 2004
