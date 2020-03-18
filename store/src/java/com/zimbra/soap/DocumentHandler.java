@@ -489,7 +489,7 @@ public abstract class DocumentHandler {
         String acctId = zsc.getRequestedAccountId();
         Provisioning.Reasons reasons = new Provisioning.Reasons();
         if (acctId != null && zsc.getProxyTarget() == null && !isAdminCommand() &&
-                !Provisioning. onLocalServer(getRequestedAccount(zsc), reasons)) {
+                !Provisioning.onLocalServer(getRequestedAccount(zsc), reasons)) {
             if (null == zsc.getSoapRequestId()) {
                 zsc.setNewSoapRequestId();
             }

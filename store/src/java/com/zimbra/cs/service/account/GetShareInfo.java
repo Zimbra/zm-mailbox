@@ -35,7 +35,7 @@ import com.zimbra.cs.account.ShareInfoData;
 import com.zimbra.cs.account.names.NameUtil;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.soap.JaxbUtil;
+import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.account.message.GetShareInfoRequest;
 import com.zimbra.soap.account.message.GetShareInfoResponse;
@@ -184,7 +184,7 @@ public class GetShareInfo  extends AccountDocumentHandler {
          */
         request.addAttribute(AccountConstants.A_INTERNAL, true);
 
-        Element response = proxyRequest(request, context, ownerId);
+        Element response = proxyRequest(request, context, DocumentHandler.getPodIP(ownerId), getZimbraSoapContext(context));
         for (Element eShare : response.listElements(AccountConstants.E_SHARE)) {
             ShareInfoData sid = ShareInfoData.fromXML(eShare);
             visitor.visit(sid);
