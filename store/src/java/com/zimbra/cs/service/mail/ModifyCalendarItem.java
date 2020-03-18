@@ -132,7 +132,7 @@ public class ModifyCalendarItem extends CalendarRequest {
             int modSeq = (int) request.getAttributeLong(MailConstants.A_MODIFIED_SEQUENCE, 0);
             int revision = (int) request.getAttributeLong(MailConstants.A_REVISION, 0);
             if (modSeq != 0 && revision != 0 &&
-                    (modSeq < calItem.getModifiedSequence() || revision < calItem.getSavedSequence())) {
+                    (modSeq < calItem.getModifiedSequence() || revision < calItem.getSavedSequenceLong())) {
                 throw MailServiceException.INVITE_OUT_OF_DATE(iid.toString());
             }
 

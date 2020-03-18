@@ -542,7 +542,7 @@ public abstract class MailItemResource extends DavResource {
     }
 
     public static String getEtag(MailItem item) {
-        return getEtag(Long.toString(item.getModifiedSequence()), Long.toString(item.getSavedSequence()));
+        return getEtag(Long.toString(item.getModifiedSequence()), Long.toString(item.getSavedSequenceLong()));
     }
     public static String getEtag(String modMetadata, String modContent) {
         return "\""+modMetadata+"-"+modContent+"\"";

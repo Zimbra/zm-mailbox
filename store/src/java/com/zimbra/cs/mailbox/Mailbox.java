@@ -1257,10 +1257,10 @@ public class Mailbox implements MailboxStore {
         if (item == null) {
             return true;
         }
-        return checkItemChangeID(item.getModifiedSequence(), item.getSavedSequence());
+        return checkItemChangeID(item.getModifiedSequence(), item.getSavedSequenceLong());
     }
 
-    public boolean checkItemChangeID(int modMetadata, int modContent) throws ServiceException {
+    public boolean checkItemChangeID(int modMetadata, long modContent) throws ServiceException {
         if (currentChange().octxt == null || currentChange().octxt.change < 0) {
             return true;
         }
@@ -5253,9 +5253,9 @@ public class Mailbox implements MailboxStore {
         public final int invId;
         public final int compNum;
         public final int modSeq;
-        public final int rev;
+        public final long rev;
 
-        private AddInviteData(int calItemId, int invId, int compNum, int modSeq, int rev) {
+        private AddInviteData(int calItemId, int invId, int compNum, int modSeq, long rev) {
             this.calItemId = calItemId;
             this.invId = invId;
             this.compNum = compNum;
@@ -5759,7 +5759,7 @@ public class Mailbox implements MailboxStore {
             success = true;
             if (processed) {
                 return new AddInviteData(calItem.getId(), inv.getMailItemId(), inv.getComponentNum(),
-                        calItem.getModifiedSequence(), calItem.getSavedSequence());
+                        calItem.getModifiedSequence(), calItem.getSavedSequenceLong());
             } else {
                 return null;
             }

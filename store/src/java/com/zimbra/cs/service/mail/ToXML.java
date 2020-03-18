@@ -522,7 +522,7 @@ public final class ToXML {
             }
         }
         if (needToOutput(fields, Change.CONTENT)) {
-            elem.addAttribute(MailConstants.A_REVISION, folder.getSavedSequence());
+            elem.addAttribute(MailConstants.A_REVISION, folder.getSavedSequenceLong());
             // this attribute ("ms") *normally* goes with MODIFIED_CONFLICT, but we need it
             //   serialized in this case as well in order to make dav ctag caching work
             elem.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, folder.getModifiedSequence());
@@ -774,11 +774,11 @@ public final class ToXML {
             el.addAttribute(MailConstants.A_CHANGE_DATE, contact.getChangeDate() / 1000);
             el.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, contact.getModifiedSequence());
             el.addAttribute(MailConstants.A_DATE, contact.getDate());
-            el.addAttribute(MailConstants.A_REVISION, contact.getSavedSequence());
+            el.addAttribute(MailConstants.A_REVISION, contact.getSavedSequenceLong());
         } else {
             if (needToOutput(fields, Change.CONTENT)) {
                 el.addAttribute(MailConstants.A_DATE, contact.getDate());
-                el.addAttribute(MailConstants.A_REVISION, contact.getSavedSequence());
+                el.addAttribute(MailConstants.A_REVISION, contact.getSavedSequenceLong());
             }
             if (needToOutput(fields, Change.MODSEQ)) {
                 el.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, contact.getModifiedSequence());
@@ -1006,8 +1006,8 @@ public final class ToXML {
     public static Element encodeNote(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Note note, int fields) throws ServiceException {
         Element el = parent.addNonUniqueElement(MailConstants.E_NOTE);
         el.addAttribute(MailConstants.A_ID, ifmt.formatItemId(note));
-        if (needToOutput(fields, Change.CONTENT) && note.getSavedSequence() != 0) {
-            el.addAttribute(MailConstants.A_REVISION, note.getSavedSequence());
+        if (needToOutput(fields, Change.CONTENT) && note.getSavedSequenceLong() != 0) {
+            el.addAttribute(MailConstants.A_REVISION, note.getSavedSequenceLong());
         }
         if (needToOutput(fields, Change.FOLDER)) {
             el.addAttribute(MailConstants.A_FOLDER,
@@ -1061,7 +1061,7 @@ public final class ToXML {
         }
         if (needToOutput(fields, Change.CONFLICT)) {
             el.addAttribute(MailConstants.A_DATE, tag.getDate());
-            el.addAttribute(MailConstants.A_REVISION, tag.getSavedSequence());
+            el.addAttribute(MailConstants.A_REVISION, tag.getSavedSequenceLong());
             el.addAttribute(MailConstants.A_CHANGE_DATE, tag.getChangeDate() / 1000);
             el.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, tag.getModifiedSequence());
         }
@@ -1417,7 +1417,7 @@ public final class ToXML {
             boolean encodeMissingBlobs, MsgContent wantContent, int fields)
     throws ServiceException {
         Mailbox mbox = msg.getMailbox();
-        int changeId = msg.getSavedSequence();
+        long changeId = msg.getSavedSequenceLong();
         while (true) {
             try {
                 return encodeMessageAsMPHelper(false /* bestEffort */, parent, ifmt, octxt, msg, part, maxSize,
@@ -1428,10 +1428,10 @@ public final class ToXML {
                 //   (this case generally means that the blob backing the MimeMessage disappeared halfway through)
                 try {
                     msg = mbox.getMessageById(octxt, msg.getId());
-                    if (msg.getSavedSequence() != changeId) {
+                    if (msg.getSavedSequenceLong() != changeId) {
                         // if a draft was re-saved and we failed because the old blob was deleted
                         //   out from under us, just fetch the new MimeMessage and try again
-                        changeId = msg.getSavedSequence();
+                        changeId = msg.getSavedSequenceLong();
                         ZimbraLog.soap.info("caught message content change while serializing; will retry");
                         continue;
                     }
@@ -1705,8 +1705,8 @@ public final class ToXML {
         calItemElem.addAttribute(MailConstants.A_FOLDER,
             ifmt.formatItemId(new ItemId(calItem.getMailbox().getAccountId(), calItem.getFolderId())));
 
-        if (needToOutput(fields, Change.CONTENT) && calItem.getSavedSequence() != 0) {
-            calItemElem.addAttribute(MailConstants.A_REVISION, calItem.getSavedSequence());
+        if (needToOutput(fields, Change.CONTENT) && calItem.getSavedSequenceLong() != 0) {
+            calItemElem.addAttribute(MailConstants.A_REVISION, calItem.getSavedSequenceLong());
         }
         if (needToOutput(fields, Change.SIZE)) {
             calItemElem.addAttribute(MailConstants.A_SIZE, calItem.getSize());
@@ -1817,7 +1817,7 @@ public final class ToXML {
         final int MAX_RETRIES = LC.calendar_item_get_max_retries.intValue();
         Element elem = null;
         Mailbox mbox = calItem.getMailbox();
-        int changeId = calItem.getSavedSequence();
+        long changeId = calItem.getSavedSequenceLong();
         int numTries = 0;
         while (numTries < MAX_RETRIES) {
             numTries++;
@@ -1840,9 +1840,9 @@ public final class ToXML {
                 elem = null;
                 try {
                     calItem = mbox.getCalendarItemById(octxt, calItem.getId());
-                    if (calItem.getSavedSequence() != changeId) {
+                    if (calItem.getSavedSequenceLong() != changeId) {
                         // just fetch the new item and try again
-                        changeId = calItem.getSavedSequence();
+                        changeId = calItem.getSavedSequenceLong();
                         ZimbraLog.soap.info("caught calendar item content change while serializing; will retry");
                         continue;
                     }
@@ -2128,15 +2128,15 @@ public final class ToXML {
             encodeAllCustomMetadata(elem, item, fields);
         }
         if (needToOutput(fields, Change.CONFLICT)) {
-            elem.addAttribute(MailConstants.A_REVISION, item.getSavedSequence());
+            elem.addAttribute(MailConstants.A_REVISION, item.getSavedSequenceLong());
             elem.addAttribute(MailConstants.A_CHANGE_DATE, item.getChangeDate() / 1000);
             elem.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, item.getModifiedSequence());
         } else {
             if (needToOutput(fields, Change.MODSEQ) && item.getModifiedSequence() > 0) {
                 elem.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, item.getModifiedSequence());
             }
-            if (needToOutput(fields, Change.CONTENT) && item.getSavedSequence() != 0) {
-                elem.addAttribute(MailConstants.A_REVISION, item.getSavedSequence());
+            if (needToOutput(fields, Change.CONTENT) && item.getSavedSequenceLong() != 0) {
+                elem.addAttribute(MailConstants.A_REVISION, item.getSavedSequenceLong());
             }
         }
         if (needToOutput(fields, Change.IMAP_UID)) {
@@ -3063,7 +3063,7 @@ throws ServiceException {
             m.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, doc.getModifiedSequence());
             m.addAttribute(MailConstants.A_METADATA_VERSION, doc.getMetadataVersion());
             m.addAttribute(MailConstants.A_CHANGE_DATE, (doc.getChangeDate() / 1000));
-            m.addAttribute(MailConstants.A_REVISION, doc.getSavedSequence());
+            m.addAttribute(MailConstants.A_REVISION, doc.getSavedSequenceLong());
         }
         recordItemTags(m, doc, octxt, fields | Change.FLAGS);
         if (needToOutput(fields, Change.METADATA)) {

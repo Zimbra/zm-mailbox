@@ -1690,8 +1690,8 @@ public class Folder extends MailItem implements FolderStore {
      * @see Folder#getSavedSequence()
      **/
     @Override
-    public int getUIDValidity() {
-        return Math.max(getSavedSequence(), 1);
+    public long getUIDValidity() {
+        return Math.max(getSavedSequenceLong(), 1);
     }
 
     @Override
