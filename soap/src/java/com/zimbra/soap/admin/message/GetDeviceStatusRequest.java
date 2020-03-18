@@ -56,11 +56,11 @@ public class GetDeviceStatusRequest {
     /**
      * @zm-api-field-description Account
      */
-    @XmlElement(name=AdminConstants.E_ACCOUNT, required=true)
+    @XmlElement(name=AdminConstants.E_ACCOUNT, required = false)
     private AccountSelector account;
 
     /**
-     * @zm-api-field-description Device specification
+     * @zm-api-field-description Device id
      */
     @XmlElement(name = SyncConstants.E_DEVICE, required = false)
     private DeviceId deviceId;
