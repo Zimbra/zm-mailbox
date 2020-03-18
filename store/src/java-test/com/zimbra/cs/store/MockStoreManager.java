@@ -111,26 +111,26 @@ public final class MockStoreManager extends StoreManager {
         return new MockStagedBlob(mbox, ((MockBlob) blob).content);
     }
 
-    private String blobKey(Mailbox mbox, int itemId, int revision) {
+    private String blobKey(Mailbox mbox, int itemId, long revision) {
         return mbox.getId() + "-" + itemId + "-" + revision;
     }
 
     @Override
-    public MailboxBlob copy(MailboxBlob src, Mailbox destMbox, int destItemId, int destRevision) {
+    public MailboxBlob copy(MailboxBlob src, Mailbox destMbox, int destItemId, long destRevision) {
         MockMailboxBlob blob = new MockMailboxBlob(destMbox, destItemId, destRevision, src.getLocator(), ((MockMailboxBlob) src).content);
         blobs.put(blobKey(destMbox, destItemId, destRevision), blob);
         return blob;
     }
 
     @Override
-    public MailboxBlob link(StagedBlob src, Mailbox destMbox, int destItemId, int destRevision) {
+    public MailboxBlob link(StagedBlob src, Mailbox destMbox, int destItemId, long destRevision) {
         MockMailboxBlob blob = new MockMailboxBlob(destMbox, destItemId, destRevision, src.getLocator(), ((MockStagedBlob) src).content);
         blobs.put(blobKey(destMbox, destItemId, destRevision), blob);
         return blob;
     }
 
     @Override
-    public MailboxBlob renameTo(StagedBlob src, Mailbox destMbox, int destItemId, int destRevision) {
+    public MailboxBlob renameTo(StagedBlob src, Mailbox destMbox, int destItemId, long destRevision) {
         MockMailboxBlob blob = new MockMailboxBlob(destMbox, destItemId, destRevision, src.getLocator(), ((MockStagedBlob) src).content);
         blobs.put(blobKey(destMbox, destItemId, destRevision), blob);
         return blob;
@@ -164,13 +164,13 @@ public final class MockStoreManager extends StoreManager {
 
     @Override
     public boolean delete(MailboxBlob mblob) throws IOException {
-        blobs.remove(blobKey(mblob.getMailbox(), mblob.getItemId(), mblob.getRevision()));
+        blobs.remove(blobKey(mblob.getMailbox(), mblob.getItemId(), mblob.getRevisionLong()));
         delete(((MockMailboxBlob) mblob).blob);
         return true;
     }
 
     @Override
-    public MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, int revision, String locator, boolean validate) {
+    public MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, long revision, String locator, boolean validate) {
         return blobs.get(blobKey(mbox, itemId, revision));
     }
 
@@ -285,7 +285,7 @@ public final class MockStoreManager extends StoreManager {
         final byte[] content;
         MockLocalBlob blob = null;
 
-        MockMailboxBlob(Mailbox mbox, int itemId, int revision, String locator, byte[] data) {
+        MockMailboxBlob(Mailbox mbox, int itemId, long revision, String locator, byte[] data) {
             super(mbox, itemId, revision, locator);
             content = data;
         }

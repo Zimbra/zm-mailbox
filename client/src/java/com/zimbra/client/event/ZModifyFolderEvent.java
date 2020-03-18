@@ -158,8 +158,8 @@ public class ZModifyFolderEvent implements ZModifyItemEvent, ToZJSONObject {
      * @return new content sequence or defaultValue if unchanged
      * @throws ServiceException
      */
-    public int getContentSequence(int defaultValue) throws ServiceException {
-        return (int) mFolderEl.getAttributeLong(MailConstants.A_REVISION, defaultValue);
+    public long getContentSequence(long defaultValue) throws ServiceException {
+        return mFolderEl.getAttributeLong(MailConstants.A_REVISION, defaultValue);
     }
 
     /**

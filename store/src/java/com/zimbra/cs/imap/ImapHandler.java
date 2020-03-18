@@ -2737,7 +2737,7 @@ public abstract class ImapHandler {
         int messages;
         int recent;
         int uidnext;
-        int uvv;
+        long uvv;
         int unread;
         int modseq;
         MailboxStore mboxStore = path.getOwnerMailbox();
@@ -2824,7 +2824,7 @@ public abstract class ImapHandler {
                 }
             }
 
-            int uvv = folderStore.getUIDValidity();
+            long uvv = folderStore.getUIDValidity();
             if (appendHint != null && uvv > 0) {
                 appendHint.append("[APPENDUID ").append(uvv).append(' ')
                     .append(ImapFolder.encodeSubsequence(createdIds)).append("] ");
@@ -4445,7 +4445,7 @@ public abstract class ImapHandler {
                 selectedFolderInOtherMailbox = false;
                 fromFolderId = selectedFolder.getFolderItemIdentifier();
             }
-            int uvv = targetFolder.getUIDValidity();
+            long uvv = targetFolder.getUIDValidity();
             ItemId iidTarget = new ItemId(targetFolder, path.getOwnerAccount().getId());
             ItemIdentifier targetIdentifier = iidTarget.toItemIdentifier();
 

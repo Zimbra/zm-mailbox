@@ -568,7 +568,7 @@ public final class NativeFormatter extends Formatter {
             resp.addHeader("X-Zimbra-Version", item.getVersion() + "");
             resp.addHeader("X-Zimbra-Modified", item.getChangeDate() + "");
             resp.addHeader("X-Zimbra-Change", item.getModifiedSequence() + "");
-            resp.addHeader("X-Zimbra-Revision", item.getSavedSequence() + "");
+            resp.addHeader("X-Zimbra-Revision", item.getSavedSequenceLong() + "");
             resp.addHeader("X-Zimbra-ItemType", item.getType().toString());
             try {
                 String val = item.getName();
@@ -589,8 +589,8 @@ public final class NativeFormatter extends Formatter {
         // set Last-Modified header to date when item's content was last modified
         resp.addDateHeader("Last-Modified", item.getDate());
         // set ETag header to item's mod_content value
-        resp.addHeader("ETag", String.valueOf(item.getSavedSequence()));
-        resp.addHeader(ETagHeaderFilter.ZIMBRA_ETAG_HEADER, String.valueOf(item.getSavedSequence()));
+        resp.addHeader("ETag", String.valueOf(item.getSavedSequenceLong()));
+        resp.addHeader(ETagHeaderFilter.ZIMBRA_ETAG_HEADER, String.valueOf(item.getSavedSequenceLong()));
     }
 
     private static final int READ_AHEAD_BUFFER_SIZE = 256;

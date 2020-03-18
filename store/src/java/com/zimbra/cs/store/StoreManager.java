@@ -221,7 +221,7 @@ public abstract class StoreManager {
      * @throws IOException
      * @throws ServiceException
      */
-    public abstract MailboxBlob copy(MailboxBlob src, Mailbox destMbox, int destMsgId, int destRevision)
+    public abstract MailboxBlob copy(MailboxBlob src, Mailbox destMbox, int destMsgId, long destRevision)
     throws IOException, ServiceException;
 
     /**
@@ -237,7 +237,7 @@ public abstract class StoreManager {
      * @throws IOException
      * @throws ServiceException
      */
-    public abstract MailboxBlob link(StagedBlob src, Mailbox destMbox, int destMsgId, int destRevision)
+    public abstract MailboxBlob link(StagedBlob src, Mailbox destMbox, int destMsgId, long destRevision)
     throws IOException, ServiceException;
 
     /**
@@ -251,7 +251,7 @@ public abstract class StoreManager {
      * @throws IOException
      * @throws ServiceException
      */
-    public abstract MailboxBlob renameTo(StagedBlob src, Mailbox destMbox, int destMsgId, int destRevision)
+    public abstract MailboxBlob renameTo(StagedBlob src, Mailbox destMbox, int destMsgId, long destRevision)
     throws IOException, ServiceException;
 
     /**
@@ -348,7 +348,7 @@ public abstract class StoreManager {
      *
      * @throws ServiceException
      */
-    public MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, int revision, String locator)
+    public MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, long revision, String locator)
     throws ServiceException {
         return getMailboxBlob(mbox, itemId, revision, locator, true);
     }
@@ -363,7 +363,7 @@ public abstract class StoreManager {
      *
      * @throws ServiceException
      */
-    public abstract MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, int revision, String locator, boolean validate)
+    public abstract MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, long revision, String locator, boolean validate)
     throws ServiceException;
 
     /**
@@ -375,7 +375,7 @@ public abstract class StoreManager {
      * @throws ServiceException
      */
     public MailboxBlob getMailboxBlob(MailItem item) throws ServiceException {
-        MailboxBlob mblob = getMailboxBlob(item.getMailbox(), item.getId(), item.getSavedSequence(), item.getLocator());
+        MailboxBlob mblob = getMailboxBlob(item.getMailbox(), item.getId(), item.getSavedSequenceLong(), item.getLocator());
         if (mblob != null) {
             mblob.setDigest(item.getDigest()).setSize(item.getSize());
         }
