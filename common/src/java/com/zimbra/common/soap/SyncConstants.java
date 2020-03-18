@@ -61,6 +61,7 @@ public final class SyncConstants {
     public static final String E_FOLDER = "folder";
     public static final String E_SYNCSTATE = "syncState";
     public static final String E_ITEMS = "item";
+    public static final String E_MAILBOX = "mailbox";
 
     public static final String A_ID = "id";
     public static final String A_TYPE = "type";
