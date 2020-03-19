@@ -60,16 +60,15 @@ import com.zimbra.cs.event.logger.StandaloneSolrEventHandlerFactory;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.index.IndexStore;
 import com.zimbra.cs.index.queue.IndexingService;
+import com.zimbra.cs.index.solr.BatchedIndexDeletions;
 import com.zimbra.cs.index.solr.SolrIndex;
-import com.zimbra.cs.iochannel.MessageChannel;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.mailbox.MailboxState;
 import com.zimbra.cs.mailbox.NotificationPubSub;
 import com.zimbra.cs.mailbox.PurgeThread;
-import com.zimbra.cs.mailbox.RedisMailboxState;
 import com.zimbra.cs.mailbox.RedisPubSub;
 import com.zimbra.cs.mailbox.ScheduledTaskManager;
 import com.zimbra.cs.mailbox.acl.AclPushTask;
+import com.zimbra.cs.mailbox.util.MailboxClusterUtil;
 import com.zimbra.cs.memcached.MemcachedConnector;
 import com.zimbra.cs.pubsub.PubSubService;
 import com.zimbra.cs.redolog.RedoLogProvider;
@@ -403,6 +402,10 @@ public final class Zimbra {
             // should be last, so that other subsystems can add dynamic stats counters
             if (app.supports(ZimbraPerf.class.getName())) {
                 ZimbraPerf.initialize(ZimbraPerf.ServerID.ZIMBRA);
+            }
+
+            if (MailboxClusterUtil.getMailboxWorkerIndex() == 0) {
+                BatchedIndexDeletions.getInstance().startSweeper();
             }
         }
 
