@@ -56,6 +56,7 @@ import com.google.common.collect.Multimap;
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.googlecode.concurrentlinkedhashmap.EvictionListener;
 import com.zimbra.common.httpclient.ZimbraHttpClientManager;
+import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -71,6 +72,8 @@ import com.zimbra.cs.index.ZimbraIndexSearcher;
 import com.zimbra.cs.index.ZimbraScoreDoc;
 import com.zimbra.cs.index.ZimbraTermsFilter;
 import com.zimbra.cs.index.ZimbraTopDocs;
+import com.zimbra.cs.index.solr.BatchedIndexDeletions.AccountDeletion;
+import com.zimbra.cs.index.solr.BatchedIndexDeletions.Deletion;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox.IndexItemEntry;
 import com.zimbra.cs.mailbox.MailboxIndex.ItemIndexDeletionInfo;
@@ -807,7 +810,12 @@ public class SolrIndex extends IndexStore {
 
     @Override
     public void deleteIndex() throws IOException, ServiceException {
-        solrHelper.deleteAccountData(accountId);
+        Deletion deletion = new AccountDeletion(solrHelper.getCoreName(accountId), accountId);
+        if (solrHelper.needsAccountFilter() && !DebugConfig.disableSolrBatchDeletesByQuery) {
+            BatchedIndexDeletions.getInstance().addDeletion(deletion);
+        } else {
+            solrHelper.deleteAccountData(accountId);
+        }
     }
 
     public static final class StandaloneSolrFactory implements IndexStore.Factory {

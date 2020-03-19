@@ -356,6 +356,8 @@ public final class DebugConfig {
 
     public static final boolean delayedIndexingIgnoresEmptyUserAgent = value("delayed_indexing_ignores_empty_user_agent", true);
 
+    public static final boolean disableSolrBatchDeletesByQuery = value("disable_solr_batch_deletes_by_query", false);
+
     private static boolean value(String key, boolean defaultValue) {
         String value = LC.get(key);
         return value.isEmpty() ? defaultValue : Boolean.parseBoolean(value);
