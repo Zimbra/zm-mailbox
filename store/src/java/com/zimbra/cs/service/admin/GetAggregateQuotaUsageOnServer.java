@@ -58,7 +58,6 @@ public class GetAggregateQuotaUsageOnServer extends AdminDocumentHandler {
         Provisioning prov = Provisioning.getInstance();
         final List<Domain> domains = prov.getAllDomains();
 
-        final Element response = zsc.createElement(AdminConstants.GET_AGGR_QUOTA_USAGE_ON_SERVER_RESPONSE);
         for (Domain domain : domains) {
             searchOpts = new SearchAccountsOptions(domain);
             searchOpts.setIncludeType(IncludeType.ACCOUNTS_ONLY);
@@ -72,6 +71,7 @@ public class GetAggregateQuotaUsageOnServer extends AdminDocumentHandler {
             domainAggrQuotaUsed.put(domain.getId(), quotaUsed);
         }
 
+        final Element response = zsc.createElement(AdminConstants.GET_AGGR_QUOTA_USAGE_ON_SERVER_RESPONSE);
         for (String domainId : domainAggrQuotaUsed.keySet()) {
             final Domain domain = prov.getDomainById(domainId);
             final Element domainElt = response.addNonUniqueElement(AdminConstants.E_DOMAIN);
