@@ -41,3 +41,7 @@ ant clean push-image -Dzimbra.buildinfo.version=8.9.0_GA_1011 -Dzimbra.buildinfo
 * If this argument `-Dzimbra.buildinfo.host` would not be passed then the `host` value in `GetVersionInfoRespone` would come as `${zimbra.server.hostname}`.
 * `hostname.pl` returns the hostanme where the image would build and use this directly in the ant target like this -Dzimbra.buildinfo.host=`./hostname.pl`(use backquote(`)).
 * If any dependent image tag would change then it needs to be updated in the mailbox `Dockerfile` before image build.
+
+## Contributing
+
+[Code Formatting Standards](http://wiki.eng.zimbra.com/index.php/Zimbra_Code_Style)
