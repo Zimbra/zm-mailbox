@@ -91,9 +91,34 @@ import io.jsonwebtoken.Claims;
  */
 public class Auth extends AccountDocumentHandler {
 
+    private Account lookupAccount(String username, String domain) throws ServiceException {
+        ZimbraLog.account.info("auth: lookupAccount: username=%s, domain=%s", username, domain);
+
+        Provisioning prov = Provisioning.getInstance();
+        Account acct = null;
+
+        Domain d = prov.get(Key.DomainBy.name, domain);
+        if (d != null) {
+            acct = prov.get(AccountBy.name, username + "@" + d.getName());
+            if (acct != null) {
+                return acct;
+            }
+        }
+
+        d = prov.get(Key.DomainBy.virtualHostname, domain);
+        if (d != null) {
+            acct = prov.get(AccountBy.name, username + "@" + d.getName());
+            if (acct != null) {
+                return acct;
+            }
+        }
+        return prov.get(AccountBy.name, username + "@" + domain);
+    }
+
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        ServletRequest httpReq = (ServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
         Provisioning prov = Provisioning.getInstance();
 
         // Look up the specified account.  It is optional in the <authToken> case.
@@ -115,15 +140,30 @@ public class Auth extends AccountDocumentHandler {
             acctByStr = acctEl.getAttribute(AccountConstants.A_BY, AccountBy.name.name());
             acctBy = AccountBy.fromString(acctByStr);
             if (acctBy == AccountBy.name) {
-                Element virtualHostEl = request.getOptionalElement(AccountConstants.E_VIRTUAL_HOST);
-                String virtualHost = virtualHostEl == null ? null : virtualHostEl.getText().toLowerCase();
-                if (virtualHost != null && acctValue.indexOf('@') == -1) {
-                    Domain d = prov.get(Key.DomainBy.virtualHostname, virtualHost);
-                    if (d != null)
-                        acctValue = acctValue + "@" + d.getName();
+                int atLoc = acctValue.indexOf('@');
+                if (atLoc == -1) {
+                    Element virtualHostEl = request.getOptionalElement(AccountConstants.E_VIRTUAL_HOST);
+                    String virtualHost = virtualHostEl == null ? null : virtualHostEl.getText().toLowerCase();
+
+                    // Check provided virtual host
+                    if (virtualHost != null) {
+                        acct = lookupAccount(acctValuePassedIn, virtualHost);
+                    }
+
+                    // No account yet - check against the servername
+                    if (acct == null) {
+                        acct = lookupAccount(acctValuePassedIn, httpReq.getServerName());
+                    }
+
+                    // Default domain (raw value)
+                    if (acct == null) {
+                        acct = prov.get(AccountBy.name, acctValuePassedIn);
+                    }
+                } else {
+                    acct = lookupAccount(acctValuePassedIn.substring(0, atLoc),
+                            acctValuePassedIn.substring(atLoc+1, acctValuePassedIn.length()));
                 }
             }
-            acct = prov.get(acctBy, acctValue);
         }
 
         TrustedDeviceToken trustedToken = null;
@@ -201,7 +241,6 @@ public class Auth extends AccountDocumentHandler {
                     }
                 }
                 if (usage == Usage.AUTH) {
-                    ServletRequest httpReq = (ServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
                     httpReq.setAttribute(CsrfFilter.AUTH_TOKEN, at);
                     if (csrfSupport && !at.isCsrfTokenEnabled()) {
                         // handle case where auth token was originally generated with csrf support
@@ -412,7 +451,6 @@ public class Auth extends AccountDocumentHandler {
                 trustedToken = trustedDeviceManager.registerTrustedDevice(attrs);
             }
         }
-        ServletRequest httpReq = (ServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
         // For CSRF filter so that token generation can happen
         if (csrfSupport && !at.isCsrfTokenEnabled()) {
             // handle case where auth token was originally generated with csrf support
