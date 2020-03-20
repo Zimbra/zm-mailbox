@@ -115,6 +115,8 @@ public class AccountService implements DocumentService {
 
         // attrs
         dispatcher.registerHandler(AccountConstants.MODIFY_ACCOUNT_REQUEST, new ModifyAccount());
+
+        dispatcher.registerHandler(AccountConstants.GET_VC_MEETING_INFO_REQUEST, new GetVCMeetingInfo());
     }
 
     /**

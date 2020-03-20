@@ -162,6 +162,8 @@ public final class JaxbUtil {
             com.zimbra.soap.account.message.GetWhiteBlackListResponse.class,
             com.zimbra.soap.account.message.GrantRightsRequest.class,
             com.zimbra.soap.account.message.GrantRightsResponse.class,
+            com.zimbra.soap.account.message.GetVCMeetingInfoRequest.class,
+			com.zimbra.soap.account.message.GetVCMeetingInfoResponse.class,
             com.zimbra.soap.account.message.ModifyAccountRequest.class,
             com.zimbra.soap.account.message.ModifyAccountResponse.class,
             com.zimbra.soap.account.message.ModifyIdentityRequest.class,
