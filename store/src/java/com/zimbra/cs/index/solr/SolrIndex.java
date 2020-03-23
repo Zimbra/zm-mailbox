@@ -731,7 +731,7 @@ public class SolrIndex extends IndexStore {
         @Override
         public void add(List<IndexItemEntry> entries) throws IOException,
                 ServiceException {
-            UpdateRequest req = new UpdateRequest();
+            Map<IndexType, UpdateRequest> requestByCollection = new HashMap<>();
             for (IndexItemEntry entry : entries) {
                 if (entry.getDocuments() == null) {
                     ZimbraLog.index.warn("NULL index data item=%s", entry);
@@ -750,11 +750,16 @@ public class SolrIndex extends IndexStore {
                             ZimbraLog.index.trace("Adding solr document %s", solrDoc.toString());
                         }
                     }
+                    UpdateRequest req = requestByCollection.computeIfAbsent(entry.getIndexType(), k -> new UpdateRequest());
                     req.add(solrDoc);
                 }
             }
             try {
-                solrHelper.executeUpdate(accountId,req, IndexType.MAILBOX);
+                for (Map.Entry<IndexType, UpdateRequest> entry: requestByCollection.entrySet()) {
+                    IndexType index = entry.getKey();
+                    UpdateRequest req = entry.getValue();
+                    solrHelper.executeUpdate(accountId, req, index);
+                }
             } catch (ServiceException e) {
                 ZimbraLog.index.error("Problem indexing documents", e);
             }

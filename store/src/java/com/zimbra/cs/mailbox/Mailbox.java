@@ -383,12 +383,10 @@ public class Mailbox implements MailboxStore {
     public static final class IndexItemEntry {
         final List<IndexDocument> documents;
         final MailItem item;
-        private IndexType indexType;
 
         public IndexItemEntry(MailItem item, List<IndexDocument> docs) {
             this.item = item;
             this.documents = docs;
-            this.indexType = inferIndexType();
         }
 
         @Override
@@ -405,10 +403,6 @@ public class Mailbox implements MailboxStore {
         }
 
         public IndexType getIndexType() {
-            return indexType;
-        }
-
-        private IndexType inferIndexType() {
             if (item instanceof Contact) {
                 return IndexType.CONTACTS;
             } else {
