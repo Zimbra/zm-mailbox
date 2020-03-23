@@ -3,6 +3,8 @@ package com.zimbra.cs.index.solr;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.common.SolrInputDocument;
 
+import com.zimbra.cs.mailbox.MailboxIndex.IndexType;
+
 /**
  * CoreLocator implementation used when each account has a separate index
  */
@@ -15,7 +17,7 @@ public class AccountCollectionLocator extends SolrCollectionLocator {
     }
 
     @Override
-    public String getCollectionName(String accountId) {
+    public String getCollectionName(String accountId, IndexType indexType) {
         return String.format("%s_%s",corePrefix, accountId);
     }
 

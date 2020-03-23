@@ -62,6 +62,7 @@ import com.zimbra.cs.index.solr.SolrCloudHelper;
 import com.zimbra.cs.index.solr.SolrCollectionLocator;
 import com.zimbra.cs.index.solr.SolrRequestHelper;
 import com.zimbra.cs.index.solr.SolrUtils;
+import com.zimbra.cs.mailbox.MailboxIndex.IndexType;
 
 
 /**
@@ -79,7 +80,7 @@ public abstract class SolrEventStore extends EventStore {
     @Override
     protected void deleteEventsByAccount() throws ServiceException {
         ZimbraLog.event.info("deleting events for account %s", accountId);
-        solrHelper.deleteAccountData(accountId);
+        solrHelper.deleteAccountData(accountId, IndexType.EVENTS);
     }
 
     @Override
@@ -92,7 +93,7 @@ public abstract class SolrEventStore extends EventStore {
         }
         builder.add(new TermQuery(new Term(LuceneFields.L_DATASOURCE_ID, dataSourceId)), Occur.MUST);
         req.deleteByQuery(builder.build().toString());
-        solrHelper.executeUpdate(accountId, req);
+        solrHelper.executeUpdate(accountId, req, IndexType.EVENTS);
     }
 
     @Override
@@ -102,7 +103,7 @@ public abstract class SolrEventStore extends EventStore {
         solrQuery.setQuery(getContactFrequencyQueryForTimeRange(timeRange));
         solrQuery.addFilterQuery(getQueryToSearchContact(contact, eventType));
 
-        QueryResponse response = (QueryResponse) solrHelper.executeQueryRequest(accountId, solrQuery);
+        QueryResponse response = (QueryResponse) solrHelper.executeQueryRequest(accountId, solrQuery, IndexType.EVENTS);
         return response.getResults().getNumFound();
     }
 
@@ -150,7 +151,7 @@ public abstract class SolrEventStore extends EventStore {
         solrQuery.addFilterQuery(getQueryToSearchContactAsSenderOrReceiver(contact).toString());
         solrQuery.add("TZ", userSolrTimeZone);
 
-        QueryResponse response = (QueryResponse) solrHelper.executeQueryRequest(accountId, solrQuery);
+        QueryResponse response = (QueryResponse) solrHelper.executeQueryRequest(accountId, solrQuery, IndexType.EVENTS);
 
         List<ContactFrequencyGraphDataPoint> graphDataPoints = Collections.emptyList();
         List<RangeFacet> facetRanges = response.getFacetRanges();
@@ -334,7 +335,7 @@ public abstract class SolrEventStore extends EventStore {
         }
 
         SolrCloudHelper helper = (SolrCloudHelper) solrHelper;
-        return new CloudSolrStream(helper.getZkHost(), solrHelper.getCoreName(accountId), SolrParams.toSolrParams(queryParams));
+        return new CloudSolrStream(helper.getZkHost(), solrHelper.getCoreName(accountId, IndexType.EVENTS), SolrParams.toSolrParams(queryParams));
     }
 
     @Override
@@ -355,7 +356,7 @@ public abstract class SolrEventStore extends EventStore {
         solrQuery.setFacet(true);
         solrQuery.addFacetField(LuceneFields.L_EVENT_TYPE);
 
-        QueryResponse response = (QueryResponse) solrHelper.executeQueryRequest(accountId, solrQuery);
+        QueryResponse response = (QueryResponse) solrHelper.executeQueryRequest(accountId, solrQuery, IndexType.EVENTS);
         if (response.getResults().getNumFound() <= 1) {
             return new RatioMetric(0d, 0);
         }

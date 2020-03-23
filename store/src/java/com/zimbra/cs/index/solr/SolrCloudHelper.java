@@ -12,7 +12,6 @@ import org.apache.solr.client.solrj.request.UpdateRequest;
 import org.apache.solr.common.params.CoreAdminParams;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.mailbox.MailboxIndex;
 import com.zimbra.cs.mailbox.MailboxIndex.IndexType;
 
 public class SolrCloudHelper extends SolrRequestHelper {
@@ -20,8 +19,8 @@ public class SolrCloudHelper extends SolrRequestHelper {
     private CloudSolrClient cloudClient;
     private SolrClientCache clientCache;
 
-    public SolrCloudHelper(SolrCollectionLocator locator, CloudSolrClient cloudClient, MailboxIndex.IndexType indexType) {
-        super(locator, indexType);
+    public SolrCloudHelper(SolrCollectionLocator locator, CloudSolrClient cloudClient) {
+        super(locator);
         this.cloudClient = cloudClient;
         this.clientCache = new SolrClientCache();
     }
@@ -33,21 +32,21 @@ public class SolrCloudHelper extends SolrRequestHelper {
     }
 
     @Override
-    public void deleteIndex(String accountId) throws ServiceException {
-        SolrUtils.deleteCloudIndex(cloudClient, getCoreName(accountId));
+    public void deleteIndex(String accountId, IndexType indexType) throws ServiceException {
+        SolrUtils.deleteCloudIndex(cloudClient, getCoreName(accountId, indexType));
     }
 
     @Override
-    public void executeUpdateRequest(String accountId, UpdateRequest request)
+    public void executeUpdateRequest(String accountId, UpdateRequest request, IndexType indexType)
             throws ServiceException {
-        request.setParam(CoreAdminParams.COLLECTION, locator.getCollectionName(accountId));
-        SolrUtils.executeCloudRequestWithRetry(accountId, cloudClient, request, locator.getCollectionName(accountId), indexType);
+        request.setParam(CoreAdminParams.COLLECTION, locator.getCollectionName(accountId, indexType));
+        SolrUtils.executeCloudRequestWithRetry(accountId, cloudClient, request, locator.getCollectionName(accountId, indexType), indexType);
     }
 
     @Override
-    public SolrResponse executeQueryRequest(String accountId, SolrQuery query) throws ServiceException {
+    public SolrResponse executeQueryRequest(String accountId, SolrQuery query, IndexType indexType) throws ServiceException {
         QueryRequest queryRequest = new QueryRequest(query, METHOD.POST);
-        String collectionName = locator.getCollectionName(accountId);
+        String collectionName = locator.getCollectionName(accountId, indexType);
         return SolrUtils.executeCloudRequestWithRetry(accountId, cloudClient, queryRequest, collectionName, indexType);
     }
 

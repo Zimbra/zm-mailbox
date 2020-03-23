@@ -8,8 +8,6 @@ import com.zimbra.cs.index.solr.SolrCloudHelper;
 import com.zimbra.cs.index.solr.SolrCollectionLocator;
 import com.zimbra.cs.index.solr.SolrRequestHelper;
 import com.zimbra.cs.index.solr.SolrUtils;
-import com.zimbra.cs.mailbox.MailboxIndex;
-import com.zimbra.cs.mailbox.MailboxIndex.IndexType;
 
 public class SolrCloudEventHandlerFactory extends SolrEventHandlerFactory {
 
@@ -17,7 +15,7 @@ public class SolrCloudEventHandlerFactory extends SolrEventHandlerFactory {
     protected BatchedEventCallback createCallback(String zkHost) throws ServiceException {
         SolrCollectionLocator coreLocator = getCoreLocator();
         CloudSolrClient client = SolrUtils.getCloudSolrClient(zkHost);
-        SolrRequestHelper requestHelper = new SolrCloudHelper(coreLocator, client, MailboxIndex.IndexType.EVENTS);
+        SolrRequestHelper requestHelper = new SolrCloudHelper(coreLocator, client);
         return new SolrEventCallback(requestHelper);
     }
 }

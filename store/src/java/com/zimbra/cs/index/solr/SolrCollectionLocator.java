@@ -5,6 +5,7 @@ import org.apache.solr.common.SolrInputDocument;
 
 import com.google.common.base.Joiner;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.mailbox.MailboxIndex.IndexType;
 
 /**
  * Helper class that routes requests to the appropriate Solr index
@@ -16,7 +17,7 @@ public abstract class SolrCollectionLocator {
     /**
      * Return the name of the Solr collection used to store documents for the given account ID
      */
-    abstract String getCollectionName(String accountId) throws ServiceException;
+    abstract String getCollectionName(String accountId, IndexType indexType) throws ServiceException;
 
     /**
      * Optionally post-process the Solr document appropriately

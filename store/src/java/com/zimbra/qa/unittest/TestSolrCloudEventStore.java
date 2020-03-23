@@ -32,8 +32,6 @@ import com.zimbra.cs.index.solr.SolrCloudHelper;
 import com.zimbra.cs.index.solr.SolrCollectionLocator;
 import com.zimbra.cs.index.solr.SolrRequestHelper;
 import com.zimbra.cs.index.solr.SolrUtils;
-import com.zimbra.cs.mailbox.MailboxIndex;
-import com.zimbra.cs.mailbox.MailboxIndex.IndexType;
 
 public class TestSolrCloudEventStore extends SolrEventStoreTestBase {
 
@@ -92,14 +90,14 @@ public class TestSolrCloudEventStore extends SolrEventStoreTestBase {
     @Override
     protected SolrCloudEventStore getCombinedEventStore(String accountId) {
         SolrCollectionLocator locator = new JointCollectionLocator(JOINT_COLLECTION_NAME);
-        SolrCloudHelper helper = new SolrCloudHelper(locator, client, MailboxIndex.IndexType.EVENTS);
+        SolrCloudHelper helper = new SolrCloudHelper(locator, client);
         return new SolrCloudEventStore(accountId, helper);
     }
 
     @Override
     protected SolrCloudEventStore getAccountEventStore(String accountId) {
         SolrCollectionLocator locator = new AccountCollectionLocator(JOINT_COLLECTION_NAME);
-        SolrCloudHelper helper = new SolrCloudHelper(locator, client, MailboxIndex.IndexType.EVENTS);
+        SolrCloudHelper helper = new SolrCloudHelper(locator, client);
         return new SolrCloudEventStore(accountId, helper);
     }
 
@@ -115,7 +113,7 @@ public class TestSolrCloudEventStore extends SolrEventStoreTestBase {
     protected SolrEventCallback getCombinedCoreCallback() {
         SolrCollectionLocator locator = new JointCollectionLocator(JOINT_COLLECTION_NAME);
         CloudSolrClient client = SolrUtils.getCloudSolrClient(zkHost);
-        SolrRequestHelper helper = new SolrCloudHelper(locator, client, MailboxIndex.IndexType.EVENTS);
+        SolrRequestHelper helper = new SolrCloudHelper(locator, client);
         return new SolrEventCallback(helper);
     }
 
@@ -123,7 +121,7 @@ public class TestSolrCloudEventStore extends SolrEventStoreTestBase {
     protected SolrEventCallback getAccountCoreCallback() {
         SolrCollectionLocator locator = new AccountCollectionLocator(JOINT_COLLECTION_NAME);
         CloudSolrClient client = SolrUtils.getCloudSolrClient(zkHost);
-        SolrRequestHelper helper = new SolrCloudHelper(locator, client, MailboxIndex.IndexType.EVENTS);
+        SolrRequestHelper helper = new SolrCloudHelper(locator, client);
         return new SolrEventCallback(helper);
     }
 
@@ -159,7 +157,7 @@ public class TestSolrCloudEventStore extends SolrEventStoreTestBase {
 
     private SolrCloudHelper getSolrHelper(SolrCollectionLocator locator) {
         CloudSolrClient client = SolrUtils.getCloudSolrClient(zkHost);
-        return new SolrCloudHelper(locator, client, MailboxIndex.IndexType.EVENTS);
+        return new SolrCloudHelper(locator, client);
     }
 
     public void testContactFrequencyCountForCombinedCore(ContactAnalytics.ContactFrequencyTimeRange timeRange) throws Exception {

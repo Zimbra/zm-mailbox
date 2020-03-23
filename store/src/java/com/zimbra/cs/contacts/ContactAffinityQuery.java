@@ -52,6 +52,7 @@ import com.zimbra.cs.event.SolrEventDocument;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.solr.SolrCloudHelper;
 import com.zimbra.cs.index.solr.SolrUtils;
+import com.zimbra.cs.mailbox.MailboxIndex.IndexType;
 import com.zimbra.cs.mime.ParsedAddress;
 
 /**
@@ -78,7 +79,7 @@ public class ContactAffinityQuery {
         this.solrHelper = solrHelper;
         this.params = params;
         this.accountId = params.getAccountId();
-        this.coreName = solrHelper.getCoreName(accountId);
+        this.coreName = solrHelper.getCoreName(accountId, IndexType.EVENTS);
         this.toExclude = new ArrayList<>();
     }
 

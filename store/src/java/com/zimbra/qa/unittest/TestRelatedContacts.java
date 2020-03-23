@@ -37,8 +37,6 @@ import com.zimbra.cs.index.solr.JointCollectionLocator;
 import com.zimbra.cs.index.solr.SolrCloudHelper;
 import com.zimbra.cs.index.solr.SolrCollectionLocator;
 import com.zimbra.cs.index.solr.SolrUtils;
-import com.zimbra.cs.mailbox.MailboxIndex;
-import com.zimbra.cs.mailbox.MailboxIndex.IndexType;
 
 public class TestRelatedContacts {
     private static CloudSolrClient client;
@@ -60,7 +58,7 @@ public class TestRelatedContacts {
         acct = TestUtil.createAccount(USER_NAME);
         acct.setContactAffinityEventLoggingEnabled(true);
         SolrCollectionLocator locator = new JointCollectionLocator(EVENT_COLLECTION_NAME);
-        helper = new SolrCloudHelper(locator, client, MailboxIndex.IndexType.EVENTS);
+        helper = new SolrCloudHelper(locator, client);
         SolrEventCallback callback = new SolrEventCallback(helper);
         eventLogger = new BatchingEventLogger(10, 1000, callback);
     }

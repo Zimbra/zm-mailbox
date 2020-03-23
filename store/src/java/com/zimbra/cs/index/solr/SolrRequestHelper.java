@@ -3,9 +3,9 @@ package com.zimbra.cs.index.solr;
 import java.io.Closeable;
 
 import org.apache.lucene.index.Term;
+import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.TermQuery;
-import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrResponse;
 import org.apache.solr.client.solrj.request.UpdateRequest;
@@ -13,7 +13,6 @@ import org.apache.solr.common.SolrInputDocument;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.LuceneFields;
-import com.zimbra.cs.mailbox.MailboxIndex;
 import com.zimbra.cs.mailbox.MailboxIndex.IndexType;
 
 /**
@@ -25,11 +24,9 @@ import com.zimbra.cs.mailbox.MailboxIndex.IndexType;
  */
 public abstract class SolrRequestHelper implements Closeable {
     protected SolrCollectionLocator locator;
-    protected MailboxIndex.IndexType indexType;
 
-    public SolrRequestHelper(SolrCollectionLocator locator, MailboxIndex.IndexType indexType) {
+    public SolrRequestHelper(SolrCollectionLocator locator) {
         this.locator = locator;
-        this.indexType = indexType;
     }
 
     public SolrQuery newQuery(String accountId) {
@@ -38,38 +35,38 @@ public abstract class SolrRequestHelper implements Closeable {
         return query;
     }
 
-    protected abstract void executeUpdateRequest(String accountId, UpdateRequest request) throws ServiceException;
+    protected abstract void executeUpdateRequest(String accountId, UpdateRequest request, IndexType indexType) throws ServiceException;
 
-    public void executeUpdate(String accountId, UpdateRequest request) throws ServiceException {
+    public void executeUpdate(String accountId, UpdateRequest request, IndexType indexType) throws ServiceException {
         if (request.getDocuments() != null) {
             for (SolrInputDocument doc: request.getDocuments()) {
                 locator.finalizeDoc(doc, accountId);
             }
         }
-        executeUpdateRequest(accountId, request);
+        executeUpdateRequest(accountId, request, indexType);
     }
 
-    public abstract SolrResponse executeQueryRequest(String accountId, SolrQuery query) throws ServiceException;
+    public abstract SolrResponse executeQueryRequest(String accountId, SolrQuery query, IndexType indexType) throws ServiceException;
 
-    public String getCoreName(String accountId) throws ServiceException {
-        return locator.getCollectionName(accountId);
+    public String getCoreName(String accountId, IndexType indexType) throws ServiceException {
+        return locator.getCollectionName(accountId, indexType);
     }
 
     public boolean needsAccountFilter() {
         return locator.needsAccountFilter();
     }
 
-    public abstract void deleteIndex(String accountId) throws ServiceException;
+    public abstract void deleteIndex(String accountId, IndexType indexType) throws ServiceException;
 
-    public void deleteAccountData(String accountId) throws ServiceException {
+    public void deleteAccountData(String accountId, IndexType indexType) throws ServiceException {
         if (needsAccountFilter()) {
             UpdateRequest req = new UpdateRequest();
             BooleanQuery.Builder builder = new BooleanQuery.Builder();
             builder.add(new TermQuery(new Term(LuceneFields.L_ACCOUNT_ID, accountId)), Occur.MUST);
             req.deleteByQuery(builder.build().toString());
-            executeUpdate(accountId, req);
+            executeUpdate(accountId, req, indexType);
         } else {
-            deleteIndex(accountId);
+            deleteIndex(accountId, indexType);
         }
     }
 

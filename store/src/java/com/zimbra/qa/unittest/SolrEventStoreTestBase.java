@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrRequest.METHOD;
 import org.apache.solr.client.solrj.request.QueryRequest;
@@ -40,6 +39,7 @@ import com.zimbra.cs.event.analytics.contact.ContactAnalytics.ContactFrequencyGr
 import com.zimbra.cs.event.analytics.contact.ContactFrequencyGraphDataPoint;
 import com.zimbra.cs.event.logger.SolrEventCallback;
 import com.zimbra.cs.index.solr.AccountCollectionLocator;
+import com.zimbra.cs.mailbox.MailboxIndex.IndexType;
 
 public abstract class SolrEventStoreTestBase {
 
@@ -71,7 +71,7 @@ public abstract class SolrEventStoreTestBase {
     protected abstract SolrDocumentList executeRequest(String coreOrCollection, QueryRequest req) throws Exception;
 
     protected static String getAccountCollectionName(String accountId) {
-        return new AccountCollectionLocator(ACCOUNT_COLLECTION_PREFIX).getCollectionName(accountId);
+        return new AccountCollectionLocator(ACCOUNT_COLLECTION_PREFIX).getCollectionName(accountId, IndexType.EVENTS);
     }
 
     protected SolrDocumentList queryEvents(String collection) throws Exception {

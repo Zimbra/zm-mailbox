@@ -12,11 +12,12 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.LuceneFields;
+import com.zimbra.cs.mailbox.MailboxIndex.IndexType;
 
 public class MultiCollectionLocator extends SolrCollectionLocator {
 
     @Override
-    String getCollectionName(String accountId) throws ServiceException {
+    String getCollectionName(String accountId, IndexType indexType) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         Account account = prov.getAccountById(accountId);
         if (account == null) {
