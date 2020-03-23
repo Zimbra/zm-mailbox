@@ -8,9 +8,10 @@ import com.zimbra.cs.contacts.RelatedContactsParams;
 import com.zimbra.cs.contacts.RelatedContactsResults;
 import com.zimbra.cs.event.Event.EventType;
 import com.zimbra.cs.event.analytics.RatioMetric;
-import com.zimbra.cs.index.solr.SolrIndex.IndexType;
 import com.zimbra.cs.index.solr.SolrRequestHelper;
 import com.zimbra.cs.index.solr.StandaloneSolrHelper;
+import com.zimbra.cs.mailbox.MailboxIndex;
+import com.zimbra.cs.mailbox.MailboxIndex.IndexType;
 
 /**
  * Event store backed by a standalone Solr server. This class does not support
@@ -48,7 +49,7 @@ public class StandaloneSolrEventStore extends SolrEventStore {
         protected SolrRequestHelper getRequestHelper() throws ServiceException {
             CloseableHttpClient httpClient = ZimbraHttpClientManager.getInstance().getInternalHttpClient();
             String baseUrl = server.getEventBackendURL().substring("solr:".length());
-            return new StandaloneSolrHelper(getCollectionLocator(), httpClient, IndexType.EVENTS, baseUrl);
+            return new StandaloneSolrHelper(getCollectionLocator(), httpClient, MailboxIndex.IndexType.EVENTS, baseUrl);
         }
     }
 }

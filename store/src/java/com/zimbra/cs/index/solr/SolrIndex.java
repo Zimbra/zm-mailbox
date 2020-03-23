@@ -77,6 +77,7 @@ import com.zimbra.cs.index.solr.BatchedIndexDeletions.Deletion;
 import com.zimbra.cs.index.solr.BatchedIndexDeletions.ItemDeletion;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox.IndexItemEntry;
+import com.zimbra.cs.mailbox.MailboxIndex;
 import com.zimbra.cs.mailbox.MailboxIndex.ItemIndexDeletionInfo;
 import com.zimbra.cs.util.IOUtil;
 
@@ -844,7 +845,7 @@ public class SolrIndex extends IndexStore {
             CloseableHttpClient httpClient = ZimbraHttpClientManager.getInstance().getInternalHttpClient();
             SolrCollectionLocator locator = new MultiCollectionLocator();
             String baseUrl = Provisioning.getInstance().getLocalServer().getIndexURL().substring("solr:".length());
-            StandaloneSolrHelper requestHelper = new StandaloneSolrHelper(locator, httpClient, IndexType.MAILBOX, baseUrl);
+            StandaloneSolrHelper requestHelper = new StandaloneSolrHelper(locator, httpClient, MailboxIndex.IndexType.MAILBOX, baseUrl);
             return new SolrIndex(accountId, requestHelper);
         }
     }
@@ -857,7 +858,7 @@ public class SolrIndex extends IndexStore {
             String zkHost = Provisioning.getInstance().getLocalServer().getIndexURL().substring("solrcloud:".length());
             CloudSolrClient client = SolrUtils.getCloudSolrClient(zkHost);
             SolrCollectionLocator locator = new MultiCollectionLocator();
-            solrHelper = new SolrCloudHelper(locator, client, IndexType.MAILBOX);
+            solrHelper = new SolrCloudHelper(locator, client, MailboxIndex.IndexType.MAILBOX);
         }
 
         @Override
@@ -877,10 +878,6 @@ public class SolrIndex extends IndexStore {
             }
             ZimbraLog.index.info("Destroyed SolrCloudIndex.Factory\n");
         }
-    }
-
-    public static enum IndexType {
-        MAILBOX, EVENTS;
     }
 
     private static class ReferencedQueryParams {

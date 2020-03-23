@@ -11,14 +11,15 @@ import org.apache.solr.client.solrj.request.QueryRequest;
 import org.apache.solr.client.solrj.request.UpdateRequest;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.index.solr.SolrIndex.IndexType;
+import com.zimbra.cs.mailbox.MailboxIndex;
+import com.zimbra.cs.mailbox.MailboxIndex.IndexType;
 
 public class StandaloneSolrHelper extends SolrRequestHelper {
 
     private String baseUrl;
     private CloseableHttpClient httpClient;
 
-    public StandaloneSolrHelper(SolrCollectionLocator locator, CloseableHttpClient httpClient, IndexType indexType, String baseUrl) {
+    public StandaloneSolrHelper(SolrCollectionLocator locator, CloseableHttpClient httpClient, MailboxIndex.IndexType indexType, String baseUrl) {
         super(locator, indexType);
         this.httpClient = httpClient;
         this.baseUrl = baseUrl;

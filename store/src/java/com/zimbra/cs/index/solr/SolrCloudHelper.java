@@ -12,14 +12,15 @@ import org.apache.solr.client.solrj.request.UpdateRequest;
 import org.apache.solr.common.params.CoreAdminParams;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.index.solr.SolrIndex.IndexType;
+import com.zimbra.cs.mailbox.MailboxIndex;
+import com.zimbra.cs.mailbox.MailboxIndex.IndexType;
 
 public class SolrCloudHelper extends SolrRequestHelper {
 
     private CloudSolrClient cloudClient;
     private SolrClientCache clientCache;
 
-    public SolrCloudHelper(SolrCollectionLocator locator, CloudSolrClient cloudClient, IndexType indexType) {
+    public SolrCloudHelper(SolrCollectionLocator locator, CloudSolrClient cloudClient, MailboxIndex.IndexType indexType) {
         super(locator, indexType);
         this.cloudClient = cloudClient;
         this.clientCache = new SolrClientCache();

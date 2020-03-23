@@ -27,10 +27,11 @@ import com.zimbra.cs.event.logger.SolrEventCallback;
 import com.zimbra.cs.index.solr.AccountCollectionLocator;
 import com.zimbra.cs.index.solr.JointCollectionLocator;
 import com.zimbra.cs.index.solr.SolrCollectionLocator;
-import com.zimbra.cs.index.solr.SolrIndex.IndexType;
 import com.zimbra.cs.index.solr.SolrRequestHelper;
 import com.zimbra.cs.index.solr.SolrUtils;
 import com.zimbra.cs.index.solr.StandaloneSolrHelper;
+import com.zimbra.cs.mailbox.MailboxIndex;
+import com.zimbra.cs.mailbox.MailboxIndex.IndexType;
 
 public class TestStandaloneSolrEventStore extends SolrEventStoreTestBase {
 
@@ -93,14 +94,14 @@ public class TestStandaloneSolrEventStore extends SolrEventStoreTestBase {
     @Override
     protected StandaloneSolrEventStore getCombinedEventStore(String accountId) {
         SolrCollectionLocator locator = new JointCollectionLocator(JOINT_COLLECTION_NAME);
-        StandaloneSolrHelper helper = new StandaloneSolrHelper(locator, getHttpClient(), IndexType.EVENTS, baseUrl);
+        StandaloneSolrHelper helper = new StandaloneSolrHelper(locator, getHttpClient(), MailboxIndex.IndexType.EVENTS, baseUrl);
         return new StandaloneSolrEventStore(accountId, helper);
     }
 
     @Override
     protected StandaloneSolrEventStore getAccountEventStore(String accountId) {
         SolrCollectionLocator locator = new AccountCollectionLocator(JOINT_COLLECTION_NAME);
-        StandaloneSolrHelper helper = new StandaloneSolrHelper(locator, getHttpClient(), IndexType.EVENTS, baseUrl);
+        StandaloneSolrHelper helper = new StandaloneSolrHelper(locator, getHttpClient(), MailboxIndex.IndexType.EVENTS, baseUrl);
         return new StandaloneSolrEventStore(accountId, helper);
     }
 
@@ -116,7 +117,7 @@ public class TestStandaloneSolrEventStore extends SolrEventStoreTestBase {
     protected SolrEventCallback getCombinedCoreCallback() {
         SolrCollectionLocator locator = new JointCollectionLocator(JOINT_COLLECTION_NAME);
         CloseableHttpClient httpClient = ZimbraHttpClientManager.getInstance().getInternalHttpClient();
-        SolrRequestHelper requestHelper = new StandaloneSolrHelper(locator, httpClient, IndexType.EVENTS, baseUrl);
+        SolrRequestHelper requestHelper = new StandaloneSolrHelper(locator, httpClient, MailboxIndex.IndexType.EVENTS, baseUrl);
         return new SolrEventCallback(requestHelper);
     }
 
@@ -124,7 +125,7 @@ public class TestStandaloneSolrEventStore extends SolrEventStoreTestBase {
     protected SolrEventCallback getAccountCoreCallback() {
         SolrCollectionLocator locator = new AccountCollectionLocator(JOINT_COLLECTION_NAME);
         CloseableHttpClient httpClient = ZimbraHttpClientManager.getInstance().getInternalHttpClient();
-        SolrRequestHelper requestHelper = new StandaloneSolrHelper(locator, httpClient, IndexType.EVENTS, baseUrl);
+        SolrRequestHelper requestHelper = new StandaloneSolrHelper(locator, httpClient, MailboxIndex.IndexType.EVENTS, baseUrl);
         return new SolrEventCallback(requestHelper);
     }
 

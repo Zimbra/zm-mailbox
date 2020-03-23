@@ -13,7 +13,8 @@ import org.apache.solr.common.SolrInputDocument;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.LuceneFields;
-import com.zimbra.cs.index.solr.SolrIndex.IndexType;
+import com.zimbra.cs.mailbox.MailboxIndex;
+import com.zimbra.cs.mailbox.MailboxIndex.IndexType;
 
 /**
  * Helper class for building and routing Solr requests. There are two degrees of freedom that
@@ -24,9 +25,9 @@ import com.zimbra.cs.index.solr.SolrIndex.IndexType;
  */
 public abstract class SolrRequestHelper implements Closeable {
     protected SolrCollectionLocator locator;
-    protected IndexType indexType;
+    protected MailboxIndex.IndexType indexType;
 
-    public SolrRequestHelper(SolrCollectionLocator locator, IndexType indexType) {
+    public SolrRequestHelper(SolrCollectionLocator locator, MailboxIndex.IndexType indexType) {
         this.locator = locator;
         this.indexType = indexType;
     }

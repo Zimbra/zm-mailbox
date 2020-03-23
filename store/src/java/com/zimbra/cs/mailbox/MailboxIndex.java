@@ -785,4 +785,8 @@ public final class MailboxIndex {
             }
         }
     }
+
+    public static enum IndexType {
+        MAILBOX, CONTACTS, EVENTS;
+    }
 }
