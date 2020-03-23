@@ -269,9 +269,15 @@ public final class LC {
 
     @Supported
     public static final KnownKey zimbra_index_num_collections = KnownKey.newKey(1);
-
+    
     @Supported
     public static final KnownKey zimbra_index_collections_prefix = KnownKey.newKey("mailbox_index_");
+    
+    @Supported
+    public static final KnownKey zimbra_contact_index_num_collections = KnownKey.newKey(1);
+    
+    @Supported
+    public static final KnownKey zimbra_contact_index_collections_prefix = KnownKey.newKey("contact_index_");
 
     public static final KnownKey zimbra_rights_delegated_admin_supported = KnownKey.newKey(true);
 

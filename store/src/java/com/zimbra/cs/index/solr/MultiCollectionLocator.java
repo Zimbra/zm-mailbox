@@ -24,24 +24,50 @@ public class MultiCollectionLocator extends SolrCollectionLocator {
             throw ServiceException.FAILURE(
                     String.format("mailbox index name not found because account=%s not found", accountId), null);
         }
-
-        //Check for backward compatibility
-        if(LC.zimbra_index_num_collections.intValue() == 1) {
-            return prov.getConfig().getMailboxIndexName();
+        int numCollections;
+        switch (indexType) {
+        case CONTACTS:
+            numCollections = LC.zimbra_contact_index_num_collections.intValue();
+            if(numCollections == 1) {
+                return "contact_index"; //TODO: no hardcoding!
+            } else {
+                return getCollectionName(accountId, LC.zimbra_index_collections_prefix.value(), numCollections);
+            }
+        case MAILBOX:
+            numCollections = LC.zimbra_index_num_collections.intValue();
+            if(numCollections == 1) {
+                //Check for backward compatibility
+                return prov.getConfig().getMailboxIndexName();
+            } else {
+                return getCollectionName(accountId, LC.zimbra_index_collections_prefix.value(), numCollections);
+            }
+        case EVENTS:
+            // event index isn't currently configured; adding this for completeness
+            return prov.getConfig().getEventIndexName();
+        default:
+            throw ServiceException.FAILURE(String.format("unrecognized index type: %s", indexType), null);
         }
+    }
 
-        CRC32 crc = new CRC32();
-        crc.update(accountId.getBytes());
-        long val = crc.getValue();
-        long index = val % LC.zimbra_index_num_collections.intValue();
-        String indexName =  LC.zimbra_index_collections_prefix.value() + index;
+    private String getCollectionName(String accountId, String collectionPrefix, int numCollections) {
+        long indexNum = getCollectionNum(accountId, numCollections);
+        String indexName = collectionPrefix + indexNum;
         ZimbraLog.index.debug("getCollectionName - indexname is %s", indexName);
         return indexName;
     }
 
+    private long getCollectionNum(String accountId, int numCollections) {
+        CRC32 crc = new CRC32();
+        crc.update(accountId.getBytes());
+        return crc.getValue() % numCollections;
+    }
+
     @Override
     void finalizeDoc(SolrInputDocument document, String accountId) {
-        document.addField(LuceneFields.L_ACCOUNT_ID, accountId);
+        if (document.getFieldValue(LuceneFields.L_ACCOUNT_ID) == null) {
+            // only set it once; this can be called multiple times if the item is indexed in multiple collections
+            document.addField(LuceneFields.L_ACCOUNT_ID, accountId);
+        }
     }
 
     @Override
