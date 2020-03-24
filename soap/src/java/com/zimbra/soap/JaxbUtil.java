@@ -250,6 +250,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.BackupQueryResponse.class,
             com.zimbra.soap.admin.message.BackupRequest.class,
             com.zimbra.soap.admin.message.BackupResponse.class,
+            com.zimbra.soap.admin.message.BlockDeviceRequest.class,
+            com.zimbra.soap.admin.message.BlockDeviceResponse.class,
             com.zimbra.soap.admin.message.CancelPendingAccountOnlyRemoteWipeRequest.class,
             com.zimbra.soap.admin.message.CancelPendingAccountOnlyRemoteWipeResponse.class,
             com.zimbra.soap.admin.message.CancelPendingRemoteWipeRequest.class,
