@@ -30,12 +30,12 @@ import com.zimbra.soap.sync.type.DeviceId;
  * @zm-api-command-network-edition
  * @zm-api-command-auth-required true
  * @zm-api-command-admin-auth-required false
- * @zm-api-command-description Resume sync with a device if currently suspended.
+ * @zm-api-command-description Allow sync with a device if currently suspended.
  * This will cause a policy reset, but will not reset sync data.
  */
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name=SyncConstants.E_RESUME_DEVICE_REQUEST)
-public class ResumeDeviceRequest {
+@XmlRootElement(name=SyncConstants.E_ALLOW_DEVICE_REQUEST)
+public class AllowDeviceRequest {
 
     /**
      * @zm-api-field-description Specify the device to resume
@@ -47,11 +47,11 @@ public class ResumeDeviceRequest {
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private ResumeDeviceRequest() {
+    private AllowDeviceRequest() {
         this((DeviceId) null);
     }
 
-    public ResumeDeviceRequest(DeviceId device) {
+    public AllowDeviceRequest(DeviceId device) {
         this.device = device;
     }
 
