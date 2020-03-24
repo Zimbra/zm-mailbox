@@ -93,6 +93,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.auth.AuthContext;
+import com.zimbra.cs.event.logger.EventLogger;
 import com.zimbra.cs.imap.ImapCredentials.EnabledHack;
 import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
 import com.zimbra.cs.imap.ImapMessage.ImapMessageSet;
@@ -4024,9 +4025,12 @@ public abstract class ImapHandler {
                     String folderOwner = i4folder.getFolder().getFolderItemIdentifier().accountId;
                     ItemIdentifier iid = ItemIdentifier.fromAccountIdAndItemId(
                             (folderOwner != null) ? folderOwner : mbox.getAccountId(), i4msg.msgId);
-                    // trigger a SEEN event for each message, since this may be
-                    // the first time that the message has been served to a client
-                    mbox.markMsgSeen(getContext(), iid);
+
+                    if (EventLogger.getEventLogger().isEnabled()) {
+                        // trigger a SEEN event for each message, since this may be
+                        // the first time that the message has been served to a client
+                        mbox.markMsgSeen(getContext(), iid);
+                    }
 
                     // 6.4.5: "The \Seen flag is implicitly set; if this causes the flags to
                     //         change, they SHOULD be included as part of the FETCH responses."
