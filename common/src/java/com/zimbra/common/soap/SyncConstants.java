@@ -29,8 +29,8 @@ public final class SyncConstants {
     public static final String E_REMOVE_DEVICE_RESPONSE = "RemoveDeviceResponse";
     public static final String E_SUSPEND_DEVICE_REQUEST = "SuspendDeviceRequest";
     public static final String E_SUSPEND_DEVICE_RESPONSE = "SuspendDeviceResponse";
-    public static final String E_RESUME_DEVICE_REQUEST = "ResumeDeviceRequest";
-    public static final String E_RESUME_DEVICE_RESPONSE = "ResumeDeviceResponse";
+    public static final String E_ALLOW_DEVICE_REQUEST = "AllowDeviceRequest";
+    public static final String E_ALLOW_DEVICE_RESPONSE = "AllowDeviceResponse";
     public static final String E_REMOTE_WIPE_REQUEST = "RemoteWipeRequest";
     public static final String E_REMOTE_WIPE_RESPONSE = "RemoteWipeResponse";
     public static final String E_CANCEL_PENDING_REMOTE_WIPE_REQUEST = "CancelPendingRemoteWipeRequest";
@@ -42,8 +42,8 @@ public final class SyncConstants {
     public static final QName REMOVE_DEVICE_RESPONSE = QName.get(E_REMOVE_DEVICE_RESPONSE, NAMESPACE);
     public static final QName SUSPEND_DEVICE_REQUEST = QName.get(E_SUSPEND_DEVICE_REQUEST, NAMESPACE);
     public static final QName SUSPEND_DEVICE_RESPONSE = QName.get(E_SUSPEND_DEVICE_RESPONSE, NAMESPACE);
-    public static final QName RESUME_DEVICE_REQUEST = QName.get(E_RESUME_DEVICE_REQUEST, NAMESPACE);
-    public static final QName RESUME_DEVICE_RESPONSE = QName.get(E_RESUME_DEVICE_RESPONSE, NAMESPACE);
+    public static final QName ALLOW_DEVICE_REQUEST = QName.get(E_ALLOW_DEVICE_REQUEST, NAMESPACE);
+    public static final QName ALLOW_DEVICE_RESPONSE = QName.get(E_ALLOW_DEVICE_RESPONSE, NAMESPACE);
     public static final QName REMOTE_WIPE_REQUEST = QName.get(E_REMOTE_WIPE_REQUEST, NAMESPACE);
     public static final QName REMOTE_WIPE_RESPONSE = QName.get(E_REMOTE_WIPE_RESPONSE, NAMESPACE);
     public static final QName CANCEL_PENDING_REMOTE_WIPE_REQUEST = QName.get(E_CANCEL_PENDING_REMOTE_WIPE_REQUEST, NAMESPACE);

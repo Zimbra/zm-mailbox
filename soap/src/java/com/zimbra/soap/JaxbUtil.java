@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2018 Synacor, Inc.
+ * Copyright (C) 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2018, 2020 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -230,6 +230,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.AdminDestroyWaitSetResponse.class,
             com.zimbra.soap.admin.message.AdminWaitSetRequest.class,
             com.zimbra.soap.admin.message.AdminWaitSetResponse.class,
+            com.zimbra.soap.admin.message.AllowDeviceRequest.class,
+            com.zimbra.soap.admin.message.AllowDeviceResponse.class,
             com.zimbra.soap.admin.message.AuthRequest.class,
             com.zimbra.soap.admin.message.AuthResponse.class,
             com.zimbra.soap.admin.message.AutoCompleteGalRequest.class,
@@ -696,8 +698,6 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.ResetAllLoggersResponse.class,
             com.zimbra.soap.admin.message.RestoreRequest.class,
             com.zimbra.soap.admin.message.RestoreResponse.class,
-            com.zimbra.soap.admin.message.ResumeDeviceRequest.class,
-            com.zimbra.soap.admin.message.ResumeDeviceResponse.class,
             com.zimbra.soap.admin.message.RevokeRightRequest.class,
             com.zimbra.soap.admin.message.RevokeRightResponse.class,
             com.zimbra.soap.admin.message.RolloverRedoLogRequest.class,
@@ -1084,6 +1084,8 @@ public final class JaxbUtil {
             com.zimbra.soap.replication.message.StopFailoverClientResponse.class,
             com.zimbra.soap.replication.message.StopFailoverDaemonRequest.class,
             com.zimbra.soap.replication.message.StopFailoverDaemonResponse.class,
+            com.zimbra.soap.sync.message.AllowDeviceRequest.class,
+            com.zimbra.soap.sync.message.AllowDeviceResponse.class,
             com.zimbra.soap.sync.message.CancelPendingRemoteWipeRequest.class,
             com.zimbra.soap.sync.message.CancelPendingRemoteWipeResponse.class,
             com.zimbra.soap.sync.message.GetDeviceStatusRequest.class,
@@ -1092,8 +1094,6 @@ public final class JaxbUtil {
             com.zimbra.soap.sync.message.RemoteWipeResponse.class,
             com.zimbra.soap.sync.message.RemoveDeviceRequest.class,
             com.zimbra.soap.sync.message.RemoveDeviceResponse.class,
-            com.zimbra.soap.sync.message.ResumeDeviceRequest.class,
-            com.zimbra.soap.sync.message.ResumeDeviceResponse.class,
             com.zimbra.soap.sync.message.SuspendDeviceRequest.class,
             com.zimbra.soap.sync.message.SuspendDeviceResponse.class,
             com.zimbra.soap.voice.message.ChangeUCPasswordRequest.class,
