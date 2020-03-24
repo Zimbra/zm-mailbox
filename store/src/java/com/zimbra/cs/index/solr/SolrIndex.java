@@ -831,13 +831,14 @@ public class SolrIndex extends IndexStore {
     }
 
     @Override
-    public void deleteIndex() throws IOException, ServiceException {
-        //TODO: use correct index type
-        Deletion deletion = new AccountDeletion(solrHelper.getCoreName(accountId, IndexType.MAILBOX), accountId);
-        if (solrHelper.needsAccountFilter() && !DebugConfig.disableSolrBatchDeletesByQuery) {
-            BatchedIndexDeletions.getInstance().addDeletion(deletion);
-        } else {
-            solrHelper.deleteAccountData(accountId, IndexType.MAILBOX);
+    public void deleteIndex(Collection<IndexType> types) throws IOException, ServiceException {
+        for (IndexType type: types) {
+            Deletion deletion = new AccountDeletion(solrHelper.getCoreName(accountId, type), accountId);
+            if (solrHelper.needsAccountFilter() && !DebugConfig.disableSolrBatchDeletesByQuery) {
+                BatchedIndexDeletions.getInstance().addDeletion(deletion);
+            } else {
+                solrHelper.deleteAccountData(accountId, IndexType.MAILBOX);
+            }
         }
     }
 

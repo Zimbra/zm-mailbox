@@ -239,11 +239,19 @@ public final class MailboxIndex {
         indexStore.evict();
     }
 
+    public void deleteIndexByType(IndexType type) throws IOException, ServiceException {
+        deleteIndexByType(EnumSet.of(type));
+    }
+
     public void deleteIndex() throws IOException, ServiceException {
+        deleteIndexByType(EnumSet.of(IndexType.CONTACTS, IndexType.MAILBOX));
+    }
+
+    public void deleteIndexByType(Collection<IndexType> types) throws IOException, ServiceException {
         if (isReIndexInProgress()) {
             abortReIndex();
         }
-        indexStore.deleteIndex();
+        indexStore.deleteIndex(types);
     }
 
     public synchronized void startReIndex(OperationContext ctxt) throws ServiceException {

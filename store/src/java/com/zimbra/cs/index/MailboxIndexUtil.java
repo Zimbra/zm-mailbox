@@ -22,6 +22,7 @@ import com.zimbra.cs.index.queue.IndexingQueueAdapter;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxIndex.IndexType;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.ReIndexStatus;
 import com.zimbra.cs.util.ProvisioningUtil;
@@ -33,13 +34,9 @@ public class MailboxIndexUtil {
             @Override
             public void run() {
                 try {
-                    mbox.index.deleteIndex();
-                    if (mbox.getContactCount() > 0) {
-                        // Rebuild contact index for sieve rules.
-                        mbox.index.startReIndexByType(EnumSet.of(MailItem.Type.CONTACT), octxt, true);
-                    }
+                    mbox.index.deleteIndexByType(IndexType.MAILBOX);
                 } catch (IOException | ServiceException e) {
-                    ZimbraLog.index.error("error deleting index");
+                    ZimbraLog.index.error("error deleting mailbox index");
                 }
             }
 
