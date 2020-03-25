@@ -25,6 +25,7 @@ import com.zimbra.cs.index.NoTermQueryOperation;
 import com.zimbra.cs.index.QueryOperation;
 import com.zimbra.cs.index.solr.SolrUtils;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxIndex.IndexType;
 
 /**
  * Special text query to search contacts.
@@ -68,7 +69,7 @@ public final class ContactQuery extends Query {
         int maxNgramSize = LC.contact_search_min_chars_for_wildcard_query.intValue() - 1;
         query.setMaxNgramSize(maxNgramSize);
         String contactFieldSearchClause = toQueryString(LuceneFields.L_CONTACT_DATA, queryString);
-        op.addClause(contactFieldSearchClause, query, evalBool(bool));
+        op.addClause(contactFieldSearchClause, query, evalBool(bool), IndexType.CONTACTS);
         return op;
     }
 
