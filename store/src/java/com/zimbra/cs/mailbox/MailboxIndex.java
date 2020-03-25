@@ -222,7 +222,7 @@ public final class MailboxIndex {
                 }
             }
             BooleanQuery bq = builder.build();
-            return searcher.search(bq, 1).getTotalHits() > 0;
+            return searcher.search(bq, 1, IndexType.CONTACTS).getTotalHits() > 0;
         }
     }
 
@@ -623,7 +623,7 @@ public final class MailboxIndex {
         List<BrowseTerm> result = new ArrayList<BrowseTerm>();
         TermFieldEnumeration values = null;
         try (ZimbraIndexSearcher searcher = indexStore.openSearcher()) {
-            values = searcher.getIndexReader().getTermsForField(field);
+            values = searcher.getIndexReader().getTermsForField(field, IndexType.MAILBOX);
             while (values.hasMoreElements()) {
                 BrowseTerm term = values.nextElement();
                 if (term == null) {
@@ -652,7 +652,7 @@ public final class MailboxIndex {
         List<BrowseTerm> result = new ArrayList<BrowseTerm>();
         TermFieldEnumeration values = null;
         try (ZimbraIndexSearcher searcher = indexStore.openSearcher()) {
-            values = searcher.getIndexReader().getTermsForField(LuceneFields.L_ATTACHMENTS);
+            values = searcher.getIndexReader().getTermsForField(LuceneFields.L_ATTACHMENTS, IndexType.MAILBOX);
             while (values.hasMoreElements()) {
                 BrowseTerm term = values.nextElement();
                 if (pattern == null || AccessBoundedRegex.matches(term.getText(), pattern, MAX_REGEX_ACCESSES)) {
@@ -673,7 +673,7 @@ public final class MailboxIndex {
         Pattern pattern = Strings.isNullOrEmpty(regex) ? null : Pattern.compile(regex);
         List<BrowseTerm> result = new ArrayList<BrowseTerm>();
         try (ZimbraIndexSearcher searcher = indexStore.openSearcher();
-             TermFieldEnumeration values = searcher.getIndexReader().getTermsForField(LuceneFields.L_OBJECTS)) {
+             TermFieldEnumeration values = searcher.getIndexReader().getTermsForField(LuceneFields.L_OBJECTS, IndexType.MAILBOX)) {
             while (values.hasMoreElements()) {
                 BrowseTerm term = values.nextElement();
                 if (term == null) {
