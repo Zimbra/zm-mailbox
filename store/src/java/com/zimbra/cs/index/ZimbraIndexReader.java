@@ -18,9 +18,12 @@ package com.zimbra.cs.index;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.Collection;
+import java.util.EnumSet;
 import java.util.Enumeration;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.mailbox.MailboxIndex.IndexType;
 
 /**
  * Modeled on a subset of {@link org.apache.lucene.index.IndexReader}
@@ -30,7 +33,11 @@ public interface ZimbraIndexReader extends Closeable, Cloneable {
      * Returns the number of documents in this index.
      * @throws ServiceException
      */
-    public int numDocs() throws ServiceException;
+    public int numDocs(Collection<IndexType> indexTypes) throws ServiceException;
+
+    default int numDocs() throws ServiceException {
+        return numDocs(EnumSet.of(IndexType.MAILBOX));
+    }
 
     /**
      * Returns an enumeration of the String representations for values of terms with {@code field}
@@ -38,7 +45,11 @@ public interface ZimbraIndexReader extends Closeable, Cloneable {
      * The enumeration is ordered by String.compareTo().
      * @throws ServiceException
      */
-    public TermFieldEnumeration getTermsForField(String field) throws IOException, ServiceException;
+    public TermFieldEnumeration getTermsForField(String field, IndexType indexType) throws IOException, ServiceException;
+
+    default TermFieldEnumeration getTermsForField(String field) throws IOException, ServiceException {
+        return getTermsForField(field, IndexType.MAILBOX);
+    }
 
     public interface TermFieldEnumeration extends Enumeration<BrowseTerm>, Closeable {
     }

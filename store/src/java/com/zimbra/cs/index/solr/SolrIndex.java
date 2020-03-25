@@ -416,11 +416,10 @@ public class SolrIndex extends IndexStore {
         }
 
         @Override
-        public int numDocs() throws ServiceException {
+        public int numDocs(Collection<IndexType> indexTypes) throws ServiceException {
             try {
                 SolrQuery q = solrHelper.newQuery(accountId).setQuery(new MatchAllDocsQuery().toString()).setRows(0);
-                //TODO: use correct index type
-                QueryResponse resp = (QueryResponse) solrHelper.executeQueryRequest(accountId, q, IndexType.MAILBOX);
+                QueryResponse resp = (QueryResponse) solrHelper.executeQueryRequest(accountId, q, indexTypes);
                 SolrDocumentList solrDocList = resp.getResults();
                 return (int)solrDocList.getNumFound();
             } catch (SolrException e) {
@@ -430,13 +429,13 @@ public class SolrIndex extends IndexStore {
         }
 
         @Override
-        public TermFieldEnumeration getTermsForField(String field) throws IOException, ServiceException {
+        public TermFieldEnumeration getTermsForField(String field, IndexType indexType) throws IOException, ServiceException {
 
             try {
                 if (solrHelper.needsAccountFilter()) {
-                    return new SolrFacetEnumeration(field);
+                    return new SolrFacetEnumeration(field, indexType);
                 } else {
-                    return new SolrTermValueEnumeration(field);
+                    return new SolrTermValueEnumeration(field, indexType);
                 }
             } catch (SolrException | SolrServerException e) {
                 throw ServiceException.FAILURE(e.getMessage(),e);
@@ -450,9 +449,11 @@ public class SolrIndex extends IndexStore {
             private boolean hasMore;
             private int offset = 0;
             private LinkedList<Count> facetChunk;
+            private IndexType indexType;
 
-            public SolrFacetEnumeration(String field) throws ServiceException {
+            public SolrFacetEnumeration(String field, IndexType indexType) throws ServiceException {
                 this.field = field;
+                this.indexType = indexType;
                 getNextFacetChunk();
             }
 
@@ -465,8 +466,7 @@ public class SolrIndex extends IndexStore {
                 q.setFacetMinCount(1);
                 q.setFacetLimit(FACET_RESULTS_CHUNK_SIZE + 1); // +1 for hasMore check
                 q.set(FacetParams.FACET_OFFSET, offset);
-                //TODO: use correct index type
-                QueryResponse resp = (QueryResponse) solrHelper.executeQueryRequest(accountId, q, IndexType.MAILBOX);
+                QueryResponse resp = (QueryResponse) solrHelper.executeQueryRequest(accountId, q, indexType);
                 FacetField facetField = resp.getFacetField(field);
                 if (facetField.getValueCount() > FACET_RESULTS_CHUNK_SIZE) {
                     facetChunk = Lists.newLinkedList(facetField.getValues().subList(0, FACET_RESULTS_CHUNK_SIZE));
@@ -517,6 +517,7 @@ public class SolrIndex extends IndexStore {
             private LinkedList<org.apache.solr.client.solrj.response.TermsResponse.Term> termEnumeration = Lists.newLinkedList();
             private final String fieldName;
             private String last = null;
+            private IndexType indexType;
 
             private void primeTermsComponent(String firstTermValue, boolean includeLower) throws IOException, SolrServerException, ServiceException {
                 SolrQuery q = new SolrQuery().setRequestHandler("/terms");
@@ -531,8 +532,7 @@ public class SolrIndex extends IndexStore {
                 }
                 q.setTermsMinCount(1);
                 q.setTermsSortString("index");
-                //TODO: use correct index type
-                QueryResponse resp = (QueryResponse) solrHelper.executeQueryRequest(accountId, q, IndexType.MAILBOX);
+                QueryResponse resp = (QueryResponse) solrHelper.executeQueryRequest(accountId, q, indexType);
                 List<org.apache.solr.client.solrj.response.TermsResponse.Term> enumeration = resp.getTermsResponse().getTerms(fieldName);
                 termEnumeration = Lists.newLinkedList(enumeration);
                 org.apache.solr.client.solrj.response.TermsResponse.Term lastTerm = termEnumeration.peekLast();
@@ -541,8 +541,9 @@ public class SolrIndex extends IndexStore {
                 }
             }
 
-            private SolrTermValueEnumeration(String field) throws IOException, SolrServerException, ServiceException {
+            private SolrTermValueEnumeration(String field, IndexType indexType) throws IOException, SolrServerException, ServiceException {
                 fieldName = field;
+                this.indexType = indexType;
                 primeTermsComponent("", true);
             }
 
