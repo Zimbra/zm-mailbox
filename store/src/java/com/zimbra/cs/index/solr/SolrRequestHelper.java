@@ -1,6 +1,8 @@
 package com.zimbra.cs.index.solr;
 
 import java.io.Closeable;
+import java.util.Collection;
+import java.util.EnumSet;
 
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause.Occur;
@@ -45,8 +47,11 @@ public abstract class SolrRequestHelper implements Closeable {
         }
         executeUpdateRequest(accountId, request, indexType);
     }
+    public SolrResponse executeQueryRequest(String accountId, SolrQuery query, IndexType indexType) throws ServiceException {
+        return executeQueryRequest(accountId, query, EnumSet.of(indexType));
+    }
 
-    public abstract SolrResponse executeQueryRequest(String accountId, SolrQuery query, IndexType indexType) throws ServiceException;
+    public abstract SolrResponse executeQueryRequest(String accountId, SolrQuery query, Collection<IndexType> indexTypes) throws ServiceException;
 
     public String getCoreName(String accountId, IndexType indexType) throws ServiceException {
         return locator.getCollectionName(accountId, indexType);

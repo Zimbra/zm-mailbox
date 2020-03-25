@@ -1,5 +1,7 @@
 package com.zimbra.cs.index.solr;
 
+import java.util.Collection;
+
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.params.ShardParams;
@@ -26,9 +28,8 @@ public class JointCollectionLocator extends SolrCollectionLocator {
     }
 
     @Override
-    public String getCollectionName(String accountId, IndexType indexType) throws ServiceException {
-        //TODO: logic goes here!
-        return indexName != null ? indexName : nameFunc.getIndexName(accountId);
+    public String getCollectionName(String accountId, Collection<IndexType> indexTypes) throws ServiceException {
+        return indexName != null ? indexName : nameFunc.getIndexName(accountId, indexTypes);
     }
 
     @Override
@@ -54,6 +55,6 @@ public class JointCollectionLocator extends SolrCollectionLocator {
 
     @FunctionalInterface
     public static interface IndexNameFunc {
-        public String getIndexName(String accountId) throws ServiceException;
+        public String getIndexName(String accountId, Collection<IndexType> indexTypes) throws ServiceException;
     }
 }

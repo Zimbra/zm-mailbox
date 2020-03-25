@@ -1,12 +1,15 @@
 package com.zimbra.cs.index.solr;
 
 import java.io.IOException;
+import java.util.Collection;
 
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.client.solrj.SolrRequest;
 import org.apache.solr.client.solrj.SolrRequest.METHOD;
 import org.apache.solr.client.solrj.SolrResponse;
+import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.request.QueryRequest;
 import org.apache.solr.client.solrj.request.UpdateRequest;
 
@@ -33,18 +36,18 @@ public class StandaloneSolrHelper extends SolrRequestHelper {
     protected void executeUpdateRequest(String accountId, UpdateRequest request, IndexType indexType) throws ServiceException {
         String coreName = locator.getCollectionName(accountId, indexType);
         try(SolrClient solrClient = SolrUtils.getSolrClient(httpClient, baseUrl, coreName)) {
-            SolrUtils.executeRequestWithRetry(accountId, solrClient, request, baseUrl, coreName, indexType);
+            doRequest(accountId, request, solrClient);
         } catch (IOException e) {
             throw ServiceException.FAILURE(String.format("unable to execute Solr request for account %s", accountId), e);
         }
     }
 
     @Override
-    public SolrResponse executeQueryRequest(String accountId, SolrQuery query, IndexType indexType) throws ServiceException {
-        String coreName = locator.getCollectionName(accountId, indexType);
+    public SolrResponse executeQueryRequest(String accountId, SolrQuery query, Collection<IndexType> indexTypes) throws ServiceException {
+        String coreName = locator.getCollectionName(accountId, indexTypes);
         try(SolrClient solrClient = SolrUtils.getSolrClient(httpClient, baseUrl, coreName)) {
             QueryRequest queryRequest = new QueryRequest(query, METHOD.POST);
-            return SolrUtils.executeRequestWithRetry(accountId, solrClient, queryRequest, baseUrl, coreName, indexType);
+            return doRequest(accountId, queryRequest, solrClient);
         } catch (IOException e) {
             throw ServiceException.FAILURE(String.format("unable to execute Solr request for account %s", accountId), e);
         }
@@ -58,6 +61,13 @@ public class StandaloneSolrHelper extends SolrRequestHelper {
         } catch (IOException e) {
             throw ServiceException.FAILURE(String.format("unable to execute Solr request for account %s", accountId), e);
         }
+    }
 
+    private SolrResponse doRequest(String accountId, SolrRequest request, SolrClient client) throws ServiceException {
+        try {
+            return request.process(client);
+        } catch (SolrServerException | IOException e) {
+            throw ServiceException.FAILURE(String.format("unable to execute Solr request for account %s", accountId), e);
+        }
     }
 }

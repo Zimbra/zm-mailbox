@@ -338,8 +338,7 @@ public class SolrIndex extends IndexStore {
             ZimbraLog.search.debug("Searching Solr:Query='%s'->SolrQuery='%s' filter='%s'",
                     query, q, filter);
             try {
-                //TODO: use correct index type
-                QueryResponse resp = (QueryResponse) solrHelper.executeQueryRequest(accountId, q, IndexType.MAILBOX);
+                QueryResponse resp = (QueryResponse) solrHelper.executeQueryRequest(accountId, q, indexTypes);
                 SolrDocumentList solrDocList = resp.getResults();
                 totalHits = (int) solrDocList.getNumFound();
                 for(SolrDocument solrDoc : solrDocList) {

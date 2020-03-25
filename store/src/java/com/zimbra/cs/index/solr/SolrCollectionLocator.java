@@ -1,5 +1,8 @@
 package com.zimbra.cs.index.solr;
 
+import java.util.Collection;
+import java.util.EnumSet;
+
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.common.SolrInputDocument;
 
@@ -14,10 +17,14 @@ public abstract class SolrCollectionLocator {
 
     protected static final Joiner idJoiner = Joiner.on("_");
 
+    public String getCollectionName(String accountId, IndexType indexType) throws ServiceException {
+        return getCollectionName(accountId, EnumSet.of(indexType));
+    }
+
     /**
      * Return the name of the Solr collection used to store documents for the given account ID
      */
-    abstract String getCollectionName(String accountId, IndexType indexType) throws ServiceException;
+    abstract String getCollectionName(String accountId, Collection<IndexType> indexTypes) throws ServiceException;
 
     /**
      * Optionally post-process the Solr document appropriately

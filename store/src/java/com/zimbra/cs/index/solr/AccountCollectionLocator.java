@@ -1,5 +1,7 @@
 package com.zimbra.cs.index.solr;
 
+import java.util.Collection;
+
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.common.SolrInputDocument;
 
@@ -17,7 +19,7 @@ public class AccountCollectionLocator extends SolrCollectionLocator {
     }
 
     @Override
-    public String getCollectionName(String accountId, IndexType indexType) {
+    public String getCollectionName(String accountId, Collection<IndexType> indexTypes) {
         return String.format("%s_%s",corePrefix, accountId);
     }
 

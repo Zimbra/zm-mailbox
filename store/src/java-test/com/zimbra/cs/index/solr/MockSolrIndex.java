@@ -2,6 +2,7 @@ package com.zimbra.cs.index.solr;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -22,6 +23,7 @@ import com.zimbra.cs.index.ZimbraTermsFilter;
 import com.zimbra.cs.index.ZimbraTopDocs;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxIndex.IndexType;
 import com.zimbra.cs.mailbox.MailboxIndex.ItemIndexDeletionInfo;
 
 public class MockSolrIndex extends SolrIndex {
@@ -139,25 +141,25 @@ public class MockSolrIndex extends SolrIndex {
         }
 
         @Override
-        public ZimbraTopDocs search(Query query, int n) throws IOException, ServiceException {
-            return search(query,null, n);
+        public ZimbraTopDocs search(Query query, int n, Collection<IndexType> types) throws IOException, ServiceException {
+            return search(query,null, n, types);
         }
 
         @Override
-        public ZimbraTopDocs search(Query query, ZimbraTermsFilter filter, int n)
+        public ZimbraTopDocs search(Query query, ZimbraTermsFilter filter, int n, Collection<IndexType> types)
                 throws IOException, ServiceException {
-            return search(query, filter, n, null);
+            return search(query, filter, n, null, types);
         }
 
         //TODO: return all fields that we need in topfielddocs so that we don't have to go back to index again
         @Override
         public ZimbraTopDocs search(Query query, ZimbraTermsFilter filter,
-                int n, Sort sort) throws IOException, ServiceException {
+                int n, Sort sort, Collection<IndexType> types) throws IOException, ServiceException {
             return null;
         }
         @Override
         public ZimbraTopDocs search(Query query, ZimbraTermsFilter filter,
-                int n, Sort sort, String idField, String[] fetchFields)
+                int n, Sort sort, String idField, String[] fetchFields, Collection<IndexType> types)
                 throws IOException, ServiceException {
             return null;
         }

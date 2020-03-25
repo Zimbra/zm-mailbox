@@ -1,14 +1,17 @@
 package com.zimbra.cs.index.solr;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.zip.CRC32;
 
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.params.ShardParams;
 
+import com.google.common.base.Joiner;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.LuceneFields;
@@ -16,14 +19,24 @@ import com.zimbra.cs.mailbox.MailboxIndex.IndexType;
 
 public class MultiCollectionLocator extends SolrCollectionLocator {
 
+    private static final Joiner JOINER = Joiner.on(",");
+
     @Override
-    String getCollectionName(String accountId, IndexType indexType) throws ServiceException {
+    String getCollectionName(String accountId, Collection<IndexType> indexTypes) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         Account account = prov.getAccountById(accountId);
         if (account == null) {
             throw ServiceException.FAILURE(
                     String.format("mailbox index name not found because account=%s not found", accountId), null);
         }
+        List<String> collections = new ArrayList<>(indexTypes.size());
+        for (IndexType type: indexTypes) {
+            collections.add(getCollectionName(accountId, prov, type));
+        }
+        return JOINER.join(collections);
+    }
+
+    private String getCollectionName(String accountId, Provisioning prov, IndexType indexType) throws ServiceException {
         int numCollections;
         switch (indexType) {
         case CONTACTS:
@@ -51,9 +64,7 @@ public class MultiCollectionLocator extends SolrCollectionLocator {
 
     private String getCollectionName(String accountId, String collectionPrefix, int numCollections) {
         long indexNum = getCollectionNum(accountId, numCollections);
-        String indexName = collectionPrefix + indexNum;
-        ZimbraLog.index.debug("getCollectionName - indexname is %s", indexName);
-        return indexName;
+        return collectionPrefix + indexNum;
     }
 
     private long getCollectionNum(String accountId, int numCollections) {
