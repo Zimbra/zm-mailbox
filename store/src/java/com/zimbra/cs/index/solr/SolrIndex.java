@@ -284,25 +284,25 @@ public class SolrIndex extends IndexStore {
         }
 
         @Override
-        public ZimbraTopDocs search(Query query, int n) throws IOException, ServiceException {
-            return search(query,null, n);
+        public ZimbraTopDocs search(Query query, int n, Collection<IndexType> indexTypes) throws IOException, ServiceException {
+            return search(query,null, n, indexTypes);
         }
 
         @Override
-        public ZimbraTopDocs search(Query query, ZimbraTermsFilter filter, int n)
+        public ZimbraTopDocs search(Query query, ZimbraTermsFilter filter, int n, Collection<IndexType> indexTypes)
                 throws IOException, ServiceException {
-            return search(query, filter, n, null);
+            return search(query, filter, n, null, indexTypes);
         }
 
         @Override
         public ZimbraTopDocs search(Query query, ZimbraTermsFilter filter,
-                int n, Sort sort) throws IOException, ServiceException {
-            return search(query, filter, n, sort, LuceneFields.L_MAILBOX_BLOB_ID, MESSAGE_FETCH_FIELDS);
+                int n, Sort sort, Collection<IndexType> indexTypes) throws IOException, ServiceException {
+            return search(query, filter, n, sort, LuceneFields.L_MAILBOX_BLOB_ID, MESSAGE_FETCH_FIELDS, indexTypes);
         }
 
         @Override
         public ZimbraTopDocs search(Query query, ZimbraTermsFilter filter,
-                int n, Sort sort, String idField, String[] fetchFields) throws IOException, ServiceException {
+                int n, Sort sort, String idField, String[] fetchFields, Collection<IndexType> indexTypes) throws IOException, ServiceException {
             List<ZimbraScoreDoc>scoreDocs = Lists.newArrayList();
             List<SortField> sortFields = Lists.newArrayList();
             List<IndexDocument> indexDocs = Lists.newArrayList();
