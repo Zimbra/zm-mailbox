@@ -430,7 +430,7 @@ public final class LuceneQueryOperation extends QueryOperation {
 
     @Override
     public String toString() {
-        return "LUCENE(" + luceneQuery + (hasSpamTrashSetting() ? " <ANYWHERE>" : "") + ")";
+        return "LUCENE(" + luceneQuery + (hasSpamTrashSetting() ? " <ANYWHERE>" : "") + " INDEX=" + indexTypes + ")";
     }
 
     /**

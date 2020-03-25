@@ -335,8 +335,8 @@ public class SolrIndex extends IndexStore {
                 q.addSort(sortField.getField(), sortField.getReverse() ? SolrQuery.ORDER.desc : SolrQuery.ORDER.asc);
             }
 
-            ZimbraLog.search.debug("Searching Solr:Query='%s'->SolrQuery='%s' filter='%s'",
-                    query, q, filter);
+            ZimbraLog.search.debug("Searching Solr:Query='%s'->SolrQuery='%s' filter='%s' index=%s",
+                    query, q, filter, indexTypes);
             try {
                 QueryResponse resp = (QueryResponse) solrHelper.executeQueryRequest(accountId, q, indexTypes);
                 SolrDocumentList solrDocList = resp.getResults();
