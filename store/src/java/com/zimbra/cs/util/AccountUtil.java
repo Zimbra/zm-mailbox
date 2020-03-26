@@ -68,6 +68,7 @@ import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.TokenUtil;
+import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -805,7 +806,8 @@ public class AccountUtil {
     }
 
     public static String getExtUserLoginURL(Account owner) throws ServiceException {
-        return ZimbraServlet.getServiceUrl(Provisioning.affinityServer(owner), "?virtualacctdomain=" + owner.getDomainName());
+        return ZimbraServlet.getServiceUrl(owner.getServer(), Provisioning.getInstance().getDomain(owner), 
+                "?virtualacctdomain=" + owner.getDomainName());
     }
 
     public static String getShareAcceptURL(Account account, int folderId, String externalUserEmail)
@@ -832,7 +834,7 @@ public class AccountUtil {
         String hmac = TokenUtil.getHmac(data, key.getKey());
         String encoded = key.getVersion() + "_" + hmac + "_" + data;
         String path = "/service/extuserprov/?p=" + encoded;
-        return ZimbraServlet.getServiceUrl(Provisioning.affinityServer(account), path);
+        return ZimbraServlet.getServiceUrl(account.getServer(), Provisioning.getInstance().getDomain(account), path);
     }
 
     public static void broadcastFlushCache(Account account) {

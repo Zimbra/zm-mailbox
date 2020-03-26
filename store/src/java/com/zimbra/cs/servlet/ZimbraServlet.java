@@ -511,6 +511,10 @@ public class ZimbraServlet extends HttpServlet {
         return URLUtil.getServiceURL(affinityIp, path + getAccountPath(acct), true);
     }
 
+    public static String getServiceUrl(Server server, Domain domain, String path) throws ServiceException {
+        return URLUtil.getPublicURLForDomain(server, domain, path, true);
+    }
+    
     public static String getServiceUrl(String podIp, String path) throws ServiceException {
         return URLUtil.getServiceURL(podIp, path, true);
     }
