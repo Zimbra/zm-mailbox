@@ -290,7 +290,7 @@ public class UserServlet extends ZimbraServlet {
 
     /** Returns the REST URL for the account. */
     public static String getRestUrl(Account acct) throws ServiceException {
-        return getServiceUrl(acct, UserServlet.SERVLET_PATH);
+        return getServiceRestUrl(acct, UserServlet.SERVLET_PATH);
     }
 
     /** Returns the REST URL for the mail item. */
