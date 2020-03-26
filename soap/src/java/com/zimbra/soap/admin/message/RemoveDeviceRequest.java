@@ -42,13 +42,13 @@ public class RemoveDeviceRequest {
     /**
      * @zm-api-field-description Account Selector
      */
-    @XmlElement(name=AdminConstants.E_ACCOUNT, required=true)
+    @XmlElement(name=AdminConstants.E_ACCOUNT, required=false)
     private AccountSelector account;
 
     /**
-     * @zm-api-field-description Device specification - Note - if not supplied ALL devices will be removed.
+     * @zm-api-field-description Device specification - Note - it is mandatory to provide deviceId.
      */
-    @XmlElement(name=SyncConstants.E_DEVICE, required=false)
+    @XmlElement(name=SyncConstants.E_DEVICE, required=true)
     private DeviceId deviceId;
 
     /**
