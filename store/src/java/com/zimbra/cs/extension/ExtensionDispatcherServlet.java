@@ -115,6 +115,8 @@ public class ExtensionDispatcherServlet extends ZimbraServlet {
             handler.doPut(req, resp);
         } else if ("DELETE".equals(method)) {
             handler.doDelete(req, resp);
+        } else if ("PATCH".equals(method)) {
+            handler.doPatch(req, resp);
         }
         else {
             throw new ServletException("request method " + method + " not supported");
