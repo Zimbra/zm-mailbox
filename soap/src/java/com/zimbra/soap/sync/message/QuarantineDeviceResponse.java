@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011, 2012, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2011, 2012, 2013, 2014, 2016, 2020 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -27,8 +27,8 @@ import com.zimbra.common.soap.SyncConstants;
 import com.zimbra.soap.sync.type.DeviceStatusInfo;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name=SyncConstants.E_SUSPEND_DEVICE_RESPONSE)
-public class SuspendDeviceResponse {
+@XmlRootElement(name=SyncConstants.E_QUARANTINE_DEVICE_RESPONSE)
+public class QuarantineDeviceResponse {
 
     /**
      * @zm-api-field-description Device status information
@@ -36,7 +36,7 @@ public class SuspendDeviceResponse {
     @XmlElement(name=SyncConstants.E_DEVICE /* device */, required=false)
     private DeviceStatusInfo device;
 
-    public SuspendDeviceResponse() {
+    public QuarantineDeviceResponse() {
     }
 
     public void setDevice(DeviceStatusInfo device) { this.device = device; }
