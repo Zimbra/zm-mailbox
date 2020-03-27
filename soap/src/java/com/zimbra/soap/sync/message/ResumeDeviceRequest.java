@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011, 2012, 2013, 2014, 2016, 2020 Synacor, Inc.
+ * Copyright (C) 2011, 2012, 2013, 2014, 2016 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -30,12 +30,12 @@ import com.zimbra.soap.sync.type.DeviceId;
  * @zm-api-command-network-edition
  * @zm-api-command-auth-required true
  * @zm-api-command-admin-auth-required false
- * @zm-api-command-description Allow sync with a device if currently suspended.
+ * @zm-api-command-description Resume sync with a device if currently suspended.
  * This will cause a policy reset, but will not reset sync data.
  */
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name=SyncConstants.E_ALLOW_DEVICE_REQUEST)
-public class AllowDeviceRequest {
+@XmlRootElement(name=SyncConstants.E_RESUME_DEVICE_REQUEST)
+public class ResumeDeviceRequest {
 
     /**
      * @zm-api-field-description Specify the device to resume
@@ -47,11 +47,11 @@ public class AllowDeviceRequest {
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private AllowDeviceRequest() {
+    private ResumeDeviceRequest() {
         this((DeviceId) null);
     }
 
-    public AllowDeviceRequest(DeviceId device) {
+    public ResumeDeviceRequest(DeviceId device) {
         this.device = device;
     }
 

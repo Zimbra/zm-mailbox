@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2012, 2013, 2014, 2016, 2020 Synacor, Inc.
+ * Copyright (C) 2011, 2012, 2013, 2014, 2016 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -15,55 +15,35 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.message;
+package com.zimbra.soap.sync.message;
 
-import java.util.Collections;
-import java.util.List;
-
+import com.google.common.base.MoreObjects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
-import com.google.common.base.MoreObjects;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.zimbra.common.soap.SyncAdminConstants;
 import com.zimbra.common.soap.SyncConstants;
-import com.zimbra.soap.admin.type.DeviceStatusInfo;
+import com.zimbra.soap.sync.type.DeviceStatusInfo;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name=SyncAdminConstants.E_ALLOW_DEVICE_RESPONSE)
-@XmlType(propOrder = {})
-public class AllowDeviceResponse {
+@XmlRootElement(name=SyncConstants.E_RESUME_DEVICE_RESPONSE)
+public class ResumeDeviceResponse {
 
     /**
-     * @zm-api-field-description Information about device status
+     * @zm-api-field-description Device status information
      */
     @XmlElement(name=SyncConstants.E_DEVICE /* device */, required=false)
-    private List<DeviceStatusInfo> devices = Lists.newArrayList();
+    private DeviceStatusInfo device;
 
-    public AllowDeviceResponse() {
+    public ResumeDeviceResponse() {
     }
 
-    public void setDevices(Iterable<DeviceStatusInfo> devices) {
-        this.devices.clear();
-        if (devices != null) {
-            Iterables.addAll(this.devices, devices);
-        }
-    }
-
-    public void addDevice(DeviceStatusInfo device) {
-        this.devices.add(device);
-    }
-
-    public List<DeviceStatusInfo> getDevices() {
-        return Collections.unmodifiableList(devices);
-    }
+    public void setDevice(DeviceStatusInfo device) { this.device = device; }
+    public DeviceStatusInfo getDevice() { return device; }
 
     public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
-        return helper.add("devices", devices);
+        return helper.add("device", device);
     }
 
     @Override
