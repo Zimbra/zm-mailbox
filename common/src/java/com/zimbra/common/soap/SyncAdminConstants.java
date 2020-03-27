@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011, 2012, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2011, 2012, 2013, 2014, 2016, 2020 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -37,12 +37,12 @@ public final class SyncAdminConstants {
     public static final String E_GET_DEVICE_STATUS_RESPONSE = "GetDeviceStatusResponse";
     public static final String E_REMOVE_DEVICE_REQUEST = "RemoveDeviceRequest";
     public static final String E_REMOVE_DEVICE_RESPONSE = "RemoveDeviceResponse";
-    public static final String E_SUSPEND_DEVICE_REQUEST = "SuspendDeviceRequest";
-    public static final String E_SUSPEND_DEVICE_RESPONSE = "SuspendDeviceResponse";
     public static final String E_BLOCK_DEVICE_REQUEST = "BlockDeviceRequest";
     public static final String E_BLOCK_DEVICE_RESPONSE = "BlockDeviceResponse";
     public static final String E_ALLOW_DEVICE_REQUEST = "AllowDeviceRequest";
     public static final String E_ALLOW_DEVICE_RESPONSE = "AllowDeviceResponse";
+    public static final String E_QUARANTINE_DEVICE_REQUEST = "QuarantineDeviceRequest";
+    public static final String E_QUARANTINE_DEVICE_RESPONSE = "QuarantineDeviceResponse";
     public static final String E_GET_SYNC_STATE_REQUEST = "GetSyncStateRequest";
     public static final String E_GET_SYNC_STATE_RESPONSE = "GetSyncStateResponse";
     public static final String E_REMOVE_STALE_DEVICE_METADATA_REQUEST = "RemoveStaleDeviceMetadataRequest";
@@ -62,12 +62,12 @@ public final class SyncAdminConstants {
     public static final QName GET_DEVICE_STATUS_RESPONSE = QName.get(E_GET_DEVICE_STATUS_RESPONSE, NAMESPACE);
     public static final QName REMOVE_DEVICE_REQUEST = QName.get(E_REMOVE_DEVICE_REQUEST, NAMESPACE);
     public static final QName REMOVE_DEVICE_RESPONSE = QName.get(E_REMOVE_DEVICE_RESPONSE, NAMESPACE);
-    public static final QName SUSPEND_DEVICE_REQUEST = QName.get(E_SUSPEND_DEVICE_REQUEST, NAMESPACE);
-    public static final QName SUSPEND_DEVICE_RESPONSE = QName.get(E_SUSPEND_DEVICE_RESPONSE, NAMESPACE);
     public static final QName BLOCK_DEVICE_REQUEST = QName.get(E_BLOCK_DEVICE_REQUEST, NAMESPACE);
     public static final QName BLOCK_DEVICE_RESPONSE = QName.get(E_BLOCK_DEVICE_RESPONSE, NAMESPACE);
     public static final QName ALLOW_DEVICE_REQUEST = QName.get(E_ALLOW_DEVICE_REQUEST, NAMESPACE);
     public static final QName ALLOW_DEVICE_RESPONSE = QName.get(E_ALLOW_DEVICE_RESPONSE, NAMESPACE);
+    public static final QName QUARANTINE_DEVICE_REQUEST = QName.get(E_QUARANTINE_DEVICE_REQUEST, NAMESPACE);
+    public static final QName QUARANTINE_DEVICE_RESPONSE = QName.get(E_QUARANTINE_DEVICE_RESPONSE, NAMESPACE);
     public static final QName GET_SYNC_STATE_REQUEST = QName.get(E_GET_SYNC_STATE_REQUEST, NAMESPACE);
     public static final QName GET_SYNC_STATE_RESPONSE = QName.get(E_GET_SYNC_STATE_RESPONSE, NAMESPACE);
     public static final QName REMOVE_STALE_DEVICE_METADATA_REQUEST = QName.get(E_REMOVE_STALE_DEVICE_METADATA_REQUEST, NAMESPACE);

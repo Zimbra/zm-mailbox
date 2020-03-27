@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2012, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2011, 2012, 2013, 2014, 2016 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -15,55 +15,49 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.message;
+package com.zimbra.soap.sync.message;
 
-import java.util.Collections;
-import java.util.List;
-
+import com.google.common.base.MoreObjects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
-import com.google.common.base.MoreObjects;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.zimbra.common.soap.SyncAdminConstants;
 import com.zimbra.common.soap.SyncConstants;
-import com.zimbra.soap.admin.type.DeviceStatusInfo;
+import com.zimbra.soap.sync.type.DeviceId;
 
+/**
+ * @zm-api-command-network-edition
+ * @zm-api-command-auth-required true
+ * @zm-api-command-admin-auth-required false
+ * @zm-api-command-description Quarantine a device from further sync actions
+ */
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name=SyncAdminConstants.E_SUSPEND_DEVICE_RESPONSE)
-@XmlType(propOrder = {})
-public class SuspendDeviceResponse {
+@XmlRootElement(name=SyncConstants.E_QUARANTINE_DEVICE_REQUEST)
+public class QuarantineDeviceRequest {
 
     /**
-     * @zm-api-field-description Information about device status
+     * @zm-api-field-description Device selector
      */
-    @XmlElement(name=SyncConstants.E_DEVICE /* device */, required=false)
-    private List<DeviceStatusInfo> devices = Lists.newArrayList();
+    @XmlElement(name=SyncConstants.E_DEVICE /* device */, required=true)
+    private final DeviceId device;
 
-    public SuspendDeviceResponse() {
+    /**
+     * no-argument constructor wanted by JAXB
+     */
+    @SuppressWarnings("unused")
+    private QuarantineDeviceRequest() {
+        this((DeviceId) null);
     }
 
-    public void setDevices(Iterable<DeviceStatusInfo> devices) {
-        this.devices.clear();
-        if (devices != null) {
-            Iterables.addAll(this.devices, devices);
-        }
+    public QuarantineDeviceRequest(DeviceId device) {
+        this.device = device;
     }
 
-    public void addDevice(DeviceStatusInfo device) {
-        this.devices.add(device);
-    }
-
-    public List<DeviceStatusInfo> getDevices() {
-        return Collections.unmodifiableList(devices);
-    }
+    public DeviceId getDevice() { return device; }
 
     public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
-        return helper.add("devices", devices);
+        return helper.add("device", device);
     }
 
     @Override
