@@ -31,6 +31,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.index.MailboxIndexUtil;
+import com.zimbra.cs.index.solr.BatchedIndexDeletions;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.OperationContext;
@@ -145,6 +146,11 @@ public final class ManageIndex extends AdminDocumentHandler {
     }
 
     public static void enableIndexing(Account acct, Mailbox mbox, OperationContext octxt) throws ServiceException {
+        // make sure that index data isn't currently batched for deletion
+        int removed = BatchedIndexDeletions.getInstance().removeDeletions(acct.getId());
+        if (removed > 0) {
+            ZimbraLog.index.info("removed %s unprocessed index deletions for %s prior to re-enabling indexing", removed, acct.getId());
+        }
         acct.setDelayedIndexStatus(DelayedIndexStatus.indexing);
         MailboxIndexUtil.asyncReIndexMailbox(mbox, octxt);
     }

@@ -1,8 +1,10 @@
 package com.zimbra.cs.index.solr;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -17,6 +19,9 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.CloudSolrClient;
+import org.redisson.api.RScript;
+import org.redisson.api.RScript.Mode;
+import org.redisson.api.RScript.ReturnType;
 import org.redisson.api.RSet;
 import org.redisson.api.RedissonClient;
 import org.redisson.client.codec.StringCodec;
@@ -53,6 +58,10 @@ public class BatchedIndexDeletions {
 
     public void addDeletion(Deletion deletion) {
         deletionProvider.addDeletion(deletion);
+    }
+
+    public int removeDeletions(String accountId) {
+        return deletionProvider.removeDeletions(accountId);
     }
 
     public static abstract class Deletion {
@@ -217,6 +226,8 @@ public class BatchedIndexDeletions {
 
         public abstract void addDeletion(Deletion deletion);
 
+        public abstract int removeDeletions(String accountId);
+
         public abstract Collection<Deletion> getDeletions(int limit);
 
         public abstract boolean hasMore();
@@ -276,6 +287,29 @@ public class BatchedIndexDeletions {
             if (encoded != null) {
                 deletionSet.add(encoded);
             }
+        }
+
+
+        @Override
+        public int removeDeletions(String accountId) {
+            String luaScript =
+                    "local items = redis.call('smembers', KEYS[1]); " +
+                    "local to_remove = {}; " +
+                    "for i, val in ipairs(items) do " +
+                        "if string.match(val, ARGV[1]) then " +
+                            "table.insert(to_remove, val); " +
+                        "end; " +
+                    "end; " +
+                    "if #to_remove == 0 then " +
+                        "return 0; " +
+                    "else " +
+                        "return redis.call('srem', KEYS[1], unpack(to_remove)); " +
+                    "end; ";
+            RScript script = client.getScript(StringCodec.INSTANCE);
+            List<Object> keys = Arrays.<Object>asList(KEY_DELETIONS_SET);
+            String escapedId = accountId.replace("-", "%-"); // dashes need to be escaped in string.match
+            Long removed = script.eval(Mode.READ_WRITE, luaScript, ReturnType.INTEGER, keys, escapedId);
+            return removed.intValue();
         }
 
         @Override
