@@ -626,7 +626,9 @@ public abstract class DocumentHandler {
         Pair<Element, Element> envelope = proxy.execute(request, zscProxy);
         // if we've got a SOAP session, handle the returned notifications and session ID
         if (localSession instanceof SoapSession && zscProxy.isNotificationEnabled()) {
-            envelope.getFirst().addUniqueElement(ZimbraNamespace.E_REFRESH);
+            if (envelope.getFirst().getOptionalElement(ZimbraNamespace.E_REFRESH) == null) {
+                envelope.getFirst().addUniqueElement(ZimbraNamespace.E_REFRESH);
+            }
             ((SoapSession) localSession).handleRemoteNotifications(affinityIp, envelope.getFirst());   
         }
         return envelope.getSecond().detach();
