@@ -27,8 +27,8 @@ import com.zimbra.common.soap.SyncConstants;
 import com.zimbra.soap.sync.type.DeviceStatusInfo;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name=SyncConstants.E_ALLOW_DEVICE_RESPONSE)
-public class AllowDeviceResponse {
+@XmlRootElement(name=SyncConstants.E_RESUME_DEVICE_RESPONSE)
+public class ResumeDeviceResponse {
 
     /**
      * @zm-api-field-description Device status information
@@ -36,7 +36,7 @@ public class AllowDeviceResponse {
     @XmlElement(name=SyncConstants.E_DEVICE /* device */, required=false)
     private DeviceStatusInfo device;
 
-    public AllowDeviceResponse() {
+    public ResumeDeviceResponse() {
     }
 
     public void setDevice(DeviceStatusInfo device) { this.device = device; }
