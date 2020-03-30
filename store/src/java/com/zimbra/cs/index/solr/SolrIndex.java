@@ -74,6 +74,7 @@ import com.zimbra.cs.index.ZimbraTermsFilter;
 import com.zimbra.cs.index.ZimbraTopDocs;
 import com.zimbra.cs.index.solr.BatchedIndexDeletions.AccountDeletion;
 import com.zimbra.cs.index.solr.BatchedIndexDeletions.Deletion;
+import com.zimbra.cs.index.solr.BatchedIndexDeletions.ItemDeletion;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox.IndexItemEntry;
 import com.zimbra.cs.mailbox.MailboxIndex.ItemIndexDeletionInfo;
@@ -615,14 +616,20 @@ public class SolrIndex extends IndexStore {
                     }
                 } else {
                     ZimbraLog.index.warn("numIndexDocs for item %s is unknown, using delete-by-query instead", itemId);
-                    if (deleteByQueryClauses == null) {
-                        deleteByQueryClauses = new BooleanQuery.Builder();
+                    if (DebugConfig.disableSolrBatchDeletesByQuery) {
+                        if (deleteByQueryClauses == null) {
+                            deleteByQueryClauses = new BooleanQuery.Builder();
+                        }
+                        deleteByQueryClauses.add(new TermQuery(new Term(LuceneFields.L_MAILBOX_BLOB_ID, Integer.toString(itemId))), Occur.SHOULD);
+                    } else {
+                        String collection = solrHelper.getCoreName(accountId);
+                        Deletion deletion = new ItemDeletion(collection, route, itemId);
+                        BatchedIndexDeletions.getInstance().addDeletion(deletion);
                     }
-                    deleteByQueryClauses.add(new TermQuery(new Term(LuceneFields.L_MAILBOX_BLOB_ID, Integer.toString(itemId))), Occur.SHOULD);
                     numDeletedByQuery++;
                 }
             }
-            if (numDeletedByQuery > 0) {
+            if (numDeletedByQuery > 0 && deleteByQueryClauses != null) {
                 BooleanQuery.Builder deleteByQueryBuilder;
                 if (solrHelper.needsAccountFilter()) {
                     deleteByQueryBuilder = new BooleanQuery.Builder();
