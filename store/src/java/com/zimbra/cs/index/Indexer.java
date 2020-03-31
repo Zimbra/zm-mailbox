@@ -23,6 +23,7 @@ import java.util.List;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox.IndexItemEntry;
+import com.zimbra.cs.mailbox.MailboxIndex.ItemIndexDeletionInfo;
 
 /**
  * Abstraction of index write operations.
@@ -39,7 +40,15 @@ public interface Indexer extends Closeable {
      * @param ids list of item IDs to delete
      * @throws ServiceException
      */
-    void deleteDocument(List<Integer> ids) throws IOException, ServiceException;
+    void deleteDocument(List<ItemIndexDeletionInfo> ids) throws IOException, ServiceException;
+
+    /**
+     * Deletes index documents.
+     *
+     * @param ids list of item IDs to delete
+     * @throws ServiceException
+     */
+    void deleteDocumentById(List<Integer> ids) throws IOException, ServiceException;
 
     /**
      * Index an IndexDocument derived from a search history item

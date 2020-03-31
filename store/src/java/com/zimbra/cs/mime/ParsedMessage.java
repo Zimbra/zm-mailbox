@@ -52,7 +52,6 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.common.primitives.Ints;
-import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.calendar.ZCalendar.ICalTok;
 import com.zimbra.common.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
@@ -73,7 +72,6 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zmime.ZMimeMessage;
 import com.zimbra.common.zmime.ZMimeMultipart;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.convert.ConversionException;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.Fragment;
@@ -906,6 +904,34 @@ public final class ParsedMessage {
             LOG.warn("message analysis failed when getting lucene documents");
         }
         return luceneDocuments;
+    }
+
+    /**
+     * Calculate an estimate for the number of index docs for this message.
+     * This doesn't have to be exact, but it should match or exceed the true number;
+     * since this is used to determine the IDs of index docs at deletion time
+     * it's better to issue deletion requests for non-existent docs than to leave
+     * orphaned docs in the index.
+     */
+    public int getNumIndexDocs() {
+        parse(); //should already be parsed
+        int numDocs = 1; //top-level doc
+        for (MPartInfo mpi: messageParts) {
+            if (mpi.isMultipart()) {
+                continue;
+            }
+            String ctype = mpi.getContentType();
+            try {
+                MimeHandler handler = MimeHandlerManager.getMimeHandler(ctype, mpi.getFilename());
+                if (handler.isIndexingEnabled() && indexAttachments && !DebugConfig.disableIndexingAttachmentsSeparately) {
+                    numDocs++;
+                }
+            } catch (MimeHandlerException e) {
+                LOG.warn("error trying to determine numIndexDocs; count may be wrong", e);
+                continue;
+            }
+        }
+        return numDocs;
     }
 
     /**

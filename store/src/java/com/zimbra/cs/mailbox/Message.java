@@ -1483,7 +1483,7 @@ public class Message extends MailItem implements Classifiable {
             if (pm.hasTemporaryAnalysisFailure()) {
                 throw new TemporaryIndexingException();
             }
-            return pm.getLuceneDocuments();
+            return checkNumIndexDocs(pm.getLuceneDocuments());
         } catch (ServiceException e) {
             ZimbraLog.index.warn("Unable to generate index data for Message %d. Item will not be indexed.", getId(), e);
             return Collections.emptyList();
@@ -1551,6 +1551,8 @@ public class Message extends MailItem implements Classifiable {
             getFolder().updateSize(0, 0, newSize - curSize);
             state.setSize(newSize);
         }
+
+        updateIndexedDocCount(pm.getNumIndexDocs());
 
         // rewrite the DB row to reflect our new view
         saveData(new DbMailItem(mMailbox), encodeMetadata(state.getColor(), state.getMetadataVersion(), state.getVersion(), mExtendedData, pm, fragment,
@@ -1632,7 +1634,7 @@ public class Message extends MailItem implements Classifiable {
     @Override
     Metadata encodeMetadata(Metadata meta) {
         return encodeMetadata(meta, state.getColor(), state.getMetadataVersion(), state.getVersion(), mExtendedData, sender, recipients, fragment,
-                state.getSubject(), rawSubject, draftInfo, calendarItemInfos, calendarIntendedFor, dsId, sentByMe);
+                state.getSubject(), rawSubject, draftInfo, calendarItemInfos, calendarIntendedFor, dsId, sentByMe, state.getNumIndexDocs());
     }
 
     private static Metadata encodeMetadata(Color color, int metaVersion, int version, CustomMetadataList extended, ParsedMessage pm,
@@ -1640,12 +1642,12 @@ public class Message extends MailItem implements Classifiable {
             String dsId, boolean sentByMe) {
         return encodeMetadata(new Metadata(), color, metaVersion, version, extended, pm.getSender(), pm.getRecipients(),
                 fragment, pm.getNormalizedSubject(), pm.getSubject(), dinfo,
-                calItemInfos, calIntendedFor, dsId, sentByMe);
+                calItemInfos, calIntendedFor, dsId, sentByMe, pm.getNumIndexDocs());
     }
 
     static Metadata encodeMetadata(Metadata meta, Color color, int metaVersion, int version, CustomMetadataList extended, String sender,
             String recipients, String fragment, String subject, String rawSubj, DraftInfo dinfo,
-            List<CalendarItemInfo> calItemInfos, String calIntendedFor, String dsId, boolean sentByMe) {
+            List<CalendarItemInfo> calItemInfos, String calIntendedFor, String dsId, boolean sentByMe, int numIndexDocs) {
         // try to figure out a simple way to make the raw subject from the normalized one
         String prefix = null;
         if (rawSubj == null || rawSubj.equals(subject)) {
@@ -1682,7 +1684,7 @@ public class Message extends MailItem implements Classifiable {
             meta.put(Metadata.FN_DRAFT, dmeta);
         }
 
-        return MailItem.encodeMetadata(meta, color, null, metaVersion, version, extended);
+        return MailItem.encodeMetadata(meta, color, null, metaVersion, version, numIndexDocs, extended);
     }
 
     /**

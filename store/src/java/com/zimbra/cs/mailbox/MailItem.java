@@ -61,8 +61,9 @@ import com.zimbra.cs.db.DbPendingAclPush;
 import com.zimbra.cs.db.DbTag;
 import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.SortBy;
-import com.zimbra.cs.mailbox.MailItemState.AccessMode;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
+import com.zimbra.cs.mailbox.MailItemState.AccessMode;
+import com.zimbra.cs.mailbox.MailboxIndex.ItemIndexDeletionInfo;
 import com.zimbra.cs.mailbox.util.TypedIdList;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.Change;
@@ -1736,6 +1737,14 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         return null;
     }
 
+    protected List<IndexDocument> checkNumIndexDocs(List<IndexDocument> docs) {
+        int expected = state.getNumIndexDocs();
+        int actual = docs == null ? 0 : docs.size();
+        if (expected != actual) {
+            ZimbraLog.index.warn("mbox %s - incorrect numIndexDocs for %s %s: (expected=%s, actual=%s)", mMailboxData.id, getType(), mId, expected, actual);
+        }
+        return docs;
+    }
 
     /** Returns the item's parent.  Returns <tt>null</tt> if the item
      *  does not have a parent.
@@ -2432,6 +2441,13 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         throw ServiceException.FAILURE("reanalysis of " + getType() + "s not supported", null);
     }
 
+    protected void updateIndexedDocCount(int newCount) {
+        int curCount = state.getNumIndexDocs();
+        if (curCount != newCount) {
+            ZimbraLog.index.debug("updating numIndexDocs for %s %s: %s -> %s", getType(), mId, curCount, newCount);
+            state.setNumIndexDocs(newCount);
+        }
+    }
     @SuppressWarnings("unused") void detach() throws ServiceException  { }
 
     /** Updates the item's unread state.  Persists the change to the
@@ -3225,13 +3241,13 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         public Set<Integer> modifiedIds = new HashSet<Integer>(2);
 
         /** The document ids that need to be removed from the index. */
-        public final List<Integer> indexIds = new ArrayList<Integer>(1);
+        public final List<ItemIndexDeletionInfo> indexIds = new ArrayList<ItemIndexDeletionInfo>(1);
 
         /** The ids of all items with the {@link Flag#BITMASK_COPIED} flag being
          *  deleted.  Items in <tt>sharedIndex</tt> whose last copies are
          *  being removed are added to {@link #indexIds} via a call to
          *  {@link DbMailItem#resolveSharedIndex}. */
-        public Set<Integer> sharedIndex;
+        public Set<ItemIndexDeletionInfo> sharedIndex;
 
         /** The {@link com.zimbra.cs.store.Blob}s for all items being deleted that have content
          *  persisted in the store. */
@@ -3271,7 +3287,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
                     (cascadeIds == null ? cascadeIds = new ArrayList<Integer>(other.cascadeIds.size()) : cascadeIds).addAll(other.cascadeIds);
                 }
                 if (other.sharedIndex != null) {
-                    (sharedIndex == null ? sharedIndex = new HashSet<Integer>(other.sharedIndex.size()) : sharedIndex).addAll(other.sharedIndex);
+                    (sharedIndex == null ? sharedIndex = new HashSet<ItemIndexDeletionInfo>(other.sharedIndex.size()) : sharedIndex).addAll(other.sharedIndex);
                 }
 
                 for (Map.Entry<Integer, DbMailItem.LocationCount> entry : other.folderCounts.entrySet()) {
@@ -3518,10 +3534,11 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             getFolderId() == Mailbox.ID_FOLDER_DRAFTS || (inSpam() && !getMailbox().useDumpsterForSpam())) {
             if (getIndexStatus() != IndexStatus.NO) {
                 int indexId = getIndexStatus() == IndexStatus.DONE ? getIndexId() : mId;
+                int numIndexDocs = state.getNumIndexDocs();
                 if (isTagged(Flag.FlagInfo.COPIED)) {
-                    info.sharedIndex = Sets.newHashSet(indexId);
+                    info.sharedIndex = Sets.newHashSet(new ItemIndexDeletionInfo(indexId, numIndexDocs));
                 } else {
-                    info.indexIds.add(indexId);
+                    info.indexIds.add(new ItemIndexDeletionInfo(indexId, numIndexDocs));
                 }
             }
 
@@ -3598,6 +3615,10 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
     abstract Metadata encodeMetadata(Metadata meta);
 
     static Metadata encodeMetadata(Metadata meta, Color color, ACL rights, int metaVersion, int version, CustomMetadataList extended) {
+        return encodeMetadata(meta, color, rights, metaVersion, version, 0, extended);
+    }
+
+    static Metadata encodeMetadata(Metadata meta, Color color, ACL rights, int metaVersion, int version, int numIndexDocs, CustomMetadataList extended) {
         if (color != null && color.getMappedColor() != DEFAULT_COLOR) {
             meta.put(Metadata.FN_COLOR, color.toMetadata());
         }
@@ -3614,6 +3635,10 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         }
         if (rights != null) {
             meta.put(Metadata.FN_RIGHTS_MAP, rights.encode());
+        }
+
+        if (numIndexDocs > 0) {
+            meta.put(Metadata.FN_NUM_INDEX_DOCS, numIndexDocs);
         }
         return meta;
     }
@@ -3668,6 +3693,10 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             if (!isTagged(Flag.FlagInfo.NO_INHERIT)) {
                 alterTag(mMailbox.getFlagById(Flag.ID_NO_INHERIT), true);
             }
+        }
+        int numIndexDocs = meta.getInt(Metadata.FN_NUM_INDEX_DOCS, 0);
+        if (numIndexDocs > 0) {
+            state.setNumIndexDocs(numIndexDocs, AccessMode.LOCAL_ONLY);
         }
     }
 

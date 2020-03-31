@@ -1,7 +1,6 @@
 package com.zimbra.cs.index.queue;
 
 import static org.junit.Assert.assertEquals;
-import org.junit.Ignore;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
@@ -13,6 +12,7 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
@@ -23,6 +23,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxIndex.ItemIndexDeletionInfo;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mime.ParsedMessage;
@@ -200,7 +201,11 @@ import com.zimbra.qa.unittest.TestUtil;
 
         //queue items for deletion from index
         IndexingQueueAdapter queueAdapter = IndexingQueueAdapter.getFactory().getAdapter();
-        DeleteFromIndexTaskLocator itemLocator = new DeleteFromIndexTaskLocator(ids, mbox.getAccountId(), mbox.getId(), mbox.getSchemaGroupId());
+        List<ItemIndexDeletionInfo> deletionInfos = new ArrayList<>(ids.size());
+        for (Integer id: ids) {
+            deletionInfos.add(new ItemIndexDeletionInfo(id, 1));
+        }
+        DeleteFromIndexTaskLocator itemLocator = new DeleteFromIndexTaskLocator(deletionInfos, mbox.getAccountId(), mbox.getId(), mbox.getSchemaGroupId());
         queueAdapter.put(itemLocator);
 
         //start indexing service
@@ -232,7 +237,8 @@ import com.zimbra.qa.unittest.TestUtil;
 
         //queue items for deletion from index
         IndexingQueueAdapter queueAdapter = IndexingQueueAdapter.getFactory().getAdapter();
-        DeleteFromIndexTaskLocator itemLocator = new DeleteFromIndexTaskLocator(ids.get(0), mbox.getAccountId(), mbox.getId(), mbox.getSchemaGroupId());
+        ItemIndexDeletionInfo itemDelete = new ItemIndexDeletionInfo(ids.get(0), 1);
+        DeleteFromIndexTaskLocator itemLocator = new DeleteFromIndexTaskLocator(itemDelete, mbox.getAccountId(), mbox.getId(), mbox.getSchemaGroupId());
         queueAdapter.put(itemLocator);
         //start indexing service
         IndexingService.getInstance().startUp();
@@ -262,9 +268,9 @@ import com.zimbra.qa.unittest.TestUtil;
         Assert.assertEquals("should find 3 items", 3, ids.size());
 
         //queue items for deletion from index
-        List<Integer> idsToDelete = Lists.newArrayList();
-        idsToDelete.add(ids.get(0));
-        idsToDelete.add(ids.get(1));
+        List<ItemIndexDeletionInfo> idsToDelete = Lists.newArrayList();
+        idsToDelete.add(new ItemIndexDeletionInfo(ids.get(0), 1));
+        idsToDelete.add(new ItemIndexDeletionInfo(ids.get(1), 1));
         IndexingQueueAdapter queueAdapter = IndexingQueueAdapter.getFactory().getAdapter();
         DeleteFromIndexTaskLocator itemLocator = new DeleteFromIndexTaskLocator(idsToDelete, mbox.getAccountId(), mbox.getId(), mbox.getSchemaGroupId());
         queueAdapter.put(itemLocator);

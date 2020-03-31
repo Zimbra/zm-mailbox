@@ -16,6 +16,7 @@ public class LocalMailItemState implements MailItemState {
     private int metadataVersion = 1;
     private int version = 1;
     private RetentionPolicy retentionPolicy;
+    private int numIndexDocs;
 
     public LocalMailItemState(UnderlyingData data) {
         this.data = data;
@@ -345,5 +346,21 @@ public class LocalMailItemState implements MailItemState {
     @Override
     public void setRetentionPolicy(RetentionPolicy policy, AccessMode setMode) {
         this.retentionPolicy = policy;
+    }
+
+    @Override
+    public int getNumIndexDocs() {
+        return numIndexDocs;
+    }
+
+    @Override
+    public void setNumIndexDocs(int numIndexDocs) {
+        this.numIndexDocs = numIndexDocs;
+
+    }
+
+    @Override
+    public void setNumIndexDocs(int numIndexDocs, AccessMode setMode) {
+        this.numIndexDocs = numIndexDocs;
     }
 }

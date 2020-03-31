@@ -31,6 +31,7 @@ public class SynchronizableMailItemState implements MailItemState {
     private Color color;
     private int metadataVersion = 1;
     private int version = 1;
+    private int numIndexDocs = 0;
     private RetentionPolicy retentionPolicy;
     private SharedStateAccessor sharedState;
 
@@ -62,6 +63,7 @@ public class SynchronizableMailItemState implements MailItemState {
     public static final String F_COLOR = "color";
     public static final String F_RIGHTS = "rights";
     public static final String F_RETENTION_POLICY = "retentionPolicy";
+    public static final String F_NUM_INDEX_DOCS = "numIndexDocs";
 
     public SynchronizableMailItemState(UnderlyingData data) {
         this.data = data;
@@ -402,6 +404,20 @@ public class SynchronizableMailItemState implements MailItemState {
         getField(F_RETENTION_POLICY).set(policy, setMode);
     }
 
+    @Override
+    public int getNumIndexDocs() {
+        return getIntFieldValue(F_NUM_INDEX_DOCS);
+    }
+
+    @Override
+    public void setNumIndexDocs(int numIndexDocs) {
+        setNumIndexDocs(numIndexDocs, AccessMode.DEFAULT);
+    }
+
+    @Override
+    public void setNumIndexDocs(int numIndexDocs, AccessMode setMode) {
+        getField(F_NUM_INDEX_DOCS).set(numIndexDocs, setMode);
+    }
 
     protected abstract class ItemField<T> {
 
@@ -1024,6 +1040,17 @@ public class SynchronizableMailItemState implements MailItemState {
                 }
             }
         });
+
+        addField(new ItemField<Integer>(F_NUM_INDEX_DOCS) {
+
+            @Override
+            protected void setLocal(Integer value) {
+                numIndexDocs = newIntLocalValue(this, value);
+            }
+
+            @Override
+            protected Integer getLocal() { return numIndexDocs; }
+        });
     }
 
     protected MoreObjects.ToStringHelper toStringHelper() {
@@ -1034,6 +1061,7 @@ public class SynchronizableMailItemState implements MailItemState {
                 .add("color", color)
                 .add("retentionPolicy", retentionPolicy)
                 .add("sharedState", sharedState)
+                .add("numIndexDocs", numIndexDocs)
                 .add("hashCode", System.identityHashCode(this));
     }
 

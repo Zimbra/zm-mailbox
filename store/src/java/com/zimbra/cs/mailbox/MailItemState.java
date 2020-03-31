@@ -138,4 +138,10 @@ public interface MailItemState {
     public void setRetentionPolicy(RetentionPolicy policy);
 
     public void setRetentionPolicy(RetentionPolicy policy, AccessMode setMode);
+
+    public int getNumIndexDocs();
+
+    public void setNumIndexDocs(int numIndexDocs);
+
+    public void setNumIndexDocs(int numIndexDocs, AccessMode setMode);
 }
