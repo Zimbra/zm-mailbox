@@ -41,6 +41,8 @@ public final class SyncAdminConstants {
     public static final String E_REMOVE_DEVICE_RESPONSE = "RemoveDeviceResponse";
     public static final String E_SUSPEND_DEVICE_REQUEST = "SuspendDeviceRequest";
     public static final String E_SUSPEND_DEVICE_RESPONSE = "SuspendDeviceResponse";
+    public static final String E_QUARANTINE_DEVICE_REQUEST = "QuarantineDeviceRequest";
+    public static final String E_QUARANTINE_DEVICE_RESPONSE = "QuarantineDeviceResponse";
     public static final String E_BLOCK_DEVICE_REQUEST = "BlockDeviceRequest";
     public static final String E_BLOCK_DEVICE_RESPONSE = "BlockDeviceResponse";
     public static final String E_RESUME_DEVICE_REQUEST = "ResumeDeviceRequest";
@@ -68,6 +70,8 @@ public final class SyncAdminConstants {
     public static final QName REMOVE_DEVICE_RESPONSE = QName.get(E_REMOVE_DEVICE_RESPONSE, NAMESPACE);
     public static final QName SUSPEND_DEVICE_REQUEST = QName.get(E_SUSPEND_DEVICE_REQUEST, NAMESPACE);
     public static final QName SUSPEND_DEVICE_RESPONSE = QName.get(E_SUSPEND_DEVICE_RESPONSE, NAMESPACE);
+    public static final QName QUARANTINE_DEVICE_REQUEST = QName.get(E_QUARANTINE_DEVICE_REQUEST, NAMESPACE);
+    public static final QName QUARANTINE_DEVICE_RESPONSE = QName.get(E_QUARANTINE_DEVICE_RESPONSE, NAMESPACE);
     public static final QName BLOCK_DEVICE_REQUEST = QName.get(E_BLOCK_DEVICE_REQUEST, NAMESPACE);
     public static final QName BLOCK_DEVICE_RESPONSE = QName.get(E_BLOCK_DEVICE_RESPONSE, NAMESPACE);
     public static final QName RESUME_DEVICE_REQUEST = QName.get(E_RESUME_DEVICE_REQUEST, NAMESPACE);
