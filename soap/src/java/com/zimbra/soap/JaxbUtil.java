@@ -732,6 +732,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.SetServerOfflineResponse.class,
             com.zimbra.soap.admin.message.SuspendDeviceRequest.class,
             com.zimbra.soap.admin.message.SuspendDeviceResponse.class,
+            com.zimbra.soap.admin.message.QuarantineDeviceRequest.class,
+            com.zimbra.soap.admin.message.QuarantineDeviceResponse.class,
             com.zimbra.soap.admin.message.SyncGalAccountRequest.class,
             com.zimbra.soap.admin.message.SyncGalAccountResponse.class,
             com.zimbra.soap.admin.message.UndeployZimletRequest.class,
