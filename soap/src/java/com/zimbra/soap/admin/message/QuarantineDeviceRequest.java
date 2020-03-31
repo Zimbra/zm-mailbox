@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2012, 2013, 2014, 2016, 2020 Synacor, Inc.
+ * Copyright (C) 2020 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -30,35 +30,34 @@ import com.zimbra.soap.admin.type.DeviceId;
 import com.zimbra.soap.type.AccountSelector;
 
 /**
- * @zm-api-command-deprecation-info Note: <b>SuspendDeviceRequest</b> is deprecated. Use zimbraAdmin QuarantineDevice instead.
  * @zm-api-command-auth-required true
  * @zm-api-command-admin-auth-required true
- * @zm-api-command-description Suspend a device or all devices attached to an account from further sync actions
+ * @zm-api-command-description Quarantine a device or all devices attached to an account from further sync actions
  */
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name=SyncAdminConstants.E_SUSPEND_DEVICE_REQUEST)
-public class SuspendDeviceRequest {
+@XmlRootElement(name=SyncAdminConstants.E_QUARANTINE_DEVICE_REQUEST)
+public class QuarantineDeviceRequest {
 
     /**
      * @zm-api-field-description Account selector
      */
-    @XmlElement(name=AdminConstants.E_ACCOUNT, required=true)
+    @XmlElement(name=AdminConstants.E_ACCOUNT, required=false)
     private AccountSelector account;
 
     /**
      * @zm-api-field-description Device selector
      */
-    @XmlElement(name=SyncConstants.E_DEVICE, required=false)
+    @XmlElement(name=SyncConstants.E_DEVICE, required=true)
     private DeviceId deviceId;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private SuspendDeviceRequest() {
+    private QuarantineDeviceRequest() {
     }
 
-    public SuspendDeviceRequest(AccountSelector account) {
+    public QuarantineDeviceRequest(AccountSelector account) {
         this.account = account;
     }
 
