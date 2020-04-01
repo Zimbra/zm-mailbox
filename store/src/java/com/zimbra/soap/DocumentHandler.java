@@ -29,6 +29,7 @@ import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapFaultException;
+import com.zimbra.common.soap.ZimbraNamespace;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.Version;
 import com.zimbra.common.util.ZimbraLog;
@@ -624,8 +625,12 @@ public abstract class DocumentHandler {
 
         Pair<Element, Element> envelope = proxy.execute(request, zscProxy);
         // if we've got a SOAP session, handle the returned notifications and session ID
-        if (localSession instanceof SoapSession && zscProxy.isNotificationEnabled())
-            ((SoapSession) localSession).handleRemoteNotifications(affinityIp, envelope.getFirst());
+        if (localSession instanceof SoapSession && zscProxy.isNotificationEnabled()) {
+            if (envelope.getFirst().getOptionalElement(ZimbraNamespace.E_REFRESH) == null) {
+                envelope.getFirst().addUniqueElement(ZimbraNamespace.E_REFRESH);
+            }
+            ((SoapSession) localSession).handleRemoteNotifications(affinityIp, envelope.getFirst());   
+        }
         return envelope.getSecond().detach();
     }
 
