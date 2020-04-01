@@ -19,6 +19,7 @@ package com.zimbra.cs.mailbox;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -26,6 +27,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.common.account.Key;
+import com.zimbra.common.account.ZAttrProvisioning.DelayedIndexStatus;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -34,9 +36,10 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.callback.CallbackUtil;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.httpclient.URLUtil;
+import com.zimbra.cs.service.admin.ManageIndex;
+import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.Config;
 import com.zimbra.cs.util.Zimbra;
-import com.zimbra.soap.admin.type.PurgeMessagesStatus;
 
 /**
  * Iterates all the mailboxes in the system, purges them one at a time
@@ -240,6 +243,9 @@ extends Thread {
                             mailboxId, accountId);
                     mbox.purgeSearchHistory(null);
                 }
+
+                disableIndexingIfNecessary(account, mbox);
+
                 Config.setInt(Config.KEY_PURGE_LAST_MAILBOX_ID, mailboxId);
             }
         } catch (ServiceException se) {
@@ -262,6 +268,38 @@ extends Thread {
         return attemptedPurge;
     }
 
+    private void disableIndexingIfNecessary(Account account, Mailbox mbox) throws ServiceException {
+        if (AccountUtil.isGalSyncAccount(account)) {
+            // don't purge gal accounts!
+            return;
+        }
+        DelayedIndexStatus indexStatus = account.getDelayedIndexStatus();
+        if (indexStatus == DelayedIndexStatus.suppressed || indexStatus == DelayedIndexStatus.waitingForSearch) {
+            // indexing is already disabled
+            return;
+        }
+        if (mbox.index.isReIndexInProgress()) {
+            ZimbraLog.purge.debug("re-index is in progress for %s, skipping index purge");
+            return;
+        }
+        long maxAge = account.getDelayedIndexInactiveAccountAge();
+        if (maxAge == 0) {
+            // age-based index deletion is disabled
+            return;
+        }
+        Date lastAccess = account.getLastLogonTimestamp();
+        if (lastAccess == null) {
+            lastAccess = account.getCreateTimestamp();
+            ZimbraLog.purge.debug("%s has never logged in - using account creation time %s as index deletion cutoff", account.getName(), lastAccess);
+        }
+        if (new Date().getTime() - lastAccess.getTime() > maxAge) {
+            String maxAgeStr = account.getDelayedIndexInactiveAccountAgeAsString();
+            ZimbraLog.purge.info("account %s has been inactive for more than %s; disabling indexing and deleting index data", account.getName(), maxAgeStr);
+            OperationContext octxt = new OperationContext(account, account.isIsAdminAccount());
+            ManageIndex.disableIndexing(account, mbox, octxt);
+        }
+
+    }
     /**
      * Sleeps for the time interval specified by {@link Provisioning#A_zimbraMailPurgeSleepInterval}.
      * If sleep is interrupted, sets {@link #mShutdownRequested} to <tt>true</tt>.

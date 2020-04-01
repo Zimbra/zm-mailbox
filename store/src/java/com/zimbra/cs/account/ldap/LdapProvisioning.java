@@ -58,7 +58,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.service.ServiceException.Argument;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.util.UnmodifiableBloomFilter;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.L10nUtil;
@@ -68,6 +67,7 @@ import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.SetUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.SystemUtil;
+import com.zimbra.common.util.UnmodifiableBloomFilter;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
@@ -5609,16 +5609,21 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     private void updateLastLogon(Account acct) throws ServiceException {
         try {
+
+            // If an account has indexing suppressed, then we HAVE to log the login timestamp,
+            // to avoid the purge thread re-disabling indexing shortly after.
+            boolean forceLogTimestamp = acct.isFeatureDelayedIndexEnabled() && acct.getDelayedIndexStatus() == DelayedIndexStatus.suppressed;
+
             Config config = Provisioning.getInstance().getConfig();
             long freq = config.getLastLogonTimestampFrequency();
             // never update timestamp if frequency is 0
-            if (freq == 0) {
+            if (freq == 0 && !forceLogTimestamp) {
                 return;
             }
             Date lastLogon = acct.getLastLogonTimestamp();
             // don't update if duration specified in zimbraLastLogonTimestampFrequency
             // hasn't passed since the last timestamp was logged
-            if (lastLogon != null && (lastLogon.getTime() + freq > System.currentTimeMillis())) {
+            if (!forceLogTimestamp && lastLogon != null && (lastLogon.getTime() + freq > System.currentTimeMillis())) {
                 return;
             }
             acct.setLastLogonTimestamp(new Date());

@@ -5378,6 +5378,130 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
+     * The amount of time that an account has to be inactive for in order for
+     * its index to be deleted and its zimbraDelayedIndexStatus set to
+     * &quot;suppressed&quot;. A value of 0 means that auto-deletion of index
+     * data is disabled.. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * <p>Use getDelayedIndexInactiveAccountAgeAsString to access value as a string.
+     *
+     * @see #getDelayedIndexInactiveAccountAgeAsString()
+     *
+     * @return zimbraDelayedIndexInactiveAccountAge in millseconds, or -1 if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4003)
+    public long getDelayedIndexInactiveAccountAge() {
+        return getTimeInterval(Provisioning.A_zimbraDelayedIndexInactiveAccountAge, -1L, true);
+    }
+
+    /**
+     * The amount of time that an account has to be inactive for in order for
+     * its index to be deleted and its zimbraDelayedIndexStatus set to
+     * &quot;suppressed&quot;. A value of 0 means that auto-deletion of index
+     * data is disabled.. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @return zimbraDelayedIndexInactiveAccountAge, or null if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4003)
+    public String getDelayedIndexInactiveAccountAgeAsString() {
+        return getAttr(Provisioning.A_zimbraDelayedIndexInactiveAccountAge, null, true);
+    }
+
+    /**
+     * The amount of time that an account has to be inactive for in order for
+     * its index to be deleted and its zimbraDelayedIndexStatus set to
+     * &quot;suppressed&quot;. A value of 0 means that auto-deletion of index
+     * data is disabled.. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param zimbraDelayedIndexInactiveAccountAge new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4003)
+    public void setDelayedIndexInactiveAccountAge(String zimbraDelayedIndexInactiveAccountAge) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDelayedIndexInactiveAccountAge, zimbraDelayedIndexInactiveAccountAge);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The amount of time that an account has to be inactive for in order for
+     * its index to be deleted and its zimbraDelayedIndexStatus set to
+     * &quot;suppressed&quot;. A value of 0 means that auto-deletion of index
+     * data is disabled.. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param zimbraDelayedIndexInactiveAccountAge new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4003)
+    public Map<String,Object> setDelayedIndexInactiveAccountAge(String zimbraDelayedIndexInactiveAccountAge, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDelayedIndexInactiveAccountAge, zimbraDelayedIndexInactiveAccountAge);
+        return attrs;
+    }
+
+    /**
+     * The amount of time that an account has to be inactive for in order for
+     * its index to be deleted and its zimbraDelayedIndexStatus set to
+     * &quot;suppressed&quot;. A value of 0 means that auto-deletion of index
+     * data is disabled.. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4003)
+    public void unsetDelayedIndexInactiveAccountAge() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDelayedIndexInactiveAccountAge, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The amount of time that an account has to be inactive for in order for
+     * its index to be deleted and its zimbraDelayedIndexStatus set to
+     * &quot;suppressed&quot;. A value of 0 means that auto-deletion of index
+     * data is disabled.. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4003)
+    public Map<String,Object> unsetDelayedIndexInactiveAccountAge(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDelayedIndexInactiveAccountAge, "");
+        return attrs;
+    }
+
+    /**
      * maximum aggregate quota for the domain in bytes
      *
      * @return zimbraDomainAggregateQuota, or 0 if unset

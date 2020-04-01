@@ -5567,6 +5567,20 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDefaultSortByRelevance = "zimbraDefaultSortByRelevance";
 
     /**
+     * The amount of time that an account has to be inactive for in order for
+     * its index to be deleted and its zimbraDelayedIndexStatus set to
+     * &quot;suppressed&quot;. A value of 0 means that auto-deletion of index
+     * data is disabled.. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4003)
+    public static final String A_zimbraDelayedIndexInactiveAccountAge = "zimbraDelayedIndexInactiveAccountAge";
+
+    /**
      * Whether MBS generates index data of the account&#039;s mailbox. The
      * key works only when zimbraFeatureDelayedIndexEnabled is TRUE.
      * suppressed - Not generate index. (default) When administrator accesses
@@ -9861,6 +9875,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1011)
     public static final String A_zimbraMaxMailItemsPerPage = "zimbraMaxMailItemsPerPage";
+
+    /**
+     * Maximum number of clauses in batched Solr delete-by-query operations;
+     * 0 means no limit
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4005)
+    public static final String A_zimbraMaxSolrBatchDeletionSize = "zimbraMaxSolrBatchDeletionSize";
 
     /**
      * max number of voice items per page, Web client (not server) verifies
@@ -16700,6 +16723,18 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1389)
     public static final String A_zimbraSocialcastURL = "zimbraSocialcastURL";
+
+    /**
+     * Amount of time between batched Solr delete-by-query operations. Must
+     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4004)
+    public static final String A_zimbraSolrBatchDeletionInterval = "zimbraSolrBatchDeletionInterval";
 
     /**
      * The number of times the server will attempt to connect to a SOLR core.

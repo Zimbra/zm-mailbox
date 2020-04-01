@@ -17,10 +17,13 @@ import com.zimbra.common.util.ZimbraLog;
 public class MailboxClusterUtil {
 
     private static String mailboxWorkerName;
+    private static int mailboxWorkerIndex;
+
     static {
         try {
             mailboxWorkerName = Files.asCharSource(new File("/var/run/pod-info/pod-name"), Charset.defaultCharset()).read();
             ZimbraLog.mailbox.debug("mailbox worker name is %s", mailboxWorkerName);
+            mailboxWorkerIndex = parseMailboxWorkerIndex(mailboxWorkerName);
         } catch (IOException e) {
             mailboxWorkerName = String.format("zmc-mailbox-%s", UUIDUtil.generateUUID());
             ZimbraLog.mailbox.warn("Unable to determine mailbox worker name! Generated name '%s' instead", mailboxWorkerName);
@@ -31,6 +34,19 @@ public class MailboxClusterUtil {
         return mailboxWorkerName;
     }
 
+    public static int getMailboxWorkerIndex() {
+        return mailboxWorkerIndex;
+    }
+
+    private static int parseMailboxWorkerIndex(String workerName) {
+        String[] parts = workerName.split("-");
+        try {
+            return Integer.parseInt(parts[parts.length - 1]);
+        } catch (NumberFormatException e) {
+            ZimbraLog.mailbox.warn("unable to determine mailbox worker index, setting to 0");
+            return 0;
+        }
+    }
 
     public static String[] getAllMailboxPodIPs() throws ServiceException {
         return getAllMailboxPodIPs("zmc-mailbox");
