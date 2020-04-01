@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2019, 2020 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -3647,7 +3647,12 @@ public class DbMailItem {
         }
     }
 
+    @Deprecated
     public static List<Pop3Message> loadPop3Folder(Set<Folder> folders, Date popSince) throws ServiceException {
+        return loadPop3Folder(folders, popSince, false);
+    }
+
+    public static List<Pop3Message> loadPop3Folder(Set<Folder> folders, Date popSince, boolean isMetadataRequired) throws ServiceException {
         assert !folders.isEmpty() : folders;
         Mailbox mbox = Iterables.get(folders, 0).getMailbox();
         long popDate = popSince == null ? -1 : Math.max(popSince.getTime(), -1);
@@ -3658,8 +3663,10 @@ public class DbMailItem {
         ResultSet rs = null;
         try {
             String dateConstraint = popDate < 0 ? "" : " AND date > ?";
+            String select_exprs = isMetadataRequired ? "mi.id, mi.size, mi.blob_digest, mi.metadata" :
+                                                       "mi.id, mi.size, mi.blob_digest";
             stmt = conn.prepareStatement(
-                    "SELECT mi.id, mi.size, mi.blob_digest, mi.metadata FROM " + getMailItemTableName(mbox, " mi") +
+                    "SELECT " + select_exprs + " FROM " + getMailItemTableName(mbox, " mi") +
                     " WHERE " + IN_THIS_MAILBOX_AND + DbUtil.whereIn("folder_id", folders.size()) +
                     " AND type = " + MailItem.Type.MESSAGE.toByte() + " AND " +
                     Db.getInstance().bitAND("flags", String.valueOf(Flag.BITMASK_DELETED | Flag.BITMASK_POPPED)) +
@@ -3681,9 +3688,11 @@ public class DbMailItem {
 
             while (rs.next()) {
                 Metadata md = null;
-                String buf = DbMailItem.decodeMetadata(rs.getString(4));
-                if (buf != null) {
-                    md = new Metadata(buf);
+                if (isMetadataRequired) {
+                    String buf = DbMailItem.decodeMetadata(rs.getString(4));
+                    if (buf != null) {
+                        md = new Metadata(buf);
+                    }
                 }
                 result.add(new Pop3Message(rs.getInt(1), rs.getLong(2), rs.getString(3), md));
             }

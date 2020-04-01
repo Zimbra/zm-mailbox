@@ -3704,7 +3704,12 @@ public class Mailbox implements MailboxStore {
             for (int folderId : folderIds) {
                 folders.add(getFolderById(folderId));
             }
-            List<Pop3Message> p3list = DbMailItem.loadPop3Folder(folders.build(), popSince);
+            Account acct = octxt.getAuthenticatedUser();
+            boolean useCustomPop3UID = false;
+            if (null != acct) {
+                useCustomPop3UID = acct.getBooleanAttr(Provisioning.A_zimbraFeatureCustomUIDEnabled, false);
+            }
+            List<Pop3Message> p3list = DbMailItem.loadPop3Folder(folders.build(), popSince, useCustomPop3UID);
             success = true;
             return p3list;
         } finally {
