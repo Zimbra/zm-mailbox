@@ -324,7 +324,7 @@ public final class ZimbraQuery {
     /**
      * Returns true if this query has at least one text query, false if it's entirely DB query.
      */
-    private boolean hasTextOperation() {
+    public boolean hasTextOperation() {
         for (Query query : clauses) {
             if (query.hasTextOperation()) {
                 return true;

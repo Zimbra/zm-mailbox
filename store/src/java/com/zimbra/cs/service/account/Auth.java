@@ -34,6 +34,7 @@ import org.apache.commons.lang.StringUtils;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ZAttrProvisioning.AutoProvAuthMech;
+import com.zimbra.common.account.ZAttrProvisioning.DelayedIndexStatus;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
@@ -64,8 +65,15 @@ import com.zimbra.cs.account.auth.twofactor.TrustedDevices;
 import com.zimbra.cs.account.auth.twofactor.TwoFactorAuth;
 import com.zimbra.cs.account.krb5.Krb5Principal;
 import com.zimbra.cs.account.names.NameUtil.EmailAddress;
+import com.zimbra.cs.account.soap.SoapProvisioning;
+import com.zimbra.cs.account.soap.SoapProvisioning.ManageIndexType;
+import com.zimbra.cs.index.MailboxIndexUtil;
 import com.zimbra.cs.listeners.AuthListener;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.service.AuthProvider;
+import com.zimbra.cs.service.admin.ManageIndex;
 import com.zimbra.cs.service.util.JWTUtil;
 import com.zimbra.cs.servlet.CsrfFilter;
 import com.zimbra.cs.servlet.util.CsrfUtil;
@@ -414,6 +422,7 @@ public class Auth extends AccountDocumentHandler {
         }
         httpReq.setAttribute(CsrfFilter.AUTH_TOKEN, at);
         AuthListener.invokeOnSuccess(acct);
+
         return doResponse(request, at, zsc, context, acct, csrfSupport, trustedToken, newDeviceId);
     }
 
@@ -428,7 +437,7 @@ public class Auth extends AccountDocumentHandler {
         if (jwtElem != null && authElem != null) {
             ZimbraLog.account.debug("both jwt and auth element can not be present in auth request");
             return Boolean.FALSE;
-        } 
+        }
         if (jwtElem == null && authElem != null && TokenType.JWT.equals(tokenType)) {
             ZimbraLog.account.debug("jwt token type not supported with auth element");
             return Boolean.FALSE;
@@ -471,6 +480,8 @@ public class Auth extends AccountDocumentHandler {
     throws ServiceException {
         Element response = zsc.createElement(AccountConstants.AUTH_RESPONSE);
         at.encodeAuthResp(response, false);
+        //If this account has indexing suppressed, start a re-index
+        handleDelayedIndexing(acct, zsc);
 
         /*
          * bug 67078
@@ -569,4 +580,21 @@ public class Auth extends AccountDocumentHandler {
             AccountUtil.addAccountToLogContext(prov, aid, ZimbraLog.C_ANAME, ZimbraLog.C_AID, null);
     }
 
+    private void handleDelayedIndexing(Account acct, ZimbraSoapContext zsc) throws ServiceException {
+        if (acct.isFeatureDelayedIndexEnabled() && acct.getDelayedIndexStatus() == DelayedIndexStatus.suppressed) {
+            if (!MailboxIndexUtil.isUserAgentAllowedForChangingIndexStatus(zsc.getUserAgent())) {
+                return;
+            }
+            if (Provisioning.onLocalServer(acct)) {
+                ZimbraLog.index.info("re-enabling indexing for %s (account is local)", acct.getName());
+                Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
+                OperationContext octxt = new OperationContext(acct, acct.isIsAdminAccount());
+                ManageIndex.enableIndexing(acct, mbox, octxt);
+            } else {
+                ZimbraLog.index.info("re-enabling indexing for %s and flushing cache (account is remote)", acct.getName());
+                SoapProvisioning sp = SoapProvisioning.getAdminInstance();
+                sp.manageIndex(acct, ManageIndexType.enableIndexing);
+            }
+        }
+    }
 }

@@ -101,8 +101,7 @@ public final class ManageIndex extends AdminDocumentHandler {
             break;
         case ENABLE_INDEXING:
             ZimbraLog.index.info("enabling indexing for %s and recreating index", account.getName());
-            account.setDelayedIndexStatus(DelayedIndexStatus.indexing);
-            MailboxIndexUtil.asyncReIndexMailbox(mbox, octxt);
+            enableIndexing(account, mbox, octxt);
             break;
         default:
             break;
@@ -139,5 +138,10 @@ public final class ManageIndex extends AdminDocumentHandler {
             }
             throw ServiceException.INVALID_REQUEST("invalid action specified", null);
         }
+    }
+
+    public static void enableIndexing(Account acct, Mailbox mbox, OperationContext octxt) throws ServiceException {
+        acct.setDelayedIndexStatus(DelayedIndexStatus.indexing);
+        MailboxIndexUtil.asyncReIndexMailbox(mbox, octxt);
     }
 }

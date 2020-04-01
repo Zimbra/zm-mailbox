@@ -1334,14 +1334,13 @@ public class SoapProvisioning extends Provisioning {
 
     public String manageIndex(Account acct, ManageIndexType type)
     throws ServiceException {
-        Server server = getServer(acct);
         MailboxByAccountIdSelector mbox = new MailboxByAccountIdSelector(acct.getId());
         String action = null;
         if (type != null) {
             action = type.toString();
         }
         ManageIndexRequest req = new ManageIndexRequest(action, mbox);
-        ManageIndexResponse resp = this.invokeJaxb(req, server.getAttr(A_zimbraServiceHostname));
+        ManageIndexResponse resp = this.invokeJaxb(req, Provisioning.affinityServer(acct));
         return resp.getStatus();
     }
 

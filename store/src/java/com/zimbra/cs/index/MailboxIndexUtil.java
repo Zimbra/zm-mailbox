@@ -9,8 +9,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 import com.zimbra.common.account.ZAttrProvisioning;
+import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Pair;
@@ -170,5 +172,15 @@ public class MailboxIndexUtil {
         public Set<MailItem.Type> getTypes() {
             return getSecond();
         }
+    }
+
+    public static boolean isUserAgentAllowedForChangingIndexStatus(String ua) {
+        if (Strings.isNullOrEmpty(ua) && DebugConfig.delayedIndexingIgnoresEmptyUserAgent) {
+            return false;
+        } else if (DebugConfig.delayedIndexingIgnoresZClient) {
+            String[] parts = ua.split("/");
+            return !parts[0].equalsIgnoreCase("zclient");
+        }
+        return true;
     }
 }
