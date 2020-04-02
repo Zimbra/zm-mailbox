@@ -606,15 +606,16 @@ public class SolrIndex extends IndexStore {
         public void deleteDocument(List<ItemIndexDeletionInfo> deleteInfo) throws IOException, ServiceException {
             String route = String.format("%s!", accountId);
             int[] itemIds = deleteInfo.stream().mapToInt(i -> i.getItemId()).toArray();
-            UpdateRequest req = new UpdateRequest();
-
-            BooleanQuery.Builder deleteByQueryClauses = null;
+            Map<IndexType, UpdateRequest> requestByIndexType = new HashMap<>();
+            Map<IndexType, BooleanQuery.Builder> deleteByQueryByIndexType = new HashMap<>();
             int numDeletedById = 0;
             int numDeletedByQuery = 0;
             for (ItemIndexDeletionInfo info : deleteInfo) {
                 int itemId = info.getItemId();
                 int numIndexDocs = info.getNumIndexDocs();
+                IndexType indexType = info.getIndexType();
                 if (numIndexDocs > 0) {
+                    UpdateRequest req = requestByIndexType.computeIfAbsent(indexType, k -> new UpdateRequest());
                     for (int part = 1; part <= numIndexDocs; part++) {
                         String docId = solrHelper.getSolrId(accountId, itemId, part);
                         req.deleteById(docId, route);
@@ -623,34 +624,41 @@ public class SolrIndex extends IndexStore {
                 } else {
                     ZimbraLog.index.warn("numIndexDocs for item %s is unknown, using delete-by-query instead", itemId);
                     if (DebugConfig.disableSolrBatchDeletesByQuery) {
-                        if (deleteByQueryClauses == null) {
-                            deleteByQueryClauses = new BooleanQuery.Builder();
-                        }
+                        BooleanQuery.Builder deleteByQueryClauses = deleteByQueryByIndexType.computeIfAbsent(indexType, k -> new BooleanQuery.Builder());
                         deleteByQueryClauses.add(new TermQuery(new Term(LuceneFields.L_MAILBOX_BLOB_ID, Integer.toString(itemId))), Occur.SHOULD);
                     } else {
-                        String collection = solrHelper.getCoreName(accountId);
+                        String collection = solrHelper.getCoreName(accountId, indexType);
                         Deletion deletion = new ItemDeletion(collection, route, itemId);
                         BatchedIndexDeletions.getInstance().addDeletion(deletion);
                     }
                     numDeletedByQuery++;
                 }
             }
-            if (numDeletedByQuery > 0 && deleteByQueryClauses != null) {
+            if (numDeletedByQuery > 0 && !deleteByQueryByIndexType.isEmpty()) {
                 BooleanQuery.Builder deleteByQueryBuilder;
-                if (solrHelper.needsAccountFilter()) {
-                    deleteByQueryBuilder = new BooleanQuery.Builder();
-                    deleteByQueryBuilder.add(new TermQuery(new Term(LuceneFields.L_ACCOUNT_ID, accountId)), Occur.MUST);
-                    deleteByQueryBuilder.add(deleteByQueryClauses.build(), Occur.MUST);
-                } else {
-                    deleteByQueryBuilder = deleteByQueryClauses;
+                for (Map.Entry<IndexType, BooleanQuery.Builder> entry: deleteByQueryByIndexType.entrySet()) {
+                    IndexType indexType = entry.getKey();
+                    BooleanQuery.Builder deleteByQueryClauses = entry.getValue();
+                    if (solrHelper.needsAccountFilter()) {
+                        deleteByQueryBuilder = new BooleanQuery.Builder();
+                        deleteByQueryBuilder.add(new TermQuery(new Term(LuceneFields.L_ACCOUNT_ID, accountId)), Occur.MUST);
+                        deleteByQueryBuilder.add(deleteByQueryClauses.build(), Occur.MUST);
+                    } else {
+                        deleteByQueryBuilder = deleteByQueryClauses;
+                    }
+                    UpdateRequest req = requestByIndexType.computeIfAbsent(indexType, k -> new UpdateRequest());
+                    req.deleteByQuery(deleteByQueryBuilder.build().toString());
                 }
-                req.deleteByQuery(deleteByQueryBuilder.build().toString());
             }
-            try {
-                solrHelper.executeUpdate(accountId, req);
-                ZimbraLog.index.debug("Deleted index documents for items %s (%s docs)", Arrays.toString(itemIds), numDeletedById);
-            } catch (ServiceException e) {
-                ZimbraLog.index.error("Problem deleting index documents for items %s (%s docs)", Arrays.toString(itemIds), numDeletedById);
+            ZimbraLog.index.debug("Deleted index documents for items %s (%s docs)", Arrays.toString(itemIds), numDeletedById);
+            for (Map.Entry<IndexType, UpdateRequest> entry: requestByIndexType.entrySet()) {
+                IndexType indexType = entry.getKey();
+                UpdateRequest req = entry.getValue();
+                try {
+                    solrHelper.executeUpdate(accountId, req, indexType);
+                } catch (ServiceException e) {
+                    ZimbraLog.index.error("Problem deleting index documents for items %s (%s docs)", Arrays.toString(itemIds), numDeletedById);
+                }
             }
         }
 

@@ -23,6 +23,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxIndex.IndexType;
 import com.zimbra.cs.mailbox.MailboxIndex.ItemIndexDeletionInfo;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
@@ -203,7 +204,7 @@ import com.zimbra.qa.unittest.TestUtil;
         IndexingQueueAdapter queueAdapter = IndexingQueueAdapter.getFactory().getAdapter();
         List<ItemIndexDeletionInfo> deletionInfos = new ArrayList<>(ids.size());
         for (Integer id: ids) {
-            deletionInfos.add(new ItemIndexDeletionInfo(id, 1));
+            deletionInfos.add(new ItemIndexDeletionInfo(id, 1, IndexType.MAILBOX));
         }
         DeleteFromIndexTaskLocator itemLocator = new DeleteFromIndexTaskLocator(deletionInfos, mbox.getAccountId(), mbox.getId(), mbox.getSchemaGroupId());
         queueAdapter.put(itemLocator);
@@ -237,7 +238,7 @@ import com.zimbra.qa.unittest.TestUtil;
 
         //queue items for deletion from index
         IndexingQueueAdapter queueAdapter = IndexingQueueAdapter.getFactory().getAdapter();
-        ItemIndexDeletionInfo itemDelete = new ItemIndexDeletionInfo(ids.get(0), 1);
+        ItemIndexDeletionInfo itemDelete = new ItemIndexDeletionInfo(ids.get(0), 1, IndexType.MAILBOX);
         DeleteFromIndexTaskLocator itemLocator = new DeleteFromIndexTaskLocator(itemDelete, mbox.getAccountId(), mbox.getId(), mbox.getSchemaGroupId());
         queueAdapter.put(itemLocator);
         //start indexing service
@@ -269,8 +270,8 @@ import com.zimbra.qa.unittest.TestUtil;
 
         //queue items for deletion from index
         List<ItemIndexDeletionInfo> idsToDelete = Lists.newArrayList();
-        idsToDelete.add(new ItemIndexDeletionInfo(ids.get(0), 1));
-        idsToDelete.add(new ItemIndexDeletionInfo(ids.get(1), 1));
+        idsToDelete.add(new ItemIndexDeletionInfo(ids.get(0), 1, IndexType.MAILBOX));
+        idsToDelete.add(new ItemIndexDeletionInfo(ids.get(1), 1, IndexType.MAILBOX));
         IndexingQueueAdapter queueAdapter = IndexingQueueAdapter.getFactory().getAdapter();
         DeleteFromIndexTaskLocator itemLocator = new DeleteFromIndexTaskLocator(idsToDelete, mbox.getAccountId(), mbox.getId(), mbox.getSchemaGroupId());
         queueAdapter.put(itemLocator);

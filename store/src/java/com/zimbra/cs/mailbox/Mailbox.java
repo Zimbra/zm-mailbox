@@ -402,12 +402,8 @@ public class Mailbox implements MailboxStore {
             return item;
         }
 
-        public IndexType getIndexType() {
-            if (item instanceof Contact) {
-                return IndexType.CONTACTS;
-            } else {
-                return IndexType.MAILBOX;
-            }
+        public IndexType getIndexType() throws ServiceException {
+            return IndexType.getByItemType(item.getType());
         }
     }
 
