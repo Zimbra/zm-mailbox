@@ -5,20 +5,20 @@ ARG DOCKER_REPO_NS=dev-registry.zimbra-docker-registry.tk
 
 #Build stage image
 FROM ${DOCKER_REPO_NS}/zms-core-utils:1.0 as utils
-FROM ${DOCKER_REPO_NS}/zms-zcs-lib:1.0.1 as lib
+FROM ${DOCKER_REPO_NS}/zms-zcs-lib:1.0.2 as lib
 FROM ${DOCKER_REPO_NS}/zms-jetty-conf:1.0 as jetty-conf
 FROM ${DOCKER_REPO_NS}/zms-jython:1.0 as jython
 FROM ${DOCKER_REPO_NS}/zms-perl:1.0 as perl
 FROM ${DOCKER_REPO_NS}/zms-db-conf:1.0 as db-conf
-FROM ${DOCKER_REPO_NS}/zms-admin-console:1.0.0 as admin-console
+FROM ${DOCKER_REPO_NS}/zms-admin-console:1.0.1 as admin-console
 FROM ${DOCKER_REPO_NS}/zms-ldap-utilities:1.0 as ldap
 FROM ${DOCKER_REPO_NS}/zms-timezones:1.0 as timezone
 FROM ${DOCKER_REPO_NS}/zms-core-extension:1.0.0 as ext-core
 FROM ${DOCKER_REPO_NS}/zms-core-network-extension:1.0.0 as ext-core-network
-FROM ${DOCKER_REPO_NS}/zms-core-zimlets:1.0.0 as zimlet-webapp
+FROM ${DOCKER_REPO_NS}/zms-core-zimlets:1.0.1 as zimlet-webapp
 
 # Final stage, copy contents from build stage
-FROM ${DOCKER_REPO_NS}/zms-base:1.0.4
+FROM ${DOCKER_REPO_NS}/zms-base:1.0.5
 COPY --from=utils /opt/zimbra/ /opt/zimbra/
 COPY --from=lib /opt/zimbra/lib/ /opt/zimbra/lib/
 COPY --from=lib /opt/zimbra/jetty_base/common/ /opt/zimbra/jetty_base/common/
