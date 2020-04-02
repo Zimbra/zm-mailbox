@@ -30,7 +30,7 @@ public enum LmtpReply {
 
     BYE(221, null, new DetailCB() { protected String detail() { return LmtpConfig.getInstance().getGoodbye(); }}),
     GREETING(220, null, new DetailCB() { protected String detail() { return LmtpConfig.getInstance().getGreeting(); }}),
-    
+
     SERVICE_DISABLED(421, "4.3.2", "Service not available, closing transmission channel"),
     MAILBOX_DISABLED(450, "4.2.1", "Mailbox disabled, not accepting messages"),
     MAILBOX_NOT_ON_THIS_SERVER(450, "4.2.0", "Mailbox is not on this server"),
@@ -38,7 +38,7 @@ public enum LmtpReply {
     TLS_REQUIRED(451, "4.2.2", "Server accepts messages only on TLS connection"),
     TEMPORARY_FAILURE_OVER_QUOTA(452, "4.2.2", "Over quota"),
     TIMEOUT(421, null, new DetailCB() { protected String detail() { return LmtpConfig.getInstance().getDescription() + " Timeout exceeded"; } }),
-    
+
     NESTED_MAIL_COMMAND(503, "5.5.1", "Nested MAIL command"),
     NO_RECIPIENTS(503, "5.5.1", "No recipients"),
     MISSING_MAIL_TO(503, "5.5.1", "Need MAIL command"),
@@ -54,16 +54,16 @@ public enum LmtpReply {
     PERMANENT_MESSAGE_REFUSED(550, "5.7.1", "Message rejected"),
     PERMANENT_FAILURE_OVER_QUOTA(552, "5.2.2", "Over quota"),
     PERMANENT_FAILURE(554, "5.0.0", "Permanent message delivery failure");
-    
+
     private int mCode;
     private String mEnhancedCode;
     private String mDetail;
     private DetailCB mDetailCallback;
-    
+
     private abstract static class DetailCB {
 	protected abstract String detail();
     }
-    
+
     private LmtpReply(int code, String enhancedCode, String detail) {
 	mCode = code;
 	mEnhancedCode = enhancedCode;
@@ -75,15 +75,15 @@ public enum LmtpReply {
 	mEnhancedCode = enhancedCode;
 	mDetailCallback = detail;
     }
-    
+
     public String toString() {
 	String detail;
 	if (mDetailCallback != null)
 	    detail = mDetailCallback.detail();
 	else
 	    detail = mDetail;
-	if (mEnhancedCode == null) 
-	    return mCode + " " + detail; 
+	if (mEnhancedCode == null)
+	    return mCode + " " + detail;
 	else
 	    return mCode + " " + mEnhancedCode + " " + detail;
     }
