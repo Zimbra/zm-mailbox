@@ -301,6 +301,7 @@ public class Mailbox implements MailboxStore {
     //This id should be incremented if any new ID_FOLDER_* is added.
     public static final int HIGHEST_SYSTEM_ID = FolderConstants.HIGHEST_SYSTEM_ID; // 18;
 
+    public static final int EAS_BLOCKED_EMAIL_ID = 255;
     public static final int FIRST_USER_ID = 256;
 
 
