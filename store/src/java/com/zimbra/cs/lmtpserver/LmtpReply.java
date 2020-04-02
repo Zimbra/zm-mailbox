@@ -49,6 +49,7 @@ public enum LmtpReply {
     INVALID_SENDER_ADDRESS(501, "5.5.4", "Syntax error in sender address"),
     INVALID_BODY_PARAMETER(501, "5.5.4", "Syntax error in BODY parameter"),
     INVALID_SIZE_PARAMETER(501, "5.5.4", "Syntax error in SIZE parameter"),
+    LINE_TOO_LONG(500, null, "Maximum line length exceeded"),
 
     NO_SUCH_USER(550, "5.1.1", "No such user here"),
     PERMANENT_MESSAGE_REFUSED(550, "5.7.1", "Message rejected"),
