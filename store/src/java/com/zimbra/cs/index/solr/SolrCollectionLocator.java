@@ -8,6 +8,7 @@ import org.apache.solr.common.SolrInputDocument;
 
 import com.google.common.base.Joiner;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.index.solr.SolrIndex.OpType;
 import com.zimbra.cs.mailbox.MailboxIndex.IndexType;
 
 /**
@@ -18,13 +19,17 @@ public abstract class SolrCollectionLocator {
     protected static final Joiner idJoiner = Joiner.on("_");
 
     public String getCollectionName(String accountId, IndexType indexType) throws ServiceException {
-        return getCollectionName(accountId, EnumSet.of(indexType));
+        return getCollectionName(accountId, indexType, OpType.WRITE);
+    }
+
+    public String getCollectionName(String accountId, IndexType indexType, OpType opType) throws ServiceException {
+        return getCollectionName(accountId, EnumSet.of(indexType), opType);
     }
 
     /**
      * Return the name of the Solr collection used to store documents for the given account ID
      */
-    abstract String getCollectionName(String accountId, Collection<IndexType> indexTypes) throws ServiceException;
+    abstract String getCollectionName(String accountId, Collection<IndexType> indexTypes, OpType opType) throws ServiceException;
 
     /**
      * Optionally post-process the Solr document appropriately

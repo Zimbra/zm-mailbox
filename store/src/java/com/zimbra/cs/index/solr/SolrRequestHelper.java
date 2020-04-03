@@ -15,6 +15,7 @@ import org.apache.solr.common.SolrInputDocument;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.LuceneFields;
+import com.zimbra.cs.index.solr.SolrIndex.OpType;
 import com.zimbra.cs.mailbox.MailboxIndex.IndexType;
 
 /**
@@ -54,7 +55,11 @@ public abstract class SolrRequestHelper implements Closeable {
     public abstract SolrResponse executeQueryRequest(String accountId, SolrQuery query, Collection<IndexType> indexTypes) throws ServiceException;
 
     public String getCoreName(String accountId, IndexType indexType) throws ServiceException {
-        return locator.getCollectionName(accountId, indexType);
+        return getCoreName(accountId, indexType, OpType.WRITE);
+    }
+
+    public String getCoreName(String accountId, IndexType indexType, OpType opType) throws ServiceException {
+        return locator.getCollectionName(accountId, indexType, opType);
     }
 
     public boolean needsAccountFilter() {

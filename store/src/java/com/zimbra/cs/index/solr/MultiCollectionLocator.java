@@ -10,11 +10,13 @@ import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.params.ShardParams;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.LuceneFields;
+import com.zimbra.cs.index.solr.SolrIndex.OpType;
 import com.zimbra.cs.mailbox.MailboxIndex.IndexType;
 
 public class MultiCollectionLocator extends SolrCollectionLocator {
@@ -22,7 +24,7 @@ public class MultiCollectionLocator extends SolrCollectionLocator {
     private static final Joiner JOINER = Joiner.on(",");
 
     @Override
-    String getCollectionName(String accountId, Collection<IndexType> indexTypes) throws ServiceException {
+    String getCollectionName(String accountId, Collection<IndexType> indexTypes, OpType opType) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         Account account = prov.getAccountById(accountId);
         if (account == null) {
@@ -31,20 +33,31 @@ public class MultiCollectionLocator extends SolrCollectionLocator {
         }
         List<String> collections = new ArrayList<>(indexTypes.size());
         for (IndexType type: indexTypes) {
-            collections.add(getCollectionName(accountId, prov, type));
+            collections.add(getCollectionName(accountId, prov, type, opType));
         }
         return JOINER.join(collections);
     }
 
-    private String getCollectionName(String accountId, Provisioning prov, IndexType indexType) throws ServiceException {
+    private String getCollectionName(String accountId, Provisioning prov, IndexType indexType, OpType opType) throws ServiceException {
         int numCollections;
         switch (indexType) {
         case CONTACTS:
             numCollections = LC.zimbra_contact_index_num_collections.intValue();
-            if(numCollections == 1) {
-                return LC.zimbra_index_collections_prefix.value();
+            String collectionPrefix;
+            if (opType == OpType.WRITE) {
+                collectionPrefix = LC.zimbra_contact_index_collections_prefix.value();
             } else {
-                return getCollectionName(accountId, LC.zimbra_index_collections_prefix.value(), numCollections);
+                String readAliasPrefix = LC.zimbra_contact_index_read_alias_prefix.value();
+                if (Strings.isNullOrEmpty(readAliasPrefix)) {
+                    collectionPrefix = LC.zimbra_contact_index_collections_prefix.value();
+                } else {
+                    collectionPrefix = readAliasPrefix;
+                }
+            }
+            if(numCollections == 1) {
+                return collectionPrefix;
+            } else {
+                return getCollectionName(accountId, collectionPrefix, numCollections);
             }
         case MAILBOX:
             numCollections = LC.zimbra_index_num_collections.intValue();

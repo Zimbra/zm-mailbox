@@ -15,6 +15,7 @@ import org.apache.solr.client.solrj.request.QueryRequest;
 import org.apache.solr.client.solrj.request.UpdateRequest;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.index.solr.SolrIndex.OpType;
 import com.zimbra.cs.mailbox.MailboxIndex.IndexType;
 
 public class SolrCloudHelper extends SolrRequestHelper {
@@ -36,19 +37,19 @@ public class SolrCloudHelper extends SolrRequestHelper {
 
     @Override
     public void deleteIndex(String accountId, IndexType indexType) throws ServiceException {
-        SolrUtils.deleteCloudIndex(cloudClient, getCoreName(accountId, indexType));
+        SolrUtils.deleteCloudIndex(cloudClient, getCoreName(accountId, indexType, OpType.WRITE));
     }
 
     @Override
     public void executeUpdateRequest(String accountId, UpdateRequest request, IndexType indexType) throws ServiceException {
-        String collection = locator.getCollectionName(accountId, indexType);
+        String collection = locator.getCollectionName(accountId, indexType, OpType.WRITE);
         doRequest(request, cloudClient, collection);
     }
 
     @Override
     public SolrResponse executeQueryRequest(String accountId, SolrQuery query, Collection<IndexType> indexTypes) throws ServiceException {
         QueryRequest queryRequest = new QueryRequest(query, METHOD.POST);
-        String collections = locator.getCollectionName(accountId, indexTypes);
+        String collections = locator.getCollectionName(accountId, indexTypes, OpType.READ);
         return doRequest(queryRequest, cloudClient, collections);
     }
 

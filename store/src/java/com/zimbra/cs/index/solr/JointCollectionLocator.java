@@ -8,6 +8,7 @@ import org.apache.solr.common.params.ShardParams;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.LuceneFields;
+import com.zimbra.cs.index.solr.SolrIndex.OpType;
 import com.zimbra.cs.mailbox.MailboxIndex.IndexType;
 
 /**
@@ -28,7 +29,7 @@ public class JointCollectionLocator extends SolrCollectionLocator {
     }
 
     @Override
-    public String getCollectionName(String accountId, Collection<IndexType> indexTypes) throws ServiceException {
+    public String getCollectionName(String accountId, Collection<IndexType> indexTypes, OpType opType) throws ServiceException {
         return indexName != null ? indexName : nameFunc.getIndexName(accountId, indexTypes);
     }
 

@@ -5,6 +5,7 @@ import java.util.Collection;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.common.SolrInputDocument;
 
+import com.zimbra.cs.index.solr.SolrIndex.OpType;
 import com.zimbra.cs.mailbox.MailboxIndex.IndexType;
 
 /**
@@ -19,7 +20,7 @@ public class AccountCollectionLocator extends SolrCollectionLocator {
     }
 
     @Override
-    public String getCollectionName(String accountId, Collection<IndexType> indexTypes) {
+    public String getCollectionName(String accountId, Collection<IndexType> indexTypes, OpType opType) {
         return String.format("%s_%s",corePrefix, accountId);
     }
 

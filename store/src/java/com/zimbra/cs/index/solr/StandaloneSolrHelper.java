@@ -14,6 +14,7 @@ import org.apache.solr.client.solrj.request.QueryRequest;
 import org.apache.solr.client.solrj.request.UpdateRequest;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.index.solr.SolrIndex.OpType;
 import com.zimbra.cs.mailbox.MailboxIndex.IndexType;
 
 public class StandaloneSolrHelper extends SolrRequestHelper {
@@ -34,7 +35,7 @@ public class StandaloneSolrHelper extends SolrRequestHelper {
 
     @Override
     protected void executeUpdateRequest(String accountId, UpdateRequest request, IndexType indexType) throws ServiceException {
-        String coreName = locator.getCollectionName(accountId, indexType);
+        String coreName = locator.getCollectionName(accountId, indexType, OpType.WRITE);
         try(SolrClient solrClient = SolrUtils.getSolrClient(httpClient, baseUrl, coreName)) {
             doRequest(accountId, request, solrClient);
         } catch (IOException e) {
@@ -44,7 +45,7 @@ public class StandaloneSolrHelper extends SolrRequestHelper {
 
     @Override
     public SolrResponse executeQueryRequest(String accountId, SolrQuery query, Collection<IndexType> indexTypes) throws ServiceException {
-        String coreName = locator.getCollectionName(accountId, indexTypes);
+        String coreName = locator.getCollectionName(accountId, indexTypes, OpType.READ);
         try(SolrClient solrClient = SolrUtils.getSolrClient(httpClient, baseUrl, coreName)) {
             QueryRequest queryRequest = new QueryRequest(query, METHOD.POST);
             return doRequest(accountId, queryRequest, solrClient);
@@ -55,7 +56,7 @@ public class StandaloneSolrHelper extends SolrRequestHelper {
 
     @Override
     public void deleteIndex(String accountId, IndexType indexType) throws ServiceException {
-        String coreName = locator.getCollectionName(accountId, indexType);
+        String coreName = locator.getCollectionName(accountId, indexType, OpType.WRITE);
         try(SolrClient solrClient = SolrUtils.getSolrClient(httpClient, baseUrl, coreName)) {
             SolrUtils.deleteStandaloneIndex(solrClient, baseUrl, coreName);
         } catch (IOException e) {

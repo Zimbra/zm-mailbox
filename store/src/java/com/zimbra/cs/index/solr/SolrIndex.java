@@ -627,7 +627,7 @@ public class SolrIndex extends IndexStore {
                         BooleanQuery.Builder deleteByQueryClauses = deleteByQueryByIndexType.computeIfAbsent(indexType, k -> new BooleanQuery.Builder());
                         deleteByQueryClauses.add(new TermQuery(new Term(LuceneFields.L_MAILBOX_BLOB_ID, Integer.toString(itemId))), Occur.SHOULD);
                     } else {
-                        String collection = solrHelper.getCoreName(accountId, indexType);
+                        String collection = solrHelper.getCoreName(accountId, indexType, OpType.WRITE);
                         Deletion deletion = new ItemDeletion(collection, route, itemId);
                         BatchedIndexDeletions.getInstance().addDeletion(deletion);
                     }
@@ -840,8 +840,8 @@ public class SolrIndex extends IndexStore {
     @Override
     public void deleteIndex(Collection<IndexType> types) throws IOException, ServiceException {
         for (IndexType type: types) {
-            Deletion deletion = new AccountDeletion(solrHelper.getCoreName(accountId, type), accountId);
             if (solrHelper.needsAccountFilter() && !DebugConfig.disableSolrBatchDeletesByQuery) {
+                Deletion deletion = new AccountDeletion(solrHelper.getCoreName(accountId, type, OpType.WRITE), accountId);
                 BatchedIndexDeletions.getInstance().addDeletion(deletion);
             } else {
                 solrHelper.deleteAccountData(accountId, IndexType.MAILBOX);
@@ -918,5 +918,9 @@ public class SolrIndex extends IndexStore {
                 request.set(entry.getKey(), entry.getValue());
             }
         }
+    }
+
+    public static enum OpType {
+        READ, WRITE;
     }
 }
