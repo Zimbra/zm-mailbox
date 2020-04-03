@@ -42,7 +42,7 @@ public class MultiCollectionLocator extends SolrCollectionLocator {
         case CONTACTS:
             numCollections = LC.zimbra_contact_index_num_collections.intValue();
             if(numCollections == 1) {
-                return "contact_index"; //TODO: no hardcoding!
+                return LC.zimbra_index_collections_prefix.value();
             } else {
                 return getCollectionName(accountId, LC.zimbra_index_collections_prefix.value(), numCollections);
             }
@@ -64,7 +64,7 @@ public class MultiCollectionLocator extends SolrCollectionLocator {
 
     private String getCollectionName(String accountId, String collectionPrefix, int numCollections) {
         long indexNum = getCollectionNum(accountId, numCollections);
-        return collectionPrefix + indexNum;
+        return collectionPrefix + "_" + indexNum;
     }
 
     private long getCollectionNum(String accountId, int numCollections) {
