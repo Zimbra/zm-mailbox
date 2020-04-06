@@ -34,7 +34,7 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.auth.PasswordUtil.SSHA512;
+import com.zimbra.cs.account.auth.PasswordUtil;
 import com.zimbra.cs.account.auth.twofactor.TwoFactorAuth;
 import com.zimbra.cs.ldap.LdapDateUtil;
 
@@ -159,11 +159,11 @@ public class LdapLockoutPolicy {
                             synchronized (pwds) {
                                 int cacheSize = pwds.size();
                                 if (cacheSize == 0) {
-                                    pwds.add(SSHA512.generateSSHA512(password, null));
+                                    pwds.add(PasswordUtil.generate(password));
                                     ZimbraLog.account.debug("Created entry in password lockout cache");
                                 } else {
                                     for (String pwd : pwds) {
-                                        if (SSHA512.verifySSHA512(pwd, password)) {
+                                        if (PasswordUtil.verify(pwd, password)) {
                                             return true;
                                         }
                                     }
@@ -176,7 +176,7 @@ public class LdapLockoutPolicy {
                                     }
                                     ZimbraLog.account.debug("Password lockout suppression cache size = %s (max = %s)", cacheSize, maxCacheSize);
                                     if (cacheSize < maxCacheSize) {
-                                        pwds.add(SSHA512.generateSSHA512(password, null));
+                                        pwds.add(PasswordUtil.generate(password));
                                         ZimbraLog.account.debug("Added entry in password lockout cache");
                                     }
                                 }

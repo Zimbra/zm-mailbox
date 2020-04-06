@@ -226,14 +226,6 @@ public abstract class AuthMechanism {
             super(authMech);
         }
 
-        protected boolean isEncodedPassword(String encodedPassword) {
-            return PasswordUtil.SSHA512.isSSHA512(encodedPassword) || PasswordUtil.SSHA.isSSHA(encodedPassword);
-        }
-
-        protected boolean isValidEncodedPassword(String encodedPassword, String password) {
-            return PasswordUtil.SSHA512.verifySSHA512(encodedPassword, password) || PasswordUtil.SSHA.verifySSHA(encodedPassword, password);
-        }
-
         @Override
         public boolean isZimbraAuth() {
             return true;
@@ -253,28 +245,33 @@ public abstract class AuthMechanism {
                         namePassedIn(authCtxt), "missing "+Provisioning.A_userPassword);
             }
 
-            if (isEncodedPassword(encodedPassword)) {
-                if (isValidEncodedPassword(encodedPassword, password)) {
-                    return;
-                } else {
-                    acct.refreshUserCredentials();
-                    String refreshedPassword = acct.getAttr(Provisioning.A_userPassword);
-                    if (!isEncodedPassword(refreshedPassword)) {
-                        doAuth(prov, domain, acct, password, authCtxt);
-                    }
-                    if (!isValidEncodedPassword(encodedPassword, refreshedPassword)) {
-                        throw AuthFailedServiceException.AUTH_FAILED(acct.getName(),
-                                namePassedIn(authCtxt), "invalid password");
-                    }
-                    return;
+            Boolean result = PasswordUtil.verify(encodedPassword, password);
+
+            if (result == null && acct instanceof LdapEntry) {
+
+                prov.zimbraLdapAuthenticate(acct, password, authCtxt);
+                return; // good password, RETURN
+            }
+
+            if (result) {
+                return; // good password, RETURN
+            } else {
+                // reload credentials from ldap for retry
+                acct.refreshUserCredentials();
+
+                String refreshedPassword = acct.getAttr(Provisioning.A_userPassword);
+                Boolean retryResult = PasswordUtil.verify(refreshedPassword, password);
+
+                if (retryResult == null) {
+                    doAuth(prov, domain, acct, password, authCtxt);
                 }
 
-            } else if (acct instanceof LdapEntry) {
-                // not SSHA/SSHA512, authenticate to Zimbra LDAP
-                prov.zimbraLdapAuthenticate(acct, password, authCtxt);
-                return;  // good password, RETURN
+                if (result) {
+                    return; // good password, RETURN
+                }
             }
-            throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), namePassedIn(authCtxt));
+
+            throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), namePassedIn(authCtxt), "invalid password");
         }
 
         @Override

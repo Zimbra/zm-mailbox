@@ -163,7 +163,7 @@ public class InMemoryLdapServer {
             if (password.startsWith(NON_SSHA_PASSWORD_PREFIX)) {
                 return password;
             } else {
-                return PasswordUtil.SSHA.generateSSHA(password, null);
+                return PasswordUtil.Scheme.SSHA.generate(password);
             }
         }
     }

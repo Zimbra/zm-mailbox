@@ -3663,7 +3663,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         deleteDomain(zimbraId, true);
     }
 
-	@Override
+    @Override
     public void deleteDomainAfterRename(String zimbraId) throws ServiceException {
         deleteDomain(zimbraId, false);
     }
@@ -5962,14 +5962,13 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             int sepIndex = history[i].indexOf(':');
             if (sepIndex != -1)  {
                 String encoded = history[i].substring(sepIndex+1);
-                if (PasswordUtil.SSHA.isSSHA(encoded)) {
-                    if (PasswordUtil.SSHA.verifySSHA(encoded, newPassword))
-                        throw AccountServiceException.PASSWORD_RECENTLY_USED();
-                } else if (PasswordUtil.SSHA512.isSSHA512(encoded)) {
-                    if (PasswordUtil.SSHA512.verifySSHA512(encoded, newPassword))
-                        throw AccountServiceException.PASSWORD_RECENTLY_USED();
-                } else {
-                    ZimbraLog.account.debug("password hash neither SSHA nor SSHA512; ignored for password history");
+
+                Boolean result = PasswordUtil.verify(encoded, newPassword);
+                if (result == null) {
+                    ZimbraLog.account.debug("password hash not supported; ignored for password history");
+                }
+                if (result) {
+                    throw AccountServiceException.PASSWORD_RECENTLY_USED();
                 }
             }
         }
