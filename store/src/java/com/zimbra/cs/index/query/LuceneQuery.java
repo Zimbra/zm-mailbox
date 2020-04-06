@@ -18,6 +18,7 @@ package com.zimbra.cs.index.query;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.TermQuery;
@@ -26,6 +27,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
 import com.zimbra.cs.index.LuceneQueryOperation;
 import com.zimbra.cs.index.QueryOperation;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 
 /**
@@ -37,6 +39,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 abstract class LuceneQuery extends Query {
     private final String luceneField;
     private final String queryField;
+    private final Set<MailItem.Type> types;
     String term;
 
     static String lookup(Map<String, String> map, String key) {
@@ -56,10 +59,11 @@ abstract class LuceneQuery extends Query {
         return types;
     }
 
-    LuceneQuery(String queryField, String luceneField, String term) {
+    LuceneQuery(String queryField, String luceneField, String term, Set<MailItem.Type> types) {
         this.queryField = queryField;
         this.luceneField = luceneField;
         this.term = term;
+        this.types = types;
     }
 
     @Override
@@ -70,7 +74,7 @@ abstract class LuceneQuery extends Query {
     @Override
     public QueryOperation compile(Mailbox mbox, boolean bool) {
         LuceneQueryOperation op = new LuceneQueryOperation();
-        op.addClause(queryField + term, new TermQuery(new Term(luceneField, term)), evalBool(bool));
+        op.addClause(queryField + term, new TermQuery(new Term(luceneField, term)), evalBool(bool), getIndexTypes(types));
         return op;
     }
 

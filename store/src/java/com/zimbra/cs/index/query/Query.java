@@ -16,14 +16,18 @@
  */
 package com.zimbra.cs.index.query;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.ImmutableMap;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.QueryOperation;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxIndex.IndexType;
 
 /**
  * Abstract base class for queries.
@@ -226,4 +230,28 @@ public abstract class Query {
      * Returns true if this query has at least one text query, false if it's entirely DB query.
      */
     public abstract boolean hasTextOperation();
+
+    private IndexType getIndexTypeForItemType(MailItem.Type type) {
+        // this is only called from index-bound Query subclasses, so it's OK
+        // to include non-indexable types in the default case here
+        switch (type) {
+        case CONTACT:
+            return IndexType.CONTACTS;
+        default:
+            return IndexType.MAILBOX;
+        }
+    }
+
+    protected Set<IndexType> getIndexTypes(Set<MailItem.Type> types) {
+        Set<IndexType> indexTypes = new HashSet<>();
+        if (!types.isEmpty()) {
+            for (MailItem.Type type: types) {
+                indexTypes.add(getIndexTypeForItemType(type));
+            }
+        } else {
+            // default to primary index
+            indexTypes.add(IndexType.MAILBOX);
+        }
+        return indexTypes;
+    }
 }

@@ -16,11 +16,14 @@
  */
 package com.zimbra.cs.index.query;
 
+import java.util.Set;
+
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.TermQuery;
 
 import com.zimbra.cs.index.LuceneQueryOperation;
 import com.zimbra.cs.index.QueryOperation;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 
 /**
@@ -32,10 +35,12 @@ import com.zimbra.cs.mailbox.Mailbox;
 public final class DomainQuery extends Query {
     private final String field;
     private final String term;
+    private final Set<MailItem.Type> types;
 
-    public DomainQuery(String field, String term) {
+    public DomainQuery(String field, String term, Set<MailItem.Type> types) {
         this.field = field;
         this.term = term;
+        this.types = types;
     }
 
     @Override
@@ -46,7 +51,7 @@ public final class DomainQuery extends Query {
     @Override
     public QueryOperation compile(Mailbox mbox, boolean bool) {
         LuceneQueryOperation op = new LuceneQueryOperation();
-        op.addClause(toQueryString(field, term), new TermQuery(new Term(field, term)), evalBool(bool));
+        op.addClause(toQueryString(field, term), new TermQuery(new Term(field, term)), evalBool(bool), getIndexTypes(types));
         return op;
     }
 
@@ -55,7 +60,7 @@ public final class DomainQuery extends Query {
         out.append("DOMAIN:");
         out.append(term);
     }
-    
+
     @Override
     public void sanitizedDump(StringBuilder out) {
         out.append("DOMAIN:");

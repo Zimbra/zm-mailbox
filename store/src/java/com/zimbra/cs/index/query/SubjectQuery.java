@@ -16,9 +16,13 @@
  */
 package com.zimbra.cs.index.query;
 
+import java.util.EnumSet;
+import java.util.Set;
+
 import com.zimbra.cs.index.DBQueryOperation;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.QueryOperation;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 
 /**
@@ -41,15 +45,19 @@ public final class SubjectQuery extends Query {
     }
 
     public static Query create(String text) {
-        return create(text, false);
+        return create(text, EnumSet.noneOf(MailItem.Type.class));
     }
 
-    public static Query create(String text, boolean isPhraseQuery) {
+    public static Query create(String text, Set<MailItem.Type> types) {
+        return create(text, false, types);
+    }
+
+    public static Query create(String text, boolean isPhraseQuery, Set<MailItem.Type> types) {
         Comparison comp = Comparison.fromPrefix(text);
         if (comp != null) {
             return new SubjectQuery(text, comp);
         } else {
-            return new TextQuery(LuceneFields.L_H_SUBJECT, text, isPhraseQuery);
+            return new TextQuery(LuceneFields.L_H_SUBJECT, text, isPhraseQuery, types);
         }
     }
 
