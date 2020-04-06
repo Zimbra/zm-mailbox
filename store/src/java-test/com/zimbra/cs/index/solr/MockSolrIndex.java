@@ -131,7 +131,7 @@ public class MockSolrIndex extends SolrIndex {
         }
 
         @Override
-        public int docFreq(Term term) throws IOException, ServiceException {
+        public int docFreq(Term term, Collection<IndexType> indexTypes) throws IOException, ServiceException {
             return 0;
         }
 

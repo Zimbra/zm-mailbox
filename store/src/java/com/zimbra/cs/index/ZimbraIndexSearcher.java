@@ -45,7 +45,7 @@ public interface ZimbraIndexSearcher extends Closeable {
      * @return the number of documents containing the term {@code term}.
      * @throws ServiceException
      */
-    int docFreq(Term term) throws IOException, ServiceException;
+    int docFreq(Term term, Collection<IndexType> indexTypes) throws IOException, ServiceException;
 
     /**
      * Return the IndexReader this searches.
@@ -114,5 +114,9 @@ public interface ZimbraIndexSearcher extends Closeable {
 
     default ZimbraTopDocs search(Query query, ZimbraTermsFilter filter, int n, Sort sort, String idField, String[] fetchFields) throws IOException, ServiceException {
         return search(query, filter, n, sort, idField, fetchFields, IndexType.MAILBOX);
+    }
+
+    default int docFreq(Term term) throws IOException, ServiceException {
+        return docFreq(term, EnumSet.of(IndexType.MAILBOX));
     }
 }

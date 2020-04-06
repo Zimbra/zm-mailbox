@@ -244,7 +244,7 @@ public final class LuceneQueryOperation extends QueryOperation {
             Term term = query.getTerm();
             long start = System.currentTimeMillis();
             try {
-                int freq = searcher.docFreq(term);
+                int freq = searcher.docFreq(term, indexTypes);
                 int docsCutoff = (int) (searcher.getIndexReader().numDocs() * DB_FIRST_TERM_FREQ_PERC);
                 ZimbraLog.search.debug("LuceneDocFreq freq=%d,cutoff=%d(%d%%),elapsed=%d",
                         freq, docsCutoff, (int) (100 * DB_FIRST_TERM_FREQ_PERC), System.currentTimeMillis() - start);

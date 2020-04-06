@@ -260,7 +260,7 @@ public class SolrIndex extends IndexStore {
         }
 
         @Override
-        public int docFreq(Term term) throws IOException, ServiceException {
+        public int docFreq(Term term, Collection<IndexType> indexTypes) throws IOException, ServiceException {
             try {
                 SolrQuery q = solrHelper.newQuery(accountId).setQuery("*:*").setRows(0);
                 if (SolrUtils.isWildcardQuery(term.text()) || SolrUtils.containsWhitespace(term.text())) {
@@ -269,8 +269,7 @@ public class SolrIndex extends IndexStore {
                 } else {
                     addTermsFilter(q, Arrays.asList(term));
                 }
-                //TODO: use correct index type
-                QueryResponse resp = (QueryResponse) solrHelper.executeQueryRequest(accountId, q, IndexType.MAILBOX);
+                QueryResponse resp = (QueryResponse) solrHelper.executeQueryRequest(accountId, q, indexTypes);
                 return (int) resp.getResults().getNumFound();
             } catch (SolrException e) {
                 ZimbraLog.index.error("Solr search problem getting docFreq for mailbox %s", accountId,e);
