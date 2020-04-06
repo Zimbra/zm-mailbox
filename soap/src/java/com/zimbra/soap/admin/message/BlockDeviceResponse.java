@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011, 2012, 2013, 2014, 2016, 2020 Synacor, Inc.
+ * Copyright (C) 2020 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -15,50 +15,55 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.sync.message;
+package com.zimbra.soap.admin.message;
 
-import com.google.common.base.MoreObjects;
+import java.util.Collections;
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.zimbra.common.soap.SyncAdminConstants;
 import com.zimbra.common.soap.SyncConstants;
-import com.zimbra.soap.sync.type.DeviceId;
+import com.zimbra.soap.admin.type.DeviceStatusInfo;
 
-/**
- * @zm-api-command-deprecation-info Note: <b>SuspendDeviceRequest</b> is deprecated. Use zimbraAccount QuarantineDevice instead.
- * @zm-api-command-network-edition
- * @zm-api-command-auth-required true
- * @zm-api-command-admin-auth-required false
- * @zm-api-command-description Suspend a device from further sync actions
- */
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name=SyncConstants.E_SUSPEND_DEVICE_REQUEST)
-public class SuspendDeviceRequest {
+@XmlRootElement(name=SyncAdminConstants.E_BLOCK_DEVICE_RESPONSE)
+@XmlType(propOrder = {})
+public class BlockDeviceResponse {
 
     /**
-     * @zm-api-field-description Device selector
+     * @zm-api-field-description Information about device status
      */
-    @XmlElement(name=SyncConstants.E_DEVICE /* device */, required=true)
-    private final DeviceId device;
+    @XmlElement(name=SyncConstants.E_DEVICE /* device */, required=false)
+    private List<DeviceStatusInfo> devices = Lists.newArrayList();
 
-    /**
-     * no-argument constructor wanted by JAXB
-     */
-    @SuppressWarnings("unused")
-    private SuspendDeviceRequest() {
-        this((DeviceId) null);
+    public BlockDeviceResponse() {
     }
 
-    public SuspendDeviceRequest(DeviceId device) {
-        this.device = device;
+    public void setDevices(Iterable<DeviceStatusInfo> devices) {
+        this.devices.clear();
+        if (devices != null) {
+            Iterables.addAll(this.devices, devices);
+        }
     }
 
-    public DeviceId getDevice() { return device; }
+    public void addDevice(DeviceStatusInfo device) {
+        this.devices.add(device);
+    }
+
+    public List<DeviceStatusInfo> getDevices() {
+        return Collections.unmodifiableList(devices);
+    }
 
     public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
-        return helper.add("device", device);
+        return helper.add("devices", devices);
     }
 
     @Override
