@@ -218,6 +218,12 @@
       <param-name>allowed.ports</param-name>
       <param-value>80, 443, 7070, 7071, 7072, 7443</param-value>
     </init-param>
+    <multipart-config>
+      <location>/tmp</location>
+      <max-file-size>10485760</max-file-size>
+      <max-request-size>10485760</max-request-size>
+      <file-size-threshold>10485760</file-size-threshold>
+    </multipart-config>
   </servlet>
 
   <servlet>
