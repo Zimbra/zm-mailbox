@@ -788,7 +788,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="114" name="zimbraLastLogonTimestampFrequency" type="duration" cardinality="single" optionalIn="globalConfig">
-  <globalConfigValue>7d</globalConfigValue>
+  <globalConfigValue>1d</globalConfigValue>
   <desc>how often the zimbraLastLogonTimestamp is updated.  
         if set to 0, updating zimbraLastLogonTimestamp is completely disabled
   </desc>

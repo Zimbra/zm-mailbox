@@ -26007,11 +26007,11 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @see #getLastLogonTimestampFrequencyAsString()
      *
-     * @return zimbraLastLogonTimestampFrequency in millseconds, or 604800000 (7d)  if unset
+     * @return zimbraLastLogonTimestampFrequency in millseconds, or 86400000 (1d)  if unset
      */
     @ZAttr(id=114)
     public long getLastLogonTimestampFrequency() {
-        return getTimeInterval(Provisioning.A_zimbraLastLogonTimestampFrequency, 604800000L, true);
+        return getTimeInterval(Provisioning.A_zimbraLastLogonTimestampFrequency, 86400000L, true);
     }
 
     /**
@@ -26022,11 +26022,11 @@ public abstract class ZAttrConfig extends Entry {
      * milliseconds. If time unit is not specified, the default is
      * s(seconds).
      *
-     * @return zimbraLastLogonTimestampFrequency, or "7d" if unset
+     * @return zimbraLastLogonTimestampFrequency, or "1d" if unset
      */
     @ZAttr(id=114)
     public String getLastLogonTimestampFrequencyAsString() {
-        return getAttr(Provisioning.A_zimbraLastLogonTimestampFrequency, "7d", true);
+        return getAttr(Provisioning.A_zimbraLastLogonTimestampFrequency, "1d", true);
     }
 
     /**
