@@ -2497,8 +2497,12 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         for (int i = 0; i < files.length; i++) {
             File file = files[i];
             String contentType = URLConnection.getFileNameMap().getContentTypeFor(file.getName());
-            builder.addBinaryBody("upfile", file, ContentType.create(contentType, "UTF-8"), file.getName());
-        }
+            if (contentType != null) {
+                builder.addBinaryBody("upfile", file, ContentType.create(contentType, "UTF-8"), file.getName());
+            } else {
+                builder.addBinaryBody("upfile", file, ContentType.DEFAULT_BINARY, file.getName());
+            }
+	}
 
         return uploadAttachments(builder, msTimeout);
     }
