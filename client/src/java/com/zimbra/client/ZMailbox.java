@@ -2532,7 +2532,11 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         for (String name : attachments.keySet()) {
             byte[] content = attachments.get(name);
             String contentType = URLConnection.getFileNameMap().getContentTypeFor(name);
-            builder.addBinaryBody(name, content, ContentType.create(contentType), name);
+            if (contentType != null) {
+                builder.addBinaryBody(name, content, ContentType.create(contentType), name);
+            } else {
+                builder.addBinaryBody(name, content, ContentType.DEFAULT_BINARY, name);
+            }
         }
 
         return uploadAttachments(builder, msTimeout);
