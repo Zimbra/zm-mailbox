@@ -139,6 +139,9 @@ public class SearchResponse {
     @XmlAttribute(name=MailConstants.A_RELEVANCE_SORT_SUPPORTED, required=false)
     private ZmBoolean relevanceSortSupported;
 
+    @XmlAttribute(name=MailConstants.A_REINDEX_IN_PROGRESS, required=false)
+    private ZmBoolean reIndexInProgress;
+
     public SearchResponse() {
     }
 
@@ -197,6 +200,14 @@ public class SearchResponse {
 
     public boolean getRelevanceSortSupported() {
         return ZmBoolean.toBool(relevanceSortSupported, true);
+    }
+
+    public void setReIndexInProgress(boolean bool) {
+        reIndexInProgress = ZmBoolean.fromBool(bool);
+    }
+
+    public boolean getReIndexInProgress() {
+        return ZmBoolean.toBool(reIndexInProgress, false);
     }
 
     public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
