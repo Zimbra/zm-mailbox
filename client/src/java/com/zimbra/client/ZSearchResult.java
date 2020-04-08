@@ -41,6 +41,7 @@ public class ZSearchResult implements ToZJSONObject {
     private int offset;
     private boolean saveSearchPrompt;
     private boolean relevanceSortSupported;
+    private boolean reIndexInProgress;
 
     public ZSearchResult(Element e, boolean convNest, TimeZone tz) throws ServiceException {
         if (!convNest) {
@@ -67,6 +68,7 @@ public class ZSearchResult implements ToZJSONObject {
         offset = (int) resp.getAttributeLong(MailConstants.A_QUERY_OFFSET, -1);
         saveSearchPrompt = resp.getAttributeBool(MailConstants.A_SAVE_SEARCH_PROMPT, false);
         relevanceSortSupported = resp.getAttributeBool(MailConstants.A_RELEVANCE_SORT_SUPPORTED, true);
+        reIndexInProgress = resp.getAttributeBool(MailConstants.A_REINDEX_IN_PROGRESS, false);
         hits = new ArrayList<ZSearchHit>();
         imapHits = new ArrayList<ZImapSearchHit>();
         for (Element h : el.listElements()) {
@@ -148,6 +150,10 @@ public class ZSearchResult implements ToZJSONObject {
      */
     public boolean isRelevanceSortSupported() {
         return relevanceSortSupported;
+    }
+
+    public boolean isReIndexInProgress() {
+        return reIndexInProgress;
     }
 
     @Override
