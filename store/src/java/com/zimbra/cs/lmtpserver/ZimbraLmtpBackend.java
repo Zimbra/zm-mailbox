@@ -361,7 +361,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                 } catch (IOException e) {
                     ZimbraLog.lmtp.warn("Error in deleting blob %s", blob, e);
                 }
-                setDeliveryStatuses(env.getRecipients(), LmtpReply.INVALID_BODY_PARAMETER);
+                setDeliveryStatuses(env.getRecipients(), LmtpReply.LINE_TOO_LONG);
                 return;
             }
 
