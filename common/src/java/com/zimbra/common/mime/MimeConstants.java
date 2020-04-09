@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2009, 2010, 2011, 2012, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2009, 2010, 2011, 2012, 2013, 2014, 2016, 2020 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -81,6 +81,7 @@ public class MimeConstants {
     public static final String CT_APPLICATION_ZIP = "application/zip";
     public static final String CT_SMIME_TYPE_ENVELOPED_DATA = "enveloped-data";
     public static final String CT_SMIME_TYPE_SIGNED_DATA = "signed-data";
+    public static final String CT_MBOX = "application/mbox";
 
     // encodings
     public static final String ET_7BIT = "7bit";
