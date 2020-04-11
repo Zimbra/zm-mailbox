@@ -1230,37 +1230,40 @@ public final class LC {
 
     @Supported
     public static final KnownKey sun_host = KnownKey.newKey("");
-
+    
     @Supported
     public static final KnownKey sun_port = KnownKey.newKey(0);
-
+    
     @Supported
     public static final KnownKey sun_binddn = KnownKey.newKey("");
-
+    
     @Supported
     public static final KnownKey sun_bindpass = KnownKey.newKey("");
-
+    
     @Supported
     public static final KnownKey sun_ssl_enable = KnownKey.newKey("false");
-
+    
     @Supported
     public static final KnownKey sun_directory_base = KnownKey.newKey("");
+    
+	@Supported
+	public static final KnownKey sun_ldap_filter = KnownKey.newKey("");
 
     @Supported
     public static final KnownKey vc_vidyo_user_name = KnownKey.newKey("");
-
+    
     @Supported
     public static final KnownKey vc_vidyo_user_pass = KnownKey.newKey("");
-
+    
     @Supported
     public static final KnownKey vc_vidyo_request_url = KnownKey.newKey("");
-
+    
     @Supported
     public static final KnownKey vc_vidyo_room_link = KnownKey.newKey(""); // zmtrainsa_cleanup_host
-
+    
     @Supported
     public static final KnownKey vc_vidyo_soap_action = KnownKey.newKey("");
-
+    
     @Supported
     public static final KnownKey external_store_delete_max_ioexceptions = KnownKey.newKey(25);
 

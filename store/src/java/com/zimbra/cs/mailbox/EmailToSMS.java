@@ -3,7 +3,9 @@ package com.zimbra.cs.mailbox;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
+import java.net.Proxy;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -186,13 +188,18 @@ public class EmailToSMS implements LmtpCallback {
 		String url = smsApiUrl + "?username=" + smsUsername + "&pin=" + smsPin + "&message=" + message + "&mnumber="
 				+ mnumber + "&signature=" + smsSenderId + msgType;
 		URL obj;
+		HttpURLConnection con = null;
+		Proxy proxy = null;
 
 		try {
 			ZimbraLog.mailbox.debug("SMS url %s, sender %s", url, sender);
 			obj = new URL(url);
-			HttpURLConnection con = (HttpURLConnection) obj.openConnection();
-			ZimbraLog.mailbox.debug("BEFORE: SMS proxy configuration host : "+System.getProperty("http.proxyHost")+" port : "+System.getProperty("http.proxyPort"));
-			configureProxy();
+			proxy = configureProxy();
+			if(proxy!=null)
+				con = (HttpURLConnection) obj.openConnection(proxy);
+			else
+				con = (HttpURLConnection) obj.openConnection();
+			
 			ZimbraLog.mailbox.debug("AFTER: SMS proxy configuration host : "+System.getProperty("http.proxyHost")+" port : "+System.getProperty("http.proxyPort"));
 			con.setRequestMethod("GET");
 			int respCode = con.getResponseCode();
@@ -205,23 +212,26 @@ public class EmailToSMS implements LmtpCallback {
 			ZimbraLog.mailbox.warn("Unable to send mobile notification MalformedURLException", e);
 		} catch (IOException e) {
 			ZimbraLog.mailbox.warn("Unable to send mobile notification IOException", e);
+		} finally {
+			try {
+				con.disconnect();
+			} catch(Exception ex) {}
 		}
 	}
 
-	private void configureProxy() {
+	private Proxy configureProxy() {
+		Proxy proxy = null;
 		try {
 			String url = Provisioning.getInstance().getLocalServer().getAttr(Provisioning.A_zimbraHttpProxyURL, null);
 			if (url == null) {
 				ZimbraLog.mailbox.debug("zimbraHttpProxyURL is not set url : "+url);
-				return;
+				return null;
 			}
 			URI sProxyUri = new URI(url);
 			String proxyHost = sProxyUri.getHost();
-			String proxyPort = String.valueOf(sProxyUri.getPort());
-			ZimbraLog.mailbox.debug("SMS zimbraHttpProxy host : "+proxyHost);
-			ZimbraLog.mailbox.debug("SMS zimbraHttpProxy port : "+proxyPort);
-			System.getProperties().put("http.proxyHost", proxyHost);
-			System.getProperties().put("http.proxyPort", proxyPort);
+			int proxyPort = Integer.valueOf(sProxyUri.getPort());
+			ZimbraLog.mailbox.debug("SMS zimbraHttpProxy : "+proxyHost+":"+proxyPort);
+			proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyHost, proxyPort));
 		} catch (ServiceException e) {
 			ZimbraLog.misc.warn("Unable to configureProxy ServiceException: "+e.getMessage(), e);
 		} catch (URISyntaxException e) {
@@ -229,6 +239,7 @@ public class EmailToSMS implements LmtpCallback {
 		} catch (Exception e) {
 			ZimbraLog.misc.warn("Unable to configureProxy: "+e.getMessage(), e);
 		}
+		return proxy;
 	}
 
 	public static EmailToSMS getInstance() {

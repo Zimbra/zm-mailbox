@@ -50,9 +50,9 @@ public class GetVCMeetingInfo extends AccountDocumentHandler {
 
 
 	private static final String contentType = "text/xml; charset=utf-8";
-
+	
 	private String vcResponse = null;
-
+	
 	@Override
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 		ZimbraSoapContext zsc = getZimbraSoapContext(context);
@@ -69,13 +69,13 @@ public class GetVCMeetingInfo extends AccountDocumentHandler {
 
         if (account == null)
             throw ServiceException.PERM_DENIED("can not access account permission denied");
-
+        
         ZimbraLog.account.debug("GetVCMeetingInfo.handle emailAddr: " + emailAddr);
 
         Element response = null;
         try {
         	String uId = fetchSunLdapUid(emailAddr);
-
+            
             if(uId!=null) {
             	getVCMeetingInfo(uId);
             }
@@ -88,12 +88,12 @@ public class GetVCMeetingInfo extends AccountDocumentHandler {
         ZimbraLog.account.debug("GetVCMeetingInfo.handle vcResponse: "+vcResponse);
         response = zsc.createElement(AccountConstants.GET_VC_MEETING_INFO_RESPONSE);
         response.addAttribute(AccountConstants.VC_RESPONSE, vcResponse);
-
+        
 		return response;
 	}
-
+	
 	private void getVCMeetingInfo(String uId) {
-
+		
 		SOAPConnectionFactory soapConnectionFactory = null;
 		SOAPConnection soapConnection = null;
 		try {
@@ -129,11 +129,11 @@ public class GetVCMeetingInfo extends AccountDocumentHandler {
 				soapConnection.close();
 			} catch (Exception e) {}
 		}
-
+		
 	}
-
+	
 	private SOAPMessage createSoapEnvelope(String uId) throws Exception {
-
+		
 		MessageFactory messageFactory = MessageFactory.newInstance();
 		SOAPMessage soapMessage = messageFactory.createMessage();
 
@@ -155,9 +155,9 @@ public class GetVCMeetingInfo extends AccountDocumentHandler {
 
 		return soapMessage;
 	}
-
+	
 	private void iterateNode(Node node) throws Exception {
-
+		
 		NodeList childNodes = node.getChildNodes();
 		for (int j = 0; j < childNodes.getLength(); j++) {
 			Node chileNode = childNodes.item(j);
@@ -172,19 +172,19 @@ public class GetVCMeetingInfo extends AccountDocumentHandler {
 
 
 	private HttpResponse callVCService(String body) {
-
+		
 		HttpResponse response = null;
 		try {
 			ZimbraLog.account.debug("GetVCMeetingInfo.callVCService request: " + body);
 			StringEntity stringEntity = new StringEntity(body, "UTF-8");
 			stringEntity.setChunked(true);
-
+	
 			// Request parameters and other properties.
 			HttpPost httpPost = new HttpPost(LC.vc_vidyo_request_url.value());
 			httpPost.setEntity(stringEntity);
 			httpPost.addHeader("Content-Type", contentType);
 			httpPost.addHeader("SOAPAction", LC.vc_vidyo_soap_action.value());
-
+	
 			// Execute and get the response.
 			HttpClient httpClient = new DefaultHttpClient();
 			response = httpClient.execute(httpPost);
@@ -198,12 +198,12 @@ public class GetVCMeetingInfo extends AccountDocumentHandler {
 	}
 
 	private String fetchSunLdapUid(String email) {
-
+		
 		String uid = null;
 		DirContext ctx = null;
 		try {
 			Hashtable<String, String> env = new Hashtable<>();
-
+			
 			env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
 	        if (LC.sun_ssl_enable.booleanValue()) {
 	        	env.put(Context.PROVIDER_URL, "ldaps://" + LC.sun_host.value() + ":" + LC.sun_port.intValue());
@@ -213,14 +213,15 @@ public class GetVCMeetingInfo extends AccountDocumentHandler {
 	        }
 	        env.put(Context.SECURITY_PRINCIPAL, LC.sun_binddn.value());
 	        env.put(Context.SECURITY_CREDENTIALS, LC.sun_bindpass.value());
-
+	
 			String[] attr = {"uid"};
 			SearchControls sc = new SearchControls();
 			sc.setReturningAttributes(attr);
 			sc.setSearchScope(SearchControls.SUBTREE_SCOPE);
-			String searchFilter = "";
-			searchFilter = "(|(mail=" + email + "))";
-
+			String searchFilter = LC.sun_ldap_filter.value();
+			searchFilter = searchFilter.replaceAll("%", email);
+			ZimbraLog.account.debug("GetVCMeetingInfo.fetchSunLdapUid sun_ldap_filter: "+searchFilter);
+			
 			ctx = new InitialDirContext(env);
 			NamingEnumeration<SearchResult> enumerator = ctx.search(LC.sun_directory_base.value(), searchFilter, sc);
 			while (enumerator.hasMoreElements()) {
@@ -230,10 +231,10 @@ public class GetVCMeetingInfo extends AccountDocumentHandler {
 					break;
 				}
 			}
-			ZimbraLog.account.debug("GetVCMeetingInfo fetchSunLdapUid email: "+email+", uid: " + uid);
+			ZimbraLog.account.debug("GetVCMeetingInfo.fetchSunLdapUid email: "+email+", uid: " + uid);
 		} catch (Exception e) {
 			vcResponse = "error";
-			ZimbraLog.account.error("Unable to fetch data from sun ldap for email: "+email, e);
+			ZimbraLog.account.error("GetVCMeetingInfo.fetchSunLdapUid Unable to fetch data from sun ldap for email: "+email, e);
 		} finally {
 			try {
 				ctx.close();
