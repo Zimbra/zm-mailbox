@@ -26,7 +26,7 @@ public class MockValidationFailingStore extends SimpleStoreManager {
 
     @Override
     public MailboxBlob getMailboxBlob(Mailbox mbox, int itemId,
-            long revision, String locator, boolean validate)
+            int revision, String locator, boolean validate)
             throws ServiceException {
         if (!validate || !failOnValidate) {
             return super.getMailboxBlob(mbox, itemId, revision, locator, false);

@@ -351,7 +351,7 @@ public class Sync extends MailDocumentHandler {
                 // the client will request the whole object out of band -- potentially using the
                 // content servlet's "include metadata in headers" hack.
                 // If it's just the metadata that changed, send back the set of mutable attributes.
-                boolean created = item.getSavedSequenceLong() > begin;
+                boolean created = item.getSavedSequence() > begin;
                 ToXML.encodeItem(response, ifmt, octxt, item, created ? Change.FOLDER | Change.CONFLICT | Change.DATE | Change.PARENT : MUTABLE_FIELDS);
                 itemCount++;
             }

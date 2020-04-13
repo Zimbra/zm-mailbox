@@ -38,7 +38,7 @@ public interface FolderStore extends BaseFolderInfo {
     public boolean inTrash();
     public boolean isVisibleInImap(boolean displayMailFoldersOnly);
     public List<ACLGrant> getACLGrants();
-    public long getUIDValidity();
+    public int getUIDValidity();
     /** @return number of items in folder, including IMAP \Deleted item */
     public int getImapMessageCount();
     /** @return number of unread items in folder, including IMAP \Deleted items */

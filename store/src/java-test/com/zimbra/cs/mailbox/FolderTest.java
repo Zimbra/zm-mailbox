@@ -147,7 +147,7 @@ public final class FolderTest {
         int changeId = mbox.getLastChangeID();
         Folder inbox = mbox.getFolderById(null, Mailbox.ID_FOLDER_INBOX);
         int modMetadata = inbox.getModifiedSequence();
-        long modContent = inbox.getSavedSequenceLong();
+        int modContent = inbox.getSavedSequence();
         Assert.assertEquals(0, inbox.getImapRECENTCutoff());
 
         mbox.recordImapSession(Mailbox.ID_FOLDER_INBOX);
@@ -155,7 +155,7 @@ public final class FolderTest {
         inbox = mbox.getFolderById(null, Mailbox.ID_FOLDER_INBOX);
         Assert.assertEquals(changeId, mbox.getLastChangeID());
         Assert.assertEquals(modMetadata, inbox.getModifiedSequence());
-        Assert.assertEquals(modContent, inbox.getSavedSequenceLong());
+        Assert.assertEquals(modContent, inbox.getSavedSequence());
         Assert.assertEquals(mbox.getLastItemId(), inbox.getImapRECENTCutoff());
     }
 
