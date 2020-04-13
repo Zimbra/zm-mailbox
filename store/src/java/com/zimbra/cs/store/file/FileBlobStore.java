@@ -200,6 +200,13 @@ public final class FileBlobStore extends StoreManager {
         return link(blob, destMbox, destItemId, destRevision, volume.getId());
     }
 
+    public VolumeMailboxBlob link(Blob src, Mailbox destMbox, int destItemId, int destRevision, short destVolumeId)
+        throws IOException, ServiceException {
+
+        return this.link(src, destMbox, destItemId, (long)destRevision, destVolumeId);
+    }
+
+
     public VolumeMailboxBlob link(Blob src, Mailbox destMbox, int destItemId, long destRevision, short destVolumeId)
     throws IOException, ServiceException {
         File srcFile = src.getFile();
@@ -364,6 +371,14 @@ public final class FileBlobStore extends StoreManager {
     }
 
     @Override
+    public MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, int revision, String locator, boolean validate)
+        throws ServiceException {
+        return this.getMailboxBlob(mbox, itemId, (long)revision, locator, validate);
+    }
+
+
+
+    @Override
     public InputStream getContent(MailboxBlob mboxBlob) throws IOException {
         if (mboxBlob == null) {
             return null;
@@ -397,6 +412,11 @@ public final class FileBlobStore extends StoreManager {
         // fallback for very very *very* old installs where blob paths were based on item id only
         file = new File(getBlobPath(mbox, itemId, -1, volumeId));
         return (file.exists() ? file : null);
+    }
+
+    private File getMailboxBlobFile(Mailbox mbox, int itemId, int revision, short volumeId, boolean check)
+        throws ServiceException {
+        return this.getMailboxBlobFile(mbox, itemId, (long) revision, volumeId, check);
     }
 
     public static String getBlobPath(Mailbox mbox, int itemId, long revision, short volumeId) throws ServiceException {
@@ -436,5 +456,18 @@ public final class FileBlobStore extends StoreManager {
 
     private static void ensureParentDirExists(File file) throws IOException {
         ensureDirExists(file.getParentFile());
+    }
+
+
+    @Override
+    public MailboxBlob link(StagedBlob src, Mailbox destMbox, int destMsgId, int destRevision)
+        throws IOException, ServiceException {
+        return this.link(src, destMbox,destMsgId, (long)destRevision);
+    }
+
+    @Override
+    public MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, int revision, String locator)
+        throws ServiceException {
+        return this.getMailboxBlob(mbox, itemId, (long)revision, locator);
     }
 }
