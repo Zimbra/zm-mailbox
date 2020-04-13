@@ -44,12 +44,12 @@ public class MailboxIndexUtil {
         deleteIndex.start();
     }
 
-    public static void asyncReIndexMailbox(Mailbox mbox, OperationContext octxt) {
+    public static void asyncReIndexMailbox(Mailbox mbox, OperationContext octxt) throws ServiceException {
         asyncReIndexMailbox(mbox, null, octxt);
     }
 
-    public static void asyncReIndexMailbox(Mailbox mbox, Set<MailItem.Type> types, OperationContext octxt) {
-        asyncReIndexMailboxes(Collections.singletonList(new MailboxReIndexSpec(mbox, types)), octxt);
+    public static void asyncReIndexMailbox(Mailbox mbox, Set<MailItem.Type> types, OperationContext octxt) throws ServiceException {
+        asyncReIndexMailboxes(Collections.singletonList(new MailboxReIndexSpec(mbox, octxt, types)), octxt);
 
     }
 
@@ -57,6 +57,10 @@ public class MailboxIndexUtil {
         Thread reindexer = new Thread() {
             @Override
             public void run() {
+                IndexingQueueAdapter queueAdapter = IndexingQueueAdapter.getFactory().getAdapter();
+                if(queueAdapter == null) {
+                    ZimbraLog.index.error("Indexing Queue Adapter is not properly configured");
+                }
                 //create a map of oldest and newest dates, so we can avoid querying a mailbox for days that are outside of it's lifetime
                 HashMap<String,Long> oldestDates = Maps.newHashMap();
                 HashMap<String,Long> newestDates = Maps.newHashMap();
@@ -72,10 +76,6 @@ public class MailboxIndexUtil {
 
                         if(recentDate < oldDate) {
                             //this mailbox is empty
-                            IndexingQueueAdapter queueAdapter = IndexingQueueAdapter.getFactory().getAdapter();
-                            if(queueAdapter == null) {
-                                throw ServiceException.FAILURE("Indexing Queue Adapter is not properly configured", null);
-                            }
                             queueAdapter.deleteMailboxTaskCounts(accountId);
                             queueAdapter.setTaskStatus(accountId, ReIndexStatus.STATUS_DONE);
                         } else {
@@ -105,11 +105,12 @@ public class MailboxIndexUtil {
                         Mailbox mbox = mboxSpec.getMailbox();
                         String accountId = mbox.getAccountId();
                         //check if current time window overlaps with the range of this account's mail items dates
-                        if( !(oldestDates.get(accountId) > mostRecent || newestDates.get(accountId) < dayBefore) ) {
+                        Long oldestForMailbox = oldestDates.get(accountId);
+                        Long newestForMailbox = newestDates.get(accountId);
+                        if( !(oldestForMailbox > mostRecent || newestForMailbox < dayBefore) ) {
                             //generated SQL query has non-inclusive boundaries
                             params.setDateAfter((int) (dayBefore-1L));
                             params.setDateBefore((int) (mostRecent+1L));
-
                             params.clearTypes();
                             Set<Type> types = mboxSpec.getTypes();
                             if (types == null) {
@@ -119,13 +120,24 @@ public class MailboxIndexUtil {
                                 params.setIncludedTypes(types);
                             }
                             try {
+                                List<Integer> ids = mbox.getItemIdList(octxt, params);
+                                if(ids.isEmpty()) {
+                                    break;
+                                }
+                                // if this is the first batch of items, mark re-indexing as started for this mailbox and reset counters
+                                if (!mboxSpec.isStarted()) {
+                                    ZimbraLog.index.debug("resetting re-index counters for account %s", accountId);
+                                    int total = mboxSpec.getNumItems();
+                                    ZimbraLog.index.debug("total number to re-index for %s: %s", accountId, total);
+                                    queueAdapter.setTotalMailboxTaskCount(accountId, total);
+                                    queueAdapter.setSucceededMailboxTaskCount(accountId, 0);
+                                    queueAdapter.setFailedMailboxTaskCount(accountId, 0);
+                                    queueAdapter.setTaskStatus(accountId, ReIndexStatus.STATUS_RUNNING);
+                                    mboxSpec.setStarted();
+                                }
                                 while(maxWait > 0) {
-                                    List<Integer> ids = mbox.getItemIdList(octxt, params);
-                                    if(ids.isEmpty()) {
-                                        break;
-                                    }
                                     if(mbox.index.startReIndexById(ids)) {
-                                        ZimbraLog.index.debug("Queued %d items for re-indexing for account %s for date range %tD - %tD", ids.size(), accountId, new Date(dayBefore), new Date(mostRecent));
+                                        ZimbraLog.index.debug("Queued %d items for re-indexing for account %s for date range %tD - %tD", ids.size(), accountId, new Date(dayBefore *1000), new Date(mostRecent * 1000));
                                         break;
                                     } else {
                                         //queue is full. Wait for space to free up
@@ -152,22 +164,41 @@ public class MailboxIndexUtil {
         reindexer.start();
     }
 
-    public static class MailboxReIndexSpec extends Pair<Mailbox, Set<MailItem.Type>>{
+    public static class MailboxReIndexSpec {
 
-        public MailboxReIndexSpec(Mailbox mbox) {
-            this(mbox, null);
+        private int numItems;
+        private boolean started;
+        private Mailbox mbox;
+        private Set<MailItem.Type> types;
+
+        public MailboxReIndexSpec(Mailbox mbox, OperationContext octxt) throws ServiceException {
+            this(mbox, octxt, null);
         }
 
-        public MailboxReIndexSpec(Mailbox mbox, Set<Type> types) {
-            super(mbox, types);
+        public MailboxReIndexSpec(Mailbox mbox, OperationContext octxt, Set<Type> types) throws ServiceException {
+            this.mbox = mbox;
+            this.types = types;
+            numItems = mbox.getNumSearchableItems(octxt, types);
         }
 
         public Mailbox getMailbox() {
-            return getFirst();
+            return mbox;
         }
 
         public Set<MailItem.Type> getTypes() {
-            return getSecond();
+            return types;
+        }
+
+        public int getNumItems() {
+            return numItems;
+        }
+
+        public boolean isStarted() {
+            return started;
+        }
+
+        public void setStarted() {
+            this.started = true;
         }
     }
 

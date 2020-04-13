@@ -4470,6 +4470,14 @@ public class Mailbox implements MailboxStore {
         }
     }
 
+    public int getNumSearchableItems(OperationContext octxt, Set<MailItem.Type> types) throws ServiceException {
+        try (final MailboxTransaction t = mailboxReadTransaction("getNumSearchableItems", octxt)) {
+            int numItems = DbMailItem.getNumSearchableItems(this, types, this.getOperationConnection());
+            t.commit();
+            return numItems;
+        }
+    }
+
     public void writeICalendarForCalendarItems(Writer writer, OperationContext octxt, Collection<CalendarItem> calItems,
         boolean useOutlookCompatMode, boolean ignoreErrors, boolean needAppleICalHacks, boolean trimCalItemsList)
             throws ServiceException {

@@ -267,7 +267,8 @@ public final class MailboxIndex {
     }
 
     /**
-     * Add mail items with specified IDs to re-indexing queue
+     * Add mail items with specified IDs to re-indexing queue.
+     * Callers need to manage IndexingQueueAdapter counters
      * @param types
      * @throws ServiceException
      */
@@ -281,16 +282,11 @@ public final class MailboxIndex {
         if(queueAdapter == null) {
             throw ServiceException.FAILURE("Indexing Queue Adapter is not properly configured", null);
         }
-        queueAdapter.setTotalMailboxTaskCount(mailbox.getAccountId(), items.length);
-        queueAdapter.setSucceededMailboxTaskCount(mailbox.getAccountId(), 0);
-        queueAdapter.setFailedMailboxTaskCount(mailbox.getAccountId(), 0);
 
         if(items.length == 0) {
             //nothing to index
-            queueAdapter.setTaskStatus(mailbox.getAccountId(), ReIndexStatus.STATUS_DONE);
             success = true;
         } else {
-            queueAdapter.setTaskStatus(mailbox.getAccountId(), ReIndexStatus.STATUS_RUNNING);
             //Step 3: add items to re-indexing queue in batches
             int ix = 0;
             int numAdded = 0;

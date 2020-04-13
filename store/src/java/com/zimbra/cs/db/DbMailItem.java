@@ -5653,4 +5653,37 @@ public class DbMailItem {
             DbPool.closeStatement(stmt);
         }
     }
+
+    public static int getNumSearchableItems(Mailbox mbox,  Set<Type> types, DbConnection conn) throws ServiceException {
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        StringBuilder buf = new StringBuilder();
+        buf.append("SELECT count(*) FROM ");
+        buf.append(getMailItemTableName(mbox, false));
+        buf.append(" WHERE ");
+        buf.append(IN_THIS_MAILBOX_AND);
+        if (types == null) {
+            buf.append("type NOT IN " + NON_SEARCHABLE_TYPES);
+        } else {
+            buf.append("type IN (");
+            List<Byte> typeBytes = types.stream().map(t -> t.toByte()).collect(Collectors.toList());
+            buf.append(Joiner.on(",").join(typeBytes));
+            buf.append(") ");
+        }
+        try {
+            stmt = conn.prepareStatement(buf.toString());
+            setMailboxId(stmt, mbox, 1);
+            rs = stmt.executeQuery();
+            if(rs.next()) {
+                return rs.getInt(1);
+            } else {
+                throw ServiceException.FAILURE("error getting num searchable items", null);
+            }
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("error getting num searchable items", e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+    }
 }
