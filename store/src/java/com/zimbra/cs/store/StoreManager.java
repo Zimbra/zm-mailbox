@@ -408,6 +408,21 @@ public abstract class StoreManager {
     }
 
     /**
+     * Find the MailboxBlob in mailbox mbox with matching item ID.
+     * @param mbox
+     * @param itemId mail_item.id value for item
+     * @param revision mail_item.mod_content value for item
+     * @return the <code>MailboxBlob</code>, or <code>null</code> if the file
+     * does not exist
+     *
+     * @throws ServiceException
+     */
+    public MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, long revision, String locator)
+    throws ServiceException {
+        return getMailboxBlob(mbox, itemId, revision, locator, true);
+    }
+
+    /**
      * Find the MailboxBlob in int mailboxId, String accountId with matching item ID.
      * @param mbox
      * @param itemId mail_item.id value for item
@@ -446,7 +461,7 @@ public abstract class StoreManager {
      * @throws ServiceException
      */
     public MailboxBlob getMailboxBlob(MailItem item) throws ServiceException {
-        MailboxBlob mblob = getMailboxBlob(item.getMailbox(), item.getId(), item.getSavedSequence(), item.getLocator());
+        MailboxBlob mblob = getMailboxBlob(item.getMailbox(), item.getId(), item.getSavedSequenceLong(), item.getLocator());
         if (mblob != null) {
             mblob.setDigest(item.getDigest()).setSize(item.getSize());
         }
