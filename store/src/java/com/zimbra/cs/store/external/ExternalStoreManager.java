@@ -212,11 +212,6 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
     }
 
     @Override
-    public MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, int revision, String locator, boolean validate) throws ServiceException {
-        return this.getMailboxBlob(mbox, itemId, (long)revision, locator, validate);
-    }
-
-    @Override
     public MailboxBlob link(StagedBlob src, Mailbox destMbox, int destMsgId, long destRevision) throws IOException,
     ServiceException {
         // link is a noop

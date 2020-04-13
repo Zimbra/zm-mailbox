@@ -237,14 +237,8 @@ public abstract class StoreManager {
      * @throws IOException
      * @throws ServiceException
      */
-    public  MailboxBlob link(StagedBlob src, Mailbox destMbox, int destMsgId, long destRevision)
-    throws IOException, ServiceException {
-
-        throw ServiceException.UNSUPPORTED();
-    }
-
-    public abstract MailboxBlob link(StagedBlob src, Mailbox destMbox, int destMsgId, int destRevision)
-        throws IOException, ServiceException;
+    public abstract MailboxBlob link(StagedBlob src, Mailbox destMbox, int destMsgId, long destRevision)
+    throws IOException, ServiceException;
 
     /**
      * Rename a blob to a blob in mailbox directory.
@@ -359,10 +353,6 @@ public abstract class StoreManager {
         return getMailboxBlob(mbox, itemId, revision, locator, true);
     }
 
-    public abstract  MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, int revision, String locator)
-        throws ServiceException ;
-
-
     /**
      * Find the MailboxBlob in int mailboxId, String accountId with matching item ID.
      * @param mbox
@@ -373,22 +363,7 @@ public abstract class StoreManager {
      *
      * @throws ServiceException
      */
-    public MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, long revision, String locator, boolean validate)
-    throws ServiceException {
-
-        throw ServiceException.UNSUPPORTED();
-    }
-    /**
-     * Find the MailboxBlob in int mailboxId, String accountId with matching item ID.
-     * @param mbox
-     * @param itemId mail_item.id value for item
-     * @param revision mail_item.mod_content value for item
-     * @return the <code>MailboxBlob</code>, or <code>null</code> if the file
-     * does not exist
-     *
-     * @throws ServiceException
-     */
-    public abstract MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, int revision, String locator, boolean validate)
+    public abstract MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, long revision, String locator, boolean validate)
     throws ServiceException;
 
     /**

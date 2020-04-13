@@ -47,8 +47,6 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.store.Blob;
-import com.zimbra.cs.store.MailboxBlob;
-import com.zimbra.cs.store.StagedBlob;
 import com.zimbra.cs.store.external.ExternalResumableIncomingBlob;
 import com.zimbra.cs.store.external.ExternalResumableUpload;
 import com.zimbra.cs.store.external.ExternalUploadedBlob;
@@ -323,22 +321,5 @@ public class TritonBlobStoreManager extends SisStore implements ExternalResumabl
             case SINGLE_INSTANCE_SERVER_CREATE : return hashType == HashType.SHA256;
             default: return super.supports(feature);
         }
-    }
-
-    @Override
-    public  MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, int revision, String locator, boolean validate)
-        throws ServiceException {
-        return this.getMailboxBlob(mbox, itemId, (long)revision, locator, validate);
-    }
-
-    @Override
-    public MailboxBlob link(StagedBlob src, Mailbox destMbox, int destMsgId, int destRevision)
-        throws IOException, ServiceException {
-        return this.link(src, destMbox, destMsgId, (long)destRevision);
-    }
-    @Override
-    public MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, int revision, String locator)
-        throws ServiceException {
-        return this.getMailboxBlob(mbox, itemId, (long)revision, locator);
     }
 }
