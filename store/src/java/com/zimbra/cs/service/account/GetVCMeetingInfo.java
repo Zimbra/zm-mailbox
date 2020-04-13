@@ -51,8 +51,6 @@ public class GetVCMeetingInfo extends AccountDocumentHandler {
 
 	private static final String contentType = "text/xml; charset=utf-8";
 	
-	private String vcResponse = null;
-	
 	@Override
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 		ZimbraSoapContext zsc = getZimbraSoapContext(context);
@@ -72,27 +70,25 @@ public class GetVCMeetingInfo extends AccountDocumentHandler {
         
         ZimbraLog.account.debug("GetVCMeetingInfo.handle emailAddr: " + emailAddr);
 
-        Element response = null;
+        Element response = zsc.createElement(AccountConstants.GET_VC_MEETING_INFO_RESPONSE);
+        response.addAttribute(AccountConstants.VC_RESPONSE, "");
         try {
-        	String uId = fetchSunLdapUid(emailAddr);
-            
+        	String uId = fetchSunLdapUid(emailAddr, response);
+        
             if(uId!=null) {
-            	getVCMeetingInfo(uId);
+            	getVCMeetingInfo(uId, response);
             }
             ZimbraLog.account.debug("GetVCMeetingInfo.handle uId: "+uId+" for emailAddr: "+emailAddr);
         } catch (Exception e) {
-        	vcResponse = "error";
+        	response.addAttribute(AccountConstants.VC_RESPONSE, "error");
 			ZimbraLog.account.error("\n GetVCMeetingInfo.handle could not able call VC Metting API !\n", e);
 		} 
-        vcResponse = vcResponse==null?"":vcResponse.trim();
-        ZimbraLog.account.debug("GetVCMeetingInfo.handle vcResponse: "+vcResponse);
-        response = zsc.createElement(AccountConstants.GET_VC_MEETING_INFO_RESPONSE);
-        response.addAttribute(AccountConstants.VC_RESPONSE, vcResponse);
+		ZimbraLog.account.debug("GetVCMeetingInfo.handle vcResponse: "+response);
         
 		return response;
 	}
 	
-	private void getVCMeetingInfo(String uId) {
+	private void getVCMeetingInfo(String uId, Element resp) {
 		
 		SOAPConnectionFactory soapConnectionFactory = null;
 		SOAPConnection soapConnection = null;
@@ -106,7 +102,7 @@ public class GetVCMeetingInfo extends AccountDocumentHandler {
 			String soapRequest = new String(byteStream.toByteArray());
 			ZimbraLog.account.debug("GetVCMeetingInfo.getVCMeetingInfo soapRequest: " + soapRequest);
 
-			HttpResponse response = callVCService(soapRequest);
+			HttpResponse response = callVCService(soapRequest, resp);
 
 			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 
@@ -117,11 +113,11 @@ public class GetVCMeetingInfo extends AccountDocumentHandler {
 			ZimbraLog.account.debug("GetVCMeetingInfo.getVCMeetingInfo nodeList: " + nodeList.getLength());
 			for (int i = 0; i < nodeList.getLength(); i++) {
 				Node node = nodeList.item(i);
-				iterateNode(node);
+				iterateNode(node, resp);
 			}
 
 		} catch (Exception e) {
-			vcResponse = "error";
+			resp.addAttribute(AccountConstants.VC_RESPONSE, "error");
 			ZimbraLog.account.error("\n GetVCMeetingInfo.getVCMeetingInfo could not able call VC Metting API !\n", e);
 			e.printStackTrace();
 		} finally {
@@ -156,22 +152,22 @@ public class GetVCMeetingInfo extends AccountDocumentHandler {
 		return soapMessage;
 	}
 	
-	private void iterateNode(Node node) throws Exception {
+	private void iterateNode(Node node, Element resp) throws Exception {
 		
 		NodeList childNodes = node.getChildNodes();
 		for (int j = 0; j < childNodes.getLength(); j++) {
 			Node chileNode = childNodes.item(j);
 			if("a:InviteContent".equals(chileNode.getNodeName())) {
 				ZimbraLog.account.debug("GetVCMeetingInfo.iterateNode InviteContent: "+chileNode.getNodeName() + " --  "+chileNode.getTextContent());
-				vcResponse = chileNode.getTextContent();
+				resp.addAttribute(AccountConstants.VC_RESPONSE, chileNode.getTextContent());
 				break;
 			}
-			iterateNode(chileNode);
+			iterateNode(chileNode, resp);
 		}
 	}
 
 
-	private HttpResponse callVCService(String body) {
+	private HttpResponse callVCService(String body, Element resp) {
 		
 		HttpResponse response = null;
 		try {
@@ -190,14 +186,14 @@ public class GetVCMeetingInfo extends AccountDocumentHandler {
 			response = httpClient.execute(httpPost);
 			ZimbraLog.account.debug("GetVCMeetingInfo.callVCService response: " + response);
 		} catch (Exception e) {
-			vcResponse = "error";
+			resp.addAttribute(AccountConstants.VC_RESPONSE, "error");
 			ZimbraLog.account.error("GetVCMeetingInfo.callVCService Unable to fetch data from vidyo api", e);
 			e.printStackTrace();
 		}
 		return response;
 	}
 
-	private String fetchSunLdapUid(String email) {
+	private String fetchSunLdapUid(String email, Element resp) {
 		
 		String uid = null;
 		DirContext ctx = null;
@@ -233,7 +229,7 @@ public class GetVCMeetingInfo extends AccountDocumentHandler {
 			}
 			ZimbraLog.account.debug("GetVCMeetingInfo.fetchSunLdapUid email: "+email+", uid: " + uid);
 		} catch (Exception e) {
-			vcResponse = "error";
+			resp.addAttribute(AccountConstants.VC_RESPONSE, "error");
 			ZimbraLog.account.error("GetVCMeetingInfo.fetchSunLdapUid Unable to fetch data from sun ldap for email: "+email, e);
 		} finally {
 			try {
