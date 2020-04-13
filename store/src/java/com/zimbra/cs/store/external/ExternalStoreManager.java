@@ -336,4 +336,25 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
     public void clearCache() {
         localCache.removeAll();
     }
+
+    @Override
+    public MailboxBlob copy(MailboxBlob src, Mailbox destMbox, int destMsgId, int destRevision)
+        throws IOException, ServiceException {
+        return this.copy(src, destMbox, destMsgId, (long) destRevision);
+    }
+
+    @Override
+    public MailboxBlob link(StagedBlob src, Mailbox destMbox, int destMsgId, int destRevision)
+        throws IOException, ServiceException {
+        return this.link(src, destMbox, destMsgId, (long)destRevision);
+    }
+
+    @Override
+    public MailboxBlob renameTo(StagedBlob src, Mailbox destMbox, int destMsgId, int destRevision)
+        throws IOException, ServiceException {
+
+        return this.renameTo(src, destMbox, destMsgId, (long) destRevision);
+    }
+
+
 }

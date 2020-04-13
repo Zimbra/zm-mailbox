@@ -336,9 +336,17 @@ public class TritonBlobStoreManager extends SisStore implements ExternalResumabl
         throws IOException, ServiceException {
         return this.link(src, destMbox, destMsgId, (long)destRevision);
     }
+
     @Override
-    public MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, int revision, String locator)
-        throws ServiceException {
-        return this.getMailboxBlob(mbox, itemId, (long)revision, locator);
+    public MailboxBlob copy(MailboxBlob src, Mailbox destMbox, int destMsgId, int destRevision)
+        throws IOException, ServiceException {
+        return this.copy(src, destMbox, destMsgId, (long)destRevision);
     }
+
+    @Override
+    public MailboxBlob renameTo(StagedBlob src, Mailbox destMbox, int destMsgId, int destRevision)
+        throws IOException, ServiceException {
+        return this.renameTo(src, destMbox, destMsgId, (long) destRevision);
+    }
+
 }
