@@ -26,15 +26,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.io.filefilter.FileFileFilter;
+import com.zimbra.common.localconfig.LC;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.store.MailboxBlob;
-import com.zimbra.cs.store.StagedBlob;
 
 /**
  * Example implementation of ExternalStoreManager which writes to a flat directory structure
@@ -125,17 +123,5 @@ public class SimpleStoreManager extends ExternalStoreManager {
         } else {
             return super.supports(feature);
         }
-    }
-
-    @Override
-    public MailboxBlob link(StagedBlob src, Mailbox destMbox, int destMsgId, int destRevision)
-        throws IOException, ServiceException {
-        return this.link(src, destMbox, destMsgId, (long)destRevision);
-    }
-
-    @Override
-    public MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, int revision, String locator)
-        throws ServiceException {
-        return this.getMailboxBlob(mbox, itemId, (long) revision, locator);
     }
 }
