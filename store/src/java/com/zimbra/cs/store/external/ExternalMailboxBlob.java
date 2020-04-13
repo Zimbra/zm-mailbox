@@ -30,7 +30,7 @@ import com.zimbra.cs.store.StoreManager;
  */
 public class ExternalMailboxBlob extends MailboxBlob {
 
-    protected ExternalMailboxBlob(Mailbox mbox, int itemId, long revision, String locator) {
+    protected ExternalMailboxBlob(Mailbox mbox, int itemId, int revision, String locator) {
         super(mbox, itemId, revision, locator);
     }
 
