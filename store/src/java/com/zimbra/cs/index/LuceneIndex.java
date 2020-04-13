@@ -579,11 +579,6 @@ public final class LuceneIndex extends IndexStore {
         return status.clean;
     }
 
-    @Override
-    public boolean isIndexExist() throws IOException {
-        return IndexReader.indexExists(luceneDirectory);
-    }
-
     /**
      * Only one background thread that holds the lock may process a merge for the given writer. Other concurrent
      * attempts simply skip the merge.

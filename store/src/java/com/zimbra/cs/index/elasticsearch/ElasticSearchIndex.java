@@ -366,11 +366,6 @@ public final class ElasticSearchIndex extends IndexStore {
         return true;
     }
 
-    @Override
-    public boolean isIndexExist() throws IOException {
-        return true;
-    }
-
     public int getDocCount() {
         refreshIndexIfNecessary();
         String url = String.format("%s%s/docs/", indexUrl, "_stats");

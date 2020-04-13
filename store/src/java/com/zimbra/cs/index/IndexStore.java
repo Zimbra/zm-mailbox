@@ -83,11 +83,6 @@ public abstract class IndexStore {
      */
     public abstract boolean verify(PrintStream out) throws IOException;
 
-    /**
-     * Get the status that the index data (files, etc.) is created or not
-     */
-    public abstract boolean isIndexExist() throws IOException;
-
     public static Factory getFactory() {
         if (factory == null) {
             setFactory(LC.zimbra_class_index_store_factory.value());

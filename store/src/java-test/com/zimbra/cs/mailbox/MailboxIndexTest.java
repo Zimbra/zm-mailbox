@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2020 Synacor, Inc.
+ * Copyright (C) 2023 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -54,45 +54,45 @@ public final class MailboxIndexTest {
 
         acct.unsetFeatureDelayedIndexEnabled();
         acct.unsetDelayedIndexStatus();
-        Assert.assertTrue("zimbraFaatureDelayedIndexEnabled is unset and zimbraDelayedIndex is unset", index.needToReIndex());
+        Assert.assertTrue("zimbraFeatureDelayedIndexEnabled is unset and zimbraDelayedIndex is unset", index.needToReIndex());
 
         acct.setDelayedIndexStatus(DelayedIndexStatus.suppressed);
-        Assert.assertTrue("zimbraFaatureDelayedIndexEnabled is unset and zimbraDelayedIndex is suppressed", index.needToReIndex());
+        Assert.assertTrue("zimbraFeatureDelayedIndexEnabled is unset and zimbraDelayedIndex is suppressed", index.needToReIndex());
 
         acct.setDelayedIndexStatus(DelayedIndexStatus.waitingForSearch);
-        Assert.assertTrue("zimbraFaatureDelayedIndexEnabled is unset and zimbraDelayedIndex is waitingForSearch", index.needToReIndex());
+        Assert.assertTrue("zimbraFeatureDelayedIndexEnabled is unset and zimbraDelayedIndex is waitingForSearch", index.needToReIndex());
 
         acct.setDelayedIndexStatus(DelayedIndexStatus.indexing);
-        Assert.assertTrue("zimbraFaatureDelayedIndexEnabled is unset and zimbraDelayedIndex is indexing", index.needToReIndex());
+        Assert.assertTrue("zimbraFeatureDelayedIndexEnabled is unset and zimbraDelayedIndex is indexing", index.needToReIndex());
 
         acct.setFeatureDelayedIndexEnabled(false);
         acct.unsetDelayedIndexStatus();
-        Assert.assertTrue("zimbraFaatureDelayedIndexEnabled is FALSE and zimbraDelayedIndex is unset", index.needToReIndex());
+        Assert.assertTrue("zimbraFeatureDelayedIndexEnabled is FALSE and zimbraDelayedIndex is unset", index.needToReIndex());
 
         acct.setDelayedIndexStatus(DelayedIndexStatus.suppressed);
-        Assert.assertTrue("zimbraFaatureDelayedIndexEnabled is FALSE and zimbraDelayedIndex is suppressed", index.needToReIndex());
+        Assert.assertTrue("zimbraFeatureDelayedIndexEnabled is FALSE and zimbraDelayedIndex is suppressed", index.needToReIndex());
 
         acct.setDelayedIndexStatus(DelayedIndexStatus.waitingForSearch);
-        Assert.assertTrue("zimbraFaatureDelayedIndexEnabled is FALSE and zimbraDelayedIndex is waitingForSearch", index.needToReIndex());
+        Assert.assertTrue("zimbraFeatureDelayedIndexEnabled is FALSE and zimbraDelayedIndex is waitingForSearch", index.needToReIndex());
 
         acct.setDelayedIndexStatus(DelayedIndexStatus.indexing);
-        Assert.assertTrue("zimbraFaatureDelayedIndexEnabled is FALSE and zimbraDelayedIndex is indexing", index.needToReIndex());
+        Assert.assertTrue("zimbraFeatureDelayedIndexEnabled is FALSE and zimbraDelayedIndex is indexing", index.needToReIndex());
 
         acct.setFeatureDelayedIndexEnabled(true);
         acct.unsetDelayedIndexStatus();
-        Assert.assertFalse("zimbraFaatureDelayedIndexEnabled is TRUE and zimbraDelayedIndex is unset", index.needToReIndex());
+        Assert.assertFalse("zimbraFeatureDelayedIndexEnabled is TRUE and zimbraDelayedIndex is unset", index.needToReIndex());
 
         acct.setDelayedIndexStatus(DelayedIndexStatus.suppressed);
-        Assert.assertFalse("zimbraFaatureDelayedIndexEnabled is TRUE and zimbraDelayedIndex is suppressed", index.needToReIndex());
+        Assert.assertFalse("zimbraFeatureDelayedIndexEnabled is TRUE and zimbraDelayedIndex is suppressed", index.needToReIndex());
 
         acct.setDelayedIndexStatus(DelayedIndexStatus.waitingForSearch);
-        Assert.assertTrue("zimbraFaatureDelayedIndexEnabled is TRUE and zimbraDelayedIndex is waitingForSearch", index.needToReIndex());
+        Assert.assertTrue("zimbraFeatureDelayedIndexEnabled is TRUE and zimbraDelayedIndex is waitingForSearch", index.needToReIndex());
 
         acct.setDelayedIndexStatus(DelayedIndexStatus.indexing);
-        Assert.assertFalse("zimbraFaatureDelayedIndexEnabled is TRUE and zimbraDelayedIndex is indexing", index.needToReIndex());
+        Assert.assertFalse("zimbraFeatureDelayedIndexEnabled is TRUE and zimbraDelayedIndex is indexing", index.needToReIndex());
 
         acct.setFeatureMobileSyncEnabled(true);
-        Assert.assertFalse("zimbraFaatureDelayedIndexEnabled is TRUE, zimbraDelayedIndex is indexing and " +
+        Assert.assertFalse("zimbraFeatureDelayedIndexEnabled is TRUE, zimbraDelayedIndex is indexing and " +
                 "zimbraFeatureMobileSyncEnabled is TRUE, but not Mobile Sync Access", index.needToReIndex());
     }
 }

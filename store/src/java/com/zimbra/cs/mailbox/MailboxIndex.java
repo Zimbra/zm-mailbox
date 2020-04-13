@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2023 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -21,6 +21,7 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
@@ -39,6 +40,7 @@ import org.apache.lucene.analysis.Analyzer;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
@@ -124,33 +126,26 @@ public final class MailboxIndex {
     }
 
     public boolean needToReIndex() throws ServiceException {
-        try {
-            if (!mailbox.getAccount().isFeatureDelayedIndexEnabled() &&
-                !mailbox.index.getIndexStore().isIndexExist()) { // Index files are empty
-                return true;
-            } else if (mailbox.getAccount().isFeatureDelayedIndexEnabled() &&
-                DelayedIndexStatus.waitingForSearch.equals(mailbox.getAccount().getDelayedIndexStatus())) {
-                return true;
-            } else if (mailbox.getAccount().isFeatureMobileSyncEnabled() &&
-                mailbox.getAccount().isFeatureDelayedIndexEnabled() &&
-                (mailbox.getAccount().getDelayedIndexStatus() == null ||
-                 DelayedIndexStatus.suppressed.equals(mailbox.getAccount().getDelayedIndexStatus()))) {
-                /* Mobile NG module doesn't call Account.authAccount(String, AuthContext.Protocol)
-                 * when Mobile Password is used.
-                 *
-                 * Standard mobile module has a cache of authentication result with no timeout by default.
-                 * It is valid until mailboxd is restarted.
-                 */
-                StackTraceElement[] ste = new Throwable().getStackTrace();
-                for (int i = 0; i < ste.length; i++) {
-                    if (ste[i].getClassName().startsWith("com.zextras.modules.mobile") ||
-                        ste[i].getClassName().startsWith("com.zimbra.zimbrasync")) {
-                        return true;
-                    }
+        if (mailbox.getAccount().isFeatureDelayedIndexEnabled() &&
+            DelayedIndexStatus.waitingForSearch.equals(mailbox.getAccount().getDelayedIndexStatus())) {
+            return true;
+        } else if (mailbox.getAccount().isFeatureMobileSyncEnabled() &&
+            mailbox.getAccount().isFeatureDelayedIndexEnabled() &&
+            (mailbox.getAccount().getDelayedIndexStatus() == null ||
+             DelayedIndexStatus.suppressed.equals(mailbox.getAccount().getDelayedIndexStatus()))) {
+            /* Mobile NG module doesn't call Account.authAccount(String, AuthContext.Protocol)
+             * when Mobile Password is used.
+             *
+             * Standard mobile module has a cache of authentication result with no timeout by default.
+             * It is valid until mailboxd is restarted.
+             */
+            StackTraceElement[] ste = new Throwable().getStackTrace();
+            for (int i = 0; i < ste.length; i++) {
+                if (ste[i].getClassName().startsWith("com.zextras.modules.mobile") ||
+                    ste[i].getClassName().startsWith("com.zimbra.zimbrasync")) {
+                    return true;
                 }
             }
-        } catch (IOException e) {
-            ZimbraLog.index.error("Failed to start reindex thread (index files IO error)");
         }
         return false;
     }
@@ -210,14 +205,14 @@ public final class MailboxIndex {
         ZimbraQuery query = new ZimbraQuery(octx, proto, mailbox, params);
         Set<MailItem.Type> types = toIndexTypes(params.getTypes());
         // no need to index if the search doesn't involve Lucene
-        if (!params.isQuick() && query.hasTextOperation() && getDeferredCount(types) > 0) {
+        if (!params.isQuick() && query.hasTextOperation()) {
             try {
                 if (needToReIndex()) {
                     // Start re-indexing thread so that the search request doesn't wait for the indexing task
                     if (mailbox.index.getReIndexStatus() == null) {
                         mailbox.index.startReIndex(ManageIndexType.enableIndexing);
                     }
-                } else {
+                } else if (getDeferredCount(types) > 0) {
                     // don't wait if an indexing is in progress by other thread
                     indexDeferredItems(types, new BatchStatus(), false);
                 }
@@ -664,6 +659,7 @@ public final class MailboxIndex {
                     mailbox.getAccount().setDelayedIndexStatus(DelayedIndexStatus.suppressed);
                     ZimbraLog.index.info("set zimbraFeatureDelayedIndexEnabled to TRUE and "
                             + "zimbraDelayedIndexStatus to suppressed");
+                    resetDeferredIds();
                     return;
                 }
                 if (enableIndexing && mailbox.getAccount().isFeatureDelayedIndexEnabled()) {
@@ -1304,7 +1300,9 @@ public final class MailboxIndex {
     }
 
     private SetMultimap<MailItem.Type, Integer> getDeferredIds() throws ServiceException {
-        if (deferredIds == null) {
+        if (!isIndexingEnabled()) {
+            resetDeferredIds();
+        } else if (deferredIds == null) {
             DbConnection conn = DbPool.getConnection(mailbox);
             try {
                 deferredIds = DbMailItem.getIndexDeferredIds(conn, mailbox);
@@ -1374,6 +1372,23 @@ public final class MailboxIndex {
 
     synchronized void clearDeferredIds() {
         deferredIds = null;
+    }
+
+    private void resetDeferredIds() {
+        if (deferredIds == null) {
+            deferredIds = Multimaps.newSetMultimap(
+                    new EnumMap<MailItem.Type, Collection<Integer>>(MailItem.Type.class),
+                    new Supplier<Set<Integer>>() {
+                        @Override
+                        public Set<Integer> get() {
+                            return new HashSet<Integer>();
+                        }
+                    });
+            ZimbraLog.index.debug("created an empty deferredIds. deferredIds=%s", deferredIds);
+        } else {
+            deferredIds.clear();
+            ZimbraLog.index.debug("reset deferredIds. deferredIds=%s", deferredIds);
+        }
     }
 
     /**
