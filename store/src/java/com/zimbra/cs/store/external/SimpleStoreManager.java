@@ -130,14 +130,12 @@ public class SimpleStoreManager extends ExternalStoreManager {
     @Override
     public MailboxBlob link(StagedBlob src, Mailbox destMbox, int destMsgId, int destRevision)
         throws IOException, ServiceException {
-        // TODO Auto-generated method stub
-        return null;
+        return this.link(src, destMbox, destMsgId, (long)destRevision);
     }
 
     @Override
     public MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, int revision, String locator)
         throws ServiceException {
-        // TODO Auto-generated method stub
         return this.getMailboxBlob(mbox, itemId, (long) revision, locator);
     }
 }

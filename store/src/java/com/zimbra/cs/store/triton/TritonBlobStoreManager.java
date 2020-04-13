@@ -326,14 +326,14 @@ public class TritonBlobStoreManager extends SisStore implements ExternalResumabl
     }
 
     @Override
-    public  MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, int revision, String locator, boolean validate) {
-        return null;
+    public  MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, int revision, String locator, boolean validate)
+        throws ServiceException {
+        return this.getMailboxBlob(mbox, itemId, (long)revision, locator, validate);
     }
 
     @Override
     public MailboxBlob link(StagedBlob src, Mailbox destMbox, int destMsgId, int destRevision)
         throws IOException, ServiceException {
-        // TODO Auto-generated method stub
         return this.link(src, destMbox, destMsgId, (long)destRevision);
     }
     @Override

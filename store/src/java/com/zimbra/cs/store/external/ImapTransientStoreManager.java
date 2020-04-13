@@ -91,7 +91,6 @@ public class ImapTransientStoreManager extends ExternalStoreManager {
     @Override
     public MailboxBlob link(StagedBlob src, Mailbox destMbox, int destMsgId, int destRevision)
         throws IOException, ServiceException {
-        // TODO Auto-generated method stub
         return this.link(src, destMbox, destMsgId, (long)destRevision);
     }
 
