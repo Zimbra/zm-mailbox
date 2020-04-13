@@ -327,4 +327,25 @@ public final class MockStoreManager extends StoreManager {
             return mockblob;
         }
     }
+
+    @Override
+    public MailboxBlob link(StagedBlob src, Mailbox destMbox, int destMsgId, int destRevision)
+        throws IOException, ServiceException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, int revision, String locator)
+        throws ServiceException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, int revision, String locator,
+        boolean validate) throws ServiceException {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }
