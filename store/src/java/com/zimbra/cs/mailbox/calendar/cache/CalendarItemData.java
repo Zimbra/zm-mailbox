@@ -37,7 +37,7 @@ public class CalendarItemData {
     private String mTagIds;
     private boolean mIsPublic;
     private int mModMetadata; // mod_metadata db column; this serves the function of last-modified-time
-    private long mModContent;  // mod_content db column
+    private int mModContent;  // mod_content db column
     private long mDate;       // date db column; unix time in millis
     private long mChangeDate; // change_date db column; unix time in millis
     private long mSize;       // size db column
@@ -73,8 +73,7 @@ public class CalendarItemData {
     public String getTagIds()   { return mTagIds; }
     public boolean isPublic() { return mIsPublic; }
     public int getModMetadata()  { return mModMetadata; }
-    public int getModContent()   { return (int) mModContent; }
-    public long getModContentLong()   { return mModContent; }
+    public int getModContent()   { return mModContent; }
     public long getDate()         { return mDate; }
     public long getChangeDate()   { return mChangeDate; }
     public long getSize()         { return mSize; }
@@ -98,7 +97,7 @@ public class CalendarItemData {
     }
 
     CalendarItemData(MailItem.Type type, int folderId, int calItemId, String flags, String[] tags, String tagIds, int modMetadata,
-            long modContent, long date, long changeDate, long size, String uid, boolean isRecurring, boolean hasExceptions, boolean isPublic,
+            int modContent, long date, long changeDate, long size, String uid, boolean isRecurring, boolean hasExceptions, boolean isPublic,
             AlarmData alarm, FullInstanceData defaultData) {
         this.type = type;
         mFolderId = folderId;

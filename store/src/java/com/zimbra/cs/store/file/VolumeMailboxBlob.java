@@ -22,7 +22,7 @@ import com.zimbra.cs.store.MailboxBlob;
 public class VolumeMailboxBlob extends MailboxBlob {
     private final VolumeBlob blob;
 
-    protected VolumeMailboxBlob(Mailbox mbox, int itemId, long revision, String locator, VolumeBlob blob) {
+    protected VolumeMailboxBlob(Mailbox mbox, int itemId, int revision, String locator, VolumeBlob blob) {
         super(mbox, itemId, revision, locator);
         this.blob = blob;
     }
