@@ -772,7 +772,7 @@ final class ImapSessionManager {
     private String cacheKey(FolderStore folder, boolean active) {
         MailboxStore mbox = folder.getMailboxStore();
         int modseq = folder instanceof SearchFolderStore ? mbox.getLastChangeID() : folder.getImapMODSEQ();
-        long uvv = folder instanceof SearchFolderStore ? mbox.getLastChangeID() : ImapFolder.getUIDValidity(folder);
+        int uvv = folder instanceof SearchFolderStore ? mbox.getLastChangeID() : ImapFolder.getUIDValidity(folder);
         String acctId = null;
         try {
             acctId = mbox.getAccountId();

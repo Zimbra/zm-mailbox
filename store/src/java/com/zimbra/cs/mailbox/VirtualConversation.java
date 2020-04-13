@@ -89,7 +89,7 @@ public class VirtualConversation extends Conversation {
         data.setSubject(msg.getSubject());
         data.date = (int) (msg.getDate() / 1000);
         data.modMetadata = msg.getSavedSequence();
-        data.modContent = msg.getSavedSequenceLong();
+        data.modContent = msg.getSavedSequence();
         data.size = 1;
         data.unreadCount = msg.getUnreadCount();
         data.setFlags(msg.getInternalFlagBitmask());
