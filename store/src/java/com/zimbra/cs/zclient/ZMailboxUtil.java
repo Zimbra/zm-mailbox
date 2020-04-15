@@ -2361,11 +2361,15 @@ public class ZMailboxUtil implements DebugListener {
         int first = offset+1;
         int last = offset+sr.getHits().size();
 
+        StringBuilder header = new StringBuilder("num: %d, more: %s");
         if (sr.hasSavedSearchPrompt()) {
-            stdout.printf("num: %d, more: %s, saveSearchPrompt=true%n%n", sr.getHits().size(), sr.hasMore());
-        } else {
-            stdout.printf("num: %d, more: %s%n%n", sr.getHits().size(), sr.hasMore());
+            header.append(" saveSearchPrompt: true");
         }
+        if (sr.isReIndexInProgress()) {
+            header.append(" reIndexInProgress: true");
+        }
+        header.append("%n%n");
+        stdout.printf(header.toString(), sr.getHits().size(), sr.hasMore());
         int width = colWidth(last);
 
         if (sr.getHits().size() == 0) {

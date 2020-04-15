@@ -1,8 +1,10 @@
 package com.zimbra.cs.index.queue;
 
-import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 
+import com.google.common.util.concurrent.AtomicLongMap;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
@@ -16,18 +18,18 @@ import com.zimbra.cs.util.ProvisioningUtil;
  */
 public class LocalIndexingQueueAdapter extends IndexingQueueAdapter {
     private final ArrayBlockingQueue<AbstractIndexingTasksLocator> itemQueue;
-    private final HashMap<String, Integer> totalCounters;
-    private final HashMap<String, Integer> succeededCounters;
-    private final HashMap<String, Integer> failedCounters;
-    private final HashMap<String, Integer> taskStatus;
+    private final AtomicLongMap<String> totalCounters;
+    private final AtomicLongMap<String> succeededCounters;
+    private final AtomicLongMap<String> failedCounters;
+    private final Map<String, Integer> taskStatus;
 
     public LocalIndexingQueueAdapter() {
         int queueSize = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraIndexingQueueMaxSize, 10000);
         itemQueue = new ArrayBlockingQueue<AbstractIndexingTasksLocator>(queueSize);
-        totalCounters = new HashMap<String, Integer>();
-        succeededCounters = new HashMap<String, Integer>();
-        failedCounters = new HashMap<String, Integer>();
-        taskStatus = new HashMap<String, Integer>();
+        totalCounters = AtomicLongMap.create();
+        succeededCounters = AtomicLongMap.create();
+        failedCounters = AtomicLongMap.create();
+        taskStatus = new ConcurrentHashMap<>();
     }
 
     /**
@@ -108,12 +110,8 @@ public class LocalIndexingQueueAdapter extends IndexingQueueAdapter {
     }
 
     @Override
-    public synchronized void incrementSucceededMailboxTaskCount(String accountId, int val) {
-        Integer currentCount = succeededCounters.get(accountId);
-        if (currentCount == null) {
-            currentCount = 0;
-        }
-        succeededCounters.put(accountId, currentCount + val);
+    public void incrementSucceededMailboxTaskCount(String accountId, int val) {
+        succeededCounters.addAndGet(accountId, val);
         checkStatus(accountId);
     }
 
@@ -125,20 +123,19 @@ public class LocalIndexingQueueAdapter extends IndexingQueueAdapter {
     }
 
     @Override
-    public synchronized int getSucceededMailboxTaskCount(String accountId) {
-        Integer currentCount = succeededCounters.get(accountId);
-        return currentCount == null ? 0 : currentCount;
+    public int getSucceededMailboxTaskCount(String accountId) {
+        return toInt(succeededCounters.get(accountId));
     }
 
     @Override
-    public synchronized void deleteMailboxTaskCounts(String accountId) {
+    public void deleteMailboxTaskCounts(String accountId) {
         totalCounters.remove(accountId);
         succeededCounters.remove(accountId);
         failedCounters.remove(accountId);
     }
 
     @Override
-    public synchronized void clearAllTaskCounts() {
+    public void clearAllTaskCounts() {
         totalCounters.clear();
         succeededCounters.clear();
         failedCounters.clear();
@@ -156,24 +153,18 @@ public class LocalIndexingQueueAdapter extends IndexingQueueAdapter {
 
     @Override
     public int getTotalMailboxTaskCount(String accountId) {
-        Integer val = totalCounters.get(accountId);
-        return val == null ? 0 : val;
+        return toInt(totalCounters.get(accountId));
     }
 
     @Override
     public void incrementFailedMailboxTaskCount(String accountId, int numItems) {
-        Integer currentCount = failedCounters.get(accountId);
-        if (currentCount == null) {
-            currentCount = 0;
-        }
-        failedCounters.put(accountId, currentCount + numItems);
+        failedCounters.addAndGet(accountId, numItems);
         checkStatus(accountId);
     }
 
     @Override
     public int getFailedMailboxTaskCount(String accountId) {
-        Integer currentCount = failedCounters.get(accountId);
-        return currentCount == null ? 0 : currentCount;
+        return toInt(failedCounters.get(accountId));
     }
 
     @Override
@@ -206,5 +197,9 @@ public class LocalIndexingQueueAdapter extends IndexingQueueAdapter {
             }
             return instance;
         }
+    }
+
+    private int toInt(Long val) {
+        return val.intValue();
     }
 }

@@ -246,36 +246,46 @@ public final class ReIndex extends AdminDocumentHandler {
                         ZimbraLog.index.debug("not re-indexing mailbox %s because indexing is suppressed", mbox.getAccountId());
                         continue;
                     }
-                    String typesStr = reIndexMboxInfo.getTypes();
-                    String idsStr = reIndexMboxInfo.getIds();
 
-                    if (typesStr != null && idsStr != null) {
-                        ServiceException.INVALID_REQUEST("Can't specify both 'types' and 'ids'", null);
-                    }
+                    if (mbox.index.isReIndexInProgress()) {
+                        ZimbraLog.index.warn("not re-indexing mailbox %s because a re-index is already in progress", account.getId());
+                        status = mbox.index.getReIndexStatus();
+                        continue;
+                    } else {
+                        String typesStr = reIndexMboxInfo.getTypes();
+                        String idsStr = reIndexMboxInfo.getIds();
 
-                    if (typesStr != null) {
-                        Set<MailItem.Type> types;
-                        try {
-                            types = MailItem.Type.setOf(typesStr);
-                            mailboxesToReindexByTime.add(new MailboxReIndexSpec(mbox, types));
-                        } catch (IllegalArgumentException e) {
-                            throw MailServiceException.INVALID_TYPE(e.getMessage());
+                        if (typesStr != null && idsStr != null) {
+                            ServiceException.INVALID_REQUEST("Can't specify both 'types' and 'ids'", null);
                         }
-                    }
-                    if (idsStr != null) {
-                        Set<Integer> ids = new HashSet<Integer>();
-                        for (String id : Splitter.on(',').trimResults().split(idsStr)) {
+
+                        if (typesStr != null) {
+                            Set<MailItem.Type> types;
                             try {
-                                ids.add(Integer.parseInt(id));
-                            } catch (NumberFormatException e) {
-                                ServiceException.INVALID_REQUEST("invalid item ID: " + id, e);
+                                types = MailItem.Type.setOf(typesStr);
+                                MailboxReIndexSpec spec = new MailboxReIndexSpec(mbox, octxt, types);
+                                mailboxesToReindexByTime.add(spec);
+                                status = new ReIndexStatus(spec.getNumItems(), 0, 0, ReIndexStatus.STATUS_RUNNING);
+                            } catch (IllegalArgumentException e) {
+                                throw MailServiceException.INVALID_TYPE(e.getMessage());
                             }
                         }
-                        mbox.index.startReIndexById(ids);
-                        status = mbox.index.getReIndexStatus();
-                    } else {
-                        mailboxesToReindexByTime.add(new MailboxReIndexSpec(mbox));
-                        status = new ReIndexStatus(0,0,0,ReIndexStatus.STATUS_RUNNING);
+                        else if (idsStr != null) {
+                            Set<Integer> ids = new HashSet<Integer>();
+                            for (String id : Splitter.on(',').trimResults().split(idsStr)) {
+                                try {
+                                    ids.add(Integer.parseInt(id));
+                                } catch (NumberFormatException e) {
+                                    ServiceException.INVALID_REQUEST("invalid item ID: " + id, e);
+                                }
+                            }
+                            mbox.index.startReIndexById(ids);
+                            status = mbox.index.getReIndexStatus();
+                        } else {
+                            MailboxReIndexSpec spec = new MailboxReIndexSpec(mbox, octxt);
+                            mailboxesToReindexByTime.add(spec);
+                            status = new ReIndexStatus(spec.getNumItems(), 0, 0, ReIndexStatus.STATUS_RUNNING);
+                        }
                     }
                     addProgressInfo(mboxStatus, status);
                 }

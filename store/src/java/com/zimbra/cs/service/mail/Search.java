@@ -131,6 +131,9 @@ public class Search extends MailDocumentHandler  {
             if (!results.isRelevanceSortSupported()) {
                 response.addAttribute(MailConstants.A_RELEVANCE_SORT_SUPPORTED, false);
             }
+            if (mbox.index.isReIndexInProgress()) {
+                response.addAttribute(MailConstants.A_REINDEX_IN_PROGRESS, true);
+            }
         } catch (IOException e) {
         }
         return response;
@@ -368,7 +371,7 @@ public class Search extends MailDocumentHandler  {
         }
 
         Provisioning prov = Provisioning.getInstance();
-        MailboxManager mboxMgr = MailboxManager.getInstance(); 
+        MailboxManager mboxMgr = MailboxManager.getInstance();
         String localIp = Provisioning.getLocalIp();
 
         Map<String, Map<String /* account id */, List<Integer> /* folder ids */>> groupedByServer =
