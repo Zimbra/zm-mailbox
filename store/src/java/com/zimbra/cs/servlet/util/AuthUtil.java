@@ -186,7 +186,11 @@ public class AuthUtil {
     public static Account basicAuthRequest(HttpServletRequest req, HttpServletResponse resp, boolean sendChallenge, boolean isDav)
             throws IOException, ServiceException
     {
+        String auth = req.getHeader(HTTP_AUTH_HEADER);
         try {
+            if (auth == null) {
+                resp.addHeader(WWW_AUTHENTICATE_HEADER, getRealmHeader(req, null));
+            }
             return basicAuthRequest(req, !sendChallenge, isDav);
         } catch (UserServletException e) {
             if (e.getHttpStatusCode() == HttpServletResponse.SC_UNAUTHORIZED) {
