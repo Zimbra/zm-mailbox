@@ -18,20 +18,20 @@ package com.zimbra.cs.index;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.extension.ExtensionUtil;
-import com.zimbra.cs.index.solr.SolrIndex;
 import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxIndex.IndexType;
 import com.zimbra.cs.util.Zimbra;
 
 /**
@@ -86,10 +86,17 @@ public abstract class IndexStore {
     public abstract void evict();
 
     /**
+     * Delete index data corresponding to the given index types
+     */
+    public abstract void deleteIndex(Collection<IndexType> types) throws IOException, ServiceException;
+
+    /**
      * Deletes the whole index data for the mailbox.
      * @throws ServiceException
      */
-    public abstract void deleteIndex() throws IOException, ServiceException;
+    public void deleteIndex() throws IOException, ServiceException {
+        deleteIndex(EnumSet.of(IndexType.CONTACTS, IndexType.MAILBOX));
+    }
 
     /**
      * Get value of Flag that indicates that the index is scheduled for deletion

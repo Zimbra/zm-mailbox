@@ -17,7 +17,9 @@
 package com.zimbra.cs.index.query;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.lucene.index.Term;
@@ -37,6 +39,7 @@ import com.zimbra.cs.index.LuceneQueryOperation;
 import com.zimbra.cs.index.NoTermQueryOperation;
 import com.zimbra.cs.index.QueryOperation;
 import com.zimbra.cs.index.solr.SolrUtils;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 
 /**
@@ -50,20 +53,25 @@ public class TextQuery extends Query {
     private final String text;
     private boolean quick = false;
     private boolean isPhraseQuery;
+    private final Set<MailItem.Type> types;
 
     /**
      * A single search term. If text has multiple words, it is treated as a phrase (full exact match required) text may
      * end in a *, which wildcards the last term.
      */
-
-    public TextQuery(String field, String text, boolean isPhraseQuery) {
+    public TextQuery(String field, String text, boolean isPhraseQuery,  Set<MailItem.Type> types) {
         this.field = field;
         this.text = text;
         this.isPhraseQuery = isPhraseQuery;
+        this.types = types;
+    }
+
+    public TextQuery(String field, String text, Set<MailItem.Type> types) {
+        this(field, text, false, types);
     }
 
     public TextQuery(String field, String text) {
-        this(field, text, false);
+        this(field, text, false, Collections.emptySet());
     }
 
     /**
@@ -138,7 +146,7 @@ public class TextQuery extends Query {
         } else {
             query = getQuery(queryField, queryString);
         }
-        op.addClause(toQueryString(field, text), query, evalBool(bool));
+        op.addClause(toQueryString(field, text), query, evalBool(bool), getIndexTypes(types));
         return op;
     }
 

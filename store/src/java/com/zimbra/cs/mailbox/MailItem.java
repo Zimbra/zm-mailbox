@@ -3536,9 +3536,9 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
                 int indexId = getIndexStatus() == IndexStatus.DONE ? getIndexId() : mId;
                 int numIndexDocs = state.getNumIndexDocs();
                 if (isTagged(Flag.FlagInfo.COPIED)) {
-                    info.sharedIndex = Sets.newHashSet(new ItemIndexDeletionInfo(indexId, numIndexDocs));
+                    info.sharedIndex = Sets.newHashSet(new ItemIndexDeletionInfo(indexId, numIndexDocs, getType()));
                 } else {
-                    info.indexIds.add(new ItemIndexDeletionInfo(indexId, numIndexDocs));
+                    info.indexIds.add(new ItemIndexDeletionInfo(indexId, numIndexDocs, getType()));
                 }
             }
 

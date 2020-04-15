@@ -12,6 +12,7 @@ import com.zimbra.cs.event.Event;
 import com.zimbra.cs.event.SolrEventDocument;
 import com.zimbra.cs.index.solr.SolrConstants;
 import com.zimbra.cs.index.solr.SolrRequestHelper;
+import com.zimbra.cs.mailbox.MailboxIndex.IndexType;
 
 public class SolrEventCallback implements BatchingEventLogger.BatchedEventCallback {
 
@@ -31,7 +32,7 @@ public class SolrEventCallback implements BatchingEventLogger.BatchedEventCallba
             req.add(solrEvent.getDocument());
         }
         try {
-            helper.executeUpdate(accountId, req);
+            helper.executeUpdate(accountId, req, IndexType.EVENTS);
         } catch (ServiceException e) {
             ZimbraLog.event.error("unable to send %d events to Solr backend", events.size(), e);
         }

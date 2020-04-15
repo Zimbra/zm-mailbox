@@ -17,10 +17,12 @@
 package com.zimbra.cs.index.query;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
 import com.zimbra.cs.index.LuceneFields;
+import com.zimbra.cs.mailbox.MailItem;
 
 /**
  * A simpler way of expressing (to:FOO or from:FOO or cc:FOO).
@@ -44,28 +46,32 @@ public final class AddrQuery extends SubQuery {
     }
 
     public static AddrQuery create(Set<Address> addrs, String text) {
-        return create(addrs, text, false);
+        return create(addrs, text, EnumSet.noneOf(MailItem.Type.class));
     }
 
-    public static AddrQuery create(Set<Address> addrs, String text, boolean isPhraseQuery) {
+    public static AddrQuery create(Set<Address> addrs, String text, Set<MailItem.Type> types) {
+        return create(addrs, text, false, types);
+    }
+
+    public static AddrQuery create(Set<Address> addrs, String text, boolean isPhraseQuery, Set<MailItem.Type> types) {
         List<Query> clauses = new ArrayList<Query>();
 
         if (addrs.contains(Address.FROM)) {
-            clauses.add(new TextQuery(LuceneFields.L_H_FROM, text, isPhraseQuery));
+            clauses.add(new TextQuery(LuceneFields.L_H_FROM, text, isPhraseQuery, types));
         }
 
         if (addrs.contains(Address.TO)) {
             if (!clauses.isEmpty()) {
                 clauses.add(new ConjQuery(ConjQuery.Conjunction.OR));
             }
-            clauses.add(new TextQuery(LuceneFields.L_H_TO, text, isPhraseQuery));
+            clauses.add(new TextQuery(LuceneFields.L_H_TO, text, isPhraseQuery, types));
         }
 
         if (addrs.contains(Address.CC)) {
             if (!clauses.isEmpty()) {
                 clauses.add(new ConjQuery(ConjQuery.Conjunction.OR));
             }
-            clauses.add(new TextQuery(LuceneFields.L_H_CC, text, isPhraseQuery));
+            clauses.add(new TextQuery(LuceneFields.L_H_CC, text, isPhraseQuery, types));
         }
 
         return new AddrQuery(clauses);

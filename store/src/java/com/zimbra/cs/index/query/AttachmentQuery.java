@@ -18,13 +18,16 @@ package com.zimbra.cs.index.query;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.zimbra.cs.index.LuceneFields;
+import com.zimbra.cs.mailbox.MailItem;
 
 /**
  * Query by attachment type.
@@ -94,25 +97,29 @@ public final class AttachmentQuery extends LuceneQuery {
             .put("text/*", "text")
             .build();
 
-    private AttachmentQuery(String what) {
-        super("attachment:", LuceneFields.L_ATTACHMENTS, what);
+    private AttachmentQuery(String what, Set<MailItem.Type> types) {
+        super("attachment:", LuceneFields.L_ATTACHMENTS, what, types);
+    }
+
+    public static Query createQuery(String what) {
+        return createQuery(what, EnumSet.noneOf(MailItem.Type.class));
     }
 
     /**
      * Note: returns either a {@link AttachmentQuery} or a {@link SubQuery}
      * @return
      */
-    public static Query createQuery(String what) {
+    public static Query createQuery(String what, Set<MailItem.Type> itemTypes) {
         Collection<String> types = lookup(CONTENT_TYPES_MULTIMAP, what);
         if (types.size() == 1) {
-            return new AttachmentQuery(Lists.newArrayList(types).get(0));
+            return new AttachmentQuery(Lists.newArrayList(types).get(0), itemTypes);
         } else {
             List<Query> clauses = new ArrayList<Query>(types.size() * 2 - 1);
             for (String contentType : types) {
                 if (!clauses.isEmpty()) {
                     clauses.add(new ConjQuery(ConjQuery.Conjunction.OR));
                 }
-                clauses.add(new AttachmentQuery(contentType));
+                clauses.add(new AttachmentQuery(contentType, itemTypes));
             }
             return new SubQuery(clauses);
         }

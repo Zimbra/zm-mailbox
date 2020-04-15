@@ -18,10 +18,13 @@ package com.zimbra.cs.index.query;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.zimbra.cs.index.LuceneFields;
+import com.zimbra.cs.mailbox.MailItem;
 
 /**
  * Query by MIME type.
@@ -31,25 +34,29 @@ import com.zimbra.cs.index.LuceneFields;
  */
 public final class TypeQuery extends LuceneQuery {
 
-    private TypeQuery(String what) {
-        super("type:", LuceneFields.L_MIMETYPE, what);
+    private TypeQuery(String what, Set<MailItem.Type> types) {
+        super("type:", LuceneFields.L_MIMETYPE, what, types);
+    }
+
+    public static Query createQuery(String what) {
+        return createQuery(what, EnumSet.noneOf(MailItem.Type.class));
     }
 
     /**
      * Note: returns either a {@link TypeQuery} or a {@link SubQuery}
      * @return
      */
-    public static Query createQuery(String what) {
+    public static Query createQuery(String what, Set<MailItem.Type> itemTypes) {
         Collection<String> types = lookup(AttachmentQuery.CONTENT_TYPES_MULTIMAP, what);
         if (types.size() == 1) {
-            return new TypeQuery(Lists.newArrayList(types).get(0));
+            return new TypeQuery(Lists.newArrayList(types).get(0), itemTypes);
         } else {
             List<Query> clauses = new ArrayList<Query>(types.size() * 2 - 1);
             for (String contentType : types) {
                 if (!clauses.isEmpty()) {
                     clauses.add(new ConjQuery(ConjQuery.Conjunction.OR));
                 }
-                clauses.add(new TypeQuery(contentType));
+                clauses.add(new TypeQuery(contentType, itemTypes));
             }
             return new SubQuery(clauses);
         }

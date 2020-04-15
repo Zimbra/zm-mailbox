@@ -40,7 +40,6 @@ import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.AccessBoundedRegex;
-import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
@@ -222,7 +221,7 @@ public final class MailboxIndex {
                 }
             }
             BooleanQuery bq = builder.build();
-            return searcher.search(bq, 1).getTotalHits() > 0;
+            return searcher.search(bq, 1, IndexType.CONTACTS).getTotalHits() > 0;
         }
     }
 
@@ -239,11 +238,19 @@ public final class MailboxIndex {
         indexStore.evict();
     }
 
+    public void deleteIndexByType(IndexType type) throws IOException, ServiceException {
+        deleteIndexByType(EnumSet.of(type));
+    }
+
     public void deleteIndex() throws IOException, ServiceException {
+        deleteIndexByType(EnumSet.of(IndexType.CONTACTS, IndexType.MAILBOX));
+    }
+
+    public void deleteIndexByType(Collection<IndexType> types) throws IOException, ServiceException {
         if (isReIndexInProgress()) {
             abortReIndex();
         }
-        indexStore.deleteIndex();
+        indexStore.deleteIndex(types);
     }
 
     public synchronized void startReIndex(OperationContext ctxt) throws ServiceException {
@@ -615,7 +622,7 @@ public final class MailboxIndex {
         List<BrowseTerm> result = new ArrayList<BrowseTerm>();
         TermFieldEnumeration values = null;
         try (ZimbraIndexSearcher searcher = indexStore.openSearcher()) {
-            values = searcher.getIndexReader().getTermsForField(field);
+            values = searcher.getIndexReader().getTermsForField(field, IndexType.MAILBOX);
             while (values.hasMoreElements()) {
                 BrowseTerm term = values.nextElement();
                 if (term == null) {
@@ -644,7 +651,7 @@ public final class MailboxIndex {
         List<BrowseTerm> result = new ArrayList<BrowseTerm>();
         TermFieldEnumeration values = null;
         try (ZimbraIndexSearcher searcher = indexStore.openSearcher()) {
-            values = searcher.getIndexReader().getTermsForField(LuceneFields.L_ATTACHMENTS);
+            values = searcher.getIndexReader().getTermsForField(LuceneFields.L_ATTACHMENTS, IndexType.MAILBOX);
             while (values.hasMoreElements()) {
                 BrowseTerm term = values.nextElement();
                 if (pattern == null || AccessBoundedRegex.matches(term.getText(), pattern, MAX_REGEX_ACCESSES)) {
@@ -665,7 +672,7 @@ public final class MailboxIndex {
         Pattern pattern = Strings.isNullOrEmpty(regex) ? null : Pattern.compile(regex);
         List<BrowseTerm> result = new ArrayList<BrowseTerm>();
         try (ZimbraIndexSearcher searcher = indexStore.openSearcher();
-             TermFieldEnumeration values = searcher.getIndexReader().getTermsForField(LuceneFields.L_OBJECTS)) {
+             TermFieldEnumeration values = searcher.getIndexReader().getTermsForField(LuceneFields.L_OBJECTS, IndexType.MAILBOX)) {
             while (values.hasMoreElements()) {
                 BrowseTerm term = values.nextElement();
                 if (term == null) {
@@ -761,18 +768,34 @@ public final class MailboxIndex {
         }
     }
 
-    public static class ItemIndexDeletionInfo extends Pair<Integer, Integer> {
+    public static class ItemIndexDeletionInfo {
 
-        public ItemIndexDeletionInfo(Integer itemId, Integer numIndexDocs) {
-            super(itemId, numIndexDocs);
+        private int itemId;
+        private int numIndexDocs;
+        private IndexType indexType;
+
+        public ItemIndexDeletionInfo(int itemId, int numIndexDocs, MailItem.Type itemType) throws ServiceException {
+            this(itemId, numIndexDocs, IndexType.getByItemType(itemType));
+        }
+
+        public ItemIndexDeletionInfo(int itemId, int numIndexDocs, IndexType indexType) {
+            this.itemId = itemId;
+            this.numIndexDocs = numIndexDocs;
+            if (indexType != null) {
+                this.indexType = indexType;
+            }
         }
 
         public int getItemId() {
-            return getFirst();
+            return itemId;
         }
 
         public int getNumIndexDocs() {
-            return getSecond();
+            return numIndexDocs;
+        }
+
+        public IndexType getIndexType() {
+            return indexType;
         }
 
         @Override
@@ -782,6 +805,29 @@ public final class MailboxIndex {
                 return ((ItemIndexDeletionInfo) other).getItemId() == getItemId();
             } else {
                 return false;
+            }
+        }
+    }
+
+    public static enum IndexType {
+        MAILBOX,
+        CONTACTS,
+        EVENTS;
+
+        public static IndexType getByItemType(MailItem.Type type) throws ServiceException {
+            switch(type) {
+            case MESSAGE:
+            case APPOINTMENT:
+            case CHAT:
+            case COMMENT:
+            case DOCUMENT:
+            case NOTE:
+            case TASK:
+                return IndexType.MAILBOX;
+            case CONTACT:
+                return IndexType.CONTACTS;
+            default:
+                throw ServiceException.FAILURE(String.format("querying for IndexType for non-indexable type %s", type), null);
             }
         }
     }

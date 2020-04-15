@@ -43,8 +43,9 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.SolrStopwordManager;
-import com.zimbra.cs.index.solr.SolrIndex.IndexType;
 import com.zimbra.cs.index.solr.SolrIndex.LocalParams;
+import com.zimbra.cs.mailbox.MailboxIndex;
+import com.zimbra.cs.mailbox.MailboxIndex.IndexType;
 import com.zimbra.cs.util.ProvisioningUtil;
 import com.zimbra.cs.util.RetryUtil;
 import com.zimbra.cs.util.RetryUtil.RequestWithRetry;
@@ -248,7 +249,7 @@ public class SolrUtils {
         return builder.build();
     }
 
-    public static SolrResponse executeRequestWithRetry(String accountId, SolrClient client, SolrRequest req, String baseUrl, String coreName, IndexType indexType) throws ServiceException {
+    public static SolrResponse executeRequestWithRetry(String accountId, SolrClient client, SolrRequest req, String baseUrl, String coreName, MailboxIndex.IndexType indexType) throws ServiceException {
         Command<SolrResponse> command = new RetryUtil.RequestWithRetry.Command<SolrResponse>() {
 
             @Override
@@ -287,7 +288,7 @@ public class SolrUtils {
         return request.execute();
     }
 
-    public static SolrResponse executeCloudRequestWithRetry(String accountId, CloudSolrClient client, SolrRequest req, String collectionName, IndexType indexType) throws ServiceException {
+    public static SolrResponse executeCloudRequestWithRetry(String accountId, CloudSolrClient client, SolrRequest req, String collectionName, MailboxIndex.IndexType indexType) throws ServiceException {
         Command<SolrResponse> command = new RetryUtil.RequestWithRetry.Command<SolrResponse>() {
 
             @Override
@@ -384,7 +385,7 @@ public class SolrUtils {
         return getTermsFilter(LuceneFields.L_ACCOUNT_ID, accountId);
     }
 
-    private static String getConfigSetName(IndexType indexType) {
+    private static String getConfigSetName(MailboxIndex.IndexType indexType) {
         switch (indexType) {
         case EVENTS:
             return SolrConstants.CONFIGSET_EVENTS;
@@ -394,7 +395,7 @@ public class SolrUtils {
         }
     }
 
-    private static InitialCollectionSpec getInitialCollectionSpec(String accountId, IndexType indexType) throws ServiceException {
+    private static InitialCollectionSpec getInitialCollectionSpec(String accountId, MailboxIndex.IndexType indexType) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         Account account = prov.getAccountById(accountId);
         if (account == null) {

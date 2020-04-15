@@ -20,6 +20,8 @@ package com.zimbra.cs.index;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -42,6 +44,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxIndex.IndexType;
 import com.zimbra.cs.util.IOUtil;
 
 /**
@@ -85,6 +88,15 @@ public final class LuceneQueryOperation extends QueryOperation {
     private int topDocsChunkSize = 2000; // how many hits to fetch per step in Lucene
     private ZimbraIndexSearcher searcher;
     private Sort sort;
+    private Set<IndexType> indexTypes = new HashSet<>();
+
+    public void addClause(String queryStr, Query query, boolean bool) {
+        addClause(queryStr, query, bool, IndexType.MAILBOX);
+    }
+
+    public void addClause(String queryStr, Query query, boolean bool, IndexType indexType) {
+        addClause(queryStr, query, bool, EnumSet.of(indexType));
+    }
 
     /**
      * Adds the specified text clause at the top level.
@@ -94,8 +106,9 @@ public final class LuceneQueryOperation extends QueryOperation {
      * @param queryStr Appended to the end of the text-representation of this query
      * @param query Lucene query
      * @param bool allows for negated query terms
+     * @param indexType index target (mailbox, contacts, etc)
      */
-    public void addClause(String queryStr, Query query, boolean bool) {
+    public void addClause(String queryStr, Query query, boolean bool, Set<IndexType> types) {
         assert(!haveRunSearch);
 
         // ignore empty BooleanQuery
@@ -120,6 +133,7 @@ public final class LuceneQueryOperation extends QueryOperation {
             BooleanClause newClause = new BooleanClause(query, Occur.MUST_NOT);
             updateBoolQuery(newClause);
         }
+        indexTypes.addAll(types);
     }
 
     private void updateBoolQuery(BooleanClause newClause) {
@@ -230,7 +244,7 @@ public final class LuceneQueryOperation extends QueryOperation {
             Term term = query.getTerm();
             long start = System.currentTimeMillis();
             try {
-                int freq = searcher.docFreq(term);
+                int freq = searcher.docFreq(term, indexTypes);
                 int docsCutoff = (int) (searcher.getIndexReader().numDocs() * DB_FIRST_TERM_FREQ_PERC);
                 ZimbraLog.search.debug("LuceneDocFreq freq=%d,cutoff=%d(%d%%),elapsed=%d",
                         freq, docsCutoff, (int) (100 * DB_FIRST_TERM_FREQ_PERC), System.currentTimeMillis() - start);
@@ -400,9 +414,9 @@ public final class LuceneQueryOperation extends QueryOperation {
             ZimbraTermsFilter filter = (filterTerms != null) ? new ZimbraTermsFilter(filterTerms) : null;
             long start = System.currentTimeMillis();
             if (sort == null) {
-                hits = searcher.search(luceneQuery, filter, topDocsLen);
+                hits = searcher.search(luceneQuery, filter, topDocsLen, indexTypes);
             } else {
-                hits = searcher.search(luceneQuery, filter, topDocsLen, sort);
+                hits = searcher.search(luceneQuery, filter, topDocsLen, sort, indexTypes);
             }
             ZimbraLog.search.debug("LuceneSearch query=%s,n=%d,total=%d,elapsed=%d",
                     luceneQuery, topDocsLen, hits.getTotalHits(), System.currentTimeMillis() - start);
@@ -416,7 +430,7 @@ public final class LuceneQueryOperation extends QueryOperation {
 
     @Override
     public String toString() {
-        return "LUCENE(" + luceneQuery + (hasSpamTrashSetting() ? " <ANYWHERE>" : "") + ")";
+        return "LUCENE(" + luceneQuery + (hasSpamTrashSetting() ? " <ANYWHERE>" : "") + " INDEX=" + indexTypes + ")";
     }
 
     /**
@@ -426,6 +440,7 @@ public final class LuceneQueryOperation extends QueryOperation {
         assert(!haveRunSearch);
         LuceneQueryOperation clone = (LuceneQueryOperation) super.clone();
         clone.luceneQuery = luceneQuery; //does this work? Queries are immutable in lucene 6
+        clone.indexTypes = indexTypes;
         return clone;
     }
 
@@ -530,6 +545,7 @@ public final class LuceneQueryOperation extends QueryOperation {
             if (other.hasSpamTrashSetting()) {
                 forceHasSpamTrashSetting();
             }
+            indexTypes.addAll(((LuceneQueryOperation) other).getIndexTypes());
             return this;
         }
         return null;
@@ -785,5 +801,9 @@ public final class LuceneQueryOperation extends QueryOperation {
     @Override
     public boolean isRelevanceSortSupported() {
         return true;
+    }
+
+    public Set<IndexType> getIndexTypes() {
+        return indexTypes;
     }
 }

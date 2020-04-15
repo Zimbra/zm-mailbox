@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.lucene.document.Document;
 import org.apache.lucene.index.Term;
 
 import com.google.common.collect.ImmutableSet;
@@ -287,7 +286,7 @@ public class DBQueryOperation extends QueryOperation {
         if (luceneOp == null) {
             luceneOp = op;
         } else {
-            luceneOp.addClause(op.getQueryString(), op.getQuery(), true);
+            luceneOp.addClause(op.getQueryString(), op.getQuery(), true, op.getIndexTypes());
         }
     }
 

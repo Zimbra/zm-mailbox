@@ -16,6 +16,8 @@
  */
 package com.zimbra.cs.index.query;
 
+import java.util.EnumSet;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.apache.lucene.document.IntPoint;
@@ -25,6 +27,7 @@ import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.LuceneQueryOperation;
 import com.zimbra.cs.index.QueryOperation;
 import com.zimbra.cs.index.solr.SolrUtils;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 
 /**
@@ -37,12 +40,16 @@ public final class FieldQuery extends TextQuery {
 
     private static final Pattern NUMERIC_QUERY_REGEX = Pattern.compile("(<|>|<=|>=)?-?\\d+");
 
-    private FieldQuery(String name, String value, boolean isPhraseQuery) {
-        super(LuceneFields.L_FIELD, String.format("%s:%s", name, value == null ? "" : value), isPhraseQuery);
+    private FieldQuery(String name, String value, boolean isPhraseQuery, Set<MailItem.Type> types) {
+        super(LuceneFields.L_FIELD, String.format("%s:%s", name, value == null ? "" : value), isPhraseQuery, types);
     }
 
     public static Query create(Mailbox mbox, String name, String value) throws ServiceException {
-        return create(mbox, name, value, false);
+        return create(mbox, name, value, EnumSet.noneOf(MailItem.Type.class));
+    }
+
+    public static Query create(Mailbox mbox, String name, String value, Set<MailItem.Type> types) throws ServiceException {
+        return create(mbox, name, value, false, types);
     }
 
     /**
@@ -57,14 +64,14 @@ public final class FieldQuery extends TextQuery {
      * @return new {@link FieldQuery} or {@link NumericRangeFieldQuery}
      * @throws ServiceException error on wildcard expansion
      */
-    public static Query create(Mailbox mbox, String name, String value, boolean isPhraseQuery) throws ServiceException {
+    public static Query create(Mailbox mbox, String name, String value, boolean isPhraseQuery, Set<MailItem.Type> types) throws ServiceException {
         if (NUMERIC_QUERY_REGEX.matcher(value).matches()) {
             try {
-                return new NumericRangeFieldQuery(name, value);
+                return new NumericRangeFieldQuery(name, value, types);
             } catch (NumberFormatException e) { // fall back to text query
             }
         }
-        return new FieldQuery(name, value, isPhraseQuery);
+        return new FieldQuery(name, value, isPhraseQuery, types);
     }
 
     private static final class NumericRangeFieldQuery extends Query {
@@ -86,8 +93,9 @@ public final class FieldQuery extends TextQuery {
         private final String name;
         private final int number;
         private final Range range;
+        private final Set<MailItem.Type> types;
 
-        NumericRangeFieldQuery(String name, String value) throws NumberFormatException {
+        NumericRangeFieldQuery(String name, String value, Set<MailItem.Type> types) throws NumberFormatException {
             this.name = name.toLowerCase();
             if (value.startsWith("<")) {
                 if (value.startsWith("=", 1)) {
@@ -109,6 +117,7 @@ public final class FieldQuery extends TextQuery {
                 range = Range.EQ;
                 number = Integer.parseInt(value);
             }
+            this.types = types;
         }
 
         @Override
@@ -141,7 +150,7 @@ public final class FieldQuery extends TextQuery {
             }
 
             LuceneQueryOperation op = new LuceneQueryOperation();
-            op.addClause(toQueryString(fieldName, range.toString() + number), query, evalBool(bool));
+            op.addClause(toQueryString(fieldName, range.toString() + number), query, evalBool(bool), getIndexTypes(types));
             return op;
         }
 

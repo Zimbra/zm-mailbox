@@ -1,11 +1,15 @@
 package com.zimbra.cs.index.solr;
 
+import java.util.Collection;
+
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.params.ShardParams;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.LuceneFields;
+import com.zimbra.cs.index.solr.SolrIndex.OpType;
+import com.zimbra.cs.mailbox.MailboxIndex.IndexType;
 
 /**
  * Implementation used when all data for all accounts are stored in one index.
@@ -25,8 +29,8 @@ public class JointCollectionLocator extends SolrCollectionLocator {
     }
 
     @Override
-    public String getCollectionName(String accountId) throws ServiceException {
-        return indexName != null ? indexName : nameFunc.getIndexName(accountId);
+    public String getCollectionName(String accountId, Collection<IndexType> indexTypes, OpType opType) throws ServiceException {
+        return indexName != null ? indexName : nameFunc.getIndexName(accountId, indexTypes);
     }
 
     @Override
@@ -52,6 +56,6 @@ public class JointCollectionLocator extends SolrCollectionLocator {
 
     @FunctionalInterface
     public static interface IndexNameFunc {
-        public String getIndexName(String accountId) throws ServiceException;
+        public String getIndexName(String accountId, Collection<IndexType> indexTypes) throws ServiceException;
     }
 }

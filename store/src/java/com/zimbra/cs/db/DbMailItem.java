@@ -77,6 +77,7 @@ import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxIndex.IndexType;
 import com.zimbra.cs.mailbox.MailboxIndex.ItemIndexDeletionInfo;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Message.EventFlag;
@@ -3458,9 +3459,9 @@ public class DbMailItem {
                     }
                     boolean shared = (flags & Flag.BITMASK_COPIED) != 0;
                     if (shared) {
-                        info.sharedIndex.add(new ItemIndexDeletionInfo(indexId, numIndexDocs));
+                        info.sharedIndex.add(new ItemIndexDeletionInfo(indexId, numIndexDocs, type));
                     } else {
-                        info.indexIds.add(new ItemIndexDeletionInfo(indexId > MailItem.IndexStatus.STALE.id() ? indexId : id, numIndexDocs));
+                        info.indexIds.add(new ItemIndexDeletionInfo(indexId > MailItem.IndexStatus.STALE.id() ? indexId : id, numIndexDocs, type));
                     }
                 }
             }
@@ -3608,7 +3609,7 @@ public class DbMailItem {
                 }
                 rs = stmt.executeQuery();
                 while (rs.next()) {
-                    info.sharedIndex.remove(new ItemIndexDeletionInfo(rs.getInt(1), 0));
+                    info.sharedIndex.remove(new ItemIndexDeletionInfo(rs.getInt(1), 0, (IndexType) null));
                 }
                 rs.close(); rs = null;
                 stmt.close(); stmt = null;

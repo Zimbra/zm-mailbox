@@ -77,6 +77,7 @@ import com.zimbra.cs.index.solr.BatchedIndexDeletions.Deletion;
 import com.zimbra.cs.index.solr.BatchedIndexDeletions.ItemDeletion;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox.IndexItemEntry;
+import com.zimbra.cs.mailbox.MailboxIndex.IndexType;
 import com.zimbra.cs.mailbox.MailboxIndex.ItemIndexDeletionInfo;
 import com.zimbra.cs.util.IOUtil;
 
@@ -246,7 +247,8 @@ public class SolrIndex extends IndexStore {
                 q.setFields(MESSAGE_FETCH_FIELDS);
                 ZimbraLog.search.debug(String.format("retrieving document by query %s ",q.toString()));
                 try {
-                    QueryResponse resp = (QueryResponse) solrHelper.executeQueryRequest(accountId, q);
+                    //TODO: use correct index type
+                    QueryResponse resp = (QueryResponse) solrHelper.executeQueryRequest(accountId, q, IndexType.MAILBOX);
                     SolrDocument solrDoc = resp.getResults().get(0);
                     return buildFullDocument(solrDoc);
                 } catch (SolrException e) {
@@ -258,7 +260,7 @@ public class SolrIndex extends IndexStore {
         }
 
         @Override
-        public int docFreq(Term term) throws IOException, ServiceException {
+        public int docFreq(Term term, Collection<IndexType> indexTypes) throws IOException, ServiceException {
             try {
                 SolrQuery q = solrHelper.newQuery(accountId).setQuery("*:*").setRows(0);
                 if (SolrUtils.isWildcardQuery(term.text()) || SolrUtils.containsWhitespace(term.text())) {
@@ -267,7 +269,7 @@ public class SolrIndex extends IndexStore {
                 } else {
                     addTermsFilter(q, Arrays.asList(term));
                 }
-                QueryResponse resp = (QueryResponse) solrHelper.executeQueryRequest(accountId, q);
+                QueryResponse resp = (QueryResponse) solrHelper.executeQueryRequest(accountId, q, indexTypes);
                 return (int) resp.getResults().getNumFound();
             } catch (SolrException e) {
                 ZimbraLog.index.error("Solr search problem getting docFreq for mailbox %s", accountId,e);
@@ -281,25 +283,25 @@ public class SolrIndex extends IndexStore {
         }
 
         @Override
-        public ZimbraTopDocs search(Query query, int n) throws IOException, ServiceException {
-            return search(query,null, n);
+        public ZimbraTopDocs search(Query query, int n, Collection<IndexType> indexTypes) throws IOException, ServiceException {
+            return search(query,null, n, indexTypes);
         }
 
         @Override
-        public ZimbraTopDocs search(Query query, ZimbraTermsFilter filter, int n)
+        public ZimbraTopDocs search(Query query, ZimbraTermsFilter filter, int n, Collection<IndexType> indexTypes)
                 throws IOException, ServiceException {
-            return search(query, filter, n, null);
+            return search(query, filter, n, null, indexTypes);
         }
 
         @Override
         public ZimbraTopDocs search(Query query, ZimbraTermsFilter filter,
-                int n, Sort sort) throws IOException, ServiceException {
-            return search(query, filter, n, sort, LuceneFields.L_MAILBOX_BLOB_ID, MESSAGE_FETCH_FIELDS);
+                int n, Sort sort, Collection<IndexType> indexTypes) throws IOException, ServiceException {
+            return search(query, filter, n, sort, LuceneFields.L_MAILBOX_BLOB_ID, MESSAGE_FETCH_FIELDS, indexTypes);
         }
 
         @Override
         public ZimbraTopDocs search(Query query, ZimbraTermsFilter filter,
-                int n, Sort sort, String idField, String[] fetchFields) throws IOException, ServiceException {
+                int n, Sort sort, String idField, String[] fetchFields, Collection<IndexType> indexTypes) throws IOException, ServiceException {
             List<ZimbraScoreDoc>scoreDocs = Lists.newArrayList();
             List<SortField> sortFields = Lists.newArrayList();
             List<IndexDocument> indexDocs = Lists.newArrayList();
@@ -332,10 +334,10 @@ public class SolrIndex extends IndexStore {
                 q.addSort(sortField.getField(), sortField.getReverse() ? SolrQuery.ORDER.desc : SolrQuery.ORDER.asc);
             }
 
-            ZimbraLog.search.debug("Searching Solr:Query='%s'->SolrQuery='%s' filter='%s'",
-                    query, q, filter);
+            ZimbraLog.search.debug("Searching Solr:Query='%s'->SolrQuery='%s' filter='%s' index=%s",
+                    query, q, filter, indexTypes);
             try {
-                QueryResponse resp = (QueryResponse) solrHelper.executeQueryRequest(accountId, q);
+                QueryResponse resp = (QueryResponse) solrHelper.executeQueryRequest(accountId, q, indexTypes);
                 SolrDocumentList solrDocList = resp.getResults();
                 totalHits = (int) solrDocList.getNumFound();
                 for(SolrDocument solrDoc : solrDocList) {
@@ -413,10 +415,10 @@ public class SolrIndex extends IndexStore {
         }
 
         @Override
-        public int numDocs() throws ServiceException {
+        public int numDocs(Collection<IndexType> indexTypes) throws ServiceException {
             try {
                 SolrQuery q = solrHelper.newQuery(accountId).setQuery(new MatchAllDocsQuery().toString()).setRows(0);
-                QueryResponse resp = (QueryResponse) solrHelper.executeQueryRequest(accountId, q);
+                QueryResponse resp = (QueryResponse) solrHelper.executeQueryRequest(accountId, q, indexTypes);
                 SolrDocumentList solrDocList = resp.getResults();
                 return (int)solrDocList.getNumFound();
             } catch (SolrException e) {
@@ -426,13 +428,13 @@ public class SolrIndex extends IndexStore {
         }
 
         @Override
-        public TermFieldEnumeration getTermsForField(String field) throws IOException, ServiceException {
+        public TermFieldEnumeration getTermsForField(String field, IndexType indexType) throws IOException, ServiceException {
 
             try {
                 if (solrHelper.needsAccountFilter()) {
-                    return new SolrFacetEnumeration(field);
+                    return new SolrFacetEnumeration(field, indexType);
                 } else {
-                    return new SolrTermValueEnumeration(field);
+                    return new SolrTermValueEnumeration(field, indexType);
                 }
             } catch (SolrException | SolrServerException e) {
                 throw ServiceException.FAILURE(e.getMessage(),e);
@@ -446,9 +448,11 @@ public class SolrIndex extends IndexStore {
             private boolean hasMore;
             private int offset = 0;
             private LinkedList<Count> facetChunk;
+            private IndexType indexType;
 
-            public SolrFacetEnumeration(String field) throws ServiceException {
+            public SolrFacetEnumeration(String field, IndexType indexType) throws ServiceException {
                 this.field = field;
+                this.indexType = indexType;
                 getNextFacetChunk();
             }
 
@@ -461,7 +465,7 @@ public class SolrIndex extends IndexStore {
                 q.setFacetMinCount(1);
                 q.setFacetLimit(FACET_RESULTS_CHUNK_SIZE + 1); // +1 for hasMore check
                 q.set(FacetParams.FACET_OFFSET, offset);
-                QueryResponse resp = (QueryResponse) solrHelper.executeQueryRequest(accountId, q);
+                QueryResponse resp = (QueryResponse) solrHelper.executeQueryRequest(accountId, q, indexType);
                 FacetField facetField = resp.getFacetField(field);
                 if (facetField.getValueCount() > FACET_RESULTS_CHUNK_SIZE) {
                     facetChunk = Lists.newLinkedList(facetField.getValues().subList(0, FACET_RESULTS_CHUNK_SIZE));
@@ -512,6 +516,7 @@ public class SolrIndex extends IndexStore {
             private LinkedList<org.apache.solr.client.solrj.response.TermsResponse.Term> termEnumeration = Lists.newLinkedList();
             private final String fieldName;
             private String last = null;
+            private IndexType indexType;
 
             private void primeTermsComponent(String firstTermValue, boolean includeLower) throws IOException, SolrServerException, ServiceException {
                 SolrQuery q = new SolrQuery().setRequestHandler("/terms");
@@ -526,7 +531,7 @@ public class SolrIndex extends IndexStore {
                 }
                 q.setTermsMinCount(1);
                 q.setTermsSortString("index");
-                QueryResponse resp = (QueryResponse) solrHelper.executeQueryRequest(accountId, q);
+                QueryResponse resp = (QueryResponse) solrHelper.executeQueryRequest(accountId, q, indexType);
                 List<org.apache.solr.client.solrj.response.TermsResponse.Term> enumeration = resp.getTermsResponse().getTerms(fieldName);
                 termEnumeration = Lists.newLinkedList(enumeration);
                 org.apache.solr.client.solrj.response.TermsResponse.Term lastTerm = termEnumeration.peekLast();
@@ -535,8 +540,9 @@ public class SolrIndex extends IndexStore {
                 }
             }
 
-            private SolrTermValueEnumeration(String field) throws IOException, SolrServerException, ServiceException {
+            private SolrTermValueEnumeration(String field, IndexType indexType) throws IOException, SolrServerException, ServiceException {
                 fieldName = field;
+                this.indexType = indexType;
                 primeTermsComponent("", true);
             }
 
@@ -600,15 +606,16 @@ public class SolrIndex extends IndexStore {
         public void deleteDocument(List<ItemIndexDeletionInfo> deleteInfo) throws IOException, ServiceException {
             String route = String.format("%s!", accountId);
             int[] itemIds = deleteInfo.stream().mapToInt(i -> i.getItemId()).toArray();
-            UpdateRequest req = new UpdateRequest();
-
-            BooleanQuery.Builder deleteByQueryClauses = null;
+            Map<IndexType, UpdateRequest> requestByIndexType = new HashMap<>();
+            Map<IndexType, BooleanQuery.Builder> deleteByQueryByIndexType = new HashMap<>();
             int numDeletedById = 0;
             int numDeletedByQuery = 0;
             for (ItemIndexDeletionInfo info : deleteInfo) {
                 int itemId = info.getItemId();
                 int numIndexDocs = info.getNumIndexDocs();
+                IndexType indexType = info.getIndexType();
                 if (numIndexDocs > 0) {
+                    UpdateRequest req = requestByIndexType.computeIfAbsent(indexType, k -> new UpdateRequest());
                     for (int part = 1; part <= numIndexDocs; part++) {
                         String docId = solrHelper.getSolrId(accountId, itemId, part);
                         req.deleteById(docId, route);
@@ -617,34 +624,41 @@ public class SolrIndex extends IndexStore {
                 } else {
                     ZimbraLog.index.warn("numIndexDocs for item %s is unknown, using delete-by-query instead", itemId);
                     if (DebugConfig.disableSolrBatchDeletesByQuery) {
-                        if (deleteByQueryClauses == null) {
-                            deleteByQueryClauses = new BooleanQuery.Builder();
-                        }
+                        BooleanQuery.Builder deleteByQueryClauses = deleteByQueryByIndexType.computeIfAbsent(indexType, k -> new BooleanQuery.Builder());
                         deleteByQueryClauses.add(new TermQuery(new Term(LuceneFields.L_MAILBOX_BLOB_ID, Integer.toString(itemId))), Occur.SHOULD);
                     } else {
-                        String collection = solrHelper.getCoreName(accountId);
+                        String collection = solrHelper.getCoreName(accountId, indexType, OpType.WRITE);
                         Deletion deletion = new ItemDeletion(collection, route, itemId);
                         BatchedIndexDeletions.getInstance().addDeletion(deletion);
                     }
                     numDeletedByQuery++;
                 }
             }
-            if (numDeletedByQuery > 0 && deleteByQueryClauses != null) {
+            if (numDeletedByQuery > 0 && !deleteByQueryByIndexType.isEmpty()) {
                 BooleanQuery.Builder deleteByQueryBuilder;
-                if (solrHelper.needsAccountFilter()) {
-                    deleteByQueryBuilder = new BooleanQuery.Builder();
-                    deleteByQueryBuilder.add(new TermQuery(new Term(LuceneFields.L_ACCOUNT_ID, accountId)), Occur.MUST);
-                    deleteByQueryBuilder.add(deleteByQueryClauses.build(), Occur.MUST);
-                } else {
-                    deleteByQueryBuilder = deleteByQueryClauses;
+                for (Map.Entry<IndexType, BooleanQuery.Builder> entry: deleteByQueryByIndexType.entrySet()) {
+                    IndexType indexType = entry.getKey();
+                    BooleanQuery.Builder deleteByQueryClauses = entry.getValue();
+                    if (solrHelper.needsAccountFilter()) {
+                        deleteByQueryBuilder = new BooleanQuery.Builder();
+                        deleteByQueryBuilder.add(new TermQuery(new Term(LuceneFields.L_ACCOUNT_ID, accountId)), Occur.MUST);
+                        deleteByQueryBuilder.add(deleteByQueryClauses.build(), Occur.MUST);
+                    } else {
+                        deleteByQueryBuilder = deleteByQueryClauses;
+                    }
+                    UpdateRequest req = requestByIndexType.computeIfAbsent(indexType, k -> new UpdateRequest());
+                    req.deleteByQuery(deleteByQueryBuilder.build().toString());
                 }
-                req.deleteByQuery(deleteByQueryBuilder.build().toString());
             }
-            try {
-                solrHelper.executeUpdate(accountId, req);
-                ZimbraLog.index.debug("Deleted index documents for items %s (%s docs)", Arrays.toString(itemIds), numDeletedById);
-            } catch (ServiceException e) {
-                ZimbraLog.index.error("Problem deleting index documents for items %s (%s docs)", Arrays.toString(itemIds), numDeletedById);
+            ZimbraLog.index.debug("Deleted index documents for items %s (%s docs)", Arrays.toString(itemIds), numDeletedById);
+            for (Map.Entry<IndexType, UpdateRequest> entry: requestByIndexType.entrySet()) {
+                IndexType indexType = entry.getKey();
+                UpdateRequest req = entry.getValue();
+                try {
+                    solrHelper.executeUpdate(accountId, req, indexType);
+                } catch (ServiceException e) {
+                    ZimbraLog.index.error("Problem deleting index documents for items %s (%s docs)", Arrays.toString(itemIds), numDeletedById);
+                }
             }
         }
 
@@ -656,7 +670,8 @@ public class SolrIndex extends IndexStore {
             solrDoc.addField(LuceneFields.SOLR_ID, solrHelper.getSolrId(accountId,  "sh", searchId));
             req.add(solrDoc);
             try {
-                solrHelper.executeUpdate(accountId, req);
+                //TODO: use correct index type (add SEARCH_HISTORY?)
+                solrHelper.executeUpdate(accountId, req, IndexType.MAILBOX);
             } catch (ServiceException e) {
                 throw ServiceException.FAILURE(String.format(Locale.US, "Failed to index document for account %s", accountId), e);
             }
@@ -684,7 +699,8 @@ public class SolrIndex extends IndexStore {
                 req.add(solrDoc);
             }
             try {
-                solrHelper.executeUpdate(accountId, req);
+                //TODO: use correct index type, though I don't think this method is actually used anywhere
+                solrHelper.executeUpdate(accountId, req, IndexType.MAILBOX);
             } catch (ServiceException e) {
                 throw ServiceException.FAILURE(String.format(Locale.US, "Failed to index part %d of Mail Item with ID %d for Account %s ", partNum, item.getId(), accountId), e);
             }
@@ -711,7 +727,8 @@ public class SolrIndex extends IndexStore {
             req.deleteByQuery(queryBuilder.build().toString());
             String idsStr = Joiner.on(",").join(ids);
             try {
-                solrHelper.executeUpdate(accountId, req);
+                //TODO: use correct index type
+                solrHelper.executeUpdate(accountId, req, IndexType.MAILBOX);
                 ZimbraLog.index.debug("Deleted documents with field %s=[%s]", fieldName, idsStr);
             } catch (ServiceException e) {
                 ZimbraLog.index.error("Problem deleting documents with field %s=[%s]",fieldName, idsStr, e);
@@ -721,7 +738,7 @@ public class SolrIndex extends IndexStore {
         @Override
         public void add(List<IndexItemEntry> entries) throws IOException,
                 ServiceException {
-            UpdateRequest req = new UpdateRequest();
+            Map<IndexType, UpdateRequest> requestByCollection = new HashMap<>();
             for (IndexItemEntry entry : entries) {
                 if (entry.getDocuments() == null) {
                     ZimbraLog.index.warn("NULL index data item=%s", entry);
@@ -740,11 +757,16 @@ public class SolrIndex extends IndexStore {
                             ZimbraLog.index.trace("Adding solr document %s", solrDoc.toString());
                         }
                     }
+                    UpdateRequest req = requestByCollection.computeIfAbsent(entry.getIndexType(), k -> new UpdateRequest());
                     req.add(solrDoc);
                 }
             }
             try {
-                solrHelper.executeUpdate(accountId,req);
+                for (Map.Entry<IndexType, UpdateRequest> entry: requestByCollection.entrySet()) {
+                    IndexType index = entry.getKey();
+                    UpdateRequest req = entry.getValue();
+                    solrHelper.executeUpdate(accountId, req, index);
+                }
             } catch (ServiceException e) {
                 ZimbraLog.index.error("Problem indexing documents", e);
             }
@@ -816,12 +838,14 @@ public class SolrIndex extends IndexStore {
     }
 
     @Override
-    public void deleteIndex() throws IOException, ServiceException {
-        Deletion deletion = new AccountDeletion(solrHelper.getCoreName(accountId), accountId);
-        if (solrHelper.needsAccountFilter() && !DebugConfig.disableSolrBatchDeletesByQuery) {
-            BatchedIndexDeletions.getInstance().addDeletion(deletion);
-        } else {
-            solrHelper.deleteAccountData(accountId);
+    public void deleteIndex(Collection<IndexType> types) throws IOException, ServiceException {
+        for (IndexType type: types) {
+            if (solrHelper.needsAccountFilter() && !DebugConfig.disableSolrBatchDeletesByQuery) {
+                Deletion deletion = new AccountDeletion(solrHelper.getCoreName(accountId, type, OpType.WRITE), accountId);
+                BatchedIndexDeletions.getInstance().addDeletion(deletion);
+            } else {
+                solrHelper.deleteAccountData(accountId, IndexType.MAILBOX);
+            }
         }
     }
 
@@ -844,7 +868,7 @@ public class SolrIndex extends IndexStore {
             CloseableHttpClient httpClient = ZimbraHttpClientManager.getInstance().getInternalHttpClient();
             SolrCollectionLocator locator = new MultiCollectionLocator();
             String baseUrl = Provisioning.getInstance().getLocalServer().getIndexURL().substring("solr:".length());
-            StandaloneSolrHelper requestHelper = new StandaloneSolrHelper(locator, httpClient, IndexType.MAILBOX, baseUrl);
+            StandaloneSolrHelper requestHelper = new StandaloneSolrHelper(locator, httpClient, baseUrl);
             return new SolrIndex(accountId, requestHelper);
         }
     }
@@ -857,7 +881,7 @@ public class SolrIndex extends IndexStore {
             String zkHost = Provisioning.getInstance().getLocalServer().getIndexURL().substring("solrcloud:".length());
             CloudSolrClient client = SolrUtils.getCloudSolrClient(zkHost);
             SolrCollectionLocator locator = new MultiCollectionLocator();
-            solrHelper = new SolrCloudHelper(locator, client, IndexType.MAILBOX);
+            solrHelper = new SolrCloudHelper(locator, client);
         }
 
         @Override
@@ -879,10 +903,6 @@ public class SolrIndex extends IndexStore {
         }
     }
 
-    public static enum IndexType {
-        MAILBOX, EVENTS;
-    }
-
     private static class ReferencedQueryParams {
         private int counter = 0;
         private Map<String, String> paramsMap = new HashMap<>();
@@ -898,5 +918,9 @@ public class SolrIndex extends IndexStore {
                 request.set(entry.getKey(), entry.getValue());
             }
         }
+    }
+
+    public static enum OpType {
+        READ, WRITE;
     }
 }

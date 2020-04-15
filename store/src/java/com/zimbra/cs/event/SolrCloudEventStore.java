@@ -7,8 +7,6 @@ import com.zimbra.cs.contacts.ContactAffinityQuery;
 import com.zimbra.cs.contacts.RelatedContactsParams;
 import com.zimbra.cs.contacts.RelatedContactsResults;
 import com.zimbra.cs.index.solr.SolrCloudHelper;
-import com.zimbra.cs.index.solr.SolrConstants;
-import com.zimbra.cs.index.solr.SolrIndex.IndexType;
 import com.zimbra.cs.index.solr.SolrRequestHelper;
 import com.zimbra.cs.index.solr.SolrUtils;
 
@@ -41,7 +39,7 @@ public class SolrCloudEventStore extends SolrEventStore {
         protected SolrRequestHelper getRequestHelper() throws ServiceException {
             String zkHost = server.getEventBackendURL().substring("solrcloud:".length());
             client = SolrUtils.getCloudSolrClient(zkHost);
-            return new SolrCloudHelper(getCollectionLocator(), client, IndexType.EVENTS);
+            return new SolrCloudHelper(getCollectionLocator(), client);
         }
     }
 }

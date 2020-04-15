@@ -153,6 +153,7 @@ import com.zimbra.cs.mailbox.MailItem.PendingDelete;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
+import com.zimbra.cs.mailbox.MailboxIndex.IndexType;
 import com.zimbra.cs.mailbox.MailboxListener.ChangeNotification;
 import com.zimbra.cs.mailbox.Message.EventFlag;
 import com.zimbra.cs.mailbox.Note.Rectangle;
@@ -399,6 +400,10 @@ public class Mailbox implements MailboxStore {
 
         public MailItem getItem() {
             return item;
+        }
+
+        public IndexType getIndexType() throws ServiceException {
+            return IndexType.getByItemType(item.getType());
         }
     }
 
