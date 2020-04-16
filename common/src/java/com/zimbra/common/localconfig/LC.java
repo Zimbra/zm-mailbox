@@ -1430,7 +1430,7 @@ public final class LC {
     // account listener rollback handler on failure
     public static final KnownKey rollback_on_account_listener_failure = KnownKey.newKey(true);
 
-    // to switch to Tika com.zimbra.cs.convert.TextExtractionClient
+    // to switch to Tika com.zimbra.cs.convert.TikaExtractionClient
     public static final KnownKey attachment_extraction_client_class = KnownKey.newKey("com.zimbra.cs.convert.LegacyConverterClient");
 
     static {
