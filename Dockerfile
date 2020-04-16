@@ -68,6 +68,9 @@ RUN cp -f /opt/zimbra/conf/zmlogrotate.mailbox /etc/logrotate.d/zimbra.mailbox \
 COPY --from=lib /opt/zimbra/jetty_base/webapps/service/WEB-INF/lib/ /opt/zimbra/jetty_base/webapps/service/WEB-INF/lib/
 COPY --from=zimlet-webapp /opt/zimbra/jetty_base/webapps/service/WEB-INF/ /opt/zimbra/jetty_base/webapps/service/WEB-INF/
 # Copy native lib to /opt/zimbra/lib & core jars to /opt/zimbra/lib/jars
+#RUN true added to fix issue described in https://github.com/moby/moby/issues/37965
+#(COPY fail in multistage build: layer does not exist )
+RUN true
 COPY native/build/libzimbra-native.so /opt/zimbra/lib/
 COPY native/build/zimbra-native.jar /opt/zimbra/lib/jars/
 COPY common/build/zimbracommon.jar /opt/zimbra/lib/jars/
