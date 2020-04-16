@@ -13,7 +13,7 @@
   <dependency org="org.apache.httpcomponents" name="httpasyncclient" rev="${httpclient.async.version}"/>
   <dependency org="org.apache.httpcomponents" name="httpcore" rev="${httpclient.httpcore.version}"/> 
   <dependency org="org.apache.httpcomponents" name="httpcore-nio" rev="${httpclient.httpcore.version}"/>
-  <dependency org="dom4j" name="dom4j" rev="1.5.2" />
+  <dependency org="org.dom4j" name="dom4j" rev="${dom4j.version}" />
   <dependency org="ical4j" name="ical4j" rev="0.9.16-patched" />
   <dependency org="junit" name="junit" rev="4.8.2" />
   <dependency org="log4j" name="log4j" rev="1.2.16" />
@@ -25,15 +25,15 @@
   <dependency org="org.jfree" name="jcommon" rev="1.0.23" />
   <dependency org="org.json" name="json" rev="20090211" />
   <dependency org="net.spy" name="spymemcached" rev="2.12.1"/>
-  <dependency org="com.google.guava" name="guava" rev="23.0" />
+  <dependency org="com.google.guava" name="guava" rev="${com.google.guava.version}" />
   <dependency org="org.python" name="jython-standalone" rev="2.5.2" />
   <dependency org="commons-cli" name="commons-cli" rev="1.2" />
   <dependency org="com.ibm.icu" name="icu4j" rev="4.8.1.1" />
   <dependency org="org.easymock" name="easymock" rev="3.0" />
   <dependency org="cglib" name="cglib" rev="2.2.2" />
   <dependency org="asm" name="asm" rev="3.3.1" />
-  <dependency org="org.eclipse.jetty" name="jetty-rewrite" rev="9.4.18.v20190429" />
-  <dependency org="org.eclipse.jetty" name="jetty-util" rev="9.4.18.v20190429" />
+  <dependency org="org.eclipse.jetty" name="jetty-rewrite" rev="${jetty.version}" />
+  <dependency org="org.eclipse.jetty" name="jetty-util" rev="${jetty.version}" />
   <dependency org="zimbra" name="zm-native" rev="latest.integration" />
   <dependency org="ant-contrib" name="ant-contrib" rev="1.0b3" />
  </dependencies>

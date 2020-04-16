@@ -22,7 +22,6 @@ import java.util.Set;
 import org.owasp.html.CssSchema;
 import org.owasp.html.HtmlPolicyBuilder;
 import org.owasp.html.PolicyFactory;
-import com.google.common.collect.ImmutableSet;
 
 /*
  * Instantiate owasp policy instance with neuter images true/false at load time
@@ -31,14 +30,6 @@ public class OwaspPolicyProducer {
 
     private static PolicyFactory policyNeuterImagesTrue;
     private static PolicyFactory policyNeuterImagesFalse;
-
-    /**
-     * The following CSS properties do not appear in the default whitelist from
-     * OWASP, but they improve the fidelity of the HTML display without
-     * unacceptable risk.
-     */
-    private static final CssSchema ADDITIONAL_CSS = CssSchema
-        .withProperties(ImmutableSet.of("float"));
 
     private static void setUp(boolean neuterImages) {
         HtmlElementsBuilder builder = new HtmlElementsBuilder(new HtmlAttributesBuilder(), neuterImages);
@@ -56,19 +47,31 @@ public class OwaspPolicyProducer {
         for (String allowTextElement : allowTextElements) {
             policyBuilder.allowTextIn(allowTextElement.trim());
         }
+        /**
+         * The following CSS properties do not appear in the default whitelist from
+         * OWASP, but they improve the fidelity of the HTML display without
+         * unacceptable risk.
+         */
+        Set<String> cssWhitelist = OwaspPolicy.getCssWhitelist();
+        CssSchema ADDITIONAL_CSS = null;
+        if (!cssWhitelist.isEmpty()) {
+            ADDITIONAL_CSS = CssSchema.withProperties(cssWhitelist);
+        }
         Set<String> urlProtocols = OwaspPolicy.getURLProtocols();
         for (String urlProtocol : urlProtocols) {
             policyBuilder.allowUrlProtocols(urlProtocol.trim());
         }
-        if(neuterImages) {
-            if(policyNeuterImagesTrue == null) {
-            policyNeuterImagesTrue = policyBuilder.allowStyling(CssSchema.union(CssSchema.DEFAULT, ADDITIONAL_CSS))
-            .toFactory();
+        if (neuterImages) {
+            if (policyNeuterImagesTrue == null) {
+                policyNeuterImagesTrue = policyBuilder.allowStyling(ADDITIONAL_CSS == null
+                    ? CssSchema.DEFAULT : CssSchema.union(CssSchema.DEFAULT, ADDITIONAL_CSS))
+                    .toFactory();
             }
         } else {
-            if(policyNeuterImagesFalse == null) {
-            policyNeuterImagesFalse = policyBuilder.allowStyling(CssSchema.union(CssSchema.DEFAULT, ADDITIONAL_CSS))
-                .toFactory();
+            if (policyNeuterImagesFalse == null) {
+                policyNeuterImagesFalse = policyBuilder.allowStyling(ADDITIONAL_CSS == null
+                    ? CssSchema.DEFAULT : CssSchema.union(CssSchema.DEFAULT, ADDITIONAL_CSS))
+                    .toFactory();
             }
         }
     }

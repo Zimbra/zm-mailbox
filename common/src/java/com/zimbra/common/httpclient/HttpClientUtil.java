@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010, 2011, 2012, 2013, 2014, 2016, 2018 Synacor, Inc.
+ * Copyright (C) 2010, 2011, 2012, 2013, 2014, 2016, 2018, 2019 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -33,6 +33,7 @@ import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.cookie.BasicClientCookie;
 
@@ -67,15 +68,39 @@ public class HttpClientUtil {
                 .setDefaultCookieStore(cookieStore)
                 .build ();
             return httpClient.execute(method);
-           
+
         }
         return client.execute(method);
     }
-    
+
+    public static HttpResponse executeMethod(HttpClientBuilder clientBuilder, HttpRequestBase method, BasicCookieStore state, HttpClientContext context) throws HttpException, IOException {
+        ProxyHostConfiguration proxyConfig = HttpProxyConfig.getProxyConfig(method.getURI().toString());
+        BasicCookieStore cookieStore = new  BasicCookieStore();
+        if (state != null) {
+            cookieStore = state;
+            clientBuilder.setDefaultCookieStore(cookieStore);
+        }
+        CloseableHttpClient httpClient = clientBuilder.build();
+        if (proxyConfig != null && proxyConfig.getUsername() != null && proxyConfig.getPassword() != null) {
+            HttpHost proxy = new HttpHost(proxyConfig.getProxyHost(), proxyConfig.getProxyPort());
+            RequestConfig config = RequestConfig.custom().setProxy(proxy).build();
+            UsernamePasswordCredentials credentials = new UsernamePasswordCredentials(proxyConfig.getUsername(), proxyConfig.getPassword());
+            CredentialsProvider credsProvider = new BasicCredentialsProvider();
+            credsProvider.setCredentials(new AuthScope(proxy),credentials);
+            httpClient = clientBuilder
+                .setDefaultCredentialsProvider(credsProvider)
+                .setDefaultRequestConfig(config)
+                .setDefaultCookieStore(cookieStore)
+                .build();
+            return httpClient.execute(method);
+
+        }
+        return httpClient.execute(method);
+    }
+
     public static HttpResponse executeMethod(HttpClient client, HttpRequestBase method, HttpClientContext context) throws HttpException, IOException {
         return client.execute(method, context);
     }
-
 
     public static BasicCookieStore newHttpState(ZAuthToken authToken, String host, boolean isAdmin) {
         BasicCookieStore cookieStore = new BasicCookieStore();

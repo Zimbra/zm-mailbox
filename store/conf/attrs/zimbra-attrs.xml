@@ -2392,8 +2392,8 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <deprecateDesc>deprecated</deprecateDesc>
 </attr>
 
-<attr id="453" name="zimbraPrefClientType" type="enum" value="standard,advanced" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
-  <defaultCOSValue>advanced</defaultCOSValue>
+<attr id="453" name="zimbraPrefClientType" type="enum" value="standard,advanced,modern" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+  <defaultCOSValue>modern</defaultCOSValue>
   <desc>user preference of client type</desc>
 </attr>
 
@@ -3413,6 +3413,8 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="639" name="zimbraSSLExcludeCipherSuites" type="string" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="5.0.5">
   <globalConfigValue>.*_RC4_.*</globalConfigValue>
+  <globalConfigValue>^.*_(MD5|SHA|SHA1)$</globalConfigValue>
+  <globalConfigValue>^TLS_RSA_.*</globalConfigValue>
   <desc>exact name or regular expression of cipher suites to exclude</desc>
 </attr>
 
@@ -8356,8 +8358,6 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="1653" name="zimbraReverseProxySSLProtocols" type="string" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" since="8.6.0">
-  <globalConfigValue>TLSv1</globalConfigValue>
-  <globalConfigValue>TLSv1.1</globalConfigValue>
   <globalConfigValue>TLSv1.2</globalConfigValue>
   <desc>SSL protocols enabled for the proxy</desc>
 </attr>
@@ -8376,10 +8376,7 @@ TODO: delete them permanently from here
 <!-- attr id="1656" name="zimbraMobileShareCalendarEnabled" for 9.0 -->
 
 <attr id="1657" name="zimbraMailboxdSSLProtocols" type="string" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.6.0">
-  <globalConfigValue>TLSv1</globalConfigValue>
-  <globalConfigValue>TLSv1.1</globalConfigValue>
   <globalConfigValue>TLSv1.2</globalConfigValue>
-  <globalConfigValue>SSLv2Hello</globalConfigValue>
   <desc>List of SSL/TLS protocols (as documented by SunJSSE Provider Protocols and used in setEnabledProtocols) to be enabled in Jetty for HTTPS, IMAPS, POP3S, and STARTTLS (including LMTP)</desc>
 </attr>
 
@@ -9762,4 +9759,24 @@ TODO: delete them permanently from here
   <desc>filter to decide members of the address list using ldap</desc>
 </attr>
 
+<attr id="3079" name="zimbraFeatureZXWebEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.9.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>Whether to allow a user to access Zimbra X web client</desc>
+</attr>
+
+<attr id="3080" name="zimbraFeatureZXDesktopEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.9.0" deprecatedSince="8.9.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>Whether to allow a user to access Zimbra X desktop</desc>
+  <deprecateDesc>deprecated with attribute zimbraFeatureModernDesktopEnabled</deprecateDesc>
+</attr>
+
+<attr id="3082" name="zimbraFeatureModernDesktopEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.9.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>Whether to allow a user to access Zimbra modern desktop</desc>
+</attr>
+
+<attr id="3083" name="zimbraFeatureMobileAppEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.9.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>Whether to allow a user to access Zimbra mobile App</desc>
+</attr>
 </attrs>

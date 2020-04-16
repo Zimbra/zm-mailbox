@@ -19444,7 +19444,7 @@ public abstract class ZAttrServer extends NamedEntry {
      */
     @ZAttr(id=1657)
     public String[] getMailboxdSSLProtocols() {
-        String[] value = getMultiAttr(Provisioning.A_zimbraMailboxdSSLProtocols, true, true); return value.length > 0 ? value : new String[] {"TLSv1","TLSv1.1","TLSv1.2","SSLv2Hello"};
+        String[] value = getMultiAttr(Provisioning.A_zimbraMailboxdSSLProtocols, true, true); return value.length > 0 ? value : new String[] {"TLSv1.2"};
     }
 
     /**
@@ -43456,7 +43456,7 @@ public abstract class ZAttrServer extends NamedEntry {
      */
     @ZAttr(id=1653)
     public String[] getReverseProxySSLProtocols() {
-        String[] value = getMultiAttr(Provisioning.A_zimbraReverseProxySSLProtocols, true, true); return value.length > 0 ? value : new String[] {"TLSv1","TLSv1.1","TLSv1.2"};
+        String[] value = getMultiAttr(Provisioning.A_zimbraReverseProxySSLProtocols, true, true); return value.length > 0 ? value : new String[] {"TLSv1.2"};
     }
 
     /**
@@ -46016,7 +46016,7 @@ public abstract class ZAttrServer extends NamedEntry {
      */
     @ZAttr(id=639)
     public String[] getSSLExcludeCipherSuites() {
-        String[] value = getMultiAttr(Provisioning.A_zimbraSSLExcludeCipherSuites, true, true); return value.length > 0 ? value : new String[] {".*_RC4_.*"};
+        String[] value = getMultiAttr(Provisioning.A_zimbraSSLExcludeCipherSuites, true, true); return value.length > 0 ? value : new String[] {".*_RC4_.*","^.*_(MD5|SHA|SHA1)$","^TLS_RSA_.*"};
     }
 
     /**

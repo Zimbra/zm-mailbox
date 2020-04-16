@@ -413,15 +413,15 @@ public final class HttpUtil {
             try {
                 URL urlTemp = new URL(url);
                 if (urlTemp.getUserInfo() != null) {
-                    // UserInfo format username:password
-                    //  chnage to username: 
+                    // UserInfo format username:password@
+                    //  change to username:
                     String userInfo  = urlTemp.getUserInfo();
-                    int index = userInfo.indexOf(":");
+                    int index = url.indexOf(userInfo);
                     String newUserInfo = userInfo;
                     if (index != -1) {
-                        newUserInfo = userInfo.substring(0, index + 1);
+                        newUserInfo = url.substring(index, (index + userInfo.length() + 1));
                     }
-                    String sanitizedUrl = url.replace(userInfo, newUserInfo);
+                    String sanitizedUrl = url.replace(newUserInfo, "");
                     ZimbraLog.misc.debug("Sanitized url: %s" , sanitizedUrl);
                     return sanitizedUrl;
                 }
@@ -652,7 +652,6 @@ public final class HttpUtil {
      * @param tralingSlash
      * @return
      */
-
     public static URI getUriFromFragments(String[] fragments, String queryString, boolean leadingSlash, boolean tralingSlash) {
         StringBuilder sb = new StringBuilder();
         if (leadingSlash) {

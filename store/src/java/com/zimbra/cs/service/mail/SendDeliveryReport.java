@@ -43,6 +43,7 @@ import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.common.zmime.ZMimeBodyPart;
 import com.zimbra.common.zmime.ZMimeMultipart;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Flag;
@@ -107,8 +108,8 @@ public class SendDeliveryReport extends MailDocumentHandler {
             InternetAddress[] recipients = Mime.parseAddressHeader(mm, "Disposition-Notification-To");
             if (recipients == null || recipients.length == 0)
                 return;
-
-            Session smtpSession = JMSession.getSmtpSession();
+            Domain domain = Provisioning.getInstance().getDomain(authAccount);
+            Session smtpSession = JMSession.getSmtpSession(domain);
             SMTPMessage report = new SMTPMessage(smtpSession);
             String subject = "Read-Receipt: " + msg.getSubject();
             report.setSubject(subject, CharsetUtil.checkCharset(subject, charset));

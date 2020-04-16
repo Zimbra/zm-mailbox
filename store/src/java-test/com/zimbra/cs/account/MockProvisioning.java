@@ -32,11 +32,13 @@ import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.AlwaysOnClusterBy;
 import com.zimbra.common.account.Key.ShareLocatorBy;
 import com.zimbra.common.account.Key.UCServiceBy;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.NamedEntry.Visitor;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.auth.AuthContext.Protocol;
@@ -62,6 +64,7 @@ public final class MockProvisioning extends Provisioning {
     private final Map<String, Account> id2account = Maps.newHashMap();
     private final Map<String, Account> name2account = Maps.newHashMap();
 
+    private static final String DATA_SOURCE_LIST_CACHE_KEY = "MockProvisioning.DATA_SOURCE_CACHE";
     private final Map<String, Domain> id2domain = Maps.newHashMap();
 
     private final Map<String, Cos> id2cos = Maps.newHashMap();
@@ -124,10 +127,18 @@ public final class MockProvisioning extends Provisioning {
     }
 
     @Override
-    public Account get(AccountBy keyType, String key) {
+    public Account get(AccountBy keyType, String key) throws ServiceException {
         switch (keyType) {
             case name:
-                return name2account.get(key);
+                if (name2account.get(key) != null) {
+                    return name2account.get(key);
+                } else {
+                    for (Account acct : name2account.values()) {
+                        if (Arrays.asList(acct.getAliases()).contains(key)) {
+                            return acct;
+                        }
+                    }
+                }
             case id:
             default:
                 return id2account.get(key);
@@ -355,8 +366,12 @@ public final class MockProvisioning extends Provisioning {
     }
 
     @Override
-    public void authAccount(Account acct, String password, Protocol proto, Map<String, Object> authCtxt) {
-
+    public void authAccount(Account acct, String password, Protocol proto, Map<String, Object> authCtxt) throws ServiceException {
+        String accountNamePassedIn = (String) authCtxt.get(AuthContext.AC_ACCOUNT_NAME_PASSEDIN);
+        if (!LC.alias_login_enabled.booleanValue() &&
+                Arrays.asList(acct.getAliases()).contains(authCtxt.get(AuthContext.AC_ACCOUNT_NAME_PASSEDIN))) {
+            throw AuthFailedServiceException.AUTH_FAILED(accountNamePassedIn, accountNamePassedIn, "alias login not enabled.");
+        }
     }
 
     @Override
@@ -732,7 +747,19 @@ public final class MockProvisioning extends Provisioning {
 
     @Override
     public DataSource createDataSource(Account account, DataSourceType type, String dataSourceName, Map<String, Object> attrs) {
-        throw new UnsupportedOperationException();
+        attrs.put(A_zimbraDataSourceName, dataSourceName); // must be the same
+        attrs.put(Provisioning.A_zimbraDataSourceType, type.toString());
+
+        String dsId = new UUID(0L, 0L).toString();
+
+        DataSource ds = new DataSource(account, type, dataSourceName, dsId, attrs, this);
+
+        List<DataSource> dsList = getAllDataSources(account);
+        dsList.add(ds);
+
+        account.setCachedData(DATA_SOURCE_LIST_CACHE_KEY, dsList);
+
+        return ds;
     }
 
     @Override
@@ -761,7 +788,14 @@ public final class MockProvisioning extends Provisioning {
     public List<DataSource> getAllDataSources(Account account) {
         // Don't throw UnsupportedOperationException because Mailbox.updateRssDataSource()
         // calls this method.
-        return Collections.emptyList();
+        @SuppressWarnings("unchecked")
+        List<DataSource> result = (List<DataSource>) account.getCachedData(DATA_SOURCE_LIST_CACHE_KEY);
+
+        if (result != null) {
+            return result;
+        }
+
+        return new ArrayList<DataSource>();
     }
 
     @Override

@@ -34,6 +34,7 @@ import org.dom4j.Element;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.soap.W3cDomUtil;
 import com.zimbra.common.soap.XmlParseException;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 
 /*
@@ -45,7 +46,9 @@ public class OwaspPolicy {
     public static final String E_OWASP_POLICY = "owasp_policy";
     public static final String E_DISALLOW_TEXT_IN = "disallow_text_in";
     public static final String E_ALLOW_TEXT_IN = "allow_text_in";
+    public static final String E_CSS_WHITELIST = "css_whitelist";
     public static final String E_URL_PROTOCOLS = "url_protocols";
+    public static final String E_URL_PROTOCOL_Attrs = "url_protocol_attributes";
     public static final String E_ELEMENT = "element";
     public static final String A_NAME = "name";
     public static final String A_REMOVE_TEXT = "removeText";
@@ -59,16 +62,17 @@ public class OwaspPolicy {
     private static final Map<String, String> mConfiguredElements = new HashMap<String, String>();
     private static final Set<String> mDisallowTextElements = new HashSet<String>();
     private static final Set<String> mAllowTextElements = new HashSet<String>();
+    private static final Set<String> mCssWhitelist = new HashSet<String>();
     private static final Set<String> mURLProtocols = new HashSet<String>();
+    private static final Set<String> mURLProtocolAttrs = new HashSet<String>();
     private static final Map<String, String> mElementUrlProtocols = new HashMap<String, String>();
 
     static {
         try {
             load(null);
-        } catch (DocumentException de) {
-            throw new RuntimeException(de);
-        } catch (Exception ce) {
-            throw new RuntimeException(ce);
+        } catch (Exception e) {
+            ZimbraLog.mailbox.debug("Failed to load OWASP policy file", e);
+            ZimbraLog.mailbox.warn("Failed to load OWASP policy file: %s", e.getMessage());
         }
     }
 
@@ -99,11 +103,25 @@ public class OwaspPolicy {
                     set(name, attributes, urlProtocols);
                 }
                 String disallowTextElements = root.elementText(E_DISALLOW_TEXT_IN);
-                mDisallowTextElements.addAll(Arrays.asList(disallowTextElements.split(COMMA)));
+                if (!StringUtil.isNullOrEmpty(disallowTextElements)) {
+                    mDisallowTextElements.addAll(Arrays.asList(disallowTextElements.split(COMMA)));
+                }
                 String allowTextElements = root.elementText(E_ALLOW_TEXT_IN);
-                mAllowTextElements.addAll(Arrays.asList(allowTextElements.split(COMMA)));
+                if (!StringUtil.isNullOrEmpty(allowTextElements)) {
+                    mAllowTextElements.addAll(Arrays.asList(allowTextElements.split(COMMA)));
+                }
+                String cssWhitelist = root.elementText(E_CSS_WHITELIST);
+                if (!StringUtil.isNullOrEmpty(cssWhitelist)) {
+                    mCssWhitelist.addAll(Arrays.asList(cssWhitelist.split(COMMA)));
+                }
                 String urlProtocols = root.elementText(E_URL_PROTOCOLS);
-                mURLProtocols.addAll(Arrays.asList(urlProtocols.split(COMMA)));
+                if (!StringUtil.isNullOrEmpty(urlProtocols)) {
+                    mURLProtocols.addAll(Arrays.asList(urlProtocols.split(COMMA)));
+                }
+                String urlProtocolAttrs = root.elementText(E_URL_PROTOCOL_Attrs);
+                if (!StringUtil.isNullOrEmpty(urlProtocolAttrs)) {
+                    mURLProtocolAttrs.addAll(Arrays.asList(urlProtocolAttrs.split(COMMA)));
+                }
             } catch (IOException | XmlParseException e) {
                 ZimbraLog.mailbox
                     .warn(String.format("Problem parsing owasp policy file '%s'", policyFile), e);
@@ -114,6 +132,7 @@ public class OwaspPolicy {
         } else {
             ZimbraLog.mailbox
                 .warn(String.format("Owasp policy file '%s' is not readable", mPolicyFile));
+            throw new Exception(String.format("Owasp policy file '%s' is not readable", mPolicyFile));
         }
     }
 
@@ -163,8 +182,15 @@ public class OwaspPolicy {
         return mAllowTextElements;
     }
 
+    public static Set<String> getCssWhitelist() {
+        return mCssWhitelist;
+    }
+
     public static Set<String> getURLProtocols() {
         return mURLProtocols;
     }
 
+    public static Set<String> getElementUrlProtocolAttributes() {
+        return mURLProtocolAttrs;
+    }
 }

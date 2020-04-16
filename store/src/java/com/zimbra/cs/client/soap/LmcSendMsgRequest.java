@@ -73,12 +73,14 @@ public class LmcSendMsgRequest extends LmcSoapRequest {
         mFwdPartNumbers = fwdPartNumbers;
     }
 
+    @Override
     protected Element getRequestXML() {
         Element request = DocumentHelper.createElement(MailConstants.SEND_MSG_REQUEST);
         addMsg(request, mMsg, mInReplyTo, mFwdMsgID, mFwdPartNumbers);
         return request;
     }
 
+    @Override
     protected LmcSoapResponse parseResponseXML(Element responseXML)
         throws ServiceException
     {
@@ -104,7 +106,7 @@ public class LmcSendMsgRequest extends LmcSoapRequest {
         // set the cookie.
         if (session == null)
             System.err.println(System.currentTimeMillis() + " " + Thread.currentThread() + " LmcSendMsgRequest.postAttachment session=null");
-        
+
         HttpClientBuilder clientBuilder = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
         HttpPost post = new HttpPost(uploadURL);
         ZAuthToken zat = session.getAuthToken();
@@ -120,7 +122,7 @@ public class LmcSendMsgRequest extends LmcSoapRequest {
                 initialState.addCookie(cookie);
             }
             clientBuilder.setDefaultCookieStore(initialState);
-            
+
             RequestConfig reqConfig = RequestConfig.copy(
                 ZimbraHttpConnectionManager.getInternalHttpConnMgr().getZimbraConnMgrParams().getReqConfig())
                 .setCookieSpec(CookieSpecs.BROWSER_COMPATIBILITY).build();
@@ -159,7 +161,6 @@ public class LmcSendMsgRequest extends LmcSoapRequest {
         } finally {
             post.releaseConnection();
         }
-
         return aid;
     }
 }

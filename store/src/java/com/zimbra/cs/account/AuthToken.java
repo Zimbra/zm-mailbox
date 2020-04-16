@@ -28,6 +28,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.impl.client.BasicCookieStore;
+import org.apache.http.impl.client.HttpClientBuilder;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.auth.ZAuthToken;
@@ -232,6 +233,17 @@ public abstract class AuthToken {
         //do nothing
     }
 
+    /**
+     *
+     * @param clientBuilder
+     * @param method
+     * @param isAdminReq
+     * @param cookieDomain
+     * @throws ServiceException
+     */
+    public void encode(HttpClientBuilder clientBuilder, HttpRequestBase method, boolean isAdminReq, String cookieDomain) throws ServiceException{
+        // EMpty method which can be implemented by  extending classes, avoiding changing existing signature
+    }
     public abstract void encodeAuthResp(Element parent, boolean isAdmin) throws ServiceException;
 
     public abstract ZAuthToken toZAuthToken() throws ServiceException;

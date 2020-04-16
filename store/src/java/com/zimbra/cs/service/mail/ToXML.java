@@ -96,10 +96,9 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE;
-import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.cs.fb.FreeBusy;
-import com.zimbra.cs.gal.GalGroup.GroupInfo;
 import com.zimbra.cs.gal.GalGroup;
+import com.zimbra.cs.gal.GalGroup.GroupInfo;
 import com.zimbra.cs.gal.GalGroupInfoProvider;
 import com.zimbra.cs.gal.GalGroupMembers.ContactDLMembers;
 import com.zimbra.cs.html.BrowserDefang;
@@ -323,7 +322,6 @@ public final class ToXML {
             // them when they try to delete something within the retention period
             canDelete = canAdminister || (perms != null && perms.indexOf(ACL.ABBR_DELETE) != -1);
         }
-
         if (canAdminister) {
             // return full ACLs for folders we have admin rights on
             if (needToOutput(fields, Change.ACL)) {
@@ -896,7 +894,7 @@ public final class ToXML {
     public static boolean hasDLViewRight(String email, Account mRequestedAcct,
         Account mAuthedAcct) {
         boolean canExpand = true;
-        if (mRequestedAcct != null && mAuthedAcct != null) {
+        if (mRequestedAcct != null && mAuthedAcct != null && email != null) {
             GalGroup.GroupInfo groupInfo = GalGroupInfoProvider.getInstance().getGroupInfo(email,
                 true, mRequestedAcct, mAuthedAcct);
             if (groupInfo != null) {
@@ -1650,7 +1648,7 @@ public final class ToXML {
                     "The message is signed. Forwarding it to SmimeHandler for signature verification.");
                 if (SmimeHandler.getHandler() != null) {
                     SmimeHandler.getHandler().verifyMessageSignature(msg, m, mm, octxt);
-                } 
+                }
            } else {
                 // if the original mime message was PKCS7-signed and it was
                 // decoded and stored in cache as plain mime
@@ -3325,11 +3323,11 @@ throws ServiceException {
                     elt.addAttribute(MailConstants.E_CAL_EVENT_ISRECURRING, cur.isRecurring());
                     elt.addAttribute(MailConstants.E_CAL_EVENT_ISREMINDERSET, cur.isReminderSet());
                     elt.addAttribute(MailConstants.E_CAL_EVENT_ISEXCEPTION, cur.isException());
-                } 
+                }
                 if(!cur.isHasPermission()) {
                     elt.addAttribute(MailConstants.E_CAL_EVENT_HASPERMISSION, cur.isHasPermission());
                 }
-                
+
             }
         }
 

@@ -22,10 +22,10 @@ import java.io.IOException;
 import java.security.MessageDigest;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.http.client.HttpClient;
 import org.apache.http.HttpException;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.InputStreamEntity;

@@ -29,6 +29,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.http.Header;
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpException;
 import org.apache.http.HttpResponse;
 import org.apache.http.auth.AuthScope;
@@ -40,7 +41,6 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
-import org.apache.http.client.params.ClientPNames;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.DefaultRedirectStrategy;
@@ -290,7 +290,7 @@ public class ProxyServlet extends ZimbraServlet {
                 if (canProxyHeader(hdr)) {
                 	ZimbraLog.zimlet.debug("outgoing: " + hdr + ": " + req.getHeader(hdr));
                 	if (hdr.equalsIgnoreCase("x-host"))
-                	    method.getParams().setParameter(ClientPNames.VIRTUAL_HOST, req.getHeader(hdr));
+                	    method.setHeader("Host", req.getHeader(hdr));
                 	else
                 		method.addHeader(hdr, req.getHeader(hdr));
                 }
@@ -301,9 +301,8 @@ public class ProxyServlet extends ZimbraServlet {
                 if (!(reqMethod.equalsIgnoreCase("POST") || reqMethod.equalsIgnoreCase("PUT"))) {
                     clientBuilder.setRedirectStrategy(new DefaultRedirectStrategy());
                 }
-                
+
                 HttpClient client = clientBuilder.build();
-                client.getParams().setParameter(ClientPNames.HANDLE_AUTHENTICATION, true);
                 httpResp = HttpClientUtil.executeMethod(client, method);
             } catch (HttpException ex) {
                 ZimbraLog.zimlet.info("exception while proxying " + target, ex);
@@ -317,7 +316,12 @@ public class ProxyServlet extends ZimbraServlet {
             Header ctHeader = httpResp.getFirstHeader("Content-Type");
             String contentType = ctHeader == null || ctHeader.getValue() == null ? DEFAULT_CTYPE : ctHeader.getValue();
 
-            InputStream targetResponseBody = httpResp.getEntity().getContent();
+            // getEntity may return null if no response body (e.g. HTTP 204)
+            InputStream targetResponseBody = null;
+            HttpEntity targetResponseEntity = httpResp.getEntity();
+            if (targetResponseEntity != null) {
+                targetResponseBody = targetResponseEntity.getContent();
+            }
 
             if (asUpload) {
                 String filename = req.getParameter(FILENAME_PARAM);

@@ -554,4 +554,9 @@ public final class HttpUtilTest {
         Assert.assertEquals("attachement; filename*=UTF-8''%ED%95%9C%EA%B5%AD%EC%96%B4%2520%EC%88%98%EC%8B%A0%EC%9E%90.pdf", HttpUtil.createContentDisposition(request,  "attachement", unicodeFilename));
 
     }
+
+    @Test
+    public void testSanitizeUrl() {
+        Assert.assertEquals("http://example.com/", HttpUtil.sanitizeURL("http://username:password@example.com/"));
+    }
 }

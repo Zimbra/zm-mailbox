@@ -63,10 +63,10 @@ public abstract class HttpStoreManager extends ExternalStoreManager {
         HttpClientBuilder clientBuilder = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
         clientBuilder.setRetryHandler(new InputStreamRequestHttpRetryHandler());
         HttpClient client = clientBuilder.build();
-        
+
         HttpPost post = new HttpPost(getPostUrl(mbox));
         try {
-            
+
             InputStreamEntity entity = new InputStreamEntity(pin, actualSize, ContentType.APPLICATION_OCTET_STREAM);
             post.setEntity(entity);
             HttpResponse httpResp = HttpClientUtil.executeMethod(client, post);
@@ -101,7 +101,7 @@ public abstract class HttpStoreManager extends ExternalStoreManager {
         } catch (HttpException e) {
              throw new IOException("unexpected return code during blob GET: " + e.getMessage());
         }
-       
+
     }
 
     @Override

@@ -5,14 +5,14 @@ version: 2
 references:
    default_environment_settings: &default_environment_settings
       docker:
-        - image: circleci/build-image:ubuntu-14.04-XXL-upstart-1189-5614f37
+        - image: circleci/openjdk:8-node
       environment:
         - ANT_OPTS: -Dzimbra.buildinfo.version=8.7.6_GA
-        - BUILD: "/home/ubuntu"
-      working_directory: /home/ubuntu/zm-mailbox
+        - BUILD: "/home/circleci"
+      working_directory: /home/circleci/zm-mailbox
    default_attach_workspace: &default_attach_workspace
          attach_workspace:
-            at: /home/ubuntu
+            at: /home/circleci
    filter_branches: &filter_branches
      filters:
        branches:
@@ -54,7 +54,7 @@ jobs:
           command: ant clean compile publish-local
           working_directory: store
       - persist_to_workspace:
-          root: /home/ubuntu/
+          root: /home/circleci/
           paths:
             - zm-timezones
             - zm-mailbox
@@ -64,14 +64,6 @@ jobs:
     <<: *default_environment_settings
     steps:
       - *default_attach_workspace
-      - run:
-          name: Install npm
-          command: sudo apt-get update; sudo apt-get install npm
-      - run:
-          name: Install nodejs
-          command: |
-            sudo curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
-            sudo apt-get install -y nodejs
       - run:
           name: Install junit-merge
           command: sudo npm config set strict-ssl false && sudo npm install -g junit-merge

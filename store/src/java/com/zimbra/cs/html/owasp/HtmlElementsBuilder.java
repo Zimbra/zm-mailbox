@@ -27,7 +27,6 @@ import org.owasp.html.ElementPolicy;
 import com.zimbra.cs.html.owasp.policies.AElementPolicy;
 import com.zimbra.cs.html.owasp.policies.AreaElementPolicy;
 import com.zimbra.cs.html.owasp.policies.BaseElementPolicy;
-import com.zimbra.cs.html.owasp.policies.DivElementPolicy;
 import com.zimbra.cs.html.owasp.policies.ImgInputElementPolicy;
 
 /*
@@ -46,7 +45,6 @@ public class HtmlElementsBuilder {
     }
 
     public void setUp() {
-        elementSpecificPolicies.put("div", new DivElementPolicy());
         elementSpecificPolicies.put("a", new AElementPolicy());
         elementSpecificPolicies.put("area", new AreaElementPolicy());
         elementSpecificPolicies.put("base", new BaseElementPolicy());

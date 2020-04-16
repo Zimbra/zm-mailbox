@@ -16726,6 +16726,78 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Whether to allow a user to access Zimbra mobile App
+     *
+     * @return zimbraFeatureMobileAppEnabled, or false if unset
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3083)
+    public boolean isFeatureMobileAppEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureMobileAppEnabled, false, true);
+    }
+
+    /**
+     * Whether to allow a user to access Zimbra mobile App
+     *
+     * @param zimbraFeatureMobileAppEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3083)
+    public void setFeatureMobileAppEnabled(boolean zimbraFeatureMobileAppEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMobileAppEnabled, zimbraFeatureMobileAppEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to allow a user to access Zimbra mobile App
+     *
+     * @param zimbraFeatureMobileAppEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3083)
+    public Map<String,Object> setFeatureMobileAppEnabled(boolean zimbraFeatureMobileAppEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMobileAppEnabled, zimbraFeatureMobileAppEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to allow a user to access Zimbra mobile App
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3083)
+    public void unsetFeatureMobileAppEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMobileAppEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to allow a user to access Zimbra mobile App
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3083)
+    public Map<String,Object> unsetFeatureMobileAppEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMobileAppEnabled, "");
+        return attrs;
+    }
+
+    /**
      * Whether to enable Zimbra Mobile Gateway feature
      *
      * @return zimbraFeatureMobileGatewayEnabled, or false if unset
@@ -16928,6 +17000,78 @@ public abstract class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetFeatureMobileSyncEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureMobileSyncEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Whether to allow a user to access Zimbra modern desktop
+     *
+     * @return zimbraFeatureModernDesktopEnabled, or false if unset
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3082)
+    public boolean isFeatureModernDesktopEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureModernDesktopEnabled, false, true);
+    }
+
+    /**
+     * Whether to allow a user to access Zimbra modern desktop
+     *
+     * @param zimbraFeatureModernDesktopEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3082)
+    public void setFeatureModernDesktopEnabled(boolean zimbraFeatureModernDesktopEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureModernDesktopEnabled, zimbraFeatureModernDesktopEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to allow a user to access Zimbra modern desktop
+     *
+     * @param zimbraFeatureModernDesktopEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3082)
+    public Map<String,Object> setFeatureModernDesktopEnabled(boolean zimbraFeatureModernDesktopEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureModernDesktopEnabled, zimbraFeatureModernDesktopEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to allow a user to access Zimbra modern desktop
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3082)
+    public void unsetFeatureModernDesktopEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureModernDesktopEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to allow a user to access Zimbra modern desktop
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3082)
+    public Map<String,Object> unsetFeatureModernDesktopEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureModernDesktopEnabled, "");
         return attrs;
     }
 
@@ -19723,6 +19867,160 @@ public abstract class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetFeatureWebSearchEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureWebSearchEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Deprecated since: 8.9.0. deprecated with attribute
+     * zimbraFeatureModernDesktopEnabled. Orig desc: Whether to allow a user
+     * to access Zimbra X desktop
+     *
+     * @return zimbraFeatureZXDesktopEnabled, or false if unset
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3080)
+    public boolean isFeatureZXDesktopEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureZXDesktopEnabled, false, true);
+    }
+
+    /**
+     * Deprecated since: 8.9.0. deprecated with attribute
+     * zimbraFeatureModernDesktopEnabled. Orig desc: Whether to allow a user
+     * to access Zimbra X desktop
+     *
+     * @param zimbraFeatureZXDesktopEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3080)
+    public void setFeatureZXDesktopEnabled(boolean zimbraFeatureZXDesktopEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureZXDesktopEnabled, zimbraFeatureZXDesktopEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Deprecated since: 8.9.0. deprecated with attribute
+     * zimbraFeatureModernDesktopEnabled. Orig desc: Whether to allow a user
+     * to access Zimbra X desktop
+     *
+     * @param zimbraFeatureZXDesktopEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3080)
+    public Map<String,Object> setFeatureZXDesktopEnabled(boolean zimbraFeatureZXDesktopEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureZXDesktopEnabled, zimbraFeatureZXDesktopEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Deprecated since: 8.9.0. deprecated with attribute
+     * zimbraFeatureModernDesktopEnabled. Orig desc: Whether to allow a user
+     * to access Zimbra X desktop
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3080)
+    public void unsetFeatureZXDesktopEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureZXDesktopEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Deprecated since: 8.9.0. deprecated with attribute
+     * zimbraFeatureModernDesktopEnabled. Orig desc: Whether to allow a user
+     * to access Zimbra X desktop
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3080)
+    public Map<String,Object> unsetFeatureZXDesktopEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureZXDesktopEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Whether to allow a user to access Zimbra X web client
+     *
+     * @return zimbraFeatureZXWebEnabled, or false if unset
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3079)
+    public boolean isFeatureZXWebEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureZXWebEnabled, false, true);
+    }
+
+    /**
+     * Whether to allow a user to access Zimbra X web client
+     *
+     * @param zimbraFeatureZXWebEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3079)
+    public void setFeatureZXWebEnabled(boolean zimbraFeatureZXWebEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureZXWebEnabled, zimbraFeatureZXWebEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to allow a user to access Zimbra X web client
+     *
+     * @param zimbraFeatureZXWebEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3079)
+    public Map<String,Object> setFeatureZXWebEnabled(boolean zimbraFeatureZXWebEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureZXWebEnabled, zimbraFeatureZXWebEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to allow a user to access Zimbra X web client
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3079)
+    public void unsetFeatureZXWebEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureZXWebEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to allow a user to access Zimbra X web client
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3079)
+    public Map<String,Object> unsetFeatureZXWebEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureZXWebEnabled, "");
         return attrs;
     }
 
@@ -41368,7 +41666,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * user preference of client type
      *
-     * <p>Valid values: [standard, advanced]
+     * <p>Valid values: [standard, advanced, zimbrax]
      *
      * @return zimbraPrefClientType, or ZAttrProvisioning.PrefClientType.advanced if unset and/or has invalid value
      */
@@ -41380,7 +41678,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * user preference of client type
      *
-     * <p>Valid values: [standard, advanced]
+     * <p>Valid values: [standard, advanced, zimbrax]
      *
      * @return zimbraPrefClientType, or "advanced" if unset
      */
@@ -41392,7 +41690,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * user preference of client type
      *
-     * <p>Valid values: [standard, advanced]
+     * <p>Valid values: [standard, advanced, zimbrax]
      *
      * @param zimbraPrefClientType new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -41407,7 +41705,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * user preference of client type
      *
-     * <p>Valid values: [standard, advanced]
+     * <p>Valid values: [standard, advanced, zimbrax]
      *
      * @param zimbraPrefClientType new value
      * @param attrs existing map to populate, or null to create a new map
@@ -41423,7 +41721,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * user preference of client type
      *
-     * <p>Valid values: [standard, advanced]
+     * <p>Valid values: [standard, advanced, zimbrax]
      *
      * @param zimbraPrefClientType new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -41438,7 +41736,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * user preference of client type
      *
-     * <p>Valid values: [standard, advanced]
+     * <p>Valid values: [standard, advanced, zimbrax]
      *
      * @param zimbraPrefClientType new value
      * @param attrs existing map to populate, or null to create a new map
@@ -41454,7 +41752,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * user preference of client type
      *
-     * <p>Valid values: [standard, advanced]
+     * <p>Valid values: [standard, advanced, zimbrax]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -41468,7 +41766,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * user preference of client type
      *
-     * <p>Valid values: [standard, advanced]
+     * <p>Valid values: [standard, advanced, zimbrax]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

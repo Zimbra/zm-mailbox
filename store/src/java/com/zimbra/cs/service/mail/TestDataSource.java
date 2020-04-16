@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2013, 2014, 2015, 2016, 2019 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -141,7 +141,7 @@ public class TestDataSource extends MailDocumentHandler {
         CreateDataSource.processSmtpAttrs(testAttrs, eDataSource, true, testId);
 
         // Common optional attributes
-        ModifyDataSource.processCommonOptionalAttrs(testAttrs, eDataSource);
+        ModifyDataSource.processCommonOptionalAttrs(account, testAttrs, eDataSource);
 
         // Perform test and assemble response
 

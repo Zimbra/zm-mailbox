@@ -140,7 +140,7 @@ public class ComputeAggregateQuotaUsage extends AdminDocumentHandler {
             @Override
             public void run() {
                 try {
-                    SMTPMessage out = new SMTPMessage(JMSession.getSmtpSession());
+                    SMTPMessage out = new SMTPMessage(JMSession.getSmtpSession(domain));
 
                     // should From be configurable?
                     out.setFrom(new JavaMailInternetAddress("Postmaster <postmaster@" + domain.getName() + ">"));

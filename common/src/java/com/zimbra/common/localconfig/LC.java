@@ -570,8 +570,8 @@ public final class LC {
 
     @Supported
     public static final KnownKey mailboxd_java_options = KnownKey.newKey("-server" +
-            " -Dhttps.protocols=TLSv1,TLSv1.1,TLSv1.2" +
-            " -Djdk.tls.client.protocols=TLSv1,TLSv1.1,TLSv1.2" +
+            " -Dhttps.protocols=TLSv1.2" +
+            " -Djdk.tls.client.protocols=TLSv1.2" +
             " -Djava.awt.headless=true" +
             " -Dsun.net.inetaddr.ttl=${networkaddress_cache_ttl}" +
             " -Dorg.apache.jasper.compiler.disablejsr199=true" +
@@ -678,6 +678,7 @@ public final class LC {
 
     public static final KnownKey imap_max_request_size = KnownKey.newKey(10 * 1024);
     public static final KnownKey imap_max_nesting_in_search_request = KnownKey.newKey(100);
+    public static final KnownKey imap_max_items_in_copy = KnownKey.newKey(1000);
 
     @Supported
     @Reloadable
@@ -792,6 +793,9 @@ public final class LC {
     public static final KnownKey zimbra_class_jsieve_comparators_octet = KnownKey.newKey("com.zimbra.cs.filter.ZimbraOctet");
     public static final KnownKey zimbra_class_two_factor_auth_factory = KnownKey.newKey("com.zimbra.cs.account.auth.twofactor.TwoFactorAuth$DefaultFactory");
 
+    // ZCS-8181 if below flag is false, do not update zimbraAppSpecificPassword attr
+    //          with last authentication time during authentication of app specific password.
+    public static final KnownKey zimbra_two_factor_apppasswd_update_authtime = KnownKey.newKey(true);
     // XXX REMOVE AND RELEASE NOTE
     public static final KnownKey data_source_trust_self_signed_certs = KnownKey.newKey(false);
     public static final KnownKey data_source_fetch_size = KnownKey.newKey(5);
@@ -858,8 +862,8 @@ public final class LC {
     public static final KnownKey zimbra_jwt_cookie_size_limit = KnownKey.newKey(4096);
     public static final KnownKey zimbra_authtoken_cookie_domain = KnownKey.newKey("");
     public static final KnownKey zimbra_zmjava_options = KnownKey.newKey("-Xmx256m" +
-            " -Dhttps.protocols=TLSv1,TLSv1.1,TLSv1.2" +
-            " -Djdk.tls.client.protocols=TLSv1,TLSv1.1,TLSv1.2");
+            " -Dhttps.protocols=TLSv1.2" +
+            " -Djdk.tls.client.protocols=TLSv1.2");
     public static final KnownKey zimbra_zmjava_java_library_path = KnownKey.newKey("");
     public static final KnownKey zimbra_zmjava_java_ext_dirs = KnownKey.newKey("");
     public static final KnownKey debug_xmpp_disable_client_tls = KnownKey.newKey(0);
@@ -951,7 +955,7 @@ public final class LC {
      * Bug: 47051 Known key for the CLI utilities SOAP HTTP transport timeout.
      * The default value is set to 0 i.e. no timeout.
      */
-    public static final KnownKey cli_httpclient_soaphttptransport_so_timeout  = KnownKey.newKey(0);
+    public static final KnownKey cli_httpclient_soaphttptransport_so_timeout  = KnownKey.newKey(Integer.MAX_VALUE);
 
 
     public static final KnownKey httpclient_convertd_so_timeout = KnownKey.newKey(-1);
@@ -1289,19 +1293,34 @@ public final class LC {
     public static final KnownKey imap_always_use_remote_store = KnownKey.newKey(false);
 
     // owasp handler
-    public static final KnownKey zimbra_use_owasp_html_sanitizer = KnownKey.newKey(false);
+    public static final KnownKey zimbra_use_owasp_html_sanitizer = KnownKey.newKey(true);
+
+    public static final KnownKey enable_delegated_admin_ldap_access = KnownKey.newKey(true);
 
     // OAuth2 Social
     public static final KnownKey zm_oauth_classes_handlers_yahoo = KnownKey.newKey("com.zimbra.oauth.handlers.impl.YahooOAuth2Handler");
     public static final KnownKey zm_oauth_classes_handlers_google = KnownKey.newKey("com.zimbra.oauth.handlers.impl.GoogleOAuth2Handler");
     public static final KnownKey zm_oauth_classes_handlers_facebook = KnownKey.newKey("com.zimbra.oauth.handlers.impl.FacebookOAuth2Handler");
+    public static final KnownKey zm_oauth_classes_handlers_outlook = KnownKey.newKey("com.zimbra.oauth.handlers.impl.OutlookOAuth2Handler");
+    public static final KnownKey zm_oauth_classes_handlers_twitter = KnownKey.newKey("com.zimbra.oauth.handlers.impl.TwitterOAuth2Handler");
+    public static final KnownKey zm_oauth_classes_handlers_slack = KnownKey.newKey("com.zimbra.oauth.handlers.impl.SlackOAuth2Handler");
+    public static final KnownKey zm_oauth_classes_handlers_zoom = KnownKey.newKey("com.zimbra.oauth.handlers.impl.ZoomOAuth2Handler");
+    public static final KnownKey zm_oauth_classes_handlers_dropbox = KnownKey.newKey("com.zimbra.oauth.handlers.impl.DropboxOAuth2Handler");
 
+    // alias login
+    public static final KnownKey alias_login_enabled = KnownKey.newKey(true);
 
     // Feed Manager comma-separated blacklist. addresses can be CIDR notation, or single ip. no wild-cards (default blacklist private networks)
     public static final KnownKey zimbra_feed_manager_blacklist = KnownKey.newKey("10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,fd00::/8");
 
+    // Feed Manager comma-separated whitelist (exceptions to the blacklist). addresses can be CIDR notation, or single ip. no wild-cards
+    public static final KnownKey zimbra_feed_manager_whitelist = KnownKey.newKey("");
+
     // Zimbra valid class list to de-serialize
     public static final KnownKey zimbra_deserialize_classes = KnownKey.newKey("");
+
+    // XML 1.0 invalid characters regex pattern
+    public static final KnownKey xml_invalid_chars_regex = KnownKey.newKey("\\&\\#(?:x([0-9a-fA-F]+)|([0-9]+))\\;");
 
     static {
         // Automatically set the key name with the variable name.

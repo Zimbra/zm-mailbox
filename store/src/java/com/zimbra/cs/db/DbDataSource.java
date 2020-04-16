@@ -777,14 +777,14 @@ public class DbDataSource {
         return items;
     }
 
-    public static int getDataSourceUsage(DataSource ds) throws ServiceException {
+    public static long getDataSourceUsage(DataSource ds) throws ServiceException {
         Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
         ZimbraLog.datasource.debug("Getting size of %s", ds.getName());
 
         DbConnection conn = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
-        int totalSize = 0;
+        long totalSize = 0L;
         try {
             conn = mbox.getOperationConnection();
             StringBuilder sb = new StringBuilder();
@@ -801,7 +801,7 @@ public class DbDataSource {
             stmt.setByte(pos++, MailItem.Type.MESSAGE.toByte());
             rs = stmt.executeQuery();
             while (rs.next()) {
-                totalSize = rs.getInt(1);
+                totalSize = rs.getLong(1);
                 break;
             }
             rs.close();

@@ -3,6 +3,9 @@
   <property name="httpclient.version" value="4.5.8"/>
   <property name="httpclient.httpcore.version" value="4.4.11"/>
   <property name="httpclient.async.version" value="4.1.4"/>
+  <property name="jetty.version" value="9.4.18.v20190429"/>
+  <property name="dom4j.version" value="2.1.1"/>
+  <property name="com.google.guava.version" value="28.1-jre"/>
 <settings defaultResolver="chain-resolver" />
   <caches defaultCacheDir="${dev.home}/.ivy2/cache"/>
   <resolvers>
@@ -13,6 +16,12 @@
         <artifact pattern= "${dev.home}/.zcs-deps/[organisation].[ext]" />
 
       </filesystem>
+       <url name="maven-https-org">
+        <artifact pattern="https://repo1.maven.org/maven2/[organization]/[module]/[revision]/[artifact]-[revision].[ext]" />
+      </url>
+      <url name="maven-https-orgPath">
+        <artifact pattern="https://repo1.maven.org/maven2/[orgPath]/[module]/[revision]/[artifact]-[revision].[ext]" />
+      </url>
       <ibiblio name="maven" m2compatible="true" usepoms="false"/>
       <ibiblio name="maven-redhat" root="https://maven.repository.redhat.com/ga/" pattern="[organisation]/[module]/[revision]/[module]-[revision].[ext]"/>
       <url name="zimbra">

@@ -32,12 +32,12 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 
 public class HttpProxyUtil {
-    
+
     private static String sProxyUrl = null;
     private static URI sProxyUri = null;
     private static AuthScope sProxyAuthScope = null;
     private static UsernamePasswordCredentials sProxyCreds = null;
-    
+
     public static synchronized void configureProxy(HttpClientBuilder clientBuilder) {
         try {
             String url = Provisioning.getInstance().getLocalServer().getAttr(Provisioning.A_zimbraHttpProxyURL, null);
@@ -49,11 +49,11 @@ public class HttpProxyUtil {
                 sProxyUri = new URI(url);
                 sProxyAuthScope = null;
                 sProxyCreds = null;
-                String userInfo = sProxyUri.getUserInfo();                
+                String userInfo = sProxyUri.getUserInfo();
                 if (userInfo != null) {
                     int i = userInfo.indexOf(':');
                     if (i != -1) {
-                        sProxyAuthScope = new AuthScope(sProxyUri.getHost(), sProxyUri.getPort(), null); 
+                        sProxyAuthScope = new AuthScope(sProxyUri.getHost(), sProxyUri.getPort(), null);
                         sProxyCreds = new UsernamePasswordCredentials(userInfo.substring(0, i), userInfo.substring(i+1));
                     }
                 }
@@ -61,7 +61,7 @@ public class HttpProxyUtil {
             if (ZimbraLog.misc.isDebugEnabled()) {
                 ZimbraLog.misc.debug("setting proxy: "+url);
             }
-            
+
             HttpHost proxy = new HttpHost(sProxyUri.getHost(), sProxyUri.getPort());
             RequestConfig config = RequestConfig.custom()
                     .setProxy(proxy)

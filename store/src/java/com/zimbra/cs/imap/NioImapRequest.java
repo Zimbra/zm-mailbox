@@ -21,6 +21,10 @@ import java.io.IOException;
 
 import org.apache.mina.filter.codec.ProtocolDecoderException;
 
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.imap.ImapParseException.ImapMaximumSizeExceededException;
+
 final class NioImapRequest extends ImapRequest {
     private Literal literal;    // current literal data
     private int literalCount;   // remaining byte count for current literal
@@ -91,4 +95,30 @@ final class NioImapRequest extends ImapRequest {
         }
         return sb.toString();
     }
+
+    public void checkSize(long size) throws ImapParseException {
+        int maxLiteralSize = Integer.MAX_VALUE;
+        if (isAppend()) {
+            try {
+                long msgLimit = mHandler.getConfig().getMaxMessageSize();
+                if ((msgLimit != 0 /* 0 means unlimited */) && (msgLimit < maxLiteralSize)
+                        && (size > msgLimit)) {
+                    throwSizeExceeded("message");
+                }
+            } catch (ServiceException se) {
+                ZimbraLog.imap.warn("unable to check zimbraMtaMaxMessageSize", se);
+            }
+        }
+        if (size >= mHandler.config.getMaxRequestSize()){
+            throwSizeExceeded("request");
+        }
+    }
+
+    private void throwSizeExceeded(String exceededType) throws ImapParseException {
+        if (tag == null && index == 0 && offset == 0) {
+            tag = readTag(); rewind();
+        }
+        throw new ImapMaximumSizeExceededException(tag, exceededType);
+    }
+
 }

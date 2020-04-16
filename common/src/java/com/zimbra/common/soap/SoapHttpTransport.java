@@ -28,7 +28,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -77,7 +76,7 @@ import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
 
 public class SoapHttpTransport extends SoapTransport {
-    private HttpClient mClient = ZimbraHttpConnectionManager.getInternalHttpConnMgr().getDefaultHttpClient().build();
+    private HttpClientBuilder mClientBuilder = ZimbraHttpConnectionManager.getInternalHttpConnMgr().getDefaultHttpClient();
     private Map<String, String> mCustomHeaders;
     private ProxyHostConfiguration mHostConfig = null;
     private HttpDebugListener mHttpDebugListener;
@@ -121,9 +120,9 @@ public class SoapHttpTransport extends SoapTransport {
      * Frees any resources such as connection pool held by this transport.
      */
     public void shutdown() {
-        if (mClient != null && mClient != ZimbraHttpConnectionManager.getInternalHttpConnMgr().getDefaultHttpClient()) {
-            mClient.getConnectionManager().closeIdleConnections(0, TimeUnit.MILLISECONDS);
-            mClient = null;
+        if (mClientBuilder != null && mClientBuilder != ZimbraHttpConnectionManager.getInternalHttpConnMgr().getDefaultHttpClient()) {
+            ZimbraHttpConnectionManager.getInternalHttpConnMgr().closeIdleConnections();
+            mClientBuilder = null;
             mHostConfig = null;
         }
     }
@@ -223,6 +222,7 @@ public class SoapHttpTransport extends SoapTransport {
             String changeToken, String tokenType, NotificationFormat nFormat, String curWaitSetID, ResponseHandler respHandler)
             throws IOException, ServiceException {
         HttpPost method = null;
+        HttpClient client = null;
 
         try {
             // Assemble post method.  Append document name, so that the request
@@ -269,6 +269,7 @@ public class SoapHttpTransport extends SoapTransport {
 
             String host = method.getURI().getHost();
             ZAuthToken zToken = getAuthToken();
+
             BasicCookieStore cookieStore = HttpClientUtil.newHttpState(zToken, host, this.isAdmin());
             String trustedToken = getTrustedToken();
             if (trustedToken != null) {
@@ -283,13 +284,22 @@ public class SoapHttpTransport extends SoapTransport {
                 method.addHeader(Constants.AUTH_HEADER, Constants.BEARER + " " + zToken.getValue());
             }
 
+            ZimbraLog.soap.trace("Httpclient timeout: %s" , mTimeout);
             RequestConfig reqConfig = RequestConfig.custom().
                 setCookieSpec(cookieStore.getCookies().size() == 0 ? CookieSpecs.IGNORE_COOKIES:
-               CookieSpecs.BROWSER_COMPATIBILITY).build();
-            SocketConfig socketConfig = SocketConfig.custom().setSoTimeout(LC.httpclient_external_connmgr_so_timeout.intValue())
+               CookieSpecs.BROWSER_COMPATIBILITY)
+                .setSocketTimeout(mTimeout)
+                .build();
+            SocketConfig socketConfig = SocketConfig.custom().setSoTimeout(mTimeout)
                 .setTcpNoDelay(LC.httpclient_external_connmgr_tcp_nodelay.booleanValue()).build();
             method.setProtocolVersion(HttpVersion.HTTP_1_1);
             method.addHeader("Connection", mKeepAlive ? "Keep-alive" : "Close");
+
+
+            client = mClientBuilder.setDefaultRequestConfig(reqConfig)
+               .setDefaultSocketConfig(socketConfig)
+               .setDefaultCookieStore(cookieStore).build();
+            ZimbraLog.soap.trace("Httpclient request config timeout: %s" , reqConfig.getSocketTimeout());
 
             if (mHostConfig != null && mHostConfig.getUsername() != null && mHostConfig.getPassword() != null) {
 
@@ -297,9 +307,10 @@ public class SoapHttpTransport extends SoapTransport {
                 AuthScope authScope = new AuthScope(null, -1);
                 CredentialsProvider credsProvider = new BasicCredentialsProvider();
                 credsProvider.setCredentials(authScope, credentials);
-                mClient = HttpClientBuilder.create().setDefaultCredentialsProvider(credsProvider)
+                client = HttpClientBuilder.create().setDefaultCredentialsProvider(credsProvider)
                     .setDefaultRequestConfig(reqConfig)
                     .setDefaultSocketConfig(socketConfig)
+                    .setDefaultCookieStore(cookieStore)
                     .build();
             }
 
@@ -307,7 +318,7 @@ public class SoapHttpTransport extends SoapTransport {
                 mHttpDebugListener.sendSoapMessage(method, soapReq, cookieStore);
             }
 
-            HttpResponse response = mClient.execute(method);
+            HttpResponse response = client.execute(method);
             int responseCode = response.getStatusLine().getStatusCode();
             // SOAP allows for "200" on success and "500" on failure;
             //   real server issues will probably be "503" or "404"
@@ -350,7 +361,7 @@ public class SoapHttpTransport extends SoapTransport {
             // if called from CLI, all connections will be closed when the CLI
             // exits.  Leave it here anyway.
             if (!mKeepAlive)
-                mClient.getConnectionManager().closeIdleConnections(0, TimeUnit.MILLISECONDS);
+                ZimbraHttpConnectionManager.getInternalHttpConnMgr().closeIdleConnections();
         }
     }
 

@@ -363,7 +363,7 @@ public class ZimbraServlet extends HttpServlet {
         }
         return false;
     }
-    
+
     // TO DO HTTP
     private static boolean hasJWTSaltCookie(BasicCookieStore state) {
         List<Cookie>  cookies = state == null? null : state.getCookies();
@@ -389,7 +389,7 @@ public class ZimbraServlet extends HttpServlet {
         if (cookies != null) {
             for (int i = 0; i < cookies.length; i++) {
                 if ((cookies[i].getName().equals(ZimbraCookie.COOKIE_ZM_AUTH_TOKEN) && hasZMAuth) ||
-                        (hasJwtSalt && cookies[i].getName().equals(ZimbraCookie.COOKIE_ZM_JWT))) 
+                        (hasJwtSalt && cookies[i].getName().equals(ZimbraCookie.COOKIE_ZM_JWT)))
                     continue;
                 BasicClientCookie cookie = new BasicClientCookie(cookies[i].getName(), cookies[i].getValue());
                 cookie.setDomain(hostname);
@@ -445,7 +445,7 @@ public class ZimbraServlet extends HttpServlet {
         if (responseStream == null || resp.getOutputStream() == null)
             return;
         ByteUtil.copy(httpResp.getEntity().getContent(), false, resp.getOutputStream(), false);
-        
+
     }
 
     protected boolean isAdminRequest(HttpServletRequest req) throws ServiceException {

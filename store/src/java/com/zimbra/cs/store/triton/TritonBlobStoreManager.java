@@ -152,7 +152,7 @@ public class TritonBlobStoreManager extends SisStore implements ExternalResumabl
         HttpClientBuilder clientBuilder = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
         clientBuilder.setRetryHandler(new InputStreamRequestHttpRetryHandler());
         HttpClient client = clientBuilder.build();
-        
+
         if (actualSize < 0) {
             throw ServiceException.FAILURE("Must use resumable upload (i.e. StoreManager.newIncomingBlob()) if size is unknown", null);
         }
@@ -209,7 +209,7 @@ public class TritonBlobStoreManager extends SisStore implements ExternalResumabl
         } catch (HttpException e) {
             throw new IOException("unexpected return code during blob GET: " + e.getMessage());
         }
-       
+
     }
 
     @Override

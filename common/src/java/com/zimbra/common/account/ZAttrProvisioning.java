@@ -1666,7 +1666,8 @@ public class ZAttrProvisioning {
 
     public static enum PrefClientType {
         standard("standard"),
-        advanced("advanced");
+        advanced("advanced"),
+        zimbrax("zimbrax");
         private String mValue;
         private PrefClientType(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -1678,6 +1679,7 @@ public class ZAttrProvisioning {
         }
         public boolean isStandard() { return this == standard;}
         public boolean isAdvanced() { return this == advanced;}
+        public boolean isZimbrax() { return this == zimbrax;}
     }
 
     public static enum PrefComposeDirection {
@@ -6691,6 +6693,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureMarkMailForwardedAsRead = "zimbraFeatureMarkMailForwardedAsRead";
 
     /**
+     * Whether to allow a user to access Zimbra mobile App
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3083)
+    public static final String A_zimbraFeatureMobileAppEnabled = "zimbraFeatureMobileAppEnabled";
+
+    /**
      * Whether to enable Zimbra Mobile Gateway feature
      *
      * @since ZCS 8.7.0,9.0.0
@@ -6711,6 +6721,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=347)
     public static final String A_zimbraFeatureMobileSyncEnabled = "zimbraFeatureMobileSyncEnabled";
+
+    /**
+     * Whether to allow a user to access Zimbra modern desktop
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3082)
+    public static final String A_zimbraFeatureModernDesktopEnabled = "zimbraFeatureModernDesktopEnabled";
 
     /**
      * Whether user can create address books
@@ -7010,6 +7028,24 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=544)
     public static final String A_zimbraFeatureZimbraAssistantEnabled = "zimbraFeatureZimbraAssistantEnabled";
+
+    /**
+     * Deprecated since: 8.9.0. deprecated with attribute
+     * zimbraFeatureModernDesktopEnabled. Orig desc: Whether to allow a user
+     * to access Zimbra X desktop
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3080)
+    public static final String A_zimbraFeatureZXDesktopEnabled = "zimbraFeatureZXDesktopEnabled";
+
+    /**
+     * Whether to allow a user to access Zimbra X web client
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3079)
+    public static final String A_zimbraFeatureZXWebEnabled = "zimbraFeatureZXWebEnabled";
 
     /**
      * whether crash reporting is enabled in the Android client

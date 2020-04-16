@@ -23,29 +23,47 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Set;
 
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.MethodRule;
+import org.junit.rules.TestName;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.CharStreams;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.servlet.ZThreadLocal;
-import com.zimbra.soap.RequestContext;
+import com.zimbra.cs.util.ZTestWatchman;
 
 public class OwaspHtmlSanitizerTest {
 
     private static String EMAIL_BASE_DIR = "data/unittest/email/";
+    @Rule public TestName testName = new TestName();
+    @Rule public MethodRule watchman = new ZTestWatchman();
 
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
         EMAIL_BASE_DIR = MailboxTestUtil.getZimbraServerDir("") + EMAIL_BASE_DIR;
-        OwaspPolicy.load("conf/owasp_policy.xml");
+    }
+
+    @Before
+    public void setUp() throws Exception {
+        MailboxTestUtil.clearData();
+        LC.zimbra_use_owasp_html_sanitizer.setDefault(true);
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        MailboxTestUtil.clearData();
     }
 
     /*
@@ -578,6 +596,7 @@ public class OwaspHtmlSanitizerTest {
         html = "<html><head></head><body><a target=\"_blank\"" +
             " href=\"smb://Aurora._smb._tcp.local/untitled/folder/03%20DANDIYA%20MIX.mp3\"></a></body></html>";
         result = new OwaspHtmlSanitizer(html, true, null).sanitize();
+        hrefVal = "smb://Aurora._smb._tcp.local/untitled/folder/03%20DANDIYA%20MIX.mp3";
         Assert.assertTrue(result.contains(hrefVal));
 
         html = "<html><head></head><body><a target=\"_blank\"" +
@@ -665,5 +684,28 @@ public class OwaspHtmlSanitizerTest {
         String result = new OwaspHtmlSanitizer(html, true, null).sanitize();
         Assert.assertTrue(!result.contains("@zimbra"));
         Assert.assertTrue(result.contains("&#64;zimbra"));
+    }
+
+    @Test
+    public void testZCS7621() throws Exception {
+        String html = "<div class=\"gmail\" style=\"display:none; width:0; overflow:hidden; float:left; max-height:0;\" align=\"center\">";
+        String result = new OwaspHtmlSanitizer(html, true, null).sanitize();
+        Assert.assertTrue(result.contains("display"));
+        Assert.assertTrue(result.contains("float"));
+    }
+
+    @Test
+    public void testZCS7784() throws Exception {
+        String html = "<img class=\"gmail\" style=\"display:none; width:0; overflow:hidden;\" src=\"https://localhost:8443/service/home/~/?auth=co&loc=en_US&id=285&part=2.2\" >";
+        String result = new OwaspHtmlSanitizer(html, true, null).sanitize();
+        Assert.assertTrue(result.contains("style"));
+    }
+
+    @Test
+    public void testZBUG1215() throws Exception {
+        String html = "<div id=\"noticias\"><div class=\"bloque\">BLOQUESSS</div></div>";
+        String result = new OwaspHtmlSanitizer(html, true, null).sanitize();
+        // check that the id and class attributes are not removed
+        Assert.assertTrue(result.equals(html));
     }
 }

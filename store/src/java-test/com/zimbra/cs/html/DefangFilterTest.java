@@ -29,9 +29,14 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.MethodRule;
+import org.junit.rules.TestName;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
@@ -45,6 +50,7 @@ import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.servlet.ZThreadLocal;
+import com.zimbra.cs.util.ZTestWatchman;
 import com.zimbra.soap.RequestContext;
 
 /**
@@ -55,13 +61,26 @@ import com.zimbra.soap.RequestContext;
  */
 public class DefangFilterTest {
     private static String EMAIL_BASE_DIR = "data/unittest/email/";
+    @Rule public TestName testName = new TestName();
+    @Rule public MethodRule watchman = new ZTestWatchman();
+
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
         EMAIL_BASE_DIR = MailboxTestUtil.getZimbraServerDir("") + EMAIL_BASE_DIR;
-        LC.zimbra_use_owasp_html_sanitizer.setDefault(false);
         Provisioning prov = Provisioning.getInstance();
         Account acct = prov.createAccount("test@in.telligent.com", "secret", new HashMap<String, Object>());
+    }
+
+    @Before
+    public void setUp() throws Exception {
+        MailboxTestUtil.clearData();
+        LC.zimbra_use_owasp_html_sanitizer.setDefault(false);
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        MailboxTestUtil.clearData();
     }
 
     /**
