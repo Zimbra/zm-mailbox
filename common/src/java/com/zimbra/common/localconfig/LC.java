@@ -1433,6 +1433,9 @@ public final class LC {
     // to switch to Tika com.zimbra.cs.convert.TikaExtractionClient
     public static final KnownKey attachment_extraction_client_class = KnownKey.newKey("com.zimbra.cs.convert.LegacyConverterClient");
 
+    // Content type not supported by convertd
+    public static final KnownKey convertd_unsupported_mime_type = KnownKey.newKey("application/pdf");
+
     static {
         // Automatically set the key name with the variable name.
         for (Field field : LC.class.getFields()) {
