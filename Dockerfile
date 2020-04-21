@@ -14,7 +14,7 @@ FROM ${DOCKER_REPO_NS}/zms-admin-console:1.0.1 as admin-console
 FROM ${DOCKER_REPO_NS}/zms-ldap-utilities:1.0 as ldap
 FROM ${DOCKER_REPO_NS}/zms-timezones:1.0 as timezone
 FROM ${DOCKER_REPO_NS}/zms-core-extension:1.0.0 as ext-core
-FROM ${DOCKER_REPO_NS}/zms-core-network-extension:1.0.0 as ext-core-network
+FROM ${DOCKER_REPO_NS}/zms-core-network-extension:1.0.1 as ext-core-network
 FROM ${DOCKER_REPO_NS}/zms-core-zimlets:1.0.1 as zimlet-webapp
 
 # Final stage, copy contents from build stage
@@ -68,6 +68,8 @@ RUN cp -f /opt/zimbra/conf/zmlogrotate.mailbox /etc/logrotate.d/zimbra.mailbox \
 COPY --from=lib /opt/zimbra/jetty_base/webapps/service/WEB-INF/lib/ /opt/zimbra/jetty_base/webapps/service/WEB-INF/lib/
 COPY --from=zimlet-webapp /opt/zimbra/jetty_base/webapps/service/WEB-INF/ /opt/zimbra/jetty_base/webapps/service/WEB-INF/
 # Copy native lib to /opt/zimbra/lib & core jars to /opt/zimbra/lib/jars
+#RUN true added to fix issue described in https://github.com/moby/moby/issues/37965
+#(COPY fail in multistage build: layer does not exist )
 RUN true
 COPY native/build/libzimbra-native.so /opt/zimbra/lib/
 COPY native/build/zimbra-native.jar /opt/zimbra/lib/jars/

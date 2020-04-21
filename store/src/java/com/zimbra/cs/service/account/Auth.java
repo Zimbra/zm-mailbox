@@ -163,6 +163,8 @@ public class Auth extends AccountDocumentHandler {
                     acct = lookupAccount(acctValuePassedIn.substring(0, atLoc),
                             acctValuePassedIn.substring(atLoc+1, acctValuePassedIn.length()));
                 }
+            } else {
+                acct = prov.get(acctBy, acctValue);
             }
         }
 
