@@ -743,13 +743,13 @@ public class RedissonRetryClient implements RedissonClient {
     }
 
     @Override
-    public <K, V> RStream<K, V> getStream(String arg0) {
-        throw new UnsupportedOperationException();
+    public <K, V> RStream<K, V> getStream(String name) {
+        return new RedissonRetryStream<K, V>(client -> client.getStream(name), this);
     }
 
     @Override
-    public <K, V> RStream<K, V> getStream(String arg0, Codec arg1) {
-        throw new UnsupportedOperationException();
+    public <K, V> RStream<K, V> getStream(String name, Codec codec) {
+        return new RedissonRetryStream<K, V>(client -> client.getStream(name, codec), this);
     }
 
     @Override
