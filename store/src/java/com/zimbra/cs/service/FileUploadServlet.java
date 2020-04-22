@@ -27,6 +27,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -38,6 +39,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TimerTask;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.mail.util.SharedByteArrayInputStream;
@@ -178,22 +180,22 @@ public class FileUploadServlet extends ZimbraServlet {
                 // with WebDAV handlers as the content type needs to be
                 // text/xml instead.
 
-                // 1. detect by file extension
-                contentType = MimeDetect.getMimeDetect().detect(name);
+                //1. detect by magic
+                try {
+                    contentType = MimeDetect.getMimeDetect().detect(new FileInputStream(file));
+                } catch (Exception e) {
+                    contentType = null;
+                }
 
-                // 2. special-case text/xml to avoid detection
+                // 2. detect by file extension
+                if (contentType == null) {
+                    contentType = MimeDetect.getMimeDetect().detect(name);
+                }
+
+                // 3. special-case text/xml to avoid detection
                 if (contentType == null && attachment.getContentType() != null) {
                     if (attachment.getContentType().equals("text/xml"))
                         contentType = attachment.getContentType();
-                }
-
-                // 3. detect by magic
-                if (contentType == null) {
-                    try {
-                        contentType = MimeDetect.getMimeDetect().detect(new FileInputStream(file));
-                    } catch (Exception e) {
-                        contentType = null;
-                    }
                 }
 
                 // 4. try the browser-specified content type
@@ -752,7 +754,7 @@ public class FileUploadServlet extends ZimbraServlet {
         List<FileItem> items = new ArrayList<FileItem>(1);
         items.add(fi);
         Upload up = new Upload(acct.getId(), fi, filename);
-
+        
         if (filename.endsWith(".har")) {
             File file = ((DiskFileItem) fi).getStoreLocation();
             try {
@@ -764,6 +766,24 @@ public class FileUploadServlet extends ZimbraServlet {
             } catch (IOException e) {
                 mLog.warn("Failed to detect file content type");
             }
+        }
+        final String finalMimeType = up.contentType;
+        String contentTypeBlacklist = LC.zimbra_file_content_type_blacklist.value();
+        List<String> blacklist = new ArrayList<String>();
+        if (!StringUtil.isNullOrEmpty(contentTypeBlacklist)) {
+            blacklist.addAll(Arrays.asList(contentTypeBlacklist.trim().split(",")));
+        }
+        if (blacklist.stream().anyMatch((blacklistedContentType) -> {
+            Pattern p = Pattern.compile(blacklistedContentType);
+            Matcher m = p.matcher(finalMimeType);
+            return m.find();
+        })) {
+            mLog.debug("handlePlainUpload(): deleting %s", fi);
+            fi.delete();
+            mLog.info("File content type is blacklisted : %s" + finalMimeType);
+            drainRequestStream(req);
+            sendResponse(resp, HttpServletResponse.SC_FORBIDDEN, fmt, null, null, null);
+            return Collections.emptyList();
         }
 
         mLog.info("Received plain: %s", up);
