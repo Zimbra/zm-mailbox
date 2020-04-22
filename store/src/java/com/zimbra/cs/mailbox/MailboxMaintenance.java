@@ -51,7 +51,7 @@ public final class MailboxMaintenance {
         return mailboxId;
     }
 
-    Mailbox getMailbox() {
+    public Mailbox getMailbox() {
         return mailbox;
     }
 
