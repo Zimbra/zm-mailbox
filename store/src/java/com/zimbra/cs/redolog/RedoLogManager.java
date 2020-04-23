@@ -19,6 +19,7 @@ package com.zimbra.cs.redolog;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -30,12 +31,17 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 
+import org.redisson.api.RScript;
+import org.redisson.api.RScript.Mode;
+import org.redisson.api.RScript.ReturnType;
+
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
-
 import com.zimbra.cs.db.Db;
 import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.RedissonClientHolder;
 import com.zimbra.cs.redolog.logger.DbLogWriter;
 import com.zimbra.cs.redolog.logger.DistributedLogWriter;
 import com.zimbra.cs.redolog.logger.FileLogReader;
@@ -54,11 +60,17 @@ import com.zimbra.znative.IO;
  */
 public class RedoLogManager {
 
-    private static class TxnIdGenerator {
+    private abstract class TxnIdGenerator {
+
+
+        public abstract TransactionId getNext();
+    }
+
+    private class LocalTxnIdGenerator extends TxnIdGenerator {
         private int mTime;
         private int mCounter;
 
-        public TxnIdGenerator() {
+        public LocalTxnIdGenerator() {
             init();
         }
 
@@ -67,6 +79,7 @@ public class RedoLogManager {
             mCounter = 1;
         }
 
+        @Override
         public synchronized TransactionId getNext() {
             TransactionId tid = new TransactionId(mTime, mCounter);
             if (mCounter < 0x7fffffffL)
@@ -74,6 +87,45 @@ public class RedoLogManager {
             else
                 init();
             return tid;
+        }
+    }
+
+    private class RedisTxnIdGenerator extends TxnIdGenerator {
+
+        private RScript rscript;
+        private final String HASHTAG = "{redolog}";
+        private final String KEY_TIMESTAMP = HASHTAG + "-timestamp";
+        private final String KEY_COUNTER = HASHTAG + "-counter";
+        private final List<Object> KEYS = Arrays.<Object>asList(KEY_TIMESTAMP, KEY_COUNTER);
+        private static final String LUA_SCRIPT =
+                "local timestamp_key = KEYS[1]; " +
+                "local counter_key = KEYS[2]; " +
+                // init function sets timestamp and resets counter
+                "local function init() " +
+                "    redis.call('del', counter_key); " +
+                "    redis.call('set', timestamp_key, redis.call('time')[1]); " +
+                "end; " +
+                "local timestamp = redis.call('get', timestamp_key); " +
+                "local counter = redis.call('incr', counter_key); " +
+                // reset if timestamp is unavailable (first call or redis restarted) or if counter exceeds max int
+                "if (counter > 2147483647) or (timestamp == false) then " +
+                "        init(); " +
+                "        counter = redis.call('incr', counter_key); " +
+                "        timestamp = redis.call('get', timestamp_key); " +
+                "end; " +
+                "return {tonumber(timestamp), counter};";
+
+        private RedisTxnIdGenerator() {
+            this.rscript = RedissonClientHolder.getInstance().getRedissonClient().getScript();
+        }
+
+        @Override
+        public TransactionId getNext() {
+            List<Long> resp = rscript.eval(Mode.READ_WRITE, LUA_SCRIPT, ReturnType.MULTI, KEYS);
+            // redis returns longs, but the lua script ensures that it fits into an int
+            int timestamp = resp.get(0).intValue();
+            int counter = resp.get(1).intValue();
+            return new TransactionId(timestamp, counter);
         }
     }
 
@@ -131,7 +183,7 @@ public class RedoLogManager {
 
         mRWLock = new ReentrantReadWriteLock();
         mActiveOps = new LinkedHashMap<TransactionId, RedoableOp>(100);
-        mTxnIdGenerator = new TxnIdGenerator();
+        mTxnIdGenerator = createTxnIdGenerator();
         long minAge = RedoConfig.redoLogRolloverMinFileAge() * 60 * 1000;     // milliseconds
         long softMax = RedoConfig.redoLogRolloverFileSizeKB() * 1024;         // bytes
         long hardMax = RedoConfig.redoLogRolloverHardMaxFileSizeKB() * 1024;  // bytes
@@ -143,6 +195,14 @@ public class RedoLogManager {
         mStatGuard = new Object();
         mElapsed = 0;
         mCounter = 0;
+    }
+
+    private TxnIdGenerator createTxnIdGenerator() {
+        if (LC.use_redis_redo_transaction_id_generator.booleanValue()) {
+            return new RedisTxnIdGenerator();
+        } else {
+            return new LocalTxnIdGenerator();
+        }
     }
 
     protected LogWriter getLogWriter() {
@@ -304,6 +364,7 @@ public class RedoLogManager {
             mOps = ops;
         }
 
+        @Override
         public void run() {
             ZimbraLog.redolog.info("Starting post-startup crash recovery");
             boolean interrupted = false;

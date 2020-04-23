@@ -1416,6 +1416,9 @@ public final class LC {
     @Supported
     public static final KnownKey trust_all_originating_ips = KnownKey.newKey(true);
 
+    @Supported
+    public static final KnownKey use_redis_redo_transaction_id_generator = KnownKey.newKey(true);
+
     public enum PUBLIC_SHARE_VISIBILITY { samePrimaryDomain, all, none };
 
     /**
