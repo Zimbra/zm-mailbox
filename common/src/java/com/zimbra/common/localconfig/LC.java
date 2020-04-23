@@ -1294,6 +1294,9 @@ public final class LC {
     public static final KnownKey redis_streams_redo_log_field = KnownKey.newKey("l");
 
     @Supported
+    public static final KnownKey is_mailbox_pod = KnownKey.newKey(false);
+
+    @Supported
     public static final KnownKey redis_num_pubsub_channels = KnownKey.newKey(100);
 
     @Supported
