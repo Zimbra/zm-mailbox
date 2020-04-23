@@ -65,28 +65,28 @@ public class Props2Js {
         String classname) throws IOException {
         DataOutputStream out = getOutputStream(ostream);
         Matcher matcher = VARNAME.matcher("");
-        
+
         printHead(out, classname);
         for (Enumeration<String> keys = bundle.getKeys(); keys.hasMoreElements();) {
             String key = keys.nextElement();
-            
+
             printEntry(out, matcher, key, bundle.getString(key));
         }
-		printTail(out);
+        printTail(out);
     }
 
     public static void convert(OutputStream ostream, Properties props,
         String classname) throws IOException {
         DataOutputStream out = getOutputStream(ostream);
         Matcher matcher = VARNAME.matcher("");
-        
+
         printHead(out, classname);
         for (Enumeration<Object> keys = props.keys(); keys.hasMoreElements();) {
             String key = (String)keys.nextElement();
-            
+
             printEntry(out, matcher, key, props.getProperty(key));
         }
-		printTail(out);
+        printTail(out);
     }
 
     public static void convert(OutputStream ostream, File file,
@@ -95,7 +95,7 @@ public class Props2Js {
         class PropertyPrinter extends Properties {
             DataOutputStream out;
             Matcher matcher = VARNAME.matcher("");
-            
+
             PropertyPrinter(DataOutputStream out) { this.out = out; }
 
             public Object put(Object key, Object val) {
@@ -106,30 +106,30 @@ public class Props2Js {
                 return null;
             }
         }
-        
+
         DataOutputStream out = getOutputStream(ostream);
         FileInputStream in = new FileInputStream(file);
         PropertyPrinter pp = new PropertyPrinter(out);
-        
+
         printHead(out, classname);
         pp.load(in);
         in.close();
-		printTail(out);
+        printTail(out);
     }
 
     private static void printHead(DataOutputStream out, String classname) throws
         IOException {
-        out.writeBytes("if (!window."+classname+") { ");
-        out.writeBytes(classname+" = {};");
+        out.writeBytes("if (!window['"+classname+"']) { ");
+        out.writeBytes("window['"+classname+"'] = {};");
         out.writeBytes(" }\n");
-        out.writeBytes("a="+classname+";\n");
+        out.writeBytes("a=window['"+classname+"'];\n");
     }
-    
-	private static void printTail(DataOutputStream out) throws
-		IOException {
-		out.writeBytes("delete a;");
-	}
-	
+
+    private static void printTail(DataOutputStream out) throws
+        IOException {
+        out.writeBytes("delete a;");
+    }
+
     private static void printEntry(DataOutputStream out, Matcher matcher,
         String key, String val) throws IOException {
         matcher.reset(key);
@@ -151,7 +151,7 @@ public class Props2Js {
     private static void printEscaped(DataOutputStream out, String s)
     throws IOException {
         int length = s.length();
-        
+
         for (int i = 0; i < length; i++) {
             char c = s.charAt(i);
             switch (c) {
@@ -241,7 +241,7 @@ public class Props2Js {
             System.exit(1);
         }
 
-        OutputStream out = new BufferedOutputStream(ofile != null ? 
+        OutputStream out = new BufferedOutputStream(ofile != null ?
             new FileOutputStream(ofile) : System.out);
 
             // convert resource bundle
