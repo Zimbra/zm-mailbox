@@ -37,6 +37,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.db.Db;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.redolog.logger.DbLogWriter;
+import com.zimbra.cs.redolog.logger.DistributedLogWriter;
 import com.zimbra.cs.redolog.logger.FileLogReader;
 import com.zimbra.cs.redolog.logger.FileLogWriter;
 import com.zimbra.cs.redolog.logger.LogWriter;
@@ -111,6 +112,9 @@ public class RedoLogManager {
     // the actual logger
     private LogWriter mLogWriter;
 
+    // the stream logger
+    private DistributedLogWriter dLogWriter;
+
     private Object mStatGuard;
     private long mElapsed;
     private int mCounter;
@@ -134,6 +138,7 @@ public class RedoLogManager {
         setRolloverLimits(minAge, softMax, hardMax);
         mRolloverMgr = new RolloverManager(this, mLogFile);
         mLogWriter = null;
+        dLogWriter = null;
 
         mStatGuard = new Object();
         mElapsed = 0;
@@ -215,6 +220,7 @@ public class RedoLogManager {
         }
 
         mLogWriter = createLogWriter(this);
+        dLogWriter = new DistributedLogWriter();
 
         ArrayList<RedoableOp> postStartupRecoveryOps = new ArrayList<RedoableOp>(100);
         int numRecoveredOps = 0;
@@ -455,7 +461,8 @@ public class RedoLogManager {
 
                 try {
                     long start = System.currentTimeMillis();
-                    mLogWriter.log(op, op.getInputStream(), synchronous);
+                    //mLogWriter.log(op, op.getInputStream(), synchronous);
+                    dLogWriter.log(op, op.getInputStream(), false);
                     long elapsed = System.currentTimeMillis() - start;
                     synchronized (mStatGuard) {
                         mElapsed += elapsed;
