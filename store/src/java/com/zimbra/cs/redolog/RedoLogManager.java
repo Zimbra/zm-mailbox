@@ -198,7 +198,7 @@ public class RedoLogManager {
     }
 
     private TxnIdGenerator createTxnIdGenerator() {
-        if (LC.use_redis_redo_transaction_id_generator.booleanValue()) {
+        if (LC.use_redis_redo_transaction_id_generator.booleanValue() && RedoConfig.redoLogEnabled()) {
             return new RedisTxnIdGenerator();
         } else {
             return new LocalTxnIdGenerator();
