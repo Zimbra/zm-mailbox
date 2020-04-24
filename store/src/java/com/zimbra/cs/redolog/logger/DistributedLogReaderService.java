@@ -77,6 +77,10 @@ public class DistributedLogReaderService {
                 int blockSecs = LC.redis_redolog_stream_read_timeout_secs.intValue();
                 int count = LC.redis_redolog_stream_max_items_per_read.intValue();
                 Map<StreamMessageId, Map<String, String>> logs = stream.readGroup(group, consumer, count, blockSecs, TimeUnit.SECONDS, StreamMessageId.NEVER_DELIVERED);
+                if (logs == null || logs.isEmpty()) {
+                    ZimbraLog.redolog.debug("no redo entries found after waiting on stream for %s seconds", blockSecs);
+                    continue;
+                }
                 for(Map.Entry<StreamMessageId, Map<String, String>> m:logs.entrySet()){
                     Map<String, String> fields = m.getValue();
                     for(Map.Entry<String, String> m1:fields.entrySet()){
