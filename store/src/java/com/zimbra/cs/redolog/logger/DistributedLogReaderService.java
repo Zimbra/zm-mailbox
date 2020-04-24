@@ -74,14 +74,16 @@ public class DistributedLogReaderService {
             ZimbraLog.redolog.info("Started Log queue monitoring thread %s", Thread.currentThread().getName());
             while (running) {
                 ZimbraLog.redolog.debug("Iterating %s", Thread.currentThread().getName());
-                Map<StreamMessageId, Map<String, String>> logs = stream.readGroup(group, consumer,1, 0, TimeUnit.SECONDS, StreamMessageId.NEVER_DELIVERED);
-                for(Map.Entry<StreamMessageId, Map<String, String>> m:logs.entrySet()){  
-                    Map<String, String> fields = (Map<String, String>) m.getValue();
-                    for(Map.Entry<String, String> m1:fields.entrySet()){ 
+                int blockSecs = LC.redis_redolog_stream_read_timeout_secs.intValue();
+                int count = LC.redis_redolog_stream_max_items_per_read.intValue();
+                Map<StreamMessageId, Map<String, String>> logs = stream.readGroup(group, consumer, count, blockSecs, TimeUnit.SECONDS, StreamMessageId.NEVER_DELIVERED);
+                for(Map.Entry<StreamMessageId, Map<String, String>> m:logs.entrySet()){
+                    Map<String, String> fields = m.getValue();
+                    for(Map.Entry<String, String> m1:fields.entrySet()){
                         InputStream targetStream = new ByteArrayInputStream(m1.getValue().getBytes());
                         try {
                             fileWriter.log(targetStream, true);
-                            stream.ack(group, (StreamMessageId) m.getKey());
+                            stream.ack(group, m.getKey());
                         } catch (IOException e) {
                             ZimbraLog.redolog.error("Failed to log data using filewriter", e);
                         }
