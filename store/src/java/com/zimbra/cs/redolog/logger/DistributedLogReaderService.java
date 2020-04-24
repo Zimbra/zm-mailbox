@@ -11,6 +11,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.redisson.api.RStream;
 import org.redisson.api.RedissonClient;
+import org.redisson.api.StreamInfo;
 import org.redisson.api.StreamMessageId;
 import org.redisson.client.codec.StringCodec;
 
@@ -50,6 +51,17 @@ public class DistributedLogReaderService {
         consumer = MailboxClusterUtil.getMailboxWorkerName();
         client = RedissonClientHolder.getInstance().getRedissonClient();
         stream = client.getStream(LC.redis_streams_redo_log_stream.value(), StringCodec.INSTANCE);
+        if (!stream.isExists()) {
+            stream.createGroup(group, StreamMessageId.ALL); // stream will be auto-created
+            ZimbraLog.redolog.info("created consumer group %s and stream %s", group, stream.getName());
+        } else {
+            // create group if it doesn't exist on the stream
+            StreamInfo<String, String> info = stream.getInfo();
+            if (info.getGroups() == 0) {
+                stream.createGroup(group, StreamMessageId.ALL);
+                ZimbraLog.redolog.info("created consumer group %s for existing stream %s", group, stream.getName());
+            }
+        }
         fileWriter = RedoLogProvider.getInstance().getRedoLogManager().getCurrentLogWriter();
         ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("DistributedLog-Reader-Thread-%d").build();
         executorService = Executors.newSingleThreadExecutor(namedThreadFactory);

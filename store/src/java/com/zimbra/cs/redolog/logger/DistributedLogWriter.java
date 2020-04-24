@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.LinkedHashMap;
 
-import org.redisson.api.RFuture;
 import org.redisson.api.RStream;
 import org.redisson.api.RedissonClient;
 import org.redisson.client.codec.StringCodec;
@@ -18,12 +17,10 @@ public class DistributedLogWriter implements LogWriter {
 
     private static RedissonClient client;
     private RStream<String, String> stream;
-    private RFuture<Void> groupFuture;
 
     public DistributedLogWriter() {
         client = RedissonClientHolder.getInstance().getRedissonClient();
         stream = client.getStream(LC.redis_streams_redo_log_stream.value(), StringCodec.INSTANCE);
-        groupFuture = stream.createGroupAsync(LC.redis_streams_redo_log_group.value());
     }
 
     @Override
