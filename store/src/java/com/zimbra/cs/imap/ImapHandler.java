@@ -2408,6 +2408,9 @@ public abstract class ImapHandler {
                     // IMAP datasource connections
                     continue;
                 }
+                if (folderStore instanceof MountpointStore) {
+                    isMountPath = true;
+                }
                 boolean alreadyTraversed = (!isMountPath) ? paths.put(path, path.asItemId()) != null : mountPaths.put(path, path.asItemId()) != null;
                 if (folderStore instanceof MountpointStore && !alreadyTraversed) {
                     accumulatePaths(path.getOwnerImapMailboxStore(), owner, path, paths, mountPaths, true);
