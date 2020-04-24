@@ -97,6 +97,10 @@ public class DbLogWriter implements LogWriter {
     }
 
     @Override
+    public void log(InputStream data, boolean synchronous) throws IOException {
+    }
+
+    @Override
     public void log(RedoableOp op, InputStream data, boolean synchronous) throws LogFailedException {
         try(DbLogWriterConn connection = newConnection()) {
             DbConnection conn = connection.getConn();

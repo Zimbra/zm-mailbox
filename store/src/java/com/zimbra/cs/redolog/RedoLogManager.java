@@ -169,7 +169,7 @@ public class RedoLogManager {
         return mLogWriter;
     }
 
-    public LogWriter createLogWriter(RedoLogManager redoMgr,
+    public LogWriter createFileWriter(RedoLogManager redoMgr,
                                         File logfile,
                                         long fsyncIntervalMS) {
         return new FileLogWriter(redoMgr, logfile, fsyncIntervalMS);
@@ -219,7 +219,7 @@ public class RedoLogManager {
             signalFatalError(e);
         }
 
-        mLogWriter = createLogWriter(this);
+        mLogWriter = createFileWriter(this, mLogFile, RedoConfig.redoLogFsyncIntervalMS());
         dLogWriter = new DistributedLogWriter();
 
         ArrayList<RedoableOp> postStartupRecoveryOps = new ArrayList<RedoableOp>(100);
@@ -461,8 +461,7 @@ public class RedoLogManager {
 
                 try {
                     long start = System.currentTimeMillis();
-                    //mLogWriter.log(op, op.getInputStream(), synchronous);
-                    dLogWriter.log(op, op.getInputStream(), false);
+                    dLogWriter.log(op.getInputStream(), synchronous);
                     long elapsed = System.currentTimeMillis() - start;
                     synchronized (mStatGuard) {
                         mElapsed += elapsed;

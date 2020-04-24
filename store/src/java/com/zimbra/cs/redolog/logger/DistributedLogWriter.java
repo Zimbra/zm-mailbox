@@ -34,7 +34,7 @@ public class DistributedLogWriter implements LogWriter {
     }
 
     @Override
-    public void log(RedoableOp op, InputStream data, boolean synchronous) throws IOException {
+    public void log(InputStream data, boolean synchronous) throws IOException {
         StringBuilder sb = new StringBuilder();
         int ch;
         while((ch = data.read()) != -1) {
@@ -42,6 +42,10 @@ public class DistributedLogWriter implements LogWriter {
         }
         String str = sb.toString();
         stream.add(LC.redis_streams_redo_log_field.value(), str);
+    }
+
+    @Override
+    public void log(RedoableOp op, InputStream data, boolean synchronous) throws IOException {
     }
 
     @Override

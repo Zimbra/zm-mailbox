@@ -246,6 +246,60 @@ public class FileLogWriter implements LogWriter {
             ZimbraLog.redolog.debug("Logged: " + mLogCount + " items, " + mFsyncCount + " fsyncs");
     }
 
+    @Override
+    public void log(InputStream data, boolean synchronous) throws IOException {
+        int seq;
+        boolean sameMboxAsLastOp = false;
+
+        synchronized (mLock) {
+            if (mRAF == null)
+                throw new IOException("Redolog file closed");
+
+            mLogSeq++;
+            mLogCount++;
+            seq = mLogSeq;
+            int numRead;
+            byte[] buf = new byte[1024];
+            while ((numRead = data.read(buf)) >= 0) {
+                mRAF.write(buf, 0, numRead);
+                mFileSize += numRead;
+            }
+            data.close();
+        }
+
+        // cases 1 above
+        if (!synchronous)
+            return;
+
+        if (mFsyncIntervalMS > 0) {
+            if (!sameMboxAsLastOp) {
+                // case 2
+                try {
+                    // wait for fsync thread to write this entry to disk
+                    synchronized (mFsyncCond) {
+                        mFsyncCond.wait(10000);
+                    }
+                } catch (InterruptedException e) {
+                    ZimbraLog.redolog.info("Thread interrupted during fsync");
+                }
+                synchronized (mLock) {
+                    // timed out, so fsync in this thread
+                    if (seq > mFsyncSeq)
+                        fsync();
+                }
+            } else {
+                // If this op is on same mailbox as last op, let's assume there's a thread issuing
+                // many updates on a single mailbox in a loop, such as when importing a large ics file.
+                // We don't want to pause for mFsyncIntervalMS between every op (because all writes
+                // to a single mailbox are synchronized), so fsync inline and return immediately.
+                fsync();
+            }
+        } else {
+            // case 3
+            fsync();
+        }
+    }
+
     /**
      * Log the supplied bytes.  Depending on the value of synchronous argument
      * and the setting of fsync interval, this method can do one of 3 things:

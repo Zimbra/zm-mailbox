@@ -50,6 +50,8 @@ public interface LogWriter {
 	 */
 	public void close() throws IOException;
 
+    public void log(InputStream data, boolean synchronous) throws IOException;
+
 	/**
 	 * Logs an entry.
      * @param op entry being logged
