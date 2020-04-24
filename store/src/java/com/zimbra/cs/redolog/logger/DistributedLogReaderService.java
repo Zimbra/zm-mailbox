@@ -18,6 +18,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.RedissonClientHolder;
+import com.zimbra.cs.mailbox.util.MailboxClusterUtil;
 import com.zimbra.cs.redolog.RedoLogProvider;
 
 public class DistributedLogReaderService {
@@ -46,7 +47,7 @@ public class DistributedLogReaderService {
     public synchronized void startUp() {
         running = true;
         group = LC.redis_streams_redo_log_group.value();
-        consumer = "log-reader-c1";
+        consumer = MailboxClusterUtil.getMailboxWorkerName();
         client = RedissonClientHolder.getInstance().getRedissonClient();
         stream = client.getStream(LC.redis_streams_redo_log_stream.value(), StringCodec.INSTANCE);
         fileWriter = RedoLogProvider.getInstance().getRedoLogManager().getCurrentLogWriter();
@@ -77,6 +78,6 @@ public class DistributedLogReaderService {
                 }
             }
         }
-        
+
     }
 }
