@@ -2459,10 +2459,11 @@ public abstract class ImapHandler {
                     // IMAP datasource connections
                     continue;
                 }
-                //boolean alreadyTraversed = paths.put(path, path.asItemId()) != null;
+                if (folderStore instanceof MountpointStore) {
+                    isMountPath = true;
+                }
                 boolean alreadyTraversed = (!isMountPath) ? paths.put(path, path.asItemId()) != null : mountPaths.put(path, path.asItemId()) != null;
                 if (folderStore instanceof MountpointStore && !alreadyTraversed) {
-//                    mountPaths.put(path, path.asItemId());
                     accumulatePaths(path.getOwnerImapMailboxStore(), owner, path, paths, mountPaths, true);
                 }
             }
