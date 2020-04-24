@@ -333,7 +333,7 @@ public final class Zimbra {
         SessionDataProvider.setFactory(new RedisSessionDataProvider.Factory());
         NotificationPubSub.setFactory(new RedisPubSub.Factory());
 
-        if (!LC.is_mailbox_pod.booleanValue()) {
+        if (MailboxClusterUtil.isBackupRestorePod()) {
             DistributedLogReaderService.getInstance().startUp();
         }
 
