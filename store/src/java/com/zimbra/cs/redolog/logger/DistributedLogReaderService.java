@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 import org.redisson.api.RStream;
 import org.redisson.api.RedissonClient;
 import org.redisson.api.StreamMessageId;
+import org.redisson.client.codec.StringCodec;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.zimbra.common.localconfig.LC;
@@ -47,7 +48,7 @@ public class DistributedLogReaderService {
         group = LC.redis_streams_redo_log_group.value();
         consumer = "log-reader-c1";
         client = RedissonClientHolder.getInstance().getRedissonClient();
-        stream = client.getStream(LC.redis_streams_redo_log_stream.value());
+        stream = client.getStream(LC.redis_streams_redo_log_stream.value(), StringCodec.INSTANCE);
         fileWriter = RedoLogProvider.getInstance().getRedoLogManager().getCurrentLogWriter();
         ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("DistributedLog-Reader-Thread-%d").build();
         executorService = Executors.newSingleThreadExecutor(namedThreadFactory);

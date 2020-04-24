@@ -8,6 +8,7 @@ import java.util.LinkedHashMap;
 import org.redisson.api.RFuture;
 import org.redisson.api.RStream;
 import org.redisson.api.RedissonClient;
+import org.redisson.client.codec.StringCodec;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.mailbox.RedissonClientHolder;
@@ -21,7 +22,7 @@ public class DistributedLogWriter implements LogWriter {
 
     public DistributedLogWriter() {
         client = RedissonClientHolder.getInstance().getRedissonClient();
-        stream = client.getStream(LC.redis_streams_redo_log_stream.value());
+        stream = client.getStream(LC.redis_streams_redo_log_stream.value(), StringCodec.INSTANCE);
         groupFuture = stream.createGroupAsync(LC.redis_streams_redo_log_group.value());
     }
 
