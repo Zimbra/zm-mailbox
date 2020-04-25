@@ -1291,9 +1291,6 @@ public final class LC {
     public static final KnownKey redis_streams_redo_log_stream = KnownKey.newKey("ZIMBRA_REDO_LOG_STREAM");
 
     @Supported
-    public static final KnownKey redis_streams_redo_log_field = KnownKey.newKey("l");
-
-    @Supported
     public static final KnownKey redis_num_pubsub_channels = KnownKey.newKey(100);
 
     @Supported

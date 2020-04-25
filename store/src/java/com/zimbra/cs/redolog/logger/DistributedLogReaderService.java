@@ -18,8 +18,11 @@ import org.redisson.client.codec.StringCodec;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.RedissonClientHolder;
 import com.zimbra.cs.mailbox.util.MailboxClusterUtil;
+import com.zimbra.cs.redolog.RedoLogManager.RedoOpContext;
+import com.zimbra.cs.redolog.RedoLogManager.DistributedRedoOpContext;;
 import com.zimbra.cs.redolog.RedoLogProvider;
 
 public class DistributedLogReaderService {
@@ -82,16 +85,23 @@ public class DistributedLogReaderService {
                     continue;
                 }
                 for(Map.Entry<StreamMessageId, Map<String, String>> m:logs.entrySet()){
+                    StreamMessageId messageId = m.getKey();
                     Map<String, String> fields = m.getValue();
-                    for(Map.Entry<String, String> m1:fields.entrySet()){
-                        InputStream targetStream = new ByteArrayInputStream(m1.getValue().getBytes());
-                        try {
-                            fileWriter.log(targetStream, true);
-                            stream.ack(group, m.getKey());
-                        } catch (IOException e) {
-                            ZimbraLog.redolog.error("Failed to log data using filewriter", e);
-                        }
-                        ZimbraLog.redolog.debug("Key:%s Value:%s", m1.getKey(), m1.getValue());
+                    String dataStr = fields.get(DistributedLogWriter.F_DATA);
+                    String timestampStr = fields.get(DistributedLogWriter.F_TIMESTAMP);
+                    String mboxIdStr = fields.get(DistributedLogWriter.F_MAILBOX_ID);
+                    String typeStr = fields.get(DistributedLogWriter.F_OP_TYPE);
+                    InputStream targetStream = new ByteArrayInputStream(dataStr.getBytes());
+                    long timestamp = Long.valueOf(timestampStr);
+                    int mboxId = Integer.valueOf(mboxIdStr);
+                    MailboxOperation opType = MailboxOperation.fromInt(Integer.valueOf(typeStr));
+                    RedoOpContext context = new DistributedRedoOpContext(timestamp, mboxId, opType);
+                    ZimbraLog.redolog.debug("received streamId=%s, timestamp=%s, mboxId=%s, op=%s", messageId, timestamp, mboxId, opType);
+                    try {
+                        fileWriter.log(context, targetStream, true);
+                        stream.ack(group, messageId);
+                    } catch (IOException e) {
+                        ZimbraLog.redolog.error("Failed to log data using filewriter", e);
                     }
                 }
             }

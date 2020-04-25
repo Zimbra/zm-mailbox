@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.LinkedHashMap;
 
+import com.zimbra.cs.redolog.RedoLogManager.RedoOpContext;
 import com.zimbra.cs.redolog.op.RedoableOp;
 
 /**
@@ -50,7 +51,7 @@ public interface LogWriter {
 	 */
 	public void close() throws IOException;
 
-    public void log(InputStream data, boolean synchronous) throws IOException;
+    public void log(RedoOpContext context, InputStream data, boolean synchronous) throws IOException;
 
 	/**
 	 * Logs an entry.

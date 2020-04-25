@@ -23,6 +23,15 @@
  */
 package com.zimbra.cs.redolog.logger;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.RandomAccessFile;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
+
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
@@ -32,19 +41,12 @@ import com.zimbra.cs.redolog.CommitId;
 import com.zimbra.cs.redolog.RedoCommitCallback;
 import com.zimbra.cs.redolog.RedoConfig;
 import com.zimbra.cs.redolog.RedoLogManager;
+import com.zimbra.cs.redolog.RedoLogManager.LocalRedoOpContext;
+import com.zimbra.cs.redolog.RedoLogManager.RedoOpContext;
 import com.zimbra.cs.redolog.RolloverManager;
 import com.zimbra.cs.redolog.op.CommitTxn;
 import com.zimbra.cs.redolog.op.RedoableOp;
 import com.zimbra.cs.util.Zimbra;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.RandomAccessFile;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * @author jhahm
@@ -247,57 +249,8 @@ public class FileLogWriter implements LogWriter {
     }
 
     @Override
-    public void log(InputStream data, boolean synchronous) throws IOException {
-        int seq;
-        boolean sameMboxAsLastOp = false;
-
-        synchronized (mLock) {
-            if (mRAF == null)
-                throw new IOException("Redolog file closed");
-
-            mLogSeq++;
-            mLogCount++;
-            seq = mLogSeq;
-            int numRead;
-            byte[] buf = new byte[1024];
-            while ((numRead = data.read(buf)) >= 0) {
-                mRAF.write(buf, 0, numRead);
-                mFileSize += numRead;
-            }
-            data.close();
-        }
-
-        // cases 1 above
-        if (!synchronous)
-            return;
-
-        if (mFsyncIntervalMS > 0) {
-            if (!sameMboxAsLastOp) {
-                // case 2
-                try {
-                    // wait for fsync thread to write this entry to disk
-                    synchronized (mFsyncCond) {
-                        mFsyncCond.wait(10000);
-                    }
-                } catch (InterruptedException e) {
-                    ZimbraLog.redolog.info("Thread interrupted during fsync");
-                }
-                synchronized (mLock) {
-                    // timed out, so fsync in this thread
-                    if (seq > mFsyncSeq)
-                        fsync();
-                }
-            } else {
-                // If this op is on same mailbox as last op, let's assume there's a thread issuing
-                // many updates on a single mailbox in a loop, such as when importing a large ics file.
-                // We don't want to pause for mFsyncIntervalMS between every op (because all writes
-                // to a single mailbox are synchronized), so fsync inline and return immediately.
-                fsync();
-            }
-        } else {
-            // case 3
-            fsync();
-        }
+    public void log(RedoableOp op, InputStream data, boolean synchronous) throws IOException {
+        log(new LocalRedoOpContext(op), data, synchronous);
     }
 
     /**
@@ -323,7 +276,7 @@ public class FileLogWriter implements LogWriter {
      * special case this condition to mean fsync should be done by the calling
      * thread.
      */
-    @Override public void log(RedoableOp op, InputStream data, boolean synchronous) throws IOException {
+    @Override public void log(RedoOpContext context, InputStream data, boolean synchronous) throws IOException {
         int seq;
         boolean sameMboxAsLastOp = false;
 
@@ -332,7 +285,7 @@ public class FileLogWriter implements LogWriter {
                 throw new IOException("Redolog file closed");
 
             // Record first transaction in header.
-            long tstamp = op.getTimestamp();
+            long tstamp = context.getOpTimestamp();
             mLastOpTstamp = Math.max(tstamp, mLastOpTstamp);
             if (mFirstOpTstamp == 0) {
             	mFirstOpTstamp = tstamp;
@@ -356,7 +309,9 @@ public class FileLogWriter implements LogWriter {
 
             // We do this with log writer lock held, so the commits and any
             // callbacks made on their behalf are truly in the correct order.
-            if (op instanceof CommitTxn) {
+            // TODO: make transaction callbacks work in Zimbra Cloud
+            RedoableOp op = context.getOp();
+            if (op != null && op instanceof CommitTxn) {
                 CommitTxn cmt = (CommitTxn) op;
                 RedoCommitCallback cb = cmt.getCallback();
                 if (cb != null) {
@@ -371,8 +326,8 @@ public class FileLogWriter implements LogWriter {
 
             mLastLogTime = System.currentTimeMillis();
 
-            sameMboxAsLastOp = mLastOpMboxId == op.getMailboxId();
-            mLastOpMboxId = op.getMailboxId();
+            sameMboxAsLastOp = mLastOpMboxId == context.getOpMailboxId();
+            mLastOpMboxId = context.getOpMailboxId();
         }
 
         // cases 1 above

@@ -41,6 +41,7 @@ import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.db.Db;
 import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.RedissonClientHolder;
 import com.zimbra.cs.redolog.logger.DbLogWriter;
 import com.zimbra.cs.redolog.logger.DistributedLogWriter;
@@ -522,7 +523,7 @@ public class RedoLogManager {
 
                 try {
                     long start = System.currentTimeMillis();
-                    dLogWriter.log(op.getInputStream(), synchronous);
+                    dLogWriter.log(op, op.getInputStream(), synchronous);
                     long elapsed = System.currentTimeMillis() - start;
                     synchronized (mStatGuard) {
                         mElapsed += elapsed;
@@ -909,6 +910,76 @@ public class RedoLogManager {
                             linkDir.getAbsolutePath(), e);
                 }
             }
+        }
+    }
+
+    public static interface RedoOpContext {
+
+        default RedoableOp getOp() {
+            return null;
+        }
+
+        public long getOpTimestamp();
+
+        public int getOpMailboxId();
+
+        public MailboxOperation getOperationType();
+    }
+
+    public static class LocalRedoOpContext implements RedoOpContext {
+
+        private RedoableOp op;
+
+        public LocalRedoOpContext(RedoableOp op) {
+            this.op = op;
+        }
+
+        @Override
+        public long getOpTimestamp() {
+            return op.getTimestamp();
+        }
+
+        @Override
+        public int getOpMailboxId() {
+            return op.getMailboxId();
+        }
+
+        @Override
+        public RedoableOp getOp() {
+            return op;
+        }
+
+        @Override
+        public MailboxOperation getOperationType() {
+            return op.getOperation();
+        }
+    }
+
+    public static class DistributedRedoOpContext implements RedoOpContext {
+
+        private long timestamp;
+        private int mailboxId;
+        private MailboxOperation operationType;
+
+        public DistributedRedoOpContext(long timestamp, int mailboxId, MailboxOperation operationType) {
+            this.timestamp = timestamp;
+            this.mailboxId = mailboxId;
+            this.operationType = operationType;
+        }
+
+        @Override
+        public long getOpTimestamp() {
+            return timestamp;
+        }
+
+        @Override
+        public int getOpMailboxId() {
+            return mailboxId;
+        }
+
+        @Override
+        public MailboxOperation getOperationType() {
+            return operationType;
         }
     }
 }

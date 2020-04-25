@@ -3,7 +3,9 @@ package com.zimbra.cs.redolog.logger;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 import org.redisson.api.RStream;
 import org.redisson.api.RedissonClient;
@@ -11,12 +13,19 @@ import org.redisson.client.codec.StringCodec;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.mailbox.RedissonClientHolder;
+import com.zimbra.cs.redolog.RedoLogManager.LocalRedoOpContext;
+import com.zimbra.cs.redolog.RedoLogManager.RedoOpContext;
 import com.zimbra.cs.redolog.op.RedoableOp;
 
 public class DistributedLogWriter implements LogWriter {
 
     private static RedissonClient client;
     private RStream<String, String> stream;
+
+    public static final String F_DATA = "d";
+    public static final String F_TIMESTAMP = "t";
+    public static final String F_MAILBOX_ID = "m";
+    public static final String F_OP_TYPE = "p";
 
     public DistributedLogWriter() {
         client = RedissonClientHolder.getInstance().getRedissonClient();
@@ -32,18 +41,24 @@ public class DistributedLogWriter implements LogWriter {
     }
 
     @Override
-    public void log(InputStream data, boolean synchronous) throws IOException {
+    public void log(RedoOpContext context, InputStream data, boolean synchronous) throws IOException {
         StringBuilder sb = new StringBuilder();
         int ch;
         while((ch = data.read()) != -1) {
             sb.append((char)ch);
         }
         String str = sb.toString();
-        stream.add(LC.redis_streams_redo_log_field.value(), str);
+        Map<String, String> fields = new HashMap<>();
+        fields.put(F_DATA, str);
+        fields.put(F_TIMESTAMP, String.valueOf(context.getOpTimestamp()));
+        fields.put(F_MAILBOX_ID, String.valueOf(context.getOpMailboxId()));
+        fields.put(F_OP_TYPE, String.valueOf(context.getOperationType().getCode()));
+        stream.addAll(fields);
     }
 
     @Override
     public void log(RedoableOp op, InputStream data, boolean synchronous) throws IOException {
+        log(new LocalRedoOpContext(op), data, synchronous);
     }
 
     @Override
@@ -103,5 +118,4 @@ public class DistributedLogWriter implements LogWriter {
     public long getSequence() {
         return 0;
     }
-
 }
