@@ -18,7 +18,6 @@ package com.zimbra.cs.redolog;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -269,52 +268,9 @@ public class RedoLogManager {
             signalFatalError(e);
         }
 
-        setInCrashRecovery(true);
-
-        // Recover from crash during rollover.  We do this even when
-        // mSupportsCrashRecovery is false.
-        try {
-            mRolloverMgr.crashRecovery();
-        } catch (IOException e) {
-            ZimbraLog.redolog.fatal("Exception during crash recovery");
-            signalFatalError(e);
-        }
-
         mLogWriter = createFileWriter(this, mLogFile, RedoConfig.redoLogFsyncIntervalMS());
         dLogWriter = new DistributedLogWriter();
 
-        ArrayList<RedoableOp> postStartupRecoveryOps = new ArrayList<RedoableOp>(100);
-        int numRecoveredOps = 0;
-        /*
-            TODO fix me the recovery process was temporally changed we avoid this process when useDbAsLogStorage
-            since the storage will change from file to a DB Which is in process jet
-            "original if (mSupportsCrashRecovery)"
-         */
-        if (mSupportsCrashRecovery && (getLogWriter() instanceof FileLogWriter)) {
-            mRecoveryMode = true;
-            ZimbraLog.redolog.info("Starting pre-startup crash recovery");
-            // Run crash recovery.
-            try {
-                mLogWriter.open();
-                mRolloverMgr.initSequence(mLogWriter.getSequence());
-                RedoPlayer redoPlayer = new RedoPlayer(true);
-                try {
-                    numRecoveredOps = redoPlayer.runCrashRecovery(this, postStartupRecoveryOps);
-                } finally {
-                    redoPlayer.shutdown();
-                }
-                mLogWriter.close();
-            } catch (Exception e) {
-                ZimbraLog.redolog.fatal("Exception during crash recovery");
-                signalFatalError(e);
-            }
-            ZimbraLog.redolog.info("Finished pre-startup crash recovery");
-            mRecoveryMode = false;
-        }
-
-        setInCrashRecovery(false);
-
-        // Reopen log after crash recovery.
         try {
             mLogWriter.open();
             mRolloverMgr.initSequence(mLogWriter.getSequence());
@@ -322,99 +278,6 @@ public class RedoLogManager {
         } catch (IOException e) {
             ZimbraLog.redolog.fatal("Unable to open redo log");
             signalFatalError(e);
-        }
-
-        if (numRecoveredOps > 0) {
-            // Add post-recovery ops to map before rollover, so the new redolog
-            // file after rollover will still list these uncommitted ops.
-            if (postStartupRecoveryOps.size() > 0) {
-                synchronized (mActiveOps) {
-                    for (Iterator iter = postStartupRecoveryOps.iterator(); iter.hasNext(); ) {
-                        RedoableOp op = (RedoableOp) iter.next();
-                        assert(op.isStartMarker());
-                        mActiveOps.put(op.getTransactionId(), op);
-                    }
-                }
-            }
-
-            // Force rollover to clear the current log file, only when use FileLogWriter mechanism
-            if (getLogWriter() instanceof FileLogWriter) {
-                forceRollover();
-            }
-
-            // Start a new thread to run recovery on the remaining ops.
-            // Recovery of these ops will occur in parallel with new client
-            // requests.
-            if (postStartupRecoveryOps.size() > 0) {
-                synchronized (mShuttingDownGuard) {
-                    mInPostStartupCrashRecovery = true;
-                }
-                Thread psrThread =
-                    new PostStartupCrashRecoveryThread(postStartupRecoveryOps);
-                psrThread.start();
-            }
-        }
-    }
-
-    private class PostStartupCrashRecoveryThread extends Thread {
-        List mOps;
-
-        private PostStartupCrashRecoveryThread(List ops) {
-            super("PostStartupCrashRecovery");
-            setDaemon(true);
-            mOps = ops;
-        }
-
-        @Override
-        public void run() {
-            ZimbraLog.redolog.info("Starting post-startup crash recovery");
-            boolean interrupted = false;
-            for (Iterator iter = mOps.iterator(); iter.hasNext(); ) {
-                synchronized (mShuttingDownGuard) {
-                    if (mShuttingDown) {
-                        interrupted = true;
-                        break;
-                    }
-                }
-                RedoableOp op = (RedoableOp) iter.next();
-                try {
-                    if (ZimbraLog.redolog.isDebugEnabled())
-                        ZimbraLog.redolog.debug("REDOING: " + op);
-                    op.redo();
-                } catch (Exception e) {
-                    // If there's any problem, just log the error and move on.
-                    // The alternative is to abort the server, but that may be
-                    // too drastic.
-                    ZimbraLog.redolog.error("Redo failed for [" + op + "]." +
-                                            "  Backend state of affected item is indeterminate." +
-                                            "  Marking operation as aborted and moving on.", e);
-                } finally {
-                    // If the redo didn't work, we need to mark this operation
-                    // as aborted in the redolog so it doesn't get reattempted
-                    // during next startup.
-                    //
-                    // If the redo did work, we still need to mark our op as
-                    // aborted because in the course of the redo a successful
-                    // commit of the operation was logged using a different
-                    // txn ID.  We must therefore tell the redolog the currnt
-                    // op is canceled, to avoid redoing it during next startup.
-                    AbortTxn abort = new AbortTxn(op);
-                    logOnly(abort, true);
-                }
-            }
-
-            if (!interrupted)
-                ZimbraLog.redolog.info("Finished post-startup crash recovery");
-
-            // Being paranoid...
-            mOps.clear();
-            mOps = null;
-
-            synchronized (mShuttingDownGuard) {
-                mInPostStartupCrashRecovery = false;
-                if (mShuttingDown)
-                    mShuttingDownGuard.notifyAll();  // signals wait() in stop() method
-            }
         }
     }
 
