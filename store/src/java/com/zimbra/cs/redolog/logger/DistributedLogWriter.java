@@ -11,6 +11,7 @@ import org.redisson.api.RStream;
 import org.redisson.api.RedissonClient;
 import org.redisson.client.codec.StringCodec;
 
+import com.google.common.io.ByteStreams;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.mailbox.RedissonClientHolder;
 import com.zimbra.cs.redolog.RedoLogManager.LocalRedoOpContext;
@@ -42,14 +43,9 @@ public class DistributedLogWriter implements LogWriter {
 
     @Override
     public void log(RedoOpContext context, InputStream data, boolean synchronous) throws IOException {
-        StringBuilder sb = new StringBuilder();
-        int ch;
-        while((ch = data.read()) != -1) {
-            sb.append((char)ch);
-        }
-        String str = sb.toString();
+        byte[] payload = ByteStreams.toByteArray(data);
         Map<String, String> fields = new HashMap<>();
-        fields.put(F_DATA, str);
+        fields.put(F_DATA, new String(payload));
         fields.put(F_TIMESTAMP, String.valueOf(context.getOpTimestamp()));
         fields.put(F_MAILBOX_ID, String.valueOf(context.getOpMailboxId()));
         fields.put(F_OP_TYPE, String.valueOf(context.getOperationType().getCode()));
