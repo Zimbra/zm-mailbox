@@ -111,7 +111,7 @@ public abstract class MailboxListener {
     }
 
     @VisibleForTesting
-    static void unregister(MailboxListener listener) {
+    public static void unregister(MailboxListener listener) {
         synchronized (sListeners) {
             sListeners.remove(listener);
         }
