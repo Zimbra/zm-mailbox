@@ -56,8 +56,21 @@ public class DistributedLogWriter implements LogWriter {
         fields.put(F_TIMESTAMP, Longs.toByteArray(context.getOpTimestamp()));
         fields.put(F_MAILBOX_ID, Ints.toByteArray(context.getOpMailboxId()));
         fields.put(F_OP_TYPE, Ints.toByteArray(context.getOperationType().getCode()));
-        fields.put(F_TXN_ID, context.getTransactionId().encodeToString().getBytes(Charsets.UTF_8));         
-        stream.addAll(fields);
+        fields.put(F_TXN_ID, context.getTransactionId().encodeToString().getBytes(Charsets.UTF_8));
+        long start = System.currentTimeMillis();
+        RFuture<StreamMessageId> future = stream.addAllAsync(fields);
+        future.onComplete((streamId, e) -> {
+            long elapsed = System.currentTimeMillis() - start;
+            if (e == null) {
+                if (ZimbraLog.redolog.isDebugEnabled()) {
+                    ZimbraLog.redolog.debug("submitted op %s txnId=%s to redis stream (stream_id=%s) (elapsed=%s)",
+                            context.getOperationType(), context.getTransactionId(), streamId, elapsed);
+                }
+            } else {
+                ZimbraLog.redolog.error("error writing op %s txnId=%s to redis stream",
+                        context.getOp(), context.getTransactionId(), e);
+            }
+        });
     }
 
     @Override
