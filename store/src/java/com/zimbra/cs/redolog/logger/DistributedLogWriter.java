@@ -7,14 +7,18 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.redisson.api.RFuture;
 import org.redisson.api.RStream;
 import org.redisson.api.RedissonClient;
+import org.redisson.api.StreamMessageId;
 import org.redisson.client.codec.ByteArrayCodec;
 
+import com.google.common.base.Charsets;
 import com.google.common.io.ByteStreams;
 import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.RedissonClientHolder;
 import com.zimbra.cs.redolog.RedoLogManager.LocalRedoOpContext;
 import com.zimbra.cs.redolog.RedoLogManager.RedoOpContext;
@@ -29,6 +33,7 @@ public class DistributedLogWriter implements LogWriter {
     public static final byte[] F_TIMESTAMP = "t".getBytes();
     public static final byte[] F_MAILBOX_ID = "m".getBytes();
     public static final byte[] F_OP_TYPE = "p".getBytes();
+    public static final byte[] F_TXN_ID = "i".getBytes();
 
     public DistributedLogWriter() {
         client = RedissonClientHolder.getInstance().getRedissonClient();
@@ -51,6 +56,7 @@ public class DistributedLogWriter implements LogWriter {
         fields.put(F_TIMESTAMP, Longs.toByteArray(context.getOpTimestamp()));
         fields.put(F_MAILBOX_ID, Ints.toByteArray(context.getOpMailboxId()));
         fields.put(F_OP_TYPE, Ints.toByteArray(context.getOperationType().getCode()));
+        fields.put(F_TXN_ID, context.getTransactionId().encodeToString().getBytes(Charsets.UTF_8));         
         stream.addAll(fields);
     }
 

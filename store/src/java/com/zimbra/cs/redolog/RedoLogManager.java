@@ -787,6 +787,8 @@ public class RedoLogManager {
         public int getOpMailboxId();
 
         public MailboxOperation getOperationType();
+
+        public TransactionId getTransactionId();
     }
 
     public static class LocalRedoOpContext implements RedoOpContext {
@@ -816,6 +818,11 @@ public class RedoLogManager {
         public MailboxOperation getOperationType() {
             return op.getOperation();
         }
+
+        @Override
+        public TransactionId getTransactionId() {
+            return op.getTransactionId();
+        }
     }
 
     public static class DistributedRedoOpContext implements RedoOpContext {
@@ -823,11 +830,13 @@ public class RedoLogManager {
         private long timestamp;
         private int mailboxId;
         private MailboxOperation operationType;
+        private TransactionId transactionId;
 
-        public DistributedRedoOpContext(long timestamp, int mailboxId, MailboxOperation operationType) {
+        public DistributedRedoOpContext(long timestamp, int mailboxId, MailboxOperation operationType, TransactionId txnId) {
             this.timestamp = timestamp;
             this.mailboxId = mailboxId;
             this.operationType = operationType;
+            this.transactionId = txnId;
         }
 
         @Override
@@ -843,6 +852,11 @@ public class RedoLogManager {
         @Override
         public MailboxOperation getOperationType() {
             return operationType;
+        }
+
+        @Override
+        public TransactionId getTransactionId() {
+            return transactionId;
         }
     }
 }

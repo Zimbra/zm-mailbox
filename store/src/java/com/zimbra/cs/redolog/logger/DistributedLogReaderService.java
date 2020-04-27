@@ -16,10 +16,12 @@ import org.redisson.api.StreamInfo;
 import org.redisson.api.StreamMessageId;
 import org.redisson.client.codec.ByteArrayCodec;
 
+import com.google.common.base.Charsets;
 import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.RedissonClientHolder;
@@ -27,6 +29,7 @@ import com.zimbra.cs.mailbox.util.MailboxClusterUtil;
 import com.zimbra.cs.redolog.RedoLogManager.DistributedRedoOpContext;
 import com.zimbra.cs.redolog.RedoLogManager.RedoOpContext;
 import com.zimbra.cs.redolog.RedoLogProvider;
+import com.zimbra.cs.redolog.TransactionId;
 
 public class DistributedLogReaderService {
     private static RedissonClient client;
@@ -78,7 +81,7 @@ public class DistributedLogReaderService {
         @Override
         public void run() {
             ZimbraLog.redolog.info("Started Log queue monitoring thread %s", Thread.currentThread().getName());
-            while (running) {
+            READ_STREAM: while (running) {
                 ZimbraLog.redolog.debug("Iterating %s", Thread.currentThread().getName());
                 int blockSecs = LC.redis_redolog_stream_read_timeout_secs.intValue();
                 int count = LC.redis_redolog_stream_max_items_per_read.intValue();
@@ -94,6 +97,7 @@ public class DistributedLogReaderService {
                     long timestamp = 0;
                     int mboxId = 0;
                     int opType = 0;
+                    TransactionId txnId = null;
                     /*
                      * We can't use map.get() here because keys are byte arrays, which are compared by reference (not equality).
                      * Instead we iterate over the map and compare to the known keys using Arrays.equals().
@@ -112,11 +116,19 @@ public class DistributedLogReaderService {
                             mboxId = Ints.fromByteArray(val);
                         } else if (Arrays.equals(key, DistributedLogWriter.F_OP_TYPE)) {
                             opType = Ints.fromByteArray(val);
+                        } else if (Arrays.equals(key, DistributedLogWriter.F_TXN_ID)) {
+                            String txnStr = new String(val, Charsets.UTF_8);
+                            try {
+                                txnId = TransactionId.decodeFromString(txnStr);
+                            } catch (ServiceException e) {
+                                ZimbraLog.redolog.error("unable to decode transaction ID '%s' from redis stream", txnStr, e);
+                                continue READ_STREAM;
+                            }
                         }
                     }
                     MailboxOperation op = MailboxOperation.fromInt(opType);
-                    RedoOpContext context = new DistributedRedoOpContext(timestamp, mboxId, op);
-                    ZimbraLog.redolog.debug("received streamId=%s, timestamp=%s, mboxId=%s, op=%s", messageId, timestamp, mboxId, op);
+                    RedoOpContext context = new DistributedRedoOpContext(timestamp, mboxId, op, txnId);
+                    ZimbraLog.redolog.debug("received streamId=%s, opTimestamp=%s, mboxId=%s, op=%s, txnId=%s", messageId, timestamp, mboxId, op, txnId);
                     try {
                         fileWriter.log(context, payload, true);
                         stream.ack(group, messageId);
