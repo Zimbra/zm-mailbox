@@ -34,6 +34,7 @@ public class DistributedLogWriter implements LogWriter {
     public static final byte[] F_MAILBOX_ID = "m".getBytes();
     public static final byte[] F_OP_TYPE = "p".getBytes();
     public static final byte[] F_TXN_ID = "i".getBytes();
+    public static final byte[] F_SUBMIT_TIME = "s".getBytes();
 
     public DistributedLogWriter() {
         client = RedissonClientHolder.getInstance().getRedissonClient();
@@ -57,6 +58,7 @@ public class DistributedLogWriter implements LogWriter {
         fields.put(F_MAILBOX_ID, Ints.toByteArray(context.getOpMailboxId()));
         fields.put(F_OP_TYPE, Ints.toByteArray(context.getOperationType().getCode()));
         fields.put(F_TXN_ID, context.getTransactionId().encodeToString().getBytes(Charsets.UTF_8));
+        fields.put(F_SUBMIT_TIME, Longs.toByteArray(System.currentTimeMillis()));
         long start = System.currentTimeMillis();
         RFuture<StreamMessageId> future = stream.addAllAsync(fields);
         future.onComplete((streamId, e) -> {

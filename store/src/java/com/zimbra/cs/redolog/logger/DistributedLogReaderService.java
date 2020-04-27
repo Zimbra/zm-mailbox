@@ -98,6 +98,7 @@ public class DistributedLogReaderService {
                     int mboxId = 0;
                     int opType = 0;
                     TransactionId txnId = null;
+                    long submitTime = 0;
                     /*
                      * We can't use map.get() here because keys are byte arrays, which are compared by reference (not equality).
                      * Instead we iterate over the map and compare to the known keys using Arrays.equals().
@@ -116,6 +117,8 @@ public class DistributedLogReaderService {
                             mboxId = Ints.fromByteArray(val);
                         } else if (Arrays.equals(key, DistributedLogWriter.F_OP_TYPE)) {
                             opType = Ints.fromByteArray(val);
+                        } else if (Arrays.equals(key, DistributedLogWriter.F_SUBMIT_TIME)) {
+                            submitTime = Longs.fromByteArray(val);
                         } else if (Arrays.equals(key, DistributedLogWriter.F_TXN_ID)) {
                             String txnStr = new String(val, Charsets.UTF_8);
                             try {
@@ -128,7 +131,8 @@ public class DistributedLogReaderService {
                     }
                     MailboxOperation op = MailboxOperation.fromInt(opType);
                     RedoOpContext context = new DistributedRedoOpContext(timestamp, mboxId, op, txnId);
-                    ZimbraLog.redolog.debug("received streamId=%s, opTimestamp=%s, mboxId=%s, op=%s, txnId=%s", messageId, timestamp, mboxId, op, txnId);
+                    long queued = System.currentTimeMillis() - submitTime;
+                    ZimbraLog.redolog.debug("received streamId=%s, opTimestamp=%s, mboxId=%s, op=%s, txnId=%s, queued=%sms", messageId, timestamp, mboxId, op, txnId, queued);
                     try {
                         fileWriter.log(context, payload, true);
                         stream.ack(group, messageId);
