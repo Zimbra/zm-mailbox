@@ -4,17 +4,22 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
+import org.redisson.api.RScript;
+import org.redisson.api.RScript.Mode;
+import org.redisson.api.RScript.ReturnType;
 import org.redisson.api.RStream;
 import org.redisson.api.RedissonClient;
 import org.redisson.api.StreamInfo;
 import org.redisson.api.StreamMessageId;
 import org.redisson.client.codec.ByteArrayCodec;
+import org.redisson.client.codec.StringCodec;
 
 import com.google.common.base.Charsets;
 import com.google.common.primitives.Ints;
@@ -40,6 +45,10 @@ public class DistributedLogReaderService {
     private volatile boolean running = false;
     private static DistributedLogReaderService instance = null;
     private static LogWriter fileWriter = null;
+    private RScript script;
+    private static final String ACK_DEL_SCRIPT =
+            "redis.call('xack', KEYS[1], ARGV[1], ARGV[2]); " +
+            "return redis.call('xdel', KEYS[1], ARGV[2]);";
 
     private DistributedLogReaderService() {}
 
@@ -60,6 +69,7 @@ public class DistributedLogReaderService {
         consumer = MailboxClusterUtil.getMailboxWorkerName();
         client = RedissonClientHolder.getInstance().getRedissonClient();
         stream = client.getStream(LC.redis_streams_redo_log_stream.value(), ByteArrayCodec.INSTANCE);
+        script = client.getScript(StringCodec.INSTANCE);
         if (!stream.isExists()) {
             stream.createGroup(group, StreamMessageId.ALL); // stream will be auto-created
             ZimbraLog.redolog.info("created consumer group %s and stream %s", group, stream.getName());
@@ -135,13 +145,17 @@ public class DistributedLogReaderService {
                     ZimbraLog.redolog.debug("received streamId=%s, opTimestamp=%s, mboxId=%s, op=%s, txnId=%s, queued=%sms", messageId, timestamp, mboxId, op, txnId, queued);
                     try {
                         fileWriter.log(context, payload, true);
-                        stream.ack(group, messageId);
+                        ackAndDelete(messageId);
                     } catch (IOException e) {
                         ZimbraLog.redolog.error("Failed to log data using filewriter", e);
                     }
                 }
             }
         }
+    }
 
+    private void ackAndDelete(StreamMessageId id) {
+        List<Object> keys = Arrays.<Object>asList(stream.getName());
+        script.eval(Mode.READ_WRITE, ACK_DEL_SCRIPT, ReturnType.INTEGER, keys, group, id.toString());
     }
 }
