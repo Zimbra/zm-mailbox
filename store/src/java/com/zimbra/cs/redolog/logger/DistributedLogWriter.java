@@ -9,9 +9,11 @@ import java.util.Map;
 
 import org.redisson.api.RStream;
 import org.redisson.api.RedissonClient;
-import org.redisson.client.codec.StringCodec;
+import org.redisson.client.codec.ByteArrayCodec;
 
 import com.google.common.io.ByteStreams;
+import com.google.common.primitives.Ints;
+import com.google.common.primitives.Longs;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.mailbox.RedissonClientHolder;
 import com.zimbra.cs.redolog.RedoLogManager.LocalRedoOpContext;
@@ -21,16 +23,16 @@ import com.zimbra.cs.redolog.op.RedoableOp;
 public class DistributedLogWriter implements LogWriter {
 
     private static RedissonClient client;
-    private RStream<String, String> stream;
+    private RStream<byte[], byte[]> stream;
 
-    public static final String F_DATA = "d";
-    public static final String F_TIMESTAMP = "t";
-    public static final String F_MAILBOX_ID = "m";
-    public static final String F_OP_TYPE = "p";
+    public static final byte[] F_DATA = "d".getBytes();
+    public static final byte[] F_TIMESTAMP = "t".getBytes();
+    public static final byte[] F_MAILBOX_ID = "m".getBytes();
+    public static final byte[] F_OP_TYPE = "p".getBytes();
 
     public DistributedLogWriter() {
         client = RedissonClientHolder.getInstance().getRedissonClient();
-        stream = client.getStream(LC.redis_streams_redo_log_stream.value(), StringCodec.INSTANCE);
+        stream = client.getStream(LC.redis_streams_redo_log_stream.value(), ByteArrayCodec.INSTANCE);
     }
 
     @Override
@@ -44,11 +46,11 @@ public class DistributedLogWriter implements LogWriter {
     @Override
     public void log(RedoOpContext context, InputStream data, boolean synchronous) throws IOException {
         byte[] payload = ByteStreams.toByteArray(data);
-        Map<String, String> fields = new HashMap<>();
-        fields.put(F_DATA, new String(payload));
-        fields.put(F_TIMESTAMP, String.valueOf(context.getOpTimestamp()));
-        fields.put(F_MAILBOX_ID, String.valueOf(context.getOpMailboxId()));
-        fields.put(F_OP_TYPE, String.valueOf(context.getOperationType().getCode()));
+        Map<byte[], byte[]> fields = new HashMap<>();
+        fields.put(F_DATA, payload);
+        fields.put(F_TIMESTAMP, Longs.toByteArray(context.getOpTimestamp()));
+        fields.put(F_MAILBOX_ID, Ints.toByteArray(context.getOpMailboxId()));
+        fields.put(F_OP_TYPE, Ints.toByteArray(context.getOperationType().getCode()));
         stream.addAll(fields);
     }
 

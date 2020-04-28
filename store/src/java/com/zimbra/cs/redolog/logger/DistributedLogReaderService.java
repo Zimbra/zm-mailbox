@@ -3,6 +3,7 @@ package com.zimbra.cs.redolog.logger;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -13,21 +14,23 @@ import org.redisson.api.RStream;
 import org.redisson.api.RedissonClient;
 import org.redisson.api.StreamInfo;
 import org.redisson.api.StreamMessageId;
-import org.redisson.client.codec.StringCodec;
+import org.redisson.client.codec.ByteArrayCodec;
 
+import com.google.common.primitives.Ints;
+import com.google.common.primitives.Longs;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.RedissonClientHolder;
 import com.zimbra.cs.mailbox.util.MailboxClusterUtil;
+import com.zimbra.cs.redolog.RedoLogManager.DistributedRedoOpContext;
 import com.zimbra.cs.redolog.RedoLogManager.RedoOpContext;
-import com.zimbra.cs.redolog.RedoLogManager.DistributedRedoOpContext;;
 import com.zimbra.cs.redolog.RedoLogProvider;
 
 public class DistributedLogReaderService {
     private static RedissonClient client;
-    private RStream<String, String> stream;
+    private RStream<byte[], byte[]> stream;
     private ExecutorService executorService;
     private static String group;
     private static String consumer;
@@ -53,13 +56,13 @@ public class DistributedLogReaderService {
         group = LC.redis_streams_redo_log_group.value();
         consumer = MailboxClusterUtil.getMailboxWorkerName();
         client = RedissonClientHolder.getInstance().getRedissonClient();
-        stream = client.getStream(LC.redis_streams_redo_log_stream.value(), StringCodec.INSTANCE);
+        stream = client.getStream(LC.redis_streams_redo_log_stream.value(), ByteArrayCodec.INSTANCE);
         if (!stream.isExists()) {
             stream.createGroup(group, StreamMessageId.ALL); // stream will be auto-created
             ZimbraLog.redolog.info("created consumer group %s and stream %s", group, stream.getName());
         } else {
             // create group if it doesn't exist on the stream
-            StreamInfo<String, String> info = stream.getInfo();
+            StreamInfo<byte[], byte[]> info = stream.getInfo();
             if (info.getGroups() == 0) {
                 stream.createGroup(group, StreamMessageId.ALL);
                 ZimbraLog.redolog.info("created consumer group %s for existing stream %s", group, stream.getName());
@@ -79,26 +82,43 @@ public class DistributedLogReaderService {
                 ZimbraLog.redolog.debug("Iterating %s", Thread.currentThread().getName());
                 int blockSecs = LC.redis_redolog_stream_read_timeout_secs.intValue();
                 int count = LC.redis_redolog_stream_max_items_per_read.intValue();
-                Map<StreamMessageId, Map<String, String>> logs = stream.readGroup(group, consumer, count, blockSecs, TimeUnit.SECONDS, StreamMessageId.NEVER_DELIVERED);
+                Map<StreamMessageId, Map<byte[], byte[]>> logs = stream.readGroup(group, consumer, count, blockSecs, TimeUnit.SECONDS, StreamMessageId.NEVER_DELIVERED);
                 if (logs == null || logs.isEmpty()) {
                     ZimbraLog.redolog.debug("no redo entries found after waiting on stream for %s seconds", blockSecs);
                     continue;
                 }
-                for(Map.Entry<StreamMessageId, Map<String, String>> m:logs.entrySet()){
+                for(Map.Entry<StreamMessageId, Map<byte[], byte[]>> m:logs.entrySet()){
                     StreamMessageId messageId = m.getKey();
-                    Map<String, String> fields = m.getValue();
-                    String dataStr = fields.get(DistributedLogWriter.F_DATA);
-                    String timestampStr = fields.get(DistributedLogWriter.F_TIMESTAMP);
-                    String mboxIdStr = fields.get(DistributedLogWriter.F_MAILBOX_ID);
-                    String typeStr = fields.get(DistributedLogWriter.F_OP_TYPE);
-                    InputStream targetStream = new ByteArrayInputStream(dataStr.getBytes());
-                    long timestamp = Long.valueOf(timestampStr);
-                    int mboxId = Integer.valueOf(mboxIdStr);
-                    MailboxOperation opType = MailboxOperation.fromInt(Integer.valueOf(typeStr));
-                    RedoOpContext context = new DistributedRedoOpContext(timestamp, mboxId, opType);
-                    ZimbraLog.redolog.debug("received streamId=%s, timestamp=%s, mboxId=%s, op=%s", messageId, timestamp, mboxId, opType);
+                    Map<byte[], byte[]> fields = m.getValue();
+                    InputStream payload = null;
+                    long timestamp = 0;
+                    int mboxId = 0;
+                    int opType = 0;
+                    /*
+                     * We can't use map.get() here because keys are byte arrays, which are compared by reference (not equality).
+                     * Instead we iterate over the map and compare to the known keys using Arrays.equals().
+                     *
+                     * Tried using redisson's CompositeCodec to specify different codecs for keys vs values (StringCodec and ByteArrayCodec, respectively),
+                     * but while XADD respects the key/value codecs, XREADGROUP doesn't, leading to a cast error on the stream consumer.
+                     */
+                    for (Map.Entry<byte[], byte[]> entry: fields.entrySet()) {
+                        byte[] key = entry.getKey();
+                        byte[] val = entry.getValue();
+                        if (Arrays.equals(key, DistributedLogWriter.F_DATA)) {
+                            payload = new ByteArrayInputStream(val);
+                        } else if (Arrays.equals(key, DistributedLogWriter.F_TIMESTAMP)) {
+                            timestamp = Longs.fromByteArray(val);
+                        } else if (Arrays.equals(key, DistributedLogWriter.F_MAILBOX_ID)) {
+                            mboxId = Ints.fromByteArray(val);
+                        } else if (Arrays.equals(key, DistributedLogWriter.F_OP_TYPE)) {
+                            opType = Ints.fromByteArray(val);
+                        }
+                    }
+                    MailboxOperation op = MailboxOperation.fromInt(opType);
+                    RedoOpContext context = new DistributedRedoOpContext(timestamp, mboxId, op);
+                    ZimbraLog.redolog.debug("received streamId=%s, timestamp=%s, mboxId=%s, op=%s", messageId, timestamp, mboxId, op);
                     try {
-                        fileWriter.log(context, targetStream, true);
+                        fileWriter.log(context, payload, true);
                         stream.ack(group, messageId);
                     } catch (IOException e) {
                         ZimbraLog.redolog.error("Failed to log data using filewriter", e);
