@@ -9921,6 +9921,11 @@ TODO: delete them permanently from here
   <desc>whether or not the user has accepted the client's terms of service</desc>
 </attr>
 
+<attr id="3069" name="zimbraPrefSlackCalendarReminderEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="9.0.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>whether or not slack reminders for appointments and tasks are enabled</desc>
+</attr>
+
 <attr id="3071" name="zimbraHABSeniorityIndex" type="integer" cardinality="single" optionalIn="habGroup,account" since="8.8.10">
   <desc>seniority index of the group or group member which will determine the sorting order in the hierarchical address book</desc>
 </attr>

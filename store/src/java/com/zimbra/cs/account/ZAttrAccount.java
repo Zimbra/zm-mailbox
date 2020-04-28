@@ -55082,6 +55082,78 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * whether or not slack reminders for appointments and tasks are enabled
+     *
+     * @return zimbraPrefSlackCalendarReminderEnabled, or false if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=3069)
+    public boolean isPrefSlackCalendarReminderEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraPrefSlackCalendarReminderEnabled, false, true);
+    }
+
+    /**
+     * whether or not slack reminders for appointments and tasks are enabled
+     *
+     * @param zimbraPrefSlackCalendarReminderEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=3069)
+    public void setPrefSlackCalendarReminderEnabled(boolean zimbraPrefSlackCalendarReminderEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefSlackCalendarReminderEnabled, zimbraPrefSlackCalendarReminderEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether or not slack reminders for appointments and tasks are enabled
+     *
+     * @param zimbraPrefSlackCalendarReminderEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=3069)
+    public Map<String,Object> setPrefSlackCalendarReminderEnabled(boolean zimbraPrefSlackCalendarReminderEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefSlackCalendarReminderEnabled, zimbraPrefSlackCalendarReminderEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether or not slack reminders for appointments and tasks are enabled
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=3069)
+    public void unsetPrefSlackCalendarReminderEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefSlackCalendarReminderEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether or not slack reminders for appointments and tasks are enabled
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=3069)
+    public Map<String,Object> unsetPrefSlackCalendarReminderEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefSlackCalendarReminderEnabled, "");
+        return attrs;
+    }
+
+    /**
      * sort order for list view in the WEB UI
      *
      * @return zimbraPrefSortOrder, or null if unset

@@ -14360,6 +14360,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefSkin = "zimbraPrefSkin";
 
     /**
+     * whether or not slack reminders for appointments and tasks are enabled
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=3069)
+    public static final String A_zimbraPrefSlackCalendarReminderEnabled = "zimbraPrefSlackCalendarReminderEnabled";
+
+    /**
      * sort order for list view in the WEB UI
      *
      * @since ZCS 7.1.0
