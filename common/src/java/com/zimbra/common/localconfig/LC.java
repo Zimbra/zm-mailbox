@@ -1077,7 +1077,7 @@ public final class LC {
     public static final KnownKey data_source_eas_window_size = KnownKey.newKey(50);
     public static final KnownKey data_source_eas_mime_truncation = KnownKey.newKey(4);
 
-    public static final KnownKey zimbra_activesync_versions = KnownKey.newKey("2.0,2.1,2.5,12.0,12.1");
+    public static final KnownKey zimbra_activesync_versions = KnownKey.newKey("2.0,2.1,2.5,12.0,12.1,14.0,14.1");
     public static final KnownKey zimbra_activesync_contact_image_size = KnownKey.newKey(2*1024*1024);
     public static final KnownKey zimbra_activesync_autodiscover_url = KnownKey.newKey(null);
     public static final KnownKey zimbra_activesync_autodiscover_use_service_url = KnownKey.newKey(false);
