@@ -161,7 +161,7 @@ public class RedoLogManager {
 
     private long mInitialLogSize;	// used in log rollover
 
-    // the actual logger
+    // the file logger
     private LogWriter mLogWriter;
 
     // the stream logger
@@ -223,10 +223,6 @@ public class RedoLogManager {
 
     public File getRolloverDestDir() {
         return mArchiveDir;
-    }
-
-    public LogWriter getCurrentLogWriter() {
-        return mLogWriter;
     }
 
     public LogWriter createFileWriter(RedoLogManager redoMgr,
