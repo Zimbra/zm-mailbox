@@ -42,6 +42,7 @@ import com.zimbra.cs.db.Db;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.RedissonClientHolder;
+import com.zimbra.cs.mailbox.util.MailboxClusterUtil;
 import com.zimbra.cs.redolog.logger.DbLogWriter;
 import com.zimbra.cs.redolog.logger.DistributedLogWriter;
 import com.zimbra.cs.redolog.logger.FileLogReader;
@@ -321,8 +322,7 @@ public class RedoLogManager {
 
         logOnly(op, synchronous);
 
-        //rollover is needed only when use FileLogWriter mechanism
-        if (isRolloverNeeded(false) && !(getLogWriter() instanceof DbLogWriter))
+        if (isRolloverNeeded(false) && MailboxClusterUtil.isBackupRestorePod())
             rollover(false, false);
     }
 
@@ -382,7 +382,11 @@ public class RedoLogManager {
 
                 try {
                     long start = System.currentTimeMillis();
-                    dLogWriter.log(op, op.getInputStream(), synchronous);
+                    if(MailboxClusterUtil.isBackupRestorePod()) {
+                        mLogWriter.log(op, op.getInputStream(), synchronous);
+                    } else {
+                        dLogWriter.log(op, op.getInputStream(), synchronous);
+                    }
                     long elapsed = System.currentTimeMillis() - start;
                     synchronized (mStatGuard) {
                         mElapsed += elapsed;
