@@ -1,7 +1,6 @@
 package com.zimbra.cs.redolog.logger;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
@@ -31,10 +30,9 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.RedissonClientHolder;
 import com.zimbra.cs.mailbox.util.MailboxClusterUtil;
-import com.zimbra.cs.redolog.RedoLogManager.DistributedRedoOpContext;
-import com.zimbra.cs.redolog.RedoLogManager.RedoOpContext;
-import com.zimbra.cs.redolog.RedoLogProvider;
+import com.zimbra.cs.redolog.RedoLogManager.LoggableOp;
 import com.zimbra.cs.redolog.TransactionId;
+import com.zimbra.cs.redolog.op.RedoableOp;
 
 public class DistributedLogReaderService {
     private static RedissonClient client;
@@ -44,7 +42,6 @@ public class DistributedLogReaderService {
     private static String consumer;
     private volatile boolean running = false;
     private static DistributedLogReaderService instance = null;
-    private static LogWriter fileWriter = null;
     private RScript script;
     private static final String ACK_DEL_SCRIPT =
             "redis.call('xack', KEYS[1], ARGV[1], ARGV[2]); " +
@@ -81,7 +78,6 @@ public class DistributedLogReaderService {
                 ZimbraLog.redolog.info("created consumer group %s for existing stream %s", group, stream.getName());
             }
         }
-        fileWriter = RedoLogProvider.getInstance().getRedoLogManager().getCurrentLogWriter();
         ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("DistributedLog-Reader-Thread-%d").build();
         executorService = Executors.newSingleThreadExecutor(namedThreadFactory);
         executorService.execute(new LogMonitor());
@@ -139,16 +135,13 @@ public class DistributedLogReaderService {
                             }
                         }
                     }
-                    MailboxOperation op = MailboxOperation.fromInt(opType);
-                    RedoOpContext context = new DistributedRedoOpContext(timestamp, mboxId, op, txnId);
+                    MailboxOperation mailboxOperation = MailboxOperation.fromInt(opType);
+                    RedoableOp op = new LoggableOp(mailboxOperation, txnId, payload);
                     long queued = System.currentTimeMillis() - submitTime;
-                    ZimbraLog.redolog.debug("received streamId=%s, opTimestamp=%s, mboxId=%s, op=%s, txnId=%s, queued=%sms", messageId, timestamp, mboxId, op, txnId, queued);
-                    try {
-                        fileWriter.log(context, payload, true);
-                        ackAndDelete(messageId);
-                    } catch (IOException e) {
-                        ZimbraLog.redolog.error("Failed to log data using filewriter", e);
-                    }
+                    ZimbraLog.redolog.debug("received streamId=%s, opTimestamp=%s, mboxId=%s, op=%s, txnId=%s, queued=%sms", messageId, timestamp,
+                            mboxId, mailboxOperation, txnId, queued);
+                    op.log(true);
+                    ackAndDelete(messageId);
                 }
             }
         }

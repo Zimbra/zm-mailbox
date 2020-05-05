@@ -18,6 +18,7 @@ package com.zimbra.cs.redolog;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -172,6 +173,8 @@ public class RedoLogManager {
     private long mElapsed;
     private int mCounter;
 
+    private final static boolean isBackupRestorePod = MailboxClusterUtil.isBackupRestorePod();
+
 
     public RedoLogManager(File redolog, File archdir, boolean supportsCrashRecovery) {
         mEnabled = false;
@@ -322,8 +325,10 @@ public class RedoLogManager {
 
         logOnly(op, synchronous);
 
-        if (isRolloverNeeded(false) && MailboxClusterUtil.isBackupRestorePod())
+        if (isRolloverNeeded(false) && isBackupRestorePod) {
+            ZimbraLog.redolog.debug("RedoLogManager - rollover is needed");
             rollover(false, false);
+        }
     }
 
     /**
@@ -379,10 +384,9 @@ public class RedoLogManager {
                     if (op.isEndMarker())
                         mActiveOps.remove(op.getTransactionId());
                 }
-
                 try {
                     long start = System.currentTimeMillis();
-                    if(MailboxClusterUtil.isBackupRestorePod()) {
+                    if(isBackupRestorePod) {
                         mLogWriter.log(op, op.getInputStream(), synchronous);
                     } else {
                         dLogWriter.log(op, op.getInputStream(), synchronous);
@@ -789,6 +793,7 @@ public class RedoLogManager {
         public MailboxOperation getOperationType();
 
         public TransactionId getTransactionId();
+
     }
 
     public static class LocalRedoOpContext implements RedoOpContext {
@@ -825,38 +830,49 @@ public class RedoLogManager {
         }
     }
 
-    public static class DistributedRedoOpContext implements RedoOpContext {
+    /*
+     * This class extends the RedoableOp and can be used for logging the wrapped payload.
+     * One example of such usage is demonstrated by DistributedLogReaderService's LogMonitor class.
+     */
+    public static class LoggableOp extends RedoableOp {
 
-        private long timestamp;
-        private int mailboxId;
-        private MailboxOperation operationType;
         private TransactionId transactionId;
+        private InputStream payload;
 
-        public DistributedRedoOpContext(long timestamp, int mailboxId, MailboxOperation operationType, TransactionId txnId) {
-            this.timestamp = timestamp;
-            this.mailboxId = mailboxId;
-            this.operationType = operationType;
+        public LoggableOp(MailboxOperation operationType, TransactionId txnId, InputStream payload) {
+            super(operationType);
             this.transactionId = txnId;
-        }
-
-        @Override
-        public long getOpTimestamp() {
-            return timestamp;
-        }
-
-        @Override
-        public int getOpMailboxId() {
-            return mailboxId;
-        }
-
-        @Override
-        public MailboxOperation getOperationType() {
-            return operationType;
+            this.payload = payload;
         }
 
         @Override
         public TransactionId getTransactionId() {
             return transactionId;
+        }
+
+        @Override
+        public InputStream getInputStream() {
+            return payload;
+        }
+
+        @Override
+        public void redo() throws Exception {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        protected String getPrintableData() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        protected void serializeData(RedoLogOutput out) throws IOException {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        protected void deserializeData(RedoLogInput in) throws IOException {
+            throw new UnsupportedOperationException();
         }
     }
 }
