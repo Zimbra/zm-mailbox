@@ -10316,11 +10316,21 @@ public class Mailbox implements MailboxStore {
     }
 
     public void clearStaleCaches(MailboxLockContext context) throws ServiceException {
-        String caller = context.getCaller();
-        if (caller != null && caller.equals("createMailbox")) {
-            //mailbox creation will always reach this point (since there is no lock marker in redis),
-            //but we don't actually need to flush any caches
-            return;
+        clearStaleCaches(context, false);
+    }
+
+    public void clearStaleCaches(boolean forceFromDb) throws ServiceException {
+        clearStaleCaches(null, forceFromDb);
+    }
+
+    private void clearStaleCaches(MailboxLockContext context, boolean forceFromDb) throws ServiceException {
+        if (context != null) {
+            String caller = context.getCaller();
+            if (caller != null && caller.equals("createMailbox")) {
+                //mailbox creation will always reach this point (since there is no lock marker in redis),
+                //but we don't actually need to flush any caches
+                return;
+            }
         }
         if (!LC.redis_cache_synchronize_folders_tags.booleanValue()) {
             clearFolderCache();
@@ -10331,6 +10341,9 @@ public class Mailbox implements MailboxStore {
         }
         if (!LC.redis_cache_synchronize_item_cache.booleanValue()) {
             clearItemCache();
+        }
+        if (forceFromDb) {
+            folderTagSnapshot.invalidate();
         }
     }
 

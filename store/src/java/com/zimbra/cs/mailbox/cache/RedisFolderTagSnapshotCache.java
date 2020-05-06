@@ -48,4 +48,11 @@ public class RedisFolderTagSnapshotCache extends FolderTagSnapshotCache {
             folderTagBucket.set(RedisItemCache.CURR_VERSION_PREFIX + folderTagMeta.toString());
         }
     }
+
+    @Override
+    public void invalidate() {
+        if (folderTagBucket.delete()) {
+            ZimbraLog.cache.info("deleted folder/tag snapshot from redis for mailbox %s", mbox.getId());
+        }
+    }
 }
