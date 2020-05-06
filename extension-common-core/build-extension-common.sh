@@ -82,5 +82,4 @@ cd ../../..
 
 cd $EXT_DIR
 docker build -t dev-registry.zimbra-docker-registry.tk/zms-core-extension:${TAG} .
-#docker push dev-registry.zimbra-docker-registry.tk/zms-core-extension:${TAG}
 rm -rf build

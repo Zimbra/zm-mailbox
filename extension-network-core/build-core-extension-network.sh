@@ -55,7 +55,6 @@ done < "$repoFile"
 
 cd $EXT_DIR
 docker build -t dev-registry.zimbra-docker-registry.tk/zms-core-network-extension:${TAG} .
-#docker push dev-registry.zimbra-docker-registry.tk/zms-core-network-extension:${TAG}
 cd ../
 
 rm -rf $EXT_DIR/build

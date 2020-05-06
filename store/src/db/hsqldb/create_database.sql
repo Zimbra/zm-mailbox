@@ -274,3 +274,25 @@ CREATE TABLE *{DATABASE_NAME}.search_history (
    CONSTRAINT fk_search_history_mailbox_id FOREIGN KEY (mailbox_id) REFERENCES zimbra.mailbox(id) ON DELETE CASCADE,
    CONSTRAINT fk_search_id FOREIGN KEY (mailbox_id, search_id) REFERENCES searches(mailbox_id, id) ON DELETE CASCADE
 );
+
+CREATE TABLE *{DATABASE_NAME}.event (
+   mailbox_id    INTEGER NOT NULL,
+   account_id    VARCHAR(36) NOT NULL,  -- user performing the action (email address or guid)
+   item_id       INTEGER NOT NULL,  -- itemId for the event
+   folder_id     INTEGER NOT NULL,  -- folderId for the item in the event
+   op            TINYINT NOT NULL,  -- operation
+   ts            INTEGER NOT NULL,  -- timestamp
+   version       INTEGER,           -- version of the item
+   user_agent    VARCHAR(128),      -- identifier of device if available
+   arg           VARCHAR(10240),    -- operation specific argument
+
+   CONSTRAINT fk_event_mailbox_id FOREIGN KEY (mailbox_id) REFERENCES zimbra.mailbox(id) ON DELETE CASCADE
+);
+
+CREATE TABLE *{DATABASE_NAME}.watch (
+   mailbox_id   INTEGER NOT NULL,
+   target       VARCHAR(36) NOT NULL,  -- watch target account id
+   item_id      INTEGER NOT NULL,  -- target item id
+
+   CONSTRAINT pk_watch PRIMARY KEY (mailbox_id, target, item_id)
+);
