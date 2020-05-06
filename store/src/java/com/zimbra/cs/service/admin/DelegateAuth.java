@@ -41,7 +41,6 @@ import com.zimbra.cs.index.MailboxIndexUtil;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.ZimbraSoapContext;
-import com.zimbra.soap.admin.type.CacheEntryType;
 
 /**
  * @author schemers
@@ -138,9 +137,9 @@ public class DelegateAuth extends AdminDocumentHandler {
             //flush account cache first
             CacheEntry accountEntry = new CacheEntry(Key.CacheEntryBy.id, acct.getId());
             try {
-                Provisioning.getInstance().flushCache(CacheEntryType.account, new CacheEntry[] {accountEntry});
+                Provisioning.getInstance().reload(acct);
             } catch (ServiceException e) {
-                ZimbraLog.index.warn("error flushing cache on non-local account %s during delegated auth", acct.getName(), e);
+                ZimbraLog.index.warn("error reloading non-local account %s during delegated auth", acct.getName(), e);
             }
         }
         if (acct.isFeatureDelayedIndexEnabled() && acct.getDelayedIndexStatus() == DelayedIndexStatus.suppressed) {
