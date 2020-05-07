@@ -104,7 +104,6 @@ public class DistributedLogReaderService {
         public void run() {
             ZimbraLog.redolog.info("Started Log queue monitoring thread %s for %s", Thread.currentThread().getName(), stream.getName());
             READ_STREAM: while (running) {
-                ZimbraLog.redolog.debug("Iterating %s", Thread.currentThread().getName());
                 int blockSecs = LC.redis_redolog_stream_read_timeout_secs.intValue();
                 int count = LC.redis_redolog_stream_max_items_per_read.intValue();
                 Map<StreamMessageId, Map<byte[], byte[]>> logs = stream.readGroup(group, consumer, count, blockSecs, TimeUnit.SECONDS, StreamMessageId.NEVER_DELIVERED);
@@ -112,6 +111,7 @@ public class DistributedLogReaderService {
                     ZimbraLog.redolog.debug("no redo entries found after waiting on stream for %s seconds", blockSecs);
                     continue;
                 }
+                ZimbraLog.redolog.debug("received %s stream entries: %s", logs.size(), logs.keySet());
                 for(Map.Entry<StreamMessageId, Map<byte[], byte[]>> m:logs.entrySet()){
                     StreamMessageId messageId = m.getKey();
                     Map<byte[], byte[]> fields = m.getValue();
