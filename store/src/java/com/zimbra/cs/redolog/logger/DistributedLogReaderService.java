@@ -4,8 +4,10 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -103,7 +105,7 @@ public class DistributedLogReaderService {
         @Override
         public void run() {
             ZimbraLog.redolog.info("Started Log queue monitoring thread %s for %s", Thread.currentThread().getName(), stream.getName());
-            READ_STREAM: while (running) {
+            while (running) {
                 int blockSecs = LC.redis_redolog_stream_read_timeout_secs.intValue();
                 int count = LC.redis_redolog_stream_max_items_per_read.intValue();
                 Map<StreamMessageId, Map<byte[], byte[]>> logs = stream.readGroup(group, consumer, count, blockSecs, TimeUnit.SECONDS, StreamMessageId.NEVER_DELIVERED);
@@ -112,59 +114,77 @@ public class DistributedLogReaderService {
                     continue;
                 }
                 ZimbraLog.redolog.debug("received %s stream entries: %s", logs.size(), logs.keySet());
-                for(Map.Entry<StreamMessageId, Map<byte[], byte[]>> m:logs.entrySet()){
-                    StreamMessageId messageId = m.getKey();
-                    Map<byte[], byte[]> fields = m.getValue();
-                    InputStream payload = null;
-                    long timestamp = 0;
-                    int mboxId = 0;
-                    int opType = 0;
-                    TransactionId txnId = null;
-                    long submitTime = 0;
-                    /*
-                     * We can't use map.get() here because keys are byte arrays, which are compared by reference (not equality).
-                     * Instead we iterate over the map and compare to the known keys using Arrays.equals().
-                     *
-                     * Tried using redisson's CompositeCodec to specify different codecs for keys vs values (StringCodec and ByteArrayCodec, respectively),
-                     * but while XADD respects the key/value codecs, XREADGROUP doesn't, leading to a cast error on the stream consumer.
-                     */
-                    for (Map.Entry<byte[], byte[]> entry: fields.entrySet()) {
-                        byte[] key = entry.getKey();
-                        byte[] val = entry.getValue();
-                        if (Arrays.equals(key, DistributedLogWriter.F_DATA)) {
-                            payload = new ByteArrayInputStream(val);
-                        } else if (Arrays.equals(key, DistributedLogWriter.F_TIMESTAMP)) {
-                            timestamp = Longs.fromByteArray(val);
-                        } else if (Arrays.equals(key, DistributedLogWriter.F_MAILBOX_ID)) {
-                            mboxId = Ints.fromByteArray(val);
-                        } else if (Arrays.equals(key, DistributedLogWriter.F_OP_TYPE)) {
-                            opType = Ints.fromByteArray(val);
-                        } else if (Arrays.equals(key, DistributedLogWriter.F_SUBMIT_TIME)) {
-                            submitTime = Longs.fromByteArray(val);
-                        } else if (Arrays.equals(key, DistributedLogWriter.F_TXN_ID)) {
-                            String txnStr = new String(val, Charsets.UTF_8);
-                            try {
-                                txnId = TransactionId.decodeFromString(txnStr);
-                            } catch (ServiceException e) {
-                                ZimbraLog.redolog.error("unable to decode transaction ID '%s' from redis stream", txnStr, e);
-                                continue READ_STREAM;
-                            }
-                        }
+                logs.entrySet().stream()
+                .sorted(SORT_BY_STREAM_ID)
+                .forEachOrdered(item -> handleOp(item.getKey(), item.getValue()));
+            }
+        }
+
+        private void handleOp(StreamMessageId messageId, Map<byte[], byte[]> fields) {
+            InputStream payload = null;
+            long timestamp = 0;
+            int mboxId = 0;
+            int opType = 0;
+            TransactionId txnId = null;
+            long submitTime = 0;
+            /*
+             * We can't use map.get() here because keys are byte arrays, which are compared by reference (not equality).
+             * Instead we iterate over the map and compare to the known keys using Arrays.equals().
+             *
+             * Tried using redisson's CompositeCodec to specify different codecs for keys vs values (StringCodec and ByteArrayCodec, respectively),
+             * but while XADD respects the key/value codecs, XREADGROUP doesn't, leading to a cast error on the stream consumer.
+             */
+            for (Map.Entry<byte[], byte[]> entry: fields.entrySet()) {
+                byte[] key = entry.getKey();
+                byte[] val = entry.getValue();
+                if (Arrays.equals(key, DistributedLogWriter.F_DATA)) {
+                    payload = new ByteArrayInputStream(val);
+                } else if (Arrays.equals(key, DistributedLogWriter.F_TIMESTAMP)) {
+                    timestamp = Longs.fromByteArray(val);
+                } else if (Arrays.equals(key, DistributedLogWriter.F_MAILBOX_ID)) {
+                    mboxId = Ints.fromByteArray(val);
+                } else if (Arrays.equals(key, DistributedLogWriter.F_OP_TYPE)) {
+                    opType = Ints.fromByteArray(val);
+                } else if (Arrays.equals(key, DistributedLogWriter.F_SUBMIT_TIME)) {
+                    submitTime = Longs.fromByteArray(val);
+                } else if (Arrays.equals(key, DistributedLogWriter.F_TXN_ID)) {
+                    String txnStr = new String(val, Charsets.UTF_8);
+                    try {
+                        txnId = TransactionId.decodeFromString(txnStr);
+                    } catch (ServiceException e) {
+                        ZimbraLog.redolog.error("unable to decode transaction ID '%s' from redis stream", txnStr, e);
+                        ackAndDelete(messageId, stream.getName());
+                        return;
                     }
-                    MailboxOperation mailboxOperation = MailboxOperation.fromInt(opType);
-                    RedoableOp op = new LoggableOp(mailboxOperation, txnId, payload);
-                    long queued = System.currentTimeMillis() - submitTime;
-                    ZimbraLog.redolog.debug("received streamId=%s, opTimestamp=%s, mboxId=%s, op=%s, txnId=%s, queued=%sms", messageId, timestamp,
-                            mboxId, mailboxOperation, txnId, queued);
-                    op.log(true);
-                    ackAndDelete(messageId,stream.getName());
                 }
             }
+
+            MailboxOperation mailboxOperation = MailboxOperation.fromInt(opType);
+            RedoableOp op = new LoggableOp(mailboxOperation, txnId, payload);
+            long queued = System.currentTimeMillis() - submitTime;
+            op.log(true);
+            ZimbraLog.redolog.debug("processed streamId=%s, opTimestamp=%s, mboxId=%s, op=%s, txnId=%s, queued=%sms", messageId, timestamp,
+                    mboxId, mailboxOperation, txnId, queued);
+            ackAndDelete(messageId, stream.getName());
+        }
+
+        private void ackAndDelete(StreamMessageId id, String streamName) {
+            List<Object> keys = Arrays.<Object>asList(streamName);
+            script.eval(Mode.READ_WRITE, ACK_DEL_SCRIPT, ReturnType.INTEGER, keys, group, id.toString());
         }
     }
 
-    private void ackAndDelete(StreamMessageId id, String streamName) {
-        List<Object> keys = Arrays.<Object>asList(streamName);
-        script.eval(Mode.READ_WRITE, ACK_DEL_SCRIPT, ReturnType.INTEGER, keys, group, id.toString());
-    }
+    private static final Comparator<Map.Entry<StreamMessageId, Map<byte[], byte[]>>> SORT_BY_STREAM_ID = new Comparator<Map.Entry<StreamMessageId, Map<byte[], byte[]>>>() {
+
+        @Override
+        public int compare(Entry<StreamMessageId, Map<byte[], byte[]>> item1,
+                Entry<StreamMessageId, Map<byte[], byte[]>> item2) {
+            StreamMessageId id1 = item1.getKey();
+            StreamMessageId id2 = item2.getKey();
+            return id1.getId0() == id2.getId0() ?
+                    Long.compare(id1.getId1(), id2.getId1()) :
+                        Long.compare(id1.getId0(), id2.getId0());
+        }
+    };
 }
+
