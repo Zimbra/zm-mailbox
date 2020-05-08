@@ -1415,6 +1415,10 @@ public final class LC {
     public static final KnownKey zm_oauth_classes_handlers_zoom = KnownKey.newKey("com.zimbra.oauth.handlers.impl.ZoomOAuth2Handler");
     public static final KnownKey zm_oauth_classes_handlers_dropbox = KnownKey.newKey("com.zimbra.oauth.handlers.impl.DropboxOAuth2Handler");
 
+    // activesync free-busy max number of recipients in single request
+    // default is set to 100 as per suggested by EAS specification
+    public static final KnownKey eas_fb_max_number_of_recipient = KnownKey.newKey(100);
+
     // alias login
     public static final KnownKey alias_login_enabled = KnownKey.newKey(true);
 
