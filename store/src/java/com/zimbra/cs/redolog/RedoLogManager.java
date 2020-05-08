@@ -18,6 +18,7 @@ package com.zimbra.cs.redolog;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -42,6 +43,7 @@ import com.zimbra.cs.db.Db;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.RedissonClientHolder;
+import com.zimbra.cs.mailbox.util.MailboxClusterUtil;
 import com.zimbra.cs.redolog.logger.DbLogWriter;
 import com.zimbra.cs.redolog.logger.DistributedLogWriter;
 import com.zimbra.cs.redolog.logger.FileLogReader;
@@ -161,7 +163,7 @@ public class RedoLogManager {
 
     private long mInitialLogSize;	// used in log rollover
 
-    // the actual logger
+    // the file logger
     private LogWriter mLogWriter;
 
     // the stream logger
@@ -170,6 +172,8 @@ public class RedoLogManager {
     private Object mStatGuard;
     private long mElapsed;
     private int mCounter;
+
+    private final static boolean isBackupRestorePod = MailboxClusterUtil.isBackupRestorePod();
 
 
     public RedoLogManager(File redolog, File archdir, boolean supportsCrashRecovery) {
@@ -223,10 +227,6 @@ public class RedoLogManager {
 
     public File getRolloverDestDir() {
         return mArchiveDir;
-    }
-
-    public LogWriter getCurrentLogWriter() {
-        return mLogWriter;
     }
 
     public LogWriter createFileWriter(RedoLogManager redoMgr,
@@ -325,9 +325,10 @@ public class RedoLogManager {
 
         logOnly(op, synchronous);
 
-        //rollover is needed only when use FileLogWriter mechanism
-        if (isRolloverNeeded(false) && !(getLogWriter() instanceof DbLogWriter))
+        if (isRolloverNeeded(false) && isBackupRestorePod) {
+            ZimbraLog.redolog.debug("RedoLogManager - rollover is needed");
             rollover(false, false);
+        }
     }
 
     /**
@@ -383,10 +384,13 @@ public class RedoLogManager {
                     if (op.isEndMarker())
                         mActiveOps.remove(op.getTransactionId());
                 }
-
                 try {
                     long start = System.currentTimeMillis();
-                    dLogWriter.log(op, op.getInputStream(), synchronous);
+                    if(isBackupRestorePod) {
+                        mLogWriter.log(op, op.getInputStream(), synchronous);
+                    } else {
+                        dLogWriter.log(op, op.getInputStream(), synchronous);
+                    }
                     long elapsed = System.currentTimeMillis() - start;
                     synchronized (mStatGuard) {
                         mElapsed += elapsed;
@@ -789,6 +793,7 @@ public class RedoLogManager {
         public MailboxOperation getOperationType();
 
         public TransactionId getTransactionId();
+
     }
 
     public static class LocalRedoOpContext implements RedoOpContext {
@@ -825,38 +830,49 @@ public class RedoLogManager {
         }
     }
 
-    public static class DistributedRedoOpContext implements RedoOpContext {
+    /*
+     * This class extends the RedoableOp and can be used for logging the wrapped payload.
+     * One example of such usage is demonstrated by DistributedLogReaderService's LogMonitor class.
+     */
+    public static class LoggableOp extends RedoableOp {
 
-        private long timestamp;
-        private int mailboxId;
-        private MailboxOperation operationType;
         private TransactionId transactionId;
+        private InputStream payload;
 
-        public DistributedRedoOpContext(long timestamp, int mailboxId, MailboxOperation operationType, TransactionId txnId) {
-            this.timestamp = timestamp;
-            this.mailboxId = mailboxId;
-            this.operationType = operationType;
+        public LoggableOp(MailboxOperation operationType, TransactionId txnId, InputStream payload) {
+            super(operationType);
             this.transactionId = txnId;
-        }
-
-        @Override
-        public long getOpTimestamp() {
-            return timestamp;
-        }
-
-        @Override
-        public int getOpMailboxId() {
-            return mailboxId;
-        }
-
-        @Override
-        public MailboxOperation getOperationType() {
-            return operationType;
+            this.payload = payload;
         }
 
         @Override
         public TransactionId getTransactionId() {
             return transactionId;
+        }
+
+        @Override
+        public InputStream getInputStream() {
+            return payload;
+        }
+
+        @Override
+        public void redo() throws Exception {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        protected String getPrintableData() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        protected void serializeData(RedoLogOutput out) throws IOException {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        protected void deserializeData(RedoLogInput in) throws IOException {
+            throw new UnsupportedOperationException();
         }
     }
 }
