@@ -18,6 +18,7 @@ public class MailboxClusterUtil {
 
     private static String mailboxWorkerName;
     private static int mailboxWorkerIndex;
+    private final static String mailboxServiceName = "zmc-mailbox";
 
     static {
         try {
@@ -48,8 +49,17 @@ public class MailboxClusterUtil {
         }
     }
 
+    public static int getAllMailboxPodsCount() throws ServiceException {
+        try {
+            InetAddress[] addrs = InetAddress.getAllByName(mailboxServiceName);
+            return addrs.length;
+        } catch (UnknownHostException e) {
+            throw ServiceException.NOT_FOUND(String.format("Host exception for ", mailboxServiceName), e);
+        }
+    }
+
     public static String[] getAllMailboxPodIPs() throws ServiceException {
-        return getAllMailboxPodIPs("zmc-mailbox");
+        return getAllMailboxPodIPs(mailboxServiceName);
     }
 
     public static String[] getAllMailboxPodIPs(String mboxServiceName) throws ServiceException {
@@ -109,9 +119,6 @@ public class MailboxClusterUtil {
         @Override
         public void close() {
             endOverride();
-
         }
-
     }
-
 }
