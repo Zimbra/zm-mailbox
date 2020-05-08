@@ -36,6 +36,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.callback.CallbackUtil;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.httpclient.URLUtil;
+import com.zimbra.cs.index.history.SearchHistory;
 import com.zimbra.cs.service.admin.ManageIndex;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.Config;
@@ -238,7 +239,7 @@ extends Thread {
                     ZimbraLog.purge.info("Not all messages were purged.  Scheduling mailbox to be purged again.");
                     mailboxIds.add(mailboxId);
                 }
-                if (account.isFeatureSearchHistoryEnabled()) {
+                if (SearchHistory.featureEnabled(account)) {
                     ZimbraLog.purge.debug("Purging search history for mailbox %d account %s",
                             mailboxId, accountId);
                     mbox.purgeSearchHistory(null);
