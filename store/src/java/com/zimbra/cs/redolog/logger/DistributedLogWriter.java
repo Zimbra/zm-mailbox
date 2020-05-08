@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 
 import org.redisson.api.RFuture;
 import org.redisson.api.RStream;
@@ -21,9 +22,11 @@ import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.RedissonClientHolder;
 import com.zimbra.cs.redolog.RedoLogManager.LocalRedoOpContext;
 import com.zimbra.cs.redolog.RedoLogManager.RedoOpContext;
+import com.zimbra.cs.redolog.TransactionId;
 import com.zimbra.cs.redolog.op.RedoableOp;
 
 public class DistributedLogWriter implements LogWriter {
@@ -38,6 +41,8 @@ public class DistributedLogWriter implements LogWriter {
     public static final byte[] F_OP_TYPE = "p".getBytes();
     public static final byte[] F_TXN_ID = "i".getBytes();
     public static final byte[] F_SUBMIT_TIME = "s".getBytes();
+
+    private Map<TransactionId, CountDownLatch> pendingOps = new HashMap<>();
 
     public DistributedLogWriter() {
         client = RedissonClientHolder.getInstance().getRedissonClient();
@@ -74,17 +79,46 @@ public class DistributedLogWriter implements LogWriter {
         byte[] payload = ByteStreams.toByteArray(data);
         Map<byte[], byte[]> fields = new HashMap<>();
         int mailboxId = context.getOpMailboxId();
+        RedoableOp op = context.getOp();
+        TransactionId txnId = context.getTransactionId();
+        MailboxOperation opType = context.getOperationType();
         fields.put(F_DATA, payload);
         fields.put(F_TIMESTAMP, Longs.toByteArray(context.getOpTimestamp()));
-        fields.put(F_MAILBOX_ID, Ints.toByteArray(mailboxId));
-        fields.put(F_OP_TYPE, Ints.toByteArray(context.getOperationType().getCode()));
-        fields.put(F_TXN_ID, context.getTransactionId().encodeToString().getBytes(Charsets.UTF_8));
+        fields.put(F_MAILBOX_ID, Ints.toByteArray(context.getOpMailboxId()));
+        fields.put(F_OP_TYPE, Ints.toByteArray(opType.getCode()));
+        fields.put(F_TXN_ID, txnId.encodeToString().getBytes(Charsets.UTF_8));
         fields.put(F_SUBMIT_TIME, Longs.toByteArray(System.currentTimeMillis()));
+        boolean isStartMarker = op.isStartMarker();
+        boolean isEndMarker = op.isEndMarker();
+        if (isStartMarker) {
+            pendingOps.put(txnId, new CountDownLatch(1));
+        }
+        if (isEndMarker) {
+            // We need to make sure that the parent op has been successfully sent to the stream before submitting
+            // a commitTxn or abortTxn.
+            CountDownLatch latch = pendingOps.get(txnId);
+            if (latch != null) {
+                try {
+                    long waitStart = System.currentTimeMillis();
+                    latch.await();
+                    if (ZimbraLog.redolog.isDebugEnabled()) {
+                        long waited = System.currentTimeMillis() - waitStart;
+                        ZimbraLog.redolog.debug("waited %sms for %s to be submitted to the stream before submitting %s (txnId=%s)", waited, op.getTxnOpCode(), opType, txnId);
+                    }
+                } catch (InterruptedException e1) {}
+            }
+        }
         long start = System.currentTimeMillis();
 
         RFuture<StreamMessageId> future = streams.get(getStreamIndex(mailboxId)).addAllAsync(fields);
         future.onComplete((streamId, e) -> {
             long elapsed = System.currentTimeMillis() - start;
+            if (isStartMarker) {
+                CountDownLatch latch = pendingOps.remove(txnId);
+                if (latch != null) {
+                    latch.countDown();
+                }
+            }
             if (e == null) {
                 if (ZimbraLog.redolog.isDebugEnabled()) {
                     ZimbraLog.redolog.debug("submitted op %s txnId=%s to redis stream (stream_id=%s) (elapsed=%s)",
