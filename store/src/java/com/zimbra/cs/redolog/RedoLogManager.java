@@ -862,7 +862,7 @@ public class RedoLogManager {
 
         @Override
         protected String getPrintableData() {
-            throw new UnsupportedOperationException();
+            return null;
         }
 
         @Override
