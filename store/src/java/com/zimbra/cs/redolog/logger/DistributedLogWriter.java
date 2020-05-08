@@ -20,6 +20,7 @@ import com.google.common.primitives.Longs;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.RedissonClientHolder;
+import com.zimbra.cs.mailbox.util.MailboxClusterUtil;
 import com.zimbra.cs.redolog.RedoLogManager.LocalRedoOpContext;
 import com.zimbra.cs.redolog.RedoLogManager.RedoOpContext;
 import com.zimbra.cs.redolog.op.RedoableOp;
@@ -38,7 +39,8 @@ public class DistributedLogWriter implements LogWriter {
 
     public DistributedLogWriter() {
         client = RedissonClientHolder.getInstance().getRedissonClient();
-        stream = client.getStream(LC.redis_streams_redo_log_stream.value(), ByteArrayCodec.INSTANCE);
+        stream = client.getStream(LC.redis_streams_redo_log_stream_prefix.value() + MailboxClusterUtil.getMailboxWorkerIndex(), ByteArrayCodec.INSTANCE);
+        ZimbraLog.redolog.debug("stream configured for log writing %s", stream);
     }
 
     @Override
