@@ -92,6 +92,14 @@ public class ZimbraServlet extends HttpServlet {
 
     private static final RemoteIP.TrustedIPs TRUST_ALL_IPS = new RemoteIP.TrustedIPs().setTrustAllIPs(true);
 
+    protected String getRealmHeader(String realm)  {
+        return AuthUtil.getRealmHeader(realm);
+    }
+
+    protected String getRealmHeader(HttpServletRequest req, Domain domain)  {
+        return AuthUtil.getRealmHeader(req, domain);
+    }
+
     public static final String ZIMBRA_FAULT_CODE_HEADER = "X-Zimbra-Fault-Code";
     public static final String ZIMBRA_FAULT_MESSAGE_HEADER = "X-Zimbra-Fault-Message";
 
