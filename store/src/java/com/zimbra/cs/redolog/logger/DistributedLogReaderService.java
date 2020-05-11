@@ -67,7 +67,7 @@ public class DistributedLogReaderService {
         group = LC.redis_streams_redo_log_group.value();
         consumer = MailboxClusterUtil.getMailboxWorkerName();
         client = RedissonClientHolder.getInstance().getRedissonClient();
-        streamsCount = MailboxClusterUtil.getAllMailboxPodsCount();
+        streamsCount = LC.redis_num_streams.intValue();
         streams = new ArrayList<RStream<byte[], byte[]>>(streamsCount);
 
         ZimbraLog.redolog.info("Reader service streamsCount %d", streamsCount);
