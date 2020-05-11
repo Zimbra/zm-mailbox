@@ -40,7 +40,7 @@ public class DistributedLogWriter implements LogWriter {
     public DistributedLogWriter() {
         client = RedissonClientHolder.getInstance().getRedissonClient();
         stream = client.getStream(LC.redis_streams_redo_log_stream_prefix.value() + MailboxClusterUtil.getMailboxWorkerIndex(), ByteArrayCodec.INSTANCE);
-        ZimbraLog.redolog.debug("stream configured for log writing %s", stream);
+        ZimbraLog.redolog.debug("stream configured for log writing %s", stream.getName());
     }
 
     @Override
