@@ -309,13 +309,13 @@ public class UserServlet extends ZimbraServlet {
             return;
         }
         if (ctxt != null &&!ctxt.cookieAuthHappened && ctxt.basicAuthAllowed() && !ctxt.basicAuthHappened) {
-            resp.addHeader(AuthUtil.WWW_AUTHENTICATE_HEADER, getRealmHeader(req, null));
+            resp.addHeader(AuthUtil.WWW_AUTHENTICATE_HEADER, AuthUtil.getRealmHeader(req, null));
             resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, L10nUtil.getMessage(MsgKey.errMustAuthenticate, req));
         } else if (ctxt != null && ctxt.cookieAuthHappened && !ctxt.isCsrfAuthSucceeded()
             && (req.getMethod().equalsIgnoreCase("POST") || req.getMethod().equalsIgnoreCase("PUT"))) {
             resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, L10nUtil.getMessage(MsgKey.errMustAuthenticate, req));
         } else if (ctxt != null && ctxt.getAuthAccount() instanceof GuestAccount && ctxt.basicAuthAllowed() ) {
-            resp.addHeader(AuthUtil.WWW_AUTHENTICATE_HEADER, getRealmHeader(req, null));
+            resp.addHeader(AuthUtil.WWW_AUTHENTICATE_HEADER, AuthUtil.getRealmHeader(req, null));
                 resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, L10nUtil.getMessage(MsgKey.errMustAuthenticate, req));
          } else {
                 resp.sendError(HttpServletResponse.SC_NOT_FOUND, message);

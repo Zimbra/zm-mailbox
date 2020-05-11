@@ -70,7 +70,7 @@ public class AutoDiscoverServlet extends ZimbraServlet {
 
     private static final String BASIC_AUTH_HEADER = "Authorization";
     private static final String WWW_AUTHENTICATE_HEADER = "WWW-Authenticate";
-    private static final String WWW_AUTHENTICATE_VALUE = "BASIC realm=\"Zimbra\"";
+    private static final String WWW_AUTHENTICATE_VALUE = "Basic realm=\"Zimbra\"";
     private static final String NTLM = "NTLM";
     private static final String NEGOTIATE = "Negotiate";
 

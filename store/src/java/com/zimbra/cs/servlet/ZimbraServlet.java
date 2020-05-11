@@ -92,34 +92,6 @@ public class ZimbraServlet extends HttpServlet {
 
     private static final RemoteIP.TrustedIPs TRUST_ALL_IPS = new RemoteIP.TrustedIPs().setTrustAllIPs(true);
 
-    protected String getRealmHeader(String realm)  {
-        if (realm == null)
-            realm = "Zimbra";
-        return "BASIC realm=\"" + realm + "\"";
-    }
-
-    protected String getRealmHeader(HttpServletRequest req, Domain domain)  {
-        String realm = null;
-
-        if (domain == null) {
-            // get domain by virtual host
-            String host = HttpUtil.getVirtualHost(req);
-            if (host != null) {
-                // to defend against DOS attack, use the negative domain cache
-                try {
-                    domain = Provisioning.getInstance().getDomain(Key.DomainBy.virtualHostname, host.toLowerCase(), true);
-                } catch (ServiceException e) {
-                    mLog.warn("caught exception while getting domain by virtual host: " + host, e);
-                }
-            }
-        }
-
-        if (domain != null)
-            realm = domain.getBasicAuthRealm();
-
-        return getRealmHeader(realm);
-    }
-
     public static final String ZIMBRA_FAULT_CODE_HEADER = "X-Zimbra-Fault-Code";
     public static final String ZIMBRA_FAULT_MESSAGE_HEADER = "X-Zimbra-Fault-Message";
 
