@@ -134,14 +134,6 @@
         </exec>
     </target>
 
-    <property name="EXTENSION_COMMON_BUILD_TAG" value="1.0.0" />
-    <target name="build-extension-common-core" depends="publish-local-all">
-      <exec executable="/bin/bash" failonerror="true">
-        <arg value="./extension-common-core/build-extension-common.sh"/>
-        <arg value="${EXTENSION_COMMON_BUILD_TAG}"/>
-      </exec>
-    </target>
-
     <property name="EXTENSION_NETWORK_BUILD_TAG" value="1.0.0" />
     <target name="build-extension-network-core" depends="publish-local-all">
       <exec executable="/bin/bash" failonerror="true">
