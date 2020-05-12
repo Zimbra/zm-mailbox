@@ -195,7 +195,7 @@ public abstract class WatchCache extends OperationContextData {
                 transport = new SoapHttpTransport(url);
                 transport.setTargetAcctId(account.getId());
                 transport.setAuthToken(authToken.toZAuthToken());
-                transport.setTimeout(LC.httpclient_soaphttptransport_so_timeout);
+                transport.setTimeout(LC.httpclient_soaphttptransport_so_timeout.intValue());
                 transport.setResponseProtocol(SoapProtocol.Soap12);
                 XMLElement req = new XMLElement(OctopusXmlConstants.GET_WATCHING_ITEMS_REQUEST);
                 Element body = transport.invokeWithoutSession(req);
