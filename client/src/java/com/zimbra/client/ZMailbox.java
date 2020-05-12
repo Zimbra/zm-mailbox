@@ -2092,7 +2092,8 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      */
     public ZContact modifyContact(String id, boolean replace, Map<String, String> attrs, Map<String, ZAttachmentInfo> attachments, Map<String, String> members)
             throws ServiceException {
-        ModifyContactSpec contactSpec = ModifyContactSpec.createForId(Integer.valueOf(id));
+        ItemIdentifier iid = new ItemIdentifier(id, (String) null);
+        ModifyContactSpec contactSpec = ModifyContactSpec.createForId(iid.id);
         ModifyContactRequest mcReq = new ModifyContactRequest(contactSpec);
         mcReq.setWantImapUid(true);
         mcReq.setWantModifiedSequence(true);
