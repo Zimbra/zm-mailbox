@@ -297,7 +297,7 @@ public class AuthUtil {
     public static String getRealmHeader(String realm)  {
         if (realm == null)
             realm = "Zimbra";
-        return "BASIC realm=\"" + realm + "\"";
+        return "Basic realm=\"" + realm + "\"";
     }
 
     private static String getAdminURL(Server server, boolean relative) throws ServiceException {

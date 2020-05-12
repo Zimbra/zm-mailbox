@@ -81,7 +81,7 @@ public class ProxyServlet extends ZimbraServlet {
     private static final String USER_PARAM = "user";
     private static final String PASS_PARAM = "pass";
     private static final String AUTH_PARAM = "auth";
-    private static final String AUTH_BASIC = "basic";
+    private static final String AUTH_BASIC = "Basic";
 
 
     private Set<String> getAllowedDomains(AuthToken auth) throws ServiceException {
@@ -273,7 +273,7 @@ public class ProxyServlet extends ZimbraServlet {
             user = req.getParameter(USER_PARAM);
             pass = req.getParameter(PASS_PARAM);
             if (auth != null && user != null && pass != null) {
-                if (!auth.equals(AUTH_BASIC)) {
+                if (!auth.equalsIgnoreCase(AUTH_BASIC)) {
                     ZimbraLog.zimlet.info("unsupported auth type: " + auth);
                     resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
                     return;
