@@ -3,8 +3,10 @@ package com.zimbra.cs.redolog.logger;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.redisson.api.RFuture;
@@ -20,7 +22,6 @@ import com.google.common.primitives.Longs;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.RedissonClientHolder;
-import com.zimbra.cs.mailbox.util.MailboxClusterUtil;
 import com.zimbra.cs.redolog.RedoLogManager.LocalRedoOpContext;
 import com.zimbra.cs.redolog.RedoLogManager.RedoOpContext;
 import com.zimbra.cs.redolog.op.RedoableOp;
@@ -28,7 +29,8 @@ import com.zimbra.cs.redolog.op.RedoableOp;
 public class DistributedLogWriter implements LogWriter {
 
     private static RedissonClient client;
-    private RStream<byte[], byte[]> stream;
+    private static int streamsCount;
+    private List<RStream<byte[], byte[]>> streams;
 
     public static final byte[] F_DATA = "d".getBytes();
     public static final byte[] F_TIMESTAMP = "t".getBytes();
@@ -39,8 +41,24 @@ public class DistributedLogWriter implements LogWriter {
 
     public DistributedLogWriter() {
         client = RedissonClientHolder.getInstance().getRedissonClient();
-        stream = client.getStream(LC.redis_streams_redo_log_stream_prefix.value() + MailboxClusterUtil.getMailboxWorkerIndex(), ByteArrayCodec.INSTANCE);
-        ZimbraLog.redolog.debug("stream configured for log writing %s", stream.getName());
+        streamsCount = LC.redis_num_streams.intValue();
+        streams = new ArrayList<RStream<byte[], byte[]>>(streamsCount);
+
+        ZimbraLog.redolog.info("DistributedLogWriter streamsCount: %d", streamsCount);
+
+        for (int i=0; i<streamsCount ; i++) {
+            streams.add(client.getStream(LC.redis_streams_redo_log_stream_prefix.value()+i, ByteArrayCodec.INSTANCE));
+        }
+    }
+
+    /*
+     * Returns the index of the stream that could be used to send data to the
+     * Backup Restore Pod.
+     */
+    private int getStreamIndex(int mboxId) {
+        int streamIndex = mboxId % streamsCount;
+        ZimbraLog.redolog.debug("DistributedLogWriter - getStreamIndex mboxId:%d, streamsCount:%d, streamIndex:%d", mboxId, streamsCount, streamIndex);
+        return streamIndex;
     }
 
     @Override
@@ -55,14 +73,16 @@ public class DistributedLogWriter implements LogWriter {
     public void log(RedoOpContext context, InputStream data, boolean synchronous) throws IOException {
         byte[] payload = ByteStreams.toByteArray(data);
         Map<byte[], byte[]> fields = new HashMap<>();
+        int mailboxId = context.getOpMailboxId();
         fields.put(F_DATA, payload);
         fields.put(F_TIMESTAMP, Longs.toByteArray(context.getOpTimestamp()));
-        fields.put(F_MAILBOX_ID, Ints.toByteArray(context.getOpMailboxId()));
+        fields.put(F_MAILBOX_ID, Ints.toByteArray(mailboxId));
         fields.put(F_OP_TYPE, Ints.toByteArray(context.getOperationType().getCode()));
         fields.put(F_TXN_ID, context.getTransactionId().encodeToString().getBytes(Charsets.UTF_8));
         fields.put(F_SUBMIT_TIME, Longs.toByteArray(System.currentTimeMillis()));
         long start = System.currentTimeMillis();
-        RFuture<StreamMessageId> future = stream.addAllAsync(fields);
+
+        RFuture<StreamMessageId> future = streams.get(getStreamIndex(mailboxId)).addAllAsync(fields);
         future.onComplete((streamId, e) -> {
             long elapsed = System.currentTimeMillis() - start;
             if (e == null) {
@@ -84,59 +104,79 @@ public class DistributedLogWriter implements LogWriter {
 
     @Override
     public void flush() throws IOException {
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public long getSize() throws IOException {
-        return stream.sizeInMemory();
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public long getCreateTime() {
-        return 0;
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public long getLastLogTime() {
-        return 0;
+        throw new UnsupportedOperationException();
     }
 
+    /*
+     * Returns true if all the configured streams has size < 1,
+     * else false.
+     * @throws IOException
+     */
     @Override
     public boolean isEmpty() throws IOException {
-        if (stream.sizeInMemory() == 0) {
-            return true;
-        } else {
-            return false;
+        for (int i=0; i<streamsCount ; i++) {
+            if (streams.get(i).size() > 0)
+                return false;
         }
+        return true;
     }
 
+    /*
+     * Returns true if at least one stream exists else return false.
+     */
     @Override
     public boolean exists() {
-        return stream.isExists();
-    }
-
-    @Override
-    public String getAbsolutePath() {
-        return null;
-    }
-
-    @Override
-    public boolean renameTo(File dest) {
+        for (int i=0; i<streamsCount ; i++) {
+            if (streams.get(i).isExists())
+                return true;
+        }
         return false;
     }
 
     @Override
+    public String getAbsolutePath() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean renameTo(File dest) {
+        throw new UnsupportedOperationException();
+    }
+
+    /*
+     * Returns true if all the configured streams gets deleted else false.
+     */
+    @Override
     public boolean delete() throws IOException {
-        return stream.delete();
+        boolean returnCode = false;
+        for (int i=0; i<streamsCount ; i++) {
+            returnCode = streams.get(i).delete();
+        }
+        return returnCode;
     }
 
     @Override
     public File rollover(LinkedHashMap activeOps) throws IOException {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public long getSequence() {
-        return 0;
+        throw new UnsupportedOperationException();
     }
 }
