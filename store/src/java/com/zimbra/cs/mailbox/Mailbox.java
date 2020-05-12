@@ -2188,6 +2188,7 @@ public class Mailbox implements MailboxStore {
                             ZimbraLog.event.warn("Unable to delete event data for account %s", getAccountId(), e);
                         }
                     }
+                    folderTagSnapshot.invalidate();
                 }
             } finally {
                 if (needRedo) {
