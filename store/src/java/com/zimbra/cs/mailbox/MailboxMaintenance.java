@@ -43,7 +43,7 @@ public final class MailboxMaintenance {
         allowedThreads.add(Thread.currentThread());
     }
 
-    String getAccountId() {
+    public String getAccountId() {
         return accountId;
     }
 
