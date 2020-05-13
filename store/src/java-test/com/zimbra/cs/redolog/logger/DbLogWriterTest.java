@@ -87,7 +87,7 @@ public class DbLogWriterTest {
 
     @Test(expected = Exception.class)
     public void logBeforeOpen() throws Exception {
-        logWriter.log(null, null, false);
+        logWriter.log((RedoableOp) null, null, false);
     }
 
 /*

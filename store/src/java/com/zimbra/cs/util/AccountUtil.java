@@ -44,6 +44,7 @@ import org.apache.commons.codec.binary.Hex;
 import com.sun.mail.smtp.SMTPMessage;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.DomainBy;
+import com.zimbra.common.account.ZAttrProvisioning.AccountStatus;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
@@ -68,10 +69,11 @@ import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.TokenUtil;
-import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxMaintenance;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.MetadataList;
 import com.zimbra.cs.mime.Mime;
@@ -806,7 +808,7 @@ public class AccountUtil {
     }
 
     public static String getExtUserLoginURL(Account owner) throws ServiceException {
-        return ZimbraServlet.getServiceUrl(owner.getServer(), Provisioning.getInstance().getDomain(owner), 
+        return ZimbraServlet.getServiceUrl(owner.getServer(), Provisioning.getInstance().getDomain(owner),
                 "?virtualacctdomain=" + owner.getDomainName());
     }
 
@@ -864,7 +866,7 @@ public class AccountUtil {
     }
 
     /**
-     * 
+     *
      * @param acct
      * @return SMTPMessage object
      * @throws ServiceException
@@ -873,5 +875,19 @@ public class AccountUtil {
     public static SMTPMessage getSmtpMessageObj(Account acct) throws ServiceException, MessagingException {
         return new SMTPMessage(JMSession.getSmtpSession(Provisioning.getInstance().getDomain(acct)));
     }
+
+    public static MailboxMaintenance beginMaintenanceAndFlushCache(Account account, int mailboxId) throws ServiceException {
+        MailboxMaintenance maintenance = MailboxManager.getInstance().beginMaintenance(account.getId(), mailboxId);
+        account.setAccountStatus(AccountStatus.maintenance);
+        broadcastFlushCache(account);
+        return maintenance;
+    }
+
+    public static void endMaintenanceAndFlushCache(MailboxMaintenance maintenance, boolean success, boolean removeFromCache) throws ServiceException {
+        MailboxManager.getInstance().endMaintenance(maintenance, success, removeFromCache);
+        Account account = maintenance.getMailbox().getAccount();
+        account.setAccountStatus(AccountStatus.active);
+        broadcastFlushCache(account);
+    }
 }
-   
+

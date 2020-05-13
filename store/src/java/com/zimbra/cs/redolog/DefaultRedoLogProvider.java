@@ -53,6 +53,6 @@ public class DefaultRedoLogProvider extends RedoLogProvider {
         // is disabled.
         File redoLog = new File(RedoConfig.redoLogPath());
         File archDir = new File(RedoConfig.redoLogArchiveDir());
-        super.mRedoLogManager = new RedoLogManager(redoLog, archDir, true);
+        super.mRedoLogManager = new RedoLogManager(redoLog, archDir, false);
     }
 }

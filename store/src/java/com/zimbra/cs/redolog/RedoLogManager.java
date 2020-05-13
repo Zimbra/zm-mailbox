@@ -18,7 +18,7 @@ package com.zimbra.cs.redolog;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -30,13 +30,20 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 
+import org.redisson.api.RScript;
+import org.redisson.api.RScript.Mode;
+import org.redisson.api.RScript.ReturnType;
+
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
-
 import com.zimbra.cs.db.Db;
 import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.MailboxOperation;
+import com.zimbra.cs.mailbox.RedissonClientHolder;
 import com.zimbra.cs.redolog.logger.DbLogWriter;
+import com.zimbra.cs.redolog.logger.DistributedLogWriter;
 import com.zimbra.cs.redolog.logger.FileLogReader;
 import com.zimbra.cs.redolog.logger.FileLogWriter;
 import com.zimbra.cs.redolog.logger.LogWriter;
@@ -53,11 +60,17 @@ import com.zimbra.znative.IO;
  */
 public class RedoLogManager {
 
-    private static class TxnIdGenerator {
+    private abstract class TxnIdGenerator {
+
+
+        public abstract TransactionId getNext();
+    }
+
+    private class LocalTxnIdGenerator extends TxnIdGenerator {
         private int mTime;
         private int mCounter;
 
-        public TxnIdGenerator() {
+        public LocalTxnIdGenerator() {
             init();
         }
 
@@ -66,6 +79,7 @@ public class RedoLogManager {
             mCounter = 1;
         }
 
+        @Override
         public synchronized TransactionId getNext() {
             TransactionId tid = new TransactionId(mTime, mCounter);
             if (mCounter < 0x7fffffffL)
@@ -73,6 +87,45 @@ public class RedoLogManager {
             else
                 init();
             return tid;
+        }
+    }
+
+    private class RedisTxnIdGenerator extends TxnIdGenerator {
+
+        private RScript rscript;
+        private final String HASHTAG = "{redolog}";
+        private final String KEY_TIMESTAMP = HASHTAG + "-timestamp";
+        private final String KEY_COUNTER = HASHTAG + "-counter";
+        private final List<Object> KEYS = Arrays.<Object>asList(KEY_TIMESTAMP, KEY_COUNTER);
+        private static final String LUA_SCRIPT =
+                "local timestamp_key = KEYS[1]; " +
+                "local counter_key = KEYS[2]; " +
+                // init function sets timestamp and resets counter
+                "local function init() " +
+                "    redis.call('del', counter_key); " +
+                "    redis.call('set', timestamp_key, redis.call('time')[1]); " +
+                "end; " +
+                "local timestamp = redis.call('get', timestamp_key); " +
+                "local counter = redis.call('incr', counter_key); " +
+                // reset if timestamp is unavailable (first call or redis restarted) or if counter exceeds max int
+                "if (counter > 2147483647) or (timestamp == false) then " +
+                "        init(); " +
+                "        counter = redis.call('incr', counter_key); " +
+                "        timestamp = redis.call('get', timestamp_key); " +
+                "end; " +
+                "return {tonumber(timestamp), counter};";
+
+        private RedisTxnIdGenerator() {
+            this.rscript = RedissonClientHolder.getInstance().getRedissonClient().getScript();
+        }
+
+        @Override
+        public TransactionId getNext() {
+            List<Long> resp = rscript.eval(Mode.READ_WRITE, LUA_SCRIPT, ReturnType.MULTI, KEYS);
+            // redis returns longs, but the lua script ensures that it fits into an int
+            int timestamp = resp.get(0).intValue();
+            int counter = resp.get(1).intValue();
+            return new TransactionId(timestamp, counter);
         }
     }
 
@@ -111,6 +164,9 @@ public class RedoLogManager {
     // the actual logger
     private LogWriter mLogWriter;
 
+    // the stream logger
+    private DistributedLogWriter dLogWriter;
+
     private Object mStatGuard;
     private long mElapsed;
     private int mCounter;
@@ -127,17 +183,26 @@ public class RedoLogManager {
 
         mRWLock = new ReentrantReadWriteLock();
         mActiveOps = new LinkedHashMap<TransactionId, RedoableOp>(100);
-        mTxnIdGenerator = new TxnIdGenerator();
+        mTxnIdGenerator = createTxnIdGenerator();
         long minAge = RedoConfig.redoLogRolloverMinFileAge() * 60 * 1000;     // milliseconds
         long softMax = RedoConfig.redoLogRolloverFileSizeKB() * 1024;         // bytes
         long hardMax = RedoConfig.redoLogRolloverHardMaxFileSizeKB() * 1024;  // bytes
         setRolloverLimits(minAge, softMax, hardMax);
         mRolloverMgr = new RolloverManager(this, mLogFile);
         mLogWriter = null;
+        dLogWriter = null;
 
         mStatGuard = new Object();
         mElapsed = 0;
         mCounter = 0;
+    }
+
+    private TxnIdGenerator createTxnIdGenerator() {
+        if (LC.use_redis_redo_transaction_id_generator.booleanValue() && RedoConfig.redoLogEnabled()) {
+            return new RedisTxnIdGenerator();
+        } else {
+            return new LocalTxnIdGenerator();
+        }
     }
 
     protected LogWriter getLogWriter() {
@@ -164,7 +229,7 @@ public class RedoLogManager {
         return mLogWriter;
     }
 
-    public LogWriter createLogWriter(RedoLogManager redoMgr,
+    public LogWriter createFileWriter(RedoLogManager redoMgr,
                                         File logfile,
                                         long fsyncIntervalMS) {
         return new FileLogWriter(redoMgr, logfile, fsyncIntervalMS);
@@ -203,51 +268,9 @@ public class RedoLogManager {
             signalFatalError(e);
         }
 
-        setInCrashRecovery(true);
+        mLogWriter = createFileWriter(this, mLogFile, RedoConfig.redoLogFsyncIntervalMS());
+        dLogWriter = new DistributedLogWriter();
 
-        // Recover from crash during rollover.  We do this even when
-        // mSupportsCrashRecovery is false.
-        try {
-            mRolloverMgr.crashRecovery();
-        } catch (IOException e) {
-            ZimbraLog.redolog.fatal("Exception during crash recovery");
-            signalFatalError(e);
-        }
-
-        mLogWriter = createLogWriter(this);
-
-        ArrayList<RedoableOp> postStartupRecoveryOps = new ArrayList<RedoableOp>(100);
-        int numRecoveredOps = 0;
-        /*
-            TODO fix me the recovery process was temporally changed we avoid this process when useDbAsLogStorage
-            since the storage will change from file to a DB Which is in process jet
-            "original if (mSupportsCrashRecovery)"
-         */
-        if (mSupportsCrashRecovery && (getLogWriter() instanceof FileLogWriter)) {
-            mRecoveryMode = true;
-            ZimbraLog.redolog.info("Starting pre-startup crash recovery");
-            // Run crash recovery.
-            try {
-                mLogWriter.open();
-                mRolloverMgr.initSequence(mLogWriter.getSequence());
-                RedoPlayer redoPlayer = new RedoPlayer(true);
-                try {
-                    numRecoveredOps = redoPlayer.runCrashRecovery(this, postStartupRecoveryOps);
-                } finally {
-                    redoPlayer.shutdown();
-                }
-                mLogWriter.close();
-            } catch (Exception e) {
-                ZimbraLog.redolog.fatal("Exception during crash recovery");
-                signalFatalError(e);
-            }
-            ZimbraLog.redolog.info("Finished pre-startup crash recovery");
-            mRecoveryMode = false;
-        }
-
-        setInCrashRecovery(false);
-
-        // Reopen log after crash recovery.
         try {
             mLogWriter.open();
             mRolloverMgr.initSequence(mLogWriter.getSequence());
@@ -255,98 +278,6 @@ public class RedoLogManager {
         } catch (IOException e) {
             ZimbraLog.redolog.fatal("Unable to open redo log");
             signalFatalError(e);
-        }
-
-        if (numRecoveredOps > 0) {
-            // Add post-recovery ops to map before rollover, so the new redolog
-            // file after rollover will still list these uncommitted ops.
-            if (postStartupRecoveryOps.size() > 0) {
-                synchronized (mActiveOps) {
-                    for (Iterator iter = postStartupRecoveryOps.iterator(); iter.hasNext(); ) {
-                        RedoableOp op = (RedoableOp) iter.next();
-                        assert(op.isStartMarker());
-                        mActiveOps.put(op.getTransactionId(), op);
-                    }
-                }
-            }
-
-            // Force rollover to clear the current log file, only when use FileLogWriter mechanism
-            if (getLogWriter() instanceof FileLogWriter) {
-                forceRollover();
-            }
-
-            // Start a new thread to run recovery on the remaining ops.
-            // Recovery of these ops will occur in parallel with new client
-            // requests.
-            if (postStartupRecoveryOps.size() > 0) {
-                synchronized (mShuttingDownGuard) {
-                    mInPostStartupCrashRecovery = true;
-                }
-                Thread psrThread =
-                    new PostStartupCrashRecoveryThread(postStartupRecoveryOps);
-                psrThread.start();
-            }
-        }
-    }
-
-    private class PostStartupCrashRecoveryThread extends Thread {
-        List mOps;
-
-        private PostStartupCrashRecoveryThread(List ops) {
-            super("PostStartupCrashRecovery");
-            setDaemon(true);
-            mOps = ops;
-        }
-
-        public void run() {
-            ZimbraLog.redolog.info("Starting post-startup crash recovery");
-            boolean interrupted = false;
-            for (Iterator iter = mOps.iterator(); iter.hasNext(); ) {
-                synchronized (mShuttingDownGuard) {
-                    if (mShuttingDown) {
-                        interrupted = true;
-                        break;
-                    }
-                }
-                RedoableOp op = (RedoableOp) iter.next();
-                try {
-                    if (ZimbraLog.redolog.isDebugEnabled())
-                        ZimbraLog.redolog.debug("REDOING: " + op);
-                    op.redo();
-                } catch (Exception e) {
-                    // If there's any problem, just log the error and move on.
-                    // The alternative is to abort the server, but that may be
-                    // too drastic.
-                    ZimbraLog.redolog.error("Redo failed for [" + op + "]." +
-                                            "  Backend state of affected item is indeterminate." +
-                                            "  Marking operation as aborted and moving on.", e);
-                } finally {
-                    // If the redo didn't work, we need to mark this operation
-                    // as aborted in the redolog so it doesn't get reattempted
-                    // during next startup.
-                    //
-                    // If the redo did work, we still need to mark our op as
-                    // aborted because in the course of the redo a successful
-                    // commit of the operation was logged using a different
-                    // txn ID.  We must therefore tell the redolog the currnt
-                    // op is canceled, to avoid redoing it during next startup.
-                    AbortTxn abort = new AbortTxn(op);
-                    logOnly(abort, true);
-                }
-            }
-
-            if (!interrupted)
-                ZimbraLog.redolog.info("Finished post-startup crash recovery");
-
-            // Being paranoid...
-            mOps.clear();
-            mOps = null;
-
-            synchronized (mShuttingDownGuard) {
-                mInPostStartupCrashRecovery = false;
-                if (mShuttingDown)
-                    mShuttingDownGuard.notifyAll();  // signals wait() in stop() method
-            }
         }
     }
 
@@ -455,7 +386,7 @@ public class RedoLogManager {
 
                 try {
                     long start = System.currentTimeMillis();
-                    mLogWriter.log(op, op.getInputStream(), synchronous);
+                    dLogWriter.log(op, op.getInputStream(), synchronous);
                     long elapsed = System.currentTimeMillis() - start;
                     synchronized (mStatGuard) {
                         mElapsed += elapsed;
@@ -842,6 +773,90 @@ public class RedoLogManager {
                             linkDir.getAbsolutePath(), e);
                 }
             }
+        }
+    }
+
+    public static interface RedoOpContext {
+
+        default RedoableOp getOp() {
+            return null;
+        }
+
+        public long getOpTimestamp();
+
+        public int getOpMailboxId();
+
+        public MailboxOperation getOperationType();
+
+        public TransactionId getTransactionId();
+    }
+
+    public static class LocalRedoOpContext implements RedoOpContext {
+
+        private RedoableOp op;
+
+        public LocalRedoOpContext(RedoableOp op) {
+            this.op = op;
+        }
+
+        @Override
+        public long getOpTimestamp() {
+            return op.getTimestamp();
+        }
+
+        @Override
+        public int getOpMailboxId() {
+            return op.getMailboxId();
+        }
+
+        @Override
+        public RedoableOp getOp() {
+            return op;
+        }
+
+        @Override
+        public MailboxOperation getOperationType() {
+            return op.getOperation();
+        }
+
+        @Override
+        public TransactionId getTransactionId() {
+            return op.getTransactionId();
+        }
+    }
+
+    public static class DistributedRedoOpContext implements RedoOpContext {
+
+        private long timestamp;
+        private int mailboxId;
+        private MailboxOperation operationType;
+        private TransactionId transactionId;
+
+        public DistributedRedoOpContext(long timestamp, int mailboxId, MailboxOperation operationType, TransactionId txnId) {
+            this.timestamp = timestamp;
+            this.mailboxId = mailboxId;
+            this.operationType = operationType;
+            this.transactionId = txnId;
+        }
+
+        @Override
+        public long getOpTimestamp() {
+            return timestamp;
+        }
+
+        @Override
+        public int getOpMailboxId() {
+            return mailboxId;
+        }
+
+        @Override
+        public MailboxOperation getOperationType() {
+            return operationType;
+        }
+
+        @Override
+        public TransactionId getTransactionId() {
+            return transactionId;
         }
     }
 }

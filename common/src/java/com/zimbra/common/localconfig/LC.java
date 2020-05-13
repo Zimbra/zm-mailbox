@@ -1285,6 +1285,12 @@ public final class LC {
     public static final KnownKey redis_service_uri = KnownKey.newKey("redis://zmc-redis:6379");
 
     @Supported
+    public static final KnownKey redis_streams_redo_log_group = KnownKey.newKey("ZIMBRA_REDO_LOG_GROUP");
+
+    @Supported
+    public static final KnownKey redis_streams_redo_log_stream = KnownKey.newKey("ZIMBRA_REDO_LOG_STREAM");
+
+    @Supported
     public static final KnownKey redis_num_pubsub_channels = KnownKey.newKey(100);
 
     @Supported
@@ -1403,6 +1409,15 @@ public final class LC {
 
     @Supported
     public static final KnownKey trust_all_originating_ips = KnownKey.newKey(true);
+
+    @Supported
+    public static final KnownKey use_redis_redo_transaction_id_generator = KnownKey.newKey(true);
+
+    @Supported
+    public static final KnownKey redis_redolog_stream_read_timeout_secs = KnownKey.newKey(10);
+
+    @Supported
+    public static final KnownKey redis_redolog_stream_max_items_per_read = KnownKey.newKey(10);
 
     public enum PUBLIC_SHARE_VISIBILITY { samePrimaryDomain, all, none };
 

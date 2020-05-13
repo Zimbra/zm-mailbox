@@ -61,6 +61,10 @@ public class MailboxClusterUtil {
         }
     }
 
+    public static boolean isBackupRestorePod() {
+        return getMailboxWorkerName().startsWith("zmc-backup-restore");
+    }
+
     /**
      * This class lets the mailbox temporarily bypass its liveness check, in case it
      * gets into a scenario where it is blocked waiting on some external dependency to
