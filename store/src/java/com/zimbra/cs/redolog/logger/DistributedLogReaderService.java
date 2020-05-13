@@ -2,6 +2,7 @@ package com.zimbra.cs.redolog.logger;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +37,8 @@ import com.zimbra.cs.redolog.op.RedoableOp;
 
 public class DistributedLogReaderService {
     private static RedissonClient client;
-    private RStream<byte[], byte[]> stream;
+    private static int streamsCount;
+    private List<RStream<byte[], byte[]>> streams;
     private ExecutorService executorService;
     private static String group;
     private static String consumer;
@@ -60,33 +62,47 @@ public class DistributedLogReaderService {
         return instance;
     }
 
-    public synchronized void startUp() {
+    public synchronized void startUp() throws ServiceException {
         running = true;
         group = LC.redis_streams_redo_log_group.value();
         consumer = MailboxClusterUtil.getMailboxWorkerName();
         client = RedissonClientHolder.getInstance().getRedissonClient();
-        stream = client.getStream(LC.redis_streams_redo_log_stream.value(), ByteArrayCodec.INSTANCE);
-        script = client.getScript(StringCodec.INSTANCE);
-        if (!stream.isExists()) {
-            stream.createGroup(group, StreamMessageId.ALL); // stream will be auto-created
-            ZimbraLog.redolog.info("created consumer group %s and stream %s", group, stream.getName());
-        } else {
-            // create group if it doesn't exist on the stream
-            StreamInfo<byte[], byte[]> info = stream.getInfo();
-            if (info.getGroups() == 0) {
-                stream.createGroup(group, StreamMessageId.ALL);
-                ZimbraLog.redolog.info("created consumer group %s for existing stream %s", group, stream.getName());
-            }
-        }
+        streamsCount = LC.redis_num_streams.intValue();
+        streams = new ArrayList<RStream<byte[], byte[]>>(streamsCount);
+
+        ZimbraLog.redolog.info("Reader service streamsCount %d", streamsCount);
+
         ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("DistributedLog-Reader-Thread-%d").build();
-        executorService = Executors.newSingleThreadExecutor(namedThreadFactory);
-        executorService.execute(new LogMonitor());
+        executorService = Executors.newFixedThreadPool(streamsCount, namedThreadFactory);
+
+        for (int i=0; i<streamsCount ; i++) {
+            streams.add(client.getStream(LC.redis_streams_redo_log_stream_prefix.value()+i, ByteArrayCodec.INSTANCE));
+            if (!streams.get(i).isExists()) {
+                streams.get(i).createGroup(group, StreamMessageId.ALL); // stream will be auto-created
+                ZimbraLog.redolog.info("created consumer group %s and stream %s", group, streams.get(i).getName());
+            } else {
+                // create group if it doesn't exist on the stream
+                StreamInfo<byte[], byte[]> info = streams.get(i).getInfo();
+                if (info.getGroups() == 0) {
+                    streams.get(i).createGroup(group, StreamMessageId.ALL);
+                    ZimbraLog.redolog.info("created consumer group %s for existing stream %s", group, streams.get(i).getName());
+                }
+            }
+            executorService.execute(new LogMonitor(streams.get(i)));
+        }
+        script = client.getScript(StringCodec.INSTANCE);
     }
 
     class LogMonitor implements Runnable {
+        private RStream<byte[], byte[]> stream;
+
+        public LogMonitor(RStream<byte[], byte[]> stream) {
+            this.stream = stream;
+        }
+
         @Override
         public void run() {
-            ZimbraLog.redolog.info("Started Log queue monitoring thread %s", Thread.currentThread().getName());
+            ZimbraLog.redolog.info("Started Log queue monitoring thread %s for %s", Thread.currentThread().getName(), stream.getName());
             READ_STREAM: while (running) {
                 ZimbraLog.redolog.debug("Iterating %s", Thread.currentThread().getName());
                 int blockSecs = LC.redis_redolog_stream_read_timeout_secs.intValue();
@@ -141,14 +157,14 @@ public class DistributedLogReaderService {
                     ZimbraLog.redolog.debug("received streamId=%s, opTimestamp=%s, mboxId=%s, op=%s, txnId=%s, queued=%sms", messageId, timestamp,
                             mboxId, mailboxOperation, txnId, queued);
                     op.log(true);
-                    ackAndDelete(messageId);
+                    ackAndDelete(messageId,stream.getName());
                 }
             }
         }
     }
 
-    private void ackAndDelete(StreamMessageId id) {
-        List<Object> keys = Arrays.<Object>asList(stream.getName());
+    private void ackAndDelete(StreamMessageId id, String streamName) {
+        List<Object> keys = Arrays.<Object>asList(streamName);
         script.eval(Mode.READ_WRITE, ACK_DEL_SCRIPT, ReturnType.INTEGER, keys, group, id.toString());
     }
 }
