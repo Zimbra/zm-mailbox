@@ -20,4 +20,9 @@ public class LocalFolderTagSnapshotCache extends FolderTagSnapshotCache {
     protected void cacheFoldersTagsMeta(Metadata folderTagMeta) {
         this.folderTagMeta = folderTagMeta;
     }
+
+    @Override
+    public void invalidate() {
+        folderTagMeta = null;
+    }
 }

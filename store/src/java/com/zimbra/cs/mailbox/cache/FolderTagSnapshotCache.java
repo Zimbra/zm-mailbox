@@ -58,6 +58,8 @@ public abstract class FolderTagSnapshotCache {
 
     protected abstract void cacheFoldersTagsMeta(Metadata folderTagMeta);
 
+    public abstract void invalidate();
+
     public static class CachedTagsAndFolders extends Pair<List<Metadata>, List<Metadata>>{
 
         public CachedTagsAndFolders(List<Metadata> folders, List<Metadata> tags) {

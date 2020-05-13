@@ -885,9 +885,15 @@ public class AccountUtil {
 
     public static void endMaintenanceAndFlushCache(MailboxMaintenance maintenance, boolean success, boolean removeFromCache) throws ServiceException {
         MailboxManager.getInstance().endMaintenance(maintenance, success, removeFromCache);
-        Account account = maintenance.getMailbox().getAccount();
-        account.setAccountStatus(AccountStatus.active);
-        broadcastFlushCache(account);
+        Account acct;
+        if (maintenance.getMailbox() != null) {
+            acct = maintenance.getMailbox().getAccount();
+        } else {
+            // MailboxMaintenance objects for newly-created accounts don't have a reference to the underlying Mailbox
+            acct = Provisioning.getInstance().getAccountById(maintenance.getAccountId());
+        }
+        acct.setAccountStatus(AccountStatus.active);
+        broadcastFlushCache(acct);
     }
 }
 
