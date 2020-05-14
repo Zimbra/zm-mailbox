@@ -780,56 +780,6 @@ public class RedoLogManager {
         }
     }
 
-    public static interface RedoOpContext {
-
-        default RedoableOp getOp() {
-            return null;
-        }
-
-        public long getOpTimestamp();
-
-        public int getOpMailboxId();
-
-        public MailboxOperation getOperationType();
-
-        public TransactionId getTransactionId();
-
-    }
-
-    public static class LocalRedoOpContext implements RedoOpContext {
-
-        private RedoableOp op;
-
-        public LocalRedoOpContext(RedoableOp op) {
-            this.op = op;
-        }
-
-        @Override
-        public long getOpTimestamp() {
-            return op.getTimestamp();
-        }
-
-        @Override
-        public int getOpMailboxId() {
-            return op.getMailboxId();
-        }
-
-        @Override
-        public RedoableOp getOp() {
-            return op;
-        }
-
-        @Override
-        public MailboxOperation getOperationType() {
-            return op.getOperation();
-        }
-
-        @Override
-        public TransactionId getTransactionId() {
-            return op.getTransactionId();
-        }
-    }
-
     /*
      * This class extends the RedoableOp and can be used for logging the wrapped payload.
      * One example of such usage is demonstrated by DistributedLogReaderService's LogMonitor class.
