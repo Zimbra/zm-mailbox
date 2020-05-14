@@ -69,6 +69,7 @@ public class DistributedLogReaderService {
         group = LC.redis_streams_redo_log_group.value();
         consumer = MailboxClusterUtil.getMailboxWorkerName();
         client = RedissonClientHolder.getInstance().getRedissonClient();
+        script = client.getScript(StringCodec.INSTANCE);
         streamsCount = LC.redis_num_streams.intValue();
         streams = new ArrayList<RStream<byte[], byte[]>>(streamsCount);
 
@@ -92,7 +93,6 @@ public class DistributedLogReaderService {
             }
             executorService.execute(new LogMonitor(streams.get(i)));
         }
-        script = client.getScript(StringCodec.INSTANCE);
     }
 
     class LogMonitor implements Runnable {
