@@ -254,6 +254,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     public final static int MAX_NUM_CACHED_CONTACTS = 25;
     private static final int ADMIN_PORT = LC.zimbra_admin_service_port.intValue();
     public static final String APPOINTMENT_IMPORT_TYPE_ICS= "ics";
+    private static final int REMOTE_SYNC_BATCH_SIZE = 50;
 
     public final static String PATH_SEPARATOR = "/";
 
@@ -2118,30 +2119,61 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      * @throws ServiceException on error
      */
     public List<ZContact> getContactsForFolder(String folderid, String ids, ContactSortBy sortBy, boolean sync, List<String> attrs) throws ServiceException {
-        Element req = newRequestElement(MailConstants.GET_CONTACTS_REQUEST);
-
-        if (!StringUtil.isNullOrEmpty(folderid)) {
-            req.addAttribute(MailConstants.A_FOLDER, folderid);
-        }
-        if (sortBy != null) {
-            req.addAttribute(MailConstants.A_SORTBY, sortBy.name());
-        }
-        if (sync) {
-            req.addAttribute(MailConstants.A_SYNC, sync);
-        }
-        req.addAttribute(MailConstants.A_WANT_IMAP_UID, true);
-        if (!StringUtil.isNullOrEmpty(ids)) {
-            req.addAttribute(MailConstants.A_DEREF_CONTACT_GROUP_MEMBER, true);
-            req.addNonUniqueElement(MailConstants.E_CONTACT).addAttribute(MailConstants.A_ID, ids);
-        }
-        if (attrs != null) {
-            for (String name : attrs) {
-                req.addNonUniqueElement(MailConstants.E_ATTRIBUTE).addAttribute(MailConstants.A_ATTRIBUTE_NAME, name);
-            }
-        }
         List<ZContact> result = new ArrayList<ZContact>();
-        for (Element cn : invoke(req).listElements(MailConstants.E_CONTACT)) {
-            result.add(new ZContact(cn, this));
+        if (!StringUtil.isNullOrEmpty(ids)) {
+            String[] arr = ids.split(",");
+            int max = arr.length;
+            int start = 0;
+            int end = max <= REMOTE_SYNC_BATCH_SIZE ? max : REMOTE_SYNC_BATCH_SIZE;
+            while (end <= max && start < max) {
+                String[] temp = Arrays.copyOfRange(arr, start, end);
+                String subIds = String.join(",", temp);
+
+                Element req = newRequestElement(MailConstants.GET_CONTACTS_REQUEST);
+                if (!StringUtil.isNullOrEmpty(folderid)) {
+                    req.addAttribute(MailConstants.A_FOLDER, folderid);
+                }
+                if (sortBy != null) {
+                    req.addAttribute(MailConstants.A_SORTBY, sortBy.name());
+                }
+                if (sync) {
+                    req.addAttribute(MailConstants.A_SYNC, sync);
+                }
+                req.addAttribute(MailConstants.A_WANT_IMAP_UID, true);
+                req.addAttribute(MailConstants.A_DEREF_CONTACT_GROUP_MEMBER, true);
+                req.addNonUniqueElement(MailConstants.E_CONTACT).addAttribute(MailConstants.A_ID, subIds);
+                if (attrs != null) {
+                    for (String name : attrs) {
+                        req.addNonUniqueElement(MailConstants.E_ATTRIBUTE).addAttribute(MailConstants.A_ATTRIBUTE_NAME, name);
+                    }
+                }
+                for (Element cn : invoke(req).listElements(MailConstants.E_CONTACT)) {
+                    result.add(new ZContact(cn, this));
+                }
+
+                start = end;
+                end = max <= end + REMOTE_SYNC_BATCH_SIZE ? max : end + REMOTE_SYNC_BATCH_SIZE;
+            }
+        } else {
+            Element req = newRequestElement(MailConstants.GET_CONTACTS_REQUEST);
+            if (!StringUtil.isNullOrEmpty(folderid)) {
+                req.addAttribute(MailConstants.A_FOLDER, folderid);
+            }
+            if (sortBy != null) {
+                req.addAttribute(MailConstants.A_SORTBY, sortBy.name());
+            }
+            if (sync) {
+                req.addAttribute(MailConstants.A_SYNC, sync);
+            }
+            req.addAttribute(MailConstants.A_WANT_IMAP_UID, true);
+            if (attrs != null) {
+                for (String name : attrs) {
+                    req.addNonUniqueElement(MailConstants.E_ATTRIBUTE).addAttribute(MailConstants.A_ATTRIBUTE_NAME, name);
+                }
+            }
+            for (Element cn : invoke(req).listElements(MailConstants.E_CONTACT)) {
+                result.add(new ZContact(cn, this));
+            }
         }
         return result;
     }
