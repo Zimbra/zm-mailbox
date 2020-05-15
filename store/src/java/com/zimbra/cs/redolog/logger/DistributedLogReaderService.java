@@ -7,7 +7,6 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -114,9 +113,21 @@ public class DistributedLogReaderService {
                     continue;
                 }
                 ZimbraLog.redolog.debug("received %s stream entries: %s", logs.size(), logs.keySet());
-                logs.entrySet().stream()
-                .sorted(SORT_BY_STREAM_ID)
-                .forEachOrdered(item -> handleOp(item.getKey(), item.getValue()));
+
+                if (logs.size() == 1) {
+                    // only one entry, so process it directly
+                    StreamMessageId messageId = logs.keySet().iterator().next();
+                    Map<byte[], byte[]> data = logs.remove(messageId);
+                    handleOp(messageId, data);
+                } else {
+                    // process in StreamMessageId order to ensure proper redolog ordering
+                    ArrayList<StreamMessageId> messageIds = new ArrayList<>(logs.keySet());
+                    messageIds.sort(SORT_BY_STREAM_ID);
+                    for (StreamMessageId messageId: messageIds) {
+                        Map<byte[], byte[]> data = logs.remove(messageId);
+                        handleOp(messageId, data);
+                    }
+                }
             }
         }
 
@@ -166,6 +177,7 @@ public class DistributedLogReaderService {
             ZimbraLog.redolog.debug("processed streamId=%s, opTimestamp=%s, mboxId=%s, op=%s, txnId=%s, queued=%sms", messageId, timestamp,
                     mboxId, mailboxOperation, txnId, queued);
             ackAndDelete(messageId, stream.getName());
+            fields.clear();
         }
 
         private void ackAndDelete(StreamMessageId id, String streamName) {
@@ -174,13 +186,10 @@ public class DistributedLogReaderService {
         }
     }
 
-    private static final Comparator<Map.Entry<StreamMessageId, Map<byte[], byte[]>>> SORT_BY_STREAM_ID = new Comparator<Map.Entry<StreamMessageId, Map<byte[], byte[]>>>() {
+    private static final Comparator<StreamMessageId> SORT_BY_STREAM_ID = new Comparator<StreamMessageId>() {
 
         @Override
-        public int compare(Entry<StreamMessageId, Map<byte[], byte[]>> item1,
-                Entry<StreamMessageId, Map<byte[], byte[]>> item2) {
-            StreamMessageId id1 = item1.getKey();
-            StreamMessageId id2 = item2.getKey();
+        public int compare(StreamMessageId id1, StreamMessageId id2) {
             return id1.getId0() == id2.getId0() ?
                     Long.compare(id1.getId1(), id2.getId1()) :
                         Long.compare(id1.getId0(), id2.getId0());
