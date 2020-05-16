@@ -45,6 +45,7 @@ import com.zimbra.common.calendar.ZCalendar.ZParameter;
 import com.zimbra.common.calendar.ZCalendar.ZProperty;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
@@ -112,6 +113,8 @@ public class SendMsg extends MailDocumentHandler {
                ZimbraSoapContext zsc = getZimbraSoapContext(context);
                Mailbox mbox = getRequestedMailbox(zsc);
                AccountUtil.checkQuotaWhenSendMail(mbox);
+               AuthToken authToken = zsc.getAuthToken();
+               Account authAcct = getAuthenticatedAccount(zsc);
 
                OperationContext octxt = getOperationContext(zsc, context);
                ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
@@ -133,9 +136,18 @@ public class SendMsg extends MailDocumentHandler {
                String identityId = msgElem.getAttribute(MailConstants.A_IDENTITY_ID, null);
                String dataSourceId = msgElem.getAttribute(MailConstants.A_DATASOURCE_ID, null);
                String draftId = msgElem.getAttribute(MailConstants.A_DRAFT_ID, null);
-               ItemId iidDraft = draftId == null ? null : new ItemId(draftId, zsc);
                boolean sendFromDraft = msgElem.getAttributeBool(MailConstants.A_SEND_FROM_DRAFT, false);
 
+               // ZBUG-903
+               // As the draft is always part of authUser's context, append the authUser accountId with draftId
+               // so that the draft will be deleted when message will be sent successfully in case of persona.
+               // Because in case of sendAs and sendOnBehalfOf the draftId pattern is accountId:itemId.
+               if (AccountUtil.isMessageSentUsingPersona(identityId, authAcct, authToken)) {
+                   if(draftId != null && draftId.indexOf(ItemIdentifier.ACCOUNT_DELIMITER) == -1) {
+                       draftId = authAcct.getId() + ItemIdentifier.ACCOUNT_DELIMITER + draftId;
+                   }
+               }
+               ItemId iidDraft = draftId == null ? null : new ItemId(draftId, zsc);
                SendState state = SendState.NEW;
                ItemId savedMsgId = null;
                Pair<String, ItemId> sendRecord = null;
