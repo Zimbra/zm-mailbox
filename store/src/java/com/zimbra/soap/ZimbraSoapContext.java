@@ -33,10 +33,12 @@ import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.HeaderConstants;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
@@ -56,6 +58,7 @@ import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.SoapSession;
 import com.zimbra.cs.session.SoapSession.PushChannel;
+import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.BuildInfo;
 
 /**
@@ -276,6 +279,20 @@ public final class ZimbraSoapContext {
      * @param requestProtocol  The SOAP protocol used for the request */
     public ZimbraSoapContext(Element ctxt, QName requestName, DocumentHandler handler, Map<String, Object> context,
             SoapProtocol requestProtocol) throws ServiceException {
+        this(ctxt, requestName, handler, context, requestProtocol, null);
+    }
+
+    /**
+     * Creates a {@link ZimbraSoapContext} from the {@code <context>}
+     * {@link Element} from the SOAP header.
+     *
+     * @param ctxt {@code <context>} Element (can be null if not present in request)
+     * @param requestName - The SOAP request name - may be null
+     * @param context The engine context, which might contain the auth token
+     * @param requestProtocol  The SOAP protocol used for the request
+     * @param body The SOAP request body */
+    public ZimbraSoapContext(Element ctxt, QName requestName, DocumentHandler handler, Map<String, Object> context,
+            SoapProtocol requestProtocol, Element body) throws ServiceException {
 
         if (ctxt != null && !ctxt.getQName().equals(HeaderConstants.CONTEXT))
             throw new IllegalArgumentException("expected ctxt, got: " + ctxt.getQualifiedName());
@@ -346,6 +363,18 @@ public final class ZimbraSoapContext {
                     throw ServiceException.AUTH_REQUIRED();
                 }
                 Account account = prov.get(AccountBy.name, value, mAuthToken);
+                // Overriding the value for sendMsgRequest if the account in header is not equal to the from address.
+                // Because in case of Persona(added for the owner's account), the account passed in header is not equal to from address.
+                // if zimbraAllowAnyFromAddress = TRUE for delegate's account then we can create Persona with any email address and the
+                // from address could be different in this case.
+                if (body != null && requestName.equals(MailConstants.SEND_MSG_REQUEST)) {
+                   String fromAddress = AccountUtil.extractFromAddress(body);
+                    if (!StringUtil.isNullOrEmpty(fromAddress) && !value.equals(fromAddress)
+                            && !account.getBooleanAttr(Provisioning.A_zimbraAllowAnyFromAddress, false)) {
+                        value = fromAddress;
+                        account = prov.get(AccountBy.name, value, mAuthToken);
+                    }
+                }
                 if (account == null) {
                     if (!mAuthToken.isAdmin()) {
                         throw ServiceException.DEFEND_ACCOUNT_HARVEST(value);
@@ -361,6 +390,16 @@ public final class ZimbraSoapContext {
                     throw ServiceException.AUTH_REQUIRED();
                 }
                 Account account = prov.get(AccountBy.id, value, mAuthToken);
+                if (body != null && requestName.equals(MailConstants.SEND_MSG_REQUEST)) {
+                    String fromAddress = AccountUtil.extractFromAddress(body);
+                    if (!StringUtil.isNullOrEmpty(fromAddress) && !account.getBooleanAttr(Provisioning.A_zimbraAllowAnyFromAddress, false)) {
+                        Account fromAccount = prov.get(AccountBy.name, fromAddress, mAuthToken);
+                        if(!value.equals(fromAccount.getId())) {
+                            value = fromAccount.getId();
+                            account = prov.get(AccountBy.id, value, mAuthToken);
+                        }
+                    }
+                }
                 if (account == null) {
                     if (!mAuthToken.isAdmin()) {
                         throw ServiceException.DEFEND_ACCOUNT_HARVEST(value);
