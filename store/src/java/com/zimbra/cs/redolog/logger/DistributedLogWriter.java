@@ -61,6 +61,10 @@ public class DistributedLogWriter implements LogWriter {
      * Backup Restore Pod.
      */
     private int getStreamIndex(int mboxId) {
+        if (mboxId == RedoableOp.MAILBOX_ID_ALL || mboxId == RedoableOp.UNKNOWN_ID) {
+            // if the mailbox ID isn't specified, send it to the first stream
+            return 0;
+        }
         int streamIndex = mboxId % streamsCount;
         ZimbraLog.redolog.debug("DistributedLogWriter - getStreamIndex mboxId:%d, streamsCount:%d, streamIndex:%d", mboxId, streamsCount, streamIndex);
         return streamIndex;
