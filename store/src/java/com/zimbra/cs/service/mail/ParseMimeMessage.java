@@ -42,6 +42,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.zimbra.common.calendar.ZCalendar;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeConstants;
@@ -490,7 +491,11 @@ public final class ParseMimeMessage {
             boolean optional = elem.getAttributeBool(MailConstants.A_OPTIONAL, false);
             try {
                 if (attachType.equals(MailConstants.E_MIMEPART)) {
-                    ItemId iid = new ItemId(elem.getAttribute(MailConstants.A_MESSAGE_ID), ctxt.zsc);
+                    String mid = elem.getAttribute(MailConstants.A_MESSAGE_ID);
+                    if (mid.indexOf(ItemIdentifier.ACCOUNT_DELIMITER) == -1) {
+                        mid = ctxt.zsc.getAuthToken().getAccount().getId() + ItemIdentifier.ACCOUNT_DELIMITER + mid;
+                    }
+                    ItemId iid = new ItemId(mid, ctxt.zsc);
                     String part = elem.getAttribute(MailConstants.A_PART);
                     attachPart(mmp, iid, part, contentID, ctxt, contentDisposition);
                 } else if (attachType.equals(MailConstants.E_MSG)) {
