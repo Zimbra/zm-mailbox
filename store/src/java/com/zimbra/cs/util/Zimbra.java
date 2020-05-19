@@ -62,6 +62,7 @@ import com.zimbra.cs.index.IndexStore;
 import com.zimbra.cs.index.queue.IndexingService;
 import com.zimbra.cs.index.solr.BatchedIndexDeletions;
 import com.zimbra.cs.index.solr.SolrIndex;
+import com.zimbra.cs.mailbox.LocalPubSub;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.NotificationPubSub;
 import com.zimbra.cs.mailbox.PurgeThread;
@@ -332,7 +333,11 @@ public final class Zimbra {
         PubSubService.getInstance().startup();
 
         SessionDataProvider.setFactory(new RedisSessionDataProvider.Factory());
-        NotificationPubSub.setFactory(new RedisPubSub.Factory());
+        if (MailboxClusterUtil.isBackupRestorePod()) {
+            NotificationPubSub.setFactory(new LocalPubSub.Factory());
+        } else {
+            NotificationPubSub.setFactory(new RedisPubSub.Factory());
+        }
 
         if (MailboxClusterUtil.isBackupRestorePod() && RedoConfig.redoLogEnabled()) {
             DistributedLogReaderService.getInstance().startUp();
