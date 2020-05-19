@@ -16,7 +16,7 @@ FROM ${DOCKER_REPO_NS}/zms-core-network-extension:1.0.3 as ext-core-network
 FROM ${DOCKER_REPO_NS}/zms-core-zimlets:1.0.1 as zimlet-webapp
 
 # Final stage, copy contents from build stage
-FROM ${DOCKER_REPO_NS}/zms-base:1.0.8
+FROM ${DOCKER_REPO_NS}/zms-base:1.0.10
 ENV EXT_REPO_URL http://zimbraqa.s3.amazonaws.com/api-team/extensions
 ENV S3_DOCKER_URL https://s3.amazonaws.com/docker.zimbra.com/assets
 COPY --from=utils /opt/zimbra/ /opt/zimbra/
