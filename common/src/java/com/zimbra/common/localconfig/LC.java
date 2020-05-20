@@ -1092,6 +1092,11 @@ public final class LC {
     public static final KnownKey zimbra_activesync_general_cache_size = KnownKey.newKey(500); //active device number
     public static final KnownKey zimbra_activesync_parallel_sync_enabled = KnownKey.newKey(false);
     public static final KnownKey zimbra_activesync_syncstate_item_cache_heap_size = KnownKey.newKey("10M"); //e.g. 10M,10G
+    public static final KnownKey zimbra_activesync_picture_max_size = KnownKey.newKey(102400);
+    // activesync free-busy max number of recipients in single request
+    // default is set to 100 as per suggested by EAS specification
+    public static final KnownKey zimbra_activesync_fb_max_number_of_recipient = KnownKey.newKey(100);
+    public static final KnownKey zimbra_activesync_remote_sync_batch_size = KnownKey.newKey(50);
 
     public static final KnownKey zimbra_slow_logging_enabled = KnownKey.newKey(false);
     public static final KnownKey zimbra_slow_logging_threshold = KnownKey.newKey(5000);
