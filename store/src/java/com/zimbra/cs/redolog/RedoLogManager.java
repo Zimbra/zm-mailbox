@@ -175,6 +175,8 @@ public class RedoLogManager {
 
     private final static boolean isBackupRestorePod = MailboxClusterUtil.isBackupRestorePod();
 
+    private RedoLogBlobStore blobStore;
+
 
     public RedoLogManager(File redolog, File archdir, boolean supportsCrashRecovery) {
         mEnabled = false;
@@ -199,6 +201,8 @@ public class RedoLogManager {
         mStatGuard = new Object();
         mElapsed = 0;
         mCounter = 0;
+
+        blobStore = RedoLogBlobStore.getFactory().getRedoLogBlobStore();
     }
 
     private TxnIdGenerator createTxnIdGenerator() {
@@ -778,6 +782,10 @@ public class RedoLogManager {
                 }
             }
         }
+    }
+
+    public RedoLogBlobStore getBlobStore() {
+        return blobStore;
     }
 
     /*
