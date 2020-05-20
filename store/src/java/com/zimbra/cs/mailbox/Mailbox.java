@@ -671,6 +671,7 @@ public class Mailbox implements MailboxStore {
     private final NotificationPubSub pubsub;
     private final Set<WeakReference<TransactionListener>> transactionListeners;
     private final TransactionCacheTracker cacheTracker;
+    private RedoLogBlobStore redoBlobStore;
 
 
     protected Mailbox(MailboxData data) {
@@ -691,6 +692,7 @@ public class Mailbox implements MailboxStore {
         pubsub = NotificationPubSub.getFactory().getNotificationPubSub(this);
         MAX_ITEM_CACHE_SIZE = LC.zimbra_mailbox_active_cache.intValue();
         folderTagSnapshot = ItemCache.getFactory().getFolderTagSnapshotCache(this);
+        redoBlobStore = RedoLogProvider.getInstance().getRedoLogManager().getBlobStore();
     }
 
     public void setGalSyncMailbox(boolean galSyncMailbox) {
@@ -5999,7 +6001,6 @@ public class Mailbox implements MailboxStore {
 
             PendingRedoBlobOperation redoBlobOp = null;
             // step 5: write the redolog entries
-            RedoLogBlobStore redoBlobStore = RedoLogProvider.getInstance().getRedoLogManager().getBlobStore();
             if (redoBlobStore instanceof RedoOpBlobStore) {
                 // old mechanism - log StoreIncomingBlob op if shared delivery; store blob in CreateMessage otherwise
                 if (dctxt.getShared()) {
@@ -6178,7 +6179,12 @@ public class Mailbox implements MailboxStore {
             // content changed, so we're obliged to change the IMAP uid
             int imapID = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getImapId());
             redoRecorder.setImapId(imapID);
-            redoRecorder.setMessageBodyInfo(new ParsedMessageDataSource(pm), size);
+            javax.activation.DataSource ds = new ParsedMessageDataSource(pm);
+            if (redoBlobStore instanceof RedoOpBlobStore) {
+                redoRecorder.setMessageBodyInfo(ds, size);
+            } else {
+                redoRecorder.setRedoBlobOperation(redoBlobStore.logBlob(this, ds, size, digest));
+            }
 
             msg.setDraftAutoSendTime(autoSendTime);
 
@@ -8569,7 +8575,14 @@ public class Mailbox implements MailboxStore {
                 // extra write to local disk.  If this becomes a problem, we should update the
                 // ParsedDocument constructor to take a DataSource instead of an InputStream.
                 MailboxBlob mailboxBlob = doc.setContent(staged, pd);
-                redoRecorder.setMessageBodyInfo(new MailboxBlobDataSource(mailboxBlob), mailboxBlob.getSize());
+                MailboxBlobDataSource ds = new MailboxBlobDataSource(mailboxBlob);
+                long size = mailboxBlob.getSize();
+                if (redoBlobStore instanceof RedoOpBlobStore) {
+                    redoRecorder.setMessageBodyInfo(ds, size);
+                } else {
+                    String digest = mailboxBlob.getDigest();
+                    redoRecorder.setRedoBlobOperation(redoBlobStore.logBlob(this, ds, size, digest));
+                }
 
                 if (indexing) {
                     currentChange().addIndexItem(doc);
@@ -8610,6 +8623,17 @@ public class Mailbox implements MailboxStore {
         }
     }
 
+    public Document addDocumentRevision(OperationContext octxt, int docId, String author, String name, String description, boolean descEnabled, Blob data)
+    throws ServiceException {
+        Document doc = getDocumentById(octxt, docId);
+        try {
+            ParsedDocument pd = new ParsedDocument(data, name, doc.getContentType(), System.currentTimeMillis(), author, description, descEnabled);
+            return addDocumentRevision(octxt, docId, pd);
+        } catch (IOException ioe) {
+            throw ServiceException.FAILURE("error writing document blob", ioe);
+        }
+    }
+
     public Document addDocumentRevision(OperationContext octxt, int docId, ParsedDocument pd)
     throws IOException, ServiceException {
 
@@ -8632,7 +8656,14 @@ public class Mailbox implements MailboxStore {
                 // extra write to local disk.  If this becomes a problem, we should update the
                 // ParsedDocument constructor to take a DataSource instead of an InputStream.
                 MailboxBlob mailboxBlob = doc.setContent(staged, pd);
-                redoRecorder.setMessageBodyInfo(new MailboxBlobDataSource(mailboxBlob), mailboxBlob.getSize());
+                MailboxBlobDataSource ds = new MailboxBlobDataSource(mailboxBlob);
+                long size = mailboxBlob.getSize();
+                if (redoBlobStore instanceof RedoOpBlobStore) {
+                    redoRecorder.setMessageBodyInfo(ds, size);
+                } else {
+                    String digest = mailboxBlob.getDigest();
+                    redoRecorder.setRedoBlobOperation(redoBlobStore.logBlob(this, ds, size, digest));
+                }
 
                 currentChange().addIndexItem(doc);
 

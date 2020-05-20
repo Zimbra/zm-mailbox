@@ -91,6 +91,7 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder, BlobRecorder {
                                       // if mMsgBodyType == MSGBODY_EXTERNAL, unset
     protected PendingRedoBlobOperation pendingRedoBlobOp = null;
 
+
     public CreateMessage() {
         super(MailboxOperation.CreateMessage);
         mShared = false;
