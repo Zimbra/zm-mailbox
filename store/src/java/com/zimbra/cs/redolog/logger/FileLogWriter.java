@@ -40,7 +40,9 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.redolog.CommitId;
 import com.zimbra.cs.redolog.RedoCommitCallback;
 import com.zimbra.cs.redolog.RedoConfig;
+import com.zimbra.cs.redolog.RedoLogBlobStore;
 import com.zimbra.cs.redolog.RedoLogManager;
+import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.redolog.RolloverManager;
 import com.zimbra.cs.redolog.op.CommitTxn;
 import com.zimbra.cs.redolog.op.RedoableOp;
@@ -403,6 +405,8 @@ public class FileLogWriter implements LogWriter {
         if (RedoConfig.redoLogDeleteOnRollover()) {
             // Delete the current log.  We don't need to hold on to the
             // indexing-only log files after rollover.
+            RedoLogBlobStore blobStore = RedoLogProvider.getInstance().getRedoLogManager().getBlobStore();
+            blobStore.derefRedoLogFile(mFile);
             if (!mFile.delete())
                 throw new IOException("Unable to delete current redo log " + mFile.getAbsolutePath());
         } else {
