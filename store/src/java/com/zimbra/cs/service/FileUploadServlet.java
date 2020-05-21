@@ -156,7 +156,11 @@ public class FileUploadServlet extends ZimbraServlet {
                 }
 
                 // 2. detect by file extension
-                if (contentType == null) {
+                // .xls and .docx files can contain beginning characters
+                // resembling to x-ole-storage/zip. Hence,
+                // check by file extension
+                if (contentType == null || contentType.equals("application/x-ole-storage")
+                    || contentType.equals("application/zip")) {
                     contentType = MimeDetect.getMimeDetect().detect(name);
                 }
 
