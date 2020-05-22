@@ -831,7 +831,7 @@ public final class LC {
     public static final KnownKey zimbra_class_jsieve_comparators_ascii_numeric = KnownKey.newKey("com.zimbra.cs.filter.ZimbraAsciiNumeric");
     public static final KnownKey zimbra_class_jsieve_comparators_octet = KnownKey.newKey("com.zimbra.cs.filter.ZimbraOctet");
     public static final KnownKey zimbra_class_two_factor_auth_factory = KnownKey.newKey("com.zimbra.cs.account.auth.twofactor.TwoFactorAuth$DefaultFactory");
-    public static final KnownKey zimbra_class_redolog_blob_store_factory = KnownKey.newKey("class_goes_here");
+    public static final KnownKey zimbra_class_redolog_blob_store_factory = KnownKey.newKey("com.zimbra.cs.redolog.RedoOpBlobStore$Factory");
 
     // ZCS-8181 if below flag is false, do not update zimbraAppSpecificPassword attr
     //          with last authentication time during authentication of app specific password.
