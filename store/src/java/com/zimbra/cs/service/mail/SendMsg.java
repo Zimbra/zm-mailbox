@@ -142,7 +142,7 @@ public class SendMsg extends MailDocumentHandler {
                // As the draft is always part of authUser's context, append the authUser accountId with draftId
                // so that the draft will be deleted when message will be sent successfully in case of persona.
                // Because in case of sendAs and sendOnBehalfOf the draftId pattern is accountId:itemId.
-               if (AccountUtil.isMessageSentUsingPersona(identityId, authAcct, authToken)) {
+               if (AccountUtil.isMessageSentUsingOwnersPersona(identityId, authAcct, authToken)) {
                    if(draftId != null && draftId.indexOf(ItemIdentifier.ACCOUNT_DELIMITER) == -1) {
                        draftId = authAcct.getId() + ItemIdentifier.ACCOUNT_DELIMITER + draftId;
                    }

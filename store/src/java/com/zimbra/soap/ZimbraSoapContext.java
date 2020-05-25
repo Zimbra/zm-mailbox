@@ -407,6 +407,30 @@ public final class ZimbraSoapContext {
             }
 
             mMountpointTraversed = eAccount.getAttributeBool(HeaderConstants.A_MOUNTPOINT, false);
+        } else if (body != null && requestName.equals(MailConstants.SEND_MSG_REQUEST)) {
+            // To handle SendMsgRequest sent using zmsoap command where header does not exists.
+            // Check if from Address is not equal to auth user email address then set `mRequestedAccountId`
+            // as the from address accountId.
+            if (mAuthToken == null) {
+                throw ServiceException.AUTH_REQUIRED();
+            }
+            Account authAccount = mAuthToken.getAccount();
+            String fromAddress = AccountUtil.extractFromAddress(body);
+            String identityId = body.getElement(MailConstants.E_MSG).getAttribute(MailConstants.A_IDENTITY_ID, null);
+            if (!StringUtil.isNullOrEmpty(fromAddress) && AccountUtil.isMessageSentUsingOwnersPersona(identityId, authAccount, mAuthToken)) {
+                Account account = prov.get(AccountBy.name, fromAddress, mAuthToken);
+                if (account == null) {
+                    if (!mAuthToken.isAdmin()) {
+                        throw ServiceException.DEFEND_ACCOUNT_HARVEST(fromAddress);
+                    } else {
+                        throw AccountServiceException.NO_SUCH_ACCOUNT(fromAddress);
+                    }
+                }
+                if (!account.getId().equals(authAccount.getId())) {
+                    mRequestedAccountId = account.getId();
+                    validateDelegatedAccess(account, handler, requestName, fromAddress);
+                }
+            }
         } else {
             mRequestedAccountId = null;
         }
