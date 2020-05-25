@@ -899,16 +899,18 @@ public class AccountUtil {
      * @return true/false
      * @throws ServiceException s
      */
-    public static boolean isMessageSentUsingPersona(String identityId, Account authAcct, AuthToken authToken) throws ServiceException {
+    public static boolean isMessageSentUsingOwnersPersona(String identityId, Account authAcct, AuthToken authToken) throws ServiceException {
         if (identityId != null) {
             Identity identity = Provisioning.getInstance().get(authAcct, Key.IdentityBy.id, identityId);
-            if (identity != null) {
-                String fromAddrPrefType =  identity.getAccount().getPrefFromAddressTypeAsString();
-                String fromAddrPrefValue   = identity.getAccount().getPrefFromAddress();
-                if (!StringUtil.isNullOrEmpty(fromAddrPrefType) && !authToken.isAdmin()
-                        && !authAcct.isAllowAnyFromAddress()
-                        && (fromAddrPrefType.equals(RightConsts.RT_sendAs) || fromAddrPrefType.equals(RightConsts.RT_sendOnBehalfOf))
-                        && !StringUtil.isNullOrEmpty(fromAddrPrefValue) && !authAcct.getMail().equals(fromAddrPrefValue)) {
+            Identity defaultIdentity = Provisioning.getInstance().getDefaultIdentity(authAcct);
+            if (identity != null && defaultIdentity != null && !defaultIdentity.getId().equals(identity.getId())) {
+                String fromAddrPrefType = identity.getAttr(Provisioning.A_zimbraPrefFromAddressType, null);
+                String fromAddrPrefValue = identity.getAttr(Provisioning.A_zimbraPrefFromAddress, null);
+                if (!StringUtil.isNullOrEmpty(fromAddrPrefType) && !StringUtil.isNullOrEmpty(fromAddrPrefValue)
+                        && !authToken.isAdmin() && !authAcct.isAllowAnyFromAddress()
+                        && !authAcct.getMail().equals(fromAddrPrefValue)
+                        && (fromAddrPrefType.equals(RightConsts.RT_sendAs)
+                                || fromAddrPrefType.equals(RightConsts.RT_sendOnBehalfOf))) {
                     return true;
                 }
             }
