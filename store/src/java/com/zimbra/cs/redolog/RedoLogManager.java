@@ -797,10 +797,12 @@ public class RedoLogManager {
         private TransactionId transactionId;
         private InputStream payload;
 
-        public LoggableOp(MailboxOperation operationType, TransactionId txnId, InputStream payload) {
+        public LoggableOp(MailboxOperation operationType, TransactionId txnId, InputStream payload, long timestamp, int mboxId) {
             super(operationType);
             this.transactionId = txnId;
             this.payload = payload;
+            setTimestamp(timestamp);
+            setMailboxId(mboxId);
         }
 
         @Override
