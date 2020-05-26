@@ -100,9 +100,9 @@ public abstract class RedoLogBlobStore {
             Collection<Integer> mboxIds = refs.getMailboxIds();
             if (refManager.removeRefs(digest, mboxIds)) {
                 deleteBlobData(digest);
-                ZimbraLog.redolog.info("deleted redolog blob with digest=%s (no more references)", digest);
+                ZimbraLog.redolog.debug("deleted redolog blob with digest=%s (no more references)", digest);
             } else {
-                ZimbraLog.redolog.info("unlinked redolog blob with digest=%s (more references remain)", digest);
+                ZimbraLog.redolog.debug("unlinked redolog blob with digest=%s (more references remain)", digest);
             }
         }
     }
@@ -129,7 +129,7 @@ public abstract class RedoLogBlobStore {
             FileLogReader reader = new FileLogReader(file);
             reader.open();
             long seq = reader.getHeader().getSequence();
-            ZimbraLog.backup.info("finding blob references for redolog sequence %s (%s)", seq, file.getName());
+            ZimbraLog.backup.debug("finding blob references for redolog sequence %s (%s)", seq, file.getName());
             RedoableOp op = null;
             while ((op = reader.getNextOp()) != null) {
                 if (op instanceof BlobRecorder) {
@@ -140,7 +140,7 @@ public abstract class RedoLogBlobStore {
                     }
                 }
             }
-            ZimbraLog.backup.info("found mappings for %s digests", mappings.size(), file.getName());
+            ZimbraLog.backup.debug("found mappings for %s digests", mappings.size(), file.getName());
             return mappings.values();
         }
     }
