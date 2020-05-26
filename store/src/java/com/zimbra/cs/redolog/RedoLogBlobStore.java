@@ -94,7 +94,7 @@ public abstract class RedoLogBlobStore {
         return new ExternalRedoBlobOperation(in, size, digest, mboxIds);
     }
 
-    public void derefRedoLogFile(File file) {
+    public void derefRedoLogFile(File file) throws IOException {
         for (BlobReferences refs: refManager.getBlobRefs(file)) {
             String digest = refs.getDigest();
             Collection<Integer> mboxIds = refs.getMailboxIds();
@@ -124,24 +124,21 @@ public abstract class RedoLogBlobStore {
         /**
          * Subclasses can override, in case we track mappings of redo files to their blobs externally
          */
-        public Iterable<BlobReferences> getBlobRefs(File file) {
+        public Iterable<BlobReferences> getBlobRefs(File file) throws IOException {
             Map<String, BlobReferences> mappings = new HashMap<>();
-            FileLogReader reader = new FileLogReader(file);try {
-                reader.open();
-                long seq = reader.getHeader().getSequence();
-                ZimbraLog.backup.info("finding blob references for redolog sequence %s (%s)", seq, file.getName());
-                RedoableOp op = null;
-                while ((op = reader.getNextOp()) != null) {
-                    if (op instanceof BlobRecorder) {
-                        String digest = ((BlobRecorder) op).getBlobDigest();
-                        if (digest != null) {
-                            int mboxId = op.getMailboxId();
-                            mappings.computeIfAbsent(digest, k -> new BlobReferences(k)).addMapping(mboxId);
-                        }
+            FileLogReader reader = new FileLogReader(file);
+            reader.open();
+            long seq = reader.getHeader().getSequence();
+            ZimbraLog.backup.info("finding blob references for redolog sequence %s (%s)", seq, file.getName());
+            RedoableOp op = null;
+            while ((op = reader.getNextOp()) != null) {
+                if (op instanceof BlobRecorder) {
+                    String digest = ((BlobRecorder) op).getBlobDigest();
+                    if (digest != null) {
+                        int mboxId = op.getMailboxId();
+                        mappings.computeIfAbsent(digest, k -> new BlobReferences(k)).addMapping(mboxId);
                     }
                 }
-            } catch (IOException e) {
-                ZimbraLog.redolog.error("error finding blob references for %s", file.getName(), e);
             }
             ZimbraLog.backup.info("found mappings for %s digests", mappings.size(), file.getName());
             return mappings.values();
