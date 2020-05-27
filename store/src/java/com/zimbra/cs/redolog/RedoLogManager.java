@@ -175,6 +175,8 @@ public class RedoLogManager {
 
     private final static boolean isBackupRestorePod = MailboxClusterUtil.isBackupRestorePod();
 
+    private RedoLogBlobStore blobStore;
+
 
     public RedoLogManager(File redolog, File archdir, boolean supportsCrashRecovery) {
         mEnabled = false;
@@ -199,6 +201,8 @@ public class RedoLogManager {
         mStatGuard = new Object();
         mElapsed = 0;
         mCounter = 0;
+
+        blobStore = RedoLogBlobStore.getFactory().getRedoLogBlobStore();
     }
 
     private TxnIdGenerator createTxnIdGenerator() {
@@ -780,6 +784,10 @@ public class RedoLogManager {
         }
     }
 
+    public RedoLogBlobStore getBlobStore() {
+        return blobStore;
+    }
+
     /*
      * This class extends the RedoableOp and can be used for logging the wrapped payload.
      * One example of such usage is demonstrated by DistributedLogReaderService's LogMonitor class.
@@ -789,10 +797,12 @@ public class RedoLogManager {
         private TransactionId transactionId;
         private InputStream payload;
 
-        public LoggableOp(MailboxOperation operationType, TransactionId txnId, InputStream payload) {
+        public LoggableOp(MailboxOperation operationType, TransactionId txnId, InputStream payload, long timestamp, int mboxId) {
             super(operationType);
             this.transactionId = txnId;
             this.payload = payload;
+            setTimestamp(timestamp);
+            setMailboxId(mboxId);
         }
 
         @Override

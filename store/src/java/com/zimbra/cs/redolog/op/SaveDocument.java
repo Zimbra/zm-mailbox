@@ -27,6 +27,7 @@ import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
+import com.zimbra.cs.store.Blob;
 
 public class SaveDocument extends CreateMessage {
 
@@ -157,8 +158,15 @@ public class SaveDocument extends CreateMessage {
     public void redo() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
         try {
-            ParsedDocument pd = new ParsedDocument(getAdditionalDataStream(), mFilename, mMimeType,
-                System.currentTimeMillis(), mAuthor, mDescription, mDescEnabled);
+            ParsedDocument pd;
+            if (mMsgBodyType == MSGBODY_LINK) {
+                Blob blob = mRedoLogMgr.getBlobStore().fetchBlob(mPath);
+                pd = new ParsedDocument(blob, mFilename, mMimeType,
+                        System.currentTimeMillis(), mAuthor, mDescription, mDescEnabled);
+            } else {
+                pd = new ParsedDocument(getAdditionalDataStream(), mFilename, mMimeType,
+                        System.currentTimeMillis(), mAuthor, mDescription, mDescEnabled);
+            }
             mbox.createDocument(getOperationContext(), getFolderId(), pd, type, getFlags());
         } catch (MailServiceException e) {
             if (e.getCode() == MailServiceException.ALREADY_EXISTS) {

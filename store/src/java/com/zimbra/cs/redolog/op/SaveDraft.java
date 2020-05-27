@@ -20,6 +20,7 @@
  */
 package com.zimbra.cs.redolog.op;
 
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.zip.GZIPInputStream;
@@ -77,11 +78,15 @@ public class SaveDraft extends CreateMessage {
         Blob blob = null;
         InputStream in = null;
         try {
-            in = mData.getInputStream();
-            if (mData.getLength() != mMsgSize)
-                in = new GZIPInputStream(in);
-
-            blob = sm.storeIncoming(in);
+            if (mMsgBodyType == MSGBODY_LINK) {
+                blob = mRedoLogMgr.getBlobStore().fetchBlob(mPath);
+            } else {
+                in = mData.getInputStream();
+                if (mData.getLength() != mMsgSize) {
+                    in = new GZIPInputStream(in);
+                }
+                blob = sm.storeIncoming(in);
+            }
             ParsedMessage pm = new ParsedMessage(blob.getFile(), getTimestamp(), mbox.attachmentsIndexingEnabled());
 
             mbox.saveDraft(getOperationContext(), pm, getMessageId());

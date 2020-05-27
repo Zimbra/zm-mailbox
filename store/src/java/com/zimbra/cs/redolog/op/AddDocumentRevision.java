@@ -26,6 +26,7 @@ import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
+import com.zimbra.cs.store.Blob;
 
 public class AddDocumentRevision extends SaveDocument {
     private int mDocId;
@@ -61,7 +62,12 @@ public class AddDocumentRevision extends SaveDocument {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
         OperationContext octxt = getOperationContext();
         try {
-            mbox.addDocumentRevision(octxt, mDocId, getAuthor(), getFilename(), getDescription(), isDescriptionEnabled(), getAdditionalDataStream());
+            if (mMsgBodyType == MSGBODY_LINK) {
+                Blob blob = mRedoLogMgr.getBlobStore().fetchBlob(mPath);
+                mbox.addDocumentRevision(octxt, mDocId, getAuthor(), getFilename(), getDescription(), isDescriptionEnabled(), blob);
+            } else {
+                mbox.addDocumentRevision(octxt, mDocId, getAuthor(), getFilename(), getDescription(), isDescriptionEnabled(), getAdditionalDataStream());
+            }
         } catch (MailServiceException e) {
             if (e.getCode() == MailServiceException.ALREADY_EXISTS) {
                 mLog.info("Document revision " + getMessageId() + " is already in mailbox " + mbox.getId());

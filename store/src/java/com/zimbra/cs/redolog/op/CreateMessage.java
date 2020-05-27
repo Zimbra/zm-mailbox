@@ -49,18 +49,20 @@ import com.zimbra.cs.mailbox.util.TagUtil;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.mime.ParsedMessageOptions;
 import com.zimbra.cs.redolog.RedoException;
+import com.zimbra.cs.redolog.RedoLogBlobStore.PendingRedoBlobOperation;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
 
 public class CreateMessage extends RedoableOp
-implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
+implements CreateCalendarItemPlayer, CreateCalendarItemRecorder, BlobRecorder {
 
     private static final long RECEIVED_DATE_UNSET = -1;
 
-    private static final byte MSGBODY_INLINE = 1;   // message body buffer is included in this op
-    private static final byte MSGBODY_LINK   = 2;   // message link information is included in this op
+    protected static final byte MSGBODY_INLINE = 1;   // message body buffer is included in this op
+    protected static final byte MSGBODY_LINK   = 2;   // message link information is included in this op
+    protected static final byte MSGBODY_EXTERNAL = 3;   // digest of blob, to be looked up in RedoLogBlobStore
 
     protected long mReceivedDate;     // email received date; not necessarily equal to operation time
     private String mRcptEmail;      // email address the message was delivered to
@@ -83,9 +85,12 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
     private CustomMetadata mExtendedData; // extra data associated with the message at delivery time
     protected RedoableOpData mData;
 
-    private byte mMsgBodyType;
-    private String mPath;           // if mMsgBodyType == MSGBODY_LINK, source file to link to
-    // if mMsgBodyType == MSGBODY_INLINE, path of saved blob file
+    protected byte mMsgBodyType;
+    protected String mPath;           // if mMsgBodyType == MSGBODY_LINK, source file to link to
+                                      // if mMsgBodyType == MSGBODY_INLINE, path of saved blob file
+                                      // if mMsgBodyType == MSGBODY_EXTERNAL, unset
+    protected PendingRedoBlobOperation pendingRedoBlobOp = null;
+
 
     public CreateMessage() {
         super(MailboxOperation.CreateMessage);
@@ -96,7 +101,7 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
         mConvFirstMsgId = UNKNOWN_ID;
         mMergedConvIds = Collections.emptyList();
         mFlags = 0;
-        mMsgBodyType = MSGBODY_INLINE;
+        mMsgBodyType = MSGBODY_EXTERNAL;
         mNoICal = false;
     }
 
@@ -123,7 +128,7 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
         mMergedConvIds = Collections.emptyList();
         mFlags = flags;
         mTags = tags != null ? tags : new String[0];
-        mMsgBodyType = MSGBODY_INLINE;
+        mMsgBodyType = MSGBODY_EXTERNAL;
         mNoICal = noICal;
         mExtendedData = extended;
     }
@@ -151,8 +156,16 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
         // so nulling out mData member is safe.
         try {
             super.commit();
+            if (pendingRedoBlobOp != null) {
+                pendingRedoBlobOp.commit();
+                pendingRedoBlobOp = null;
+            }
         } finally {
             mData = null;
+            if (pendingRedoBlobOp != null) {
+                pendingRedoBlobOp.abort();
+                pendingRedoBlobOp = null;
+            }
         }
     }
 
@@ -162,6 +175,7 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
             super.abort();
         } finally {
             mData = null;
+            pendingRedoBlobOp = null;
         }
     }
 
@@ -310,8 +324,10 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
         sb.append(", bodyType=").append(mMsgBodyType);
         if (mMsgBodyType == MSGBODY_LINK) {
             sb.append(", linkSourcePath=").append(mPath);
-        } else {
+        } else if (mMsgBodyType == MSGBODY_INLINE){
             sb.append(", path=").append(mPath);
+        } else {
+            sb.append(", [external blob]");
         }
         return sb.toString();
     }
@@ -490,8 +506,15 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
 
         DeliveryContext dctxt = new DeliveryContext(mShared, Arrays.asList(mboxId));
 
+        Blob blob = null;
         if (mMsgBodyType == MSGBODY_LINK) {
-            Blob blob = StoreIncomingBlob.fetchBlob(mPath);
+            // backwards compatibility - if using StoreIncomingBlob ops,
+            // the blob is referenced by its path
+            blob = mRedoLogMgr.getBlobStore().fetchBlob(mPath);
+        } else if (mMsgBodyType == MSGBODY_EXTERNAL) {
+            blob = mRedoLogMgr.getBlobStore().fetchBlob(getBlobDigest());
+        }
+        if (mMsgBodyType == MSGBODY_LINK || mMsgBodyType == MSGBODY_EXTERNAL) {
             if (blob == null)
                 throw new RedoException("Missing link source blob " + mPath + " (digest=" + mDigest + ")", this);
             dctxt.setIncomingBlob(blob);
@@ -538,5 +561,15 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
                 ByteUtil.closeStream(in);
             }
         }
+    }
+
+    @Override
+    public String getBlobDigest() {
+        return mDigest;
+    }
+
+    @Override
+    public void setRedoBlobOperation(PendingRedoBlobOperation op) {
+        this.pendingRedoBlobOp = op;
     }
 }

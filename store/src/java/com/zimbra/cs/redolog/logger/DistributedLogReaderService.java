@@ -171,7 +171,7 @@ public class DistributedLogReaderService {
             }
 
             MailboxOperation mailboxOperation = MailboxOperation.fromInt(opType);
-            RedoableOp op = new LoggableOp(mailboxOperation, txnId, payload);
+            RedoableOp op = new LoggableOp(mailboxOperation, txnId, payload, timestamp, mboxId);
             long queued = System.currentTimeMillis() - submitTime;
             op.log(true);
             ZimbraLog.redolog.debug("processed streamId=%s, opTimestamp=%s, mboxId=%s, op=%s, txnId=%s, queued=%sms", messageId, timestamp,

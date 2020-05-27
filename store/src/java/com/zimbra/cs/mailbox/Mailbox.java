@@ -186,6 +186,10 @@ import com.zimbra.cs.mime.ParsedMessageOptions;
 import com.zimbra.cs.ml.ClassificationExecutionContext;
 import com.zimbra.cs.ml.classifier.ClassifierManager;
 import com.zimbra.cs.pop3.Pop3Message;
+import com.zimbra.cs.redolog.RedoLogBlobStore;
+import com.zimbra.cs.redolog.RedoLogBlobStore.PendingRedoBlobOperation;
+import com.zimbra.cs.redolog.RedoLogProvider;
+import com.zimbra.cs.redolog.RedoOpBlobStore;
 import com.zimbra.cs.redolog.op.AddDocumentRevision;
 import com.zimbra.cs.redolog.op.AddSearchHistoryEntry;
 import com.zimbra.cs.redolog.op.AlterItemTag;
@@ -255,7 +259,6 @@ import com.zimbra.cs.redolog.op.SetSavedSearchStatus;
 import com.zimbra.cs.redolog.op.SetSubscriptionData;
 import com.zimbra.cs.redolog.op.SetWebOfflineSyncDays;
 import com.zimbra.cs.redolog.op.SnoozeCalendarItemAlarm;
-import com.zimbra.cs.redolog.op.StoreIncomingBlob;
 import com.zimbra.cs.redolog.op.TrackImap;
 import com.zimbra.cs.redolog.op.TrackSync;
 import com.zimbra.cs.redolog.op.UnlockItem;
@@ -668,6 +671,7 @@ public class Mailbox implements MailboxStore {
     private final NotificationPubSub pubsub;
     private final Set<WeakReference<TransactionListener>> transactionListeners;
     private final TransactionCacheTracker cacheTracker;
+    private RedoLogBlobStore redoBlobStore;
 
 
     protected Mailbox(MailboxData data) {
@@ -688,6 +692,7 @@ public class Mailbox implements MailboxStore {
         pubsub = NotificationPubSub.getFactory().getNotificationPubSub(this);
         MAX_ITEM_CACHE_SIZE = LC.zimbra_mailbox_active_cache.intValue();
         folderTagSnapshot = ItemCache.getFactory().getFolderTagSnapshotCache(this);
+        redoBlobStore = RedoLogProvider.getInstance().getRedoLogManager().getBlobStore();
     }
 
     public void setGalSyncMailbox(boolean galSyncMailbox) {
@@ -5787,8 +5792,6 @@ public class Mailbox implements MailboxStore {
 
         CreateMessage redoRecorder = new CreateMessage(mId, rcptEmail, pm.getReceivedDate(), dctxt.getShared(),
                 digest, msgSize, folderId, noICal, flags, tags, customData);
-        StoreIncomingBlob storeRedoRecorder = null;
-
         // strip out unread flag for internal storage (don't do this before redoRecorder initialization)
         boolean unread = (flags & Flag.BITMASK_UNREAD) > 0;
         flags &= ~Flag.BITMASK_UNREAD;
@@ -5996,23 +5999,35 @@ public class Mailbox implements MailboxStore {
             // conversations may have shifted, so the threader's cached state is now questionable
             threader.reset();
 
+            PendingRedoBlobOperation redoBlobOp = null;
             // step 5: write the redolog entries
-            if (dctxt.getShared()) {
-                if (dctxt.isFirst() && needRedo) {
-                    // Log entry in redolog for blob save.  Blob bytes are logged in the StoreIncoming entry.
-                    // Subsequent CreateMessage ops will reference this blob.
-                    storeRedoRecorder = new StoreIncomingBlob(digest, msgSize, dctxt.getMailboxIdList());
-                    storeRedoRecorder.start(getOperationTimestampMillis());
-                    storeRedoRecorder.setBlobBodyInfo(blob.getFile());
-                    storeRedoRecorder.log();
+            if (redoBlobStore instanceof RedoOpBlobStore) {
+                // old mechanism - log StoreIncomingBlob op if shared delivery; store blob in CreateMessage otherwise
+                if (dctxt.getShared()) {
+                    if (dctxt.isFirst() && needRedo) {
+                        // Log entry in redolog for blob save.  Blob bytes are logged in the StoreIncoming entry.
+                        // Subsequent CreateMessage ops will reference this blob.
+                        redoBlobOp = redoBlobStore.logBlob(this, blob, msgSize, dctxt.getMailboxIdList());
+                    }
+                    // Link to the file created by StoreIncomingBlob.
+                    redoRecorder.setMessageLinkInfo(blob.getPath());
+                } else {
+                    // Store the blob data inside the CreateMessage op.
+                    redoRecorder.setMessageBodyInfo(blob.getFile());
                 }
-                // Link to the file created by StoreIncomingBlob.
-                redoRecorder.setMessageLinkInfo(blob.getPath());
-            } else {
-                // Store the blob data inside the CreateMessage op.
-                redoRecorder.setMessageBodyInfo(blob.getFile());
+            } else if (needRedo) {
+                // new mechanism - delegate to RedoLogBLobStore regardless of # of recipients
+                if (dctxt.getShared()) {
+                    if (dctxt.isFirst()) {
+                        redoBlobOp = redoBlobStore.logBlob(this, blob, msgSize, dctxt.getMailboxIdList());
+                    }
+                } else {
+                    redoBlobOp = redoBlobStore.logBlob(this, blob, msgSize);
+                }
             }
-
+            if (redoBlobOp != null) {
+                redoRecorder.setRedoBlobOperation(redoBlobOp);
+            }
             // step 6: link to existing blob
             MailboxBlob mblob = StoreManager.getInstance().link(staged, this, messageId, getOperationChangeID());
             markOtherItemDirty(mblob);
@@ -6041,14 +6056,6 @@ public class Mailbox implements MailboxStore {
                 ZimbraLog.mailbox.error("unable to send legal intercept message", e);
             }
         } finally {
-            if (storeRedoRecorder != null) {
-                if (success) {
-                    storeRedoRecorder.commit();
-                } else {
-                    storeRedoRecorder.abort();
-                }
-            }
-
             if (success) {
                 // Everything worked.  Update the blob field in ParsedMessage
                 // so the next recipient in the multi-recipient case will link
@@ -6172,7 +6179,12 @@ public class Mailbox implements MailboxStore {
             // content changed, so we're obliged to change the IMAP uid
             int imapID = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getImapId());
             redoRecorder.setImapId(imapID);
-            redoRecorder.setMessageBodyInfo(new ParsedMessageDataSource(pm), size);
+            javax.activation.DataSource ds = new ParsedMessageDataSource(pm);
+            if (redoBlobStore instanceof RedoOpBlobStore) {
+                redoRecorder.setMessageBodyInfo(ds, size);
+            } else {
+                redoRecorder.setRedoBlobOperation(redoBlobStore.logBlob(this, ds, size, digest));
+            }
 
             msg.setDraftAutoSendTime(autoSendTime);
 
@@ -8563,7 +8575,14 @@ public class Mailbox implements MailboxStore {
                 // extra write to local disk.  If this becomes a problem, we should update the
                 // ParsedDocument constructor to take a DataSource instead of an InputStream.
                 MailboxBlob mailboxBlob = doc.setContent(staged, pd);
-                redoRecorder.setMessageBodyInfo(new MailboxBlobDataSource(mailboxBlob), mailboxBlob.getSize());
+                MailboxBlobDataSource ds = new MailboxBlobDataSource(mailboxBlob);
+                long size = mailboxBlob.getSize();
+                if (redoBlobStore instanceof RedoOpBlobStore) {
+                    redoRecorder.setMessageBodyInfo(ds, size);
+                } else {
+                    String digest = mailboxBlob.getDigest();
+                    redoRecorder.setRedoBlobOperation(redoBlobStore.logBlob(this, ds, size, digest));
+                }
 
                 if (indexing) {
                     currentChange().addIndexItem(doc);
@@ -8604,6 +8623,17 @@ public class Mailbox implements MailboxStore {
         }
     }
 
+    public Document addDocumentRevision(OperationContext octxt, int docId, String author, String name, String description, boolean descEnabled, Blob data)
+    throws ServiceException {
+        Document doc = getDocumentById(octxt, docId);
+        try {
+            ParsedDocument pd = new ParsedDocument(data, name, doc.getContentType(), System.currentTimeMillis(), author, description, descEnabled);
+            return addDocumentRevision(octxt, docId, pd);
+        } catch (IOException ioe) {
+            throw ServiceException.FAILURE("error writing document blob", ioe);
+        }
+    }
+
     public Document addDocumentRevision(OperationContext octxt, int docId, ParsedDocument pd)
     throws IOException, ServiceException {
 
@@ -8626,7 +8656,14 @@ public class Mailbox implements MailboxStore {
                 // extra write to local disk.  If this becomes a problem, we should update the
                 // ParsedDocument constructor to take a DataSource instead of an InputStream.
                 MailboxBlob mailboxBlob = doc.setContent(staged, pd);
-                redoRecorder.setMessageBodyInfo(new MailboxBlobDataSource(mailboxBlob), mailboxBlob.getSize());
+                MailboxBlobDataSource ds = new MailboxBlobDataSource(mailboxBlob);
+                long size = mailboxBlob.getSize();
+                if (redoBlobStore instanceof RedoOpBlobStore) {
+                    redoRecorder.setMessageBodyInfo(ds, size);
+                } else {
+                    String digest = mailboxBlob.getDigest();
+                    redoRecorder.setRedoBlobOperation(redoBlobStore.logBlob(this, ds, size, digest));
+                }
 
                 currentChange().addIndexItem(doc);
 

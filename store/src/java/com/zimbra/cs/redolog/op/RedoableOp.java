@@ -37,7 +37,6 @@ import java.util.Map;
 
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
-
 import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.redolog.RedoCommitCallback;
@@ -71,7 +70,7 @@ public abstract class RedoableOp {
     private int mChangeId = -1;
     private int mChangeConstraint;
     private int mMailboxId;
-    private RedoLogManager mRedoLogMgr;
+    protected RedoLogManager mRedoLogMgr;
     private boolean mUnloggedReplay;  // true if redo of this op is not redo-logged
     protected RedoCommitCallback mCommitCallback;
 

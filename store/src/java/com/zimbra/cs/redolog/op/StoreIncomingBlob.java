@@ -27,15 +27,16 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.activation.DataSource;
 
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailboxOperation;
+import com.zimbra.cs.redolog.RedoLogBlobStore;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
+import com.zimbra.cs.redolog.RedoOpBlobStore;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
 
@@ -182,7 +183,12 @@ public class StoreIncomingBlob extends RedoableOp {
             if (compressed) {
                 blob.setDigest(mDigest).setRawSize(mMsgSize).setCompressed(compressed);
             }
-            registerBlob(mPath, blob);
+            RedoLogBlobStore blobStore = mRedoLogMgr.getBlobStore();
+            if (blobStore instanceof RedoOpBlobStore) {
+                ((RedoOpBlobStore) blobStore).registerBlob(mPath, blob);
+            } else {
+                ZimbraLog.redolog.warn("StoreIncomingBlob operations must be used with RedoOpBlobStore (found %s)", blobStore.getClass().getSimpleName());
+            }
             success = true;
         } finally {
             if (redoRecorder != null) {
@@ -192,18 +198,6 @@ public class StoreIncomingBlob extends RedoableOp {
                     redoRecorder.abort();
                 }
             }
-        }
-    }
-
-    private static final Map<String, Blob> sReplayedBlobs = new HashMap<String, Blob>();
-    static void registerBlob(String path, Blob blob) {
-        synchronized (sReplayedBlobs) {
-            sReplayedBlobs.put(path, blob);
-        }
-    }
-    static Blob fetchBlob(String path) {
-        synchronized (sReplayedBlobs) {
-            return sReplayedBlobs.get(path);
         }
     }
 }
