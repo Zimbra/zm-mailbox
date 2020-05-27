@@ -512,7 +512,7 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder, BlobRecorder {
             // the blob is referenced by its path
             blob = mRedoLogMgr.getBlobStore().fetchBlob(mPath);
         } else if (mMsgBodyType == MSGBODY_EXTERNAL) {
-            blob = mRedoLogMgr.getBlobStore().fetchBlob(getBlobDigest());
+            blob = getExternalBlob();
         }
         if (mMsgBodyType == MSGBODY_LINK || mMsgBodyType == MSGBODY_EXTERNAL) {
             if (blob == null)
@@ -561,6 +561,10 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder, BlobRecorder {
                 ByteUtil.closeStream(in);
             }
         }
+    }
+
+    protected Blob getExternalBlob() throws ServiceException, IOException {
+        return mRedoLogMgr.getBlobStore().fetchBlob(getBlobDigest());
     }
 
     @Override

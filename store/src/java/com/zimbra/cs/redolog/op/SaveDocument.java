@@ -159,8 +159,8 @@ public class SaveDocument extends CreateMessage {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
         try {
             ParsedDocument pd;
-            if (mMsgBodyType == MSGBODY_LINK) {
-                Blob blob = mRedoLogMgr.getBlobStore().fetchBlob(mPath);
+            if (mMsgBodyType == MSGBODY_EXTERNAL) {
+                Blob blob = getExternalBlob();
                 pd = new ParsedDocument(blob, mFilename, mMimeType,
                         System.currentTimeMillis(), mAuthor, mDescription, mDescEnabled);
             } else {

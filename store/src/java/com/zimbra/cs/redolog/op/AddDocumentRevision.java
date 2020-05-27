@@ -62,8 +62,8 @@ public class AddDocumentRevision extends SaveDocument {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
         OperationContext octxt = getOperationContext();
         try {
-            if (mMsgBodyType == MSGBODY_LINK) {
-                Blob blob = mRedoLogMgr.getBlobStore().fetchBlob(mPath);
+            if (mMsgBodyType == MSGBODY_EXTERNAL) {
+                Blob blob = getExternalBlob();
                 mbox.addDocumentRevision(octxt, mDocId, getAuthor(), getFilename(), getDescription(), isDescriptionEnabled(), blob);
             } else {
                 mbox.addDocumentRevision(octxt, mDocId, getAuthor(), getFilename(), getDescription(), isDescriptionEnabled(), getAdditionalDataStream());

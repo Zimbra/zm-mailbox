@@ -78,8 +78,8 @@ public class SaveDraft extends CreateMessage {
         Blob blob = null;
         InputStream in = null;
         try {
-            if (mMsgBodyType == MSGBODY_LINK) {
-                blob = mRedoLogMgr.getBlobStore().fetchBlob(mPath);
+            if (mMsgBodyType == MSGBODY_EXTERNAL) {
+                blob = getExternalBlob();
             } else {
                 in = mData.getInputStream();
                 if (mData.getLength() != mMsgSize) {
