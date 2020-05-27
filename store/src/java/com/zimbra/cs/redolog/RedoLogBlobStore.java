@@ -184,6 +184,7 @@ public abstract class RedoLogBlobStore {
             this.ds = ds;
             this.digest = digest;
             this.mboxIds = mboxIds;
+            this.size = size;
         }
 
         @Override
