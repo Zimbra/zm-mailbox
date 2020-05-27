@@ -1294,6 +1294,12 @@ public final class LC {
     public static final KnownKey redis_num_streams = KnownKey.newKey(10);
 
     @Supported
+    public static final KnownKey backup_reader_buffer_size_kb = KnownKey.newKey(16384);
+
+    @Supported
+    public static final KnownKey backup_cmd_buffer_size_kb = KnownKey.newKey("4096");
+
+    @Supported
     public static final KnownKey redis_num_pubsub_channels = KnownKey.newKey(100);
 
     @Supported
