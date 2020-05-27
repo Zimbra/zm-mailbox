@@ -41,8 +41,6 @@ import com.zimbra.cs.redolog.CommitId;
 import com.zimbra.cs.redolog.RedoCommitCallback;
 import com.zimbra.cs.redolog.RedoConfig;
 import com.zimbra.cs.redolog.RedoLogManager;
-import com.zimbra.cs.redolog.RedoLogManager.LocalRedoOpContext;
-import com.zimbra.cs.redolog.RedoLogManager.RedoOpContext;
 import com.zimbra.cs.redolog.RolloverManager;
 import com.zimbra.cs.redolog.op.CommitTxn;
 import com.zimbra.cs.redolog.op.RedoableOp;
@@ -248,11 +246,6 @@ public class FileLogWriter implements LogWriter {
             ZimbraLog.redolog.debug("Logged: " + mLogCount + " items, " + mFsyncCount + " fsyncs");
     }
 
-    @Override
-    public void log(RedoableOp op, InputStream data, boolean synchronous) throws IOException {
-        log(new LocalRedoOpContext(op), data, synchronous);
-    }
-
     /**
      * Log the supplied bytes.  Depending on the value of synchronous argument
      * and the setting of fsync interval, this method can do one of 3 things:
@@ -276,7 +269,7 @@ public class FileLogWriter implements LogWriter {
      * special case this condition to mean fsync should be done by the calling
      * thread.
      */
-    @Override public void log(RedoOpContext context, InputStream data, boolean synchronous) throws IOException {
+    @Override public void log(RedoableOp op, InputStream data, boolean synchronous) throws IOException {
         int seq;
         boolean sameMboxAsLastOp = false;
 
@@ -285,7 +278,7 @@ public class FileLogWriter implements LogWriter {
                 throw new IOException("Redolog file closed");
 
             // Record first transaction in header.
-            long tstamp = context.getOpTimestamp();
+            long tstamp = op.getTimestamp();
             mLastOpTstamp = Math.max(tstamp, mLastOpTstamp);
             if (mFirstOpTstamp == 0) {
             	mFirstOpTstamp = tstamp;
@@ -310,7 +303,6 @@ public class FileLogWriter implements LogWriter {
             // We do this with log writer lock held, so the commits and any
             // callbacks made on their behalf are truly in the correct order.
             // TODO: make transaction callbacks work in Zimbra Cloud
-            RedoableOp op = context.getOp();
             if (op != null && op instanceof CommitTxn) {
                 CommitTxn cmt = (CommitTxn) op;
                 RedoCommitCallback cb = cmt.getCallback();
@@ -326,8 +318,8 @@ public class FileLogWriter implements LogWriter {
 
             mLastLogTime = System.currentTimeMillis();
 
-            sameMboxAsLastOp = mLastOpMboxId == context.getOpMailboxId();
-            mLastOpMboxId = context.getOpMailboxId();
+            sameMboxAsLastOp = mLastOpMboxId == op.getMailboxId();
+            mLastOpMboxId = op.getMailboxId();
         }
 
         // cases 1 above

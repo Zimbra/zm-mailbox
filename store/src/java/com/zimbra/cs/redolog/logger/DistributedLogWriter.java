@@ -24,8 +24,6 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.RedissonClientHolder;
-import com.zimbra.cs.redolog.RedoLogManager.LocalRedoOpContext;
-import com.zimbra.cs.redolog.RedoLogManager.RedoOpContext;
 import com.zimbra.cs.redolog.TransactionId;
 import com.zimbra.cs.redolog.op.RedoableOp;
 
@@ -79,16 +77,15 @@ public class DistributedLogWriter implements LogWriter {
     }
 
     @Override
-    public void log(RedoOpContext context, InputStream data, boolean synchronous) throws IOException {
+    public void log(RedoableOp op, InputStream data, boolean synchronous) throws IOException {
         byte[] payload = ByteStreams.toByteArray(data);
         Map<byte[], byte[]> fields = new HashMap<>();
-        int mailboxId = context.getOpMailboxId();
-        RedoableOp op = context.getOp();
-        TransactionId txnId = context.getTransactionId();
-        MailboxOperation opType = context.getOperationType();
+        int mailboxId = op.getMailboxId();
+        TransactionId txnId = op.getTransactionId();
+        MailboxOperation opType = op.getOperation();
         fields.put(F_DATA, payload);
-        fields.put(F_TIMESTAMP, Longs.toByteArray(context.getOpTimestamp()));
-        fields.put(F_MAILBOX_ID, Ints.toByteArray(context.getOpMailboxId()));
+        fields.put(F_TIMESTAMP, Longs.toByteArray(op.getTimestamp()));
+        fields.put(F_MAILBOX_ID, Ints.toByteArray(mailboxId));
         fields.put(F_OP_TYPE, Ints.toByteArray(opType.getCode()));
         fields.put(F_TXN_ID, txnId.encodeToString().getBytes(Charsets.UTF_8));
         fields.put(F_SUBMIT_TIME, Longs.toByteArray(System.currentTimeMillis()));
@@ -126,18 +123,13 @@ public class DistributedLogWriter implements LogWriter {
             if (e == null) {
                 if (ZimbraLog.redolog.isDebugEnabled()) {
                     ZimbraLog.redolog.debug("submitted op %s txnId=%s to redis stream (stream_id=%s) (elapsed=%s)",
-                            context.getOperationType(), context.getTransactionId(), streamId, elapsed);
+                            opType, txnId, streamId, elapsed);
                 }
             } else {
                 ZimbraLog.redolog.error("error writing op %s txnId=%s to redis stream",
-                        context.getOp(), context.getTransactionId(), e);
+                        opType, txnId, e);
             }
         });
-    }
-
-    @Override
-    public void log(RedoableOp op, InputStream data, boolean synchronous) throws IOException {
-        log(new LocalRedoOpContext(op), data, synchronous);
     }
 
     @Override

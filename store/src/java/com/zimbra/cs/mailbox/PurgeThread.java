@@ -37,6 +37,7 @@ import com.zimbra.cs.account.callback.CallbackUtil;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.index.history.SearchHistory;
+import com.zimbra.cs.mailbox.util.MailboxClusterUtil;
 import com.zimbra.cs.service.admin.ManageIndex;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.Config;
@@ -69,7 +70,9 @@ extends Thread {
                 ZimbraLog.purge.warn("Cannot start a second purge thread while another one is running.");
                 return;
             }
-
+            if (MailboxClusterUtil.isBackupRestorePod()) {
+                return;
+            }
             if (getSleepInterval() == 0) {
                 ZimbraLog.purge.info("Not starting purge thread because %s is 0.",
                     Provisioning.A_zimbraMailPurgeSleepInterval);

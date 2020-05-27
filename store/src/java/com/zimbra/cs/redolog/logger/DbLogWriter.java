@@ -21,7 +21,6 @@ import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogManager;
-import com.zimbra.cs.redolog.RedoLogManager.RedoOpContext;
 import com.zimbra.cs.redolog.RedoLogOutput;
 import com.zimbra.cs.redolog.Version;
 import com.zimbra.cs.redolog.op.RedoableOp;
@@ -95,10 +94,6 @@ public class DbLogWriter implements LogWriter {
         } catch (Exception e) {
             ZimbraLog.redolog.error("Failed to write header at close redolog", e);
         }
-    }
-
-    @Override
-    public void log(RedoOpContext context, InputStream data, boolean synchronous) throws IOException {
     }
 
     @Override
