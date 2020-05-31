@@ -108,7 +108,7 @@ public final class ParsedDocument {
                     ZimbraLog.doc.warn("Temporary failure extracting from the document.  (is convertd down?)", e);
                     temporaryAnalysisFailure = true;
                 } else {
-                    ZimbraLog.index.warn("Failure indexing wiki document "+ filename + ".  Item will be partially indexed", e);
+                    ZimbraLog.index.warnQuietly("Failure indexing wiki document "+ filename + ".  Item will be partially indexed", e);
                 }
             }
             fragment = Fragment.getFragment(textContent, Fragment.Source.NOTEBOOK);
@@ -131,13 +131,13 @@ public final class ParsedDocument {
             ZimbraLog.doc.debug("ParsedDocument performExtraction elapsed=" + elapsed);
         } catch (MimeHandlerException mhe) {
             if (ConversionException.isTemporaryCauseOf(mhe)) {
-                ZimbraLog.doc.warn("Temporary failure extracting from the document.  (is convertd down?)", mhe);
+                ZimbraLog.doc.warnQuietly("Temporary failure extracting from the document.  (is convertd down?)", mhe);
                 temporaryAnalysisFailure = true;
             } else {
                 ZimbraLog.doc.errorQuietly("cannot create ParsedDocument", mhe);
             }
         } catch (Exception e) {
-            ZimbraLog.index.warn("Failure indexing wiki document " + filename + ".  Item will be partially indexed", e);
+            ZimbraLog.index.warnQuietly("Failure indexing wiki document " + filename + ".  Item will be partially indexed", e);
         } finally {
             parsed = true;
         }
