@@ -267,7 +267,7 @@ public class IndexingService {
                 }
                 ZimbraLog.index.debug("%s processed %d items", Thread.currentThread().getName(), queueItem.getMailItemsToAdd().size());
             } catch (Exception e) {
-                ZimbraLog.index.error("MailItemIndexTask - exception - ", e);
+                ZimbraLog.index.errorQuietly("MailItemIndexTask - exception - ", e);
                 if (queueItem.isReindex()) {
                     queueAdapter.incrementFailedMailboxTaskCount(queueItem.getAccountID(), queueItem.getMailItemsToAdd().size());
                 }

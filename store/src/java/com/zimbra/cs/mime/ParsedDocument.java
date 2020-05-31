@@ -134,7 +134,7 @@ public final class ParsedDocument {
                 ZimbraLog.doc.warn("Temporary failure extracting from the document.  (is convertd down?)", mhe);
                 temporaryAnalysisFailure = true;
             } else {
-                ZimbraLog.doc.error("cannot create ParsedDocument", mhe);
+                ZimbraLog.doc.errorQuietly("cannot create ParsedDocument", mhe);
             }
         } catch (Exception e) {
             ZimbraLog.index.warn("Failure indexing wiki document " + filename + ".  Item will be partially indexed", e);
