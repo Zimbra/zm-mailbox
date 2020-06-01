@@ -78524,13 +78524,13 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * URL of error page for unsupported browser.
      *
-     * @return zimbraWebclientUnsupportedBrowserRedirectToErrorPageURL, or null if unset
+     * @return zimbraWebclientUnsupportedBrowserRedirectToErrorPageURL, or "https://zimbra_ssl_webclient" if unset
      *
      * @since ZCS 8.8.9
      */
     @ZAttr(id=9009)
     public String getWebclientUnsupportedBrowserRedirectToErrorPageURL() {
-        return getAttr(Provisioning.A_zimbraWebclientUnsupportedBrowserRedirectToErrorPageURL, null, true);
+        return getAttr(Provisioning.A_zimbraWebclientUnsupportedBrowserRedirectToErrorPageURL, "https://zimbra_ssl_webclient", true);
     }
 
     /**
