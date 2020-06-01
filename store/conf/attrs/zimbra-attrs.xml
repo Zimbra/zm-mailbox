@@ -10034,7 +10034,7 @@ TODO: delete them permanently from here
   <desc>Whether to redirect to classic UI for the selected browsers not supported by Modern WebClient.</desc>
   <globalConfigValue>FALSE</globalConfigValue>
 </attr>
-<attr id="9006" name="zimbraWebclientUnsupportedBrowserRedirectToClassicUserAgents" type="regex" value="^[A-Za-z0-9]$" cardinality="single" optionalIn="globalConfig" since="8.8.9">
+<attr id="9006" name="zimbraWebclientUnsupportedBrowserRedirectToClassicUserAgents" type="string" cardinality="single" optionalIn="globalConfig" since="8.8.9">
   <desc>Regex for unsupported browsers by Modern webclient to redirect to classic webclient</desc>
   <globalConfigValue>$-</globalConfigValue>
 </attr>
@@ -10042,7 +10042,7 @@ TODO: delete them permanently from here
   <desc>Whether to redirect to error page for the selected browsers not supported by Modern WebClient.</desc>
   <globalConfigValue>FALSE</globalConfigValue>
 </attr>
-<attr id="9008" name="zimbraWebclientUnsupportedBrowserRedirectToErrorPageUserAgents" type="regex" value="^[A-Za-z0-9]$" cardinality="single" optionalIn="globalConfig" since="8.8.9">
+<attr id="9008" name="zimbraWebclientUnsupportedBrowserRedirectToErrorPageUserAgents" type="string" cardinality="single" optionalIn="globalConfig" since="8.8.9">
   <desc>Regex for unsupported browsers to redirect to error page</desc>
   <globalConfigValue>$-</globalConfigValue>
 </attr>
