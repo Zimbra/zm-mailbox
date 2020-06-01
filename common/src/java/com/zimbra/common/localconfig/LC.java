@@ -1301,6 +1301,15 @@ public final class LC {
     public static final KnownKey backup_cmd_buffer_size_kb = KnownKey.newKey("4096");
 
     @Supported
+    public static final KnownKey backup_blob_store_service_uri = KnownKey.newKey("localhost");
+
+    @Supported
+    public static final KnownKey backup_blob_store_access_key = KnownKey.newKey("minioadmin");
+
+    @Supported
+    public static final KnownKey backup_blob_store_secret_key = KnownKey.newKey("minioadmin");
+
+    @Supported
     public static final KnownKey redis_num_pubsub_channels = KnownKey.newKey(100);
 
     @Supported
