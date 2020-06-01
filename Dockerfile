@@ -3,14 +3,14 @@
 
 ARG DOCKER_REPO_NS=dev-registry.zimbra-docker-registry.tk
 #Build stage image
-FROM ${DOCKER_REPO_NS}/zms-core-utils:1.1 as utils
+FROM ${DOCKER_REPO_NS}/zms-core-utils:1.2 as utils
 FROM ${DOCKER_REPO_NS}/zms-zcs-lib:1.0.3 as lib
 FROM ${DOCKER_REPO_NS}/zms-jetty-conf:1.2 as jetty-conf
 FROM ${DOCKER_REPO_NS}/zms-jython:1.1 as jython
 FROM ${DOCKER_REPO_NS}/zms-perl:1.1 as perl
 FROM ${DOCKER_REPO_NS}/zms-db-conf:1.1 as db-conf
 FROM ${DOCKER_REPO_NS}/zms-admin-console:1.0.2 as admin-console
-FROM ${DOCKER_REPO_NS}/zms-ldap-utilities:1.1 as ldap
+FROM ${DOCKER_REPO_NS}/zms-ldap-utilities:1.2 as ldap
 FROM ${DOCKER_REPO_NS}/zms-timezones:1.1 as timezone
 FROM ${DOCKER_REPO_NS}/zms-core-network-extension:1.0.4 as ext-core-network
 FROM ${DOCKER_REPO_NS}/zms-core-zimlets:1.0.2 as zimlet-webapp
