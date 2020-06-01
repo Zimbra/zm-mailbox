@@ -14,7 +14,7 @@ FROM ${DOCKER_REPO_NS}/zms-ldap-utilities:1.2 as ldap
 FROM ${DOCKER_REPO_NS}/zms-timezones:1.1 as timezone
 FROM ${DOCKER_REPO_NS}/zms-core-network-extension:1.0.4 as ext-core-network
 FROM ${DOCKER_REPO_NS}/zms-core-zimlets:1.0.2 as zimlet-webapp
-FROM ${DOCKER_REPO_NS}/zms-classic-webclient:0.0.1 as zimbra-classic-webclient
+FROM ${DOCKER_REPO_NS}/zms-classic-webclient:0.0.2 as zimbra-classic-webclient
 
 # Final stage, copy contents from build stage
 FROM ${DOCKER_REPO_NS}/zms-base:1.0.10
