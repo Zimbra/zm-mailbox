@@ -132,5 +132,7 @@
   <dependency org="org.apache.pdfbox" name="jempbox" rev="1.8.16"/>
   <dependency org="org.apache.pdfbox" name="pdfbox" rev="2.0.18"/>
   <dependency org="org.apache.pdfbox" name="fontbox" rev="2.0.18"/>
+  <dependency org="io.minio" name="minio" rev="7.0.2"/>
+  <dependency org="com.squareup.okhttp3" name="okhttp" rev="4.7.2"/>
  </dependencies>
 </ivy-module>
