@@ -78291,6 +78291,381 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Whether to redirect to classic UI for the selected browsers not
+     * supported by Modern WebClient.
+     *
+     * @return zimbraWebclientUnsupportedBrowserRedirectToClassicEnabled, or false if unset
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=9005)
+    public boolean isWebclientUnsupportedBrowserRedirectToClassicEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraWebclientUnsupportedBrowserRedirectToClassicEnabled, false, true);
+    }
+
+    /**
+     * Whether to redirect to classic UI for the selected browsers not
+     * supported by Modern WebClient.
+     *
+     * @param zimbraWebclientUnsupportedBrowserRedirectToClassicEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=9005)
+    public void setWebclientUnsupportedBrowserRedirectToClassicEnabled(boolean zimbraWebclientUnsupportedBrowserRedirectToClassicEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebclientUnsupportedBrowserRedirectToClassicEnabled, zimbraWebclientUnsupportedBrowserRedirectToClassicEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to redirect to classic UI for the selected browsers not
+     * supported by Modern WebClient.
+     *
+     * @param zimbraWebclientUnsupportedBrowserRedirectToClassicEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=9005)
+    public Map<String,Object> setWebclientUnsupportedBrowserRedirectToClassicEnabled(boolean zimbraWebclientUnsupportedBrowserRedirectToClassicEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebclientUnsupportedBrowserRedirectToClassicEnabled, zimbraWebclientUnsupportedBrowserRedirectToClassicEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to redirect to classic UI for the selected browsers not
+     * supported by Modern WebClient.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=9005)
+    public void unsetWebclientUnsupportedBrowserRedirectToClassicEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebclientUnsupportedBrowserRedirectToClassicEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to redirect to classic UI for the selected browsers not
+     * supported by Modern WebClient.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=9005)
+    public Map<String,Object> unsetWebclientUnsupportedBrowserRedirectToClassicEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebclientUnsupportedBrowserRedirectToClassicEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Regex for unsupported browsers by Modern webclient to redirect to
+     * classic webclient
+     *
+     * @return zimbraWebclientUnsupportedBrowserRedirectToClassicUserAgents, or "$-" if unset
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=9006)
+    public String getWebclientUnsupportedBrowserRedirectToClassicUserAgents() {
+        return getAttr(Provisioning.A_zimbraWebclientUnsupportedBrowserRedirectToClassicUserAgents, "$-", true);
+    }
+
+    /**
+     * Regex for unsupported browsers by Modern webclient to redirect to
+     * classic webclient
+     *
+     * @param zimbraWebclientUnsupportedBrowserRedirectToClassicUserAgents new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=9006)
+    public void setWebclientUnsupportedBrowserRedirectToClassicUserAgents(String zimbraWebclientUnsupportedBrowserRedirectToClassicUserAgents) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebclientUnsupportedBrowserRedirectToClassicUserAgents, zimbraWebclientUnsupportedBrowserRedirectToClassicUserAgents);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Regex for unsupported browsers by Modern webclient to redirect to
+     * classic webclient
+     *
+     * @param zimbraWebclientUnsupportedBrowserRedirectToClassicUserAgents new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=9006)
+    public Map<String,Object> setWebclientUnsupportedBrowserRedirectToClassicUserAgents(String zimbraWebclientUnsupportedBrowserRedirectToClassicUserAgents, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebclientUnsupportedBrowserRedirectToClassicUserAgents, zimbraWebclientUnsupportedBrowserRedirectToClassicUserAgents);
+        return attrs;
+    }
+
+    /**
+     * Regex for unsupported browsers by Modern webclient to redirect to
+     * classic webclient
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=9006)
+    public void unsetWebclientUnsupportedBrowserRedirectToClassicUserAgents() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebclientUnsupportedBrowserRedirectToClassicUserAgents, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Regex for unsupported browsers by Modern webclient to redirect to
+     * classic webclient
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=9006)
+    public Map<String,Object> unsetWebclientUnsupportedBrowserRedirectToClassicUserAgents(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebclientUnsupportedBrowserRedirectToClassicUserAgents, "");
+        return attrs;
+    }
+
+    /**
+     * Whether to redirect to error page for the selected browsers not
+     * supported by Modern WebClient.
+     *
+     * @return zimbraWebclientUnsupportedBrowserRedirectToErrorPageEnabled, or false if unset
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=9007)
+    public boolean isWebclientUnsupportedBrowserRedirectToErrorPageEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraWebclientUnsupportedBrowserRedirectToErrorPageEnabled, false, true);
+    }
+
+    /**
+     * Whether to redirect to error page for the selected browsers not
+     * supported by Modern WebClient.
+     *
+     * @param zimbraWebclientUnsupportedBrowserRedirectToErrorPageEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=9007)
+    public void setWebclientUnsupportedBrowserRedirectToErrorPageEnabled(boolean zimbraWebclientUnsupportedBrowserRedirectToErrorPageEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebclientUnsupportedBrowserRedirectToErrorPageEnabled, zimbraWebclientUnsupportedBrowserRedirectToErrorPageEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to redirect to error page for the selected browsers not
+     * supported by Modern WebClient.
+     *
+     * @param zimbraWebclientUnsupportedBrowserRedirectToErrorPageEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=9007)
+    public Map<String,Object> setWebclientUnsupportedBrowserRedirectToErrorPageEnabled(boolean zimbraWebclientUnsupportedBrowserRedirectToErrorPageEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebclientUnsupportedBrowserRedirectToErrorPageEnabled, zimbraWebclientUnsupportedBrowserRedirectToErrorPageEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to redirect to error page for the selected browsers not
+     * supported by Modern WebClient.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=9007)
+    public void unsetWebclientUnsupportedBrowserRedirectToErrorPageEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebclientUnsupportedBrowserRedirectToErrorPageEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to redirect to error page for the selected browsers not
+     * supported by Modern WebClient.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=9007)
+    public Map<String,Object> unsetWebclientUnsupportedBrowserRedirectToErrorPageEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebclientUnsupportedBrowserRedirectToErrorPageEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * URL of error page for unsupported browser.
+     *
+     * @return zimbraWebclientUnsupportedBrowserRedirectToErrorPageURL, or null if unset
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=9009)
+    public String getWebclientUnsupportedBrowserRedirectToErrorPageURL() {
+        return getAttr(Provisioning.A_zimbraWebclientUnsupportedBrowserRedirectToErrorPageURL, null, true);
+    }
+
+    /**
+     * URL of error page for unsupported browser.
+     *
+     * @param zimbraWebclientUnsupportedBrowserRedirectToErrorPageURL new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=9009)
+    public void setWebclientUnsupportedBrowserRedirectToErrorPageURL(String zimbraWebclientUnsupportedBrowserRedirectToErrorPageURL) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebclientUnsupportedBrowserRedirectToErrorPageURL, zimbraWebclientUnsupportedBrowserRedirectToErrorPageURL);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * URL of error page for unsupported browser.
+     *
+     * @param zimbraWebclientUnsupportedBrowserRedirectToErrorPageURL new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=9009)
+    public Map<String,Object> setWebclientUnsupportedBrowserRedirectToErrorPageURL(String zimbraWebclientUnsupportedBrowserRedirectToErrorPageURL, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebclientUnsupportedBrowserRedirectToErrorPageURL, zimbraWebclientUnsupportedBrowserRedirectToErrorPageURL);
+        return attrs;
+    }
+
+    /**
+     * URL of error page for unsupported browser.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=9009)
+    public void unsetWebclientUnsupportedBrowserRedirectToErrorPageURL() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebclientUnsupportedBrowserRedirectToErrorPageURL, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * URL of error page for unsupported browser.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=9009)
+    public Map<String,Object> unsetWebclientUnsupportedBrowserRedirectToErrorPageURL(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebclientUnsupportedBrowserRedirectToErrorPageURL, "");
+        return attrs;
+    }
+
+    /**
+     * Regex for unsupported browsers to redirect to error page
+     *
+     * @return zimbraWebclientUnsupportedBrowserRedirectToErrorPageUserAgents, or "$-" if unset
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=9008)
+    public String getWebclientUnsupportedBrowserRedirectToErrorPageUserAgents() {
+        return getAttr(Provisioning.A_zimbraWebclientUnsupportedBrowserRedirectToErrorPageUserAgents, "$-", true);
+    }
+
+    /**
+     * Regex for unsupported browsers to redirect to error page
+     *
+     * @param zimbraWebclientUnsupportedBrowserRedirectToErrorPageUserAgents new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=9008)
+    public void setWebclientUnsupportedBrowserRedirectToErrorPageUserAgents(String zimbraWebclientUnsupportedBrowserRedirectToErrorPageUserAgents) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebclientUnsupportedBrowserRedirectToErrorPageUserAgents, zimbraWebclientUnsupportedBrowserRedirectToErrorPageUserAgents);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Regex for unsupported browsers to redirect to error page
+     *
+     * @param zimbraWebclientUnsupportedBrowserRedirectToErrorPageUserAgents new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=9008)
+    public Map<String,Object> setWebclientUnsupportedBrowserRedirectToErrorPageUserAgents(String zimbraWebclientUnsupportedBrowserRedirectToErrorPageUserAgents, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebclientUnsupportedBrowserRedirectToErrorPageUserAgents, zimbraWebclientUnsupportedBrowserRedirectToErrorPageUserAgents);
+        return attrs;
+    }
+
+    /**
+     * Regex for unsupported browsers to redirect to error page
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=9008)
+    public void unsetWebclientUnsupportedBrowserRedirectToErrorPageUserAgents() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebclientUnsupportedBrowserRedirectToErrorPageUserAgents, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Regex for unsupported browsers to redirect to error page
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=9008)
+    public Map<String,Object> unsetWebclientUnsupportedBrowserRedirectToErrorPageUserAgents(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebclientUnsupportedBrowserRedirectToErrorPageUserAgents, "");
+        return attrs;
+    }
+
+    /**
      * Deprecated since: 8.7.0. Zimbra no longer includes an XMPP server.
      * Orig desc: Enable XMPP support for IM
      *
