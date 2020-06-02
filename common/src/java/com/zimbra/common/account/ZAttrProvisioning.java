@@ -17768,6 +17768,49 @@ public class ZAttrProvisioning {
     public static final String A_zimbraWebClientSupportedHelps = "zimbraWebClientSupportedHelps";
 
     /**
+     * Whether to redirect to classic UI for the selected browsers not
+     * supported by Modern WebClient.
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=9005)
+    public static final String A_zimbraWebclientUnsupportedBrowserRedirectToClassicEnabled = "zimbraWebclientUnsupportedBrowserRedirectToClassicEnabled";
+
+    /**
+     * Regex for unsupported browsers by Modern webclient to redirect to
+     * classic webclient
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=9006)
+    public static final String A_zimbraWebclientUnsupportedBrowserRedirectToClassicUserAgents = "zimbraWebclientUnsupportedBrowserRedirectToClassicUserAgents";
+
+    /**
+     * Whether to redirect to error page for the selected browsers not
+     * supported by Modern WebClient.
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=9007)
+    public static final String A_zimbraWebclientUnsupportedBrowserRedirectToErrorPageEnabled = "zimbraWebclientUnsupportedBrowserRedirectToErrorPageEnabled";
+
+    /**
+     * URL of error page for unsupported browser.
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=9009)
+    public static final String A_zimbraWebclientUnsupportedBrowserRedirectToErrorPageURL = "zimbraWebclientUnsupportedBrowserRedirectToErrorPageURL";
+
+    /**
+     * Regex for unsupported browsers to redirect to error page
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=9008)
+    public static final String A_zimbraWebclientUnsupportedBrowserRedirectToErrorPageUserAgents = "zimbraWebclientUnsupportedBrowserRedirectToErrorPageUserAgents";
+
+    /**
      * weclient URL to directly connect when making service to JS calls from
      * mail server in split mode
      *

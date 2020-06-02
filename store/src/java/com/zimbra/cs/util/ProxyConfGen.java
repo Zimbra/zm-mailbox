@@ -1784,6 +1784,77 @@ class EwsEnablerVar extends WebEnablerVar {
     }
 }
 
+
+class UnSupportedBrowserRedirectToClassicEnablerVar extends WebEnablerVar {
+
+	public UnSupportedBrowserRedirectToClassicEnablerVar() {
+        super("web.unsupported.browser.redirect.classic.disable", "#","Whether to redirect to classic UI for the selected browsers not supported by Modern WebClient");
+    }
+
+	@Override
+    public String format(Object o)  {
+        if (configSource.getBooleanAttr(Provisioning.A_zimbraWebclientUnsupportedBrowserRedirectToClassicEnabled, false)) {
+            return "";
+        } else {
+            return "#";
+        }
+    }
+}
+
+class UnSupportedBrowserRedirectToClassicUserAgentsVar extends ProxyConfVar {
+	public UnSupportedBrowserRedirectToClassicUserAgentsVar() {
+        super("web.unsupported.browser.redirect.classic.user.agents",Provisioning.A_zimbraWebclientUnsupportedBrowserRedirectToClassicUserAgents,
+              "$-", ProxyConfValueType.STRING, ProxyConfOverride.CONFIG, "Regex for unsupported browsers by Modern webclient to redirect to classic webclient");
+    }
+
+	@Override
+    public void update() throws ServiceException {
+        mValue = mProv.getConfig().getWebclientUnsupportedBrowserRedirectToClassicUserAgents();
+    }
+}
+
+
+class UnSupportedBrowserRedirectToErroPageEnablerVar extends WebEnablerVar {
+	public UnSupportedBrowserRedirectToErroPageEnablerVar() {
+        super("web.unsupported.browser.redirect.error.page.disable", "#","Whether to redirect to error page for the selected browsers not supported by Modern WebClient");
+    }
+
+	@Override
+    public String format(Object o)  {
+        if (configSource.getBooleanAttr(Provisioning.A_zimbraWebclientUnsupportedBrowserRedirectToErrorPageEnabled, false)) {
+            return "";
+        } else {
+            return "#";
+        }
+    }
+}
+
+class UnSupportedBrowserRedirectToErrorPageUserAgentsVar extends ProxyConfVar {
+	public UnSupportedBrowserRedirectToErrorPageUserAgentsVar() {
+        super("web.unsupported.browser.redirect.error.page.user.agents", Provisioning.A_zimbraWebclientUnsupportedBrowserRedirectToErrorPageUserAgents,
+              "$-", ProxyConfValueType.STRING, ProxyConfOverride.CONFIG, "Regex for unsupported browsers to redirect to error page");
+    }
+
+	@Override
+    public void update() throws ServiceException {
+        mValue = mProv.getConfig().getWebclientUnsupportedBrowserRedirectToErrorPageUserAgents();
+    }
+}
+
+class UnSupportedBrowserErrorPageURLVar extends ProxyConfVar {
+	public UnSupportedBrowserErrorPageURLVar() {
+        super("web.unsupported.browser.error.page.url", Provisioning.A_zimbraWebclientUnsupportedBrowserRedirectToErrorPageURL,
+              "", ProxyConfValueType.STRING, ProxyConfOverride.CONFIG, "URL of error page for unsupported browser.");
+    }
+
+	@Override
+    public void update() throws ServiceException {
+        mValue = mProv.getConfig().getWebclientUnsupportedBrowserRedirectToErrorPageURL();
+    }
+}
+
+
+
 /**
  *
  * @author zimbra
@@ -2978,6 +3049,11 @@ public class ProxyConfGen
         mConfVars.put("web.ssl.upstream.zx.name", new ProxyConfVar("web.ssl.upstream.zx.name", null, ZIMBRA_SSL_UPSTREAM_ZX_NAME, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG,"Symbolic name for HTTPS zx upstream"));
         mConfVars.put("web.upstream.zx.:servers", new WebUpstreamZxServersVar());
         mConfVars.put("web.ssl.upstream.zx.:servers", new WebSslUpstreamZxServersVar());
+        mConfVars.put("web.unsupported.browser.redirect.classic.disable", new UnSupportedBrowserRedirectToClassicEnablerVar());
+        mConfVars.put("web.unsupported.browser.redirect.classic.user.agents", new UnSupportedBrowserRedirectToClassicUserAgentsVar());
+        mConfVars.put("web.unsupported.browser.redirect.error.page.disable", new UnSupportedBrowserRedirectToErroPageEnablerVar());
+        mConfVars.put("web.unsupported.browser.redirect.error.page.user.agents", new UnSupportedBrowserRedirectToErrorPageUserAgentsVar());
+        mConfVars.put("web.unsupported.browser.redirect.error.page.url", new UnSupportedBrowserErrorPageURLVar());
 
         //Get the response headers list from globalconfig
         String[] rspHeaders = ProxyConfVar.configSource.getMultiAttr(Provisioning.A_zimbraReverseProxyResponseHeaders);

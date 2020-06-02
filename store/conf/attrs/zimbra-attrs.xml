@@ -10030,4 +10030,24 @@ TODO: delete them permanently from here
     indexing         - Generate index
   </desc>
 </attr>
+<attr id="9005" name="zimbraWebclientUnsupportedBrowserRedirectToClassicEnabled" type="boolean" cardinality="single" optionalIn="globalConfig" since="8.8.9">
+  <desc>Whether to redirect to classic UI for the selected browsers not supported by Modern WebClient.</desc>
+  <globalConfigValue>FALSE</globalConfigValue>
+</attr>
+<attr id="9006" name="zimbraWebclientUnsupportedBrowserRedirectToClassicUserAgents" type="string" cardinality="single" optionalIn="globalConfig" since="8.8.9">
+  <desc>Regex for unsupported browsers by Modern webclient to redirect to classic webclient</desc>
+  <globalConfigValue>Trident/7.0</globalConfigValue>
+</attr>
+<attr id="9007" name="zimbraWebclientUnsupportedBrowserRedirectToErrorPageEnabled" type="boolean" cardinality="single" optionalIn="globalConfig" since="8.8.9">
+  <desc>Whether to redirect to error page for the selected browsers not supported by Modern WebClient.</desc>
+  <globalConfigValue>FALSE</globalConfigValue>
+</attr>
+<attr id="9008" name="zimbraWebclientUnsupportedBrowserRedirectToErrorPageUserAgents" type="string" cardinality="single" optionalIn="globalConfig" since="8.8.9">
+  <desc>Regex for unsupported browsers to redirect to error page</desc>
+  <globalConfigValue>$-</globalConfigValue>
+</attr>
+<attr id="9009" name="zimbraWebclientUnsupportedBrowserRedirectToErrorPageURL" type="string" cardinality="single" optionalIn="globalConfig" since="8.8.9">
+  <desc>URL of error page for unsupported browser.</desc>
+  <globalConfigValue>https://zimbra_ssl_webclient/unsupportedbrowser.html</globalConfigValue>
+</attr>
 </attrs>
