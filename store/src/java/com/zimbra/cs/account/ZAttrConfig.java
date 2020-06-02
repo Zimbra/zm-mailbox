@@ -78371,13 +78371,13 @@ public abstract class ZAttrConfig extends Entry {
      * Regex for unsupported browsers by Modern webclient to redirect to
      * classic webclient
      *
-     * @return zimbraWebclientUnsupportedBrowserRedirectToClassicUserAgents, or "$-" if unset
+     * @return zimbraWebclientUnsupportedBrowserRedirectToClassicUserAgents, or "Trident/7.0" if unset
      *
      * @since ZCS 8.8.9
      */
     @ZAttr(id=9006)
     public String getWebclientUnsupportedBrowserRedirectToClassicUserAgents() {
-        return getAttr(Provisioning.A_zimbraWebclientUnsupportedBrowserRedirectToClassicUserAgents, "$-", true);
+        return getAttr(Provisioning.A_zimbraWebclientUnsupportedBrowserRedirectToClassicUserAgents, "Trident/7.0", true);
     }
 
     /**
@@ -78524,13 +78524,13 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * URL of error page for unsupported browser.
      *
-     * @return zimbraWebclientUnsupportedBrowserRedirectToErrorPageURL, or "https://zimbra_ssl_webclient" if unset
+     * @return zimbraWebclientUnsupportedBrowserRedirectToErrorPageURL, or "https://zimbra_ssl_webclient/unsupportedbrowser.html" if unset
      *
      * @since ZCS 8.8.9
      */
     @ZAttr(id=9009)
     public String getWebclientUnsupportedBrowserRedirectToErrorPageURL() {
-        return getAttr(Provisioning.A_zimbraWebclientUnsupportedBrowserRedirectToErrorPageURL, "https://zimbra_ssl_webclient", true);
+        return getAttr(Provisioning.A_zimbraWebclientUnsupportedBrowserRedirectToErrorPageURL, "https://zimbra_ssl_webclient/unsupportedbrowser.html", true);
     }
 
     /**
