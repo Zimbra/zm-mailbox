@@ -68,7 +68,7 @@ public abstract class RedoLogBlobStore {
 
     public abstract Blob fetchBlob(String identifier) throws ServiceException, IOException;
 
-    protected abstract void storeBlobData(InputStream in, long size, String digest) throws IOException;
+    protected abstract void storeBlobData(InputStream in, long size, String digest) throws ServiceException, IOException;
 
     protected abstract void deleteBlobData(String digest);
 
@@ -195,7 +195,7 @@ public abstract class RedoLogBlobStore {
                 try {
                     in = ds.getInputStream();
                     storeBlobData(in, size, digest);
-                } catch (IOException e) {
+                } catch (IOException | ServiceException e) {
                     ZimbraLog.redolog.error("unable to store redolog blob! digest=%s", digest, e);
                 } finally {
                     ByteUtil.closeStream(in);
