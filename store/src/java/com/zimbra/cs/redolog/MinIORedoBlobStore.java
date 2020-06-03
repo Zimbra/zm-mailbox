@@ -7,6 +7,7 @@ import java.security.NoSuchAlgorithmException;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.redolog.RedisRedoBlobStore.RedisReferenceManager;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
@@ -17,6 +18,7 @@ import io.minio.errors.InsufficientDataException;
 import io.minio.errors.InternalException;
 import io.minio.errors.InvalidBucketNameException;
 import io.minio.errors.InvalidResponseException;
+import io.minio.errors.RegionConflictException;
 import io.minio.errors.XmlParserException;
 
 public class MinIORedoBlobStore extends RedoLogBlobStore {
@@ -24,10 +26,27 @@ public class MinIORedoBlobStore extends RedoLogBlobStore {
     private final MinioClient client;
     private final String bucketName;
 
+    private void createBucket() throws ServiceException {
+        try {
+            boolean bucketExists = client.bucketExists(bucketName);
+            if (!bucketExists) {
+                ZimbraLog.redolog.debug("MinIORedoBlobStore - createBucket - going to make bucket");
+                client.makeBucket(bucketName);
+            }
+        } catch (InvalidKeyException | ErrorResponseException | IllegalArgumentException | InsufficientDataException
+                | InternalException | InvalidBucketNameException | InvalidResponseException | NoSuchAlgorithmException
+                | XmlParserException | IOException e) {
+            throw ServiceException.FAILURE("MinIORedoBlobStore - createBucket failed: ", e);
+        } catch (RegionConflictException e) {
+            throw ServiceException.FAILURE("MinIORedoBlobStore - createBucket failed - RegionConflictException: ", e);
+        }
+    }
+
     public MinIORedoBlobStore(BlobReferenceManager refManager) throws ServiceException {
         super(refManager);
         client = MinIOClientHolder.getInstance().getClient();
         bucketName = LC.backup_blob_store_s3_bucket.value();
+        createBucket();
     }
 
     @Override
