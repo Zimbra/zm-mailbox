@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -13,6 +15,7 @@ import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
 
 import io.minio.MinioClient;
+import io.minio.PutObjectOptions;
 import io.minio.errors.ErrorResponseException;
 import io.minio.errors.InsufficientDataException;
 import io.minio.errors.InternalException;
@@ -25,6 +28,10 @@ public class MinIORedoBlobStore extends RedoLogBlobStore {
 
     private final MinioClient client;
     private final String bucketName;
+
+    private enum BlobMetaData {
+        SIZE;
+    }
 
     private void createBucket() throws ServiceException {
         try {
@@ -66,7 +73,13 @@ public class MinIORedoBlobStore extends RedoLogBlobStore {
     @Override
     protected void storeBlobData(InputStream in, long size, String digest) throws ServiceException {
         try {
-            client.putObject(bucketName, digest, in, null);
+            Map<String, String> metadataMap = new HashMap<String, String>();
+            metadataMap.put(BlobMetaData.SIZE.toString(), Long.toString(size));
+
+            PutObjectOptions options = new PutObjectOptions(in.available(), -1);
+            options.setHeaders(metadataMap);
+
+            client.putObject(bucketName, digest, in, options);
         } catch (InvalidKeyException | ErrorResponseException | IllegalArgumentException | InsufficientDataException
                 | InternalException | InvalidBucketNameException | InvalidResponseException | NoSuchAlgorithmException
                 | XmlParserException | IOException e) {
