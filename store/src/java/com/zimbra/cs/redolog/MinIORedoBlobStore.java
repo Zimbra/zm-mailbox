@@ -7,6 +7,7 @@ import java.security.NoSuchAlgorithmException;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.redolog.RedisRedoBlobStore.RedisReferenceManager;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
 
@@ -62,6 +63,15 @@ public class MinIORedoBlobStore extends RedoLogBlobStore {
                 | InternalException | InvalidBucketNameException | InvalidResponseException | NoSuchAlgorithmException
                 | XmlParserException | IOException e) {
             throw ServiceException.FAILURE("MinIORedoBlobStore - deleteBlobData failed: ", e);
+        }
+    }
+
+    public static class Factory implements RedoLogBlobStore.Factory {
+
+        @Override
+        public MinIORedoBlobStore getRedoLogBlobStore() throws ServiceException {
+            //Temporary code to use RedisReferenceManager as a BlobReferenceManager
+            return new MinIORedoBlobStore(new RedisReferenceManager());
         }
     }
 }

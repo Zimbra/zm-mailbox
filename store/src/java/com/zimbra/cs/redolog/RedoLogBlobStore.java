@@ -213,6 +213,6 @@ public abstract class RedoLogBlobStore {
     }
 
     public static interface Factory {
-        public RedoLogBlobStore getRedoLogBlobStore();
+        public RedoLogBlobStore getRedoLogBlobStore() throws ServiceException;
     }
 }

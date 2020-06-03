@@ -179,7 +179,7 @@ public class RedoLogManager {
     private RedoLogBlobStore blobStore;
 
 
-    public RedoLogManager(File redolog, File archdir, boolean supportsCrashRecovery) {
+    public RedoLogManager(File redolog, File archdir, boolean supportsCrashRecovery) throws ServiceException {
         mEnabled = false;
         mShuttingDown = false;
         mRecoveryMode = false;
