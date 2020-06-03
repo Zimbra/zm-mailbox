@@ -370,7 +370,7 @@ public class FileLogWriter implements LogWriter {
 
     @SuppressWarnings("unchecked")
     @Override public synchronized File rollover(LinkedHashMap /*<TxnId, RedoableOp>*/ activeOps)
-    throws IOException {
+    throws ServiceException, IOException {
         RolloverManager romgr = mRedoLogMgr.getRolloverManager();
 
         long lastSeq = getSequence();

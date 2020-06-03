@@ -70,7 +70,7 @@ public abstract class RedoLogBlobStore {
 
     protected abstract void storeBlobData(InputStream in, long size, String digest) throws ServiceException, IOException;
 
-    protected abstract void deleteBlobData(String digest);
+    protected abstract void deleteBlobData(String digest) throws ServiceException;
 
     public PendingRedoBlobOperation logBlob(Mailbox mbox, Blob blob, long size) throws ServiceException, IOException {
         return logBlob(mbox, blob, size, Arrays.asList(mbox.getId()));
@@ -89,7 +89,7 @@ public abstract class RedoLogBlobStore {
         return new ExternalRedoBlobOperation(ds, size, digest, mboxIds);
     }
 
-    public void derefRedoLogFile(File file) throws IOException {
+    public void derefRedoLogFile(File file) throws ServiceException, IOException {
         for (BlobReferences refs: refManager.getBlobRefs(file)) {
             String digest = refs.getDigest();
             Collection<Integer> mboxIds = refs.getMailboxIds();

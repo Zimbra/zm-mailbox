@@ -55,7 +55,13 @@ public class MinIORedoBlobStore extends RedoLogBlobStore {
     }
 
     @Override
-    protected void deleteBlobData(String digest) {
-        // TODO Auto-generated method stub
+    protected void deleteBlobData(String digest) throws ServiceException {
+        try {
+            client.removeObject(bucketName, digest);
+        } catch (InvalidKeyException | ErrorResponseException | IllegalArgumentException | InsufficientDataException
+                | InternalException | InvalidBucketNameException | InvalidResponseException | NoSuchAlgorithmException
+                | XmlParserException | IOException e) {
+            throw ServiceException.FAILURE("MinIORedoBlobStore - deleteBlobData failed: ", e);
+        }
     }
 }
