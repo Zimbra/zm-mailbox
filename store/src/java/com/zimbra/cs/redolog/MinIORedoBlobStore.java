@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.localconfig.LC;
@@ -15,6 +16,7 @@ import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
 
 import io.minio.MinioClient;
+import io.minio.ObjectStat;
 import io.minio.PutObjectOptions;
 import io.minio.errors.ErrorResponseException;
 import io.minio.errors.InsufficientDataException;
@@ -60,13 +62,22 @@ public class MinIORedoBlobStore extends RedoLogBlobStore {
     public Blob fetchBlob(String identifier) throws ServiceException {
         try {
             InputStream obj = client.getObject(bucketName, identifier);
-            // Temp code
-            Boolean compressed = false;
+            ObjectStat objectStat = client.statObject(bucketName, identifier);
+            Map<String, List<String>> metadataMap = objectStat.httpHeaders();
+            List<String> sizeList = metadataMap.get(BlobMetaData.SIZE.toString());
+            if (sizeList == null) {
+                throw ServiceException.NOT_FOUND(
+                        "MinIORedoBlobStore - fetchBlob - Missing meta information: " + BlobMetaData.SIZE.toString());
+            }
+            Long size = Long.parseLong(sizeList.get(0));
+            Boolean compressed = obj.available() < size;
             return StoreManager.getInstance().storeIncoming(obj, compressed);
         } catch (InvalidKeyException | ErrorResponseException | IllegalArgumentException | InsufficientDataException
                 | InternalException | InvalidBucketNameException | InvalidResponseException | NoSuchAlgorithmException
                 | XmlParserException | IOException e) {
             throw ServiceException.FAILURE("MinIORedoBlobStore - fetchBlob failed: ", e);
+        } catch (IndexOutOfBoundsException e) {
+            throw ServiceException.FAILURE("MinIORedoBlobStore - fetchBlob failed - Missing data: ", e);
         }
     }
 
