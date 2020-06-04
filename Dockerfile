@@ -99,6 +99,7 @@ COPY store-conf/conf/stats.conf.in /opt/zimbra/conf/
 COPY store/conf/unbound.conf.in /opt/zimbra/conf/
 COPY store/build/dist/conf/attrs/zimbra-attrs-schema /opt/zimbra/conf/
 COPY store-conf/conf/contacts/zimbra-contact-fields.xml /opt/zimbra/conf/
+COPY store-conf/conf/common-passwords.txt /opt/zimbra/conf/common-passwords.txt
 
 # Copy service webapp and web.xml
 COPY store-conf/conf/logback-access.xml /opt/zimbra/jetty_base/resources/logback-access.xml
