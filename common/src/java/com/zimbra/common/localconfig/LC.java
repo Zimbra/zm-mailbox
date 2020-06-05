@@ -1304,6 +1304,9 @@ public final class LC {
     public static final KnownKey backup_blob_store_service_uri = KnownKey.newKey("localhost");
 
     @Supported
+    public static final KnownKey backup_blob_store_service_port = KnownKey.newKey(9000);
+
+    @Supported
     public static final KnownKey backup_blob_store_access_key = KnownKey.newKey("minioadmin");
 
     @Supported
