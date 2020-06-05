@@ -27,7 +27,7 @@ import com.zimbra.common.service.ServiceException;
  */
 public class MockRedoLogProvider extends RedoLogProvider {
 
-    public MockRedoLogProvider() {
+    public MockRedoLogProvider() throws ServiceException {
         mRedoLogManager = new RedoLogManager(new File("build/test/redo/redo.log"), new File("build/test/redo"), false);
     }
 
