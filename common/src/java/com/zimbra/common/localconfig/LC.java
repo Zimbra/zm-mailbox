@@ -1313,7 +1313,7 @@ public final class LC {
     public static final KnownKey backup_blob_store_secret_key = KnownKey.newKey("minioadmin");
 
     @Supported
-    public static final KnownKey backup_blob_store_s3_bucket = KnownKey.newKey("backup_blob_bucket");
+    public static final KnownKey backup_blob_store_s3_bucket = KnownKey.newKey("backup-blob-bucket");
 
     @Supported
     public static final KnownKey redis_num_pubsub_channels = KnownKey.newKey(100);
