@@ -1301,7 +1301,7 @@ public final class LC {
     public static final KnownKey backup_cmd_buffer_size_kb = KnownKey.newKey("4096");
 
     @Supported
-    public static final KnownKey backup_blob_store_service_uri = KnownKey.newKey("localhost");
+    public static final KnownKey backup_blob_store_service_uri = KnownKey.newKey("zmc-minio-storage");
 
     @Supported
     public static final KnownKey backup_blob_store_service_port = KnownKey.newKey(9000);
