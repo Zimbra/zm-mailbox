@@ -32,7 +32,14 @@ public class MinIORedoBlobStore extends RedoLogBlobStore {
     private final String bucketName;
 
     private enum BlobMetaData {
-        SIZE;
+        BLOBSIZE("x-amz-meta-blobsize");
+        private final String key;
+        BlobMetaData(String key) {
+            this.key = key;
+        }
+        public String getKey() {
+            return key;
+        }
     }
 
     private void createBucket() throws ServiceException {
@@ -66,14 +73,13 @@ public class MinIORedoBlobStore extends RedoLogBlobStore {
             InputStream obj = client.getObject(bucketName, identifier);
             ObjectStat objectStat = client.statObject(bucketName, identifier);
             Map<String, List<String>> metadataMap = objectStat.httpHeaders();
-            List<String> sizeList = metadataMap.get(BlobMetaData.SIZE.toString());
+            List<String> sizeList = metadataMap.get(BlobMetaData.BLOBSIZE.getKey());
             if (sizeList == null) {
-                throw ServiceException.NOT_FOUND(
-                        "MinIORedoBlobStore - fetchBlob - Missing meta information: " + BlobMetaData.SIZE.toString());
+                throw ServiceException.NOT_FOUND("MinIORedoBlobStore - fetchBlob - Missing meta information: "
+                        + BlobMetaData.BLOBSIZE.toString());
             }
             Long size = Long.parseLong(sizeList.get(0));
-            ZimbraLog.redolog.debug("MinIORedoBlobStore - fetchBlob - element sizeList size: %d, size: %d", sizeList,
-                    size);
+            ZimbraLog.redolog.debug("MinIORedoBlobStore - fetchBlob - size: %d", size);
             Boolean compressed = obj.available() < size;
             return StoreManager.getInstance().storeIncoming(obj, compressed);
         } catch (InvalidKeyException | ErrorResponseException | IllegalArgumentException | InsufficientDataException
@@ -90,7 +96,7 @@ public class MinIORedoBlobStore extends RedoLogBlobStore {
         ZimbraLog.redolog.debug("MinIORedoBlobStore - storeBlobData - size: %d, digest: %s", size, digest);
         try {
             Map<String, String> metadataMap = new HashMap<String, String>();
-            metadataMap.put(BlobMetaData.SIZE.toString(), Long.toString(size));
+            metadataMap.put(BlobMetaData.BLOBSIZE.toString(), Long.toString(size));
 
             PutObjectOptions options = new PutObjectOptions(in.available(), -1);
             options.setHeaders(metadataMap);
