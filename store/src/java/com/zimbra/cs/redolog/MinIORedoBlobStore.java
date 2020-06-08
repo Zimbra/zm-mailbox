@@ -42,6 +42,7 @@ public class MinIORedoBlobStore extends RedoLogBlobStore {
                 ZimbraLog.redolog.debug("MinIORedoBlobStore - createBucket - going to make bucket");
                 client.makeBucket(bucketName);
             }
+            ZimbraLog.redolog.debug("MinIORedoBlobStore - createBucket - bucket already exists");
         } catch (InvalidKeyException | ErrorResponseException | IllegalArgumentException | InsufficientDataException
                 | InternalException | InvalidBucketNameException | InvalidResponseException | NoSuchAlgorithmException
                 | XmlParserException | IOException e) {
@@ -60,6 +61,7 @@ public class MinIORedoBlobStore extends RedoLogBlobStore {
 
     @Override
     public Blob fetchBlob(String identifier) throws ServiceException {
+        ZimbraLog.redolog.debug("MinIORedoBlobStore - fetchBlob - digest: %s", identifier);
         try {
             InputStream obj = client.getObject(bucketName, identifier);
             ObjectStat objectStat = client.statObject(bucketName, identifier);
@@ -70,6 +72,8 @@ public class MinIORedoBlobStore extends RedoLogBlobStore {
                         "MinIORedoBlobStore - fetchBlob - Missing meta information: " + BlobMetaData.SIZE.toString());
             }
             Long size = Long.parseLong(sizeList.get(0));
+            ZimbraLog.redolog.debug("MinIORedoBlobStore - fetchBlob - element sizeList size: %d, size: %d", sizeList,
+                    size);
             Boolean compressed = obj.available() < size;
             return StoreManager.getInstance().storeIncoming(obj, compressed);
         } catch (InvalidKeyException | ErrorResponseException | IllegalArgumentException | InsufficientDataException
@@ -83,6 +87,7 @@ public class MinIORedoBlobStore extends RedoLogBlobStore {
 
     @Override
     protected void storeBlobData(InputStream in, long size, String digest) throws ServiceException {
+        ZimbraLog.redolog.debug("MinIORedoBlobStore - storeBlobData - size: %d, digest: %s", size, digest);
         try {
             Map<String, String> metadataMap = new HashMap<String, String>();
             metadataMap.put(BlobMetaData.SIZE.toString(), Long.toString(size));
