@@ -48,10 +48,6 @@ public class RedoOpBlobStore extends RedoLogBlobStore {
         return new StoreIncomingBlobOperation(storeRedoRecorder);
     }
 
-    @Override
-    protected PendingRedoBlobOperation logBlob(Mailbox mbox, InputStream in, long size, String digest, List<Integer> mboxIds) throws ServiceException, IOException {
-        throw new UnsupportedOperationException();
-    }
 
     protected static class NoOpReferenceManager extends RedoLogBlobStore.BlobReferenceManager {
 

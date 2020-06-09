@@ -73,25 +73,20 @@ public abstract class RedoLogBlobStore {
     protected abstract void deleteBlobData(String digest);
 
     public PendingRedoBlobOperation logBlob(Mailbox mbox, Blob blob, long size) throws ServiceException, IOException {
-     // wrap in FileDataSource so that we can read the same InputStream twice
-        return logBlob(mbox, new FileDataSource(blob.getFile()).getInputStream(), size, blob.getDigest(), Arrays.asList(mbox.getId()));
+        return logBlob(mbox, blob, size, Arrays.asList(mbox.getId()));
     }
 
     public PendingRedoBlobOperation logBlob(Mailbox mbox, Blob blob, long size, List<Integer> mboxIds) throws ServiceException, IOException {
         // wrap in FileDataSource so that we can read the same InputStream twice
-        return logBlob(mbox, new FileDataSource(blob.getFile()).getInputStream(), size, blob.getDigest(), mboxIds);
+        return logBlob(mbox, new FileDataSource(blob.getFile()), size, blob.getDigest(), mboxIds);
     }
 
-    public PendingRedoBlobOperation logBlob(Mailbox mbox, InputStream in, long size, String digest) throws ServiceException, IOException {
-        return logBlob(mbox, in, size, digest, Arrays.asList(mbox.getId()));
+    public PendingRedoBlobOperation logBlob(Mailbox mbox, DataSource ds, long size, String digest) throws ServiceException, IOException {
+        return logBlob(mbox, ds, size, digest, Arrays.asList(mbox.getId()));
     }
 
-    public PendingRedoBlobOperation logBlob(Mailbox mbox, DataSource in, long size, String digest) throws ServiceException, IOException {
-        return logBlob(mbox, in.getInputStream(), size, digest);
-    }
-
-    protected PendingRedoBlobOperation logBlob(Mailbox mbox, InputStream in, long size, String digest, List<Integer> mboxIds) throws ServiceException, IOException {
-        return new ExternalRedoBlobOperation(in, size, digest, mboxIds);
+    protected PendingRedoBlobOperation logBlob(Mailbox mbox, DataSource ds, long size, String digest, List<Integer> mboxIds) throws ServiceException, IOException {
+        return new ExternalRedoBlobOperation(ds, size, digest, mboxIds);
     }
 
     public void derefRedoLogFile(File file) throws IOException {
@@ -182,20 +177,23 @@ public abstract class RedoLogBlobStore {
 
         private String digest;
         private List<Integer> mboxIds;
-        private InputStream in;
+        private DataSource ds;
         private long size;
 
-        public ExternalRedoBlobOperation(InputStream in, long size, String digest, List<Integer> mboxIds) {
-            this.in = in;
+        public ExternalRedoBlobOperation(DataSource ds, long size, String digest, List<Integer> mboxIds) {
+            this.ds = ds;
             this.digest = digest;
             this.mboxIds = mboxIds;
+            this.size = size;
         }
 
         @Override
         public void commit() {
             // for external redolog blob stores, the actual execution logic happens on during a commit
             if (!refManager.addRefs(digest, mboxIds)) {
+                InputStream in = null;
                 try {
+                    in = ds.getInputStream();
                     storeBlobData(in, size, digest);
                 } catch (IOException e) {
                     ZimbraLog.redolog.error("unable to store redolog blob! digest=%s", digest, e);
