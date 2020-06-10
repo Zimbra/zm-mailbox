@@ -83,7 +83,7 @@ public class RedisRedoBlobStore extends RedoLogBlobStore {
 
     }
 
-    private static class RedisReferenceManager extends RedoLogBlobStore.BlobReferenceManager {
+    public static class RedisReferenceManager extends RedoLogBlobStore.BlobReferenceManager {
 
         private RScript script;
 
@@ -99,7 +99,7 @@ public class RedisRedoBlobStore extends RedoLogBlobStore {
                 "end; " +
                 "return 0;";
 
-        private RedisReferenceManager() {
+        RedisReferenceManager() {
             RedissonClient client = RedissonClientHolder.getInstance().getRedissonClient();
             script = client.getScript(StringCodec.INSTANCE);
         }

@@ -68,9 +68,9 @@ public abstract class RedoLogBlobStore {
 
     public abstract Blob fetchBlob(String identifier) throws ServiceException, IOException;
 
-    protected abstract void storeBlobData(InputStream in, long size, String digest) throws IOException;
+    protected abstract void storeBlobData(InputStream in, long size, String digest) throws ServiceException, IOException;
 
-    protected abstract void deleteBlobData(String digest);
+    protected abstract void deleteBlobData(String digest) throws ServiceException;
 
     public PendingRedoBlobOperation logBlob(Mailbox mbox, Blob blob, long size) throws ServiceException, IOException {
         return logBlob(mbox, blob, size, Arrays.asList(mbox.getId()));
@@ -89,7 +89,7 @@ public abstract class RedoLogBlobStore {
         return new ExternalRedoBlobOperation(ds, size, digest, mboxIds);
     }
 
-    public void derefRedoLogFile(File file) throws IOException {
+    public void derefRedoLogFile(File file) throws ServiceException, IOException {
         for (BlobReferences refs: refManager.getBlobRefs(file)) {
             String digest = refs.getDigest();
             Collection<Integer> mboxIds = refs.getMailboxIds();
@@ -195,7 +195,7 @@ public abstract class RedoLogBlobStore {
                 try {
                     in = ds.getInputStream();
                     storeBlobData(in, size, digest);
-                } catch (IOException e) {
+                } catch (IOException | ServiceException e) {
                     ZimbraLog.redolog.error("unable to store redolog blob! digest=%s", digest, e);
                 } finally {
                     ByteUtil.closeStream(in);
@@ -213,6 +213,6 @@ public abstract class RedoLogBlobStore {
     }
 
     public static interface Factory {
-        public RedoLogBlobStore getRedoLogBlobStore();
+        public RedoLogBlobStore getRedoLogBlobStore() throws ServiceException;
     }
 }

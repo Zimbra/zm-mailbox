@@ -75,7 +75,7 @@ public abstract class RedoLogProvider {
     public abstract void startup() throws ServiceException;
     public abstract void shutdown() throws ServiceException;
 
-    public abstract void initRedoLogManager();
+    public abstract void initRedoLogManager() throws ServiceException;
     
     public RedoLogManager getRedoLogManager() {
         return mRedoLogManager;

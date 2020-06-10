@@ -36,6 +36,7 @@ import org.redisson.api.RScript.Mode;
 import org.redisson.api.RScript.ReturnType;
 
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
@@ -178,7 +179,7 @@ public class RedoLogManager {
     private RedoLogBlobStore blobStore;
 
 
-    public RedoLogManager(File redolog, File archdir, boolean supportsCrashRecovery) {
+    public RedoLogManager(File redolog, File archdir, boolean supportsCrashRecovery) throws ServiceException {
         mEnabled = false;
         mShuttingDown = false;
         mRecoveryMode = false;
@@ -565,7 +566,7 @@ public class RedoLogManager {
                 long elapsed = System.currentTimeMillis() - start;
                 ZimbraLog.redolog.info("Redo log rollover took " + elapsed + "ms");
             }
-        } catch (IOException e) {
+        } catch (ServiceException | IOException e) {
             ZimbraLog.redolog.error("IOException during redo log rollover");
             signalFatalError(e);
         } finally {

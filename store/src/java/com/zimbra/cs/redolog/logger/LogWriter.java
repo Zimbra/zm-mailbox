@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.LinkedHashMap;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.redolog.op.RedoableOp;
 
 /**
@@ -131,9 +132,10 @@ public interface LogWriter {
      *                  at the beginning of new log file
      * @return java.io.File object for rolled over logfile
      * @throws IOException
+     * @throws ServiceException
      */
     public File rollover(LinkedHashMap /*<TxnId, RedoableOp>*/ activeOps)
-    throws IOException;
+    throws IOException, ServiceException;
 
     /**
      * Returns the sequence number of redolog.  Only file-based log writers
