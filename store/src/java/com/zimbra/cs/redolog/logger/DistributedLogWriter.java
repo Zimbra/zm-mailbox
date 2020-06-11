@@ -8,6 +8,8 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
 import org.redisson.api.RFuture;
@@ -52,6 +54,7 @@ public class DistributedLogWriter implements LogWriter {
     private Map<TransactionId, CountDownLatch> pendingOps = new HashMap<>();
     private boolean externalBlobStore;
     private Joiner joiner = Joiner.on(",");
+    private Random random = new Random();
 
     public DistributedLogWriter() {
         client = RedissonClientHolder.getInstance().getRedissonClient();
@@ -71,13 +74,21 @@ public class DistributedLogWriter implements LogWriter {
      * Returns the index of the stream that could be used to send data to the
      * Backup Restore Pod.
      */
-    private int getStreamIndex(int mboxId) {
+    private int getStreamIndex(RedoableOp op) {
+        int mboxId = op.getMailboxId();
+        int streamIndex;
         if (mboxId == RedoableOp.MAILBOX_ID_ALL || mboxId == RedoableOp.UNKNOWN_ID) {
-            // if the mailbox ID isn't specified, send it to the first stream
-            return 0;
+            if (externalBlobStore) {
+                // send to random stream to disperse load of handling blob data
+                streamIndex = random.nextInt(streamsCount);
+            } else {
+                // if the mailbox ID isn't specified, send it to the first stream
+                streamIndex = 0;
+            }
+        } else {
+           streamIndex = mboxId % streamsCount;
         }
-        int streamIndex = mboxId % streamsCount;
-        ZimbraLog.redolog.debug("DistributedLogWriter - getStreamIndex mboxId:%d, streamsCount:%d, streamIndex:%d", mboxId, streamsCount, streamIndex);
+        ZimbraLog.redolog.debug("sending %s txnId=%s mboxId=%s to stream %s", op.getOperation(), op.getTransactionId(), mboxId, streamIndex);
         return streamIndex;
     }
 
@@ -100,11 +111,14 @@ public class DistributedLogWriter implements LogWriter {
         }
         long blobSize = operationBlobData.getBlobSize();
         String digest = operationBlobData.getBlobDigest();
-        String mboxIds = joiner.join(operationBlobData.getReferencedMailboxIds());
-        ZimbraLog.redolog.debug("adding blob data to stream during commit of %s txnId=%s, digest=%s, size=%s, ids=%s", commit.getTxnOpCode(), commit.getTransactionId(), digest, blobSize, mboxIds);
+        Set<Integer> mboxIds = operationBlobData.getReferencedMailboxIds();
+        if (ZimbraLog.redolog.isDebugEnabled()) {
+            ZimbraLog.redolog.debug("adding blob data to stream during commit of %s txnId=%s, digest=%s, size=%s, ids=%s", commit.getTxnOpCode(), commit.getTransactionId(), digest, blobSize, mboxIds);
+        }
+        String mboxIdsCsv = joiner.join(operationBlobData.getReferencedMailboxIds());
         fields.put(F_BLOB_DATA, ByteStreams.toByteArray(blobStream));
         fields.put(F_BLOB_DIGEST, digest.getBytes(Charsets.UTF_8));
-        fields.put(F_BLOB_REFS, mboxIds.getBytes(Charsets.UTF_8));
+        fields.put(F_BLOB_REFS, mboxIdsCsv.getBytes(Charsets.UTF_8));
         fields.put(F_BLOB_SIZE, Longs.toByteArray(blobSize));
     }
 
@@ -166,7 +180,7 @@ public class DistributedLogWriter implements LogWriter {
         }
         long start = System.currentTimeMillis();
 
-        RFuture<StreamMessageId> future = streams.get(getStreamIndex(mailboxId)).addAllAsync(fields);
+        RFuture<StreamMessageId> future = streams.get(getStreamIndex(op)).addAllAsync(fields);
         future.onComplete((streamId, e) -> {
             long elapsed = System.currentTimeMillis() - start;
             if (isStartMarker) {
