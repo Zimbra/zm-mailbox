@@ -28,6 +28,7 @@ import com.zimbra.cs.mailbox.RedissonClientHolder;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.redolog.TransactionId;
 import com.zimbra.cs.redolog.op.BlobRecorder;
+import com.zimbra.cs.redolog.op.CommitTxn;
 import com.zimbra.cs.redolog.op.RedoableOp;
 
 public class DistributedLogWriter implements LogWriter {
@@ -39,8 +40,9 @@ public class DistributedLogWriter implements LogWriter {
     public static final byte[] F_DATA = "d".getBytes();
     public static final byte[] F_TIMESTAMP = "t".getBytes();
     public static final byte[] F_MAILBOX_ID = "m".getBytes();
-    public static final byte[] F_OP_TYPE = "p".getBytes();
+    public static final byte[] F_OP_TYPE = "o".getBytes();
     public static final byte[] F_TXN_ID = "i".getBytes();
+    public static final byte[] F_PARENT_OP_TYPE = "p".getBytes();
     public static final byte[] F_SUBMIT_TIME = "s".getBytes();
     public static final byte[] F_BLOB_DATA = "b".getBytes();
     public static final byte[] F_BLOB_DIGEST = "g".getBytes();
@@ -87,8 +89,36 @@ public class DistributedLogWriter implements LogWriter {
     public void close() throws IOException {
     }
 
+    private void addBlobDataFields(Map<byte[], byte[]> fields, CommitTxn commit) throws IOException {
+        BlobRecorder operationBlobData = commit.getBlobRecorder();
+        if (operationBlobData == null) {
+            return;
+        }
+        InputStream blobStream = operationBlobData.getBlobInputStream();
+        if (blobStream == null) {
+            return;
+        }
+        long blobSize = operationBlobData.getBlobSize();
+        String digest = operationBlobData.getBlobDigest();
+        String mboxIds = joiner.join(operationBlobData.getReferencedMailboxIds());
+        ZimbraLog.redolog.debug("adding blob data to stream during commit of %s txnId=%s, digest=%s, size=%s, ids=%s", commit.getTxnOpCode(), commit.getTransactionId(), digest, blobSize, mboxIds);
+        fields.put(F_BLOB_DATA, ByteStreams.toByteArray(blobStream));
+        fields.put(F_BLOB_DIGEST, digest.getBytes(Charsets.UTF_8));
+        fields.put(F_BLOB_REFS, mboxIds.getBytes(Charsets.UTF_8));
+        fields.put(F_BLOB_SIZE, Longs.toByteArray(blobSize));
+    }
+
     @Override
     public void log(RedoableOp op, InputStream data, boolean synchronous) throws IOException {
+        if (externalBlobStore && op.getOperation() == MailboxOperation.StoreIncomingBlob) {
+            // we don't actually send StoreIncomingBlob operations to the backup pods if an external redolog blob store
+            // is configured. Its CommitTxn does get logged, which contains the actual blob data to be
+            // stored in the blob store.
+            // We are essentially hijacking the StoreIncomingBlob mechanism to log shared blobs to the blob store
+            // only if the transaction is successful.
+            return;
+        }
+
         byte[] payload = ByteStreams.toByteArray(data);
         Map<byte[], byte[]> fields = new HashMap<>();
         int mailboxId = op.getMailboxId();
@@ -101,20 +131,17 @@ public class DistributedLogWriter implements LogWriter {
         fields.put(F_TXN_ID, txnId.encodeToString().getBytes(Charsets.UTF_8));
         fields.put(F_SUBMIT_TIME, Longs.toByteArray(System.currentTimeMillis()));
 
-        if (externalBlobStore && op instanceof BlobRecorder) {
-            // log the blob data in a separate field, so that the zmc-backup-restore pods can upload it to the redolog blob store
-            BlobRecorder blobRecorder = (BlobRecorder) op;
-            InputStream blobStream = blobRecorder.getBlobInputStream();
-            if (blobStream != null) {
-                long blobSize = blobRecorder.getBlobSize();
-                String digest = blobRecorder.getBlobDigest();
-                String mboxIds = joiner.join(blobRecorder.getReferencedMailboxIds());
-                ZimbraLog.redolog.info("adding blob data to stream for %s txnId=%s, digest=%s, size=%s, ids=%s", opType, txnId, digest, blobSize, mboxIds);
-                fields.put(F_BLOB_DATA, ByteStreams.toByteArray(blobStream));
-                fields.put(F_BLOB_DIGEST, digest.getBytes(Charsets.UTF_8));
-                fields.put(F_BLOB_REFS, mboxIds.getBytes(Charsets.UTF_8));
-                fields.put(F_BLOB_SIZE, Longs.toByteArray(blobSize));
-            }
+        // If logging a commit/abort transaction, also log the parent operation type.
+        // This is because, when using an external redolog blob store, some operations aren't actually logged to the redolog file.
+        if (op.isEndMarker()) {
+            fields.put(F_PARENT_OP_TYPE, Ints.toByteArray(op.getTxnOpCode().getCode()));
+        }
+
+        if (externalBlobStore && op instanceof CommitTxn) {
+            // Blob data for redolog operations involving blobs is sent as part of the CommitTxn, so that
+            // aborted operations don't have to then revert storing the blob.
+            CommitTxn commit = (CommitTxn) op;
+            addBlobDataFields(fields, commit);
         }
 
         boolean isStartMarker = op.isStartMarker();

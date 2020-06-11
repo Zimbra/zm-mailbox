@@ -142,11 +142,33 @@ public class DistributedLogReaderService {
             }
         }
 
+        private boolean shouldLogOp(MailboxOperation op, MailboxOperation parentOp) {
+            if (!externalBlobStore) {
+                return true; //log everything if not using external redolog blob store
+            }
+            switch (op) {
+            case StoreIncomingBlob:
+                // StoreIncomingBlob operations shouldn't be logged with external blob stores,
+                // but we guard for it here anyways
+                return false;
+            case AbortTxn:
+            case CommitTxn:
+                if (parentOp == null) {
+                    return true;
+                } else {
+                    return parentOp != MailboxOperation.StoreIncomingBlob;
+                }
+            default:
+                return true;
+            }
+        }
+
         private void handleOp(StreamMessageId messageId, Map<byte[], byte[]> fields) {
             InputStream payload = null;
             long timestamp = 0;
             int mboxId = 0;
             int opType = 0;
+            int parentOpType = 0;
             TransactionId txnId = null;
             long submitTime = 0;
 
@@ -155,7 +177,6 @@ public class DistributedLogReaderService {
             long blobSize = 0;
             List<Integer> mboxIds = null;
 
-            boolean logOp = true;
             /*
              * We can't use map.get() here because keys are byte arrays, which are compared by reference (not equality).
              * Instead we iterate over the map and compare to the known keys using Arrays.equals().
@@ -174,6 +195,8 @@ public class DistributedLogReaderService {
                     mboxId = Ints.fromByteArray(val);
                 } else if (Arrays.equals(key, DistributedLogWriter.F_OP_TYPE)) {
                     opType = Ints.fromByteArray(val);
+                } else if (Arrays.equals(key, DistributedLogWriter.F_PARENT_OP_TYPE)) {
+                    parentOpType = Ints.fromByteArray(val);
                 } else if (Arrays.equals(key, DistributedLogWriter.F_SUBMIT_TIME)) {
                     submitTime = Longs.fromByteArray(val);
                 } else if (Arrays.equals(key, DistributedLogWriter.F_TXN_ID)) {
@@ -198,29 +221,36 @@ public class DistributedLogReaderService {
             }
 
             MailboxOperation mailboxOperation = MailboxOperation.fromInt(opType);
+            MailboxOperation parentMailboxOperation = null;
+            if (parentOpType > 0) {
+                parentMailboxOperation = MailboxOperation.fromInt(parentOpType);
+            }
             RedoableOp op = new LoggableOp(mailboxOperation, txnId, payload, timestamp, mboxId);
             long queued = System.currentTimeMillis() - submitTime;
-            if (mailboxOperation == MailboxOperation.StoreIncomingBlob && externalBlobStore) {
-                ZimbraLog.redolog.info("received %s txnId=%s, not logging due to external blob store", mailboxOperation, txnId);
-                logOp = false;
-            }
+            boolean logOp = shouldLogOp(mailboxOperation, parentMailboxOperation);
+            long blobStoreDuration = -1;
             try {
                 if (logOp) {
                     op.log(true);
                 }
                 if (blobPayload != null) {
                     long start = System.currentTimeMillis();
-                    ZimbraLog.redolog.info("received blob data for %s txnId=%s, digest=%s, size=%s, ids=%s", mailboxOperation, txnId, blobDigest, blobSize, mboxIds);
                     blobStore.logBlob(blobPayload, blobSize, blobDigest, mboxIds);
-                    long blobStoreDuration = System.currentTimeMillis() - start;
-                    ZimbraLog.redolog.info("blob data for %s txnId=%s uploaded in %s ms", mailboxOperation, txnId, blobStoreDuration);
+                    blobStoreDuration = System.currentTimeMillis() - start;
                 }
             } catch (ServiceException | IOException e) {
                 ZimbraLog.redolog.error("error processing redolog entry %s (txnId=%s)!", mailboxOperation, txnId, e);
             } finally {
                 ackAndDelete(messageId, stream.getName());
-                ZimbraLog.redolog.debug("processed streamId=%s, opTimestamp=%s, mboxId=%s, op=%s, txnId=%s, queued=%sms", messageId, timestamp,
-                        mboxId, mailboxOperation, txnId, queued);
+                if (ZimbraLog.redolog.isDebugEnabled()) {
+                    if (blobPayload != null) {
+                        ZimbraLog.redolog.debug("processed streamId=%s, opTimestamp=%s, mboxId=%s, op=%s, txnId=%s, queued=%sms, blobStore=%sms", messageId, timestamp,
+                                mboxId, mailboxOperation, txnId, queued, blobStoreDuration);
+                    } else {
+                        ZimbraLog.redolog.debug("processed streamId=%s, opTimestamp=%s, mboxId=%s, op=%s, txnId=%s, queued=%sms", messageId, timestamp,
+                                mboxId, mailboxOperation, txnId, queued);
+                    }
+                }
                 fields.clear();
             }
         }
