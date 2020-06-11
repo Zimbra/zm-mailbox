@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.zip.GZIPInputStream;
 
 import javax.activation.DataSource;
@@ -49,7 +50,6 @@ import com.zimbra.cs.mailbox.util.TagUtil;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.mime.ParsedMessageOptions;
 import com.zimbra.cs.redolog.RedoException;
-import com.zimbra.cs.redolog.RedoLogBlobStore.PendingRedoBlobOperation;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 import com.zimbra.cs.store.Blob;
@@ -88,8 +88,7 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder, BlobRecorder {
     protected byte mMsgBodyType;
     protected String mPath;           // if mMsgBodyType == MSGBODY_LINK, source file to link to
                                       // if mMsgBodyType == MSGBODY_INLINE, path of saved blob file
-                                      // if mMsgBodyType == MSGBODY_EXTERNAL, unset
-    protected PendingRedoBlobOperation pendingRedoBlobOp = null;
+                                      // if mMsgBodyType == MSGBODY_EXTERNAL, :external:
 
 
     public CreateMessage() {
@@ -156,16 +155,8 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder, BlobRecorder {
         // so nulling out mData member is safe.
         try {
             super.commit();
-            if (pendingRedoBlobOp != null) {
-                pendingRedoBlobOp.commit();
-                pendingRedoBlobOp = null;
-            }
         } finally {
             mData = null;
-            if (pendingRedoBlobOp != null) {
-                pendingRedoBlobOp.abort();
-                pendingRedoBlobOp = null;
-            }
         }
     }
 
@@ -175,7 +166,6 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder, BlobRecorder {
             super.abort();
         } finally {
             mData = null;
-            pendingRedoBlobOp = null;
         }
     }
 
@@ -573,7 +563,35 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder, BlobRecorder {
     }
 
     @Override
-    public void setRedoBlobOperation(PendingRedoBlobOperation op) {
-        this.pendingRedoBlobOp = op;
+    public InputStream getBlobInputStream() throws IOException {
+        if (mData != null) {
+            return mData.getInputStream();
+        } else {
+            return null;
+        }
+    }
+
+    @Override
+    public void setBlobDataFromDataSource(DataSource ds, long size) {
+        mMsgBodyType = MSGBODY_EXTERNAL;
+        mData = new RedoableOpData(ds, (int) size);
+        mPath = ":external:";
+    }
+
+    @Override
+    public void setBlobDataFromFile(File file) {
+        mMsgBodyType = MSGBODY_EXTERNAL;
+        mData = new RedoableOpData(file);
+        mPath = ":external:";
+    }
+
+    @Override
+    public long getBlobSize() {
+        return mMsgSize;
+    }
+
+    @Override
+    public Set<Integer> getReferencedMailboxIds() {
+        return Collections.singleton(getMailboxId());
     }
 }

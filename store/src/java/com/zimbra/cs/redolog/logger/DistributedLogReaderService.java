@@ -1,6 +1,7 @@
 package com.zimbra.cs.redolog.logger;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,6 +12,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import org.redisson.api.RScript;
 import org.redisson.api.RScript.Mode;
@@ -23,6 +25,7 @@ import org.redisson.client.codec.ByteArrayCodec;
 import org.redisson.client.codec.StringCodec;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Splitter;
 import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -32,7 +35,9 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.RedissonClientHolder;
 import com.zimbra.cs.mailbox.util.MailboxClusterUtil;
+import com.zimbra.cs.redolog.RedoLogBlobStore;
 import com.zimbra.cs.redolog.RedoLogManager.LoggableOp;
+import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.redolog.TransactionId;
 import com.zimbra.cs.redolog.op.RedoableOp;
 
@@ -45,10 +50,14 @@ public class DistributedLogReaderService {
     private static String consumer;
     private volatile boolean running = false;
     private static DistributedLogReaderService instance = null;
+    private RedoLogBlobStore blobStore;
+    private boolean externalBlobStore;
+    private static Splitter splitter = Splitter.on(",");
     private RScript script;
     private static final String ACK_DEL_SCRIPT =
             "redis.call('xack', KEYS[1], ARGV[1], ARGV[2]); " +
             "return redis.call('xdel', KEYS[1], ARGV[2]);";
+
 
     private DistributedLogReaderService() {}
 
@@ -71,8 +80,10 @@ public class DistributedLogReaderService {
         script = client.getScript(StringCodec.INSTANCE);
         streamsCount = LC.redis_num_streams.intValue();
         streams = new ArrayList<RStream<byte[], byte[]>>(streamsCount);
-
         ZimbraLog.redolog.info("Reader service streamsCount %d", streamsCount);
+
+        blobStore = RedoLogProvider.getInstance().getRedoLogManager().getBlobStore();
+        externalBlobStore = RedoLogProvider.getInstance().getRedoLogManager().hasExternalBlobStore();
 
         ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("DistributedLog-Reader-Thread-%d").build();
         executorService = Executors.newFixedThreadPool(streamsCount, namedThreadFactory);
@@ -138,6 +149,13 @@ public class DistributedLogReaderService {
             int opType = 0;
             TransactionId txnId = null;
             long submitTime = 0;
+
+            InputStream blobPayload = null;
+            String blobDigest = null;
+            long blobSize = 0;
+            List<Integer> mboxIds = null;
+
+            boolean logOp = true;
             /*
              * We can't use map.get() here because keys are byte arrays, which are compared by reference (not equality).
              * Instead we iterate over the map and compare to the known keys using Arrays.equals().
@@ -167,17 +185,44 @@ public class DistributedLogReaderService {
                         ackAndDelete(messageId, stream.getName());
                         return;
                     }
+                } else if (Arrays.equals(key, DistributedLogWriter.F_BLOB_DATA)) {
+                    blobPayload = new ByteArrayInputStream(val);
+                } else if (Arrays.equals(key, DistributedLogWriter.F_BLOB_DIGEST)) {
+                    blobDigest = new String(val, Charsets.UTF_8);
+                } else if (Arrays.equals(key, DistributedLogWriter.F_BLOB_SIZE)) {
+                    blobSize = Longs.fromByteArray(val);
+                } else if (Arrays.equals(key, DistributedLogWriter.F_BLOB_REFS)) {
+                    String mboxIsStr = new String(val, Charsets.UTF_8);
+                    mboxIds = splitter.splitToList(mboxIsStr).stream().mapToInt(n -> Integer.parseInt(n)).boxed().collect(Collectors.toList());
                 }
             }
 
             MailboxOperation mailboxOperation = MailboxOperation.fromInt(opType);
             RedoableOp op = new LoggableOp(mailboxOperation, txnId, payload, timestamp, mboxId);
             long queued = System.currentTimeMillis() - submitTime;
-            op.log(true);
-            ZimbraLog.redolog.debug("processed streamId=%s, opTimestamp=%s, mboxId=%s, op=%s, txnId=%s, queued=%sms", messageId, timestamp,
-                    mboxId, mailboxOperation, txnId, queued);
-            ackAndDelete(messageId, stream.getName());
-            fields.clear();
+            if (mailboxOperation == MailboxOperation.StoreIncomingBlob && externalBlobStore) {
+                ZimbraLog.redolog.info("received %s txnId=%s, not logging due to external blob store", mailboxOperation, txnId);
+                logOp = false;
+            }
+            try {
+                if (logOp) {
+                    op.log(true);
+                }
+                if (blobPayload != null) {
+                    long start = System.currentTimeMillis();
+                    ZimbraLog.redolog.info("received blob data for %s txnId=%s, digest=%s, size=%s, ids=%s", mailboxOperation, txnId, blobDigest, blobSize, mboxIds);
+                    blobStore.logBlob(blobPayload, blobSize, blobDigest, mboxIds);
+                    long blobStoreDuration = System.currentTimeMillis() - start;
+                    ZimbraLog.redolog.info("blob data for %s txnId=%s uploaded in %s ms", mailboxOperation, txnId, blobStoreDuration);
+                }
+            } catch (ServiceException | IOException e) {
+                ZimbraLog.redolog.error("error processing redolog entry %s (txnId=%s)!", mailboxOperation, txnId, e);
+            } finally {
+                ackAndDelete(messageId, stream.getName());
+                ZimbraLog.redolog.debug("processed streamId=%s, opTimestamp=%s, mboxId=%s, op=%s, txnId=%s, queued=%sms", messageId, timestamp,
+                        mboxId, mailboxOperation, txnId, queued);
+                fields.clear();
+            }
         }
 
         private void ackAndDelete(StreamMessageId id, String streamName) {

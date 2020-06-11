@@ -4,12 +4,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.redolog.op.StoreIncomingBlob;
 import com.zimbra.cs.store.Blob;
 
 public class RedoOpBlobStore extends RedoLogBlobStore {
@@ -39,16 +36,6 @@ public class RedoOpBlobStore extends RedoLogBlobStore {
         throw new UnsupportedOperationException();
     }
 
-    @Override
-    public PendingRedoBlobOperation logBlob(Mailbox mbox, Blob blob, long size, List<Integer> mboxIds) throws ServiceException, IOException {
-        StoreIncomingBlob storeRedoRecorder = new StoreIncomingBlob(blob.getDigest(), (int) size, mboxIds);
-        storeRedoRecorder.start(mbox.getOperationTimestampMillis());
-        storeRedoRecorder.setBlobBodyInfo(blob.getFile());
-        storeRedoRecorder.log();
-        return new StoreIncomingBlobOperation(storeRedoRecorder);
-    }
-
-
     protected static class NoOpReferenceManager extends RedoLogBlobStore.BlobReferenceManager {
 
         @Override
@@ -67,26 +54,6 @@ public class RedoOpBlobStore extends RedoLogBlobStore {
         @Override
         public RedoLogBlobStore getRedoLogBlobStore() {
             return new RedoOpBlobStore();
-        }
-    }
-
-    public class StoreIncomingBlobOperation extends PendingRedoBlobOperation {
-
-        private StoreIncomingBlob op;
-
-        public StoreIncomingBlobOperation(StoreIncomingBlob op) {
-            this.op = op;
-        }
-
-        @Override
-        public void commit() throws ServiceException {
-            op.commit();
-
-        }
-
-        @Override
-        public void abort() {
-            op.abort();
         }
     }
 }

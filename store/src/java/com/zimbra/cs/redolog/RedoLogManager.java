@@ -177,6 +177,7 @@ public class RedoLogManager {
     private final static boolean isBackupRestorePod = MailboxClusterUtil.isBackupRestorePod();
 
     private RedoLogBlobStore blobStore;
+    private boolean isBlobStoreExternal;
 
 
     public RedoLogManager(File redolog, File archdir, boolean supportsCrashRecovery) throws ServiceException {
@@ -204,6 +205,7 @@ public class RedoLogManager {
         mCounter = 0;
 
         blobStore = RedoLogBlobStore.getFactory().getRedoLogBlobStore();
+        isBlobStoreExternal = !(blobStore instanceof RedoOpBlobStore);
     }
 
     private TxnIdGenerator createTxnIdGenerator() {
@@ -789,6 +791,10 @@ public class RedoLogManager {
         return blobStore;
     }
 
+    public boolean hasExternalBlobStore() {
+        return isBlobStoreExternal;
+
+    }
     /*
      * This class extends the RedoableOp and can be used for logging the wrapped payload.
      * One example of such usage is demonstrated by DistributedLogReaderService's LogMonitor class.

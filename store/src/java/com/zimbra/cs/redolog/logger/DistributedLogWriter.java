@@ -17,6 +17,7 @@ import org.redisson.api.StreamMessageId;
 import org.redisson.client.codec.ByteArrayCodec;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
 import com.google.common.io.ByteStreams;
 import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
@@ -24,7 +25,9 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.RedissonClientHolder;
+import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.redolog.TransactionId;
+import com.zimbra.cs.redolog.op.BlobRecorder;
 import com.zimbra.cs.redolog.op.RedoableOp;
 
 public class DistributedLogWriter implements LogWriter {
@@ -39,8 +42,14 @@ public class DistributedLogWriter implements LogWriter {
     public static final byte[] F_OP_TYPE = "p".getBytes();
     public static final byte[] F_TXN_ID = "i".getBytes();
     public static final byte[] F_SUBMIT_TIME = "s".getBytes();
+    public static final byte[] F_BLOB_DATA = "b".getBytes();
+    public static final byte[] F_BLOB_DIGEST = "g".getBytes();
+    public static final byte[] F_BLOB_SIZE = "l".getBytes();
+    public static final byte[] F_BLOB_REFS = "r".getBytes();
 
     private Map<TransactionId, CountDownLatch> pendingOps = new HashMap<>();
+    private boolean externalBlobStore;
+    private Joiner joiner = Joiner.on(",");
 
     public DistributedLogWriter() {
         client = RedissonClientHolder.getInstance().getRedissonClient();
@@ -52,6 +61,8 @@ public class DistributedLogWriter implements LogWriter {
         for (int i=0; i<streamsCount ; i++) {
             streams.add(client.getStream(LC.redis_streams_redo_log_stream_prefix.value()+i, ByteArrayCodec.INSTANCE));
         }
+
+        externalBlobStore = RedoLogProvider.getInstance().getRedoLogManager().hasExternalBlobStore();
     }
 
     /*
@@ -89,6 +100,23 @@ public class DistributedLogWriter implements LogWriter {
         fields.put(F_OP_TYPE, Ints.toByteArray(opType.getCode()));
         fields.put(F_TXN_ID, txnId.encodeToString().getBytes(Charsets.UTF_8));
         fields.put(F_SUBMIT_TIME, Longs.toByteArray(System.currentTimeMillis()));
+
+        if (externalBlobStore && op instanceof BlobRecorder) {
+            // log the blob data in a separate field, so that the zmc-backup-restore pods can upload it to the redolog blob store
+            BlobRecorder blobRecorder = (BlobRecorder) op;
+            InputStream blobStream = blobRecorder.getBlobInputStream();
+            if (blobStream != null) {
+                long blobSize = blobRecorder.getBlobSize();
+                String digest = blobRecorder.getBlobDigest();
+                String mboxIds = joiner.join(blobRecorder.getReferencedMailboxIds());
+                ZimbraLog.redolog.info("adding blob data to stream for %s txnId=%s, digest=%s, size=%s, ids=%s", opType, txnId, digest, blobSize, mboxIds);
+                fields.put(F_BLOB_DATA, ByteStreams.toByteArray(blobStream));
+                fields.put(F_BLOB_DIGEST, digest.getBytes(Charsets.UTF_8));
+                fields.put(F_BLOB_REFS, mboxIds.getBytes(Charsets.UTF_8));
+                fields.put(F_BLOB_SIZE, Longs.toByteArray(blobSize));
+            }
+        }
+
         boolean isStartMarker = op.isStartMarker();
         boolean isEndMarker = op.isEndMarker();
         if (isStartMarker) {
