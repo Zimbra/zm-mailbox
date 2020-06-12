@@ -391,7 +391,7 @@ public abstract class ZimbraHit implements ZimbraQueryHit {
                     String flagValue = msgHit.getAttribute(MailConstants.A_FLAGS);
                     return (flagValue.contains("u")) ? 1 : 0;
                 } catch (ServiceException e2) {
-                    ZimbraLog.index.info("Error reading unread flag. :%s for hit:%s", e2.getMessage(), msgHit) ;
+                    ZimbraLog.index.debug("Error reading unread flag. :%s for hit:%s", e2.getMessage(), msgHit) ;
                     return 1;
                 }
             }
