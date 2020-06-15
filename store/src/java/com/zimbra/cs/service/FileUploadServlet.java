@@ -47,6 +47,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.fileupload.DefaultFileItem;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileUploadBase;
 import org.apache.commons.fileupload.FileUploadException;
@@ -61,7 +62,6 @@ import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.tika.Tika;
 
 import com.google.common.base.Strings;
 import com.zimbra.client.ZMailbox;
@@ -762,8 +762,7 @@ public class FileUploadServlet extends ZimbraServlet {
         if (filename.endsWith(".har")) {
             File file = ((DiskFileItem) fi).getStoreLocation();
             try {
-                Tika tika = new Tika();
-                String mimeType = tika.detect(file);
+                String mimeType = MimeDetect.getMimeDetect().detect(file);
                 if (mimeType != null) {
                     up.contentType = mimeType;
                 }
