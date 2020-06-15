@@ -415,7 +415,7 @@ public final class Zimbra {
                 ZimbraPerf.initialize(ZimbraPerf.ServerID.ZIMBRA);
             }
 
-            if (MailboxClusterUtil.getMailboxWorkerIndex() == 0) {
+            if (MailboxClusterUtil.getWorkerIndex() == 0 && MailboxClusterUtil.isMailboxPod()) {
                 BatchedIndexDeletions.getInstance().startSweeper();
             }
         }
