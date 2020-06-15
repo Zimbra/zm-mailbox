@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
@@ -20,6 +19,8 @@ import org.redisson.client.codec.ByteArrayCodec;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
 import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
@@ -55,8 +56,8 @@ public class DistributedLogWriter implements LogWriter {
     private Map<TransactionId, CountDownLatch> pendingOps = new HashMap<>();
     private boolean externalBlobStore;
     private Joiner joiner = Joiner.on(",");
-    private Random random = new Random();
     private RedoStreamSelector streamSelector;
+    HashFunction hasher;
 
     public DistributedLogWriter() {
         client = RedissonClientHolder.getInstance().getRedissonClient();
@@ -71,6 +72,7 @@ public class DistributedLogWriter implements LogWriter {
 
         externalBlobStore = RedoLogProvider.getInstance().getRedoLogManager().hasExternalBlobStore();
         streamSelector = new RedoStreamSelector();
+        hasher = Hashing.murmur3_128();
     }
 
     /*
@@ -81,9 +83,18 @@ public class DistributedLogWriter implements LogWriter {
         int mboxId = op.getMailboxId();
         int streamIndex;
         if (mboxId == RedoableOp.MAILBOX_ID_ALL || mboxId == RedoableOp.UNKNOWN_ID) {
-            if (externalBlobStore) {
-                // send to random stream to disperse load of handling blob data
-                streamIndex = random.nextInt(streamsCount);
+            if (externalBlobStore && op instanceof CommitTxn) {
+                // StoreIncomingBlob  commit ops for a given digest should for a go to the same stream, so that they are
+                // processed serially on the consumer side. THis is to avoid a race condition in updating blob references,
+                // in case the BlobReferenceManager implementation is not atomic.
+                CommitTxn commit = (CommitTxn) op;
+                String blobDigest = commit.getBlobRecorder().getBlobDigest();
+                if (blobDigest != null) {
+                    streamIndex = Math.abs(hasher.hashString(blobDigest, Charsets.UTF_8).asInt()) % streamsCount;
+                } else {
+                    ZimbraLog.redolog.warn("encountered CommitTxn for %s without blob data! sending to stream 0", op.getTxnOpCode());
+                    streamIndex = 0;
+                }
             } else {
                 // if the mailbox ID isn't specified, send it to the first stream
                 streamIndex = 0;
