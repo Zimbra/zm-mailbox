@@ -58,7 +58,7 @@ public class DistributedLogWriter implements LogWriter {
 
     public DistributedLogWriter() {
         client = RedissonClientHolder.getInstance().getRedissonClient();
-        streamsCount = LC.redis_num_streams.intValue();
+        streamsCount = LC.redis_num_redolog_streams.intValue();
         streams = new ArrayList<RStream<byte[], byte[]>>(streamsCount);
 
         ZimbraLog.redolog.info("DistributedLogWriter streamsCount: %d", streamsCount);
