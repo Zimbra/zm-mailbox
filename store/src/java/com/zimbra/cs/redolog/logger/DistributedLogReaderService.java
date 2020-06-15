@@ -5,7 +5,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -35,6 +37,8 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.RedissonClientHolder;
 import com.zimbra.cs.mailbox.util.MailboxClusterUtil;
+import com.zimbra.cs.mailbox.util.MailboxClusterUtil.PodInfo;
+import com.zimbra.cs.mailbox.util.MailboxClusterUtil.WorkerType;
 import com.zimbra.cs.redolog.RedoLogBlobStore;
 import com.zimbra.cs.redolog.RedoLogManager.LoggableOp;
 import com.zimbra.cs.redolog.RedoLogProvider;
@@ -43,8 +47,7 @@ import com.zimbra.cs.redolog.op.RedoableOp;
 
 public class DistributedLogReaderService {
     private static RedissonClient client;
-    private static int streamsCount;
-    private List<RStream<byte[], byte[]>> streams;
+    private Map<Integer, RStream<byte[], byte[]>> streams;
     private ExecutorService executorService;
     private static String group;
     private static String consumer;
@@ -78,30 +81,35 @@ public class DistributedLogReaderService {
         consumer = MailboxClusterUtil.getMailboxWorkerName();
         client = RedissonClientHolder.getInstance().getRedissonClient();
         script = client.getScript(StringCodec.INSTANCE);
-        streamsCount = LC.redis_num_redolog_streams.intValue();
-        streams = new ArrayList<RStream<byte[], byte[]>>(streamsCount);
-        ZimbraLog.redolog.info("Reader service streamsCount %d", streamsCount);
-
+        streams = new HashMap<>();
         blobStore = RedoLogProvider.getInstance().getRedoLogManager().getBlobStore();
         externalBlobStore = RedoLogProvider.getInstance().getRedoLogManager().hasExternalBlobStore();
 
+        PodInfo podInfo = MailboxClusterUtil.getPodInfo();
+        RedoStreamSelector selector = new RedoStreamSelector();
+        List<Integer> streamIndexes = selector.getStreamIndexes(podInfo.getIndex());
+        if (streamIndexes.isEmpty()) {
+            ZimbraLog.redolog.info("%s is not tasked with processing any redolog streams!", podInfo.getName());
+            return;
+        }
+        ZimbraLog.redolog.info("%s will listen on redolog streams %s", podInfo.getName(), streamIndexes);
         ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("DistributedLog-Reader-Thread-%d").build();
-        executorService = Executors.newFixedThreadPool(streamsCount, namedThreadFactory);
-
-        for (int i=0; i<streamsCount ; i++) {
-            streams.add(client.getStream(LC.redis_streams_redo_log_stream_prefix.value()+i, ByteArrayCodec.INSTANCE));
-            if (!streams.get(i).isExists()) {
-                streams.get(i).createGroup(group, StreamMessageId.ALL); // stream will be auto-created
-                ZimbraLog.redolog.info("created consumer group %s and stream %s", group, streams.get(i).getName());
+        executorService = Executors.newFixedThreadPool(streamIndexes.size(), namedThreadFactory);
+        for (int i: streamIndexes) {
+            RStream<byte[], byte[]> stream = client.getStream(LC.redis_streams_redo_log_stream_prefix.value()+i, ByteArrayCodec.INSTANCE);
+            streams.put(i, stream);
+            if (!stream.isExists()) {
+                stream.createGroup(group, StreamMessageId.ALL); // stream will be auto-created
+                ZimbraLog.redolog.info("created consumer group %s and stream %s", group, stream.getName());
             } else {
                 // create group if it doesn't exist on the stream
-                StreamInfo<byte[], byte[]> info = streams.get(i).getInfo();
+                StreamInfo<byte[], byte[]> info = stream.getInfo();
                 if (info.getGroups() == 0) {
-                    streams.get(i).createGroup(group, StreamMessageId.ALL);
-                    ZimbraLog.redolog.info("created consumer group %s for existing stream %s", group, streams.get(i).getName());
+                    stream.createGroup(group, StreamMessageId.ALL);
+                    ZimbraLog.redolog.info("created consumer group %s for existing stream %s", group, stream.getName());
                 }
             }
-            executorService.execute(new LogMonitor(streams.get(i)));
+            executorService.execute(new LogMonitor(stream));
         }
     }
 
@@ -270,5 +278,67 @@ public class DistributedLogReaderService {
                         Long.compare(id1.getId0(), id2.getId0());
         }
     };
+
+    // Helper class that determines which redolog redis streams a given zmc-backup-restore pod
+    // should listen on. Keeping it public because external systems might need this logic.
+    public static class RedoStreamSelector {
+
+        private int numStreams;
+        private int numWorkers;
+        private Map<Integer, Integer> streamPodMap = new HashMap<>();
+        private Map<Integer, List<Integer>> streamsByPod = new HashMap<>();
+        private PodInfo currentPod;
+
+        public RedoStreamSelector() {
+            this(LC.redis_num_redolog_streams.intValue(), LC.num_backup_restore_workers.intValue());
+        }
+
+        public RedoStreamSelector(int numStreams, int numWorkers) {
+            this.numStreams = numStreams;
+            this.numWorkers = numWorkers;
+            this.currentPod = MailboxClusterUtil.getPodInfo();
+            initStreamMapping();
+        }
+
+        private void initStreamMapping() {
+            if (numWorkers > numStreams) {
+                ZimbraLog.redolog.warn("numWorkers > numStreams (%s>%s), not all zmc-backup-restore workers will be used!", numWorkers, numStreams);
+            }
+            int workerNum=0;
+            for (int streamNum = 0; streamNum < numStreams; streamNum++) {
+                streamPodMap.put(streamNum, workerNum);
+                streamsByPod.computeIfAbsent(workerNum, k -> new ArrayList<>()).add(streamNum);
+                workerNum++;
+                if (workerNum >= numWorkers) {
+                    workerNum = 0;
+                }
+            }
+            for (Map.Entry<Integer, List<Integer>> entry: streamsByPod.entrySet()) {
+                //temp logging
+                ZimbraLog.redolog.info("worker %s will handle redolog streams %s", entry.getKey(), entry.getValue());
+            }
+        }
+
+        public List<Integer> getStreamIndexes(int podIndex) {
+            return streamsByPod.getOrDefault(podIndex, Collections.emptyList());
+        }
+
+        public int getStreamForMailboxId(int mailboxId) {
+            return mailboxId % numStreams;
+        }
+
+        public int getBackupPodForMailboxId(int mailboxId) {
+            int streamId = getStreamForMailboxId(mailboxId);
+            return streamPodMap.get(streamId);
+        }
+
+        public boolean isLocal(int mailboxId) {
+            if (currentPod.getType() == WorkerType.BACKUP_RESTORE) {
+                return getBackupPodForMailboxId(mailboxId) == currentPod.getIndex();
+            } else {
+                return false;
+            }
+        }
+    }
 }
 

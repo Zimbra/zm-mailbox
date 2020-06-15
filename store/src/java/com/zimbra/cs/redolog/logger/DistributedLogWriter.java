@@ -29,6 +29,7 @@ import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.RedissonClientHolder;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.redolog.TransactionId;
+import com.zimbra.cs.redolog.logger.DistributedLogReaderService.RedoStreamSelector;
 import com.zimbra.cs.redolog.op.BlobRecorder;
 import com.zimbra.cs.redolog.op.CommitTxn;
 import com.zimbra.cs.redolog.op.RedoableOp;
@@ -55,6 +56,7 @@ public class DistributedLogWriter implements LogWriter {
     private boolean externalBlobStore;
     private Joiner joiner = Joiner.on(",");
     private Random random = new Random();
+    private RedoStreamSelector streamSelector;
 
     public DistributedLogWriter() {
         client = RedissonClientHolder.getInstance().getRedissonClient();
@@ -68,6 +70,7 @@ public class DistributedLogWriter implements LogWriter {
         }
 
         externalBlobStore = RedoLogProvider.getInstance().getRedoLogManager().hasExternalBlobStore();
+        streamSelector = new RedoStreamSelector();
     }
 
     /*
@@ -86,7 +89,7 @@ public class DistributedLogWriter implements LogWriter {
                 streamIndex = 0;
             }
         } else {
-           streamIndex = mboxId % streamsCount;
+           streamIndex = streamSelector.getStreamForMailboxId(mboxId);
         }
         ZimbraLog.redolog.debug("sending %s txnId=%s mboxId=%s to stream %s", op.getOperation(), op.getTransactionId(), mboxId, streamIndex);
         return streamIndex;
