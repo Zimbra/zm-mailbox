@@ -16,6 +16,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
 
+import io.minio.ErrorCode;
 import io.minio.MinioClient;
 import io.minio.ObjectStat;
 import io.minio.PutObjectOptions;
@@ -56,6 +57,9 @@ public class MinIORedoBlobStore extends RedoLogBlobStore {
         InputStream obj = null;
         try {
             obj = MinIOUtil.getObject(client, bucketName, identifier);
+            if(obj == null) {
+                throw ServiceException.NOT_FOUND("MinIORedoBlobStore - fetchBlob failed, object does not exist for identifier: "+ identifier);
+            }
 
             ObjectStat objectStat = MinIOUtil.statObject(client, bucketName, identifier);
 
@@ -172,9 +176,15 @@ public class MinIORedoBlobStore extends RedoLogBlobStore {
                 throws ServiceException {
             try {
                 return client.getObject(bucketName, key);
-            } catch (InvalidKeyException | ErrorResponseException | IllegalArgumentException | InsufficientDataException
-                    | InternalException | InvalidBucketNameException | InvalidResponseException
-                    | NoSuchAlgorithmException | XmlParserException | IOException e) {
+            } catch (InvalidKeyException | IllegalArgumentException | InsufficientDataException | InternalException
+                    | InvalidBucketNameException | InvalidResponseException | NoSuchAlgorithmException
+                    | XmlParserException | IOException e) {
+                throw ServiceException.FAILURE("MinIOUtil - getObject failed: ", e);
+            } catch (ErrorResponseException e) {
+                ErrorCode code = e.errorResponse().errorCode();
+                if (code == ErrorCode.NO_SUCH_OBJECT) {
+                    return null;
+                }
                 throw ServiceException.FAILURE("MinIOUtil - getObject failed: ", e);
             }
         }
