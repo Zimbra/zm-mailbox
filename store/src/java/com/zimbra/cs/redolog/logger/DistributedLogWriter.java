@@ -19,8 +19,6 @@ import org.redisson.client.codec.ByteArrayCodec;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
-import com.google.common.hash.HashFunction;
-import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
 import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
@@ -57,7 +55,6 @@ public class DistributedLogWriter implements LogWriter {
     private boolean externalBlobStore;
     private Joiner joiner = Joiner.on(",");
     private RedoStreamSelector streamSelector;
-    HashFunction hasher;
 
     public DistributedLogWriter() {
         client = RedissonClientHolder.getInstance().getRedissonClient();
@@ -72,38 +69,6 @@ public class DistributedLogWriter implements LogWriter {
 
         externalBlobStore = RedoLogProvider.getInstance().getRedoLogManager().hasExternalBlobStore();
         streamSelector = new RedoStreamSelector();
-        hasher = Hashing.murmur3_128();
-    }
-
-    /*
-     * Returns the index of the stream that could be used to send data to the
-     * Backup Restore Pod.
-     */
-    private int getStreamIndex(RedoableOp op) {
-        int mboxId = op.getMailboxId();
-        int streamIndex;
-        if (mboxId == RedoableOp.MAILBOX_ID_ALL || mboxId == RedoableOp.UNKNOWN_ID) {
-            if (externalBlobStore && op instanceof CommitTxn) {
-                // StoreIncomingBlob  commit ops for a given digest should for a go to the same stream, so that they are
-                // processed serially on the consumer side. THis is to avoid a race condition in updating blob references,
-                // in case the BlobReferenceManager implementation is not atomic.
-                CommitTxn commit = (CommitTxn) op;
-                String blobDigest = commit.getBlobRecorder().getBlobDigest();
-                if (blobDigest != null) {
-                    streamIndex = Math.abs(hasher.hashString(blobDigest, Charsets.UTF_8).asInt()) % streamsCount;
-                } else {
-                    ZimbraLog.redolog.warn("encountered CommitTxn for %s without blob data! sending to stream 0", op.getTxnOpCode());
-                    streamIndex = 0;
-                }
-            } else {
-                // if the mailbox ID isn't specified, send it to the first stream
-                streamIndex = 0;
-            }
-        } else {
-           streamIndex = streamSelector.getStreamForMailboxId(mboxId);
-        }
-        ZimbraLog.redolog.debug("sending %s txnId=%s mboxId=%s to stream %s", op.getOperation(), op.getTransactionId(), mboxId, streamIndex);
-        return streamIndex;
     }
 
     @Override
@@ -194,7 +159,9 @@ public class DistributedLogWriter implements LogWriter {
         }
         long start = System.currentTimeMillis();
 
-        RFuture<StreamMessageId> future = streams.get(getStreamIndex(op)).addAllAsync(fields);
+        int streamIndex = streamSelector.getStreamIndex(op);
+        ZimbraLog.redolog.info("sending %s txnId=%s mboxId=%s to stream %s", op.getOperation(), op.getTransactionId(), op.getMailboxId(), streamIndex);
+        RFuture<StreamMessageId> future = streams.get(streamIndex).addAllAsync(fields);
         future.onComplete((streamId, e) -> {
             long elapsed = System.currentTimeMillis() - start;
             if (isStartMarker) {
