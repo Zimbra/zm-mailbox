@@ -43,28 +43,11 @@ public class MinIORedoBlobStore extends RedoLogBlobStore {
         }
     }
 
-    private void createBucket() throws ServiceException {
-        try {
-            boolean bucketExists = client.bucketExists(bucketName);
-            if (!bucketExists) {
-                ZimbraLog.redolog.debug("MinIORedoBlobStore - createBucket - going to make bucket");
-                client.makeBucket(bucketName);
-            }
-            ZimbraLog.redolog.debug("MinIORedoBlobStore - createBucket - bucket already exists");
-        } catch (InvalidKeyException | ErrorResponseException | IllegalArgumentException | InsufficientDataException
-                | InternalException | InvalidBucketNameException | InvalidResponseException | NoSuchAlgorithmException
-                | XmlParserException | IOException e) {
-            throw ServiceException.FAILURE("MinIORedoBlobStore - createBucket failed: ", e);
-        } catch (RegionConflictException e) {
-            throw ServiceException.FAILURE("MinIORedoBlobStore - createBucket failed - RegionConflictException: ", e);
-        }
-    }
-
     public MinIORedoBlobStore(BlobReferenceManager refManager) throws ServiceException {
         super(refManager);
         client = MinIOClientHolder.getInstance().getClient();
         bucketName = LC.backup_blob_store_s3_bucket.value();
-        createBucket();
+        MinIOUtil.createBucket(client, bucketName);
     }
 
     @Override
@@ -72,8 +55,10 @@ public class MinIORedoBlobStore extends RedoLogBlobStore {
         ZimbraLog.redolog.debug("MinIORedoBlobStore - fetchBlob - digest: %s", identifier);
         InputStream obj = null;
         try {
-            obj = client.getObject(bucketName, identifier);
-            ObjectStat objectStat = client.statObject(bucketName, identifier);
+            obj = MinIOUtil.getObject(client, bucketName, identifier);
+
+            ObjectStat objectStat = MinIOUtil.statObject(client, bucketName, identifier);
+
             Map<String, List<String>> metadataMap = objectStat.httpHeaders();
             List<String> sizeList = metadataMap.get(BlobMetaData.BLOBSIZE.getKey());
             if (sizeList == null) {
@@ -84,12 +69,8 @@ public class MinIORedoBlobStore extends RedoLogBlobStore {
             ZimbraLog.redolog.debug("MinIORedoBlobStore - fetchBlob - size: %d", size);
             Boolean compressed = obj.available() < size;
             return StoreManager.getInstance().storeIncoming(obj, compressed);
-        } catch (InvalidKeyException | ErrorResponseException | IllegalArgumentException | InsufficientDataException
-                | InternalException | InvalidBucketNameException | InvalidResponseException | NoSuchAlgorithmException
-                | XmlParserException | IOException e) {
+        } catch (IOException e) {
             throw ServiceException.FAILURE("MinIORedoBlobStore - fetchBlob failed: ", e);
-        } catch (IndexOutOfBoundsException e) {
-            throw ServiceException.FAILURE("MinIORedoBlobStore - fetchBlob failed - Missing data: ", e);
         } finally {
             ByteUtil.closeStream(obj);
         }
@@ -105,38 +86,46 @@ public class MinIORedoBlobStore extends RedoLogBlobStore {
             PutObjectOptions options = new PutObjectOptions(in.available(), -1);
             options.setHeaders(metadataMap);
 
-            client.putObject(bucketName, digest, in, options);
-        } catch (InvalidKeyException | ErrorResponseException | IllegalArgumentException | InsufficientDataException
-                | InternalException | InvalidBucketNameException | InvalidResponseException | NoSuchAlgorithmException
-                | XmlParserException | IOException e) {
+            MinIOUtil.putObject(client, bucketName, digest, in, options);
+        } catch (IllegalArgumentException | IOException e) {
             throw ServiceException.FAILURE("MinIORedoBlobStore - storeBlobData failed: ", e);
         }
     }
 
     @Override
     protected void deleteBlobData(String digest) throws ServiceException {
-        try {
-            client.removeObject(bucketName, digest);
-        } catch (InvalidKeyException | ErrorResponseException | IllegalArgumentException | InsufficientDataException
-                | InternalException | InvalidBucketNameException | InvalidResponseException | NoSuchAlgorithmException
-                | XmlParserException | IOException e) {
-            throw ServiceException.FAILURE("MinIORedoBlobStore - deleteBlobData failed: ", e);
-        }
+        MinIOUtil.deleteObject(client, bucketName, digest);
     }
 
     public static class MinIOReferenceManager extends RedoLogBlobStore.BlobReferenceManager {
 
-        MinIOReferenceManager() {
+        private final MinioClient client;
+        private final String bucketName;
+
+        MinIOReferenceManager() throws ServiceException {
+            client = MinIOClientHolder.getInstance().getClient();
+            bucketName = LC.backup_blob_store_s3_bucket.value();
+            MinIOUtil.createBucket(client, bucketName);
         }
 
+        /**
+         * Adds the Ids against the digest key. Returns true on successful addition else
+         * false.
+         */
         @Override
         public boolean addRefs(String digest, Collection<Integer> mboxIds) {
 
             return true;
         }
 
+        /**
+         * Remove the Ids mapped to the digest key. Returns true if the cardinality of
+         * values mapped to key is equal to zero else false. if the cardinality of
+         * values mapped to key is equal to zero delete the key.
+         */
         @Override
         public boolean removeRefs(String digest, Collection<Integer> mboxIds) {
+
             return true;
         }
     }
@@ -146,6 +135,69 @@ public class MinIORedoBlobStore extends RedoLogBlobStore {
         @Override
         public MinIORedoBlobStore getRedoLogBlobStore() throws ServiceException {
             return new MinIORedoBlobStore(new MinIOReferenceManager());
+        }
+    }
+
+    private static class MinIOUtil {
+
+        public static void createBucket(MinioClient client, String bucketName) throws ServiceException {
+            try {
+                boolean bucketExists = client.bucketExists(bucketName);
+                if (!bucketExists) {
+                    ZimbraLog.redolog.debug("MinIOUtil - createBucket - going to make bucket");
+                    client.makeBucket(bucketName);
+                }
+                ZimbraLog.redolog.debug("MinIOUtil - createBucket - bucket already exists");
+            } catch (InvalidKeyException | ErrorResponseException | IllegalArgumentException | InsufficientDataException
+                    | InternalException | InvalidBucketNameException | InvalidResponseException
+                    | NoSuchAlgorithmException | XmlParserException | IOException e) {
+                throw ServiceException.FAILURE("MinIOUtil - createBucket failed: ", e);
+            } catch (RegionConflictException e) {
+                throw ServiceException.FAILURE("MinIOUtil - createBucket failed - RegionConflictException: ", e);
+            }
+        }
+
+        private static void putObject(MinioClient client, String bucketName, String key, InputStream is,
+                PutObjectOptions options) throws ServiceException {
+            try {
+                client.putObject(bucketName, key, is, options);
+            } catch (InvalidKeyException | ErrorResponseException | IllegalArgumentException | InsufficientDataException
+                    | InternalException | InvalidBucketNameException | InvalidResponseException
+                    | NoSuchAlgorithmException | XmlParserException | IOException e) {
+                throw ServiceException.FAILURE("MinIOUtil - putObject failed: ", e);
+            }
+        }
+
+        private static InputStream getObject(MinioClient client, String bucketName, String key)
+                throws ServiceException {
+            try {
+                return client.getObject(bucketName, key);
+            } catch (InvalidKeyException | ErrorResponseException | IllegalArgumentException | InsufficientDataException
+                    | InternalException | InvalidBucketNameException | InvalidResponseException
+                    | NoSuchAlgorithmException | XmlParserException | IOException e) {
+                throw ServiceException.FAILURE("MinIOUtil - getObject failed: ", e);
+            }
+        }
+
+        private static ObjectStat statObject(MinioClient client, String bucketName, String key)
+                throws ServiceException {
+            try {
+                return client.statObject(bucketName, key);
+            } catch (InvalidKeyException | ErrorResponseException | IllegalArgumentException | InsufficientDataException
+                    | InternalException | InvalidBucketNameException | InvalidResponseException
+                    | NoSuchAlgorithmException | XmlParserException | IOException e) {
+                throw ServiceException.FAILURE("MinIOUtil - statObject failed: ", e);
+            }
+        }
+
+        private static void deleteObject(MinioClient client, String bucketName, String key) throws ServiceException {
+            try {
+                client.removeObject(bucketName, key);
+            } catch (InvalidKeyException | ErrorResponseException | IllegalArgumentException | InsufficientDataException
+                    | InternalException | InvalidBucketNameException | InvalidResponseException
+                    | NoSuchAlgorithmException | XmlParserException | IOException e) {
+                throw ServiceException.FAILURE("MinIOUtil - deleteObject failed: ", e);
+            }
         }
     }
 }
