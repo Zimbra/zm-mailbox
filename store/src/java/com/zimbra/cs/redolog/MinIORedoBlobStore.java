@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,7 +13,6 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.redolog.RedisRedoBlobStore.RedisReferenceManager;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
 
@@ -124,12 +124,28 @@ public class MinIORedoBlobStore extends RedoLogBlobStore {
         }
     }
 
+    public static class MinIOReferenceManager extends RedoLogBlobStore.BlobReferenceManager {
+
+        MinIOReferenceManager() {
+        }
+
+        @Override
+        public boolean addRefs(String digest, Collection<Integer> mboxIds) {
+
+            return true;
+        }
+
+        @Override
+        public boolean removeRefs(String digest, Collection<Integer> mboxIds) {
+            return true;
+        }
+    }
+
     public static class Factory implements RedoLogBlobStore.Factory {
 
         @Override
         public MinIORedoBlobStore getRedoLogBlobStore() throws ServiceException {
-            //Temporary code to use RedisReferenceManager as a BlobReferenceManager
-            return new MinIORedoBlobStore(new RedisReferenceManager());
+            return new MinIORedoBlobStore(new MinIOReferenceManager());
         }
     }
 }
