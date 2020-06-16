@@ -10,6 +10,7 @@ import java.util.Map;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.redolog.RedisRedoBlobStore.RedisReferenceManager;
 import com.zimbra.cs.store.Blob;
@@ -69,8 +70,9 @@ public class MinIORedoBlobStore extends RedoLogBlobStore {
     @Override
     public Blob fetchBlob(String identifier) throws ServiceException {
         ZimbraLog.redolog.debug("MinIORedoBlobStore - fetchBlob - digest: %s", identifier);
+        InputStream obj = null;
         try {
-            InputStream obj = client.getObject(bucketName, identifier);
+            obj = client.getObject(bucketName, identifier);
             ObjectStat objectStat = client.statObject(bucketName, identifier);
             Map<String, List<String>> metadataMap = objectStat.httpHeaders();
             List<String> sizeList = metadataMap.get(BlobMetaData.BLOBSIZE.getKey());
@@ -88,6 +90,8 @@ public class MinIORedoBlobStore extends RedoLogBlobStore {
             throw ServiceException.FAILURE("MinIORedoBlobStore - fetchBlob failed: ", e);
         } catch (IndexOutOfBoundsException e) {
             throw ServiceException.FAILURE("MinIORedoBlobStore - fetchBlob failed - Missing data: ", e);
+        } finally {
+            ByteUtil.closeStream(obj);
         }
     }
 
