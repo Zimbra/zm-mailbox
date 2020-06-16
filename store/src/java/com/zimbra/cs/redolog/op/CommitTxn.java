@@ -54,6 +54,7 @@ public class CommitTxn extends ControlOp {
     public CommitTxn(RedoableOp changeEntry) {
     	super(MailboxOperation.CommitTxn, changeEntry.getTransactionId());
         setMailboxId(changeEntry.getMailboxId());
+        setAccountId(changeEntry.getAccountId());
         mTxnOpCode = changeEntry.getOperation();
         mCommitCallback = changeEntry.getCommitCallback();
         if (changeEntry instanceof BlobRecorder) {

@@ -46,23 +46,28 @@ public class AbortTxn extends ControlOp {
     public AbortTxn(RedoableOp changeEntry) {
         super(MailboxOperation.AbortTxn, changeEntry.getTransactionId());
         setMailboxId(changeEntry.getMailboxId());
+        setAccountId(changeEntry.getAccountId());
         mTxnOpCode = changeEntry.getOperation();
     }
 
+    @Override
     public MailboxOperation getTxnOpCode() {
         return mTxnOpCode;
     }
 
+    @Override
     protected String getPrintableData() {
         StringBuffer sb = new StringBuffer("txnType=");
         sb.append(mTxnOpCode.name());
         return sb.toString();
     }
 
+    @Override
     protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeInt(mTxnOpCode.getCode());
     }
 
+    @Override
     protected void deserializeData(RedoLogInput in) throws IOException {
         mTxnOpCode = MailboxOperation.fromInt(in.readInt());
     }
