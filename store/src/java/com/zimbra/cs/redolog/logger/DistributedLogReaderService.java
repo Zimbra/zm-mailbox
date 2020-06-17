@@ -292,20 +292,25 @@ public class DistributedLogReaderService {
         private Map<Integer, List<Integer>> streamsByPod = new HashMap<>();
         private PodInfo currentPod;
         private HashFunction hasher;
-        private boolean externalBlobStore;
+        private boolean hasExternalBlobStore;
         private static final int DEFAULT_STREAM_INDEX = 0;
 
         public RedoStreamSelector() {
-            this(LC.redis_num_redolog_streams.intValue(), LC.num_backup_restore_workers.intValue());
+            this(LC.redis_num_redolog_streams.intValue(), LC.num_backup_restore_workers.intValue(),
+                    RedoLogProvider.getInstance().getRedoLogManager().hasExternalBlobStore());
         }
 
         public RedoStreamSelector(int numStreams, int numWorkers) {
+            this(numStreams, numWorkers, true);
+        }
+
+        public RedoStreamSelector(int numStreams, int numWorkers, boolean hasExternalBlobStore) {
             this.numStreams = numStreams;
             this.numWorkers = numWorkers;
             this.currentPod = MailboxClusterUtil.getPodInfo();
             hasher = Hashing.murmur3_128();
             initStreamMapping();
-            externalBlobStore = RedoLogProvider.getInstance().getRedoLogManager().hasExternalBlobStore();
+            this.hasExternalBlobStore = hasExternalBlobStore;
         }
 
         private void initStreamMapping() {
@@ -327,11 +332,15 @@ public class DistributedLogReaderService {
             return streamsByPod.getOrDefault(podIndex, Collections.emptyList());
         }
 
+        public List<Integer> getActivePodIndexes() {
+            return new ArrayList<>(streamsByPod.keySet());
+        }
+
         public int getStreamIndex(RedoableOp op) {
             String acctId = op.getAccountId();
             if (acctId != null) {
                 return getStreamIndex(acctId);
-            } else if (externalBlobStore && op instanceof CommitTxn) {
+            } else if (hasExternalBlobStore && op instanceof CommitTxn) {
                 // StoreIncomingBlob  commit ops for a given digest should for a go to the same stream, so that they are
                 // processed serially on the consumer side. This is to avoid a race condition in updating blob references,
                 // in case the BlobReferenceManager implementation is not atomic.
@@ -354,7 +363,7 @@ public class DistributedLogReaderService {
             return Math.abs(hasher.hashString(str, Charsets.UTF_8).asInt()) % numStreams;
         }
 
-        private int getBackupPodForAccount(NamedEntry acct) {
+        public int getBackupPodForAccount(NamedEntry acct) {
             int streamIndex = getStreamIndex(acct.getId());
             return streamPodMap.get(streamIndex);
         }
