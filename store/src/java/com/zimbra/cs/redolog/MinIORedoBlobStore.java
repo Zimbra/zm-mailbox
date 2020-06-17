@@ -1,9 +1,14 @@
 package com.zimbra.cs.redolog;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -105,32 +110,159 @@ public class MinIORedoBlobStore extends RedoLogBlobStore {
 
         private final MinioClient client;
         private final String bucketName;
+        private final String metaPrefix;
 
         MinIOReferenceManager() throws ServiceException {
             client = MinIOClientHolder.getInstance().getClient();
             bucketName = LC.backup_blob_store_s3_bucket.value();
+            metaPrefix = LC.backup_blob_store_s3_object_ref_prefix.value();
             MinIOUtil.createBucket(client, bucketName);
+        }
+
+        private String getKey(String digest) {
+            return metaPrefix + digest;
         }
 
         /**
          * Adds the Ids against the digest key. Returns true on successful addition else
          * false.
+         * @throws ServiceException
          */
         @Override
-        public boolean addRefs(String digest, Collection<Integer> mboxIds) {
+        public boolean addRefs(String digest, Collection<Integer> mboxIds) throws ServiceException {
+            InputStream iS = null;
+            ObjectInputStream objIS = null;
+            InputStream modifiedIS = null;
+            ByteArrayOutputStream bAOS = null;
+            ObjectOutputStream objOS = null;
 
-            return true;
+            try {
+                iS = MinIOUtil.getObject(client, bucketName, getKey(digest));
+                HashMap<Integer, Integer> digestRefHolder = null;
+
+                if (iS != null) {
+                    objIS = new ObjectInputStream(iS);
+                    Object obj = objIS.readObject();
+
+                    if (obj instanceof HashMap<?,?>) {
+                        digestRefHolder = (HashMap<Integer, Integer>) objIS.readObject();
+                    } else {
+                        throw ServiceException.NOT_FOUND(
+                                "MinIORedoBlobStore - addRefs - deserialization failed for digest: " + digest);
+                    }
+                } else {
+                    digestRefHolder = new HashMap<Integer, Integer>();
+                }
+
+                digestRefHolder.replaceAll((k, v) -> {
+                    if (mboxIds.contains(k))
+                        return v + 1;
+                    else {
+                        return v;
+                    }
+                });
+
+                for (Integer id : mboxIds) {
+                    if (!digestRefHolder.containsKey(id))
+                        digestRefHolder.put(id, 1);
+                }
+
+                byte[] bArray = null;
+                bAOS = new ByteArrayOutputStream();
+                objOS = new ObjectOutputStream(bAOS);
+                objOS.writeObject(digestRefHolder);
+                bArray = bAOS.toByteArray();
+                modifiedIS = new ByteArrayInputStream(bArray);
+
+                PutObjectOptions options = new PutObjectOptions(modifiedIS.available(), -1);
+                MinIOUtil.putObject(client, bucketName, digest, modifiedIS, options);
+
+                return true;
+            } catch (IOException | ClassNotFoundException e) {
+                throw ServiceException.FAILURE("MinIORedoBlobStore - addRefs failed: ", e);
+            } finally {
+                ByteUtil.closeStream(iS);
+                ByteUtil.closeStream(objIS);
+                ByteUtil.closeStream(modifiedIS);
+                ByteUtil.closeStream(bAOS);
+                ByteUtil.closeStream(objOS);
+            }
         }
 
         /**
          * Remove the Ids mapped to the digest key. Returns true if the cardinality of
          * values mapped to key is equal to zero else false. if the cardinality of
          * values mapped to key is equal to zero delete the key.
+         * 
+         * @throws ServiceException
          */
         @Override
-        public boolean removeRefs(String digest, Collection<Integer> mboxIds) {
+        public boolean removeRefs(String digest, Collection<Integer> mboxIds) throws ServiceException {
+            InputStream iS = null;
+            ObjectInputStream objIS = null;
+            InputStream modifiedIS = null;
+            ByteArrayOutputStream bAOS = null;
+            ObjectOutputStream objOS = null;
 
-            return true;
+            try {
+                iS = MinIOUtil.getObject(client, bucketName, getKey(digest));
+                if (iS == null) {
+                    return true;
+                }
+
+                objIS = new ObjectInputStream(iS);
+                Object obj = objIS.readObject();
+
+                if (obj instanceof HashMap<?, ?>) {
+                    HashMap<Integer, Integer> digestRefHolder = (HashMap<Integer, Integer>) objIS.readObject();
+
+                    List<Integer> tracker = new ArrayList<Integer>();
+
+                    digestRefHolder.replaceAll((k, v) -> {
+                        if (mboxIds.contains(k)) {
+                            Integer val = v - 1;
+                            if (val <= 0) {
+                                tracker.add(k);
+                            }
+                            return val;
+                        } else {
+                            return v;
+                        }
+                    });
+
+                    for (Integer id : tracker) {
+                        digestRefHolder.remove(id);
+                    }
+
+                    if (digestRefHolder.isEmpty()) {
+                        MinIOUtil.deleteObject(client, bucketName, getKey(digest));
+                        return true;
+                    }
+
+                    byte[] bArray = null;
+                    bAOS = new ByteArrayOutputStream();
+                    objOS = new ObjectOutputStream(bAOS);
+                    objOS.writeObject(digestRefHolder);
+                    bArray = bAOS.toByteArray();
+
+                    modifiedIS = new ByteArrayInputStream(bArray);
+
+                    PutObjectOptions options = new PutObjectOptions(modifiedIS.available(), -1);
+                    MinIOUtil.putObject(client, bucketName, digest, modifiedIS, options);
+
+                    return false;
+                }
+                throw ServiceException
+                        .NOT_FOUND("MinIORedoBlobStore - removeRefs - deserialization failed for digest: " + digest);
+            } catch (IOException | ClassNotFoundException e) {
+                throw ServiceException.FAILURE("MinIORedoBlobStore - fetchBlob failed: ", e);
+            } finally {
+                ByteUtil.closeStream(iS);
+                ByteUtil.closeStream(objIS);
+                ByteUtil.closeStream(modifiedIS);
+                ByteUtil.closeStream(bAOS);
+                ByteUtil.closeStream(objOS);
+            }
         }
     }
 

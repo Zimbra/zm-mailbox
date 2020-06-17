@@ -35,6 +35,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.cs.mailbox.MailboxOperation;
@@ -146,7 +147,7 @@ public abstract class RedoableOp {
         return octxt;
     }
 
-    public synchronized void commit() {
+    public synchronized void commit() throws ServiceException {
         if (mActive) {
             mActive = false;
             mRedoLogMgr.commit(this);
