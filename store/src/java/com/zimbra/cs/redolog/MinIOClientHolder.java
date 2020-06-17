@@ -17,9 +17,14 @@ public final class MinIOClientHolder {
 
     void initClient() throws ServiceException {
         try {
-            minioClient = new MinioClient(LC.backup_blob_store_service_uri.value(),
-                    LC.backup_blob_store_service_port.intValue(), LC.backup_blob_store_access_key.value(),
-                    LC.backup_blob_store_secret_key.value(), false);
+            if (LC.backup_blob_store_service_port.intValue() > 0) {
+                minioClient = new MinioClient(LC.backup_blob_store_service_uri.value(),
+                        LC.backup_blob_store_service_port.intValue(), LC.backup_blob_store_access_key.value(),
+                        LC.backup_blob_store_secret_key.value(), false);
+            } else {
+                minioClient = new MinioClient(LC.backup_blob_store_service_uri.value(),
+                        LC.backup_blob_store_access_key.value(), LC.backup_blob_store_secret_key.value());
+            }
 
         } catch (InvalidEndpointException | InvalidPortException e) {
             throw ServiceException.FAILURE("MinIOClientHolder - initClient failed: ", e);
