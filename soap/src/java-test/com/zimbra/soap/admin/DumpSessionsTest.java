@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -26,10 +26,10 @@ import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.namespace.QName;
 
-import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.Logger;
-import org.apache.log4j.Level;
-
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -48,15 +48,15 @@ import com.zimbra.soap.admin.type.SessionInfo;
  */
 public class DumpSessionsTest {
 
-    private static final Logger LOG = Logger.getLogger(DumpSessionsTest.class);
-    
+    private static final Logger LOG = LogManager.getLogger(DumpSessionsTest.class);
+
     private static Unmarshaller unmarshaller;
     private static Marshaller marshaller;
 
     static {
-        BasicConfigurator.configure();
-        Logger.getRootLogger().setLevel(Level.INFO);
-        LOG.setLevel(Level.INFO);
+        Configurator.reconfigure();
+        Configurator.setRootLevel(Level.INFO);
+        Configurator.setLevel(LOG.getName(), Level.INFO);
     }
 
     @BeforeClass

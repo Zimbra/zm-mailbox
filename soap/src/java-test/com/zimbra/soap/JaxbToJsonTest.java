@@ -36,9 +36,10 @@ import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlMixed;
 import javax.xml.parsers.DocumentBuilder;
 
-import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.dom4j.QName;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -118,7 +119,7 @@ import junit.framework.Assert;
 public class JaxbToJsonTest {
     @Rule public TestName testName = new TestName();
 
-    private static final Logger LOG = Logger.getLogger(JaxbToJsonTest.class);
+    private static final Logger LOG = LogManager.getLogger(JaxbToJsonTest.class);
 
     private static String jsonEmptyGetSystemRetentionPolicyResponse =
             "{\n" +
@@ -149,9 +150,9 @@ public class JaxbToJsonTest {
             "}";
 
     static {
-        BasicConfigurator.configure();
-        Logger.getRootLogger().setLevel(Level.INFO);
-        LOG.setLevel(Level.INFO);
+        Configurator.reconfigure();
+        Configurator.setRootLevel(Level.INFO);
+        Configurator.setLevel(LOG.getName(), Level.INFO);
     }
 
     private void logDebug(String format, Object ... objects) {

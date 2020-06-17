@@ -16,15 +16,17 @@
  */
 package com.zimbra.common.util;
 
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
-import org.apache.log4j.PropertyConfigurator;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.config.ConfigurationSource;
+import org.apache.logging.log4j.core.config.Configurator;
 
 import com.zimbra.common.localconfig.LC;
 
@@ -40,19 +42,32 @@ public final class LogFactory {
     private LogFactory() {
     }
 
-    public synchronized static void init() {
-        PropertyConfigurator.configure(LC.zimbra_log4j_properties.value());
+    public synchronized static void init(){
+
+        try {
+           ConfigurationSource logConfigSource = new ConfigurationSource(new FileInputStream(LC.zimbra_log4j_properties.value()));
+           Configurator.initialize(null, logConfigSource);
+        } catch (IOException e) {
+            ZimbraLog.misc.info("Error initializing the  loggers.", e);
+        }
     }
 
-    public synchronized static void reset() {
+    public synchronized static void reset()  {
         ZimbraLog.misc.info("Resetting all loggers");
         // LogManager.resetConfiguration() will set all logger's level to null. We don't want to leave account loggers
         // with that state.
         for (Log log : getAllLoggers()) {
             log.removeAccountLoggers();
         }
-        LogManager.resetConfiguration();
-        PropertyConfigurator.configure(LC.zimbra_log4j_properties.value());
+        LogManager.shutdown();
+        ConfigurationSource logConfigSource;
+        try {
+            logConfigSource = new ConfigurationSource(new FileInputStream(LC.zimbra_log4j_properties.value()));
+            Configurator.initialize(null, logConfigSource);
+        } catch (IOException e) {
+            ZimbraLog.misc.info("Error resetting the  loggers.", e);
+        }
+
     }
 
     public static Log getLog(Class<?> clazz) {
@@ -65,7 +80,7 @@ public final class LogFactory {
     public static Log getLog(String name) {
         Log log = NAME2LOG.get(name);
         if (log == null) {
-            log = new Log(Logger.getLogger(name));
+            log = new Log(LogManager.getLogger(name));
             Log prev = NAME2LOG.putIfAbsent(name, log);
             if (prev != null) {
                 log = prev;
@@ -78,7 +93,7 @@ public final class LogFactory {
      * Returns <tt>true</tt> if a logger with the given name exists.
      */
     public static boolean logExists(String name) {
-        return (LogManager.exists(name) != null);
+        return (LogManager.exists(name));
     }
 
     /**

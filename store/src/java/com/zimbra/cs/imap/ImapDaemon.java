@@ -22,14 +22,15 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
 
-import com.zimbra.cs.extension.ExtensionUtil;
-import org.apache.log4j.PropertyConfigurator;
+import org.apache.logging.log4j.core.config.properties.PropertiesConfiguration;
+import org.apache.logging.log4j.core.config.properties.PropertiesConfigurationBuilder;
 
 import com.zimbra.common.calendar.WellKnownTimeZones;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.MemoryStats;
@@ -98,7 +99,12 @@ public class ImapDaemon {
             try (FileInputStream fisLog4j = new FileInputStream(IMAPD_LOG4J_CONFIG)) {
                 props.load(fisLog4j);
             }
-            PropertyConfigurator.configure(props);
+
+            PropertiesConfigurationBuilder propConfigBuilder = new PropertiesConfigurationBuilder();
+            propConfigBuilder.setRootProperties(props);
+            PropertiesConfiguration propConfig = propConfigBuilder.build();
+            propConfig.initialize();
+
             String imapdClassStore=LC.imapd_class_store.value();
             try {
                 StoreManager.getInstance(imapdClassStore).startup();

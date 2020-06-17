@@ -4,6 +4,8 @@
  xsi:noNamespaceSchemaLocation="http://ant.apache.org/ivy/schemas/ivy.xsd">
  <info organisation="zimbra" module="zm-soap" status="integration" />
  <dependencies>
+  <dependency org="org.apache.logging.log4j" name="log4j-api" rev="2.13.2" />
+  <dependency org="org.apache.logging.log4j" name="log4j-core" rev="2.13.2" />
   <dependency org="junit" name="junit" rev="4.8.2" />
   <dependency org="xmlunit" name="xmlunit" rev="1.6"/>
   <dependency org="org.dom4j" name="dom4j" rev="${dom4j.version}" />
@@ -17,7 +19,6 @@
   <dependency org="commons-codec" name="commons-codec" rev="1.7" />
   <dependency org="commons-cli" name="commons-cli" rev="1.2" />
   <dependency org="org.freemarker" name="freemarker" rev="2.3.23"/>
-  <dependency org="log4j" name="log4j" rev="1.2.16" />
   <dependency org="com.fasterxml.jackson.core" name="jackson-core" rev="2.10.1"/>
   <dependency org="com.fasterxml.jackson.core" name="jackson-databind" rev="2.10.1"/>
   <dependency org="com.fasterxml.jackson.module" name="jackson-module-jaxb-annotations" rev="2.8.9"/>

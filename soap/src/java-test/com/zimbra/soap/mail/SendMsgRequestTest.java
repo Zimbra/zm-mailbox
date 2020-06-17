@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -18,10 +18,10 @@ package com.zimbra.soap.mail;
 
 import java.util.List;
 
-import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.Logger;
-import org.apache.log4j.Level;
-
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -44,12 +44,12 @@ import com.zimbra.soap.mail.type.MsgToSend;
 public final class SendMsgRequestTest {
     @Rule public TestName testName = new TestName();
 
-    private static final Logger LOG = Logger.getLogger(SendMsgRequestTest.class);
+    private static final Logger LOG = LogManager.getLogger(SendMsgRequestTest.class);
 
     static {
-        BasicConfigurator.configure();
-        Logger.getRootLogger().setLevel(Level.INFO);
-        LOG.setLevel(Level.INFO);
+        Configurator.reconfigure();
+        Configurator.setRootLevel(Level.INFO);
+        Configurator.setLevel(LOG.getName(), Level.INFO);
     }
 
     private void logInfo(String format, Object ... objects) {

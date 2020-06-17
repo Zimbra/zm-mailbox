@@ -17,6 +17,8 @@
 package com.zimbra.common.util;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Date;
@@ -28,7 +30,14 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
 
-import org.apache.log4j.PropertyConfigurator;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.config.ConfigurationSource;
+import org.apache.logging.log4j.core.config.Configurator;
+import org.apache.logging.log4j.core.config.properties.PropertiesConfiguration;
+import org.apache.logging.log4j.core.config.properties.PropertiesConfigurationBuilder;
+
+
 
 /**
  * Log categories.
@@ -850,6 +859,7 @@ public final class ZimbraLog {
         if (level == null) {
             level = defaultLevel;
         }
+        PropertiesConfigurationBuilder propConfigBuilder = new PropertiesConfigurationBuilder();
         Properties p = new Properties();
         p.put("log4j.rootLogger", level + ",A1");
         if (logFile != null) {
@@ -865,7 +875,9 @@ public final class ZimbraLog {
         } else {
             p.put("log4j.appender.A1.layout.ConversionPattern", "[%x] %p: %m%n");
         }
-        PropertyConfigurator.configure(p);
+        propConfigBuilder.setRootProperties(p);
+        PropertiesConfiguration propConfig = propConfigBuilder.build();
+        propConfig.initialize();
     }
 
     public static void toolSetupLog4jConsole(String defaultLevel, boolean stderr, boolean showThreads) {
@@ -873,6 +885,9 @@ public final class ZimbraLog {
         if (level == null) {
             level = defaultLevel;
         }
+
+        PropertiesConfigurationBuilder propConfigBuilder = new PropertiesConfigurationBuilder();
+
         Properties p = new Properties();
         p.put("log4j.rootLogger", level + ",A1");
 
@@ -886,7 +901,9 @@ public final class ZimbraLog {
         } else {
             p.put("log4j.appender.A1.layout.ConversionPattern", "[%x] %p: %m%n");
         }
-        PropertyConfigurator.configure(p);
+        propConfigBuilder.setRootProperties(p);
+        PropertiesConfiguration propConfig = propConfigBuilder.build();
+        propConfig.initialize();
     }
 
     /**
@@ -899,7 +916,15 @@ public final class ZimbraLog {
      */
     public static void toolSetupLog4j(String defaultLevel, String propsFile) {
         if (propsFile != null && new File(propsFile).exists()) {
-            PropertyConfigurator.configure(propsFile);
+            ConfigurationSource logConfigSource;
+            try {
+                logConfigSource = new ConfigurationSource(new FileInputStream(propsFile));
+                Configurator.initialize(null, logConfigSource);
+            } catch (IOException e) {
+                LogManager.getLogger().log(Level.INFO, "Error setting up log 4j");
+                toolSetupLog4j(defaultLevel, null, false);
+            }
+
         } else {
             toolSetupLog4j(defaultLevel, null, false);
         }

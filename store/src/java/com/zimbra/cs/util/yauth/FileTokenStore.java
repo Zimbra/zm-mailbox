@@ -16,25 +16,26 @@
  */
 package com.zimbra.cs.util.yauth;
 
-import org.apache.log4j.Logger;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.Writer;
-import java.io.FileWriter;
-import java.io.BufferedWriter;
-import java.io.Reader;
-import java.io.FileReader;
-import java.io.FileNotFoundException;
 import java.io.BufferedReader;
-import java.util.Map;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Reader;
+import java.io.Writer;
 import java.util.HashMap;
+import java.util.Map;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class FileTokenStore extends TokenStore {
     private final File file;
     private final Map<String, String> tokens;
 
-    private static final Logger LOG = Logger.getLogger(FileTokenStore.class);
+    private static final Logger LOG = LogManager.getLogger(FileTokenStore.class);
 
     public FileTokenStore(File file) throws IOException {
         this.file = file;
@@ -42,12 +43,14 @@ public class FileTokenStore extends TokenStore {
         loadTokens();
     }
 
+    @Override
     public String getToken(String appId, String user) {
         synchronized (this) {
             return tokens.get(key(appId, user));
         }
     }
 
+    @Override
     protected void putToken(String appId, String user, String token) {
         synchronized (this) {
             tokens.put(key(appId, user), token);
@@ -55,12 +58,14 @@ public class FileTokenStore extends TokenStore {
         }
     }
 
+    @Override
     public void removeToken(String appId, String user) {
         synchronized (this) {
             tokens.remove(key(appId, user));
         }
     }
 
+    @Override
     public int size() {
         return tokens.size();
     }
@@ -132,7 +137,7 @@ public class FileTokenStore extends TokenStore {
     private static void debug(String fmt, Object... args) {
         LOG.debug(String.format(fmt, args));
     }
-    
+
     private static String key(String appId, String user) {
         return appId + " " + user;
     }

@@ -16,16 +16,17 @@
  */
 package com.zimbra.cs.util.yauth;
 
-import org.apache.log4j.Logger;
-
 import java.io.IOException;
 import java.util.HashMap;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public final class RawAuthManager {
     private final TokenStore store;
     private final HashMap<String, RawAuth> cookies;
 
-    private static final Logger LOG = Logger.getLogger(RawAuthManager.class);
+    private static final Logger LOG = LogManager.getLogger(RawAuthManager.class);
 
     public RawAuthManager(TokenStore store) {
         this.store = store;
@@ -67,14 +68,16 @@ public final class RawAuthManager {
     public void invalidate(String appId, String user) {
         cookies.remove(key(appId, user));
     }
-    
+
     public Authenticator newAuthenticator(final String appId,
                                           final String user,
                                           final String pass) {
         return new Authenticator() {
+            @Override
             public RawAuth authenticate() throws AuthenticationException, IOException {
                 return RawAuthManager.this.authenticate(appId, user, pass);
             }
+            @Override
             public void invalidate() {
                 RawAuthManager.this.invalidate(appId, user);
             }
@@ -84,11 +87,12 @@ public final class RawAuthManager {
     public TokenStore getTokenStore() {
         return store;
     }
-    
+
     private String key(String appId, String user) {
         return appId + " " + user;
     }
 
+    @Override
     public String toString() {
         return String.format("{cookies=%d,tokens=%d}", cookies.size(), store.size());
     }

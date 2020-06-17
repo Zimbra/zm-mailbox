@@ -13,10 +13,11 @@
   <dependency org="org.apache.httpcomponents" name="httpasyncclient" rev="${httpclient.async.version}"/>
   <dependency org="org.apache.httpcomponents" name="httpcore" rev="${httpclient.httpcore.version}"/> 
   <dependency org="org.apache.httpcomponents" name="httpcore-nio" rev="${httpclient.httpcore.version}"/>
-  <dependency org="org.dom4j" name="dom4j" rev="${dom4j.version}" />
+  <dependency org="org.dom4j" name="dom4j" rev="2.1.1" />
   <dependency org="ical4j" name="ical4j" rev="0.9.16-patched" />
   <dependency org="junit" name="junit" rev="4.8.2" />
-  <dependency org="log4j" name="log4j" rev="1.2.16" />
+  <dependency org="org.apache.logging.log4j" name="log4j-api" rev="2.13.2" />
+  <dependency org="org.apache.logging.log4j" name="log4j-core" rev="2.13.2" />
   <dependency org="javax.mail" name="mail" rev="1.4.5" />
   <dependency org="net.sourceforge.nekohtml" name="nekohtml" rev="1.9.13.1z" />
   <dependency org="javax.servlet" name="javax.servlet-api" rev="3.1.0" />

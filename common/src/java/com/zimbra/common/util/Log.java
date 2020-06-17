@@ -22,7 +22,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.config.Configurator;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -36,23 +38,23 @@ public class Log {
 
     private final Map<String, Logger> mAccountLoggers = new ConcurrentHashMap<String, Logger>();
 
-    private static final Map<Level, org.apache.log4j.Level> ZIMBRA_TO_LOG4J =
-        new EnumMap<Level, org.apache.log4j.Level>(Level.class);
+    private static final Map<Level, org.apache.logging.log4j.Level> ZIMBRA_TO_LOG4J =
+        new EnumMap<Level, org.apache.logging.log4j.Level>(Level.class);
     static {
-        ZIMBRA_TO_LOG4J.put(Level.error, org.apache.log4j.Level.ERROR);
-        ZIMBRA_TO_LOG4J.put(Level.warn, org.apache.log4j.Level.WARN);
-        ZIMBRA_TO_LOG4J.put(Level.info, org.apache.log4j.Level.INFO);
-        ZIMBRA_TO_LOG4J.put(Level.debug, org.apache.log4j.Level.DEBUG);
-        ZIMBRA_TO_LOG4J.put(Level.trace, org.apache.log4j.Level.TRACE);
+        ZIMBRA_TO_LOG4J.put(Level.error, org.apache.logging.log4j.Level.ERROR);
+        ZIMBRA_TO_LOG4J.put(Level.warn, org.apache.logging.log4j.Level.WARN);
+        ZIMBRA_TO_LOG4J.put(Level.info, org.apache.logging.log4j.Level.INFO);
+        ZIMBRA_TO_LOG4J.put(Level.debug, org.apache.logging.log4j.Level.DEBUG);
+        ZIMBRA_TO_LOG4J.put(Level.trace, org.apache.logging.log4j.Level.TRACE);
     }
-    private static final Map<org.apache.log4j.Level, Level> LOG4J_TO_ZIMBRA =
-        new ImmutableMap.Builder<org.apache.log4j.Level, Level>()
-        .put(org.apache.log4j.Level.FATAL, Level.error)
-        .put(org.apache.log4j.Level.ERROR, Level.error)
-        .put(org.apache.log4j.Level.WARN, Level.warn)
-        .put(org.apache.log4j.Level.INFO, Level.info)
-        .put(org.apache.log4j.Level.DEBUG, Level.debug)
-        .put(org.apache.log4j.Level.TRACE, Level.trace)
+    private static final Map<org.apache.logging.log4j.Level, Level> LOG4J_TO_ZIMBRA =
+        new ImmutableMap.Builder<org.apache.logging.log4j.Level, Level>()
+        .put(org.apache.logging.log4j.Level.FATAL, Level.error)
+        .put(org.apache.logging.log4j.Level.ERROR, Level.error)
+        .put(org.apache.logging.log4j.Level.WARN, Level.warn)
+        .put(org.apache.logging.log4j.Level.INFO, Level.info)
+        .put(org.apache.logging.log4j.Level.DEBUG, Level.debug)
+        .put(org.apache.logging.log4j.Level.TRACE, Level.trace)
         .build();
 
     public enum Level {
@@ -85,10 +87,10 @@ public class Log {
         Logger accountLogger = mAccountLoggers.get(accountName);
         if (accountLogger == null) {
             String accountCategory = getAccountCategory(getCategory(), accountName);
-            accountLogger = Logger.getLogger(accountCategory);
+            accountLogger = LogManager.getLogger(accountCategory);
             mAccountLoggers.put(accountName, accountLogger);
         }
-        accountLogger.setLevel(ZIMBRA_TO_LOG4J.get(level));
+        Configurator.setLevel(accountLogger.getName(), ZIMBRA_TO_LOG4J.get(level));
     }
 
     /**
@@ -134,15 +136,15 @@ public class Log {
     }
 
     public boolean isWarnEnabled() {
-        return getLogger().isEnabledFor(org.apache.log4j.Level.WARN);
+        return getLogger().isEnabled(org.apache.logging.log4j.Level.WARN);
     }
 
     public boolean isErrorEnabled() {
-        return getLogger().isEnabledFor(org.apache.log4j.Level.ERROR);
+        return getLogger().isEnabled(org.apache.logging.log4j.Level.ERROR);
     }
 
     public boolean isFatalEnabled() {
-        return getLogger().isEnabledFor(org.apache.log4j.Level.FATAL);
+        return getLogger().isEnabled(org.apache.logging.log4j.Level.FATAL);
     }
 
     public void trace(Object o) {
@@ -441,18 +443,18 @@ public class Log {
     }
 
     /**
-     * Returns Log4j equivalent of {@code level} or org.apache.log4j.Level.TRACE
+     * Returns Log4j equivalent of {@code level} or org.apache.logging.log4j.Level.TRACE
      */
-    private static final org.apache.log4j.Level log4jLevel(Level level) {
-        org.apache.log4j.Level log4jlevel = ZIMBRA_TO_LOG4J.get(level);
+    private static final org.apache.logging.log4j.Level log4jLevel(Level level) {
+        org.apache.logging.log4j.Level log4jlevel = ZIMBRA_TO_LOG4J.get(level);
         if (log4jlevel == null) {
-            log4jlevel = org.apache.log4j.Level.TRACE;
+            log4jlevel = org.apache.logging.log4j.Level.TRACE;
         }
         return log4jlevel;
     }
 
     public boolean isEnabledFor(Level level) {
-        return getLogger().isEnabledFor(log4jLevel(level));
+        return getLogger().isEnabled(log4jLevel(level));
     }
 
     public void fatal(Object o) {
@@ -545,7 +547,7 @@ public class Log {
 
 
     public void setLevel(Level level) {
-        mLogger.setLevel(ZIMBRA_TO_LOG4J.get(level));
+        Configurator.setLevel(mLogger.getName(), ZIMBRA_TO_LOG4J.get(level));
     }
 
     public Level getLevel() {
