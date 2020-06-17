@@ -322,6 +322,17 @@ public class ZContact extends ZBaseItem implements ToZJSONObject {
         return mMailbox.getRESTResource(url);
     }
 
+    public InputStream getAttachmentDataForSharedContact(String name, String ownerEmail)
+        throws ServiceException {
+        ZimbraLog.misc.info("Attachment data for contact: :%s", ownerEmail) ;
+            String part = mAttachments.get(name).getPart();
+            if (part == null) {
+                throw ZClientException.CLIENT_ERROR("Invalid attachment name: " + name, null);
+            }
+            String url = String.format("?id=%s&part=%s", getId(), part);
+            return mMailbox.getRESTResourceForSharedMailItem(url, ownerEmail);
+        }
+
     public ZContactAttachmentInfo getAttachmentPartInfo(String name) {
         return mAttachments.get(name);
     }
