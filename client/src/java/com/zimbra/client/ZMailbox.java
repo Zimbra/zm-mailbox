@@ -3423,7 +3423,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      * @throws ServiceException on error
      */
     public URI getRestURI(String relativePath) throws ServiceException {
-        return getRestURI(relativePath, null);
+        return getRestURI(relativePath, null, null);
     }
 
     /**
@@ -3433,14 +3433,17 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      * @return URI of path
      * @throws ServiceException on error
      */
-    private URI getRestURI(String relativePath, String alternateUrl) throws ServiceException {
+    private URI getRestURI(String relativePath, String alternateUrl, String ownerEmail) throws ServiceException {
         String pathPrefix = "/";
         if (relativePath.startsWith("/")) {
             pathPrefix = "";
         }
 
         try {
-            String restURI = getAccountInfo(false).getRestURLBase();
+            String restURI = null;
+            if (ownerEmail == null) {
+                restURI =  getAccountInfo(false).getRestURLBase();
+            }
             if (alternateUrl != null) {
                 // parse the URI and extract path
                 URI uri = new URI(restURI);
@@ -3449,7 +3452,14 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
 
             if (restURI == null) {
                 URI uri = new URI(mTransport.getURI());
-                return  uri.resolve("/home/" + getName() + pathPrefix + relativePath);
+                String  baseUri = uri.getScheme() + "://" + uri.getHost() + ":" + uri.getPort();
+                uri = new URI(baseUri);
+                ZimbraLog.misc.info("Resource URI " + uri.resolve("/home/" + ownerEmail + pathPrefix + relativePath));
+                if (ownerEmail == null) {
+                    return  uri.resolve("/home/" + getName() + pathPrefix + relativePath);
+                } else {
+                    return  uri.resolve("/home/" + ownerEmail + pathPrefix + relativePath);
+                }
             } else {
                 return new URI(restURI + pathPrefix + relativePath);
             }
@@ -3474,7 +3484,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
                     throws ServiceException {
         InputStream in = null;
         try {
-            in = getRESTResource(relativePath, startTimeArg, endTimeArg, msecTimeout, alternateUrl);
+            in = getRESTResource(relativePath, startTimeArg, endTimeArg, msecTimeout, alternateUrl, null);
             ByteUtil.copy(in, false, os, closeOs);
         } catch (IOException e) {
             throw ZClientException.IO_ERROR("Unable to get " + relativePath, e);
@@ -3484,7 +3494,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     }
 
     private InputStream getRESTResource(String relativePath, String startTimeArg, String endTimeArg,
-            int msecTimeout, String alternateUrl)
+            int msecTimeout, String alternateUrl, String ownerEmail)
     throws ServiceException {
         String relPathWithParams = relativePath;
         URI uri = null;
@@ -3510,7 +3520,8 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
                     relPathWithParams, startTimeArg, endTimeArg, e.getMessage());
             throw ZClientException.IO_ERROR(msg, e);
         }
-        uri = getRestURI(relPathWithParams, alternateUrl);
+        uri = getRestURI(relPathWithParams, alternateUrl, ownerEmail);
+        ZimbraLog.misc.debug("Respurce URI:%s", uri.toASCIIString());
         return getResource(uri, msecTimeout);
     }
 
@@ -3520,7 +3531,16 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      */
     public InputStream getRESTResource(String relativePath)
             throws ServiceException {
-        return getRESTResource(relativePath, null, null, getTimeout(), null);
+        return getRESTResource(relativePath, null, null, getTimeout(), null, null);
+    }
+
+    /**
+     * @param relativePath a relative path (i.e., "/Calendar", "Inbox?fmt=rss", etc).
+     * @throws ServiceException on error
+     */
+    public InputStream getRESTResourceForSharedMailItem(String relativePath, String ownerEmail)
+            throws ServiceException {
+        return getRESTResource(relativePath, null, null, getTimeout(), null, ownerEmail);
     }
 
     /**
@@ -3557,7 +3577,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
                     relativePath = relativePath + "&preserveAlarms=1";
                 }
             }
-            URI uri = getRestURI(relativePath, alternateUrl);
+            URI uri = getRestURI(relativePath, alternateUrl, null);
             post = new HttpPost(uri.toString());
             HttpClientBuilder clientBuilder = getHttpClientBuilder(uri);
             if (msecTimeout > -1) {
