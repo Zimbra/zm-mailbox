@@ -76,8 +76,6 @@ public abstract class RedoLogBlobStore {
         if (!refManager.addRefs(digest, mboxIds)) {
             try {
                 storeBlobData(in, size, digest);
-            } catch (IOException | ServiceException e) {
-                ZimbraLog.redolog.error("unable to store redolog blob! digest=%s", digest, e);
             } finally {
                 ByteUtil.closeStream(in);
             }
