@@ -1,5 +1,6 @@
 package com.zimbra.cs.redolog.op;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.redolog.RedoLogManager;
@@ -42,7 +43,7 @@ public class RedoableOpTest extends EasyMockSupport {
     }
 
     @Test
-    public void startLogCommit() {
+    public void startLogCommit() throws ServiceException {
         final TransactionId txnId = new TransactionId(1, 2);
         EasyMock.expect(mgr.getNewTxnId()).andReturn(txnId);
         mgr.log(op, false);
@@ -61,7 +62,7 @@ public class RedoableOpTest extends EasyMockSupport {
     }
 
     @Test
-    public void inactiveOp() {
+    public void inactiveOp() throws ServiceException {
         replayAll();
         op.commit();
         op.abort();
@@ -92,7 +93,7 @@ public class RedoableOpTest extends EasyMockSupport {
     }
 
     @Test
-    public void chainedCommit() {
+    public void chainedCommit() throws ServiceException {
         mgr.log(op, false);
         mgr.commit(op);
 
