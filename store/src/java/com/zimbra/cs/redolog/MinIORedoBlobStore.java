@@ -130,27 +130,36 @@ public class MinIORedoBlobStore extends RedoLogBlobStore {
          */
         @Override
         public boolean addRefs(String digest, Collection<Integer> mboxIds) throws ServiceException {
+            ZimbraLog.redolog.debug("Using MinIOReferenceManager - addRefs - with digest=%s and mailboxes %s", digest,
+                    mboxIds);
             InputStream iS = null;
             ObjectInputStream objIS = null;
             InputStream modifiedIS = null;
             ByteArrayOutputStream bAOS = null;
             ObjectOutputStream objOS = null;
+            boolean exists = false;
 
             try {
-                iS = MinIOUtil.getObject(client, bucketName, getKey(digest));
+                String refKey = getKey(digest);
+                iS = MinIOUtil.getObject(client, bucketName, refKey);
                 HashMap<Integer, Integer> digestRefHolder = null;
 
                 if (iS != null) {
+                    ZimbraLog.redolog.debug("Using MinIOReferenceManager - addRefs - updating existing refKey=%s",
+                            refKey);
+                    exists = true;
                     objIS = new ObjectInputStream(iS);
                     Object obj = objIS.readObject();
 
-                    if (obj instanceof HashMap<?,?>) {
-                        digestRefHolder = (HashMap<Integer, Integer>) objIS.readObject();
+                    if (obj instanceof HashMap<?, ?>) {
+                        digestRefHolder = (HashMap<Integer, Integer>) obj;
                     } else {
                         throw ServiceException.NOT_FOUND(
-                                "MinIORedoBlobStore - addRefs - deserialization failed for digest: " + digest);
+                                "MinIORedoBlobStore - addRefs - deserialization failed for refKey: " + refKey);
                     }
                 } else {
+                    ZimbraLog.redolog.debug("Using MinIOReferenceManager - addRefs - adding new key=%s", refKey);
+                    exists = false;
                     digestRefHolder = new HashMap<Integer, Integer>();
                 }
 
@@ -175,9 +184,9 @@ public class MinIORedoBlobStore extends RedoLogBlobStore {
                 modifiedIS = new ByteArrayInputStream(bArray);
 
                 PutObjectOptions options = new PutObjectOptions(modifiedIS.available(), -1);
-                MinIOUtil.putObject(client, bucketName, digest, modifiedIS, options);
+                MinIOUtil.putObject(client, bucketName, refKey, modifiedIS, options);
 
-                return true;
+                return exists;
             } catch (IOException | ClassNotFoundException e) {
                 throw ServiceException.FAILURE("MinIORedoBlobStore - addRefs failed: ", e);
             } finally {
@@ -198,15 +207,21 @@ public class MinIORedoBlobStore extends RedoLogBlobStore {
          */
         @Override
         public boolean removeRefs(String digest, Collection<Integer> mboxIds) throws ServiceException {
+            ZimbraLog.redolog.debug("Using MinIOReferenceManager - removeRefs - with digest=%s and mailboxes %s",
+                    digest, mboxIds);
             InputStream iS = null;
             ObjectInputStream objIS = null;
             InputStream modifiedIS = null;
             ByteArrayOutputStream bAOS = null;
             ObjectOutputStream objOS = null;
+            String refKey = getKey(digest);
 
             try {
-                iS = MinIOUtil.getObject(client, bucketName, getKey(digest));
+                iS = MinIOUtil.getObject(client, bucketName, refKey);
                 if (iS == null) {
+                    ZimbraLog.redolog.debug(
+                            "Using MinIOReferenceManager - removeRefs - no reference present to remove for refKey=%s",
+                            refKey);
                     return true;
                 }
 
@@ -214,7 +229,10 @@ public class MinIORedoBlobStore extends RedoLogBlobStore {
                 Object obj = objIS.readObject();
 
                 if (obj instanceof HashMap<?, ?>) {
-                    HashMap<Integer, Integer> digestRefHolder = (HashMap<Integer, Integer>) objIS.readObject();
+                    ZimbraLog.redolog.debug(
+                            "Using MinIOReferenceManager - removeRefs - reference present to remove for refKey=%s",
+                            refKey);
+                    HashMap<Integer, Integer> digestRefHolder = (HashMap<Integer, Integer>) obj;
 
                     List<Integer> tracker = new ArrayList<Integer>();
 
@@ -235,7 +253,7 @@ public class MinIORedoBlobStore extends RedoLogBlobStore {
                     }
 
                     if (digestRefHolder.isEmpty()) {
-                        MinIOUtil.deleteObject(client, bucketName, getKey(digest));
+                        MinIOUtil.deleteObject(client, bucketName, refKey);
                         return true;
                     }
 
@@ -248,12 +266,12 @@ public class MinIORedoBlobStore extends RedoLogBlobStore {
                     modifiedIS = new ByteArrayInputStream(bArray);
 
                     PutObjectOptions options = new PutObjectOptions(modifiedIS.available(), -1);
-                    MinIOUtil.putObject(client, bucketName, digest, modifiedIS, options);
+                    MinIOUtil.putObject(client, bucketName, refKey, modifiedIS, options);
 
                     return false;
                 }
                 throw ServiceException
-                        .NOT_FOUND("MinIORedoBlobStore - removeRefs - deserialization failed for digest: " + digest);
+                        .NOT_FOUND("MinIORedoBlobStore - removeRefs - deserialization failed for refKey: " + refKey);
             } catch (IOException | ClassNotFoundException e) {
                 throw ServiceException.FAILURE("MinIORedoBlobStore - fetchBlob failed: ", e);
             } finally {
