@@ -1545,7 +1545,7 @@ public final class LC {
     public static final KnownKey common_passwords_txt = KnownKey.newKey("${zimbra_home}/conf/common-passwords.txt");
 
     // to switch to Tika com.zimbra.cs.convert.TikaExtractionClient
-    public static final KnownKey attachment_extraction_client_class = KnownKey.newKey("com.zimbra.cs.convert.LegacyConverterClient");
+    public static final KnownKey attachment_extraction_client_class = KnownKey.newKey("com.zimbra.cs.convert.TikaExtractionClient");
 
     static {
         // Automatically set the key name with the variable name.
