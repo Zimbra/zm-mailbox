@@ -333,7 +333,12 @@ public class UserServlet extends ZimbraServlet {
         ZimbraLog.clearContext();
         addRemoteIpToLoggingContext(req);
         try {
-            context = createContext(req, resp, this);
+            if (this instanceof SharedFileServlet) {
+                SharedFileServlet sfs = (SharedFileServlet) this;
+                context = sfs.createContext(req, resp, sfs);
+            } else {
+                context = createContext(req, resp, this);
+            }
             if (!checkAuthentication(context)) {
                 sendError(context, req, resp, L10nUtil.getMessage(MsgKey.errMustAuthenticate, req));
                 return;
@@ -544,12 +549,22 @@ public class UserServlet extends ZimbraServlet {
             if (context.reqListIds != null) {
                 resolveItems(context);
             } else {
-                MailItem item = resolveItem(context);
-                if (proxyIfMountpoint(req, resp, context, item)) {
-                    // if the target is a mountpoint, the request was already proxied to the resolved target
-                    return;
+                if (this instanceof UserServlet) {
+                    MailItem item = resolveItem(context);
+                    if (proxyIfMountpoint(req, resp, context, item)) {
+                        // if the target is a mountpoint, the request was already proxied to the resolved target
+                        return;
+                    }
+                    context.target = item;  /* imap_id resolution needs this. */
+                } else if (this instanceof SharedFileServlet) {
+                    SharedFileServlet sfs = (SharedFileServlet) this;
+                    MailItem item =  sfs.resolveItem(context);
+                    if (sfs.proxyIfMountpoint(req, resp, context, item)) {
+                        // if the target is a mountpoint, the request was already proxied to the resolved target
+                        return;
+                    }
+                    context.target = item;  /* imap_id resolution needs this. */
                 }
-                context.target = item;  /* imap_id resolution needs this. */
             }
         }
 
@@ -994,7 +1009,7 @@ public class UserServlet extends ZimbraServlet {
             String contentType = doc.getContentType();
             method.addHeader("Content-Type", contentType);
             method.setEntity(new InputStreamEntity(doc.getContentStream(), doc.getSize(), ContentType.create(contentType)));
-            
+
             method.addHeader("X-Zimbra-Description", doc.getDescription());
             method.setEntity(new InputStreamEntity(doc.getContentStream(), doc.getSize(), ContentType.create(contentType)));
             Pair<Header[], HttpResponse> pair = doHttpOp(authToken, method);
@@ -1041,7 +1056,7 @@ public class UserServlet extends ZimbraServlet {
         if (cookieMap != null) {
             BasicCookieStore cookieStore = new BasicCookieStore();
             for (Map.Entry<String, String> ck : cookieMap.entrySet()) {
-                
+
                 BasicClientCookie cookie = new BasicClientCookie(ck.getKey(), ck.getValue());
                 cookie.setDomain(hostname);
                 cookie.setPath("/");
