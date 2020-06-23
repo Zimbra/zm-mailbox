@@ -4,7 +4,7 @@
 ARG DOCKER_REPO_NS=dev-registry.zimbra-docker-registry.tk
 #Build stage image
 FROM ${DOCKER_REPO_NS}/zms-core-utils:1.2 as utils
-FROM ${DOCKER_REPO_NS}/zms-zcs-lib:1.0.4 as lib
+FROM ${DOCKER_REPO_NS}/zms-zcs-lib:1.0.5 as lib
 FROM ${DOCKER_REPO_NS}/zms-jetty-conf:1.2 as jetty-conf
 FROM ${DOCKER_REPO_NS}/zms-jython:1.1 as jython
 FROM ${DOCKER_REPO_NS}/zms-perl:1.1 as perl
@@ -45,7 +45,6 @@ RUN mkdir -p /opt/zimbra/lib/ext /opt/zimbra/extensions-extra /opt/zimbra/lib/ex
 # zm-gql and zm-gql-admin
 RUN mkdir -p /opt/zimbra/lib/ext/zm-gql /opt/zimbra/lib/ext/zm-gql-admin \
 && curl -k -s -o /opt/zimbra/lib/ext/zm-gql/zmgql.jar ${EXT_REPO_URL}/zm-gql/latest/zmgql.jar \
-&& curl -k -s -o /opt/zimbra/lib/ext/zm-gql/java-jwt-3.2.0.jar https://repo1.maven.org/maven2/com/auth0/java-jwt/3.2.0/java-jwt-3.2.0.jar \
 && curl -k -s -o /opt/zimbra/lib/ext/zm-gql-admin/zmgqladmin.jar ${EXT_REPO_URL}/zm-gql-admin/latest/zmgqladmin.jar
 
 # zm-oauth-social and zm-ssdb-ephemeral-store
