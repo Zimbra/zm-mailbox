@@ -140,7 +140,7 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder, BlobRecorder {
         }
     }
 
-    @Override public synchronized void commit() {
+    @Override public synchronized void commit() throws ServiceException {
         // Override commit() and abort().  Null out mData (reference to message
         // body byte array) after calling superclass' commit/abort.
         // Indexer keeps many IndexItem redo objects in memory because of batch

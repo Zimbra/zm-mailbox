@@ -79,7 +79,7 @@ public class RedoOpBlobStore extends RedoLogBlobStore {
         }
 
         @Override
-        public void commit() {
+        public void commit() throws ServiceException {
             op.commit();
 
         }

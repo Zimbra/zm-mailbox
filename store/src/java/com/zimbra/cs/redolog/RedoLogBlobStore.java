@@ -107,14 +107,16 @@ public abstract class RedoLogBlobStore {
         /**
          * Link the mailbox IDs to the specified digest.
          * @return true if the blob already exists in the backend; false otherwise
+         * @throws ServiceException
          */
-        public abstract boolean addRefs(String digest, Collection<Integer> mboxIds);
+        public abstract boolean addRefs(String digest, Collection<Integer> mboxIds) throws ServiceException;
 
         /**
          * Unlink the mailbox IDs from the specified digest.
          * @return true if the blob has no more references, false otherwise
+         * @throws ServiceException
          */
-        public abstract boolean removeRefs(String digest, Collection<Integer> mboxIds);
+        public abstract boolean removeRefs(String digest, Collection<Integer> mboxIds) throws ServiceException;
 
         /**
          * Subclasses can override, in case we track mappings of redo files to their blobs externally
@@ -168,7 +170,7 @@ public abstract class RedoLogBlobStore {
 
     public abstract class PendingRedoBlobOperation {
 
-        public abstract void commit();
+        public abstract void commit() throws ServiceException;
 
         public abstract void abort();
     }
@@ -188,7 +190,7 @@ public abstract class RedoLogBlobStore {
         }
 
         @Override
-        public void commit() {
+        public void commit() throws ServiceException {
             // for external redolog blob stores, the actual execution logic happens on during a commit
             if (!refManager.addRefs(digest, mboxIds)) {
                 InputStream in = null;
