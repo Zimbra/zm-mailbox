@@ -36,7 +36,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.NamedEntry;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.RedissonClientHolder;
 import com.zimbra.cs.mailbox.util.MailboxClusterUtil;
@@ -363,14 +363,18 @@ public class DistributedLogReaderService {
             return Math.abs(hasher.hashString(str, Charsets.UTF_8).asInt()) % numStreams;
         }
 
-        public int getBackupPodForAccount(NamedEntry acct) {
-            int streamIndex = getStreamIndex(acct.getId());
+        public int getBackupPodForAccountId(String acctId) {
+            int streamIndex = getStreamIndex(acctId);
             return streamPodMap.get(streamIndex);
         }
 
-        public boolean isLocal(NamedEntry entry) {
+        public int getBackupPodForAccount(Account acct) {
+            return getBackupPodForAccountId(acct.getId());
+        }
+
+        public boolean isLocal(Account account) {
             if (currentPod.getType() == WorkerType.BACKUP_RESTORE) {
-                return getBackupPodForAccount(entry) == currentPod.getIndex();
+                return getBackupPodForAccount(account) == currentPod.getIndex();
             } else {
                 return false;
             }
