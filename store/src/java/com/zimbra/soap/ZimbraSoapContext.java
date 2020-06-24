@@ -369,11 +369,12 @@ public final class ZimbraSoapContext {
                 // from address could be different in this case.
                 if (body != null && requestName.equals(MailConstants.SEND_MSG_REQUEST)) {
                    String fromAddress = AccountUtil.extractFromAddress(body);
-                    if (!StringUtil.isNullOrEmpty(fromAddress) && !value.equals(fromAddress)
-                            && !account.getBooleanAttr(Provisioning.A_zimbraAllowAnyFromAddress, false)) {
-                        value = fromAddress;
-                        account = prov.get(AccountBy.name, value, mAuthToken);
-                    }
+                   if (!StringUtil.isNullOrEmpty(fromAddress) && !AccountUtil.isDataSourceAddress(account, fromAddress)) {
+                       if (!value.equals(fromAddress) && !account.getBooleanAttr(Provisioning.A_zimbraAllowAnyFromAddress, false)) {
+                           value = fromAddress;
+                           account = prov.get(AccountBy.name, value, mAuthToken);
+                       }
+                   }
                 }
                 if (account == null) {
                     if (!mAuthToken.isAdmin()) {
@@ -392,7 +393,8 @@ public final class ZimbraSoapContext {
                 Account account = prov.get(AccountBy.id, value, mAuthToken);
                 if (body != null && requestName.equals(MailConstants.SEND_MSG_REQUEST)) {
                     String fromAddress = AccountUtil.extractFromAddress(body);
-                    if (!StringUtil.isNullOrEmpty(fromAddress) && !account.getBooleanAttr(Provisioning.A_zimbraAllowAnyFromAddress, false)) {
+                    if (!StringUtil.isNullOrEmpty(fromAddress) && !AccountUtil.isDataSourceAddress(account, fromAddress) &&
+                            !account.getBooleanAttr(Provisioning.A_zimbraAllowAnyFromAddress, false)) {
                         Account fromAccount = prov.get(AccountBy.name, fromAddress, mAuthToken);
                         if(!value.equals(fromAccount.getId())) {
                             value = fromAccount.getId();
@@ -423,9 +425,11 @@ public final class ZimbraSoapContext {
                 throw ServiceException.AUTH_REQUIRED();
             }
             Account authAccount = mAuthToken.getAccount();
+            mRequestedAccountId = authAccount.getId();
             String fromAddress = AccountUtil.extractFromAddress(body);
             String identityId = body.getElement(MailConstants.E_MSG).getAttribute(MailConstants.A_IDENTITY_ID, null);
-            if (!StringUtil.isNullOrEmpty(fromAddress) && AccountUtil.isMessageSentUsingOwnersPersona(identityId, authAccount, mAuthToken)) {
+            if (!StringUtil.isNullOrEmpty(fromAddress) && !AccountUtil.isDataSourceAddress(authAccount, fromAddress) &&
+                    AccountUtil.isMessageSentUsingOwnersPersona(identityId, authAccount, mAuthToken)) {
                 Account account = prov.get(AccountBy.name, fromAddress, mAuthToken);
                 if (account == null) {
                     if (!mAuthToken.isAdmin()) {
