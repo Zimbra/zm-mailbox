@@ -11,15 +11,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.activation.DataSource;
-import javax.activation.FileDataSource;
-
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.extension.ExtensionUtil;
-import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.redolog.logger.FileLogReader;
 import com.zimbra.cs.redolog.op.BlobRecorder;
 import com.zimbra.cs.redolog.op.RedoableOp;
@@ -72,21 +68,21 @@ public abstract class RedoLogBlobStore {
 
     protected abstract void deleteBlobData(String digest) throws ServiceException;
 
-    public PendingRedoBlobOperation logBlob(Mailbox mbox, Blob blob, long size) throws ServiceException, IOException {
-        return logBlob(mbox, blob, size, Arrays.asList(mbox.getId()));
+    public void logBlob(InputStream in, long size, String digest, int mboxId) throws ServiceException, IOException {
+        logBlob(in, size, digest, Arrays.asList(new Integer(mboxId)));
     }
 
-    public PendingRedoBlobOperation logBlob(Mailbox mbox, Blob blob, long size, List<Integer> mboxIds) throws ServiceException, IOException {
-        // wrap in FileDataSource so that we can read the same InputStream twice
-        return logBlob(mbox, new FileDataSource(blob.getFile()), size, blob.getDigest(), mboxIds);
-    }
-
-    public PendingRedoBlobOperation logBlob(Mailbox mbox, DataSource ds, long size, String digest) throws ServiceException, IOException {
-        return logBlob(mbox, ds, size, digest, Arrays.asList(mbox.getId()));
-    }
-
-    protected PendingRedoBlobOperation logBlob(Mailbox mbox, DataSource ds, long size, String digest, List<Integer> mboxIds) throws ServiceException, IOException {
-        return new ExternalRedoBlobOperation(ds, size, digest, mboxIds);
+    public void logBlob(InputStream in, long size, String digest, List<Integer> mboxIds) throws ServiceException, IOException {
+        if (!refManager.addRefs(digest, mboxIds)) {
+            try {
+                storeBlobData(in, size, digest);
+            } finally {
+                ByteUtil.closeStream(in);
+            }
+            ZimbraLog.redolog.debug("uploaded blob with digest=%s and mapped to mailboxes %s", digest, mboxIds);
+        } else {
+            ZimbraLog.redolog.debug("added mailboxes %s to existing redolog blob digest=%s", mboxIds, digest);
+        }
     }
 
     public void derefRedoLogFile(File file) throws ServiceException, IOException {
@@ -109,14 +105,14 @@ public abstract class RedoLogBlobStore {
          * @return true if the blob already exists in the backend; false otherwise
          * @throws ServiceException
          */
-        public abstract boolean addRefs(String digest, Collection<Integer> mboxIds) throws ServiceException;
+        public abstract boolean addRefs(String digest, Collection<Integer> mboxIds) throws ServiceException, IOException;
 
         /**
          * Unlink the mailbox IDs from the specified digest.
          * @return true if the blob has no more references, false otherwise
          * @throws ServiceException
          */
-        public abstract boolean removeRefs(String digest, Collection<Integer> mboxIds) throws ServiceException;
+        public abstract boolean removeRefs(String digest, Collection<Integer> mboxIds) throws ServiceException, IOException;
 
         /**
          * Subclasses can override, in case we track mappings of redo files to their blobs externally
@@ -165,52 +161,6 @@ public abstract class RedoLogBlobStore {
 
         public void addMapping(int mboxId) {
             this.mboxIds.add(mboxId);
-        }
-    }
-
-    public abstract class PendingRedoBlobOperation {
-
-        public abstract void commit() throws ServiceException;
-
-        public abstract void abort();
-    }
-
-    public class ExternalRedoBlobOperation extends PendingRedoBlobOperation {
-
-        private String digest;
-        private List<Integer> mboxIds;
-        private DataSource ds;
-        private long size;
-
-        public ExternalRedoBlobOperation(DataSource ds, long size, String digest, List<Integer> mboxIds) {
-            this.ds = ds;
-            this.digest = digest;
-            this.mboxIds = mboxIds;
-            this.size = size;
-        }
-
-        @Override
-        public void commit() throws ServiceException {
-            // for external redolog blob stores, the actual execution logic happens on during a commit
-            if (!refManager.addRefs(digest, mboxIds)) {
-                InputStream in = null;
-                try {
-                    in = ds.getInputStream();
-                    storeBlobData(in, size, digest);
-                } catch (IOException | ServiceException e) {
-                    ZimbraLog.redolog.error("unable to store redolog blob! digest=%s", digest, e);
-                } finally {
-                    ByteUtil.closeStream(in);
-                }
-                ZimbraLog.redolog.info("uploaded blob with digest=%s and mapped to mailboxes %s", digest, mboxIds);
-            } else {
-                ZimbraLog.redolog.info("added mailboxes %s to existing redolog blob digest=%s", mboxIds, digest);
-            }
-        }
-
-        @Override
-        public void abort() {
-            // do nothing by default; subclasses can override if necessary
         }
     }
 

@@ -187,7 +187,6 @@ import com.zimbra.cs.ml.ClassificationExecutionContext;
 import com.zimbra.cs.ml.classifier.ClassifierManager;
 import com.zimbra.cs.pop3.Pop3Message;
 import com.zimbra.cs.redolog.RedoLogBlobStore;
-import com.zimbra.cs.redolog.RedoLogBlobStore.PendingRedoBlobOperation;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.redolog.RedoOpBlobStore;
 import com.zimbra.cs.redolog.op.AddDocumentRevision;
@@ -259,6 +258,7 @@ import com.zimbra.cs.redolog.op.SetSavedSearchStatus;
 import com.zimbra.cs.redolog.op.SetSubscriptionData;
 import com.zimbra.cs.redolog.op.SetWebOfflineSyncDays;
 import com.zimbra.cs.redolog.op.SnoozeCalendarItemAlarm;
+import com.zimbra.cs.redolog.op.StoreIncomingBlob;
 import com.zimbra.cs.redolog.op.TrackImap;
 import com.zimbra.cs.redolog.op.TrackSync;
 import com.zimbra.cs.redolog.op.UnlockItem;
@@ -5792,6 +5792,8 @@ public class Mailbox implements MailboxStore {
 
         CreateMessage redoRecorder = new CreateMessage(mId, rcptEmail, pm.getReceivedDate(), dctxt.getShared(),
                 digest, msgSize, folderId, noICal, flags, tags, customData);
+        StoreIncomingBlob storeRedoRecorder = null;
+
         // strip out unread flag for internal storage (don't do this before redoRecorder initialization)
         boolean unread = (flags & Flag.BITMASK_UNREAD) > 0;
         flags &= ~Flag.BITMASK_UNREAD;
@@ -5999,35 +6001,33 @@ public class Mailbox implements MailboxStore {
             // conversations may have shifted, so the threader's cached state is now questionable
             threader.reset();
 
-            PendingRedoBlobOperation redoBlobOp = null;
+            boolean externalRedoBlobStore = RedoLogProvider.getInstance().getRedoLogManager().hasExternalBlobStore();
             // step 5: write the redolog entries
-            if (redoBlobStore instanceof RedoOpBlobStore) {
-                // old mechanism - log StoreIncomingBlob op if shared delivery; store blob in CreateMessage otherwise
-                if (dctxt.getShared()) {
-                    if (dctxt.isFirst() && needRedo) {
-                        // Log entry in redolog for blob save.  Blob bytes are logged in the StoreIncoming entry.
-                        // Subsequent CreateMessage ops will reference this blob.
-                        redoBlobOp = redoBlobStore.logBlob(this, blob, msgSize, dctxt.getMailboxIdList());
-                    }
+            if (dctxt.getShared()) {
+                if (dctxt.isFirst() && needRedo) {
+                    // Log entry in redolog for blob save.  Blob bytes are logged in the StoreIncoming entry.
+                    // Subsequent CreateMessage ops will reference this blob.
+
+                    // In Zimbra X, with an external redolog blob store configured, this operation isn't actually logged to the redolog.
+                    // Instead, it is used as a container to deliver the blob data to the zmc-backup-restore pod,
+                    // which then uploads it in the blob store.
+                    storeRedoRecorder = new StoreIncomingBlob(digest, msgSize, dctxt.getMailboxIdList());
+                    storeRedoRecorder.start(getOperationTimestampMillis());
+                    storeRedoRecorder.setBlobBodyInfo(blob.getFile());
+                    storeRedoRecorder.log();
+                }
+                if (!externalRedoBlobStore) {
                     // Link to the file created by StoreIncomingBlob.
                     redoRecorder.setMessageLinkInfo(blob.getPath());
-                } else {
-                    // Store the blob data inside the CreateMessage op.
-                    redoRecorder.setMessageBodyInfo(blob.getFile());
                 }
-            } else if (needRedo) {
-                // new mechanism - delegate to RedoLogBLobStore regardless of # of recipients
-                if (dctxt.getShared()) {
-                    if (dctxt.isFirst()) {
-                        redoBlobOp = redoBlobStore.logBlob(this, blob, msgSize, dctxt.getMailboxIdList());
-                    }
-                } else {
-                    redoBlobOp = redoBlobStore.logBlob(this, blob, msgSize);
-                }
+            } else if (externalRedoBlobStore) {
+                // blob data will be stored outside the redologs
+                redoRecorder.setBlobDataFromFile(blob.getFile());
+            } else {
+                // Store the blob data inside the CreateMessage op.
+                redoRecorder.setMessageBodyInfo(blob.getFile());
             }
-            if (redoBlobOp != null) {
-                redoRecorder.setRedoBlobOperation(redoBlobOp);
-            }
+
             // step 6: link to existing blob
             MailboxBlob mblob = StoreManager.getInstance().link(staged, this, messageId, getOperationChangeID());
             markOtherItemDirty(mblob);
@@ -6056,6 +6056,13 @@ public class Mailbox implements MailboxStore {
                 ZimbraLog.mailbox.error("unable to send legal intercept message", e);
             }
         } finally {
+            if (storeRedoRecorder != null) {
+                if (success) {
+                    storeRedoRecorder.commit();
+                } else {
+                    storeRedoRecorder.abort();
+                }
+            }
             if (success) {
                 // Everything worked.  Update the blob field in ParsedMessage
                 // so the next recipient in the multi-recipient case will link
@@ -6183,7 +6190,7 @@ public class Mailbox implements MailboxStore {
             if (redoBlobStore instanceof RedoOpBlobStore) {
                 redoRecorder.setMessageBodyInfo(ds, size);
             } else {
-                redoRecorder.setRedoBlobOperation(redoBlobStore.logBlob(this, ds, size, digest));
+                redoRecorder.setBlobDataFromDataSource(ds, size);
             }
 
             msg.setDraftAutoSendTime(autoSendTime);
@@ -8580,8 +8587,7 @@ public class Mailbox implements MailboxStore {
                 if (redoBlobStore instanceof RedoOpBlobStore) {
                     redoRecorder.setMessageBodyInfo(ds, size);
                 } else {
-                    String digest = mailboxBlob.getDigest();
-                    redoRecorder.setRedoBlobOperation(redoBlobStore.logBlob(this, ds, size, digest));
+                    redoRecorder.setBlobDataFromDataSource(ds, size);
                 }
 
                 if (indexing) {
@@ -8661,8 +8667,7 @@ public class Mailbox implements MailboxStore {
                 if (redoBlobStore instanceof RedoOpBlobStore) {
                     redoRecorder.setMessageBodyInfo(ds, size);
                 } else {
-                    String digest = mailboxBlob.getDigest();
-                    redoRecorder.setRedoBlobOperation(redoBlobStore.logBlob(this, ds, size, digest));
+                    redoRecorder.setBlobDataFromDataSource(ds, size);
                 }
 
                 currentChange().addIndexItem(doc);

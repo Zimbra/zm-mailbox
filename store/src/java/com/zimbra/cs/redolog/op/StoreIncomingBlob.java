@@ -27,7 +27,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.activation.DataSource;
 
@@ -40,7 +42,7 @@ import com.zimbra.cs.redolog.RedoOpBlobStore;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
 
-public class StoreIncomingBlob extends RedoableOp {
+public class StoreIncomingBlob extends RedoableOp implements BlobRecorder {
 
     static final int MAX_BLOB_SIZE = 100 * 1024 * 1024;  // 100MB size limit
     static final int MAX_MAILBOX_LIST_LENGTH = 1000000;
@@ -199,5 +201,37 @@ public class StoreIncomingBlob extends RedoableOp {
                 }
             }
         }
+    }
+
+    // BlobRecorder interface methods (not all of these are actually used)
+
+    @Override
+    public String getBlobDigest() {
+        return mDigest;
+    }
+
+    @Override
+    public InputStream getBlobInputStream() throws IOException {
+        return mData.getInputStream();
+    }
+
+    @Override
+    public void setBlobDataFromDataSource(DataSource ds, long size) {
+        setBlobBodyInfo(ds, (int) size, ":external:");
+    }
+
+    @Override
+    public void setBlobDataFromFile(File file) {
+        setBlobBodyInfo(file);
+    }
+
+    @Override
+    public long getBlobSize() {
+        return mMsgSize;
+    }
+
+    @Override
+    public Set<Integer> getReferencedMailboxIds() {
+        return new HashSet<>(mMailboxIdList);
     }
 }
