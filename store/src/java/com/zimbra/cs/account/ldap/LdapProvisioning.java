@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2018, 2019 Synacor, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2018, 2019, 2020 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -58,6 +58,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.service.ServiceException.Argument;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.UnmodifiableBloomFilter;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.L10nUtil;
@@ -264,6 +265,9 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     private final INamedEntryCache<XMPPComponent> xmppComponentCache;
     private final INamedEntryCache<LdapZimlet> zimletCache;
 
+    private final UnmodifiableBloomFilter<String> commonPasswordFilter;
+    private boolean blockCommonPasswordsEnabled;
+
     private LdapConfig cachedGlobalConfig = null;
     private GlobalGrant cachedGlobalGrant = null;
     private static final Random sPoolRandom = new Random();
@@ -314,6 +318,10 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         xmppComponentCache = cache.xmppComponentCache();
         zimletCache = cache.zimletCache();
         alwaysOnClusterCache = cache.alwaysOnClusterCache();
+
+        commonPasswordFilter = UnmodifiableBloomFilter
+            .createLazyFilterFromFile(LC.common_passwords_txt.value());
+        blockCommonPasswordsEnabled = LC.zimbra_block_common_passwords_enabled.booleanValue();
 
         setDIT();
         setHelper(new ZLdapHelper(this));
@@ -6086,7 +6094,6 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         return cos.getAttr(name);
     }
 
-
     /**
      * called to check password strength. Should pass in either an Account, or Cos/Attributes (during creation).
      *
@@ -6108,6 +6115,10 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         if (maxLength > 0 && password.length() > maxLength) {
             throw AccountServiceException.INVALID_PASSWORD("too long",
                     new Argument(Provisioning.A_zimbraPasswordMaxLength, maxLength, Argument.Type.NUM));
+        }
+
+        if (blockCommonPasswordsEnabled && commonPasswordFilter.mightContain(password)) {
+            throw AccountServiceException.INVALID_PASSWORD("password is known to be too common");
         }
 
         int minUpperCase = getInt(acct, cos, entry, Provisioning.A_zimbraPasswordMinUpperCaseChars, 0);
