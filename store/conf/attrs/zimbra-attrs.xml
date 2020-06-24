@@ -479,17 +479,17 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>max length of a password</desc>
 </attr>
 
-<attr id="35" name="zimbraPasswordMinAge" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="35" name="zimbraPasswordMinAge" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
   <defaultCOSValue>0</defaultCOSValue>
   <desc>minimum days between password changes</desc>
 </attr>
 
-<attr id="36" name="zimbraPasswordMaxAge" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="36" name="zimbraPasswordMaxAge" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
   <defaultCOSValue>0</defaultCOSValue>
   <desc>maximum days between password changes</desc>
 </attr>
 
-<attr id="37" name="zimbraPasswordEnforceHistory" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="37" name="zimbraPasswordEnforceHistory" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
   <defaultCOSValue>0</defaultCOSValue>
   <desc>whether or not to enforce password history.  Number of unique passwords a user must have before being allowed to re-use an old one. A value of 0 means no password history.</desc>
 </attr>
@@ -498,7 +498,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>historical password values</desc>
 </attr>
 
-<attr id="39" name="zimbraPasswordModifiedTime" type="gentime" cardinality="single" optionalIn="account">
+<attr id="39" name="zimbraPasswordModifiedTime" type="gentime" cardinality="single" optionalIn="account" flags="accountInfo">
   <desc>time password was last changed</desc>
 </attr>
 
