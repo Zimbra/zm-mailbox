@@ -10050,4 +10050,10 @@ TODO: delete them permanently from here
   <desc>URL of error page for unsupported browser.</desc>
   <globalConfigValue>https://zimbra_ssl_webclient/unsupportedbrowser.html</globalConfigValue>
 </attr>
+<attr id="9010" name="zimbraDomainTrialExpirationDate" type="gentime" cardinality="single" optionalIn="domain" flags="accountInfo" since="8.9.0">
+  <desc>Can be used by an external service to indicate when a trial will expire.</desc>
+</attr>
+<attr id="9011" name="zimbraDomainTrialConvertAtExpiration" type="boolean" cardinality="single" optionalIn="domain" flags="accountInfo" since="8.9.0">
+  <desc>Can be used by an external service to indicate that a trial is set to convert to active at expiration.</desc>
+</attr>
 </attrs>

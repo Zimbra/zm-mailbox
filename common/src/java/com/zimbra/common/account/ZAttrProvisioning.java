@@ -5954,6 +5954,24 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDomainStatus = "zimbraDomainStatus";
 
     /**
+     * Can be used by an external service to indicate that a trial is set to
+     * convert to active at expiration.
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9011)
+    public static final String A_zimbraDomainTrialConvertAtExpiration = "zimbraDomainTrialConvertAtExpiration";
+
+    /**
+     * Can be used by an external service to indicate when a trial will
+     * expire.
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9010)
+    public static final String A_zimbraDomainTrialExpirationDate = "zimbraDomainTrialExpirationDate";
+
+    /**
      * should be one of: local, alias
      */
     @ZAttr(id=212)

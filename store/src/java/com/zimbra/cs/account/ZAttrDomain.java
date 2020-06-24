@@ -7305,6 +7305,210 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
+     * Can be used by an external service to indicate that a trial is set to
+     * convert to active at expiration.
+     *
+     * @return zimbraDomainTrialConvertAtExpiration, or false if unset
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9011)
+    public boolean isDomainTrialConvertAtExpiration() {
+        return getBooleanAttr(Provisioning.A_zimbraDomainTrialConvertAtExpiration, false, true);
+    }
+
+    /**
+     * Can be used by an external service to indicate that a trial is set to
+     * convert to active at expiration.
+     *
+     * @param zimbraDomainTrialConvertAtExpiration new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9011)
+    public void setDomainTrialConvertAtExpiration(boolean zimbraDomainTrialConvertAtExpiration) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainTrialConvertAtExpiration, zimbraDomainTrialConvertAtExpiration ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Can be used by an external service to indicate that a trial is set to
+     * convert to active at expiration.
+     *
+     * @param zimbraDomainTrialConvertAtExpiration new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9011)
+    public Map<String,Object> setDomainTrialConvertAtExpiration(boolean zimbraDomainTrialConvertAtExpiration, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainTrialConvertAtExpiration, zimbraDomainTrialConvertAtExpiration ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Can be used by an external service to indicate that a trial is set to
+     * convert to active at expiration.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9011)
+    public void unsetDomainTrialConvertAtExpiration() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainTrialConvertAtExpiration, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Can be used by an external service to indicate that a trial is set to
+     * convert to active at expiration.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9011)
+    public Map<String,Object> unsetDomainTrialConvertAtExpiration(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainTrialConvertAtExpiration, "");
+        return attrs;
+    }
+
+    /**
+     * Can be used by an external service to indicate when a trial will
+     * expire.
+     *
+     * <p>Use getDomainTrialExpirationDateAsString to access value as a string.
+     *
+     * @see #getDomainTrialExpirationDateAsString()
+     *
+     * @return zimbraDomainTrialExpirationDate as Date, null if unset or unable to parse
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9010)
+    public Date getDomainTrialExpirationDate() {
+        return getGeneralizedTimeAttr(Provisioning.A_zimbraDomainTrialExpirationDate, null, true);
+    }
+
+    /**
+     * Can be used by an external service to indicate when a trial will
+     * expire.
+     *
+     * @return zimbraDomainTrialExpirationDate, or null if unset
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9010)
+    public String getDomainTrialExpirationDateAsString() {
+        return getAttr(Provisioning.A_zimbraDomainTrialExpirationDate, null, true);
+    }
+
+    /**
+     * Can be used by an external service to indicate when a trial will
+     * expire.
+     *
+     * @param zimbraDomainTrialExpirationDate new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9010)
+    public void setDomainTrialExpirationDate(Date zimbraDomainTrialExpirationDate) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainTrialExpirationDate, zimbraDomainTrialExpirationDate==null ? "" : LdapDateUtil.toGeneralizedTime(zimbraDomainTrialExpirationDate));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Can be used by an external service to indicate when a trial will
+     * expire.
+     *
+     * @param zimbraDomainTrialExpirationDate new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9010)
+    public Map<String,Object> setDomainTrialExpirationDate(Date zimbraDomainTrialExpirationDate, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainTrialExpirationDate, zimbraDomainTrialExpirationDate==null ? "" : LdapDateUtil.toGeneralizedTime(zimbraDomainTrialExpirationDate));
+        return attrs;
+    }
+
+    /**
+     * Can be used by an external service to indicate when a trial will
+     * expire.
+     *
+     * @param zimbraDomainTrialExpirationDate new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9010)
+    public void setDomainTrialExpirationDateAsString(String zimbraDomainTrialExpirationDate) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainTrialExpirationDate, zimbraDomainTrialExpirationDate);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Can be used by an external service to indicate when a trial will
+     * expire.
+     *
+     * @param zimbraDomainTrialExpirationDate new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9010)
+    public Map<String,Object> setDomainTrialExpirationDateAsString(String zimbraDomainTrialExpirationDate, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainTrialExpirationDate, zimbraDomainTrialExpirationDate);
+        return attrs;
+    }
+
+    /**
+     * Can be used by an external service to indicate when a trial will
+     * expire.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9010)
+    public void unsetDomainTrialExpirationDate() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainTrialExpirationDate, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Can be used by an external service to indicate when a trial will
+     * expire.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9010)
+    public Map<String,Object> unsetDomainTrialExpirationDate(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainTrialExpirationDate, "");
+        return attrs;
+    }
+
+    /**
      * should be one of: local, alias
      *
      * <p>Valid values: [local, alias]
