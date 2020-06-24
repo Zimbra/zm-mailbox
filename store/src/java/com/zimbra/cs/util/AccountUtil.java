@@ -917,4 +917,15 @@ public class AccountUtil {
         }
         return false;
     }
+
+    public static boolean isDataSourceAddress(Account account, String fromEmailAddress) throws ServiceException {
+        List<DataSource> dsList = account.getAllDataSources();
+        for (DataSource ds : dsList) {
+            if (ds.getEmailAddress().equals(fromEmailAddress) && (ds.getType().equals(DataSourceType.imap) ||
+                    ds.getType().equals(DataSourceType.pop3))) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
