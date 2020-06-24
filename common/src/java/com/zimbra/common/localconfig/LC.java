@@ -1436,6 +1436,12 @@ public final class LC {
     // to switch to Tika com.zimbra.cs.convert.TikaExtractionClient
     public static final KnownKey attachment_extraction_client_class = KnownKey.newKey("com.zimbra.cs.convert.LegacyConverterClient");
 
+    // list file for blocking common passwords
+    public static final KnownKey common_passwords_txt = KnownKey.newKey("${zimbra_home}/conf/common-passwords.txt");
+
+    // enable blocking common passwords
+    public static final KnownKey zimbra_block_common_passwords_enabled = KnownKey.newKey(false);
+
     static {
         // Automatically set the key name with the variable name.
         for (Field field : LC.class.getFields()) {
