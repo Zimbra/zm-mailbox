@@ -1453,7 +1453,7 @@ public final class LC {
     public static final KnownKey redis_redolog_stream_max_items_per_read = KnownKey.newKey(10);
 
     @Supported
-    public static final KnownKey num_backup_restore_workers = KnownKey.newKey(2);
+    public static final KnownKey num_backup_restore_workers = KnownKey.newKey(1);
 
     public enum PUBLIC_SHARE_VISIBILITY { samePrimaryDomain, all, none };
 
