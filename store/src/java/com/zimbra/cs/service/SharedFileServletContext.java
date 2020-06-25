@@ -50,6 +50,8 @@ public class SharedFileServletContext extends UserServletContext {
     @Override
     protected void parseParams(HttpServletRequest request, AuthToken authToken)
             throws UserServletException, ServiceException {
+
+        ZimbraLog.doc.debug("Parse params");
         String pathInfo = request.getPathInfo();
         if (StringUtil.isNullOrEmpty(pathInfo) || !pathInfo.startsWith("/")) {
             throw new UserServletException(HttpServletResponse.SC_NOT_FOUND, null);
@@ -65,6 +67,7 @@ public class SharedFileServletContext extends UserServletContext {
         EncodedId epath;
         try {
             epath = EncodedId.decode(idstr);
+            ZimbraLog.doc.info("SHF : %s", epath);
         } catch (ServiceException e) {
             ZimbraLog.doc.debug("invalid path: " + idstr, e);
             throw new UserServletException(HttpServletResponse.SC_NOT_FOUND,null);
@@ -91,6 +94,7 @@ public class SharedFileServletContext extends UserServletContext {
         }
         targetAccount = Provisioning.getInstance().get(AccountBy.id, accountId, authToken);
         fromDumpster = false;  // fetching dumpster'd file not supported
+        ZimbraLog.doc.debug("Looking for item :%s, for account:%s", itemUuid, accountId);
     }
 
     static class EncodedId {

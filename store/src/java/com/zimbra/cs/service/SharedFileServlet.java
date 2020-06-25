@@ -26,6 +26,7 @@ import org.apache.http.HttpException;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.MailItem;
@@ -85,7 +86,7 @@ public class SharedFileServlet extends UserServlet {
             return true;
         }
 
-        throw MailServiceException.NO_SUCH_ITEM_UUID(context.itemUuid);
+        return false;
     }
 
     @Override
@@ -110,5 +111,18 @@ public class SharedFileServlet extends UserServlet {
     protected boolean proxyIfMountpoint(HttpServletRequest req, HttpServletResponse resp, UserServletContext ct, MailItem item)
     throws IOException, ServiceException, UserServletException {
         return false;
+    }
+
+
+    @Override
+    public void init() throws ServletException {
+        ZimbraLog.doc.info("Starting up SHF");
+        super.init();
+    }
+
+    @Override
+    public void destroy() {
+        ZimbraLog.doc.info("Shutting down SHF");
+        super.destroy();
     }
 }

@@ -554,6 +554,16 @@
     </init-param>
     <load-on-startup>12</load-on-startup>
   </servlet>
+  
+  <servlet>
+    <servlet-name>SharedFileServlet</servlet-name>
+    <servlet-class>com.zimbra.cs.service.SharedFileServlet</servlet-class>
+    <init-param>
+      <param-name>allowed.ports</param-name>
+      <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, %%zimbraAdminPort%%, 7070, 7443</param-value>
+    </init-param>
+    <load-on-startup>13</load-on-startup>
+  </servlet>
 
   <servlet-mapping>
     <servlet-name>ExtensionDispatcherServlet</servlet-name>
@@ -700,6 +710,11 @@
   <servlet-mapping>
     <servlet-name>ZimletProperties2Javascript</servlet-name>
     <url-pattern>/res/*</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>SharedFileServlet</servlet-name>
+    <url-pattern>/shf/*</url-pattern>
   </servlet-mapping>
 
   <servlet-mapping>
