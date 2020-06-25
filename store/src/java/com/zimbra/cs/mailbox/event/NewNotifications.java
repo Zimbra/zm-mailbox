@@ -73,6 +73,9 @@ public class NewNotifications {
      */
     public void markSeen() throws ServiceException {
         Metadata config = mbox.getConfig(octxt, CONFIG_KEY);
+        if (config == null) {
+            config = new Metadata();
+        }
         config.put(LAST_SEEN, System.currentTimeMillis() / 1000);  // store second since epoch
         mbox.setConfig(octxt, CONFIG_KEY, config);
     }

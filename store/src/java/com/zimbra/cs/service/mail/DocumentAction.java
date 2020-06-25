@@ -40,7 +40,6 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.Session.Type;
-import com.zimbra.cs.session.SoapSession;
 import com.zimbra.cs.session.WatchNotification;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -138,10 +137,9 @@ public class DocumentAction extends ItemAction {
         }
 
         if (notification != null) {
-// TODO Need to identify how to get session from mailbox.
-//            for (Session s : mbox.getListeners(Type.SOAP)) {
-//                s.notifyExternalEvent(notification);
-//            }
+            for (Session s : mbox.getNotificationPubSub().getSubscriber().getListeners(Type.SOAP)) {
+                s.notifyExternalEvent(notification);
+            }
 
             EventLogger logger = EventLogger.getInstance();
             ItemEventLog log = logger.getLog(watchedItem);

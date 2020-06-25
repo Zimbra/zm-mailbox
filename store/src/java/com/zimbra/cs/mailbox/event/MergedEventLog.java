@@ -50,6 +50,10 @@ public class MergedEventLog extends ItemEventLog {
             }
             fetchInitialEvents(chunk);
         }
+
+        if (mergedEvents.size() == 0) {
+            return ret;
+        }
         int end = offset + count;
         if (end < mergedEvents.size()) {
             // we already have the data in mergedEvents
