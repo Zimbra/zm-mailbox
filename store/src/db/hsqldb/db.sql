@@ -185,7 +185,8 @@ CREATE TABLE mobile_devices (
    os_language         VARCHAR(64),
    phone_number        VARCHAR(64),
    unapproved_appl_list VARCHAR(512),
-   approved_appl_list   VARCHAR(512),  
+   approved_appl_list   VARCHAR(512),
+   mobile_operator     VARCHAR(512),
 
    CONSTRAINT pk_mobile_devices PRIMARY KEY (mailbox_id, device_id),
    CONSTRAINT fk_mobile_mailbox_id FOREIGN KEY (mailbox_id) REFERENCES mailbox(id) ON DELETE CASCADE,
