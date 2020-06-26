@@ -603,12 +603,12 @@ public class RedissonRetryClient implements RedissonClient {
 
     @Override
     public <V> RBlockingQueue<V> getBlockingQueue(String name) {
-        throw new UnsupportedOperationException();
+        return new RedissonRetryBlockingQueue<V>(client -> client.getBlockingQueue(name), this);
     }
 
     @Override
     public <V> RBlockingQueue<V> getBlockingQueue(String name, Codec codec) {
-        throw new UnsupportedOperationException();
+        return new RedissonRetryBlockingQueue<V>(client -> client.getBlockingQueue(name, codec), this);
     }
 
     @Override
