@@ -1297,7 +1297,7 @@ public final class LC {
     public static final KnownKey redis_streams_redo_log_stream_prefix = KnownKey.newKey("ZIMBRA_REDO_LOG_STREAM_");
 
     @Supported
-    public static final KnownKey redis_num_streams = KnownKey.newKey(10);
+    public static final KnownKey redis_num_redolog_streams = KnownKey.newKey(10);
 
     @Supported
     public static final KnownKey backup_reader_buffer_size_kb = KnownKey.newKey(16384);
@@ -1451,6 +1451,9 @@ public final class LC {
 
     @Supported
     public static final KnownKey redis_redolog_stream_max_items_per_read = KnownKey.newKey(10);
+
+    @Supported
+    public static final KnownKey num_backup_restore_workers = KnownKey.newKey(1);
 
     public enum PUBLIC_SHARE_VISIBILITY { samePrimaryDomain, all, none };
 

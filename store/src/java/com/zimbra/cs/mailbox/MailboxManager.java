@@ -434,7 +434,7 @@ public class MailboxManager {
             ZimbraLog.mailbox.warn("operation sent to wrong pod (you want '" + Provisioning.affinityServer(account) + "')");
         }
     }
-    
+
     protected Mailbox getMailboxById(int mailboxId, FetchMode fetchMode, boolean skipMailHostCheck)
     throws ServiceException {
         // see bug 19088 - we do NOT want to call this while holding the mgr lock, because
@@ -895,7 +895,7 @@ public class MailboxManager {
             cacheManager.cacheAccount(data.accountId, data.id);
             cacheManager.cacheMailbox(mbox);
             redoRecorder.setMailboxId(mbox.getId());
-
+            redoRecorder.setAccountId(account.getId());
             mboxTransaction.commit();
 
         } catch (ServiceException e) {

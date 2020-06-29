@@ -74,6 +74,7 @@ public abstract class RedoableOp {
     protected RedoLogManager mRedoLogMgr;
     private boolean mUnloggedReplay;  // true if redo of this op is not redo-logged
     protected RedoCommitCallback mCommitCallback;
+    private String mAccountId = null; // used for routing to redolog streams
 
     protected RedoableOp(MailboxOperation op, RedoLogManager mgr) {
         mOperation = op;
@@ -247,6 +248,14 @@ public abstract class RedoableOp {
 
     public void setMailboxId(int mboxId) {
         mMailboxId = mboxId;
+    }
+
+    public void setAccountId(String accountId) {
+        mAccountId = accountId;
+    }
+
+    public String getAccountId() {
+        return mAccountId;
     }
 
     protected void serializeHeader(RedoLogOutput out) throws IOException {

@@ -17,39 +17,41 @@
 
 package com.zimbra.soap.admin.message;
 
-import com.google.common.base.MoreObjects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.soap.BackupConstants;
 import com.zimbra.soap.admin.type.BackupInfo;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=BackupConstants.E_BACKUP_RESPONSE)
 @XmlType(propOrder = {})
-public class BackupResponse {
+public class BackupResponse extends BackupRestoreBase {
 
     /**
      * @zm-api-field-description Information about the backup
      */
     @XmlElement(name=BackupConstants.E_BACKUP /* backup */, required=true)
-    private final BackupInfo backup;
+    private BackupInfo backup;
 
     /**
      * no-argument constructor wanted by JAXB
      */
-    @SuppressWarnings("unused")
-    private BackupResponse() {
+    public BackupResponse() {
         this((BackupInfo) null);
     }
 
     public BackupResponse(BackupInfo backup) {
-        this.backup = backup;
+        setBackup(backup);
     }
 
+    public void setBackup(BackupInfo backup) {
+        this.backup = backup;
+    }
     public BackupInfo getBackup() { return backup; }
 
     public MoreObjects.ToStringHelper addToStringInfo(

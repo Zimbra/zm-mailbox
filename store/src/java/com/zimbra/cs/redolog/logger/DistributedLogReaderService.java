@@ -5,7 +5,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -26,25 +28,31 @@ import org.redisson.client.codec.StringCodec;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hashing;
 import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.RedissonClientHolder;
 import com.zimbra.cs.mailbox.util.MailboxClusterUtil;
+import com.zimbra.cs.mailbox.util.MailboxClusterUtil.PodInfo;
+import com.zimbra.cs.mailbox.util.MailboxClusterUtil.WorkerType;
 import com.zimbra.cs.redolog.RedoLogBlobStore;
 import com.zimbra.cs.redolog.RedoLogManager.LoggableOp;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.redolog.TransactionId;
+import com.zimbra.cs.redolog.op.BlobRecorder;
+import com.zimbra.cs.redolog.op.CommitTxn;
 import com.zimbra.cs.redolog.op.RedoableOp;
 
 public class DistributedLogReaderService {
     private static RedissonClient client;
-    private static int streamsCount;
-    private List<RStream<byte[], byte[]>> streams;
+    private Map<Integer, RStream<byte[], byte[]>> streams;
     private ExecutorService executorService;
     private static String group;
     private static String consumer;
@@ -78,30 +86,35 @@ public class DistributedLogReaderService {
         consumer = MailboxClusterUtil.getMailboxWorkerName();
         client = RedissonClientHolder.getInstance().getRedissonClient();
         script = client.getScript(StringCodec.INSTANCE);
-        streamsCount = LC.redis_num_streams.intValue();
-        streams = new ArrayList<RStream<byte[], byte[]>>(streamsCount);
-        ZimbraLog.redolog.info("Reader service streamsCount %d", streamsCount);
-
+        streams = new HashMap<>();
         blobStore = RedoLogProvider.getInstance().getRedoLogManager().getBlobStore();
         externalBlobStore = RedoLogProvider.getInstance().getRedoLogManager().hasExternalBlobStore();
 
+        PodInfo podInfo = MailboxClusterUtil.getPodInfo();
+        RedoStreamSelector selector = new RedoStreamSelector();
+        List<Integer> streamIndexes = selector.getStreamIndexes(podInfo.getIndex());
+        if (streamIndexes.isEmpty()) {
+            ZimbraLog.redolog.info("%s is not tasked with processing any redolog streams!", podInfo.getName());
+            return;
+        }
+        ZimbraLog.redolog.info("%s will listen on redolog streams %s", podInfo.getName(), streamIndexes);
         ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("DistributedLog-Reader-Thread-%d").build();
-        executorService = Executors.newFixedThreadPool(streamsCount, namedThreadFactory);
-
-        for (int i=0; i<streamsCount ; i++) {
-            streams.add(client.getStream(LC.redis_streams_redo_log_stream_prefix.value()+i, ByteArrayCodec.INSTANCE));
-            if (!streams.get(i).isExists()) {
-                streams.get(i).createGroup(group, StreamMessageId.ALL); // stream will be auto-created
-                ZimbraLog.redolog.info("created consumer group %s and stream %s", group, streams.get(i).getName());
+        executorService = Executors.newFixedThreadPool(streamIndexes.size(), namedThreadFactory);
+        for (int i: streamIndexes) {
+            RStream<byte[], byte[]> stream = client.getStream(LC.redis_streams_redo_log_stream_prefix.value()+i, ByteArrayCodec.INSTANCE);
+            streams.put(i, stream);
+            if (!stream.isExists()) {
+                stream.createGroup(group, StreamMessageId.ALL); // stream will be auto-created
+                ZimbraLog.redolog.info("created consumer group %s and stream %s", group, stream.getName());
             } else {
                 // create group if it doesn't exist on the stream
-                StreamInfo<byte[], byte[]> info = streams.get(i).getInfo();
+                StreamInfo<byte[], byte[]> info = stream.getInfo();
                 if (info.getGroups() == 0) {
-                    streams.get(i).createGroup(group, StreamMessageId.ALL);
-                    ZimbraLog.redolog.info("created consumer group %s for existing stream %s", group, streams.get(i).getName());
+                    stream.createGroup(group, StreamMessageId.ALL);
+                    ZimbraLog.redolog.info("created consumer group %s for existing stream %s", group, stream.getName());
                 }
             }
-            executorService.execute(new LogMonitor(streams.get(i)));
+            executorService.execute(new LogMonitor(stream));
         }
     }
 
@@ -270,5 +283,102 @@ public class DistributedLogReaderService {
                         Long.compare(id1.getId0(), id2.getId0());
         }
     };
+
+    public static class RedoStreamSelector {
+
+        private int numStreams;
+        private int numWorkers;
+        private Map<Integer, Integer> streamPodMap = new HashMap<>();
+        private Map<Integer, List<Integer>> streamsByPod = new HashMap<>();
+        private PodInfo currentPod;
+        private HashFunction hasher;
+        private boolean hasExternalBlobStore;
+        private static final int DEFAULT_STREAM_INDEX = 0;
+
+        public RedoStreamSelector() {
+            this(LC.redis_num_redolog_streams.intValue(), LC.num_backup_restore_workers.intValue(),
+                    RedoLogProvider.getInstance().getRedoLogManager().hasExternalBlobStore());
+        }
+
+        public RedoStreamSelector(int numStreams, int numWorkers) {
+            this(numStreams, numWorkers, true);
+        }
+
+        public RedoStreamSelector(int numStreams, int numWorkers, boolean hasExternalBlobStore) {
+            this.numStreams = numStreams;
+            this.numWorkers = numWorkers;
+            this.currentPod = MailboxClusterUtil.getPodInfo();
+            hasher = Hashing.murmur3_128();
+            initStreamMapping();
+            this.hasExternalBlobStore = hasExternalBlobStore;
+        }
+
+        private void initStreamMapping() {
+            if (numWorkers > numStreams) {
+                ZimbraLog.redolog.warn("numWorkers > numStreams (%s>%s), not all zmc-backup-restore workers will be used!", numWorkers, numStreams);
+            }
+            int workerNum=0;
+            for (int streamNum = 0; streamNum < numStreams; streamNum++) {
+                streamPodMap.put(streamNum, workerNum);
+                streamsByPod.computeIfAbsent(workerNum, k -> new ArrayList<>()).add(streamNum);
+                workerNum++;
+                if (workerNum >= numWorkers) {
+                    workerNum = 0;
+                }
+            }
+        }
+
+        public List<Integer> getStreamIndexes(int podIndex) {
+            return streamsByPod.getOrDefault(podIndex, Collections.emptyList());
+        }
+
+        public List<Integer> getActivePodIndexes() {
+            return new ArrayList<>(streamsByPod.keySet());
+        }
+
+        public int getStreamIndex(RedoableOp op) {
+            String acctId = op.getAccountId();
+            if (acctId != null) {
+                return getStreamIndex(acctId);
+            } else if (hasExternalBlobStore && op instanceof CommitTxn) {
+                // StoreIncomingBlob  commit ops for a given digest should for a go to the same stream, so that they are
+                // processed serially on the consumer side. This is to avoid a race condition in updating blob references,
+                // in case the BlobReferenceManager implementation is not atomic.
+                CommitTxn commit = (CommitTxn) op;
+                BlobRecorder blobData = commit.getBlobRecorder();
+                if (blobData != null && blobData.getBlobDigest() != null) {
+                    return getStreamIndex(blobData.getBlobDigest());
+                } else {
+                    // temp warnings
+                    ZimbraLog.redolog.warn("CommitTxn for %s doesn't have blob data! sending to stream 0", op.getTxnOpCode());
+                    return DEFAULT_STREAM_INDEX;
+                }
+            } else {
+                ZimbraLog.redolog.warn("%s doesn't have an accountId! sending to stream 0", op.getOperation());
+                return DEFAULT_STREAM_INDEX;
+            }
+        }
+
+        private int getStreamIndex(String str) {
+            return Math.abs(hasher.hashString(str, Charsets.UTF_8).asInt()) % numStreams;
+        }
+
+        public int getBackupPodForAccountId(String acctId) {
+            int streamIndex = getStreamIndex(acctId);
+            return streamPodMap.get(streamIndex);
+        }
+
+        public int getBackupPodForAccount(Account acct) {
+            return getBackupPodForAccountId(acct.getId());
+        }
+
+        public boolean isLocal(Account account) {
+            if (currentPod.getType() == WorkerType.BACKUP_RESTORE) {
+                return getBackupPodForAccount(account) == currentPod.getIndex();
+            } else {
+                return false;
+            }
+        }
+    }
 }
 

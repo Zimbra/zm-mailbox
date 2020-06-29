@@ -70,22 +70,22 @@ import com.zimbra.cs.client.LmcSession;
  *   } catch (ParseException e) {
  *     util.usage(e);
  *   }
- *     
+ *
  * </pre>
- * 
+ *
  * @author kchen
  *
  */
 public abstract class SoapCLI {
-    
+
     // common options
-    
+
     public static final String O_AUTHTOKEN = "y";
     public static final String O_AUTHTOKENFILE = "Y";
     public static final String O_H = "h";
     public static final String O_HIDDEN = "hidden";
     public static final String O_S = "s";
-    
+
     public static final Option OPT_AUTHTOKEN = new Option(O_AUTHTOKEN, "authtoken", true, "use auth token string (has to be in JSON format) from command line");
     public static final Option OPT_AUTHTOKENFILE = new Option(O_AUTHTOKENFILE, "authtokenfile", true, "read auth token (has to be in JSON format) from a file");
 
@@ -98,7 +98,7 @@ public abstract class SoapCLI {
     private Options mOptions;
     private Options mHiddenOptions;
     private boolean mDisableTargetServerOption;
-    
+
     private SoapTransport mTrans = null;
     private String mServerUrl;
 
@@ -129,6 +129,9 @@ public abstract class SoapCLI {
     }
 
     protected void setServer(String hostname) {
+        if (!hostname.equals(mHost)) {
+            mTrans = null; //unset old transport in case we have to issue requests to multiple hosts in the same CLI session
+        }
         mHost = hostname;
     }
 
@@ -182,7 +185,7 @@ public abstract class SoapCLI {
                 }
             }
         }
-        
+
         for (OptionGroup group : groups) {
             newOptions.addOptionGroup(group);
         }
@@ -194,7 +197,7 @@ public abstract class SoapCLI {
             args != null && args.length == 1 &&
             ("-h".equals(args[0]) || "--help".equals(args[0]));
     }
-    
+
     /**
      * Authenticates using the username and password from the local config.
      * @throws IOException
@@ -206,23 +209,32 @@ public abstract class SoapCLI {
         mServerUrl = url.toExternalForm();
         SoapTransport trans = getTransport();
         mAuth = false;
-        
+        LmcSession session = auth(trans, mUser, mPassword);
+        mAuth = true;
+        return session;
+
+    }
+
+    protected static LmcSession auth(SoapTransport trans) throws SoapFaultException, IOException, ServiceException {
+        return auth(trans, LC.zimbra_ldap_user.value(), LC.zimbra_ldap_password.value());
+    }
+
+    protected static LmcSession auth(SoapTransport trans, String user, String password) throws SoapFaultException, IOException, ServiceException {
         Element authReq = new Element.XMLElement(AdminConstants.AUTH_REQUEST);
-        authReq.addAttribute(AdminConstants.E_NAME, mUser, Element.Disposition.CONTENT);
-        authReq.addAttribute(AdminConstants.E_PASSWORD, mPassword, Element.Disposition.CONTENT);
+        authReq.addAttribute(AdminConstants.E_NAME, user, Element.Disposition.CONTENT);
+        authReq.addAttribute(AdminConstants.E_PASSWORD, password, Element.Disposition.CONTENT);
         try {
             Element authResp = trans.invokeWithoutSession(authReq);
             String authToken = authResp.getAttribute(AdminConstants.E_AUTH_TOKEN);
             ZAuthToken zat = new ZAuthToken(null, authToken, null);
             trans.setAuthToken(authToken);
-            mAuth = true;
             return new LmcSession(zat, null);
         } catch (UnknownHostException e) {
             // UnknownHostException's error message is not clear; rethrow with a more descriptive message
-            throw new IOException("Unknown host: " + mHost);
+            throw new IOException("Unknown host");
         }
     }
-    
+
     /**
      * Authenticates using the provided ZAuthToken
      * @throws IOException
@@ -232,12 +244,12 @@ public abstract class SoapCLI {
     protected LmcSession auth(ZAuthToken zAuthToken) throws SoapFaultException, IOException, ServiceException {
         if (zAuthToken == null)
             return auth();
-            
+
         URL url = new URL("https", mHost, mPort, AdminConstants.ADMIN_SERVICE_URI);
         mServerUrl = url.toExternalForm();
         SoapTransport trans = getTransport();
         mAuth = false;
-        
+
         Element authReq = new Element.XMLElement(AdminConstants.AUTH_REQUEST);
         zAuthToken.encodeAuthReq(authReq, true);
         try {
@@ -249,7 +261,7 @@ public abstract class SoapCLI {
         } catch (UnknownHostException e) {
             // UnknownHostException's error message is not clear; rethrow with a more descriptive message
             throw new IOException("Unknown host: " + mHost);
-        } 
+        }
     }
 
     /**
@@ -272,10 +284,10 @@ public abstract class SoapCLI {
     protected void usage() {
         usage(null);
     }
-    
+
     /**
      * Displays usage to stdout.
-     * @param e parse error 
+     * @param e parse error
      */
     protected void usage(ParseException e) {
         usage(e, false);
@@ -307,7 +319,7 @@ public abstract class SoapCLI {
      * @return
      */
     protected abstract String getCommandUsage();
-    
+
     /**
      * Returns the trailer in the usage message. Subclass can add additional notes on the usage.
      * @return
@@ -315,7 +327,7 @@ public abstract class SoapCLI {
     protected String getTrailer() {
         return "";
     }
-    
+
     /**
      * Returns whether this command line SOAP client has been authenticated.
      * @return
@@ -323,7 +335,7 @@ public abstract class SoapCLI {
     protected boolean isAuthenticated() {
         return mAuth;
     }
-    
+
     /**
      * Returns the username.
      * @return
@@ -331,7 +343,7 @@ public abstract class SoapCLI {
     protected String getUser() {
         return mUser;
     }
-    
+
     /**
      * Returns the target server hostname.
      * @return
@@ -339,7 +351,7 @@ public abstract class SoapCLI {
     protected String getServer() {
         return mHost;
     }
-    
+
     /**
      * Returns the target server admin port number.
      * @return
@@ -347,9 +359,9 @@ public abstract class SoapCLI {
     protected int getPort() {
         return mPort;
     }
-    
+
     /**
-     * Gets the SOAP transport. 
+     * Gets the SOAP transport.
      * @return null if the SOAP client has not been authenticated.
      */
     protected SoapTransport getTransport() {
@@ -357,13 +369,21 @@ public abstract class SoapCLI {
             initTransport();
         return mTrans;
     }
-    
+
     private void initTransport() {
         SoapHttpTransport trans = new SoapHttpTransport(mServerUrl);
         trans.setRetryCount(1);
         mTrans = trans;
     }
-    
+
+    protected static SoapTransport getNewTransport(String host) throws IOException, ServiceException {
+        int port = Provisioning.getInstance().getConfig().getAdminPort();
+        URL url = new URL("https", host, port, AdminConstants.ADMIN_SERVICE_URI);
+        SoapHttpTransport trans = new SoapHttpTransport(url.toExternalForm());
+        trans.setRetryCount(1);
+        return trans;
+    }
+
     /**
      * Set the SOAP transport read timeout
      * @return null if the SOAP client has not been authenticated.
@@ -371,14 +391,14 @@ public abstract class SoapCLI {
     public void setTransportTimeout(int newTimeout) {
         getTransport().setTimeout(newTimeout);
     }
-    
+
     protected String getServerUrl() {
         return mServerUrl;
     }
-    
+
     /**
-     * Gets the options that has been set up so far. 
-     * @return 
+     * Gets the options that has been set up so far.
+     * @return
      */
     protected Options getOptions() {
         return mOptions;
@@ -434,23 +454,23 @@ public abstract class SoapCLI {
             "Hour must be specified in 24-hour format, and time is in local time zone.\n");
         return sb.toString();
     }
-    
+
     public static ZAuthToken getZAuthToken(CommandLine cl) throws ServiceException, ParseException, IOException {
         if (cl.hasOption(SoapCLI.O_AUTHTOKEN) && cl.hasOption(SoapCLI.O_AUTHTOKENFILE)) {
             String msg = String.format("cannot specify both %s and %s options",
                     SoapCLI.O_AUTHTOKEN, SoapCLI.O_AUTHTOKENFILE);
             throw new ParseException(msg);
         }
-        
+
         if (cl.hasOption(SoapCLI.O_AUTHTOKEN)) {
             return ZAuthToken.fromJSONString(cl.getOptionValue(SoapCLI.O_AUTHTOKEN));
         }
-        
+
         if (cl.hasOption(SoapCLI.O_AUTHTOKENFILE)) {
             String authToken = StringUtil.readSingleLineFromFile(cl.getOptionValue(SoapCLI.O_AUTHTOKENFILE));
             return ZAuthToken.fromJSONString(authToken);
-        } 
-        
+        }
+
         return null;
     }
 }

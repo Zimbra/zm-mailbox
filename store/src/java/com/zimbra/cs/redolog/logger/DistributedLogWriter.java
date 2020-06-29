@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
@@ -29,6 +28,7 @@ import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.RedissonClientHolder;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.redolog.TransactionId;
+import com.zimbra.cs.redolog.logger.DistributedLogReaderService.RedoStreamSelector;
 import com.zimbra.cs.redolog.op.BlobRecorder;
 import com.zimbra.cs.redolog.op.CommitTxn;
 import com.zimbra.cs.redolog.op.RedoableOp;
@@ -54,11 +54,11 @@ public class DistributedLogWriter implements LogWriter {
     private Map<TransactionId, CountDownLatch> pendingOps = new HashMap<>();
     private boolean externalBlobStore;
     private Joiner joiner = Joiner.on(",");
-    private Random random = new Random();
+    private RedoStreamSelector streamSelector;
 
     public DistributedLogWriter() {
         client = RedissonClientHolder.getInstance().getRedissonClient();
-        streamsCount = LC.redis_num_streams.intValue();
+        streamsCount = LC.redis_num_redolog_streams.intValue();
         streams = new ArrayList<RStream<byte[], byte[]>>(streamsCount);
 
         ZimbraLog.redolog.info("DistributedLogWriter streamsCount: %d", streamsCount);
@@ -68,28 +68,7 @@ public class DistributedLogWriter implements LogWriter {
         }
 
         externalBlobStore = RedoLogProvider.getInstance().getRedoLogManager().hasExternalBlobStore();
-    }
-
-    /*
-     * Returns the index of the stream that could be used to send data to the
-     * Backup Restore Pod.
-     */
-    private int getStreamIndex(RedoableOp op) {
-        int mboxId = op.getMailboxId();
-        int streamIndex;
-        if (mboxId == RedoableOp.MAILBOX_ID_ALL || mboxId == RedoableOp.UNKNOWN_ID) {
-            if (externalBlobStore) {
-                // send to random stream to disperse load of handling blob data
-                streamIndex = random.nextInt(streamsCount);
-            } else {
-                // if the mailbox ID isn't specified, send it to the first stream
-                streamIndex = 0;
-            }
-        } else {
-           streamIndex = mboxId % streamsCount;
-        }
-        ZimbraLog.redolog.debug("sending %s txnId=%s mboxId=%s to stream %s", op.getOperation(), op.getTransactionId(), mboxId, streamIndex);
-        return streamIndex;
+        streamSelector = new RedoStreamSelector();
     }
 
     @Override
@@ -180,7 +159,9 @@ public class DistributedLogWriter implements LogWriter {
         }
         long start = System.currentTimeMillis();
 
-        RFuture<StreamMessageId> future = streams.get(getStreamIndex(op)).addAllAsync(fields);
+        int streamIndex = streamSelector.getStreamIndex(op);
+        ZimbraLog.redolog.debug("sending %s txnId=%s mboxId=%s to stream %s", op.getOperation(), op.getTransactionId(), op.getMailboxId(), streamIndex);
+        RFuture<StreamMessageId> future = streams.get(streamIndex).addAllAsync(fields);
         future.onComplete((streamId, e) -> {
             long elapsed = System.currentTimeMillis() - start;
             if (isStartMarker) {

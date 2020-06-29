@@ -8,6 +8,7 @@ import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.io.Files;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -16,50 +17,45 @@ import com.zimbra.common.util.ZimbraLog;
 
 public class MailboxClusterUtil {
 
-    private static String mailboxWorkerName;
-    private static int mailboxWorkerIndex;
-    private final static String mailboxServiceName = "zmc-mailbox";
+    private static PodInfo podInfo;
 
     static {
         try {
-            mailboxWorkerName = Files.asCharSource(new File("/var/run/pod-info/pod-name"), Charset.defaultCharset()).read();
-            ZimbraLog.mailbox.debug("mailbox worker name is %s", mailboxWorkerName);
-            mailboxWorkerIndex = parseMailboxWorkerIndex(mailboxWorkerName);
+            String mailboxWorkerName = Files.asCharSource(new File("/var/run/pod-info/pod-name"), Charset.defaultCharset()).read();
+            podInfo = new PodInfo(mailboxWorkerName);
         } catch (IOException e) {
-            mailboxWorkerName = String.format("zmc-mailbox-%s", UUIDUtil.generateUUID());
-            ZimbraLog.mailbox.warn("Unable to determine mailbox worker name! Generated name '%s' instead", mailboxWorkerName);
+            ZimbraLog.misc.error("error reading pod info!", e);
+            podInfo = PodInfo.generateUnknownPodInfo();
         }
     }
 
     public static String getMailboxWorkerName() {
-        return mailboxWorkerName;
+        return podInfo.getName();
     }
 
-    public static int getMailboxWorkerIndex() {
-        return mailboxWorkerIndex;
+    public static int getWorkerIndex() {
+        return podInfo.getIndex();
     }
 
-    private static int parseMailboxWorkerIndex(String workerName) {
-        String[] parts = workerName.split("-");
+    public static WorkerType getWorkerType() {
+        return podInfo.getType();
+    }
+
+    public static PodInfo getPodInfo() {
+        return podInfo;
+    }
+
+    public static int getNumPodsByType(WorkerType type) throws ServiceException {
         try {
-            return Integer.parseInt(parts[parts.length - 1]);
-        } catch (NumberFormatException e) {
-            ZimbraLog.mailbox.warn("unable to determine mailbox worker index, setting to 0");
-            return 0;
-        }
-    }
-
-    public static int getAllMailboxPodsCount() throws ServiceException {
-        try {
-            InetAddress[] addrs = InetAddress.getAllByName(mailboxServiceName);
+            InetAddress[] addrs = InetAddress.getAllByName(type.getServiceName());
             return addrs.length;
         } catch (UnknownHostException e) {
-            throw ServiceException.NOT_FOUND(String.format("Host exception for ", mailboxServiceName), e);
+            throw ServiceException.NOT_FOUND(String.format("Host exception for ", WorkerType.MAILBOX.getServiceName()), e);
         }
     }
 
     public static String[] getAllMailboxPodIPs() throws ServiceException {
-        return getAllMailboxPodIPs(mailboxServiceName);
+        return getAllMailboxPodIPs(WorkerType.MAILBOX.getServiceName());
     }
 
     public static String[] getAllMailboxPodIPs(String mboxServiceName) throws ServiceException {
@@ -71,8 +67,12 @@ public class MailboxClusterUtil {
         }
     }
 
+    public static boolean isMailboxPod() {
+        return podInfo.getType() == WorkerType.MAILBOX;
+    }
+
     public static boolean isBackupRestorePod() {
-        return getMailboxWorkerName().startsWith("zmc-backup-restore");
+        return podInfo.getType() == WorkerType.BACKUP_RESTORE;
     }
 
     /**
@@ -119,6 +119,105 @@ public class MailboxClusterUtil {
         @Override
         public void close() {
             endOverride();
+        }
+    }
+
+    public static enum WorkerType {
+        MAILBOX("zmc-mailbox"),
+        BACKUP_RESTORE("zmc-backup-restore"),
+        UNKNOWN("unknown");
+
+        private String serviceName;
+
+        private WorkerType(String serviceName) {
+            this.serviceName = serviceName;
+        }
+
+        public String getServiceName() {
+            return serviceName;
+        }
+    }
+
+    public static class PodInfo {
+
+        public static final int UNKNOWN_POD_INDEX = -1;
+        private String podName;
+        private WorkerType podType;
+        private int podIndex;
+
+        public PodInfo(String podName) {
+            this.podName  = podName;
+            this.podIndex = parseWorkerIndex(podName);
+            this.podType = parseWorkerType(podName);
+        }
+
+        public PodInfo(WorkerType type, int index) {
+            this.podType = type;
+            this.podIndex = index;
+            this.podName = String.format("%s-%s", type.getServiceName(), index);
+        }
+
+        private PodInfo(String podName, WorkerType type, int index) {
+            this.podName = podName;
+            this.podType = type;
+            this.podIndex = index;
+        }
+
+        private int parseWorkerIndex(String podName) {
+            String[] parts = podName.split("-");
+            try {
+                return Integer.parseInt(parts[parts.length - 1]);
+            } catch (NumberFormatException e) {
+                ZimbraLog.mailbox.warn("unable to determine worker index, setting to %s", UNKNOWN_POD_INDEX);
+                return UNKNOWN_POD_INDEX;
+            }
+        }
+
+        private WorkerType parseWorkerType(String podName) {
+            for (WorkerType type: WorkerType.values()) {
+                if (podName.startsWith(type.getServiceName())) {
+                    return type;
+                }
+            }
+            ZimbraLog.mailbox.warn("unable to determine worker type, setting to %s", WorkerType.UNKNOWN);
+            return WorkerType.UNKNOWN;
+        }
+
+        public String getName() {
+            return podName;
+        }
+
+        public WorkerType getType() {
+            return podType;
+        }
+
+        public int getIndex() {
+            return podIndex;
+        }
+
+        public static PodInfo generateUnknownPodInfo() {
+            return new PodInfo(String.format("pod-%s", UUIDUtil.generateUUID()), WorkerType.UNKNOWN, UNKNOWN_POD_INDEX);
+        }
+
+        public String getFQN() {
+            return String.format("%s.%s.default.svc.cluster.local", getName(), getType().getServiceName());
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (o instanceof PodInfo) {
+                PodInfo otherPod = (PodInfo) o;
+                return otherPod.podIndex == podIndex && otherPod.getType() == podType;
+            }
+            return false;
+        }
+
+        @Override
+        public String toString() {
+            return MoreObjects.toStringHelper(this)
+                    .add("name", podName)
+                    .add("type", podType)
+                    .add("idx", podIndex).toString();
         }
     }
 }

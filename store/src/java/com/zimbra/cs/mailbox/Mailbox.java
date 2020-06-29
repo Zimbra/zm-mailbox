@@ -2132,6 +2132,7 @@ public class Mailbox implements MailboxStore {
             }
 
             DeleteMailbox redoRecorder = new DeleteMailbox(mId);
+            redoRecorder.setAccountId(getAccountId());
             boolean needRedo = needRedo(null, redoRecorder);
             boolean success = false;
             try {
@@ -10179,6 +10180,7 @@ public class Mailbox implements MailboxStore {
                 boolean needRedo = needRedo(currentChange().octxt, redoRecorder);
                 // Log the change redo record for main transaction.
                 if (redoRecorder != null && needRedo) {
+                    redoRecorder.setAccountId(getAccountId());
                     redoRecorder.log(true);
                 }
                 boolean dbCommitSuccess = false;
