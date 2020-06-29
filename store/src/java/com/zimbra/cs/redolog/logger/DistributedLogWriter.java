@@ -160,7 +160,7 @@ public class DistributedLogWriter implements LogWriter {
         long start = System.currentTimeMillis();
 
         int streamIndex = streamSelector.getStreamIndex(op);
-        ZimbraLog.redolog.info("sending %s txnId=%s mboxId=%s to stream %s", op.getOperation(), op.getTransactionId(), op.getMailboxId(), streamIndex);
+        ZimbraLog.redolog.debug("sending %s txnId=%s mboxId=%s to stream %s", op.getOperation(), op.getTransactionId(), op.getMailboxId(), streamIndex);
         RFuture<StreamMessageId> future = streams.get(streamIndex).addAllAsync(fields);
         future.onComplete((streamId, e) -> {
             long elapsed = System.currentTimeMillis() - start;
