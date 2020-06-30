@@ -26,7 +26,6 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.regex.Pattern;
 
 import net.fortuna.ical4j.data.CalendarParser;
@@ -283,11 +282,10 @@ public class ZCalendar {
         public String getName() { return mName; }
         public ICalTok getTok() { return mTok; }
 
-        List<ZProperty> mProperties = new CopyOnWriteArrayList<ZProperty>();
+        List<ZProperty> mProperties = new ArrayList<ZProperty>();
         List<ZComponent> mComponents = new ArrayList<ZComponent>();
 
         public void addProperty(ZProperty prop) { mProperties.add(prop); }
-        public void removeProperty(ZProperty prop) { mProperties.remove(prop); }
         public void addComponent(ZComponent comp) { mComponents.add(comp); }
 
         public ZComponent getComponent(ICalTok tok) { return findComponent(mComponents, tok); }
