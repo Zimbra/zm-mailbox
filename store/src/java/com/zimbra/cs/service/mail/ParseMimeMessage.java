@@ -16,11 +16,8 @@
  */
 package com.zimbra.cs.service.mail;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -34,12 +31,10 @@ import javax.mail.MessagingException;
 import javax.mail.Part;
 import javax.mail.SendFailedException;
 import javax.mail.internet.InternetAddress;
-import javax.mail.internet.InternetHeaders;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.MimePart;
-import javax.mail.internet.MimeUtility;
 import javax.mail.util.SharedByteArrayInputStream;
 
 import com.google.common.base.Charsets;
@@ -567,13 +562,6 @@ public final class ParseMimeMessage {
         // or a multipart/alternative created just above....either way we are safe to stick
         // the client's nice and simple body right here
         String text = elem.getAttribute(MailConstants.E_CONTENT, "");
-        boolean isAscii = StringUtil.isAsciiString(text);
-        if (!isAscii) {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            OutputStream encodedOut = MimeUtility.encode(baos, MimeConstants.ET_QUOTED_PRINTABLE);
-            encodedOut.write(text.getBytes());
-            text = baos.toString();
-        }
         byte[] raw = text.getBytes(Charsets.UTF_8);
         if (raw.length > 0 || !LC.mime_exclude_empty_content.booleanValue() || ctype.getPrimaryType().equals("text")) {
             ctxt.incrementSize("message body", raw.length);
@@ -585,18 +573,9 @@ public final class ParseMimeMessage {
             Object content = ctype.getContentType().equals(ContentType.MESSAGE_RFC822) ?
                     new ZMimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(raw)) : text;
             if (mmp != null) {
-                if (!isAscii) {
-                    String mbpHeaders = "Content-Type: " + ctype.toString()
-                        + "\r\nContent-Transfer-Encoding: " + MimeConstants.ET_QUOTED_PRINTABLE
-                        + "\r\n";
-                    mmp.addBodyPart(new MimeBodyPart(
-                        new InternetHeaders(new ByteArrayInputStream(mbpHeaders.getBytes())),
-                        content.toString().getBytes()));
-                } else {
-                    MimeBodyPart mbp = new ZMimeBodyPart();
-                    mbp.setContent(content, ctype.toString());
-                    mmp.addBodyPart(mbp);
-                }
+                MimeBodyPart mbp = new ZMimeBodyPart();
+                mbp.setContent(content, ctype.toString());
+                mmp.addBodyPart(mbp);
             } else {
                 mm.setContent(content, ctype.toString());
             }
