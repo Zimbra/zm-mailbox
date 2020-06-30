@@ -12,7 +12,7 @@ FROM ${DOCKER_REPO_NS}/zms-db-conf:1.1 as db-conf
 FROM ${DOCKER_REPO_NS}/zms-admin-console:1.0.2 as admin-console
 FROM ${DOCKER_REPO_NS}/zms-ldap-utilities:1.2 as ldap
 FROM ${DOCKER_REPO_NS}/zms-timezones:1.1 as timezone
-FROM ${DOCKER_REPO_NS}/zms-core-network-extension:1.0.6 as ext-core-network
+FROM ${DOCKER_REPO_NS}/zms-core-network-extension:1.0.7 as ext-core-network
 FROM ${DOCKER_REPO_NS}/zms-core-zimlets:1.0.2 as zimlet-webapp
 FROM ${DOCKER_REPO_NS}/zms-classic-webclient:0.0.2 as zimbra-classic-webclient
 
