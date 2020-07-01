@@ -562,6 +562,8 @@ public final class ParseMimeMessage {
         // or a multipart/alternative created just above....either way we are safe to stick
         // the client's nice and simple body right here
         String text = elem.getAttribute(MailConstants.E_CONTENT, "");
+        boolean isAscii = StringUtil.isAsciiString(text);
+
         byte[] raw = text.getBytes(Charsets.UTF_8);
         if (raw.length > 0 || !LC.mime_exclude_empty_content.booleanValue() || ctype.getPrimaryType().equals("text")) {
             ctxt.incrementSize("message body", raw.length);
@@ -573,9 +575,24 @@ public final class ParseMimeMessage {
             Object content = ctype.getContentType().equals(ContentType.MESSAGE_RFC822) ?
                     new ZMimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(raw)) : text;
             if (mmp != null) {
-                MimeBodyPart mbp = new ZMimeBodyPart();
-                mbp.setContent(content, ctype.toString());
-                mmp.addBodyPart(mbp);
+                if (!isAscii) {
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    OutputStream encodedOut = MimeUtility.encode(baos, MimeConstants.ET_QUOTED_PRINTABLE);
+                    encodedOut.write(text.getBytes(charset));
+                    text = baos.toString();
+                    content = ctype.getContentType().equals(ContentType.MESSAGE_RFC822) ?
+                        new ZMimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(raw)) : text;
+                    String mbpHeaders = "Content-Type: " + ctype.toString()
+                        + "\r\nContent-Transfer-Encoding: " + MimeConstants.ET_QUOTED_PRINTABLE
+                        + "\r\n";
+                    mmp.addBodyPart(new MimeBodyPart(
+                        new InternetHeaders(new ByteArrayInputStream(mbpHeaders.getBytes())),
+                        content.toString().getBytes()));
+                } else {
+                    MimeBodyPart mbp = new ZMimeBodyPart();
+                    mbp.setContent(content, ctype.toString());
+                    mmp.addBodyPart(mbp);
+                }
             } else {
                 mm.setContent(content, ctype.toString());
             }
