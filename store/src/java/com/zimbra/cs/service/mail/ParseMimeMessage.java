@@ -573,12 +573,7 @@ public final class ParseMimeMessage {
         // the client's nice and simple body right here
         String text = elem.getAttribute(MailConstants.E_CONTENT, "");
         boolean isAscii = StringUtil.isAsciiString(text);
-        if (!isAscii) {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            OutputStream encodedOut = MimeUtility.encode(baos, MimeConstants.ET_QUOTED_PRINTABLE);
-            encodedOut.write(text.getBytes());
-            text = baos.toString();
-        }
+
         byte[] raw = text.getBytes(Charsets.UTF_8);
         if (raw.length > 0 || !LC.mime_exclude_empty_content.booleanValue() || ctype.getPrimaryType().equals("text")) {
             ctxt.incrementSize("message body", raw.length);
@@ -591,6 +586,12 @@ public final class ParseMimeMessage {
                     new ZMimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(raw)) : text;
             if (mmp != null) {
                 if (!isAscii) {
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    OutputStream encodedOut = MimeUtility.encode(baos, MimeConstants.ET_QUOTED_PRINTABLE);
+                    encodedOut.write(text.getBytes(charset));
+                    text = baos.toString();
+                    content = ctype.getContentType().equals(ContentType.MESSAGE_RFC822) ?
+                        new ZMimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(raw)) : text;
                     String mbpHeaders = "Content-Type: " + ctype.toString()
                         + "\r\nContent-Transfer-Encoding: " + MimeConstants.ET_QUOTED_PRINTABLE
                         + "\r\n";
