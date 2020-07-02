@@ -90,4 +90,11 @@ public class ExternalBlobInputStream extends BlobInputStream {
             return blob.getFile();
         }
     }
+
+    @Override
+    public void close() {
+        this.mbox = null; //prevent the finalizer queue from holding reference to mailbox object
+        super.close();
+    }
+
 }

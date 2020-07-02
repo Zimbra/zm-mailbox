@@ -39,6 +39,7 @@ import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.mailbox.Color;
+import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.service.ServiceException.Argument;
 import com.zimbra.common.soap.SoapFaultException;
@@ -505,26 +506,29 @@ public abstract class MailItemResource extends DavResource {
             writer.write(doc);
             configVal = new String(out.toByteArray(), "UTF-8");
 
-            if (configVal.length() > PROP_LENGTH_LIMIT)
-                for (Map.Entry<QName,Element> entry : mDeadProps.entrySet())
-                    ctxt.getResponseProp().addPropError(entry.getKey(), new DavException("prop length exceeded", DavProtocol.STATUS_INSUFFICIENT_STORAGE));
-        }
-        Mailbox mbox = null;
-        try {
-            mbox = getMailbox(ctxt);
-            mbox.lock.lock();
-            Metadata data = mbox.getConfig(ctxt.getOperationContext(), CONFIG_KEY);
-            if (data == null) {
-                data = new Metadata();
+            if (configVal.length() > PROP_LENGTH_LIMIT) {
+                for (Map.Entry<QName,Element> entry : mDeadProps.entrySet()) {
+                    ctxt.getResponseProp().addPropError(entry.getKey(),
+                            new DavException("prop length exceeded",
+                                    DavProtocol.STATUS_INSUFFICIENT_STORAGE));
+                }
             }
-            data.put(Integer.toString(mId), configVal);
-            mbox.setConfig(ctxt.getOperationContext(), CONFIG_KEY, data);
+        }
+        try {
+            Mailbox mbox = getMailbox(ctxt);
+            try (final MailboxLock rl = mbox.getWriteLockAndLockIt()) {
+                Metadata data = mbox.getConfig(ctxt.getOperationContext(), CONFIG_KEY);
+                if (data == null) {
+                    data = new Metadata();
+                }
+                data.put(Integer.toString(mId), configVal);
+                mbox.setConfig(ctxt.getOperationContext(), CONFIG_KEY, data);
+            }
         } catch (ServiceException se) {
-            for (QName qname : reqProps)
-                ctxt.getResponseProp().addPropError(qname, new DavException(se.getMessage(), HttpServletResponse.SC_FORBIDDEN));
-        } finally {
-            if (mbox != null)
-                mbox.lock.release();
+            for (QName qname : reqProps) {
+                ctxt.getResponseProp().addPropError(qname,
+                        new DavException(se.getMessage(), HttpServletResponse.SC_FORBIDDEN));
+            }
         }
     }
 

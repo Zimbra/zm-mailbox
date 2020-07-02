@@ -21,12 +21,19 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
+
+import io.leangen.graphql.annotations.GraphQLInputField;
+import io.leangen.graphql.annotations.GraphQLNonNull;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
 
 // See ParseMimeMessage.MessageAddresses.
 //
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name=GqlConstants.CLASS_EMAIL_ADDRESS_INFO, description="Email Addres Information")
 public class EmailAddrInfo {
 
     /**
@@ -34,6 +41,7 @@ public class EmailAddrInfo {
      * @zm-api-field-description Email address
      */
     @XmlAttribute(name=MailConstants.A_ADDRESS /* a */, required=true)
+    @GraphQLQuery(name=GqlConstants.ADDRESS, description="Email address")
     private final String address;
 
     /**
@@ -59,25 +67,38 @@ public class EmailAddrInfo {
         this((String) null);
     }
 
-    public EmailAddrInfo(String address) {
+    public EmailAddrInfo(@GraphQLNonNull @GraphQLInputField String address) {
         this.address = address;
     }
 
     public static EmailAddrInfo createForAddressPersonalAndAddressType(String address,
             String personalName, String addressType) {
-        EmailAddrInfo eai = new EmailAddrInfo(address);
+        final EmailAddrInfo eai = new EmailAddrInfo(address);
         eai.setPersonal(personalName);
         eai.setAddressType(addressType);
         return eai;
     }
-
-    public void setAddressType(String addressType) { this.addressType = addressType; }
+    @GraphQLInputField(name=GqlConstants.ADDRESS_TYPE, description="Address type\n "
+        + "> Valid values:\n "
+        + "* f: from\n "
+        + "* t: to\n "
+        + "* c: cc\n "
+        + "* b: bcc\n "
+        + "* r: reply-to\n "
+        + "* s: sender\n "
+        + "* read-receipt\n "
+        + "* n: notification\n "
+        + "* rf: resent-from")
+    public void setAddressType(@GraphQLNonNull String addressType) { this.addressType = addressType; }
+    @GraphQLInputField(name=GqlConstants.PERSONAL, description="The comment/name part of an address")
     public void setPersonal(String personal) { this.personal = personal; }
     public String getAddress() { return address; }
+    @GraphQLQuery(name=GqlConstants.ADDRESS_TYPE, description="Address type - (f)rom, (t)o, (c)c, (b)cc, (r)eply-to, (s)ender, read-receipt (n)otification, (rf) resent-from")
     public String getAddressType() { return addressType; }
+    @GraphQLQuery(name=GqlConstants.PERSONAL, description="The comment/name part of an address")
     public String getPersonal() { return personal; }
 
-    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         return helper
             .add("address", address)
             .add("addressType", addressType)
@@ -86,6 +107,6 @@ public class EmailAddrInfo {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this)).toString();
+        return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
     }
 }

@@ -17,7 +17,7 @@
 
 package com.zimbra.soap.account.message;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -76,7 +76,7 @@ public class GetDistributionListMembersRequest {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
             .add("limit", limit)
             .add("offset", offset)
             .add("dl", dl)

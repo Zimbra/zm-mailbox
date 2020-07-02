@@ -19,19 +19,23 @@ package com.zimbra.soap.mail.type;
 
 import java.util.List;
 
-import com.google.common.base.Objects;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.EmailInfoInterface;
 import com.zimbra.soap.type.ZmBoolean;
 
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name=GqlConstants.CLASS_EMAIL_INFO, description="Email information")
 public class EmailInfo
 implements EmailInfoInterface {
 
@@ -124,37 +128,45 @@ implements EmailInfoInterface {
     }
 
     @Override
+    @GraphQLQuery(name=GqlConstants.ADDRESS, description="The email address")
     public String getAddress() { return address; }
     @Override
+    @GraphQLQuery(name=GqlConstants.DISPLAY, description="The email addresses display name. Example: \"Jane Doe\" <local@domain.com>")
     public String getDisplay() { return display; }
     @Override
+    @GraphQLQuery(name=GqlConstants.PERSONAL, description="The comment/name part of an address")
     public String getPersonal() { return personal; }
     @Override
+    @GraphQLQuery(name=GqlConstants.ADDRESS_TYPE, description="Address type. Example: (f)rom, (t)o, (c)c, (b)cc, (r)eply-to, (s)ender, read-receipt (n)otification, (rf) resent-from")
     public String getAddressType() { return addressType; }
     @Override
+    @GraphQLQuery(name=GqlConstants.GROUP, description="Set if the email address is a group")
     public Boolean getGroup() { return ZmBoolean.toBool(group); }
     @Override
+    @GraphQLQuery(name=GqlConstants.IS_GROUP_MEMBERS_EXPANDABLE, description="Denotes whether the group can be expanded showing its members")
     public Boolean getCanExpandGroupMembers() { return ZmBoolean.toBool(canExpandGroupMembers); }
 
     public static Iterable <EmailInfo> fromInterfaces(Iterable <EmailInfoInterface> ifs) {
-        if (ifs == null)
+        if (ifs == null) {
             return null;
-        List <EmailInfo> newList = Lists.newArrayList();
-        for (EmailInfoInterface listEnt : ifs) {
+        }
+        final List <EmailInfo> newList = Lists.newArrayList();
+        for (final EmailInfoInterface listEnt : ifs) {
             newList.add((EmailInfo) listEnt);
         }
         return newList;
     }
 
     public static List <EmailInfoInterface> toInterfaces(Iterable <EmailInfo> params) {
-        if (params == null)
+        if (params == null) {
             return null;
-        List <EmailInfoInterface> newList = Lists.newArrayList();
+        }
+        final List <EmailInfoInterface> newList = Lists.newArrayList();
         Iterables.addAll(newList, params);
         return newList;
     }
 
-    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         return helper
             .add("address", address)
             .add("display", display)
@@ -166,6 +178,6 @@ implements EmailInfoInterface {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this)).toString();
+        return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
     }
 }

@@ -16,7 +16,6 @@
  */
 package com.zimbra.cs.service.mail;
 
-import com.google.common.io.Closeables;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.share.ShareNotification;
@@ -59,10 +58,7 @@ public class GetShareNotifications extends MailDocumentHandler {
         OperationContext octxt = getOperationContext(zsc, context);
         Element response = zsc.createElement(MailConstants.GET_SHARE_NOTIFICATIONS_RESPONSE);
         HashSet<String> shares = new HashSet<String>();
-
-        ZimbraQueryResults zqr = null;
-        try {
-            zqr = mbox.index.search(octxt, query, SEARCH_TYPES, SortBy.DATE_DESC, 10);
+        try(ZimbraQueryResults zqr = mbox.index.search(octxt, query, SEARCH_TYPES, SortBy.DATE_DESC, 10)) {
             while (zqr.hasNext()) {
                 ZimbraHit hit = zqr.getNext();
                 if (hit instanceof MessageHit) {
@@ -113,8 +109,7 @@ public class GetShareNotifications extends MailDocumentHandler {
                     }
                 }
             }
-        } finally {
-            Closeables.closeQuietly(zqr);
+        } catch (IOException e) {
         }
 
         return response;

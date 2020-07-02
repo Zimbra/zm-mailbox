@@ -26,6 +26,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.http.HttpException;
+
 import com.zimbra.common.calendar.ICalTimeZone;
 import com.zimbra.common.calendar.ZCalendar;
 import com.zimbra.common.calendar.ZCalendar.ZComponent;
@@ -65,7 +67,7 @@ public class CalDavDataImport extends MailItemImport {
     private static final String METADATA_KEY_CTAG = "c";
     private static final int DEFAULT_FOLDER_FLAGS = Flag.BITMASK_CHECKED;
 
-    private CalDavClient mClient;
+    protected CalDavClient mClient;
 
     private static class CalendarFolder {
         public int id;
@@ -99,6 +101,8 @@ public class CalDavDataImport extends MailItemImport {
             throw ServiceException.FAILURE("error importing CalDAV data", e);
         } catch (IOException e) {
             throw ServiceException.FAILURE("error importing CalDAV data", e);
+        } catch (HttpException e) {
+            throw ServiceException.FAILURE("error importing CalDAV data", e);
         }
     }
 
@@ -106,7 +110,7 @@ public class CalDavDataImport extends MailItemImport {
     public void test() throws ServiceException {
         mClient = new CalDavClient(getTargetUrl());
         mClient.setAppName(getAppName());
-        mClient.setCredential(getUsername(), getDecryptedPassword());
+        mClient.setCredential(getUsername(), getDecryptedPassword(), getTargetUrl());
         mClient.setDebugEnabled(dataSource.isDebugTraceEnabled());
         try {
             mClient.login(getDefaultPrincipalUrl());
@@ -158,11 +162,11 @@ public class CalDavDataImport extends MailItemImport {
         return "ZCS";
     }
 
-    private CalDavClient getClient() throws ServiceException, IOException, DavException {
+    protected CalDavClient getClient() throws ServiceException, IOException, DavException, HttpException {
         if (mClient == null) {
             mClient = new CalDavClient(getTargetUrl());
             mClient.setAppName(getAppName());
-            mClient.setCredential(getUsername(), getDecryptedPassword());
+            mClient.setCredential(getUsername(), getDecryptedPassword(), getTargetUrl());
             mClient.setDebugEnabled(dataSource.isDebugTraceEnabled());
             mClient.login(getDefaultPrincipalUrl());
         }
@@ -196,7 +200,7 @@ public class CalDavDataImport extends MailItemImport {
         return folders;
     }
 
-    private ArrayList<CalendarFolder> syncFolders() throws ServiceException, IOException, DavException {
+    private ArrayList<CalendarFolder> syncFolders() throws ServiceException, IOException, DavException, HttpException {
         ArrayList<CalendarFolder> ret = new ArrayList<CalendarFolder>();
         DataSource ds = getDataSource();
         OperationContext octxt = new OperationContext(mbox);
@@ -332,7 +336,7 @@ public class CalDavDataImport extends MailItemImport {
         mbox.setSyncDate(octxt, rootFolder.getId(), mbox.getLastChangeID());
         return ret;
     }
-    private void deleteRemoteFolder(String url) throws ServiceException, IOException, DavException {
+    private void deleteRemoteFolder(String url) throws ServiceException, IOException, DavException, HttpException {
         ZimbraLog.datasource.debug("deleteRemoteFolder: deleting remote folder %s", url);
         getClient().sendRequest(DavRequest.DELETE(url));
     }
@@ -354,7 +358,7 @@ public class CalDavDataImport extends MailItemImport {
         }
         return deleted;
     }
-    private void deleteRemoteItem(DataSourceItem item) throws ServiceException, IOException, DavException {
+    private void deleteRemoteItem(DataSourceItem item) throws ServiceException, IOException, DavException, HttpException {
         if (item.itemId <= 0 || item.md == null) {
             ZimbraLog.datasource.warn("pushDelete: empty item %d", item.itemId);
             return;
@@ -396,7 +400,7 @@ public class CalDavDataImport extends MailItemImport {
         }
         return url;
     }
-    private void pushModify(MailItem mitem) throws ServiceException, IOException, DavException {
+    private void pushModify(MailItem mitem) throws ServiceException, IOException, DavException, HttpException{
         int itemId = mitem.getId();
         DataSource ds = getDataSource();
         DataSourceItem item = DbDataSource.getMapping(ds, itemId);
@@ -440,7 +444,7 @@ public class CalDavDataImport extends MailItemImport {
             return;
         }
     }
-    private String putAppointment(CalendarItem calItem, DataSourceItem dsItem) throws ServiceException, IOException, DavException {
+    private String putAppointment(CalendarItem calItem, DataSourceItem dsItem) throws ServiceException, IOException, DavException, HttpException {
         StringBuilder buf = new StringBuilder();
         ArrayList<String> recipients = new ArrayList<String>();
 
@@ -477,7 +481,7 @@ public class CalDavDataImport extends MailItemImport {
         Appointment appt = new Appointment(dsItem.remoteId, etag, buf.toString(), recipients);
         return getClient().sendCalendarData(appt);
     }
-    private List<RemoteItem> getRemoteItems(Folder folder) throws ServiceException, IOException, DavException {
+    private List<RemoteItem> getRemoteItems(Folder folder) throws ServiceException, IOException, DavException, HttpException {
         ZimbraLog.datasource.debug("Refresh folder %s", folder.getPath());
         DataSource ds = getDataSource();
         DataSourceItem item = DbDataSource.getMapping(ds, folder.getId());
@@ -513,7 +517,7 @@ public class CalDavDataImport extends MailItemImport {
             DbDataSource.deleteMappings(ds, deletedIds);
         return ret;
     }
-    private MailItem applyRemoteItem(RemoteItem remoteItem, Folder where) throws ServiceException, IOException {
+    private MailItem applyRemoteItem(RemoteItem remoteItem, Folder where) throws ServiceException, IOException, HttpException {
         if (!(remoteItem instanceof RemoteCalendarItem)) {
             ZimbraLog.datasource.warn("applyRemoteItem: not a calendar item: %s", remoteItem);
             return null;
@@ -626,7 +630,7 @@ public class CalDavDataImport extends MailItemImport {
         return mi;
     }
 
-    private void sync(OperationContext octxt, CalendarFolder cf) throws ServiceException, IOException, DavException {
+    private void sync(OperationContext octxt, CalendarFolder cf) throws ServiceException, IOException, DavException, HttpException {
         Folder syncFolder = cf.folder;
         int lastSync = (int)syncFolder.getLastSyncDate();  // hack alert: caldav import uses sync date field to store sync token
         int currentSync = lastSync;

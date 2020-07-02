@@ -20,7 +20,12 @@ package com.zimbra.soap.type;
 import javax.xml.bind.annotation.XmlEnum;
 import javax.xml.bind.annotation.XmlEnumValue;
 
+import com.zimbra.common.gql.GqlConstants;
+
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlEnum
+@GraphQLType(name=GqlConstants.CLASS_INCLUDE_RECIPS_SETTING)
 public enum WantRecipsSetting {
     @XmlEnumValue("0") PUT_SENDERS,
     @XmlEnumValue("1") PUT_RECIPIENTS,

@@ -16,6 +16,8 @@
  */
 package com.zimbra.soap;
 
+import java.time.Instant;
+import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Random;
@@ -154,6 +156,7 @@ public final class ZimbraSoapContext {
     private int mHopCount;
     private boolean mMountpointTraversed;
 
+    private String mOriginalUserAgent;
     private String mUserAgent;
     private String mRequestIP;
     private Integer mPort;
@@ -175,7 +178,15 @@ public final class ZimbraSoapContext {
     public ZimbraSoapContext(AuthToken authToken, String accountId,
             SoapProtocol reqProtocol, SoapProtocol respProtocol, int hopCount)
         throws ServiceException {
+        this(authToken, accountId, reqProtocol, respProtocol, hopCount, null);
+    }
 
+    /**
+     * Added via as new constructor argument for smx/idbridge
+     */
+    public ZimbraSoapContext(AuthToken authToken, String accountId,
+            SoapProtocol reqProtocol, SoapProtocol respProtocol, int hopCount, String via)
+        throws ServiceException {
         mAuthToken = authToken;
         mRawAuthToken = authToken.toZAuthToken();
         mAuthTokenAccountId = authToken.getAccountId();
@@ -184,9 +195,9 @@ public final class ZimbraSoapContext {
         mResponseProtocol = respProtocol;
         mSessionEnabled = false;
         mHopCount = hopCount;
-
-        mUserAgent = mRequestIP = mVia = null;
+        mUserAgent = mRequestIP = null;
         soapRequestId = null;
+        mVia = via;
     }
 
     /**
@@ -286,6 +297,9 @@ public final class ZimbraSoapContext {
 
         try {
             mAuthToken = AuthProvider.getAuthToken(ctxt, context);
+            if (mAuthToken == null) {
+                mAuthToken = AuthProvider.getJWToken(ctxt, context);
+            }
             if (mAuthToken != null) {
                 boolean isRegistered = mAuthToken.isRegistered();
                 boolean isExpired = mAuthToken.isExpired();
@@ -303,9 +317,10 @@ public final class ZimbraSoapContext {
                         // erase the auth token and continue
                         mAuthToken = null;
                     } else {
-                        if (sLog.isDebugEnabled()) {
-                            sLog.debug("Throwing AUTH_EXPIRED for token:%s expired=%s registered=%s",
-                                    mAuthToken, isExpired, isRegistered);
+                        if (sLog.isInfoEnabled()) {
+                            sLog.info("Throwing AUTH_EXPIRED for token:%s expired=%s registered=%s expires=%s",
+                                    mAuthToken, isExpired, isRegistered, DateTimeFormatter.ISO_INSTANT.format(
+                                            Instant.ofEpochMilli(mAuthToken.getExpires())));
                         }
                         throw ServiceException.AUTH_EXPIRED();
                     }
@@ -395,7 +410,7 @@ public final class ZimbraSoapContext {
         if (targetServerId != null) {
             HttpServletRequest req = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
             if (req != null) {
-                mProxyTarget = new ProxyTarget(targetServerId, mAuthToken, req);
+                mProxyTarget = new ServerProxyTarget(targetServerId, mAuthToken, req);
                 mIsProxyRequest = !mProxyTarget.isTargetLocal();
             } else {
                 sLog.warn("Missing SERVLET_REQUEST key in request context");
@@ -467,6 +482,7 @@ public final class ZimbraSoapContext {
 
         mRequestIP = (String) context.get(SoapEngine.REQUEST_IP);
         mPort = (Integer) context.get(SoapEngine.REQUEST_PORT);
+        mOriginalUserAgent = (String) context.get(SoapEngine.ORIG_REQUEST_USER_AGENT);
 
     }
 
@@ -943,6 +959,10 @@ public final class ZimbraSoapContext {
         return mIsProxyRequest;
     }
 
+    public String getOriginalUserAgent() {
+        return mOriginalUserAgent;
+    }
+
     /**
      * Returns the name and version of the client that's making the current
      * request, in the format "name/version".
@@ -987,7 +1007,7 @@ public final class ZimbraSoapContext {
      *
      * @return {@code via} header value
      */
-    String getVia() {
+    public String getVia() {
         return mVia;
     }
 

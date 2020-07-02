@@ -17,7 +17,7 @@
 
 package com.zimbra.soap.mail.type;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
@@ -29,12 +29,21 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 
 import com.zimbra.soap.base.XPropInterface;
+
+import io.leangen.graphql.annotations.GraphQLIgnore;
+import io.leangen.graphql.annotations.GraphQLInputField;
+import io.leangen.graphql.annotations.GraphQLNonNull;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 import com.zimbra.soap.base.XParamInterface;
 
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name=GqlConstants.CLASS_XPROP, description="Non-standard property")
 public class XProp implements XPropInterface {
 
     /**
@@ -42,6 +51,8 @@ public class XProp implements XPropInterface {
      * @zm-api-field-description XPROP name
      */
     @XmlAttribute(name=MailConstants.A_NAME, required=true)
+    @GraphQLNonNull
+    @GraphQLQuery(name=GqlConstants.NAME, description="XPROP name")
     private final String name;
 
     /**
@@ -49,12 +60,14 @@ public class XProp implements XPropInterface {
      * @zm-api-field-description XPROP value
      */
     @XmlAttribute(name=MailConstants.A_VALUE, required=true)
+    @GraphQLQuery(name=GqlConstants.VALUE, description="XPROP value")
     private final String value;
 
     /**
      * @zm-api-field-description XPARAMs
      */
     @XmlElement(name=MailConstants.E_CAL_XPARAM, required=false)
+    @GraphQLQuery(name=GqlConstants.XPARAMS, description="XPARAMs")
     private List<XParam> xParams = Lists.newArrayList();
 
     /**
@@ -65,16 +78,20 @@ public class XProp implements XPropInterface {
         this((String) null, (String) null);
     }
 
-    public XProp(String name, String value) {
+    public XProp(
+        @GraphQLNonNull @GraphQLInputField(name=GqlConstants.NAME) String name,
+        @GraphQLNonNull @GraphQLInputField(name=GqlConstants.VALUE) String value) {
         this.name = name;
         this.value = value;
     }
 
     @Override
+    @GraphQLIgnore
     public XPropInterface createFromNameAndValue(String name, String value) {
         return new XProp(name, value);
     }
 
+    @GraphQLInputField(name=GqlConstants.XPARAMS, description="XPARAMs") 
     public void setXParams(Iterable <XParam> xParams) {
         this.xParams.clear();
         if (xParams != null) {
@@ -82,6 +99,7 @@ public class XProp implements XPropInterface {
         }
     }
 
+    @GraphQLIgnore
     public XProp addXParam(XParam xParam) {
         this.xParams.add(xParam);
         return this;
@@ -92,13 +110,14 @@ public class XProp implements XPropInterface {
     @Override
     public String getValue() { return value; }
 
+    @GraphQLQuery(name=GqlConstants.XPARAMS, description="XPARAMs")
     public List<XParam> getXParams() {
         return Collections.unmodifiableList(xParams);
     }
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
             .add("name", name)
             .add("value", value)
             .add("xParams", xParams)
@@ -106,16 +125,19 @@ public class XProp implements XPropInterface {
     }
 
     @Override
+    @GraphQLIgnore
     public void setXParamInterfaces(Iterable<XParamInterface> xParams) {
         setXParams(XParam.fromInterfaces(xParams));
     }
 
     @Override
+    @GraphQLIgnore
     public void addXParamInterface(XParamInterface xParam) {
         addXParam((XParam) xParam);
     }
 
     @Override
+    @GraphQLIgnore
     public List<XParamInterface> getXParamInterfaces() {
         return XParam.toInterfaces(xParams);
     }

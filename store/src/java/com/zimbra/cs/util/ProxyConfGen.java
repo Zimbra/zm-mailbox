@@ -333,6 +333,10 @@ class ProxyConfVar
 
     String generateServerDirective(Server server, String serverName, String portName) {
         int serverPort = server.getIntAttr(portName, 0);
+        return generateServerDirective(server, serverName, serverPort);
+    }
+
+    String generateServerDirective(Server server, String serverName, int serverPort) {
         int timeout = server.getIntAttr(
                 Provisioning.A_zimbraMailProxyReconnectTimeout, 60);
         String version = server.getAttr(Provisioning.A_zimbraServerVersion, "");
@@ -694,7 +698,8 @@ class WebAdminUpstreamAdminClientServersVar extends ProxyConfVar {
     public WebAdminUpstreamAdminClientServersVar() {
         super("web.admin.upstream.:servers", null, null, ProxyConfValueType.CUSTOM,
                 ProxyConfOverride.CUSTOM,
-                "List of upstream HTTPS Admin client servers used by Web Proxy");
+                "List of upstream HTTPS Admin client servers used by Web Proxy. " +
+                "Can be overridden by zimbra_admin_soap_service LC.");
     }
 
     @Override
@@ -702,14 +707,26 @@ class WebAdminUpstreamAdminClientServersVar extends ProxyConfVar {
         ArrayList<String> directives = new ArrayList<String>();
         String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyAdminPortAttribute, "");
 
-        List<Server> adminclientservers = mProv.getAllAdminClientServers();
-        for (Server server : adminclientservers) {
-            String serverName = server.getAttr(
-                    Provisioning.A_zimbraServiceHostname, "");
+        // The zimbra_admin_soap_service value, if not empty, must be registered as a _server_ in LDAP
+        String adminSoapService = LC.zimbra_admin_soap_service.value();
+        if (adminSoapService.length() > 0) {
+            Server server = mProv.getServerByName(adminSoapService);
+            if (server != null) {
+                directives.add(generateServerDirective(server, adminSoapService, portName));
+                mLog.debug("Added service to HTTPS Admin client upstream: %s", adminSoapService);
+            } else {
+                mLog.error("Server lookup error. Server name: '%s'", adminSoapService);
+            }
+        } else {
+            List<Server> adminclientservers = mProv.getAllAdminClientServers();
+            for (Server server : adminclientservers) {
+                String serverName = server.getAttr(
+                        Provisioning.A_zimbraServiceHostname, "");
 
-            if (isValidUpstream(server, serverName)) {
-                directives.add(generateServerDirective(server, serverName, portName));
-                mLog.debug("Added server to HTTPS Admin client upstream: " + serverName);
+                if (isValidUpstream(server, serverName)) {
+                    directives.add(generateServerDirective(server, serverName, portName));
+                    mLog.debug("Added server to HTTPS Admin client upstream: %s", serverName);
+                }
             }
         }
         mValue = directives;
@@ -769,6 +786,12 @@ class MemcacheServersVar extends ProxyConfVar {
                 mLog.error("Error resolving memcached host name: '" + serverName + "'", pce);
             }
         }
+        String MEMCACHED_SERVERS = System.getenv("MEMCACHED_SERVERS");
+        if (MEMCACHED_SERVERS != null) {
+            for (String server : MEMCACHED_SERVERS.replace("\n", " ").split(" ")) {
+                servers.add(server);
+            }
+        }
         if (servers.isEmpty()) {
             throw new ProxyConfException ("No available memcached servers could be contacted");
         }
@@ -780,8 +803,15 @@ class MemcacheServersVar extends ProxyConfVar {
         @SuppressWarnings("unchecked")
         ArrayList<String> servers = (ArrayList<String>) o;
         StringBuilder conf = new StringBuilder();
+
+        boolean indent = false;
         for (String s : servers) {
-            conf.append("  servers   ");
+            if (!indent) {
+                conf.append("servers   ");
+                indent = true;
+            } else {
+                conf.append("    servers   ");
+            }
             conf.append(s);
             conf.append(";\n");
         }
@@ -890,58 +920,98 @@ class WebUpstreamServersVar extends ServersVar {
     }
 }
 
+class WebUpstreamZxServersVar extends ServersVar {
+
+    public WebUpstreamZxServersVar() {
+        super("web.upstream.zx.:servers", null,
+              "List of upstream HTTP servers towards zx port used by Web Proxy (i.e. servers " +
+                "for which zimbraReverseProxyLookupTarget is true, and whose " +
+                "mail mode is http|https|mixed|both)");
+    }
+
+    @Override
+    public void update() throws ServiceException {
+        ArrayList<String> directives = new ArrayList<String>();
+
+        List<Server> mailclientservers = mProv.getAllMailClientServers();
+        for (Server server : mailclientservers) {
+            String serverName = server.getAttr(
+              Provisioning.A_zimbraServiceHostname, "");
+
+            if (isValidUpstream(server, serverName)) {
+                directives.add(generateServerDirective(server, serverName, ProxyConfGen.ZIMBRA_UPSTREAM_ZX_PORT));
+                mLog.debug("Added server to HTTP zx upstream: " + serverName);
+            }
+        }
+        mValue = directives;
+    }
+}
+
+class WebSslUpstreamZxServersVar extends ServersVar {
+
+    public WebSslUpstreamZxServersVar() {
+        super("web.ssl.upstream.zx.:servers", null,
+              "List of upstream HTTPS servers towards zx ssl port used by Web Proxy (i.e. servers " +
+                "for which zimbraReverseProxyLookupTarget is true, and whose " +
+                "mail mode is http|https|mixed|both)");
+    }
+
+    @Override
+    public void update() throws ServiceException {
+        ArrayList<String> directives = new ArrayList<String>();
+
+        List<Server> mailclientservers = mProv.getAllMailClientServers();
+        for (Server server : mailclientservers) {
+            String serverName = server.getAttr(
+              Provisioning.A_zimbraServiceHostname, "");
+
+            if (isValidUpstream(server, serverName)) {
+                directives.add(generateServerDirective(server, serverName, ProxyConfGen.ZIMBRA_UPSTREAM_SSL_ZX_PORT));
+                mLog.debug("Added server to HTTPS zx ssl upstream: " + serverName);
+            }
+        }
+        mValue = directives;
+    }
+}
+
 class WebSSLUpstreamServersVar extends ServersVar {
 
     public WebSSLUpstreamServersVar() {
     	super("web.ssl.upstream.:servers", Provisioning.A_zimbraReverseProxyHttpSSLPortAttribute,
     			"List of upstream HTTPS servers used by Web Proxy (i.e. servers " +
     			"for which zimbraReverseProxyLookupTarget is true, and whose " +
-    			"mail mode is https|mixed|both)");
+                "mail mode is https|mixed|both). Can be overridden by zimbra_soap_server LC.");
     }
 
     @Override
     public void update() throws ServiceException {
     	ArrayList<String> directives = new ArrayList<String>();
-    	String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyHttpSSLPortAttribute, "");
+        String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyHttpSSLPortAttribute, "");
 
-    	List<Server> mailclientservers = mProv.getAllMailClientServers();
-    	for (Server server : mailclientservers) {
-    		String serverName = server.getAttr(
-    				Provisioning.A_zimbraServiceHostname, "");
 
-    		if (isValidUpstream(server, serverName)) {
-    			directives.add(generateServerDirective(server, serverName, portName));
-    			mLog.debug("Added server to HTTPS mailstore upstream: " + serverName);
-    		}
-    	}
+        String soapService = LC.zimbra_soap_service.value();
+        if (soapService.length() > 0) {
+            Server server = mProv.getServerByName(soapService);
+            if (server != null) {
+                directives.add(generateServerDirective(server, soapService, portName));
+                mLog.debug("Added service to HTTPS mailstore upstream: %s", soapService);
+            } else {
+                mLog.error("Server lookup error. Server name: '%s'", soapService);
+            }
+        } else {
+            List<Server> mailclientservers = mProv.getAllMailClientServers();
+            for (Server server : mailclientservers) {
+                String serverName = server.getAttr(
+                        Provisioning.A_zimbraServiceHostname, "");
+
+                if (isValidUpstream(server, serverName)) {
+                    directives.add(generateServerDirective(server, serverName, portName));
+                    mLog.debug("Added server to HTTPS mailstore upstream: %s", serverName);
+                }
+            }
+        }
     	mValue = directives;
     }
-}
-
-class WebAdminUpstreamServersVar extends ServersVar {
-	public WebAdminUpstreamServersVar() {
-		super("web.admin.upstream.:servers", Provisioning.A_zimbraReverseProxyAdminPortAttribute,
-				"List of upstream admin console servers used by Web Proxy (i.e. servers " +
-				"for which zimbraReverseProxyLookupTarget is true");
-	}
-
-	@Override
-	public void update() throws ServiceException {
-		ArrayList<String> directives = new ArrayList<String>();
-		String portName = configSource.getAttr(Provisioning.A_zimbraReverseProxyAdminPortAttribute, "");
-
-		List<Server> mailclientservers = mProv.getAllMailClientServers();
-		for (Server server : mailclientservers) {
-			String serverName = server.getAttr(
-					Provisioning.A_zimbraServiceHostname, "");
-
-			if (isValidUpstream(server, serverName)) {
-				directives.add(generateServerDirective(server, serverName, portName));
-				mLog.debug("Added server to HTTPS Admin mailstore upstream: " + serverName);
-			}
-		}
-		mValue = directives;
-	}
 }
 
 class WebEwsUpstreamServersVar extends ServersVar {
@@ -1652,6 +1722,22 @@ class XmppBoshProxyUpstreamProtoVar extends ProxyConfVar {
     }
 }
 
+class WebProxyUpstreamZxTargetVar extends ProxyConfVar {
+    public WebProxyUpstreamZxTargetVar() {
+        super("web.upstream.schema", Provisioning.A_zimbraReverseProxySSLToUpstreamEnabled, true, ProxyConfValueType.BOOLEAN,
+              ProxyConfOverride.SERVER, "The target for zx paths");
+    }
+
+    @Override
+    public String format(Object o) throws ProxyConfException {
+        Boolean value = (Boolean)o;
+        if(value == false) {
+            return "http://" + ProxyConfGen.ZIMBRA_UPSTREAM_ZX_NAME;
+        } else {
+            return "https://" + ProxyConfGen.ZIMBRA_SSL_UPSTREAM_ZX_NAME;
+        }
+    }
+}
 
 class WebSSLSessionCacheSizeVar extends ProxyConfVar {
 
@@ -1697,6 +1783,77 @@ class EwsEnablerVar extends WebEnablerVar {
         }
     }
 }
+
+
+class UnSupportedBrowserRedirectToClassicEnablerVar extends WebEnablerVar {
+
+	public UnSupportedBrowserRedirectToClassicEnablerVar() {
+        super("web.unsupported.browser.redirect.classic.disable", "#","Whether to redirect to classic UI for the selected browsers not supported by Modern WebClient");
+    }
+
+	@Override
+    public String format(Object o)  {
+        if (configSource.getBooleanAttr(Provisioning.A_zimbraWebclientUnsupportedBrowserRedirectToClassicEnabled, false)) {
+            return "";
+        } else {
+            return "#";
+        }
+    }
+}
+
+class UnSupportedBrowserRedirectToClassicUserAgentsVar extends ProxyConfVar {
+	public UnSupportedBrowserRedirectToClassicUserAgentsVar() {
+        super("web.unsupported.browser.redirect.classic.user.agents",Provisioning.A_zimbraWebclientUnsupportedBrowserRedirectToClassicUserAgents,
+              "$-", ProxyConfValueType.STRING, ProxyConfOverride.CONFIG, "Regex for unsupported browsers by Modern webclient to redirect to classic webclient");
+    }
+
+	@Override
+    public void update() throws ServiceException {
+        mValue = mProv.getConfig().getWebclientUnsupportedBrowserRedirectToClassicUserAgents();
+    }
+}
+
+
+class UnSupportedBrowserRedirectToErroPageEnablerVar extends WebEnablerVar {
+	public UnSupportedBrowserRedirectToErroPageEnablerVar() {
+        super("web.unsupported.browser.redirect.error.page.disable", "#","Whether to redirect to error page for the selected browsers not supported by Modern WebClient");
+    }
+
+	@Override
+    public String format(Object o)  {
+        if (configSource.getBooleanAttr(Provisioning.A_zimbraWebclientUnsupportedBrowserRedirectToErrorPageEnabled, false)) {
+            return "";
+        } else {
+            return "#";
+        }
+    }
+}
+
+class UnSupportedBrowserRedirectToErrorPageUserAgentsVar extends ProxyConfVar {
+	public UnSupportedBrowserRedirectToErrorPageUserAgentsVar() {
+        super("web.unsupported.browser.redirect.error.page.user.agents", Provisioning.A_zimbraWebclientUnsupportedBrowserRedirectToErrorPageUserAgents,
+              "$-", ProxyConfValueType.STRING, ProxyConfOverride.CONFIG, "Regex for unsupported browsers to redirect to error page");
+    }
+
+	@Override
+    public void update() throws ServiceException {
+        mValue = mProv.getConfig().getWebclientUnsupportedBrowserRedirectToErrorPageUserAgents();
+    }
+}
+
+class UnSupportedBrowserErrorPageURLVar extends ProxyConfVar {
+	public UnSupportedBrowserErrorPageURLVar() {
+        super("web.unsupported.browser.error.page.url", Provisioning.A_zimbraWebclientUnsupportedBrowserRedirectToErrorPageURL,
+              "", ProxyConfValueType.STRING, ProxyConfOverride.CONFIG, "URL of error page for unsupported browser.");
+    }
+
+	@Override
+    public void update() throws ServiceException {
+        mValue = mProv.getConfig().getWebclientUnsupportedBrowserRedirectToErrorPageURL();
+    }
+}
+
+
 
 /**
  *
@@ -1753,6 +1910,30 @@ class WebXmppBoshEnablerVar extends ProxyConfVar {
                 mValue = false;
             }
         }
+    }
+}
+
+/**
+ * Simplified container object for a server
+ * @author Davide Baldo
+ */
+class ServerAttrItem {
+    public String zimbraId;
+    public String hostname;
+    public String[] services;
+
+    public ServerAttrItem(String zimbraId, String hostname, String[] services) {
+        this.zimbraId = zimbraId;
+        this.hostname = hostname;
+        this.services = services;
+    }
+
+    public boolean hasService(String service)
+    {
+        for( String current : services ) {
+            if( service.equals(current) ) return true;
+        }
+        return false;
     }
 }
 
@@ -1977,6 +2158,7 @@ public class ProxyConfGen
     private static Map<String, String> mVars = new HashMap<String, String>();
     private static Map<String, ProxyConfVar> mDomainConfVars = new HashMap<String, ProxyConfVar>();
     static List<DomainAttrItem> mDomainReverseProxyAttrs;
+    static List<ServerAttrItem> mServerAttrs;
     static Set<String> mListenAddresses = new HashSet<String>();
 
     static final String ZIMBRA_UPSTREAM_NAME = "zimbra";
@@ -1989,6 +2171,10 @@ public class ProxyConfGen
     static final String ZIMBRA_SSL_UPSTREAM_EWS_NAME = "zimbra_ews_ssl";
     static final String ZIMBRA_UPSTREAM_LOGIN_NAME = "zimbra_login";
     static final String ZIMBRA_SSL_UPSTREAM_LOGIN_NAME = "zimbra_login_ssl";
+    static final String ZIMBRA_UPSTREAM_ZX_NAME = "zx";
+    static final String ZIMBRA_SSL_UPSTREAM_ZX_NAME = "zx_ssl";
+    static final int    ZIMBRA_UPSTREAM_ZX_PORT = 8742;
+    static final int    ZIMBRA_UPSTREAM_SSL_ZX_PORT = 8743;
 
     /** the pattern for custom header cmd, such as "!{explode domain} */
     private static Pattern cmdPattern = Pattern.compile("(.*)\\!\\{([^\\}]+)\\}(.*)", Pattern.DOTALL);
@@ -2037,6 +2223,35 @@ public class ProxyConfGen
         }
 
         return cl;
+    }
+
+    /**
+     * Retrieve all server and store only few attrs
+     *
+     * @return a list of <code>ServerAttrItem</code>
+     * @throws ServiceException
+     *              this method can work only when LDAP is available
+     * @author Davide Baldo
+     */
+
+    private static List<ServerAttrItem> loadServerAttrs() throws ServiceException {
+        if (!(mProv instanceof LdapProv))
+            throw ServiceException.INVALID_REQUEST(
+                    "The method can work only when LDAP is available", null);
+
+        final List<ServerAttrItem> serverAttrItems = new ArrayList<ServerAttrItem>();
+        for (Server server : mProv.getAllServers()) {
+            String zimbraId = server
+                    .getAttr(Provisioning.A_zimbraId);
+            String serviceHostname = server
+                    .getAttr(Provisioning.A_zimbraServiceHostname);
+            String[] services = server
+                    .getMultiAttr(Provisioning.A_zimbraServiceEnabled);
+
+            serverAttrItems.add(new ServerAttrItem(zimbraId, serviceHostname, services));
+        }
+
+        return serverAttrItems;
     }
 
     /**
@@ -2283,22 +2498,32 @@ public class ProxyConfGen
                 if(cmd_arg.length == 2 &&
                    cmd_arg[0].compareTo("explode") == 0) {
 
-                    if(!mGenConfPerVhn) { // explode only when GenConfPerVhn is enabled
-                        return;
-                    }
-
-                    if(cmd_arg[1].startsWith("domain(") &&cmd_arg[1].endsWith(")")) {
-                        //extract the args in "domain(arg1, arg2, ...)
-                        String arglist = cmd_arg[1].substring("domain(".length(), cmd_arg[1].length() - 1);
-                        String[] args;
-                        if(arglist.equals("")) {
-                            args = new String[0];
-                        } else {
-                            args = arglist.split(",( |\t)*");
+                    if( cmd_arg[1].startsWith("server(") && cmd_arg[1].endsWith(")")) {
+                        String serviceName = cmd_arg[1].substring("server(".length(), cmd_arg[1].length() - 1);
+                        if( serviceName.isEmpty() ) {
+                            throw new ProxyConfException("Missing service parameter in custom header command: " + cmdMatcher.group(2));
                         }
-                        expandTemplateByExplodeDomain(r, w, args);
-                    } else {
-                        throw new ProxyConfException("Illegal custom header command: " + cmdMatcher.group(2));
+                        expandTemplateByExplodeServer(r, w, serviceName);
+                    }
+                    else
+                    {
+                      if(!mGenConfPerVhn) { // explode only when GenConfPerVhn is enabled
+                        return;
+                      }
+
+                      if(cmd_arg[1].startsWith("domain(") &&cmd_arg[1].endsWith(")")) {
+                          //extract the args in "domain(arg1, arg2, ...)
+                          String arglist = cmd_arg[1].substring("domain(".length(), cmd_arg[1].length() - 1);
+                          String[] args;
+                          if(arglist.equals("")) {
+                              args = new String[0];
+                          } else {
+                              args = arglist.split(",( |\t)*");
+                          }
+                          expandTemplateByExplodeDomain(r, w, args);
+                      } else {
+                          throw new ProxyConfException("Illegal custom header command: " + cmdMatcher.group(2));
+                      }
                     }
                 } else {
                     throw new ProxyConfException("Illegal custom header command: " + cmdMatcher.group(2));
@@ -2405,6 +2630,44 @@ public class ProxyConfGen
                 fillVarsWithDomainAttrs(item);
                 expandTempateFromCache(cache, conf);
                 conf.newLine();
+            }
+        }
+    }
+
+    /**
+     * Iterate all server of type `serviceName` and populate server_id and server_hostname when exploding
+     * with !{explode server(docs)}
+     * initially created for zimbra-docs.
+     *
+     * @param temp Reader of the file which will be exploded per server
+     * @param conf Target buffer where generated configuration will be written
+     * @param serviceName Filter only servers which contains `serviceName`
+     * @throws IOException
+     * @author Davide Baldo
+     */
+    private static void expandTemplateByExplodeServer(
+            BufferedReader temp, BufferedWriter conf, String serviceName ) throws IOException {
+
+        List<ServerAttrItem> filteredServers = new ArrayList<>();
+        for( ServerAttrItem serverAttrItem : mServerAttrs ) {
+            if (serverAttrItem.hasService(serviceName)) {
+                filteredServers.add(serverAttrItem);
+            }
+        }
+        if( !filteredServers.isEmpty() ) {
+            ArrayList<String> cache = new ArrayList<String>(50);
+            String line;
+            while ((line = temp.readLine()) != null) {
+                if (!line.startsWith("#"))
+                    cache.add(line); // cache only non-comment lines
+            }
+
+            for (ServerAttrItem server : filteredServers) {
+                mVars.put("server_id", server.zimbraId);
+                mVars.put("server_hostname", server.hostname);
+                expandTempateFromCache(cache, conf);
+                mVars.remove("server_id");
+                mVars.remove("server_hostname");
             }
         }
     }
@@ -2747,7 +3010,7 @@ public class ProxyConfGen
         mConfVars.put("web.admin.uport", new ProxyConfVar("web.admin.uport", Provisioning.A_zimbraAdminPort, new Integer(7071), ProxyConfValueType.INTEGER, ProxyConfOverride.SERVER, "Admin console upstream port"));
         mConfVars.put("web.admin.upstream.name", new ProxyConfVar("web.admin.upstream.name", null, ZIMBRA_ADMIN_CONSOLE_UPSTREAM_NAME, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG, "Symbolic name for admin console upstream cluster"));
         mConfVars.put("web.admin.upstream.adminclient.name", new ProxyConfVar("web.admin.upstream.adminclient.name", null, ZIMBRA_ADMIN_CONSOLE_CLIENT_UPSTREAM_NAME, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG, "Symbolic name for admin client console upstream cluster"));
-        mConfVars.put("web.admin.upstream.:servers", new WebAdminUpstreamServersVar());
+        mConfVars.put("web.admin.upstream.:servers", new WebAdminUpstreamAdminClientServersVar());
         mConfVars.put("web.admin.upstream.adminclient.:servers", new WebAdminUpstreamAdminClientServersVar());
         mConfVars.put("web.upstream.noop.timeout", new TimeoutVar("web.upstream.noop.timeout", "zimbra_noop_max_timeout", 1200, ProxyConfOverride.LOCALCONFIG, 20, "the response timeout for NoOpRequest"));
         mConfVars.put("web.upstream.waitset.timeout", new TimeoutVar("web.upstream.waitset.timeout", "zimbra_waitset_max_request_timeout", 1200, ProxyConfOverride.LOCALCONFIG, 20, "the response timeout for WaitSetRequest"));
@@ -2781,6 +3044,17 @@ public class ProxyConfGen
         mConfVars.put("web.ssl.dhparam.file", webSslDhParamFile);
         mConfVars.put("upstream.fair.shm.size", new ProxyFairShmVar());
         mConfVars.put("web.strict.servername", new WebStrictServerName());
+        mConfVars.put("web.upstream.zx", new WebProxyUpstreamZxTargetVar());
+        mConfVars.put("web.upstream.zx.name", new ProxyConfVar("web.upstream.zx.name", null, ZIMBRA_UPSTREAM_ZX_NAME, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG,"Symbolic name for HTTP zx upstream"));
+        mConfVars.put("web.ssl.upstream.zx.name", new ProxyConfVar("web.ssl.upstream.zx.name", null, ZIMBRA_SSL_UPSTREAM_ZX_NAME, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG,"Symbolic name for HTTPS zx upstream"));
+        mConfVars.put("web.upstream.zx.:servers", new WebUpstreamZxServersVar());
+        mConfVars.put("web.ssl.upstream.zx.:servers", new WebSslUpstreamZxServersVar());
+        mConfVars.put("web.unsupported.browser.redirect.classic.disable", new UnSupportedBrowserRedirectToClassicEnablerVar());
+        mConfVars.put("web.unsupported.browser.redirect.classic.user.agents", new UnSupportedBrowserRedirectToClassicUserAgentsVar());
+        mConfVars.put("web.unsupported.browser.redirect.error.page.disable", new UnSupportedBrowserRedirectToErroPageEnablerVar());
+        mConfVars.put("web.unsupported.browser.redirect.error.page.user.agents", new UnSupportedBrowserRedirectToErrorPageUserAgentsVar());
+        mConfVars.put("web.unsupported.browser.redirect.error.page.url", new UnSupportedBrowserErrorPageURLVar());
+
         //Get the response headers list from globalconfig
         String[] rspHeaders = ProxyConfVar.configSource.getMultiAttr(Provisioning.A_zimbraReverseProxyResponseHeaders);
         ArrayList<String> rhdr = new ArrayList<String>();
@@ -2976,6 +3250,7 @@ public class ProxyConfGen
         /* upgrade the variable map from the config in force */
             mLog.debug("Loading Attrs in Domain Level");
             mDomainReverseProxyAttrs = loadDomainReverseProxyAttrs();
+            mServerAttrs = loadServerAttrs();
             updateListenAddresses();
 
             mLog.debug("Updating Default Variable Map");
@@ -3062,6 +3337,8 @@ public class ProxyConfGen
             expandTemplate(new File(mTemplateDir, getWebHttpSModeConfTemplate("both")), new File(mConfIncludesDir, getWebHttpSModeConf("both")));
             expandTemplate(new File(mTemplateDir, getWebHttpSModeConfTemplate("redirect")), new File(mConfIncludesDir, getWebHttpSModeConf("redirect")));
             expandTemplate(new File(mTemplateDir, getWebHttpSModeConfTemplate("mixed")), new File(mConfIncludesDir, getWebHttpSModeConf("mixed")));
+            expandTemplate(new File(mTemplateDir, getConfTemplateFileName("docs.common")), new File(mConfIncludesDir, getConfFileName("docs.common")));
+            expandTemplate(new File(mTemplateDir, getConfTemplateFileName("docs.upstream")), new File(mConfIncludesDir, getConfFileName("docs.upstream")));
         } catch (ProxyConfException pe) {
             handleException(pe);
             exitCode = 1;

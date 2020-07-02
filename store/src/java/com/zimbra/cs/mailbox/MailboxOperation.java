@@ -110,7 +110,15 @@ public enum MailboxOperation {
     ExpireAccess(90),
     SetDisableActiveSync(91),
     SetWebOfflineSyncDays(92),
-    DeleteConfig(93);
+    DeleteConfig(93),
+    //search history redo OPs
+    AddSearchHistoryEntry(94),
+    PurgeSearchHistory(95),
+    DeleteSearchHistory(96),
+    SetSavedSearchStatus(97),
+    //SmartFolders
+    CreateSmartFolder(98);
+
 
     private MailboxOperation(int c) {
         code = c;

@@ -22,7 +22,7 @@ import java.util.List;
 import org.apache.lucene.search.TopFieldDocs;
 import org.apache.lucene.search.SortField;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 
 /**
  * Used for results of Zimbra Index searches.
@@ -42,11 +42,6 @@ public class ZimbraTopFieldDocs extends ZimbraTopDocs {
         this.sortFields = sortFields;
     }
 
-    public static ZimbraTopFieldDocs create(int totalHits, List<ZimbraScoreDoc> scoreDocs,
-            float maxScore, List<SortField> sortFields) {
-        return new ZimbraTopFieldDocs(totalHits, scoreDocs, maxScore, sortFields);
-    }
-
     /**
      * Create a ZimbraTopFielDocs object for search results where scores are not tracked.
      */
@@ -58,7 +53,7 @@ public class ZimbraTopFieldDocs extends ZimbraTopDocs {
      * Create equivalent ZimbraTopFieldDocs object to a Lucene TopFieldDocs object
      */
     public static ZimbraTopFieldDocs create(TopFieldDocs luceneTopFieldDocs) {
-        return new ZimbraTopFieldDocs(luceneTopFieldDocs.totalHits, 
+        return new ZimbraTopFieldDocs((int) luceneTopFieldDocs.totalHits,
                 ZimbraScoreDoc.listFromLuceneScoreDocs(luceneTopFieldDocs.scoreDocs),
                 luceneTopFieldDocs.getMaxScore(), Arrays.asList(luceneTopFieldDocs.fields));
     }
@@ -79,6 +74,6 @@ public class ZimbraTopFieldDocs extends ZimbraTopDocs {
 
     @Override
     public String toString() {
-        return super.toString() + Objects.toStringHelper(this).add("sortFields", sortFields).toString();
+        return super.toString() + MoreObjects.toStringHelper(this).add("sortFields", sortFields).toString();
     }
 }

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010, 2011, 2012, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2010, 2011, 2012, 2013, 2014, 2016, 2017 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -11,16 +11,18 @@
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
  * You should have received a copy of the GNU General Public License along with this program.
- * If not, see <https://www.gnu.org/licenses/>.
+ * If not, see <http://www.gnu.org/licenses/>.
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.cs.index.query;
 
-import org.apache.lucene.analysis.Analyzer;
+import java.util.EnumSet;
+import java.util.Set;
 
 import com.zimbra.cs.index.DBQueryOperation;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.QueryOperation;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 
 /**
@@ -38,26 +40,24 @@ public final class SenderQuery extends Query {
      * {@link TextQuery}.
      */
     private SenderQuery(String text) {
-        if (text.startsWith(Comparison.LE.toString())) {
-            comparison = Comparison.LE;
-        } else if (text.startsWith(Comparison.LT.toString())) {
-            comparison = Comparison.LT;
-        } else if (text.startsWith(Comparison.GE.toString())) {
-            comparison = Comparison.GE;
-        } else if (text.startsWith(Comparison.GT.toString())) {
-            comparison = Comparison.GT;
-        } else {
-            throw new IllegalArgumentException(text);
-        }
+        comparison = Comparison.fromPrefix(text);
         sender = text.substring(comparison.toString().length());
     }
 
-    public static Query create(Analyzer analyzer, String text) {
+    public static Query create(String text) {
+        return create(text, EnumSet.noneOf(MailItem.Type.class));
+    }
+
+    public static Query create(String text, Set<MailItem.Type> types) {
+        return create(text, false, types);
+    }
+
+    public static Query create(String text, boolean isPhraseQuery, Set<MailItem.Type> types) {
         if (text.length() > 1 &&
                 (text.startsWith(Comparison.LT.toString()) || text.startsWith(Comparison.GT.toString()))) {
             return new SenderQuery(text);
         } else {
-            return new TextQuery(analyzer, LuceneFields.L_H_FROM, text);
+            return new TextQuery(LuceneFields.L_H_FROM, text, isPhraseQuery, types);
         }
     }
 

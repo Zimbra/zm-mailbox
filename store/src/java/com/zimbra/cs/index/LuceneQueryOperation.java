@@ -20,16 +20,15 @@ package com.zimbra.cs.index;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Set;
 
-import org.apache.lucene.document.Document;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.search.MultiPhraseQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
@@ -39,15 +38,14 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
-import com.google.common.io.Closeables;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.index.ZimbraIndexReader.TermFieldEnumeration;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxIndex.IndexType;
+import com.zimbra.cs.util.IOUtil;
 
 /**
  * {@link QueryOperation} which queries Lucene.
@@ -90,6 +88,15 @@ public final class LuceneQueryOperation extends QueryOperation {
     private int topDocsChunkSize = 2000; // how many hits to fetch per step in Lucene
     private ZimbraIndexSearcher searcher;
     private Sort sort;
+    private Set<IndexType> indexTypes = new HashSet<>();
+
+    public void addClause(String queryStr, Query query, boolean bool) {
+        addClause(queryStr, query, bool, IndexType.MAILBOX);
+    }
+
+    public void addClause(String queryStr, Query query, boolean bool, IndexType indexType) {
+        addClause(queryStr, query, bool, EnumSet.of(indexType));
+    }
 
     /**
      * Adds the specified text clause at the top level.
@@ -99,8 +106,9 @@ public final class LuceneQueryOperation extends QueryOperation {
      * @param queryStr Appended to the end of the text-representation of this query
      * @param query Lucene query
      * @param bool allows for negated query terms
+     * @param indexType index target (mailbox, contacts, etc)
      */
-    public void addClause(String queryStr, Query query, boolean bool) {
+    public void addClause(String queryStr, Query query, boolean bool, Set<IndexType> types) {
         assert(!haveRunSearch);
 
         // ignore empty BooleanQuery
@@ -116,32 +124,29 @@ public final class LuceneQueryOperation extends QueryOperation {
 
         if (bool) {
             if (luceneQuery == null) {
-                luceneQuery = query;
-            } else if (luceneQuery instanceof BooleanQuery) {
-                ((BooleanQuery) luceneQuery).add(query, BooleanClause.Occur.MUST);
-            } else if (query instanceof BooleanQuery) {
-                ((BooleanQuery) query).add(luceneQuery, BooleanClause.Occur.MUST);
-                luceneQuery = query;
+                luceneQuery = query; //no boolean query necessary
             } else {
-                BooleanQuery combined = new BooleanQuery();
-                combined.add(luceneQuery, BooleanClause.Occur.MUST);
-                combined.add(query, BooleanClause.Occur.MUST);
-                luceneQuery = combined;
+                BooleanClause newClause = new BooleanClause(query, Occur.MUST);
+                updateBoolQuery(newClause);
             }
         } else {
-            if (luceneQuery == null) {
-                BooleanQuery negate = new BooleanQuery();
-                negate.add(query, BooleanClause.Occur.MUST_NOT);
-                luceneQuery = negate;
-            } else if (luceneQuery instanceof BooleanQuery) {
-                ((BooleanQuery) luceneQuery).add(query, BooleanClause.Occur.MUST_NOT);
-            } else {
-                BooleanQuery combined = new BooleanQuery();
-                combined.add(luceneQuery, BooleanClause.Occur.MUST);
-                combined.add(query, BooleanClause.Occur.MUST_NOT);
-                luceneQuery = combined;
-            }
+            BooleanClause newClause = new BooleanClause(query, Occur.MUST_NOT);
+            updateBoolQuery(newClause);
         }
+        indexTypes.addAll(types);
+    }
+
+    private void updateBoolQuery(BooleanClause newClause) {
+        BooleanQuery.Builder newQuery = new BooleanQuery.Builder();
+        newQuery.add(newClause);
+        if (luceneQuery != null && luceneQuery instanceof BooleanQuery) {
+            for (BooleanClause clause: ((BooleanQuery) luceneQuery).clauses()) {
+                newQuery.add(clause);
+            }
+        } else if (luceneQuery != null) {
+            newQuery.add(luceneQuery, Occur.MUST);
+        }
+        luceneQuery = newQuery.build();
     }
 
     /**
@@ -159,6 +164,7 @@ public final class LuceneQueryOperation extends QueryOperation {
         curHitNo = 0;
 
         if (luceneQuery instanceof BooleanQuery) {
+            BooleanQuery.Builder builder = new BooleanQuery.Builder();
             BooleanQuery bquery = ((BooleanQuery) luceneQuery);
             boolean orOnly = true;
             for (BooleanClause clause : bquery) {
@@ -168,15 +174,19 @@ public final class LuceneQueryOperation extends QueryOperation {
                 }
             }
             if (!orOnly) {
-                bquery.add(new BooleanClause(query, bool ? BooleanClause.Occur.MUST : BooleanClause.Occur.MUST_NOT));
+                for (BooleanClause clause: bquery) {
+                    builder.add(clause); //copy over existing clauses
+                }
+                builder.add(new BooleanClause(query, bool ? BooleanClause.Occur.MUST : BooleanClause.Occur.MUST_NOT));
+                luceneQuery = builder.build();
                 return;
             }
         }
 
-        BooleanQuery bquery = new BooleanQuery();
-        bquery.add(new BooleanClause(luceneQuery, BooleanClause.Occur.MUST));
-        bquery.add(new BooleanClause(query, bool ? BooleanClause.Occur.MUST : BooleanClause.Occur.MUST_NOT));
-        luceneQuery = bquery;
+        BooleanQuery.Builder builder = new BooleanQuery.Builder();
+        builder.add(new BooleanClause(luceneQuery, BooleanClause.Occur.MUST));
+        builder.add(new BooleanClause(query, bool ? BooleanClause.Occur.MUST : BooleanClause.Occur.MUST_NOT));
+        luceneQuery = builder.build();
     }
 
     /**
@@ -222,8 +232,9 @@ public final class LuceneQueryOperation extends QueryOperation {
 
     /**
      * Returns {@code true} if we think this query is best evaluated DB-FIRST.
+     * @throws ServiceException
      */
-    boolean shouldExecuteDbFirst() {
+    boolean shouldExecuteDbFirst() throws ServiceException {
         if (searcher == null || luceneQuery == null) {
             return true;
         }
@@ -233,7 +244,7 @@ public final class LuceneQueryOperation extends QueryOperation {
             Term term = query.getTerm();
             long start = System.currentTimeMillis();
             try {
-                int freq = searcher.docFreq(term);
+                int freq = searcher.docFreq(term, indexTypes);
                 int docsCutoff = (int) (searcher.getIndexReader().numDocs() * DB_FIRST_TERM_FREQ_PERC);
                 ZimbraLog.search.debug("LuceneDocFreq freq=%d,cutoff=%d(%d%%),elapsed=%d",
                         freq, docsCutoff, (int) (100 * DB_FIRST_TERM_FREQ_PERC), System.currentTimeMillis() - start);
@@ -283,7 +294,7 @@ public final class LuceneQueryOperation extends QueryOperation {
 
     @Override
     public void close() {
-        Closeables.closeQuietly(searcher);
+        IOUtil.closeQuietly(searcher);
         searcher = null;
     }
 
@@ -321,20 +332,14 @@ public final class LuceneQueryOperation extends QueryOperation {
                 }
                 runSearch();
             }
+            ZimbraScoreDoc scoreDoc = hits.getScoreDoc(curHitNo);
+            IndexDocument indexDoc = hits.getIndexDocs().get(curHitNo);
 
-            Document doc;
-            try {
-                doc = searcher.doc(hits.getScoreDoc(curHitNo).getDocumentID());
-            } catch (Exception e) {
-                ZimbraLog.search.error("Failed to retrieve Lucene document: %s",
-                        hits.getScoreDoc(curHitNo).getDocumentID().toString(), e);
-                return result;
-            }
             curHitNo++;
-            String mbid = doc.get(LuceneFields.L_MAILBOX_BLOB_ID);
+            String mbid = indexDoc.get(LuceneFields.L_MAILBOX_BLOB_ID);
             if (mbid != null) {
                 try {
-                    result.addHit(Integer.parseInt(mbid), doc);
+                    result.addHit(Integer.parseInt(mbid), indexDoc);
                 } catch (NumberFormatException e) {
                     ZimbraLog.search.error("Invalid MAILBOX_BLOB_ID: " + mbid, e);
                 }
@@ -350,27 +355,41 @@ public final class LuceneQueryOperation extends QueryOperation {
      * non top level parts, negative queries will end up matching everything. Therefore we only match the top level part
      * for negative queries.
      */
-    private void fixMustNotOnly(BooleanQuery query) {
+    private BooleanQuery fixMustNotOnly(BooleanQuery query) {
+        BooleanQuery.Builder builder = new BooleanQuery.Builder();
+        boolean hasMustNotClause = false;
         for (BooleanClause clause : query.clauses()) {
             if (clause.getQuery() instanceof BooleanQuery) {
-                fixMustNotOnly((BooleanQuery) clause.getQuery());
+                Query fixed = fixMustNotOnly((BooleanQuery) clause.getQuery());
+                builder.add(fixed, clause.getOccur());
+            } else {
+                builder.add(clause);
             }
-            if (clause.getOccur() != BooleanClause.Occur.MUST_NOT) {
-                return;
+            if (clause.getOccur() == BooleanClause.Occur.MUST_NOT) {
+                hasMustNotClause = true;
             }
         }
-
-        query.add(new TermQuery(new Term(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_TOP)),
-                BooleanClause.Occur.SHOULD);
-        Set<MailItem.Type> types = context.getParams().getTypes();
-        if (types.contains(MailItem.Type.CONTACT)) {
-            query.add(new TermQuery(new Term(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_CONTACT)),
-                    BooleanClause.Occur.SHOULD);
+        if (hasMustNotClause) {
+            List<Query> topLevelClauses = new ArrayList<>();
+            topLevelClauses.add(new TermQuery(new Term(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_TOP)));
+            Set<MailItem.Type> types = context.getParams().getTypes();
+            if (types.contains(MailItem.Type.CONTACT)) {
+                topLevelClauses.add(new TermQuery(new Term(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_CONTACT)));
+            }
+            if (types.contains(MailItem.Type.NOTE)) {
+                topLevelClauses.add(new TermQuery(new Term(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_NOTE)));
+            }
+            if (topLevelClauses.size() == 1) {
+                builder.add(topLevelClauses.get(0), Occur.MUST);
+            } else {
+                BooleanQuery.Builder topLevelClauseBuilder = new BooleanQuery.Builder();
+                for (Query topLevelClauseQuery: topLevelClauses) {
+                    topLevelClauseBuilder.add(topLevelClauseQuery, Occur.SHOULD);
+                }
+                builder.add(topLevelClauseBuilder.build(), Occur.MUST);
+            }
         }
-        if (types.contains(MailItem.Type.NOTE)) {
-            query.add(new TermQuery(new Term(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_NOTE)),
-                    BooleanClause.Occur.SHOULD);
-        }
+        return builder.build();
     }
 
     /**
@@ -386,9 +405,8 @@ public final class LuceneQueryOperation extends QueryOperation {
 
         try {
             if (luceneQuery instanceof BooleanQuery) {
-                fixMustNotOnly((BooleanQuery) luceneQuery);
+                luceneQuery = fixMustNotOnly((BooleanQuery) luceneQuery);
             }
-            luceneQuery = expandLazyMultiPhraseQuery(luceneQuery);
             if (luceneQuery == null) { // optimized away
                 hits = null;
                 return;
@@ -396,83 +414,23 @@ public final class LuceneQueryOperation extends QueryOperation {
             ZimbraTermsFilter filter = (filterTerms != null) ? new ZimbraTermsFilter(filterTerms) : null;
             long start = System.currentTimeMillis();
             if (sort == null) {
-                hits = searcher.search(luceneQuery, filter, topDocsLen);
+                hits = searcher.search(luceneQuery, filter, topDocsLen, indexTypes);
             } else {
-                hits = searcher.search(luceneQuery, filter, topDocsLen, sort);
+                hits = searcher.search(luceneQuery, filter, topDocsLen, sort, indexTypes);
             }
             ZimbraLog.search.debug("LuceneSearch query=%s,n=%d,total=%d,elapsed=%d",
                     luceneQuery, topDocsLen, hits.getTotalHits(), System.currentTimeMillis() - start);
-        } catch (IOException e) {
+        } catch (IOException | ServiceException e) {
             ZimbraLog.search.error("Failed to search query=%s", luceneQuery, e);
-            Closeables.closeQuietly(searcher);
+            IOUtil.closeQuietly(searcher);
             searcher = null;
             hits = null;
         }
     }
 
-    private Query expandLazyMultiPhraseQuery(Query query) throws IOException {
-        if (query instanceof LazyMultiPhraseQuery) {
-            LazyMultiPhraseQuery lazy = (LazyMultiPhraseQuery) query;
-            int max = LC.zimbra_index_wildcard_max_terms_expanded.intValue();
-            MultiPhraseQuery mquery = new MultiPhraseQuery();
-            for (Term[] terms : lazy.getTermArrays()) {
-                if (terms.length != 1) {
-                    mquery.add(terms);
-                    continue;
-                }
-                Term base = terms[0];
-                if (!lazy.expand.contains(base)) {
-                    mquery.add(terms);
-                    continue;
-                }
-                List<Term> expanded = Lists.newArrayList();
-                TermFieldEnumeration itr = searcher.getIndexReader().getTermsForField(base.field(), base.text());
-                try {
-                    while (itr.hasMoreElements()) {
-                        BrowseTerm term = itr.nextElement();
-                        if (term != null && term.getText().startsWith(base.text())) {
-                            if (expanded.size() >= max) { // too many terms expanded
-                                break;
-                            }
-                            expanded.add(new Term(base.field(), term.getText()));
-                        } else {
-                            break;
-                        }
-                    }
-                } finally {
-                    Closeables.closeQuietly(itr);
-                }
-                if (expanded.isEmpty()) {
-                    return null;
-                } else {
-                    mquery.add(expanded.toArray(new Term[expanded.size()]));
-                }
-            }
-            return mquery;
-        } else if (query instanceof BooleanQuery) {
-            ListIterator<BooleanClause> itr = ((BooleanQuery) query).clauses().listIterator();
-            while (itr.hasNext()) {
-                BooleanClause clause = itr.next();
-                Query result = expandLazyMultiPhraseQuery(clause.getQuery());
-                if (result == null) {
-                    if (clause.isRequired()) {
-                        return null;
-                    } else {
-                        itr.remove();
-                    }
-                } else if (result != clause.getQuery()) {
-                    clause.setQuery(result);
-                }
-            }
-            return ((BooleanQuery) query).clauses().isEmpty() ? null : query;
-        } else {
-            return query;
-        }
-    }
-
     @Override
     public String toString() {
-        return "LUCENE(" + luceneQuery + (hasSpamTrashSetting() ? " <ANYWHERE>" : "") + ")";
+        return "LUCENE(" + luceneQuery + (hasSpamTrashSetting() ? " <ANYWHERE>" : "") + " INDEX=" + indexTypes + ")";
     }
 
     /**
@@ -481,7 +439,8 @@ public final class LuceneQueryOperation extends QueryOperation {
     private LuceneQueryOperation cloneInternal() {
         assert(!haveRunSearch);
         LuceneQueryOperation clone = (LuceneQueryOperation) super.clone();
-        clone.luceneQuery = (Query) luceneQuery.clone();
+        clone.luceneQuery = luceneQuery; //does this work? Queries are immutable in lucene 6
+        clone.indexTypes = indexTypes;
         return clone;
     }
 
@@ -557,41 +516,42 @@ public final class LuceneQueryOperation extends QueryOperation {
                 queryString = '(' + queryString + ") AND (" + otherLucene.queryString + ')';
             }
 
-            BooleanQuery top = new BooleanQuery();
+            BooleanQuery.Builder builder = new BooleanQuery.Builder();
             if (union) {
                 if (luceneQuery instanceof BooleanQuery) {
-                    orCopy((BooleanQuery) luceneQuery, top);
+                    orCopy((BooleanQuery) luceneQuery, builder);
                 } else {
-                    top.add(new BooleanClause(luceneQuery, Occur.SHOULD));
+                    builder.add(new BooleanClause(luceneQuery, Occur.SHOULD));
                 }
                 if (otherLucene.luceneQuery instanceof BooleanQuery) {
-                    orCopy((BooleanQuery) otherLucene.luceneQuery, top);
+                    orCopy((BooleanQuery) otherLucene.luceneQuery, builder);
                 } else {
-                    top.add(new BooleanClause(otherLucene.luceneQuery, Occur.SHOULD));
+                    builder.add(new BooleanClause(otherLucene.luceneQuery, Occur.SHOULD));
                 }
             } else {
                 if (luceneQuery instanceof BooleanQuery) {
-                    andCopy((BooleanQuery) luceneQuery, top);
+                    andCopy((BooleanQuery) luceneQuery, builder);
                 } else {
-                    top.add(new BooleanClause(luceneQuery, Occur.MUST));
+                    builder.add(new BooleanClause(luceneQuery, Occur.MUST));
                 }
                 if (otherLucene.luceneQuery instanceof BooleanQuery) {
-                    andCopy((BooleanQuery) otherLucene.luceneQuery, top);
+                    andCopy((BooleanQuery) otherLucene.luceneQuery, builder);
                 } else {
-                    top.add(new BooleanClause(otherLucene.luceneQuery, Occur.MUST));
+                    builder.add(new BooleanClause(otherLucene.luceneQuery, Occur.MUST));
                 }
             }
-            luceneQuery = top;
+            luceneQuery = builder.build();
             queryInfo.addAll(other.getResultInfo());
             if (other.hasSpamTrashSetting()) {
                 forceHasSpamTrashSetting();
             }
+            indexTypes.addAll(((LuceneQueryOperation) other).getIndexTypes());
             return this;
         }
         return null;
     }
 
-    private void andCopy(BooleanQuery from, BooleanQuery to) {
+    private void andCopy(BooleanQuery from, BooleanQuery.Builder to) {
         boolean allAnd = true;
         for (BooleanClause clause : from) {
             if (clause.getOccur() == BooleanClause.Occur.SHOULD) {
@@ -608,7 +568,7 @@ public final class LuceneQueryOperation extends QueryOperation {
         }
     }
 
-    private void orCopy(BooleanQuery from, BooleanQuery to) {
+    private void orCopy(BooleanQuery from, BooleanQuery.Builder to) {
         boolean allOr = true;
         for (BooleanClause clause : from) {
             if (clause.getOccur() != BooleanClause.Occur.SHOULD) {
@@ -779,28 +739,31 @@ public final class LuceneQueryOperation extends QueryOperation {
             case NAME:
             case NAME_NATURAL_ORDER:
             case SENDER:
-                return new Sort(new SortField(LuceneFields.L_SORT_NAME, SortField.STRING,
+                return new Sort(new SortField(LuceneFields.L_SORT_NAME, SortField.Type.STRING,
                         sortBy.getDirection() == SortBy.Direction.DESC));
             case SUBJECT:
-                return new Sort(new SortField(LuceneFields.L_SORT_SUBJECT, SortField.STRING,
+                return new Sort(new SortField(LuceneFields.L_SORT_SUBJECT, SortField.Type.STRING,
                         sortBy.getDirection() == SortBy.Direction.DESC));
             case SIZE:
-                return new Sort(new SortField(LuceneFields.L_SORT_SIZE, SortField.LONG,
+                return new Sort(new SortField(LuceneFields.L_SORT_SIZE, SortField.Type.LONG,
                         sortBy.getDirection() == SortBy.Direction.DESC));
             case ATTACHMENT:
-                return new Sort(new SortField(LuceneFields.L_SORT_ATTACH, SortField.STRING,
+                return new Sort(new SortField(LuceneFields.L_SORT_ATTACH, SortField.Type.STRING,
                         sortBy.getDirection() == SortBy.Direction.DESC));
             case FLAG:
-                return new Sort(new SortField(LuceneFields.L_SORT_FLAG, SortField.STRING,
+                return new Sort(new SortField(LuceneFields.L_SORT_FLAG, SortField.Type.STRING,
                         sortBy.getDirection() == SortBy.Direction.DESC));
             case PRIORITY:
-                return new Sort(new SortField(LuceneFields.L_SORT_PRIORITY, SortField.STRING,
+                return new Sort(new SortField(LuceneFields.L_SORT_PRIORITY, SortField.Type.STRING,
                         sortBy.getDirection() == SortBy.Direction.DESC));
             case RCPT:
                 assert false : sortBy; // should already be checked in the compile phase
+            case RELEVANCE:
+                return new Sort(new SortField(LuceneFields.L_SORT_RELEVANCE, SortField.Type.FLOAT,
+                        sortBy.getDirection() == SortBy.Direction.DESC));
             case DATE:
             default: // default to DATE_DESCENDING
-                return new Sort(new SortField(LuceneFields.L_SORT_DATE, SortField.STRING,
+                return new Sort(new SortField(LuceneFields.L_SORT_DATE, SortField.Type.STRING,
                         sortBy.getDirection() == SortBy.Direction.DESC));
         }
     }
@@ -809,41 +772,38 @@ public final class LuceneQueryOperation extends QueryOperation {
      * We use this data structure to track a "chunk" of Lucene hits which the {@link DBQueryOperation} will use to check
      * against the DB.
      */
-    static final class LuceneResultsChunk {
-        private final Multimap<Integer, Document> hits = LinkedHashMultimap.create();
+    public static final class LuceneResultsChunk {
+        private final Multimap<Integer, IndexDocument> hits = LinkedHashMultimap.create();
 
-        Set<Integer> getIndexIds() {
-            return hits.keySet();
+        List<Integer> getIndexIds() {
+            return new ArrayList<>(hits.keySet());
         }
 
         int size() {
             return hits.size();
         }
 
-        void addHit(int indexId, Document doc) {
+        void addHit(int indexId, IndexDocument doc) {
             hits.put(indexId, doc);
         }
 
-        Collection<Document> getHit(int indexId) {
+        Collection<IndexDocument> getHit(int indexId) {
             return hits.get(indexId);
         }
-    }
 
-    /**
-     * Extended {@link MultiPhraseQuery} that defers wildcard expansion until actual Lucene search execution, rather
-     * than doing so when creating a {@link MultiPhraseQuery}.
-     *
-     * @see LuceneQueryOperation#expandLazyMultiPhraseQuery(Query)
-     */
-    public static final class LazyMultiPhraseQuery extends MultiPhraseQuery {
-        private static final long serialVersionUID = -6754267749628771968L;
-
-        private final Set<Term> expand = Sets.newIdentityHashSet();
-
-        public void expand(Term term) {
-            add(term);
-            expand.add(term);
+        public float getScore(int indexId) {
+            Collection<IndexDocument> docs = getHit(indexId);
+            //go with first score
+            return Float.valueOf(docs.iterator().next().get(LuceneFields.L_SORT_RELEVANCE));
         }
     }
 
+    @Override
+    public boolean isRelevanceSortSupported() {
+        return true;
+    }
+
+    public Set<IndexType> getIndexTypes() {
+        return indexTypes;
+    }
 }

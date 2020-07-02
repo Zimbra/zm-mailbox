@@ -29,12 +29,12 @@ import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
-import org.codehaus.jackson.annotate.JsonPropertyOrder;
-
-import com.google.common.base.Objects;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.account.type.AccountCalDataSource;
@@ -60,6 +60,11 @@ import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
 import com.zimbra.soap.json.jackson.annotate.ZimbraKeyValuePairs;
 import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 import com.zimbra.soap.type.ZmBoolean;
+
+import io.leangen.graphql.annotations.GraphQLIgnore;
+import io.leangen.graphql.annotations.GraphQLNonNull;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
 /**
  * Note that LicenseAdminService and LicenseService both register a handler (the same one) which
  * extends com.zimbra.cs.service.account.GetInfo - this adds the "license" element
@@ -68,13 +73,14 @@ import com.zimbra.soap.type.ZmBoolean;
  */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AccountConstants.E_GET_INFO_RESPONSE)
+@GraphQLType(name=GqlConstants.CLASS_GET_INFO_RESPONSE, description="The response to a request for account information")
 @XmlType(propOrder = {"version", "accountId", "profileImageId", "accountName", "crumb", "lifetime", "adminDelegated", "restUrl",
         "quotaUsed", "isTrackingIMAP", "previousSessionTime", "lastWriteAccessTime", "recentMessageCount", "cos", "prefs", "attrs",
         "zimlets", "props", "identities", "signatures", "dataSources", "childAccounts", "discoveredRights",
         "soapURL", "publicURL", "changePasswordURL", "license", "adminURL", "boshURL"})
 @JsonPropertyOrder({"version", "id", "profileImageId", "name", "crumb", "lifetime", "adminDelegated", "docSizeLimit", "attSizeLimit",
         "rest", "used", "isTrackingIMAP", "prevSession", "accessed", "recent", "cos", "prefs", "attrs", "zimlets", "props", "identities",
-        "signatures", "dataSources", "childAccounts", "rights", "soapURL", "publicURL", "license", "adminURL", "boshURL"})
+        "signatures", "dataSources", "childAccounts", "discoveredRights", "soapURL", "publicURL", "license", "adminURL", "boshURL"})
 public final class GetInfoResponse {
 
     /**
@@ -458,70 +464,114 @@ public final class GetInfoResponse {
     public void setBOSHURL(String boshURL) { this.boshURL = boshURL; }
     public void setLicense(LicenseInfo license) { this.license = license; }
 
+    @GraphQLQuery(name=GqlConstants.ATTACHMENT_SIZE_LIMIT, description="The size limit for attachments - Use \"-1\" to mean unlimited")
     public Long getAttachmentSizeLimit() { return attachmentSizeLimit; }
+    @GraphQLQuery(name=GqlConstants.DOCUMENT_SIZE_LIMIT, description="The size limit for documents")
     public Long getDocumentSizeLimit() { return documentSizeLimit; }
+    @GraphQLQuery(name=GqlConstants.VERSION, description="Server version")
+    @GraphQLNonNull
     public String getVersion() { return version; }
+    @GraphQLQuery(name=GqlConstants.ACCOUNT_ID, description="Account ID")
+    @GraphQLNonNull
     public String getAccountId() { return accountId; }
+    @GraphQLQuery(name=GqlConstants.PROFILE_IMAGE_ID, description="Profile image ID")
     public int getProfileImageId() { return profileImageId; }
+    @GraphQLQuery(name=GqlConstants.ACCOUNT_NAME, description="Email address (user@domain)")
+    @GraphQLNonNull
     public String getAccountName() { return accountName; }
+    @GraphQLQuery(name=GqlConstants.CRUMB, description="Crumb")
     public String getCrumb() { return crumb; }
+    @GraphQLQuery(name=GqlConstants.LIFETIME, description="Number of milliseconds until auth token expires")
+    @GraphQLNonNull
     public long getLifetime() { return lifetime; }
+    @GraphQLQuery(name=GqlConstants.ADMIN_DELEGATED,
+            description="1 (true) if the auth token is a delegated auth token issued to an admin account")
     public Boolean getAdminDelegated() { return ZmBoolean.toBool(adminDelegated, Boolean.FALSE); }
+    @GraphQLQuery(name=GqlConstants.REST_URL, description="Base REST URL for the requested account")
     public String getRestUrl() { return restUrl; }
+    @GraphQLQuery(name=GqlConstants.QUOTA_USED, description="Mailbox quota used in bytes")
     public Long getQuotaUsed() { return quotaUsed; }
+    @GraphQLQuery(name=GqlConstants.PREVIOUS_SESSION_TIME,
+            description="Time (in millis) of last write op from this session, or from any SOAP session if we don't have one")
     public Long getPreviousSessionTime() { return previousSessionTime; }
+    @GraphQLQuery(name=GqlConstants.LAST_WRITE_ACCESS_TIME,
+            description="Time (in millis) of last write op from any SOAP session before this session was initiated,"
+                    + " or same as {previous-SOAP-session-time} if we don't have one")
     public Long getLastWriteAccessTime() { return lastWriteAccessTime; }
+    @GraphQLQuery(name=GqlConstants.RECENT_MESSAGE_COUNT,
+            description="Number of messages received since the previous soap session, or since the last SOAP"
+                    + " write op if we don't have a session")
     public Integer getRecentMessageCount() { return recentMessageCount; }
+    @GraphQLQuery(name=GqlConstants.ADMIN_URL, description="base URL for accessing the admin console")
     public String getAdminURL() { return adminURL; }
+    @GraphQLQuery(name=GqlConstants.BOSH_URL,
+            description="Proxy URL for accessing XMPP over BOSH."
+                    + " Should be returned only when zimbraFeatureChatEnabled is set to TRUE for Account/COS")
     public String getBOSHURL() { return boshURL; }
 
+    @GraphQLQuery(name=GqlConstants.CLASS_COS, description="Class of service")
     public Cos getCos() { return cos; }
+    @GraphQLQuery(name=GqlConstants.PREFS, description="User-settable preferences")
     public List<Pref> getPrefs() {
         return Collections.unmodifiableList(prefs);
     }
+    @GraphQLQuery(name=GqlConstants.ATTRS,
+            description="Account attributes that aren't user-settable, but the front-end needs")
     public List<Attr> getAttrs() {
         return Collections.unmodifiableList(attrs);
     }
+    @GraphQLQuery(name=GqlConstants.ZIMLETS, description="Zimlets")
     public List<AccountZimletInfo> getZimlets() {
         return Collections.unmodifiableList(zimlets);
     }
+    @GraphQLQuery(name=GqlConstants.PROPS, description="Properties")
     public List<Prop> getProps() {
         return Collections.unmodifiableList(props);
     }
+    @GraphQLQuery(name=GqlConstants.CLASS_IDENTITIES, description="Identities")
     public List<Identity> getIdentities() {
         return Collections.unmodifiableList(identities);
     }
+    @GraphQLQuery(name=GqlConstants.SIGNATURES, description="Signatures")
     public List<Signature> getSignatures() {
         return Collections.unmodifiableList(signatures);
     }
+    @GraphQLQuery(name=GqlConstants.DATA_SOURCES, description="Data sources")
     public List<AccountDataSource> getDataSources() {
         return Collections.unmodifiableList(dataSources);
     }
+    @GraphQLQuery(name=GqlConstants.CHILD_ACCOUNTS, description="Child accounts")
     public List<ChildAccount> getChildAccounts() {
         return Collections.unmodifiableList(childAccounts);
     }
+    @GraphQLQuery(name=GqlConstants.DISCOVERED_RIGHTS, description="Discovered Rights - same as for DiscoverRightsResponse")
     public List<DiscoverRightsInfo> getDiscoveredRights() {
         return Collections.unmodifiableList(discoveredRights);
     }
+    @GraphQLQuery(name=GqlConstants.SOAP_URL, description="URL to talk to for soap service for this account")
     public String getSoapURL() {
         return soapURL;
     }
+    @GraphQLQuery(name=GqlConstants.PUBLIC_URL, description="Base public URL for the requested account")
     public String getPublicURL() { return publicURL; }
+    @GraphQLQuery(name=GqlConstants.CHANGE_PASSWORD_URL, description="URL to talk to in order to change a password")
     public String getChangePasswordURL() { return changePasswordURL; }
+    @GraphQLQuery(name=GqlConstants.LICENSE, description="License information")
     public LicenseInfo getLicense() { return license; }
-
+    @GraphQLIgnore
     public Multimap<String, String> getPrefsMultimap() {
         return Pref.toMultimap(prefs);
     }
-
+    @GraphQLIgnore
     public Multimap<String, String> getAttrsMultimap() {
         return Attr.toMultimap(attrs);
     }
-
+    @GraphQLIgnore
     public Multimap<String, String> getPropsMultimap(String userPropKey) {
         return Prop.toMultimap(props, userPropKey);
     }
 
+    @GraphQLQuery(name=GqlConstants.IS_TRACKING_IMAP, description="Boolean value denoting if this account has logged in over IMAP")
     public Boolean getIsTrackingIMAP() {
         return ZmBoolean.toBool(isTrackingIMAP, Boolean.FALSE);
     }
@@ -530,8 +580,8 @@ public final class GetInfoResponse {
         this.isTrackingIMAP = ZmBoolean.fromBool(trackingEnabled);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(
+                MoreObjects.ToStringHelper helper) {
         return helper
             .add("attachmentSizeLimit", attachmentSizeLimit)
             .add("documentSizeLimit", documentSizeLimit)
@@ -566,7 +616,7 @@ public final class GetInfoResponse {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
+        return addToStringInfo(MoreObjects.toStringHelper(this))
                 .toString();
     }
 }

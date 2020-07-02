@@ -14,3 +14,10 @@
 
 - `Everything under build/conf after a build should end up under /opt/zimbra/conf`
 ~                    
+
+
+## Common Password List
+
+- `The common password list is sourced from the [SecLists repository].`
+
+[SecLists repository]: https://github.com/danielmiessler/SecLists

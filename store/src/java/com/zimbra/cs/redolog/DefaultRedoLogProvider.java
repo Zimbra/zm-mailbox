@@ -48,11 +48,11 @@ public class DefaultRedoLogProvider extends RedoLogProvider {
             mRedoLogManager.stop();
     }
     
-    public void initRedoLogManager() {
+    public void initRedoLogManager() throws ServiceException {
         // RedoLogManager instance is needed even when redo logging
         // is disabled.
         File redoLog = new File(RedoConfig.redoLogPath());
         File archDir = new File(RedoConfig.redoLogArchiveDir());
-        super.mRedoLogManager = new RedoLogManager(redoLog, archDir, true);
+        super.mRedoLogManager = new RedoLogManager(redoLog, archDir, false);
     }
 }

@@ -1,5 +1,7 @@
 package com.zimbra.qa.unittest;
 
+import com.zimbra.client.ZMailbox.OwnerBy;
+import com.zimbra.client.ZMailbox.SharedItemBy;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -16,6 +18,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -23,6 +26,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import javax.mail.MessagingException;
 
+import com.zimbra.client.ZGetInfoResult;
 import org.apache.commons.lang.StringUtils;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -67,6 +71,7 @@ import com.zimbra.cs.mailclient.imap.MessageData;
 import com.zimbra.cs.mailclient.imap.ResponseHandler;
 import com.zimbra.cs.service.formatter.VCard;
 import com.zimbra.soap.type.SearchSortBy;
+import com.zimbra.client.ZGrant.GranteeType;
 
 /**
  * Definitions of tests used from {@Link TestLocalImapShared} and {@Link TestRemoteImapShared}
@@ -141,7 +146,7 @@ public abstract class SharedImapTests extends ImapTestBase {
                 acctIdForFolder(folderForPath));
     }
 
-    private String acctIdForFolder(FolderStore folder) {
+    private String acctIdForFolder(FolderStore folder) throws ServiceException {
         MailboxStore mbox = folder.getMailboxStore();
         String acctId;
         try {
@@ -1391,6 +1396,61 @@ public abstract class SharedImapTests extends ImapTestBase {
         });
     }
 
+    private class ImapClientThread
+    implements Runnable {
+        private final String folderName;
+        private Random rand = new Random();
+
+        private ImapClientThread(String fldr) {
+            folderName = fldr;
+        }
+
+        @Override
+        public void run() {
+            for (int i = 0; i < 1000; i++) {
+                try {
+                    ImapConnection imapConn = connectAndLogin(USER);
+                    imapConn.select(folderName);
+                    imapConn.store("1:*", "+FLAGS", new String[] { "\\Seen" });
+                    try {
+                        Thread.sleep(rand.nextInt(1000));
+                    } catch (InterruptedException e) {
+                    }
+                    imapConn.select("INBOX");
+                    imapConn.select(folderName);
+                    imapConn.store("1:*", "-FLAGS", new String[] { "\\Seen" });
+                    imapConn.select("INBOX");
+                    imapConn.logout();
+                    imapConn.close();
+                } catch (Exception e) {
+                    ZimbraLog.test.error("Problem connecting and selecting %s in thread", folderName, e);
+                }
+            }
+        }
+    }
+
+    /** Test created to attempt to repro ZBUG-446 */
+    @Test(timeout=1000000)
+    @Ignore("Takes a while to run.")
+    public void imapFolderReload() throws Exception {
+        connection = connectAndLogin(USER);
+        String folderName = "INBOX/exercise";
+        connection.create(folderName);
+        assertTrue(connection.exists(folderName));
+        String msg1 = simpleMessage("message to exercise ImapURL");
+        connection.append(folderName, null, null, literal(msg1));
+        Thread[] threads = new Thread[14];
+        for (int i = 0; i < threads.length; i++) {
+            threads[i] = new Thread(new ImapClientThread(folderName));
+        }
+        for (Thread thread : threads) {
+            thread.start();
+        }
+        for (Thread thread : threads) {
+            thread.join();
+        }
+    }
+
     private void doAppendThenOtherAppendReferencingFirst(
             ImapConnection conn, String folder1, String folder2) throws IOException {
         assertTrue(conn.hasCapability("CATENATE"));
@@ -2057,6 +2117,65 @@ public abstract class SharedImapTests extends ImapTestBase {
             }
         }
         assertTrue(String.format("'%s' mountpoint not in result of 'list \"\" \"*\"'", mountpointName), seenIt);
+        otherConnection.logout();
+        otherConnection = null;
+    }
+
+    /** Simulate how LIST handles the situation where a user has shared their whole mailbox with a sharee
+     * and the sharee has used ZWC to add a shared folder for "All applications".
+        "CreateMountpointRequest": [{
+            "link": {
+                "l": 1, "name": "owner's", "view": "unknown", "zid": "028fdbd8-d5de-483a-a545-11e421b8bd12", "rid": 1
+            },
+            "_jsns": "urn:zimbraMail"
+        }], "_jsns": "urn:zimbra"
+     */
+    @Test(timeout=100000)
+    public void listMountpointForAllApplicationsShare() throws ServiceException, IOException {
+        TestUtil.createAccount(SHAREE);
+        ZMailbox shareeZmbox = TestUtil.getZMailbox(SHAREE);
+        ZMailbox mbox = TestUtil.getZMailbox(USER);
+        String sharedFolderName = String.format("%s-shared", testId);
+        String remoteFolderPath = "/" + sharedFolderName;
+        TestUtil.createFolder(mbox, remoteFolderPath);
+        String mountpointName = String.format("%s's", USER, testId);
+        ZGetInfoResult remoteInfo = mbox.getAccountInfo(true);
+        String folderUserRoot = Integer.toString(Mailbox.ID_FOLDER_USER_ROOT);
+        otherConnection = connectAndLogin(SHAREE);
+        List<ListData> beforeListResult = otherConnection.list("", "*");
+        assertNotNull("list result 'list \"\" \"*\"' should not be null (before share)", beforeListResult);
+        mbox.modifyFolderGrant(folderUserRoot, GranteeType.all, null, "rwidx", null);
+        shareeZmbox.createMountpoint(folderUserRoot, mountpointName, null, null,
+                null, OwnerBy.BY_ID, remoteInfo.getId(), SharedItemBy.BY_ID, folderUserRoot, false);
+        List<ListData> listResult;
+        listResult = otherConnection.list("", "*");
+        assertNotNull("list result 'list \"\" \"*\"' should not be null", listResult);
+        boolean seenIt = false;
+        for (ListData listEnt : listResult) {
+            ZimbraLog.test.info("LIST result has entry '%s'", listEnt.getMailbox());
+            if (mountpointName.equals(listEnt.getMailbox())) {
+                seenIt = true;
+                break;
+            }
+        }
+        assertTrue(String.format("'%s' mountpoint not in result of 'list \"\" \"*\"'", mountpointName), seenIt);
+        int extras = listResult.size() - beforeListResult.size();
+        /* Extra entries should look something like these - i.e. a top level container and the sharer user's folders
+         * under there.
+         * LIST (\NoSelect \HasChildren) "/" "testimapviaembeddedlocal-listmountpointforallapplicationsshare-61-user's"
+         * LIST (\HasNoChildren) "/" "testimapviaembeddedlocal-listmountpointforallapplicationsshare-61-user's/Chats"
+         * LIST (\HasNoChildren) "/" "testimapviaembeddedlocal-listmountpointforallapplicationsshare-61-user's/Contacts"
+         * LIST (\HasNoChildren \Drafts) "/" "testimapviaembeddedlocal-listmountpointforallapplicationsshare-61-user's/Drafts"
+         * LIST (\HasNoChildren) "/" "testimapviaembeddedlocal-listmountpointforallapplicationsshare-61-user's/Emailed Contacts"
+         * LIST (\HasNoChildren) "/" "testimapviaembeddedlocal-listmountpointforallapplicationsshare-61-user's/Inbox"
+         * LIST (\NoInferiors \Junk) "/" "testimapviaembeddedlocal-listmountpointforallapplicationsshare-61-user's/Junk"
+         * LIST (\HasNoChildren \Sent) "/" "testimapviaembeddedlocal-listmountpointforallapplicationsshare-61-user's/Sent"
+         * LIST (\HasNoChildren) "/" "testimapviaembeddedlocal-listmountpointforallapplicationsshare-61-user's/TestImapViaEmbeddedLocal-listMountpointForAllApplicationsShare-61-shared"
+         * LIST (\HasNoChildren \Trash) "/" "testimapviaembeddedlocal-listmountpointforallapplicationsshare-61-user's/Trash"
+         */
+        assertTrue(String.format(
+                "'list \"\" \"*\"' response before share had %s entries, after %s entries (diff %s) expected >= 10 new",
+                beforeListResult.size(), listResult.size(), extras), extras >= 10);
         otherConnection.logout();
         otherConnection = null;
     }

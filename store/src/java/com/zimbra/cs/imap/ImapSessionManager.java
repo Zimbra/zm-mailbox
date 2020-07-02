@@ -41,6 +41,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mailbox.MailItemType;
+import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.mailbox.MountpointStore;
 import com.zimbra.common.mailbox.OpContext;
@@ -297,8 +298,7 @@ final class ImapSessionManager {
             waitForWaitSetNotifications(imapStore, folder);
         }
 
-        mbox.lock(true);
-        try {
+        try (final MailboxLock l = mbox.getWriteLockAndLockIt()) {
             // need mInitialRecent to be set *before* loading the folder so we can determine what's \Recent
             if (!(folder instanceof ZSharedFolder)) {
                 folder = mbox.getFolderById(octxt, folderIdAsString);
@@ -373,8 +373,6 @@ final class ImapSessionManager {
                 }
                 throw e;
             }
-        } finally {
-            mbox.unlock();
         }
     }
 
@@ -548,7 +546,7 @@ final class ImapSessionManager {
         return listeners;
     }
 
-    private List<ImapMessage> duplicateSerializedFolder(FolderStore folder) {
+    private List<ImapMessage> duplicateSerializedFolder(FolderStore folder) throws ServiceException {
         ImapFolder i4folder = getCache(folder);
         if (i4folder == null) { // cache miss
             return null;
@@ -695,8 +693,14 @@ final class ImapSessionManager {
         // if there are still other listeners on this folder, this session is unnecessary
         MailboxStore mbox = session.getMailbox();
         if (mbox != null) {
-            mbox.lock(true);
+            MailboxLock lock;
             try {
+                lock = mbox.getWriteLockAndLockIt();
+            } catch (ServiceException e) {
+                ZimbraLog.imap.warn("unable to acquire mailbox lock in ImapSessionManager.closeFolder(), proceeding anyways");
+                lock = null;
+            }
+            try (final MailboxLock l = lock) {
                 for (ImapListener i4listener : session.getImapMboxStore().getListeners(
                         session.getFolderItemIdentifier())) {
                     if (differentSessions(i4listener, session)) {
@@ -706,8 +710,6 @@ final class ImapSessionManager {
                         return;
                     }
                 }
-            } finally {
-                mbox.unlock();
             }
         }
     }
@@ -720,7 +722,7 @@ final class ImapSessionManager {
     /**
      * Try to retrieve from inactive session cache, then fall back to active session cache.
      */
-    private ImapFolder getCache(FolderStore folder) {
+    private ImapFolder getCache(FolderStore folder) throws ServiceException {
         ImapFolder i4folder = inactiveSessionCache.get(cacheKey(folder, false));
         if (i4folder != null) {
             return i4folder;
@@ -732,8 +734,12 @@ final class ImapSessionManager {
      * Remove cached values from both active session cache and inactive session cache.
      */
     private void clearCache(FolderStore folder) {
-        activeSessionCache.remove(cacheKey(folder, true));
-        inactiveSessionCache.remove(cacheKey(folder, false));
+        try {
+            activeSessionCache.remove(cacheKey(folder, true));
+            inactiveSessionCache.remove(cacheKey(folder, false));
+        } catch (ServiceException e){
+            ZimbraLog.imap.error("unable to clear the cache for folder %s", folder.getName(), e);
+        }
     }
 
     /**
@@ -769,7 +775,7 @@ final class ImapSessionManager {
         return session.hasExpunges() ? cachekey + "+" + session.getQualifiedSessionId() : cachekey;
     }
 
-    private String cacheKey(FolderStore folder, boolean active) {
+    private String cacheKey(FolderStore folder, boolean active) throws ServiceException {
         MailboxStore mbox = folder.getMailboxStore();
         int modseq = folder instanceof SearchFolderStore ? mbox.getLastChangeID() : folder.getImapMODSEQ();
         int uvv = folder instanceof SearchFolderStore ? mbox.getLastChangeID() : ImapFolder.getUIDValidity(folder);

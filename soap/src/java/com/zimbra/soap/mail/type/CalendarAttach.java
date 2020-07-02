@@ -17,17 +17,23 @@
 
 package com.zimbra.soap.mail.type;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlValue;
 
 import com.zimbra.common.calendar.Attach;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.CalendarAttachInterface;
 
+import io.leangen.graphql.annotations.GraphQLInputField;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name=GqlConstants.CLASS_CALENDAR_ATTACHMENT, description="Calendar attachment information")
 public class CalendarAttach implements CalendarAttachInterface {
 
     /**
@@ -69,25 +75,31 @@ public class CalendarAttach implements CalendarAttachInterface {
     }
 
     @Override
+    @GraphQLInputField(name=GqlConstants.URI, description="URI")
     public void setUri(String uri) { this.uri = uri; }
     @Override
+    @GraphQLInputField(name=GqlConstants.CONTENT_TYPE, description="Content-Type for the binary64Data")
     public void setContentType(String contentType) {
         this.contentType = contentType;
     }
 
     @Override
+    @GraphQLInputField(name=GqlConstants.BINARY_64_DATA, description="Base64 encoded binary alarm attachment data")
     public void setBinaryB64Data(String binaryB64Data) {
         this.binaryB64Data = binaryB64Data;
     }
 
     @Override
+    @GraphQLQuery(name=GqlConstants.URI, description="URI")
     public String getUri() { return uri; }
     @Override
+    @GraphQLQuery(name=GqlConstants.CONTENT_TYPE, description="Content-Type for the binary64Data")
     public String getContentType() { return contentType; }
     @Override
+    @GraphQLQuery(name=GqlConstants.BINARY_64_DATA, description="Base64 encoded binary alarm attachment data")
     public String getBinaryB64Data() { return binaryB64Data; }
 
-    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         return helper
             .add("uri", uri)
             .add("contentType", contentType)
@@ -96,6 +108,6 @@ public class CalendarAttach implements CalendarAttachInterface {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this)).toString();
+        return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
     }
 }

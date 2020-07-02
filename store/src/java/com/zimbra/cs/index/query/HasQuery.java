@@ -17,9 +17,11 @@
 package com.zimbra.cs.index.query;
 
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.ImmutableMap;
 import com.zimbra.cs.index.LuceneFields;
+import com.zimbra.cs.mailbox.MailItem;
 
 /**
  * Query by special objects.
@@ -37,8 +39,8 @@ public final class HasQuery extends LuceneQuery {
         .put("url", "url")
         .build();
 
-    public HasQuery(String what) {
-        super("has:", LuceneFields.L_OBJECTS, lookup(MAP, what));
+    public HasQuery(String what, Set<MailItem.Type> types) {
+        super("has:", LuceneFields.L_OBJECTS, lookup(MAP, what), types);
     }
 
 }

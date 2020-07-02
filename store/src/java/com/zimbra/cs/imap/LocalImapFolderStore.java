@@ -16,7 +16,7 @@
  */
 package com.zimbra.cs.imap;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
@@ -52,6 +52,6 @@ public class LocalImapFolderStore implements ImapFolderStore {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this).add("folder", folder).toString();
+        return MoreObjects.toStringHelper(this).add("folder", folder).toString();
     }
 }

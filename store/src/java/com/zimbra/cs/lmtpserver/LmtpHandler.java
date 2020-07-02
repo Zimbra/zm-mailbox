@@ -485,12 +485,11 @@ public abstract class LmtpHandler extends ProtocolHandler {
         StringBuilder headers = new StringBuilder();
 
         // Assemble Return-Path header
+        String sender = "";
         if (mEnvelope.hasSender()) {
-            String sender = mEnvelope.getSender().getEmailAddress();
-            if (!StringUtil.isNullOrEmpty(sender)) {
-                headers.append(String.format("Return-Path: %s\r\n", sender));
-            }
+            sender = mEnvelope.getSender().getEmailAddress();
         }
+        headers.append(String.format("Return-Path: <%s>\r\n", sender));
 
         // Assemble Received header
         String localHostname = "unknown";

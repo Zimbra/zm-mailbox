@@ -358,8 +358,12 @@ implements SharedInputStream, InputStreamSource {
      * in this case because we have no control over how JavaMail uses BlobInputStream.
      */
     protected void finalize() throws Throwable {
-        super.finalize();
-        close();
+    	try {
+    		close();
+    	}
+    	finally {
+    		super.finalize();
+    	}
     }
 
     ////////////// SharedInputStream methods //////////////

@@ -17,7 +17,7 @@
 
 package com.zimbra.soap.account.message;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -242,7 +242,7 @@ public class SearchGalRequest {
     public CursorInfo getCursor() { return cursor; }
     public EntrySearchFilterInfo getSearchFilter() { return searchFilter; }
 
-    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         return helper
             .add("ref", ref)
             .add("name", name)
@@ -263,6 +263,6 @@ public class SearchGalRequest {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this)).toString();
+        return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
     }
 }

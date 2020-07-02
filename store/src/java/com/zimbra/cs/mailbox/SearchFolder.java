@@ -16,14 +16,17 @@
  */
 package com.zimbra.cs.mailbox;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.mailbox.SearchFolderStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.mailbox.MailItem.Type;
+import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.session.PendingModifications.Change;
 
@@ -46,7 +49,16 @@ public final class SearchFolder extends Folder implements SearchFolderStore {
 
     public SearchFolder(Mailbox mbox, UnderlyingData data, boolean skipCache) throws ServiceException {
         super(mbox, data, skipCache);
-        if (mData.type != Type.SEARCHFOLDER.toByte()) {
+        init();
+    }
+
+    SearchFolder(Account acc, UnderlyingData data, int mailboxId) throws ServiceException {
+        super(acc, data, mailboxId);
+        init();
+    }
+
+    private void init() throws ServiceException {
+        if (type != Type.SEARCHFOLDER.toByte()) {
             throw new IllegalArgumentException();
         }
     }
@@ -219,7 +231,7 @@ public final class SearchFolder extends Folder implements SearchFolderStore {
     }
 
     @Override Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mRGBColor, mMetaVersion, mVersion, mExtendedData, mQuery, mTypes, mSort);
+        return encodeMetadata(meta, state.getColor(), state.getMetadataVersion(), state.getVersion(), mExtendedData, mQuery, mTypes, mSort);
     }
 
     private static String encodeMetadata(Color color, int metaVersion, int version, CustomMetadata custom, String query, String types, String sort) {
@@ -240,7 +252,7 @@ public final class SearchFolder extends Folder implements SearchFolderStore {
 
     @Override
     public String toString() {
-        Objects.ToStringHelper helper = Objects.toStringHelper(this);
+        MoreObjects.ToStringHelper helper = MoreObjects.toStringHelper(this);
         appendCommonMembers(helper);
         helper.add(CN_NAME, getName());
         helper.add(CN_QUERY, getQuery());

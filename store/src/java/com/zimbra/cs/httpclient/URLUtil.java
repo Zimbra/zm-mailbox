@@ -23,15 +23,18 @@
  */
 package com.zimbra.cs.httpclient;
 
+import com.zimbra.common.account.Key;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.MailMode;
 import com.zimbra.cs.account.Server;
+import com.zimbra.soap.DocumentHandler;
 
 /**
  * @author jhahm
@@ -54,6 +57,10 @@ public class URLUtil {
      */
     public static String getSoapURL(Server server, boolean preferSSL) throws ServiceException {
         return URLUtil.getServiceURL(server, AccountConstants.USER_SERVICE_URI, preferSSL);
+    }
+    
+    public static String getSoapURL(String podIP, int port, boolean preferSSL) throws ServiceException {
+        return URLUtil.getServiceURL(podIP, port, AccountConstants.USER_SERVICE_URI, preferSSL);
     }
 
     public static String getSoapPublicURL(Server server, Domain domain, boolean preferSSL) throws ServiceException {
@@ -122,7 +129,19 @@ public class URLUtil {
         return sb.toString();
     }
 
-
+    public static String getAdminURL(String podIp, String path) throws ServiceException {
+		Server localServer = Provisioning.getInstance().getLocalServer();
+		int port = localServer.getIntAttr(Provisioning.A_zimbraAdminPort, 0);
+		StringBuffer sb = new StringBuffer(128);
+		sb.append(LC.zimbra_admin_service_scheme.value()).append(podIp).append(":").append(port).append(path);
+		return sb.toString();
+    }
+    
+    public static String getAdminURL(String ip, int port, String path, boolean checkPort) throws ServiceException {
+        StringBuffer sb = new StringBuffer(128);
+        sb.append(LC.zimbra_admin_service_scheme.value()).append(ip).append(":").append(port).append(path);
+        return sb.toString();
+    }
     /**
      * Returns absolute URL with scheme, host, and port for admin app on server.
      * Admin app only runs over SSL. Uses port from localconfig.
@@ -208,7 +227,7 @@ public class URLUtil {
     public static String getPublicAdminConsoleURLForDomain(Server server, Domain domain) throws ServiceException {
         String publicAdminUrl = getAdminConsoleProxyUrl(server, domain);
         if (publicAdminUrl == null) {
-            publicAdminUrl = URLUtil.getAdminURL(server, server.getAdminURL());
+            publicAdminUrl = URLUtil.getAdminURL(server, AdminConstants.ADMIN_SERVICE_URI);
         }
         return publicAdminUrl;
     }
@@ -244,7 +263,7 @@ public class URLUtil {
         if (printPort) {
             buf.append(":").append(port);
         }
-        buf.append(server.getAdminURL());
+        buf.append(AdminConstants.ADMIN_SERVICE_URI);
         return buf.toString();
 
     }
@@ -276,9 +295,84 @@ public class URLUtil {
         buf.append(path);
     	return buf.toString();
     }
+    
+	public static String getServiceURL(String podIP, String path, boolean useSSL) throws ServiceException {
+		Server localServer = Provisioning.getInstance().getLocalServer();
+		int port = getServicePort(localServer, useSSL);
+		return getServiceURL(podIP, port, path, useSSL);
+	}
 
+	public static MailMode getModeString(Server server) throws ServiceException {
+		String modeString = server.getAttr(Provisioning.A_zimbraMailMode, null);
+		if (modeString == null) {
+			throw ServiceException.INVALID_REQUEST("server " + server.getName() + " does not have "
+					+ Provisioning.A_zimbraMailMode + " set, maybe it is not a store server?", null);
+		}
+		MailMode mailMode = Provisioning.MailMode.fromString(modeString);
+
+		return mailMode;
+	}
+
+	public static int getServiceURLPort(String hostname, boolean useSSL) throws ServiceException {
+		Server server = Provisioning.getInstance().get(Key.ServerBy.name, hostname);
+		if (hostname == null) {
+			throw ServiceException.INVALID_REQUEST(
+					"server " + server.getName() + " does not have " + Provisioning.A_zimbraServiceHostname, null);
+		}
+
+		return getServicePort(server, useSSL);
+	}
+
+	public static int getServicePort(Server server, boolean useSSL) throws ServiceException {
+		MailMode mailMode = getModeString(server);
+		int port;
+		if ((mailMode != MailMode.http && useSSL) || mailMode == MailMode.https) {
+			port = server.getIntAttr(Provisioning.A_zimbraMailSSLPort, DEFAULT_HTTPS_PORT);
+		} else {
+			port = server.getIntAttr(Provisioning.A_zimbraMailPort, DEFAULT_HTTP_PORT);
+		}
+
+		return port;
+	}
+
+	public static String getProtocol(MailMode mailMode, boolean useSSL) {
+		String proto;
+		if ((mailMode != MailMode.http && useSSL) || mailMode == MailMode.https) {
+			proto = PROTO_HTTPS;
+		} else {
+			proto = PROTO_HTTP;
+		}
+
+		return proto;
+	}
+
+	public static String getServiceURL(String ip, int port, String path, boolean useSSL) throws ServiceException {
+		Server localServer = Provisioning.getInstance().getLocalServer();
+		MailMode mailMode = getModeString(localServer);
+		String proto = getProtocol(mailMode, useSSL);
+		StringBuilder buf = new StringBuilder();
+		buf.append(proto).append("://").append(ip);
+		buf.append(":").append(port);
+		buf.append(path);
+		return buf.toString();
+	}
+    
     public static boolean reverseProxiedMode(Server server) throws ServiceException {
         String referMode = server.getAttr(Provisioning.A_zimbraMailReferMode, "wronghost");
         return Provisioning.MAIL_REFER_MODE_REVERSE_PROXIED.equals(referMode);
+    }
+
+    public static int getPort() throws ServiceException {
+    	int port = 0;
+    	String hostname = DocumentHandler.getLocalHost();
+    	if (hostname == null) {
+    		throw ServiceException.PROXY_ERROR(AccountServiceException.NO_SUCH_SERVER(""), "");
+    	}
+
+    	try {
+    		port = getServiceURLPort(hostname, false);
+    	} catch (ServiceException exp) {
+    	}   	
+    	return port;
     }
 }

@@ -35,9 +35,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
-
 import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.redolog.RedoCommitCallback;
@@ -71,9 +71,10 @@ public abstract class RedoableOp {
     private int mChangeId = -1;
     private int mChangeConstraint;
     private int mMailboxId;
-    private RedoLogManager mRedoLogMgr;
+    protected RedoLogManager mRedoLogMgr;
     private boolean mUnloggedReplay;  // true if redo of this op is not redo-logged
     protected RedoCommitCallback mCommitCallback;
+    private String mAccountId = null; // used for routing to redolog streams
 
     protected RedoableOp(MailboxOperation op, RedoLogManager mgr) {
         mOperation = op;
@@ -147,7 +148,7 @@ public abstract class RedoableOp {
         return octxt;
     }
 
-    public synchronized void commit() {
+    public synchronized void commit() throws ServiceException {
         if (mActive) {
             mActive = false;
             mRedoLogMgr.commit(this);
@@ -247,6 +248,14 @@ public abstract class RedoableOp {
 
     public void setMailboxId(int mboxId) {
         mMailboxId = mboxId;
+    }
+
+    public void setAccountId(String accountId) {
+        mAccountId = accountId;
+    }
+
+    public String getAccountId() {
+        return mAccountId;
     }
 
     protected void serializeHeader(RedoLogOutput out) throws IOException {

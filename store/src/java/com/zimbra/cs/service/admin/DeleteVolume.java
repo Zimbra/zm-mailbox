@@ -25,6 +25,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.volume.VolumeManager;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -45,6 +46,10 @@ public final class DeleteVolume extends AdminDocumentHandler {
 
         VolumeManager mgr = VolumeManager.getInstance();
         mgr.getVolume(req.getId()); // make sure the volume exists before doing anything heavyweight...
+        StoreManager storeManager = StoreManager.getInstance();
+        if (storeManager.supports(StoreManager.StoreFeature.CUSTOM_STORE_API, String.valueOf(req.getId()))) {
+          throw ServiceException.INVALID_REQUEST("Operation unsupported, use zxsuite to delete this volume", null);
+        }
         mgr.delete(req.getId());
         return new DeleteVolumeResponse();
     }

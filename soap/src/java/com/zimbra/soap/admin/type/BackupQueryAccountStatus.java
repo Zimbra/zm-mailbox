@@ -17,7 +17,7 @@
 
 package com.zimbra.soap.admin.type;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -78,8 +78,8 @@ public class BackupQueryAccountStatus {
     public String getErrorMessage() { return errorMessage; }
     public String getTrace() { return trace; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(
+                MoreObjects.ToStringHelper helper) {
         return helper
             .add("name", name)
             .add("status", status)
@@ -89,7 +89,7 @@ public class BackupQueryAccountStatus {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
+        return addToStringInfo(MoreObjects.toStringHelper(this))
                 .toString();
     }
 }

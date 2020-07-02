@@ -21,8 +21,9 @@ import javax.xml.bind.annotation.XmlEnum;
 import javax.xml.bind.annotation.XmlEnumValue;
 import javax.xml.bind.annotation.XmlType;
 
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.zimbra.soap.json.jackson.ZmBooleanDeSerializer;
 import com.zimbra.soap.json.jackson.ZmBooleanSerializer;
 
 /**
@@ -54,6 +55,7 @@ import com.zimbra.soap.json.jackson.ZmBooleanSerializer;
 @XmlType
 @XmlEnum(String.class)
 @JsonSerialize(using=ZmBooleanSerializer.class)
+@JsonDeserialize(using=ZmBooleanDeSerializer.class)
 public enum ZmBoolean {
     @XmlEnumValue("0") ZERO,
     @XmlEnumValue("1") ONE,

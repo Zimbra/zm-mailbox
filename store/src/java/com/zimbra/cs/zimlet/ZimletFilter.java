@@ -80,7 +80,7 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
 		}
 		HttpServletRequest  req = (HttpServletRequest) request;
 		HttpServletResponse resp = (HttpServletResponse) response;
-
+		String zimbraXZimletCompatibleWith = req.getParameter("zimbraXZimletCompatibleWith");
         AuthToken authToken;
 		try {
         	authToken = getAuthTokenForApp(req, resp, false);
@@ -109,13 +109,14 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
 			if (!isAdminAuth) {
 				// zimlets for this account's COS
 				Account account = prov.get(AccountBy.id, authToken.getAccountId(), authToken);
+				String[] array = ZimletUtil.getAvailableZimlets(account).getZimletNamesAsArray();
 				for (String zimletName : ZimletUtil.getAvailableZimlets(account).getZimletNamesAsArray()) {
 					Zimlet zimlet = prov.getZimlet(zimletName);
 					if (zimlet == null) continue;
                     if (zimlet.isEnabled()) {
-						allowedZimlets.add(zimlet);
+                        addZimlet(allowedZimlets, zimbraXZimletCompatibleWith, zimlet);
 					}
-                    allZimlets.add(zimlet);
+                    addZimlet(allZimlets, zimbraXZimletCompatibleWith, zimlet);
 				}
 			}
 
@@ -127,7 +128,7 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
                     Zimlet zimlet = iter.next();
 					if (zimlet.isExtension()) {
 	                    if (zimlet.isEnabled()) {
-	                        allowedZimlets.add(zimlet);
+                            addZimlet(allowedZimlets, zimbraXZimletCompatibleWith, zimlet);
 	                    }
                     }
 				}
@@ -241,6 +242,24 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
         req.setAttribute(ZimletFilter.ALL_ZIMLETS, allZimletNames);
         chain.doFilter(req, resp);
 	}
+
+    private static void addZimlet(List zimletList, String zimbraXZimletCompatibleWith,
+        Zimlet zimlet) {
+        if (zimbraXZimletCompatibleWith != null && zimlet.getZimbraXCompatibleSemVer() != null) {
+            // request is for ZimbraX zimlets and this is zimbraX zimlet
+            // check version compatibility
+            com.github.zafarkhaja.semver.Version v = com.github.zafarkhaja.semver.Version
+                .valueOf(zimbraXZimletCompatibleWith);
+            boolean result = v.satisfies(zimlet.getZimbraXCompatibleSemVer());
+            if (result) {
+                zimletList.add(zimlet);
+            }
+        } else if (zimbraXZimletCompatibleWith == null
+            && zimlet.getZimbraXCompatibleSemVer() == null) {
+            // request is not for ZimbraX zimlets and this is not zimbraX zimlet
+            zimletList.add(zimlet);
+        }
+    }
 
 	public void destroy() {
 

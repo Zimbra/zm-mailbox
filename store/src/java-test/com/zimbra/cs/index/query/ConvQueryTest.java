@@ -17,6 +17,7 @@
 package com.zimbra.cs.index.query;
 
 import java.util.HashMap;
+import org.junit.Ignore;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -29,7 +30,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 
-public final class ConvQueryTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public final class ConvQueryTest {
 
     @BeforeClass
     public static void init() throws Exception {

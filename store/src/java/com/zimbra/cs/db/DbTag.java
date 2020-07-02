@@ -27,8 +27,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import junit.framework.Assert;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
@@ -52,6 +50,8 @@ import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.RetentionPolicyManager;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.soap.mail.type.RetentionPolicy;
+
+import junit.framework.Assert;
 
 public final class DbTag {
     public static final String TABLE_TAG = "tag";
@@ -795,7 +795,7 @@ public final class DbTag {
         return DbMailbox.qualifyTableName(groupId, TABLE_TAG);
     }
 
-    public static String getTagTableName(MailItem item) {
+    public static String getTagTableName(MailItem item) throws ServiceException {
         return DbMailbox.qualifyTableName(item.getMailbox(), TABLE_TAG);
     }
 
@@ -822,7 +822,9 @@ public final class DbTag {
 
     @VisibleForTesting
     public static void debugConsistencyCheck(Mailbox mbox) throws ServiceException {
-        DbConnection conn = mbox.lock.isWriteLockedByCurrentThread() ? mbox.getOperationConnection() : DbPool.getConnection(mbox);
+        boolean writeLockedByCurrentThread = mbox.isWriteLockedByCurrentThread();
+        DbConnection conn = writeLockedByCurrentThread ? mbox.getOperationConnection() :
+            DbPool.getConnection(mbox);
 
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -854,7 +856,7 @@ public final class DbTag {
         } finally {
             DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);
-            if (!mbox.lock.isWriteLockedByCurrentThread()) {
+            if (writeLockedByCurrentThread) {
                 conn.close();
             }
         }

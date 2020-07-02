@@ -49,11 +49,16 @@ public class SoapSessionFactory {
         return sSessionFactory;
     }
 
+
     public SoapSession getSoapSession(ZimbraSoapContext zsc) throws ServiceException {
+        return getSoapSession(zsc,null);
+    }
+
+    public SoapSession getSoapSession(ZimbraSoapContext zsc, String sessionId) throws ServiceException {
         if (zsc.isAuthUserOnLocalhost()) {
-            return new SoapSession(zsc);
+            return new SoapSession(zsc, sessionId);
         } else {
-            return new RemoteSoapSession(zsc);
+            return new RemoteSoapSession(zsc, sessionId);
         }
     }
 }

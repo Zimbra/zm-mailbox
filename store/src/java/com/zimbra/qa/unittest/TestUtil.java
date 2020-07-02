@@ -38,13 +38,13 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import javax.mail.util.SharedByteArrayInputStream;
 
+import org.apache.http.HttpException;
 import org.dom4j.DocumentException;
 import org.junit.internal.AssumptionViolatedException;
 import org.junit.runner.JUnitCore;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
-import com.google.common.io.Closeables;
 import com.zimbra.client.ZAuthResult;
 import com.zimbra.client.ZContact;
 import com.zimbra.client.ZDataSource;
@@ -272,7 +272,7 @@ public class TestUtil extends Assert {
     }
 
     public static LmcSession getSoapSession(String userName) throws ServiceException, LmcSoapClientException,
-            IOException, SoapFaultException {
+            IOException, SoapFaultException, HttpException {
         LmcAuthRequest auth = new LmcAuthRequest();
         auth.setUsername(getAddress(userName));
         auth.setPassword(DEFAULT_PASSWORD);
@@ -456,12 +456,14 @@ public class TestUtil extends Assert {
      */
     public static List<Integer> search(Mailbox mbox, String query, Set<MailItem.Type> types) throws ServiceException {
         List<Integer> ids = new ArrayList<Integer>();
-        ZimbraQueryResults r = mbox.index.search(new OperationContext(mbox), query, types, SortBy.DATE_DESC, 100);
-        while (r.hasNext()) {
-            ZimbraHit hit = r.getNext();
-            ids.add(new Integer(hit.getItemId()));
+        try (ZimbraQueryResults r = mbox.index.search(new OperationContext(mbox), query, types,
+            SortBy.DATE_DESC, 100)) {
+            while (r.hasNext()) {
+                ZimbraHit hit = r.getNext();
+                ids.add(new Integer(hit.getItemId()));
+            }
+        } catch (IOException e) {
         }
-        Closeables.closeQuietly(r);
         return ids;
     }
 
@@ -471,11 +473,12 @@ public class TestUtil extends Assert {
 
     public static List<ZimbraHit> searchForHits(Mailbox mbox, String query, Set<MailItem.Type> types) throws Exception {
         List<ZimbraHit> hits = Lists.newArrayList();
-        ZimbraQueryResults r = mbox.index.search(new OperationContext(mbox), query, types, SortBy.DATE_DESC, 100);
-        while (r.hasNext()) {
-            hits.add(r.getNext());
+        try (ZimbraQueryResults r = mbox.index.search(new OperationContext(mbox), query, types,
+            SortBy.DATE_DESC, 100)) {
+            while (r.hasNext()) {
+                hits.add(r.getNext());
+            }
         }
-        Closeables.closeQuietly(r);
         return hits;
     }
 
@@ -684,7 +687,9 @@ public class TestUtil extends Assert {
     }
 
     public static ZMessage waitForMessage(ZMailbox mbox, String query) throws Exception {
-        List<ZMessage> msgs = waitForMessages(mbox, query, 1, 10000);
+        // Used to wait up to 10 secs but due to the way postfix sometimes works, can get longer delays
+        // so increased the max wait time.
+        List<ZMessage> msgs = waitForMessages(mbox, query, 1, 31000);
         return msgs.get(0);
     }
 
@@ -1223,7 +1228,7 @@ public class TestUtil extends Assert {
 
     private static SoapTransport getAdminSoapTransport(SoapHttpTransport transport,
             String adminName, String adminPassword)
-                    throws SoapFaultException, IOException, ServiceException {
+                    throws SoapFaultException, IOException, ServiceException, HttpException {
         // Create auth element
         Element auth = new XMLElement(AdminConstants.AUTH_REQUEST);
         auth.addNonUniqueElement(AdminConstants.E_NAME).setText(adminName);
@@ -1238,16 +1243,17 @@ public class TestUtil extends Assert {
         return transport;
     }
 
-    /** Returns an authenticated transport for the <tt>zimbra</tt> account. */
+    /** Returns an authenticated transport for the <tt>zimbra</tt> account. 
+     * @throws HttpException */
     public static SoapTransport getAdminSoapTransport()
-            throws SoapFaultException, IOException, ServiceException {
+            throws SoapFaultException, IOException, ServiceException, HttpException {
         return getAdminSoapTransport(new SoapHttpTransport(getAdminSoapUrl()),
                 LC.zimbra_ldap_user.value(), LC.zimbra_ldap_password.value());
     }
 
     /** Returns an authenticated transport for the <tt>zimbra</tt> account on the target server. */
     public static SoapTransport getAdminSoapTransport(Server targetServer)
-            throws SoapFaultException, IOException, ServiceException {
+            throws SoapFaultException, IOException, ServiceException, HttpException {
         return getAdminSoapTransport(new SoapHttpTransport(URLUtil.getAdminURL(targetServer)),
                 LC.zimbra_ldap_user.value(), LC.zimbra_ldap_password.value());
     }
@@ -1256,7 +1262,7 @@ public class TestUtil extends Assert {
      * Returns an authenticated transport for the <tt>adminName</tt> account.
      */
     public static SoapTransport getAdminSoapTransport(String adminName, String adminPassword)
-            throws SoapFaultException, IOException, ServiceException {
+            throws SoapFaultException, IOException, ServiceException, HttpException {
         return getAdminSoapTransport(new SoapHttpTransport(getAdminSoapUrl()), adminName, adminPassword);
     }
 
@@ -1635,6 +1641,6 @@ public class TestUtil extends Assert {
     }
 
     public static void flushImapDaemonCache(Server imapd) throws Exception {
-        FlushCache.flushCacheOnImapDaemon(imapd, "all", null);
+        // FIXME: This doesn't work any longer since the code was removed from FlushCache
     }
 }

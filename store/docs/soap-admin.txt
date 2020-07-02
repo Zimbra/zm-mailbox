@@ -225,6 +225,21 @@ Access: domain admin sufficient
    note: this request is by default proxied to the account's home server
 
 -----------------------------
+<ChangePrimaryEmailRequest>
+  <account by="id|name|foreignPrincipal">{account-to-be-renamed}</account>
+  <newName>{new-account-name}</newName>
+</ChangePrimaryEmailRequest>
+
+<ChangePrimaryEmailResponse>
+  <account name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </account>
+</ChangePrimaryEmailResponse>
+
+Access: domain admin sufficient
+This api renames an account and adds old account name as an alias to the account.
+note: this request is by default proxied to the account's home server
+-----------------------------
 
 <SetPasswordRequest>
   <id>{value-of-zimbraId}</id>
@@ -1463,12 +1478,12 @@ Access: domain admin sufficient
 
 -----------------------------
 
-<DeleteDistributionListRequest>
-  <id>{value-of-zimbraId}</id>
-</DeleteDistributionListRequest>
+<DeleteDistributionListRequest id={zimbraId_of_dl} [cascadeDelete="true|false"] />
 
 <DeleteDistributionListResponse/>
 
+cascadeDelete: is used only for hab groups. when false, group deletion is prohibited if group has members.
+    when true, group hierarchy is deleted.
 Access: domain admin sufficient
 
 -----------------------------
@@ -3168,3 +3183,102 @@ Corresponding API for outgoing/sent email filters (message structure same as abo
 </ModifyOutgoingFilterRulesRequest>
 
 <ModifyOutgoingFilterRulesResponse/>
+------------------------------
+ContactBackup API
+------------------------------
+<ContactBackupRequest <op="start|stop">>
+    [<servers>
+     <server by="{id | name | serviceHostname}">{server-id | name | serviceHostname}</server>
+     <server by="{id | name | serviceHostname}">{server-id | name | serviceHostname}</server>
+     ...
+     </servers>
+    ]
+</ContactBackupRequest>
+
+op : It's a mandatory attribute. Value should be either "start" or "stop"
+start : start contact backup
+stop : stop contact backup
+servers : optional wrapper element for servers. if not mentioned all the mailbox servers will be processed.
+server : server to be searched by id/name/serviceHostname
+
+<ContactBackupResponse>
+     <servers>
+         [<server name="" status="started|error|stopped"></server>
+         ...
+         ]
+     </server>
+</ContactBackupResponse>
+
+servers : optional wrapper element for servers. if not mentioned, no backups were done on any mailbox servers.
+server name : name of the server
+status : response status from the server requested
+started : contact backup started on this server
+error : error occurred while starting or stopping contact backup on this server
+stopped : stopped contact backup on this server.
+
+----------------------------
+<CreateHABGroupRequest [habDispalyName={habDisplayName}] habOrgUnit={habOrgUnit}>
+</CreateHABGroupRequest>
+
+<CreateHABGroupResponse>
+  <dl name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </dl>
+</CreateHABGroupResponse>
+
+Note: CreateHABGroupRequest extends CreateDistributionListRequest.
+
+Access: domain admin sufficient
+-------------------------------
+
+
+-----------------------
+Create HAB OU API
+-----------------------
+
+ <HABOrgUnitRequest op="create|rename|delete" name="zimbraHAB41" xmlns="urn:zimbraAdmin">
+    <domain by="{id|name}">{domain-id | domain-name}</domain>
+</HABOrgUnitRequest>
+
+For create and rename operation the response is
+<HABOrgUnitResponse>
+  [<habOrgUnitName>{habOrgunitname1}</habOrgUnitName>
+  <habOrgUnitName>{habOrgunitname2}</habOrgUnitName>
+    ......
+  ]
+</HABOrgUnitResponse>
+
+For delete operation
+<HABOrgUnitResponse >
+</HABOrgUnitResponse>
+------------------------
+API to get all address lists in the given domain
+<GetAllAddressListsRequest xmlns="urn:zimbraAdmin">
+      [<domain by="id|name">...</domain>]
+</GetAllAddressListsRequest>
+
+Returns list of address lists.
+      <GetAllAddressListsResponse xmlns="urn:zimbraAdmin">
+         <AddressLists>
+            <AddressList name={name_of_address_list} [description={description}] id={zimbraId} active={0|1}/>
+            ...
+         </AddressLists>
+      </GetAllAddressListsResponse>
+------------------------
+API to delete address list.
+<DeleteAddressListRequest id={address-list-zimbra-Id} xmlns="urn:zimbraAdmin"/>
+
+Response:
+<DeleteAddressListResponse xmlns="urn:zimbraAdmin"/>
+------------------------
+API to create address list in given domain
+  <CreateAddressListRequest [type="all|account|resource|group"]>
+     <name>name_of_addresslist</name>
+     [<desc>description_of_addresslist</desc>]
+     [<searchFilter>...</searchFilter>]
+     [<domain by="id|name|virtualHostname">domain-id|name|serviceHostname</domain>]
+  </CreateAddressListRequest>
+
+searchFilter: See SearchCalendarResourcesRequest section in soap.txt.
+domain: domain is optional element, if domain is not provided, admin account's domain is used from admin auth token
+

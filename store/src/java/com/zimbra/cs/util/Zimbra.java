@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2019 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -49,19 +49,37 @@ import com.zimbra.cs.db.DbSession;
 import com.zimbra.cs.db.Versions;
 import com.zimbra.cs.ephemeral.EphemeralStore;
 import com.zimbra.cs.ephemeral.LdapEphemeralStore;
+import com.zimbra.cs.event.EventStore;
+import com.zimbra.cs.event.SolrCloudEventStore;
+import com.zimbra.cs.event.StandaloneSolrEventStore;
+import com.zimbra.cs.event.logger.EventLogger;
+import com.zimbra.cs.event.logger.EventMetricUpdateFactory;
+import com.zimbra.cs.event.logger.FileEventLogHandler;
+import com.zimbra.cs.event.logger.SolrCloudEventHandlerFactory;
+import com.zimbra.cs.event.logger.StandaloneSolrEventHandlerFactory;
 import com.zimbra.cs.extension.ExtensionUtil;
-import com.zimbra.cs.iochannel.MessageChannel;
-import com.zimbra.cs.mailbox.ContactBackupThread;
-import com.zimbra.cs.mailbox.MailboxIndex;
+import com.zimbra.cs.index.IndexStore;
+import com.zimbra.cs.index.queue.IndexingService;
+import com.zimbra.cs.index.solr.BatchedIndexDeletions;
+import com.zimbra.cs.index.solr.SolrIndex;
+import com.zimbra.cs.mailbox.LocalPubSub;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.NotificationPubSub;
 import com.zimbra.cs.mailbox.PurgeThread;
+import com.zimbra.cs.mailbox.RedisPubSub;
 import com.zimbra.cs.mailbox.ScheduledTaskManager;
 import com.zimbra.cs.mailbox.acl.AclPushTask;
+import com.zimbra.cs.mailbox.util.MailboxClusterUtil;
 import com.zimbra.cs.memcached.MemcachedConnector;
+import com.zimbra.cs.pubsub.PubSubService;
+import com.zimbra.cs.redolog.RedoConfig;
 import com.zimbra.cs.redolog.RedoLogProvider;
+import com.zimbra.cs.redolog.logger.DistributedLogReaderService;
 import com.zimbra.cs.server.ServerManager;
 import com.zimbra.cs.servlet.FirstServlet;
+import com.zimbra.cs.session.RedisSessionDataProvider;
 import com.zimbra.cs.session.SessionCache;
+import com.zimbra.cs.session.SessionDataProvider;
 import com.zimbra.cs.session.WaitSetMgr;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.store.StoreManager;
@@ -267,6 +285,12 @@ public final class Zimbra {
 
         ExtensionUtil.initAll();
 
+        IndexStore.registerIndexFactory("solr", SolrIndex.StandaloneSolrFactory.class.getName());
+        IndexStore.registerIndexFactory("solrcloud", SolrIndex.SolrCloudFactory.class.getName());
+
+        EventStore.registerFactory("solr", StandaloneSolrEventStore.Factory.class.getName());
+        EventStore.registerFactory("solrcloud", SolrCloudEventStore.Factory.class.getName());
+
         try {
             StoreManager.getInstance().startup();
         } catch (IOException e) {
@@ -286,7 +310,7 @@ public final class Zimbra {
 
         // ZimletUtil.loadZimlets();
 
-        MailboxIndex.startup();
+        IndexingService.getInstance().startUp();
 
         RedoLogProvider redoLog = RedoLogProvider.getInstance();
         if (sIsMailboxd) {
@@ -295,9 +319,29 @@ public final class Zimbra {
             redoLog.initRedoLogManager();
         }
 
+        EventLogger.registerHandlerFactory("file", new FileEventLogHandler.Factory());
+        EventLogger.registerHandlerFactory("solr", new StandaloneSolrEventHandlerFactory());
+        EventLogger.registerHandlerFactory("solrcloud", new SolrCloudEventHandlerFactory());
+        EventLogger.registerHandlerFactory("metrics", new EventMetricUpdateFactory());
+        EventLogger.getEventLogger().startupEventNotifierExecutor();
+
         System.setProperty("ical4j.unfolding.relaxed", "true");
 
         MailboxManager.getInstance().startup();
+
+        PubSubService.setFactory(new com.zimbra.cs.pubsub.RedisPubSub.Factory());
+        PubSubService.getInstance().startup();
+
+        SessionDataProvider.setFactory(new RedisSessionDataProvider.Factory());
+        if (MailboxClusterUtil.isBackupRestorePod()) {
+            NotificationPubSub.setFactory(new LocalPubSub.Factory());
+        } else {
+            NotificationPubSub.setFactory(new RedisPubSub.Factory());
+        }
+
+        if (MailboxClusterUtil.isBackupRestorePod() && RedoConfig.redoLogEnabled()) {
+            DistributedLogReaderService.getInstance().startUp();
+        }
 
         app.initialize(sIsMailboxd);
         if (sIsMailboxd) {
@@ -329,10 +373,6 @@ public final class Zimbra {
                 PurgeThread.startup();
             }
 
-            if (app.supports(ContactBackupThread.class.getName())) {
-                ContactBackupThread.startup();
-            }
-
             if (app.supports(AutoProvisionThread.class.getName())) {
                 AutoProvisionThread.switchAutoProvThreadIfNecessary();
             }
@@ -354,14 +394,6 @@ public final class Zimbra {
                 sTimer.schedule(new ExternalAccountManagerTask(), interval, interval);
             }
 
-            if (prov.getLocalServer().isMessageChannelEnabled()) {
-                try {
-                    MessageChannel.getInstance().startup();
-                } catch (IOException e) {
-                    ZimbraLog.misc.warn("can't start notification channels", e);
-                }
-            }
-
             Server localServer = Provisioning.getInstance().getLocalServer();
             String provPort = localServer.getAttr(Provisioning.A_zimbraMailPort);
             String lcPort = LC.zimbra_mail_service_port.value();
@@ -381,6 +413,10 @@ public final class Zimbra {
             // should be last, so that other subsystems can add dynamic stats counters
             if (app.supports(ZimbraPerf.class.getName())) {
                 ZimbraPerf.initialize(ZimbraPerf.ServerID.ZIMBRA);
+            }
+
+            if (MailboxClusterUtil.getWorkerIndex() == 0 && MailboxClusterUtil.isMailboxPod()) {
+                BatchedIndexDeletions.getInstance().startSweeper();
             }
         }
 
@@ -409,7 +445,6 @@ public final class Zimbra {
 
         if (sIsMailboxd) {
             PurgeThread.shutdown();
-            ContactBackupThread.shutdown();
             AutoProvisionThread.shutdown();
         }
 
@@ -443,8 +478,6 @@ public final class Zimbra {
             }
         }
 
-        MailboxIndex.shutdown();
-
         if (sIsMailboxd) {
             redoLog.shutdown();
         }
@@ -476,6 +509,7 @@ public final class Zimbra {
         }
 
         EphemeralStore.getFactory().shutdown();
+        EventLogger.getEventLogger().shutdownEventLogger();
     }
 
     public static synchronized boolean started() {

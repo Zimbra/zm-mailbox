@@ -29,7 +29,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
@@ -44,6 +44,8 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -77,6 +79,7 @@ public final class SearchParams implements Cloneable, ZimbraSearchParams {
     private final static Pattern LOCALE_PATTERN = Pattern.compile("([a-zA-Z]{2})(?:[-_]([a-zA-Z]{2})([-_](.+))?)?");
 
     private ZimbraSoapContext requestContext;
+    private Account account;
 
     /**
      * this parameter is intentionally NOT encoded into XML, it is encoded manually by the ProxiedQueryResults proxying
@@ -119,6 +122,7 @@ public final class SearchParams implements Cloneable, ZimbraSearchParams {
     private boolean prefetch = true;
     private Fetch fetch = Fetch.NORMAL;
     private boolean quick = false; // whether or not to skip the catch-up index prior to search
+    private boolean logSearch = true; // whether or not to log the search in search history
 
     public boolean isQuick() {
         return quick;
@@ -372,7 +376,7 @@ public final class SearchParams implements Cloneable, ZimbraSearchParams {
     public void setSortBy(String value) {
         SortBy sort = SortBy.of(value);
         if (sort == null) {
-            sort = SortBy.DATE_DESC;
+            sort = account.isDefaultSortByRelevance() ? SortBy.RELEVANCE_DESC : SortBy.DATE_DESC;
         }
         setSortBy(sort);
     }
@@ -458,6 +462,10 @@ public final class SearchParams implements Cloneable, ZimbraSearchParams {
         this.wantContent = wantContent;
     }
 
+    public void setLogSearch(boolean logSearch) {
+        this.logSearch = logSearch;
+    }
+
     /**
      * Encode the necessary parameters into a {@code <SearchRequest>} (or similar element) in cases where we have to
      * proxy a search request over to a remote server.
@@ -524,6 +532,7 @@ public final class SearchParams implements Cloneable, ZimbraSearchParams {
         if (getWantContent() != null) {
             el.addAttribute(MailConstants.A_WANT_CONTENT, getWantContent().toString());
         }
+        el.addAttribute(MailConstants.A_LOG_SEARCH, logSearch);
 
         // skip cursor data
     }
@@ -540,16 +549,17 @@ public final class SearchParams implements Cloneable, ZimbraSearchParams {
         SearchParams params = new SearchParams();
 
         params.requestContext = zsc;
+        params.account = Provisioning.getInstance().getAccountById(zsc.getAuthtokenAccountId());
         params.setHopCount(zsc.getHopCount());
-        params.setCalItemExpandStart(Objects.firstNonNull(soapParams.getCalItemExpandStart(), -1L));
-        params.setCalItemExpandEnd(Objects.firstNonNull(soapParams.getCalItemExpandEnd(), -1L));
+        params.setCalItemExpandStart(MoreObjects.firstNonNull(soapParams.getCalItemExpandStart(), -1L));
+        params.setCalItemExpandEnd(MoreObjects.firstNonNull(soapParams.getCalItemExpandEnd(), -1L));
         String query = soapParams.getQuery() == null ? defaultQueryStr : soapParams.getQuery();
         if (query == null) {
             throw ServiceException.INVALID_REQUEST("no query submitted and no default query found", null);
         }
         params.setQueryString(query);
-        params.setInDumpster(Objects.firstNonNull(soapParams.getInDumpster(), false));
-        params.setQuick(Objects.firstNonNull(soapParams.getQuick(), false));
+        params.setInDumpster(MoreObjects.firstNonNull(soapParams.getInDumpster(), false));
+        params.setQuick(MoreObjects.firstNonNull(soapParams.getQuick(), false));
         String types = soapParams.getSearchTypes() == null ? soapParams.getGroupBy() : soapParams.getSearchTypes();
         if (Strings.isNullOrEmpty(types)) {
             params.setTypes(EnumSet.of(params.isQuick() ? MailItem.Type.MESSAGE : MailItem.Type.CONVERSATION));
@@ -557,9 +567,13 @@ public final class SearchParams implements Cloneable, ZimbraSearchParams {
             params.setTypes(types);
         }
         params.setSortBy(soapParams.getSortBy());
-
-        params.setIncludeTagDeleted(Objects.firstNonNull(soapParams.getIncludeTagDeleted(), false));
-        params.setIncludeTagMuted(Objects.firstNonNull(soapParams.getIncludeTagMuted(), true));
+        if (soapParams.getSortBy() != null && query.toLowerCase().contains("is:unread") && isSortByReadFlag(SortBy.of(soapParams.getSortBy()))) {
+            params.setSortBy(SortBy.DATE_DESC);
+        } else {
+            params.setSortBy(soapParams.getSortBy());
+        }
+        params.setIncludeTagDeleted(MoreObjects.firstNonNull(soapParams.getIncludeTagDeleted(), false));
+        params.setIncludeTagMuted(MoreObjects.firstNonNull(soapParams.getIncludeTagMuted(), true));
         String allowableTasks = soapParams.getAllowableTaskStatus();
         if (allowableTasks != null) {
             params.allowableTaskStatuses = new HashSet<TaskHit.Status>();
@@ -575,11 +589,11 @@ public final class SearchParams implements Cloneable, ZimbraSearchParams {
 
         params.setInlineRule(ExpandResults.valueOf(soapParams.getFetch(), zsc));
         if (params.getInlineRule() != ExpandResults.NONE) {
-            params.setMarkRead(Objects.firstNonNull(soapParams.getMarkRead(), false));
-            params.setMaxInlinedLength(Objects.firstNonNull(soapParams.getMaxInlinedLength(), -1));
-            params.setWantHtml(Objects.firstNonNull(soapParams.getWantHtml(), false));
-            params.setWantExpandGroupInfo(Objects.firstNonNull(soapParams.getNeedCanExpand(), false));
-            params.setNeuterImages(Objects.firstNonNull(soapParams.getNeuterImages(), true));
+            params.setMarkRead(MoreObjects.firstNonNull(soapParams.getMarkRead(), false));
+            params.setMaxInlinedLength(MoreObjects.firstNonNull(soapParams.getMaxInlinedLength(), -1));
+            params.setWantHtml(MoreObjects.firstNonNull(soapParams.getWantHtml(), false));
+            params.setWantExpandGroupInfo(MoreObjects.firstNonNull(soapParams.getNeedCanExpand(), false));
+            params.setNeuterImages(MoreObjects.firstNonNull(soapParams.getNeuterImages(), true));
             for (AttributeName hdr : soapParams.getHeaders()) {
                 params.addInlinedHeader(hdr.getName());
             }
@@ -596,7 +610,7 @@ public final class SearchParams implements Cloneable, ZimbraSearchParams {
             params.setLocale(parseLocale(locale));
         }
 
-        params.setPrefetch(Objects.firstNonNull(soapParams.getPrefetch(), true));
+        params.setPrefetch(MoreObjects.firstNonNull(soapParams.getPrefetch(), true));
         String resultMode = soapParams.getResultMode();
         if (!Strings.isNullOrEmpty(resultMode)) {
             try {
@@ -613,23 +627,36 @@ public final class SearchParams implements Cloneable, ZimbraSearchParams {
         }
 
         params.setLimit(parseLimit(soapParams.getLimit()));
-        params.setOffset(Objects.firstNonNull(soapParams.getOffset(), 0));
+        params.setOffset(MoreObjects.firstNonNull(soapParams.getOffset(), 0));
 
         CursorInfo cursor = soapParams.getCursor();
-        if (cursor != null) {
-            params.parseCursor(cursor, zsc.getRequestedAccountId());
+       
+        if (cursor != null ) {
+            params.parseCursor(cursor, zsc.getRequestedAccountId(), params);
         }
 
         if (soapParams instanceof MailSearchParams) {
             MailSearchParams mailParams = (MailSearchParams) soapParams;
             params.setFullConversation(ZmBoolean.toBool(mailParams.getFullConversation(), false));
-            params.setWantContent(Objects.firstNonNull(mailParams.getWantContent(), MsgContent.full));
+            params.setWantContent(MoreObjects.firstNonNull(mailParams.getWantContent(), MsgContent.full));
             params.setIncludeMemberOf(mailParams.getIncludeMemberOf());
         }
 
         return params;
     }
 
+
+    /**
+     * @param params
+     * @return
+     */
+    public static boolean isSortByReadFlag(SortBy sortBy) {
+        if (sortBy == null) {
+            return false;
+        }
+        return (sortBy.getKey() == SortBy.READ_ASC.getKey() 
+            || sortBy.getKey() == SortBy.READ_DESC.getKey());
+    }
 
     /**
      * Parse the search parameters from a {@code <SearchRequest>} or similar element.
@@ -643,6 +670,7 @@ public final class SearchParams implements Cloneable, ZimbraSearchParams {
         SearchParams params = new SearchParams();
 
         params.requestContext = zsc;
+        params.account = Provisioning.getInstance().getAccountById(zsc.getAuthtokenAccountId());
         params.setHopCount(zsc.getHopCount());
         params.setCalItemExpandStart(request.getAttributeLong(MailConstants.A_CAL_EXPAND_INST_START, -1));
         params.setCalItemExpandEnd(request.getAttributeLong(MailConstants.A_CAL_EXPAND_INST_END, -1));
@@ -719,10 +747,10 @@ public final class SearchParams implements Cloneable, ZimbraSearchParams {
 
         Element cursor = request.getOptionalElement(MailConstants.E_CURSOR);
         if (cursor != null) {
-            params.parseCursor(cursor, zsc.getRequestedAccountId());
+            params.parseCursor(cursor, zsc.getRequestedAccountId(), params);
         }
 
-        params.setWantContent(Objects.firstNonNull(
+        params.setWantContent(MoreObjects.firstNonNull(
             MsgContent.fromString(request.getAttribute(MailConstants.A_WANT_CONTENT, null)),
             MsgContent.full));
 
@@ -735,11 +763,13 @@ public final class SearchParams implements Cloneable, ZimbraSearchParams {
      * @param cursor cursor element taken from a {@code <SearchRequest>}
      * @param acctId requested account id
      */
-    public void parseCursor(Element el, String acctId) throws ServiceException {
+    public void parseCursor(Element el, String acctId, SearchParams params) throws ServiceException {
         cursor = new Cursor();
         cursor.itemId = new ItemId(el.getAttribute(MailConstants.A_ID), acctId);
+        if (!isSortByReadFlag(params.getSortBy())) {
         cursor.sortValue = el.getAttribute(MailConstants.A_SORTVAL, null); // optional
         cursor.endSortValue = el.getAttribute(MailConstants.A_ENDSORTVAL, null); // optional
+        }
         cursor.includeOffset = el.getAttributeBool(MailConstants.A_INCLUDE_OFFSET, false); // optional
     }
 
@@ -749,15 +779,18 @@ public final class SearchParams implements Cloneable, ZimbraSearchParams {
      * @param cursorInfo cursor element taken from a {@code <SearchRequest>}
      * @param acctId requested account id
      */
-    public void parseCursor(CursorInfo cursorInfo, String acctId) throws ServiceException {
+    public void parseCursor(CursorInfo cursorInfo, String acctId,  SearchParams params) throws ServiceException {
         cursor = new Cursor();
         if (null == cursorInfo.getId()) {
                 throw ServiceException.INVALID_REQUEST("Invalid ID for " + MailConstants.E_CURSOR, null);
         }
         cursor.itemId = new ItemId(cursorInfo.getId(), acctId);
-        cursor.sortValue = cursorInfo.getSortVal(); // optional
-        cursor.endSortValue = cursorInfo.getEndSortVal(); // optional
-        cursor.includeOffset = Objects.firstNonNull(cursorInfo.getIncludeOffset(), false); // optional
+        if (!isSortByReadFlag(params.getSortBy())) {
+            cursor.sortValue = cursorInfo.getSortVal(); // optional
+            cursor.endSortValue = cursorInfo.getEndSortVal(); // optional
+        }
+       
+        cursor.includeOffset = MoreObjects.firstNonNull(cursorInfo.getIncludeOffset(), false); // optional
     }
 
     private static TimeZone parseTimeZonePart(CalTZInfoInterface calTZ) throws ServiceException {
@@ -846,6 +879,7 @@ public final class SearchParams implements Cloneable, ZimbraSearchParams {
     public Object clone() {
         SearchParams result = new SearchParams();
         result.requestContext = requestContext;
+        result.account = account;
         result.hopCount = hopCount;
         result.defaultField = defaultField;
         result.queryString = queryString;

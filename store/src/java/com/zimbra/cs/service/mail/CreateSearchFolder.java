@@ -22,6 +22,10 @@ import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.cs.index.history.SavedSearchPromptLog;
+import com.zimbra.cs.index.history.SearchHistory;
+import com.zimbra.cs.index.history.ZimbraSearchHistory;
+import com.zimbra.cs.index.history.SavedSearchPromptLog.SavedSearchStatus;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -72,6 +76,8 @@ public class CreateSearchFolder extends MailDocumentHandler  {
         SearchFolder search = mbox.createSearchFolder(octxt, iidParent.getId(),
             spec.getName(), spec.getQuery(), spec.getSearchTypes(), spec.getSortBy(), Flag.toBitmask(spec.getFlags()),
             itemColor);
+
+        mbox.setSavedSearchPromptStatus(octxt, spec.getQuery(), SavedSearchStatus.CREATED);
 
         Element response = zsc.createElement(MailConstants.CREATE_SEARCH_FOLDER_RESPONSE);
         if (search != null)

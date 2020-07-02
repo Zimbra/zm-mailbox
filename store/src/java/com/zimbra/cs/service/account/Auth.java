@@ -29,9 +29,12 @@ import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang.StringUtils;
+
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ZAttrProvisioning.AutoProvAuthMech;
+import com.zimbra.common.account.ZAttrProvisioning.DelayedIndexStatus;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
@@ -47,10 +50,12 @@ import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.AttributeFlag;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.AuthToken.TokenType;
 import com.zimbra.cs.account.AuthToken.Usage;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AuthMode;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.TrustedDevice;
 import com.zimbra.cs.account.TrustedDeviceToken;
@@ -60,7 +65,16 @@ import com.zimbra.cs.account.auth.twofactor.TrustedDevices;
 import com.zimbra.cs.account.auth.twofactor.TwoFactorAuth;
 import com.zimbra.cs.account.krb5.Krb5Principal;
 import com.zimbra.cs.account.names.NameUtil.EmailAddress;
+import com.zimbra.cs.account.soap.SoapProvisioning;
+import com.zimbra.cs.account.soap.SoapProvisioning.ManageIndexType;
+import com.zimbra.cs.index.MailboxIndexUtil;
+import com.zimbra.cs.listeners.AuthListener;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.service.AuthProvider;
+import com.zimbra.cs.service.admin.ManageIndex;
+import com.zimbra.cs.service.util.JWTUtil;
 import com.zimbra.cs.servlet.CsrfFilter;
 import com.zimbra.cs.servlet.util.CsrfUtil;
 import com.zimbra.cs.session.Session;
@@ -70,14 +84,41 @@ import com.zimbra.soap.SoapEngine;
 import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
 
+import io.jsonwebtoken.Claims;
+
 /**
  * @author schemers
  */
 public class Auth extends AccountDocumentHandler {
 
+    private Account lookupAccount(String username, String domain) throws ServiceException {
+        ZimbraLog.account.info("auth: lookupAccount: username=%s, domain=%s", username, domain);
+
+        Provisioning prov = Provisioning.getInstance();
+        Account acct = null;
+
+        Domain d = prov.get(Key.DomainBy.name, domain);
+        if (d != null) {
+            acct = prov.get(AccountBy.name, username + "@" + d.getName());
+            if (acct != null) {
+                return acct;
+            }
+        }
+
+        d = prov.get(Key.DomainBy.virtualHostname, domain);
+        if (d != null) {
+            acct = prov.get(AccountBy.name, username + "@" + d.getName());
+            if (acct != null) {
+                return acct;
+            }
+        }
+        return prov.get(AccountBy.name, username + "@" + domain);
+    }
+
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        ServletRequest httpReq = (ServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
         Provisioning prov = Provisioning.getInstance();
 
         // Look up the specified account.  It is optional in the <authToken> case.
@@ -86,21 +127,45 @@ public class Auth extends AccountDocumentHandler {
         Account acct = null;
         Element acctEl = request.getOptionalElement(AccountConstants.E_ACCOUNT);
         boolean csrfSupport = request.getAttributeBool(AccountConstants.A_CSRF_SUPPORT, false);
+        String reqTokenType = request.getAttribute(AccountConstants.A_TOKEN_TYPE, "");
+        TokenType tokenType = TokenType.fromCode(reqTokenType);
+        if (TokenType.JWT.equals(tokenType)) {
+            //in case of jwt, csrfSupport has no significance
+            csrfSupport = false;
+        }
+        ZimbraLog.account.debug("auth: reqTokenType: %s, tokenType: %s", reqTokenType, tokenType);
         if (acctEl != null) {
             acctValuePassedIn = acctEl.getText();
             acctValue = acctValuePassedIn;
             acctByStr = acctEl.getAttribute(AccountConstants.A_BY, AccountBy.name.name());
             acctBy = AccountBy.fromString(acctByStr);
             if (acctBy == AccountBy.name) {
-                Element virtualHostEl = request.getOptionalElement(AccountConstants.E_VIRTUAL_HOST);
-                String virtualHost = virtualHostEl == null ? null : virtualHostEl.getText().toLowerCase();
-                if (virtualHost != null && acctValue.indexOf('@') == -1) {
-                    Domain d = prov.get(Key.DomainBy.virtualHostname, virtualHost);
-                    if (d != null)
-                        acctValue = acctValue + "@" + d.getName();
+                int atLoc = acctValue.indexOf('@');
+                if (atLoc == -1) {
+                    Element virtualHostEl = request.getOptionalElement(AccountConstants.E_VIRTUAL_HOST);
+                    String virtualHost = virtualHostEl == null ? null : virtualHostEl.getText().toLowerCase();
+
+                    // Check provided virtual host
+                    if (virtualHost != null) {
+                        acct = lookupAccount(acctValuePassedIn, virtualHost);
+                    }
+
+                    // No account yet - check against the servername
+                    if (acct == null) {
+                        acct = lookupAccount(acctValuePassedIn, httpReq.getServerName());
+                    }
+
+                    // Default domain (raw value)
+                    if (acct == null) {
+                        acct = prov.get(AccountBy.name, acctValuePassedIn);
+                    }
+                } else {
+                    acct = lookupAccount(acctValuePassedIn.substring(0, atLoc),
+                            acctValuePassedIn.substring(atLoc+1, acctValuePassedIn.length()));
                 }
+            } else {
+                acct = prov.get(acctBy, acctValue);
             }
-            acct = prov.get(acctBy, acctValue);
         }
 
         TrustedDeviceToken trustedToken = null;
@@ -118,11 +183,34 @@ public class Auth extends AccountDocumentHandler {
         }
 
         String password = request.getAttribute(AccountConstants.E_PASSWORD, null);
+        String recoveryCode = request.getAttribute(AccountConstants.E_RECOVERY_CODE, null);
         boolean generateDeviceId = request.getAttributeBool(AccountConstants.A_GENERATE_DEVICE_ID, false);
         String twoFactorCode = request.getAttribute(AccountConstants.E_TWO_FACTOR_CODE, null);
         String newDeviceId = generateDeviceId? UUIDUtil.generateUUID(): null;
 
         Element authTokenEl = request.getOptionalElement(AccountConstants.E_AUTH_TOKEN);
+        Element jwtTokenElement = request.getOptionalElement(AccountConstants.E_JWT_TOKEN);
+        boolean validationSuccess = tokenTypeAndElementValidation(tokenType, authTokenEl, jwtTokenElement);
+        if (!validationSuccess) {
+            AuthFailedServiceException e = AuthFailedServiceException
+                .AUTH_FAILED("auth: incorrect tokenType and Element combination");
+            AuthListener.invokeOnException(e);
+            throw e;
+        }
+        boolean acctAutoProvisioned = false;
+        Claims claims = null;
+        // if jwtToken is present in request then use it
+        if (jwtTokenElement != null && authTokenEl == null) {
+            String jwt = jwtTokenElement.getText();
+            String salt = JWTUtil.getSalt(null, context);
+            claims = JWTUtil.validateJWT(jwt, salt);
+            acct = prov.getAccountById(claims.getSubject());
+            if (acct == null ) {
+                throw AccountServiceException.NO_SUCH_ACCOUNT(claims.getSubject());
+            }
+            acctAutoProvisioned = true;
+        }
+        // if authToken is present in request then use it
         if (authTokenEl != null) {
             boolean verifyAccount = authTokenEl.getAttributeBool(AccountConstants.A_VERIFY_ACCOUNT, false);
             if (verifyAccount && acctEl == null) {
@@ -140,7 +228,10 @@ public class Auth extends AccountDocumentHandler {
                     throw ServiceException.INVALID_REQUEST("clear text password is not allowed", null);
                 AuthToken.Usage usage = at.getUsage();
                 if (usage != Usage.AUTH && usage != Usage.TWO_FACTOR_AUTH) {
-                    throw AuthFailedServiceException.AUTH_FAILED("invalid auth token");
+                    AuthFailedServiceException e = AuthFailedServiceException
+                        .AUTH_FAILED("invalid auth token");
+                    AuthListener.invokeOnException(e);
+                    throw e;
                 }
                 Account authTokenAcct = AuthProvider.validateAuthToken(prov, at, false, usage);
                 if (verifyAccount) {
@@ -152,7 +243,6 @@ public class Auth extends AccountDocumentHandler {
                     }
                 }
                 if (usage == Usage.AUTH) {
-                    ServletRequest httpReq = (ServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
                     httpReq.setAttribute(CsrfFilter.AUTH_TOKEN, at);
                     if (csrfSupport && !at.isCsrfTokenEnabled()) {
                         // handle case where auth token was originally generated with csrf support
@@ -182,7 +272,13 @@ public class Auth extends AccountDocumentHandler {
         authCtxt.put(AuthContext.AC_ACCOUNT_NAME_PASSEDIN, acctValuePassedIn);
         authCtxt.put(AuthContext.AC_USER_AGENT, zsc.getUserAgent());
 
-        boolean acctAutoProvisioned = false;
+        AuthMode mode = AuthMode.PASSWORD;
+        String code = password;
+        if (StringUtils.isEmpty(password) && StringUtils.isNotEmpty(recoveryCode)) {
+            mode = AuthMode.RECOVERY_CODE;
+            code = recoveryCode;
+        }
+        authCtxt.put(Provisioning.AUTH_MODE_KEY, mode);
 
         if (acct == null) {
             // try LAZY auto provision if it is enabled
@@ -215,6 +311,7 @@ public class Auth extends AccountDocumentHandler {
                         acctAutoProvisioned = true;
                     }
                 } catch (AuthFailedServiceException e) {
+                    AuthListener.invokeOnException(e);
                     ZimbraLog.account.debug("auth failed, unable to auto provisioing acct " + acctValue, e);
                 } catch (ServiceException e) {
                     ZimbraLog.account.info("unable to auto provisioing acct " + acctValue, e);
@@ -229,6 +326,7 @@ public class Auth extends AccountDocumentHandler {
                 try {
                     result = prov.autoProvZMGProxyAccount(acctValuePassedIn, password);
                 } catch (AuthFailedServiceException e) {
+                    AuthListener.invokeOnException(e);
                     // Most likely in error with user creds
                 } catch (ServiceException e) {
                     ZimbraLog.account.info("unable to auto provision acct " + acctValuePassedIn, e);
@@ -241,7 +339,10 @@ public class Auth extends AccountDocumentHandler {
         }
 
         if (acct == null) {
-            throw AuthFailedServiceException.AUTH_FAILED(acctValue, acctValuePassedIn, "account not found");
+            AuthFailedServiceException e = AuthFailedServiceException.AUTH_FAILED(acctValue,
+                acctValuePassedIn, "account not found");
+            AuthListener.invokeOnException(e);
+            throw e;
         }
 
         AccountUtil.addAccountToLogContext(prov, acct.getId(), ZimbraLog.C_NAME, ZimbraLog.C_ID, null);
@@ -263,15 +364,16 @@ public class Auth extends AccountDocumentHandler {
                         verifyTrustedDevice(acct, trustedToken, attrs);
                         trustedDeviceOverride = true;
                     } catch (AuthFailedServiceException e) {
+                        AuthListener.invokeOnException(e);
                         ZimbraLog.account.info("trusted device not verified");
                     }
                 }
             }
             boolean usingTwoFactorAuth = acct != null && twoFactorManager.twoFactorAuthRequired() && !trustedDeviceOverride;
             boolean twoFactorAuthWithToken = usingTwoFactorAuth && authTokenEl != null;
-            if (password != null || twoFactorAuthWithToken) {
+            if (password != null || recoveryCode != null || twoFactorAuthWithToken) {
                 // authentication logic can be reached with either a password, or a 2FA auth token
-                if (usingTwoFactorAuth && twoFactorCode == null && password != null) {
+                if (usingTwoFactorAuth && twoFactorCode == null && (password != null || recoveryCode != null)) {
                     int mtaAuthPort = acct.getServer().getMtaAuthPort();
                     boolean supportsAppSpecificPaswords =  acct.isFeatureAppSpecificPasswordsEnabled() && zsc.getPort() == mtaAuthPort;
                     if (supportsAppSpecificPaswords && password != null) {
@@ -281,12 +383,12 @@ public class Auth extends AccountDocumentHandler {
                         AppSpecificPasswords appPasswords = TwoFactorAuth.getFactory().getAppSpecificPasswords(acct, acctValuePassedIn);
                         appPasswords.authenticate(password);
                     } else {
-                        prov.authAccount(acct, password, AuthContext.Protocol.soap, authCtxt);
-                        return needTwoFactorAuth(acct, twoFactorManager, zsc);
+                        prov.authAccount(acct, code, AuthContext.Protocol.soap, authCtxt);
+                        return needTwoFactorAuth(acct, twoFactorManager, zsc, tokenType);
                     }
                 } else {
-                    if (password != null) {
-                        prov.authAccount(acct, password, AuthContext.Protocol.soap, authCtxt);
+                    if (password != null || recoveryCode != null) {
+                        prov.authAccount(acct, code, AuthContext.Protocol.soap, authCtxt);
                     } else {
                         // it's ok to not have a password if the client is using a 2FA auth token for the 2nd step of 2FA
                         if (!twoFactorAuthWithToken) {
@@ -308,14 +410,20 @@ public class Auth extends AccountDocumentHandler {
                                     throw new AuthTokenException("two-factor auth token doesn't match the named account");
                                 }
                             } catch (AuthTokenException e) {
-                                throw AuthFailedServiceException.AUTH_FAILED("bad auth token");
+                                AuthFailedServiceException exception = AuthFailedServiceException
+                                    .AUTH_FAILED("bad auth token");
+                                AuthListener.invokeOnException(exception);
+                                throw exception;
                             }
                         }
                         TwoFactorAuth manager = TwoFactorAuth.getFactory().getTwoFactorAuth(acct);
                         if (twoFactorCode != null) {
                             manager.authenticate(twoFactorCode);
                         } else {
-                            throw AuthFailedServiceException.AUTH_FAILED("no two-factor code provided");
+                            AuthFailedServiceException e = AuthFailedServiceException
+                                .AUTH_FAILED("no two-factor code provided");
+                            AuthListener.invokeOnException(e);
+                            throw e;
                         }
                         if (twoFactorToken != null) {
                             try {
@@ -336,14 +444,15 @@ public class Auth extends AccountDocumentHandler {
             }
         }
 
-        AuthToken at = expires ==  0 ? AuthProvider.getAuthToken(acct) : AuthProvider.getAuthToken(acct, expires);
+        AuthToken at = expires ==  0 ? AuthProvider.getAuthToken(acct, tokenType) : AuthProvider.getAuthToken(acct, expires, tokenType);
         if (registerTrustedDevice && (trustedToken == null || trustedToken.isExpired())) {
             //generate a new trusted device token if there is no existing one or if the current one is no longer valid
             Map<String, Object> attrs = getTrustedDeviceAttrs(zsc, newDeviceId == null? deviceId: newDeviceId);
             TrustedDevices trustedDeviceManager = TwoFactorAuth.getFactory().getTrustedDevices(acct);
-            trustedToken = trustedDeviceManager.registerTrustedDevice(attrs);
+            if (trustedDeviceManager != null) {
+                trustedToken = trustedDeviceManager.registerTrustedDevice(attrs);
+            }
         }
-        ServletRequest httpReq = (ServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
         // For CSRF filter so that token generation can happen
         if (csrfSupport && !at.isCsrfTokenEnabled()) {
             // handle case where auth token was originally generated with csrf support
@@ -352,6 +461,8 @@ public class Auth extends AccountDocumentHandler {
             at.setCsrfTokenEnabled(csrfSupport);
         }
         httpReq.setAttribute(CsrfFilter.AUTH_TOKEN, at);
+        AuthListener.invokeOnSuccess(acct);
+
         return doResponse(request, at, zsc, context, acct, csrfSupport, trustedToken, newDeviceId);
     }
 
@@ -362,12 +473,28 @@ public class Auth extends AccountDocumentHandler {
         return deviceAttrs;
     }
 
+    private boolean tokenTypeAndElementValidation(TokenType tokenType, Element authElem, Element jwtElem) throws AuthFailedServiceException {
+        if (jwtElem != null && authElem != null) {
+            ZimbraLog.account.debug("both jwt and auth element can not be present in auth request");
+            return Boolean.FALSE;
+        }
+        if (jwtElem == null && authElem != null && TokenType.JWT.equals(tokenType)) {
+            ZimbraLog.account.debug("jwt token type not supported with auth element");
+            return Boolean.FALSE;
+        }
+        if (jwtElem != null && authElem == null && !TokenType.JWT.equals(tokenType)) {
+            ZimbraLog.account.debug("auth token type not supported with jwt element");
+            return Boolean.FALSE;
+        }
+        return Boolean.TRUE;
+    }
+
     private void verifyTrustedDevice(Account account, TrustedDeviceToken td, Map<String, Object> attrs) throws ServiceException {
         TrustedDevices trustedDeviceManager = TwoFactorAuth.getFactory().getTrustedDevices(account);
         trustedDeviceManager.verifyTrustedDevice(td, attrs);
     }
 
-    private Element needTwoFactorAuth(Account account, TwoFactorAuth auth, ZimbraSoapContext zsc) throws ServiceException {
+    private Element needTwoFactorAuth(Account account, TwoFactorAuth auth, ZimbraSoapContext zsc, TokenType tokenType) throws ServiceException {
         /* two cases here:
          * 1) the user needs to provide a two-factor code.
          *    in this case, the server returns a two-factor auth token in the response header that the client
@@ -379,7 +506,7 @@ public class Auth extends AccountDocumentHandler {
             throw AccountServiceException.TWO_FACTOR_SETUP_REQUIRED();
         } else {
             Element response = zsc.createElement(AccountConstants.AUTH_RESPONSE);
-            AuthToken twoFactorToken = AuthProvider.getAuthToken(account, Usage.TWO_FACTOR_AUTH);
+            AuthToken twoFactorToken = AuthProvider.getAuthToken(account, Usage.TWO_FACTOR_AUTH, tokenType);
             response.addUniqueElement(AccountConstants.E_TWO_FACTOR_AUTH_REQUIRED).setText("true");
             response.addAttribute(AccountConstants.E_LIFETIME, twoFactorToken.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);
             twoFactorToken.encodeAuthResp(response, false);
@@ -393,6 +520,8 @@ public class Auth extends AccountDocumentHandler {
     throws ServiceException {
         Element response = zsc.createElement(AccountConstants.AUTH_RESPONSE);
         at.encodeAuthResp(response, false);
+        //If this account has indexing suppressed, start a re-index
+        handleDelayedIndexing(acct, zsc);
 
         /*
          * bug 67078
@@ -401,7 +530,7 @@ public class Auth extends AccountDocumentHandler {
         HttpServletRequest httpReq = (HttpServletRequest)context.get(SoapServlet.SERVLET_REQUEST);
         HttpServletResponse httpResp = (HttpServletResponse)context.get(SoapServlet.SERVLET_RESPONSE);
         boolean rememberMe = request.getAttributeBool(AccountConstants.A_PERSIST_AUTH_TOKEN_COOKIE, false);
-        at.encode(httpResp, false, ZimbraCookie.secureCookie(httpReq), rememberMe);
+        at.encode(httpReq, httpResp, false, ZimbraCookie.secureCookie(httpReq), rememberMe);
 
         response.addAttribute(AccountConstants.E_LIFETIME, at.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);
         boolean isCorrectHost = Provisioning.onLocalServer(acct);
@@ -446,11 +575,11 @@ public class Auth extends AccountDocumentHandler {
         String skin = SkinUtil.chooseSkin(acct, requestedSkin);
         ZimbraLog.webclient.debug("chooseSkin() returned "+skin );
         if (skin != null) {
-            response.addElement(AccountConstants.E_SKIN).setText(skin);
+            response.addNonUniqueElement(AccountConstants.E_SKIN).setText(skin);
         }
 
         boolean csrfCheckEnabled = false;
-        if ( httpReq.getAttribute(Provisioning.A_zimbraCsrfTokenCheckEnabled) != null) {
+        if (httpReq.getAttribute(Provisioning.A_zimbraCsrfTokenCheckEnabled) != null) {
             csrfCheckEnabled = (Boolean) httpReq.getAttribute(Provisioning.A_zimbraCsrfTokenCheckEnabled);
         }
 
@@ -489,5 +618,23 @@ public class Auth extends AccountDocumentHandler {
         String aid = at.getAdminAccountId();
         if (aid != null && !aid.equals(id))
             AccountUtil.addAccountToLogContext(prov, aid, ZimbraLog.C_ANAME, ZimbraLog.C_AID, null);
+    }
+
+    private void handleDelayedIndexing(Account acct, ZimbraSoapContext zsc) throws ServiceException {
+        if (acct.isFeatureDelayedIndexEnabled() && acct.getDelayedIndexStatus() == DelayedIndexStatus.suppressed) {
+            if (!MailboxIndexUtil.isUserAgentAllowedForChangingIndexStatus(zsc.getUserAgent())) {
+                return;
+            }
+            if (Provisioning.onLocalServer(acct)) {
+                ZimbraLog.index.info("re-enabling indexing for %s (account is local)", acct.getName());
+                Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
+                OperationContext octxt = new OperationContext(acct, acct.isIsAdminAccount());
+                ManageIndex.enableIndexing(acct, mbox, octxt);
+            } else {
+                ZimbraLog.index.info("re-enabling indexing for %s and flushing cache (account is remote)", acct.getName());
+                SoapProvisioning sp = SoapProvisioning.getAdminInstance();
+                sp.manageIndex(acct, ManageIndexType.enableIndexing);
+            }
+        }
     }
 }

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011, 2012, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2011, 2012, 2013, 2014, 2016, 2018 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -30,7 +30,6 @@ import java.util.regex.Pattern;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.TreeMultimap;
-
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
@@ -633,9 +632,7 @@ public class ContactGroup {
         private Element fetchRemoteContact(AuthToken authToken, Account ownerAcct, 
                 ItemId contactId, SoapProtocol proxyProtocol)
         throws ServiceException {
-            Provisioning prov = Provisioning.getInstance();
-            
-            String serverUrl = URLUtil.getAdminURL(prov.getServerByName(ownerAcct.getMailHost()));
+            String serverUrl = URLUtil.getAdminURL(Provisioning.affinityServer(ownerAcct));
             SoapHttpTransport transport = new SoapHttpTransport(serverUrl);
             transport.setAuthToken(authToken.toZAuthToken());
             transport.setTargetAcctId(ownerAcct.getId());

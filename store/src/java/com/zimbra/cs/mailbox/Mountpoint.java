@@ -16,13 +16,15 @@
  */
 package com.zimbra.cs.mailbox;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mailbox.MountpointStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.PendingModifications.Change;
@@ -43,6 +45,10 @@ public class Mountpoint extends Folder implements MountpointStore {
 
     Mountpoint(Mailbox mbox, UnderlyingData ud, boolean skipCache) throws ServiceException {
         super(mbox, ud, skipCache);
+    }
+
+    Mountpoint(Account acc, UnderlyingData data, int mailboxId) throws ServiceException {
+        super(acc, data, mailboxId);
     }
 
     /** Returns the <code>zimbraId</code> of the remote shared item's
@@ -92,7 +98,7 @@ public class Mountpoint extends Folder implements MountpointStore {
 
     /** @return TRUE if this mountpoint points to its owner's mailbox */
     public boolean isLocal() {
-        return (getOwnerId().equals(getMailbox().getAccountId()));
+        return (getOwnerId().equals(getAccountId()));
     }
 
     /** Grants the specified set of rights to the target and persists them
@@ -205,7 +211,7 @@ public class Mountpoint extends Folder implements MountpointStore {
 
     @Override
     Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mRGBColor, mMetaVersion, mVersion, mExtendedData, attributes, defaultView, mOwnerId, mRemoteId, mRemoteUuid, mReminderEnabled);
+        return encodeMetadata(meta, state.getColor(), state.getMetadataVersion(), state.getVersion(), mExtendedData, attributes, defaultView, mOwnerId, mRemoteId, mRemoteUuid, mReminderEnabled);
     }
 
     private static String encodeMetadata(Color color, int metaVersion, int version, CustomMetadata custom, Type view, String owner,
@@ -226,7 +232,7 @@ public class Mountpoint extends Folder implements MountpointStore {
 
     @Override
     public String toString() {
-        Objects.ToStringHelper helper = Objects.toStringHelper(this);
+        MoreObjects.ToStringHelper helper = MoreObjects.toStringHelper(this);
         helper.add(CN_NAME, getName());
         appendCommonMembers(helper);
         helper.add(CN_ATTRIBUTES, attributes);

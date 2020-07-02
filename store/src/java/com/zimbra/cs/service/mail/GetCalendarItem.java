@@ -19,6 +19,7 @@ package com.zimbra.cs.service.mail;
 
 import java.util.Map;
 
+import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -31,7 +32,6 @@ import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.PendingModifications.Change;
-import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.mail.type.GetCalendarItemRequestBase;
 
@@ -90,8 +90,7 @@ public class GetCalendarItem extends CalendarRequest {
         }
         Element response = getResponseElement(zsc);
         CalendarItem calItem = null;
-        mbox.lock.lock(false);
-        try {
+        try (final MailboxLock l = mbox.getReadLockAndLockIt()) {
             if (uid != null) {
                 calItem = mbox.getCalendarItemByUid(octxt, uid);
                 if (calItem == null) {
@@ -103,8 +102,6 @@ public class GetCalendarItem extends CalendarRequest {
                     throw MailServiceException.NO_SUCH_CALITEM(iid.toString());
                 }
             }
-        } finally {
-            mbox.lock.release();
         }
         ToXML.encodeCalendarItemSummary(response, ifmt, octxt, calItem, fields, includeInvites, includeContent);
 

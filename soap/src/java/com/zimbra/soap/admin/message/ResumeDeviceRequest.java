@@ -22,7 +22,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.SyncAdminConstants;
 import com.zimbra.common.soap.SyncConstants;
@@ -30,6 +30,7 @@ import com.zimbra.soap.admin.type.DeviceId;
 import com.zimbra.soap.type.AccountSelector;
 
 /**
+ * @zm-api-command-deprecation-info Note: <b>ResumeDeviceRequest</b> is deprecated. See <b>AllowDeviceRequest</b>.
  * @zm-api-command-auth-required true
  * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Resume sync with a device or all devices attached to an account if currently suspended.
@@ -77,6 +78,6 @@ public class ResumeDeviceRequest {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this).add("account", this.account).add("device", this.deviceId).toString();
+        return MoreObjects.toStringHelper(this).add("account", this.account).add("device", this.deviceId).toString();
     }
 }

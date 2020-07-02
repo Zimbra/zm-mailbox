@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2018 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.concurrent.Future;
 
-import org.apache.commons.httpclient.HttpException;
 import org.apache.http.HttpResponse;
 import org.apache.http.concurrent.FutureCallback;
 
@@ -53,6 +52,7 @@ public abstract class SoapTransport {
     private String trustedToken;
     private boolean voidOnExpired = false;
     private boolean isAdmin = false;
+    private String originalUserAgent;
     public static final String DEFAULT_USER_AGENT_NAME = "ZCS";
     private static String sDefaultUserAgentName = DEFAULT_USER_AGENT_NAME;
     private static String sDefaultUserAgentVersion;
@@ -414,7 +414,7 @@ public abstract class SoapTransport {
      * @param envelope
      * @return
      * @throws IOException
-     * @throws ServiceException
+     * @throws ServiceException 
      */
     public final Element invokeRaw(Element envelope) throws IOException, ServiceException {
         return invoke(envelope, true, false, null);
@@ -441,8 +441,9 @@ public abstract class SoapTransport {
      *
      * If <tt>noSession</tt> is true, no session object is created/accessed for this request.
      * @throws ServiceException
+     * @throws IOException  
      */
-    public final Element invoke(Element document, boolean raw, boolean noSession, String requestedAccountId) throws IOException, ServiceException {
+    public final Element invoke(Element document, boolean raw, boolean noSession, String requestedAccountId) throws IOException, ServiceException{
         return invoke(document, raw, noSession, requestedAccountId, null, null);
     }
 
@@ -463,7 +464,7 @@ public abstract class SoapTransport {
     }
 
     public abstract Element invoke(Element document, boolean raw, boolean noSession, String requestedAccountId, String changeToken,
-            String tokenType, NotificationFormat nFormat, String curWaitSetID) throws IOException, HttpException, ServiceException;
+            String tokenType, NotificationFormat nFormat, String curWaitSetID) throws IOException, ServiceException;
     /**
      * Sends the specified document as a Soap message
      * and parses the response as a Soap message. <p />
@@ -508,6 +509,14 @@ public abstract class SoapTransport {
 
     public void setAdmin(boolean isAdmin) {
         this.isAdmin = isAdmin;
+    }
+
+    public String getOriginalUserAgent() {
+        return originalUserAgent;
+    }
+
+    public void setOriginalUserAgent(String originalUserAgent) {
+        this.originalUserAgent = originalUserAgent;
     }
 
 }

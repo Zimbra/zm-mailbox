@@ -26,11 +26,12 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.ContactGroupMemberInterface;
@@ -42,10 +43,15 @@ import com.zimbra.soap.type.ContactAttr;
 import com.zimbra.soap.type.SearchHit;
 import com.zimbra.soap.type.ZmBoolean;
 
+import io.leangen.graphql.annotations.GraphQLIgnore;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 /**
  * {@link SearchHit} is used in {@link SearchResponse} as the element type for a List
  */
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name=GqlConstants.CLASS_MAIL_CONTACT_INFO, description="Contact information")
 public class ContactInfo
 implements ContactInterface, SearchHit {
 
@@ -331,57 +337,80 @@ implements ContactInterface, SearchHit {
         this.memberOf = groups;
     }
 
+    @GraphQLQuery(name="memberOf", description="Comma separated list of IDs of contact groups this contact is a member of")
     public Collection<String> getMemberOf() {
         return Lists.newArrayList(COMMA_SPLITTER.split(Strings.nullToEmpty(memberOf)));
     }
 
     @Override
+    @GraphQLQuery(name=GqlConstants.SORT_FIELD, description="Sort field value")
     public String getSortField() { return sortField; }
     @Override
+    @GraphQLQuery(name=GqlConstants.IS_EXPANDABLE, description="Denotes whether user can expand group members")
     public Boolean getCanExpand() { return ZmBoolean.toBool(canExpand); }
     @Override
+    @GraphQLQuery(name=GqlConstants.ID, description="Unique contact ID")
     public String getId() { return id; }
     @Override
+    @GraphQLQuery(name=GqlConstants.FOLDER_ID, description="The containing Folder ID")
     public String getFolder() { return folder; }
     @Override
+    @GraphQLQuery(name=GqlConstants.FLAGS, description="(f)lagged, has (a)ttachment")
     public String getFlags() { return flags; }
     @Override
+    @GraphQLIgnore
     public String getTags() { return tags; }
     @Override
+    @GraphQLQuery(name=GqlConstants.TAG_NAMES, description="Comma-separated list of tag names")
     public String getTagNames() { return tagNames; }
     @Override
+    @GraphQLQuery(name=GqlConstants.LAST_MODIFIED, description="Modified date in seconds")
     public Long getChangeDate() { return changeDate; }
     @Override
+    @GraphQLQuery(name=GqlConstants.MODIFIED_SEQUENCE, description="Modified sequence")
     public Integer getModifiedSequenceId() { return modifiedSequenceId; }
     @Override
+    @GraphQLQuery(name=GqlConstants.DATE, description="Date in milliseconds")
     public Long getDate() { return date; }
     @Override
+    @GraphQLQuery(name=GqlConstants.REVISION, description="Saved sequence number")
     public Integer getRevisionId() { return revisionId; }
     @Override
+    @GraphQLQuery(name=GqlConstants.FILE_AS, description="Current fileAs string for display/sorting purposes")
     public String getFileAs() { return fileAs; }
     @Override
+    @GraphQLQuery(name=GqlConstants.EMAIL, description="Contact email address")
     public String getEmail() { return email; }
     @Override
+    @GraphQLQuery(name=GqlConstants.EMAIL2, description="Contact email address 2")
     public String getEmail2() { return email2; }
     @Override
+    @GraphQLQuery(name=GqlConstants.EMAIL3, description="Contact email address 3")
     public String getEmail3() { return email3; }
     @Override
+    @GraphQLQuery(name=GqlConstants.TYPE, description="Contact type")
     public String getType() { return type; }
     @Override
+    @GraphQLQuery(name=GqlConstants.DLIST, description="Contact dlist")
     public String getDlist() { return dlist; }
     @Override
+    @GraphQLQuery(name=GqlConstants.REFERENCE, description="Global Address List entry reference")
     public String getReference() { return reference; }
     @Override
+    @GraphQLQuery(name=GqlConstants.IS_TOO_MANY_MEMBERS, description="Denotes whether the number of entries on a GAL group exceeds the specified max")
     public Boolean getTooManyMembers() { return ZmBoolean.toBool(tooManyMembers); }
 
+    @GraphQLQuery(name=GqlConstants.METADATAS, description="Custom metadata information")
     public List<MailCustomMetadata> getMetadatas() {
         return metadatas;
     }
     @Override
+    @GraphQLQuery(name=GqlConstants.ATTRIBUTES, description="Attributes")
     public List<ContactAttr> getAttrs() {
         return attrs;
     }
 
+    @GraphQLQuery(name=GqlConstants.CONTACT_GROUP_MEMBERS, description="Contact group members")
     public List<ContactGroupMember> getContactGroupMembers() {
         return Collections.unmodifiableList(contactGroupMembers);
     }
@@ -401,6 +430,7 @@ implements ContactInterface, SearchHit {
 
     // non-JAXB method
     @Override
+    @GraphQLIgnore
     public List<CustomMetadataInterface> getMetadataInterfaces() {
         return MailCustomMetadata.toInterfaces(metadatas);
     }
@@ -408,8 +438,8 @@ implements ContactInterface, SearchHit {
     public static Iterable <ContactInfo> fromInterfaces(Iterable <ContactInterface> params) {
         if (params == null)
             return null;
-        List <ContactInfo> newList = Lists.newArrayList();
-        for (ContactInterface param : params) {
+        final List <ContactInfo> newList = Lists.newArrayList();
+        for (final ContactInterface param : params) {
             newList.add((ContactInfo) param);
         }
         return newList;
@@ -418,15 +448,16 @@ implements ContactInterface, SearchHit {
     public static List <ContactInterface> toInterfaces(Iterable <ContactInfo> params) {
         if (params == null)
             return null;
-        List <ContactInterface> newList = Lists.newArrayList();
+        final List <ContactInterface> newList = Lists.newArrayList();
         Iterables.addAll(newList, params);
         return newList;
     }
 
     public void setImapUid(Integer imapUid) { this.imapUid = imapUid; }
+    @GraphQLQuery(name=GqlConstants.IMAP_UID, description="Imap UID")
     public Integer getImapUid() { return imapUid; }
 
-    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         return helper
             .add("sortField", sortField)
             .add("canExpand", canExpand)
@@ -454,7 +485,7 @@ implements ContactInterface, SearchHit {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this)).toString();
+        return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
     }
 
     @Override
@@ -468,6 +499,7 @@ implements ContactInterface, SearchHit {
     }
 
     @Override
+    @GraphQLIgnore
     public List<ContactGroupMemberInterface> getContactGroupMemberInterfaces() {
         return ContactGroupMember.toInterfaces(contactGroupMembers);
     }

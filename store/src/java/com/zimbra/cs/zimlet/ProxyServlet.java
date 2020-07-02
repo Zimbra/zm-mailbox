@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2016, 2018 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -28,18 +28,23 @@ import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.httpclient.Header;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpException;
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.HttpState;
-import org.apache.commons.httpclient.UsernamePasswordCredentials;
-import org.apache.commons.httpclient.auth.AuthScope;
-import org.apache.commons.httpclient.methods.ByteArrayRequestEntity;
-import org.apache.commons.httpclient.methods.DeleteMethod;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.httpclient.methods.PutMethod;
+import org.apache.http.Header;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpException;
+import org.apache.http.HttpResponse;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.impl.client.DefaultRedirectStrategy;
+import org.apache.http.impl.client.HttpClientBuilder;
 
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.httpclient.HttpClientUtil;
@@ -76,7 +81,7 @@ public class ProxyServlet extends ZimbraServlet {
     private static final String USER_PARAM = "user";
     private static final String PASS_PARAM = "pass";
     private static final String AUTH_PARAM = "auth";
-    private static final String AUTH_BASIC = "basic";
+    private static final String AUTH_BASIC = "Basic";
 
 
     private Set<String> getAllowedDomains(AuthToken auth) throws ServiceException {
@@ -92,7 +97,7 @@ public class ProxyServlet extends ZimbraServlet {
         return allowedDomains;
     }
 
-    private boolean checkPermissionOnTarget(URL target, AuthToken auth) {
+    protected boolean checkPermissionOnTarget(URL target, AuthToken auth) {
         String host = target.getHost().toLowerCase();
         ZimbraLog.zimlet.debug("checking allowedDomains permission on target host: "+host);
         Set<String> domains;
@@ -116,7 +121,7 @@ public class ProxyServlet extends ZimbraServlet {
         return false;
     }
 
-    private boolean canProxyHeader(String header) {
+    protected boolean canProxyHeader(String header) {
         if (header == null) return false;
         header = header.toLowerCase();
         if (header.startsWith("accept") ||
@@ -134,7 +139,7 @@ public class ProxyServlet extends ZimbraServlet {
         return true;
     }
 
-    private byte[] copyPostedData(HttpServletRequest req) throws IOException {
+    protected byte[] copyPostedData(HttpServletRequest req) throws IOException {
         int size = req.getContentLength();
         if (req.getMethod().equalsIgnoreCase("GET") || size <= 0) {
             return null;
@@ -181,9 +186,9 @@ public class ProxyServlet extends ZimbraServlet {
         return req.getServerPort() == LC.zimbra_admin_service_port.intValue();
     }
 
-    private static final String DEFAULT_CTYPE = "text/xml";
+    protected static final String DEFAULT_CTYPE = "text/xml";
 
-    private void doProxy(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+    protected void doProxy(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         ZimbraLog.clearContext();
         boolean isAdmin = isAdminRequest(req);
         AuthToken authToken = isAdmin ?
@@ -197,14 +202,6 @@ public class ProxyServlet extends ZimbraServlet {
                         resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "authtoken expired");
                         return;
                     }
-                    if (!authToken.isRegistered()) {
-                        resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "authtoken is invalid");
-                        return;
-                    }
-                    if (isAdmin && !authToken.isAdmin()) {
-                        resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "permission denied");
-                        return;
-                    }
                 } catch (AuthTokenException e) {
                     resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "unable to parse authtoken");
                     return;
@@ -213,6 +210,14 @@ public class ProxyServlet extends ZimbraServlet {
         }
         if (authToken == null) {
             resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "no authtoken cookie");
+            return;
+        }
+        if (!authToken.isRegistered()) {
+            resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "authtoken is invalid");
+            return;
+        }
+        if (isAdmin && !authToken.isAdmin()) {
+            resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "permission denied");
             return;
         }
 
@@ -237,25 +242,25 @@ public class ProxyServlet extends ZimbraServlet {
         String uploadParam = req.getParameter(UPLOAD_PARAM);
         boolean asUpload = uploadParam != null && (uploadParam.equals("1") || uploadParam.equalsIgnoreCase("true"));
 
-        HttpMethod method = null;
+        HttpRequestBase method = null;
         try {
-            HttpClient client = ZimbraHttpConnectionManager.getExternalHttpConnMgr().newHttpClient();
-            HttpProxyUtil.configureProxy(client);
+            HttpClientBuilder clientBuilder = ZimbraHttpConnectionManager.getExternalHttpConnMgr().newHttpClient();
+            HttpProxyUtil.configureProxy(clientBuilder);
             String reqMethod = req.getMethod();
             if (reqMethod.equalsIgnoreCase("GET")) {
-                method = new GetMethod(target);
+                method = new HttpGet(target);
             } else if (reqMethod.equalsIgnoreCase("POST")) {
-                PostMethod post = new PostMethod(target);
+                HttpPost post = new HttpPost(target);
                 if (body != null)
-                    post.setRequestEntity(new ByteArrayRequestEntity(body, req.getContentType()));
+                    post.setEntity(new ByteArrayEntity(body, org.apache.http.entity.ContentType.create(req.getContentType())));
                 method = post;
             } else if (reqMethod.equalsIgnoreCase("PUT")) {
-                PutMethod put = new PutMethod(target);
+                HttpPut put = new HttpPut(target);
                 if (body != null)
-                    put.setRequestEntity(new ByteArrayRequestEntity(body, req.getContentType()));
+                    put.setEntity(new ByteArrayEntity(body, org.apache.http.entity.ContentType.create(req.getContentType())));
                 method = put;
             } else if (reqMethod.equalsIgnoreCase("DELETE")) {
-                method = new DeleteMethod(target);
+                method = new HttpDelete(target);
             } else {
                 ZimbraLog.zimlet.info("unsupported request method: " + reqMethod);
                 resp.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
@@ -268,15 +273,14 @@ public class ProxyServlet extends ZimbraServlet {
             user = req.getParameter(USER_PARAM);
             pass = req.getParameter(PASS_PARAM);
             if (auth != null && user != null && pass != null) {
-                if (!auth.equals(AUTH_BASIC)) {
+                if (!auth.equalsIgnoreCase(AUTH_BASIC)) {
                     ZimbraLog.zimlet.info("unsupported auth type: " + auth);
                     resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
                     return;
                 }
-                HttpState state = new HttpState();
-                state.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(user, pass));
-                client.setState(state);
-                method.setDoAuthentication(true);
+                CredentialsProvider provider = new BasicCredentialsProvider();
+                provider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(user, pass));
+                clientBuilder.setDefaultCredentialsProvider(provider);
             }
 
             Enumeration headers = req.getHeaderNames();
@@ -286,37 +290,45 @@ public class ProxyServlet extends ZimbraServlet {
                 if (canProxyHeader(hdr)) {
                 	ZimbraLog.zimlet.debug("outgoing: " + hdr + ": " + req.getHeader(hdr));
                 	if (hdr.equalsIgnoreCase("x-host"))
-                		method.getParams().setVirtualHost(req.getHeader(hdr));
+                	    method.setHeader("Host", req.getHeader(hdr));
                 	else
-                		method.addRequestHeader(hdr, req.getHeader(hdr));
+                		method.addHeader(hdr, req.getHeader(hdr));
                 }
             }
 
+            HttpResponse httpResp = null;
             try {
                 if (!(reqMethod.equalsIgnoreCase("POST") || reqMethod.equalsIgnoreCase("PUT"))) {
-                    method.setFollowRedirects(true);
+                    clientBuilder.setRedirectStrategy(new DefaultRedirectStrategy());
                 }
-                HttpClientUtil.executeMethod(client, method);
+
+                HttpClient client = clientBuilder.build();
+                httpResp = HttpClientUtil.executeMethod(client, method);
             } catch (HttpException ex) {
                 ZimbraLog.zimlet.info("exception while proxying " + target, ex);
                 resp.sendError(HttpServletResponse.SC_NOT_FOUND);
                 return;
             }
 
-            int status = method.getStatusLine() == null ? HttpServletResponse.SC_INTERNAL_SERVER_ERROR : method.getStatusCode();
+            int status = httpResp.getStatusLine() == null ? HttpServletResponse.SC_INTERNAL_SERVER_ERROR :httpResp.getStatusLine().getStatusCode();
 
             // workaround for Alexa Thumbnails paid web service, which doesn't bother to return a content-type line
-            Header ctHeader = method.getResponseHeader("Content-Type");
+            Header ctHeader = httpResp.getFirstHeader("Content-Type");
             String contentType = ctHeader == null || ctHeader.getValue() == null ? DEFAULT_CTYPE : ctHeader.getValue();
 
-            InputStream targetResponseBody = method.getResponseBodyAsStream();
+            // getEntity may return null if no response body (e.g. HTTP 204)
+            InputStream targetResponseBody = null;
+            HttpEntity targetResponseEntity = httpResp.getEntity();
+            if (targetResponseEntity != null) {
+                targetResponseBody = targetResponseEntity.getContent();
+            }
 
             if (asUpload) {
                 String filename = req.getParameter(FILENAME_PARAM);
                 if (filename == null || filename.equals(""))
                     filename = new ContentType(contentType).getParameter("name");
-                if ((filename == null || filename.equals("")) && method.getResponseHeader("Content-Disposition") != null)
-                    filename = new ContentDisposition(method.getResponseHeader("Content-Disposition").getValue()).getParameter("filename");
+                if ((filename == null || filename.equals("")) && httpResp.getFirstHeader("Content-Disposition") != null)
+                    filename = new ContentDisposition(httpResp.getFirstHeader("Content-Disposition").getValue()).getParameter("filename");
                 if (filename == null || filename.equals(""))
                     filename = "unknown";
 
@@ -339,7 +351,7 @@ public class ProxyServlet extends ZimbraServlet {
             } else {
                 resp.setStatus(status);
                 resp.setContentType(contentType);
-                for (Header h : method.getResponseHeaders())
+                for (Header h : httpResp.getAllHeaders())
                     if (canProxyHeader(h.getName()))
                         resp.addHeader(h.getName(), h.getValue());
                 if (targetResponseBody != null)

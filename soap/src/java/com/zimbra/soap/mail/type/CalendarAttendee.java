@@ -25,15 +25,22 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.CalendarAttendeeInterface;
 import com.zimbra.soap.base.XParamInterface;
 import com.zimbra.soap.type.ZmBoolean;
 
+import io.leangen.graphql.annotations.GraphQLIgnore;
+import io.leangen.graphql.annotations.GraphQLInputField;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name=GqlConstants.CLASS_CALENDAR_ATTENDEE, description="Calendar attendee information")
 public class CalendarAttendee implements CalendarAttendeeInterface {
 
     /**
@@ -142,6 +149,7 @@ public class CalendarAttendee implements CalendarAttendeeInterface {
      * @zm-api-field-description Non-standard parameters (XPARAMs)
      */
     @XmlElement(name=MailConstants.E_CAL_XPARAM /* xparam */, required=false)
+    @GraphQLQuery(name=GqlConstants.XPARAMS, description="Non-standard parameters")
     private final List<XParam> xParams = Lists.newArrayList();
 
     public CalendarAttendee() {
@@ -159,39 +167,62 @@ public class CalendarAttendee implements CalendarAttendeeInterface {
     }
 
     @Override
+    @GraphQLInputField(name=GqlConstants.ADDRESS, description="Email address (without MAILTO:)")
     public void setAddress(String address) { this.address = address; }
     @Override
+    @GraphQLInputField(name=GqlConstants.URL, description="URL - has same value as emailAddress")
     public void setUrl(String url) { this.url = url; }
     @Override
+    @GraphQLInputField(name=GqlConstants.DISPLAY_NAME, description="Friendly name - CN in iCalendar")
     public void setDisplayName(String displayName) {
         this.displayName = displayName;
     }
     @Override
+    @GraphQLInputField(name=GqlConstants.SENT_BY, description="iCalendar SENT_BY")
     public void setSentBy(String sentBy) { this.sentBy = sentBy; }
     @Override
+    @GraphQLInputField(name=GqlConstants.DIRECTORY, description="iCalendar DIR - Reference to a directory entry associated with the calendar user")
     public void setDir(String dir) { this.dir = dir; }
     @Override
+    @GraphQLInputField(name=GqlConstants.LANGUAGE, description="iCalendar LANGUAGE - As defined in RFC5646 * (e.g. \"en-US\")")
     public void setLanguage(String language) { this.language = language; }
     @Override
+    @GraphQLInputField(name=GqlConstants.CALENDAR_USER_TYPE, description="iCalendar CUTYPE (Calendar user type)")
     public void setCuType(String cuType) { this.cuType = cuType; }
     @Override
+    @GraphQLInputField(name=GqlConstants.ROLE, description="iCalendar ROLE")
     public void setRole(String role) { this.role = role; }
     @Override
+    @GraphQLInputField(name=GqlConstants.PARTICIPATION_STATUS, description="iCalendar PTST (Participation status)\n"
+        + "* \"NE\"eds-action\n "
+        + "* \"TE\"ntative\n "
+        + "* \"AC\"cept\n "
+        + "* \"DE\"clined\n "
+        + "* \"DG\" (delegated)\n "
+        + "* \"CO\"mpleted (todo)\n "
+        + "* \"IN\"-process (todo)\n " 
+        + "* \"WA\"iting (custom value only for todo)\n "
+        + "* \"DF\" (deferred; custom value only for todo)")
     public void setPartStat(String partStat) { this.partStat = partStat; }
     @Override
+    @GraphQLInputField(name=GqlConstants.RSVP, description="iCalendar RSVP")
     public void setRsvp(Boolean rsvp) { this.rsvp = ZmBoolean.fromBool(rsvp); }
     @Override
+    @GraphQLInputField(name=GqlConstants.MEMBER, description="iCalendar MEMBER - The group or list membership of the calendar user")
     public void setMember(String member) { this.member = member; }
     @Override
+    @GraphQLInputField(name=GqlConstants.DELEGATED_TO, description="iCalendar DELEGATED-TO")
     public void setDelegatedTo(String delegatedTo) {
         this.delegatedTo = delegatedTo;
     }
 
     @Override
+    @GraphQLInputField(name=GqlConstants.DELEGATED_FROM, description="iCalendar DELEGATED-FROM")
     public void setDelegatedFrom(String delegatedFrom) {
         this.delegatedFrom = delegatedFrom;
     }
 
+    @GraphQLInputField(name=GqlConstants.XPARAMS, description="Non-standard parameters")
     public void setXParams(Iterable <XParam> xParams) {
         this.xParams.clear();
         if (xParams != null) {
@@ -199,41 +230,65 @@ public class CalendarAttendee implements CalendarAttendeeInterface {
         }
     }
 
+    @GraphQLIgnore
     public void addXParam(XParam xParam) {
         this.xParams.add(xParam);
     }
 
     @Override
+    @GraphQLQuery(name=GqlConstants.ADDRESS, description="Email address (without MAILTO:)")
     public String getAddress() { return address; }
     @Override
+    @GraphQLQuery(name=GqlConstants.URL, description="URL - has same value as emailAddress")
     public String getUrl() { return url; }
     @Override
+    @GraphQLQuery(name=GqlConstants.DISPLAY_NAME, description="Friendly name - CN in iCalendar")
     public String getDisplayName() { return displayName; }
     @Override
+    @GraphQLQuery(name=GqlConstants.SENT_BY, description="iCalendar SENT_BY")
     public String getSentBy() { return sentBy; }
     @Override
+    @GraphQLQuery(name=GqlConstants.DIRECTORY, description="iCalendar DIR - Reference to a directory entry associated with the calendar user")
     public String getDir() { return dir; }
     @Override
+    @GraphQLQuery(name=GqlConstants.LANGUAGE, description="iCalendar LANGUAGE - As defined in RFC5646 * (e.g. \"en-US\")")
     public String getLanguage() { return language; }
     @Override
+    @GraphQLQuery(name=GqlConstants.CALENDAR_USER_TYPE, description="iCalendar CUTYPE (Calendar user type)")
     public String getCuType() { return cuType; }
     @Override
+    @GraphQLQuery(name=GqlConstants.ROLE, description="iCalendar ROLE")
     public String getRole() { return role; }
     @Override
+    @GraphQLQuery(name=GqlConstants.PARTICIPATION_STATUS, description="iCalendar PTST (Participation status)\n"
+        + "* \"NE\"eds-action\n "
+        + "* \"TE\"ntative\n "
+        + "* \"AC\"cept\n "
+        + "* \"DE\"clined\n "
+        + "* \"DG\" (delegated)\n "
+        + "* \"CO\"mpleted (todo)\n "
+        + "* \"IN\"-process (todo)\n " 
+        + "* \"WA\"iting (custom value only for todo)\n "
+        + "* \"DF\" (deferred; custom value only for todo)")
     public String getPartStat() { return partStat; }
     @Override
+    @GraphQLQuery(name=GqlConstants.RSVP, description="iCalendar RSVP")
     public Boolean getRsvp() { return ZmBoolean.toBool(rsvp); }
     @Override
+    @GraphQLQuery(name=GqlConstants.MEMBER, description="iCalendar MEMBER - The group or list membership of the calendar user")
     public String getMember() { return member; }
     @Override
+    @GraphQLQuery(name=GqlConstants.DELEGATED_TO, description="iCalendar DELEGATED-TO")
     public String getDelegatedTo() { return delegatedTo; }
     @Override
+    @GraphQLQuery(name=GqlConstants.DELEGATED_FROM, description="iCalendar DELEGATED-FROM")
     public String getDelegatedFrom() { return delegatedFrom; }
+    @GraphQLQuery(name=GqlConstants.XPARAMS, description="Non-standard parameters")
     public List<XParam> getXParams() {
         return Collections.unmodifiableList(xParams);
     }
 
-    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         return helper
             .add("address", address)
             .add("url", url)
@@ -253,20 +308,23 @@ public class CalendarAttendee implements CalendarAttendeeInterface {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this)).toString();
+        return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
     }
 
     @Override
+    @GraphQLIgnore
     public void setXParamInterfaces(Iterable<XParamInterface> xParams) {
         setXParams(XParam.fromInterfaces(xParams));
     }
 
     @Override
+    @GraphQLIgnore
     public void addXParamInterface(XParamInterface xParam) {
         addXParam((XParam) xParam);
     }
 
     @Override
+    @GraphQLIgnore
     public List<XParamInterface> getXParamInterfaces() {
         return XParam.toInterfaces(xParams);
     }

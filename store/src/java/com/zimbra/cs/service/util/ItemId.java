@@ -19,6 +19,8 @@
  */
 package com.zimbra.cs.service.util;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -51,7 +53,7 @@ public class ItemId implements java.io.Serializable {
     private int    mSubpartId = -1;
 
     public ItemId(MailItem item) {
-        this(item.getMailbox(), item.getId());
+        this(item.getAccountId(), item.getId());
     }
 
     public ItemId(Mailbox mbox, int id) {
@@ -63,7 +65,7 @@ public class ItemId implements java.io.Serializable {
     }
 
     public ItemId(MailItem item, int subId) {
-        this(item.getMailbox().getAccountId(), item.getId(), subId);
+        this(item.getAccountId(), item.getId(), subId);
     }
 
     public ItemId(String acctId, int id, int subId) {
@@ -105,7 +107,7 @@ public class ItemId implements java.io.Serializable {
         Account acctTarget = Provisioning.getInstance().get(AccountBy.id, mAccountId);
         if (acctTarget == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(mAccountId);
-        return DocumentHandler.getLocalHost().equalsIgnoreCase(acctTarget.getAttr(Provisioning.A_zimbraMailHost));
+        return Provisioning.getLocalIp().equalsIgnoreCase(Provisioning.affinityServer(acctTarget));
     }
 
     /** Returns whether the item belongs to the mailbox owned by the passed-in
@@ -230,6 +232,11 @@ public class ItemId implements java.io.Serializable {
             }
         }
         return foldersMap;
+    }
+
+    // ZCS-6695 Deserialization protection
+    private final void readObject(ObjectInputStream in) throws java.io.IOException {
+        throw new IOException("Cannot be deserialized");
     }
 
     public static void main(String[] args) {

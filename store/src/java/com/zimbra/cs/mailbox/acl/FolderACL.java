@@ -18,11 +18,12 @@ package com.zimbra.cs.mailbox.acl;
 
 import java.io.IOException;
 
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapHttpTransport;
-import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
@@ -30,14 +31,12 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.httpclient.URLUtil;
-import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Folder;
-import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.util.ItemId;
@@ -272,8 +271,8 @@ public class FolderACL {
         ItemId iid = new ItemId(mShareTarget.getAccountId(), mShareTarget.getFolderId());
         request.addElement(MailConstants.E_FOLDER).addAttribute(MailConstants.A_FOLDER, iid.toString((Account)null));
 
-        Server server = Provisioning.getInstance().getServer(mShareTarget.getAccount());
-        String url = URLUtil.getSoapURL(server, false);
+        String podIp = Provisioning.affinityServer(mShareTarget.getAccount());
+        String url = URLUtil.getSoapURL(podIp, URLUtil.getPort(), false);
         SoapHttpTransport transport = new SoapHttpTransport(url);
 
         AuthToken authToken = null;
@@ -291,9 +290,9 @@ public class FolderACL {
             String permsStr = eFolder.getAttribute(MailConstants.A_RIGHTS);
             perms = Short.valueOf(ACL.stringToRights(permsStr));
         } catch (ServiceException e) {
-            ZimbraLog.misc.warn("cannot get effective perms from server " + server.getName(), e);
+            ZimbraLog.misc.warn("cannot get effective perms from server " + podIp, e);
         } catch (IOException e) {
-            ZimbraLog.misc.warn("cannot get effective perms from server " + server.getName(), e);
+            ZimbraLog.misc.warn("cannot get effective perms from server " + podIp, e);
         } finally {
             transport.shutdown();
         }

@@ -30,6 +30,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.http.HttpException;
+
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.mime.ContentDisposition;
@@ -244,6 +246,8 @@ public class ContentServlet extends ZimbraServlet {
             resp.sendError(HttpServletResponse.SC_NOT_FOUND, L10nUtil.getMessage(MsgKey.errNoSuchItem, req));
         } catch (ServiceException e) {
             returnError(resp, e);
+        } catch (HttpException e) {
+            throw new IOException("Unknown error", e);
         } finally {
             ZimbraLog.clearContext();
         }
@@ -254,7 +258,7 @@ public class ContentServlet extends ZimbraServlet {
          */
     }
 
-    private void retrieveUpload(HttpServletRequest req, HttpServletResponse resp, AuthToken authToken) throws IOException {
+    private void retrieveUpload(HttpServletRequest req, HttpServletResponse resp, String podIp, AuthToken authToken) throws IOException {
         // if it's another server fetching an already-uploaded file, just do that
         String uploadId = req.getParameter(PARAM_UPLOAD_ID);
         if (uploadId == null) {
@@ -264,10 +268,8 @@ public class ContentServlet extends ZimbraServlet {
 
         try {
             if (!FileUploadServlet.isLocalUpload(uploadId)) {
-                // wrong server; proxy to the right one...
-                String serverId = FileUploadServlet.getUploadServerId(uploadId);
-                Server server = Provisioning.getInstance().get(Key.ServerBy.id, serverId);
-                proxyServletRequest(req, resp, server, null);
+                // wrong pod; proxy to the right one...
+                proxyServletRequest(req, resp, podIp, null);
                 return;
             }
 
@@ -287,6 +289,8 @@ public class ContentServlet extends ZimbraServlet {
                 FileUploadServlet.deleteUpload(up);
         } catch (ServiceException e) {
             returnError(resp, e);
+        } catch (HttpException e) {
+            throw new IOException("Unknown error", e);
         }
     }
 
@@ -376,11 +380,20 @@ public class ContentServlet extends ZimbraServlet {
             sendbackBlockMessage(req, resp);
             return;
         }
+        
+		Account acct = null;
+		String affinityIp = null;
+		try {
+			acct = Provisioning.getInstance().get(Key.AccountBy.id, authToken.getAccountId());
+			affinityIp = Provisioning.affinityServer(acct);
+		} catch (ServiceException e) {
+			mLog.debug("Cannot retrieve account information: ", e);
+		}
         String pathInfo = req.getPathInfo();
         if (pathInfo != null && pathInfo.equals(PREFIX_GET)) {
             getCommand(req, resp, authToken);
         } else if (pathInfo != null && pathInfo.equals(PREFIX_PROXY)) {
-            retrieveUpload(req, resp, authToken);
+            retrieveUpload(req, resp, affinityIp, authToken);
         } else {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, L10nUtil.getMessage(MsgKey.errInvalidRequest, req));
         }

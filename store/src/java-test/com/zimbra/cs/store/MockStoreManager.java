@@ -65,6 +65,11 @@ public final class MockStoreManager extends StoreManager {
     }
 
     @Override
+    public boolean supports(StoreFeature feature, String locator) {
+         return supports(feature);
+    }
+
+    @Override
     public boolean supports(StoreFeature feature) {
         switch (feature) {
             case BULK_DELETE:

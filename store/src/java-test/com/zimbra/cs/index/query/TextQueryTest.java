@@ -17,6 +17,7 @@
 package com.zimbra.cs.index.query;
 
 import java.util.EnumSet;
+import org.junit.Ignore;
 import java.util.HashMap;
 import java.util.List;
 
@@ -51,7 +52,7 @@ import com.zimbra.soap.type.SearchHit;
  *
  * @author ysasaki
  */
-public final class TextQueryTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public final class TextQueryTest {
 
     @BeforeClass
     public static void init() throws Exception {

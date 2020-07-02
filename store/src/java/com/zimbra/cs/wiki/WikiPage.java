@@ -20,25 +20,25 @@ import java.io.IOException;
 import java.util.Locale;
 import java.util.Map;
 
-import com.zimbra.common.util.MapUtil;
-import org.apache.commons.httpclient.Header;
+import org.apache.http.Header;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.MapUtil;
+import com.zimbra.common.util.Pair;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Document;
-import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.UserServlet;
-import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.doc.DocServiceException;
-import com.zimbra.common.account.Key;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.Pair;
+import com.zimbra.cs.service.util.ItemId;
 
 /*
  * Wikis are now obsolete but this class has been retained to aid migrating legacy data.
@@ -238,7 +238,7 @@ public abstract class WikiPage {
             mFolderId = newItem.getFolderId();
             mFragment = newItem.getFragment();
             mContents = null;
-            mAccountId = newItem.getMailbox().getAccountId();
+            mAccountId = newItem.getAccountId();
         }
 
         public Document getWikiRevision(WikiPage.WikiContext ctxt, int version) throws ServiceException {

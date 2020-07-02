@@ -33,6 +33,8 @@ public class AccountConstants {
     public static final String E_AUTH_RESPONSE = "AuthResponse";
     public static final String E_CHANGE_PASSWORD_REQUEST = "ChangePasswordRequest";
     public static final String E_CHANGE_PASSWORD_RESPONSE = "ChangePasswordResponse";
+    public static final String E_CLIENT_INFO_REQUEST = "ClientInfoRequest";
+    public static final String E_CLIENT_INFO_RESPONSE = "ClientInfoResponse";
     public static final String E_END_SESSION_REQUEST = "EndSessionRequest";
     public static final String E_END_SESSION_RESPONSE = "EndSessionResponse";
     public static final String E_ENABLE_TWO_FACTOR_AUTH_REQUEST = "EnableTwoFactorAuthRequest";
@@ -167,12 +169,27 @@ public class AccountConstants {
     public static final String E_REVOKE_OAUTH_CONSUMER_REQUEST = "RevokeOAuthConsumerRequest";
     public static final String E_REVOKE_OAUTH_CONSUMER_RESPONSE = "RevokeOAuthConsumerResponse";
 
+    //AddressList
+    public static final String E_GET_ALL_ADDRESS_LISTS_REQUEST = "GetAllAddressListsRequest";
+    public static final String E_GET_ALL_ADDRESS_LISTS_RESPONSE = "GetAllAddressListsResponse";
+    public static final String E_ADDRESS_LISTS = "addressLists";
+    public static final String E_ADDRESS_LIST = "addressList";
+    public static final String A_DESCRIPTION = "description";
+    public static final QName GET_ALL_ADDRESS_LISTS_REQUEST = QName.get(E_GET_ALL_ADDRESS_LISTS_REQUEST, NAMESPACE);
+    public static final QName GET_ALL_ADDRESS_LISTS_RESPONSE = QName.get(E_GET_ALL_ADDRESS_LISTS_RESPONSE, NAMESPACE);
+    public static final String E_GET_ADDRESS_LIST_MEMBERS_REQUEST = "GetAddressListMembersRequest";
+    public static final String E_GET_ADDRESS_LIST_MEMBERS_RESPONSE = "GetAddressListMembersResponse";
+    public static final String E_ADDRESS_LIST_MEMBERS = "alm";
+    public static final String E_ADDRESS_LIST_MEMBER = "member";
+    public static final String A_COUNT_ONLY = "countOnly";
 
     // auth
     public static final QName AUTH_REQUEST = QName.get(E_AUTH_REQUEST, NAMESPACE);
     public static final QName AUTH_RESPONSE = QName.get(E_AUTH_RESPONSE, NAMESPACE);
     public static final QName CHANGE_PASSWORD_REQUEST = QName.get(E_CHANGE_PASSWORD_REQUEST, NAMESPACE);
     public static final QName CHANGE_PASSWORD_RESPONSE = QName.get(E_CHANGE_PASSWORD_RESPONSE, NAMESPACE);
+    public static final QName CLIENT_INFO_REQUEST = QName.get(E_CLIENT_INFO_REQUEST, NAMESPACE);
+    public static final QName CLIENT_INFO_RESPONSE = QName.get(E_CLIENT_INFO_RESPONSE, NAMESPACE);
     public static final QName END_SESSION_REQUEST = QName.get(E_END_SESSION_REQUEST, NAMESPACE);
     public static final QName END_SESSION_RESPONSE = QName.get(E_END_SESSION_RESPONSE, NAMESPACE);
     public static final QName ENABLE_TWO_FACTOR_AUTH_REQUEST = QName.get(E_ENABLE_TWO_FACTOR_AUTH_REQUEST, NAMESPACE);
@@ -307,6 +324,15 @@ public class AccountConstants {
     public static final QName GET_OAUTH_CONSUMERS_RESPONSE = QName.get(E_GET_OAUTH_CONSUMERS_RESPONSE, NAMESPACE);
     public static final QName REVOKE_OAUTH_CONSUMER_REQUEST = QName.get(E_REVOKE_OAUTH_CONSUMER_REQUEST, NAMESPACE);
     public static final QName REVOKE_OAUTH_CONSUMER_RESPONSE = QName.get(E_REVOKE_OAUTH_CONSUMER_RESPONSE, NAMESPACE);
+    
+    //HAB
+    public static final String E_GET_HAB_REQUEST = "GetHABRequest";
+    public static final String E_GET_HAB_RESPONSE = "GetHABResponse";
+    public static final QName GET_HAB_REQUEST = QName.get( E_GET_HAB_REQUEST, NAMESPACE);
+    public static final QName GET_HAB_RESPONSE = QName.get(E_GET_HAB_RESPONSE, NAMESPACE);
+    
+    public static final QName GET_ADDRESS_LIST_MEMBERS_REQUEST = QName.get(E_GET_ADDRESS_LIST_MEMBERS_REQUEST, NAMESPACE);
+    public static final QName GET_ADDRESS_LIST_MEMBERS_RESPONSE = QName.get(E_GET_ADDRESS_LIST_MEMBERS_RESPONSE, NAMESPACE);
 
     public static final String E_ACTION = "action";
     public static final String E_ALIAS = "alias";
@@ -335,6 +361,7 @@ public class AccountConstants {
     public static final String E_ID = "id";
     public static final String E_PROFILE_IMAGE_ID = "profileImageId";
     public static final String E_PASSWORD = "password";
+    public static final String E_RECOVERY_CODE = "recoveryCode";
     public static final String E_OLD_PASSWORD = "oldPassword";
     public static final String A_SECTIONS = "sections";
     public static final String E_PREF = "pref";
@@ -367,6 +394,8 @@ public class AccountConstants {
     public static final String E_VIRTUAL_HOST = "virtualHost";
     public static final String E_SKIN = "skin";
     public static final String E_LICENSE = "license";
+    public static final String E_HAB_ROOTS = "habRoots";
+    public static final String E_HAB = "hab";
     public static final String E_IDENTITIES = "identities";
     public static final String E_SIGNATURES = "signatures";
     public static final String E_IDENTITY = "identity";
@@ -399,6 +428,7 @@ public class AccountConstants {
     public static final String A_BCC_OWNERS = "bccOwners";
     public static final String A_DIRECT_ONLY = "directOnly";
     public static final String A_DYNAMIC = "dynamic";
+    public static final String A_HOSTNAME = "hostname";
     public static final String A_KEY = "key";
     public static final String A_N = "n";
     public static final String A_NAME = "name";
@@ -444,7 +474,10 @@ public class AccountConstants {
     public static final String A_VIA = "via";
     public static final String A_VERIFY_ACCOUNT = "verifyAccount";
     public static final String A_CSRF_SUPPORT = "csrfTokenSecured";
-
+    public static final String A_GET_COUNT = "getCount";
+    public static final String A_TOKEN_TYPE = "tokenType";
+    public static final String E_JWT_TOKEN = "jwtToken";
+    public static final String A_OFFSET = "offset";
 
     // account ACLs
     public static final String A_ACCESSKEY = "key";
@@ -517,8 +550,10 @@ public class AccountConstants {
     public static final String A_ATTACHMENT_SIZE_LIMIT = "attSizeLimit";
     public static final String A_DOCUMENT_SIZE_LIMIT = "docSizeLimit";
 
-    //auth
+    //end session
     public static final String A_LOG_OFF = "logoff";
+    public static final String A_CLEAR_ALL_SOAP_SESSIONS = "all";
+    public static final String A_EXCLUDE_CURRENT_SESSION = "excludeCurrent";
 
     // Zimbra Mobile Gateway
     public static final String E_APP_ID = "appId";
@@ -566,4 +601,38 @@ public class AccountConstants {
     public static final String P_LINK_EXPIRY = "exp";
     public static final String P_EMAIL = "email";
     public static final String P_ADDRESS_VERIFICATION = "address-verification";
+
+    // Password reset feature
+    public static final String E_RESET_PASSWORD_REQUEST = "ResetPasswordRequest";
+    public static final String E_RESET_PASSWORD_RESPONSE = "ResetPasswordResponse";
+    public static final QName RESET_PASSWORD_REQUEST = QName.get(E_RESET_PASSWORD_REQUEST, NAMESPACE);
+
+    //Hab
+    public static final String A_HAB_ROOT_GROUP_ID = "habRootGroupId";
+    public static final String E_HAB_GROUP = "habGroup";
+    public static final String E_HAB_GROUPS = "habGroups";
+    public static final String A_ROOT_HAB_GROUP = "rootHabGroup";
+    public static final String A_PARENT_HAB_GROUP_ID = "parentHabGroupId";
+    public static final String A_HAB_GROUPS= "habGroups";
+    public static final String A_HAB_SENIORITY_INDEX = "seniorityIndex";
+    public static final String E_HAB_GROUP_MEMBERS = "groupMembers";
+    public static final String E_HAB_GROUP_MEMBER = "groupMember";
+
+    // Session activity feature
+    public static final String A_SESSION_ID = "sessionId";
+
+    // Client Info
+    public static final String E_SKIN_LOGO_APP_BANNER = "zimbraSkinLogoAppBanner";
+    public static final String E_SKIN_LOGO_LOGIN_BANNER = "zimbraSkinLogoLoginBanner";
+    public static final String E_SKIN_LOGO_URL = "zimbraSkinLogoURL";
+    public static final String E_WEB_CLIENT_LOGIN_URL = "zimbraWebClientLoginURL";
+    public static final String E_WEB_CLIENT_LOGOUT_URL = "zimbraWebClientLogoutURL";
+    public static final String E_WEB_CLIENT_STAY_SIGNED_IN_DISABLED = "zimbraFeatureStaySignedInDisabled";
+    public static final String E_WEB_CLIENT_FEATURE_PASSWORD_RESET = "zimbraFeatureResetPasswordStatus";
+    public static final String E_SKIN_BACKGROUND_COLOR = "zimbraSkinBackgroundColor";
+    public static final String E_SKIN_FOREGROUND_COLOR = "zimbraSkinForegroundColor";
+    public static final String E_SKIN_SECONDARY_COLOR = "zimbraSkinSecondaryColor";
+    public static final String E_SKIN_SELECTION_COLOR = "zimbraSkinSelectionColor";
+    public static final String E_SKIN_FAVICON = "zimbraSkinFavicon";
+    public static final String E_HOSTNAME = "hostname";
 }

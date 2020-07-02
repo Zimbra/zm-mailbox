@@ -167,6 +167,7 @@ public class UBIDLdapContext extends ZLdapContext {
         }
 
         conn = getConnection(connPool);
+        ZimbraLog.ldap.debug("UBIDLdapContext: Zimbra LDAP host: %s ", conn.getHostPort());
     }
 
     /*
@@ -179,6 +180,7 @@ public class UBIDLdapContext extends ZLdapContext {
 
         connPool = LdapConnectionPool.getConnPoolByConfig(config);
         conn = getConnection(connPool);
+        ZimbraLog.ldap.debug("UBIDLdapContext: External LDAP host: %s ", conn.getHostPort());
     }
 
     // for unittest

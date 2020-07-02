@@ -17,6 +17,7 @@
 package com.zimbra.cs.service.formatter;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -30,7 +31,7 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.service.util.ItemData;
 
-public class ArchiveFormatterTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class ArchiveFormatterTest {
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();

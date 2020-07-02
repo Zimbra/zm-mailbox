@@ -17,14 +17,18 @@
 
 package com.zimbra.soap.account.type;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlValue;
 
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.ZimletConstants;
 import com.zimbra.soap.base.ZimletTarget;
+
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
 
 /**
  * Implemented as an object rather than using String with @XmlElement because when constructing a JAXB
@@ -35,6 +39,7 @@ import com.zimbra.soap.base.ZimletTarget;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=ZimletConstants.ZIMLET_TAG_TARGET)
+@GraphQLType(name=GqlConstants.CLASS_ACCOUNT_ZIMLET_TARGET, description="Account zimlet target")
 public class AccountZimletTarget
 implements ZimletTarget {
 
@@ -53,17 +58,18 @@ implements ZimletTarget {
     @Override
     public void setValue(String value) { this.value = value; }
     @Override
+    @GraphQLQuery(name=GqlConstants.VALUE, description="Value")
     public String getValue() { return value; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(
+                MoreObjects.ToStringHelper helper) {
         return helper
             .add("value", value);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
+        return addToStringInfo(MoreObjects.toStringHelper(this))
                 .toString();
     }
 }

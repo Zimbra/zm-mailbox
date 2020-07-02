@@ -14,6 +14,7 @@ import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.http.HttpException;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Assume;
@@ -426,7 +427,7 @@ public class TestImapServerListener {
     }
 
     @Test
-    public void testRegisterUnregister() throws ServiceException, IOException {
+    public void testRegisterUnregister() throws ServiceException, IOException, HttpException {
         Assume.assumeNotNull(remoteServer);
         Assume.assumeNotNull(remoteAccount);
         assertNotNull("ImapServerListener instance should not be null", remoteListener);
@@ -825,7 +826,7 @@ public class TestImapServerListener {
         }
 
         @Override
-        public void notifyPendingChanges(PendingModifications pnsIn, int changeId, Session source) {
+        public void notifyPendingChanges(PendingModifications pnsIn, int changeId, SourceSessionInfo source) {
             triggered = true;
             doneSignal.countDown();
         }

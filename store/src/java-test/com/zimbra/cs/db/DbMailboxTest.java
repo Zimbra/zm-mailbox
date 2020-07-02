@@ -79,6 +79,41 @@ public class DbMailboxTest {
     }
 
     @Test
+    public void getMailboxCount() throws Exception {
+        Integer mailboxCount = DbMailbox.getMailboxCount(connection);
+
+        Assert.assertEquals(0, mailboxCount.intValue());
+
+        DbMailbox.createMailbox(connection, 100, "0", "test0", 0);
+        DbMailbox.createMailbox(connection, 101, "1", "test1", 0);
+        DbMailbox.createMailbox(connection, 102, "2", "test2", 0);
+
+        mailboxCount = DbMailbox.getMailboxCount(connection);
+
+        Assert.assertEquals(3, mailboxCount.intValue());
+
+    }
+
+    @Test
+    public void getMailboxKey() throws Exception {
+
+        DbMailbox.createMailbox(connection, 100, "0", "test0", 0);
+
+        Integer mailboxKey = DbMailbox.getMailboxKey(connection, "0");
+
+        Assert.assertEquals(100, mailboxKey.intValue());
+
+    }
+    @Test
+    public void getNullMailboxKey() throws Exception {
+
+        Integer mailboxKey = DbMailbox.getMailboxKey(connection, "0");
+        Assert.assertEquals(null,mailboxKey);
+
+
+    }
+
+    @Test
     public void listAccountIds() throws Exception {
         Assert.assertEquals(0, DbMailbox.listAccountIds(connection).size());
 

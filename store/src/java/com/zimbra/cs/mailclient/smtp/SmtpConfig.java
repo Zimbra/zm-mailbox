@@ -16,7 +16,7 @@
  */
 package com.zimbra.cs.mailclient.smtp;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailclient.MailConfig;
 
@@ -57,7 +57,7 @@ public final class SmtpConfig extends MailConfig {
     }
 
     public String getDomain() {
-        return Objects.firstNonNull(domain, "localhost");
+        return MoreObjects.firstNonNull(domain, "localhost");
     }
 
     public void setAllowPartialSend(boolean allow) {
@@ -77,7 +77,7 @@ public final class SmtpConfig extends MailConfig {
     }
 
     @Override
-    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);
         helper
             .add("domain", domain)
@@ -90,6 +90,6 @@ public final class SmtpConfig extends MailConfig {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this)).toString();
+        return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
     }
 }

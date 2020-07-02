@@ -27,10 +27,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.http.HttpException;
 import org.dom4j.QName;
 
 import com.google.common.primitives.Ints;
@@ -56,6 +58,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.event.logger.EventLogger;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.CalendarItem;
@@ -68,9 +71,11 @@ import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
+import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.Message.EventFlag;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.Invite;
@@ -185,6 +190,13 @@ public class ItemActionHelper {
             List<Integer> ids, MailItem.Type type, TargetConstraint tcon, ItemId iidFolder) throws ServiceException {
         ItemActionHelper ia = new ItemActionHelper(octxt, mbox, responseProto, ids, Op.MOVE, type, true, tcon);
         ia.setIidFolder(iidFolder);
+        ia.schedule();
+        return ia;
+    }
+
+    public static ItemActionHelper SEEN(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto,
+            List<Integer> ids) throws ServiceException {
+        ItemActionHelper ia = new ItemActionHelper(octxt, mbox, responseProto, ids, Op.SEEN, MailItem.Type.MESSAGE, true, null);
         ia.schedule();
         return ia;
     }
@@ -315,7 +327,8 @@ public class ItemActionHelper {
         RENAME("rename"),
         UPDATE("update"),
         LOCK("lock"),
-        UNLOCK("unlock");
+        UNLOCK("unlock"),
+        SEEN("seen");
 
         private final String name;
 
@@ -442,7 +455,7 @@ public class ItemActionHelper {
                 mResult = executeLocal();
             else
                 mResult = executeRemote();
-        } catch (IOException ioe) {
+        } catch (IOException | HttpException ioe) {
             throw ServiceException.FAILURE("exception reading item blob", ioe);
         }
     }
@@ -548,6 +561,22 @@ public class ItemActionHelper {
                     getMailbox().unlock(getOpCtxt(), id, type, mAuthenticatedAccount.getId());
                 }
                 break;
+            case SEEN:
+                Mailbox mbox = getMailbox();
+                if (type != Type.MESSAGE) {
+                    throw ServiceException.INVALID_REQUEST("SEEN operation can only be performed on Messages", null);
+                }
+                if (!EventLogger.getEventLogger().isEnabled()) {
+                    throw ServiceException.INVALID_REQUEST("event logging is not enabled", null);
+                }
+                MailItem[] items = mbox.getItemById(getOpCtxt(), ids, type);
+                List<Message> msgs = new ArrayList<>(items.length);
+                for (MailItem mi: items) {
+                    msgs.add((Message) mi);
+                }
+                List<Integer> affectedMsgIds = mbox.advanceMessageEventFlags(getOpCtxt(), msgs, EventFlag.seen);
+                result.setSuccessIds(affectedMsgIds.stream().map(id -> mIdFormatter.formatItemId(id)).collect(Collectors.toList()));
+                break;
             default:
                 throw ServiceException.INVALID_REQUEST("unknown operation: " + mOperation, null);
         }
@@ -598,7 +627,7 @@ public class ItemActionHelper {
         return authToken;
     }
 
-    private ItemActionResult executeRemote() throws ServiceException, IOException {
+    private ItemActionResult executeRemote() throws ServiceException, IOException, HttpException{
         Account target = Provisioning.getInstance().get(Key.AccountBy.id, mIidFolder.getAccountId());
 
         AuthToken at = getAuthToken();

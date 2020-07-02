@@ -17,15 +17,22 @@
 
 package com.zimbra.soap.mail.type;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.ByYearDayRuleInterface;
 
+import io.leangen.graphql.annotations.GraphQLInputField;
+import io.leangen.graphql.annotations.GraphQLNonNull;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name=GqlConstants.CLASS_BY_YEAR_DAY_RULE, description="By-year-day rule")
 public class ByYearDayRule implements ByYearDayRuleInterface {
 
     /**
@@ -36,6 +43,8 @@ public class ByYearDayRule implements ByYearDayRuleInterface {
      * e.g. <b>&lt;byyearday yrdaylist="1,+2,-1"/></b> means January 1st, January 2nd, and December 31st.
      */
     @XmlAttribute(name=MailConstants.A_CAL_RULE_BYYEARDAY_YRDAYLIST /* yrdaylist */, required=true)
+    @GraphQLNonNull
+    @GraphQLQuery(name=GqlConstants.LIST, description="BYYEARDAY yearday list. Format : \"[[+]|-]num[,...]\" where num is between 1 and 366")
     private final String list;
 
     /**
@@ -46,7 +55,7 @@ public class ByYearDayRule implements ByYearDayRuleInterface {
         this((String) null);
     }
 
-    public ByYearDayRule(String list) {
+    public ByYearDayRule(@GraphQLNonNull @GraphQLInputField String list) {
         this.list = list;
     }
 
@@ -60,7 +69,7 @@ public class ByYearDayRule implements ByYearDayRuleInterface {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
             .add("list", list)
             .toString();
     }

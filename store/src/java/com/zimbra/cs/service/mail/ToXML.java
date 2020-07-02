@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2020 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -97,6 +97,7 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 import com.zimbra.cs.fb.FreeBusy;
+import com.zimbra.cs.gal.GalGroup;
 import com.zimbra.cs.gal.GalGroup.GroupInfo;
 import com.zimbra.cs.gal.GalGroupInfoProvider;
 import com.zimbra.cs.gal.GalGroupMembers.ContactDLMembers;
@@ -128,6 +129,8 @@ import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxNotificationInfo;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.Note;
@@ -136,8 +139,10 @@ import com.zimbra.cs.mailbox.OperationContextData;
 import com.zimbra.cs.mailbox.RetentionPolicyManager;
 import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.mailbox.SenderList;
+import com.zimbra.cs.mailbox.SmartFolder;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.WikiItem;
+import com.zimbra.cs.mailbox.cache.WatchCache;
 import com.zimbra.cs.mailbox.calendar.Alarm;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
@@ -157,7 +162,9 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.smime.SmimeHandler;
+import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.admin.type.DataSourceType;
+import com.zimbra.soap.mail.type.ActivityInfo;
 import com.zimbra.soap.mail.type.AlarmDataInfo;
 import com.zimbra.soap.mail.type.CalendarReply;
 import com.zimbra.soap.mail.type.Policy;
@@ -174,6 +181,7 @@ import com.zimbra.soap.type.WantRecipsSetting;
  */
 public final class ToXML {
     private static final Log LOG = LogFactory.getLog(ToXML.class);
+    private static final String A_WATCH = "watch";
 
     public static enum OutputParticipants {
         PUT_SENDERS(0),
@@ -211,6 +219,8 @@ public final class ToXML {
             int fields) throws ServiceException {
         if (item instanceof Folder) {
             return encodeFolder(parent, ifmt, octxt, (Folder) item, fields);
+        } else if (item instanceof SmartFolder) {
+            return encodeSmartFolder(parent, ifmt, octxt, (SmartFolder) item, fields);
         } else if (item instanceof Tag) {
             return encodeTag(parent, ifmt, octxt, (Tag) item, fields);
         } else if (item instanceof Note) {
@@ -250,12 +260,12 @@ public final class ToXML {
     }
 
     public static Element encodeMailbox(Element parent, OperationContext octxt, Mailbox mbox) {
-        return encodeMailbox(parent, octxt, mbox, NOTIFY_FIELDS);
+        return encodeMailbox(parent, octxt, new MailboxNotificationInfo(mbox), NOTIFY_FIELDS);
     }
 
-    public static Element encodeMailbox(Element parent, OperationContext octxt, Mailbox mbox, int fields) {
+    public static Element encodeMailbox(Element parent, OperationContext octxt, MailboxNotificationInfo mbox, int fields) {
         Element elem = parent.addNonUniqueElement(MailConstants.E_MAILBOX);
-        if (octxt.isDelegatedRequest(mbox)) {
+        if (octxt.isDelegatedRequest(mbox.getAccountId())) {
             elem.addAttribute(HeaderConstants.A_ACCOUNT_ID, mbox.getAccountId());
         }
         if (needToOutput(fields, Change.SIZE)) {
@@ -741,13 +751,27 @@ public final class ToXML {
                 fields, migratedDlist, returnHiddenAttrs, maxMembers, returnCertInfo, (Set<String>) null);
     }
 
+    public static Element encodeContact(Element parent, ItemIdFormatter ifmt,
+        OperationContext octxt, Contact contact, ContactGroup contactGroup,
+        Collection<String> memberAttrFilter, boolean summary, Collection<String> attrFilter,
+        int fields, String migratedDlist, boolean returnHiddenAttrs, long maxMembers,
+        boolean returnCertInfo, Set<String> memberOfIds) throws ServiceException {
+        return encodeContact(parent, ifmt, octxt, contact, contactGroup, memberAttrFilter, summary,
+            attrFilter, fields, migratedDlist, returnHiddenAttrs, maxMembers, returnCertInfo,
+            memberOfIds, null, null);
+    }
+
     /**
      * @param memberOfIds set of IDs of contact groups this contact is a member of
+     * @param mRequestedAcct requested account
+     * @param mAuthedAcct authenticated account
      */
-    public static Element encodeContact(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Contact contact,
-            ContactGroup contactGroup, Collection<String> memberAttrFilter, boolean summary,
-            Collection<String> attrFilter, int fields, String migratedDlist,
-            boolean returnHiddenAttrs, long maxMembers, boolean returnCertInfo, Set<String> memberOfIds)
+    public static Element encodeContact(Element parent, ItemIdFormatter ifmt,
+        OperationContext octxt, Contact contact, ContactGroup contactGroup,
+        Collection<String> memberAttrFilter, boolean summary, Collection<String> attrFilter,
+        int fields, String migratedDlist, boolean returnHiddenAttrs, long maxMembers,
+        boolean returnCertInfo, Set<String> memberOfIds, Account mRequestedAcct,
+        Account mAuthedAcct)
     throws ServiceException {
         Element el = parent.addNonUniqueElement(MailConstants.E_CONTACT);
         el.addAttribute(MailConstants.A_ID, ifmt.formatItemId(contact));
@@ -828,19 +852,22 @@ public final class ToXML {
             for (Map.Entry<String, String> me : contactFields.entrySet()) {
                 String name = me.getKey();
                 String value = me.getValue();
-
                 // don't put returnHiddenAttrs in one of the && condition because member
                 // can be configured as a hidden or non-hidden field
-                if (ContactConstants.A_member.equals(name) &&
-                            maxMembers != GetContacts.NO_LIMIT_MAX_MEMBERS) {
-                    // there is a limit on the max number of members to return
-                    ContactDLMembers dlMembers = new ContactDLMembers(contact);
-                    if (dlMembers.getTotal() > maxMembers) {
-                        el.addAttribute(MailConstants.A_TOO_MANY_MEMBERS, true);
+                if (ContactConstants.A_member.equals(name)) {
+                    String email = contactFields.get("email");
+                    if (!hasDLViewRight(email, mRequestedAcct, mAuthedAcct)) {
                         continue;
                     }
+                    if (maxMembers != GetContacts.NO_LIMIT_MAX_MEMBERS) {
+                        // there is a limit on the max number of members to return
+                        ContactDLMembers dlMembers = new ContactDLMembers(contact);
+                        if (dlMembers.getTotal() > maxMembers) {
+                            el.addAttribute(MailConstants.A_TOO_MANY_MEMBERS, true);
+                            continue;
+                        }
+                    }
                 }
-
                 if (name != null && !name.trim().isEmpty() && !Strings.isNullOrEmpty(value)) {
                     encodeContactAttr(el, name, value, contact, encodeContactGroupMembersBasic, octxt, returnCertInfo);
                 }
@@ -872,6 +899,19 @@ public final class ToXML {
                     Element.Disposition.CONTENT);
         }
         return el;
+    }
+
+    public static boolean hasDLViewRight(String email, Account mRequestedAcct,
+        Account mAuthedAcct) {
+        boolean canExpand = true;
+        if (mRequestedAcct != null && mAuthedAcct != null && email != null) {
+            GalGroup.GroupInfo groupInfo = GalGroupInfoProvider.getInstance().getGroupInfo(email,
+                true, mRequestedAcct, mAuthedAcct);
+            if (groupInfo != null) {
+                canExpand = (GalGroup.GroupInfo.CAN_EXPAND == groupInfo);
+            }
+        }
+        return canExpand;
     }
 
     private static void encodeContactAttr(Element elem, String name, String value,
@@ -1009,47 +1049,58 @@ public final class ToXML {
         return encodeTag(parent, ifmt, octxt, tag, NOTIFY_FIELDS);
     }
 
-    public static Element encodeTag(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Tag tag, int fields)
-    throws ServiceException {
-        Element el = parent.addNonUniqueElement(MailConstants.E_TAG);
+    private static void encodeTagBase(Element el, ItemIdFormatter ifmt, OperationContext octxt, Tag item, int fields) throws ServiceException {
         // FIXME: eventually remove tag ID from serialization
-        el.addAttribute(MailConstants.A_ID, ifmt.formatItemId(tag));
-        // always encode the name now that we're switching away from IDs
-        el.addAttribute(MailConstants.A_NAME, tag.getName());
-        encodeColor(el, tag, fields);
+        el.addAttribute(MailConstants.A_ID, ifmt.formatItemId(item));
         if (needToOutput(fields, Change.UNREAD)) {
-            int unreadCount = tag.getUnreadCount();
+            int unreadCount = item.getUnreadCount();
             if (unreadCount > 0 || fields != NOTIFY_FIELDS) {
                 el.addAttribute(MailConstants.A_UNREAD, unreadCount);
             }
         }
         if (needToOutput(fields, Change.SIZE)) {
-            long num = tag.getItemCount();
+            long num = item.getItemCount();
             if (num > 0 || fields != NOTIFY_FIELDS) {
                 el.addAttribute(MailConstants.A_NUM, num);
             }
         }
         if (needToOutput(fields, Change.CONFLICT)) {
-            el.addAttribute(MailConstants.A_DATE, tag.getDate());
-            el.addAttribute(MailConstants.A_REVISION, tag.getSavedSequence());
-            el.addAttribute(MailConstants.A_CHANGE_DATE, tag.getChangeDate() / 1000);
-            el.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, tag.getModifiedSequence());
+            el.addAttribute(MailConstants.A_DATE, item.getDate());
+            el.addAttribute(MailConstants.A_REVISION, item.getSavedSequence());
+            el.addAttribute(MailConstants.A_CHANGE_DATE, item.getChangeDate() / 1000);
+            el.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, item.getModifiedSequence());
         }
         if (needToOutput(fields, Change.METADATA)) {
-            encodeAllCustomMetadata(el, tag, fields);
+            encodeAllCustomMetadata(el, item, fields);
         }
-        boolean remote = octxt != null && octxt.isDelegatedRequest(tag.getMailbox());
+        boolean remote = octxt != null && octxt.isDelegatedRequest(item.getMailbox());
         boolean canAdminister = !remote;
         if (canAdminister) {
             if (needToOutput(fields, Change.RETENTION_POLICY)) {
-                RetentionPolicy rp = tag.getRetentionPolicy();
+                RetentionPolicy rp = item.getRetentionPolicy();
                 if (fields != NOTIFY_FIELDS || rp.isSet()) {
                     // Only output retention policy if it's being modified, or if we're returning all
                     // folder data and policy is set.
-                    encodeRetentionPolicy(el, RetentionPolicyManager.getInstance().getCompleteRetentionPolicy(tag.getAccount(), rp));
+                    encodeRetentionPolicy(el, RetentionPolicyManager.getInstance().getCompleteRetentionPolicy(item.getAccount(), rp));
                 }
             }
         }
+    }
+
+    public static Element encodeSmartFolder(Element parent, ItemIdFormatter ifmt, OperationContext octxt, SmartFolder smartFolder, int fields)
+    throws ServiceException {
+        Element el = parent.addNonUniqueElement(MailConstants.E_SMART_FOLDER);
+        encodeTagBase(el, ifmt, octxt, smartFolder, fields);
+        el.addAttribute(MailConstants.A_NAME, smartFolder.getSmartFolderName());
+        return el;
+    }
+
+    public static Element encodeTag(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Tag tag, int fields)
+    throws ServiceException {
+        Element el = parent.addNonUniqueElement(MailConstants.E_TAG);
+        encodeTagBase(el, ifmt, octxt, tag, fields);
+        el.addAttribute(MailConstants.A_NAME, tag.getName());
+        encodeColor(el, tag, fields);
         return el;
     }
 
@@ -1071,7 +1122,7 @@ public final class ToXML {
     public static Element encodeConversation(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
             Conversation conv, SearchParams params) throws ServiceException {
         Mailbox mbox = conv.getMailbox();
-        List<Message> msgs = mbox.getMessagesByConversation(octxt, conv.getId(), SortBy.DATE_ASC, -1);
+        List<Message> msgs = mbox.getMessagesByConversation(octxt, conv, SortBy.DATE_ASC, -1, false);
         return encodeConversation(parent, ifmt, octxt, conv, msgs, params);
     }
 
@@ -1180,7 +1231,7 @@ public final class ToXML {
                     conv.getAccount(), octxt.isUsingAdminPrivileges());
         }
         if (isDelegatedNonAccessible || conv.isTagged(Flag.FlagInfo.DELETED)) {
-            msgs = mbox.getMessagesByConversation(octxt, conv.getId(), SortBy.DATE_ASC, -1);
+            msgs = mbox.getMessagesByConversation(octxt, conv, SortBy.DATE_ASC, -1, false);
         }
         return encodeConversationSummary(parent, ifmt, octxt, conv, msgs, msgHit, output, fields, alwaysSerialize);
     }
@@ -1215,12 +1266,11 @@ public final class ToXML {
              * bug: 75104
              * we need to encode fragment of the first message in the conv instead of the first hit
              */
-            if (msgHit.inTrash() || msgHit.inSpam()) {
-                msgsByConv = mbox.getMessagesByConversation(octxt, conv.getId(), SortBy.DATE_DESC, 1);
-            } else {
-                msgsByConv = mbox.getMessagesByConversation(octxt, conv.getId(), SortBy.DATE_DESC, -1, true);
-            }
-            c.addAttribute(MailConstants.E_FRAG, msgsByConv.isEmpty() == false ? msgsByConv.get(0).getFragment() : msgHit.getFragment(), Element.Disposition.CONTENT);
+            msgsByConv = mbox.getMessagesByConversation(octxt, conv, SortBy.DATE_DESC, -1,
+                    !(msgHit.inTrash() || msgHit.inSpam()));
+            c.addAttribute(MailConstants.E_FRAG,
+                    msgsByConv.isEmpty() == false ? msgsByConv.get(0).getFragment()
+                                                  : msgHit.getFragment(), Element.Disposition.CONTENT);
         }
         if (addFirstHitRecips && msgHit != null) {
             addEmails(c, Mime.parseAddressHeader(msgHit.getRecipients()), EmailType.TO);
@@ -1237,7 +1287,7 @@ public final class ToXML {
                         }
                     }
                 } else {
-                    sl = mbox.getConversationSenderList(conv.getId());
+                    sl = mbox.getConversationSenderList(conv);
                 }
             } catch (SenderList.RefreshException slre) {
                 ZimbraLog.soap.warn("out-of-order messages returned for conversation " + conv.getId());
@@ -1262,7 +1312,7 @@ public final class ToXML {
                 }
             } else {
                 if (msgsByConv == null) {
-                    msgsByConv = mbox.getMessagesByConversation(octxt, conv.getId(), SortBy.DATE_DESC, -1, true);
+                    msgsByConv = mbox.getMessagesByConversation(octxt, conv, SortBy.DATE_DESC, -1, true);
                 }
                 if (msgsByConv != null) {
                     for (Message msg : msgsByConv) {
@@ -1617,10 +1667,9 @@ public final class ToXML {
                 ZimbraLog.mailbox.debug(
                     "The message is signed. Forwarding it to SmimeHandler for signature verification.");
                 if (SmimeHandler.getHandler() != null) {
-                    SmimeHandler.getHandler().verifyMessageSignature(msg.getMailbox().getAccount(), m,
-                        mm, octxt.getmResponseProtocol());
+                    SmimeHandler.getHandler().verifyMessageSignature(msg, m, mm, octxt);
                 }
-            } else {
+           } else {
                 // if the original mime message was PKCS7-signed and it was
                 // decoded and stored in cache as plain mime
                 if ((mm instanceof Mime.FixedMimeMessage)
@@ -3264,6 +3313,7 @@ throws ServiceException {
         resp.addAttribute(MailConstants.A_ID, fb.getName());
         for (Iterator<FreeBusy.Interval> iter = fb.iterator(); iter.hasNext(); ) {
             FreeBusy.Interval cur = iter.next();
+
             String status = cur.getStatus();
             Element elt;
             if (status.equals(IcalXmlStrMap.FBTYPE_FREE)) {
@@ -3284,6 +3334,20 @@ throws ServiceException {
             if (elt != null) {
                 elt.addAttribute(MailConstants.A_CAL_START_TIME, cur.getStart());
                 elt.addAttribute(MailConstants.A_CAL_END_TIME, cur.getEnd());
+                if (cur.isDetailsExist()) {
+                    elt.addAttribute(MailConstants.E_CAL_EVENT_ID,cur.getId());
+                    elt.addAttribute(MailConstants.E_CAL_EVENT_SUBJECT, cur.getSubject());
+                    elt.addAttribute(MailConstants.E_CAL_EVENT_LOCATION, cur.getLocation());
+                    elt.addAttribute(MailConstants.E_CAL_EVENT_ISMEETING, cur.isMeeting());
+                    elt.addAttribute(MailConstants.E_CAL_EVENT_ISPRIVATE, cur.isPrivate());
+                    elt.addAttribute(MailConstants.E_CAL_EVENT_ISRECURRING, cur.isRecurring());
+                    elt.addAttribute(MailConstants.E_CAL_EVENT_ISREMINDERSET, cur.isReminderSet());
+                    elt.addAttribute(MailConstants.E_CAL_EVENT_ISEXCEPTION, cur.isException());
+                }
+                if(!cur.isHasPermission()) {
+                    elt.addAttribute(MailConstants.E_CAL_EVENT_HASPERMISSION, cur.isHasPermission());
+                }
+
             }
         }
 
@@ -3410,12 +3474,22 @@ throws ServiceException {
     }
 
     public static Element encodeGalContact(Element response, GalContact contact,
-            Collection<String> returnAttrs) {
+        Collection<String> returnAttrs) {
+        return encodeGalContact(response, contact, returnAttrs, true);
+    }
+
+    public static Element encodeGalContact(Element response, GalContact contact,
+            Collection<String> returnAttrs, boolean canExpand) {
         Element cn = response.addNonUniqueElement(MailConstants.E_CONTACT);
         cn.addAttribute(MailConstants.A_ID, contact.getId());
         Map<String, Object> attrs = contact.getAttrs();
         for (Map.Entry<String, Object> entry : attrs.entrySet()) {
             String key = entry.getKey();
+            if (ContactConstants.A_member.equals(key)) {
+                if (!canExpand) {
+                    continue;
+                }
+            }
             if (returnAttrs == null || returnAttrs.contains(key)) {
                 Object value = entry.getValue();
                 if (value instanceof String[]) {
@@ -3535,5 +3609,42 @@ throws ServiceException {
 
     public static void addExtension(ToXMLExtension e) {
         extensions.add(e);
+    }
+
+    public static void addWatchActivity(Element notify, Account account, String op, long timestamp, String itemId, String userAgent, Map<String,String> args) {
+        ActivityInfo activity = new ActivityInfo(op, timestamp, itemId);
+        if (account != null)
+            activity.setEmail(account.getName());
+        if (userAgent != null)
+            activity.setUserAgent(userAgent);
+        activity.setArgs(args);
+        JaxbUtil.addChildElementFromJaxb(notify, MailConstants.E_A,
+                MailConstants.NAMESPACE_STR, activity);
+    }
+
+    public Element encodeDocumentAdditionalAttribute(Element elem, ItemIdFormatter ifmt, OperationContext octxt, Document doc, int fields) {
+        WatchCache cache = WatchCache.get(octxt);
+        if (cache.hasMapping(doc)) {
+            return encodeDocumentWatchAttribute(elem, true);
+        }
+        return elem;
+    }
+
+    public static Element encodeDocumentWatchAttribute(Element elem, boolean watched) {
+        return elem.addAttribute(A_WATCH, watched);
+    }
+
+    public static ActivityInfo toActivityInfo(Account account, MailboxOperation op,
+            long timestamp, String itemId, int version, String userAgent, Map<String,String> args) {
+        ActivityInfo activity =
+            ActivityInfo.fromOperationTimeStampItemId(op.name(), timestamp, itemId);
+        if (version > 0)
+            activity.setVersion(version);
+        if (userAgent != null)
+            activity.setUserAgent(userAgent);
+        if (account != null)
+            activity.setEmail(account.getName());
+        activity.setArgs(args);
+        return activity;
     }
 }

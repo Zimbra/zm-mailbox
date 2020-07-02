@@ -76,6 +76,8 @@ public class GalSearchParams {
     private String maxLdapTimeStamp = "";
     private int ldapMatchCount = 0;
     private boolean ldapHasMore = true;
+    private boolean getCount = false;
+    private boolean expandQuery = true;
 
     private GalOp mOp;
 
@@ -420,6 +422,14 @@ public class GalSearchParams {
         this.ldapHasMore = ldapHasMore;
     }
 
+    public void setGetCount(boolean getCount) {
+        this.getCount = getCount;
+    }
+
+    public boolean isGetCount() {
+        return getCount;
+    }
+
     public String getUserInfo() {
         if (mAccount != null) {
             return mAccount.getName() + " (" + ((mUserAgent == null) ? "" : mUserAgent) + ")";
@@ -427,4 +437,13 @@ public class GalSearchParams {
             return " (" + ((mUserAgent == null) ? "" : mUserAgent) + ")";
         }
     }
+
+    public boolean isExpandQuery() {
+        return expandQuery;
+    }
+
+    public void setExpandQuery(boolean expandQuery) {
+        this.expandQuery = expandQuery;
+    }
+
 }

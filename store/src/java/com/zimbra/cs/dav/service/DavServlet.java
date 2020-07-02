@@ -34,10 +34,14 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.httpclient.Header;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.HttpState;
+import org.apache.http.Header;
+import org.apache.http.HttpException;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.impl.client.BasicCookieStore;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.message.BasicHeader;
 import org.dom4j.Document;
 import org.dom4j.Element;
 
@@ -655,7 +659,7 @@ public class DavServlet extends ZimbraServlet {
         }
     }
 
-    private boolean isProxyRequest(DavContext ctxt, DavMethod m) throws IOException, DavException, ServiceException {
+    private boolean isProxyRequest(DavContext ctxt, DavMethod m) throws IOException, DavException, ServiceException, HttpException {
         Provisioning prov = Provisioning.getInstance();
         ItemId target = null;
         String extraPath = null;
@@ -711,8 +715,8 @@ public class DavServlet extends ZimbraServlet {
         if (acct == null) {
             return false;
         }
-        Server server = prov.getServer(acct);
-        if (server == null) {
+        String affinityIp = Provisioning.affinityServer(acct);
+        if (affinityIp == null) {
             return false;
         }
 
@@ -745,13 +749,15 @@ public class DavServlet extends ZimbraServlet {
         }
 
         // build proxy request
-        String url = getProxyUrl(ctxt.getRequest(), server, DAV_PATH) + HttpUtil.urlEscape("/" + acct.getName() + path + "/" + (extraPath == null ? "" : extraPath));
-        HttpState state = new HttpState();
-        authToken.encode(state, false, server.getAttr(Provisioning.A_zimbraServiceHostname));
-        HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
-        client.setState(state);
-        HttpMethod method = m.toHttpMethod(ctxt, url);
-        method.setRequestHeader(new Header(DavProtocol.HEADER_USER_AGENT, "Zimbra-DAV/" + BuildInfo.VERSION));
+        String url = getProxyUrl(ctxt.getRequest(), affinityIp, DAV_PATH) + HttpUtil.urlEscape("/" + acct.getName() + path + "/" + (extraPath == null ? "" : extraPath));
+        BasicCookieStore state = new BasicCookieStore();
+        authToken.encode(state, false, affinityIp);
+        HttpClientBuilder clientBuilder = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+        clientBuilder.setDefaultCookieStore(state);
+        HttpClient client = clientBuilder.build();
+
+        HttpRequestBase method = m.toHttpMethod(ctxt, url);
+        method.addHeader(new BasicHeader(DavProtocol.HEADER_USER_AGENT, "Zimbra-DAV/" + BuildInfo.VERSION));
         if (ZimbraLog.dav.isDebugEnabled()) {
             Enumeration<String> headers = ctxt.getRequest().getHeaderNames();
             while (headers.hasMoreElements()) {
@@ -766,12 +772,13 @@ public class DavServlet extends ZimbraServlet {
         for (String h : PROXY_REQUEST_HEADERS) {
             String hval = ctxt.getRequest().getHeader(h);
             if (hval != null) {
-                method.addRequestHeader(h, hval);
+                method.addHeader(h, hval);
             }
         }
-        int statusCode = HttpClientUtil.executeMethod(client, method);
+        HttpResponse httpResponse = HttpClientUtil.executeMethod(client, method);
+        int statusCode = httpResponse.getStatusLine().getStatusCode();
         if (ZimbraLog.dav.isDebugEnabled()) {
-            for (Header hval : method.getResponseHeaders()) {
+            for (Header hval : httpResponse.getAllHeaders()) {
                 String hdrName = hval.getName();
                 if (!PROXY_RESPONSE_HEADERS.contains(hdrName) && !IGNORABLE_PROXY_RESPONSE_HEADERS.contains(hdrName)) {
                     ZimbraLog.dav.debug(
@@ -781,7 +788,7 @@ public class DavServlet extends ZimbraServlet {
         }
 
         for (String h : PROXY_RESPONSE_HEADERS) {
-            for (Header hval : method.getResponseHeaders(h)) {
+            for (Header hval : method.getHeaders(h)) {
                 String hdrValue = hval.getValue();
                 if (DavProtocol.HEADER_LOCATION.equals(h)) {
                     int pfxLastSlashPos = prefix.lastIndexOf('/');
@@ -797,7 +804,7 @@ public class DavServlet extends ZimbraServlet {
 
         ctxt.getResponse().setStatus(statusCode);
         ctxt.setStatus(statusCode);
-        try (InputStream in = method.getResponseBodyAsStream()) {
+        try (InputStream in = httpResponse.getEntity().getContent()) {
             switch (statusCode) {
             case DavProtocol.STATUS_MULTI_STATUS:
                 // rewrite the <href> element in the response to point to local mountpoint.

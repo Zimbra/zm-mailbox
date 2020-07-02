@@ -20,7 +20,7 @@ package com.zimbra.soap.account.type;
 import java.util.Collections;
 import java.util.List;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
@@ -29,11 +29,16 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.CustomMetadataInterface;
 
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_METADATA)
+@GraphQLType(name=GqlConstants.CLASS_ACCOUNT_CUSTOM_METADATA, description="Custom metadatas")
 public class AccountCustomMetadata
 extends AccountKeyValuePairs
 implements CustomMetadataInterface {
@@ -58,6 +63,7 @@ implements CustomMetadataInterface {
     @Override
     public void setSection(String section) { this.section = section; }
     @Override
+    @GraphQLQuery(name=GqlConstants.SECTION, description="Section. If absent this indicates that CustomMetadata info is present but there are no sections to report on.")
     public String getSection() { return section; }
 
     public static List <AccountCustomMetadata> fromInterfaces(Iterable <CustomMetadataInterface> params) {
@@ -79,8 +85,8 @@ implements CustomMetadataInterface {
     }
 
     @Override
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(
+                MoreObjects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);
         return helper
             .add("section", section);
@@ -88,7 +94,7 @@ implements CustomMetadataInterface {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
+        return addToStringInfo(MoreObjects.toStringHelper(this))
                 .toString();
     }
 }

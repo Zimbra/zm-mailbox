@@ -19,6 +19,8 @@ package com.zimbra.cs.service.mail;
 import java.io.IOException;
 import java.util.Map;
 
+import org.apache.http.HttpException;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -53,9 +55,9 @@ public class GetYahooAuthToken extends MailDocumentHandler {
             if (token == null) {
                 response.addAttribute("failed", true);
             }
-        } catch (IOException e) {
+        } catch (IOException | HttpException e) {
             throw ServiceException.FAILURE("IOException", e);
-        }
+        } 
         
         
         return response;

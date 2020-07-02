@@ -22,7 +22,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.soap.CertMgrConstants;
 import com.zimbra.soap.base.CertSubjectAttrs;
 
@@ -88,8 +88,8 @@ public class CSRSubject implements CertSubjectAttrs {
     @Override
     public String getCn() { return cn; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(
+                MoreObjects.ToStringHelper helper) {
         return helper
             .add("c", c)
             .add("st", st)
@@ -101,7 +101,7 @@ public class CSRSubject implements CertSubjectAttrs {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
+        return addToStringInfo(MoreObjects.toStringHelper(this))
                 .toString();
     }
 }

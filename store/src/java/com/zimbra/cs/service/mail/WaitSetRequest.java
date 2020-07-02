@@ -41,6 +41,7 @@ import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.DistributedWaitSet;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -262,6 +263,12 @@ public class WaitSetRequest extends MailDocumentHandler {
         // if we got here, then we did *not* execute a jetty RetryContinuation,
         // soooo, we'll fall through and finish up at the bottom
         processCallback(resp, cb, waitSetId, lastKnownSeqNo, expand);
+
+        // publish WaitSetResp to all subscribers via Redis
+        final DistributedWaitSet dws = DistributedWaitSet.getInstance();
+        if (cb.signalledAccounts != null && !cb.signalledAccounts.isEmpty()) {
+            cb.signalledAccounts.forEach((accountId) -> dws.publish(accountId, resp));
+        }
     }
 
     /** No data after initial check...wait up to a few extra seconds before going into the

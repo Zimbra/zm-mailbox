@@ -21,6 +21,8 @@ import java.io.IOException;
 import java.io.File;
 import java.util.*;
 
+import org.apache.http.HttpException;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.soap.SoapFaultException;
@@ -62,7 +64,7 @@ public class Tester {
     }
 
     private static void doSearchReadDelete(LmcSession session, String serverURL)
-        throws IOException, LmcSoapClientException, ServiceException, SoapFaultException {
+        throws IOException, LmcSoapClientException, ServiceException, SoapFaultException, HttpException {
         /* search to find messages that have CVS in the subject */
         System.out.println("==== SEARCH \"CVS\" ======");
         LmcSearchRequest sReq = new LmcSearchRequest();
@@ -114,7 +116,7 @@ public class Tester {
     }
 
     private static void doCreateDeleteFolder(LmcSession session, String serverURL)
-            throws IOException, LmcSoapClientException, ServiceException, SoapFaultException {
+            throws IOException, LmcSoapClientException, ServiceException, SoapFaultException, HttpException {
         /* create new folder "testfolder" */
         System.out.println("==== CREATE FOLDER ======");
         LmcCreateFolderRequest cfReq = new LmcCreateFolderRequest();
@@ -136,7 +138,7 @@ public class Tester {
     }
 
     private static void doSearchAndConvAction(LmcSession session, String serverURL)
-            throws IOException, LmcSoapClientException, ServiceException, SoapFaultException {
+            throws IOException, LmcSoapClientException, ServiceException, SoapFaultException, HttpException {
         /* search to find messages that have CVS in the subject */
         System.out.println("==== SEARCH \"CVS\" ======");
         LmcSearchRequest sReq = new LmcSearchRequest();
@@ -186,7 +188,7 @@ public class Tester {
     }
 
     private static void getAndDumpContacts(LmcSession session, String serverURL)
-            throws IOException, LmcSoapClientException, ServiceException, SoapFaultException {
+            throws IOException, LmcSoapClientException, ServiceException, SoapFaultException, HttpException {
         /* get contacts */
         System.out.println("==== GET CONTACTS ======");
         LmcGetContactsRequest gcReq = new LmcGetContactsRequest();
@@ -202,7 +204,7 @@ public class Tester {
     }
 
     private static void doSearchConv(LmcSession session, String serverURL)
-            throws IOException, LmcSoapClientException, ServiceException, SoapFaultException {
+            throws IOException, LmcSoapClientException, ServiceException, SoapFaultException, HttpException {
         // just search for CVS in a conv we know will have it
         System.out.println("==== SEARCH CONV ======");
         LmcSearchConvRequest sReq = new LmcSearchConvRequest();
@@ -224,7 +226,7 @@ public class Tester {
     }
 
     private static void doBrowse(LmcSession session, String serverURL)
-            throws IOException, LmcSoapClientException, ServiceException, SoapFaultException {
+            throws IOException, LmcSoapClientException, ServiceException, SoapFaultException, HttpException {
         System.out.println("======= BROWSE BY DOMAIN ======");
         LmcBrowseRequest bReq = new LmcBrowseRequest();
         bReq.setBrowseBy("domains");
@@ -240,7 +242,7 @@ public class Tester {
 
 
     private static void doCreateDeleteContact(LmcSession session, String serverURL)
-            throws IOException, LmcSoapClientException, ServiceException, SoapFaultException {
+            throws IOException, LmcSoapClientException, ServiceException, SoapFaultException, HttpException {
         // create the contact
         System.out.println("=========== CREATING CONTACT ============");
         LmcCreateContactRequest ccReq = new LmcCreateContactRequest();
@@ -273,7 +275,7 @@ public class Tester {
     }
 
     private static void doCreateDeleteTag(LmcSession session, String serverURL)
-            throws IOException, LmcSoapClientException, ServiceException, SoapFaultException {
+            throws IOException, LmcSoapClientException, ServiceException, SoapFaultException, HttpException {
 
         // create the tag
         System.out.println("=========== CREATING TAG ============");
@@ -295,7 +297,7 @@ public class Tester {
     }
 
     private static void doCreateGetDeleteNote(LmcSession session, String serverURL)
-            throws IOException, LmcSoapClientException, ServiceException, SoapFaultException {
+            throws IOException, LmcSoapClientException, ServiceException, SoapFaultException, HttpException {
         // create the Note
         System.out.println("=========== CREATING NOTE ============");
         LmcCreateNoteRequest ctReq = new LmcCreateNoteRequest();
@@ -339,7 +341,7 @@ public class Tester {
     }
 
     private static void doGetDumpPrefs(LmcSession session, String serverURL)
-            throws IOException, LmcSoapClientException, ServiceException, SoapFaultException {
+            throws IOException, LmcSoapClientException, ServiceException, SoapFaultException, HttpException {
         System.out.println("====== GET PREFS ==========");
         String prefs[] = new String[] { "zimbraPrefMailSignatureEnabled",
                                         "zimbraPrefSaveToSent" };
@@ -353,7 +355,7 @@ public class Tester {
     }
 
     private static void doModifyDumpPrefs(LmcSession session, String serverURL)
-            throws IOException, LmcSoapClientException, ServiceException, SoapFaultException {
+            throws IOException, LmcSoapClientException, ServiceException, SoapFaultException, HttpException {
         System.out.println("=========== MODIFY PREFS ==========");
         HashMap prefMods = new HashMap();
         prefMods.put("zimbraPrefMailSignatureEnabled", "TRUE");
@@ -369,7 +371,7 @@ public class Tester {
 
 
     private static void doChangePassword(LmcSession session, String account, String currPassword, String serverURL)
-            throws IOException, LmcSoapClientException, ServiceException, SoapFaultException {
+            throws IOException, LmcSoapClientException, ServiceException, SoapFaultException, HttpException {
         System.out.println("=========== CHANGE PASSWORD ==========");
 
         // change the password
@@ -388,7 +390,7 @@ public class Tester {
     }
 
     private static void doAddMsg(LmcSession session, String serverURL)
-            throws IOException, LmcSoapClientException, ServiceException, SoapFaultException {
+            throws IOException, LmcSoapClientException, ServiceException, SoapFaultException, HttpException {
         System.out.println("====== ADD MSG =======");
 
         LmcMessage lMsg = new LmcMessage();
@@ -406,7 +408,7 @@ public class Tester {
 
 
     private static void doGetInfo(LmcSession session, String serverURL)
-            throws IOException, LmcSoapClientException, ServiceException, SoapFaultException {
+            throws IOException, LmcSoapClientException, ServiceException, SoapFaultException, HttpException {
         System.out.println("=========== GET INFO ==========");
         LmcGetInfoRequest giReq = new LmcGetInfoRequest();
         giReq.setSession(session);
@@ -417,7 +419,7 @@ public class Tester {
     }
 
     private static void doSearchGal(LmcSession session, String serverURL, String searchTarget)
-            throws IOException, LmcSoapClientException, ServiceException, SoapFaultException {
+            throws IOException, LmcSoapClientException, ServiceException, SoapFaultException, HttpException {
         System.out.println("=========== SEARCH GAL ==========");
         LmcSearchGalRequest sgReq = new LmcSearchGalRequest();
         sgReq.setSession(session);
@@ -605,6 +607,9 @@ public class Tester {
         } catch (LmcSoapClientException e) {
             e.printStackTrace();
         } catch (ServiceException e) {
+            e.printStackTrace();
+        } catch (HttpException e) {
+            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }

@@ -16,8 +16,9 @@
  */
 package com.zimbra.doc.soap.apidesc;
 
-import org.codehaus.jackson.annotate.JsonIgnore;
 
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Strings;
 import com.zimbra.doc.soap.Command;
 

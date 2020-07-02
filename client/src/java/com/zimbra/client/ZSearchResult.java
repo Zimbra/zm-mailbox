@@ -23,7 +23,7 @@ import java.util.TimeZone;
 
 import org.json.JSONException;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.zimbra.client.event.ZModifyConversationEvent;
 import com.zimbra.client.event.ZModifyEvent;
 import com.zimbra.common.service.ServiceException;
@@ -39,6 +39,9 @@ public class ZSearchResult implements ToZJSONObject {
     private boolean hasMore;
     private String sortBy;
     private int offset;
+    private boolean saveSearchPrompt;
+    private boolean relevanceSortSupported;
+    private boolean reIndexInProgress;
 
     public ZSearchResult(Element e, boolean convNest, TimeZone tz) throws ServiceException {
         if (!convNest) {
@@ -63,6 +66,9 @@ public class ZSearchResult implements ToZJSONObject {
         sortBy = resp.getAttribute(MailConstants.A_SORTBY);
         hasMore = resp.getAttributeBool(MailConstants.A_QUERY_MORE);
         offset = (int) resp.getAttributeLong(MailConstants.A_QUERY_OFFSET, -1);
+        saveSearchPrompt = resp.getAttributeBool(MailConstants.A_SAVE_SEARCH_PROMPT, false);
+        relevanceSortSupported = resp.getAttributeBool(MailConstants.A_RELEVANCE_SORT_SUPPORTED, true);
+        reIndexInProgress = resp.getAttributeBool(MailConstants.A_REINDEX_IN_PROGRESS, false);
         hits = new ArrayList<ZSearchHit>();
         imapHits = new ArrayList<ZImapSearchHit>();
         for (Element h : el.listElements()) {
@@ -132,6 +138,24 @@ public class ZSearchResult implements ToZJSONObject {
         return offset;
     }
 
+    /**
+     * return whether the user is prompted to create a search folder for this query
+     */
+    public boolean hasSavedSearchPrompt() {
+        return saveSearchPrompt;
+    }
+
+    /**
+     * return whether these query results support being sorted by relevance
+     */
+    public boolean isRelevanceSortSupported() {
+        return relevanceSortSupported;
+    }
+
+    public boolean isReIndexInProgress() {
+        return reIndexInProgress;
+    }
+
     @Override
     public ZJSONObject toZJSONObject() throws JSONException {
         ZJSONObject zjo = new ZJSONObject();
@@ -144,7 +168,7 @@ public class ZSearchResult implements ToZJSONObject {
 
     @Override
     public String toString() {
-       return Objects.toStringHelper(this).add("size", hits.size()).add("more", hasMore).toString();
+       return MoreObjects.toStringHelper(this).add("size", hits.size()).add("more", hasMore).toString();
     }
 
     public String dump() {

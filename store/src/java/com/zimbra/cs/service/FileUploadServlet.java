@@ -16,11 +16,18 @@
  */
 package com.zimbra.cs.service;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileFilter;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -32,6 +39,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TimerTask;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.mail.util.SharedByteArrayInputStream;
@@ -46,16 +54,19 @@ import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.disk.DiskFileItem;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
-import org.apache.commons.httpclient.Header;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpException;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.http.Header;
+import org.apache.http.HttpException;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.HttpClientBuilder;
 
 import com.google.common.base.Strings;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.ContentDisposition;
@@ -84,6 +95,7 @@ import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.service.util.JWTUtil;
 import com.zimbra.cs.servlet.CsrfFilter;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.servlet.util.CsrfUtil;
@@ -111,14 +123,31 @@ public class FileUploadServlet extends ZimbraServlet {
     private static String sUploadDir;
 
     public static final class Upload {
-        final String   accountId;
-        String         contentType;
-        final String   uuid;
-        final String   name;
-        final FileItem file;
-        long time;
-        boolean deleted = false;
-        BlobInputStream blobInputStream;
+        private final static String  UPLOAD_FILENAME_FORMAT = "%s/upload_%s_%s.tmp";
+        private final static String  METADATA_FILENAME_FORMAT = "%s/uploadmetadata_%s_%s.tmp";
+        private static final String NAME_TAG = "name:";
+        private static final String CONTENT_TYPE_TAG = "content-type:";
+        private final String   accountId;
+        private String         contentType;
+        private final String   uuid;
+        private final String   name;
+        private final File     file;
+        private final File     metadataFile;
+        private final String   physical_filename;
+        private long time;
+        private boolean deleted = false;
+        private BlobInputStream blobInputStream;
+
+        Upload(String acctId, String uploadId) {
+            accountId = acctId;
+            time      = System.currentTimeMillis();
+            uuid      = uploadId;
+            physical_filename  = String.format(UPLOAD_FILENAME_FORMAT, getUploadDir(), accountId, uuid);
+            String metadataFilename  = String.format(METADATA_FILENAME_FORMAT, getUploadDir(), accountId, uuid);
+            file      = new File(physical_filename);
+            metadataFile = new File(metadataFilename);
+            name = readMetadataFile();
+        }
 
         Upload(String acctId, FileItem attachment) throws ServiceException {
             this(acctId, attachment, attachment.getName());
@@ -127,14 +156,22 @@ public class FileUploadServlet extends ZimbraServlet {
         Upload(String acctId, FileItem attachment, String filename) throws ServiceException {
             assert(attachment != null); // TODO: Remove null checks in mainline.
 
-
             String localServer = Provisioning.getInstance().getLocalServer().getId();
+            String localIp = Provisioning.getLocalIp();
             accountId = acctId;
             time      = System.currentTimeMillis();
-            uuid      = localServer + UPLOAD_PART_DELIMITER + LdapUtil.generateUUID();
+            uuid      = localServer + UPLOAD_PART_DELIMITER + LdapUtil.generateUUID() + UPLOAD_PART_DELIMITER + localIp;
             name      = FileUtil.trimFilename(filename);
-            file      = attachment;
-            if (file == null) {
+            // Force FileItem to be a deterministic filename
+            physical_filename  = String.format(UPLOAD_FILENAME_FORMAT, getUploadDir(), accountId, uuid);
+            file      = new File(physical_filename);
+            try {
+                attachment.write(file);
+            }
+            catch (Exception e) {
+                mLog.error("unable to write file %s to disk as :%s", filename, physical_filename);
+            }
+            if (attachment == null) {
                 contentType = MimeConstants.CT_TEXT_PLAIN;
             } else {
                 // use content based detection.  we can't use magic based
@@ -143,41 +180,46 @@ public class FileUploadServlet extends ZimbraServlet {
                 // with WebDAV handlers as the content type needs to be
                 // text/xml instead.
 
-                // 1. detect by file extension
-                contentType = MimeDetect.getMimeDetect().detect(name);
-
-                // 2. special-case text/xml to avoid detection
-                if (contentType == null && file.getContentType() != null) {
-                    if (file.getContentType().equals("text/xml"))
-                        contentType = file.getContentType();
+                //1. detect by magic
+                try {
+                    contentType = MimeDetect.getMimeDetect().detect(new FileInputStream(file));
+                } catch (Exception e) {
+                    contentType = null;
                 }
 
-                // 3. detect by magic
-                if (contentType == null) {
-                    try {
-                        contentType = MimeDetect.getMimeDetect().detect(file.getInputStream());
-                    } catch (Exception e) {
-                        contentType = null;
-                    }
+                // 2. detect by file extension
+                // .xls and .docx files can contain beginning characters
+                // resembling to x-ole-storage/zip. Hence,
+                // check by file extension
+                if (contentType == null || contentType.equals("application/x-ole-storage")
+                    || contentType.equals("application/zip")) {
+                    contentType = MimeDetect.getMimeDetect().detect(name);
+                }
+
+                // 3. special-case text/xml to avoid detection
+                if (contentType == null && attachment.getContentType() != null) {
+                    if (attachment.getContentType().equals("text/xml"))
+                        contentType = attachment.getContentType();
                 }
 
                 // 4. try the browser-specified content type
                 if (contentType == null || contentType.equals(MimeConstants.CT_APPLICATION_OCTET_STREAM)) {
-                    contentType = file.getContentType();
+                    contentType = attachment.getContentType();
                 }
 
                 // 5. when all else fails, use application/octet-stream
                 if (contentType == null)
-                    contentType = file.getContentType();
+                    contentType = attachment.getContentType();
                 if (contentType == null)
                     contentType = MimeConstants.CT_APPLICATION_OCTET_STREAM;
             }
+            metadataFile = createMetadataFile();
         }
 
         public String getName()         { return name; }
         public String getId()           { return uuid; }
         public String getContentType()  { return contentType; }
-        public long getSize()           { return file == null ? 0 : file.getSize(); }
+        public long getSize()           { return file == null ? 0 : file.length(); }
         public BlobInputStream getBlobInputStream()        { return blobInputStream; }
 
         public InputStream getInputStream() throws IOException {
@@ -187,23 +229,61 @@ public class FileUploadServlet extends ZimbraServlet {
             if (file == null) {
                 return new SharedByteArrayInputStream(new byte[0]);
             }
-            if (!file.isInMemory() && file instanceof DiskFileItem) {
-                // If it's backed by a File, return a BlobInputStream so that any use by JavaMail
-                // will avoid loading the whole thing in memory.
-                File f = ((DiskFileItem) file).getStoreLocation();
-                blobInputStream = new BlobInputStream(f, f.length());
-                return blobInputStream;
-            } else {
-                return file.getInputStream();
+            // It's backed by a File, return a BlobInputStream so that any use by JavaMail
+            // will avoid loading the whole thing in memory.
+            blobInputStream = new BlobInputStream(file, file.length());
+            return blobInputStream;
+        }
+
+        private File createMetadataFile() {
+            String metadataFilename = String.format(METADATA_FILENAME_FORMAT, getUploadDir(), accountId, uuid);
+            File mFile = new File(metadataFilename);
+            try (BufferedWriter bw = new BufferedWriter(
+                    new OutputStreamWriter(new FileOutputStream(mFile), StandardCharsets.UTF_8))) {
+                bw.write(Upload.NAME_TAG);
+                bw.write(Strings.nullToEmpty(name));
+                bw.newLine();
+                bw.write(Upload.CONTENT_TYPE_TAG);
+                bw.write(Strings.nullToEmpty(contentType));
+                bw.newLine();
+                bw.flush();
+            } catch (IOException e) {
+                mLog.warnQuietly("unable to write upload metadata file %s to disk", metadataFilename, e);
             }
+            mLog.debug("written upload metadata file [%s]", mFile);
+            return mFile;
+        }
+
+        private String readMetadataFile() {
+            String name = "";
+            try (BufferedReader br = new BufferedReader(
+                    new InputStreamReader(new FileInputStream(metadataFile), StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = br.readLine()) != null) {
+                    if (line.startsWith(Upload.NAME_TAG)) {
+                        name = line.substring(Upload.NAME_TAG.length());
+                    } else if (line.startsWith(Upload.CONTENT_TYPE_TAG)) {
+                        contentType = line.substring(Upload.CONTENT_TYPE_TAG.length());
+                    }
+                }
+            } catch (IOException e) {
+                mLog.warnQuietly("unable to read metadata file %s from disk", metadataFile, e);
+            }
+            mLog.debug("read upload metadata file [%s] name=%s content-type=%s", metadataFile, name, contentType);
+            return name;
         }
 
         boolean accessedAfter(long checkpoint)  { return time > checkpoint; }
 
         void purge() {
+            boolean succeeded;
             if (file != null) {
-                mLog.debug("Deleting from disk: id=%s, %s", uuid, file);
-                file.delete();
+                succeeded = file.delete();
+                mLog.debug("Deleted from disk succeeded=%s : id=%s, %s", succeeded, uuid, file);
+            }
+            if (metadataFile != null) {
+                succeeded = metadataFile.delete();
+                mLog.debug("Deleted metadata file from disk succeeded=%s : %s", succeeded, metadataFile);
             }
             if (blobInputStream != null) {
                 blobInputStream.closeFile();
@@ -220,7 +300,7 @@ public class FileUploadServlet extends ZimbraServlet {
 
         @Override public String toString() {
             return "Upload: { accountId=" + accountId + ", time=" + new Date(time) +
-                   ", size=" + getSize() + ", uploadId=" + uuid + ", name=" + name + ", path=" + getStoreLocation(file) + " }";
+                   ", size=" + getSize() + ", uploadId=" + uuid + ", name=" + name + ", path=" + physical_filename + " }";
         }
     }
 
@@ -237,9 +317,16 @@ public class FileUploadServlet extends ZimbraServlet {
     static String getUploadServerId(String uploadId) throws ServiceException {
         // uploadId is in the format of {serverId}:{uuid of the upload}
         String[] parts = null;
-        if (uploadId == null || (parts = uploadId.split(UPLOAD_PART_DELIMITER)).length != 2)
+        if (uploadId == null || (parts = uploadId.split(UPLOAD_PART_DELIMITER)).length != 3)
             throw ServiceException.INVALID_REQUEST("invalid upload ID: " + uploadId, null);
         return parts[0];
+    }
+
+    static String getUploadServerIp(String uploadId) throws ServiceException {
+        String[] parts = null;
+        if (uploadId == null || (parts = uploadId.split(UPLOAD_PART_DELIMITER)).length != 3)
+            throw ServiceException.INVALID_REQUEST("invalid upload ID: " + uploadId, null);
+        return parts[2];
     }
 
     /** Returns whether the specified upload resides on this server.
@@ -248,8 +335,10 @@ public class FileUploadServlet extends ZimbraServlet {
      * @throws ServiceException if the upload id is malformed or if there is
      *         an error accessing LDAP. */
     static boolean isLocalUpload(String uploadId) throws ServiceException {
-        String serverId = getUploadServerId(uploadId);
-        return Provisioning.getInstance().getLocalServer().getId().equals(serverId);
+        int index = uploadId.lastIndexOf(UPLOAD_PART_DELIMITER);
+        String serverIp = uploadId.substring(index+1, uploadId.length()).trim();
+        String localIp = Provisioning.getLocalIp();
+        return localIp.equals(serverIp);
     }
 
     public static Upload fetchUpload(String accountId, String uploadId, AuthToken authtoken) throws ServiceException {
@@ -266,11 +355,14 @@ public class FileUploadServlet extends ZimbraServlet {
         synchronized (mPending) {
             Upload up = mPending.get(uploadId);
             if (up == null) {
-                mLog.warn("upload not found: " + context);
-                throw MailServiceException.NO_SUCH_UPLOAD(uploadId);
+                up = new Upload(accountId, uploadId);
             }
             if (!accountId.equals(up.accountId)) {
                 mLog.warn("mismatched accountId for upload: " + up + "; expected: " + context);
+                throw MailServiceException.NO_SUCH_UPLOAD(uploadId);
+            }
+            if (!up.file.exists()) {
+                mLog.warn("missing upload: " + up);
                 throw MailServiceException.NO_SUCH_UPLOAD(uploadId);
             }
             up.time = System.currentTimeMillis();
@@ -294,32 +386,35 @@ public class FileUploadServlet extends ZimbraServlet {
         }
         // the first half of the upload id is the server id where it lives
         Server server = Provisioning.getInstance().get(Key.ServerBy.id, getUploadServerId(uploadId));
-        String url = AccountUtil.getBaseUri(server);
+        String uploadServerIp = getUploadServerIp(uploadId);
+        String url = AccountUtil.getBaseUri(server, uploadServerIp);
         if (url == null)
             return null;
-        String hostname = server.getServiceHostname();
         url += ContentServlet.SERVLET_PATH + ContentServlet.PREFIX_PROXY + '?' +
                ContentServlet.PARAM_UPLOAD_ID + '=' + uploadId + '&' +
                ContentServlet.PARAM_EXPUNGE + "=true";
 
         // create an HTTP client with auth cookie to fetch the file from the remote ContentServlet
-        HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
-        GetMethod get = new GetMethod(url);
-        authtoken.encode(client, get, false, hostname);
+        HttpClientBuilder clientBuilder = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+        HttpGet get = new HttpGet(url);
+
+        authtoken.encode(clientBuilder, get, false, uploadServerIp);
+        HttpClient client = clientBuilder.build();
         try {
             // fetch the remote item
-            int statusCode = HttpClientUtil.executeMethod(client, get);
+            HttpResponse httpResp = HttpClientUtil.executeMethod(client, get);
+            int statusCode = httpResp.getStatusLine().getStatusCode();
             if (statusCode != HttpStatus.SC_OK)
                 return null;
 
             // metadata is encoded in the response's HTTP headers
-            Header ctHeader = get.getResponseHeader("Content-Type");
+            Header ctHeader = httpResp.getFirstHeader("Content-Type");
             String contentType = ctHeader == null ? "text/plain" : ctHeader.getValue();
-            Header cdispHeader = get.getResponseHeader("Content-Disposition");
+            Header cdispHeader = httpResp.getFirstHeader("Content-Disposition");
             String filename = cdispHeader == null ? "unknown" : new ContentDisposition(cdispHeader.getValue()).getParameter("filename");
 
             // store the fetched upload along with original uploadId
-            Upload up = saveUpload(get.getResponseBodyAsStream(), filename, contentType, accountId);
+            Upload up = saveUpload(httpResp.getEntity().getContent(), filename, contentType, accountId);
             synchronized (mProxiedUploadIds) {
                 mProxiedUploadIds.put(uploadId, up.uuid);
             }
@@ -348,7 +443,7 @@ public class FileUploadServlet extends ZimbraServlet {
             // sizeMax=-1 means "no limit"
             long size = ByteUtil.copy(is, true, fi.getOutputStream(), true, sizeMax < 0 ? sizeMax : sizeMax + 1);
             if (upload.getSizeMax() >= 0 && size > upload.getSizeMax()) {
-                mLog.info("Exceeded maximum upload size of " + upload.getSizeMax() + " bytes");
+                mLog.warn("Exceeded maximum upload size of %s bytes", upload.getSizeMax());
                 throw MailServiceException.UPLOAD_TOO_LARGE(filename, "upload too large");
             }
 
@@ -369,13 +464,6 @@ public class FileUploadServlet extends ZimbraServlet {
 
     public static Upload saveUpload(InputStream is, String filename, String contentType, String accountId) throws ServiceException, IOException {
         return saveUpload(is, filename, contentType, accountId, false);
-    }
-
-    static File getStoreLocation(FileItem fi) {
-        if (fi.isInMemory() || !(fi instanceof DiskFileItem)) {
-            return null;
-        }
-        return ((DiskFileItem) fi).getStoreLocation();
     }
 
     public static void deleteUploads(Collection<Upload> uploads) {
@@ -408,42 +496,6 @@ public class FileUploadServlet extends ZimbraServlet {
         return sUploadDir;
     }
 
-    private static class TempFileFilter implements FileFilter {
-        private final long mNow = System.currentTimeMillis();
-
-        TempFileFilter()  { }
-
-        /** Returns <code>true</code> if the specified <code>File</code>
-         *  follows the {@link DefaultFileItem} naming convention
-         *  (<code>upload_*.tmp</code>) and is older than
-         *  {@link FileUploadServlet#UPLOAD_TIMEOUT_MSEC}. */
-        @Override
-        public boolean accept(File pathname) {
-            // upload_ XYZ .tmp
-            if (pathname == null)
-                return false;
-            String name = pathname.getName();
-            // file naming convention used by DefaultFileItem class
-            return name.startsWith("upload_") && name.endsWith(".tmp") && mNow - pathname.lastModified() > UPLOAD_TIMEOUT_MSEC;
-        }
-    }
-
-    private static void cleanupLeftoverTempFiles() {
-        File files[] = new File(getUploadDir()).listFiles(new TempFileFilter());
-        if (files == null || files.length < 1)
-            return;
-
-        mLog.info("deleting %d temporary upload files left over from last time", files.length);
-        for (int i = 0; i < files.length; i++) {
-            String path = files[i].getAbsolutePath();
-            if (files[i].delete()) {
-                mLog.info("deleted leftover upload file %s", path);
-            } else {
-                mLog.error("unable to delete leftover upload file %s", path);
-            }
-        }
-    }
-
     @Override
     public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
         ZimbraLog.clearContext();
@@ -474,6 +526,10 @@ public class FileUploadServlet extends ZimbraServlet {
         boolean csrfCheckComplete = false;
         if (req.getAttribute(CsrfFilter.CSRF_TOKEN_CHECK) != null) {
             doCsrfCheck =  (Boolean) req.getAttribute(CsrfFilter.CSRF_TOKEN_CHECK);
+        }
+
+        if (JWTUtil.isJWT(at)) {
+            doCsrfCheck = false;
         }
 
         if (doCsrfCheck) {
@@ -701,8 +757,38 @@ public class FileUploadServlet extends ZimbraServlet {
         }
         List<FileItem> items = new ArrayList<FileItem>(1);
         items.add(fi);
-
         Upload up = new Upload(acct.getId(), fi, filename);
+        
+        if (filename.endsWith(".har")) {
+            File file = ((DiskFileItem) fi).getStoreLocation();
+            try {
+                String mimeType = MimeDetect.getMimeDetect().detect(file);
+                if (mimeType != null) {
+                    up.contentType = mimeType;
+                }
+            } catch (IOException e) {
+                mLog.warn("Failed to detect file content type");
+            }
+        }
+        final String finalMimeType = up.contentType;
+        String contentTypeBlacklist = LC.zimbra_file_content_type_blacklist.value();
+        List<String> blacklist = new ArrayList<String>();
+        if (!StringUtil.isNullOrEmpty(contentTypeBlacklist)) {
+            blacklist.addAll(Arrays.asList(contentTypeBlacklist.trim().split(",")));
+        }
+        if (blacklist.stream().anyMatch((blacklistedContentType) -> {
+            Pattern p = Pattern.compile(blacklistedContentType);
+            Matcher m = p.matcher(finalMimeType);
+            return m.find();
+        })) {
+            mLog.debug("handlePlainUpload(): deleting %s", fi);
+            fi.delete();
+            mLog.info("File content type is blacklisted : %s" + finalMimeType);
+            drainRequestStream(req);
+            sendResponse(resp, HttpServletResponse.SC_FORBIDDEN, fmt, null, null, null);
+            return Collections.emptyList();
+        }
+
         mLog.info("Received plain: %s", up);
         synchronized (mPending) {
             mPending.put(up.uuid, up);
@@ -851,7 +937,6 @@ public class FileUploadServlet extends ZimbraServlet {
                 throw new ServletException(msg);
             }
         }
-        cleanupLeftoverTempFiles();
 
         Zimbra.sTimer.schedule(new MapReaperTask(), REAPER_INTERVAL_MSEC, REAPER_INTERVAL_MSEC);
     }

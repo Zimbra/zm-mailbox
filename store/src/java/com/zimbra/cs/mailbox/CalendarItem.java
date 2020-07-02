@@ -45,6 +45,7 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.util.SharedByteArrayInputStream;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.calendar.ICalTimeZone;
@@ -73,8 +74,6 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.LuceneFields;
-import com.zimbra.cs.index.analysis.FieldTokenStream;
-import com.zimbra.cs.index.analysis.RFC822AddressTokenStream;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.mailbox.Mailbox.SetCalendarItemData;
 import com.zimbra.cs.mailbox.calendar.Alarm;
@@ -178,7 +177,16 @@ public abstract class CalendarItem extends MailItem {
 
     protected CalendarItem(Mailbox mbox, UnderlyingData data, boolean skipCache) throws ServiceException {
         super(mbox, data, skipCache);
-        if (mData.type != Type.APPOINTMENT.toByte() && mData.type != Type.TASK.toByte()) {
+        init();
+    }
+
+    protected CalendarItem(Account acc, UnderlyingData data, int mailboxId) throws ServiceException {
+        super(acc, data, mailboxId);
+        init();
+    }
+
+    private void init() throws ServiceException {
+        if (type != Type.APPOINTMENT.toByte() && type != Type.TASK.toByte()) {
             throw new IllegalArgumentException();
         }
     }
@@ -275,19 +283,37 @@ public abstract class CalendarItem extends MailItem {
     }
 
     @Override
-    public List<IndexDocument> generateIndexData() throws TemporaryIndexingException {
+    public List<IndexDocument> generateIndexDataAsync(boolean indexAttachments) throws TemporaryIndexingException {
         List<IndexDocument> docs = null;
-        mMailbox.lock.lock();
-        try {
-            docs = getIndexDocuments();
-        } finally {
-            mMailbox.lock.release();
-        }
-
-        return docs;
+        docs = getIndexDocuments(indexAttachments);
+        return checkNumIndexDocs(docs);
     }
 
-    protected List<IndexDocument> getIndexDocuments() throws TemporaryIndexingException{
+    private static int getNumIndexDocs(List<Invite> invites, boolean attachmentIndexingEnabled) throws ServiceException {
+        int numDocs = 0;
+        for (Invite inv: invites) {
+            int delta;
+            if (inv.getDontIndexMimeMessage()) {
+                delta = 1;
+            } else {
+                MimeMessage mm = inv.getMimeMessage();
+                if (mm != null) {
+                    ParsedMessage pm = new ParsedMessage(mm, attachmentIndexingEnabled);
+                    delta = pm.getNumIndexDocs();
+                } else {
+                    delta = 1; // no blob
+                }
+            }
+            numDocs += delta;
+        }
+        return numDocs;
+    }
+
+    private int getNumIndexDocs() throws ServiceException {
+        return getNumIndexDocs(mInvites, getMailbox().attachmentsIndexingEnabled());
+    }
+
+    protected List<IndexDocument> getIndexDocuments(boolean indexAttachments) throws TemporaryIndexingException{
         List<IndexDocument> toRet = new ArrayList<IndexDocument>();
 
         // Special case to prevent getDefaultInviteOrNull() from logging an error
@@ -403,7 +429,7 @@ public abstract class CalendarItem extends MailItem {
                 docList.add(doc);
             } else {
                 try {
-                    ParsedMessage pm = new ParsedMessage(mm, mMailbox.attachmentsIndexingEnabled());
+                    ParsedMessage pm = new ParsedMessage(mm, indexAttachments);
                     pm.analyzeFully();
 
                     if (pm.hasTemporaryAnalysisFailure())
@@ -425,17 +451,15 @@ public abstract class CalendarItem extends MailItem {
                 doc.removeFrom();
                 doc.removeSubject();
 
-                for (String to : toAddrs) {
-                    doc.addTo(new RFC822AddressTokenStream(to));
-                }
-                doc.addFrom(new RFC822AddressTokenStream(orgToUse));
+                doc.addTo(Joiner.on(", ").join(toAddrs));
+                doc.addFrom(orgToUse);
                 doc.addSubject(nameToUse);
                 toRet.add(doc);
             }
         }
 
         // set the "public"/"private" flag in the index for this appointment
-        FieldTokenStream fields = new FieldTokenStream(INDEX_FIELD_ITEM_CLASS, isPublic() ? "public" : "private");
+        String fields = String.format("%s:%s",INDEX_FIELD_ITEM_CLASS, isPublic() ? "public" : "private");
         for (IndexDocument doc : toRet) {
             doc.addField(fields);
         }
@@ -514,6 +538,8 @@ public abstract class CalendarItem extends MailItem {
         Account account = mbox.getAccount();
         firstInvite.updateMyPartStat(account, firstInvite.getPartStat());
 
+        int initialNumIndexDocs = getNumIndexDocs(invites, mbox.attachmentsIndexingEnabled());
+
         UnderlyingData data = new UnderlyingData();
         data.id = id;
         data.type = type.toByte();
@@ -527,7 +553,7 @@ public abstract class CalendarItem extends MailItem {
         data.setTags(ntags);
         data.setSubject(subject);
         data.metadata = encodeMetadata(DEFAULT_COLOR_RGB, 1, 1, custom, uid, startTime, endTime, recur,
-                                       invites, firstInvite.getTimeZoneMap(), new ReplyList(), null);
+                                       invites, firstInvite.getTimeZoneMap(), new ReplyList(), null, initialNumIndexDocs);
         data.contentChanged(mbox, false);
 
         if (!firstInvite.hasRecurId()) {
@@ -677,7 +703,11 @@ public abstract class CalendarItem extends MailItem {
      * Diagnostic code to flag when odd RECURRENCE-ID is used
      */
     private void checkRecurIdIsSensible(RecurId recurId) throws ServiceException {
-        Collection<Instance> instancesNear = instancesNear(recurId);
+        checkRecurIdIsSensible(recurId, instancesNear(recurId));
+    }
+
+    private void checkRecurIdIsSensible(RecurId recurId, Collection<Instance> instancesNear)
+            throws ServiceException {
         if (instancesNear.isEmpty()) {
             ZimbraLog.calendar.warn(
                     "WARNING:RECURRENCE-ID %s, does not match any pre-existing instances.",
@@ -900,21 +930,21 @@ public abstract class CalendarItem extends MailItem {
     }
 
     @Override Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mRGBColor, mMetaVersion, mVersion, mExtendedData, mUid, mStartTime, mEndTime,
-                              mRecurrence, mInvites, mTzMap, mReplyList, mAlarmData);
+        return encodeMetadata(meta, state.getColor(), state.getMetadataVersion(), state.getVersion(), mExtendedData, mUid, mStartTime, mEndTime,
+                              mRecurrence, mInvites, mTzMap, mReplyList, mAlarmData, state.getNumIndexDocs());
     }
 
     private static String encodeMetadata(Color color, int metaVersion, int version, CustomMetadata custom, String uid, long startTime, long endTime,
                                          Recurrence.IRecurrence recur, List<Invite> invs, TimeZoneMap tzmap,
-                                         ReplyList replyList, AlarmData alarmData) {
+                                         ReplyList replyList, AlarmData alarmData, int numIndexDocs) {
         CustomMetadataList extended = (custom == null ? null : custom.asList());
         return encodeMetadata(new Metadata(), color, metaVersion, version, extended, uid, startTime, endTime, recur,
-                              invs, tzmap, replyList, alarmData).toString();
+                              invs, tzmap, replyList, alarmData, numIndexDocs).toString();
     }
 
     static Metadata encodeMetadata(Metadata meta, Color color, int metaVersion, int version, CustomMetadataList extended,
                                    String uid, long startTime, long endTime, Recurrence.IRecurrence recur,
-                                   List<Invite> invs, TimeZoneMap tzmap, ReplyList replyList, AlarmData alarmData) {
+                                   List<Invite> invs, TimeZoneMap tzmap, ReplyList replyList, AlarmData alarmData, int numIndexDocs) {
         if (tzmap != null)
             meta.put(Metadata.FN_TZMAP, Util.encodeAsMetadata(tzmap));
 
@@ -936,7 +966,7 @@ public abstract class CalendarItem extends MailItem {
         if (alarmData != null)
             meta.put(Metadata.FN_ALARM_DATA, alarmData.encodeMetadata());
 
-        return MailItem.encodeMetadata(meta, color, null, metaVersion, version, extended);
+        return MailItem.encodeMetadata(meta, color, null, metaVersion, version, numIndexDocs, extended);
     }
 
     /**
@@ -1420,7 +1450,7 @@ public abstract class CalendarItem extends MailItem {
         }
         if (first == null)
             ZimbraLog.calendar.error(
-                    "Invalid state: appointment/task " + getId() + " in mailbox " + getMailbox().getId() + " has no default invite; " +
+                    "Invalid state: appointment/task " + getId() + " in mailbox " + getMailboxId() + " has no default invite; " +
                     (mInvites != null ? ("invite count = " + mInvites.size()) : "null invite list"));
         return first;
     }
@@ -1482,19 +1512,6 @@ public abstract class CalendarItem extends MailItem {
         return folder.canAccess(ACL.RIGHT_FREEBUSY, authAccount, asAdmin);
     }
 
-    boolean processNewInvite(ParsedMessage pm, Invite invite,
-                             int folderId, boolean replaceExistingInvites)
-    throws ServiceException {
-        return processNewInvite(pm, invite, folderId, CalendarItem.NEXT_ALARM_KEEP_CURRENT, true, replaceExistingInvites);
-    }
-
-    boolean processNewInvite(ParsedMessage pm, Invite invite,
-            int folderId, long nextAlarm,
-            boolean preserveAlarms, boolean replaceExistingInvites)
-        throws ServiceException {
-        return processNewInvite(pm, invite, folderId, nextAlarm, preserveAlarms, replaceExistingInvites, false);
-    }
-
     /**
      * A new Invite has come in, take a look at it and see what needs to happen.
      * Maybe we need to send updates out. Maybe we need to modify the
@@ -1506,9 +1523,7 @@ public abstract class CalendarItem extends MailItem {
      * @param nextAlarm
      * @param replaceExistingInvites
      * @param updatePrevFolders
-     * @return
-     *            TRUE if an update calendar was written, FALSE if the CalendarItem is
-     *            unchanged or deleted
+     * @return TRUE if an update calendar was written, FALSE if the CalendarItem is unchanged or deleted
      */
     boolean processNewInvite(ParsedMessage pm, Invite invite,
                              int folderId, long nextAlarm,
@@ -1524,9 +1539,10 @@ public abstract class CalendarItem extends MailItem {
             return processNewInviteRequestOrCancel(pm, invite, folderId, nextAlarm,
                                                    preserveAlarms, replaceExistingInvites, false);
         } else if (method.equals(ICalTok.REPLY.toString())) {
-            return processNewInviteReply(invite, null, updatePrevFolders);
+            return processNewInviteReply(invite, null, updatePrevFolders, null /* next item id getter */);
         } else if (method.equals(ICalTok.COUNTER.toString())) {
-            return processNewInviteReply(invite, pm.getSender());
+            return processNewInviteReply(invite, pm.getSender(), false /* don't update prev folders */,
+                                null /* next item id getter */);
         }
 
         if (!method.equals(ICalTok.DECLINECOUNTER.toString()))
@@ -2148,8 +2164,8 @@ public abstract class CalendarItem extends MailItem {
 
         // Check if there are any surviving non-cancel invites after applying the update.
         // Also check for changes in flags.
-        int oldFlags = mData.getFlags();
-        int newFlags = mData.getFlags() & ~(Flag.BITMASK_ATTACHED | Flag.BITMASK_DRAFT | Flag.BITMASK_HIGH_PRIORITY | Flag.BITMASK_LOW_PRIORITY);
+        int oldFlags = state.getFlags();
+        int newFlags = oldFlags & ~(Flag.BITMASK_ATTACHED | Flag.BITMASK_DRAFT | Flag.BITMASK_HIGH_PRIORITY | Flag.BITMASK_LOW_PRIORITY);
         boolean hasSurvivingRequests = false;
         for (Invite cur : mInvites) {
             String method = cur.getMethod();
@@ -2167,7 +2183,7 @@ public abstract class CalendarItem extends MailItem {
             }
         }
         if (newFlags != oldFlags) {
-            mData.setFlags(newFlags);
+            state.setFlags(newFlags);
             modifiedCalItem = true;
         }
 
@@ -2526,7 +2542,8 @@ public abstract class CalendarItem extends MailItem {
         if (firstInvite != null) {
             subject = firstInvite.getName();
         }
-        mData.setSubject(Strings.nullToEmpty(subject));
+        state.setSubject(Strings.nullToEmpty(subject));
+        updateIndexedDocCount(getNumIndexDocs());
         saveData(new DbMailItem(mMailbox));
     }
 
@@ -3300,12 +3317,14 @@ public abstract class CalendarItem extends MailItem {
         saveMetadata();
     }
 
-    boolean processNewInviteReply(Invite reply, String sender)
-    throws ServiceException {
-        return processNewInviteReply(reply, sender, false);
-    }
-
-    boolean processNewInviteReply(Invite reply, String sender, boolean updatePrevFolders)
+    /**
+     * @param updatePrevFolders - If set, update the record of previous folders
+     * @param itemIdGetter - Used in newly created pseudo exceptions
+     * @return false if the invite being updated is out of date
+     * @throws ServiceException
+     */
+    protected boolean processNewInviteReply(Invite reply, String sender, boolean updatePrevFolders,
+            Mailbox.ItemIdGetter itemIdGetter)
     throws ServiceException {
         List<ZAttendee> attendees = reply.getAttendees();
 
@@ -3412,7 +3431,7 @@ public abstract class CalendarItem extends MailItem {
             matchingInvite.updateMatchingAttendeesFromReply(reply);
             updateLocalExceptionsWhichMatchSeriesReply(reply);
         } else {
-            createPseudoExceptionForSingleInstanceReplyIfNecessary(reply);
+            createPseudoExceptionForSingleInstanceReplyIfNecessary(reply, itemIdGetter);
         }
         if (updatePrevFolders) {
             performSetPrevFoldersOperation(octxt);
@@ -3425,7 +3444,7 @@ public abstract class CalendarItem extends MailItem {
         String prevFolders = StringUtil.isNullOrEmpty(this.getPrevFolders()) ? "" : this.getPrevFolders() + ";";
         prevFolders = prevFolders + (this.getModifiedSequence()+2) + ":" + Mailbox.ID_FOLDER_TRASH;
         this.mMailbox.setPreviousFolder(octxt, mId, prevFolders);
-        this.mData.setPrevFolders(prevFolders);
+        state.setPrevFolders(prevFolders);
     }
 
     /**
@@ -3481,7 +3500,8 @@ public abstract class CalendarItem extends MailItem {
      * Assumption - already checked that there isn't a matching exception instance already
      * Caller is responsible for ensuring changed MetaData is written through to SQL sending notification of change.
      */
-    private void createPseudoExceptionForSingleInstanceReplyIfNecessary(Invite reply) throws ServiceException {
+    private void createPseudoExceptionForSingleInstanceReplyIfNecessary(Invite reply,
+            Mailbox.ItemIdGetter itemIdGetter) throws ServiceException {
         if ((reply == null) || reply.getRecurId() == null) {
             return; // reply isn't to a single instance
         }
@@ -3496,12 +3516,30 @@ public abstract class CalendarItem extends MailItem {
             for (int i = 0; i < numInvites(); i++) {
                 Invite cur = getInvite(i);
                 if (cur.getRecurId() == null) {
+                    checkRecurIdIsSensible(reply.getRecurId(), instancesNear);
                     try {
                         ParsedDateTime pdt = ParsedDateTime.parseUtcOnly(reply.getRecurId().getDtZ());
+                        /* Best practice is to use RECURRENCE-IDs with the same TZID as the DTSTART
+                         * for the main series.  Try to make that so here.  This is so that exceptions
+                         * don't become invalid when the rules for a timezone change, moving the
+                         * expected time for an instance forward or backward relative to UTC
+                         */
+                        ParsedDateTime seriesStartTime = cur.getStartTime();
+                        /* Don't do this for allday events as they shouldn't really have timezones */
+                        if ((seriesStartTime != null) && (seriesStartTime.hasTime())) {
+                            ICalTimeZone seriesTz = seriesStartTime.getTimeZone();
+                            if (seriesTz != null) {
+                                pdt.toTimeZone(seriesTz);
+                            }
+                        }
                         Invite localException = cur.makeInstanceInvite(pdt);
                         localException.setDtStamp(System.currentTimeMillis());
                         localException.updateMatchingAttendeesFromReply(reply);
                         localException.setClassPropSetByMe(true); // flag as organizer change
+                        if (itemIdGetter != null) {
+                            /* ZWC expects a different mail item id for each exception */
+                            localException.setMailItemId(itemIdGetter.get());
+                        }
                         mInvites.add(localException);
                         // create a fake ExceptionRule wrapper around the single-instance
                         recurrenceRule.addException(
@@ -3900,6 +3938,11 @@ public abstract class CalendarItem extends MailItem {
             InviteInfo invId = inst.getInviteInfo();
             Invite inv = getInvite(invId.getMsgId(), invId.getComponentId());
             assert(inv != null);
+            if (inv == null) {
+                ZimbraLog.calendar.debug("CalendarItem getNextAlarmHelper %s: no match for invId=%s",
+                        this, invId);
+                break;
+            }
             // The instance can have multiple alarms.
             for (Iterator<Alarm> alarms = inv.alarmsIterator(); alarms.hasNext(); ) {
                 Alarm alarm = alarms.next();

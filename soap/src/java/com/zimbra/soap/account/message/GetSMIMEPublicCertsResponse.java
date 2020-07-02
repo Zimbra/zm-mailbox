@@ -17,13 +17,15 @@
 
 package com.zimbra.soap.account.message;
 
-import com.google.common.base.Objects;
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.account.type.SMIMEPublicCertsInfo;
 
@@ -36,23 +38,23 @@ public class GetSMIMEPublicCertsResponse {
      * @zm-api-field-description SMIME public certificates
      */
     @XmlElement(name=AccountConstants.E_CERTS /* certs */, required=false)
-    private SMIMEPublicCertsInfo certs;
+    private List<SMIMEPublicCertsInfo> certs;
 
     public GetSMIMEPublicCertsResponse() {
     }
 
-    public void setCerts(SMIMEPublicCertsInfo certs) { this.certs = certs; }
-    public SMIMEPublicCertsInfo getCerts() { return certs; }
+    public void setCerts(List<SMIMEPublicCertsInfo> certs) { this.certs = certs; }
+    public List<SMIMEPublicCertsInfo> getCerts() { return certs; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(
+                MoreObjects.ToStringHelper helper) {
         return helper
             .add("certs", certs);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
+        return addToStringInfo(MoreObjects.toStringHelper(this))
                 .toString();
     }
 }

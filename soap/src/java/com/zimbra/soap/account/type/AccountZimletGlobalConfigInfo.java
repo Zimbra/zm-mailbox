@@ -17,7 +17,7 @@
 
 package com.zimbra.soap.account.type;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
@@ -28,11 +28,18 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.ZimletConstants;
 import com.zimbra.soap.base.ZimletGlobalConfigInfo;
 import com.zimbra.soap.base.ZimletProperty;
 
+import io.leangen.graphql.annotations.GraphQLIgnore;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name=GqlConstants.CLASS_ACCOUNT_ZIMLET_GLOBAL_CONFIG_INFO,
+    description="Account zimlet global configuration information")
 public class AccountZimletGlobalConfigInfo
 implements ZimletGlobalConfigInfo {
 
@@ -57,6 +64,7 @@ implements ZimletGlobalConfigInfo {
         this.properties.add(property);
     }
 
+    @GraphQLQuery(name=GqlConstants.ZIMLET_GLOBAL_CONFIG_PROPERTIES, description="Global zimlet configuration properties")
     public List<AccountZimletProperty> getProperties() {
         return Collections.unmodifiableList(properties);
     }
@@ -72,19 +80,20 @@ implements ZimletGlobalConfigInfo {
     }
 
     @Override
+    @GraphQLIgnore
     public List<ZimletProperty> getZimletProperties() {
         return AccountZimletProperty.toInterfaces(properties);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(
+                MoreObjects.ToStringHelper helper) {
         return helper
             .add("properties", properties);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
+        return addToStringInfo(MoreObjects.toStringHelper(this))
                 .toString();
     }
 }

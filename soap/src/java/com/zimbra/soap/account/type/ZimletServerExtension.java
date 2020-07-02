@@ -17,20 +17,25 @@
 
 package com.zimbra.soap.account.type;
 
-import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.codehaus.jackson.annotate.JsonPropertyOrder;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
+import com.google.common.base.MoreObjects;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.ZimletConstants;
 import com.zimbra.soap.base.ZimletServerExtensionInterface;
+
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=ZimletConstants.ZIMLET_TAG_SERVER_EXTENSION)
 @JsonPropertyOrder({ "extensionClass", "hasKeyword", "regex" })
+@GraphQLType(name=GqlConstants.CLASS_ZIMLET_SERVER_EXTENSION, description="Zimlet server extension")
 public class ZimletServerExtension
 implements ZimletServerExtensionInterface {
 
@@ -69,14 +74,17 @@ implements ZimletServerExtensionInterface {
     @Override
     public void setRegex(String regex) { this.regex = regex; }
     @Override
+    @GraphQLQuery(name=GqlConstants.HAS_KEYWORD, description="has keyword")
     public String getHasKeyword() { return hasKeyword; }
     @Override
+    @GraphQLQuery(name=GqlConstants.EXTENSION_CLASS, description="Extension class")
     public String getExtensionClass() { return extensionClass; }
     @Override
+    @GraphQLQuery(name=GqlConstants.REGEX, description="Regex")
     public String getRegex() { return regex; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(
+                MoreObjects.ToStringHelper helper) {
         return helper
             .add("hasKeyword", hasKeyword)
             .add("extensionClass", extensionClass)
@@ -85,7 +93,7 @@ implements ZimletServerExtensionInterface {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
+        return addToStringInfo(MoreObjects.toStringHelper(this))
                 .toString();
     }
 }

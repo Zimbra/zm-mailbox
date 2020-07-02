@@ -17,6 +17,7 @@
 package com.zimbra.cs.filter;
 
 import static org.junit.Assert.fail;
+import org.junit.Ignore;
 
 import java.util.Enumeration;
 import java.util.List;
@@ -49,7 +50,7 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.mail.SendMsgTest.DirectInsertionMailboxManager;
 import com.zimbra.cs.service.util.ItemId;
 
-public class DeleteHeaderTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class DeleteHeaderTest {
 
     private static String sampleBaseMsg = "Received: from edge01e.zimbra.com ([127.0.0.1])\n"
             + "\tby localhost (edge01e.zimbra.com [127.0.0.1]) (amavisd-new, port 10032)\n"

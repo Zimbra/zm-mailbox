@@ -17,6 +17,7 @@
 package com.zimbra.cs.store.external;
 
 import java.io.File;
+import org.junit.Ignore;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collection;
@@ -31,7 +32,7 @@ import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.store.file.BlobConsistencyChecker;
 
-public class ExternalBlobConsistencyCheckTest extends AbstractBlobConsistencyCheckTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class ExternalBlobConsistencyCheckTest extends AbstractBlobConsistencyCheckTest {
 
     @Override
     protected void deleteAllBlobs() throws ServiceException, IOException {

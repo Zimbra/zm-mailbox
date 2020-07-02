@@ -16,7 +16,7 @@
  */
 package com.zimbra.cs.mailbox;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -57,34 +57,34 @@ public class Link extends Document {
         link.finishCreation(parent);
         return link;
     }
-    
+
     private String mOwnerId;
     private int mRemoteId;
-    
+
     public String getOwnerId() {
         return mOwnerId;
     }
-    
+
     public int getRemoteId() {
         return mRemoteId;
     }
-    
+
     @Override
     Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mRGBColor, mMetaVersion, mVersion, mOwnerId, mRemoteId, mExtendedData);
+        return encodeMetadata(meta, state.getColor(), state.getMetadataVersion(), state.getVersion(), mOwnerId, mRemoteId, mExtendedData);
     }
-    
+
     private static String encodeMetadata(Color color, int metaVersion, int version, String owner, int remoteId, CustomMetadata custom) {
         CustomMetadataList extended = (custom == null ? null : custom.asList());
         return encodeMetadata(new Metadata(), color, metaVersion, version, owner, remoteId, extended).toString();
     }
-    
+
     private static Metadata encodeMetadata(Metadata meta, Color color, int metaVersion, int version, String owner, int remoteId, CustomMetadataList extended) {
         meta.put(Metadata.FN_ACCOUNT_ID, owner);
         meta.put(Metadata.FN_REMOTE_ID, remoteId);
         return encodeMetadata(meta, color, null, metaVersion, version, extended);
     }
-    
+
     @Override
     void decodeMetadata(Metadata meta) throws ServiceException {
         super.decodeMetadata(meta);
@@ -96,7 +96,7 @@ public class Link extends Document {
 
     @Override
     public String toString() {
-        Objects.ToStringHelper helper = Objects.toStringHelper(this);
+        MoreObjects.ToStringHelper helper = MoreObjects.toStringHelper(this);
         appendCommonMembers(helper);
         helper.add("type", getType());
         helper.add("owner", mOwnerId);

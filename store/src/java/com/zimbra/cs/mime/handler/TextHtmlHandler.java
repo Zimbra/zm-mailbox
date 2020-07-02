@@ -23,7 +23,7 @@ import java.io.Reader;
 
 import javax.activation.DataSource;
 
-import org.apache.lucene.document.Document;
+import org.apache.solr.common.SolrInputDocument;
 
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.HtmlTextExtractor;
@@ -48,7 +48,7 @@ public class TextHtmlHandler extends MimeHandler {
     }
 
     @Override
-    public void addFields(Document doc) throws MimeHandlerException {
+    public void addFields(SolrInputDocument doc) throws MimeHandlerException {
         // make sure we've parsed the document
         getContentImpl();
     }

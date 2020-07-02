@@ -17,7 +17,7 @@
 
 package com.zimbra.soap.mail.message;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 
 import java.util.Collection;
@@ -72,6 +72,6 @@ public final class GetOutgoingFilterRulesResponse {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this).add("rules", rules).toString();
+        return MoreObjects.toStringHelper(this).add("rules", rules).toString();
     }
 }

@@ -17,7 +17,7 @@
 
 package com.zimbra.soap.voice.message;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -138,7 +138,7 @@ public class SearchVoiceRequest {
     public String getSearchTypes() { return searchTypes; }
     public String getSortBy() { return sortBy; }
 
-    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         return helper
             .add("storePrincipal", storePrincipal)
             .add("query", query)
@@ -150,6 +150,6 @@ public class SearchVoiceRequest {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this)).toString();
+        return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
     }
 }

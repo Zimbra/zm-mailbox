@@ -32,7 +32,6 @@ import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
-import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.ModifyDataSourceRequest;
 import com.zimbra.soap.admin.type.DataSourceInfo;
@@ -47,6 +46,7 @@ public class ModifyDataSource extends AdminDocumentHandler {
     /**
      * must be careful and only allow modifies to accounts/attrs domain admin has access to
      */
+    @SuppressWarnings("rawtypes")
     @Override
     public boolean domainAuthSufficient(Map context) {
         return true;
@@ -109,6 +109,8 @@ public class ModifyDataSource extends AdminDocumentHandler {
             return AttributeClass.rssDataSource;
         else if (type == DataSourceType.gal)
             return AttributeClass.galDataSource;
+        else if (type == DataSourceType.oauth2contact || type == DataSourceType.oauth2calendar)
+            return AttributeClass.oauth2DataSource;
         else
             return AttributeClass.dataSource;
     }

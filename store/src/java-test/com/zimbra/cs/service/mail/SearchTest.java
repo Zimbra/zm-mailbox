@@ -17,6 +17,7 @@
 package com.zimbra.cs.service.mail;
 
 import java.util.List;
+import org.junit.Ignore;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -40,7 +41,7 @@ import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.util.ZTestWatchman;
 
-public class SearchTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class SearchTest {
     @Rule
     public TestName testName = new TestName();
     @Rule

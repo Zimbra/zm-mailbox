@@ -302,10 +302,12 @@ final class SessionMap {
                     iter.remove();
                     totalActiveSessions--;
                     AccountSessionMap acctMap = accountSessionMap.get(s.getAuthenticatedAccountId());
-                    Session removed = acctMap.remove(s.getSessionId());
-                    if (removed != null) {
-                        if (acctMap.isEmpty()) {
-                            accountSessionMap.remove(s.getAuthenticatedAccountId());
+                    if (acctMap != null) {
+                        Session removed = acctMap.remove(s.getSessionId());
+                        if (removed != null) {
+                            if (acctMap.isEmpty()) {
+                                accountSessionMap.remove(s.getAuthenticatedAccountId());
+                            }
                         }
                     }
                 } else {

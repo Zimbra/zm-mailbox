@@ -209,6 +209,9 @@ public final class ZimbraLog {
      */
     public static final Log mailbox = LogFactory.getLog("zimbra.mailbox");
 
+    /** the "zimbra.mailboxlock" logger. For mailbox locking related events. */
+    public static final Log mailboxlock = LogFactory.getLog("zimbra.mailboxlock");
+
     /**
      * the "zimbra.calendar" logger. For calendar-related events.
      */
@@ -466,9 +469,39 @@ public final class ZimbraLog {
     public static final Log contactbackup = LogFactory.getLog("zimbra.contactbackup");
 
     /**
-     * Maps the log category name to its description.
+     * the "zimbra.passwordreset" logger. For Password reset logs.
      */
+    public static final Log passwordreset = LogFactory.getLog("zimbra.passwordreset");
+
+    /** * the "zimbra.event" logger. For Zimbra Event Logs.  */
+    public static final Log event = LogFactory.getLog("zimbra.event");
+
+    /** * the "zimbra.eventlog" logger. This is used for logging actual event data,
+     * as opposed to the "zimbra.event" logger, which is used for general messages
+     * about the event system.  */
+    public static final Log eventlog = LogFactory.getLog("zimbra.eventlog");
+
+    /** * the "zimbra.ml" logger. For machine learning-related events */
+    public static final Log ml = LogFactory.getLog("zimbra.ml");
+
+    /** * the "zimbra.addresslist" logger. For address list logs.  */
+    public static final Log addresslist = LogFactory.getLog("zimbra.addresslist");
+
+    /** * the "zimbra.gql" logger. For graphql logs.  */
+    public static final Log gql = LogFactory.getLog("zimbra.gql");
+
+    /** * the "zimbra.pubsub" logger. For pub/sub related events.  */
+    public static final Log pubsub = LogFactory.getLog("zimbra.pubsub");
+
+    /** * Maps the log category name to its description.  */
     public static final Map<String, String> CATEGORY_DESCRIPTIONS;
+
+    // this is called from offline and only at LC init so we are taking chances with race
+    private static final Set<String> CONTEXT_FILTER = new HashSet<String>();
+
+    private static final ThreadLocal<Map<String, String>> sContextMap = new ThreadLocal<Map<String, String>>();
+    private static final ThreadLocal<String> sContextString = new ThreadLocal<String>();
+    private static final Set<String> CONTEXT_KEY_ORDER = new LinkedHashSet<String>();
 
     private ZimbraLog() {
     }
@@ -497,11 +530,6 @@ public final class ZimbraLog {
         }
         return names;
     }
-
-    private static final ThreadLocal<Map<String, String>> sContextMap = new ThreadLocal<Map<String, String>>();
-    private static final ThreadLocal<String> sContextString = new ThreadLocal<String>();
-
-    private static final Set<String> CONTEXT_KEY_ORDER = new LinkedHashSet<String>();
 
     static {
         CONTEXT_KEY_ORDER.add(C_NAME);
@@ -554,15 +582,18 @@ public final class ZimbraLog {
         descriptions.put(activity.getCategory(), "Document operations");
         descriptions.put(ews.getCategory(), "EWS operations");
         descriptions.put(contactbackup.getCategory(), "Contact Backup and restore");
+        descriptions.put(passwordreset.getCategory(), "Password Reset operations");
+        descriptions.put(event.getCategory(), "Event log operations");
+        descriptions.put(eventlog.getCategory(), "Serialized events");
+        descriptions.put(ml.getCategory(), "Machine learning operations");
+        descriptions.put(addresslist.getCategory(), "Addresslist operations");
+        descriptions.put(gql.getCategory(), "GraphQL operations");
         CATEGORY_DESCRIPTIONS = Collections.unmodifiableMap(descriptions);
     }
 
     public static String getContextString() {
         return sContextString.get();
     }
-
-    // this is called from offline and only at LC init so we are taking chances with race
-    private static final Set<String> CONTEXT_FILTER = new HashSet<String>();
 
     public static void addContextFilters(String filters) {
         for (String item : filters.split(","))
@@ -791,10 +822,7 @@ public final class ZimbraLog {
         sContextString.remove();
     }
 
-    public static String getStackTrace(int maxDepth) {
-        // Thread.currentThread().getStackTrace() would seem cleaner but bizarrely is slower.
-        StackTraceElement[] stElems = new Throwable().getStackTrace();
-
+    public static String stackTraceAsString(StackTraceElement[] stElems, int maxDepth) {
         if (stElems == null) {
             return "";
         }
@@ -805,12 +833,24 @@ public final class ZimbraLog {
             if (count == 0) {
                 continue; // Skip element for this method.
             }
+            if (!stElem.getClassName().contains("zimbra")) {
+                break;
+            }
             sb.append(stElem.toString()).append('\n');
             if (count >= maxDepth) {
                 break;
             }
         }
         return sb.toString();
+    }
+
+    public static String getStackTrace(int maxDepth) {
+        // Thread.currentThread().getStackTrace() would seem cleaner but bizarrely is slower.
+        return stackTraceAsString(new Throwable().getStackTrace(), maxDepth);
+    }
+
+    public static String elapsedSince(long start) {
+        return elapsedTime(start, System.currentTimeMillis());
     }
 
     public static String elapsedTime(long start, long end) {
@@ -887,10 +927,8 @@ public final class ZimbraLog {
         }
     }
 
-    private static void encodeArg(StringBuilder sb, String name, String value) {
-        if (value == null) {
-            value = "";
-        }
+    private static void encodeArg(StringBuilder sb, String name, String origValue) {
+        String value = (origValue == null) ? "" : origValue;
         if (value.indexOf(';') != -1) {
             value = value.replaceAll(";", ";;");
         }

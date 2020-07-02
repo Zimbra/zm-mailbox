@@ -16,8 +16,6 @@
  */
 package com.zimbra.cs.index;
 
-import org.apache.lucene.document.Document;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -25,14 +23,14 @@ import com.zimbra.cs.mailbox.Mailbox;
 public final class DocumentHit extends ZimbraHit {
 
     private final int itemId;
-    private final Document luceneDoc;
+    private final IndexDocument indexDoc;
     private com.zimbra.cs.mailbox.Document docItem;
 
     DocumentHit(ZimbraQueryResultsImpl results, Mailbox mbx, int id,
-            com.zimbra.cs.mailbox.Document docItem, Document luceneDoc, Object sortKey) {
+            com.zimbra.cs.mailbox.Document docItem, IndexDocument indexDoc, Object sortKey) {
         super(results, mbx, sortKey);
         this.itemId = id;
-        this.luceneDoc = luceneDoc;
+        this.indexDoc = indexDoc;
         this.docItem = docItem;
     }
 
@@ -80,8 +78,8 @@ public final class DocumentHit extends ZimbraHit {
     }
 
     public int getVersion() throws ServiceException {
-        if (luceneDoc != null) {
-            String ver = luceneDoc.get(LuceneFields.L_VERSION);
+        if (indexDoc != null) {
+            String ver = indexDoc.get(LuceneFields.L_VERSION);
             if (ver != null) {
                 return Integer.parseInt(ver);
             }

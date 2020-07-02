@@ -17,7 +17,7 @@
 
 package com.zimbra.soap.replication.message;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -93,7 +93,7 @@ public class ReplicationStatusResponse {
     public ReplicationMasterStatus getMasterStatus() { return masterStatus; }
     public ReplicationSlaveStatus getSlaveStatus() { return slaveStatus; }
 
-    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         return helper
             .add("replicationEnabled", replicationEnabled)
             .add("currentRole", currentRole)
@@ -104,6 +104,6 @@ public class ReplicationStatusResponse {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this)).toString();
+        return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
     }
 }

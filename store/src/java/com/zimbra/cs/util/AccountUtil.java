@@ -41,8 +41,10 @@ import javax.mail.internet.MimeMultipart;
 
 import org.apache.commons.codec.binary.Hex;
 
+import com.sun.mail.smtp.SMTPMessage;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.DomainBy;
+import com.zimbra.common.account.ZAttrProvisioning.AccountStatus;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
@@ -58,6 +60,7 @@ import com.zimbra.common.zmime.ZMimeBodyPart;
 import com.zimbra.common.zmime.ZMimeMultipart;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Domain;
@@ -69,10 +72,17 @@ import com.zimbra.cs.account.TokenUtil;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxMaintenance;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.MetadataList;
 import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.pubsub.PubSubService;
+import com.zimbra.cs.pubsub.message.FlushCacheMsg;
 import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.soap.admin.type.CacheEntrySelector;
+import com.zimbra.soap.admin.type.CacheEntryType;
+import com.zimbra.soap.admin.type.CacheSelector;
 import com.zimbra.soap.admin.type.DataSourceType;
 
 public class AccountUtil {
@@ -385,7 +395,7 @@ public class AccountUtil {
         }
 
         /**
-         * 
+         *
          * @param account
          * @param internalOnly only match internal addresses, i.e. ignore zimbraAllowFromAddress values
          * @param matchSendAs match sendAs/sendAsDistList addresses granted
@@ -478,28 +488,27 @@ public class AccountUtil {
                 ZimbraLog.account.warn("no server associated with acccount " + account.getName());
                 return null;
             }
-            return getBaseUri(server);
+            return getBaseUri(server, Provisioning.affinityServer(account));
         } catch (ServiceException e) {
             ZimbraLog.account.warn("error fetching SOAP URI for account " + account.getName(), e);
             return null;
         }
     }
 
-    public static String getBaseUri(Server server) {
-        if (server == null)
+    public static String getBaseUri(Server server, String podIp) {
+        if (podIp == null)
             return null;
 
-        String host = server.getAttr(Provisioning.A_zimbraServiceHostname);
         String mode = server.getAttr(Provisioning.A_zimbraMailMode, "http");
         int port = server.getIntAttr(Provisioning.A_zimbraMailPort, 0);
         if (port > 0 && !mode.equalsIgnoreCase("https") && !mode.equalsIgnoreCase("redirect")) {
-            return "http://" + host + ':' + port;
+            return "http://" + podIp + ':' + port;
         } else if (!mode.equalsIgnoreCase("http")) {
             port = server.getIntAttr(Provisioning.A_zimbraMailSSLPort, 0);
             if (port > 0)
-                return "https://" + host + ':' + port;
+                return "https://" + podIp + ':' + port;
         }
-        ZimbraLog.account.warn("no service port available on host " + host);
+        ZimbraLog.account.warn("no service port available on host " + podIp);
         return null;
     }
 
@@ -549,15 +558,15 @@ public class AccountUtil {
             ZimbraLog.addToContext(nameKey, acct.getName());
         }
     }
-    
+
     /**
      * Check if given account is a galsync account
      * @param account to lookup
      * @return true if account is galsync account, false otherwise.
      */
-    
+
     public static boolean isGalSyncAccount(Account account) {
-        boolean isGalSync = false;    	
+        boolean isGalSync = false;
         try {
             Domain domain = Provisioning.getInstance().getDomain(account);
             if (domain != null) {
@@ -799,9 +808,8 @@ public class AccountUtil {
     }
 
     public static String getExtUserLoginURL(Account owner) throws ServiceException {
-        return ZimbraServlet.getServiceUrl(owner.getServer(),
-            Provisioning.getInstance().getDomain(owner),
-            "?virtualacctdomain=" + owner.getDomainName());
+        return ZimbraServlet.getServiceUrl(owner.getServer(), Provisioning.getInstance().getDomain(owner),
+                "?virtualacctdomain=" + owner.getDomainName());
     }
 
     public static String getShareAcceptURL(Account account, int folderId, String externalUserEmail)
@@ -828,7 +836,64 @@ public class AccountUtil {
         String hmac = TokenUtil.getHmac(data, key.getKey());
         String encoded = key.getVersion() + "_" + hmac + "_" + data;
         String path = "/service/extuserprov/?p=" + encoded;
-        return ZimbraServlet.getServiceUrl(account.getServer(),
-            Provisioning.getInstance().getDomain(account), path);
+        return ZimbraServlet.getServiceUrl(account.getServer(), Provisioning.getInstance().getDomain(account), path);
+    }
+
+    public static void broadcastFlushCache(Account account) {
+        CacheSelector selector = new CacheSelector(false, CacheEntryType.account.name());
+        selector.addEntry(new CacheEntrySelector(CacheEntrySelector.CacheEntryBy.id, account.getId()));
+        PubSubService.getInstance().publish(PubSubService.BROADCAST, new FlushCacheMsg(selector));
+    }
+
+    public static void checkAliasLoginAllowed(Account acct, String loginEmailAddr) throws ServiceException {
+        String accountName = acct.getName();
+        if (!LC.alias_login_enabled.booleanValue()) {
+            if (accountName.indexOf('@') != -1 && loginEmailAddr.indexOf('@') != -1 &&
+                    !accountName.equalsIgnoreCase(loginEmailAddr)) {
+                ZimbraLog.account.debug("Alias login not enabled. '%s' is the alias account", loginEmailAddr);
+                throw AuthFailedServiceException.AUTH_FAILED(loginEmailAddr, loginEmailAddr, "alias login not enabled.");
+            } else {
+                String acctLocalPart = EmailUtil.getLocalPartAndDomain(accountName) == null ?
+                        accountName : EmailUtil.getLocalPartAndDomain(accountName)[0];
+                String loginEmailLocalPart = EmailUtil.getLocalPartAndDomain(loginEmailAddr) == null ?
+                        loginEmailAddr : EmailUtil.getLocalPartAndDomain(loginEmailAddr)[0];
+                if (!acctLocalPart.equalsIgnoreCase(loginEmailLocalPart)) {
+                    ZimbraLog.account.debug("Alias login not enabled. '%s' is the alias account", loginEmailAddr);
+                    throw AuthFailedServiceException.AUTH_FAILED(loginEmailAddr, loginEmailAddr, "alias login not enabled.");
+                }
+            }
+        }
+    }
+
+    /**
+     *
+     * @param acct
+     * @return SMTPMessage object
+     * @throws ServiceException
+     * @throws MessagingException
+     */
+    public static SMTPMessage getSmtpMessageObj(Account acct) throws ServiceException, MessagingException {
+        return new SMTPMessage(JMSession.getSmtpSession(Provisioning.getInstance().getDomain(acct)));
+    }
+
+    public static MailboxMaintenance beginMaintenanceAndFlushCache(Account account, int mailboxId) throws ServiceException {
+        MailboxMaintenance maintenance = MailboxManager.getInstance().beginMaintenance(account.getId(), mailboxId);
+        account.setAccountStatus(AccountStatus.maintenance);
+        broadcastFlushCache(account);
+        return maintenance;
+    }
+
+    public static void endMaintenanceAndFlushCache(MailboxMaintenance maintenance, boolean success, boolean removeFromCache) throws ServiceException {
+        MailboxManager.getInstance().endMaintenance(maintenance, success, removeFromCache);
+        Account acct;
+        if (maintenance.getMailbox() != null) {
+            acct = maintenance.getMailbox().getAccount();
+        } else {
+            // MailboxMaintenance objects for newly-created accounts don't have a reference to the underlying Mailbox
+            acct = Provisioning.getInstance().getAccountById(maintenance.getAccountId());
+        }
+        acct.setAccountStatus(AccountStatus.active);
+        broadcastFlushCache(acct);
     }
 }
+

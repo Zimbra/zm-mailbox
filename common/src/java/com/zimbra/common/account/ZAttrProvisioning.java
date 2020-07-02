@@ -298,6 +298,24 @@ public class ZAttrProvisioning {
         public boolean isSsl() { return this == ssl;}
     }
 
+    public static enum DelayedIndexStatus {
+        suppressed("suppressed"),
+        waitingForSearch("waitingForSearch"),
+        indexing("indexing");
+        private String mValue;
+        private DelayedIndexStatus(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static DelayedIndexStatus fromString(String s) throws ServiceException {
+            for (DelayedIndexStatus value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isSuppressed() { return this == suppressed;}
+        public boolean isWaitingForSearch() { return this == waitingForSearch;}
+        public boolean isIndexing() { return this == indexing;}
+    }
+
     public static enum DistributionListSubscriptionPolicy {
         ACCEPT("ACCEPT"),
         REJECT("REJECT"),
@@ -458,6 +476,24 @@ public class ZAttrProvisioning {
         public boolean isPending() { return this == pending;}
         public boolean isFailed() { return this == failed;}
         public boolean isExpired() { return this == expired;}
+    }
+
+    public static enum FeatureResetPasswordStatus {
+        enabled("enabled"),
+        suspended("suspended"),
+        disabled("disabled");
+        private String mValue;
+        private FeatureResetPasswordStatus(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static FeatureResetPasswordStatus fromString(String s) throws ServiceException {
+            for (FeatureResetPasswordStatus value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isEnabled() { return this == enabled;}
+        public boolean isSuspended() { return this == suspended;}
+        public boolean isDisabled() { return this == disabled;}
     }
 
     public static enum FeatureSocialFiltersEnabled {
@@ -1994,6 +2030,22 @@ public class ZAttrProvisioning {
         public boolean isOUTOFOFFICE() { return this == OUTOFOFFICE;}
     }
 
+    public static enum PrefPasswordRecoveryAddressStatus {
+        verified("verified"),
+        pending("pending");
+        private String mValue;
+        private PrefPasswordRecoveryAddressStatus(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static PrefPasswordRecoveryAddressStatus fromString(String s) throws ServiceException {
+            for (PrefPasswordRecoveryAddressStatus value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isVerified() { return this == verified;}
+        public boolean isPending() { return this == pending;}
+    }
+
     public static enum PrefPop3DeleteOption {
         keep("keep"),
         read("read"),
@@ -2885,6 +2937,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraAccountStatus = "zimbraAccountStatus";
 
     /**
+     * Account Suspension reason. It describes the actual cause for account
+     * suspension if any and it must be updated with account status.
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3078)
+    public static final String A_zimbraAccountSuspensionReason = "zimbraAccountSuspensionReason";
+
+    /**
      * Zimbra access control list
      *
      * @since ZCS 5.0.7
@@ -2925,6 +2986,22 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=3002)
     public static final String A_zimbraActiveSyncEhcacheMaxDiskSize = "zimbraActiveSyncEhcacheMaxDiskSize";
+
+    /**
+     * filter to decide members of the address list using gal
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=3074)
+    public static final String A_zimbraAddressListGalFilter = "zimbraAddressListGalFilter";
+
+    /**
+     * filter to decide members of the address list using ldap
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=3076)
+    public static final String A_zimbraAddressListLdapFilter = "zimbraAddressListLdapFilter";
 
     /**
      * access control mechanism for admin access acl: ACL based access
@@ -4732,6 +4809,16 @@ public class ZAttrProvisioning {
     public static final String A_zimbraConstraint = "zimbraConstraint";
 
     /**
+     * If TRUE, incoming emails will cause an AFFINITY event to be logged for
+     * each recipient. This allows for more accurate &quot;related
+     * contacts&quot; results, at the cost of higher index usage
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3049)
+    public static final String A_zimbraContactAffinityEventLoggingEnabled = "zimbraContactAffinityEventLoggingEnabled";
+
+    /**
      * Deprecated since: 6.0.7. deprecated in favor of
      * zimbraContactEmailFields, for bug 45475. Orig desc: Comma separates
      * list of attributes in contact object to search for email addresses
@@ -5471,6 +5558,46 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDefaultFolderFlags = "zimbraDefaultFolderFlags";
 
     /**
+     * If true, search results will be sorted by relevance if a sortBy value
+     * is not provided.
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3053)
+    public static final String A_zimbraDefaultSortByRelevance = "zimbraDefaultSortByRelevance";
+
+    /**
+     * The amount of time that an account has to be inactive for in order for
+     * its index to be deleted and its zimbraDelayedIndexStatus set to
+     * &quot;suppressed&quot;. A value of 0 means that auto-deletion of index
+     * data is disabled.. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4003)
+    public static final String A_zimbraDelayedIndexInactiveAccountAge = "zimbraDelayedIndexInactiveAccountAge";
+
+    /**
+     * Whether MBS generates index data of the account&#039;s mailbox. The
+     * key works only when zimbraFeatureDelayedIndexEnabled is TRUE.
+     * suppressed - Not generate index. (default) When administrator accesses
+     * the account via admin console, it changes to
+     * &quot;waitingForSearch&quot;. When the account logs in via SOAP, IMAP
+     * or MobileSync protocol, it changes to &quot;indexing&quot;.
+     * waitingForSearch - Not generate index. When administrator executes
+     * text search on the account, it changes to &quot;indexing&quot;. When
+     * the account logs in via SOAP, IMAP or MobileSync protocol, it changes
+     * to &quot;indexing&quot;. indexing - Generate index
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=9004)
+    public static final String A_zimbraDelayedIndexStatus = "zimbraDelayedIndexStatus";
+
+    /**
      * allowed passcode lockout duration. Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
@@ -5827,6 +5954,24 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDomainStatus = "zimbraDomainStatus";
 
     /**
+     * Can be used by an external service to indicate that a trial is set to
+     * convert to active at expiration.
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9011)
+    public static final String A_zimbraDomainTrialConvertAtExpiration = "zimbraDomainTrialConvertAtExpiration";
+
+    /**
+     * Can be used by an external service to indicate when a trial will
+     * expire.
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9010)
+    public static final String A_zimbraDomainTrialExpirationDate = "zimbraDomainTrialExpirationDate";
+
+    /**
      * should be one of: local, alias
      */
     @ZAttr(id=212)
@@ -5878,7 +6023,10 @@ public class ZAttrProvisioning {
     public static final String A_zimbraEmptyFolderOpTimeout = "zimbraEmptyFolderOpTimeout";
 
     /**
-     * URL of ephemeral storage backend
+     * Deprecated since: 10.0.0. Deprecated in Zimbra X in favor of ephemeral
+     * data being stored in the existing redis deployment, governed by the
+     * redis_service_uri LC attribute. Orig desc: URL of ephemeral storage
+     * backend
      *
      * @since ZCS 8.7.6
      */
@@ -5892,6 +6040,89 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1075)
     public static final String A_zimbraErrorReportUrl = "zimbraErrorReportUrl";
+
+    /**
+     * URL of the event storage backend to be queried for event analytics
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3048)
+    public static final String A_zimbraEventBackendURL = "zimbraEventBackendURL";
+
+    /**
+     * If an event batch remains unmodified for this duration of time, it
+     * will be flushed regardless of its size. Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3045)
+    public static final String A_zimbraEventBatchLifetime = "zimbraEventBatchLifetime";
+
+    /**
+     * Event batch size used by batching EventLogHandlers such as
+     * &quot;solrcloud&quot;. When this limit is reached, the batch is
+     * flushed.
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3044)
+    public static final String A_zimbraEventBatchMaxSize = "zimbraEventBatchMaxSize";
+
+    /**
+     * The initial number of shards that the event index is created with
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3059)
+    public static final String A_zimbraEventIndexInitialNumShards = "zimbraEventIndexInitialNumShards";
+
+    /**
+     * The name of the Solr collection to be used for indexing mailbox event
+     * data.
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3046)
+    public static final String A_zimbraEventIndexName = "zimbraEventIndexName";
+
+    /**
+     * Replication factor for the event index
+     *
+     * @since ZCS 10.0.0
+     */
+    @ZAttr(id=3060)
+    public static final String A_zimbraEventIndexReplicationFactor = "zimbraEventIndexReplicationFactor";
+
+    /**
+     * Event logging backends to be used for storing events. The value before
+     * the first colon identifies the implementation Factory; everything
+     * after is configuration. Current options are: 1) File backend that logs
+     * events in a log file. It is recommended to keep this enabled. 2)
+     * SolrCloud backend. Format is &quot;solrcloud:[ZooKeeper URL]&quot;
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3042)
+    public static final String A_zimbraEventLoggingBackends = "zimbraEventLoggingBackends";
+
+    /**
+     * Whether event logging is enabled
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3047)
+    public static final String A_zimbraEventLoggingEnabled = "zimbraEventLoggingEnabled";
+
+    /**
+     * Number of consumer threads used to process the event logging queue
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3043)
+    public static final String A_zimbraEventLoggingNumThreads = "zimbraEventLoggingNumThreads";
 
     /**
      * Indicates the account should be excluded from Crossmailbox searchers.
@@ -6309,11 +6540,12 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureContactBackupEnabled = "zimbraFeatureContactBackupEnabled";
 
     /**
-     * Sleep time between subsequent contact backups. 0 means that contact
-     * backup is disabled. . Must be in valid duration format:
-     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
-     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
-     * specified, the default is s(seconds).
+     * Deprecated since: 8.8.6. No longer used by ContactBackupRequest SOAP
+     * handler. Orig desc: Sleep time between subsequent contact backups. 0
+     * means that contact backup is disabled. . Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @since ZCS 8.8.5
      */
@@ -6383,6 +6615,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=2014)
     public static final String A_zimbraFeatureDataSourcePurgingEnabled = "zimbraFeatureDataSourcePurgingEnabled";
+
+    /**
+     * Whether the &quot;delayed index&quot; feature is enabled. If FALSE,
+     * index is always generated
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=9003)
+    public static final String A_zimbraFeatureDelayedIndexEnabled = "zimbraFeatureDelayedIndexEnabled";
 
     /**
      * enable end-user mail discarding defined in mail filters features
@@ -6744,10 +6985,46 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureReadReceiptsEnabled = "zimbraFeatureReadReceiptsEnabled";
 
     /**
+     * Whether the Related Contacts feature is enabled on the account/COS
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3052)
+    public static final String A_zimbraFeatureRelatedContactsEnabled = "zimbraFeatureRelatedContactsEnabled";
+
+    /**
+     * status of password reset feature
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=2134)
+    public static final String A_zimbraFeatureResetPasswordStatus = "zimbraFeatureResetPasswordStatus";
+
+    /**
+     * time for which reset password feature is suspended. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=2142)
+    public static final String A_zimbraFeatureResetPasswordSuspensionTime = "zimbraFeatureResetPasswordSuspensionTime";
+
+    /**
      * saved search feature
      */
     @ZAttr(id=139)
     public static final String A_zimbraFeatureSavedSearchesEnabled = "zimbraFeatureSavedSearchesEnabled";
+
+    /**
+     * Whether to enable Search History
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3024)
+    public static final String A_zimbraFeatureSearchHistoryEnabled = "zimbraFeatureSearchHistoryEnabled";
 
     /**
      * enabled sharing
@@ -6939,6 +7216,22 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=544)
     public static final String A_zimbraFeatureZimbraAssistantEnabled = "zimbraFeatureZimbraAssistantEnabled";
+
+    /**
+     * Whether to allow a user to access Zimbra X desktop
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3080)
+    public static final String A_zimbraFeatureZXDesktopEnabled = "zimbraFeatureZXDesktopEnabled";
+
+    /**
+     * Whether to allow a user to access Zimbra X web client
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3079)
+    public static final String A_zimbraFeatureZXWebEnabled = "zimbraFeatureZXWebEnabled";
 
     /**
      * whether crash reporting is enabled in the Android client
@@ -7675,6 +7968,23 @@ public class ZAttrProvisioning {
     public static final String A_zimbraGroupId = "zimbraGroupId";
 
     /**
+     * LDAP attribute to HAB Group Member attribute mapping
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=3073)
+    public static final String A_zimbraHABMemberLdapAttrMap = "zimbraHABMemberLdapAttrMap";
+
+    /**
+     * seniority index of the group or group member which will determine the
+     * sorting order in the hierarchical address book
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=3071)
+    public static final String A_zimbraHABSeniorityIndex = "zimbraHABSeniorityIndex";
+
+    /**
      * help URL for admin
      *
      * @since ZCS 5.0.7
@@ -7711,6 +8021,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=353)
     public static final String A_zimbraHideInGal = "zimbraHideInGal";
+
+    /**
+     * root group id of hierarchical address book
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=3072)
+    public static final String A_zimbraHierarchicalAddressBookRoot = "zimbraHierarchicalAddressBookRoot";
 
     /**
      * Deprecated since: 6.0.0_BETA2. deprecated in favor for
@@ -8142,6 +8460,108 @@ public class ZAttrProvisioning {
     public static final String A_zimbraIMService = "zimbraIMService";
 
     /**
+     * The maximum number of items that can be held in memory while queued
+     * for indexing
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3034)
+    public static final String A_zimbraIndexingQueueMaxSize = "zimbraIndexingQueueMaxSize";
+
+    /**
+     * Time that mailstore will wait between attempts to take/put an indexing
+     * task from/to a shared indexing queue.. Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3037)
+    public static final String A_zimbraIndexingQueuePollingInterval = "zimbraIndexingQueuePollingInterval";
+
+    /**
+     * Time that mailstore will wait for space to free up in the shared
+     * indexing queue. Increase this value if you are reindexing several
+     * large mailboxes simultaneously.. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3040)
+    public static final String A_zimbraIndexingQueueTimeout = "zimbraIndexingQueueTimeout";
+
+    /**
+     * Time that the mailstore will wait between attempts to request status
+     * from an external indexing service (Solr or SolrCloud).. Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3031)
+    public static final String A_zimbraIndexPollingInterval = "zimbraIndexPollingInterval";
+
+    /**
+     * Maximum number of threads for re-indexing. Re-index threads are not
+     * pooled.
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3036)
+    public static final String A_zimbraIndexReIndexThreads = "zimbraIndexReIndexThreads";
+
+    /**
+     * Time that the mailstore will wait for an external indexing service to
+     * fully replicate an index for a single mailbox. When using SolrCloud,
+     * this is the time that a mailstore will wait for all replicas of a SOLR
+     * collection to go live and sync up to the leader.. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3030)
+    public static final String A_zimbraIndexReplicationTimeout = "zimbraIndexReplicationTimeout";
+
+    /**
+     * The number of terms SOLR will cache during term enumeration queries
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3028)
+    public static final String A_zimbraIndexTermsCacheSize = "zimbraIndexTermsCacheSize";
+
+    /**
+     * Number of threads used for indexing items from the queue
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3035)
+    public static final String A_zimbraIndexThreads = "zimbraIndexThreads";
+
+    /**
+     * URL for accessing external indexing service. First part of the URL
+     * before the first colon identifies the implementation Factory and
+     * should be registered by calling IndexStore.registerFactory(prefix,
+     * classname). ZCS ships with two index Factory implementations: 1)
+     * SolrIndex identified by prefix &quot;solr&quot;. 2) SolrCloudIndex
+     * identified by prefix &quot;solrcloud&quot;. If using solrcloud, the
+     * URL should be set to that of the ZooKeeper host managing the SOLR
+     * cluster.
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3027)
+    public static final String A_zimbraIndexURL = "zimbraIndexURL";
+
+    /**
      * Deprecated since: 5.0. Installed skin list is a per server property,
      * the list is now generated by directory scan of skin files. Orig desc:
      * Skins installed and available on all servers (this is global config
@@ -8219,6 +8639,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraInternalSharingDomain = "zimbraInternalSharingDomain";
 
     /**
+     * list of invalid jwt
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=2133)
+    public static final String A_zimbraInvalidJWTokens = "zimbraInvalidJWTokens";
+
+    /**
      * This attribute is used for failed authentication requests. It
      * indicates the minimum time between current req and last req from the
      * same IP before this suspended IP will be reinstated
@@ -8274,6 +8702,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1242)
     public static final String A_zimbraIsACLGroup = "zimbraIsACLGroup";
+
+    /**
+     * whether address list is active or not
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=3075)
+    public static final String A_zimbraIsAddressListActive = "zimbraIsAddressListActive";
 
     /**
      * set to true for admin accounts
@@ -8572,6 +9008,33 @@ public class ZAttrProvisioning {
     public static final String A_zimbraLowestSupportedAuthVersion = "zimbraLowestSupportedAuthVersion";
 
     /**
+     * URL for accessing the machine learning service. First part of the URL
+     * before the first colon identifies the implementation Factory. Only the
+     * &quot;zimbra&quot; prefix is currently supported.
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3055)
+    public static final String A_zimbraMachineLearningBackendURL = "zimbraMachineLearningBackendURL";
+
+    /**
+     * Serialized info about registered classifiers
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3054)
+    public static final String A_zimbraMachineLearningClassifierInfo = "zimbraMachineLearningClassifierInfo";
+
+    /**
+     * The names of classifiers to be used for handling known classification
+     * tasks. Format is taskName:classifierLabel[:probThreshold].
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3056)
+    public static final String A_zimbraMachineLearningTaskConfig = "zimbraMachineLearningTaskConfig";
+
+    /**
      * RFC822 email address of this recipient for accepting mail
      */
     @ZAttr(id=3)
@@ -8682,6 +9145,22 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1832)
     public static final String A_zimbraMailboxdSSLRenegotiationAllowed = "zimbraMailboxdSSLRenegotiationAllowed";
+
+    /**
+     * The initial number of shards that the mailbox index is created with
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3058)
+    public static final String A_zimbraMailboxIndexInitialNumShards = "zimbraMailboxIndexInitialNumShards";
+
+    /**
+     * The name of the Solr collection to be used for indexing mailbox data.
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3057)
+    public static final String A_zimbraMailboxIndexName = "zimbraMailboxIndexName";
 
     /**
      * serverId:mboxId of mailbox before being moved
@@ -9395,6 +9874,17 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMaxContactsPerPage = "zimbraMaxContactsPerPage";
 
     /**
+     * Maximum number of times a server will re-attempt to send a document to
+     * an indexing service. When this value is higher than 0 and an attempt
+     * to index a document fails, the server will put the document into the
+     * indexing queue for additional indexing attempts.
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3038)
+    public static final String A_zimbraMaxIndexingRetries = "zimbraMaxIndexingRetries";
+
+    /**
      * max number of messages/conversations per page, Web client (not server)
      * verifies that zimbraPrefMailItemsPerPage should not exceed this
      * attribute.
@@ -9403,6 +9893,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1011)
     public static final String A_zimbraMaxMailItemsPerPage = "zimbraMaxMailItemsPerPage";
+
+    /**
+     * Maximum number of clauses in batched Solr delete-by-query operations;
+     * 0 means no limit
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4005)
+    public static final String A_zimbraMaxSolrBatchDeletionSize = "zimbraMaxSolrBatchDeletionSize";
 
     /**
      * max number of voice items per page, Web client (not server) verifies
@@ -10252,12 +10751,28 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMobileSearchMimeSupportEnabled = "zimbraMobileSearchMimeSupportEnabled";
 
     /**
+     * Whether to permit syncing shared calendar folders
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=4002)
+    public static final String A_zimbraMobileShareCalendarEnabled = "zimbraMobileShareCalendarEnabled";
+
+    /**
      * Whether to permit syncing shared contact folders
      *
      * @since ZCS 8.5.0
      */
     @ZAttr(id=1570)
     public static final String A_zimbraMobileShareContactEnabled = "zimbraMobileShareContactEnabled";
+
+    /**
+     * Whether to permit syncing shared mail folders
+     *
+     * @since ZCS 9.0
+     */
+    @ZAttr(id=4001)
+    public static final String A_zimbraMobileShareMailEnabled = "zimbraMobileShareMailEnabled";
 
     /**
      * indicates whether the application can forward original email as RFC
@@ -11779,12 +12294,32 @@ public class ZAttrProvisioning {
     public static final String A_zimbraNotifySSLServerEnabled = "zimbraNotifySSLServerEnabled";
 
     /**
+     * Searching for the same query this many times will result in a prompt
+     * offering the user to save this query as a search folder. This will
+     * only happen once per query. A value of 0 disables this feature.
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3025)
+    public static final String A_zimbraNumSearchesForSavedSearchPrompt = "zimbraNumSearchesForSavedSearchPrompt";
+
+    /**
      * Credentials associated with a successfully authorized OAuth Consumer
      *
      * @since ZCS 8.7.0,9.0.0
      */
     @ZAttr(id=2049)
     public static final String A_zimbraOAuthAccessor = "zimbraOAuthAccessor";
+
+    /**
+     * OAuth consumer API scope. It is in the format of apiscope1{separator
+     * character}apiscope2:consumer-app-name. The separator between apiscope1
+     * and apiscope2 is consumer-app specific
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3066)
+    public static final String A_zimbraOAuthConsumerAPIScope = "zimbraOAuthConsumerAPIScope";
 
     /**
      * OAuth Consumer id, secret, and application name. It is in the format
@@ -11794,6 +12329,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1131)
     public static final String A_zimbraOAuthConsumerCredentials = "zimbraOAuthConsumerCredentials";
+
+    /**
+     * OAuth redirectURI. It is in the format of
+     * redirectURI:consumer-app-name
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3065)
+    public static final String A_zimbraOAuthConsumerRedirectUri = "zimbraOAuthConsumerRedirectUri";
 
     /**
      * the handler class for the object type
@@ -11824,6 +12368,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=161)
     public static final String A_zimbraObjectType = "zimbraObjectType";
+
+    /**
+     * temporary RFC822 email address of this recipient for accepting mail
+     * during account rename
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=2143)
+    public static final String A_zimbraOldMailAddress = "zimbraOldMailAddress";
 
     /**
      * allowed OpenID Provider Endpoint URLs for authentication
@@ -11866,6 +12419,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1256)
     public static final String A_zimbraPasswordAllowedPunctuationChars = "zimbraPasswordAllowedPunctuationChars";
+
+    /**
+     * whether or not blocking common passwords is enabled
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3081)
+    public static final String A_zimbraPasswordBlockCommonEnabled = "zimbraPasswordBlockCommonEnabled";
 
     /**
      * registered change password listener name
@@ -12052,6 +12613,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPasswordMustChange = "zimbraPasswordMustChange";
 
     /**
+     * Maximum attempts for password recovery resend
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=2141)
+    public static final String A_zimbraPasswordRecoveryMaxAttempts = "zimbraPasswordRecoveryMaxAttempts";
+
+    /**
      * phonetic company name
      *
      * @since ZCS 7.0.0
@@ -12209,6 +12778,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=307)
     public static final String A_zimbraPreAuthKey = "zimbraPreAuthKey";
+
+    /**
+     * whether or not the user has accepted the client&#039;s terms of
+     * service
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=3068)
+    public static final String A_zimbraPrefAcceptedClientTOS = "zimbraPrefAcceptedClientTOS";
 
     /**
      * whether or not account tree is expanded
@@ -12764,6 +13342,17 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=144)
     public static final String A_zimbraPrefDedupeMessagesSentToSelf = "zimbraPrefDedupeMessagesSentToSelf";
+
+    /**
+     * Default calendar folder id. Current default calendar id is 10, as
+     * calendar folder with id 10, is created for all users. Cos level change
+     * is blocked. So admin can not change value of this attribute on cos
+     * level.
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=2994)
+    public static final String A_zimbraPrefDefaultCalendarId = "zimbraPrefDefaultCalendarId";
 
     /**
      * default font size
@@ -13569,6 +14158,22 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefOutOfOfficeUntilDate = "zimbraPrefOutOfOfficeUntilDate";
 
     /**
+     * RFC822 recovery email address for an account
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=2135)
+    public static final String A_zimbraPrefPasswordRecoveryAddress = "zimbraPrefPasswordRecoveryAddress";
+
+    /**
+     * End-user recovery email address verification status
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=2136)
+    public static final String A_zimbraPrefPasswordRecoveryAddressStatus = "zimbraPrefPasswordRecoveryAddressStatus";
+
+    /**
      * When messages are accessed via POP3: - keep: Leave DELE&#039;ed
      * messages in Inbox. - read: Mark RETR&#039;ed messages as read, and
      * leave DELE&#039;ed messages in Inbox. - trash: Move DELE&#039;ed
@@ -13771,6 +14376,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=355)
     public static final String A_zimbraPrefSkin = "zimbraPrefSkin";
+
+    /**
+     * whether or not slack reminders for appointments and tasks are enabled
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=3069)
+    public static final String A_zimbraPrefSlackCalendarReminderEnabled = "zimbraPrefSlackCalendarReminderEnabled";
 
     /**
      * sort order for list view in the WEB UI
@@ -13997,12 +14610,22 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrevFoldersToTrackMax = "zimbraPrevFoldersToTrackMax";
 
     /**
-     * URL of the previous ephemeral storage backend
+     * Deprecated since: 10.0.0. Deprecated in Zimbra X; the ephemeral
+     * backend is no longer governed by an LDAP attribute. Orig desc: URL of
+     * the previous ephemeral storage backend
      *
      * @since ZCS 8.8.1
      */
     @ZAttr(id=3018)
     public static final String A_zimbraPreviousEphemeralBackendURL = "zimbraPreviousEphemeralBackendURL";
+
+    /**
+     * timestamp of account rename and previous name of the account
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=2144)
+    public static final String A_zimbraPrimaryEmailChangeHistory = "zimbraPrimaryEmailChangeHistory";
 
     /**
      * whether this instance of Zimbra is running ZCS or some other
@@ -14107,6 +14730,26 @@ public class ZAttrProvisioning {
     public static final String A_zimbraQuotaWarnPercent = "zimbraQuotaWarnPercent";
 
     /**
+     * Expiry time for recovery email code verification. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=2140)
+    public static final String A_zimbraRecoveryAccountCodeValidity = "zimbraRecoveryAccountCodeValidity";
+
+    /**
+     * Recovery email verification data
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=2139)
+    public static final String A_zimbraRecoveryAccountVerificationData = "zimbraRecoveryAccountVerificationData";
+
+    /**
      * redolog rollover destination
      */
     @ZAttr(id=76)
@@ -14189,6 +14832,36 @@ public class ZAttrProvisioning {
     public static final String A_zimbraRegexMaxAccessesWhenMatching = "zimbraRegexMaxAccessesWhenMatching";
 
     /**
+     * Maximum number of items to put into a single reindexing task.
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3039)
+    public static final String A_zimbraReindexBatchSize = "zimbraReindexBatchSize";
+
+    /**
+     * The time window for which related contacts are calculated; emails
+     * older than this will not affect the contact affinity calculation. Must
+     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3050)
+    public static final String A_zimbraRelatedContactsMaxAge = "zimbraRelatedContactsMaxAge";
+
+    /**
+     * The number of times two contacts have to co-occur on an email in order
+     * to be considered related
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3051)
+    public static final String A_zimbraRelatedContactsMinConcurrenceCount = "zimbraRelatedContactsMinConcurrenceCount";
+
+    /**
      * port number on which the remote IMAP server should listen
      *
      * @since ZCS 8.8.1
@@ -14247,6 +14920,26 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=337)
     public static final String A_zimbraRemoteManagementUser = "zimbraRemoteManagementUser";
+
+    /**
+     * Recovery code sent to recovery email address
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=2137)
+    public static final String A_zimbraResetPasswordRecoveryCode = "zimbraResetPasswordRecoveryCode";
+
+    /**
+     * Expiry time for password reset recovery code. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=2138)
+    public static final String A_zimbraResetPasswordRecoveryCodeExpiry = "zimbraResetPasswordRecoveryCodeExpiry";
 
     /**
      * Custom response headers. For example, can be used to add a P3P header
@@ -15324,6 +16017,22 @@ public class ZAttrProvisioning {
     public static final String A_zimbraScheduledTaskRetryPolicy = "zimbraScheduledTaskRetryPolicy";
 
     /**
+     * Search history entries older than this will not show up in search
+     * suggestions and will not be included in the count used for
+     * zimbraNumSearchesForSavedSearchPrompt or as part of
+     * GetSearchHistoryResponse/SearchSuggestResponse. If purging is enabled,
+     * these entries will be purged as part of a mailbox purge.. Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3026)
+    public static final String A_zimbraSearchHistoryAge = "zimbraSearchHistoryAge";
+
+    /**
      * Object classes to add when creating a zimbra server object.
      *
      * @since ZCS 6.0.0_BETA1
@@ -15394,6 +16103,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1605)
     public static final String A_zimbraServerVersionType = "zimbraServerVersionType";
+
+    /**
+     * Subscriber/service account number. Custom attribute for account
+     * identity.
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3077)
+    public static final String A_zimbraServiceAccountNumber = "zimbraServiceAccountNumber";
 
     /**
      * services that are enabled on this server
@@ -15582,6 +16300,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1900)
     public static final String A_zimbraShortTermGranteeCacheSize = "zimbraShortTermGranteeCacheSize";
+
+    /**
+     * whether or not to show client Terms of Service
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=3067)
+    public static final String A_zimbraShowClientTOS = "zimbraShowClientTOS";
 
     /**
      * Whether edit header commands in admin sieve scripts are enabled or
@@ -16025,6 +16751,35 @@ public class ZAttrProvisioning {
     public static final String A_zimbraSocialcastURL = "zimbraSocialcastURL";
 
     /**
+     * Amount of time between batched Solr delete-by-query operations. Must
+     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=4004)
+    public static final String A_zimbraSolrBatchDeletionInterval = "zimbraSolrBatchDeletionInterval";
+
+    /**
+     * The number of times the server will attempt to connect to a SOLR core.
+     * 1 is the recommended setting.
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3029)
+    public static final String A_zimbraSolrMaxRetries = "zimbraSolrMaxRetries";
+
+    /**
+     * Replication factor for the mailbox index
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3032)
+    public static final String A_zimbraSolrReplicationFactor = "zimbraSolrReplicationFactor";
+
+    /**
      * If TRUE, spam messages will be affected by user and admin mail filters
      * instead of being automatically filed into the Junk folder.
      *
@@ -16212,9 +16967,11 @@ public class ZAttrProvisioning {
     public static final String A_zimbraSpnegoAuthTargetName = "zimbraSpnegoAuthTargetName";
 
     /**
-     * Specifies the JedisPool size used by SSDBEphemeralStore. Higher pool
-     * sizes allow for more simultaneous connections to SSDB. A value of 0
-     * will cause the pool size to be unlimited.
+     * Deprecated since: 10.0.0. As of Zimbra X, SSDBEphemeralStore no longer
+     * uses the Jedis libary. Orig desc: Specifies the JedisPool size used by
+     * SSDBEphemeralStore. Higher pool sizes allow for more simultaneous
+     * connections to SSDB. A value of 0 will cause the pool size to be
+     * unlimited.
      *
      * @since ZCS 8.7.6
      */
@@ -16222,12 +16979,13 @@ public class ZAttrProvisioning {
     public static final String A_zimbraSSDBResourcePoolSize = "zimbraSSDBResourcePoolSize";
 
     /**
-     * Specifies the amount of time a thread will wait for a JedisPool
-     * resource. A value of 0 will cause the thread to block indefinitely..
-     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
-     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
-     * ms - milliseconds. If time unit is not specified, the default is
-     * s(seconds).
+     * Deprecated since: 10.0.0. As of Zimbra X, SSDBEphemeralStore no longer
+     * uses the Jedis libary. Orig desc: Specifies the amount of time a
+     * thread will wait for a JedisPool resource. A value of 0 will cause the
+     * thread to block indefinitely.. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @since ZCS 8.7.6
      */
@@ -17028,6 +17786,49 @@ public class ZAttrProvisioning {
     public static final String A_zimbraWebClientSupportedHelps = "zimbraWebClientSupportedHelps";
 
     /**
+     * Whether to redirect to classic UI for the selected browsers not
+     * supported by Modern WebClient.
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=9005)
+    public static final String A_zimbraWebclientUnsupportedBrowserRedirectToClassicEnabled = "zimbraWebclientUnsupportedBrowserRedirectToClassicEnabled";
+
+    /**
+     * Regex for unsupported browsers by Modern webclient to redirect to
+     * classic webclient
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=9006)
+    public static final String A_zimbraWebclientUnsupportedBrowserRedirectToClassicUserAgents = "zimbraWebclientUnsupportedBrowserRedirectToClassicUserAgents";
+
+    /**
+     * Whether to redirect to error page for the selected browsers not
+     * supported by Modern WebClient.
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=9007)
+    public static final String A_zimbraWebclientUnsupportedBrowserRedirectToErrorPageEnabled = "zimbraWebclientUnsupportedBrowserRedirectToErrorPageEnabled";
+
+    /**
+     * URL of error page for unsupported browser.
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=9009)
+    public static final String A_zimbraWebclientUnsupportedBrowserRedirectToErrorPageURL = "zimbraWebclientUnsupportedBrowserRedirectToErrorPageURL";
+
+    /**
+     * Regex for unsupported browsers to redirect to error page
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=9008)
+    public static final String A_zimbraWebclientUnsupportedBrowserRedirectToErrorPageUserAgents = "zimbraWebclientUnsupportedBrowserRedirectToErrorPageUserAgents";
+
+    /**
      * weclient URL to directly connect when making service to JS calls from
      * mail server in split mode
      *
@@ -17098,6 +17899,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=695)
     public static final String A_zimbraXMPPServerDialbackKey = "zimbraXMPPServerDialbackKey";
+
+    /**
+     * ZimbraX compatible semantic version expression
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3064)
+    public static final String A_zimbraXZimletCompatibleSemVer = "zimbraXZimletCompatibleSemVer";
 
     /**
      * Yahoo ID
@@ -17262,6 +18071,17 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=282)
     public static final String A_zimbraZimletVersion = "zimbraZimletVersion";
+
+    /**
+     * Timeout for ZooKeeper requests. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3033)
+    public static final String A_zimbraZKClientTimeout = "zimbraZKClientTimeout";
 
     /**
      * list of host:port for zookeeper servers; set to empty value to disable

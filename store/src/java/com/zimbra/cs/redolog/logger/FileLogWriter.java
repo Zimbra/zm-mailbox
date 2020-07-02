@@ -23,20 +23,6 @@
  */
 package com.zimbra.cs.redolog.logger;
 
-import com.zimbra.common.localconfig.DebugConfig;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.Constants;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.redolog.CommitId;
-import com.zimbra.cs.redolog.RedoCommitCallback;
-import com.zimbra.cs.redolog.RedoConfig;
-import com.zimbra.cs.redolog.RedoLogManager;
-import com.zimbra.cs.redolog.RolloverManager;
-import com.zimbra.cs.redolog.op.CommitTxn;
-import com.zimbra.cs.redolog.op.RedoableOp;
-import com.zimbra.cs.util.Zimbra;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -45,6 +31,22 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+
+import com.zimbra.common.localconfig.DebugConfig;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.redolog.CommitId;
+import com.zimbra.cs.redolog.RedoCommitCallback;
+import com.zimbra.cs.redolog.RedoConfig;
+import com.zimbra.cs.redolog.RedoLogBlobStore;
+import com.zimbra.cs.redolog.RedoLogManager;
+import com.zimbra.cs.redolog.RedoLogProvider;
+import com.zimbra.cs.redolog.RolloverManager;
+import com.zimbra.cs.redolog.op.CommitTxn;
+import com.zimbra.cs.redolog.op.RedoableOp;
+import com.zimbra.cs.util.Zimbra;
 
 /**
  * @author jhahm
@@ -302,7 +304,8 @@ public class FileLogWriter implements LogWriter {
 
             // We do this with log writer lock held, so the commits and any
             // callbacks made on their behalf are truly in the correct order.
-            if (op instanceof CommitTxn) {
+            // TODO: make transaction callbacks work in Zimbra Cloud
+            if (op != null && op instanceof CommitTxn) {
                 CommitTxn cmt = (CommitTxn) op;
                 RedoCommitCallback cb = cmt.getCallback();
                 if (cb != null) {
@@ -367,7 +370,7 @@ public class FileLogWriter implements LogWriter {
 
     @SuppressWarnings("unchecked")
     @Override public synchronized File rollover(LinkedHashMap /*<TxnId, RedoableOp>*/ activeOps)
-    throws IOException {
+    throws ServiceException, IOException {
         RolloverManager romgr = mRedoLogMgr.getRolloverManager();
 
         long lastSeq = getSequence();
@@ -402,6 +405,8 @@ public class FileLogWriter implements LogWriter {
         if (RedoConfig.redoLogDeleteOnRollover()) {
             // Delete the current log.  We don't need to hold on to the
             // indexing-only log files after rollover.
+            RedoLogBlobStore blobStore = RedoLogProvider.getInstance().getRedoLogManager().getBlobStore();
+            blobStore.derefRedoLogFile(mFile);
             if (!mFile.delete())
                 throw new IOException("Unable to delete current redo log " + mFile.getAbsolutePath());
         } else {

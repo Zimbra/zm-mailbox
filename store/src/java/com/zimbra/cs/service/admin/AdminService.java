@@ -58,6 +58,7 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(AdminConstants.REMOVE_ACCOUNT_ALIAS_REQUEST, new RemoveAccountAlias());
         dispatcher.registerHandler(AdminConstants.SEARCH_ACCOUNTS_REQUEST, new SearchAccounts());
         dispatcher.registerHandler(AdminConstants.RENAME_ACCOUNT_REQUEST, new RenameAccount());
+        dispatcher.registerHandler(AdminConstants.CHANGE_PRIMARY_EMAIL_REQUEST, new ChangePrimaryEmail());
 
         dispatcher.registerHandler(AdminConstants.SEARCH_DIRECTORY_REQUEST, new SearchDirectory());
         dispatcher.registerHandler(AdminConstants.GET_ACCOUNT_MEMBERSHIP_REQUEST, new GetAccountMembership());
@@ -146,6 +147,7 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(AdminConstants.GET_ATTRIBUTE_INFO_REQUEST, new GetAttributeInfo());
 
         dispatcher.registerHandler(AdminConstants.REINDEX_REQUEST, new ReIndex());
+        dispatcher.registerHandler(AdminConstants.MANAGE_INDEX_REQUEST, new ManageIndex());
         dispatcher.registerHandler(AdminConstants.COMPACT_INDEX_REQUEST, new CompactIndex());
         dispatcher.registerHandler(AdminConstants.GET_INDEX_STATS_REQUEST, new GetIndexStats());
         dispatcher.registerHandler(AdminConstants.VERIFY_INDEX_REQUEST, new VerifyIndex());
@@ -304,6 +306,9 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(AdminConstants.MODIFY_FILTER_RULES_REQUEST, new ModifyFilterRules());
         dispatcher.registerHandler(AdminConstants.GET_OUTGOING_FILTER_RULES_REQUEST, new GetOutgoingFilterRules());
         dispatcher.registerHandler(AdminConstants.MODIFY_OUTGOING_FILTER_RULES_REQUEST, new ModifyOutgoingFilterRules());
+
+        // ContactBackup API
+        dispatcher.registerHandler(AdminConstants.CONTACT_BACKUP_REQUEST, new ContactBackup());
 
     }
 

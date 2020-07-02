@@ -1,10 +1,12 @@
 <project name="zm-mailbox" default="all">
-   <target name="all" depends="publish-local-all">
+
+    <target name="all" depends="publish-local-all">
       <ant dir="./native" target="generate-native-headers" inheritAll="true"/>
       <exec dir="./native" executable="make"          failonerror="true"/>
       <ant dir="./store"  target="war"                inheritAll="true"/>
       <ant dir="./store"  target="create-version-sql" inheritAll="true"/>
       <ant dir="./store"  target="create-version-ldap" inheritAll="true"/>
+      <ant dir="./store-conf"  target="common-passwords" inheritAll="true"/>
     </target>
 
    <target name="publish-local-all">
@@ -13,6 +15,8 @@
       <ant dir="./soap"   target="publish-local" inheritAll="true"/>
       <ant dir="./client" target="publish-local" inheritAll="true"/>
       <ant dir="./store"  target="publish-local" inheritAll="true"/>
+      <ant dir="./store"  target="set-dev-version" inheritAll="true"/>
+      <echo>Starting package creation from war </echo>
    </target>
 
    <target name="set-no-halt-on-failure">
@@ -45,11 +49,98 @@
         <ant dir="./store"  target="dist" inheritAll="false"/>
       </target>
 
+<!-- Code added to parse regex provided in version zimbra.buildinfo.version -->
+    <taskdef resource="net/sf/antcontrib/antlib.xml">
+        <classpath>
+		<pathelement location="${user.home}/.zcs-deps/ant-contrib-1.0b1.jar"/>
+        </classpath>
+    </taskdef>
+	<propertyregex property="zimbra.buildinfo.majorversion"
+	               input="${zimbra.buildinfo.version}"
+	               regexp="([0-9]+)\.([0-9]+)\.([0-9]+)"
+	               select="\1"
+	               casesensitive="false" />
+
+	<propertyregex property="zimbra.buildinfo.minorversion"
+	               input="${zimbra.buildinfo.version}"
+	               regexp="([0-9]+)\.([0-9]+)\.([0-9]+)"
+	               select="\2"
+	               casesensitive="false" />
+
+	<propertyregex property="zimbra.buildinfo.microversion"
+	               input="${zimbra.buildinfo.version}"
+	               regexp="([0-9]+)\.([0-9]+)\.([0-9]+)"
+	               select="\3"
+	               casesensitive="false" />
+
+<!-- Property defined to accept the version -->
+
+  <property name="store.ext.patch.revision" value="1" />
+  <property name="store.ext.patch.version"
+      value="${zimbra.buildinfo.majorversion}.${zimbra.buildinfo.minorversion}.${zimbra.buildinfo.microversion}"/>
+
+<!--Package building starts here from the war files -->
    <target name="pkg" depends="clean-pkg,all,dist">
-      <exec dir="." executable="./pkg-builder.pl" failonerror="true"/>
+      <exec dir="." executable="./pkg-builder.pl" failonerror="true">
+      <arg value="-v"/>
+      <arg value="${store.ext.patch.version}"/>
+      <arg value="-r"/>
+      <arg value="${store.ext.patch.revision}"/>
+      </exec>
    </target>
 
    <target name="pkg-after-plough-through-tests" depends="test-all-plough-through,pkg"/>
+
+    <property name="DOCKER_REPO_PUSH_NS" value="zimbra" />
+    <property name="DOCKER_MAILBOX_BUILD_TAG" value="1.0" />
+    <property name="DOCKER_PUSH_TAG" value="${DOCKER_MAILBOX_BUILD_TAG}" />
+    <target name="build-image" depends="all">
+        <copy todir="native/build/" overwrite="true">
+            <fileset dir="native/build" />
+            <globmapper from="zm-native-*.jar" to="zimbra-native.jar" />
+        </copy>
+        <copy todir="common/build/" overwrite="true">
+            <fileset dir="common/build" />
+            <globmapper from="zm-common-*.jar" to="zimbracommon.jar" />
+        </copy>
+        <copy todir="soap/build/" overwrite="true">
+            <fileset dir="soap/build" />
+            <globmapper from="zm-soap-*.jar" to="zimbrasoap.jar" />
+        </copy>
+        <copy todir="client/build/" overwrite="true">
+            <fileset dir="client/build" />
+            <globmapper from="zm-client-*.jar" to="zimbraclient.jar" />
+        </copy>
+        <copy todir="store/build/" overwrite="true">
+            <fileset dir="store/build" />
+            <globmapper from="zm-store-*.jar" to="zimbrastore.jar" />
+        </copy>
+        <exec executable="docker">
+            <arg value="build" />
+            <arg value="--build-arg" />
+            <arg value="DOCKER_REPO_NS=${DOCKER_REPO_PUSH_NS}" />
+            <arg value="--cache-from" />
+            <arg value="${DOCKER_REPO_PUSH_NS}/zmc-mailbox-network:${DOCKER_MAILBOX_BUILD_TAG}" />
+            <arg value="--tag" />
+            <arg value="${DOCKER_REPO_PUSH_NS}/zmc-mailbox-network:${DOCKER_MAILBOX_BUILD_TAG}" />
+            <arg value="." />
+        </exec>
+    </target>
+
+    <target name="push-image" depends="build-image">
+        <exec executable="docker">
+            <arg value="push" />
+            <arg value="${DOCKER_REPO_PUSH_NS}/zmc-mailbox-network:${DOCKER_PUSH_TAG}" />
+        </exec>
+    </target>
+
+    <property name="EXTENSION_NETWORK_BUILD_TAG" value="1.0.0" />
+    <target name="build-extension-network-core" depends="publish-local-all">
+      <exec executable="/bin/bash" failonerror="true">
+        <arg value="./extension-network-core/build-core-extension-network.sh"/>
+        <arg value="${EXTENSION_NETWORK_BUILD_TAG}"/>
+      </exec>
+    </target>
 
    <target name="clean" depends="clean-ant,clean-pkg">
       <exec dir="./native" executable="make" failonerror="true"><arg value="clean"/></exec>

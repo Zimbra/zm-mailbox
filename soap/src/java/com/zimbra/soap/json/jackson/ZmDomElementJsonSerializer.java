@@ -20,12 +20,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
-
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.JsonGenerator;
-import org.codehaus.jackson.map.SerializerProvider;
-import org.codehaus.jackson.map.ser.std.SerializerBase;
 
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
@@ -33,21 +27,35 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import com.fasterxml.jackson.core.JsonGenerationException;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
 import com.zimbra.common.soap.Element.JSONElement;
 
 public class ZmDomElementJsonSerializer
-extends SerializerBase<Element>
+extends StdSerializer<Element>
 {
+
+
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -2141574675978397686L;
+
+
     public ZmDomElementJsonSerializer() {
         super(Element.class);
     }
-
+    
+    /* (non-Javadoc)
+     * @see com.fasterxml.jackson.databind.ser.std.StdSerializer#serialize(java.lang.Object, com.fasterxml.jackson.core.JsonGenerator, com.fasterxml.jackson.databind.SerializerProvider)
+     */
     @Override
     public void serialize(Element value, JsonGenerator jgen, SerializerProvider provider)
-    throws IOException, JsonGenerationException {
+        throws IOException {
         jgen.writeStartArray();
         serializeInner(value, jgen, provider, null /* parent namespaceURI */);
         jgen.writeEndArray();

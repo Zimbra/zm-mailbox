@@ -26,6 +26,7 @@ import javax.naming.NamingException;
 public class WebSplitUtil {
     private static List<String> servicesEnabled;
     private static final String webClientApp = "zimbra";
+    private static final String webClientClassicApp = "zimbra-classic";
     private static final String webServiceApp = "service";
     private static final String adminClientApp = "zimbraAdmin";
     private static final String zimletApp = "zimlet";
@@ -59,7 +60,8 @@ public class WebSplitUtil {
     }
 
     public static boolean isZimbraWebClientSplitEnabled() {
-        if (!((servicesEnabled == null || servicesEnabled.isEmpty()) || allServicesEnabled()) && servicesEnabled.contains(webClientApp)) {
+        if (!((servicesEnabled == null || servicesEnabled.isEmpty()) || allServicesEnabled())
+            && (servicesEnabled.contains(webClientApp) || servicesEnabled.contains(webClientClassicApp))) {
         	ZimbraLog.misc.debug("webclient split enabled = true");
             return true;
         } else {
@@ -69,7 +71,8 @@ public class WebSplitUtil {
     }
 
     private static boolean allServicesEnabled() {
-        if (servicesEnabled.contains(webClientApp) && servicesEnabled.contains(webServiceApp) &&
+        if ( (servicesEnabled.contains(webClientApp) || servicesEnabled.contains(webClientClassicApp))
+                && servicesEnabled.contains(webServiceApp) &&
                 servicesEnabled.contains(adminClientApp) && servicesEnabled.contains(zimletApp)) {
         	ZimbraLog.misc.debug("all services enabled = true");
             return true;

@@ -23,6 +23,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -345,6 +347,33 @@ public class ZimletProps2JsServlet extends HttpServlet {
                 }
             }
             return super.getResourceAsStream(rname);
+        }
+
+        @Override
+        public URL getResource(String rname) {
+            String filename = rname.replaceAll("^.*/", "");
+            Matcher matcher = RE_LOCALE.matcher(filename);
+            String locale = matcher.matches() ? matcher.group(1) : "";
+            String ext = rname.replaceAll("^[^\\.]*", "");
+            for (String basename : this.patterns) {
+                basename = basename.replaceAll("\\$\\{dir\\}", this.dir);
+                basename = basename.replaceAll("\\$\\{name\\}", this.name);
+                basename = replaceSystemProps(basename);
+                basename += locale + ext;
+                File file = new File(this.dirname + basename);
+                if (!file.exists()) {
+                    file = new File(basename);
+                }
+                if (file.exists()) {
+                    files.add(file);
+                    try {
+                        return file.toURI().toURL();
+                    } catch (MalformedURLException e) {
+                        ZimbraLog.zimlet.debug("MalformedURLException:" + e);
+                    }
+                }
+            }
+            return super.getResource(rname);
         }
 
         private static String replaceSystemProps(String s) {

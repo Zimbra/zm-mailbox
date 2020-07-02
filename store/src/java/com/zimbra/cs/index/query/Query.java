@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010, 2011, 2012, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2010, 2011, 2012, 2013, 2014, 2016, 2017 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -11,19 +11,23 @@
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
  * You should have received a copy of the GNU General Public License along with this program.
- * If not, see <https://www.gnu.org/licenses/>.
+ * If not, see <http://www.gnu.org/licenses/>.
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.cs.index.query;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.ImmutableMap;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.QueryOperation;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxIndex.IndexType;
 
 /**
  * Abstract base class for queries.
@@ -51,7 +55,7 @@ public abstract class Query {
         }
     }
 
-    enum Comparison {
+    public enum Comparison {
         GT(">"), GE(">="), LT("<"), LE("<=");
 
         private final String symbol;
@@ -63,6 +67,29 @@ public abstract class Query {
         @Override
         public String toString() {
             return symbol;
+        }
+
+        public static Comparison fromString(String string) {
+            for (Comparison c: Comparison.values()) {
+                if (string.equals(c.symbol)) {
+                    return c;
+                }
+            }
+        throw new IllegalArgumentException(string + " is not a valid comparison");
+        }
+
+        public static Comparison fromPrefix(String text) {
+            if (text.startsWith(Comparison.LE.symbol)) {
+                return Comparison.LE;
+            } else if (text.startsWith(Comparison.LT.symbol)) {
+                return Comparison.LT;
+            } else if (text.startsWith(Comparison.GE.symbol)) {
+                return Comparison.GE;
+            } else if (text.startsWith(Comparison.GT.symbol)) {
+                return Comparison.GT;
+            } else {
+                return null;
+            }
         }
     }
 
@@ -132,6 +159,8 @@ public abstract class Query {
             }
             buf.append('"');
             return buf.toString();
+        } else if (luceneField.startsWith("header_")) {
+            return String.format("#%s:%s", luceneField.substring("header_".length()), term);
         } else {
             return field + term;
         }
@@ -158,7 +187,7 @@ public abstract class Query {
         dump(out);
         return out.append(')');
     }
-    
+
     public StringBuilder toSanitizedString(StringBuilder out) {
         out.append(modifier);
         out.append("Q(");
@@ -173,7 +202,7 @@ public abstract class Query {
      * @param out output
      */
     abstract void dump(StringBuilder out);
-    
+
     void sanitizedDump(StringBuilder out) {
         dump(out);
     }
@@ -202,4 +231,27 @@ public abstract class Query {
      */
     public abstract boolean hasTextOperation();
 
+    private IndexType getIndexTypeForItemType(MailItem.Type type) {
+        // this is only called from index-bound Query subclasses, so it's OK
+        // to include non-indexable types in the default case here
+        switch (type) {
+        case CONTACT:
+            return IndexType.CONTACTS;
+        default:
+            return IndexType.MAILBOX;
+        }
+    }
+
+    protected Set<IndexType> getIndexTypes(Set<MailItem.Type> types) {
+        Set<IndexType> indexTypes = new HashSet<>();
+        if (!types.isEmpty()) {
+            for (MailItem.Type type: types) {
+                indexTypes.add(getIndexTypeForItemType(type));
+            }
+        } else {
+            // default to primary index
+            indexTypes.add(IndexType.MAILBOX);
+        }
+        return indexTypes;
+    }
 }

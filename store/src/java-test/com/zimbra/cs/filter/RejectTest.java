@@ -50,7 +50,7 @@ import com.zimbra.cs.service.mail.SendMsgTest.DirectInsertionMailboxManager;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.ZTestWatchman;
 
-public class RejectTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class RejectTest {
 
     @Rule public TestName testName = new TestName();
     @Rule public MethodRule watchman = new ZTestWatchman();

@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.Charset;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -35,23 +36,23 @@ import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlMixed;
 import javax.xml.parsers.DocumentBuilder;
 
-import junit.framework.Assert;
-
+import com.fasterxml.jackson.databind.type.TypeFactory;
+import com.zimbra.soap.admin.type.CacheEntrySelector;
+import com.zimbra.soap.admin.type.CacheSelector;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import org.codehaus.jackson.map.AnnotationIntrospector;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.SerializationConfig;
-import org.codehaus.jackson.map.introspect.JacksonAnnotationIntrospector;
-import org.codehaus.jackson.xc.JaxbAnnotationIntrospector;
 import org.dom4j.QName;
-import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
 
+import com.fasterxml.jackson.databind.AnnotationIntrospector;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
+import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.zimbra.common.service.ServiceException;
@@ -100,7 +101,9 @@ import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
 import com.zimbra.soap.json.jackson.annotate.ZimbraKeyValuePairs;
 import com.zimbra.soap.mail.message.DiffDocumentResponse;
 import com.zimbra.soap.mail.message.GetFilterRulesResponse;
+import com.zimbra.soap.mail.message.GetSystemRetentionPolicyResponse;
 import com.zimbra.soap.mail.message.NoOpResponse;
+import com.zimbra.soap.mail.message.VerifyCodeResponse;
 import com.zimbra.soap.mail.type.AppointmentData;
 import com.zimbra.soap.mail.type.CalendaringDataInterface;
 import com.zimbra.soap.mail.type.DispositionAndText;
@@ -109,13 +112,45 @@ import com.zimbra.soap.mail.type.FilterRule;
 import com.zimbra.soap.mail.type.FilterTest;
 import com.zimbra.soap.mail.type.FilterTests;
 import com.zimbra.soap.mail.type.InstanceDataInfo;
+import com.zimbra.soap.mail.type.Policy;
+import com.zimbra.soap.mail.type.RetentionPolicy;
 import com.zimbra.soap.type.GranteeType;
 import com.zimbra.soap.type.KeyValuePair;
+
+import junit.framework.Assert;
 
 public class JaxbToJsonTest {
     @Rule public TestName testName = new TestName();
 
     private static final Logger LOG = Logger.getLogger(JaxbToJsonTest.class);
+
+    private static String jsonEmptyGetSystemRetentionPolicyResponse =
+            "{\n" +
+            "  \"retentionPolicy\": [{\n" +
+            "      \"keep\": [{}],\n" +
+            "      \"purge\": [{}]\n" +
+            "    }],\n" +
+            "  \"_jsns\": \"urn:zimbraMail\"\n" +
+            "}";
+
+    private static String jsonGetSystemRetentionPolicyResponse =
+            "{\n" +
+            "  \"retentionPolicy\": [{\n" +
+            "      \"keep\": [{\n" +
+            "          \"policy\": [{\n" +
+            "              \"type\": \"user\",\n" +
+            "              \"lifetime\": \"200\"\n" +
+            "            }]\n" +
+            "        }],\n" +
+            "      \"purge\": [{\n" +
+            "          \"policy\": [{\n" +
+            "              \"type\": \"user\",\n" +
+            "              \"lifetime\": \"400\"\n" +
+            "            }]\n" +
+            "        }]\n" +
+            "    }],\n" +
+            "  \"_jsns\": \"urn:zimbraMail\"\n" +
+            "}";
 
     static {
         BasicConfigurator.configure();
@@ -146,10 +181,6 @@ public class JaxbToJsonTest {
         }
     }
 
-    @BeforeClass
-    public static void init() throws Exception {
-    }
-
     /**
      * the element referenced MailConstants.E_FRAG is treated in XML as an element with content but no attributes.
      * However in JSON, it is just treated like an ordinary attribute.
@@ -161,7 +192,7 @@ public class JaxbToJsonTest {
      *         }],
      */
     @Test
-    public void bug61264_AttributeDispositionCONTENThandling() throws Exception {
+    public void bug61264AttributeDispositionCONTENThandling() throws Exception {
         StringBuilder sb;
         final String uid = "uidString";
         final String frag = "Fragment text";
@@ -182,7 +213,7 @@ public class JaxbToJsonTest {
         Element jsoncalItemElem = JSONElement.mFactory.createElement(MailConstants.E_APPOINTMENT);
         jsoncalItemElem.addAttribute(MailConstants.A_UID, uid);
         jsoncalItemElem.addAttribute("x_uid", uid);
-        Element instElt = jsoncalItemElem.addElement(MailConstants.E_INSTANCE);
+        Element instElt = jsoncalItemElem.addNonUniqueElement(MailConstants.E_INSTANCE);
         instElt.addAttribute(MailConstants.E_FRAG, frag, Element.Disposition.CONTENT);
         instElt.addAttribute(MailConstants.A_CAL_IS_EXCEPTION, true);
         instElt.addAttribute(MailConstants.A_NAME, name);
@@ -190,7 +221,7 @@ public class JaxbToJsonTest {
         Element xmlcalItemElem = XMLElement.mFactory.createElement(MailConstants.E_APPOINTMENT);
         xmlcalItemElem.addAttribute(MailConstants.A_UID, uid);
         xmlcalItemElem.addAttribute("x_uid", uid);
-        Element xmlinstElt = xmlcalItemElem.addElement(MailConstants.E_INSTANCE);
+        Element xmlinstElt = xmlcalItemElem.addNonUniqueElement(MailConstants.E_INSTANCE);
         xmlinstElt.addAttribute(MailConstants.E_FRAG, frag, Element.Disposition.CONTENT);
         xmlinstElt.addAttribute(MailConstants.A_CAL_IS_EXCEPTION, true);
         xmlinstElt.addAttribute(MailConstants.A_NAME, name);
@@ -220,8 +251,8 @@ public class JaxbToJsonTest {
 
         Element parent4legacyJson = JSONElement.mFactory.createElement(new QName("legacy-json", MailConstants.NAMESPACE));
         Element parent4jackson = JSONElement.mFactory.createElement(new QName("jacksonjson", MailConstants.NAMESPACE));
-        parent4legacyJson.addElement(jsoncalItemElem);
-        parent4jackson.addElement(jacksonJaxbElem);
+        parent4legacyJson.addNonUniqueElement(jsoncalItemElem);
+        parent4jackson.addNonUniqueElement(jacksonJaxbElem);
 
         sb = new StringBuilder();
         xmlcalItemElem.output(sb);
@@ -258,32 +289,6 @@ public class JaxbToJsonTest {
         Assert.assertEquals("name", name, instE.getAttribute(MailConstants.A_NAME));
     }
 
-    private void jacksonSerializeCheck(ObjectMapper mapper, String tag, Object obj)
-    throws ServiceException {
-        String json = JacksonUtil.jaxbToJsonString(mapper, obj);
-        StringBuilder fullTag = new StringBuilder("JacksonPlay ")
-            .append(obj.getClass().getName()).append(" ").append(tag).append(" ");
-        logDebug(fullTag.toString() +
-                "JAXB --> Jackson --> String\n" + json);
-        try {
-            Element jsonElemFromJackson = JacksonUtil.jacksonJsonToElement(json, obj);
-            logDebug(fullTag.toString() +
-                    "JAXB --> Jackson --> String ---> Element ---> prettyPrint\n" +
-                    jsonElemFromJackson.prettyPrint());
-        } catch (ServiceException e) {
-            LOG.error(fullTag.toString() + "\nProblem with Element.parseJSON", e);
-        }
-        try {
-            Element jsonE = JaxbUtil.jaxbToElement(obj, JSONElement.mFactory);
-            logDebug(fullTag.toString() +
-                    "JAXB --> jaxbToElement --> Element ---> prettyPrint\n" +
-                    jsonE.prettyPrint());
-        } catch (ServiceException e) {
-            LOG.error(fullTag.toString() + "\nProblem with jaxbToElement", e);
-        }
-        logDebug("===============================================");
-    }
-
     /**
      *  {
      *    "status": [{
@@ -296,12 +301,12 @@ public class JaxbToJsonTest {
      *  }
      */
     @Test
-    public void ZmBooleanAntStringXmlElements() throws Exception {
+    public void zmBooleanAntStringXmlElements() throws Exception {
         final String msg = "ver ndx message";
         // ---------------------------------  For Comparison - Element handling
         Element legacyElem = JSONElement.mFactory.createElement(AdminConstants.VERIFY_INDEX_RESPONSE);
-        legacyElem.addElement(AdminConstants.E_STATUS).addText(String.valueOf(true));
-        legacyElem.addElement(AdminConstants.E_MESSAGE).addText(msg);
+        legacyElem.addNonUniqueElement(AdminConstants.E_STATUS).addText(String.valueOf(true));
+        legacyElem.addNonUniqueElement(AdminConstants.E_MESSAGE).addText(msg);
         logDebug("VerifyIndexResponse JSONElement ---> prettyPrint\n%1$s", legacyElem.prettyPrint());
 
         VerifyIndexResponse viResp = new VerifyIndexResponse(true, msg);
@@ -322,15 +327,15 @@ public class JaxbToJsonTest {
      *               { "disp": "disPosition 2", "_content": "text 2" }],
      */
     @Test
-    public void XmlValueAnnotation() throws Exception {
+    public void xmlValueAnnotation() throws Exception {
         String dispos1 = "disposition 1";
         String text1 = "text 1\nIn the sun";
         String dispos2 = "disPosition 2";
         String text2 = "text 2";
         // ---------------------------------  For Comparison - Element handling where the JAXB has an @XmlValue
         Element legacyElem = JSONElement.mFactory.createElement(MailConstants.DIFF_DOCUMENT_RESPONSE);
-        legacyElem.addElement(MailConstants.E_CHUNK).addAttribute(MailConstants.A_DISP, dispos1).setText(text1);
-        legacyElem.addElement(MailConstants.E_CHUNK).addAttribute(MailConstants.A_DISP, dispos2).setText(text2);
+        legacyElem.addNonUniqueElement(MailConstants.E_CHUNK).addAttribute(MailConstants.A_DISP, dispos1).setText(text1);
+        legacyElem.addNonUniqueElement(MailConstants.E_CHUNK).addAttribute(MailConstants.A_DISP, dispos2).setText(text2);
         logDebug("DiffDocumentResponse JSONElement ---> prettyPrint\n%1$s", legacyElem.prettyPrint());
         // --------------------------------- @XmlValue handling test - need @JsonProperty("_content") annotation
         DiffDocumentResponse ddResp = new DiffDocumentResponse();
@@ -383,7 +388,7 @@ public class JaxbToJsonTest {
         KVPairs roundtripped = JaxbUtil.elementToJaxb(jsonJaxbElem, KVPairs.class);
         logDebug("JSONElement (for comparison) ---> prettyPrint\n%1$s", jsonElem.prettyPrint());
         logDebug("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
-        List<com.zimbra.common.soap.Element.KeyValuePair> elemKVPs = jsonJaxbElem.listKeyValuePairs();
+        List<Element.KeyValuePair> elemKVPs = jsonJaxbElem.listKeyValuePairs();
         Assert.assertEquals("elemKVP num", 3, elemKVPs.size());
         List<KeyValuePair> kvps = roundtripped.getKeyValuePairs();
         Assert.assertEquals("roundtripped kvps num", 3, kvps.size());
@@ -430,7 +435,7 @@ public class JaxbToJsonTest {
         logDebug("JSONElement (for comparison) ---> prettyPrint\n%1$s", jsonElem.prettyPrint());
         logDebug("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
         KeyValuePairsTester roundtripped = JaxbUtil.elementToJaxb(jsonJaxbElem, KeyValuePairsTester.class);
-        List<com.zimbra.common.soap.Element.KeyValuePair> elemKVPs = jsonJaxbElem.listKeyValuePairs();
+        List<Element.KeyValuePair> elemKVPs = jsonJaxbElem.listKeyValuePairs();
         Assert.assertEquals("elemKVP num", 3, elemKVPs.size());
         Assert.assertEquals("prettyPrint", jsonElem.prettyPrint(), jsonJaxbElem.prettyPrint());
         List<KeyValuePair> kvps = roundtripped.getAttrList();
@@ -478,7 +483,7 @@ public class JaxbToJsonTest {
         String origJson = jsonJaxbElem.prettyPrint();
         logDebug("JSONElement from JAXB ---> prettyPrint\n%1$s", origJson);
         OddKeyValuePairsTester roundtripped = JaxbUtil.elementToJaxb(jsonJaxbElem, OddKeyValuePairsTester.class);
-        List<com.zimbra.common.soap.Element.KeyValuePair> elemKVPs = jsonJaxbElem.listKeyValuePairs();
+        List<Element.KeyValuePair> elemKVPs = jsonJaxbElem.listKeyValuePairs();
         Assert.assertEquals("elemKVP num", 3, elemKVPs.size());
         Assert.assertEquals("prettyPrint", jsonElem.prettyPrint(), jsonJaxbElem.prettyPrint());
         List<Attr> kvps = roundtripped.getAttrList();
@@ -518,7 +523,7 @@ public class JaxbToJsonTest {
         logDebug("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
         Assert.assertEquals("prettyPrint", jsonElem.prettyPrint(), jsonJaxbElem.prettyPrint());
         WrappedKeyValuePairsTester roundtripped = JaxbUtil.elementToJaxb(jsonJaxbElem, WrappedKeyValuePairsTester.class);
-        List<com.zimbra.common.soap.Element.KeyValuePair> elemKVPs = jsonJaxbElem.getElement("wrapper").listKeyValuePairs();
+        List<Element.KeyValuePair> elemKVPs = jsonJaxbElem.getElement("wrapper").listKeyValuePairs();
         Assert.assertEquals("elemKVP num", 2, elemKVPs.size());
         List<KeyValuePair> kvps = roundtripped.getAttrList();
         Assert.assertEquals("roundtripped kvps num", 2, kvps.size());
@@ -580,7 +585,7 @@ Extract from mailbox.log for creation of this DL by ZWC - demonstrating the diff
      * Desired JSON
      */
     // Re-enable when Bug 74371 is fixed? @Test
-    public void kvpForCreateDLResp_bug74371() throws Exception {
+    public void kvpForCreateDLRespBug74371() throws Exception {
         Element jsonElem = JSONElement.mFactory.createElement(
                 QName.get(AccountConstants.E_CREATE_DISTRIBUTION_LIST_RESPONSE, AccountConstants.NAMESPACE_STR));
         populateCreateDlResp(jsonElem);
@@ -602,7 +607,7 @@ Extract from mailbox.log for creation of this DL by ZWC - demonstrating the diff
         Element eDL = jsonJaxbElem.getElement(AdminConstants.E_DL);
         List<? extends KeyValuePair> kvps = roundtripped.getAttrList();
         Assert.assertEquals("roundtripped kvps num", 2, kvps.size());
-        List<com.zimbra.common.soap.Element.KeyValuePair> elemKVPs = eDL.getElement("a").listKeyValuePairs();
+        List<Element.KeyValuePair> elemKVPs = eDL.getElement("a").listKeyValuePairs();
         Assert.assertEquals("elemKVP num", 2, elemKVPs.size());
         Assert.assertEquals("prettyPrint", jsonElem.prettyPrint(), jsonJaxbElem.prettyPrint());
     }
@@ -722,16 +727,16 @@ Extract from mailbox.log for creation of this DL by ZWC - demonstrating the diff
         jaxb.addKeyValuePair(new KeyValuePair("notificationMessage", notifMsg));
         Element elem = JacksonUtil.jaxbToJSONElement(jaxb, XMbxSearchConstants.CREATE_XMBX_SEARCH_REQUEST);
         logDebug("CreateXmbxSearchRequest JSONElement from JAXB ---> prettyPrint\n%1$s", elem.prettyPrint());
-        List<com.zimbra.common.soap.Element.KeyValuePair> kvps = elem.listKeyValuePairs();
+        List<Element.KeyValuePair> kvps = elem.listKeyValuePairs();
         Assert.assertEquals("Number of keyValuePairs ", 4, kvps.size());
-        com.zimbra.common.soap.Element.KeyValuePair kvp4 = kvps.get(3);
+        Element.KeyValuePair kvp4 = kvps.get(3);
         Assert.assertEquals("KeyValuePair notificationMessage key", "notificationMessage", kvp4.getKey());
         Assert.assertEquals("KeyValuePair notificationMessage value", notifMsg, kvp4.getValue());
     }
 
     // Cut down version of com.zimbra.cs.service.admin.ToXML.encodeAttr
     private void encodeAttr(Element parent, String key, String value, String eltname, String attrname) {
-        Element e = parent.addElement(eltname);
+        Element e = parent.addNonUniqueElement(eltname);
         e.addAttribute(attrname, key);
         e.setText(value);
     }
@@ -756,7 +761,7 @@ Extract from mailbox.log for creation of this DL by ZWC - demonstrating the diff
     }
 
     private void populateCreateDlResp(Element elem) {
-        Element eDL = elem.addElement(AdminConstants.E_DL);
+        Element eDL = elem.addNonUniqueElement(AdminConstants.E_DL);
         eDL.addAttribute(AdminConstants.A_NAME, "my name");
         eDL.addAttribute(AdminConstants.A_ID, "myId");
         eDL.addAttribute(AdminConstants.A_DYNAMIC, true);
@@ -768,12 +773,12 @@ Extract from mailbox.log for creation of this DL by ZWC - demonstrating the diff
     }
 
     private void populateGetDlResp(Element elem) {
-        Element eDL = elem.addElement(AdminConstants.E_DL);
+        Element eDL = elem.addNonUniqueElement(AdminConstants.E_DL);
         eDL.addAttribute(AdminConstants.A_NAME, "my name");
         eDL.addAttribute(AdminConstants.A_ID, "myId");
-        eDL.addAttribute(AdminConstants.A_DYNAMIC, true);
         eDL.addKeyValuePair("mail", "fun@example.test", AccountConstants.E_A, AccountConstants.A_N);
         eDL.addKeyValuePair("zimbraMailStatus", "enabled", AccountConstants.E_A, AccountConstants.A_N);
+        eDL.addAttribute(AdminConstants.A_DYNAMIC, true);
     }
 
     /**
@@ -800,9 +805,9 @@ Extract from mailbox.log for creation of this DL by ZWC - demonstrating the diff
         Element legacyElem = JSONElement.mFactory.createElement(AccountConstants.GET_DISTRIBUTION_LIST_MEMBERS_RESPONSE);
         legacyElem.addAttribute(AccountConstants.A_MORE, false);
         legacyElem.addAttribute(AccountConstants.A_TOTAL, 23);
-        legacyElem.addElement(AccountConstants.E_DLM).setText("dlmember1@no.where");
-        legacyElem.addElement(AccountConstants.E_DLM).setText("dlmember2@no.where");
-        legacyElem.addElement(AccountConstants.E_DLM).setText("dlmember3@no.where");
+        legacyElem.addNonUniqueElement(AccountConstants.E_DLM).setText("dlmember1@no.where");
+        legacyElem.addNonUniqueElement(AccountConstants.E_DLM).setText("dlmember2@no.where");
+        legacyElem.addNonUniqueElement(AccountConstants.E_DLM).setText("dlmember3@no.where");
         logDebug("GetDistributionListMembersResponse JSONElement ---> prettyPrint\n%1$s", legacyElem.prettyPrint());
         // GetDistributionListMembersResponse has:
         //      @XmlElement(name=AccountConstants.E_DLM, required=false)
@@ -897,23 +902,23 @@ header="X-Spam-Score"/>
      */
     private Element mkFilterRulesResponse(Element.ElementFactory factory) {
         Element legacyElem = factory.createElement(MailConstants.GET_FILTER_RULES_RESPONSE);
-        Element filterRulesE = legacyElem.addElement(MailConstants.E_FILTER_RULES);
-        Element filterRuleE = filterRulesE.addElement(MailConstants.E_FILTER_RULE);
+        Element filterRulesE = legacyElem.addNonUniqueElement(MailConstants.E_FILTER_RULES);
+        Element filterRuleE = filterRulesE.addNonUniqueElement(MailConstants.E_FILTER_RULE);
         filterRuleE.addAttribute(MailConstants.A_NAME, "filter.bug65572");
         filterRuleE.addAttribute(MailConstants.A_ACTIVE, false);
-        Element filterTestsE = filterRuleE.addElement(MailConstants.E_FILTER_TESTS);
+        Element filterTestsE = filterRuleE.addNonUniqueElement(MailConstants.E_FILTER_TESTS);
         filterTestsE.addAttribute(MailConstants.A_CONDITION, "anyof");
-        Element hdrTestE = filterTestsE.addElement(MailConstants.E_HEADER_TEST);
+        Element hdrTestE = filterTestsE.addNonUniqueElement(MailConstants.E_HEADER_TEST);
         hdrTestE.addAttribute(MailConstants.A_INDEX, 0);
         hdrTestE.addAttribute(MailConstants.A_HEADER, "X-Spam-Score");
         hdrTestE.addAttribute(MailConstants.A_CASE_SENSITIVE, false);  /* not actually in above test */
         hdrTestE.addAttribute(MailConstants.A_STRING_COMPARISON, "contains");
         hdrTestE.addAttribute(MailConstants.A_VALUE, "0");
-        Element filterActionsE = filterRuleE.addElement(MailConstants.E_FILTER_ACTIONS);
-        Element actionFlagE = filterActionsE.addElement(MailConstants.E_ACTION_FLAG);
+        Element filterActionsE = filterRuleE.addNonUniqueElement(MailConstants.E_FILTER_ACTIONS);
+        Element actionFlagE = filterActionsE.addNonUniqueElement(MailConstants.E_ACTION_FLAG);
         actionFlagE.addAttribute(MailConstants.A_FLAG_NAME, "flagged");
         actionFlagE.addAttribute(MailConstants.A_INDEX, 0);
-        Element actionStopE = filterActionsE.addElement(MailConstants.E_ACTION_STOP);
+        Element actionStopE = filterActionsE.addNonUniqueElement(MailConstants.E_ACTION_STOP);
         actionStopE.addAttribute(MailConstants.A_INDEX, 1);
         return legacyElem;
     }
@@ -955,7 +960,7 @@ header="X-Spam-Score"/>
      * @throws Exception
      */
     @Test
-    public void bug65572_BooleanAndXmlElements() throws Exception {
+    public void bug65572BooleanAndXmlElements() throws Exception {
         Element legacyXmlElem = mkFilterRulesResponse(XMLElement.mFactory);
         Element legacyJsonElem = mkFilterRulesResponse(JSONElement.mFactory);
 
@@ -1032,7 +1037,7 @@ header="X-Spam-Score"/>
      * use for Zimbra JSON now handles lists of strings this way by default.  GetFilterRules uses JAXB rather than
      * Element already.
      * Similar situation using Element based code for GetDistributionListMembers response used multiple calls to:
-     *     parent.addElement(AccountConstants.E_DLM).setText(member);
+     *     parent.addNonUniqueElement(AccountConstants.E_DLM).setText(member);
      * Desired JSON :
       {
         "condition": "anyof",
@@ -1087,7 +1092,7 @@ header="X-Spam-Score"/>
     public void xmlEnumValuesInAttrAndElem() throws Exception {
         Element jsonElem = JSONElement.mFactory.createElement(QName.get("enum-tester", "urn:zimbraTest"));
         jsonElem.addAttribute("fold1", ViewEnum.VIRTUAL_CONVERSATION.toString());
-        jsonElem.addElement("fold2").addText(ViewEnum.UNKNOWN.toString());
+        jsonElem.addNonUniqueElement("fold2").addText(ViewEnum.UNKNOWN.toString());
         EnumAttribEnumElem tstr = new EnumAttribEnumElem();
         tstr.setFold1(ViewEnum.VIRTUAL_CONVERSATION);
         tstr.setFold2(ViewEnum.UNKNOWN);
@@ -1152,7 +1157,7 @@ header="X-Spam-Score"/>
         final String elem1Val = "My element ONE";
         Element jsonElem = JSONElement.mFactory.createElement(QName.get("string-tester", "urn:zimbraTest2"));
         jsonElem.addAttribute("attribute-1", attr1Val);
-        jsonElem.addElement(QName.get("element1", "urn:zimbraTest3")).addText(elem1Val);
+        jsonElem.addNonUniqueElement(QName.get("element1", "urn:zimbraTest3")).addText(elem1Val);
         StringAttrStringElem tstr = new StringAttrStringElem();
         tstr.setAttr1(attr1Val);
         tstr.setElem1(elem1Val);
@@ -1190,9 +1195,9 @@ header="X-Spam-Score"/>
         final String attr1Val = "My attribute ONE";
         final String elem1Val = "My element ONE";
         Element jsonElem = JSONElement.mFactory.createElement(QName.get("ns-delta", "urn:ZimbraTest4"));
-        Element saseElem = jsonElem.addElement(QName.get("strAttrStrElem", "urn:ZimbraTest5"));
+        Element saseElem = jsonElem.addNonUniqueElement(QName.get("strAttrStrElem", "urn:ZimbraTest5"));
         saseElem.addAttribute("attribute-1", attr1Val);
-        saseElem.addElement(QName.get("element1", "urn:ZimbraTest3")).addText(elem1Val);
+        saseElem.addNonUniqueElement(QName.get("element1", "urn:ZimbraTest3")).addText(elem1Val);
         logDebug("JSONElement (for comparison) ---> prettyPrint\n%1$s", jsonElem.prettyPrint());
         NamespaceDeltaElem tstr = new NamespaceDeltaElem();
         StringAttrStringElem tstrSase = new StringAttrStringElem();
@@ -1272,8 +1277,8 @@ header="X-Spam-Score"/>
     }
 
     /**
-     * A JSON element added via {@code addElement} is always serialized as an array, because there could be
-     * further {@code addElement} calls with the same element name.  On the other hand, a JSON element added via
+     * A JSON element added via {@code addNonUniqueElement} is always serialized as an array, because there could be
+     * further {@code addNonUniqueElement} calls with the same element name.  On the other hand, a JSON element added via
      * {@code addUniqueElement} won't be serialized as an array as their is an implicit assumption that there will
      * be only one element with that name.
      * Desired JSON :
@@ -1301,7 +1306,7 @@ header="X-Spam-Score"/>
         final String valueStr = new Integer(value).toString();
         Element jsonElem = JSONElement.mFactory.createElement(QName.get("unique-tester", "urn:zimbraTest"));
         jsonElem.addUniqueElement(QName.get("unique-str-elem", "urn:zimbraTest1")).setText(elem1);
-        jsonElem.addElement(QName.get("non-unique-elem", "urn:zimbraTest1")).setText(elem1);
+        jsonElem.addNonUniqueElement(QName.get("non-unique-elem", "urn:zimbraTest1")).setText(elem1);
         jsonElem.addUniqueElement("unique-complex-elem").addAttribute("attr1", attrib1).setText(valueStr);
         logDebug("JSONElement (for comparison) ---> prettyPrint\n%1$s", jsonElem.prettyPrint());
         UniqueTester tstr = new UniqueTester();
@@ -1340,9 +1345,9 @@ header="X-Spam-Score"/>
     @Test
     public void enumElemList() throws Exception {
         Element jsonElem = JSONElement.mFactory.createElement(QName.get("enum-elem-list", "urn:zimbraTest"));
-        jsonElem.addElement("enum-entry").addText(ViewEnum.APPOINTMENT.toString());
-        jsonElem.addElement("enum-entry").addText(ViewEnum.UNKNOWN.toString());
-        jsonElem.addElement("enum-entry").addText(ViewEnum.DOCUMENT.toString());
+        jsonElem.addNonUniqueElement("enum-entry").addText(ViewEnum.APPOINTMENT.toString());
+        jsonElem.addNonUniqueElement("enum-entry").addText(ViewEnum.UNKNOWN.toString());
+        jsonElem.addNonUniqueElement("enum-entry").addText(ViewEnum.DOCUMENT.toString());
         logDebug("JSONElement (for comparison) ---> prettyPrint\n%1$s", jsonElem.prettyPrint());
         EnumElemList tstr = new EnumElemList();
         tstr.addEntry(ViewEnum.APPOINTMENT);
@@ -1400,9 +1405,9 @@ header="X-Spam-Score"/>
     @Test
     public void wrappedEnumElemList() throws Exception {
         Element jsonElem = JSONElement.mFactory.createElement(QName.get("wrapped-enum-elem-list", "urn:zimbraTest"));
-        Element wrapElem = jsonElem.addElement("wrapper");
-        wrapElem.addElement("enum-entry").addText(ViewEnum.APPOINTMENT.toString());
-        wrapElem.addElement("enum-entry").addText(ViewEnum.DOCUMENT.toString());
+        Element wrapElem = jsonElem.addNonUniqueElement("wrapper");
+        wrapElem.addNonUniqueElement("enum-entry").addText(ViewEnum.APPOINTMENT.toString());
+        wrapElem.addNonUniqueElement("enum-entry").addText(ViewEnum.DOCUMENT.toString());
         logDebug("JSONElement (for comparison) ---> prettyPrint\n%1$s", jsonElem.prettyPrint());
         WrappedEnumElemList tstr = new WrappedEnumElemList();
         tstr.addEntry(ViewEnum.APPOINTMENT);
@@ -1938,9 +1943,9 @@ header="X-Spam-Score"/>
         Element jsonElem = JSONElement.mFactory.createElement(QName.get("XmlElemJsonAttr", "urn:zimbraTest"));
         Element xmlElem = XMLElement.mFactory.createElement(QName.get("XmlElemJsonAttr", "urn:zimbraTest"));
         jsonElem.addAttribute("xml-elem-json-attr", str1, Element.Disposition.CONTENT);
-        jsonElem.addElement("classic-elem").setText(str2);
+        jsonElem.addNonUniqueElement("classic-elem").setText(str2);
         xmlElem.addAttribute("xml-elem-json-attr", str1, Element.Disposition.CONTENT);
-        xmlElem.addElement("classic-elem").setText(str2);
+        xmlElem.addNonUniqueElement("classic-elem").setText(str2);
         logDebug("XMLElement ---> prettyPrint\n%1$s", xmlElem.prettyPrint());
         logDebug("JSONElement ---> prettyPrint\n%1$s", jsonElem.prettyPrint());
         XmlElemJsonAttr jaxb = new XmlElemJsonAttr(str1, str2);
@@ -1953,6 +1958,63 @@ header="X-Spam-Score"/>
         Assert.assertEquals("JSONElement xml-elem-json-attr as attribute", str1, jsonElem.getAttribute("xml-elem-json-attr"));
         // Note difference from XMLElement - for JSON this is Always an attribute but for XML it can be treated as an element
         Assert.assertEquals("JSONElement num xml-elem-json-attr elements", 0, jsonElem.listElements("xml-elem-json-attr").size());
+    }
+
+    @Test
+    public void systemRetentionPolicyResponse() throws Exception {
+        RetentionPolicy rp = new RetentionPolicy((Iterable<Policy>) null, (Iterable<Policy>) null);
+        GetSystemRetentionPolicyResponse jaxb = new GetSystemRetentionPolicyResponse(rp);
+        Element jsonJaxbElem = JacksonUtil.jaxbToJSONElement(jaxb);
+        logDebug("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
+        Assert.assertEquals("json string from jaxb", jsonEmptyGetSystemRetentionPolicyResponse,
+                jsonJaxbElem.prettyPrint());
+        GetSystemRetentionPolicyResponse roundtripped =
+                JaxbUtil.elementToJaxb(jsonJaxbElem, GetSystemRetentionPolicyResponse.class);
+        Assert.assertEquals("roundtripped retention policy",
+                jaxb.getRetentionPolicy().toString(), roundtripped.getRetentionPolicy().toString());
+
+        rp = new RetentionPolicy(
+                Collections.singleton(Policy.newUserPolicy("200")),
+                Collections.singleton(Policy.newUserPolicy("400")));
+        jaxb = new GetSystemRetentionPolicyResponse(rp);
+        jsonJaxbElem = JacksonUtil.jaxbToJSONElement(jaxb);
+        logDebug("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
+        Assert.assertEquals("json string from jaxb", jsonGetSystemRetentionPolicyResponse,
+                jsonJaxbElem.prettyPrint());
+        roundtripped = JaxbUtil.elementToJaxb(jsonJaxbElem, GetSystemRetentionPolicyResponse.class);
+        Assert.assertEquals("roundtripped retention policy",
+                jaxb.getRetentionPolicy().toString(), roundtripped.getRetentionPolicy().toString());
+    }
+
+    /** Verify that a class with ZmBoolean fields is handled correctly. */
+    @Test
+    public void verifyCodeResponse() throws Exception {
+        String jsonStr =
+                "{\n" +
+                "  \"success\": true,\n" +
+                "  \"_jsns\": \"urn:zimbraMail\"\n" +
+                "}";
+        VerifyCodeResponse jaxb = new VerifyCodeResponse(true);
+        Element jsonJaxbElem = JacksonUtil.jaxbToJSONElement(jaxb);
+        logDebug("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
+        Assert.assertEquals("json string from jaxb", jsonStr, jsonJaxbElem.prettyPrint());
+        VerifyCodeResponse roundtripped =
+                JaxbUtil.elementToJaxb(jsonJaxbElem, VerifyCodeResponse.class);
+        Assert.assertEquals("roundtripped value", true, roundtripped.getSuccess());
+    }
+
+    @Test
+    public void cacheSelectorStringSerializeDeserialize() throws Exception {
+        CacheSelector selector = new CacheSelector(false, "acl,skin");
+        selector.setIncludeImapServers(true);
+        selector.addEntry(new CacheEntrySelector(CacheEntrySelector.CacheEntryBy.name, "foobar"));
+        selector.addEntry(new CacheEntrySelector(CacheEntrySelector.CacheEntryBy.name, "humph"));
+        String json = JacksonUtil.jaxbToJsonNonSoapApi(selector);
+        logDebug("JSON from JAXB\n%1$s", json);
+        CacheSelector newSel = JacksonUtil.jsonToJaxbNonSoapApi(json, CacheSelector.class);
+        String json2 = JacksonUtil.jaxbToJsonNonSoapApi(newSel);
+        logDebug("Round tripped JSON\n%1$s", json2);
+        Assert.assertEquals("Round tripped json", json, json2);
     }
 
     public String getZimbraJsonJaxbString(Object obj) {
@@ -1975,8 +2037,9 @@ header="X-Spam-Score"/>
     public ObjectMapper getSimpleJsonJaxbMapper() {
         ObjectMapper mapper = new ObjectMapper();
         mapper.setAnnotationIntrospector(
-                AnnotationIntrospector.pair(new JacksonAnnotationIntrospector(), new JaxbAnnotationIntrospector()));
-        mapper.enable(SerializationConfig.Feature.INDENT_OUTPUT);
+                AnnotationIntrospector.pair(new JacksonAnnotationIntrospector(),
+                        new JaxbAnnotationIntrospector(TypeFactory.defaultInstance())));
+        mapper.enable(SerializationFeature.INDENT_OUTPUT);
         return mapper;
     }
 

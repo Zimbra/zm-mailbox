@@ -21,10 +21,16 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 
+import io.leangen.graphql.annotations.GraphQLInputField;
+import io.leangen.graphql.annotations.GraphQLNonNull;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name=GqlConstants.CLASS_NEW_CONTACT_GROUP_MEMBER, description="Input for creating a new contact group member")
 public class NewContactGroupMember {
 
     /**
@@ -67,12 +73,14 @@ public class NewContactGroupMember {
         return new NewContactGroupMember(type, value);
     }
 
-    public void setType(String type) { this.type = type; }
-    public void setValue(String value) { this.value = value; }
+    @GraphQLInputField(name=GqlConstants.TYPE, description="Member type. C|G|I")
+    public void setType(@GraphQLNonNull String type) { this.type = type; }
+    @GraphQLInputField(name=GqlConstants.VALUE, description="Member value")
+    public void setValue(@GraphQLNonNull String value) { this.value = value; }
     public String getType() { return type; }
     public String getValue() { return value; }
 
-    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         return helper
             .add("type", type)
             .add("value", value);
@@ -80,6 +88,6 @@ public class NewContactGroupMember {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this)).toString();
+        return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
     }
 }

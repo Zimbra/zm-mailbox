@@ -18,6 +18,7 @@ package com.zimbra.cs.html;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Stack;
@@ -26,8 +27,10 @@ import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
+import com.zimbra.common.localconfig.DebugConfig;
+
 /**
- * A basic xhtml handler that deletes unfriendly tags and attributes.
+ * A basic xhtml handler that deletes unfriendly tags and attributes which are not whitelisted.
  * 
  * The functionality is based mostly off the DefangFilter that's used for html.
  * 
@@ -40,38 +43,15 @@ import org.xml.sax.helpers.DefaultHandler;
  */
 public class XHtmlDocumentHandler extends DefaultHandler {
     /**
-     * The list of tags that should always be removed
+     * The list of tags that should always be allowed
      */
-    private static Set<String> removeTags = new HashSet<String>();
-    
-    private static Set<String> removeAttributes = new HashSet<String>(); 
-    // fills in the static sets
-    static {
-        removeTags.add("applet");
-        removeTags.add("frame");
-        removeTags.add("frameset");
-        removeTags.add("iframe");
-        removeTags.add("object");
-        removeTags.add("script");
-        removeTags.add("style");
-        removeTags.add("animate");
-        removeTags.add("foreignobject");
-        removeTags.add("embed");
-        removeTags.add("use");
-
-        removeAttributes.add("onclick");
-        removeAttributes.add("ondblclick");
-        removeAttributes.add("onmousedown");
-        removeAttributes.add("onmouseup");
-        removeAttributes.add("onmouseover");
-        removeAttributes.add("onmousemove");
-        removeAttributes.add("onmouseout");
-        removeAttributes.add("onkeypress");
-        removeAttributes.add("onkeydown");
-        removeAttributes.add("onkeyup");
-
-    }
-
+    private static Set<String> allowTags = new HashSet<String>(
+        Arrays.asList(DebugConfig.xhtmlWhitelistedTags.split(",")));
+    /**
+     * The list of attributes that should always be allowed
+     */
+    private static Set<String> allowAttributes = new HashSet<String>(
+        Arrays.asList(DebugConfig.xhtmlWhitelistedAttributes.split(",")));
 
     /*
      * The writer that we'll write the sanitzed output to
@@ -145,7 +125,7 @@ public class XHtmlDocumentHandler extends DefaultHandler {
         String eName = "".equals(sName)? qName: sName; // element name
 
         // check to see if we're removing this tag
-        if(removeTags.contains(eName.toLowerCase())) {
+        if(!allowTags.contains(eName.toLowerCase())) {
             removedElements.push(eName.toLowerCase());
             return;
         }
@@ -161,7 +141,7 @@ public class XHtmlDocumentHandler extends DefaultHandler {
             if (attrs != null) {
               for (int i = 0; i < attrs.getLength(); i++) {
                 String aName = "".equals(attrs.getLocalName(i))? attrs.getQName(i) : attrs.getLocalName(i); // Attr name
-                if(removeAttributes.contains(aName.toLowerCase())) {
+                if(!allowAttributes.contains(aName.toLowerCase())) {
                     // just skip this attribute
                     continue;
                 }

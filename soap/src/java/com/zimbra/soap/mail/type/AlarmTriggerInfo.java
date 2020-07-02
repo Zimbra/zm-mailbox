@@ -17,17 +17,24 @@
 
 package com.zimbra.soap.mail.type;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.AlarmTriggerInfoInterface;
 import com.zimbra.soap.base.DateAttrInterface;
 import com.zimbra.soap.base.DurationInfoInterface;
 
+import io.leangen.graphql.annotations.GraphQLIgnore;
+import io.leangen.graphql.annotations.GraphQLInputField;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name=GqlConstants.CLASS_ALARM_TRIGGER_INFORMATION, description="Alarm trigger information")
 public class AlarmTriggerInfo implements AlarmTriggerInfoInterface {
 
     /**
@@ -45,35 +52,43 @@ public class AlarmTriggerInfo implements AlarmTriggerInfoInterface {
     public AlarmTriggerInfo() {
     }
 
+    @GraphQLInputField(name=GqlConstants.ABSOLUTE, description="Absolute trigger information")
     public void setAbsolute(DateAttr absolute) { this.absolute = absolute; }
+    @GraphQLInputField(name=GqlConstants.RELATIVE, description="Relative trigger information")
     public void setRelative(DurationInfo relative) { this.relative = relative; }
+    @GraphQLQuery(name=GqlConstants.ABSOLUTE, description="Absolute trigger information")
     public DateAttr getAbsolute() { return absolute; }
+    @GraphQLQuery(name=GqlConstants.RELATIVE, description="Relative trigger information")
     public DurationInfo getRelative() { return relative; }
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
             .add("absolute", absolute)
             .add("relative", relative)
             .toString();
     }
 
     @Override
+    @GraphQLIgnore
     public void setAbsoluteInterface(DateAttrInterface absolute) {
         setAbsolute((DateAttr) absolute);
     }
 
     @Override
+    @GraphQLIgnore
     public void setRelativeInterface(DurationInfoInterface relative) {
         setRelative((DurationInfo) relative);
     }
 
     @Override
+    @GraphQLIgnore
     public DateAttrInterface getAbsoluteInterface() {
         return absolute;
     }
 
     @Override
+    @GraphQLIgnore
     public DurationInfoInterface getRelativeInterface() {
         return relative;
     }

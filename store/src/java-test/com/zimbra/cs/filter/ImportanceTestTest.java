@@ -17,6 +17,7 @@
 package com.zimbra.cs.filter;
 
 import com.zimbra.common.util.ArrayUtil;
+import org.junit.Ignore;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
@@ -41,7 +42,7 @@ import java.util.List;
  *
  * @author ysasaki
  */
-public final class ImportanceTestTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public final class ImportanceTestTest {
 
     @BeforeClass
     public static void init() throws Exception {

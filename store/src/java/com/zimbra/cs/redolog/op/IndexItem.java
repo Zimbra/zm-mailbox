@@ -19,6 +19,7 @@ package com.zimbra.cs.redolog.op;
 import java.io.IOException;
 import java.util.List;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.mailbox.MailItem;
@@ -108,8 +109,7 @@ public class IndexItem extends RedoableOp {
         }
 
         try {
-            List<IndexDocument> docList = item.generateIndexData();
-            mbox.index.redoIndexItem(item, mId, docList);
+            mbox.index.redoIndexItem(item);
         } catch (Exception e) {
             // TODO - update the item and set the item's "unindexed" flag
             ZimbraLog.index.info("Caught exception attempting to replay IndexItem for ID "+mId+" item will not be indexed", e);
@@ -145,7 +145,7 @@ public class IndexItem extends RedoableOp {
         return mCommitAllowed;
     }
 
-    public synchronized void allowCommit() {
+    public synchronized void allowCommit() throws ServiceException {
         mCommitAllowed = true;
         if (mAttachedToParent) {
             commit();
@@ -157,8 +157,9 @@ public class IndexItem extends RedoableOp {
      * called by two different threads.  It's necessary to remember if
      * commit/abort has been called already and ignore the subsequent
      * calls.
+     * @throws ServiceException
      */
-    @Override public synchronized void commit() {
+    @Override public synchronized void commit() throws ServiceException {
         if (ZimbraLog.index.isDebugEnabled())
             ZimbraLog.index.debug(this.toString()+" committed");
 
@@ -190,7 +191,7 @@ public class IndexItem extends RedoableOp {
         mParentOp = op;
     }
 
-    public synchronized void attachToParent() {
+    public synchronized void attachToParent() throws ServiceException {
         if (!mCommitAllowed && !mAttachedToParent) {
             mAttachedToParent = true;
             if (mParentOp != null)

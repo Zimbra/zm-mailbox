@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.mailbox.Folder;
@@ -47,16 +48,13 @@ class FolderChanges {
         List<Integer> tombstones;
         List<Folder> modifiedFolders;
 
-        mbox.lock.lock(false);
-        try {
+        try (final MailboxLock l = mbox.getReadLockAndLockIt()) {
             lastChangeId = mbox.getLastChangeID();
             if (lastChangeId <= lastSync) {
                 return this; // No changes
             }
             tombstones = mbox.getTombstones(lastSync).getIds(MailItem.Type.FOLDER);
             modifiedFolders = mbox.getModifiedFolders(lastSync);
-        } finally {
-            mbox.lock.release();
         }
         if ((tombstones == null || tombstones.isEmpty()) && modifiedFolders.isEmpty()) {
             return this; // No changes

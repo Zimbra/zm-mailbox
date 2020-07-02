@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2011, 2013, 2014, 2016, 2020 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -52,7 +52,9 @@ public class FormatterFactory {
             VCF("vcf", MimeConstants.CT_TEXT_VCARD),
             XML("xml", MimeConstants.CT_TEXT_XML),
             ZIP("zip", MimeConstants.CT_APPLICATION_ZIP),
-            OPATCH("opatch", MimeConstants.CT_APPLICATION_OCTET_STREAM);
+            OPATCH("opatch", MimeConstants.CT_APPLICATION_OCTET_STREAM),
+            MOBILE_CONFIG("mobileconfig", MimeConstants.CT_TEXT_XML),
+            MBOX("mbox", MimeConstants.CT_MBOX);
 
             /**
              * cache of available format types
@@ -142,6 +144,8 @@ public class FormatterFactory {
         addFormatter(new ZipFormatter());
         addFormatter(new ContactFolderFormatter());
         addFormatter(new OctopusPatchFormatter());
+        addFormatter(new MobileConfigFormatter());
+        addFormatter(new MboxFormatter());
     }
 
     /**

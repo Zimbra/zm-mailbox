@@ -21,6 +21,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.account.Key;
+import com.zimbra.common.account.ZAttrProvisioning.AccountStatus;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -32,7 +34,9 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.TargetType;
-import com.zimbra.soap.JaxbUtil;
+import com.zimbra.cs.listeners.AccountListener;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.CreateAccountRequest;
 
@@ -58,21 +62,48 @@ public class CreateAccount extends AdminDocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
-        CreateAccountRequest req = zsc.elementToJaxb(request);
+        Account account = null;
+        boolean rollbackOnFailure = LC.rollback_on_account_listener_failure.booleanValue();
+        try {
+            CreateAccountRequest req = zsc.elementToJaxb(request);
 
-        String name = req.getName().toLowerCase();
-        Map<String, Object> attrs = req.getAttrsAsOldMultimap(true /* ignoreEmptyValues */);
+            String name = req.getName().toLowerCase();
+            Map<String, Object> attrs = req.getAttrsAsOldMultimap(true /* ignoreEmptyValues */);
 
-        checkDomainRightByEmail(zsc, name, Admin.R_createAccount);
-        checkSetAttrsOnCreate(zsc, TargetType.account, name, attrs);
-        checkCos(zsc, attrs);
+            checkDomainRightByEmail(zsc, name, Admin.R_createAccount);
+            checkSetAttrsOnCreate(zsc, TargetType.account, name, attrs);
+            checkCos(zsc, attrs);
 
-        Account account = prov.createAccount(name, req.getPassword(), attrs);
+            AccountListener.invokeBeforeAccountCreation(name, attrs);
 
-        ZimbraLog.security.info(ZimbraLog.encodeAttrs( new String[] {"cmd", "CreateAccount","name", name}, attrs));
+            account = prov.createAccount(name, req.getPassword(), attrs);
+
+            ZimbraLog.security.info(ZimbraLog.encodeAttrs( new String[] {"cmd", "CreateAccount","name", name}, attrs));
+        } catch (ServiceException e) {
+            AccountListener.invokeOnException(e);
+            throw e;
+        }
 
         Element response = zsc.createElement(AdminConstants.CREATE_ACCOUNT_RESPONSE);
         ToXML.encodeAccount(response, account);
+        try {
+            AccountListener.invokeOnAccountCreation(account, zsc);
+        } catch (ServiceException e) {
+            if (rollbackOnFailure) {
+                // roll-back account creation
+                prov.modifyAccountStatus(account, AccountStatus.maintenance.name());
+                Mailbox mbox = Provisioning.onLocalServer(account)
+                    ? MailboxManager.getInstance().getMailboxByAccount(account, false) : null;
+                if (mbox != null) {
+                    mbox.deleteMailbox();
+                }
+                prov.deleteAccount(account.getId());
+                throw ServiceException
+                    .FAILURE("Failed to create account '" + account.getName() + "' in AccountListener", e);
+            } else {
+                ZimbraLog.account.warn("No rollback on zimbra create account for account listener failure, there may be inconsistency in accounts. %s", e.getMessage());
+            }
+        }
         return response;
     }
 

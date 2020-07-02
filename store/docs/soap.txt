@@ -420,11 +420,13 @@ global soap/system errors used with zimbra:Error/Code:
    account.TWO_FACTOR_SETUP_REQUIRED
 
 
- <AuthRequest xmlns="urn:zimbraAccount" [persistAuthTokenCookie="1"][csrfTokenSecured="0|1"] [deviceTrusted="0|1"] [generateDeviceId="0|1"]>
+ <AuthRequest xmlns="urn:zimbraAccount" [persistAuthTokenCookie="1"][csrfTokenSecured="0|1"] [deviceTrusted="0|1"] [generateDeviceId="0|1"][tokenType="JWT"]>
    [<account by="name|id|foreignPrincipal">...</account>]
    [<password>...</password>]
+   [<recoveryCode>...</recoveryCode>]
    [<preauth timestamp="{timestamp}" expires="{expires}">{computed-preauth-value}</preauth>]
    [<authToken [verifyAccount="1"]>...</authToken>]
+   [<jwtToken>...</jwtToken>]
    [<virtualHost>{virtual-host}</virtualHost>]
    [<prefs>[<pref name="..."/>...]</prefs>]
    [<attrs>[<attr name="..."/>...]</attrs>]
@@ -451,14 +453,20 @@ global soap/system errors used with zimbra:Error/Code:
  </AuthResponse>
 
 Note:
+when tokenType is set as "JWT", token returned in response is a JWT(JasonWebToken).
 
-when specifiying an account, one of <password> or <preauth> must be specified. see preauth.txt for a discussion of preauth.
+when specifiying an account, one of <password>, <preauth> or <recoveryCode> must be specified. see preauth.txt for a discussion of preauth.
+recoveryCode can be used for auth during password reset flow.
 
 An authToken can be passed instead of account/password/preauth to validate an existing auth token.
 If verifyAccount="1", <account> is required and the account in the auth token is compared to the named account.
 Mismatch results in auth failure.  An external app that relies on ZCS for user identification can use this to
 test if the auth token provided by the user belongs to that user.
 If verifyAccount="0" (default), only the auth token is verified and any <account> element specified is ignored.
+
+JWT can also be passed instead of account/password/preauth to validate an existing JWT.when JWT is passed,
+ ZM_JWT cookie should be set in the request or jwtSalt should be present in the soap context.
+When token type is JWT, authToken element is not supported i.e. JWT can not be issued on the basis of an auth token.
 
   {persistAuthTokenCookie} = controls whether the auth token cookie in the response should 
                              be persisted when the browser exits.
@@ -525,14 +533,18 @@ See ZimbraTwoFactorAuth server extension docs for more details on two-factor aut
   Returns new authToken, as old authToken will be invalidated on password change.
 
 ---------------------------
-
-<EndSessionRequest xmlns="urn:zimbraAccount" [logoff="1"]/>
+<EndSessionRequest xmlns="urn:zimbraAccount" [logoff="1"] [all="1"] [excludeCurrent="1"] [sessionId="session_id"]/>
 
 Ends the current session, removing it from all caches.  Called when
 the browser app (or other session-using app) shuts down.  Has no
 effect if called in a <nosession> context.
 
 Setting logoff to "1" will prevent the cookie from being re-used.
+Setting sessionId will end session for given session id and not current session.
+
+When all is 1, all web sessions of the user will be cleared.
+When all is 1 and excludeCurrent is also 1, all web sessions of the user, except the current session will be cleared.
+For all and sessionId, <nosession> context has no effect.
 
 ---------
  <GetPrefsRequest>
@@ -882,14 +894,14 @@ import and export of addressbook.
 
 ----------------------------
 
- <SyncGalRequest [limit={limit}] [token="{previous-token}] [idOnly={true|false}]"/>
+ <SyncGalRequest [limit={limit}] [token="{previous-token}] [idOnly={true|false}] [getCount={true|false}]"/>
 
   {limit} - Page size control for SyncGalRequest. The maximum entries that can be returned for
  every SyncGal Request can be controlled by specifying this limit.
   {previous-token} - The page offset token from where sync gal should be resumed.
 
  <SyncGalResponse token="{new-token}" [galDefinitionLastModified="{timestamp}"] [throttled="{throttled-flag}"]
-                                     [fullSyncRecommended="{fullSyncRecommended-flag}"] >
+                                     [fullSyncRecommended="{fullSyncRecommended-flag}"] [remain="{count of remaining items}"]>
    <cn>...</cn>*
    <deleted id="{itemId}">*
  </SyncGalResponse>
@@ -898,9 +910,11 @@ import and export of addressbook.
   id attribute without all the contact fields populated.  The sync client
   then should make batch request to the server to fetch the contact fields
   with <GetContactsRequest/>.
+  If the request has getCount set to true, then the response will contain count of items remaining.
   Note: idOnly only works when GAL sync account is configured/enabled.
   If idOnly is specified and GAL sync account is not enabled, idOnly will
   be ignored.
+  Note: getCount works only when idOnly is set to true and GAL sync account is configured/enabled.
   galDefinitionLastModified is the time at which the GAL definition is last modified.
   This is returned if the sync does not happen using GAL sync account.
   {throttled-flag} - true if the SyncGal request is throttled.
@@ -4328,6 +4342,9 @@ Ajax client can use this request to ask the server for help in generating a prop
 
 <GetDistributionListMembersResponse more="{more-flag}" [total="{total}"]>
     <dlm>{member email}</dlm>+
+    <groupMember name={member email}>
+      <attr name={attribute-name}>{attribute-value}</attr>+
+    </groupMember>+
 </GetDistributionListMembersResponse>
 
 Notes:
@@ -4337,7 +4354,8 @@ Notes:
     more-flag = true if more members left to return
     total = total number of distribution lists (not affected by limit/offset)
     
-    returns group members sorted ascendingly by email address.
+    returns group members in <dlm> element, sorted ascendingly by email address for non-hab distribution lists
+    For HAB Groups, it returns group members with their details in groupMember element, sorted by seniorityIndex and then by name.
 
 -----------------------------
 
@@ -4764,3 +4782,114 @@ Note: The item id returned in response can be used to download the profile image
 Server Debug config parameters:
 1. profile_image_max_size = maximum image size allowed for account profile
 2. profile_thumbnail_image_dimension = profile ldap thumbnail image dimesion
+
+-----------------------------
+API to set recovery email address
+<SetRecoveryAccountRequest op="{op}" recoveryAccount="{recoveryAccount}" recoveryAccountVerificationCode="{recoveryAccountVerificationCode}" channel="email">
+</SetRecoveryAccountRequest>
+
+{op} = op can be sendCode, validateCode, resendCode or reset.
+{recoveryAccount} = Recovery account address to be set
+{recoveryAccountVerificationCode} = Recovery account verification code to validate the account
+channel = It is a mandatory attribute with value "email" only. As only email is supported currently.
+
+sendCode: reads input parameter {recoveryAccount}. If the code is not already sent to this account, generates new code and sends to the recovery address. Sets the recovery address status to pending.
+validateCode: reads input parameter {recoveryAccountVerificationCode}. If the code is not expired and verified successfully, sets the recovery address status to verified.
+resendCode: reads no input parameter. If the code is not yet expired, resends the code to recovery account set in sendCode request. If it is expired, generates new code and resends.
+reset: reads no input parameter. 'reset' will clear all ldap attributes related to recovery account.
+
+<SetRecoveryAccountResponse>
+</SetRecoveryAccountResponse>
+
+-----------------------------
+API to get recovery email address and send recovery code to reset forgotten password.
+<RecoverAccountRequest op="{getRecoveryAccount|sendRecoveryCode}" email="{user_email}" channel="email" xmlns="urn:zimbraMail" />
+
+channel = It is a mandatory attribute with value "email" only. As only email is supported currently.
+getRecoveryAccount = get recovery account for given channel only if it's verified.
+sendRecoveryCode = send recovery code to recovery account using given channel only if it's verified.
+user_email = email address of the user who forgot the password.
+
+<RecoverAccountResponse recoveryAccount="{recovery_account}" recoveryAttemptsLeft="{recovery_attempts_left}"/>
+recovery_account = verified recovery account for getRecoveryAccount operation
+recovery_attempts_left = attempts remaining before feature suspension.
+
+-----------------------------
+API to reset password of authenticated account under zimbraAccount namespace.
+<ResetPasswordRequest>
+    <password>...</password>
+</ResetPasswordRequest>
+ HERE,
+ password = new password to set for account
+
+<ResetPasswordResponse />
+
+-----------------------
+Get HAB API
+-----------------------
+<GetHABRequest habRootGroupId="{id of HAB Group}"/>
+
+</GetHABRequest>
+
+<GetHABResponse>
+    <habGroup rootHabGroup="{TRUE|FALSE}" seniorityIndex="{0|1}"
+       name="{habGroupName}" id="{habGroupId}" parentHabGroupId="{parentHabGroupId}">
+       <a n="...">...</a>+
+       {Child groups of this parent group}
+       <habGroup rootHabGroup="{TRUE|FALSE}" seniorityIndex="{0|1}"
+       name="{habGroupName}" id="{habGroupId}" parentHabGroupId="{parentHabGroupId}">
+       </habGroup>+
+      
+    </habGroup>+
+ </GetHABResponse>
+   
+
+----------------------------
+API to get all active address lists in the user's domain
+<GetAllAddressListsRequest xmlns="urn:zimbraAccount"/>
+
+Returns list of address lists.
+      <GetAllAddressListsResponse xmlns="urn:zimbraAccount">
+         <AddressLists>
+            <AddressList name={name_of_address_list} [description={description}] id={zimbraId}/>
+            ...
+         </AddressLists>
+      </GetAllAddressListsResponse>
+
+-----------------------------
+GetAddressListMembers
+
+API to get the members of an address list
+
+Request:
+<GetAddressListMembersRequest limit="{max result items}" offset="{offset from which result should be returned}"   id="{address list id}" countOnly="0|1{if only total account is returned}"/>
+
+Response
+<GetAddressListMembersResponse xmlns="urn:zimbraAccount">
+ <alm total="{total members in query result}">
+ <member>{email}</member>+
+</alm>
+</GetAddressListMembersResponse>
+
+-----------------------------
+GetAddressListInfo
+
+API to get the meta info of an address list.
+Address list may be requested by id, or name and domain.
+If address list is requested by id, name and domain are ignored.
+
+Request:
+<GetAddressListInfoRequest name="{address list name}" id="{address list id}">
+ <domain by="{by}">{address list domain}</domain>
+</GetAddressListInfoRequest>
+
+Response:
+<GetAddressListInfoResponse name="{address list name}" id="{address list id}" type="{address list type}" xmlns="urn:zimbraAccount">
+ <domain by="name">{address list domain}</domain>
+ <desc>{address list description}</desc>
+ <searchFilter>
+    <conds>
+        <cond/>+
+    </conds>
+ </searchFilter>
+</GetAddressListInfoResponse>

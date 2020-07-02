@@ -28,17 +28,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.lucene.document.Document;
 import org.apache.lucene.index.Term;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.io.Closeables;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.db.Db;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.db.DbSearch;
+import com.zimbra.cs.index.SortBy.Key;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -47,6 +46,7 @@ import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.util.IOUtil;
 
 /**
  * {@link QueryOperation} which goes to the SQL DB. It might have a "child" Lucene operation attached to it.
@@ -286,7 +286,7 @@ public class DBQueryOperation extends QueryOperation {
         if (luceneOp == null) {
             luceneOp = op;
         } else {
-            luceneOp.addClause(op.getQueryString(), op.getQuery(), true);
+            luceneOp.addClause(op.getQueryString(), op.getQuery(), true, op.getIndexTypes());
         }
     }
 
@@ -445,7 +445,7 @@ public class DBQueryOperation extends QueryOperation {
 
     @Override
     public void close() {
-        Closeables.closeQuietly(luceneOp);
+        IOUtil.closeQuietly(luceneOp);
     }
 
     @Override
@@ -532,7 +532,7 @@ public class DBQueryOperation extends QueryOperation {
                     // message with separately-indexed MIME parts. Each of these parts will turn into a separate
                     // ZimbraHit at this point, although they might be combined together at a higher level (via a
                     // HitGrouper).
-                    Collection<Document> docs = luceneChunk != null ? luceneChunk.getHit(sr.getIndexId()) : null;
+                    Collection<IndexDocument> docs = luceneChunk != null ? luceneChunk.getHit(sr.getIndexId()) : null;
 
                     if (docs == null || !ZimbraQueryResultsImpl.shouldAddDuplicateHits(sr.getType())) {
                         ZimbraHit toAdd = context.getResults().getZimbraHit(context.getMailbox(), sr, null, fetch);
@@ -544,7 +544,7 @@ public class DBQueryOperation extends QueryOperation {
                             }
                         }
                     } else {
-                        for (Document doc : docs) {
+                        for (IndexDocument doc : docs) {
                             ZimbraHit toAdd = context.getResults().getZimbraHit(context.getMailbox(), sr, doc, fetch);
                             if (toAdd != null) {
                                 // make sure we only return each hit once
@@ -621,6 +621,7 @@ public class DBQueryOperation extends QueryOperation {
                 case FOLDER:
                 case SEARCHFOLDER:
                 case TAG:
+                case SMARTFOLDER:
                     result.add(MailItem.Type.UNKNOWN);
                     break;
                 case CONVERSATION:
@@ -665,7 +666,7 @@ public class DBQueryOperation extends QueryOperation {
     private void dbSearch(List<DbSearch.Result> results, SortBy sort, int offset, int size) throws ServiceException {
         long start = System.currentTimeMillis();
         results.addAll(context.getMailbox().index.search(constraints, fetch, sort, offset, size,
-                context.getParams().inDumpster()));
+                context.getParams().inDumpster(), luceneChunk));
         ZimbraLog.search.debug("DBSearch elapsed=%d", System.currentTimeMillis() - start);
     }
 
@@ -680,6 +681,9 @@ public class DBQueryOperation extends QueryOperation {
             return true;
         }
 
+        if (context.getParams().getSortBy().getKey() == Key.RELEVANCE) {
+            return false;
+        }
         return constraints.tryDbFirst(context.getMailbox());
     }
 
@@ -739,7 +743,7 @@ public class DBQueryOperation extends QueryOperation {
                     // hits from Lucene then there are DB id's, so we just ask for a large number.
                     while (hasMore) {
                         luceneChunk = luceneOp.getNextResultsChunk(MAX_HITS_PER_CHUNK*3);
-                        Set<Integer> indexIds = luceneChunk.getIndexIds();
+                        List<Integer> indexIds = luceneChunk.getIndexIds();
                         if (indexIds.size() < MAX_HITS_PER_CHUNK*3) {
                             hasMore = false;
                         }
@@ -1265,6 +1269,11 @@ public class DBQueryOperation extends QueryOperation {
     @Override
     public long getCursorOffset() {
         return cursorOffset;
+    }
+
+    @Override
+    public boolean isRelevanceSortSupported() {
+        return luceneOp != null;
     }
 
 }

@@ -175,7 +175,7 @@ public class TestSendAndReceive {
             matcher = PAT_RETURN_PATH.matcher(line);
             if (matcher.matches()) {
                 foundReturnPath = true;
-                Assert.assertEquals("Sender doesn't match", sender, matcher.group(1));
+                Assert.assertEquals("Sender doesn't match", "<" + sender + ">", matcher.group(1));
                 ZimbraLog.test.debug("Found " + line);
             }
             line = reader.readLine();

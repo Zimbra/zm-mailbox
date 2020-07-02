@@ -19,7 +19,7 @@ package com.zimbra.cs.redolog.op;
 
 import java.io.IOException;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
@@ -63,7 +63,7 @@ public final class ModifyVolume extends RedoableOp {
 
     @Override
     protected String getPrintableData() {
-        return Objects.toStringHelper(this).add("id", id).add("type", type).add("name", name).add("path", rootPath)
+        return MoreObjects.toStringHelper(this).add("id", id).add("type", type).add("name", name).add("path", rootPath)
                 .add("mboxGroupBits", mboxGroupBits).add("mboxBits", mboxBits)
                 .add("fileGroupBits", fileGroupBits).add("fileBits", fileBits)
                 .add("compressBlobs", compressBlobs).add("compressionThrehold", compressionThreshold)

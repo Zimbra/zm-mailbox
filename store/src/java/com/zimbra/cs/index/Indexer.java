@@ -20,8 +20,10 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.List;
 
-import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox.IndexItemEntry;
+import com.zimbra.cs.mailbox.MailboxIndex.ItemIndexDeletionInfo;
 
 /**
  * Abstraction of index write operations.
@@ -33,28 +35,45 @@ import com.zimbra.cs.mailbox.MailItem;
 public interface Indexer extends Closeable {
 
     /**
-     * Adds index documents.
+     * Deletes index documents.
+     *
+     * @param ids list of item IDs to delete
+     * @throws ServiceException
      */
-    void addDocument(Folder folder, MailItem item, List<IndexDocument> docs) throws IOException;
+    void deleteDocument(List<ItemIndexDeletionInfo> ids) throws IOException, ServiceException;
 
     /**
      * Deletes index documents.
      *
      * @param ids list of item IDs to delete
+     * @throws ServiceException
      */
-    void deleteDocument(List<Integer> ids) throws IOException;
+    void deleteDocumentById(List<Integer> ids) throws IOException, ServiceException;
 
     /**
-     * Compacts the index by expunging all the deletes.
+     * Index an IndexDocument derived from a search history item
      */
-    void compact();
+    void addSearchHistoryDocument(IndexDocument doc) throws IOException, ServiceException;
 
     /**
-     * Modeled on {@link org.apache.lucene.index.IndexReader} {@code maxDoc()} whose description is: <br />
-     * Returns total number of docs in this index, including docs not yet flushed (still in the RAM buffer),
-     * not counting deletions.  Note that this is a cached value.
-     * <p>Used from SOAP GetIndexStatsRequest</p>
-     * @return total number of documents in this index excluding deletions
+     * Adds single MailItem to index. A MailItem may contain multiple IndexDocuments.
+     * @param MailItem
+     * @param list of IndexDocument docs
+     * @throws ServiceException
+     * @throws TemporaryIndexingException
      */
-    int maxDocs();
+    void addDocument(MailItem item,List<IndexDocument> docs) throws IOException, ServiceException;
+
+    /**
+     * Deletes index documents by the specified field name
+     */
+    void deleteDocument(List<Integer> ids, String fieldName) throws IOException, ServiceException;
+
+    /**
+     * Adds multiple MailItems to index. Each MailItem may contain multiple IndexDocuments
+     * @param entries encapsulated in IndexItemEntry class
+     * @throws IOException
+     * @throws ServiceException
+     */
+    void add(List<IndexItemEntry> entries) throws IOException, ServiceException;
 }

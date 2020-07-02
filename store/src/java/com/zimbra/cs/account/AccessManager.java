@@ -21,7 +21,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
@@ -261,9 +261,9 @@ public abstract class AccessManager {
         @Override
         public String toString() {
             if (mImpl == null) {
-                return Objects.toStringHelper(this).toString();
+                return MoreObjects.toStringHelper(this).toString();
             }
-            return Objects.toStringHelper(this)
+            return MoreObjects.toStringHelper(this)
                 .add("targetType", mImpl.getTargetType())
                 .add("targetName", mImpl.getTargetName())
                 .add("granteeType", mImpl.getGranteeType())

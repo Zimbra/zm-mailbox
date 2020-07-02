@@ -92,6 +92,7 @@ public class ItemAction extends MailDocumentHandler {
     public static final String OP_INHERIT = MailConstants.OP_INHERIT;
     public static final String OP_MUTE = MailConstants.OP_MUTE;
     public static final String OP_IMAP_RESET = MailConstants.OP_RESET_IMAP_UID;
+    public static final String OP_SEEN = MailConstants.OP_SEEN;
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
@@ -247,6 +248,8 @@ public class ItemAction extends MailDocumentHandler {
                 mbox.resetImapUid(octxt, local);
 
                 localResults = new ItemActionResult(local);
+            } else if (opStr.equals(MailConstants.OP_SEEN)) {
+                localResults = ItemActionHelper.SEEN(octxt, mbox, responseProto, local).getResult();
             } else {
                 throw ServiceException.INVALID_REQUEST("unknown operation: " + opStr, null);
             }
@@ -264,6 +267,14 @@ public class ItemAction extends MailDocumentHandler {
             proxyRequest(zsc.createElement(MailConstants.NO_OP_REQUEST), context, remoteNotify.getId());
         }
 
+        // check if default calendar is deleted, if yes, reset default calendar id
+        Integer defaultCalId = mbox.getAccount().getPrefDefaultCalendarId();
+        if (defaultCalId != null
+                && (opStr.equals(MailConstants.OP_TRASH) || opStr.equals(MailConstants.OP_HARD_DELETE))
+                && result.mSuccessIds.contains(defaultCalId.toString())) {
+            ZimbraLog.mailbox.info("Default calendar deleted, so setting default calendar back to \"Calendar\"");
+            mbox.resetDefaultCalendarId();
+        }
         return result;
     }
 

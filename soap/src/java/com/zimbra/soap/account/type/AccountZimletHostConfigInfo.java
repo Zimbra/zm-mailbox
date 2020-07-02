@@ -17,7 +17,7 @@
 
 package com.zimbra.soap.account.type;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
@@ -30,12 +30,18 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.ZimletConstants;
 import com.zimbra.soap.base.ZimletHostConfigInfo;
 import com.zimbra.soap.base.ZimletProperty;
 
+import io.leangen.graphql.annotations.GraphQLIgnore;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {})
+@GraphQLType(name=GqlConstants.CLASS_ACCOUNT_ZIMLET_HOST_CONFIG_INFO, description="Account zimlet host configuration information")
 public class AccountZimletHostConfigInfo
 implements ZimletHostConfigInfo {
 
@@ -78,8 +84,10 @@ implements ZimletHostConfigInfo {
         this.properties.add(property);
     }
 
+    @GraphQLQuery(name=GqlConstants.NAME, description="Name")
     @Override
     public String getName() { return name; }
+    @GraphQLQuery(name=GqlConstants.ZIMLET_HOST_CONFIG_PROPERTIES, description="zimlet host config properties")
     public List<AccountZimletProperty> getProperties() {
         return Collections.unmodifiableList(properties);
     }
@@ -95,12 +103,13 @@ implements ZimletHostConfigInfo {
     }
 
     @Override
+    @GraphQLIgnore
     public List<ZimletProperty> getZimletProperties() {
         return AccountZimletProperty.toInterfaces(properties);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(
+                MoreObjects.ToStringHelper helper) {
         return helper
             .add("name", name)
             .add("properties", properties);
@@ -108,7 +117,7 @@ implements ZimletHostConfigInfo {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
+        return addToStringInfo(MoreObjects.toStringHelper(this))
                 .toString();
     }
 }

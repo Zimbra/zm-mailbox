@@ -24,6 +24,7 @@ import java.util.Map;
 import javax.mail.internet.MimeMessage;
 
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
+import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -105,8 +106,7 @@ public class SetCalendarItem extends CalendarRequest {
         int flags = Flag.toBitmask(request.getAttribute(MailConstants.A_FLAGS, null));
         String[] tags = TagUtil.parseTags(request, mbox, octxt);
 
-        mbox.lock.lock();
-        try {
+        try (final MailboxLock l = mbox.getWriteLockAndLockIt()) {
             int defaultFolder = getItemType() == MailItem.Type.TASK ? Mailbox.ID_FOLDER_TASKS : Mailbox.ID_FOLDER_CALENDAR;
             String defaultFolderStr = Integer.toString(defaultFolder);
             String folderIdStr = request.getAttribute(MailConstants.A_FOLDER, defaultFolderStr);
@@ -163,8 +163,6 @@ public class SetCalendarItem extends CalendarRequest {
                 response.addAttribute(MailConstants.A_APPT_ID_DEPRECATE_ME, itemId);  // for backward compat
 
             return response;
-        } finally {
-            mbox.lock.release();
         }
     }
 

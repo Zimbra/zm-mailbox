@@ -149,7 +149,7 @@ public class PreAuthServlet extends ZimbraServlet {
                             throw new ServletException(e);
                         }
                         newZimbraAuthToken.resetTokenId();
-                        
+
                         oneTimeToken.deRegister();
                         authToken = newZimbraAuthToken;
                         ZimbraLog.account.debug("Deregistered the one time preauth token and issuing new one to the user.");
@@ -212,7 +212,7 @@ public class PreAuthServlet extends ZimbraServlet {
                 if (acct == null) {
                     throw AuthFailedServiceException.AUTH_FAILED(account, account, "account not found");
                 }
-                
+
                 String accountStatus = acct.getAccountStatus(prov);
                 if (!Provisioning.ACCOUNT_STATUS_ACTIVE.equalsIgnoreCase(accountStatus)) {
                     if(Provisioning.ACCOUNT_STATUS_MAINTENANCE.equalsIgnoreCase(accountStatus)) {
@@ -220,7 +220,7 @@ public class PreAuthServlet extends ZimbraServlet {
                     } else {
                         throw AccountServiceException.ACCOUNT_INACTIVE(acct.getName());
                     }
-                } 
+                }
 
                 if (admin) {
                     boolean isDomainAdminAccount = acct.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false);
@@ -311,8 +311,7 @@ public class PreAuthServlet extends ZimbraServlet {
      */
     private void redirectToCorrectServer(HttpServletRequest req, HttpServletResponse resp, Account acct, String token) throws ServiceException, IOException {
         StringBuilder sb = new StringBuilder();
-        Provisioning prov = Provisioning.getInstance();
-        sb.append(URLUtil.getServiceURL(prov.getServer(acct), req.getRequestURI(), true));
+        sb.append(URLUtil.getServiceURL(Provisioning.affinityServer(acct), req.getRequestURI(), true));
         sb.append('?').append(PARAM_ISREDIRECT).append('=').append('1');
 
         if (token != null) {
@@ -349,12 +348,6 @@ public class PreAuthServlet extends ZimbraServlet {
                 redirectUrl = server.getAttr(Provisioning.A_zimbraAdminURL, DEFAULT_ADMIN_URL);
             } else {
                 redirectUrl = server.getAttr(Provisioning.A_zimbraMailURL, DEFAULT_MAIL_URL);
-                // NB: do we really have to add the mail app to the end?
-                if (redirectUrl.charAt(redirectUrl.length() - 1) == '/') {
-                    redirectUrl += "mail";
-                } else {
-                    redirectUrl += "/mail";
-                }
             }
             if (sb.length() > 0) {
                 resp.sendRedirect(redirectUrl + "?" + sb.toString());

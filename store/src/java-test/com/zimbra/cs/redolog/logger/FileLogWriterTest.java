@@ -69,6 +69,6 @@ public class  FileLogWriterTest {
 
     @Test(expected = IOException.class)
     public void logBeforeOpen() throws Exception {
-        logWriter.log(null, null, false);
+        logWriter.log((RedoableOp) null, null, false);
     }
 }

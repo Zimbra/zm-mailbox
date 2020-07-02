@@ -41,9 +41,6 @@ public class GetDelegatedAdminConstraintsResponse {
     @XmlElement(name=AdminConstants.E_A, required=false)
     private List<ConstraintAttr> attrs = Lists.newArrayList();
 
-    public GetDelegatedAdminConstraintsResponse() {
-    }
-
     public void setAttrs(Iterable <ConstraintAttr> attrs) {
         this.attrs.clear();
         if (attrs != null) {

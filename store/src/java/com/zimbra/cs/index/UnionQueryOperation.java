@@ -347,5 +347,4 @@ public final class UnionQueryOperation extends CombiningQueryOperation {
         }
         cb.recurseCallback(this);
     }
-
 }

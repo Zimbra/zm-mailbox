@@ -29,13 +29,6 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.KeyValuePair;
 import com.zimbra.common.util.StringUtil;
-import com.zimbra.cs.service.mail.BeginTrackingImap;
-import com.zimbra.cs.service.mail.GetLastItemIdInMailbox;
-import com.zimbra.cs.service.mail.GetModifiedItemsIDs;
-import com.zimbra.cs.service.mail.ListIMAPSubscriptions;
-import com.zimbra.cs.service.mail.OpenImapFolder;
-import com.zimbra.cs.service.mail.ResetRecentMessageCount;
-import com.zimbra.cs.service.mail.SaveIMAPSubscriptions;
 import com.zimbra.soap.DocumentDispatcher;
 import com.zimbra.soap.DocumentService;
 
@@ -55,6 +48,9 @@ public class AccountService implements DocumentService {
         dispatcher.registerHandler(AccountConstants.AUTH_REQUEST, new Auth());
         dispatcher.registerHandler(AccountConstants.CHANGE_PASSWORD_REQUEST, new ChangePassword());
         dispatcher.registerHandler(AccountConstants.END_SESSION_REQUEST, new EndSession());
+
+        //client info
+        dispatcher.registerHandler(AccountConstants.CLIENT_INFO_REQUEST, new ClientInfo());
 
         // oauth
         dispatcher.registerHandler(AccountConstants.GET_OAUTH_CONSUMERS_REQUEST, new GetOAuthConsumers());
@@ -116,6 +112,10 @@ public class AccountService implements DocumentService {
 
         // misc
         dispatcher.registerHandler(AccountConstants.GET_VERSION_INFO_REQUEST, new GetVersionInfo());
+
+        // reset password
+        dispatcher.registerHandler(AccountConstants.RESET_PASSWORD_REQUEST, new ResetPassword());
+
     }
 
     /**

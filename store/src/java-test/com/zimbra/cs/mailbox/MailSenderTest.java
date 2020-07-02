@@ -17,6 +17,7 @@
 package com.zimbra.cs.mailbox;
 
 import java.util.HashMap;
+import org.junit.Ignore;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -54,7 +55,7 @@ import com.zimbra.qa.unittest.MessageBuilder;
  * Unit test for {@link MailSender}.
  *
  */
-public final class MailSenderTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public final class MailSenderTest {
 
     @BeforeClass
     public static void init() throws Exception {

@@ -451,7 +451,7 @@ public class MailSender {
             mbox = m;  msgId = new ItemId(mbox, i);
         }
 
-        RollbackData(Message msg) {
+        RollbackData(Message msg) throws ServiceException {
             mbox = msg.getMailbox();  msgId = new ItemId(msg);
         }
 
@@ -539,8 +539,11 @@ public class MailSender {
                 if (acct.isSmtpRestrictEnvelopeFrom() && !isDataSourceSender()) {
                     mEnvelopeFrom = mbox.getAccount().getName();
                 } else {
-                    // Set envelope sender to Sender or From, in that order.
+                    // Set envelope sender to Sender or Reply-To or From, in that order.
                     Address envAddress = mm.getSender();
+                    if (envAddress == null) {
+                        envAddress =  ArrayUtil.getFirstElement(mm.getReplyTo());
+                    }
                     if (envAddress == null) {
                         envAddress = ArrayUtil.getFirstElement(mm.getFrom());
                     }

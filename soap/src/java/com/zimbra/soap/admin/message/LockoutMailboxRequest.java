@@ -23,7 +23,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.type.AccountNameSelector;
 
@@ -67,8 +67,8 @@ public class LockoutMailboxRequest {
     public void setOperation(String operation) { this.operation = operation; }
     public String getOperation() { return operation; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(
+                MoreObjects.ToStringHelper helper) {
         return helper
             .add("account", account)
             .add("operation", operation);
@@ -77,7 +77,7 @@ public class LockoutMailboxRequest {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
+        return addToStringInfo(MoreObjects.toStringHelper(this))
                 .toString();
     }
 }

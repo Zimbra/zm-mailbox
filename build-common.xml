@@ -302,7 +302,7 @@
             <fileset dir="${test.classes.dir}/com/zimbra/extensions" />
           </move>
           <copy file="${test.src.dir}/log4j-test.properties" tofile="${test.classes.dir}/log4j.properties" failonerror="false"/>
-          <junit haltonfailure="${halt-on-failure}" printsummary="on" showoutput="true" failureproperty="junit.failure" tempdir="${test.dir}" fork="true">
+          <junit haltonfailure="${halt-on-failure}" printsummary="on" showoutput="true" errorproperty="junit.error" failureproperty="junit.failure" tempdir="${test.dir}" fork="true">
             <classpath refid="test.class.path"/>
             <assertions><enable/></assertions>
             <formatter type="xml"/>
@@ -315,6 +315,11 @@
                     <include name="${test.pattern}"/>
                     <exclude name="**/Abstract*Test.java"/>
                     <exclude name="**/mailbox/ContactTest.java"/>
+                    <exclude name="**/filter/FileIntoCopyTest.java"/>
+                    <exclude name="**/cs/redolog/op/CreateMessageTest.java"/>
+                    <exclude name="**/cs/service/mail/SearchActionTest.java"/>
+                    <exclude name="**/cs/filter/RuleManagerWithCustomActionFilterTest.java"/>
+                    <exclude name="**/html/owasp/OwaspHtmlSanitizerTest.java"/>
                 </fileset>
             </batchtest>
           </junit>
@@ -324,7 +329,10 @@
           </junitreport>
           <echo>Test Report: ${test.dir}/report/index.html</echo>
       <antcontrib:if>
-        <isset property="junit.failure"/>
+        <or>
+         <isset property="junit.failure"/>
+         <isset property="junit.error"/>
+        </or>
         <then><echo append="true" file="${test-results-file}" message="${test.dir} - FAILED&#xD;&#xA;"/></then>
         <else><echo append="true" file="${test-results-file}" message="${test.dir} - PASSED&#xD;&#xA;"/></else>
       </antcontrib:if>
@@ -345,7 +353,7 @@
             <fileset dir="${test.classes.dir}/com/zimbra/extensions" />
         </move>
         <copy file="${test.src.dir}/log4j-test.properties" tofile="${test.classes.dir}/log4j.properties" failonerror="false"/>
-        <junit printsummary="on" showoutput="true" failureproperty="junit.failure" tempdir="${test.dir}">
+        <junit printsummary="on" showoutput="true" errorproperty="junit.error" failureproperty="junit.failure" tempdir="${test.dir}">
             <classpath refid="test.class.path"/>
             <assertions><enable/></assertions>
             <formatter type="xml"/>
@@ -364,6 +372,7 @@
         </junitreport>
         <echo>Test Report: ${test.dir}/report/index.html</echo>
         <fail if="junit.failure" message="Unit test failed"/>
+        <fail if="junit.error" message="Unit test error"/>
     </target>
 
     <!-- e.g. ant -Dtest.name=com.zimbra.cs.mailbox.ContactTest single-test -->
@@ -379,7 +388,7 @@
             <fileset dir="${test.classes.dir}/com/zimbra/extensions" />
         </move>
         <copy file="${test.src.dir}/log4j-test.properties" tofile="${test.classes.dir}/log4j.properties" failonerror="false"/>
-        <junit fork="yes" printsummary="on" showoutput="true" failureproperty="junit.failure" tempdir="${single.test.dir}">
+        <junit fork="yes" printsummary="on" showoutput="true" errorproperty="junit.error" failureproperty="junit.failure" tempdir="${single.test.dir}">
             <classpath refid="test.class.path"/>
             <assertions><enable/></assertions>
             <formatter type="xml"/>
@@ -395,6 +404,7 @@
         </junitreport>
         <echo>Test Report: ${single.test.dir}/report/index.html</echo>
         <fail if="junit.failure" message="Single Unit test failed"/>
+        <fail if="junit.error" message="Single Unit test error"/>
     </target>
 
     <target name="emma" description="Emma Instrumentation">
@@ -420,7 +430,7 @@
       <mkdir dir="${test.dir}/report"/>
       <copy file="${test.src.dir}/log4j-test.properties" tofile="${test.classes.dir}/log4j.properties" failonerror="false"/>
       <taskdef resource="emma_ant.properties" classpathref="emma.lib"/>
-      <junit fork="yes" printsummary="on" failureproperty="junit.failure" tempdir="${test.dir}">
+      <junit fork="yes" printsummary="on" errorproperty="junit.error" failureproperty="junit.failure" tempdir="${test.dir}">
         <classpath refid="emma.lib" />
         <classpath location="${build.instrumented.dir}" />
         <classpath refid="class.path"/>
@@ -452,6 +462,7 @@
       </emma>
       <echo>Test Report: ${test.dir}/report/index.html</echo>
       <fail if="junit.failure" message="Unit test failed"/>
+      <fail if="junit.error" message="Unit test error"/>
     </target>
 
     <target name="integration-test" depends="test-compile" description="Run integration tests">
@@ -459,7 +470,7 @@
         <delete dir="${itest.dir}" quiet="true"/>
         <mkdir dir="${itest.dir}/output"/>
         <mkdir dir="${itest.dir}/report"/>
-        <junit printsummary="on" failureproperty="junit.failure" tempdir="${itest.dir}">
+        <junit printsummary="on" errorproperty="junit.error" failureproperty="junit.failure" tempdir="${itest.dir}">
             <classpath refid="class.path"/>
             <classpath path="${test.classes.dir}"/>
             <assertions><enable/></assertions>
@@ -476,6 +487,7 @@
         </junitreport>
         <echo>Test Report: ${itest.dir}/report/index.html</echo>
         <fail if="junit.failure" message="Integration test failed"/>
+        <fail if="junit.error" message="Integration test error"/>
     </target>
 
     <target name="generate-jar-version" description="Creates the Version class that prints the version of the jarfile.  This class is the Main-Class in the jarfile's manifest." depends="3rd-party-defines">

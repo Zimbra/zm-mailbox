@@ -30,11 +30,11 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Group.GroupOwner;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.gal.GalGroupMembers;
 import com.zimbra.cs.gal.GalGroupMembers.DLMembers;
 import com.zimbra.cs.gal.GalGroupMembers.DLMembersResult;
 import com.zimbra.cs.gal.GalGroupMembers.LdapDLMembers;
+import com.zimbra.cs.gal.GalGroupMembers.LdapHABMembers;
 import com.zimbra.cs.gal.GalGroupMembers.ProxiedDLMembers;
 import com.zimbra.cs.gal.GalSearchControl;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -168,27 +168,29 @@ public class GetDistributionListMembers extends GalDocumentHandler {
         // The isOwner/isMember/isHideInGal check will be executed on the
         // home server of the group, which has the most up-to-date data.
 
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);      
         boolean local = proxiedToHomeOfInternalGroup || Provisioning.onLocalServer(group);
         if (local) {
             // do it locally
             return getMembersFromLdap(account, group);
         } else {
-            Server server = group.getServer();
-            if (server == null) {
+            String targetPod = Provisioning.affinityServerForZimbraId(group.getId());
+            ZimbraSoapContext pxyCtxt = new ZimbraSoapContext(zsc);
+            if (targetPod == null) {
                 // just execute locally
                 ZimbraLog.account.warn(
-                        "unable to find home server (%s) for group %s, getting members from LDAP on local server",
-                        group.getAttr(Provisioning.A_zimbraMailHost), group.getName());
+                        "unable to find home pod (%s) for group %s, getting members from LDAP on local server",
+                        targetPod, group.getName());
                 // do it locally
                 return getMembersFromLdap(account, group);
             } else {
-                // proxy to the home server of the group
+                // proxy to the home pod of the group
                 ZimbraLog.account.info("Proxying request: dl.name=%s reason: target=%s",
-                        group.getName(), server.getName());
+                        group.getName(), targetPod);
 
                 request.addAttribute(A_PROXIED_TO_HOME_OF_GROUP, true);
                 try {
-                    Element resp = proxyRequest(request, context, server);
+                    Element resp = proxyRequest(request, context, targetPod, pxyCtxt);
                     return new ProxiedDLMembers(resp);
                 } catch (ServiceException e) {
                     // delete attribute to avoid confusion in future proxied requests
@@ -205,20 +207,24 @@ public class GetDistributionListMembers extends GalDocumentHandler {
 
     private DLMembersResult getMembersFromLdap(Account account, Group group)
     throws ServiceException {
-        boolean allow = false;
-        if (group.hideInGal()) {
-            allow = GroupOwner.isOwner(account, group);
+        if (group.isHABGroup()) {
+            ZimbraLog.account.debug("Retrieving hab group members from LDAP for group %s", group.getName());
+            return new LdapHABMembers(group);
         } else {
-            allow = GroupOwner.isOwner(account, group) || group.isMemberOf(account);
-        }
-
-        if (allow) {
-            ZimbraLog.account.debug("Retrieving group members from LDAP for group %s", group.getName());
-            return new LdapDLMembers(group);
-        } else {
-            ZimbraLog.account.debug("account %s is not allowed to get members from ldap for group %s",
-                    account.getName(), group.getName());
-            return null;
+            boolean allow = false;
+            if (group.hideInGal()) {
+                allow = GroupOwner.isOwner(account, group);
+            } else {
+                allow = GroupOwner.isOwner(account, group) || group.isMemberOf(account);
+            }
+            if (allow) {
+                ZimbraLog.account.debug("Retrieving group members from LDAP for group %s", group.getName());
+                return new LdapDLMembers(group);
+            } else {
+                ZimbraLog.account.debug("account %s is not allowed to get members from ldap for group %s",
+                        account.getName(), group.getName());
+                return null;
+            }
         }
     }
 

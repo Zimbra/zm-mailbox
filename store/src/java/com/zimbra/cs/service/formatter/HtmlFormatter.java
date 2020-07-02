@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2016, 2018 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -24,9 +24,11 @@ import javax.servlet.Servlet;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 
-import org.apache.commons.httpclient.Header;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.http.Header;
+import org.apache.http.HttpException;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
 
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.mailbox.Color;
@@ -70,6 +72,31 @@ public class HtmlFormatter extends Formatter {
     private static final String ATTR_TARGET_ITEM_VIEW    = "zimbra_target_item_view";
     private static final String ATTR_TARGET_ITEM_PATH    = "zimbra_target_item_path";
     private static final String ATTR_TARGET_ITEM_NAME    = "zimbra_target_item_name";
+    private static final String ATTR_TARGET_ACTION       = "action";
+    private static final String ATTR_TARGET_BODYPART     = "bodypart";
+    private static final String ATTR_TARGET_COLOR        = "color";
+    private static final String ATTR_TARGET_DATE         = "date";
+    private static final String ATTR_TARGET_EX_COMP_NUM  = "exCompNum";
+    private static final String ATTR_TARGET_EX_INV_ID    = "exInvId";
+    private static final String ATTR_TARGET_FMT          = "fmt";
+    private static final String ATTR_TARGET_FOLDER_IDS   = "folderIds";
+    private static final String ATTR_TARGET_IM_ID        = "im_id";
+    private static final String ATTR_TARGET_IM_PART      = "im_part";
+    private static final String ATTR_TARGET_IM_XIM       = "im_xim";
+    private static final String ATTR_TARGET_INST_DURATION = "instDuration";
+    private static final String ATTR_TARGET_INST_START_TIME = "instStartTime";
+    private static final String ATTR_TARGET_INV_COMP_NUM = "invCompNum";
+    private static final String ATTR_TARGET_INV_ID       = "invId";
+    private static final String ATTR_TARGET_NOTOOLBAR    = "notoolbar";
+    private static final String ATTR_TARGET_NUMDAYS      = "numdays";
+    private static final String ATTR_TARGET_PSTAT        = "pstat";
+    private static final String ATTR_TARGET_REFRESH      = "refresh";
+    private static final String ATTR_TARGET_SKIN         = "skin";
+    private static final String ATTR_TARGET_SQ           = "sq";
+    private static final String ATTR_TARGET_TZ           = "tz";
+    private static final String ATTR_TARGET_USE_INSTANCE = "useInstance";
+    private static final String ATTR_TARGET_XIM          = "xim";
+    private static final String ATTR_TARGET_VIEW         = "view";
 
     private static final String ATTR_TARGET_ACCOUNT_PREF_TIME_ZONE   = "zimbra_target_account_prefTimeZoneId";
     private static final String ATTR_TARGET_ACCOUNT_PREF_SKIN   = "zimbra_target_account_prefSkin";
@@ -80,7 +107,7 @@ public class HtmlFormatter extends Formatter {
 
     @Override
     public void formatCallback(UserServletContext context) throws UserServletException,
-            ServiceException, IOException, ServletException {
+            ServiceException, IOException, ServletException, HttpException {
         dispatchJspRest(context.getServlet(), context);
     }
 
@@ -186,6 +213,31 @@ public class HtmlFormatter extends Formatter {
             if (targetItem instanceof Folder) {
                 context.req.setAttribute(ATTR_TARGET_ITEM_VIEW, ((Folder) targetItem).getDefaultView().toString());
             }
+            context.req.setAttribute(ATTR_TARGET_ACTION, context.getAction());
+            context.req.setAttribute(ATTR_TARGET_BODYPART, context.getBodypart());
+            context.req.setAttribute(ATTR_TARGET_COLOR, context.getColor());
+            context.req.setAttribute(ATTR_TARGET_DATE, context.getDate());
+            context.req.setAttribute(ATTR_TARGET_EX_COMP_NUM, context.getExCompNum());
+            context.req.setAttribute(ATTR_TARGET_EX_INV_ID, context.getExInvId());
+            context.req.setAttribute(ATTR_TARGET_FMT, context.getFmt());
+            context.req.setAttribute(ATTR_TARGET_FOLDER_IDS, context.getFolderIds());
+            context.req.setAttribute(ATTR_TARGET_IM_ID, context.getImId());
+            context.req.setAttribute(ATTR_TARGET_IM_PART, context.getImPart());
+            context.req.setAttribute(ATTR_TARGET_IM_XIM, context.getImXim());
+            context.req.setAttribute(ATTR_TARGET_INST_DURATION, context.getInstDuration());
+            context.req.setAttribute(ATTR_TARGET_INST_START_TIME, context.getInstStartTime());
+            context.req.setAttribute(ATTR_TARGET_INV_COMP_NUM, context.getInvCompNum());
+            context.req.setAttribute(ATTR_TARGET_INV_ID, context.getInvId());
+            context.req.setAttribute(ATTR_TARGET_NOTOOLBAR, context.getNotoolbar());
+            context.req.setAttribute(ATTR_TARGET_NUMDAYS, context.getNumdays());
+            context.req.setAttribute(ATTR_TARGET_PSTAT, context.getPstat());
+            context.req.setAttribute(ATTR_TARGET_REFRESH, context.getRefresh());
+            context.req.setAttribute(ATTR_TARGET_SKIN, context.getSkin());
+            context.req.setAttribute(ATTR_TARGET_SQ, context.getSq());
+            context.req.setAttribute(ATTR_TARGET_TZ, context.getTz());
+            context.req.setAttribute(ATTR_TARGET_USE_INSTANCE, context.getUseInstance());
+            context.req.setAttribute(ATTR_TARGET_XIM, context.getXim());
+            context.req.setAttribute(ATTR_TARGET_VIEW, context.getView());
         } else {
             context.req.setAttribute(ATTR_TARGET_ITEM_COLOR, Color.getMappedColor(null));
         }
@@ -196,10 +248,10 @@ public class HtmlFormatter extends Formatter {
         String mailUrl = PATH_MAIN_CONTEXT;
         if (WebSplitUtil.isZimbraServiceSplitEnabled()) {
             mailUrl = Provisioning.getInstance().getLocalServer().getWebClientURL() + PATH_JSP_REST_PAGE;
-            HttpClient httpclient = ZimbraHttpConnectionManager.getInternalHttpConnMgr().getDefaultHttpClient();
+            HttpClient httpclient = ZimbraHttpConnectionManager.getInternalHttpConnMgr().getDefaultHttpClient().build();
             /*
              * Retest the code with POST to check whether it works
-            PostMethod postMethod = new PostMethod(mailUrl);
+            HttpPost postMethod = new HttpPost(mailUrl);
             Enumeration<String> attributeNames = context.req.getAttributeNames();
             List<Part> parts = new ArrayList<Part>();
             while(attributeNames.hasMoreElements())
@@ -224,10 +276,17 @@ public class HtmlFormatter extends Formatter {
                 String attrValue = context.req.getAttribute(attrName).toString();
                 sb.append(attrName).append("=").append(HttpUtil.urlEscape(attrValue)).append("&");
             }
-            GetMethod postMethod = new GetMethod(sb.toString());
+            HttpGet postMethod = new HttpGet(sb.toString());
+            postMethod.setHeader("Accept-Language", context.getLocale().getLanguage());
 
-            HttpClientUtil.executeMethod(httpclient, postMethod);
-            ByteUtil.copy(postMethod.getResponseBodyAsStream(), true, context.resp.getOutputStream(), false);
+            HttpResponse httpResp;
+            try {
+                httpResp = HttpClientUtil.executeMethod(httpclient, postMethod);
+                ByteUtil.copy(httpResp.getEntity().getContent(), true, context.resp.getOutputStream(), false);
+            } catch (HttpException e) {
+                throw new ServletException("error executing the request.", e);
+            }
+            
         } else {
             try {
                 mailUrl = Provisioning.getInstance().getLocalServer().getMailURL();

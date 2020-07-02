@@ -52,13 +52,14 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimePart;
 import javax.servlet.http.HttpServletResponse;
 
+import com.zimbra.cs.util.IOUtil;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.google.common.io.Closeables;
 import com.zimbra.common.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.common.calendar.ZCalendar.ZICalendarParseHandler;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
@@ -97,10 +98,12 @@ import com.zimbra.cs.mailbox.MailboxMaintenance;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Message.CalendarItemInfo;
+import com.zimbra.cs.mailbox.MessageCallbackContext;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.Note;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.SearchFolder;
+import com.zimbra.cs.mailbox.SmartFolder;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.Task;
 import com.zimbra.cs.mailbox.WikiItem;
@@ -362,12 +365,12 @@ public abstract class ArchiveFormatter extends Formatter {
                             }
                             aos = saveItem(context, results.getNext().getMailItem(), fldrs, cnts, false, aos, encoder, names);
                         }
-                        Closeables.closeQuietly(results);
+                        IOUtil.closeQuietly(results);
                         results = null;
                     } catch (Exception e) {
                         warn(e);
                     } finally {
-                        Closeables.closeQuietly(results);
+                        IOUtil.closeQuietly(results);
                     }
                 }
             }
@@ -1400,6 +1403,19 @@ public abstract class ArchiveFormatter extends Formatter {
                         setFolderId(fldr.getId()).setNoICal(true).
                         setFlags(msg.getFlagBitmask()).
                         setTags(msg.getTags());
+                        MessageCallbackContext callbackCtxt = null;
+                        if (fldr.getId() == Mailbox.ID_FOLDER_SENT) {
+                             callbackCtxt = new MessageCallbackContext(Mailbox.MessageCallback.Type.sent);
+                            opt.setCallbackContext(callbackCtxt);
+                        } else if (fldr.getId() != Mailbox.ID_FOLDER_TRASH && fldr.getId() != Mailbox.ID_FOLDER_DRAFTS) {
+                            String recipient = mbox.getAccount().getName(); //assume the recipient is the name on the account
+                            callbackCtxt = new MessageCallbackContext(Mailbox.MessageCallback.Type.received);
+                            callbackCtxt.setRecipient(recipient);
+                        }
+                        if (callbackCtxt != null) {
+                            callbackCtxt.setTimestamp(msg.getDate());
+                            opt.setCallbackContext(callbackCtxt);
+                        }
                         newItem = mbox.addMessage(octxt, ais.getInputStream(), (int) aie.getSize(),
                                 msg.getDate(), opt, null, id);
                     }
@@ -1504,6 +1520,17 @@ public abstract class ArchiveFormatter extends Formatter {
                     }
                     break;
 
+                case SMARTFOLDER:
+                    SmartFolder smartFolder = (SmartFolder) mi;
+                    try {
+                        SmartFolder oldSmartFolder = mbox.getSmartFolder(octxt, smartFolder.getSmartFolderName());
+                        oldItem = oldSmartFolder;
+                    } catch (Exception e) {
+                    }
+                    if (oldItem == null) {
+                        newItem = mbox.createSmartFolder(octxt, smartFolder.getSmartFolderName());
+                    }
+                    break;
                 case VIRTUAL_CONVERSATION:
                     return;
             }

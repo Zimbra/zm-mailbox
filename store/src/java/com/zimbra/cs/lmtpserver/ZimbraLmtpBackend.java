@@ -36,8 +36,10 @@ import javax.mail.internet.MimeMessage;
 
 import com.google.common.base.Function;
 import com.google.common.base.Strings;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Lists;
-import com.google.common.collect.MapMaker;
 import com.google.common.collect.Multimap;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.lmtp.LmtpClient;
@@ -57,7 +59,6 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.DeliveryOptions;
@@ -84,7 +85,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
 
     private static List<LmtpCallback> callbacks = new CopyOnWriteArrayList<LmtpCallback>();
     private static Map<String, Set<Integer>> receivedMessageIDs;
-    private static final Map<Integer, ReentrantLock> mailboxDeliveryLocks = createMailboxDeliveryLocks();
+    private static final LoadingCache<Integer, ReentrantLock> mailboxDeliveryLocks = createMailboxDeliveryLocks();
 
     private final LmtpConfig config;
 
@@ -111,14 +112,16 @@ public class ZimbraLmtpBackend implements LmtpBackend {
         addCallback(QuotaWarning.getInstance());
     }
 
-    private static Map<Integer, ReentrantLock> createMailboxDeliveryLocks() {
+    private static LoadingCache<Integer, ReentrantLock> createMailboxDeliveryLocks() {
         Function<Integer, ReentrantLock> lockCreator = new Function<Integer,  ReentrantLock>() {
             @Override
             public ReentrantLock apply(Integer from) {
                 return new ReentrantLock();
             }
         };
-        return new MapMaker().makeComputingMap(lockCreator);
+        LoadingCache<Integer, ReentrantLock> cache = CacheBuilder.newBuilder()
+            .build(CacheLoader.from(lockCreator));
+        return cache;
     }
 
     @Override public LmtpReply getAddressStatus(LmtpAddress address) {
@@ -145,14 +148,15 @@ public class ZimbraLmtpBackend implements LmtpBackend {
 
             if (Provisioning.onLocalServer(acct)) {
                 address.setOnLocalServer(true);
-            } else if (Provisioning.getInstance().getServer(acct) != null) {
+            } else  {
+                String affinityIp = Provisioning.affinityServer(acct);
+                if (affinityIp == null) {
+                    ZimbraLog.lmtp.warn("try again for address " + addr + ": mailbox is not on this server");
+                    return LmtpReply.MAILBOX_NOT_ON_THIS_SERVER;
+                }
                 address.setOnLocalServer(false);
-                address.setRemoteServer(acct.getMailHost());
-            } else {
-                ZimbraLog.lmtp.warn("try again for address " + addr + ": mailbox is not on this server");
-                return LmtpReply.MAILBOX_NOT_ON_THIS_SERVER;
+                address.setRemoteServer(affinityIp);
             }
-
             if (acctStatus.equals(Provisioning.ACCOUNT_STATUS_PENDING)) {
                 ZimbraLog.lmtp.info("rejecting address " + addr + ": account status pending");
                 return LmtpReply.NO_SUCH_USER;
@@ -357,7 +361,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                 } catch (IOException e) {
                     ZimbraLog.lmtp.warn("Error in deleting blob %s", blob, e);
                 }
-                setDeliveryStatuses(env.getRecipients(), LmtpReply.INVALID_BODY_PARAMETER);
+                setDeliveryStatuses(env.getRecipients(), LmtpReply.LINE_TOO_LONG);
                 return;
             }
 
@@ -742,8 +746,8 @@ public class ZimbraLmtpBackend implements LmtpBackend {
             InputStream in = null;
             Collection<LmtpAddress> serverRecipients = serverToRecipientsMap.get(server);
             try {
-                Server serverObj = Provisioning.getInstance().getServerByName(server);
-                lmtpClient = new LmtpClient(server, new Integer(serverObj.getAttr(Provisioning.A_zimbraLmtpBindPort)));
+                int lmtpPort = Provisioning.getInstance().getLocalServer().getLmtpBindPort();
+                lmtpClient = new LmtpClient(server, lmtpPort);
                 in = data == null ? blob.getInputStream() : new ByteArrayInputStream(data);
                 boolean success = lmtpClient.sendMessage(in,
                                                          getRecipientsEmailAddress(serverRecipients),

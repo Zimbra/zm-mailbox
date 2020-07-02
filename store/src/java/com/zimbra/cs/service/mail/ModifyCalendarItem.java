@@ -29,6 +29,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
+import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -108,47 +109,45 @@ public class ModifyCalendarItem extends CalendarRequest {
         MailSendQueue sendQueue = new MailSendQueue();
         Element response = getResponseElement(zsc);
         int compNum = (int) request.getAttributeLong(MailConstants.A_CAL_COMP, 0);
-        mbox.lock.lock();
-        try {
-            CalendarItem calItem = mbox.getCalendarItemById(octxt, iid.getId());
-            if (calItem == null) {
-                throw MailServiceException.NO_SUCH_CALITEM(iid.toString(), "Could not find calendar item");
-            }
+        try (final MailboxLock l = mbox.getWriteLockAndLockIt()) {
+                CalendarItem calItem = mbox.getCalendarItemById(octxt, iid.getId());
+                if (calItem == null) {
+                    throw MailServiceException.NO_SUCH_CALITEM(iid.toString(), "Could not find calendar item");
+                }
 
-            // Reject the request if calendar item is under trash or is being moved to trash.
-            if (calItem.inTrash()) {
-                throw ServiceException.INVALID_REQUEST("cannot modify a calendar item under trash", null);
-            }
-            if (!isInterMboxMove && iidFolder != null) {
-                if (iidFolder.getId() != calItem.getFolderId()) {
-                    Folder destFolder = mbox.getFolderById(octxt, iidFolder.getId());
-                    if (destFolder.inTrash()) {
-                        throw ServiceException.INVALID_REQUEST("cannot combine with a move to trash", null);
+                // Reject the request if calendar item is under trash or is being moved to trash.
+                if (calItem.inTrash()) {
+                    throw ServiceException.INVALID_REQUEST("cannot modify a calendar item under trash", null);
+                }
+                if (!isInterMboxMove && iidFolder != null) {
+                    if (iidFolder.getId() != calItem.getFolderId()) {
+                        Folder destFolder = mbox.getFolderById(octxt, iidFolder.getId());
+                        if (destFolder.inTrash()) {
+                            throw ServiceException.INVALID_REQUEST("cannot combine with a move to trash", null);
+                        }
                     }
                 }
-            }
 
-            // Conflict detection.  Do it only if requested by client.  (for backward compat)
-            int modSeq = (int) request.getAttributeLong(MailConstants.A_MODIFIED_SEQUENCE, 0);
-            int revision = (int) request.getAttributeLong(MailConstants.A_REVISION, 0);
-            if (modSeq != 0 && revision != 0 &&
-                    (modSeq < calItem.getModifiedSequence() || revision < calItem.getSavedSequence())) {
-                throw MailServiceException.INVITE_OUT_OF_DATE(iid.toString());
-            }
+                // Conflict detection.  Do it only if requested by client.  (for backward compat)
+                int modSeq = (int) request.getAttributeLong(MailConstants.A_MODIFIED_SEQUENCE, 0);
+                int revision = (int) request.getAttributeLong(MailConstants.A_REVISION, 0);
+                if (modSeq != 0 && revision != 0 &&
+                        (modSeq < calItem.getModifiedSequence() || revision < calItem.getSavedSequence())) {
+                    throw MailServiceException.INVITE_OUT_OF_DATE(iid.toString());
+                }
 
-            Invite inv = calItem.getInvite(iid.getSubpartId(), compNum);
-            if (inv == null) {
-                throw MailServiceException.INVITE_OUT_OF_DATE(iid.toString());
-            }
-            Invite seriesInv = calItem.getDefaultInviteOrNull();
-            int folderId = calItem.getFolderId();
-            if (!isInterMboxMove && iidFolder != null) {
-                folderId = iidFolder.getId();
-            }
-            modifyCalendarItem(zsc, octxt, request, acct, mbox, folderId, calItem, inv, seriesInv,
-                               response, isInterMboxMove, sendQueue);
+                Invite inv = calItem.getInvite(iid.getSubpartId(), compNum);
+                if (inv == null) {
+                    throw MailServiceException.INVITE_OUT_OF_DATE(iid.toString());
+                }
+                Invite seriesInv = calItem.getDefaultInviteOrNull();
+                int folderId = calItem.getFolderId();
+                if (!isInterMboxMove && iidFolder != null) {
+                    folderId = iidFolder.getId();
+                }
+                modifyCalendarItem(zsc, octxt, request, acct, mbox, folderId, calItem, inv, seriesInv,
+                        response, isInterMboxMove, sendQueue);
         } finally {
-            mbox.lock.release();
             sendQueue.send();
         }
 

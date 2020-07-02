@@ -37,6 +37,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.MessageCallbackContext;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
@@ -102,7 +103,7 @@ public final class IncomingMessageHandler implements FilterHandler {
             throws ServiceException {
         ItemId id = FilterUtil.addMessage(dctxt, mailbox, parsedMessage, recipientAddress, folderPath,
                                           false, FilterUtil.getFlagBitmask(flagActions, Flag.BITMASK_UNREAD),
-                                          tags, Mailbox.ID_AUTO_INCREMENT, octxt);
+                                          tags, Mailbox.ID_AUTO_INCREMENT, octxt, getMessageCallbackContext());
 
         // Do spam training if the user explicitly filed the message into
         // the spam folder (bug 37164).
@@ -134,6 +135,7 @@ public final class IncomingMessageHandler implements FilterHandler {
         try {
             DeliveryOptions dopt = new DeliveryOptions().setFolderId(folderId).setNoICal(noICal).setRecipientEmail(recipientAddress);
             dopt.setFlags(FilterUtil.getFlagBitmask(flagActions, Flag.BITMASK_UNREAD)).setTags(tags);
+            dopt.setCallbackContext(getMessageCallbackContext());
             return mailbox.addMessage(octxt, parsedMessage, dopt, dctxt);
         } catch (IOException e) {
             throw ServiceException.FAILURE("Unable to add incoming message", e);
@@ -195,8 +197,16 @@ public final class IncomingMessageHandler implements FilterHandler {
     public void afterFiltering() {
     }
 
+    @Override
     public DeliveryContext getDeliveryContext() {
         return dctxt;
+    }
+
+    @Override
+    public MessageCallbackContext getMessageCallbackContext() {
+        MessageCallbackContext ctxt = new MessageCallbackContext(Mailbox.MessageCallback.Type.received);
+        ctxt.setRecipient(recipientAddress);
+        return ctxt;
     }
 
     public void setParsedMessage(ParsedMessage pm) {

@@ -17,6 +17,7 @@
 package com.zimbra.cs.db;
 
 import java.util.EnumSet;
+import org.junit.Ignore;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -47,7 +48,7 @@ import com.zimbra.cs.mailbox.MailboxTestUtil;
  *
  * @author ysasaki
  */
-public final class DbMailItemTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public final class DbMailItemTest {
 
     @BeforeClass
     public static void init() throws Exception {

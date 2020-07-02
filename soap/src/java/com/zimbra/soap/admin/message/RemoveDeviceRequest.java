@@ -22,7 +22,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.SyncAdminConstants;
 import com.zimbra.common.soap.SyncConstants;
@@ -42,13 +42,13 @@ public class RemoveDeviceRequest {
     /**
      * @zm-api-field-description Account Selector
      */
-    @XmlElement(name=AdminConstants.E_ACCOUNT, required=true)
+    @XmlElement(name=AdminConstants.E_ACCOUNT, required=false)
     private AccountSelector account;
 
     /**
-     * @zm-api-field-description Device specification - Note - if not supplied ALL devices will be removed.
+     * @zm-api-field-description Device specification - Note - it is mandatory to provide deviceId.
      */
-    @XmlElement(name=SyncConstants.E_DEVICE, required=false)
+    @XmlElement(name=SyncConstants.E_DEVICE, required=true)
     private DeviceId deviceId;
 
     /**
@@ -76,6 +76,6 @@ public class RemoveDeviceRequest {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this).add("account", this.account).add("device", this.deviceId).toString();
+        return MoreObjects.toStringHelper(this).add("account", this.account).add("device", this.deviceId).toString();
     }
 }

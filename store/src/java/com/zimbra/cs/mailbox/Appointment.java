@@ -26,12 +26,19 @@ import java.util.TimeZone;
 
 import javax.mail.internet.MimeMessage;
 
+import com.zimbra.common.calendar.ICalTimeZone;
+import com.zimbra.common.calendar.ParsedDateTime;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.DateTimeUtil;
+import com.zimbra.common.util.L10nUtil;
+import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.fb.FreeBusy;
 import com.zimbra.cs.fb.FreeBusy.FBInstance;
 import com.zimbra.cs.fb.FreeBusy.Interval;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
+import com.zimbra.cs.mailbox.calendar.CalendarMailSender.Verb;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.InviteInfo;
@@ -39,16 +46,9 @@ import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.Util;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
-import com.zimbra.cs.mailbox.calendar.CalendarMailSender.Verb;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.redolog.op.CreateCalendarItemPlayer;
 import com.zimbra.cs.redolog.op.CreateCalendarItemRecorder;
-import com.zimbra.common.calendar.ICalTimeZone;
-import com.zimbra.common.calendar.ParsedDateTime;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.DateTimeUtil;
-import com.zimbra.common.util.L10nUtil;
-import com.zimbra.common.util.L10nUtil.MsgKey;
 
 
 /**
@@ -64,13 +64,22 @@ import com.zimbra.common.util.L10nUtil.MsgKey;
  */
 public class Appointment extends CalendarItem {
 
-    public Appointment(Mailbox mbox, UnderlyingData data) throws ServiceException {
+    Appointment(Mailbox mbox, UnderlyingData data) throws ServiceException {
         this(mbox, data, false);
     }
-    
-    public Appointment(Mailbox mbox, UnderlyingData data, boolean skipCache) throws ServiceException {
+
+    Appointment(Mailbox mbox, UnderlyingData data, boolean skipCache) throws ServiceException {
         super(mbox, data, skipCache);
-        if (mData.type != Type.APPOINTMENT.toByte()) {
+        init();
+    }
+
+    Appointment(Account acc, UnderlyingData data, int mailboxId) throws ServiceException {
+        super(acc, data, mailboxId);
+        init();
+    }
+
+    private void init() throws ServiceException {
+        if (type != Type.APPOINTMENT.toByte()) {
             throw new IllegalArgumentException();
         }
     }

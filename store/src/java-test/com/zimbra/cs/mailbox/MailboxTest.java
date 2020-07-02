@@ -17,6 +17,7 @@
 package com.zimbra.cs.mailbox;
 
 import static org.junit.Assert.assertEquals;
+import org.junit.Ignore;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -38,6 +39,7 @@ import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.ZAttrProvisioning.MailThreadingAlgorithm;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.cs.account.Account;
@@ -45,7 +47,9 @@ import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.BrowseTerm;
 import com.zimbra.cs.mailbox.util.TypedIdList;
+import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.service.mail.ServiceTestUtil;
 import com.zimbra.cs.session.PendingLocalModifications;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.ModificationKey;
@@ -57,20 +61,34 @@ import com.zimbra.cs.store.StoreManager;
  *
  * @author ysasaki
  */
-public final class MailboxTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public final class MailboxTest {
 
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
-        Provisioning prov = Provisioning.getInstance();
-        prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
     }
 
     @Before
     public void setUp() throws Exception {
-        MailboxTestUtil.clearData();
-        MailboxTestUtil.cleanupIndexStore(
-                MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID));
+        Provisioning prov = Provisioning.getInstance();
+        prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
+    }
+
+    @After
+    public void cleanUp() throws Exception {
+        Mailbox mbox = null;
+        try {
+            mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+            if (mbox != null) {
+                // Keeping these for exercising this code, even though deleting the account
+                MailboxTestUtil.clearData();
+                MailboxTestUtil.cleanupIndexStore(
+                        MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID));
+                Provisioning prov = Provisioning.getInstance();
+                prov.deleteAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+            }
+        } catch (Exception ex) {
+        }
     }
 
     public static final DeliveryOptions STANDARD_DELIVERY_OPTIONS = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
@@ -90,7 +108,6 @@ public final class MailboxTest {
         mbox.addMessage(null, new ParsedMessage("From: test3-1@sub3.zimbra.com".getBytes(), false), dopt, null);
         mbox.addMessage(null, new ParsedMessage("From: test3-2@sub3.zimbra.com".getBytes(), false), dopt, null);
         mbox.addMessage(null, new ParsedMessage("From: test4-1@sub4.zimbra.com".getBytes(), false), dopt, null);
-        mbox.index.indexDeferredItems();
 
         List<BrowseTerm> terms = mbox.browse(null, Mailbox.BrowseBy.domains, null, 100);
         Assert.assertEquals("sub1.zimbra.com", terms.get(0).getText());
@@ -337,8 +354,6 @@ public final class MailboxTest {
 
         int msgId = mbox.addMessage(null, MailboxTestUtil.generateMessage("test"), STANDARD_DELIVERY_OPTIONS, null).getId();
 
-        mbox.index.indexDeferredItems();
-
         mbox.delete(null, msgId, MailItem.Type.MESSAGE);
         mbox.recover(null, new int[] { msgId }, MailItem.Type.MESSAGE, Mailbox.ID_FOLDER_INBOX);
     }
@@ -353,8 +368,7 @@ public final class MailboxTest {
 
         MailItem item = mbox.addMessage(null, MailboxTestUtil.generateMessage("test"), STANDARD_DELIVERY_OPTIONS, null);
         Assert.assertEquals("1 blob in the store", 1, sm.size());
-        // Index the mailbox so that mime message gets cached
-        mbox.index.indexDeferredItems();
+
         // make sure digest is in message cache.
         Assert.assertTrue(MessageCache.contains(item.getDigest()));
 
@@ -371,8 +385,6 @@ public final class MailboxTest {
         item = mbox.addMessage(null, MailboxTestUtil.generateMessage("test"), STANDARD_DELIVERY_OPTIONS, null);
         Assert.assertEquals("1 blob in the store", 1, sm.size());
 
-        // Index the mailbox so that mime message gets cached
-        mbox.index.indexDeferredItems();
         // make sure digest is in message cache.
         Assert.assertTrue(MessageCache.contains(item.getDigest()));
 
@@ -613,6 +625,85 @@ public final class MailboxTest {
         Message message = mbox.addMessage(null, new ParsedMessage("From: test1-1@sub1.zimbra.com".getBytes(), false), dopt, null);       
         Assert.assertEquals(true, message.isUnread());
 
+    }
+
+    @Test
+    public void testGetModifiedItemsCount() throws Exception {
+        Provisioning prov = Provisioning.getInstance();
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        Account acct = prov.createAccount("testGetModifiedItemsCount@zimbra.com", "secret", attrs);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(acct.getId());
+
+        Map<String, Object> fields = new HashMap<String, Object>();
+        fields.put(ContactConstants.A_firstName, "First1");
+        fields.put(ContactConstants.A_lastName, "Last1");
+        mbox.createContact(null, new ParsedContact(fields), Mailbox.ID_FOLDER_CONTACTS, null);
+        fields.put(ContactConstants.A_firstName, "First2");
+        fields.put(ContactConstants.A_lastName, "Last2");
+        mbox.createContact(null, new ParsedContact(fields), Mailbox.ID_FOLDER_CONTACTS, null);
+
+        Set<Integer> folderIds = new HashSet<Integer>();
+        folderIds.add(Mailbox.ID_FOLDER_CONTACTS);
+        OperationContext octxt = new OperationContext(acct);
+        int count = mbox.getModifiedItemsCount(octxt, 0, 0, MailItem.Type.CONTACT, folderIds);
+        Assert.assertEquals(2, count);
+    }
+
+    @Test
+    public void testAdditionalQuotaProviderExceedsQuota() throws Exception {
+        AdditionalQuotaProvider additionalQuotaProvider = new AdditionalQuotaProvider() {
+            @Override
+            public long getAdditionalQuota(Mailbox mailbox) {
+                return 10;
+            }
+        };
+        MailboxManager.getInstance().addAdditionalQuotaProvider(additionalQuotaProvider);
+        Provisioning prov = Provisioning.getInstance();
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put("zimbraMailQuota", "5");
+        Account acct = prov.createAccount("testAdditionalQuotaProvider@zimbra.com", "secret", attrs);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
+        try {
+            mbox.checkSizeChange(0);
+            Assert.fail("Expected QUOTA_EXCEEDED exception");
+        }
+        catch (MailServiceException ignored) {}
+
+        Assert.assertEquals(10L, mbox.getSize());
+
+        MailboxManager.getInstance().removeAdditionalQuotaProvider(additionalQuotaProvider);
+        try {
+            mbox.checkSizeChange(5);
+        }
+        catch (MailServiceException ignored) {
+            Assert.fail("Unexpected QUOTA_EXCEEDED exception");
+        }
+
+        Assert.assertEquals(0L, mbox.getSize());
+    }
+
+    @Test
+    public void testAdditionalQuotaProviderRespectsQuota() throws Exception {
+        MailboxManager.getInstance().addAdditionalQuotaProvider(
+          new AdditionalQuotaProvider() {
+              public long getAdditionalQuota(Mailbox mbox) {
+                  return 10;
+              }
+          }
+        );
+        Provisioning prov = Provisioning.getInstance();
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put("zimbraMailQuota", "30");
+        Account acct = prov.createAccount("testAdditionalQuotaProvider@zimbra.com", "secret", attrs);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
+        try {
+            mbox.checkSizeChange(10);
+        }
+        catch (MailServiceException ignored) {
+            Assert.fail("Unexpected QUOTA_EXCEEDED exception");
+        }
+
+        Assert.assertEquals(10L, mbox.getSize());
     }
 
     /**

@@ -16,7 +16,7 @@
  */
 package com.zimbra.client;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.zimbra.common.filter.Sieve;
@@ -418,7 +418,7 @@ public abstract class ZFilterAction implements ToZJSONObject {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this).add("name", name).toString();
+        return MoreObjects.toStringHelper(this).add("name", name).toString();
     }
 
     public String dump() {

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2013, 2014, 2016, 2017 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -22,15 +22,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.base.Objects;
-import com.zimbra.common.util.ZimbraLog;
-
-import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
-import org.apache.lucene.document.Fieldable;
-import org.codehaus.jackson.annotate.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.MoreObjects;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.index.IndexableFieldType;
+
+import com.zimbra.common.util.ZimbraLog;
 
 /**
  * Record of information related to search terms
@@ -52,7 +53,7 @@ public final class TermInfo {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this).add("pos", positions).toString();
+        return MoreObjects.toStringHelper(this).add("pos", positions).toString();
     }
 
     /**
@@ -66,19 +67,20 @@ public final class TermInfo {
      * @param pos is the current position
      * @return new value for {@code pos}
      */
-    public static int updateMapWithDetailsForField(Analyzer analyzer, Fieldable field,
+    public static int updateMapWithDetailsForField(Analyzer analyzer, Field field,
             Map<String, TermInfo> term2info, int pos)
     throws IOException {
-        if (!field.isIndexed()) {
+        IndexableFieldType fieldType = field.fieldType();
+        if (fieldType.indexOptions() == null) {
             return pos;
         }
         Character prefix = LuceneFields.FIELD2PREFIX.get(field.name());
         if (prefix == null) {
             ZimbraLog.index.info("TermInfo.updateMapWithDetailsForField - skipping indexed field " + field.name() +
-                    " isTokenized=" + field.isTokenized());
+                    " isTokenized=" + fieldType.tokenized());
             return pos;
         }
-        if (field.isTokenized()) {
+        if (fieldType.tokenized()) {
             TokenStream stream = field.tokenStreamValue();
             if (stream == null) {
                 stream = analyzer.tokenStream(field.name(), new StringReader(field.stringValue()));

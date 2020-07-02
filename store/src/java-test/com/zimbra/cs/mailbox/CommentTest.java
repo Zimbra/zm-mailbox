@@ -17,6 +17,7 @@
 package com.zimbra.cs.mailbox;
 
 import java.io.ByteArrayInputStream;
+import org.junit.Ignore;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashMap;
@@ -35,7 +36,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mime.ParsedDocument;
 
-public class CommentTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class CommentTest {
 
     private Mailbox mbox;
     private Folder folder;

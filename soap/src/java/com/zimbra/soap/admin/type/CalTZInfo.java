@@ -19,7 +19,7 @@ package com.zimbra.soap.admin.type;
 
 import java.util.List;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
@@ -157,8 +157,8 @@ public class CalTZInfo implements CalTZInfoInterface {
         Iterables.addAll(newList, params);
         return newList;
     }
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(
+                MoreObjects.ToStringHelper helper) {
         return helper
             .add("id", id)
             .add("tzStdOffset", tzStdOffset)
@@ -171,7 +171,7 @@ public class CalTZInfo implements CalTZInfoInterface {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
+        return addToStringInfo(MoreObjects.toStringHelper(this))
                 .toString();
     }
 }

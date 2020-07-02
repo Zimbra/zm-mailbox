@@ -51,8 +51,15 @@ import org.mozilla.javascript.EvaluatorException;
 import com.yahoo.platform.yui.compressor.CssCompressor;
 import com.yahoo.platform.yui.compressor.JavaScriptCompressor;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.servlet.DiskCacheServlet;
+
+import com.google.javascript.jscomp.CompilationLevel;
+import com.google.javascript.jscomp.CompilerOptions;
+import com.google.javascript.jscomp.Compiler;
+import com.google.javascript.jscomp.SourceFile;
+import com.google.javascript.jscomp.WarningLevel;
 
 @SuppressWarnings("serial")
 public class ZimletResources extends DiskCacheServlet {
@@ -113,7 +120,7 @@ public class ZimletResources extends DiskCacheServlet {
 
         HttpServletRequest req = (HttpServletRequest)request;
         HttpServletResponse resp = (HttpServletResponse)response;
-
+        String zimbraXZimletCompatibleWith = req.getParameter("zimbraXZimletCompatibleWith");
         String uri = req.getRequestURI();
         String pathInfo = req.getPathInfo();
 
@@ -194,39 +201,46 @@ public class ZimletResources extends DiskCacheServlet {
             if (type.equals(T_JAVASCRIPT) && !debug) {
                 // compress JS code
 				text = text.replaceAll("(^|\n)\\s*DBG\\.\\w+\\(.*\\);\\s*(\n|$)", "\n");
-                JavaScriptCompressor compressor = new JavaScriptCompressor(
-                    new StringReader(text), new ErrorReporter() {
+                String mintext = null;
+                if (zimbraXZimletCompatibleWith != null) {
+                    mintext = compile(text);
+                } else {
+                    JavaScriptCompressor compressor = new JavaScriptCompressor(
+                        new StringReader(text), new ErrorReporter() {
 
-                    @Override
-                    public void warning(String message, String sourceName,
-                        int line, String lineSource, int lineOffset) {
-                        if (line < 0) {
-                            ZimbraLog.zimlet.warn("\n" + message);
-                        } else {
-                            ZimbraLog.zimlet.warn("\n" + line + ':' + lineOffset + ':' + message);
-                        }
-                    }
+                            @Override
+                            public void warning(String message, String sourceName, int line,
+                                String lineSource, int lineOffset) {
+                                if (line < 0) {
+                                    ZimbraLog.zimlet.warn("\n" + message);
+                                } else {
+                                    ZimbraLog.zimlet
+                                        .warn("\n" + line + ':' + lineOffset + ':' + message);
+                                }
+                            }
 
-                    @Override
-                    public void error(String message, String sourceName,
-                        int line, String lineSource, int lineOffset) {
-                        if (line < 0) {
-                            ZimbraLog.zimlet.error("\n" + message);
-                        } else {
-                            ZimbraLog.zimlet.error("\n" + line + ':' + lineOffset + ':' + message);
-                        }
-                    }
+                            @Override
+                            public void error(String message, String sourceName, int line,
+                                String lineSource, int lineOffset) {
+                                if (line < 0) {
+                                    ZimbraLog.zimlet.error("\n" + message);
+                                } else {
+                                    ZimbraLog.zimlet
+                                        .error("\n" + line + ':' + lineOffset + ':' + message);
+                                }
+                            }
 
-                    @Override
-                    public EvaluatorException runtimeError(String message,
-                        String sourceName, int line, String lineSource, int lineOffset) {
-                        error(message, sourceName, line, lineSource, lineOffset);
-                        return new EvaluatorException(message);
-                    }
-                });
-                StringWriter out = new StringWriter();
-                compressor.compress(out, 0, true, false, false, false);
-                String mintext = out.toString();
+                            @Override
+                            public EvaluatorException runtimeError(String message,
+                                String sourceName, int line, String lineSource, int lineOffset) {
+                                error(message, sourceName, line, lineSource, lineOffset);
+                                return new EvaluatorException(message);
+                            }
+                        });
+                    StringWriter out = new StringWriter();
+                    compressor.compress(out, 0, true, false, false, false);
+                    mintext = out.toString();
+                }
                 if (mintext == null) {
                     ZimbraLog.zimlet.info("unable to minimize zimlet JS source");
                 } else {
@@ -315,6 +329,24 @@ public class ZimletResources extends DiskCacheServlet {
         }
 
     } // doGet(HttpServletRequest,HttpServletResponse)
+
+    /**
+     * @param code JavaScript source code to compile.
+     * @return The compiled version of the code.
+     */
+    public static String compile(String code) {
+        if (StringUtil.isNullOrEmpty(code)) {
+            return null;
+        }
+        Compiler compiler = new Compiler();
+        CompilerOptions options = new CompilerOptions();
+        CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+        SourceFile extern = SourceFile.fromCode("externs.js", "");
+        SourceFile input = SourceFile.fromCode("input.js", code);
+        WarningLevel.QUIET.setOptionsForWarningLevel(options);
+        compiler.compile(extern, input, options);
+        return compiler.toSource();
+    }
 
     //
     // Private methods

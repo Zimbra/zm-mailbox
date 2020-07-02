@@ -19,13 +19,14 @@ package com.zimbra.soap.account.type;
 
 import org.w3c.dom.Element;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAnyElement;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.ZimletConstants;
 import com.zimbra.soap.base.ZimletConfigInfo;
@@ -33,8 +34,12 @@ import com.zimbra.soap.base.ZimletContextInterface;
 import com.zimbra.soap.base.ZimletDesc;
 import com.zimbra.soap.base.ZimletInterface;
 
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"zimletContext", "zimlet", "zimletConfig", "zimletHandlerConfig"})
+@GraphQLType(name=GqlConstants.CLASS_ACCOUNT_ZIMLET_INFO, description="Zimlets for account")
 public class AccountZimletInfo
 implements ZimletInterface {
 
@@ -69,12 +74,16 @@ implements ZimletInterface {
     public void setZimletHandlerConfig(Element zimletHandlerConfig) { this.zimletHandlerConfig = zimletHandlerConfig; }
 
     @Override
+    @GraphQLQuery(name=GqlConstants.ZIMLET_CONTEXT, description="Zimlet context")
     public AccountZimletContext getZimletContext() { return zimletContext; }
     @Override
+    @GraphQLQuery(name=GqlConstants.ZIMLET, description="Zimlet description")
     public AccountZimletDesc getZimlet() { return zimlet; }
     @Override
+    @GraphQLQuery(name=GqlConstants.ZIMLET_CONFIG, description="Other elements")
     public AccountZimletConfigInfo getZimletConfig() { return zimletConfig; }
     @Override
+    @GraphQLQuery(name=GqlConstants.ZIMLET_HANDLER_CONFIG)
     public Element getZimletHandlerConfig() { return zimletHandlerConfig; }
 
     @Override
@@ -89,8 +98,8 @@ implements ZimletInterface {
         setZimletConfig((AccountZimletConfigInfo) zimletConfig);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(
+                MoreObjects.ToStringHelper helper) {
         return helper
             .add("zimletContext", zimletContext)
             .add("zimlet", getZimlet())
@@ -100,7 +109,7 @@ implements ZimletInterface {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
+        return addToStringInfo(MoreObjects.toStringHelper(this))
                 .toString();
     }
 }

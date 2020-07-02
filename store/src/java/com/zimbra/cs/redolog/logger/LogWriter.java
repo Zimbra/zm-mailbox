@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.LinkedHashMap;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.redolog.op.RedoableOp;
 
 /**
@@ -63,7 +64,7 @@ public interface LogWriter {
 	 * @throws IOException
 	 */
 	public void log(RedoableOp op, InputStream data, boolean synchronous) throws IOException;
-    
+
     /**
      * Make sure all writes are committed to disk, or whatever the log
      * destination medium is.  This is mainly useful only when we need to
@@ -78,7 +79,7 @@ public interface LogWriter {
 	 * Returns the current size of the log.  Used for rollover tracking.
 	 * @return
 	 */
-	public long getSize();
+	public long getSize() throws IOException;
 
 	/**
 	 * Returns the time of the log creation.
@@ -123,7 +124,7 @@ public interface LogWriter {
 	 * if open.
 	 * @return true if and only if the deletion succeeded; false otherwise
 	 */
-	public boolean delete();
+	public boolean delete() throws IOException;
 
     /**
      * Performs log rollover.
@@ -131,15 +132,15 @@ public interface LogWriter {
      *                  at the beginning of new log file
      * @return java.io.File object for rolled over logfile
      * @throws IOException
+     * @throws ServiceException
      */
     public File rollover(LinkedHashMap /*<TxnId, RedoableOp>*/ activeOps)
-    throws IOException;
+    throws IOException, ServiceException;
 
     /**
      * Returns the sequence number of redolog.  Only file-based log writers
      * will return a meaningful number.  Others return 0.
      * @return
-     * @throws IOException
      */
     public long getSequence();
 }

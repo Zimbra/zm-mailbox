@@ -63,10 +63,10 @@ public final class FilteredQueryResults implements ZimbraQueryResults {
                         break;
                     default:
                         break;
-                }   
+                }
             }
         }
-        
+
         if (isContactSearch && searchParams != null && searchParams.getCursor() != null) {
             if (searchParams.getCursor().getSortValue() != null) {
                 firstHit = new ResultsPager.CursorHit(results, searchParams.getCursor().getSortValue(),
@@ -215,4 +215,8 @@ public final class FilteredQueryResults implements ZimbraQueryResults {
         return null;
     }
 
+    @Override
+    public boolean isRelevanceSortSupported() {
+        return results.isRelevanceSortSupported();
+    }
 }

@@ -27,7 +27,6 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.search.TermQuery;
 
 import com.google.common.base.Joiner;
-import com.google.common.io.Closeables;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.ZimbraLog;
@@ -46,6 +45,7 @@ import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.util.IOUtil;
 
 /**
  * Executes a search query.
@@ -334,6 +334,18 @@ public final class ZimbraQuery {
     }
 
     /**
+     * Returns true if all clauses have a text component, false if any of the clauses is DB-only
+     */
+    private boolean allClausesHaveTextOperations() {
+        for (Query query: clauses) {
+            if (!(query instanceof ConjQuery) && !query.hasTextOperation()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
      * Returns number of text parts of this query.
      */
     private int getTextOperationCount(QueryOperation op) {
@@ -369,7 +381,7 @@ public final class ZimbraQuery {
 
         // Parse the text using the JavaCC parser.
         try {
-            QueryParser parser = new QueryParser(mbox, mbox.index.getAnalyzer());
+            QueryParser parser = new QueryParser(mbox);
             parser.setDefaultField(params.getDefaultField());
             parser.setTypes(params.getTypes());
             parser.setTimeZone(params.getTimeZone());
@@ -398,10 +410,18 @@ public final class ZimbraQuery {
         // Check sort compatibility.
         switch (params.getSortBy().getKey()) {
             case RCPT:
-                // We don't store these in Lucene.
+                // We don't store these in the index.
                 if (hasTextOperation()) {
                     throw ServiceException.INVALID_REQUEST(
                             "Sort '" + params.getSortBy().name() + "' can't be used with text query.", null);
+                }
+                break;
+            case RELEVANCE:
+                //relevance sort can only be used if an index query is involved
+                if (!allClausesHaveTextOperations()) {
+                    SortBy sortBy = SortBy.DATE_DESC;
+                    ZimbraLog.search.debug("relevance search not supported; switching to %s", sortBy.name());
+                    params.setSortBy(sortBy);
                 }
                 break;
             default:
@@ -788,8 +808,8 @@ public final class ZimbraQuery {
             }
             return results;
         } catch (RuntimeException e) {
-            Closeables.closeQuietly(results);
-            Closeables.closeQuietly(operation);
+            IOUtil.closeQuietly(results);
+            IOUtil.closeQuietly(operation);
             throw e;
         }
     }

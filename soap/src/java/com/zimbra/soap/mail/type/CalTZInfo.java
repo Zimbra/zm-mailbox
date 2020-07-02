@@ -19,20 +19,25 @@ package com.zimbra.soap.mail.type;
 
 import java.util.List;
 
-import com.google.common.base.Objects;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.CalTZInfoInterface;
 import com.zimbra.soap.type.TzOnsetInfo;
 
+import io.leangen.graphql.annotations.GraphQLNonNull;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name=GqlConstants.CLASS_CALENDAR_TIME_ZONE_INFO, description="Timezone specification")
 public class CalTZInfo implements CalTZInfoInterface {
 
     /**
@@ -42,6 +47,8 @@ public class CalTZInfo implements CalTZInfoInterface {
      * Otherwise, it must be present, although it will be ignored by the server
      */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=true)
+    @GraphQLNonNull
+    @GraphQLQuery(name=GqlConstants.ID, description="Timezone ID.")
     private final String id;
 
     /**
@@ -49,6 +56,8 @@ public class CalTZInfo implements CalTZInfoInterface {
      * @zm-api-field-description Standard Time's offset in minutes from UTC; local = UTC + offset
      */
     @XmlAttribute(name=MailConstants.A_CAL_TZ_STDOFFSET /* stdoff */, required=true)
+    @GraphQLNonNull
+    @GraphQLQuery(name=GqlConstants.TIME_ZONE_STANDARD_OFFSET, description="Standard Time's offset in minutes from UTC; local = UTC + offset")
     private final Integer tzStdOffset;
 
     /**
@@ -56,6 +65,8 @@ public class CalTZInfo implements CalTZInfoInterface {
      * @zm-api-field-description Daylight Saving Time's offset in minutes from UTC; present only if DST is used
      */
     @XmlAttribute(name=MailConstants.A_CAL_TZ_DAYOFFSET /* dayoff */, required=true)
+    @GraphQLNonNull
+    @GraphQLQuery(name=GqlConstants.TIME_ZONE_DAY_OFFSET, description="Daylight Saving Time's offset in minutes from UTC; present only if DST is used")
     private final Integer tzDayOffset;
 
     /**
@@ -63,24 +74,28 @@ public class CalTZInfo implements CalTZInfoInterface {
      * Either specify week/wkday combo, or mday.
      */
     @XmlElement(name=MailConstants.E_CAL_TZ_STANDARD /* standard */, required=false)
+    @GraphQLQuery(name=GqlConstants.STANDARD_TIME_ZONE_ONSET, description="Time/rule for transitioning from daylight time to standard time. Either specify week/wkday combo, or mday.")
     private TzOnsetInfo standardTzOnset;
 
     /**
      * @zm-api-field-description Time/rule for transitioning from standard time to daylight time
      */
     @XmlElement(name=MailConstants.E_CAL_TZ_DAYLIGHT /* daylight */, required=false)
+    @GraphQLQuery(name=GqlConstants.DAYLIGHT_TIME_ZONE_ONSET, description="Time/rule for transitioning from standard time to daylight time. See `standardTzOnset` for more details.")
     private TzOnsetInfo daylightTzOnset;
 
     /**
      * @zm-api-field-description Standard Time component's timezone name
      */
     @XmlAttribute(name=MailConstants.A_CAL_TZ_STDNAME /* stdname */, required=false)
+    @GraphQLQuery(name=GqlConstants.STANDARD_TIME_ZONE_NAME, description="Standard Time component's timezone name")
     private String standardTZName;
 
     /**
      * @zm-api-field-description Daylight Saving Time component's timezone name
      */
     @XmlAttribute(name=MailConstants.A_CAL_TZ_DAYNAME /* dayname */, required=false)
+    @GraphQLQuery(name=GqlConstants.DAYLIGHT_TIME_ZONE_NAME, description="Daylight Saving Time component's timezone name")
     private String daylightTZName;
 
     /**
@@ -139,24 +154,26 @@ public class CalTZInfo implements CalTZInfoInterface {
     public String getDaylightTZName() { return daylightTZName; }
 
     public static Iterable <CalTZInfo> fromInterfaces(Iterable <CalTZInfoInterface> params) {
-        if (params == null)
+        if (params == null) {
             return null;
-        List <CalTZInfo> newList = Lists.newArrayList();
-        for (CalTZInfoInterface param : params) {
+        }
+        final List <CalTZInfo> newList = Lists.newArrayList();
+        for (final CalTZInfoInterface param : params) {
             newList.add((CalTZInfo) param);
         }
         return newList;
     }
 
     public static List <CalTZInfoInterface> toInterfaces(Iterable <CalTZInfo> params) {
-        if (params == null)
+        if (params == null) {
             return null;
-        List <CalTZInfoInterface> newList = Lists.newArrayList();
+        }
+        final List <CalTZInfoInterface> newList = Lists.newArrayList();
         Iterables.addAll(newList, params);
         return newList;
     }
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(
+                MoreObjects.ToStringHelper helper) {
         return helper
             .add("id", id)
             .add("tzStdOffset", tzStdOffset)
@@ -169,7 +186,7 @@ public class CalTZInfo implements CalTZInfoInterface {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
+        return addToStringInfo(MoreObjects.toStringHelper(this))
                 .toString();
     }
 }

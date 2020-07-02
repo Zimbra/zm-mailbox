@@ -65,4 +65,9 @@ final class EmptyQueryResults extends ZimbraQueryResultsImpl {
         return new ArrayList<QueryInfo>();
     }
 
+    @Override
+    public boolean isRelevanceSortSupported() {
+        return false;
+    }
+
 }

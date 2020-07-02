@@ -32,7 +32,6 @@ import java.util.concurrent.ConcurrentSkipListMap;
 
 import com.google.common.base.Function;
 import com.google.common.base.Strings;
-import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.zimbra.common.mailbox.BaseFolderInfo;
 import com.zimbra.common.mailbox.BaseItemInfo;
@@ -314,7 +313,7 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
 
     @Override
     public String toString() {
-        return path.toString();
+        return (path == null) ? "NULLPATH" : path.toString();
     }
 
     /** Returns the UID Validity Value for the {@link FolderStore}.  This is the
@@ -644,7 +643,7 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
 
     protected Iterator<DirtyMessage> dirtyIterator() {
         SessionData sdata = sessionData;
-        return sdata == null ? Iterators.<DirtyMessage>emptyIterator() : sdata.dirtyMessages.values().iterator();
+        return sdata == null ? Collections.<DirtyMessage>emptyIterator() : sdata.dirtyMessages.values().iterator();
     }
 
     /** Empties the folder's list of modified/created messages. */
@@ -1105,7 +1104,8 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
         return removed;
     }
 
-    protected void restore(ImapListener sess, SessionData sdata) throws ImapSessionClosedException, ServiceException {
+    protected synchronized void restore(ImapListener sess, SessionData sdata)
+            throws ImapSessionClosedException, ServiceException {
         session = sess;
         MailboxStore sessMbox = session.getMailbox();
         if (sessMbox == null) {
@@ -1113,9 +1113,20 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
             throw new ImapSessionClosedException();
         }
         mailboxStore = ImapMailboxStore.get(sessMbox, sessMbox.getAccountId());
+        if (mailboxStore == null) {
+            ZimbraLog.imap.warn("Unable to get mailboxStore corresponding to mailbox=%s sessionPath=%s",
+                    sessMbox, session.getPath());
+            throw new ImapSessionClosedException();
+        }
         path = session.getPath();
         // FIXME: NOT RESTORING sequence.msg.sflags PROPERLY -- need to serialize it!!!
         sessionData = sdata;
+        if (folderIdentifier == null) {
+            ZimbraLog.imap.warn("Restored ImapFolder has null folderIdentifier mailbox=%s sessionPath=%s",
+                    sessMbox, session.getPath());
+            /* We're going to have big problems with this anyway, if this is true */
+            throw new ImapSessionClosedException();
+        }
     }
 
     @Override
@@ -1170,6 +1181,14 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
 
     @Override
     public void handleItemUpdate(int changeId, Change chg, ImapSession.AddedItems added) {
+        ImapMailboxStore mboxStore = mailboxStore;
+        if (mboxStore == null) {
+            if (ZimbraLog.imap.isDebugEnabled()) {
+                ZimbraLog.imap.debug("handleItemUpdate called when mailboxStore=null. ImapFolder=%s\n%s",
+                        this.path, ZimbraLog.getStackTrace(20));
+            }
+            return;  // restore set mailboxStore to null
+        }
         BaseItemInfo item = (BaseItemInfo) chg.what;
         int itemId;
         int fId;
@@ -1180,9 +1199,9 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
             ZimbraLog.imap.warn("unable to get item or folder ID during handling item update", e);
             return;
         }
-        if ((folderIdentifier.accountId != null) && !folderIdentifier.accountId.equals(mailboxStore.getAccountId())) {
+        if ((folderIdentifier.accountId != null) && !folderIdentifier.accountId.equals(mboxStore.getAccountId())) {
             ZimbraLog.imap.debug("handleItemUpdate unexpectedly called with folder=%s when local mailbox is %s",
-                    folderIdentifier, mailboxStore);
+                    folderIdentifier, mboxStore);
             return;
         }
         boolean inFolder = isVirtual() || fId == folderIdentifier.id;
@@ -1215,11 +1234,19 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
 
     @Override
     public void handleAddedMessages(int changeId, ImapSession.AddedItems added) {
+        ImapMailboxStore mboxStore = mailboxStore;
+        if (mboxStore == null) {
+            if (ZimbraLog.imap.isDebugEnabled()) {
+                ZimbraLog.imap.debug("handleAddedMessages called when mailboxStore=null. ImapFolder=%s\n%s",
+                        this.path, ZimbraLog.getStackTrace(20));
+            }
+            return;  // restore set mailboxStore to null
+        }
         boolean debug = ZimbraLog.imap.isDebugEnabled();
 
         added.sort();
         boolean recent = true;
-        for (ImapListener i4session : mailboxStore.getListeners(folderIdentifier)) {
+        for (ImapListener i4session : mboxStore.getListeners(folderIdentifier)) {
             // added messages are only \Recent if we're the first IMAP session notified about them
             if (i4session == session) {
                 break;
@@ -1262,7 +1289,7 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
             try {
                 ZimbraLog.imap.debug("  ** moved; changing imap uid (ntfn): %s", renumber);
                 // notification will take care of adding to mailbox
-                mailboxStore.resetImapUid(renumber);
+                mboxStore.resetImapUid(renumber);
             } catch (ServiceException e) {
                 if (debug) {
                     ZimbraLog.imap.debug("  ** moved; imap uid change failed; msg hidden (ntfn): %s", renumber);

@@ -39,20 +39,33 @@ public class DeleteDistributionListRequest {
      * @zm-api-field-tag value-of-zimbra-id
      * @zm-api-field-description Zimbra ID
      */
-    @XmlAttribute(name=AdminConstants.E_ID, required=false)
+    @XmlAttribute(name=AdminConstants.E_ID, required=true)
     private final String id;
+
+    /**
+     * @zm-api-field-tag cascadeDelete
+     * @zm-api-field-description If true, cascade delete the hab-groups else return error
+     */
+    @XmlAttribute(name=AdminConstants.A_CASCADE_DELETE, required=false)
+    private final boolean cascadeDelete;
 
     /**
      * no-argument constructor wanted by JAXB
      */
      @SuppressWarnings("unused")
     private DeleteDistributionListRequest() {
-        this((String)null);
+        this(null);
     }
 
     public DeleteDistributionListRequest(String id) {
+        this(id, false);
+    }
+
+    public DeleteDistributionListRequest(String id, boolean cascadeDelete) {
         this.id = id;
+        this.cascadeDelete = cascadeDelete;
     }
 
     public String getId() { return id; }
+    public boolean isCascadeDelete() { return cascadeDelete; }
 }

@@ -443,3 +443,15 @@ Content-Disposition: form-data; name="csrfToken"
 ----Example with Http Header----
 Referer http://localhost:7070/
 X-Zimbra-Csrf-Token 0_b9c88c641becf7943e7c9af7e569ea911cf8b7a0
+
+---------------------------------------------------
+Profile configuration files
+This rest api will allow user to download his/her profile configuration file to configure account on mac/iphone.
+---------------------------------------------------
+/home/<user_email>/?fmt=mobileconfig&configType=<config_type>
+supported config types
+    1. caldav
+    2. carddav
+    3. imap
+    4. dav (caldav and carddav)
+    5. all (caldav, carddav and imap)

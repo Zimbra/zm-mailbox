@@ -1,10 +1,20 @@
 <project name="zm-store-conf" default="conf-dist">
-	<import file="../build-common.xml" />
 	<property name="dist.conf.dir" value="build/conf" />
 	<property name="conf.dir" value="conf" />
 	<property name="conf.cont.dir" value="${conf.dir}/contacts" />
 	<property name="conf.msgs.dir" value="${conf.dir}/msgs" />
+	<property name="conf.common.dir" value="${conf.dir}/common" />
+	<target name="common-passwords-exists">
+		<available file="${conf.common.dir}/common-passwords.gz" property="common-passwords.exists" />
+	</target>
+	<target name="common-passwords" depends="common-passwords-exists" if="common-passwords.exists">
+		<delete file="${conf.dir}/common-passwords.txt" />
+		<untar src="${conf.common.dir}/common-passwords.gz" dest="${conf.dir}/common-passwords.txt" compression="gzip">
+			<globmapper from="common-passwords.txt" to="*" />
+		</untar>
+	</target>
 	<target name="conf-dist">
+		<antcall target="common-passwords" />
 		<copy todir="${dist.conf.dir}" overwrite="true">
 			<fileset dir="${conf.dir}" includes="*.*" />
 		</copy>
@@ -17,4 +27,36 @@
 		<zip destfile="build/zimbrastoreconf.zip" basedir="${dist.conf.dir}" />
 	</target>
 
+	<property name="dist.mailbox.conf" value="build/zms/mailbox-conf"/>
+	<property name="dist.jetty.conf" value="build/zms/jetty-conf"/>
+	<property name="zms.mailbox.conf.dir" value="zms/mailbox-conf" />
+	<property name="zms.jetty.conf.dir" value="zms/jetty-conf" />
+	<target name="build-mailbox-conf">
+		<delete dir="${dist.mailbox.conf}"/>
+		<mkdir dir="${dist.mailbox.conf}" />
+		<copy todir="${dist.mailbox.conf}" overwrite="true">
+			<fileset dir="${conf.dir}">
+			</fileset>
+			<globmapper from="*.production" to="*.in"/>
+		</copy>
+		<copy todir="${dist.mailbox.conf}" file="${conf.dir}/contacts/zimbra-contact-fields.xml" overwrite="true"/>
+		<copy todir="${dist.mailbox.conf}" overwrite="true">
+			<fileset dir="${conf.dir}">
+				<exclude name="**/common/**"/>
+				<exclude name="**/contacts/**"/>
+				<exclude name="localconfig.xml"/>
+				<exclude name="*.production"/>
+			</fileset>
+		</copy>
+		<copy todir="${dist.mailbox.conf}" overwrite="true">
+			<fileset dir="${zms.mailbox.conf.dir}"/>
+		</copy>
+	</target>
+	<target name="build-jetty-conf">
+		<delete dir="${dist.jetty.conf}"/>
+		<mkdir dir="${dist.jetty.conf}" />
+		<copy todir="${dist.jetty.conf}" overwrite="true">
+			<fileset dir="${zms.jetty.conf.dir}"/>
+		</copy>
+	</target>
 </project>

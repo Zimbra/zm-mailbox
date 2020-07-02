@@ -31,8 +31,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.localconfig.DebugConfig;
+import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ListUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -339,8 +340,7 @@ public class DbDataSource {
 
         ZimbraLog.datasource.debug("Deleting all mappings for dataSource %s in folder %d", ds.getName(), folderId);
 
-        mbox.lock.lock();
-        try {
+        try (final MailboxLock l = mbox.getWriteLockAndLockIt()) {
             DbConnection conn = null;
             PreparedStatement stmt = null;
             try {
@@ -376,8 +376,6 @@ public class DbDataSource {
                     DbPool.quietClose(conn);
                 }
             }
-        } finally {
-            mbox.lock.release();
         }
         return items;
     }
@@ -777,14 +775,14 @@ public class DbDataSource {
         return items;
     }
 
-    public static int getDataSourceUsage(DataSource ds) throws ServiceException {
+    public static long getDataSourceUsage(DataSource ds) throws ServiceException {
         Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
         ZimbraLog.datasource.debug("Getting size of %s", ds.getName());
 
         DbConnection conn = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
-        int totalSize = 0;
+        long totalSize = 0L;
         try {
             conn = mbox.getOperationConnection();
             StringBuilder sb = new StringBuilder();
@@ -801,7 +799,7 @@ public class DbDataSource {
             stmt.setByte(pos++, MailItem.Type.MESSAGE.toByte());
             rs = stmt.executeQuery();
             while (rs.next()) {
-                totalSize = rs.getInt(1);
+                totalSize = rs.getLong(1);
                 break;
             }
             rs.close();
@@ -1286,7 +1284,7 @@ public class DbDataSource {
 
         @Override
         public String toString() {
-            Objects.ToStringHelper helper = Objects.toStringHelper(this);
+            MoreObjects.ToStringHelper helper = MoreObjects.toStringHelper(this);
             helper.add("id", msgId);
             helper.add("remote id", remoteId);
             helper.add("folder", remoteFolder);

@@ -23,7 +23,6 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public abstract class DistributionListDocumentHandler extends AdminDocumentHandler {
@@ -50,22 +49,19 @@ public abstract class DistributionListDocumentHandler extends AdminDocumentHandl
     throws ServiceException {
         // if we've explicitly been told to execute here, don't proxy
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        if (zsc.getProxyTarget() != null) {
-            return null;
-        }
 
         // check whether we need to proxy to the home server of a group
         try {
             Group group = getGroupAndCacheInContext(request, context);
 
             if (group != null && !Provisioning.onLocalServer(group)) {
-                Server server = group.getServer();
-                if (server == null) {
+                String targetPod = Provisioning.affinityServerForZimbraId(group.getId());
+                ZimbraSoapContext pxyCtxt = new ZimbraSoapContext(zsc);
+                if (targetPod == null) {
                     throw ServiceException.PROXY_ERROR(
-                            AccountServiceException.NO_SUCH_SERVER(
-                            group.getAttr(Provisioning.A_zimbraMailHost)), "");
+                            AccountServiceException.NO_SUCH_SERVER, "");
                 }
-                return proxyRequest(request, context, server);
+                return proxyRequest(request, context, targetPod, pxyCtxt);
             }
 
             return super.proxyIfNecessary(request, context);

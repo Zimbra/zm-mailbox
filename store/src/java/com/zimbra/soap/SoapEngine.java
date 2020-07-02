@@ -18,6 +18,7 @@
 package com.zimbra.soap;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
@@ -85,6 +86,7 @@ public class SoapEngine {
     public static final String ZIMBRA_CONTEXT = "zimbra.context";
     public static final String ZIMBRA_ENGINE  = "zimbra.engine";
     public static final String ZIMBRA_SESSION = "zimbra.session";
+    public static final String JWT_SALT = "jwt.salt";
 
     /** context name of request IP
      *
@@ -107,10 +109,25 @@ public class SoapEngine {
     /** context name of request port */
     public static final String REQUEST_PORT = "request.port";
 
+    /** context name of the original user agent */
+    public static final String ORIG_REQUEST_USER_AGENT = "orig.request.user.agent";
+
     private final DocumentDispatcher dispatcher = new DocumentDispatcher();
+
+    private File healthcheckFile;
 
     SoapEngine() {
         SoapTransport.setDefaultUserAgent(SoapTransport.DEFAULT_USER_AGENT_NAME, BuildInfo.VERSION);
+        initHeathcheckFile();
+    }
+
+    private void initHeathcheckFile() {
+        healthcheckFile = new File(LC.mailbox_healthcheck_touchpoint_file.value());
+        if (!healthcheckFile.exists()) {
+            ZimbraLog.mailbox.warn("healthcheck touchpoint file %s does not exist!", healthcheckFile.getAbsolutePath());
+        } else {
+            ZimbraLog.mailbox.info("found touchpoint healthcheck file %s", healthcheckFile.getAbsolutePath());
+        }
     }
 
     /**
@@ -138,7 +155,12 @@ public class SoapEngine {
             LOG.info("%s%s", e.getMessage(), (msg == null ? "" : ": " + msg)); // do not log stack
             LOG.debug(msg, e); // log stack
         } else {
-            LOG.warn(msg, e);
+            if (e.isReceiversFault()) {
+                ZimbraLog.soap.warn("SoapEngine: handler exception - '%s'", msg, e);
+            } else {
+                ZimbraLog.soap.warnQuietly(String.format("SoapEngine: %s %s", e.getMessage(),
+                        msg == null ? "" : " - " + msg), e);
+            }
         }
     }
 
@@ -353,6 +375,15 @@ public class SoapEngine {
             if (doc.getName().equals("AuthRequest")) {
                 // this is a Auth request, no CSRF validation happens
                 doCsrfCheck = false;
+                try {
+                        Element contextElmt = getSoapContextElement(soapProto, envelope);
+                        if (contextElmt != null) {
+                            String jwtSalt = contextElmt.getAttribute(HeaderConstants.E_JWT_SALT);
+                            context.put(JWT_SALT, jwtSalt);
+                        }
+                } catch (ServiceException e) {
+                    //was trying to get the jwt salt from soap context, if any issue occurred ignore.
+                }
             } else {
                 doCsrfCheck = doCsrfCheck && handler.needsAuth(context);
             }
@@ -364,8 +395,10 @@ public class SoapEngine {
                 // Bug: 96167 SoapEngine should be able to read CSRF token from HTTP headers
                 String csrfToken = httpReq.getHeader(Constants.CSRF_TOKEN);
                 if (StringUtil.isNullOrEmpty(csrfToken)) {
-                    Element contextElmt = soapProto.getHeader(envelope).getElement(HeaderConstants.E_CONTEXT);
-                    csrfToken = contextElmt.getAttribute(HeaderConstants.E_CSRFTOKEN);
+                    Element contextElmt = getSoapContextElement(soapProto, envelope);
+                    if (contextElmt != null) {
+                        csrfToken = contextElmt.getAttribute(HeaderConstants.E_CSRFTOKEN);
+                    }
                 }
                 AuthToken authToken = zsc.getAuthToken();
                 if (!CsrfUtil.isValidCsrfToken(csrfToken, authToken)) {
@@ -515,6 +548,14 @@ public class SoapEngine {
         return responseProto.soapEnvelope(responseBody, responseHeader);
     }
 
+    private Element getSoapContextElement(SoapProtocol soapProto, Element envelope) throws ServiceException {
+        Element contextElmt = null;
+        if (soapProto != null && soapProto.getHeader(envelope) != null) {
+            contextElmt = soapProto.getHeader(envelope).getElement(HeaderConstants.E_CONTEXT);
+        }
+        return contextElmt;
+    }
+
     /**
      * Handles individual requests, either direct or from a batch
      */
@@ -621,6 +662,7 @@ public class SoapEngine {
                     handler.logAuditAccess(at.getAdminAccountId(), acctId, acctId);
                 }
                 response = handler.handle(soapReqElem, context);
+                updateHealthcheckFileTimestamp(startTime);
                 ZimbraPerf.SOAP_TRACKER.addStat(getStatName(soapReqElem), startTime);
                 long duration = System.currentTimeMillis() - startTime;
                 if (LC.zimbra_slow_logging_enabled.booleanValue() && duration > LC.zimbra_slow_logging_threshold.longValue() &&
@@ -662,12 +704,19 @@ public class SoapEngine {
             if (e instanceof OutOfMemoryError) {
                 Zimbra.halt("handler exception", e);
             }
-            LOG.warn("handler exception", e);
+            ZimbraLog.soap.warnQuietly("SoapEngine: handler exception", e);
+
             // XXX: if the session was new, do we want to delete it?
         } finally {
             SoapTransport.clearVia();
         }
         return response;
+    }
+
+    private void updateHealthcheckFileTimestamp(long timestamp) {
+        if (healthcheckFile.exists()) {
+            healthcheckFile.setLastModified(timestamp);
+        }
     }
 
     /**

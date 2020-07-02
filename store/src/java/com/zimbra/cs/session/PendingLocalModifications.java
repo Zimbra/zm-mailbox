@@ -20,21 +20,26 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.zimbra.common.mailbox.BaseItemInfo;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.io.SecureObjectInputStream;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxNotificationInfo;
 import com.zimbra.cs.mailbox.Metadata;
 
 public final class PendingLocalModifications extends PendingModifications<MailItem> {
@@ -61,11 +66,13 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
         }
 
         if (other.modified != null) {
-            for (PendingModifications.Change chg : other.modified.values()) {
+            for (Map.Entry<PendingModifications.ModificationKey, PendingModifications.Change> entry : other.modified.entrySet()) {
+                PendingModifications.ModificationKey key = entry.getKey();
+                PendingModifications.Change chg = entry.getValue();
                 if (chg.what instanceof ZimbraMailItem) {
                     recordModified((ZimbraMailItem) chg.what, chg.why, (ZimbraMailItem) chg.preModifyObj);
-                } else if (chg.what instanceof Mailbox) {
-                    recordModified((Mailbox) chg.what, chg.why);
+                } else if (chg.what instanceof MailboxNotificationInfo) {
+                    recordModified(key, chg.what, chg.why, null, false);
                 }
             }
         }
@@ -94,14 +101,19 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
 
     @Override
     public void recordDeleted(ZimbraMailItem itemSnapshot) {
-        MailItem.Type type = MailItem.Type.fromCommon(itemSnapshot.getMailItemType());
-        changedTypes.add(type);
-        try {
-            addChangedParentFolderId(itemSnapshot.getFolderIdInMailbox());
-        } catch (ServiceException e) {
-            ZimbraLog.mailbox.warn("error getting folder ID for modified item");
+        if (null != itemSnapshot) {
+            MailItem.Type type = MailItem.Type.fromCommon(itemSnapshot.getMailItemType());
+            changedTypes.add(type);
+            try {
+                addChangedParentFolderId(itemSnapshot.getFolderIdInMailbox());
+            } catch (ServiceException e) {
+                ZimbraLog.mailbox.warn("error getting folder ID for modified item");
+            }
+            delete(new ModificationKey(itemSnapshot), type, itemSnapshot);
         }
-        delete(new ModificationKey(itemSnapshot), type, itemSnapshot);
+        else {
+        	ZimbraLog.mailbox.warn("PendingLocalModifications.recordDeleted itemSnapshot is NULL");
+        }
     }
 
     @Override
@@ -111,10 +123,9 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
 
     @Override
     public void recordModified(MailboxStore mbox, int reason) {
-        // Not recording preModify state of the mailbox for now
         if (mbox instanceof Mailbox) {
             Mailbox mb = (Mailbox) mbox;
-            recordModified(new PendingModifications.ModificationKey(mb.getAccountId(), 0), mbox, reason, null, false);
+            recordModified(new PendingModifications.ModificationKey(mb.getAccountId(), 0), new MailboxNotificationInfo(mb), reason, null, false);
         }
     }
 
@@ -197,33 +208,41 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
     }
 
     private static Map<PendingModifications.ModificationKey, PendingModifications.Change> getOriginal(Mailbox mbox,
-            Map<ModificationKeyMeta, ChangeMeta> map) throws ServiceException {
+            Map<String, ChangeMeta> map) throws ServiceException {
         if (map == null) {
             return null;
         }
         Map<PendingModifications.ModificationKey, PendingModifications.Change> ret = new LinkedHashMap<PendingModifications.ModificationKey, PendingModifications.Change>();
-        Iterator<Entry<ModificationKeyMeta, ChangeMeta>> iter = map.entrySet().iterator();
+        Iterator<Entry<String, ChangeMeta>> iter = map.entrySet().iterator();
         while (iter.hasNext()) {
-            Entry<ModificationKeyMeta, ChangeMeta> entry = iter.next();
+            Entry<String, ChangeMeta> entry = iter.next();
+            ModificationKeyMeta keyMeta = ModificationKeyMeta.fromString(entry.getKey());
             PendingModifications.ModificationKey key = new PendingModifications.ModificationKey(
-                    entry.getKey().accountId, entry.getKey().itemId);
+                    keyMeta.accountId, keyMeta.itemId);
             ChangeMeta changeMeta = entry.getValue();
             Object what = null;
             Object preModifyObj = null;
+            // if this is a remote item, we have to grab that account's mailbox
+            Mailbox itemMailbox;
+            if (!keyMeta.accountId.equals(mbox.getAccountId())) {
+                itemMailbox = MailboxManager.getInstance().getMailboxByAccountId(keyMeta.accountId);
+            } else {
+                itemMailbox = mbox;
+            }
             if (changeMeta.whatType == ChangeMeta.ObjectType.MAILITEM) {
                 Metadata meta = new Metadata(changeMeta.metaWhat);
                 MailItem.UnderlyingData ud = new MailItem.UnderlyingData();
                 ud.deserialize(meta);
-                what = MailItem.constructItem(mbox, ud, true);
+                what = MailItem.constructItem(itemMailbox, ud, true);
                 if (what instanceof Folder) {
                     Folder folder = ((Folder) what);
-                    folder.setParent(mbox.getFolderById(null, folder.getFolderId()));
+                    folder.setParentId(folder.getFolderId());
                 }
             } else if (changeMeta.whatType == ChangeMeta.ObjectType.MAILITEMTYPE) {
                 what = MailItem.Type.of(changeMeta.metaWhat);
             } else if (changeMeta.whatType == ChangeMeta.ObjectType.MAILBOX) {
-                mbox.refreshMailbox(null);
-                what = mbox;
+                Long mboxSize = Long.valueOf(changeMeta.metaWhat);
+                what = new MailboxNotificationInfo(itemMailbox.getAccountId(), mboxSize);
             } else {
                 ZimbraLog.session.warn("Unexpected mailbox change type received: %s", changeMeta.whatType);
                 continue;
@@ -233,17 +252,17 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
                 Metadata meta = new Metadata(changeMeta.metaPreModifyObj);
                 MailItem.UnderlyingData ud = new MailItem.UnderlyingData();
                 ud.deserialize(meta);
-                preModifyObj = MailItem.constructItem(mbox, ud, true);
+                preModifyObj = MailItem.constructItem(itemMailbox, ud, true);
                 if (preModifyObj instanceof Folder) {
                     Folder folder = ((Folder) preModifyObj);
-                    folder.setParent(mbox.getFolderById(null, folder.getFolderId()));
+                    folder.setParentId(folder.getFolderId());
                 }
             } else if (changeMeta.preModifyObjType == ChangeMeta.ObjectType.MAILITEMTYPE) {
                 preModifyObj = MailItem.Type.of(changeMeta.metaPreModifyObj);
-            } else if (changeMeta.whatType == ChangeMeta.ObjectType.MAILBOX) {
-                what = mbox;
-            } else {
-                ZimbraLog.session.warn("Unexpected mailbox change type received: %s", changeMeta.whatType);
+            } else if (changeMeta.preModifyObjType == ChangeMeta.ObjectType.MAILBOX) {
+                what = itemMailbox;
+            } else if (changeMeta.preModifyObjType != null ){
+                ZimbraLog.session.warn("Unexpected mailbox change type received: %s", changeMeta.preModifyObjType);
                 continue;
             }
             PendingModifications.Change change = new Change(what, changeMeta.metaWhy, preModifyObj);
@@ -252,12 +271,126 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
         return ret;
     }
 
+    private Map<String, String> encodeCreatedMap() throws ServiceException {
+        if (created == null) {
+            return null;
+        } else {
+        	ConcurrentHashMap<ModificationKey, BaseItemInfo> concurrentCreated = new ConcurrentHashMap<PendingModifications.ModificationKey, BaseItemInfo>(created);
+        	Map<String, String> createdMeta = new ConcurrentHashMap<>();
+            for (Iterator<Map.Entry<ModificationKey, BaseItemInfo>> iter = concurrentCreated.entrySet().iterator();iter.hasNext();) {
+            	Map.Entry<ModificationKey, BaseItemInfo> entry = iter.next();
+                ModificationKey key = entry.getKey();
+                BaseItemInfo itemInfo = entry.getValue();
+                if (itemInfo instanceof MailItem) {
+                    MailItem item = (MailItem) itemInfo;
+                    Metadata md = item.getUnderlyingData().serialize();
+                    createdMeta.put(new ModificationKeyMeta(key.getAccountId(), key.getItemId()).toString(), md.toString());
+                }
+            }
+            return createdMeta;
+        }
+    }
+
+    private static Map<String, ChangeMeta> encodeMap(Map<ModificationKey, Change> map) throws ServiceException {
+        if (map == null) {
+            return null;
+        }
+        ConcurrentHashMap<ModificationKey, Change> concurrentMap = new ConcurrentHashMap<ModificationKey, Change>(map);
+        Map<String, ChangeMeta> metaMap = new ConcurrentHashMap<>();
+        for (Iterator<Map.Entry<ModificationKey, Change>> iter = concurrentMap.entrySet().iterator();iter.hasNext();) {
+        	Map.Entry<ModificationKey, Change> entry = iter.next();
+            ModificationKey key = entry.getKey();
+            Change change = entry.getValue();
+            ChangeMeta.ObjectType type = null;
+            ChangeMeta.ObjectType preModType = null;
+            String str = null;
+            String preModStr = null;
+            if (change.what instanceof MailboxNotificationInfo) {
+                type = ChangeMeta.ObjectType.MAILBOX;
+                str = ((Long) ((MailboxNotificationInfo) change.what).getSize()).toString();
+            } else if (change.what instanceof MailItem) {
+                type = ChangeMeta.ObjectType.MAILITEM;
+                str = ((MailItem) change.what).getUnderlyingData().serialize().toString();
+                if (change.preModifyObj != null) {
+                    preModStr = ((MailItem) change.preModifyObj).getUnderlyingData().serialize().toString();
+                }
+            } else if (change.what instanceof MailItem.Type) {
+                type = ChangeMeta.ObjectType.MAILITEMTYPE;
+                str = ((MailItem.Type) change.what).toString();
+                if (change.preModifyObj instanceof MailItem.Type) {
+                    preModStr = ((MailItem.Type) change.preModifyObj).toString();
+                }
+            }
+            ChangeMeta changeMeta = new ChangeMeta(type, str, change.why, preModType, preModStr);
+            metaMap.put(new ModificationKeyMeta(key.getAccountId(), key.getItemId()).toString(), changeMeta);
+        }
+        return metaMap;
+    }
+
+    public static class PendingModificationSnapshot {
+        private Set<Type> changedTypes;
+        private Set<Integer> changedFolders;
+        private Set<Integer> changedParentFolders;
+        private Map<String, String> created;
+        private Map<String, ChangeMeta> modified;
+        private Map<String, ChangeMeta> deleted;
+    }
+
+    public PendingModificationSnapshot toSnapshot() throws ServiceException {
+        PendingModificationSnapshot snapshot = new PendingModificationSnapshot();
+        snapshot.changedTypes = new HashSet<>(changedTypes);
+        snapshot.changedFolders = new HashSet<>(getChangedFolders());
+        snapshot.changedParentFolders = new HashSet<>(getChangedParentFolders());
+        snapshot.modified = encodeMap(modified);
+        snapshot.deleted = encodeMap(deleted);
+        snapshot.created = encodeCreatedMap();
+        return snapshot;
+    }
+
+    public static PendingLocalModifications fromSnapshot(Mailbox mbox, PendingModificationSnapshot snapshot) throws ServiceException {
+        PendingLocalModifications pms = new PendingLocalModifications();
+        pms.changedTypes = snapshot.changedTypes;
+        pms.addChangedParentFolderIds(snapshot.changedParentFolders);
+        for (Integer id: snapshot.changedFolders) {
+            pms.addChangedFolderId(id);
+        }
+        if (snapshot.created != null) {
+            pms.created = new LinkedHashMap<PendingModifications.ModificationKey, BaseItemInfo>();
+            Iterator<Entry<String, String>> iter = snapshot.created.entrySet().iterator();
+            while (iter.hasNext()) {
+                Entry<String, String> entry = iter.next();
+                ModificationKeyMeta keyMeta = ModificationKeyMeta.fromString(entry.getKey());
+                Metadata meta = new Metadata(entry.getValue());
+                // if this is a remote item, we have to grab that account's mailbox
+                Mailbox itemMailbox;
+                if (!keyMeta.accountId.equals(mbox.getAccountId())) {
+                    itemMailbox = MailboxManager.getInstance().getMailboxByAccountId(keyMeta.accountId);
+                } else {
+                    itemMailbox = mbox;
+                }
+                MailItem.UnderlyingData ud = new MailItem.UnderlyingData();
+                ud.deserialize(meta);
+                MailItem item = MailItem.constructItem(itemMailbox, ud, true);
+                if (item instanceof Folder) {
+                    Folder folder = ((Folder) item);
+                    folder.setParentId(folder.getFolderId());
+                }
+                PendingModifications.ModificationKey key = new PendingModifications.ModificationKey(
+                        keyMeta.accountId, keyMeta.itemId);
+                pms.created.put(key, item);
+            }
+        }
+        pms.modified = getOriginal(mbox, snapshot.modified);
+        pms.deleted = getOriginal(mbox, snapshot.deleted);
+        return pms;
+    }
+
     @SuppressWarnings("unchecked")
     public static PendingLocalModifications deserialize(Mailbox mbox, byte[] data)
             throws IOException, ClassNotFoundException, ServiceException {
         ByteArrayInputStream bis = new ByteArrayInputStream(data);
         PendingLocalModifications pms = new PendingLocalModifications();
-        try (ObjectInputStream ois = new ObjectInputStream(bis)) {
+        try (ObjectInputStream ois = new SecureObjectInputStream(bis, Type.class.getName())) {
             pms.changedTypes = (Set<Type>) ois.readObject();
             pms.addChangedParentFolderIds((Set<Integer>) ois.readObject());
 
@@ -284,10 +417,18 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
             }
 
             Map<ModificationKeyMeta, ChangeMeta> metaModified = (Map<ModificationKeyMeta, ChangeMeta>) ois.readObject();
-            pms.modified = getOriginal(mbox, metaModified);
+            Map<String, ChangeMeta> metaModifiedStringKeys = new HashMap<>();
+            for (Map.Entry<ModificationKeyMeta, ChangeMeta> entry: metaModified.entrySet()) {
+                metaModifiedStringKeys.put(entry.getKey().toString(), entry.getValue());
+            }
+            pms.modified = getOriginal(mbox, metaModifiedStringKeys);
 
             Map<ModificationKeyMeta, ChangeMeta> metaDeleted = (Map<ModificationKeyMeta, ChangeMeta>) ois.readObject();
-            pms.deleted = getOriginal(mbox, metaDeleted);
+            Map<String, ChangeMeta> metaDeletedStringKeys = new HashMap<>();
+            for (Map.Entry<ModificationKeyMeta, ChangeMeta> entry: metaDeleted.entrySet()) {
+                metaDeletedStringKeys.put(entry.getKey().toString(), entry.getValue());
+            }
+            pms.deleted = getOriginal(mbox, metaDeletedStringKeys);
         }
         return pms;
     }

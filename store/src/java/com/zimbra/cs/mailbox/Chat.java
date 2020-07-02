@@ -17,6 +17,9 @@
 package com.zimbra.cs.mailbox;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.mailbox.MailItem.Type;
+import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.store.StagedBlob;
 
@@ -25,7 +28,7 @@ public class Chat extends Message {
     Chat(Mailbox mbox, UnderlyingData ud) throws ServiceException {
         this(mbox, ud, false);
     }
-    
+
     /**
      * this one will call back into decodeMetadata() to do our initialization
      *
@@ -35,11 +38,20 @@ public class Chat extends Message {
      */
     Chat(Mailbox mbox, UnderlyingData ud, boolean skipCache) throws ServiceException {
         super(mbox, ud, skipCache);
-        if (mData.type != Type.CHAT.toByte()) {
+        init();
+    }
+
+    Chat(Account acc, UnderlyingData data, int mailboxId) throws ServiceException {
+        super(acc, data, mailboxId);
+        init();
+    }
+
+    private void init() throws ServiceException {
+        if (type != Type.CHAT.toByte()) {
             throw new IllegalArgumentException();
         }
-        if (mData.parentId < 0) {
-            mData.parentId = -mId;
+        if (getParentId() < 0) {
+            state.setParentId(-mId);
         }
     }
 
@@ -57,7 +69,7 @@ public class Chat extends Message {
 
     static Chat create(int id, Folder folder, ParsedMessage pm, StagedBlob staged, boolean unread, int flags, Tag.NormalizedTags ntags)
     throws ServiceException {
-        return (Chat) Message.createInternal(id, folder, null, pm, staged, unread, flags, ntags, null, true, null, null, new ChatCreateFactory());
+        return (Chat) Message.createInternal(id, folder, null, pm, staged, unread, flags, ntags, null, true, null, null, null, new ChatCreateFactory());
     }
 
     @Override boolean isMutable() { return true; }

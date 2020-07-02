@@ -23,12 +23,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mailbox.MailItemType;
+import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.InputStreamWithSize;
@@ -101,11 +102,15 @@ public class LocalImapMailboxStore extends ImapMailboxStore {
     @Override
     public List<ImapListener> getListeners(ItemIdentifier ident) {
         List<ImapListener> listeners = new ArrayList<ImapListener>();
-        for (Session listener : mailbox.getListeners(Session.Type.IMAP)) {
+        if (ident == null) {
+            ZimbraLog.imap.warnQuietlyFmt("Attempted to getListeners for null item ID on mailbox %s", this);
+            return listeners;
+        }
+        for (Session listener : mailbox.getNotificationPubSub().getSubscriber().getListeners(Session.Type.IMAP)) {
             if (listener instanceof ImapSession) {
                 ImapSession iListener = (ImapSession)listener;
                 if (iListener.getFolderId() == ident.id) {
-                    listeners.add((ImapListener)iListener);
+                    listeners.add(iListener);
                 }
             }
         }
@@ -153,8 +158,7 @@ public class LocalImapMailboxStore extends ImapMailboxStore {
 
     @Override
     public void checkAppendMessageFlags(OperationContext octxt, List<AppendMessage> appends) throws ServiceException {
-        mailbox.lock.lock();
-        try {
+        try (final MailboxLock l = mailbox.getWriteLockAndLockIt()) {
             // TODO - Code taken with modifications from ImapHandler.doAPPEND
             // TODO - any reason why we can't use this.flags for flagset?
             ImapFlagCache flagset = ImapFlagCache.getSystemFlags();
@@ -162,8 +166,6 @@ public class LocalImapMailboxStore extends ImapMailboxStore {
             for (AppendMessage append : appends) {
                 append.checkFlags(flagset, tagset);
             }
-        } finally {
-            mailbox.lock.release();
         }
     }
 
@@ -258,6 +260,6 @@ public class LocalImapMailboxStore extends ImapMailboxStore {
         } catch (Exception e) {
             acctName = "unknown";
         }
-        return Objects.toStringHelper(this).add("acctName", acctName).toString();
+        return MoreObjects.toStringHelper(this).add("acctName", acctName).toString();
     }
 }

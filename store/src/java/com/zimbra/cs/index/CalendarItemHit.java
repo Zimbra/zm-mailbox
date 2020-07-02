@@ -17,7 +17,7 @@
 
 package com.zimbra.cs.index;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailItem;
@@ -78,7 +78,7 @@ public class CalendarItemHit extends ZimbraHit {
     @Override
     public String toString() {
         try {
-            return Objects.toStringHelper(this).add("name", getName()).toString();
+            return MoreObjects.toStringHelper(this).add("name", getName()).toString();
         } catch (Exception e) {
             return e.toString();
         }

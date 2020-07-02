@@ -17,6 +17,7 @@
 package com.zimbra.cs.mailbox;
 
 import java.io.File;
+import org.junit.Ignore;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -39,6 +40,10 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.MethodRule;
 import org.junit.rules.TestName;
+import org.junit.runner.RunWith;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -57,6 +62,8 @@ import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.db.DbResults;
 import com.zimbra.cs.db.DbUtil;
+import com.zimbra.cs.gal.GalGroup.GroupInfo;
+import com.zimbra.cs.gal.GalGroupInfoProvider;
 import com.zimbra.cs.mailbox.Contact.Attachment;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedContact;
@@ -75,15 +82,17 @@ import com.zimbra.cs.util.ZTestWatchman;
  *
  * @author ysasaki
  */
-public final class ContactTest {
+@RunWith(PowerMockRunner.class)
+@PrepareForTest({GalGroupInfoProvider.class})
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public final class ContactTest {
 
     @Rule public TestName testName = new TestName();
     @Rule public MethodRule watchman = new ZTestWatchman();
-    
+
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
-        
+
     }
 
     @Before
@@ -91,6 +100,7 @@ public final class ContactTest {
        System.out.println(testName.getMethodName());
        Provisioning prov = Provisioning.getInstance();
        prov.createAccount("testCont@zimbra.com", "secret", new HashMap<String, Object>());
+       prov.createAccount("test6232@zimbra.com", "secret", new HashMap<String, Object>());
     }
 
     @Test
@@ -171,8 +181,6 @@ public final class ContactTest {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         mbox.createContact(null, new ParsedContact(Collections.singletonMap(
                 ContactConstants.A_email, "test1@zimbra.com")), Mailbox.ID_FOLDER_CONTACTS, null);
-        MailboxTestUtil.index(mbox);
-        Thread.sleep(500);
         Assert.assertTrue(mbox.index.existsInContacts(ImmutableList.of(
                 new InternetAddress("Test <test1@zimbra.com>"), new InternetAddress("Test <test2@zimbra.com>"))));
         Assert.assertFalse(mbox.index.existsInContacts(ImmutableList.of(
@@ -322,6 +330,23 @@ public final class ContactTest {
     }
 
     @Test
+    public void testZCS6232() throws Exception {
+        Account account = Provisioning.getInstance().getAccountByName("test6232@zimbra.com");
+        // mocking the group not to have view permission
+        PowerMockito.stub(PowerMockito.method(GalGroupInfoProvider.class, "getGroupInfo"))
+            .toReturn(GroupInfo.IS_GROUP);
+        Assert.assertFalse(ToXML.hasDLViewRight("mydl@zimbra.com", account, account));
+    }
+
+    @Test
+    public void testZCS6232WithNullEmail() throws Exception {
+        Account account = Provisioning.getInstance().getAccountByName("test6232@zimbra.com");
+        PowerMockito.stub(PowerMockito.method(GalGroupInfoProvider.class, "getGroupInfo"))
+            .toReturn(GroupInfo.IS_GROUP);
+        Assert.assertTrue(ToXML.hasDLViewRight(null, account, account));
+    }
+
+    @Test
     public void testTruncatedContactsTgzImport() throws IOException {
         File file = new File(MailboxTestUtil.getZimbraServerDir("") + "src/java-test/Truncated.tgz");
         System.out.println(file.getAbsolutePath());
@@ -340,7 +365,7 @@ public final class ContactTest {
         }
         Assert.assertTrue(errorCaught);
     }
-    
+
     @After
     public void tearDown() {
         try {

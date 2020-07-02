@@ -17,34 +17,29 @@
 
 package com.zimbra.cs.index;
 
-import org.apache.lucene.document.Document;
-
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 
 /**
- * Inderect result object wrapped around Lucene {@link Document}.
+ * Inderect result object wrapped around {@link IndexDocument}.
  * <p>
  * You wouldn't think we'd need this -- but in fact there are situations where it is useful (e.g. a query that ONLY uses
- * MySQL and therefore has the real Conversation and Message objects) because the Lucene {@link Document} isn't there.
- *
- * Access to the real Lucene {@link Document} is perhaps not necessary here -- the few writable APIs on the Lucene
- * {@link Document} are probably not useful to us.
+ * MySQL and therefore has the real Conversation and Message objects) because the {@link IndexDocument} isn't there.
  *
  * @since Oct 15, 2004
  * @author tim
  */
 public final class MessagePartHit extends ZimbraHit {
 
-    private final Document document;
+    private final IndexDocument document;
     private MessageHit hit;
     private final int itemId;
 
     protected MessagePartHit(ZimbraQueryResultsImpl res, Mailbox mbx, int id,
-            Message msg, Document doc, Object sortValue) {
+            Message msg, IndexDocument doc, Object sortValue) {
         super(res, mbx, sortValue);
         itemId = id;
         document = doc;
@@ -84,7 +79,7 @@ public final class MessagePartHit extends ZimbraHit {
     @Override
     public String toString() {
         try {
-            return Objects.toStringHelper(this)
+            return MoreObjects.toStringHelper(this)
                 .add("id", getItemId() + "-" + getPartName())
                 .add("conv", getConversationId())
                 .addValue(super.toString())

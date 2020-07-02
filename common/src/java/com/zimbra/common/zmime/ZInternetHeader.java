@@ -535,7 +535,7 @@ public class ZInternetHeader {
                     currElement.appendBody(content[pos]);
                 }
             } else if (currStat == SequenceType.EW) {
-                if (content[pos] == ' ' || content[pos] == '\t') {
+                if ((content[pos] == ' ' || content[pos] == '\t') && !allowInvalidEncoding(currElement.getCharset())) {
                     return null;
                 } else if (encodeStat == EncodeSequenceState.TEXT && (pos < (end - 1)) && content[pos] == '?' && content[pos + 1] == '=' ) {
                     pos++;
@@ -581,6 +581,12 @@ public class ZInternetHeader {
         }
         fields.add(currElement);
         return fields.getAll();
+    }
+
+    public static boolean allowInvalidEncoding(String charset) {
+
+        return ("iso-8859-1".equalsIgnoreCase(charset) || "us-ascii".equalsIgnoreCase(charset)
+            || ("utf-8").equalsIgnoreCase(charset)) ;
     }
 
     static String unfold(final String folded) {

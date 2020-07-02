@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.mailbox;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -33,7 +34,6 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.common.io.Closeables;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
@@ -790,19 +790,17 @@ public class ContactAutoComplete {
     }
 
     private void queryFolders(String str, String generatedQuery, Map<ItemId, Mountpoint> mountpoints ,int limit, AutoCompleteResult result) throws ServiceException {
-        ZimbraQueryResults qres = null;
-        try {
-            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(getRequestedAcctId());
-            SearchParams params = new SearchParams();
-            params.setQueryString(generatedQuery);
-            params.setDefaultField("contact:");
-            params.setTypes(CONTACT_TYPES);
-            params.setSortBy(SortBy.NONE);
-            params.setLimit(limit + 1);
-            params.setPrefetch(true);
-            params.setFetchMode(SearchParams.Fetch.NORMAL);
-            ZimbraLog.gal.debug("querying contact folders: %s", params.getQueryString());
-            qres = mbox.index.search(SoapProtocol.Soap12, octxt, params);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(getRequestedAcctId());
+        SearchParams params = new SearchParams();
+        params.setQueryString(generatedQuery);
+        params.setDefaultField("contact:");
+        params.setTypes(CONTACT_TYPES);
+        params.setSortBy(SortBy.NONE);
+        params.setLimit(limit + 1);
+        params.setPrefetch(true);
+        params.setFetchMode(SearchParams.Fetch.NORMAL);
+        ZimbraLog.gal.debug("querying contact folders: %s", params.getQueryString());
+        try(ZimbraQueryResults qres = mbox.index.search(SoapProtocol.Soap12, octxt, params)) {
             while (qres.hasNext()) {
                 ZimbraHit hit = qres.getNext();
                 Map<String,String> fields = null;
@@ -856,8 +854,7 @@ public class ContactAutoComplete {
                     return;
                 }
             }
-        } finally {
-            Closeables.closeQuietly(qres);
+        } catch (IOException e) {
         }
     }
 

@@ -84,10 +84,12 @@ public class InviteChanges {
      * Returns true if the change is significant enough to invalidate earlier replies.  Changes to meeting location,
      * time, and/or recurrence warrant a new reply.  See Section 2.1.4 Component Revisions in RFC5546 (iTIP) for
      * more info.
-     * @return
+     * Overriding RFC5546 to include SUMMARY so that it will warrant a new reply.
+     * 
+     * @return true/false Return true/false based on the property change whether to notify the attendees.
      */
     public boolean isReplyInvalidatingChange() {
-        return changed(LOCATION | TIME | RECURRENCE);
+        return changed(LOCATION | TIME | RECURRENCE | SUBJECT);
     }
 
     /**

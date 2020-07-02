@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -11,7 +11,7 @@
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
  * You should have received a copy of the GNU General Public License along with this program.
- * If not, see <https://www.gnu.org/licenses/>.
+ * If not, see <http://www.gnu.org/licenses/>.
  * ***** END LICENSE BLOCK *****
  */
 
@@ -47,12 +47,11 @@ import javax.mail.internet.MimeUtility;
 import javax.mail.internet.SharedInputStream;
 import javax.mail.util.SharedByteArrayInputStream;
 
-import org.apache.lucene.document.Document;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import com.google.common.primitives.Ints;
 import com.zimbra.common.calendar.ZCalendar.ICalTok;
 import com.zimbra.common.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
@@ -78,10 +77,6 @@ import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.Fragment;
 import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.LuceneFields;
-import com.zimbra.cs.index.ZimbraAnalyzer;
-import com.zimbra.cs.index.analysis.FieldTokenStream;
-import com.zimbra.cs.index.analysis.MimeTypeTokenStream;
-import com.zimbra.cs.index.analysis.RFC822AddressTokenStream;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Threader;
@@ -125,10 +120,11 @@ public final class ParsedMessage {
 
     private List<MPartInfo> messageParts;
     private String recipients;
+    private String fromOrSender;
+    private String from;
+    private String to;
+    private String cc;
     private String sender;
-    private RFC822AddressTokenStream fromTokenStream;
-    private RFC822AddressTokenStream toTokenStream;
-    private RFC822AddressTokenStream ccTokenStream;
 
     private ParsedAddress parsedSender;
     private List<ParsedAddress> parsedRecipients;
@@ -724,15 +720,15 @@ public final class ParsedMessage {
      *  returns the value of the <tt>Sender</tt> header.  Returns an empty
      *  {@code String} if neither header is available. */
     public String getSender() {
-        if (sender == null) {
-            sender = Mime.getSender(getMimeMessage());
+        if (fromOrSender == null) {
+            fromOrSender = Mime.getSender(getMimeMessage());
         }
-        return sender;
+        return fromOrSender;
     }
 
-    private RFC822AddressTokenStream getFromTokenStream() {
-        if (fromTokenStream != null) {
-            return new RFC822AddressTokenStream(fromTokenStream);
+    private String getFrom() {
+        if (from != null) {
+            return from;
         }
 
         String from = null;
@@ -746,12 +742,13 @@ public final class ParsedMessage {
             } catch (MessagingException ignore) {
             }
         }
-        return fromTokenStream = new RFC822AddressTokenStream(from);
+        this.from = from;
+        return from;
     }
 
-    private RFC822AddressTokenStream getToTokenStream() {
-        if (toTokenStream != null) {
-            return new RFC822AddressTokenStream(toTokenStream);
+    private String getTo() {
+        if (to != null) {
+            return to;
         }
 
         String to = null;
@@ -759,12 +756,13 @@ public final class ParsedMessage {
             to = getMimeMessage().getHeader("To", ",");
         } catch (MessagingException ignore) {
         }
-        return toTokenStream = new RFC822AddressTokenStream(to);
+        this.to = to;
+        return to;
     }
 
-    private RFC822AddressTokenStream getCcTokenStream() {
-        if (ccTokenStream != null) {
-            return new RFC822AddressTokenStream(ccTokenStream);
+    private String getCc() {
+        if (cc != null) {
+            return cc;
         }
 
         String cc = null;
@@ -772,7 +770,8 @@ public final class ParsedMessage {
             cc = getMimeMessage().getHeader("Cc", ",");
         } catch (MessagingException ignore) {
         }
-        return ccTokenStream = new RFC822AddressTokenStream(cc);
+        this.cc = cc;
+        return cc;
     }
 
     /**
@@ -850,7 +849,7 @@ public final class ParsedMessage {
             Date date = getMimeMessage().getSentDate();
             if (date != null) {
                 // prevent negative dates, which Lucene can't deal with
-                dateHeader = Math.max(date.getTime(), 0);
+                dateHeader = Math.max(date.getTime(), 0L);
             }
         } catch (MessagingException e) {
         }
@@ -908,6 +907,34 @@ public final class ParsedMessage {
     }
 
     /**
+     * Calculate an estimate for the number of index docs for this message.
+     * This doesn't have to be exact, but it should match or exceed the true number;
+     * since this is used to determine the IDs of index docs at deletion time
+     * it's better to issue deletion requests for non-existent docs than to leave
+     * orphaned docs in the index.
+     */
+    public int getNumIndexDocs() {
+        parse(); //should already be parsed
+        int numDocs = 1; //top-level doc
+        for (MPartInfo mpi: messageParts) {
+            if (mpi.isMultipart()) {
+                continue;
+            }
+            String ctype = mpi.getContentType();
+            try {
+                MimeHandler handler = MimeHandlerManager.getMimeHandler(ctype, mpi.getFilename());
+                if (handler.isIndexingEnabled() && indexAttachments && !DebugConfig.disableIndexingAttachmentsSeparately) {
+                    numDocs++;
+                }
+            } catch (MimeHandlerException e) {
+                LOG.warn("error trying to determine numIndexDocs; count may be wrong", e);
+                continue;
+            }
+        }
+        return numDocs;
+    }
+
+    /**
      * Returns CalenarPartInfo object containing a ZVCalendar representing an iCalendar
      * part and some additional information about the calendar part such as whether
      * the part was found inside a forwarded rfc822 message and if the part had
@@ -940,18 +967,18 @@ public final class ParsedMessage {
     private IndexDocument getMainBodyLuceneDocument(StringBuilder fullContent)
             throws MessagingException, ServiceException {
 
-        IndexDocument doc = new IndexDocument(new Document());
-        doc.addMimeType(new MimeTypeTokenStream("message/rfc822"));
+        IndexDocument doc = new IndexDocument();
+        doc.addMimeType("message/rfc822");
         doc.addPartName(LuceneFields.L_PARTNAME_TOP);
-        doc.addFrom(getFromTokenStream());
-        doc.addTo(getToTokenStream());
-        doc.addCc(getCcTokenStream());
+        doc.addFrom(getFrom());
+        doc.addTo(getTo());
+        doc.addCc(getCc());
         try {
-            doc.addEnvFrom(new RFC822AddressTokenStream(getMimeMessage().getHeader("X-Envelope-From", ",")));
+            doc.addEnvFrom(getMimeMessage().getHeader("X-Envelope-From", ","));
         } catch (MessagingException ignore) {
         }
         try {
-            doc.addEnvTo(new RFC822AddressTokenStream(getMimeMessage().getHeader("X-Envelope-To", ",")));
+            doc.addEnvTo(getMimeMessage().getHeader("X-Envelope-To", ","));
         } catch (MessagingException ignore) {
         }
 
@@ -969,7 +996,6 @@ public final class ParsedMessage {
         }
 
         // iterate all the message headers, add them to the structured-field data in the index
-        FieldTokenStream fields = new FieldTokenStream();
         MimeMessage mm = getMimeMessage();
         List<Part> parts = new ArrayList<Part>();
         parts.add(mm);
@@ -994,50 +1020,41 @@ public final class ParsedMessage {
                     value = "";
                 }
                 if (key.length() > 0) {
+                    String val;
                     if (value.length() == 0) {
                         // low-level tokenizer can't deal with blank header value, so we'll index
                         // some dummy value just so the header appears in the index.
                         // Users can query for the existence of the header with a query
                         // like #headername:*
-                        fields.add(key, "_blank_");
+                    	val = "_blank_";
                     } else {
-                        fields.add(key, value);
+                    	val = value;
+                    }
+                    doc.addField(String.format("%s:%s", key, val));
+                    Integer intVal = Ints.tryParse(val);
+                    if (intVal != null) {
+                        //numeric values get indexed in a separate field
+                        doc.addIntHeader(key.toLowerCase(), intVal);
                     }
                 }
             }
         }
-        // add key:value pairs to the structured FIELD lucene field
-        doc.addField(fields);
-
         String subject = getSubject();
         doc.addSubject(subject);
 
-        // add subject and from to main content for better searching
-        StringBuilder contentPrepend = new StringBuilder(subject);
+        doc.addContent(fullContent.toString());
 
-        // Bug 583: add all of the TOKENIZED versions of the email addresses to our CONTENT field...
-        appendToContent(contentPrepend, StringUtil.join(" ", getFromTokenStream().getAllTokens()));
-        appendToContent(contentPrepend, StringUtil.join(" ", getToTokenStream().getAllTokens()));
-        appendToContent(contentPrepend, StringUtil.join(" ", getCcTokenStream().getAllTokens()));
-
-        // bug 33461: add filenames to our CONTENT field
-        for (String fn : filenames) {
-            appendToContent(contentPrepend, ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_FILENAME, fn));
-            appendToContent(contentPrepend, fn); // also add the non-tokenized form, so full-filename searches match
-        }
-
-        String text = contentPrepend.toString() + " " + fullContent.toString();
-        doc.addContent(text);
-
-        try {
-            MimeHandler.getObjects(text, doc);
-        } catch (ObjectHandlerException e) {
-            ZimbraLog.index.warn("Unable to recognize searchable objects in message: msgid=%s,subject=%s",
-                    getMessageID(), getSubject(), e);
-        }
 
         // Get the list of attachment content types from this message and any TNEF attachments
-        doc.addAttachments(new MimeTypeTokenStream(Mime.getAttachmentTypeList(messageParts)));
+        Set<String> attachmentTypes = Mime.getAttachmentTypeList(messageParts);
+        if (attachmentTypes.isEmpty()) {
+            doc.addAttachments(LuceneFields.L_ATTACHMENT_NONE);
+        } else {
+            for (String attachment: attachmentTypes) {
+                doc.addAttachments(attachment);
+                doc.addAttachments(LuceneFields.L_ATTACHMENT_ANY);
+            }
+        }
         return doc;
     }
 
@@ -1050,9 +1067,9 @@ public final class ParsedMessage {
      * @param doc sub-document of top level
      */
     private IndexDocument setLuceneHeadersFromContainer(IndexDocument doc) {
-        doc.addFrom(getFromTokenStream());
-        doc.addTo(getToTokenStream());
-        doc.addCc(getCcTokenStream());
+        doc.addFrom(getFrom());
+        doc.addTo(getTo());
+        doc.addCc(getCc());
 
         String subject = getNormalizedSubject();
         if (!Strings.isNullOrEmpty(subject)) {
@@ -1217,8 +1234,8 @@ public final class ParsedMessage {
             filenames.add(mpi.getFilename());
         }
 
-        IndexDocument doc = new IndexDocument(new Document());
-        doc.addMimeType(new MimeTypeTokenStream(mpi.getContentType()));
+        IndexDocument doc = new IndexDocument();
+        doc.addMimeType(mpi.getContentType());
         doc.addPartName(mpi.getPartName());
         doc.addFilename(mpi.getFilename());
         try {
@@ -1393,12 +1410,12 @@ public final class ParsedMessage {
     }
 
     public void updateMimeMessage () throws IOException, MessagingException {
-            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-            mimeMessage.writeTo(buffer);
-            byte[] content = buffer.toByteArray();
-            ByteUtil.closeStream(sharedStream);
-            sharedStream = new SharedByteArrayInputStream(content);
-            mimeMessage = expandedMessage = null;
-            mimeMessage = expandedMessage = new Mime.FixedMimeMessage(JMSession.getSession(), sharedStream);
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        mimeMessage.writeTo(buffer);
+        byte[] content = buffer.toByteArray();
+        ByteUtil.closeStream(sharedStream);
+        sharedStream = new SharedByteArrayInputStream(content);
+        mimeMessage = expandedMessage = null;
+        mimeMessage = expandedMessage = new Mime.FixedMimeMessage(JMSession.getSession(), sharedStream);
     }
 }

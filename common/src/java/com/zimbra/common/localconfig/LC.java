@@ -82,6 +82,12 @@ public final class LC {
     public static final KnownKey zimbra_mysql_shutdown_timeout = KnownKey.newKey(60);
 
     @Supported
+    public static final KnownKey dbpool_connection_max_retries = KnownKey.newKey(30);
+
+    @Supported
+    public static final KnownKey dbpool_connection_retry_seconds = KnownKey.newKey(1);
+
+    @Supported
     public static final KnownKey zimbra_ldap_userdn = KnownKey.newKey("uid=zimbra,cn=admins,cn=zimbra");
 
     @Supported
@@ -115,11 +121,23 @@ public final class LC {
     @Supported
     public static final KnownKey zimbra_admin_service_port = KnownKey.newKey(7071);
 
+    /**
+     *  If specified, ProxyConfGen uses this value when configuring the zimbra_admin upstream.
+     */
+    @Supported
+    public static final KnownKey zimbra_admin_soap_service = KnownKey.newKey("zmc-mls");
+
     @Supported
     public static final KnownKey zimbra_mail_service_port = KnownKey.newKey(80);
 
     @Supported
     public static final KnownKey zimbra_admin_service_scheme = KnownKey.newKey("https://");
+
+    /**
+     *  If specified, ProxyConfGen uses this value when configuring the zimbra_ssl upstream.
+     */
+    @Supported
+    public static final KnownKey zimbra_soap_service = KnownKey.newKey("zmc-mls");
 
     @Supported
     public static final KnownKey zimbra_zmprov_default_to_ldap = KnownKey.newKey(false);
@@ -137,7 +155,7 @@ public final class LC {
 
     @Supported
     public static final KnownKey localized_client_msgs_directory =
-        KnownKey.newKey("${mailboxd_directory}/webapps/zimbra/WEB-INF/classes/messages");
+        KnownKey.newKey("${mailboxd_directory}/webapps/zimbraAdmin/WEB-INF/classes/messages");
 
     @Supported
     public static final KnownKey skins_directory = KnownKey.newKey("${mailboxd_directory}/webapps/zimbra/skins");
@@ -164,14 +182,20 @@ public final class LC {
     @Supported
     public static final KnownKey zimbra_mailbox_galsync_cache = KnownKey.newKey(10000);
 
-    @Supported
-    public static final KnownKey zimbra_mailbox_change_checkpoint_frequency = KnownKey.newKey(100);
-
     @Reloadable
     public static final KnownKey zimbra_mailbox_lock_max_waiting_threads = KnownKey.newKey(15);
 
     @Reloadable
     public static final KnownKey zimbra_mailbox_lock_timeout = KnownKey.newKey(60); // seconds
+
+    @Reloadable
+    public static final KnownKey zimbra_mailbox_lock_read_lease_seconds = KnownKey.newKey(300); /* 5 min */
+
+    @Reloadable
+    public static final KnownKey zimbra_mailbox_lock_write_lease_seconds = KnownKey.newKey(120); /* 2 min */
+
+    @Reloadable
+    public static final KnownKey zimbra_mailbox_lock_long_lock_milliseconds = KnownKey.newKey(2000);
 
     public static final KnownKey zimbra_mailbox_lock_readwrite = KnownKey.newKey(true);
 
@@ -242,6 +266,21 @@ public final class LC {
 
     public static final KnownKey zimbra_index_rfc822address_max_token_length = KnownKey.newKey(256);
     public static final KnownKey zimbra_index_rfc822address_max_token_count = KnownKey.newKey(512);
+
+    @Supported
+    public static final KnownKey zimbra_index_num_collections = KnownKey.newKey(1);
+
+    @Supported
+    public static final KnownKey zimbra_index_collections_prefix = KnownKey.newKey("mailbox_index");
+
+    @Supported
+    public static final KnownKey zimbra_contact_index_num_collections = KnownKey.newKey(1);
+
+    @Supported
+    public static final KnownKey zimbra_contact_index_collections_prefix = KnownKey.newKey("contact_index");
+
+    @Supported
+    public static final KnownKey zimbra_contact_index_read_alias_prefix = KnownKey.newKey("contact_index_read");
 
     public static final KnownKey zimbra_rights_delegated_admin_supported = KnownKey.newKey(true);
 
@@ -462,6 +501,7 @@ public final class LC {
     public static final KnownKey ldap_cache_ucservice_maxage = KnownKey.newKey(15);
     public static final KnownKey ldap_cache_alwaysoncluster_maxsize = KnownKey.newKey(100);
     public static final KnownKey ldap_cache_alwaysoncluster_maxage = KnownKey.newKey(15);
+    public static final KnownKey ldap_cache_dns_maxage = KnownKey.newKey(3600000L);
 
     @Supported
     public static final KnownKey ldap_cache_timezone_maxsize = KnownKey.newKey(100);
@@ -575,17 +615,11 @@ public final class LC {
             " -Djava.awt.headless=true" +
             " -Dsun.net.inetaddr.ttl=${networkaddress_cache_ttl}" +
             " -Dorg.apache.jasper.compiler.disablejsr199=true" +
-            " -XX:+UseConcMarkSweepGC" +
+            " -XX:+UseG1GC" +
             " -XX:SoftRefLRUPolicyMSPerMB=1" +
             " -XX:-OmitStackTraceInFastThrow" +
             " -verbose:gc" +
-            " -XX:+PrintGCDetails" +
-            " -XX:+PrintGCDateStamps" +
-            " -XX:+PrintGCApplicationStoppedTime" +
-            " -Xloggc:/opt/zimbra/log/gc.log" +
-            " -XX:+UseGCLogFileRotation" +
-            " -XX:NumberOfGCLogFiles=20" +
-            " -XX:GCLogFileSize=10M");
+            " -Xlog:gc*=debug,safepoint=info:file=/opt/zimbra/log/gc.log:time:filecount=2,filesize=50m");
     @Supported
     public static final KnownKey mailboxd_pidfile = KnownKey.newKey("${zimbra_log_directory}/mailboxd.pid");
 
@@ -599,7 +633,7 @@ public final class LC {
     public static final KnownKey mailboxd_keystore_base_password = KnownKey.newKey("zimbra");
 
     @Supported
-    public static final KnownKey mailboxd_truststore = KnownKey.newKey("${zimbra_java_home}/jre/lib/security/cacerts");
+    public static final KnownKey mailboxd_truststore = KnownKey.newKey("${zimbra_java_home}/lib/security/cacerts");
 
     @Supported
     public static final KnownKey mailboxd_truststore_password = KnownKey.newKey("changeit");
@@ -681,6 +715,7 @@ public final class LC {
 
     public static final KnownKey imap_max_request_size = KnownKey.newKey(10 * 1024);
     public static final KnownKey imap_max_nesting_in_search_request = KnownKey.newKey(100);
+    public static final KnownKey imap_max_items_in_copy = KnownKey.newKey(1000);
 
     @Supported
     @Reloadable
@@ -698,6 +733,8 @@ public final class LC {
     public static final KnownKey imap_throttle_acct_limit = KnownKey.newKey(5000);
     public static final KnownKey imap_throttle_command_limit = KnownKey.newKey(25);
     public static final KnownKey imap_throttle_fetch = KnownKey.newKey(true);
+    //The following config should not be changed
+    public static final KnownKey imap_ehcache_heap_size = KnownKey.newKey(10);
     public static final KnownKey data_source_imap_reuse_connections = KnownKey.newKey(false);
 
     @Supported
@@ -794,7 +831,11 @@ public final class LC {
     public static final KnownKey zimbra_class_jsieve_comparators_ascii_numeric = KnownKey.newKey("com.zimbra.cs.filter.ZimbraAsciiNumeric");
     public static final KnownKey zimbra_class_jsieve_comparators_octet = KnownKey.newKey("com.zimbra.cs.filter.ZimbraOctet");
     public static final KnownKey zimbra_class_two_factor_auth_factory = KnownKey.newKey("com.zimbra.cs.account.auth.twofactor.TwoFactorAuth$DefaultFactory");
+    public static final KnownKey zimbra_class_redolog_blob_store_factory = KnownKey.newKey("com.zimbra.cs.redolog.RedoOpBlobStore$Factory");
 
+    // ZCS-8181 if below flag is false, do not update zimbraAppSpecificPassword attr
+    //          with last authentication time during authentication of app specific password.
+    public static final KnownKey zimbra_two_factor_apppasswd_update_authtime = KnownKey.newKey(true);
     // XXX REMOVE AND RELEASE NOTE
     public static final KnownKey data_source_trust_self_signed_certs = KnownKey.newKey(false);
     public static final KnownKey data_source_fetch_size = KnownKey.newKey(5);
@@ -811,6 +852,9 @@ public final class LC {
     public static final KnownKey search_disable_database_hints = KnownKey.newKey(false);
     public static final KnownKey search_dbfirst_term_percentage_cutoff = KnownKey.newKey(0.8F);
     public static final KnownKey search_tagged_item_count_join_query_cutoff = KnownKey.newKey(1000); //beyond this limit server will not use join in the query while fetching unread items
+    public static final KnownKey search_disable_standalone_wildcard_query = KnownKey.newKey(true);
+    public static final KnownKey search_disable_leading_wildcard_query = KnownKey.newKey(true);
+
 
     public static final KnownKey zmstat_interval = KnownKey.newKey(30);
     public static final KnownKey zmstat_disk_interval = KnownKey.newKey(600);
@@ -858,6 +902,7 @@ public final class LC {
     public static final KnownKey zimbra_auth_provider = KnownKey.newKey("");
     public static final KnownKey zimbra_authtoken_cache_size = KnownKey.newKey(5000);
     public static final KnownKey zimbra_deregistered_authtoken_queue_size = KnownKey.newKey(5000);
+    public static final KnownKey zimbra_jwt_cookie_size_limit = KnownKey.newKey(4096);
     public static final KnownKey zimbra_authtoken_cookie_domain = KnownKey.newKey("");
     public static final KnownKey zimbra_zmjava_options = KnownKey.newKey("-Xmx256m" +
             " -Dhttps.protocols=TLSv1,TLSv1.1,TLSv1.2" +
@@ -908,7 +953,6 @@ public final class LC {
     public static final KnownKey yauth_baseuri = KnownKey.newKey("https://login.yahoo.com/WSLogin/V1");
 
     public static final KnownKey purge_initial_sleep_ms = KnownKey.newKey(30 * Constants.MILLIS_PER_MINUTE);
-    public static final KnownKey contact_backup_initial_sleep_ms = KnownKey.newKey(10 * Constants.MILLIS_PER_MINUTE);
 
     public static final KnownKey conversation_max_age_ms = KnownKey.newKey(31 * Constants.MILLIS_PER_DAY);
     public static final KnownKey tombstone_max_age_ms = KnownKey.newKey(3 * Constants.MILLIS_PER_MONTH);
@@ -954,7 +998,7 @@ public final class LC {
      * Bug: 47051 Known key for the CLI utilities SOAP HTTP transport timeout.
      * The default value is set to 0 i.e. no timeout.
      */
-    public static final KnownKey cli_httpclient_soaphttptransport_so_timeout  = KnownKey.newKey(0);
+    public static final KnownKey cli_httpclient_soaphttptransport_so_timeout  = KnownKey.newKey(Integer.MAX_VALUE);
 
 
     public static final KnownKey httpclient_convertd_so_timeout = KnownKey.newKey(-1);
@@ -1076,19 +1120,24 @@ public final class LC {
     public static final KnownKey data_source_eas_window_size = KnownKey.newKey(50);
     public static final KnownKey data_source_eas_mime_truncation = KnownKey.newKey(4);
 
-    public static final KnownKey zimbra_activesync_versions = KnownKey.newKey("2.0,2.1,2.5,12.0,12.1");
+    public static final KnownKey zimbra_activesync_versions = KnownKey.newKey("2.0,2.1,2.5,12.0,12.1,14.0,14.1");
     public static final KnownKey zimbra_activesync_contact_image_size = KnownKey.newKey(2*1024*1024);
     public static final KnownKey zimbra_activesync_autodiscover_url = KnownKey.newKey(null);
     public static final KnownKey zimbra_activesync_autodiscover_use_service_url = KnownKey.newKey(false);
     public static final KnownKey zimbra_activesync_metadata_cache_expiration = KnownKey.newKey(3600);
     public static final KnownKey zimbra_activesync_metadata_cache_max_size = KnownKey.newKey(5000);
-    public static final KnownKey zimbra_activesync_heartbeat_interval_min = KnownKey.newKey(300); //300 Seconds = 5 mins
+    public static final KnownKey zimbra_activesync_heartbeat_interval_min = KnownKey.newKey(180); //180 Seconds = 3 mins
     //make sure it's less than nginx's zimbraReverseProxyUpstreamPollingTimeout, which is now 3600 seconds
     public static final KnownKey zimbra_activesync_heartbeat_interval_max = KnownKey.newKey(3540); //3540 Seconds = 59 mins
     public static final KnownKey zimbra_activesync_search_max_results = KnownKey.newKey(500);
     public static final KnownKey zimbra_activesync_general_cache_size = KnownKey.newKey(500); //active device number
     public static final KnownKey zimbra_activesync_parallel_sync_enabled = KnownKey.newKey(false);
     public static final KnownKey zimbra_activesync_syncstate_item_cache_heap_size = KnownKey.newKey("10M"); //e.g. 10M,10G
+    public static final KnownKey zimbra_activesync_picture_max_size = KnownKey.newKey(102400);
+    // activesync free-busy max number of recipients in single request
+    // default is set to 100 as per suggested by EAS specification
+    public static final KnownKey zimbra_activesync_fb_max_number_of_recipient = KnownKey.newKey(100);
+    public static final KnownKey zimbra_activesync_remote_sync_batch_size = KnownKey.newKey(50);
 
     public static final KnownKey zimbra_slow_logging_enabled = KnownKey.newKey(false);
     public static final KnownKey zimbra_slow_logging_threshold = KnownKey.newKey(5000);
@@ -1226,6 +1275,10 @@ public final class LC {
     public static final KnownKey external_store_local_cache_max_bytes = KnownKey.newKey(1024 * 1024 * 1024); // 1GB
 
     @Supported
+    public static final KnownKey external_store_local_cache_dir =
+            KnownKey.newKey("${zimbra_home}/data/external-store-cache");
+
+    @Supported
     public static final KnownKey external_store_local_cache_max_files = KnownKey.newKey(10000);
 
     @Supported
@@ -1233,6 +1286,174 @@ public final class LC {
 
     @Supported
     public static final KnownKey external_store_delete_max_ioexceptions = KnownKey.newKey(25);
+
+    @Supported
+    public static final KnownKey redis_service_uri = KnownKey.newKey("redis://zmc-redis:6379");
+
+    @Supported
+    public static final KnownKey redis_streams_redo_log_group = KnownKey.newKey("ZIMBRA_REDO_LOG_GROUP");
+
+    @Supported
+    public static final KnownKey redis_streams_redo_log_stream_prefix = KnownKey.newKey("ZIMBRA_REDO_LOG_STREAM_");
+
+    @Supported
+    public static final KnownKey redis_num_redolog_streams = KnownKey.newKey(10);
+
+    @Supported
+    public static final KnownKey backup_reader_buffer_size_kb = KnownKey.newKey(16384);
+
+    @Supported
+    public static final KnownKey backup_cmd_buffer_size_kb = KnownKey.newKey("4096");
+
+    @Supported
+    public static final KnownKey backup_blob_store_service_uri = KnownKey.newKey("zmc-minio-storage");
+
+    @Supported
+    public static final KnownKey backup_blob_store_service_port = KnownKey.newKey(9000);
+
+    @Supported
+    public static final KnownKey backup_blob_store_access_key = KnownKey.newKey("minioadmin");
+
+    @Supported
+    public static final KnownKey backup_blob_store_secret_key = KnownKey.newKey("minioadmin");
+
+    @Supported
+    public static final KnownKey backup_blob_store_s3_bucket = KnownKey.newKey("backup-blob-bucket");
+
+    @Supported
+    public static final KnownKey backup_blob_store_s3_object_ref_prefix = KnownKey.newKey("ref/");
+
+    @Supported
+    public static final KnownKey redis_num_pubsub_channels = KnownKey.newKey(100);
+
+    @Supported
+    public static final KnownKey redis_cluster_scan_interval = KnownKey.newKey(1000);
+
+    @Supported
+    public static final KnownKey redis_cluster_reconnect_timeout_millis = KnownKey.newKey(60000);
+
+    @Supported
+    public static final KnownKey redis_master_connection_pool_size = KnownKey.newKey(200);
+
+    @Supported
+    public static final KnownKey redis_master_idle_connection_pool_size = KnownKey.newKey(100);
+
+    @Supported
+    public static final KnownKey redis_subscription_connection_pool_size = KnownKey.newKey(200);
+
+    @Supported
+    public static final KnownKey redis_subscription_idle_connection_pool_size = KnownKey.newKey(100);
+
+    @Supported
+    public static final KnownKey redis_subscriptions_per_connection = KnownKey.newKey(10);
+
+    @Supported
+    public static final KnownKey redis_connection_timeout = KnownKey.newKey(10000);
+
+    @Supported
+    public static final KnownKey redis_num_retries = KnownKey.newKey(3);
+
+    @Supported
+    public static final KnownKey redis_netty_threads = KnownKey.newKey(16);
+
+    @Supported
+    public static final KnownKey redis_retry_interval = KnownKey.newKey(1500);
+
+    @Supported
+    public static final KnownKey redis_ping_connection_interval_millis = KnownKey.newKey(0);
+
+    @Supported
+    public static final KnownKey redis_keep_alive = KnownKey.newKey(true);
+
+    @Supported
+    public static final KnownKey redis_tcp_no_delay = KnownKey.newKey(true);
+
+    @Supported
+    public static final KnownKey redis_num_lock_channels = KnownKey.newKey(50);
+
+    @Supported
+    public static final KnownKey include_redis_attrs_in_lock_debug = KnownKey.newKey(false);
+
+    @Supported
+    public static final KnownKey search_put_hits_chunk_size = KnownKey.newKey(100);
+
+    @Supported
+    public static final KnownKey mailbox_healthcheck_touchpoint_file = KnownKey.newKey("/opt/zimbra/healthcheck_touchpoint");
+
+    @Supported
+    public static final KnownKey outside_transaction_threadlocal_cache_expiry_seconds = KnownKey.newKey(30);
+
+    @Supported
+    public static final KnownKey transaction_threadlocal_cache_expiry_seconds = KnownKey.newKey(300);
+
+    @Supported
+    public static final KnownKey outside_transaction_threadlocal_cache_max_size = KnownKey.newKey(10);
+
+    @Supported
+    public static final KnownKey threadlocal_cache_cleanup_interval_seconds  = KnownKey.newKey(120);
+
+    @Supported
+    public static final KnownKey redis_cache_synchronize_item_cache = KnownKey.newKey(false);
+
+    @Supported
+    public static final KnownKey redis_cache_synchronize_folders_tags = KnownKey.newKey(false);
+
+    @Supported
+    public static final KnownKey redis_cache_synchronize_folder_tag_snapshot = KnownKey.newKey(true);
+
+    @Supported
+    public static final KnownKey redis_cache_synchronize_mailbox_state = KnownKey.newKey(false);
+
+    @Supported
+    public static final KnownKey redis_cache_synchronize_waitset = KnownKey.newKey(false);
+
+    @Supported
+    public static final KnownKey lock_based_cache_invalidation_enabled = KnownKey.newKey(true);
+
+    @Supported
+    public static final KnownKey only_flush_cache_on_first_read_after_foreign_write = KnownKey.newKey(true);
+
+    @Supported
+    public static final KnownKey folder_tag_cache_lock_timeout_seconds = KnownKey.newKey(10);
+
+    @Supported
+    public static final KnownKey disable_all_event_logging = KnownKey.newKey(true);
+
+    @Supported
+    public static final KnownKey disable_all_search_history = KnownKey.newKey(true);
+
+    @Supported
+    public static final KnownKey zimbra_listeners_maxsize = KnownKey.newKey(5);
+
+    @Supported
+    public static final KnownKey solr_client_use_parallel_updates = KnownKey.newKey(false);
+
+    @Supported
+    public static final KnownKey notify_mbox_listeners_async_if_possible = KnownKey.newKey(true);
+
+    @Supported
+    public static final KnownKey contact_search_min_chars_for_wildcard_query = KnownKey.newKey(7);
+
+    @Supported
+    public static final KnownKey mailbox_liveness_probe_override_file = KnownKey.newKey("/tmp/PASS-LIVENESS");
+
+    @Supported
+    public static final KnownKey solr_cache_term_filter_queries = KnownKey.newKey(false);
+
+    @Supported
+    public static final KnownKey trust_all_originating_ips = KnownKey.newKey(true);
+
+    @Supported
+    public static final KnownKey use_redis_redo_transaction_id_generator = KnownKey.newKey(true);
+
+    @Supported
+    public static final KnownKey redis_redolog_stream_read_timeout_secs = KnownKey.newKey(10);
+
+    @Supported
+    public static final KnownKey redis_redolog_stream_max_items_per_read = KnownKey.newKey(10);
+
+    @Supported
+    public static final KnownKey num_backup_restore_workers = KnownKey.newKey(1);
 
     public enum PUBLIC_SHARE_VISIBILITY { samePrimaryDomain, all, none };
 
@@ -1290,6 +1511,48 @@ public final class LC {
     //Remote IMAP
     @Reloadable
     public static final KnownKey imap_always_use_remote_store = KnownKey.newKey(false);
+
+    // owasp handler
+    public static final KnownKey zimbra_use_owasp_html_sanitizer = KnownKey.newKey(true);
+
+    // file content type blacklist
+    public static final KnownKey zimbra_file_content_type_blacklist = KnownKey.newKey("application/x-ms*");
+
+    public static final KnownKey enable_delegated_admin_ldap_access = KnownKey.newKey(true);
+
+    // OAuth2 Social
+    public static final KnownKey zm_oauth_classes_handlers_yahoo = KnownKey.newKey("com.zimbra.oauth.handlers.impl.YahooOAuth2Handler");
+    public static final KnownKey zm_oauth_classes_handlers_google = KnownKey.newKey("com.zimbra.oauth.handlers.impl.GoogleOAuth2Handler");
+    public static final KnownKey zm_oauth_classes_handlers_facebook = KnownKey.newKey("com.zimbra.oauth.handlers.impl.FacebookOAuth2Handler");
+    public static final KnownKey zm_oauth_classes_handlers_outlook = KnownKey.newKey("com.zimbra.oauth.handlers.impl.OutlookOAuth2Handler");
+    public static final KnownKey zm_oauth_classes_handlers_twitter = KnownKey.newKey("com.zimbra.oauth.handlers.impl.TwitterOAuth2Handler");
+    public static final KnownKey zm_oauth_classes_handlers_slack = KnownKey.newKey("com.zimbra.oauth.handlers.impl.SlackOAuth2Handler");
+    public static final KnownKey zm_oauth_classes_handlers_zoom = KnownKey.newKey("com.zimbra.oauth.handlers.impl.ZoomOAuth2Handler");
+    public static final KnownKey zm_oauth_classes_handlers_dropbox = KnownKey.newKey("com.zimbra.oauth.handlers.impl.DropboxOAuth2Handler");
+
+    // alias login
+    public static final KnownKey alias_login_enabled = KnownKey.newKey(true);
+
+    // Feed Manager comma-separated blacklist. addresses can be CIDR notation, or single ip. no wild-cards (default blacklist private networks)
+    public static final KnownKey zimbra_feed_manager_blacklist = KnownKey.newKey("10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,fd00::/8");
+
+    // Feed Manager comma-separated whitelist (exceptions to the blacklist). addresses can be CIDR notation, or single ip. no wild-cards
+    public static final KnownKey zimbra_feed_manager_whitelist = KnownKey.newKey("");
+
+    // Zimbra valid class list to de-serialize
+    public static final KnownKey zimbra_deserialize_classes = KnownKey.newKey("");
+
+    // XML 1.0 invalid characters regex pattern
+    public static final KnownKey xml_invalid_chars_regex = KnownKey.newKey("\\&\\#(?:x([0-9a-fA-F]+)|([0-9]+))\\;");
+
+    // account listener rollback handler on failure
+    public static final KnownKey rollback_on_account_listener_failure = KnownKey.newKey(true);
+
+    // list file for blocking common passwords
+    public static final KnownKey common_passwords_txt = KnownKey.newKey("${zimbra_home}/conf/common-passwords.txt");
+
+    // to switch to Tika com.zimbra.cs.convert.TikaExtractionClient
+    public static final KnownKey attachment_extraction_client_class = KnownKey.newKey("com.zimbra.cs.convert.TikaExtractionClient");
 
     static {
         // Automatically set the key name with the variable name.

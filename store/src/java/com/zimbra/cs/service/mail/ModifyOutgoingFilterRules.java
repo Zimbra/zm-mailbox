@@ -20,9 +20,9 @@ import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.filter.RuleManager;
-import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.mail.message.ModifyOutgoingFilterRulesRequest;
 import com.zimbra.soap.mail.message.ModifyOutgoingFilterRulesResponse;
@@ -40,7 +40,8 @@ public final class ModifyOutgoingFilterRules extends MailDocumentHandler {
 
         ModifyOutgoingFilterRulesRequest req = zsc.elementToJaxb(request);
         RuleManager.setOutgoingXMLRules(account, req.getFilterRules());
+        ZimbraLog.filter.debug("ModifyOutgoingFilterRules.handle going to execute clearConfigCacheOnAllServers with accountId: %s", account.getId());
+        clearConfigCacheOnAllServers(account.getId());
         return zsc.jaxbToElement(new ModifyOutgoingFilterRulesResponse());
     }
-
 }

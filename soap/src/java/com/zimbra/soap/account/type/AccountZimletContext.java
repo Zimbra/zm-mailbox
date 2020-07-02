@@ -17,15 +17,21 @@
 
 package com.zimbra.soap.account.type;
 
-import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
+import com.google.common.base.MoreObjects;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.base.ZimletContextInterface;
 
+import io.leangen.graphql.annotations.GraphQLNonNull;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name=GqlConstants.CLASS_ACCOUNT_ZIMLET_CONTEXT, description="Zimlet context")
 public class AccountZimletContext
 implements ZimletContextInterface {
 
@@ -79,15 +85,20 @@ implements ZimletContextInterface {
     @Override
     public void setZimletPresence(String zimletPresence) { this.zimletPresence = zimletPresence; }
 
+    @GraphQLQuery(name=GqlConstants.ZIMLET_BASE_URL, description="Zimlet Base URL")
+    @GraphQLNonNull
     @Override
     public String getZimletBaseUrl() { return zimletBaseUrl; }
+    @GraphQLQuery(name=GqlConstants.ZIMLET_PRIORITY, description="Zimlet Priority")
     @Override
     public Integer getZimletPriority() { return zimletPriority; }
+    @GraphQLQuery(name=GqlConstants.ZIMLET_PRESENCE, description="Zimlet presence")
+    @GraphQLNonNull
     @Override
     public String getZimletPresence() { return zimletPresence; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(
+                MoreObjects.ToStringHelper helper) {
         return helper
             .add("zimletBaseUrl", getZimletBaseUrl())
             .add("zimletPriority", getZimletPriority())
@@ -96,7 +107,7 @@ implements ZimletContextInterface {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
+        return addToStringInfo(MoreObjects.toStringHelper(this))
                 .toString();
     }
 }

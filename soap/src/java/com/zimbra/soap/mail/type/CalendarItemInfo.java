@@ -17,7 +17,7 @@
 
 package com.zimbra.soap.mail.type;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
@@ -222,6 +222,14 @@ public class CalendarItemInfo {
     public List<Invitation> getInvites() {
         return Collections.unmodifiableList(invites);
     }
+    public Invitation getInviteFromId(int id) {
+        for (Invitation inv : invites) {
+            if (inv.getId() == id) {
+                return inv;
+            }
+        }
+        return null;
+    }
     public List<CalendarReply> getCalendarReplies() {
         return Collections.unmodifiableList(calendarReplies);
     }
@@ -229,7 +237,7 @@ public class CalendarItemInfo {
         return Collections.unmodifiableList(metadatas);
     }
 
-    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         return helper
             .add("flags", flags)
             .add("tags", tags)
@@ -251,6 +259,6 @@ public class CalendarItemInfo {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this)).toString();
+        return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
     }
 }

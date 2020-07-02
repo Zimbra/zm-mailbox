@@ -18,7 +18,9 @@ package com.zimbra.cs.service.mail;
 
 import java.util.Map;
 
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -29,7 +31,6 @@ import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.soap.DocumentHandler;
-import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public abstract class MailDocumentHandler extends DocumentHandler {
@@ -132,7 +133,10 @@ public abstract class MailDocumentHandler extends DocumentHandler {
         if (mountpoint) {
             zscTarget.recordMountpointTraversal();
         }
+        Provisioning prov = Provisioning.getInstance();
+        Account acct = prov.getAccount(prov, AccountBy.id, acctId, zsc.getAuthToken());
+        String affinityIp = Provisioning.affinityServer(acct);
 
-        return proxyRequest(request, context, getServer(acctId), zscTarget);
+        return proxyRequest(request, context, affinityIp, zscTarget);
     }
 }

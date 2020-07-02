@@ -743,3 +743,4 @@
 50:application/vnd.openxmlformats-officedocument.presentationml.presentation:*.pptm
 10:text/x-readme:README*
 10:text/x-makefile:Makefile.*
+50:text/html:*.har

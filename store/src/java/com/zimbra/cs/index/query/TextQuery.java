@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010, 2011, 2012, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2010, 2011, 2012, 2013, 2014, 2016, 2017 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -11,32 +11,35 @@
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
  * You should have received a copy of the GNU General Public License along with this program.
- * If not, see <https://www.gnu.org/licenses/>.
+ * If not, see <http://www.gnu.org/licenses/>.
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.cs.index.query;
 
-import java.io.IOException;
-import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
+import org.apache.commons.lang.StringUtils;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.search.BooleanClause.Occur;
+import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.PhraseQuery;
 import org.apache.lucene.search.TermQuery;
 
-import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.util.Pair;
+import com.zimbra.cs.index.DBQueryOperation;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.LuceneQueryOperation;
 import com.zimbra.cs.index.NoTermQueryOperation;
 import com.zimbra.cs.index.QueryOperation;
+import com.zimbra.cs.index.solr.SolrUtils;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 
 /**
@@ -46,34 +49,29 @@ import com.zimbra.cs.mailbox.Mailbox;
  * @author ysasaki
  */
 public class TextQuery extends Query {
-    private final List<String> tokens = Lists.newArrayList();
     private final String field;
     private final String text;
     private boolean quick = false;
+    private boolean isPhraseQuery;
+    private final Set<MailItem.Type> types;
 
     /**
      * A single search term. If text has multiple words, it is treated as a phrase (full exact match required) text may
      * end in a *, which wildcards the last term.
      */
-    public TextQuery(Analyzer analyzer, String field, String text) {
-        this(analyzer.tokenStream(field, new StringReader(text)), field, text);
-    }
-
-    TextQuery(TokenStream stream, String field, String text) {
+    public TextQuery(String field, String text, boolean isPhraseQuery,  Set<MailItem.Type> types) {
         this.field = field;
         this.text = text;
+        this.isPhraseQuery = isPhraseQuery;
+        this.types = types;
+    }
 
-        try {
-            CharTermAttribute termAttr = stream.addAttribute(CharTermAttribute.class);
-            stream.reset();
-            while (stream.incrementToken()) {
-                tokens.add(termAttr.toString());
-            }
-            stream.end();
-            stream.close();
-        } catch (IOException e) { // should never happen
-            ZimbraLog.search.error("Failed to tokenize text=%s", text);
-        }
+    public TextQuery(String field, String text, Set<MailItem.Type> types) {
+        this(field, text, false, types);
+    }
+
+    public TextQuery(String field, String text) {
+        this(field, text, false, Collections.emptySet());
     }
 
     /**
@@ -106,35 +104,87 @@ public class TextQuery extends Query {
 
     @Override
     public QueryOperation compile(Mailbox mbox, boolean bool) throws ServiceException {
-        if (quick || text.endsWith("*")) { // wildcard, must look at original text here b/c analyzer strips *'s
-            // only the last token is allowed to have a wildcard in it
-            String last = tokens.isEmpty() ? text : tokens.remove(tokens.size() - 1);
-            LuceneQueryOperation.LazyMultiPhraseQuery query = new LuceneQueryOperation.LazyMultiPhraseQuery();
-            for (String token : tokens) {
-                query.add(new Term(field, token));
-            }
-            query.expand(new Term(field, CharMatcher.is('*').trimTrailingFrom(last))); // expand later
-
-            LuceneQueryOperation op = new LuceneQueryOperation();
-            op.addClause(toQueryString(field, text), query, evalBool(bool));
-            return op;
-        } else if (tokens.isEmpty()) {
-            // if we have no tokens, that is usually because the analyzer removed them. The user probably queried for
-            // a stop word like "a" or "an" or "the".
+        if (text.length() == 0) {
             return new NoTermQueryOperation();
-        } else if (tokens.size() == 1) {
-            LuceneQueryOperation op = new LuceneQueryOperation();
-            op.addClause(toQueryString(field, text), new TermQuery(new Term(field, tokens.get(0))), evalBool(bool));
-            return op;
-        } else {
-            assert tokens.size() > 1 : tokens.size();
-            PhraseQuery query = new PhraseQuery();
-            for (String token : tokens) {
-                query.add(new Term(field, token));
+        }
+        if (LC.search_disable_standalone_wildcard_query.booleanValue()) {
+            if (text.equals("*")) {
+                if((field.equals(LuceneFields.L_CONTENT) || field.equals(LuceneFields.L_H_SUBJECT)) && evalBool(bool)) {
+                    return new DBQueryOperation();
+                } else {
+                    return new NoTermQueryOperation();
+                }
             }
-            LuceneQueryOperation op = new LuceneQueryOperation();
-            op.addClause(toQueryString(field, text), query, evalBool(bool));
-            return op;
+        }
+        LuceneQueryOperation op = new LuceneQueryOperation();
+        String solrQuery = quick? text + "*": text;
+        String queryField;
+        String queryString;
+        if (solrQuery.contains("*")) {
+            if (LC.search_disable_leading_wildcard_query.booleanValue()) {
+                solrQuery = stripLeadingWildcards(solrQuery);
+            }
+            // route to edge n-gram tokenized fields if possible
+            Pair<String, String> wildcardQueryInfo = SolrUtils.getWildcardQueryTarget(field, solrQuery);
+            queryField = wildcardQueryInfo.getFirst();
+            queryString = wildcardQueryInfo.getSecond();
+        } else {
+            queryField = field;
+            queryString = solrQuery;
+        }
+        org.apache.lucene.search.Query query;
+        String[] additionalFields = getAdditionalFields(queryField);
+        if (queryString.contains("*")) {
+            query = new ZimbraWildcardQuery(queryString, queryField).addFields(additionalFields);
+        } else if (additionalFields != null) {
+            BooleanQuery.Builder builder = new BooleanQuery.Builder();
+            builder.add(getQuery(queryField, queryString), Occur.SHOULD);
+            for (String field: additionalFields) {
+                builder.add(getQuery(field, queryString), Occur.SHOULD);
+            }
+            query = builder.build();
+        } else {
+            query = getQuery(queryField, queryString);
+        }
+        op.addClause(toQueryString(field, text), query, evalBool(bool), getIndexTypes(types));
+        return op;
+    }
+
+    private org.apache.lucene.search.Query getQuery(String field, String queryString) {
+        if (isPhraseQuery) {
+            return new PhraseQuery(field, queryString);
+        } else {
+            return new TermQuery(new Term(field, queryString));
+        }
+    }
+
+    private static String[] getAdditionalFields(String searchField) {
+        if (searchField.equals(LuceneFields.L_CONTENT)) {
+            return new String[] {
+                    LuceneFields.L_H_SUBJECT,
+                    SolrUtils.getSearchFieldName(LuceneFields.L_H_TO),
+                    SolrUtils.getSearchFieldName(LuceneFields.L_H_FROM),
+                    SolrUtils.getSearchFieldName(LuceneFields.L_H_CC),
+                    SolrUtils.getSearchFieldName(LuceneFields.L_FILENAME)
+            };
+        } else {
+            return null;
+        }
+    }
+
+    private String stripLeadingWildcards(String queryStr) {
+        if (isPhraseQuery) {
+            List<String> parts = new ArrayList<>();
+            for (String part: queryStr.split("\\s")) {
+                if (part.startsWith("*")) {
+                    parts.add(StringUtils.stripStart(part, "*"));
+                } else {
+                    parts.add(part);
+                }
+            }
+            return Joiner.on(" ").join(parts);
+        } else {
+            return StringUtils.stripStart(queryStr, "*");
         }
     }
 
@@ -142,21 +192,22 @@ public class TextQuery extends Query {
     public void dump(StringBuilder out) {
         out.append(field);
         out.append(':');
-        Joiner.on(',').appendTo(out, tokens);
-        if (quick || text.endsWith("*")) {
+        out.append(text);
+        if (quick && !text.endsWith("*")) {
             out.append("[*]");
         }
     }
 
     @Override
     public void sanitizedDump(StringBuilder out) {
+        int numWordsInQuery = text.split("\\s").length;
         out.append(field);
-        out.append(':');
-        out.append(Strings.repeat("$TEXT,", tokens.size()));
+        out.append(":");
+        out.append(Strings.repeat("$TEXT,", numWordsInQuery));
         if (out.charAt(out.length()-1) == ',') {
             out.deleteCharAt(out.length()-1);
         }
-        if (quick || text.endsWith("*")) {
+        if (quick && !text.endsWith("*")) {
             out.append("[*]");
         }
     }

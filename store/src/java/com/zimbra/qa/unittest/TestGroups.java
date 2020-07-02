@@ -623,7 +623,7 @@ public class TestGroups extends TestCase {
     public static Group createDynamicGroup(String name)
     throws Exception {
         Provisioning prov = Provisioning.getInstance();
-        Group group = prov.getGroup(Key.DistributionListBy.name, name, true);
+        Group group = prov.getGroup(Key.DistributionListBy.name, name, true, false);
         if (group != null) {
             ZimbraLog.test.warn("createDynamicGroup(%s) - already existed!!!", name);
             return group;
@@ -640,7 +640,7 @@ public class TestGroups extends TestCase {
     throws Exception {
         Provisioning prov = Provisioning.getInstance();
         String dName = name.substring(0, name.indexOf('@') - 1);
-        Group group = prov.getGroup(Key.DistributionListBy.name, name, true);
+        Group group = prov.getGroup(Key.DistributionListBy.name, name, true, false);
         if (group != null) {
             ZimbraLog.test.warn("createCustomDynamicGroupWhoseMembersShareCOS(%s) - already existed!!!", name);
             return group;
@@ -680,7 +680,7 @@ public class TestGroups extends TestCase {
     public static void deleteGroupIfExists(String name) {
         try {
             Provisioning prov = Provisioning.getInstance();
-            Group group = prov.getGroup(Key.DistributionListBy.name, name, true);
+            Group group = prov.getGroup(Key.DistributionListBy.name, name, true, false);
             if (group != null) {
                 prov.deleteGroup(group.getId());
             }

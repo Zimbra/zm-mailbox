@@ -27,9 +27,10 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlType;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.EmailInfoInterface;
 import com.zimbra.soap.base.InviteInfoInterface;
@@ -37,9 +38,15 @@ import com.zimbra.soap.base.MessageInfoInterface;
 import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
 import com.zimbra.soap.type.KeyValuePair;
 
+import io.leangen.graphql.annotations.GraphQLIgnore;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = { "fragment", "emails", "subject",
     "messageIdHeader", "inReplyTo", "invite", "headers", "contentElems" })
+
+@GraphQLType(name=GqlConstants.CLASS_MESSAGE_INFO, description="Message information")
 public class MessageInfo
 extends MessageCommon
 implements MessageInfoInterface {
@@ -199,6 +206,7 @@ implements MessageInfoInterface {
     public void setId(String id) { this.id = id; }
 
     public void setImapUid(Integer imapUid) { this.imapUid = imapUid; }
+    @GraphQLQuery(name=GqlConstants.IMAP_UID, description="The imap UID")
     public Integer getImapUid() { return imapUid; }
 
     @Override
@@ -286,48 +294,66 @@ implements MessageInfoInterface {
     }
 
     @Override
+    @GraphQLQuery(name=GqlConstants.ID, description="The message ID")
     public String getId() { return id; }
     @Override
+    @GraphQLIgnore
     public String getCalendarIntendedFor() { return calendarIntendedFor; }
     @Override
+    @GraphQLQuery(name=GqlConstants.ORIG_ID, description="Message id of the message being replied to/forwarded (outbound messages only)")
     public String getOrigId() { return origId; }
     @Override
+    @GraphQLQuery(name=GqlConstants.DRAFT_REPLY_TYPE, description="Reply type - r|w")
     public String getDraftReplyType() { return draftReplyType; }
     @Override
+    @GraphQLQuery(name=GqlConstants.IDENTITY_ID, description="Specifies the identity being used to compose the message")
     public String getIdentityId() { return identityId; }
     @Override
+    @GraphQLQuery(name=GqlConstants.DRAFT_ACCOUNT_ID, description="Draft account ID")
     public String getDraftAccountId() { return draftAccountId; }
     @Override
+    @GraphQLQuery(name=GqlConstants.DRAFT_AUTO_SEND_TIME, description="Specifies the time at which the draft should be automatically sent by the server")
     public Long getDraftAutoSendTime() { return draftAutoSendTime; }
     @Override
+    @GraphQLQuery(name=GqlConstants.SENT_DATE, description="The sent date in the header")
     public Long getSentDate() { return sentDate; }
     @Override
+    @GraphQLQuery(name=GqlConstants.RESENT_DATE, description="The re-sent date in the header")
     public Long getResentDate() { return resentDate; }
     @Override
+    @GraphQLQuery(name=GqlConstants.PART, description="Part")
     public String getPart() { return part; }
     @Override
+    @GraphQLQuery(name=GqlConstants.FRAGMENT, description="First few bytes of the message (probably between 40 and 100 bytes)")
     public String getFragment() { return fragment; }
+    @GraphQLQuery(name=GqlConstants.EMAILS, description="Email information")
     public List<EmailInfo> getEmails() {
         return Collections.unmodifiableList(emails);
     }
     @Override
+    @GraphQLQuery(name=GqlConstants.SUBJECT, description="The email subject")
     public String getSubject() { return subject; }
     @Override
+    @GraphQLQuery(name=GqlConstants.MESSAGE_ID_HEADER, description="The message ID")
     public String getMessageIdHeader() { return messageIdHeader; }
     @Override
+    @GraphQLQuery(name=GqlConstants.IN_REPLY_TO, description="Message-ID header for message being replied to")
     public String getInReplyTo() { return inReplyTo; }
+    @GraphQLIgnore
     public InviteInfo getInvite() { return invite; }
     @Override
+    @GraphQLQuery(name=GqlConstants.HEADERS, description="List of headers")
     public List<KeyValuePair> getHeaders() {
         return Collections.unmodifiableList(headers);
     }
     @Override
+    @GraphQLQuery(name=GqlConstants.CONTENT_ELEMS, description="List of content elements")
     public List<Object> getContentElems() {
         return Collections.unmodifiableList(contentElems);
     }
 
     @Override
-    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);
         return helper
             .add("id", id)
@@ -353,7 +379,7 @@ implements MessageInfoInterface {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this)).toString();
+        return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
     }
     @Override
     public void setEmailInterfaces(Iterable<EmailInfoInterface> emails) {
@@ -371,11 +397,13 @@ implements MessageInfoInterface {
     }
 
     @Override
+    @GraphQLIgnore
     public List<EmailInfoInterface> getEmailInterfaces() {
         return EmailInfo.toInterfaces(emails);
     }
 
     @Override
+    @GraphQLIgnore
     public InviteInfoInterface getInvitInterfacee() {
         return invite;
     }

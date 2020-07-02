@@ -25,6 +25,8 @@ import java.util.Map;
 
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ZAttrProvisioning.AccountStatus;
+import com.zimbra.common.localconfig.DebugConfig;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -33,9 +35,9 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.listeners.AccountListener;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.DeleteAccountRequest;
 import com.zimbra.soap.admin.message.DeleteAccountResponse;
@@ -64,7 +66,7 @@ public class DeleteAccount extends AdminDocumentHandler {
     public boolean defendsAgainstDelegateAdminAccountHarvesting() {
         return true;
     }
-
+	
     /**
      * Deletes an account and its mailbox.
      */
@@ -78,11 +80,11 @@ public class DeleteAccount extends AdminDocumentHandler {
         if (null == id) {
             throw ServiceException.INVALID_REQUEST("missing required attribute: " + AdminConstants.E_ID, null);
         }
-
         // Confirm that the account exists and that the mailbox is located on the current host
         Account account = prov.get(AccountBy.id, id, zsc.getAuthToken());
         defendAgainstAccountHarvesting(account, AccountBy.id, id, zsc, Admin.R_deleteAccount);
 
+        String accountStatus = account.getAccountStatus(prov);
         /*
          * bug 69009
          *
@@ -95,19 +97,46 @@ public class DeleteAccount extends AdminDocumentHandler {
          * so mail delivery and any user action is blocked.
          */
         prov.modifyAccountStatus(account, AccountStatus.maintenance.name());
+        boolean rollbackOnFailure = LC.rollback_on_account_listener_failure.booleanValue();
 
-        Mailbox mbox = Provisioning.onLocalServer(account) ?
-                MailboxManager.getInstance().getMailboxByAccount(account, false) : null;
-
-        if (mbox != null) {
-            mbox.deleteMailbox();
+        try {
+            AccountListener.invokeBeforeAccountDeletion(account, zsc, rollbackOnFailure);
+        } catch (ServiceException e) {
+            ZimbraLog.account.warn("Account deletion failed, restoring account status back to \"%s\" from maintenance.", accountStatus);
+            // reset the old status of account
+            prov.modifyAccountStatus(account, AccountStatus.fromString(accountStatus).name());
+            throw ServiceException.FAILURE(
+                "Failed to delete account '" + account.getName() + "' in AccountListener", e);
         }
 
-        prov.deleteAccount(id);
+        try {
+            Mailbox mbox = Provisioning.onLocalServer(account) ?
+                    MailboxManager.getInstance().getMailboxByAccount(account, false) : null;
+            if (mbox != null) {
+                mbox.deleteMailbox();
+            }
+            prov.deleteAccount(id);
+        } catch (ServiceException se) {
+            if (rollbackOnFailure) {
+                ZimbraLog.account.warn("Account deletion failed, restoring account status back to \"%s\" from maintenance.", accountStatus);
+                // reset the old status of account
+                prov.modifyAccountStatus(account, AccountStatus.fromString(accountStatus).name());
+                try {
+                    // invoke create account call on account listener.
+                    AccountListener.invokeOnAccountCreation(account, zsc);
+                } catch (ServiceException rse) {
+                    ZimbraLog.account.debug("AccountListener restore account failed for %s. %s", account.getMail(), rse.getCause());
+                    throw rse;
+                }
+            } else {
+                ZimbraLog.account.warn("No rollback on account listener for zimbra account delete failure, there may be inconsistency in account. %s", se.getMessage());
+            }
+            throw se;
+        }
 
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
             new String[] {"cmd", "DeleteAccount","name", account.getName(), "id", account.getId()}));
-
+        
         return zsc.jaxbToElement(new DeleteAccountResponse());
     }
 

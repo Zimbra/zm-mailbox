@@ -25,7 +25,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.zimbra.common.soap.AccountConstants;
@@ -147,6 +147,7 @@ public class GetAccountInfoResponse {
     public void setChangePasswordURL(String changePasswordURL) { this.changePasswordURL = changePasswordURL; }
     public void setCommunityURL(String communityURL) { this.communityURL = communityURL; }
     public void setAdminURL(String adminURL) { this.adminURL = adminURL; }
+    public void setBoshURL(String boshURL) { this.boshURL = boshURL; }
     public String getName() { return name; }
     public List<NamedValue> getAttrs() {
         return attrs;
@@ -156,8 +157,9 @@ public class GetAccountInfoResponse {
     public String getChangePasswordURL() { return changePasswordURL; }
     public String getCommunityURL() { return communityURL; }
     public String getAdminURL() { return adminURL; }
+    public String getBoshURL() { return boshURL; }
 
-    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         return helper
             .add("name", name)
             .add("attrs", attrs)
@@ -169,6 +171,6 @@ public class GetAccountInfoResponse {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this)).toString();
+        return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
     }
 }

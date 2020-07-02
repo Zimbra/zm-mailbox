@@ -1038,6 +1038,12 @@ public class AttributeManager {
                         mClassToAttrsMap.get(AttributeClass.domain));
                 mClassToAllAttrsMap.put(klass, attrs);
                 break;
+            case oauth2DataSource:
+                attrs = SetUtil.union(new HashSet<String>(),
+                        mClassToAttrsMap.get(AttributeClass.dataSource),
+                        mClassToAttrsMap.get(AttributeClass.oauth2DataSource));
+                mClassToAllAttrsMap.put(klass, attrs);
+                break;
             default:
                 mClassToAllAttrsMap.put(klass, mClassToAttrsMap.get(klass));
             }

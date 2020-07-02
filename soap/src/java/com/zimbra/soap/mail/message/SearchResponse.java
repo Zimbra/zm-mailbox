@@ -29,7 +29,7 @@ import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.zimbra.common.soap.MailConstants;
@@ -129,6 +129,19 @@ public class SearchResponse {
     })
     private List<BaseQueryInfo> queryInfos = Lists.newArrayList();
 
+    /**
+     * @zm-api-field-description Set to TRUE if this search has been performed often enough to
+     * prompt the user to create a search folder for this query
+     */
+    @XmlAttribute(name=MailConstants.A_SAVE_SEARCH_PROMPT /* saveSearchPrompt */, required=false)
+    private ZmBoolean saveSearchPrompt;
+
+    @XmlAttribute(name=MailConstants.A_RELEVANCE_SORT_SUPPORTED, required=false)
+    private ZmBoolean relevanceSortSupported;
+
+    @XmlAttribute(name=MailConstants.A_REINDEX_IN_PROGRESS, required=false)
+    private ZmBoolean reIndexInProgress;
+
     public SearchResponse() {
     }
 
@@ -173,7 +186,31 @@ public class SearchResponse {
         return Collections.unmodifiableList(queryInfos);
     }
 
-    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+    public void setSaveSearchPrompt(boolean bool) {
+        saveSearchPrompt = ZmBoolean.fromBool(bool);
+    }
+
+    public boolean getSaveSearchPrompt() {
+        return ZmBoolean.toBool(saveSearchPrompt, false);
+    }
+
+    public void setRelevanceSortSupported(boolean bool) {
+        relevanceSortSupported = ZmBoolean.fromBool(bool);
+    }
+
+    public boolean getRelevanceSortSupported() {
+        return ZmBoolean.toBool(relevanceSortSupported, true);
+    }
+
+    public void setReIndexInProgress(boolean bool) {
+        reIndexInProgress = ZmBoolean.fromBool(bool);
+    }
+
+    public boolean getReIndexInProgress() {
+        return ZmBoolean.toBool(reIndexInProgress, false);
+    }
+
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         return helper
             .add("sortBy", sortBy)
             .add("queryOffset", queryOffset)
@@ -185,6 +222,6 @@ public class SearchResponse {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this)).toString();
+        return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
     }
 }

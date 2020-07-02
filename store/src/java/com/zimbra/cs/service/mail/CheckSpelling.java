@@ -24,8 +24,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.http.HttpException;
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.util.EntityUtils;
 
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.service.ServiceException;
@@ -113,7 +119,7 @@ public class CheckSpelling extends MailDocumentHandler {
                 if (spellResponse.statusCode == 200) {
                     break; // Successful request.  No need to check the other servers.
                 }
-            } catch (IOException ex) {
+            } catch (IOException | HttpException ex) {
                 ZimbraLog.mailbox.warn("An error occurred while contacting " + url, ex);
             }
         }
@@ -176,26 +182,31 @@ public class CheckSpelling extends MailDocumentHandler {
     }
 
     private ServerResponse checkSpelling(String url, String dictionary, List<String> ignoreWords, String text, boolean ignoreAllCaps)
-    throws IOException {
-        PostMethod post = new PostMethod(url);
-        post.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+    throws IOException, HttpException {
+        HttpPost post = new HttpPost(url);
+        post.addHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+        List <NameValuePair> nvps = new ArrayList <NameValuePair>();
+       
         if (dictionary != null) {
-            post.addParameter("dictionary", dictionary);
+            nvps.add(new BasicNameValuePair("dictionary", dictionary));
         }
         if (text != null) {
-            post.addParameter("text", text);
+            nvps.add(new BasicNameValuePair("text", text));
         }
         if (!ListUtil.isEmpty(ignoreWords)) {
-            post.addParameter("ignore", StringUtil.join(",", ignoreWords));
+            nvps.add(new BasicNameValuePair("ignore", StringUtil.join(",", ignoreWords)));
         }
         if (ignoreAllCaps) {
-            post.addParameter("ignoreAllCaps", "on");
+            nvps.add(new BasicNameValuePair("ignoreAllCaps", "on"));
         }
-        HttpClient http = ZimbraHttpConnectionManager.getExternalHttpConnMgr().newHttpClient();
+        post.setEntity(new UrlEncodedFormEntity(nvps, "UTF-8"));
+        HttpClient http = ZimbraHttpConnectionManager.getExternalHttpConnMgr().newHttpClient().build();
         ServerResponse response = new ServerResponse();
+        HttpResponse httpResp = null;
         try {
-            response.statusCode = HttpClientUtil.executeMethod(http, post);
-            response.content = post.getResponseBodyAsString();
+            httpResp = HttpClientUtil.executeMethod(http, post);
+            response.statusCode = httpResp.getStatusLine().getStatusCode();
+            response.content = EntityUtils.toString(httpResp.getEntity());
         } finally {
             post.releaseConnection();
         }

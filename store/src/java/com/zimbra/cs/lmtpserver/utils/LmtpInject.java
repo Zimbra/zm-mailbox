@@ -18,16 +18,21 @@
 package com.zimbra.cs.lmtpserver.utils;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
 
+import com.zimbra.common.util.StringUtil;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
@@ -76,7 +81,7 @@ public class LmtpInject {
     private boolean skipTLSCertValidation;
 
 
-	private LmtpInject(int numThreads,
+    private LmtpInject(int numThreads,
                        String sender,
                        String[] recipients,
                        List<File> files,
@@ -86,7 +91,7 @@ public class LmtpInject {
                        boolean quietMode,
                        boolean tracingEnabled,
                        boolean verbose, boolean skipTLSCertValidation)
-    throws Exception {
+            throws Exception {
         mNumThreads = numThreads;
         mSender = sender;
         mRecipients = recipients;
@@ -108,7 +113,7 @@ public class LmtpInject {
 
     private int mReportEvery = 100;
     public synchronized void setReportEvery(int num) { mReportEvery = num; }
-    
+
     public void incSuccess() {
         int count;
         int lastCount = 0;
@@ -143,8 +148,8 @@ public class LmtpInject {
 
             System.out.printf(
                     "[progress] " +
-                    "%d msgs in %dms @ %.2fmps; " +
-                    "last %d msgs in %dms @ %.2fmps\n",
+                            "%d msgs in %dms @ %.2fmps; " +
+                            "last %d msgs in %dms @ %.2fmps\n",
                     count, elapsedTotal, rateAvg,
                     howmany, elapsed, rate);
         }
@@ -163,7 +168,7 @@ public class LmtpInject {
         return skipTLSCertValidation;
     }
     boolean isQuiet() { return mQuietMode; }
-    
+
     /**
      * Returns the next file and increments the current file
      * index.
@@ -174,7 +179,7 @@ public class LmtpInject {
         }
         return mFiles.get(mCurrentFileIndex++);
     }
-    
+
     public String[] getRecipients() {
         return mRecipients;
     }
@@ -182,9 +187,9 @@ public class LmtpInject {
     public void addToFileSizeTotal(long size) {
         mFileSizeTotal += size;
     }
-    
+
     private void run()
-    throws IOException {
+            throws IOException {
         Thread[] threads = new Thread[mNumThreads];
 
         // Start threads.
@@ -192,7 +197,7 @@ public class LmtpInject {
             threads[i] = new Thread(new LmtpInjectTask(this));
             threads[i].start();
         }
-        
+
         // Wait for them to finish.
         for (int i = 0; i < mNumThreads; i++) {
             try {
@@ -207,7 +212,7 @@ public class LmtpInject {
         private LmtpClient mClient;
 
         public LmtpInjectTask(LmtpInject driver)
-        throws IOException {
+                throws IOException {
             mDriver = driver;
             mClient = new LmtpClient(driver.getHost(), driver.getPort(), mDriver.getProtocol(),mDriver.isSkipTLSCertValidation());
             if (mDriver.isVerbose() && !mDriver.isQuiet()) {
@@ -257,15 +262,15 @@ public class LmtpInject {
         mOptions.addOption("a", "address",   true,  "lmtp server (default localhost)");
         mOptions.addOption("p", "port",      true,  "lmtp server port (default 7025)");
         mOptions.addOption(
-            OptionBuilder.withLongOpt("sender").hasArg(true).withDescription("envelope sender (mail from)").create("s"));
+                OptionBuilder.withLongOpt("sender").hasArg(true).withDescription("envelope sender (mail from)").create("s"));
         Option ropt = new Option("r", "recipient", true,
-            "envelope recipients (rcpt to).  This option accepts multiple arguments, so it can't be last " +
-            "if a list of input files is used.");
+                "envelope recipients (rcpt to).  This option accepts multiple arguments, so it can't be last " +
+                        "if a list of input files is used.");
         ropt.setArgs(Option.UNLIMITED_VALUES);
         mOptions.addOption(
-            OptionBuilder.withLongOpt("recipient").hasArgs(Option.UNLIMITED_VALUES).withDescription(
-                "envelope recipients (rcpt to).  This option accepts multiple arguments, so it can't be last " +
-                "if a list of input files is used.").create("r"));
+                OptionBuilder.withLongOpt("recipient").hasArgs(Option.UNLIMITED_VALUES).withDescription(
+                        "envelope recipients (rcpt to).  This option accepts multiple arguments, so it can't be last " +
+                                "if a list of input files is used.").create("r"));
         mOptions.addOption("t", "threads",   true,  "number of worker threads (default 1)");
         mOptions.addOption("q", "quiet",     false, "don't print status");
         mOptions.addOption("T", "trace",     false, "trace server/client traffic");
@@ -274,6 +279,7 @@ public class LmtpInject {
         mOptions.addOption("h", "help",      false, "display usage information");
         mOptions.addOption("v", "verbose",   false, "print detailed delivery status");
         mOptions.addOption(null, "noValidation", false, "don't validate file content");
+        mOptions.addOption(null, "batch", true, "file containing lines of argument lists.");
         mOptions.addOption(null, "skipTLSCertValidation", false, "don't validate server certifcate during TLS handshake");
     }
 
@@ -283,10 +289,10 @@ public class LmtpInject {
         }
         HelpFormatter formatter = new HelpFormatter();
         formatter.printHelp(
-            "zmlmtpinject -r <recip1> [recip2 ...] -s <sender> [options]",
-            "  <file1 [file2 ...] | -d <dir>>",
-            mOptions,
-            "Specified paths contain rfc822 messages.  Files may be gzipped.");
+                "zmlmtpinject -r <recip1> [recip2 ...] -s <sender> [options]",
+                "  <file1 [file2 ...] | -d <dir>>",
+                mOptions,
+                "Specified paths contain rfc822 messages.  Files may be gzipped.");
         System.exit((errmsg == null) ? 0 : 1);
     }
 
@@ -307,69 +313,120 @@ public class LmtpInject {
         return cl;
     }
 
-    public static void main(String[] args) {
-        CliUtil.toolSetup();
-        CommandLine cl = parseArgs(args);
-
-        if (cl.hasOption("h")) {
-            usage(null);
-        }
-        boolean quietMode = cl.hasOption("q");
-        int threads = 1;
-        if (cl.hasOption("t")) {
-            threads = Integer.valueOf(cl.getOptionValue("t")).intValue();
-        }
-
+    private static class InjectOptions {
+        boolean quietMode;
+        boolean tracingEnabled;
+        boolean verbose;
+        boolean skipTLSCertValidation;
+        int threads;
         String host = null;
-        if (cl.hasOption("a")) {
-            host = cl.getOptionValue("a");
-        } else {
-            host = "localhost";
-        }
-
         int port;
         Protocol proto = null;
-        if (cl.hasOption("smtp")) {
-            proto = Protocol.SMTP;
-            port = 25;
-        } else
-            port = 7025;
-        if (cl.hasOption("p"))
-            port = Integer.valueOf(cl.getOptionValue("p")).intValue();
-
-        String[] recipients = cl.getOptionValues("r");
-        String sender = cl.getOptionValue("s");
-        boolean tracingEnabled = cl.hasOption("T");
-
+        String[] recipients;
+        String sender;
+        List<File> files;
         int everyN;
-        if (cl.hasOption("N")) {
-            everyN = Integer.valueOf(cl.getOptionValue("N")).intValue();
-        } else {
-            everyN = 100;
+        String batchFileName = null;
+
+        private InjectOptions(String[] args) {
+            this(args, null);
         }
 
-        // Process files from the -d option.
-        List<File> files = new ArrayList<File>();
-        if (cl.hasOption("d")) {
-            File dir = new File(cl.getOptionValue("d"));
-            if (!dir.isDirectory()) {
-                System.err.format("%s is not a directory.\n", dir.getPath());
-                System.exit(1);
+        private InjectOptions(String[] args, InjectOptions defaults) {
+            CommandLine cl = parseArgs(args);
+
+            if (cl.hasOption("h")) {
+                usage(null);
             }
-            File[] fileArray = dir.listFiles();
-            if (fileArray == null || fileArray.length == 0) {
-                System.err.format("No files found in directory %s.\n", dir.getPath());
+            quietMode = cl.hasOption("q") ? true : ((defaults == null) ? false : defaults.quietMode);
+            tracingEnabled = cl.hasOption("T") ? true : ((defaults == null) ? false : defaults.tracingEnabled);
+            verbose = cl.hasOption("v") ? true : ((defaults == null) ? false : defaults.verbose);
+            skipTLSCertValidation = cl.hasOption("skipTLSCertValidation") ? true :
+                    ((defaults == null) ? false : defaults.skipTLSCertValidation);
+
+            if (cl.hasOption("t")) {
+                threads = Integer.valueOf(cl.getOptionValue("t")).intValue();
+            } else {
+                threads = (defaults == null) ? 1: defaults.threads;
             }
-            Collections.addAll(files, fileArray);
+
+            if (cl.hasOption("a")) {
+                host = cl.getOptionValue("a");
+            } else {
+                host = (defaults == null) ? "localhost" : defaults.host;
+            }
+
+            if (cl.hasOption("p")) {
+                port = Integer.valueOf(cl.getOptionValue("p")).intValue();
+                if (port == 25) {
+                    proto = Protocol.SMTP;
+                }
+            }
+            if (cl.hasOption("smtp")) {
+                proto = Protocol.SMTP;
+                port = 25;
+            } else {
+                port = 7025;
+            }
+
+            recipients = cl.getOptionValues("r");
+            if (recipients == null && defaults != null) {
+                recipients = defaults.recipients;
+            }
+            if (recipients == null) {
+                recipients = new String[0];
+            }
+
+            sender = cl.getOptionValue("s");
+            if (sender == null && defaults != null) {
+                sender = defaults.sender;
+            }
+
+            if (cl.hasOption("N")) {
+                everyN = Integer.valueOf(cl.getOptionValue("N")).intValue();
+            } else {
+                everyN = (defaults == null) ? 100 : defaults.everyN;
+            }
+
+            files = getFiles(cl);
+            if (files.isEmpty()) {
+                if (defaults != null) {
+                    files = defaults.files;  // assume validation done already
+                }
+            } else if (!cl.hasOption("noValidation")) {
+                validateContentOfFiles(files);
+            }
+
+            if ((defaults == null) && cl.hasOption("batch")) {
+                batchFileName = cl.getOptionValue("batch");
+            }
         }
-        
-        // Process files specified as arguments.
-        for (String arg : cl.getArgs()) {
-            files.add(new File(arg));
+
+        private static List<File> getFiles(CommandLine cl) {
+            // Process files from the -d option.
+            List<File> files = new ArrayList<>();
+            if (cl.hasOption("d")) {
+                File dir = new File(cl.getOptionValue("d"));
+                if (!dir.isDirectory()) {
+                    System.err.format("%s is not a directory.\n", dir.getPath());
+                    System.exit(1);
+                }
+                File[] fileArray = dir.listFiles();
+                if (fileArray == null || fileArray.length == 0) {
+                    System.err.format("No files found in directory %s.\n", dir.getPath());
+                }
+                Collections.addAll(files, fileArray);
+            }
+
+            // Process files specified as arguments.
+            for (String arg : cl.getArgs()) {
+                files.add(new File(arg));
+            }
+            return files;
         }
-        
-        // Validate file content.
-        if (!cl.hasOption("noValidation")) {
+
+        /** @param files list of files to be validated. Any deemed invalid are removed from the list */
+        private static void validateContentOfFiles(List<File> files) {
             Iterator<File> i = files.iterator();
             while (i.hasNext()) {
                 InputStream in = null;
@@ -396,26 +453,22 @@ public class LmtpInject {
                 }
             }
         }
+    }
 
-        if (files.size() == 0) {
-            System.err.println("No files to inject.");
-            System.exit(1);
-        }
+    private static LmtpInject runInjection(int numThreads, String sender, String[] recipients, List<File> files,
+                                           String host, int port, Protocol proto, boolean quietMode,
+                                           boolean tracingEnabled, boolean verbose, boolean skipTLSCertValidation,
+                                           int everyN, boolean batchMode) {
+        long startTime = System.currentTimeMillis();
 
         if (!quietMode) {
             System.out.format("Injecting %d message(s) to %d recipient(s).  Server %s, port %d, using %d thread(s).\n",
-                files.size(), recipients.length, host, port, threads);
+                    files.size(), recipients.length, host, port, numThreads);
         }
-
-        int totalFailed = 0;
-        int totalSucceeded = 0;
-        long startTime = System.currentTimeMillis();
-        boolean verbose = cl.hasOption("v");
-        boolean skipTLSCertValidation = cl.hasOption("skipTLSCertValidation");
 
         LmtpInject injector = null;
         try {
-            injector = new LmtpInject(threads,
+            injector = new LmtpInject(numThreads,
                     sender, recipients, files,
                     host, port, proto,
                     quietMode, tracingEnabled, verbose, skipTLSCertValidation);
@@ -447,21 +500,93 @@ public class LmtpInject {
         }
         double msgPerSec = ((double) succeeded / (double) elapsedMS) * 1000;
         if (!quietMode) {
+            String summaryFmt;
+            if (batchMode) {
+                summaryFmt = "Submitted=%d Failed=%d " +
+                        "%.2fs, %.2fms/msg, %.2fmsg/s " +
+                        "average message size = %.2fKB\n";
+
+            } else {
+                summaryFmt = "\nLmtpInject Finished\n" +
+                        "submitted=%d failed=%d\n" +
+                        "%.2fs, %.2fms/msg, %.2fmsg/s\n" +
+                        "average message size = %.2fKB\n";
+            }
+            System.out.printf(summaryFmt, succeeded, failedThisTime, elapsed, msPerMsg, msgPerSec, msgSizeKB);
+        }
+        return injector;
+    };
+
+    private static boolean batch(String batchFileName, InjectOptions defaultOptions) {
+        int totalFailed = 0;
+        int totalSucceeded = 0;
+        long start = System.currentTimeMillis();
+
+        File file = new File(batchFileName);
+        InjectOptions injectOptions = defaultOptions;
+        try (BufferedReader in = new BufferedReader(
+                new InputStreamReader(new FileInputStream(file), "UTF-8"))) {
+            while (true) {
+                String line = StringUtil.readLine(in);
+                if (line == null) {
+                    break;
+                }
+                String args[] = StringUtil.parseLine(line);
+                if (args.length == 0) {
+                    continue;
+                }
+                injectOptions = new InjectOptions(args, injectOptions);
+                if (!injectOptions.quietMode) {
+                    System.out.print("lmtpinject> ");
+                    System.out.println(line);
+                }
+                if (injectOptions.files.size() == 0) {
+                    System.err.println("No files to inject.");
+                    continue;
+                }
+                LmtpInject injector = runInjection(injectOptions.threads,
+                        injectOptions.sender, injectOptions.recipients,
+                        injectOptions.files, injectOptions.host, injectOptions.port, injectOptions.proto,
+                        injectOptions.quietMode, injectOptions.tracingEnabled, injectOptions.verbose,
+                        injectOptions.skipTLSCertValidation, injectOptions.everyN, true);
+                totalFailed += injector.getFailureCount();
+                totalSucceeded += injector.getSuccessCount();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+        if (!injectOptions.quietMode) {
+            long elapsedMS = System.currentTimeMillis() - start;
+            double elapsed = elapsedMS / 1000.0;
             System.out.println();
             System.out.printf(
-                "LmtpInject Finished\n" +
-                "submitted=%d failed=%d\n" +
-                "%.2fs, %.2fms/msg, %.2fmsg/s\n" +
-                "average message size = %.2fKB\n",
-                succeeded, failedThisTime,
-                elapsed, msPerMsg, msgPerSec,
-                msgSizeKB);
+                    "LmtpInject Finished\n" +
+                    "total successes=%d, total failures=%d, total time=%.2fs\n",
+                    totalSucceeded, totalFailed, elapsed);
         }
+        return (totalFailed == 0);
+    }
 
-        totalFailed+=failedThisTime;
-        totalSucceeded+=succeeded;
-
-        if (totalFailed!= 0)
-            System.exit(1);
+    public static void main(String[] args) {
+        CliUtil.toolSetup();
+        InjectOptions injectOptions = new InjectOptions(args);
+        if (injectOptions.batchFileName != null) {
+            if (!batch(injectOptions.batchFileName, injectOptions)) {
+                System.exit(1);
+            }
+        } else {
+            if (injectOptions.files.size() == 0) {
+                System.err.println("No files to inject.");
+                System.exit(1);
+            }
+            LmtpInject injector = runInjection(injectOptions.threads, injectOptions.sender, injectOptions.recipients,
+                    injectOptions.files, injectOptions.host, injectOptions.port, injectOptions.proto,
+                    injectOptions.quietMode, injectOptions.tracingEnabled, injectOptions.verbose,
+                    injectOptions.skipTLSCertValidation, injectOptions.everyN, false);
+            if (injector.getFailureCount() != 0) {
+                System.exit(1);
+            }
+        }
     }
 }

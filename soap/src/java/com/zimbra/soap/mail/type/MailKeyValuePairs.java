@@ -25,22 +25,27 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.soap.json.jackson.annotate.ZimbraKeyValuePairs;
 import com.zimbra.soap.type.KeyValuePair;
 import com.zimbra.soap.type.KeyValuePairs;
-import com.zimbra.soap.json.jackson.annotate.ZimbraKeyValuePairs;
+
+import io.leangen.graphql.annotations.GraphQLIgnore;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
 
 /*
  * Used for JAXB objects representing elements which have child node(s) of form:
  *     <a n="{key}">{value}</a>
  */
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name="MailKeyValuePairs")
 public class MailKeyValuePairs implements KeyValuePairs {
 
     /**
@@ -48,6 +53,7 @@ public class MailKeyValuePairs implements KeyValuePairs {
      */
     @ZimbraKeyValuePairs
     @XmlElement(name=MailConstants.E_A)
+    @GraphQLQuery(name="keyValuePairs", description="Key value pairs")
     private List<KeyValuePair> keyValuePairs;
 
     public MailKeyValuePairs() {
@@ -109,11 +115,13 @@ public class MailKeyValuePairs implements KeyValuePairs {
         keyValuePairs.add(keyValue);
     }
 
+    @GraphQLIgnore
     @Override
     public Multimap<String, String> getKeyValuePairsMultimap() {
         return KeyValuePair.toMultimap(keyValuePairs);
     }
 
+    @GraphQLIgnore
     @Override
     public Map<String, Object> getKeyValuePairsAsOldMultimap() {
         return StringUtil.toOldMultimap(getKeyValuePairsMultimap());
@@ -124,7 +132,7 @@ public class MailKeyValuePairs implements KeyValuePairs {
      */
     @Override
     public String firstValueForKey(String key) {
-        for (KeyValuePair kvp : keyValuePairs) {
+        for (final KeyValuePair kvp : keyValuePairs) {
             if (key.equals(kvp.getKey())) {
                 return kvp.getValue();
             }
@@ -134,8 +142,8 @@ public class MailKeyValuePairs implements KeyValuePairs {
 
     @Override
     public List<String> valuesForKey(String key) {
-        List<String> values = Lists.newArrayList();
-        for (KeyValuePair kvp : keyValuePairs) {
+        final List<String> values = Lists.newArrayList();
+        for (final KeyValuePair kvp : keyValuePairs) {
             if (key.equals(kvp.getKey())) {
                 values.add(kvp.getValue());
             }
@@ -143,7 +151,7 @@ public class MailKeyValuePairs implements KeyValuePairs {
         return Collections.unmodifiableList(values);
     }
 
-    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         return helper
             .add("keyValuePairs", keyValuePairs);
     }

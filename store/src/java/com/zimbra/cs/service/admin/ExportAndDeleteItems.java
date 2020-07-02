@@ -21,12 +21,13 @@ import java.io.File;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
+import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.db.DbBlobConsistency;
 import com.zimbra.cs.db.DbMailItem;
@@ -36,7 +37,6 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.ExportAndDeleteItemsRequest;
 import com.zimbra.soap.admin.type.ExportAndDeleteItemSpec;
@@ -64,8 +64,7 @@ public class ExportAndDeleteItems extends AdminDocumentHandler {
         String prefix = req.getExportFilenamePrefix();
 
         // Lock the mailbox, to make sure that another thread doesn't modify the items we're exporting/deleting.
-        mbox.lock.lock();
-        try {
+        try (final MailboxLock l = mbox.getWriteLockAndLockIt()) {
             DbConnection conn = null;
 
             try {
@@ -131,8 +130,6 @@ public class ExportAndDeleteItems extends AdminDocumentHandler {
                 conn.commit();
                 DbPool.quietClose(conn);
             }
-        } finally {
-            mbox.lock.release();
         }
 
         return zsc.createElement(AdminConstants.EXPORT_AND_DELETE_ITEMS_RESPONSE);

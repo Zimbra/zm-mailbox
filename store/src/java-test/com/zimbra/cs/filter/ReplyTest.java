@@ -18,6 +18,7 @@
 package com.zimbra.cs.filter;
 
 import static org.junit.Assert.fail;
+import org.junit.Ignore;
 
 import java.util.List;
 import java.util.Map;
@@ -45,7 +46,7 @@ import com.zimbra.cs.service.util.ItemId;
  * @author zimbra
  *
  */
-public class ReplyTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class ReplyTest {
 
     @BeforeClass
     public static void init() throws Exception {

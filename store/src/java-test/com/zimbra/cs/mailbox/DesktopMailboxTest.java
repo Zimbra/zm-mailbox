@@ -18,16 +18,16 @@
 package com.zimbra.cs.mailbox;
 
 import java.sql.PreparedStatement;
+import org.junit.Ignore;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
-
-import junit.framework.Assert;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -39,7 +39,9 @@ import com.zimbra.cs.mailbox.Mailbox.MailboxData;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.redolog.op.RedoableOp;
 
-public class DesktopMailboxTest {
+import junit.framework.Assert;
+
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class DesktopMailboxTest {
 
     @BeforeClass
     public static void init() throws Exception {
@@ -103,36 +105,38 @@ public class DesktopMailboxTest {
         db.useMVCC(mbox);
 
         DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
-        mbox.lock.lock();
-        try {
+        try (final MailboxLock l = mbox.getWriteLockAndLockIt()) {
             OperationContext octx = new OperationContext(acct);
-            mbox.beginTransaction("outer", octx);
-            mbox.beginTransaction("inner1", octx);
-            mbox.addMessage(octx, new ParsedMessage("From: test1-1@sub1.zimbra.com".getBytes(), false), dopt, null);
+            try (final Mailbox.MailboxTransaction outer = mbox.mailboxWriteTransaction("outer", null)) {
+                try (final Mailbox.MailboxTransaction inner1 = mbox.mailboxWriteTransaction("inner1", null)) {
+                    mbox.addMessage(octx, new ParsedMessage("From: test1-1@sub1.zimbra.com".getBytes(), false), dopt, null);
 
-            //nothing committed yet
-            Assert.assertEquals(0, countInboxMessages(mbox));
-            mbox.endTransaction(true); //inner 1
+                    //nothing committed yet
+                    Assert.assertEquals(0, countInboxMessages(mbox));
 
-            //nothing committed yet
-            Assert.assertEquals(0, countInboxMessages(mbox));
+                    inner1.commit();
+                } //inner 1
 
-            mbox.beginTransaction("inner2", null);
-            mbox.addMessage(null, new ParsedMessage("From: test1-2@sub1.zimbra.com".getBytes(), false), dopt, null);
+                //nothing committed yet
+                Assert.assertEquals(0, countInboxMessages(mbox));
 
-            //nothing committed yet
-            Assert.assertEquals(0, countInboxMessages(mbox));
-            mbox.endTransaction(true); //inner 2
+                try (final Mailbox.MailboxTransaction inner2 = mbox.mailboxWriteTransaction("inner2", null)) {
+                    mbox.addMessage(null, new ParsedMessage("From: test1-2@sub1.zimbra.com".getBytes(), false), dopt, null);
 
-            //nothing committed yet
-            Assert.assertEquals(0, countInboxMessages(mbox));
+                    //nothing committed yet
+                    Assert.assertEquals(0, countInboxMessages(mbox));
 
-            mbox.endTransaction(true); //outer
+                    inner2.commit();
+                } //inner 2
+
+                //nothing committed yet
+                Assert.assertEquals(0, countInboxMessages(mbox));
+
+                outer.commit();
+            } //outer
 
             //committed
             Assert.assertEquals(2, countInboxMessages(mbox));
-        } finally {
-            mbox.lock.release();
         }
     }
 }

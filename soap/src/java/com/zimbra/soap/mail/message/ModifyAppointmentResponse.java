@@ -21,11 +21,14 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.soap.mail.type.CreateCalendarItemResponse;
+
+import io.leangen.graphql.annotations.types.GraphQLType;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name="ModifyAppointmentResponse")
+@GraphQLType(name=GqlConstants.CLASS_MODIFY_APPOINTMENT_RESPONSE, description="Contains response information for modify appointment")
 public class ModifyAppointmentResponse
         extends CreateCalendarItemResponse {
 }

@@ -68,6 +68,7 @@ import com.zimbra.common.zmime.ZMimeBodyPart;
 import com.zimbra.common.zmime.ZMimeMultipart;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.filter.jsieve.ActionFlag;
 import com.zimbra.cs.filter.jsieve.Require;
@@ -80,8 +81,10 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.MessageCallbackContext;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.mailbox.Mailbox.MessageCallback.Type;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
@@ -170,7 +173,8 @@ public final class FilterUtil {
      * @return the id of the new message, or <tt>null</tt> if it was a duplicate
      */
     public static ItemId addMessage(DeliveryContext context, Mailbox mbox, ParsedMessage pm, String recipient,
-                                    String folderPath, boolean noICal, int flags, String[] tags, int convId, OperationContext octxt)
+                                    String folderPath, boolean noICal, int flags, String[] tags, int convId, OperationContext octxt,
+                                    MessageCallbackContext ctxt)
     throws ServiceException {
         // Do initial lookup.
         Pair<Folder, String> folderAndPath = mbox.getFolderByPathLongestMatch(
@@ -224,6 +228,9 @@ public final class FilterUtil {
             try {
                 DeliveryOptions dopt = new DeliveryOptions().setFolderId(folder).setNoICal(noICal);
                 dopt.setFlags(flags).setTags(tags).setConversationId(convId).setRecipientEmail(recipient);
+                if (ctxt != null) {
+                    dopt.setCallbackContext(ctxt);
+                }
                 Message msg = mbox.addMessage(octxt, pm, dopt, context);
                 if (msg == null) {
                     return null;
@@ -519,8 +526,7 @@ public final class FilterUtil {
             charset = MimeConstants.P_CHARSET_UTF8;
         }
 
-        SMTPMessage report = new SMTPMessage(JMSession.getSmtpSession());
-
+        SMTPMessage report = AccountUtil.getSmtpMessageObj(owner);
         // add the forwarded header account names to detect the mail loop between accounts
         for (String headerFwdAccountName : Mime.getHeaders(mimeMessage, HEADER_FORWARDED)) {
             report.addHeader(HEADER_FORWARDED, headerFwdAccountName);

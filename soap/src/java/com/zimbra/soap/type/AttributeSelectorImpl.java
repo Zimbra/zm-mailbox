@@ -25,7 +25,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.google.common.collect.Lists;
 import com.google.common.base.Joiner;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 
 import com.zimbra.common.soap.AdminConstants;
 
@@ -96,15 +96,15 @@ abstract public class AttributeSelectorImpl implements AttributeSelector {
         return COMMA_JOINER.join(attrs);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-            Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(
+            MoreObjects.ToStringHelper helper) {
     return helper
         .add("attrs", getAttrs());
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
+        return addToStringInfo(MoreObjects.toStringHelper(this))
                 .toString();
     }
 }

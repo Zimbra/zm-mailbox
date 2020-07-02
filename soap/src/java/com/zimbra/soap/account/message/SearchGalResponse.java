@@ -17,10 +17,6 @@
 
 package com.zimbra.soap.account.message;
 
-import com.google.common.base.Objects;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -31,14 +27,22 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.account.type.ContactInfo;
 import com.zimbra.soap.type.ZmBoolean;
 
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AccountConstants.E_SEARCH_GAL_RESPONSE)
 @XmlType(propOrder = {})
+@GraphQLType(name=GqlConstants.CLASS_GAL_SEARCH_RESPONSE, description="search GAL response")
 public class SearchGalResponse {
 
     /**
@@ -114,17 +118,28 @@ public class SearchGalResponse {
         this.contacts.add(contact);
     }
 
+    @GraphQLQuery(name=GqlConstants.SORT_BY, description="Name of attribute sorted on")
     public String getSortBy() { return sortBy; }
+    @GraphQLQuery(name=GqlConstants.OFFSET, description="The 0-based offset into the results list returned as the first result for this search operation.")
     public Integer getOffset() { return offset; }
+    @GraphQLQuery(name=GqlConstants.QUERY_MORE, description="Flags whether there are more results")
     public Boolean getMore() { return ZmBoolean.toBool(more); }
+    @GraphQLQuery(name=GqlConstants.PAGINATION_SUPPORTED, description="Flag whether the underlying search supported pagination. 1 (true) : limit and offset in the request was honored." + 
+            " 0 (false) - the underlying search does not support pagination.")
     public Boolean getPagingSupported() { return ZmBoolean.toBool(pagingSupported); }
+    @GraphQLQuery(name=GqlConstants.TOKENIZE_KEY, description="Valid values: and|or\n" + 
+            "      Not present if the search key was not tokenized.\n" + 
+            "      Some clients backtrack on GAL results assuming the results of a more specific key is the subset of a more\n" + 
+            "      generic key, and it checks cached results instead of issuing another SOAP request to the server.  \n" + 
+            "      If search key was tokenized and expanded with AND or OR, this cannot be assumed.")
     public Boolean getTokenizeKey() { return ZmBoolean.toBool(tokenizeKey); }
+    @GraphQLQuery(name=GqlConstants.CONTACTS, description="Matching contacts")
     public List<ContactInfo> getContacts() {
         return Collections.unmodifiableList(contacts);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(
+                MoreObjects.ToStringHelper helper) {
         return helper
             .add("sortBy", sortBy)
             .add("offset", offset)
@@ -136,7 +151,7 @@ public class SearchGalResponse {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
+        return addToStringInfo(MoreObjects.toStringHelper(this))
                 .toString();
     }
 }

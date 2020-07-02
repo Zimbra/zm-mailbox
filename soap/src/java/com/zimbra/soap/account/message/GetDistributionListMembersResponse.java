@@ -17,10 +17,6 @@
 
 package com.zimbra.soap.account.message;
 
-import com.google.common.base.Objects;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -28,9 +24,15 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.soap.account.type.HABGroupMember;
+import com.zimbra.soap.json.jackson.annotate.ZimbraJsonArrayForWrapper;
 import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
@@ -57,6 +59,14 @@ public class GetDistributionListMembersResponse {
     @XmlElement(name=AccountConstants.E_DLM /* dlm */, required=false)
     private List<String> dlMembers = Lists.newArrayList();
 
+    /**
+     * @zm-api-field-description HAB Group members
+     */
+    @ZimbraJsonArrayForWrapper
+    @XmlElementWrapper(name=AccountConstants.E_HAB_GROUP_MEMBERS /* groupMembers */, required=false)
+    @XmlElement(name=AccountConstants.E_HAB_GROUP_MEMBER /* groupMember */, required=false)
+    private List<HABGroupMember> habGroupMembers;
+
     public GetDistributionListMembersResponse() {
     }
 
@@ -80,12 +90,29 @@ public class GetDistributionListMembersResponse {
         return Collections.unmodifiableList(dlMembers);
     }
 
+    public void setHABGroupMembers(Iterable <HABGroupMember> habGroupMembers) {
+        this.habGroupMembers.clear();
+        if (habGroupMembers != null) {
+            Iterables.addAll(this.habGroupMembers,habGroupMembers);
+        }
+    }
+
+    public GetDistributionListMembersResponse addHABGroupMember(HABGroupMember habGroupMember) {
+        this.habGroupMembers.add(habGroupMember);
+        return this;
+    }
+
+    public List<HABGroupMember> getHABGroupMembers() {
+        return Collections.unmodifiableList(habGroupMembers);
+    }
+
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
             .add("more", more)
             .add("total", total)
             .add("dlMembers", dlMembers)
+            .add("habGroupMembers", habGroupMembers)
             .toString();
     }
 }

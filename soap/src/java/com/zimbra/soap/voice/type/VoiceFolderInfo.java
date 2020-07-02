@@ -17,7 +17,7 @@
 
 package com.zimbra.soap.voice.type;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -61,7 +61,7 @@ public class VoiceFolderInfo {
     public Boolean getHasVoiceMail() { return ZmBoolean.toBool(hasVoiceMail); }
     public RootVoiceFolder getVirtualRootFolder() { return virtualRootFolder; }
 
-    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         return helper
             .add("phoneNumber", phoneNumber)
             .add("hasVoiceMail", hasVoiceMail)
@@ -70,6 +70,6 @@ public class VoiceFolderInfo {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this)).toString();
+        return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
     }
 }

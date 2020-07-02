@@ -20,6 +20,8 @@
  */
 package com.zimbra.cs.session;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -30,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.zimbra.client.ZBaseItem;
@@ -42,14 +45,16 @@ import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailboxNotificationInfo;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.util.TypedIdList;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.mail.type.DeleteItemNotification;
-import com.zimbra.soap.mail.type.PendingFolderModifications;
 import com.zimbra.soap.mail.type.ModifyNotification.ModifyTagNotification;
+import com.zimbra.soap.mail.type.PendingFolderModifications;
 
 
 /**
@@ -403,11 +408,26 @@ public abstract class PendingModifications<T extends ZimbraMailItem> {
         String accountId;
         Integer itemId;
 
+        public ModificationKeyMeta() {}
+
         public ModificationKeyMeta(String accountId, int itemId) {
             this.accountId = accountId;
             this.itemId = itemId;
         }
 
+        private final void readObject(ObjectInputStream in) throws java.io.IOException {
+            throw new IOException("Cannot be deserialized");
+        }
+
+        public static ModificationKeyMeta fromString(String encoded) {
+            String[] parts = encoded.split("\\|");
+            return new ModificationKeyMeta(parts[0], Integer.parseInt(parts[1]));
+        }
+
+        @Override
+        public String toString() {
+            return String.format("%s|%d", accountId, itemId);
+        }
     }
 
     public static final class ChangeMeta implements Serializable {
@@ -423,6 +443,8 @@ public abstract class PendingModifications<T extends ZimbraMailItem> {
         public ObjectType preModifyObjType;
         public String metaPreModifyObj;
 
+        public ChangeMeta(){}
+
         public ChangeMeta(ObjectType type, String thing, int reason, ObjectType preModifyObjType, String preModifyObj) {
             whatType = type;
             metaWhat = thing; // MailItem.Type for deletions
@@ -430,6 +452,10 @@ public abstract class PendingModifications<T extends ZimbraMailItem> {
             this.preModifyObjType = preModifyObjType;
             metaPreModifyObj = preModifyObj;
         }
+
+        private final void readObject(ObjectInputStream in) throws java.io.IOException {
+            throw new IOException("Cannot be deserialized");
+         }
 
     }
 
@@ -530,5 +556,20 @@ public abstract class PendingModifications<T extends ZimbraMailItem> {
         }
 
         return folderMap;
+    }
+
+    protected MoreObjects.ToStringHelper addProperties(MoreObjects.ToStringHelper helper) {
+        helper.add("changedTypes", changedTypes)
+            .add("changedParentFolders", changedParentFolders)
+                .add("changedFolders", changedFolders)
+                .add("created", created)
+                .add("modified", modified)
+                .add("deleted", deleted);
+        return helper;
+    }
+
+    @Override
+    public String toString() {
+        return addProperties(MoreObjects.toStringHelper(this)).toString();
     }
 }

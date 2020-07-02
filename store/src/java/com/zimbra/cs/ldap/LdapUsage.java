@@ -31,7 +31,9 @@ public enum LdapUsage {
     AUTO_PROVISION,
     AUTO_PROVISION_ADMIN_SEARCH,
     COMPARE,
+    CREATE_OU,
     CREATE_ACCOUNT,
+    CREATE_ADDRESS_LIST,
     CREATE_COS,
     CREATE_DATASOURCE,
     CREATE_DISTRIBUTIONLIST,
@@ -85,6 +87,7 @@ public enum LdapUsage {
     GET_ZIMLET,
     MODIFY_ENTRY,
     MODIFY_ACCOUNT,
+    MODIFY_ADDRESS_LIST,
     MODIFY_ALIAS,
     MODIFY_CALRESOURCE,
     MODIFY_COS,
@@ -129,11 +132,13 @@ public enum LdapUsage {
     ADD,
     DELETE,
     MOD,
-    MODRDN;
+    MODRDN,
+    DELETE_ADDRESSLIST;
 
     public static LdapUsage modifyEntryfromEntryType(Entry.EntryType entryType) {
         switch (entryType) {
             case ACCOUNT: return MODIFY_ACCOUNT;
+            case ADDRESS_LIST: return MODIFY_ADDRESS_LIST;
             case ALIAS: return MODIFY_ALIAS;
             case CALRESOURCE: return MODIFY_CALRESOURCE;
             case COS: return MODIFY_COS;
@@ -156,8 +161,8 @@ public enum LdapUsage {
 
     public static LdapUsage fromGalOp(GalOp galOp) {
         if (galOp == null) {
-            ZimbraLog.ldap.warn("unknown GAL op");
-            return LdapUsage.GAL;  // really an error
+            ZimbraLog.ldap.warnQuietlyFmt("unknown GAL op: null - treating as %s", GAL);
+            return GAL;  // really an error
         }
         switch (galOp) {
             case autocomplete:
@@ -167,15 +172,15 @@ public enum LdapUsage {
             case sync:
                 return GAL_SYNC;
             default:
-                ZimbraLog.ldap.warn("unknown GAL op");
+                ZimbraLog.ldap.warn("unknown GAL op: %s", galOp);
                 return GAL;
         }
     }
 
     public static LdapUsage fromGalOpLegacy(GalOp galOp) {
         if (galOp == null) {
-            ZimbraLog.ldap.warn("unknown GAL op");
-            return LdapUsage.GAL_LEGACY;  // really an error
+            ZimbraLog.ldap.warnQuietlyFmt("unknown legacy GAL op: null - treating as %s", GAL_LEGACY);
+            return GAL_LEGACY;  // really an error
         }
         switch (galOp) {
             case autocomplete:
@@ -185,9 +190,8 @@ public enum LdapUsage {
             case sync:
                 return GAL_LEGACY_SYNC;
             default:
-                ZimbraLog.ldap.warn("unknown GAL op");
+                ZimbraLog.ldap.warn("unknown legacy GAL op: %s - treating as %s", galOp, GAL_LEGACY);
                 return GAL_LEGACY;
         }
     }
-
 }

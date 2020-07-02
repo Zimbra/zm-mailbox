@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -111,7 +111,7 @@ public final class ACLUtil {
         for (Entry entry : rights.get(UserRights.R_sendOnBehalfOf)) {
             Account grantor = (Account) entry;
             String mail = grantor.getName();
-            String name = Objects.firstNonNull(grantor.getDisplayName(), mail);
+            String name = MoreObjects.firstNonNull(grantor.getDisplayName(), mail);
             Map<String, Object> attrs = ImmutableMap.<String, Object>builder()
                 .put(Provisioning.A_zimbraPrefIdentityId, grantor.getId())
                 .put(Provisioning.A_zimbraPrefIdentityName, name)
@@ -133,7 +133,7 @@ public final class ACLUtil {
         for (ZimbraACE ace : aces) {
             ZimbraACE.validate(ace);
         }
-        ZimbraACL acl = getACL(target);
+        ZimbraACL acl = getACL(target, Boolean.TRUE);
         List<ZimbraACE> granted = null;
 
         if (acl == null) {
@@ -163,7 +163,7 @@ public final class ACLUtil {
      */
     public static List<ZimbraACE> revokeRight(Provisioning prov, Entry target, Set<ZimbraACE> aces)
     throws ServiceException {
-        ZimbraACL acl = getACL(target);
+        ZimbraACL acl = getACL(target, Boolean.TRUE);
         if (acl == null) {
             return new ArrayList<ZimbraACE>(); // return empty list
         }
@@ -198,10 +198,25 @@ public final class ACLUtil {
      * @throws ServiceException
      */
     static ZimbraACL getACL(Entry entry) throws ServiceException {
-        ZimbraACL acl = (ZimbraACL) entry.getCachedData(ACL_CACHE_KEY);
+        return getACL(entry, Boolean.FALSE);
+    }
+    /**
+     * Get cached grants, if not in cache, load from LDAP.
+     *
+     * @param entry the LDAP entry object for which we need ACLs
+     * @param loadFromLdap when true we always load from LDAP, when false we try the cache first.
+     * @return
+     * @throws ServiceException
+     */
+    static ZimbraACL getACL(Entry entry, boolean loadFromLdap) throws ServiceException {
+        ZimbraACL acl = null;
+        if (!loadFromLdap) {
+            acl = (ZimbraACL) entry.getCachedData(ACL_CACHE_KEY);
+        }
         if (acl != null) {
             return acl;
         } else {
+            acl = null;
             String[] aces = entry.getMultiAttr(Provisioning.A_zimbraACE);
             if (aces.length == 0) {
                 return null;

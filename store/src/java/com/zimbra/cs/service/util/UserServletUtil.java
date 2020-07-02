@@ -31,6 +31,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
@@ -54,6 +55,7 @@ import com.zimbra.cs.service.formatter.FormatterFactory;
 import com.zimbra.cs.service.formatter.FormatterFactory.FormatType;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.servlet.util.AuthUtil;
+import com.zimbra.soap.SoapServlet;
 
 public class UserServletUtil {
 
@@ -96,6 +98,9 @@ public class UserServletUtil {
     public static MailItem resolveItem(UserServletContext context, boolean checkExtension) throws ServiceException {
         if (context.formatter != null && !context.formatter.requiresAuth() &&
                 !FormatType.FREE_BUSY.equals(context.formatter.getType())) {
+            return null;
+        }
+        if (context.formatter != null && context.formatter.getType() == FormatType.MOBILE_CONFIG) {
             return null;
         }
 
@@ -251,34 +256,47 @@ public class UserServletUtil {
                 try {
                     AuthToken at = AuthProvider.getAuthToken(context.req, isAdminRequest);
                     if (at != null) {
-
-                        if (at.isZimbraUser()) {
-                        	if(!at.isRegistered()) {
-                        		throw new UserServletException(HttpServletResponse.SC_UNAUTHORIZED,
-                                        L10nUtil.getMessage(MsgKey.errMustAuthenticate, context.req));
-                        	}
-                            try {
-                                context.setAuthAccount(AuthProvider.validateAuthToken(Provisioning.getInstance(), at, false));
-                            } catch (ServiceException e) {
-                                throw new UserServletException(HttpServletResponse.SC_UNAUTHORIZED,
-                                        L10nUtil.getMessage(MsgKey.errMustAuthenticate, context.req));
-                            }
-                            context.cookieAuthHappened = true;
-                            context.authToken = at;
-                            return;
-                        } else {
-                            if (at.isExpired()) {
-                                throw new UserServletException(HttpServletResponse.SC_UNAUTHORIZED,
-                                        L10nUtil.getMessage(MsgKey.errMustAuthenticate, context.req));
-                            }
-                            context.setAuthAccount(new GuestAccount(at));
-                            context.basicAuthHappened = true; // pretend that we basic authed
-                            context.authToken = at;
-                            return;
-                        }
+                        validateAuthToken(context, at, Boolean.FALSE);
+                        return;
                     }
                 } catch (AuthTokenException e) {
                     // bug 35917: malformed auth token means auth failure
+                    throw new UserServletException(HttpServletResponse.SC_UNAUTHORIZED,
+                            L10nUtil.getMessage(MsgKey.errMustAuthenticate, context.req));
+                }
+            }
+
+            if (context.jwtAuthAllowed()) {
+                try {
+                    Map <Object, Object> engineCtxt = new HashMap<Object, Object>();
+                    engineCtxt.put(SoapServlet.SERVLET_REQUEST, context.req);
+                    AuthToken at = AuthProvider.getJWToken(null, engineCtxt);
+                    if (at != null) {
+                        validateAuthToken(context, at, Boolean.TRUE);
+                        return;
+                    } else {
+                        String jwt = context.params.get(ZimbraServlet.QP_ZJWT);
+                        if (!StringUtil.isNullOrEmpty(jwt)) {
+                            try {
+                                at = AuthProvider.getJWToken(jwt, JWTUtil.getSalt(null, engineCtxt));
+                                if (at != null) {
+                                    try {
+                                        context.setAuthAccount(AuthProvider.validateAuthToken(Provisioning.getInstance(), at, false));
+                                        context.jwtAuthHappened = true;
+                                        context.authToken = at;
+                                        return;
+                                    } catch (ServiceException e) {
+                                        throw new UserServletException(HttpServletResponse.SC_UNAUTHORIZED,
+                                                L10nUtil.getMessage(MsgKey.errMustAuthenticate, context.req));
+                                    }
+                                }
+                            } catch (AuthTokenException e) {
+                                throw new UserServletException(HttpServletResponse.SC_UNAUTHORIZED,
+                                        L10nUtil.getMessage(MsgKey.errMustAuthenticate, context.req));
+                            }
+                        }
+                    }
+                } catch (AuthTokenException e) {
                     throw new UserServletException(HttpServletResponse.SC_UNAUTHORIZED,
                             L10nUtil.getMessage(MsgKey.errMustAuthenticate, context.req));
                 }
@@ -337,6 +355,35 @@ public class UserServletUtil {
             // there is no credential at this point.  assume anonymous public access and continue.
         } catch (ServiceException e) {
             throw new ServletException(e);
+        }
+    }
+
+    private static void validateAuthToken(UserServletContext context, AuthToken at, boolean isJWT) throws UserServletException, ServiceException {
+        if (at.isZimbraUser()) {
+            if(!at.isRegistered()) {
+                throw new UserServletException(HttpServletResponse.SC_UNAUTHORIZED,
+                        L10nUtil.getMessage(MsgKey.errMustAuthenticate, context.req));
+            }
+            try {
+                context.setAuthAccount(AuthProvider.validateAuthToken(Provisioning.getInstance(), at, false));
+            } catch (ServiceException e) {
+                throw new UserServletException(HttpServletResponse.SC_UNAUTHORIZED,
+                        L10nUtil.getMessage(MsgKey.errMustAuthenticate, context.req));
+            }
+            if (isJWT) {
+                context.jwtAuthHappened = true;
+            } else {
+                context.cookieAuthHappened = true;
+            }
+            context.authToken = at;
+        } else {
+            if (at.isExpired()) {
+                throw new UserServletException(HttpServletResponse.SC_UNAUTHORIZED,
+                        L10nUtil.getMessage(MsgKey.errMustAuthenticate, context.req));
+            }
+            context.setAuthAccount(new GuestAccount(at));
+            context.basicAuthHappened = true; // pretend that we basic authed
+            context.authToken = at;
         }
     }
 

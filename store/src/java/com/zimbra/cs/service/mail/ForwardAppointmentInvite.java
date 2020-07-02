@@ -34,6 +34,7 @@ import javax.mail.internet.MimeMultipart;
 import com.zimbra.common.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.common.calendar.ZCalendar.ZComponent;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
+import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -97,8 +98,7 @@ public class ForwardAppointmentInvite extends ForwardAppointment {
 
     public static Pair<MimeMessage, MimeMessage> getMessagePair(Mailbox mbox, Account senderAcct, Message msg, MimeMessage mmFwdWrapper ) throws ServiceException {
         Pair<MimeMessage, MimeMessage> msgPair;
-        mbox.lock.lock();
-        try {
+        try (final MailboxLock l = mbox.getWriteLockAndLockIt()) {
             MimeMessage mmInv = msg.getMimeMessage();
             List<Invite> invs = new ArrayList<Invite>();
             for (Iterator<CalendarItemInfo> iter = msg.getCalendarItemInfoIterator(); iter.hasNext(); ) {
@@ -156,8 +156,6 @@ public class ForwardAppointmentInvite extends ForwardAppointment {
 
             msgPair = getInstanceFwdMsg(senderAcct, firstInv, cal, mmInv, mmFwdWrapper);
 
-        } finally {
-            mbox.lock.release();
         }
         return msgPair;
     }

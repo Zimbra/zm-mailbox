@@ -10,3 +10,9 @@ outgoing
 .recommenders/
 store/.pmd
 store/.ruleset
+eclipse-ivysettings.xml
+store/tmp/
+*.iml
+out
+*.msg
+common-passwords.txt

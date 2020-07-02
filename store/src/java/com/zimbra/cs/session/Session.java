@@ -20,12 +20,14 @@ package com.zimbra.cs.session;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 
@@ -51,6 +53,8 @@ public abstract class Session {
     private   boolean   mIsRegistered;
     private   boolean   mAddedToCache;
     protected int lastChangeId;
+    protected String userAgent;
+    protected String requestIPAddress;
 
 
     /**
@@ -112,12 +116,16 @@ public abstract class Session {
      *                  {@code Session} is attached to
      * @param type      The type of {@code Session} being created */
     public Session(String authId, String targetId, Type type) {
+        this(null, authId, targetId, type);
+    }
+
+    public Session(String sessionId, String authId, String targetId, Type type) {
         mAuthenticatedAccountId = authId;
         mTargetAccountId = targetId == null ? authId : targetId;
         mSessionType = type;
         mCreationTime = System.currentTimeMillis();
         mLastAccessed = mCreationTime;
-        mSessionId = SessionCache.getNextSessionId(mSessionType);
+        mSessionId = sessionId == null ? SessionCache.getNextSessionId(mSessionType) : sessionId;
     }
 
     public Type getType() {
@@ -141,13 +149,34 @@ public abstract class Session {
             // once addListener is called, you may NOT lock the mailbox (b/c of deadlock possibilities)
             if (mbox != null) {
                 if (mbox instanceof Mailbox) {
-                    ((Mailbox)mbox).addListener(this);
+                    ((Mailbox) mbox).getNotificationPubSub().getSubscriber().addListener(this);
                 } else {
                     throw new UnsupportedOperationException(String.format(
                             "Session register only supports Mailbox currently can't handle %s",
                                     mbox.getClass().getName()));
                 }
             }
+        }
+
+        // registering the session automatically sets mSessionId
+        if (isRegisteredInCache()) {
+            addToSessionCache();
+        }
+
+        mIsRegistered = true;
+
+        return this;
+    }
+
+    /** added to avoid potential for stack overflow recursion with {@link #register()} */
+    public Session register(Mailbox mbox) throws ServiceException {
+        if (mIsRegistered) {
+            return this;
+        }
+
+        if (isMailboxListener()) {
+            mailbox = mbox;
+            mbox.getNotificationPubSub().getSubscriber().addListener(this);
         }
 
         // registering the session automatically sets mSessionId
@@ -172,9 +201,9 @@ public abstract class Session {
         if (null != mboxStore) {
             if (mboxStore instanceof Mailbox) {
                 Mailbox mbox = (Mailbox)mboxStore;
-                assert(mbox.lock.isWriteLockedByCurrentThread() || !Thread.holdsLock(this));
+                //assert(l.isWriteLockedByCurrentThread() || !Thread.holdsLock(this));
                 if (isMailboxListener()) {
-                    mbox.removeListener(this);
+                    mbox.getNotificationPubSub().getSubscriber().removeListener(this);
                     mailbox = null;
                 }
             } else if (isMailboxListener()) {
@@ -287,11 +316,11 @@ public abstract class Session {
      *  on the Mailbox.
      *  <p>
      *  *All* changes are currently cached, regardless of the client's state/views.
-     * @param pns       A set of new change notifications from our Mailbox.
-     * @param changeId  The change ID of the change.
-     * @param source    The {@code Session} originating these changes, or
+     * @param pns                  A set of new change notifications from our Mailbox.
+     * @param changeId             The change ID of the change.
+     * @param sourceSessionInfo    Info about the {@code Session} originating these changes, or
      *                  <tt>null</tt> if none was specified. */
-    public abstract void notifyPendingChanges(PendingModifications pns, int changeId, Session source);
+    public abstract void notifyPendingChanges(PendingModifications pns, int changeId, SourceSessionInfo sourceSessionInfo);
 
     /** Notify this session that an external event has occured. */
     public void notifyExternalEvent(ExternalEventNotification extra) {
@@ -324,8 +353,9 @@ public abstract class Session {
         return mCreationTime;
     }
 
-    /** Public API for updating the access time of a session. */
-    public void updateAccessTime() {
+    /** Public API for updating the access time of a session.
+     * @throws ServiceException */
+    public void updateAccessTime() throws ServiceException {
         // go through the session cache so that the session cache's
         // time-ordered access list stays correct
         // see bug 16242
@@ -361,7 +391,15 @@ public abstract class Session {
         return !mAuthenticatedAccountId.equalsIgnoreCase(mTargetAccountId);
     }
 
-    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+    public String getUserAgent() {
+        return userAgent;
+    }
+
+    public String getRequestIPAddress() {
+        return requestIPAddress;
+    }
+
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         helper.add("id", mSessionId)
             .add("authAcct", mAuthenticatedAccountId);
         if (!Objects.equal(mAuthenticatedAccountId, mTargetAccountId)) {
@@ -385,6 +423,43 @@ public abstract class Session {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this)).toString();
+        return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
+    }
+
+    public SourceSessionInfo toSessionInfo() {
+        return new SourceSessionInfo(this);
+    }
+
+    public static class SourceSessionInfo {
+        private String sessionId;
+        private String wsId = null;
+
+        public SourceSessionInfo() {}
+
+        public SourceSessionInfo(Session sourceSession) {
+            this.sessionId = sourceSession.getSessionId();
+            if (sourceSession instanceof SoapSession) {
+                wsId = ((SoapSession) sourceSession).getCurWaitSetID();
+            }
+        }
+
+        public String getSessionId() {
+            return sessionId;
+        }
+
+        public String getWaitSetId() {
+            return wsId;
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            if (other instanceof Session) {
+                return sessionId.equals(((Session) other).getSessionId());
+            } else if (other instanceof SourceSessionInfo) {
+                return sessionId.equals(((SourceSessionInfo) other).getSessionId());
+            } else {
+                return false;
+            }
+        }
     }
 }

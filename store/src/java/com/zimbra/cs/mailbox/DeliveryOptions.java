@@ -34,7 +34,9 @@ public class DeliveryOptions {
     private String mRecipientEmail = ":API:";
     private Message.DraftInfo mDraftInfo = null;
     private CustomMetadata mCustomMetadata = null;
-    
+    private MessageCallbackContext mCallbackContext = null;
+    private String dsId;
+
     public int getFolderId() { return mFolderId; }
     public boolean getNoICal() { return mNoICal; }
     public int getFlags() { return mFlags; }
@@ -43,6 +45,8 @@ public class DeliveryOptions {
     public String getRecipientEmail() { return mRecipientEmail; }
     public Message.DraftInfo getDraftInfo() { return mDraftInfo; }
     public CustomMetadata getCustomMetadata() { return mCustomMetadata; }
+    public MessageCallbackContext getCallbackContext() { return mCallbackContext; }
+    public String geDataSourceId() { return dsId; }
 
     public DeliveryOptions setFolderId(int folderId) {
         mFolderId = folderId;
@@ -53,12 +57,12 @@ public class DeliveryOptions {
         mFolderId = folder.getId();
         return this;
     }
-    
+
     public DeliveryOptions setNoICal(boolean noICal) {
         mNoICal = noICal;
         return this;
     }
-    
+
     public DeliveryOptions setFlags(int flags) {
         mFlags = flags;
         return this;
@@ -73,24 +77,34 @@ public class DeliveryOptions {
         mTags = tags;
         return this;
     }
-    
+
     public DeliveryOptions setConversationId(int conversationId) {
         mConversationId = conversationId;
         return this;
     }
-    
+
     public DeliveryOptions setRecipientEmail(String recipientEmail) {
         mRecipientEmail = recipientEmail;
         return this;
     }
-    
+
     public DeliveryOptions setDraftInfo(Message.DraftInfo draftInfo) {
         mDraftInfo = draftInfo;
         return this;
     }
-    
+
     public DeliveryOptions setCustomMetadata(CustomMetadata customMetadata) {
         mCustomMetadata = customMetadata;
+        return this;
+    }
+
+    public DeliveryOptions setCallbackContext(MessageCallbackContext callbackContext) {
+        mCallbackContext = callbackContext;
+        return this;
+    }
+
+    public DeliveryOptions setDataSourceId(String dsId) {
+        this.dsId = dsId;
         return this;
     }
 }

@@ -17,6 +17,7 @@
 package com.zimbra.cs.filter;
 
 import static org.junit.Assert.*;
+import org.junit.Ignore;
 import java.util.HashMap;
 import java.util.List;
 import org.junit.Assert;
@@ -43,7 +44,7 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.qa.unittest.TestUtil;
 
-public class FileIntoCopyTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class FileIntoCopyTest {
 
     @BeforeClass
     public static void init() throws Exception {

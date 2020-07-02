@@ -17,17 +17,21 @@
 
 package com.zimbra.soap.mail.type;
 
-import com.google.common.base.Objects;
-import com.google.common.collect.Lists;
-import com.zimbra.common.soap.MailConstants;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+
+import com.google.common.base.MoreObjects;
+import com.google.common.collect.Lists;
+import com.zimbra.common.soap.MailConstants;
+
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
 
 /*
 <acl [internalGrantExpiry="{millis-since-epoch}"] [guestGrantExpiry="{millis-since-epoch}"]>
@@ -35,6 +39,7 @@ import java.util.List;
 </acl>
  */
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name="Acl", description="Access control level")
 public class Acl {
 
     /**
@@ -45,6 +50,7 @@ public class Acl {
      *   Value of 0 indicates that these grants never expire.
      */
     @XmlAttribute(name=MailConstants.A_INTERNAL_GRANT_EXPIRY /* internalGrantExpiry */, required=false)
+    @GraphQLQuery(name="internalGrantExpiry", description="Time when grants to internal grantees expire.")
     private Long internalGrantExpiry;
 
     /**
@@ -55,17 +61,20 @@ public class Acl {
      *   Value of 0 indicates that these grants never expire.
      */
     @XmlAttribute(name=MailConstants.A_GUEST_GRANT_EXPIRY /* guestGrantExpiry */, required=false)
+    @GraphQLQuery(name="guestGrantExpiry", description="Time when grants to guest grantees expire.")
     private Long guestGrantExpiry;
 
     /**
      * @zm-api-field-description Grants
      */
     @XmlElement(name=MailConstants.E_GRANT /* grant */, required=false)
+    @GraphQLQuery(name="grants", description="Grants")
     private List<Grant> grants = Lists.newArrayList();
 
     public Acl() {
     }
 
+    @GraphQLQuery(name="internalGrantExpiry", description="Time when grants to internal grantees expire.")
     public Long getInternalGrantExpiry() {
         return internalGrantExpiry;
     }
@@ -74,6 +83,7 @@ public class Acl {
         this.internalGrantExpiry = internalGrantExpiry;
     }
 
+    @GraphQLQuery(name="guestGrantExpiry", description="Time when grants to guest grantees expire.")
     public Long getGuestGrantExpiry() {
         return guestGrantExpiry;
     }
@@ -82,6 +92,7 @@ public class Acl {
         this.guestGrantExpiry = guestGrantExpiry;
     }
 
+    @GraphQLQuery(name="grants", description="Grants")
     public List<Grant> getGrants() {
         return Collections.unmodifiableList(grants);
     }
@@ -93,7 +104,7 @@ public class Acl {
         }
     }
 
-    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         return helper
                 .add("internalGrantExpiry", internalGrantExpiry)
                 .add("guestGrantExpiry", guestGrantExpiry)
@@ -102,6 +113,6 @@ public class Acl {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this)).toString();
+        return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
     }
 }

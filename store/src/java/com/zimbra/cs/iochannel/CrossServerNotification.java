@@ -39,7 +39,7 @@ public class CrossServerNotification extends Message {
 
     public static final String AppId = "xsn";
 
-    public static CrossServerNotification create(SoapSession session, ZimbraSoapContext zsc) throws MessageChannelException {
+    public static CrossServerNotification create(SoapSession session, ZimbraSoapContext zsc) throws MessageChannelException, ServiceException {
         Element soapElement;
         try {
             soapElement = Element.create(SoapProtocol.Soap12, "base");

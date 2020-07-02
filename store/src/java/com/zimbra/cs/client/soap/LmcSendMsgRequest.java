@@ -22,22 +22,31 @@ import java.io.IOException;
 import java.net.URLConnection;
 import java.util.Map;
 
-import org.apache.commons.httpclient.Cookie;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpState;
-import org.apache.commons.httpclient.cookie.CookiePolicy;
-import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.httpclient.methods.multipart.*;
-import org.dom4j.Element;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpException;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.CookieSpecs;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.config.SocketConfig;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.impl.client.BasicCookieStore;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.cookie.BasicClientCookie;
+import org.apache.http.util.EntityUtils;
 import org.dom4j.DocumentHelper;
+import org.dom4j.Element;
 
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.httpclient.HttpClientUtil;
-import com.zimbra.common.soap.DomUtil;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.DomUtil;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
-import com.zimbra.cs.client.*;
+import com.zimbra.cs.client.LmcMessage;
+import com.zimbra.cs.client.LmcSession;
 
 public class LmcSendMsgRequest extends LmcSoapRequest {
 
@@ -88,7 +97,7 @@ public class LmcSendMsgRequest extends LmcSoapRequest {
                                  File f,
                                  String domain,  // cookie domain e.g. ".example.zimbra.com"
                                  int msTimeout)
-        throws LmcSoapClientException, IOException
+        throws LmcSoapClientException, IOException, HttpException
     {
         String aid = null;
 
@@ -96,31 +105,44 @@ public class LmcSendMsgRequest extends LmcSoapRequest {
         if (session == null)
             System.err.println(System.currentTimeMillis() + " " + Thread.currentThread() + " LmcSendMsgRequest.postAttachment session=null");
         
-        HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
-        PostMethod post = new PostMethod(uploadURL);
+        HttpClientBuilder clientBuilder = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+        HttpPost post = new HttpPost(uploadURL);
         ZAuthToken zat = session.getAuthToken();
         Map<String, String> cookieMap = zat.cookieMap(false);
         if (cookieMap != null) {
-            HttpState initialState = new HttpState();
+            BasicCookieStore initialState = new BasicCookieStore();
             for (Map.Entry<String, String> ck : cookieMap.entrySet()) {
-                Cookie cookie = new Cookie(domain, ck.getKey(), ck.getValue(), "/", -1, false);
+                BasicClientCookie cookie = new BasicClientCookie(ck.getKey(), ck.getValue());
+                cookie.setDomain(domain);
+                cookie.setPath("/");
+                cookie.setSecure(false);
+                cookie.setExpiryDate(null);
                 initialState.addCookie(cookie);
             }
-            client.setState(initialState);
-            client.getParams().setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
+            clientBuilder.setDefaultCookieStore(initialState);
+            
+            RequestConfig reqConfig = RequestConfig.copy(
+                ZimbraHttpConnectionManager.getInternalHttpConnMgr().getZimbraConnMgrParams().getReqConfig())
+                .setCookieSpec(CookieSpecs.BROWSER_COMPATIBILITY).build();
+
+            clientBuilder.setDefaultRequestConfig(reqConfig);
         }
-        post.getParams().setSoTimeout(msTimeout);
+        SocketConfig config = SocketConfig.custom().setSoTimeout(msTimeout).build();
+        clientBuilder.setDefaultSocketConfig(config);
         int statusCode = -1;
         try {
             String contentType = URLConnection.getFileNameMap().getContentTypeFor(f.getName());
-            Part[] parts = { new FilePart(f.getName(), f, contentType, "UTF-8") };
-            post.setRequestEntity( new MultipartRequestEntity(parts, post.getParams()) );
-            statusCode = HttpClientUtil.executeMethod(client, post);
-
+            MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+            builder.addBinaryBody("upfile", f, ContentType.create(contentType, "UTF-8"), f.getName());
+            HttpEntity entity = builder.build();
+            post.setEntity(entity);
+            HttpClient client = clientBuilder.build();
+            HttpResponse httpResponse = HttpClientUtil.executeMethod(client, post);
+            statusCode =  httpResponse.getStatusLine().getStatusCode();
             // parse the response
             if (statusCode == 200) {
                 // paw through the returned HTML and get the attachment id
-                String response = post.getResponseBodyAsString();
+                String response = EntityUtils.toString( httpResponse.getEntity());
                 //System.out.println("response is\n" + response);
                 int lastQuote = response.lastIndexOf("'");
                 int firstQuote = response.indexOf("','") + 3;
@@ -130,7 +152,7 @@ public class LmcSendMsgRequest extends LmcSoapRequest {
             } else {
                 throw new LmcSoapClientException("Attachment post failed, status=" + statusCode);
             }
-        } catch (IOException e) {
+        } catch (IOException | HttpException e) {
             System.err.println("Attachment post failed");
             e.printStackTrace();
             throw e;

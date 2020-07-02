@@ -96,7 +96,7 @@ public class RedoConfig {
     }
 
     private boolean mRedoLogEnabled;
-    private static final boolean D_REDOLOG_ENABLED = true;
+    private static final boolean D_REDOLOG_ENABLED = false;
     /**
      * Indicates whether redo logging is enabled.
      * @return

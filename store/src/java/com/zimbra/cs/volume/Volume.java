@@ -18,7 +18,7 @@ package com.zimbra.cs.volume;
 
 import java.io.File;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -459,7 +459,7 @@ public final class Volume {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
                 .add("id", id).add("type", type).add("name", name).add("path", rootPath)
                 .add("mboxGroupBits", mboxGroupBits).add("mboxBits", mboxBits)
                 .add("fileGroupBits", fileGroupBits).add("fileBits", fileBits)

@@ -63,6 +63,14 @@ public final class MailConstants {
     public static final String E_SEARCH_RESPONSE = "SearchResponse";
     public static final String E_SEARCH_CONV_REQUEST = "SearchConvRequest";
     public static final String E_SEARCH_CONV_RESPONSE = "SearchConvResponse";
+    public static final String E_REJECT_SAVE_SEARCH_PROMPT_REQUEST = "RejectSaveSearchPromptRequest";
+    public static final String E_REJECT_SAVE_SEARCH_PROMPT_RESPONSE = "RejectSaveSearchPromptResponse";
+    public static final String E_CLEAR_SEARCH_HISTORY_REQUEST = "ClearSearchHistoryRequest";
+    public static final String E_CLEAR_SEARCH_HISTORY_RESPONSE = "ClearSearchHistoryResponse";
+    public static final String E_SEARCH_SUGGEST_REQUEST = "SearchSuggestRequest";
+    public static final String E_SEARCH_SUGGEST_RESPONSE = "SearchSuggestResponse";
+    public static final String E_GET_SEARCH_HISTORY_REQUEST = "GetSearchHistoryRequest";
+    public static final String E_GET_SEARCH_HISTORY_RESPONSE = "GetSearchHistoryResponse";
     public static final String E_BROWSE_REQUEST = "BrowseRequest";
     public static final String E_BROWSE_RESPONSE = "BrowseResponse";
     public static final String E_EMPTY_DUMPSTER_REQUEST = "EmptyDumpsterRequest";
@@ -169,6 +177,10 @@ public final class MailConstants {
     public static final String E_APPLY_OUTGOING_FILTER_RULES_RESPONSE = "ApplyOutgoingFilterRulesResponse";
     public static final String E_GET_APPT_SUMMARIES_REQUEST = "GetApptSummariesRequest";
     public static final String E_GET_APPOINTMENT_REQUEST = "GetAppointmentRequest";
+    public static final String E_GET_APPOINTMENT_IDS_IN_RANGE_REQUEST = "GetAppointmentIdsInRangeRequest";
+    public static final String E_GET_APPOINTMENT_IDS_IN_RANGE_RESPONSE = "GetAppointmentIdsInRangeResponse";
+    public static final String E_GET_APPOINTMENT_IDS_SINCE_REQUEST = "GetAppointmentIdsSinceRequest";
+    public static final String E_GET_APPOINTMENT_IDS_SINCE_RESPONSE = "GetAppointmentIdsSinceResponse";
     public static final String E_SET_APPOINTMENT_REQUEST = "SetAppointmentRequest";
     public static final String E_CREATE_APPOINTMENT_REQUEST = "CreateAppointmentRequest";
     public static final String E_CREATE_APPOINTMENT_EXCEPTION_REQUEST = "CreateAppointmentExceptionRequest";
@@ -272,6 +284,8 @@ public final class MailConstants {
     public static final String E_GET_SHARE_NOTIFICATIONS_RESPONSE = "GetShareNotificationsResponse";
     public static final String E_GET_DATA_SOURCE_USAGE_REQUEST = "GetDataSourceUsageRequest";
     public static final String E_GET_DATA_SOURCE_USAGE_RESPONSE = "GetDataSourceUsageResponse";
+    public static final String E_GET_SMART_FOLDERS_REQUEST = "GetSmartFoldersRequest";
+    public static final String E_GET_SMART_FOLDERS_RESPONSE = "GetSmartFoldersResponse";
 
     // IMAP
     public static final String E_LIST_IMAP_SUBSCRIPTIONS_REQUEST = "ListIMAPSubscriptionsRequest";
@@ -314,6 +328,16 @@ public final class MailConstants {
     public static final QName SEARCH_CONV_RESPONSE = QName.get(E_SEARCH_CONV_RESPONSE, NAMESPACE);
     public static final QName BROWSE_REQUEST = QName.get(E_BROWSE_REQUEST, NAMESPACE);
     public static final QName BROWSE_RESPONSE = QName.get(E_BROWSE_RESPONSE, NAMESPACE);
+
+    // search history
+    public static final QName REJECT_SAVE_SEARCH_PROMPT_REQUEST = QName.get(E_REJECT_SAVE_SEARCH_PROMPT_REQUEST, NAMESPACE);
+    public static final QName REJECT_SAVE_SEARCH_PROMPT_RESPONSE = QName.get(E_REJECT_SAVE_SEARCH_PROMPT_RESPONSE, NAMESPACE);
+    public static final QName CLEAR_SEARCH_HISTORY_REQUEST = QName.get(E_CLEAR_SEARCH_HISTORY_REQUEST, NAMESPACE);
+    public static final QName CLEAR_SEARCH_HISTORY_RESPONSE = QName.get(E_CLEAR_SEARCH_HISTORY_RESPONSE, NAMESPACE);
+    public static final QName SEARCH_SUGGEST_REQUEST = QName.get(E_SEARCH_SUGGEST_REQUEST, NAMESPACE);
+    public static final QName SEARCH_SUGGEST_RESPONSE = QName.get(E_SEARCH_SUGGEST_RESPONSE, NAMESPACE);
+    public static final QName GET_SEARCH_HISTORY_REQUEST = QName.get(E_GET_SEARCH_HISTORY_REQUEST, NAMESPACE);
+    public static final QName GET_SEARCH_HISTORY_RESPONSE = QName.get(E_GET_SEARCH_HISTORY_RESPONSE, NAMESPACE);
 
     // dumpster
     public static final QName EMPTY_DUMPSTER_REQUEST = QName.get(E_EMPTY_DUMPSTER_REQUEST, NAMESPACE);
@@ -376,6 +400,9 @@ public final class MailConstants {
     public static final QName GET_TAG_RESPONSE = QName.get(E_GET_TAG_RESPONSE, NAMESPACE);
     public static final QName TAG_ACTION_REQUEST = QName.get(E_TAG_ACTION_REQUEST, NAMESPACE);
     public static final QName TAG_ACTION_RESPONSE = QName.get(E_TAG_ACTION_RESPONSE, NAMESPACE);
+    // smart folders
+    public static final QName GET_SMART_FOLDERS_REQUEST = QName.get(E_GET_SMART_FOLDERS_REQUEST, NAMESPACE);
+    public static final QName GET_SMART_FOLDERS_RESPONSE = QName.get(E_GET_SMART_FOLDERS_RESPONSE, NAMESPACE);
     // saved searches
     public static final QName CREATE_SEARCH_FOLDER_REQUEST = QName.get(E_CREATE_SEARCH_FOLDER_REQUEST, NAMESPACE);
     public static final QName CREATE_SEARCH_FOLDER_RESPONSE = QName.get(E_CREATE_SEARCH_FOLDER_RESPONSE, NAMESPACE);
@@ -431,6 +458,10 @@ public final class MailConstants {
     // Calendar
     public static final QName GET_APPT_SUMMARIES_REQUEST = QName.get(E_GET_APPT_SUMMARIES_REQUEST, NAMESPACE);
     public static final QName GET_APPOINTMENT_REQUEST = QName.get(E_GET_APPOINTMENT_REQUEST, NAMESPACE);
+    public static final QName GET_APPOINTMENT_IDS_IN_RANGE_REQUEST = QName.get(E_GET_APPOINTMENT_IDS_IN_RANGE_REQUEST, NAMESPACE);
+    public static final QName GET_APPOINTMENT_IDS_IN_RANGE_RESPONSE = QName.get(E_GET_APPOINTMENT_IDS_IN_RANGE_RESPONSE, NAMESPACE);
+    public static final QName GET_APPOINTMENT_IDS_SINCE_REQUEST = QName.get(E_GET_APPOINTMENT_IDS_SINCE_REQUEST, NAMESPACE);
+    public static final QName GET_APPOINTMENT_IDS_SINCE_RESPONSE = QName.get(E_GET_APPOINTMENT_IDS_SINCE_RESPONSE, NAMESPACE);
     public static final QName SET_APPOINTMENT_REQUEST = QName.get(E_SET_APPOINTMENT_REQUEST, NAMESPACE);
     public static final QName CREATE_APPOINTMENT_REQUEST = QName.get(E_CREATE_APPOINTMENT_REQUEST, NAMESPACE);
     public static final QName CREATE_APPOINTMENT_EXCEPTION_REQUEST = QName.get(E_CREATE_APPOINTMENT_EXCEPTION_REQUEST, NAMESPACE);
@@ -610,6 +641,7 @@ public final class MailConstants {
     public static final String E_MOUNT = "link";
     public static final String E_COMMENT = "comment";
     public static final String E_LINK = "lk";
+    public static final String E_SMART_FOLDER = "sf";
 
     public static final String E_INFO = "info";
     public static final String E_LOCALE = "locale";
@@ -767,6 +799,8 @@ public final class MailConstants {
     public static final String A_ID = "id";
     public static final String A_UUID = "uuid";
     public static final String A_IDS = "ids";
+    public static final String A_MODIFIED_IDS = "mids";
+    public static final String A_DELETED_IDS = "dids";
     public static final String A_CONV_ID = "cid";
     public static final String A_DRAFT_ID = "did";
     public static final String A_SEND_FROM_DRAFT = "sfd";
@@ -923,6 +957,12 @@ public final class MailConstants {
     public static final String A_QUICK = "quick";
     public static final String A_SCORE = "score";
     public static final String E_HIT = "hit";
+    public static final String E_SEARCH_HISTORY = "searchHistory";
+    public static final String A_SAVE_SEARCH_PROMPT = "saveSearchPrompt";
+    public static final String A_LOG_SEARCH = "logSearch";
+    public static final String A_RELEVANCE_SORT_SUPPORTED = "relevanceSortSupported";
+    public static final String A_REINDEX_IN_PROGRESS = "reIndexInProgress";
+
 
     // search-result paging
     public static final String E_CURSOR = "cursor";
@@ -948,6 +988,7 @@ public final class MailConstants {
     public static final String A_GALSYNC_FULLSYNC_RECOMMENDED = "fullSyncRecommended";
     public static final String A_DELETE_LIMIT = "deleteLimit";
     public static final String A_CHANGE_LIMIT = "changeLimit";
+    public static final String A_REMAIN = "remain";
 
     // filter rules
     public static final String A_LHS = "k0";
@@ -957,6 +998,7 @@ public final class MailConstants {
 
     // calendar / appointment
     public static final String E_APPOINTMENT = "appt";
+    public static final String E_APPOINTMENT_DATA = "apptData";
     public static final String E_TASK = "task";
     public static final String E_INVITE = "inv";
     public static final String E_INVITE_COMPONENT = "comp";
@@ -994,6 +1036,15 @@ public final class MailConstants {
     public static final String E_CAL_ALARM_ABSOLUTE = "abs";
     public static final String E_CAL_ALARM_DESCRIPTION = "desc";
     public static final String E_CAL_ALARM_SUMMARY = "summary";
+    public static final String E_CAL_EVENT_ID = "eventId";
+    public static final String E_CAL_EVENT_SUBJECT = "subject";
+    public static final String E_CAL_EVENT_LOCATION = "location";
+    public static final String E_CAL_EVENT_ISPRIVATE = "isPrivate";
+    public static final String E_CAL_EVENT_ISREMINDERSET = "isReminderSet";
+    public static final String E_CAL_EVENT_ISMEETING = "isMeeting";
+    public static final String E_CAL_EVENT_ISRECURRING = "isRecurring";
+    public static final String E_CAL_EVENT_ISEXCEPTION = "isException";
+    public static final String E_CAL_EVENT_HASPERMISSION = "hasPermission";
 
     public static final String E_CAL_RULE = "rule";
     public static final String E_CAL_RULE_UNTIL = "until";
@@ -1052,6 +1103,7 @@ public final class MailConstants {
     public static final String A_CAL_RECURRENCE_ID = "recurId";
     public static final String A_CAL_RECURRENCE_RANGE_TYPE = "rangeType";
     public static final String A_CAL_RECURRENCE_ID_Z = "ridZ";  // recurrence id in "Z" (UTC) timezone
+    public static final String A_CAL_LAST_SYNC = "lastSync";
     public static final String A_CAL_START_TIME = "s";
     public static final String A_CAL_END_TIME = "e";
     public static final String A_CAL_DURATION = "d";
@@ -1344,6 +1396,7 @@ public final class MailConstants {
     public static final String OP_INHERIT = "inherit";
     public static final String OP_MUTE = "mute";
     public static final String OP_RESET_IMAP_UID = "resetimapuid";
+    public static final String OP_SEEN = "seen";
 
     // Contacts API
     public static final String E_RESTORE_CONTACTS_REQUEST = "RestoreContactsRequest";
@@ -1366,4 +1419,45 @@ public final class MailConstants {
     public static final String E_MODIFY_PROFILE_IMAGE_RESPONSE = "ModifyProfileImageResponse";
     public static final QName MODIFY_PROFILE_IMAGE_REQUEST = QName.get(E_MODIFY_PROFILE_IMAGE_REQUEST, NAMESPACE);
     public static final QName MODIFY_PROFILE_IMAGE_RESPONSE = QName.get(E_MODIFY_PROFILE_IMAGE_RESPONSE, NAMESPACE);
+
+    // Password reset API
+    public static final String E_SET_RECOVERY_ACCOUNT_REQUEST = "SetRecoveryAccountRequest";
+    public static final String E_SET_RECOVERY_ACCOUNT_RESPONSE = "SetRecoveryAccountResponse";
+    public static final QName SET_RECOVERY_EMAIL_REQUEST = QName.get(E_SET_RECOVERY_ACCOUNT_REQUEST, NAMESPACE);
+    public static final QName SET_RECOVERY_EMAIL_RESPONSE = QName.get(E_SET_RECOVERY_ACCOUNT_RESPONSE, NAMESPACE);
+    public static final String A_RECOVERY_ATTEMPTS_LEFT = "recoveryAttemptsLeft";
+    public static final String A_RECOVERY_ACCOUNT_VERIFICATION_CODE = "recoveryAccountVerificationCode";
+    public static final String E_RECOVER_ACCOUNT_REQUEST = "RecoverAccountRequest";
+    public static final String E_RECOVER_ACCOUNT_RESPONSE = "RecoverAccountResponse";
+    public static final QName RECOVER_ACCOUNT_REQUEST = QName.get(E_RECOVER_ACCOUNT_REQUEST, NAMESPACE);
+    public static final QName RECOVER_ACCOUNT_RESPONSE = QName.get(E_RECOVER_ACCOUNT_RESPONSE, NAMESPACE);
+    public static final String A_RECOVERY_ACCOUNT = "recoveryAccount";
+    public static final String A_CHANNEL = "channel";
+
+    // Related Contacts
+    public static final String E_GET_RELATED_CONTACTS_REQUEST = "GetRelatedContactsRequest";
+    public static final String E_GET_RELATED_CONTACTS_RESPONSE = "GetRelatedContactsResponse";
+    public static final QName GET_RELATED_CONTACTS_REQUEST = QName.get(E_GET_RELATED_CONTACTS_REQUEST, NAMESPACE);
+    public static final QName GET_RELATED_CONTACTS_RESPONSE = QName.get(E_GET_RELATED_CONTACTS_RESPONSE, NAMESPACE);
+    public static final String E_AFFINITY_TARGET = "targetContact";
+    public static final String A_TARGET_EMAIL = "contact";
+    public static final String A_TARGET_AFFINITY_FIELD = "field";
+    public static final String A_REQUESTED_AFFINITY_FIELD = "requestedField";
+    public static final String E_RELATED_CONTACTS = "relatedContacts";
+    public static final String E_RELATED_CONTACT = "relatedContact";
+    public static final String A_AFFINITY_SCOPE = "scope";
+
+    // Contact Analytics
+    public static final String E_GET_CONTACT_FREQUENCY_REQUEST = "GetContactFrequencyRequest";
+    public static final String E_GET_CONTACT_FREQUENCY_RESPONSE = "GetContactFrequencyResponse";
+    public static final QName GET_CONTACT_FREQUENCY_REQUEST = QName.get(E_GET_CONTACT_FREQUENCY_REQUEST, NAMESPACE);
+    public static final QName GET_CONTACT_FREQUENCY_RESPONSE = QName.get(E_GET_CONTACT_FREQUENCY_RESPONSE, NAMESPACE);
+    public static final String A_CONTACT_FREQUENCY_GRAPH_SPEC = "spec";
+    public static final String A_CONTACT_FREQUENCY_GRAPH_RANGE = "range";
+    public static final String A_CONTACT_FREQUENCY_GRAPH_INTERVAL = "interval";
+    public static final String E_CONTACT_FREQUENCY_DATA = "data";
+    public static final String E_CONTACT_FREQUENCY_DATA_POINT = "dataPoint";
+    public static final String A_CONTACT_FREQUENCY_LABEL = "label";
+    public static final String A_CONTACT_FREQUENCY_VALUE = "value";
+    public static final String A_CONTACT_FREQUENCY_OFFSET_IN_MINUTES= "offsetInMinutes";
 }

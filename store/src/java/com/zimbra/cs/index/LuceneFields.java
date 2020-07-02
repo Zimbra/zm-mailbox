@@ -17,12 +17,10 @@
 
 package com.zimbra.cs.index;
 
-import com.zimbra.cs.mailbox.Flag;
 import java.util.Map;
 
-import org.apache.lucene.document.Field;
-
 import com.google.common.collect.ImmutableMap;
+import com.zimbra.cs.mailbox.Flag;
 
 /**
  * Standard Lucene fields.
@@ -100,6 +98,11 @@ public final class LuceneFields {
      * Priority setting
      */
     public static final String L_SORT_PRIORITY = "priority";
+
+    /**
+     * Sort by relevance. "score" is the field name used by solr/lucene.
+     */
+    public static final String L_SORT_RELEVANCE = "score";
 
     /**
      * The "index id" this document -- maps to one or more rows in the DB's mail_item table (index_id column).
@@ -192,62 +195,59 @@ public final class LuceneFields {
     public static final String L_H_MESSAGE_ID = "msg_id";
 
     /**
+     * Exact text of search history entries; used for exact and edge matching
+     */
+    public static final String L_SEARCH_EXACT = "sh_exact";
+
+    /**
+     * word tokens generated from search history entries
+     */
+    public static final String L_SEARCH_TERMS = "sh_terms";
+
+    /**
+     * ID of search history entries
+     */
+    public static final String L_SEARCH_ID = "search_id";
+
+    /**
+     * Item type; used to differentiate search history entries from mail items
+     */
+    public static final String L_ITEM_TYPE = "doctype";
+
+    /**
      * field operator: structured data storage
      */
     public static final String L_FIELD = "l.field";
 
-    public enum IndexField {
-        MIMETYPE(L_MIMETYPE, Field.Store.YES, Field.Index.ANALYZED),
-        PARTNAME(L_PARTNAME, Field.Store.YES, Field.Index.NOT_ANALYZED),
-        FILENAME(L_FILENAME, Field.Store.YES, Field.Index.ANALYZED),
-        SORT_SIZE(L_SORT_SIZE, Field.Store.YES, Field.Index.NOT_ANALYZED),
-        SORT_ATTACH(L_SORT_ATTACH, Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS),
-        SORT_FLAG(L_SORT_FLAG, Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS),
-        SORT_PRIORITY(L_SORT_PRIORITY, Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS),
-        H_FROM(L_H_FROM, Field.Store.YES, Field.Index.ANALYZED),
-        H_TO(L_H_TO, Field.Store.YES, Field.Index.ANALYZED),
-        H_CC(L_H_CC, Field.Store.YES, Field.Index.ANALYZED),
-        H_X_ENV_FROM(L_H_X_ENV_FROM, Field.Store.YES, Field.Index.ANALYZED),
-        H_X_ENV_TO(L_H_X_ENV_TO, Field.Store.YES, Field.Index.ANALYZED),
-        H_MESSAGE_ID(L_H_MESSAGE_ID, Field.Store.NO, Field.Index.NOT_ANALYZED),
-        FIELD(L_FIELD, Field.Store.YES, Field.Index.ANALYZED),
-        SORT_NAME(L_SORT_NAME, Field.Store.NO, Field.Index.NOT_ANALYZED),
-        H_SUBJECT(L_H_SUBJECT, Field.Store.NO, Field.Index.ANALYZED),
-        SORT_SUBJECT(L_SORT_SUBJECT, Field.Store.NO, Field.Index.NOT_ANALYZED),
-        CONTENT(L_CONTENT, Field.Store.NO, Field.Index.ANALYZED),
-        ATTACHMENTS(L_ATTACHMENTS, Field.Store.YES, Field.Index.ANALYZED),
-        MAILBOX_BLOB_ID(L_MAILBOX_BLOB_ID, Field.Store.YES, Field.Index.NOT_ANALYZED),
-        SORT_DATE(L_SORT_DATE, Field.Store.YES, Field.Index.NOT_ANALYZED),
-        CONTACT_DATA(L_CONTACT_DATA, Field.Store.NO, Field.Index.ANALYZED),
-        OBJECTS(L_OBJECTS, Field.Store.NO, Field.Index.ANALYZED),
-        VERSION(L_VERSION, Field.Store.YES, Field.Index.NOT_ANALYZED);
+    /**
+     * account id; used when events are stored in a joint index
+     */
+    public static final String L_ACCOUNT_ID = "acct_id";
 
-        private String fieldName;
-        private Field.Store storeSetting;
-        private Field.Index indexSetting;
-        IndexField(String fieldName, Field.Store storeSetting, Field.Index indexSetting) {
-            this.fieldName = fieldName;
-            this.storeSetting = storeSetting;
-            this.indexSetting = indexSetting;
-        }
-        public String getFieldName() {
-            return fieldName;
-        }
-        public Field.Store getStoreSetting() {
-            return storeSetting;
-        }
-        public Field.Index getIndexSetting() {
-            return indexSetting;
-        }
-        public static IndexField fromFieldName(String name) {
-            for (IndexField ifield: IndexField.values()) {
-                if (ifield.getFieldName().equals(name)) {
-                    return ifield;
-                }
-            }
-            throw new IllegalArgumentException("Unrecognised Index field name " + name);
-        }
-    }
+    /**
+     * datasource id; used for differentiating events
+     */
+    public static final String L_DATASOURCE_ID = "datasource_id";
+
+    /**
+     * id of the message for which the event is logged
+     */
+    public static final String L_EVENT_MESSAGE_ID = "msg_id";
+
+    /**
+     * the type of the event
+     */
+    public static final String L_EVENT_TYPE = "ev_type";
+
+    /**
+     * timestamp of the event in ISO instant format
+     */
+    public static final String L_EVENT_TIME = "ev_timestamp";
+
+    /**
+     * Unique solr document ID
+     */
+    public static final String SOLR_ID = "id";
 
     public static String valueForBooleanField(boolean value) {
         return value ? "1" : "0";

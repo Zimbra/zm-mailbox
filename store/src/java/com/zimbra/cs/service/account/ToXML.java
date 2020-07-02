@@ -17,6 +17,7 @@
 
 package com.zimbra.cs.service.account;
 
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
@@ -28,6 +29,7 @@ import com.google.common.base.Strings;
 import com.zimbra.common.calendar.TZIDMapper;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.KeyValuePair;
 import com.zimbra.common.util.L10nUtil;
@@ -49,9 +51,17 @@ import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.Signature.SignatureContent;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE;
+import com.zimbra.soap.account.type.Attr;
+import com.zimbra.soap.account.type.HABGroup;
 
 public class ToXML {
 
+    public static Set<String> skipAttrs = new HashSet<String>();
+    static {
+        skipAttrs.add(Provisioning.A_member);
+        skipAttrs.add(Provisioning.A_zimbraMailForwardingAddress);
+        };
+    
     static Element encodeAccount(Element parent, Account account) {
         return encodeAccount(parent, account, true, null, null);
     }
@@ -185,20 +195,21 @@ public class ToXML {
 
     public static Element encodeLocale(Element parent, Locale locale, Locale inLocale) {
         Element e = parent.addNonUniqueElement(AccountConstants.E_LOCALE);
-		String id = locale.toString();
+        String id = locale.toString();
 
-		// name in the locale itself
-		String name = L10nUtil.getMessage(L10nUtil.L10N_MSG_FILE_BASENAME, id, Locale.getDefault());
-		if (name == null) {
-		    name = locale.getDisplayName(inLocale);
-		}
+        // name in the locale itself, if it is present.
+        String name = L10nUtil.getMessage(false /* shoutIfMissing */,
+                L10nUtil.L10N_MSG_FILE_BASENAME, id, Locale.getDefault());
+        if (name == null) {
+            name = locale.getDisplayName(inLocale);
+        }
 
-		// name in the locale of choice
-		String localName = locale.getDisplayName(inLocale);
+        // name in the locale of choice
+        String localName = locale.getDisplayName(inLocale);
 
-		e.addAttribute(AccountConstants.A_ID, id);
-		e.addAttribute(AccountConstants.A_NAME, name != null ? name : id);
-		e.addAttribute(AccountConstants.A_LOCAL_NAME, localName != null ? localName : id);
+        e.addAttribute(AccountConstants.A_ID, id);
+        e.addAttribute(AccountConstants.A_NAME, name != null ? name : id);
+        e.addAttribute(AccountConstants.A_LOCAL_NAME, localName != null ? localName : id);
         return e;
     }
 
@@ -290,6 +301,34 @@ public class ToXML {
             eACE.addAttribute(AccountConstants.A_DENY, ace.deny());
         }
         return eACE;
+    }
+    
+    /**
+     * 
+     * @param parent parent element of XML response
+     * @param grp the group to encode
+     * @param parentId id of the parent group
+     */
+    public static void encodeHabGroup(Element parent, HABGroup grp, String parentId) {
+        Element habGroup = parent.addNonUniqueElement(AccountConstants.E_HAB_GROUP);
+        habGroup.addAttribute(AccountConstants.A_NAME, grp.getName());
+        for (Attr attr : grp.getAttrs()) {
+            if (!skipAttrs.contains(attr.getKey())) {
+                ToXML.encodeAttr(habGroup, attr.getKey(), attr.getValue());
+            }
+        }
+        if (parentId != null) {
+            habGroup.addAttribute(AccountConstants.A_PARENT_HAB_GROUP_ID, parentId);
+        }
+
+        habGroup.addAttribute(AdminConstants.A_ID, grp.getId());
+        habGroup.addAttribute(AccountConstants.A_HAB_SENIORITY_INDEX, grp.getSeniorityIndex());
+        for (HABGroup habGrp : grp.getChildGroups()) {
+            if (habGrp.getId() != null) {
+                encodeHabGroup(habGroup, habGrp, grp.getId());
+            }
+        }
+
     }
 
 }

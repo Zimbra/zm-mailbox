@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010, 2011, 2012, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2010, 2011, 2012, 2013, 2014, 2016, 2017 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -11,23 +11,23 @@
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
  * You should have received a copy of the GNU General Public License along with this program.
- * If not, see <https://www.gnu.org/licenses/>.
+ * If not, see <http://www.gnu.org/licenses/>.
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.cs.index.query;
 
+import java.util.EnumSet;
+import java.util.Set;
 import java.util.regex.Pattern;
 
-import org.apache.lucene.index.Term;
-import org.apache.lucene.search.TermQuery;
-import org.apache.lucene.search.TermRangeQuery;
-import org.apache.lucene.util.NumericUtils;
+import org.apache.lucene.document.IntPoint;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.LuceneQueryOperation;
 import com.zimbra.cs.index.QueryOperation;
-import com.zimbra.cs.index.analysis.FieldTokenStream;
+import com.zimbra.cs.index.solr.SolrUtils;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 
 /**
@@ -40,9 +40,16 @@ public final class FieldQuery extends TextQuery {
 
     private static final Pattern NUMERIC_QUERY_REGEX = Pattern.compile("(<|>|<=|>=)?-?\\d+");
 
-    private FieldQuery(String name, String value) {
-        super(new FieldTokenStream(name, value), LuceneFields.L_FIELD,
-                String.format("%s:%s", name, value == null ? "" : value));
+    private FieldQuery(String name, String value, boolean isPhraseQuery, Set<MailItem.Type> types) {
+        super(LuceneFields.L_FIELD, String.format("%s:%s", name, value == null ? "" : value), isPhraseQuery, types);
+    }
+
+    public static Query create(Mailbox mbox, String name, String value) throws ServiceException {
+        return create(mbox, name, value, EnumSet.noneOf(MailItem.Type.class));
+    }
+
+    public static Query create(Mailbox mbox, String name, String value, Set<MailItem.Type> types) throws ServiceException {
+        return create(mbox, name, value, false, types);
     }
 
     /**
@@ -53,17 +60,18 @@ public final class FieldQuery extends TextQuery {
      * @param mbox mailbox
      * @param name structured field name
      * @param value field value
+     * @param isPhraseQuery whether the query text represents a phrase query
      * @return new {@link FieldQuery} or {@link NumericRangeFieldQuery}
      * @throws ServiceException error on wildcard expansion
      */
-    public static Query create(Mailbox mbox, String name, String value) throws ServiceException {
+    public static Query create(Mailbox mbox, String name, String value, boolean isPhraseQuery, Set<MailItem.Type> types) throws ServiceException {
         if (NUMERIC_QUERY_REGEX.matcher(value).matches()) {
             try {
-                return new NumericRangeFieldQuery(name, value);
+                return new NumericRangeFieldQuery(name, value, types);
             } catch (NumberFormatException e) { // fall back to text query
             }
         }
-        return new FieldQuery(name, value);
+        return new FieldQuery(name, value, isPhraseQuery, types);
     }
 
     private static final class NumericRangeFieldQuery extends Query {
@@ -85,8 +93,9 @@ public final class FieldQuery extends TextQuery {
         private final String name;
         private final int number;
         private final Range range;
+        private final Set<MailItem.Type> types;
 
-        NumericRangeFieldQuery(String name, String value) throws NumberFormatException {
+        NumericRangeFieldQuery(String name, String value, Set<MailItem.Type> types) throws NumberFormatException {
             this.name = name.toLowerCase();
             if (value.startsWith("<")) {
                 if (value.startsWith("=", 1)) {
@@ -108,6 +117,7 @@ public final class FieldQuery extends TextQuery {
                 range = Range.EQ;
                 number = Integer.parseInt(value);
             }
+            this.types = types;
         }
 
         @Override
@@ -117,42 +127,30 @@ public final class FieldQuery extends TextQuery {
 
         @Override
         public QueryOperation compile(Mailbox mbox, boolean bool) {
+            String fieldName = SolrUtils.getNumericHeaderFieldName(name);
             org.apache.lucene.search.Query query = null;
             switch (range) {
                 case EQ:
-                    query = new TermQuery(new Term(LuceneFields.L_FIELD,
-                            name + "#:" + NumericUtils.intToPrefixCoded(number)));
+                    query = IntPoint.newExactQuery(fieldName, number);
                     break;
                 case GT:
-                    query = new TermRangeQuery(LuceneFields.L_FIELD,
-                            name + "#:" + NumericUtils.intToPrefixCoded(number),
-                            name + "#:" + NumericUtils.intToPrefixCoded(Integer.MAX_VALUE),
-                            false, true);
+                    query = IntPoint.newRangeQuery(fieldName, number+1, Integer.MAX_VALUE);
                     break;
                 case GT_EQ:
-                    query = new TermRangeQuery(LuceneFields.L_FIELD,
-                            name + "#:" + NumericUtils.intToPrefixCoded(number),
-                            name + "#:" + NumericUtils.intToPrefixCoded(Integer.MAX_VALUE),
-                            true, true);
+                    query = IntPoint.newRangeQuery(fieldName, number, Integer.MAX_VALUE);
                     break;
                 case LT:
-                    query = new TermRangeQuery(LuceneFields.L_FIELD,
-                            name + "#:" + NumericUtils.intToPrefixCoded(Integer.MIN_VALUE),
-                            name + "#:" + NumericUtils.intToPrefixCoded(number),
-                            true, false);
+                    query = IntPoint.newRangeQuery(fieldName, Integer.MIN_VALUE, number-1);
                     break;
                 case LT_EQ:
-                    query = new TermRangeQuery(LuceneFields.L_FIELD,
-                            name + "#:" + NumericUtils.intToPrefixCoded(Integer.MIN_VALUE),
-                            name + "#:" + NumericUtils.intToPrefixCoded(number),
-                            true, true);
+                    query = IntPoint.newRangeQuery(fieldName, Integer.MIN_VALUE, number);
                     break;
                 default:
                     assert false;
             }
 
             LuceneQueryOperation op = new LuceneQueryOperation();
-            op.addClause(toQueryString(LuceneFields.L_FIELD, range.toString() + number), query, evalBool(bool));
+            op.addClause(toQueryString(fieldName, range.toString() + number), query, evalBool(bool), getIndexTypes(types));
             return op;
         }
 

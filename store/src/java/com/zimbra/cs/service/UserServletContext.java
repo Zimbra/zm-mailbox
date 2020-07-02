@@ -34,7 +34,7 @@ import org.apache.commons.fileupload.FileItemStream;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 
 import com.google.common.base.Charsets;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.ContentType;
@@ -70,6 +70,7 @@ public class UserServletContext {
     public FormatType format;
     public Formatter formatter;
     public boolean cookieAuthHappened;
+    public boolean jwtAuthHappened;
     public boolean basicAuthHappened;
     public boolean qpAuthHappened;
     public String accountPath;
@@ -413,6 +414,10 @@ public class UserServletContext {
         return getAuth().indexOf(UserServlet.AUTH_COOKIE) != -1;
     }
 
+    public boolean jwtAuthAllowed() {
+        return getAuth().indexOf(UserServlet.AUTH_JWT) != -1;
+    }
+
     public boolean isAuthedAcctGuest() {
         return authAccount != null && authAccount instanceof GuestAccount;
     }
@@ -489,6 +494,102 @@ public class UserServletContext {
 
     public String getTypesString() {
         return params.get(UserServlet.QP_TYPES);
+    }
+
+    public String getAction() {
+        return params.get(UserServlet.QP_ACTION);
+    }
+
+    public String getBodypart() {
+        return params.get(UserServlet.QP_BODYPART);
+    }
+
+    public String getColor() {
+        return params.get(UserServlet.QP_COLOR);
+    }
+
+    public String getDate() {
+        return params.get(UserServlet.QP_DATE);
+    }
+
+    public String getExCompNum() {
+        return params.get(UserServlet.QP_EX_COMP_NUM);
+    }
+
+    public String getExInvId() {
+        return params.get(UserServlet.QP_EX_INV_ID);
+    }
+
+    public String getFmt() {
+        return params.get(UserServlet.QP_FMT);
+    }
+
+    public String getFolderIds() {
+        return params.get(UserServlet.QP_FOLDER_IDS);
+    }
+
+    public String getImId() {
+        return params.get(UserServlet.QP_IM_ID);
+    }
+
+    public String getImPart() {
+        return params.get(UserServlet.QP_IM_PART);
+    }
+
+    public String getImXim() {
+        return params.get(UserServlet.QP_IM_XIM);
+    }
+
+    public String getInstDuration() {
+        return params.get(UserServlet.QP_INST_DURATION);
+    }
+
+    public String getInstStartTime() {
+        return params.get(UserServlet.QP_INST_START_TIME);
+    }
+
+    public String getInvCompNum() {
+        return params.get(UserServlet.QP_INV_COMP_NUM);
+    }
+
+    public String getInvId() {
+        return params.get(UserServlet.QP_INV_ID);
+    }
+
+    public String getNotoolbar() {
+        return params.get(UserServlet.QP_NOTOOLBAR);
+    }
+
+    public String getNumdays() {
+        return params.get(UserServlet.QP_NUMDAYS);
+    }
+
+    public String getPstat() {
+        return params.get(UserServlet.QP_PSTAT);
+    }
+
+    public String getRefresh() {
+        return params.get(UserServlet.QP_REFRESH);
+    }
+
+    public String getSkin() {
+        return params.get(UserServlet.QP_SKIN);
+    }
+
+    public String getSq() {
+        return params.get(UserServlet.QP_SQ);
+    }
+
+    public String getTz() {
+        return params.get(UserServlet.QP_TZ);
+    }
+
+    public String getUseInstance() {
+        return params.get(UserServlet.QP_USE_INSTANCE);
+    }
+
+    public String getXim() {
+        return params.get(UserServlet.QP_XIM);
     }
 
     /** Returns <tt>true</tt> if {@link UserServlet#QP_BODY} is not
@@ -731,7 +832,7 @@ public class UserServletContext {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
             .add("account", accountPath)
             .add("item", itemPath)
             .add("format", format)

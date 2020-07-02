@@ -17,17 +17,24 @@
 
 package com.zimbra.soap.mail.type;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.calendar.ParsedDuration;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.DurationInfoInterface;
 import com.zimbra.soap.type.ZmBoolean;
 
+import io.leangen.graphql.annotations.GraphQLIgnore;
+import io.leangen.graphql.annotations.GraphQLInputField;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name=GqlConstants.CLASS_DURATION_INFORMATION, description="Duration information")
 public class DurationInfo implements DurationInfoInterface {
 
     /**
@@ -110,6 +117,7 @@ public class DurationInfo implements DurationInfoInterface {
         return new DurationInfo(parsedDuration);
     }
 
+    @GraphQLIgnore
     private Integer adjustDuration(Integer pdVal) {
         if (pdVal == 0) {
             return null;
@@ -123,47 +131,67 @@ public class DurationInfo implements DurationInfoInterface {
     }
 
     @Override
+    @GraphQLInputField(name=GqlConstants.IS_NEGATIVE, description="Denotes whether the donation is negative")
     public void setDurationNegative(Boolean durationNegative) {
         this.durationNegative = ZmBoolean.fromBool(durationNegative);
     }
 
     @Override
+    @GraphQLInputField(name=GqlConstants.WEEKS, description="Weeks component of the duration")
     public void setWeeks(Integer weeks) { this.weeks = weeks; }
     @Override
+    @GraphQLInputField(name=GqlConstants.DAYS, description="Days component of the duration")
     public void setDays(Integer days) { this.days = days; }
     @Override
+    @GraphQLInputField(name=GqlConstants.HOURS, description="Hours component of the duration")
     public void setHours(Integer hours) { this.hours = hours; }
     @Override
+    @GraphQLInputField(name=GqlConstants.MINUTES, description="Minutes")
     public void setMinutes(Integer minutes) { this.minutes = minutes; }
     @Override
+    @GraphQLInputField(name=GqlConstants.SECONDS, description="Seconds component of the duration")
     public void setSeconds(Integer seconds) { this.seconds = seconds; }
     @Override
+    @GraphQLInputField(name=GqlConstants.RELATED, description="Specifies whether the alarm is related to the start or end\n"
+        + "* START\n "
+        + "* END")
     public void setRelated(String related) { this.related = related; }
     @Override
+    @GraphQLInputField(name=GqlConstants.REPEAT_COUNT, description="Alarm repeat count")
     public void setRepeatCount(Integer repeatCount) {
         this.repeatCount = repeatCount;
     }
 
     @Override
+    @GraphQLQuery(name=GqlConstants.IS_NEGATIVE, description="Denotes whether the donation is negative")
     public Boolean getDurationNegative() { return ZmBoolean.toBool(durationNegative); }
     @Override
+    @GraphQLQuery(name=GqlConstants.WEEKS, description="Weeks component of the duration")
     public Integer getWeeks() { return weeks; }
     @Override
+    @GraphQLQuery(name=GqlConstants.DAYS, description="Days component of the duration")
     public Integer getDays() { return days; }
     @Override
+    @GraphQLQuery(name=GqlConstants.HOURS, description="Hours component of the duration")
     public Integer getHours() { return hours; }
     @Override
+    @GraphQLQuery(name=GqlConstants.MINUTES, description="Minutes")
     public Integer getMinutes() { return minutes; }
     @Override
+    @GraphQLQuery(name=GqlConstants.SECONDS, description="Seconds component of the duration")
     public Integer getSeconds() { return seconds; }
     @Override
+    @GraphQLQuery(name=GqlConstants.RELATED, description="Specifies whether the alarm is related to the start or end\n"
+        + "* START\n "
+        + "* END")
     public String getRelated() { return related; }
     @Override
+    @GraphQLQuery(name=GqlConstants.REPEAT_COUNT, description="Alarm repeat count")
     public Integer getRepeatCount() { return repeatCount; }
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
             .add("durationNegative", durationNegative)
             .add("weeks", weeks)
             .add("days", days)

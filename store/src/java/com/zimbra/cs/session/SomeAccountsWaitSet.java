@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccountServiceException;
@@ -51,9 +52,49 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
     private HashMap<String, WaitSetAccount> mSessions = new HashMap<String, WaitSetAccount>();
 
     /** Constructor */
+    public SomeAccountsWaitSet() {
+        // do nothing
+    }
     SomeAccountsWaitSet(String ownerAccountId, String id, Set<MailItem.Type> defaultInterest) {
         super(ownerAccountId, id, defaultInterest);
         mCurrentSeqNo = 1;
+    }
+
+    /**
+     * @return the mCbSeqNo
+     */
+    public long getmCbSeqNo() {
+        return mCbSeqNo;
+    }
+    /**
+     * @param mCbSeqNo the mCbSeqNo to set
+     */
+    public void setmCbSeqNo(long mCbSeqNo) {
+        this.mCbSeqNo = mCbSeqNo;
+    }
+    /**
+     * @return the mCurrentSeqNo
+     */
+    public long getmCurrentSeqNo() {
+        return mCurrentSeqNo;
+    }
+    /**
+     * @param mCurrentSeqNo the mCurrentSeqNo to set
+     */
+    public void setmCurrentSeqNo(long mCurrentSeqNo) {
+        this.mCurrentSeqNo = mCurrentSeqNo;
+    }
+    /**
+     * @return the mSessions
+     */
+    public HashMap<String, WaitSetAccount> getmSessions() {
+        return mSessions;
+    }
+    /**
+     * @param mSessions the mSessions to set
+     */
+    public void setmSessions(HashMap<String, WaitSetAccount> mSessions) {
+        this.mSessions = mSessions;
     }
 
     @Override
@@ -383,6 +424,7 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
         return false;
     }
 
+    @JsonIgnore
     public long getCurrentSeqNo() {
         return mCurrentSeqNo;
     }

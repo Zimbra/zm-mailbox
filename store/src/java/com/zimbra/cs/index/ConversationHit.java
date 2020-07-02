@@ -22,7 +22,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Conversation;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -99,7 +99,7 @@ public final class ConversationHit extends ZimbraHit {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this).add("item", getId()).addValue(super.toString()).toString();
+        return MoreObjects.toStringHelper(this).add("item", getId()).addValue(super.toString()).toString();
     }
 
     @Override

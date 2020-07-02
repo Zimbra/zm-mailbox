@@ -18,7 +18,9 @@
 package com.zimbra.cs.mailbox;
 
 import java.io.File;
+import org.junit.Ignore;
 import java.io.FileNotFoundException;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.List;
 
@@ -29,12 +31,13 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.util.ByteArrayDataSource;
 
-import org.apache.commons.httpclient.HttpException;
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.methods.DeleteMethod;
+import com.zimbra.cs.pubsub.PubSubService;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.solr.common.SolrException;
 
 import com.google.common.base.Strings;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
@@ -56,11 +59,15 @@ import com.zimbra.cs.ephemeral.InMemoryEphemeralStore;
 import com.zimbra.cs.ephemeral.migrate.InMemoryMigrationInfo;
 import com.zimbra.cs.ephemeral.migrate.MigrationInfo;
 import com.zimbra.cs.index.IndexStore;
-import com.zimbra.cs.index.elasticsearch.ElasticSearchConnector;
-import com.zimbra.cs.index.elasticsearch.ElasticSearchIndex;
+import com.zimbra.cs.index.solr.EmbeddedSolrIndex;
+import com.zimbra.cs.index.solr.MockSolrIndex;
+import com.zimbra.cs.mailbox.cache.ItemCache;
+import com.zimbra.cs.mailbox.cache.LocalItemCache;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.session.LocalSessionDataProvider;
+import com.zimbra.cs.session.SessionDataProvider;
 import com.zimbra.cs.store.MockStoreManager;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.store.http.HttpStoreManagerTest.MockHttpStoreManager;
@@ -68,7 +75,7 @@ import com.zimbra.cs.store.http.MockHttpStore;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.soap.DocumentHandler;
 
-public final class MailboxTestUtil {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public final class MailboxTestUtil {
 
     private MailboxTestUtil() {
     }
@@ -155,9 +162,18 @@ public final class MailboxTestUtil {
         DbPool.startup();
         HSQLDB.createDatabase(zimbraServerDir, OctopusInstance);
 
-        MailboxManager.setInstance(null);
-        IndexStore.setFactory(LC.zimbra_class_index_store_factory.value());
+        IndexStore.registerIndexFactory("mock", MockSolrIndex.Factory.class.getName());
+        IndexStore.registerIndexFactory("embeddedsolr",EmbeddedSolrIndex.Factory.class.getName());
 
+        //use EmbeddedSolrIndex for indexing, because Solr webapp is nor running
+        Provisioning.getInstance().getLocalServer().setIndexURL("embeddedsolr:local");
+        IndexStore.setFactory(EmbeddedSolrIndex.Factory.class.getName());
+        MailboxState.setFactory(new LocalMailboxState.Factory());
+        ItemCache.setFactory(new LocalItemCache.Factory());
+        SessionDataProvider.setFactory(new LocalSessionDataProvider.Factory());
+        NotificationPubSub.setFactory(new LocalPubSub.Factory());
+        MailboxManager.setInstanceUsingLocalMailboxCacheManager();
+        IndexStore.setFactory(LC.zimbra_class_index_store_factory.value());
         LC.zimbra_class_store.setDefault(storeManagerClass.getName());
         StoreManager.getInstance().startup();
     }
@@ -171,11 +187,25 @@ public final class MailboxTestUtil {
         DbPool.startup();
         HSQLDB.createDatabase(zimbraServerDir, false);
 
-        MailboxManager.setInstance(null);
-        IndexStore.setFactory(LC.zimbra_class_index_store_factory.value());
+        IndexStore.registerIndexFactory("mock", MockSolrIndex.Factory.class.getName());
+        IndexStore.registerIndexFactory("embeddedsolr",EmbeddedSolrIndex.Factory.class.getName());
+
+        //use EmbeddedSolrIndex for indexing, because Solr webapp is nor running
+        Provisioning.getInstance().getLocalServer().setIndexURL("embeddedsolr:local");
+        IndexStore.setFactory(EmbeddedSolrIndex.Factory.class.getName());
+        MailboxState.setFactory(new LocalMailboxState.Factory());
+        ItemCache.setFactory(new LocalItemCache.Factory());
+        SessionDataProvider.setFactory(new LocalSessionDataProvider.Factory());
+        NotificationPubSub.setFactory(new LocalPubSub.Factory());
+        PubSubService.setFactory(new com.zimbra.cs.pubsub.MemoryPubSub.Factory());
+        MailboxManager.setInstanceUsingLocalMailboxCacheManager();
 
         LC.zimbra_class_store.setDefault(storeManagerClass.getName());
         StoreManager.getInstance().startup();
+
+        //set server into synchronous indexing mode
+        //Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
+
     }
 
     /**
@@ -183,6 +213,7 @@ public final class MailboxTestUtil {
      */
     public static void clearData() throws Exception {
         clearData("");
+        MailboxManager.getInstance().clearAdditionalQuotaProviders();
     }
 
     /**
@@ -191,11 +222,12 @@ public final class MailboxTestUtil {
      */
     public static void clearData(String zimbraServerDir) throws Exception {
         HSQLDB.clearDatabase(zimbraServerDir);
-        MailboxManager.getInstance().clearCache();
-        MailboxIndex.shutdown();
-        File index = new File("build/test/index");
-        if (index.isDirectory()) {
-            deleteDirContents(index);
+        MailboxManager.getInstancePreferringLocalMailboxCacheManager().cacheManager.clearCache();
+        try {
+            IndexStore.getFactory().destroy();
+            cleanupAllIndexStores();
+        } catch (SolrException ex) {
+            //ignore. We are deleting the folders anyway
         }
         StoreManager sm = StoreManager.getInstance();
         if (sm instanceof MockStoreManager) {
@@ -228,37 +260,49 @@ public final class MailboxTestUtil {
             }
             deleteDirContents(dir, recurCount+1);
         }
-
     }
 
-    public static void cleanupIndexStore(Mailbox mbox) {
-        IndexStore index = mbox.index.getIndexStore();
-        if (index instanceof ElasticSearchIndex) {
-            String key = mbox.getAccountId();
-            String indexUrl = String.format("%s%s/", LC.zimbra_index_elasticsearch_url_base.value(), key);
-            HttpMethod method = new DeleteMethod(indexUrl);
-            try {
-                ElasticSearchConnector connector = new ElasticSearchConnector();
-                int statusCode = connector.executeMethod(method);
-                if (statusCode == HttpStatus.SC_OK) {
-                    boolean ok = connector.getBooleanAtJsonPath(new String[] {"ok"}, false);
-                    boolean acknowledged = connector.getBooleanAtJsonPath(new String[] {"acknowledged"}, false);
-                    if (!ok || !acknowledged) {
-                        ZimbraLog.index.debug("Delete index status ok=%b acknowledged=%b", ok, acknowledged);
-                    }
-                } else {
-                    String error = connector.getStringAtJsonPath(new String[] {"error"});
-                    if (error != null && error.startsWith("IndexMissingException")) {
-                        ZimbraLog.index.debug("Unable to delete index for key=%s.  Index is missing", key);
-                    } else {
-                        ZimbraLog.index.error("Problem deleting index for key=%s error=%s", key, error);
-                    }
-                }
-            } catch (HttpException e) {
-                ZimbraLog.index.error("Problem Deleting index with key=" + key, e);
-            } catch (IOException e) {
-                ZimbraLog.index.error("Problem Deleting index with key=" + key, e);
+    public static void cleanupAllIndexStores() throws Exception {
+        File[] cores = new File("../ZimbraServer/build/test/solr/").listFiles(new FilenameFilter() {
+
+            @Override
+            public boolean accept(File dir, String name) {
+                return (!name.equals("configsets") &&
+                        !name.equals("custom") &&
+                        !name.equals("solr.xml"));
             }
+        });
+        if(cores != null) {
+            for (int i = 0; i < cores.length; i++) {
+                try {
+                    cleanupIndexStore(MailboxManager.getInstance().getMailboxByAccountId(cores[i].getName()));
+                } catch (ServiceException | IOException e) {
+                   Thread.sleep(1000);
+                } finally {
+                    deleteIndexDir(cores[i].getName());
+                }
+            }
+        }
+    }
+
+    private static void deleteIndexDir(String dir) throws IOException, InterruptedException {
+        File f = new File("../ZimbraServer/build/test/solr/", dir);
+        try {
+            FileUtils.deleteDirectory(f);
+        } catch (IOException e) {
+            Thread.sleep(1000);
+            try {
+                FileUtils.cleanDirectory(f);
+                FileUtils.deleteDirectory(f);
+            } catch (IOException e2) {
+                ZimbraLog.test.error("cannot delete SOLR directory " + f.getAbsolutePath());
+            }
+        }
+    }
+
+    public static void cleanupIndexStore(Mailbox mbox) throws ServiceException, IOException {
+        if(mbox != null && mbox.index != null) {
+            mbox.index.deleteIndex();
         }
     }
 
@@ -272,10 +316,6 @@ public final class MailboxTestUtil {
         MailItem item = mbox.getItemById(null, itemId, MailItem.Type.UNKNOWN);
         int flags = item.getFlagBitmask() & ~flag.toBitmask();
         mbox.setTags(null, itemId, item.getType(), flags, null, null);
-    }
-
-    public static void index(Mailbox mbox) throws ServiceException {
-        mbox.index.indexDeferredItems();
     }
 
     public static ParsedMessage generateMessage(String subject) throws Exception {

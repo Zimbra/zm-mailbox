@@ -21,12 +21,19 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.InviteComponentCommonInterface;
 import com.zimbra.soap.type.ZmBoolean;
 
+import io.leangen.graphql.annotations.GraphQLIgnore;
+import io.leangen.graphql.annotations.GraphQLInputField;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name=GqlConstants.CLASS_INVITE_COMPONENT_COMMON, description="Invite component common information")
 public class InviteComponentCommon
 implements InviteComponentCommonInterface {
 
@@ -35,6 +42,7 @@ implements InviteComponentCommonInterface {
      * @zm-api-field-description Method
      */
     @XmlAttribute(name=MailConstants.A_CAL_METHOD /* method */, required=false)
+    @GraphQLQuery(name=GqlConstants.METHOD, description="Method")
     private final String method;
 
     /**
@@ -42,6 +50,7 @@ implements InviteComponentCommonInterface {
      * @zm-api-field-description Component number of the invite
      */
     @XmlAttribute(name=MailConstants.A_CAL_COMPONENT_NUM /* compNum */, required=false)
+    @GraphQLQuery(name=GqlConstants.COMPONENT_NUMBER, description="Component number of the invite")
     private final Integer componentNum;
 
     /**
@@ -49,6 +58,7 @@ implements InviteComponentCommonInterface {
      * @zm-api-field-description RSVP flag.  Set if response requested, unset if no response requested
      */
     @XmlAttribute(name=MailConstants.A_CAL_RSVP /* rsvp */, required=false)
+    @GraphQLQuery(name=GqlConstants.RSVP, description="RSVP flag.  Set if response requested, unset if no response requested")
     private final ZmBoolean rsvp;
 
     /**
@@ -132,6 +142,7 @@ implements InviteComponentCommonInterface {
      * @zm-api-field-description x_uid
      */
     @XmlAttribute(name="x_uid", required=false)
+    @GraphQLQuery(name=GqlConstants.XUID, description="XUID")
     private String xUid;
 
     /**
@@ -169,6 +180,7 @@ implements InviteComponentCommonInterface {
      * @zm-api-field-description Appointment ID (deprecated)
      */
     @XmlAttribute(name=MailConstants.A_APPT_ID_DEPRECATE_ME /* apptId */, required=false)
+    @GraphQLIgnore
     private String deprecatedApptId;
 
     /**
@@ -253,7 +265,10 @@ implements InviteComponentCommonInterface {
         this.rsvp = null;
     }
 
-    public InviteComponentCommon(String method, int componentNum, boolean rsvp) {
+    public InviteComponentCommon(
+        @GraphQLInputField(name=GqlConstants.METHOD) String method,
+        @GraphQLInputField(name=GqlConstants.COMPONENT_NUMBER) int componentNum,
+        @GraphQLInputField(name=GqlConstants.RSVP) Boolean rsvp) {
         this.method = method;
         this.componentNum = componentNum;
         this.rsvp = ZmBoolean.fromBool(rsvp);
@@ -265,127 +280,266 @@ implements InviteComponentCommonInterface {
     }
 
     @Override
+    @GraphQLInputField(name=GqlConstants.PRIORITY, description="Priority (0 - 9; default = 0)")
     public void setPriority(String priority) { this.priority = priority; }
     @Override
+    @GraphQLInputField(name=GqlConstants.NAME, description="Name")
     public void setName(String name) { this.name = name; }
     @Override
+    @GraphQLInputField(name=GqlConstants.LOCATION, description="Location")
     public void setLocation(String location) { this.location = location; }
     @Override
+    @GraphQLInputField(name=GqlConstants.PERCENT_COMPLETE, description="Percent complete for VTODO (0 - 100; default = 0)")
     public void setPercentComplete(String percentComplete) {
         this.percentComplete = percentComplete;
     }
     @Override
+    @GraphQLInputField(name=GqlConstants.COMPLETED, description="VTODO COMPLETED DATE-TIME in format: yyyyMMddThhmmssZ")
     public void setCompleted(String completed) { this.completed = completed; }
     @Override
+    @GraphQLInputField(name=GqlConstants.NO_BLOB, description="Set if invite has no blob data, i.e. all data is in db metadata")
     public void setNoBlob(Boolean noBlob) { this.noBlob = ZmBoolean.fromBool(noBlob); }
     @Override
+    @GraphQLInputField(name=GqlConstants.FREE_BUSY_ACTUAL, description="The actual free-busy status of this invite (ie what the client should display).\n "
+        + "This is synthesized taking into account our Attendee's participationStatus, the Opacity of the appointment, its Status, etc...\n "
+        + "> Valid values:\n "
+        + "* F: Free\n "
+        + "* B: Busy (default)\n "
+        + "* T: busy-Tentative\n "
+        + "* U: OutOfOffice (busy-unavailable)")
     public void setFreeBusyActual(String freeBusyActual) {
         this.freeBusyActual = freeBusyActual;
     }
     @Override
+    @GraphQLInputField(name=GqlConstants.FREE_BUSY, description="Free Busy setting\n "
+        + "> Valid values:\n "
+        + "* F: Free\n "
+        + "* B: Busy (default)\n "
+        + "* T: busy-Tentative\n "
+        + "* U: OutOfOffice (busy-unavailable)")
     public void setFreeBusy(String freeBusy) { this.freeBusy = freeBusy; }
     @Override
+    @GraphQLInputField(name=GqlConstants.TRANSPARENCY, description="Transparency\n "
+        + "> Valid values:\n "
+        + "* O: Opaque\n "
+        + "* T: Transparent")
     public void setTransparency(String transparency) {
         this.transparency = transparency;
     }
     @Override
+    @GraphQLInputField(name=GqlConstants.IS_ORGANIZER, description="Denotes whether owner is the organizer (defaults to false)")
     public void setIsOrganizer(Boolean isOrganizer) { this.isOrganizer = ZmBoolean.fromBool(isOrganizer); }
     @Override
+    @GraphQLInputField(name=GqlConstants.XUID, description="XUID")
     public void setXUid(String xUid) { this.xUid = xUid; }
     @Override
+    @GraphQLInputField(name=GqlConstants.UID, description="UID to use when creating appointment.  Optional: client can request the UID to use")
     public void setUid(String uid) { this.uid = uid; }
     @Override
+    @GraphQLInputField(name=GqlConstants.SEQUENCE, description="Sequence number (default = 0)")
     public void setSequence(Integer sequence) { this.sequence = sequence; }
     @Override
+    @GraphQLInputField(name=GqlConstants.DATE_TIME, description="Date - used for zdsync")
     public void setDateTime(Long dateTime) { this.dateTime = dateTime; }
     @Override
+    @GraphQLInputField(name=GqlConstants.CALENDAR_ITEM_ID, description="Mail item ID of appointment")
     public void setCalItemId(String calItemId) { this.calItemId = calItemId; }
     @Override
+    @GraphQLIgnore
     public void setDeprecatedApptId(String deprecatedApptId) {
         this.deprecatedApptId = deprecatedApptId;
     }
     @Override
+    @GraphQLInputField(name=GqlConstants.CALENDAR_ITEM_FOLDER, description="Folder of appointment")
     public void setCalItemFolder(String calItemFolder) {
         this.calItemFolder = calItemFolder;
     }
     @Override
+    @GraphQLInputField(name=GqlConstants.STATUS, description="Status\n "
+        + "> Valid values:\n "
+        + "* TENT: Tentative\n "
+        + "* CONF: Confirmed\n "
+        + "* CAN: Cancelled\n "
+        + "* COMP: Completed\n "
+        + "* INPR: Inprogress\n "
+        + "* WAITING: Waiting\n "
+        + "* DEFERRED: Deferred\n" 
+        + "where waiting and Deferred are custom values not found in the iCalendar spec.")
     public void setStatus(String status) { this.status = status; }
     @Override
+    @GraphQLInputField(name=GqlConstants.CALENDAR_CLASS, description="Class\n "
+        + "> Valid values:\n "
+        + "* PUB: Public (default)\n "
+        + "* PRI: Private\n "
+        + "* CON: Confidential")
     public void setCalClass(String calClass) { this.calClass = calClass; }
     @Override
+    @GraphQLInputField(name=GqlConstants.URL, description="URL")
     public void setUrl(String url) { this.url = url; }
     @Override
+    @GraphQLInputField(name=GqlConstants.IS_EXCEPTION, description="Denotes whether this invite is an exception")
     public void setIsException(Boolean isException) { this.isException = ZmBoolean.fromBool(isException); }
     @Override
+    @GraphQLInputField(name=GqlConstants.RECURRENCE_ID_Z, description="Recurrence-id string in UTC timezone")
     public void setRecurIdZ(String recurIdZ) { this.recurIdZ = recurIdZ; }
     @Override
+    @GraphQLInputField(name=GqlConstants.IS_ALL_DAY, description="Denotes whether this is an all day appointment")
     public void setIsAllDay(Boolean isAllDay) { this.isAllDay = ZmBoolean.fromBool(isAllDay); }
     @Override
+    @GraphQLInputField(name=GqlConstants.IS_DRAFT, description="Denotes whether this invite has changes that haven't been sent to attendees; for organizer only")
     public void setIsDraft(Boolean isDraft) { this.isDraft = ZmBoolean.fromBool(isDraft); }
     @Override
+    @GraphQLInputField(name=GqlConstants.IS_NEVER_SENT, description="Denotes if attendees were never notified of this invite; for organizer only")
     public void setNeverSent(Boolean neverSent) { this.neverSent = ZmBoolean.fromBool(neverSent); }
     @Override
+    @GraphQLInputField(name=GqlConstants.CHANGES, description="Comma-separated list of changed data in an updated invite\n "
+        + "> Valid values:\n "
+        + "* subject\n "
+        + "* location\n "
+        + "* time (start time, end time, or duration)\n "
+        + "* recurrence")
     public void setChanges(String changes) { this.changes = changes; }
     @Override
     public String getMethod() { return method; }
     @Override
     public int getComponentNum() { return componentNum; }
     @Override
+    @GraphQLQuery(name=GqlConstants.RSVP, description="RSVP flag.  Set if response requested, unset if no response requested")
     public boolean getRsvp() { return ZmBoolean.toBool(rsvp); }
     @Override
+    @GraphQLQuery(name=GqlConstants.PRIORITY, description="Priority (0 - 9; default = 0)")
     public String getPriority() { return priority; }
     @Override
+    @GraphQLQuery(name=GqlConstants.NAME, description="Name")
     public String getName() { return name; }
     @Override
+    @GraphQLQuery(name=GqlConstants.LOCATION, description="Location")
     public String getLocation() { return location; }
     @Override
+    @GraphQLQuery(name=GqlConstants.PERCENT_COMPLETE, description="Percent complete for VTODO (0 - 100; default = 0)")
     public String getPercentComplete() { return percentComplete; }
     @Override
+    @GraphQLQuery(name=GqlConstants.COMPLETED, description="VTODO COMPLETED DATE-TIME in format: yyyyMMddThhmmssZ")    
     public String getCompleted() { return completed; }
     @Override
+    @GraphQLQuery(name=GqlConstants.NO_BLOB, description="Set if invite has no blob data, i.e. all data is in db metadata")
     public Boolean getNoBlob() { return ZmBoolean.toBool(noBlob); }
     @Override
+    @GraphQLQuery(name=GqlConstants.FREE_BUSY_ACTUAL, description="The actual free-busy status of this invite (ie what the client should display).\n "
+        + "This is synthesized taking into account our Attendee's participationStatus, the Opacity of the appointment, its Status, etc...\n "
+        + "> Valid values:\n "
+        + "* F: Free\n "
+        + "* B: Busy (default)\n "
+        + "* T: busy-Tentative\n "
+        + "* U: OutOfOffice (busy-unavailable)")
     public String getFreeBusyActual() { return freeBusyActual; }
     @Override
+    @GraphQLQuery(name=GqlConstants.FREE_BUSY, description="Free Busy setting\n "
+        + "> Valid values:\n "
+        + "* F: Free\n "
+        + "* B: Busy (default)\n "
+        + "* T: busy-Tentative\n "
+        + "* U: OutOfOffice (busy-unavailable)")
     public String getFreeBusy() { return freeBusy; }
     @Override
+    @GraphQLQuery(name=GqlConstants.TRANSPARENCY, description="Transparency\n "
+        + "> Valid values:\n "
+        + "* O: Opaque\n "
+        + "* T: Transparent")
     public String getTransparency() { return transparency; }
     @Override
+    @GraphQLQuery(name=GqlConstants.IS_ORGANIZER, description="Denotes whether owner is the organizer (defaults to false)")
     public Boolean getIsOrganizer() { return ZmBoolean.toBool(isOrganizer); }
     @Override
+    @GraphQLQuery(name=GqlConstants.XUID, description="XUID")
     public String getXUid() { return xUid; }
     @Override
+    @GraphQLQuery(name=GqlConstants.UID, description="UID to use when creating appointment.  Optional: client can request the UID to use")
     public String getUid() { return uid; }
     @Override
+    @GraphQLQuery(name=GqlConstants.SEQUENCE, description="Sequence number (default = 0)")
     public Integer getSequence() { return sequence; }
     @Override
+    @GraphQLQuery(name=GqlConstants.DATE_TIME, description="Date - used for zdsync")
     public Long getDateTime() { return dateTime; }
     @Override
+    @GraphQLQuery(name=GqlConstants.CALENDAR_ITEM_ID, description="Mail item ID of appointment")
     public String getCalItemId() { return calItemId; }
     @Override
+    @GraphQLIgnore
     public String getDeprecatedApptId() { return deprecatedApptId; }
     @Override
+    @GraphQLQuery(name=GqlConstants.CALENDAR_ITEM_FOLDER, description="Folder of appointment")
     public String getCalItemFolder() { return calItemFolder; }
     @Override
+    @GraphQLQuery(name=GqlConstants.STATUS, description="Status\n "
+        + "> Valid values:\n "
+        + "* TENT: Tentative\n "
+        + "* CONF: Confirmed\n "
+        + "* CAN: Cancelled\n "
+        + "* COMP: Completed\n "
+        + "* INPR: Inprogress\n "
+        + "* WAITING: Waiting\n "
+        + "* DEFERRED: Deferred\n" 
+        + "where waiting and Deferred are custom values not found in the iCalendar spec.")
     public String getStatus() { return status; }
     @Override
+    @GraphQLQuery(name=GqlConstants.CALENDAR_CLASS, description="Class\n "
+        + "> Valid values:\n "
+        + "* PUB: Public (default)\n "
+        + "* PRI: Private\n "
+        + "* CON: Confidential")
     public String getCalClass() { return calClass; }
     @Override
+    @GraphQLQuery(name=GqlConstants.URL, description="URL")
     public String getUrl() { return url; }
     @Override
+    @GraphQLQuery(name=GqlConstants.IS_EXCEPTION, description="Denotes whether this invite is an exception")
     public Boolean getIsException() { return ZmBoolean.toBool(isException); }
     @Override
+    @GraphQLQuery(name=GqlConstants.RECURRENCE_ID_Z, description="Recurrence-id string in UTC timezone")
     public String getRecurIdZ() { return recurIdZ; }
     @Override
+    @GraphQLQuery(name=GqlConstants.IS_ALL_DAY, description="Denotes whether this is an all day appointment")
     public Boolean getIsAllDay() { return ZmBoolean.toBool(isAllDay); }
     @Override
+    @GraphQLQuery(name=GqlConstants.IS_DRAFT, description="Denotes whether this invite has changes that haven't been sent to attendees; for organizer only")
     public Boolean getIsDraft() { return ZmBoolean.toBool(isDraft); }
     @Override
+    @GraphQLQuery(name=GqlConstants.IS_NEVER_SENT, description="Denotes if attendees were never notified of this invite; for organizer only")
     public Boolean getNeverSent() { return ZmBoolean.toBool(neverSent); }
     @Override
+    @GraphQLQuery(name=GqlConstants.CHANGES, description="Comma-separated list of changed data in an updated invite\n "
+        + "> Valid values:\n "
+        + "* subject\n "
+        + "* location\n "
+        + "* time (start time, end time, or duration)\n "
+        + "* recurrence")
     public String getChanges() { return changes; }
 
-    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+    // iCalendar PRIORITY to hi/med/low mapping according to RFC5545 Section 3.8.1.9
+    public boolean isHighPriority() {
+        if (priority != null) {
+            int prio = 0;
+            try {
+                prio = Integer.parseInt(priority);
+            } catch (NumberFormatException e) {}
+            return prio >= 1 && prio <= 4;
+        }
+        return false;
+    }
+    public boolean isLowPriority() {
+        if (priority != null) {
+            int prio = 0;
+            try {
+                prio = Integer.parseInt(priority);
+            } catch (NumberFormatException e) {}
+            return prio >= 6 && prio <= 9;
+        }
+        return false;
+    }
+
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         return helper
             .add("method", method)
             .add("componentNum", componentNum)
@@ -420,6 +574,6 @@ implements InviteComponentCommonInterface {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this)).toString();
+        return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
     }
 }

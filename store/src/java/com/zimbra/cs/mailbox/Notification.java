@@ -52,6 +52,7 @@ import com.zimbra.common.zmime.ZMimeBodyPart;
 import com.zimbra.common.zmime.ZMimeMessage;
 import com.zimbra.common.zmime.ZMimeMultipart;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbOutOfOffice;
 import com.zimbra.cs.db.DbPool;
@@ -285,7 +286,7 @@ public class Notification implements LmtpCallback {
 
         // Send the message
         try {
-            SMTPMessage out = new SMTPMessage(JMSession.getSmtpSession());
+            SMTPMessage out = AccountUtil.getSmtpMessageObj(account);
 
             // Set From and Reply-To.
             out.setFrom(AccountUtil.getFromAddress(account));
@@ -403,7 +404,7 @@ public class Notification implements LmtpCallback {
                 try {
                     return !mbox.index.existsInContacts(
                             Collections.singleton(new com.zimbra.common.mime.InternetAddress(senderAddr)));
-                } catch (IOException e) {
+                } catch (IOException | ServiceException e) {
                     ZimbraLog.mailbox.error("Failed to lookup contacts", e);
                     return true;
                 }
@@ -411,7 +412,7 @@ public class Notification implements LmtpCallback {
                 try {
                     return mbox.index.existsInContacts(Collections
                         .singleton(new com.zimbra.common.mime.InternetAddress(senderAddr)));
-                } catch (IOException e) {
+                } catch (IOException | ServiceException e) {
                     ZimbraLog.mailbox.error("Failed to lookup contacts", e);
                     return true;
                 }
@@ -507,7 +508,8 @@ public class Notification implements LmtpCallback {
 
         // Send the message
         try {
-            Session smtpSession = JMSession.getSmtpSession();
+            Domain domain = Provisioning.getInstance().getDomain(account);
+            Session smtpSession = JMSession.getSmtpSession(domain);
 
             // Assemble message components
             MimeMessage out = assembleNotificationMessage(account, msg, rcpt, destination, smtpSession);
@@ -534,7 +536,7 @@ public class Notification implements LmtpCallback {
     }
 
     private MimeMessage assembleNotificationMessage(Account account, Message msg, String rcpt,
-			String destination, Session smtpSession) 
+			String destination, Session smtpSession)
 		throws MessagingException {
 
     	String recipientDomain = getDomain(rcpt);
@@ -649,7 +651,7 @@ public class Notification implements LmtpCallback {
                         attached.saveChanges();
                     }
 
-                    SMTPMessage out = new SMTPMessage(JMSession.getSmtpSession());
+                    SMTPMessage out = AccountUtil.getSmtpMessageObj(account);
                     out.setHeader("Auto-Submitted", "auto-replied (zimbra; intercept)");
                     InternetAddress address = new JavaMailInternetAddress(from);
                     out.setFrom(address);

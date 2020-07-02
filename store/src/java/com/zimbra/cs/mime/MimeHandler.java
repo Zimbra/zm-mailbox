@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -11,7 +11,7 @@
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
  * You should have received a copy of the GNU General Public License along with this program.
- * If not, see <https://www.gnu.org/licenses/>.
+ * If not, see <http://www.gnu.org/licenses/>.
  * ***** END LICENSE BLOCK *****
  */
 
@@ -28,6 +28,7 @@ import javax.activation.DataSource;
 import javax.mail.internet.MimeUtility;
 
 import org.apache.lucene.document.Document;
+import org.apache.solr.common.SolrInputDocument;
 
 import com.google.common.base.Strings;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
@@ -39,7 +40,6 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.convert.AttachmentInfo;
 import com.zimbra.cs.convert.ConversionException;
 import com.zimbra.cs.index.IndexDocument;
-import com.zimbra.cs.index.analysis.MimeTypeTokenStream;
 import com.zimbra.cs.object.MatchedObject;
 import com.zimbra.cs.object.ObjectHandler;
 import com.zimbra.cs.object.ObjectHandlerException;
@@ -170,7 +170,7 @@ public abstract class MimeHandler {
      * Adds the indexed fields to the Lucene document for search. Each handler determines
      * a set of fields that it deems important for the type of documents it handles.
      */
-    protected abstract void addFields(Document doc) throws MimeHandlerException;
+    protected abstract void addFields(SolrInputDocument doc) throws MimeHandlerException;
 
     /**
      * Gets the text content of the document.
@@ -254,17 +254,18 @@ public abstract class MimeHandler {
     /**
      * Returns a Lucene document to index this content.
      *
-     * @return Lucene document
+     * @return Solr document
      * @throws MimeHandlerException if a MIME parser error occurred
      * @throws ObjectHandlerException if a Zimlet error occurred
      * @throws ServiceException if other error occurred
      */
-    public final Document getDocument()
+    public final SolrInputDocument getDocument()
         throws MimeHandlerException, ObjectHandlerException, ServiceException {
 
-        IndexDocument doc = new IndexDocument(new Document());
-        doc.addMimeType(new MimeTypeTokenStream(getContentType()));
-        addFields(doc.toDocument());
+        IndexDocument doc = new IndexDocument();
+        doc.addMimeType(getContentType());
+
+        addFields(doc.toInputDocument());
         String content = getContent();
         doc.addContent(content);
         getObjects(content, doc);
@@ -281,7 +282,7 @@ public abstract class MimeHandler {
                 doc.addFilename(name);
             }
         }
-        return doc.toDocument();
+        return doc.toInputDocument();
     }
 
     public static void getObjects(String text, IndexDocument doc)

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2018 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -16,10 +16,18 @@
  */
 package com.zimbra.cs.account;
 
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.net.URLEncoder;
+import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -28,33 +36,45 @@ import java.util.Set;
 
 import javax.mail.internet.InternetAddress;
 
+import org.apache.http.HttpException;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.HttpClientBuilder;
+
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.UCServiceBy;
 import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.account.ZAttrProvisioning;
+import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ExceptionToString;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.gal.GalOp;
+import com.zimbra.cs.account.ldap.entry.LdapDistributionList;
 import com.zimbra.cs.account.names.NameUtil;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.gal.GalSearchParams;
+import com.zimbra.cs.httpclient.HttpProxyUtil;
 import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.Zimbra;
+import com.zimbra.soap.account.type.AddressListInfo;
+import com.zimbra.soap.account.type.HABGroupMember;
 import com.zimbra.soap.admin.type.CacheEntryType;
 import com.zimbra.soap.admin.type.CmdRightsInfo;
 import com.zimbra.soap.admin.type.CountObjectsType;
@@ -236,6 +256,13 @@ public abstract class Provisioning extends ZAttrProvisioning {
         OFF
     }
 
+    public static enum AuthMode {
+        PASSWORD,
+        RECOVERY_CODE
+    }
+
+    public static final String AUTH_MODE_KEY = "authMode";
+
     /**
      * return regular accounts from searchAccounts/searchDirectory;
      * calendar resource accounts are excluded
@@ -269,6 +296,9 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     /** do not fixup return attrs for searchObject, onlt used from LdapUpgrade */
     public static final int SO_NO_FIXUP_RETURNATTRS = 0x400;
+
+    /** return distribution lists from searchAccounts/searchDirectory */
+    public static final int SD_HAB_FLAG = 0x12;
 
     /**
      *  do not set account defaults in makeAccount
@@ -790,7 +820,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this)
+            return MoreObjects.toStringHelper(this)
                         .add("mId", mId)
                         .add("mIsAdminGroup", mIsAdminGroup)
                         .add("mIsDynamicGroup", mIsDynamicGroup)
@@ -880,7 +910,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this)
+            return MoreObjects.toStringHelper(this)
                         .add("mMemberOf", mMemberOf)
                         .add("mGroupIds", mGroupIds)
                         .toString();
@@ -1489,15 +1519,145 @@ public abstract class Provisioning extends ZAttrProvisioning {
     }
 
     public static boolean onLocalServer(Account account, Reasons reasons) throws ServiceException {
-        String target = account.getAttr(Provisioning.A_zimbraMailHost);
-        String localhost = getInstance().getLocalServer().getAttr(Provisioning.A_zimbraServiceHostname);
-        boolean isLocal = (target != null && target.equalsIgnoreCase(localhost));
-        boolean onLocalSvr =  (isLocal || isAlwaysOn(account));
-        if (!onLocalSvr && reasons != null) {
-            reasons.addReason(String.format("onLocalSvr=%b isLocal=%b target=%s localhost=%s account=%s",
-                    onLocalSvr, isLocal, target, localhost, account.getName()));
+        String targetIp = Provisioning.affinityServer(account);
+        String localIp = getLocalIp();
+        boolean isLocal = ipIsLocal(targetIp, localIp);
+        if (!isLocal && reasons != null) {
+            reasons.addReason(String.format("isLocal=%b target=%s localhost=%s account=%s", isLocal, targetIp, localIp,
+                    account.getName()));
         }
-        return onLocalSvr;
+        return isLocal;
+    }
+
+    private static boolean ipIsLocal(String targetIp, String localIp) {
+        return targetIp != null && targetIp.equalsIgnoreCase(localIp);
+    }
+
+    public static boolean onLocalServer(String accountId) throws ServiceException {
+        String targetIp = Provisioning.affinityServer("zimbraId", accountId);
+        return ipIsLocal(targetIp, getLocalIp());
+    }
+
+    public static String getLocalIp() throws ServiceException {
+        String localIp = null;
+        try {
+            localIp = InetAddress.getLocalHost().getHostAddress().trim();
+        } catch (UnknownHostException e) {
+            ZimbraLog.misc.warn("Unknown Host Exception", e);
+            throw ServiceException.NOT_FOUND(" Unknown Host Exception");
+        }
+        return localIp;
+    }
+
+    /**
+     * @param key a search key acceptable to the MLS service.  Currently "email" or "zimbraId".
+     * @param value the value to be searched by key
+     * @return  The IP address of server currently assigned to the given account for processing requests
+     */
+    private static String affinityServer(String key, String value) throws ServiceException {
+        HttpClientBuilder clientBuilder = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+        HttpProxyUtil.configureProxy(clientBuilder);
+        String url = null;
+        try {
+            url = String.format("https://zmc-mls:7072/search?%s=%s",
+                    URLEncoder.encode(key, StandardCharsets.UTF_8.toString()),
+                    URLEncoder.encode(value, StandardCharsets.UTF_8.toString()));
+            HttpGet method = new HttpGet(url);
+            HttpResponse response =  HttpClientUtil.executeMethod(clientBuilder.build(), method);
+            byte[] buf = ByteUtil.getContent(response.getEntity().getContent(), 0);
+            return new String(buf, "UTF-8");
+        } catch (IOException | HttpException ex) {
+            ZimbraLog.misc.info("Problem getting Affinity server for %s=%s", key, value, ex);
+        }
+        return null;
+    }
+
+    /**
+     * @param emailAddress The email address for an account
+     * @return  The IP address of server currently assigned to the given account for processing requests
+     */
+    public static String affinityServerForEmail(String emailAddress) throws ServiceException {
+        return affinityServer("email", emailAddress);
+    }
+
+    /**
+     * @param zimbraId The zimbra ID for an account
+     * @return  The IP address of server currently assigned to the given account for processing requests
+     */
+    public static String affinityServerForZimbraId(String zimbraId) throws ServiceException {
+        return affinityServer("zimbraId", zimbraId);
+    }
+
+    /** @return  The IP address of server currently assigned to the given account for processing requests */
+    public static String affinityServer(Account account) throws ServiceException {
+        if (account == null) {
+            return null;
+        }
+        return affinityServer("email", account.getName());
+    }
+
+    /** @return true if this server is associated with the given IP address */
+    public static boolean isMyIpAddress(String ipAddress) {
+        if (ipAddress == null) {
+            ZimbraLog.misc.info("Problem - asked if null IP address is mine!  Returning false");
+            return false;
+        }
+        try {
+            Enumeration e = NetworkInterface.getNetworkInterfaces();
+            while(e.hasMoreElements())
+            {
+                NetworkInterface n = (NetworkInterface) e.nextElement();
+                Enumeration ee = n.getInetAddresses();
+                while (ee.hasMoreElements())
+                {
+                    InetAddress i = (InetAddress) ee.nextElement();
+                    if (ipAddress.equals(i.getHostAddress())) {
+                        return true;
+                    }
+                }
+            }
+        } catch (SocketException ex) {
+            ZimbraLog.misc.info("Problem checking if IP address '%s' belongs to me", ipAddress, ex);
+        }
+        return false;
+    }
+
+    public Account getAccount(Provisioning prov, AccountBy accountBy, String value, AuthToken authToken)
+    		throws ServiceException {
+    	Account acct = null;
+
+    	// first try getting it from master if not in cache
+    	try {
+    		acct = prov.get(accountBy, value, true, authToken);
+    	} catch (ServiceException e) {
+    		// try the replica
+    		acct = prov.get(accountBy, value, false, authToken);
+    	}
+    	return acct;
+    }
+
+    /** @return the IP address of the pod */
+    public static String myIpAddress() {
+    	String podIp = null;
+    	try {
+    		Enumeration<NetworkInterface> e = NetworkInterface.getNetworkInterfaces();
+    		while(e.hasMoreElements())
+    		{
+    			NetworkInterface n = e.nextElement();
+    			Enumeration<InetAddress> ee = n.getInetAddresses();
+    			while (ee.hasMoreElements())
+    			{
+    				InetAddress i = ee.nextElement();
+    				podIp = i.getHostAddress();
+    				if (podIp != null) {
+    					break;
+    				}
+    			}
+    		}
+    	} catch (SocketException ex) {
+    		ZimbraLog.misc.info("Problem determining the IP address", ex);
+    	}
+    	return podIp;
     }
 
     public static boolean canUseLocalIMAP(Account account) throws ServiceException {
@@ -1575,9 +1735,9 @@ public abstract class Provisioning extends ZAttrProvisioning {
         return isAlwaysOn;
     }
 
-    public static boolean onLocalServer(Group group) throws ServiceException {
-        String target    = group.getAttr(Provisioning.A_zimbraMailHost);
-        String localhost = getInstance().getLocalServer().getAttr(Provisioning.A_zimbraServiceHostname);
+    public static boolean onLocalServer(Group group) throws ServiceException {      
+        String target = Provisioning.affinityServerForZimbraId(group.getId());     
+        String localhost = getLocalIp();
         return (target != null && target.equalsIgnoreCase(localhost));
     }
 
@@ -1596,7 +1756,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public abstract List<Server> getAllServers(String service, String clusterId) throws ServiceException;
 
     public List<Server> getAllWebClientServers() throws ServiceException {
-        List<Server> mailboxservers = getAllServers(Provisioning.SERVICE_MAILBOX);
+        List<Server> mailboxservers = getAllServers(Provisioning.SERVICE_MAILBOX); 
         List<Server> webclientservers = getAllServers(Provisioning.SERVICE_WEBCLIENT);
 
         for (Server server : mailboxservers) {
@@ -1791,6 +1951,10 @@ public abstract class Provisioning extends ZAttrProvisioning {
         throw ServiceException.UNSUPPORTED();
     }
 
+    public void deleteGroup(String zimbraId, boolean cascadeDelete) throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
+
     public void renameGroup(String zimbraId, String newName) throws ServiceException {
         throw ServiceException.UNSUPPORTED();
     }
@@ -1799,7 +1963,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
         throw ServiceException.UNSUPPORTED();
     }
 
-    public Group getGroup(Key.DistributionListBy keyType, String key, boolean loadFromMaster)
+    public Group getGroup(Key.DistributionListBy keyType, String key, boolean loadFromMaster, boolean basicAttrsOnly)
     throws ServiceException {
         throw ServiceException.UNSUPPORTED();
     }
@@ -1837,6 +2001,10 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     public String[] getGroupMembers(Group group) throws ServiceException {
         return group.getAllMembers();
+    }
+
+    public List<HABGroupMember> getHABGroupMembers(Group group) throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
     }
 
     /**
@@ -2353,6 +2521,11 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     public abstract void deleteXMPPComponent(XMPPComponent comp) throws ServiceException;
 
+    public abstract Set<String> createHabOrgUnit(Domain domain, String habOrgUnitName) throws ServiceException;
+    public abstract Set<String> listHabOrgUnit(Domain domain) throws ServiceException;
+    public abstract Set<String> renameHabOrgUnit(Domain domain, String habOrgUnitName, String newHabOrgUnitName) throws ServiceException;
+    public abstract void deleteHabOrgUnit(Domain domain, String habOrgUnitName) throws ServiceException;
+
     public static class RightsDoc {
         private final String mCmd;
         private final List<String> mRights;
@@ -2552,6 +2725,10 @@ public abstract class Provisioning extends ZAttrProvisioning {
         return false;
     }
 
+    public boolean isOfflineProxyServer(String podIp) {
+        return false;
+    }
+
     public boolean allowsPingRemote() {
         return true;
     }
@@ -2684,6 +2861,27 @@ public abstract class Provisioning extends ZAttrProvisioning {
         throw ServiceException.UNSUPPORTED();
     }
 
+    public AddressList getAddressList(String id) throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
+
+    public AddressListInfo getAddressListByName(String name, Domain domain) throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
+
+
+    public List<AddressListInfo> getAllAddressLists(Domain domain, boolean activeOnly) throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
+
+    public void deleteAddressList(String addressListId) throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
+
+    public void modifyAddressList(AddressList addressList, String name, Map<String, String> attrs)
+        throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
 
     //
     //
@@ -2706,5 +2904,38 @@ public abstract class Provisioning extends ZAttrProvisioning {
         for (ProvisioningValidator validator : validators) {
             validator.refresh();
         }
+    }
+
+    /**
+     * @param domain
+     * @param rootDn
+     * @return
+     */
+    public List<LdapDistributionList> getAllHabGroups(Domain domain, String rootDn) throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
+
+    /**
+     * @param oldDn
+     * @param parentDn
+     */
+    public void changeHABGroupParent(String oldDn, String parentDn) throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
+
+   /**
+    *
+    * @param group Dynamic group
+    * @param dlsToCheck list of dl to be checked for membership of dynamic group
+    * @return true if one of the dl is a member of dynamic group
+    * @throws ServiceException
+    */
+    public boolean  dlIsInDynamicHABGroup(DynamicGroup group, List<String> dlsToCheck)
+        throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
+    // address list
+    public String createAddressList(Domain domain, String name, String desc, Map<String, Object> attrs) throws ServiceException {
+        throw new UnsupportedOperationException("Currently address list is not supported.");
     }
 }

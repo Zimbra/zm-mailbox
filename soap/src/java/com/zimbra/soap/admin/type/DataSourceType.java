@@ -26,7 +26,7 @@ import com.zimbra.common.service.ServiceException;
 @XmlEnum
 public enum DataSourceType {
     // case must match protocol
-    pop3, imap, caldav, contacts, yab, rss, cal, gal, xsync, tagmap, unknown;
+    pop3, imap, caldav, contacts, yab, rss, cal, gal, xsync, tagmap, unknown, oauth2contact, oauth2calendar, oauth2caldav, oauth2noop, oauth2imap;
 
     public static DataSourceType fromString(String s) throws ServiceException {
         try {

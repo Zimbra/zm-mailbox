@@ -105,9 +105,7 @@ import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.lucene.analysis.Analyzer;
-
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.zimbra.common.service.ServiceException;
@@ -216,7 +214,6 @@ public final class QueryParser {
     private static Pattern FIELD_REGEX = Pattern.compile("field\\[(.+)\\]:|#(.+):", Pattern.CASE_INSENSITIVE);
 
     private final Mailbox mailbox;
-    private final Analyzer analyzer;
     private TimeZone timezone = TimeZone.getTimeZone("UTC");
     private Locale locale = Locale.ENGLISH;
     private int defaultField = CONTENT;
@@ -228,11 +225,9 @@ public final class QueryParser {
      * Constructs a new {@link QueryParser}.
      *
      * @param mbox mailbox to search
-     * @param analyzer Lucene analyzer
      */
-    public QueryParser(Mailbox mbox, Analyzer analyzer) {
+    public QueryParser(Mailbox mbox) {
         this.mailbox = mbox;
-        this.analyzer = analyzer;
     }
 
     /**
@@ -539,14 +534,14 @@ public final class QueryParser {
         switch (field.kind) {
             case HAS:
                 if (text.equalsIgnoreCase("attachment")) {
-                    return AttachmentQuery.createQuery(LuceneFields.L_ATTACHMENT_ANY /* "any" */);
+                    return AttachmentQuery.createQuery(LuceneFields.L_ATTACHMENT_ANY /* "any" */, types);
                 } else {
-                    return new HasQuery(text);
+                    return new HasQuery(text, types);
                 }
             case ATTACHMENT:
-                return AttachmentQuery.createQuery(text);
+                return AttachmentQuery.createQuery(text, types);
             case TYPE:
-                return TypeQuery.createQuery(text);
+                return TypeQuery.createQuery(text, types);
             case ITEM:
                 return ItemQuery.create(mailbox, text);
             case UNDERID:
@@ -589,7 +584,7 @@ public final class QueryParser {
                 }
             case IS:
                 try {
-                    return BuiltInQuery.getQuery(text.toLowerCase(), mailbox, analyzer);
+                    return BuiltInQuery.getQuery(text.toLowerCase(), mailbox);
                 } catch (IllegalArgumentException e) {
                     throw exception("UNKNOWN_TEXT_AFTER_IS", term);
                 }
@@ -625,47 +620,47 @@ public final class QueryParser {
                 if (Strings.isNullOrEmpty(text)) {
                     throw exception("MISSING_TEXT_AFTER_TOFROM", term);
                 }
-                return AddrQuery.create(analyzer, EnumSet.of(Address.TO, Address.FROM), text);
+                return AddrQuery.create(EnumSet.of(Address.TO, Address.FROM), text, isPhraseQuery(term), types);
             case TOCC:
                 if (Strings.isNullOrEmpty(text)) {
                     throw exception("MISSING_TEXT_AFTER_TOCC", term);
                 }
-                return AddrQuery.create(analyzer, EnumSet.of(Address.TO, Address.CC), text);
+                return AddrQuery.create(EnumSet.of(Address.TO, Address.CC), text, isPhraseQuery(term), types);
             case FROMCC:
                 if (Strings.isNullOrEmpty(text)) {
                     throw exception("MISSING_TEXT_AFTER_FROMCC", term);
                 }
-                return AddrQuery.create(analyzer, EnumSet.of(Address.FROM, Address.CC), text);
+                return AddrQuery.create(EnumSet.of(Address.FROM, Address.CC), text, isPhraseQuery(term), types);
             case TOFROMCC:
                 if (Strings.isNullOrEmpty(text)) {
                     throw exception("MISSING_TEXT_AFTER_TOFROMCC", term);
                 }
-                return AddrQuery.create(analyzer, EnumSet.of(Address.TO, Address.FROM, Address.CC), text);
+                return AddrQuery.create(EnumSet.of(Address.TO, Address.FROM, Address.CC), text, isPhraseQuery(term), types);
             case FROM:
                 if (Strings.isNullOrEmpty(text)) {
                     throw exception("MISSING_TEXT_AFTER_FROM", term);
                 }
-                return SenderQuery.create(analyzer, text);
+                return SenderQuery.create(text, isPhraseQuery(term), types);
             case TO:
                 if (Strings.isNullOrEmpty(text)) {
                     throw exception("MISSING_TEXT_AFTER_TO", term);
                 }
-                return createAddrDomainQuery(LuceneFields.L_H_TO, text);
+                return createAddrDomainQuery(LuceneFields.L_H_TO, text, isPhraseQuery(term));
             case CC:
                 if (Strings.isNullOrEmpty(text)) {
                     throw exception("MISSING_TEXT_AFTER_CC", term);
                 }
-                return createAddrDomainQuery(LuceneFields.L_H_CC, text);
+                return createAddrDomainQuery(LuceneFields.L_H_CC, text, isPhraseQuery(term));
             case ENVTO:
                 if (Strings.isNullOrEmpty(text)) {
                     throw exception("MISSING_TEXT_AFTER_ENVTO", term);
                 }
-                return createAddrDomainQuery(LuceneFields.L_H_X_ENV_TO, text);
+                return createAddrDomainQuery(LuceneFields.L_H_X_ENV_TO, text, isPhraseQuery(term));
             case ENVFROM:
                 if (Strings.isNullOrEmpty(text)) {
                     throw exception("MISSING_TEXT_AFTER_ENVFROM", term);
                 }
-                return createAddrDomainQuery(LuceneFields.L_H_X_ENV_FROM, text);
+                return createAddrDomainQuery(LuceneFields.L_H_X_ENV_FROM, text, isPhraseQuery(term));
             case MODSEQ:
                 return new ModseqQuery(text);
             case SIZE:
@@ -675,24 +670,28 @@ public final class QueryParser {
             case SMALLER:
                 return createSizeQuery(SizeQuery.Type.LT, term, text);
             case SUBJECT:
-                return SubjectQuery.create(analyzer, text);
+                return SubjectQuery.create(text, isPhraseQuery(term), types);
             case FIELD:
                 return createFieldQuery(field.image, term, text);
             case CONTACT:
-                return new ContactQuery(text);
+                return new ContactQuery(text, isPhraseQuery(term));
             case CONTENT:
                 if (types.contains(MailItem.Type.CONTACT)) { // combine with CONTACT query
                     List<Query> clauses = new ArrayList<Query>(3);
-                    clauses.add(new ContactQuery(text));
+                    clauses.add(new ContactQuery(text, isPhraseQuery(term)));
                     clauses.add(new ConjQuery(ConjQuery.Conjunction.OR));
-                    clauses.add(createContentQuery(text));
+                    clauses.add(createContentQuery(text, isPhraseQuery(term)));
                     return new SubQuery(clauses);
                 } else {
-                    return createContentQuery(text);
+                    return createContentQuery(text, isPhraseQuery(term));
                 }
             default:
-                return new TextQuery(analyzer, JJ2LUCENE.get(field.kind), text);
+                return new TextQuery(JJ2LUCENE.get(field.kind), text, isPhraseQuery(term), types);
         }
+    }
+
+    private boolean isPhraseQuery(Token token) {
+        return token.kind == QUOTED_TERM;
     }
 
     private SizeQuery createSizeQuery(SizeQuery.Type type, Token term, String text) throws ParseException {
@@ -713,33 +712,33 @@ public final class QueryParser {
         return query;
     }
 
-    private Query createAddrDomainQuery(String field, String term) {
+    private Query createAddrDomainQuery(String field, String term, boolean isPhraseQuery) {
         if (term.startsWith("@")) {
-            return new DomainQuery(field, term);
+            return new DomainQuery(field, term, types);
         } else {
-            return new TextQuery(analyzer, field, term);
+            return new TextQuery(field, term, isPhraseQuery, types);
         }
     }
 
     private Query createFieldQuery(String field, Token term, String text) throws ServiceException, ParseException {
         Matcher matcher = FIELD_REGEX.matcher(field);
         if (matcher.matches()) {
-            String name = Objects.firstNonNull(matcher.group(1), matcher.group(2));
-            return FieldQuery.create(mailbox, name, text);
+            String name = MoreObjects.firstNonNull(matcher.group(1), matcher.group(2));
+            return FieldQuery.create(mailbox, name, text, isPhraseQuery(term), types);
         } else {
             throw exception("INVALID_FIELD_FORMAT", term);
         }
     }
 
-    private Query createContentQuery(String text) {
-        return new TextQuery(analyzer, LuceneFields.L_CONTENT, text);
+    private Query createContentQuery(String text, boolean phraseQuery) {
+        return new TextQuery(LuceneFields.L_CONTENT, text, phraseQuery, types);
     }
 
     private Query createQuickQuery(String text) {
         if (types.size() == 1 && types.contains(MailItem.Type.CONTACT)) {
             return new ContactQuery(text);
         } else {
-            TextQuery query = new TextQuery(analyzer, LuceneFields.L_CONTENT, text);
+            TextQuery query = new TextQuery(LuceneFields.L_CONTENT, text, types);
             query.setQuick(true);
             return query;
         }

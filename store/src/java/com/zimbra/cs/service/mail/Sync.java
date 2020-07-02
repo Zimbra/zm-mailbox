@@ -26,6 +26,7 @@ import java.util.Set;
 
 import com.google.common.collect.Multimap;
 import com.zimbra.common.localconfig.DebugConfig;
+import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -46,7 +47,6 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.service.util.SyncToken;
 import com.zimbra.cs.session.PendingModifications.Change;
-import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.mail.message.SyncRequest;
 
@@ -74,7 +74,7 @@ public class Sync extends MailDocumentHandler {
         // the sync token is of the form "last fully synced change id" (e.g. "32425") or
         // last fully synced change id-last item synced in next change id" (e.g. "32425-99213") or
         // last fully synced change id-last item synced in next change id and last fully synced delete change id" (e.g. "32425-99213:d1231232") or
-        // last fully synced change id-last item synced in next change id and 
+        // last fully synced change id-last item synced in next change id and
         // last fully synced delete id-last item synced in next delete id (e.g. "32425-99213:d12312-82134")
         SyncToken syncToken = null;
         int tokenInt = 0;
@@ -94,7 +94,7 @@ public class Sync extends MailDocumentHandler {
             deleleLimit = DebugConfig.syncMaximumDeleteCount;
         }
 
-        // Client can specify change page limit. If unspecified by client or 
+        // Client can specify change page limit. If unspecified by client or
         // client specify more than DebugConfig.syncMaximumChangeCount It will use DebugConfig.syncMaximumChangeCount
         if (changeLimit <= 0 || changeLimit > DebugConfig.syncMaximumChangeCount) {
             changeLimit = DebugConfig.syncMaximumChangeCount;
@@ -128,8 +128,7 @@ public class Sync extends MailDocumentHandler {
         OperationContextData.addGranteeNames(octxt, rootNode);
 
         // actually perform the sync
-        mbox.lock.lock();
-        try {
+        try (final MailboxLock l = mbox.getWriteLockAndLockIt()) {
             mbox.beginTrackingSync();
 
             if (initialSync) {
@@ -146,8 +145,6 @@ public class Sync extends MailDocumentHandler {
                 String newToken = deltaSync(response, octxt, ifmt, mbox, syncToken, deleleLimit, changeLimit, typedDeletes, root, visible, messageSyncStart);
                 response.addAttribute(MailConstants.A_TOKEN, newToken);
             }
-        } finally {
-            mbox.lock.release();
         }
 
         return response;
@@ -440,6 +437,7 @@ public class Sync extends MailDocumentHandler {
                 return MailConstants.E_MOUNT;
             case FLAG:
             case TAG:
+            case SMARTFOLDER:
                 return MailConstants.E_TAG;
             case VIRTUAL_CONVERSATION:
             case CONVERSATION:

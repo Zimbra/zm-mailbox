@@ -17,20 +17,25 @@
 
 package com.zimbra.soap.account.type;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.ZimletConstants;
 import com.zimbra.soap.base.ZimletConfigInfo;
 import com.zimbra.soap.base.ZimletGlobalConfigInfo;
 import com.zimbra.soap.base.ZimletHostConfigInfo;
 
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {})
+@GraphQLType(name=GqlConstants.CLASS_ACCOUNT_ZIMLET_CONFIG_INFO, description="Zimlet config info")
 public class AccountZimletConfigInfo
 implements ZimletConfigInfo {
 
@@ -109,25 +114,33 @@ implements ZimletConfigInfo {
     public void setLabel(String label) { this.label = label; }
     public void setGlobal(AccountZimletGlobalConfigInfo global) { this.global = global; }
     public void setHost(AccountZimletHostConfigInfo host) { this.host = host; }
+    @GraphQLQuery(name=GqlConstants.NAME, description="Zimlet name")
     @Override
     public String getName() { return name; }
+    @GraphQLQuery(name=GqlConstants.VERSION, description="Zimlet version")
     @Override
     public String getVersion() { return version; }
+    @GraphQLQuery(name=GqlConstants.DESCRIPTION, description="Zimlet description")
     @Override
     public String getDescription() { return description; }
+    @GraphQLQuery(name=GqlConstants.EXTENSION, description="Zimlet extension")
     @Override
     public String getExtension() { return extension; }
+    @GraphQLQuery(name=GqlConstants.TARGET, description="Zimlet target")
     @Override
     public String getTarget() { return target; }
+    @GraphQLQuery(name=GqlConstants.LABEL, description="Zimlet label")
     @Override
     public String getLabel() { return label; }
+    @GraphQLQuery(name=GqlConstants.GLOBAL, description="Zimlet Global configuration information")
     @Override
     public AccountZimletGlobalConfigInfo getGlobal() { return global; }
+    @GraphQLQuery(name=GqlConstants.HOST, description="Zimlet host specific configuration information")
     @Override
     public AccountZimletHostConfigInfo getHost() { return host; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(
+                MoreObjects.ToStringHelper helper) {
         return helper
             .add("name", name)
             .add("version", version)
@@ -141,7 +154,7 @@ implements ZimletConfigInfo {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
+        return addToStringInfo(MoreObjects.toStringHelper(this))
                 .toString();
     }
 

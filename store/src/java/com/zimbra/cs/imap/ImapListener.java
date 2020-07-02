@@ -27,13 +27,14 @@ import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.google.common.base.Function;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.mailbox.BaseFolderInfo;
 import com.zimbra.common.mailbox.BaseItemInfo;
 import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mailbox.MailItemType;
+import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.mailbox.ZimbraTag;
 import com.zimbra.common.service.ServiceException;
@@ -45,6 +46,7 @@ import com.zimbra.cs.imap.ImapMessage.ImapMessageSet;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.PendingModifications.ModificationKey;
@@ -386,6 +388,11 @@ public abstract class ImapListener extends Session {
         mIsVirtual = i4folder.isVirtual();
         mFolder    = i4folder;
         this.handler = handler;
+        final OperationContext octxt = i4folder.getCredentials().getContext();
+        if (octxt != null) {
+            userAgent = octxt.getUserAgent();
+            requestIPAddress = octxt.getRequestIP();
+        }
 
         i4folder.setSession(this);
     }
@@ -542,17 +549,17 @@ public abstract class ImapListener extends Session {
 
     public ImapListener detach() {
         MailboxStore mbox = this.getMailbox();
-        if (mbox != null) { // locking order is always Mailbox then Session
-            mbox.lock(true);
-        }
+        // locking order is always Mailbox then Session
+        MailboxLock l = null;
         try {
+            l = (mbox != null) ? mbox.getWriteLockAndLockIt() : null;
+        } catch (ServiceException e) {
+            ZimbraLog.imap.warn("unable to acquire mailbox lock in ImapListener.detatch(), proceeding anyways");
+        }
+        try (final MailboxLock lock = l) {
             synchronized (this) {
                 MANAGER.uncacheSession(this);
                 return isRegistered() ? (ImapListener)super.unregister() : this;
-            }
-        } finally {
-            if (mbox != null) {
-                mbox.unlock();
             }
         }
     }
@@ -577,8 +584,8 @@ public abstract class ImapListener extends Session {
         }
         // Mailbox.endTransaction() -> ImapSession.notifyPendingChanges() locks in the order of Mailbox -> ImapSession.
         // Need to lock in the same order here, otherwise can result in deadlock.
-        mbox.lock(true); // serialize() locks Mailbox deep inside of it
-        try {
+        try (final MailboxLock l =
+                mbox.getWriteLockAndLockIt() /* serialize() locks Mailbox deep inside of it */) {
             synchronized (this) {
                 if (mFolder instanceof ImapFolder) { // if the data's already paged out, we can short-circuit
                     mFolder = createPagedFolderData(active, (ImapFolder) mFolder);
@@ -604,8 +611,6 @@ public abstract class ImapListener extends Session {
                     }
                 }
             }
-        } finally {
-            mbox.unlock();
         }
     }
 
@@ -638,7 +643,7 @@ public abstract class ImapListener extends Session {
 
     @SuppressWarnings("rawtypes")
     @Override
-    public void notifyPendingChanges(PendingModifications pnsIn, int changeId, Session source) {
+    public void notifyPendingChanges(PendingModifications pnsIn, int changeId, SourceSessionInfo source) {
         if (!pnsIn.hasNotifications()) {
             return;
         }
@@ -647,7 +652,14 @@ public abstract class ImapListener extends Session {
             return;
         }
         ImapHandler i4handler = handler;
-        try {
+        //mailbox reference is volatile, so we need to acquire a local reference to avoid an NPE
+        MailboxStore mbox = getMailbox();
+        if (mbox == null) {
+            return;
+        }
+        // Mailbox.endTransaction() -> ImapSession.notifyPendingChanges() locks in the order of Mailbox -> ImapSession.
+        // Need to lock in the same order here, otherwise can result in deadlock.
+        try (final MailboxLock l = mbox.getReadLockAndLockIt() /* serialize() locks Mailbox deep inside of it */) {
             synchronized (this) {
                 AddedItems added = new AddedItems();
                 if (pnsIn.deleted != null) {
@@ -677,7 +689,7 @@ public abstract class ImapListener extends Session {
             if (i4handler != null && i4handler.isIdle()) {
                 i4handler.sendNotifications(true, true);
             }
-        } catch (IOException e) {
+        } catch (IOException | ServiceException e) {
             // ImapHandler.dropConnection clears our mHandler and calls SessionCache.clearSession,
             //   which calls Session.doCleanup, which calls Mailbox.removeListener
             if (ZimbraLog.imap.isDebugEnabled()) { // with stack trace
@@ -704,8 +716,16 @@ public abstract class ImapListener extends Session {
         }
         // Mailbox.endTransaction() -> ImapSession.notifyPendingChanges() locks in the order of Mailbox -> ImapSession.
         // Need to lock in the same order here, otherwise can result in deadlock.
-        mbox.lock(true); // PagedFolderData.replay() locks Mailbox deep inside of it.
-        try {
+        MailboxLock lock;
+        try{
+            lock = mbox.getWriteLockAndLockIt(); // PagedFolderData.replay() locks Mailbox deep inside of it
+        } catch (ServiceException e) {
+            //For simplicity, close the session
+            ZimbraLog.imap.warn("unable to acquire mailbox lock in ImapListener.reload(), closing session");
+            throw new ImapSessionClosedException();
+        }
+
+        try (final MailboxLock l = lock) {
             synchronized (this) {
                 // if the data's already paged in, we can short-circuit
                 if (mFolder instanceof PagedFolderData) {
@@ -741,8 +761,6 @@ public abstract class ImapListener extends Session {
                 }
                 return (ImapFolder) mFolder;
             }
-        } finally {
-            mbox.unlock();
         }
     }
 
@@ -777,7 +795,7 @@ public abstract class ImapListener extends Session {
     }
 
     /**
-     * Serializes this {@link ImapSession} to the session manager's current {@link ImapSessionManager.FolderSerializer}
+     * Serializes this {@link ImapSession} to the session manager's current FolderSerializer
      * if it's not already serialized there.
      *
      * @param active selects active or inactive cache
@@ -805,28 +823,25 @@ public abstract class ImapListener extends Session {
     }
 
     @Override
-    public void updateAccessTime() {
+    public void updateAccessTime() throws ServiceException {
         super.updateAccessTime();
         // ZESC-460, ZCS-4004: Ensure mailbox was not modified by another thread
         MailboxStore mbox = mailbox;
         if (mbox == null) {
             return;
         }
-        mbox.lock(true);
-        try {
+        try (final MailboxLock l = mbox.getWriteLockAndLockIt()) {
             synchronized (this) {
                 PagedFolderData paged = mFolder instanceof PagedFolderData ? (PagedFolderData) mFolder : null;
                 if (paged != null) { // if the data's already paged in, we can short-circuit
                     MANAGER.updateAccessTime(paged.getCacheKey());
                 }
             }
-        } finally {
-            mbox.unlock();
         }
     }
 
     @Override
-    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);
         helper.add("path", mPath).add("folderId", folderId);
         if ((mFolder == null) || ((mPath != null) && (!mPath.toString().equals(mFolder.toString())))) {

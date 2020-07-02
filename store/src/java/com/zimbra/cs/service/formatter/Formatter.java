@@ -33,6 +33,8 @@ import javax.mail.MessagingException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.http.HttpException;
+
 import com.google.common.io.Closeables;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
@@ -52,6 +54,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.UserServletContext;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.formatter.FormatterFactory.FormatType;
+import com.zimbra.cs.util.IOUtil;
 
 public abstract class Formatter {
 
@@ -149,13 +152,12 @@ public abstract class Formatter {
     }
 
     public final void save(UserServletContext context, String contentType, Folder folder, String filename)
-        throws UserServletException, IOException, ServletException, ServiceException {
+        throws UserServletException, IOException, ServletException, ServiceException, HttpException {
 
+        //TODO: set a large threshold for batch indexing
+        //Mailbox mbox = context.targetMailbox;
         try {
             saveStarted(context);
-            if (context.targetMailbox != null) {
-                context.targetMailbox.suspendIndexing();
-            }
             saveCallback(context, contentType, folder, filename);
             updateClient(context, null);
         } catch (UserServletException e) {
@@ -163,19 +165,11 @@ public abstract class Formatter {
         } catch (Exception e) {
             updateClient(context, e);
             saveEnded(context);
-        } finally {
-            if (context.targetMailbox != null) {
-                try {
-                    context.targetMailbox.resumeIndexingAndDrainDeferred();
-                } catch (Exception e) {
-                    context.targetMailbox.resumeIndexing();
-                }
-            }
         }
     }
 
     public abstract void formatCallback(UserServletContext context)
-        throws UserServletException, ServiceException, IOException, ServletException, MessagingException;
+        throws UserServletException, ServiceException, IOException, ServletException, MessagingException, HttpException;
 
     public void saveCallback(UserServletContext context, String contentType, Folder folder, String filename)
         throws UserServletException, ServiceException, IOException, ServletException {
@@ -303,7 +297,7 @@ public abstract class Formatter {
         }
 
         public void finished() {
-            Closeables.closeQuietly(results);
+            IOUtil.closeQuietly(results);
             results = null;
         }
     }

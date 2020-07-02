@@ -18,15 +18,21 @@ package com.zimbra.cs.mailbox;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Sets;
 import com.zimbra.common.mailbox.Color;
+import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -43,7 +49,12 @@ import com.zimbra.cs.session.Session;
  */
 public class Conversation extends MailItem {
     private   String     mEncodedSenders;
+    private boolean knowSenderList = false;
     protected SenderList mSenderList;
+    /* Useful place to cache the list of messages in the conversation for speedier access
+     * when processing a snapshot in time of multiple conversations, for instance when creating
+     * search results.  Should NOT be used for cached Conversation objects. */
+    protected List<Message> messages = null;
 
     Conversation(Mailbox mbox, UnderlyingData data) throws ServiceException {
         this(mbox, data, false);
@@ -51,7 +62,16 @@ public class Conversation extends MailItem {
 
     Conversation(Mailbox mbox, UnderlyingData data, boolean skipCache) throws ServiceException {
         super(mbox, data, skipCache);
-        if (mData.type != Type.CONVERSATION.toByte() && mData.type != Type.VIRTUAL_CONVERSATION.toByte()) {
+        init();
+    }
+
+    Conversation(Account acc, UnderlyingData data, int mailboxId)  throws ServiceException {
+        super(acc, data, mailboxId);
+        init();
+    }
+
+    private void init() throws ServiceException {
+        if (type != Type.CONVERSATION.toByte() && type != Type.VIRTUAL_CONVERSATION.toByte()) {
             throw new IllegalArgumentException();
         }
     }
@@ -81,7 +101,7 @@ public class Conversation extends MailItem {
      *  always be equal to {@link MailItem#getSize()}; if it isn't, an error
      *  has occurred and been persisted to the database. */
     public int getMessageCount() {
-        return (int) mData.size;
+        return (int) getSize();
     }
 
     @Override
@@ -96,8 +116,16 @@ public class Conversation extends MailItem {
         return mSenderList;
     }
 
+    /** This is intended as a performance optimization to avoid repeatedly getting the same
+     *  information from the DB.
+     * @return A Pair.  The first entry in the pair signals whether the 2nd entry is valid or not.
+     */
+    Pair<Boolean, SenderList> getSenderListIfCanOutsideTransaction() {
+        return knowSenderList ? new Pair<>(true, mSenderList) : new Pair<>(false, null);
+    }
+
     void instantiateSenderList() {
-        if (mSenderList != null && mSenderList.size() == mData.size)
+        if (mSenderList != null && mSenderList.size() == getSize())
             return;
 
         mSenderList = null;
@@ -109,7 +137,7 @@ public class Conversation extends MailItem {
                 // if the first message has been removed, this should throw
                 //   an exception and force the list to be recalculated
                 mSenderList = SenderList.parse(encoded);
-                if (mSenderList.size() != mData.size) {
+                if (mSenderList.size() != getSize()) {
                     mSenderList = null;
                 }
             } catch (Exception e) { }
@@ -138,16 +166,17 @@ public class Conversation extends MailItem {
     void recalculateCounts(List<Message> msgs) throws ServiceException {
         markItemModified(Change.TAGS | Change.FLAGS | Change.UNREAD);
         Set<String> tags = new HashSet<String>();
-        mData.unreadCount = 0;
-        mData.setFlags(0);
+        int unreadCount = 0;
+        state.setFlags(0);
         for (Message msg : msgs) {
-            mData.unreadCount += msg.getUnreadCount();
-            mData.setFlags(mData.getFlags() | msg.getInternalFlagBitmask());
-            for (String tag : msg.mData.getTags()) {
+            unreadCount += msg.getUnreadCount();
+            state.setFlags(state.getFlags() | msg.getInternalFlagBitmask());
+            for (String tag : msg.state.getTags()) {
                 tags.add(tag);
             }
         }
-        mData.setTags(new Tag.NormalizedTags(tags));
+        state.setUnreadCount(unreadCount);
+        state.setTags(new Tag.NormalizedTags(tags));
     }
 
     private static final int RECALCULATE_CHANGE_MASK = Change.TAGS | Change.FLAGS  | Change.SENDERS | Change.SIZE |
@@ -158,31 +187,33 @@ public class Conversation extends MailItem {
     }
 
     SenderList recalculateMetadata(List<Message> msgs) throws ServiceException {
+        knowSenderList = false; /* for safety */
         Collections.sort(msgs, new Message.SortDateAscending());
 
         markItemModified(RECALCULATE_CHANGE_MASK);
 
         mEncodedSenders = null;
         mSenderList = new SenderList(msgs);
-        mData.size = msgs.size();
+        state.setSize(msgs.size());
 
         Set<String> tags = new HashSet<String>();
-        mData.unreadCount = 0;
-        mData.setFlags(0);
+        int unreadCount = 0;
+        state.setFlags(0);
         mExtendedData = null;
         for (Message msg : msgs) {
             super.addChild(msg);
-            mData.unreadCount += (msg.isUnread() ? 1 : 0);
-            mData.setFlags(mData.getFlags() | msg.getInternalFlagBitmask());
-            for (String tag : msg.mData.getTags()) {
+            unreadCount += (msg.isUnread() ? 1 : 0);
+            state.setFlags(state.getFlags() | msg.getInternalFlagBitmask());
+            for (String tag : msg.state.getTags()) {
                 tags.add(tag);
             }
             mExtendedData = MetadataCallback.duringConversationAdd(mExtendedData, msg);
         }
-        mData.setTags(new Tag.NormalizedTags(tags));
+        state.setUnreadCount(unreadCount);
+        state.setTags(new Tag.NormalizedTags(tags));
 
         // need to rewrite the overview metadata
-        ZimbraLog.mailbox.debug("resetting metadata: cid=%d,size was=%d is=%d", mId, mData.size, mSenderList.size());
+        ZimbraLog.mailbox.debug("resetting metadata: cid=%d,size was=%d is=%d", mId, state.getSize(), mSenderList.size());
         saveData(new DbMailItem(mMailbox));
         return mSenderList;
     }
@@ -191,6 +222,7 @@ public class Conversation extends MailItem {
      *  are fetched from the {@link Mailbox}'s cache, if possible; if not,
      *  they're fetched from the database.  The returned messages are not
      *  guaranteed to be sorted in any way. */
+    /* do not make public - should be called within a transaction */
     List<Message> getMessages() throws ServiceException {
         return getMessages(SortBy.NONE, -1);
     }
@@ -202,11 +234,102 @@ public class Conversation extends MailItem {
      * @param sort the sort order for the messages
      * @param limit max number of messages to retrieve, or unlimited if -1
      */
+    /* do not make public - should be called within a transaction */
     List<Message> getMessages(SortBy sort, int limit) throws ServiceException {
-        List<Message> msgs = new ArrayList<Message>(getMessageCount());
+        List<Message> msgs = getMessagesIfCanOutsideTransaction(sort, limit);
+        if (msgs != null) {
+            return msgs;
+        }
+        msgs = new ArrayList<Message>(getMessageCount());
         List<UnderlyingData> listData = DbMailItem.getByParent(this, sort, limit, false);
         for (UnderlyingData data : listData) {
             msgs.add(mMailbox.getMessage(data));
+        }
+        return msgs;
+    }
+
+    /** This is intended as a performance optimization to avoid repeatedly getting the same
+     *  information from the DB.
+     * @return messages in this conversation that match the params if we can get that information
+     *         without talking to the database.  Otherwise return <b>null</b>
+     */
+    List<Message> getMessagesIfCanOutsideTransaction(SortBy sort, int limit) {
+        List<Message> mymsgs = messages; /* use own reference for safety */
+        if ((mymsgs == null) || !Message.SupportedSortsForMsgs.contains(sort)) {
+            return null;
+        }
+        List<Message> msgs;
+        if (-1 == limit || limit > mymsgs.size()) {
+            msgs = new ArrayList<>(mymsgs);
+        } else {
+            msgs = new ArrayList<>(mymsgs.subList(0, limit));
+        }
+        if (!SortBy.NONE.equals(sort)) {
+            msgs.sort(new Message.SortAndIdComparator(sort));
+        }
+        return msgs;
+    }
+
+    /** Update the list of messages in these conversations.  The messages are fetched from each
+     *  conversation's {@link Mailbox}'s cache, if possible; if not, they're fetched from the database.
+     *
+     * @param sort the sort order for the messages
+     * @param limit max number of messages to retrieve, or unlimited if -1
+     * @return all the {@link Message}s in these conversations.
+     */
+    /* do not make public - should be called within a transaction */
+    static List<Message> updateMessageInfoForConversations(
+            Collection<Conversation> convs, SortBy sort, int limit) throws ServiceException {
+        List<Message> msgs = new ArrayList<>();
+        Map<Mailbox, List<Integer>> convIdsMap = new HashMap<>(1 /* rarely more than 1 mailbox */);
+        Map<Mailbox, List<Integer>> msgIdsMap = new HashMap<>(1 /* rarely more than 1 mailbox */);
+        Map<String, Conversation> convMap = new HashMap<>(convs.size());
+        for (Conversation conv : convs) {
+            Mailbox mbox = conv.getMailbox();
+            convMap.put(ItemIdentifier.fromAccountIdAndItemId(
+                    mbox.getAccountId(), conv.getId()).toString(), conv);
+            if (conv instanceof VirtualConversation) {
+                msgIdsMap.computeIfAbsent(mbox, k -> new ArrayList<>()).add(
+                        ((VirtualConversation) conv).getMessageId());
+            } else {
+                convIdsMap.computeIfAbsent(mbox, k -> new ArrayList<>()).add(conv.getId());
+            }
+            conv.getSenderList();
+            conv.knowSenderList = true;
+            /* initialize - will be populated below */
+            conv.messages = new ArrayList<Message>(conv.getMessageCount());
+        }
+        // Process (non-virtual) conversations
+        for (Entry<Mailbox, List<Integer>> entry : convIdsMap.entrySet()) {
+            Mailbox mbox = entry.getKey();
+            List<Integer> convIds = entry.getValue();
+            List<UnderlyingData> listData = DbMailItem.getByParents(mbox, convIds, sort, -1, false);
+            for (UnderlyingData data : listData) {
+                Message msg = mbox.getMessage(data);
+                Conversation conv = convMap.get(ItemIdentifier.fromAccountIdAndItemId(
+                        mbox.getAccountId(), msg.getParentId()).toString());
+                if (conv != null) {
+                    conv.messages.add(msg);
+                }
+                if (-1 == limit || limit > msgs.size()) {
+                    msgs.add(msg);
+                }
+            }
+        }
+        // Process virtual conversations
+        for (Entry<Mailbox, List<Integer>> entry : msgIdsMap.entrySet()) {
+            Mailbox mbox = entry.getKey();
+            List<Integer> msgIds = entry.getValue();
+            MailItem[] msgItems = mbox.getItemById(null, msgIds, MailItem.Type.MESSAGE);
+            for (MailItem msgItem : msgItems) {
+                Message msg = (Message)msgItem;
+                Conversation conv = convMap.get(ItemIdentifier.fromAccountIdAndItemId(
+                        mbox.getAccountId(), msg.getParentId()).toString());
+                if (conv != null) {
+                    conv.messages.add(msg);
+                }
+                msgs.add((Message)msgItem);
+            }
         }
         return msgs;
     }
@@ -271,10 +394,10 @@ public class Conversation extends MailItem {
             if (msg == null) {
                 throw ServiceException.FAILURE("null Message in list", null);
             }
-            date = Math.max(date, msg.mData.date);
-            unread += msg.mData.unreadCount;
-            flags  |= msg.mData.getFlags();
-            for (String tag : msg.mData.getTags()) {
+            date = Math.max(date, msg.state.getDate());
+            unread += msg.state.getUnreadCount();
+            flags  |= msg.state.getFlags();
+            for (String tag : msg.state.getTags()) {
                 tags.add(tag);
             }
             extended = MetadataCallback.duringConversationAdd(extended, msg);
@@ -300,7 +423,7 @@ public class Conversation extends MailItem {
         DbMailItem.setParent(msgs, conv);
         for (int i = 0; i < msgs.length; i++) {
             mbox.markItemModified(msgs[i], Change.PARENT);
-            msgs[i].mData.parentId = id;
+            msgs[i].state.setParentId(id);
             msgs[i].metadataChanged();
         }
         return conv;
@@ -469,7 +592,7 @@ public class Conversation extends MailItem {
         if (add) {
             tagChanged(tag, add);
         } else {
-            DbMailItem.completeConversation(mMailbox, mMailbox.getOperationConnection(), mData);
+            DbMailItem.completeConversation(mMailbox, mMailbox.getOperationConnection(), state.getUnderlyingData());
         }
     }
 
@@ -525,7 +648,7 @@ public class Conversation extends MailItem {
             }
         }
         // if mData.unread is wrong, what to do?  right now, always use the calculated value
-        mData.unreadCount = oldUnread;
+        state.setUnreadCount(oldUnread);
 
         boolean excludeAccess = false;
 
@@ -606,7 +729,7 @@ public class Conversation extends MailItem {
 
             if (!indexUpdated.isEmpty()) {
                 for (MailItem msg : indexUpdated) {
-                    mMailbox.index.add(msg);
+                    mMailbox.indexItem(msg);
                 }
             }
         }
@@ -617,6 +740,8 @@ public class Conversation extends MailItem {
     /** please call this *after* adding the child row to the DB */
     @Override
     void addChild(MailItem child) throws ServiceException {
+        knowSenderList = false; /* for safety */
+        messages = null; /* for safety */
         if (!(child instanceof Message)) {
             throw MailServiceException.CANNOT_PARENT();
         }
@@ -625,30 +750,30 @@ public class Conversation extends MailItem {
         super.addChild(msg);
 
         // update inherited flags
-        int oldFlags = mData.getFlags();
-        mData.setFlags(mData.getFlags() | msg.getInternalFlagBitmask());
-        if (mData.getFlags() != oldFlags) {
+        int oldFlags = state.getFlags();
+        state.setFlags(oldFlags | msg.getInternalFlagBitmask());
+        if (state.getFlags() != oldFlags) {
             markItemModified(Change.FLAGS);
         }
 
         // update inherited tags
-        String[] msgTags = msg.mData.getTags();
+        String[] msgTags = msg.state.getTags();
         if (msgTags.length > 0) {
-            Set<String> tags = Sets.newHashSet(mData.getTags());
+            Set<String> tags = Sets.newHashSet(state.getTags());
             int oldCount = tags.size();
             for (String msgTag : msgTags) {
                 tags.add(msgTag);
             }
             if (tags.size() != oldCount) {
                 markItemModified(Change.TAGS);
-                mData.setTags(new Tag.NormalizedTags(tags));
+                state.setTags(new Tag.NormalizedTags(tags));
             }
         }
 
         // update unread counts
         if (msg.isUnread()) {
             markItemModified(Change.UNREAD);
-            updateUnread(child.mData.unreadCount, child.isTagged(Flag.FlagInfo.DELETED) ? child.mData.unreadCount : 0);
+            updateUnread(child.getUnreadCount(), child.isTagged(Flag.FlagInfo.DELETED) ? child.getUnreadCount() : 0);
         }
 
         markItemModified(Change.SIZE | Change.SENDERS | Change.METADATA);
@@ -657,12 +782,12 @@ public class Conversation extends MailItem {
 
         // FIXME: this ordering is to work around the fact that when getSenderList has to
         //   recalc the metadata, it uses the already-updated DB message state to do it...
-        mData.date = mMailbox.getOperationTimestamp();
+        state.setDate(mMailbox.getOperationTimestamp());
         contentChanged();
 
         if (!mMailbox.hasListeners(Session.Type.SOAP)) {
             instantiateSenderList();
-            mData.size++;
+            state.setSize(state.getSize() + 1);
             try {
                 if (mSenderList != null) {
                     mSenderList.add(msg);
@@ -674,7 +799,7 @@ public class Conversation extends MailItem {
         } else {
             boolean recalculated = loadSenderList();
             if (!recalculated) {
-                mData.size++;
+                state.setSize(state.getSize() + 1);
                 try {
                     mSenderList.add(msg);
                     saveMetadata();
@@ -687,6 +812,8 @@ public class Conversation extends MailItem {
 
     @Override
     void removeChild(MailItem child) throws ServiceException {
+        knowSenderList = false; /* for safety */
+        messages = null; /* for safety */
         super.removeChild(child);
 
         // remove the last message and the conversation goes away
@@ -701,27 +828,27 @@ public class Conversation extends MailItem {
             // update unread counts
             if (child.isUnread()) {
                 markItemModified(Change.UNREAD);
-                updateUnread(-child.mData.unreadCount, child.isTagged(Flag.FlagInfo.DELETED) ? -child.mData.unreadCount : 0);
+                updateUnread(-child.getUnreadCount(), child.isTagged(Flag.FlagInfo.DELETED) ? -child.getUnreadCount() : 0);
             }
 
             // update inherited tags, if applicable
-            if (child.mData.getTags().length != 0 || child.mData.getFlags() != 0) {
-                int oldFlags = mData.getFlags();
-                int oldTagCount = mData.getTags().length;
+            if (child.state.getTags().length != 0 || child.state.getFlags() != 0) {
+                int oldFlags = state.getFlags();
+                int oldTagCount = state.getTags().length;
 
-                DbMailItem.completeConversation(mMailbox, mMailbox.getOperationConnection(), mData);
+                DbMailItem.completeConversation(mMailbox, mMailbox.getOperationConnection(), state.getUnderlyingData());
 
-                if (mData.getFlags() != oldFlags) {
+                if (state.getFlags() != oldFlags) {
                     markItemModified(Change.FLAGS);
                 }
-                if (mData.getTags().length != oldTagCount) {
+                if (state.getTags().length != oldTagCount) {
                     markItemModified(Change.TAGS);
                 }
             }
 
             mEncodedSenders = null;
             mSenderList = null;
-            mData.size--;
+            state.setSize(state.getSize() - 1);
             saveMetadata(null);
         } else {
             List<Message> msgs = getMessages();
@@ -740,7 +867,7 @@ public class Conversation extends MailItem {
 
         for (Message msg : other.getMessages()) {
             msg.markItemModified(Change.PARENT);
-            msg.mData.parentId = mId;
+            msg.state.setParentId(mId);
             MetadataCallback.duringConversationAdd(mExtendedData, msg);
         }
         DbMailItem.reparentChildren(other, this);
@@ -780,9 +907,9 @@ public class Conversation extends MailItem {
     @Override
     PendingDelete getDeletionInfo() throws ServiceException {
         PendingDelete info = new PendingDelete();
-        info.itemIds.add(getType(), mId, mData.uuid);
+        info.itemIds.add(getType(), mId, uuid);
 
-        if (mData.size == 0) {
+        if (state.getSize() == 0) {
             return info;
         }
 
@@ -848,6 +975,7 @@ public class Conversation extends MailItem {
     @Override
     void decodeMetadata(Metadata meta) throws ServiceException {
         super.decodeMetadata(meta);
+        knowSenderList = false; /* for safety */
         mEncodedSenders = meta.get(Metadata.FN_PARTICIPANTS, null);
     }
 
@@ -857,7 +985,7 @@ public class Conversation extends MailItem {
         if (encoded == null && mSenderList != null) {
             encoded = mSenderList.toString();
         }
-        return encodeMetadata(meta, mRGBColor, mMetaVersion, mVersion, mExtendedData, encoded);
+        return encodeMetadata(meta, state.getColor(), state.getMetadataVersion(), state.getVersion(), mExtendedData, encoded);
     }
 
     static String encodeMetadata(Color color, int metaVersion, int version, CustomMetadataList extended, SenderList senders) {
@@ -882,6 +1010,6 @@ public class Conversation extends MailItem {
 
     @Override
     public String toString() {
-        return appendCommonMembers(Objects.toStringHelper(this)).toString();
+        return appendCommonMembers(MoreObjects.toStringHelper(this)).toString();
     }
 }

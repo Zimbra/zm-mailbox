@@ -177,10 +177,28 @@ public class ZimbraPerf {
     public static final Counter COUNTER_LMTP_RCVD_RCPT = new Counter();
     public static final Counter COUNTER_LMTP_DLVD_MSGS = new Counter();
     public static final Counter COUNTER_LMTP_DLVD_BYTES = new Counter();
+
+    public static final Counter COUNTER_STORE_COPY = new Counter();
+    public static final Counter COUNTER_STORE_DEL = new Counter();
+    public static final Counter COUNTER_STORE_GET = new Counter();
+    public static final Counter COUNTER_STORE_LINK = new Counter();
+    public static final Counter COUNTER_STORE_PUT = new Counter();
+    public static final Counter COUNTER_STORE_RENAME = new Counter();
+    public static final Counter COUNTER_STORE_STAGE = new Counter();
+
     public static final StopWatch STOPWATCH_DB_CONN = new StopWatch();
     public static final StopWatch STOPWATCH_LDAP_DC = new StopWatch();
     public static final StopWatch STOPWATCH_MBOX_ADD_MSG = new StopWatch();
     public static final StopWatch STOPWATCH_MBOX_GET = new StopWatch();         // Mailbox accessor response time
+
+    public static final StopWatch STOPWATCH_STORE_DEL = new StopWatch();
+    public static final StopWatch STOPWATCH_STORE_GET = new StopWatch();
+    public static final StopWatch STOPWATCH_STORE_PUT = new StopWatch();
+    public static final StopWatch STOPWATCH_STORE_STAGE = new StopWatch();
+    public static final StopWatch STOPWATCH_STORE_COPY = new StopWatch();
+    public static final StopWatch STOPWATCH_STORE_LINK = new StopWatch();
+
+
     public static final Counter COUNTER_MBOX_CACHE = new Counter();           // Mailbox cache hit rate
     public static final Counter COUNTER_MBOX_MSG_CACHE = new Counter();
     public static final Counter COUNTER_MBOX_ITEM_CACHE = new Counter();
@@ -204,8 +222,10 @@ public class ZimbraPerf {
     public static final ActivityTracker IMAPD_TRACKER = new ActivityTracker("imapd.csv");
     public static final ActivityTracker POP_TRACKER = new ActivityTracker("pop3.csv");
     public static final ActivityTracker LDAP_TRACKER = new ActivityTracker("ldap.csv");
+    public static final ActivityTracker STORE_TRACKER = new ActivityTracker("store.csv");
     public static final ActivityTracker SYNC_TRACKER = new ActivityTracker("sync.csv");
     public static final ActivityTracker SQL_TRACKER  = new ActivityTracker("sql.csv");
+    public static final ActivityTracker REDIS_TRACKER  = new ActivityTracker("redis.csv");
 
     private static int mailboxCacheSize;
     private static long mailboxCacheSizeTimestamp = 0;
@@ -251,6 +271,24 @@ public class ZimbraPerf {
 
     @Description("Number of bytes of data delivered to mailboxes as a result of LMTP delivery")
     private static final String DC_LMTP_DLVD_BYTES = "lmtp_dlvd_bytes";
+
+    @Description("Number of items deleted by the StoreManager")
+    private static final String DC_STORE_DEL_CNT = "store_del_cnt";
+
+    @Description("Number of items retrieved by the StoreManager")
+    private static final String DC_STORE_GET_CNT = "store_get_cnt";
+
+    @Description("Number of items stored by the StoreManager")
+    private static final String DC_STORE_PUT_CNT = "store_put_cnt";
+
+    @Description("Average latency (ms) of deleting an item using the StoreManager")
+    private static final String DC_STORE_DEL_MS_AVG = "store_del_ms_avg";
+
+    @Description("Average latency (ms) of retrieving an item using the StoreManager")
+    private static final String DC_STORE_GET_MS_AVG = "store_get_ms_avg";
+
+    @Description("Average latency (ms) of storing an item using the StoreManager")
+    private static final String DC_STORE_PUT_MS_AVG = "store_put_ms_avg";
 
     @Description("Number of times that the server got a database connection from the pool")
     private static final String DC_DB_CONN_COUNT = "db_conn_count";
@@ -469,6 +507,14 @@ public class ZimbraPerf {
                             new DeltaCalculator(COUNTER_LMTP_RCVD_RCPT).setTotalName(DC_LMTP_RCVD_RCPT),
                             new DeltaCalculator(COUNTER_LMTP_DLVD_MSGS).setTotalName(DC_LMTP_DLVD_MSGS),
                             new DeltaCalculator(COUNTER_LMTP_DLVD_BYTES).setTotalName(DC_LMTP_DLVD_BYTES),
+
+                            new DeltaCalculator(COUNTER_STORE_DEL).setTotalName(DC_STORE_DEL_CNT)
+                                    .setAverageName(DC_STORE_DEL_MS_AVG),
+                            new DeltaCalculator(COUNTER_STORE_GET).setTotalName(DC_STORE_GET_CNT)
+                                    .setAverageName(DC_STORE_GET_MS_AVG),
+                            new DeltaCalculator(COUNTER_STORE_PUT).setTotalName(DC_STORE_PUT_CNT)
+                                    .setAverageName(DC_STORE_PUT_MS_AVG),
+
                             new DeltaCalculator(STOPWATCH_DB_CONN).setCountName(DC_DB_CONN_COUNT)
                                     .setAverageName(DC_DB_CONN_MS_AVG),
                             new DeltaCalculator(STOPWATCH_LDAP_DC).setCountName(DC_LDAP_DC_COUNT)
@@ -560,8 +606,10 @@ public class ZimbraPerf {
         StatsDumper.schedule(IMAP_TRACKER, CSV_DUMP_FREQUENCY);
         StatsDumper.schedule(POP_TRACKER, CSV_DUMP_FREQUENCY);
         StatsDumper.schedule(LDAP_TRACKER, CSV_DUMP_FREQUENCY);
+        StatsDumper.schedule(STORE_TRACKER, CSV_DUMP_FREQUENCY);
         StatsDumper.schedule(SYNC_TRACKER, CSV_DUMP_FREQUENCY);
         StatsDumper.schedule(SQL_TRACKER, CSV_DUMP_FREQUENCY);
+        StatsDumper.schedule(REDIS_TRACKER, CSV_DUMP_FREQUENCY);
         ThreadStats threadStats = new ThreadStats("threads.csv");
         StatsDumper.schedule(threadStats, CSV_DUMP_FREQUENCY);
     }

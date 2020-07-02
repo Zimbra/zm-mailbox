@@ -19,7 +19,7 @@ package com.zimbra.soap.account.type;
 
 import java.util.List;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
@@ -28,10 +28,15 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlValue;
 
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.ZimletConstants;
 import com.zimbra.soap.base.ZimletProperty;
 
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name=GqlConstants.CLASS_ACCOUNT_ZIMLET_PROPERTY, description="Account zimlet property")
 public class AccountZimletProperty
 implements ZimletProperty {
 
@@ -65,13 +70,15 @@ implements ZimletProperty {
     public void setName(String name) { this.name = name; }
     @Override
     public void setValue(String value) { this.value = value; }
+    @GraphQLQuery(name=GqlConstants.NAME, description="Name")
     @Override
     public String getName() { return name; }
+    @GraphQLQuery(name=GqlConstants.VALUE, description="Value")
     @Override
     public String getValue() { return value; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(
+                MoreObjects.ToStringHelper helper) {
         return helper
             .add("name", name)
             .add("value", value);
@@ -97,7 +104,7 @@ implements ZimletProperty {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
+        return addToStringInfo(MoreObjects.toStringHelper(this))
                 .toString();
     }
 }

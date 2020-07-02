@@ -18,7 +18,8 @@ package com.zimbra.cs.session;
 
 import java.util.Set;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
+import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccountServiceException;
@@ -46,7 +47,7 @@ public class WaitSetAccount {
             try {
                 Mailbox mbox = getMailboxIfLoaded();
                 if (mbox != null)
-                    return (WaitSetSession)mbox.getListener(sessionId);
+                    return (WaitSetSession)mbox.getNotificationPubSub().getSubscriber().getListener(sessionId);
             } catch (ServiceException e) {
                 ZimbraLog.session.info("Caught exception fetching mailbox in WaitSetAccount.getSession()", e);
             }
@@ -71,9 +72,8 @@ public class WaitSetAccount {
         //
         WaitSetSession session = new WaitSetSession(ws, accountId, interests, folderInterests, lastKnownSyncToken);
         ZimbraLog.session.debug("Created WaitSetSession %s for waitset %s on account %s", session.getSessionId(), ws.getWaitSetId(), accountId);
-        mbox.lock.lock();
-        try {
-            session.register();
+        try (final MailboxLock l = mbox.getWriteLockAndLockIt()) {
+            session.register(mbox);
             sessionId = session.getSessionId();
             // must force update here so that initial sync token is checked against current mbox state
             session.update(interests, folderInterests, lastKnownSyncToken);
@@ -97,8 +97,6 @@ public class WaitSetAccount {
             } else {
                 return new WaitSetError(accountId, WaitSetError.Type.ERROR_LOADING_MAILBOX);
             }
-        } finally {
-            mbox.lock.release();
         }
         return null;
     }
@@ -116,7 +114,7 @@ public class WaitSetAccount {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
                 .add("account", accountId)
                 .add("sessionId", sessionId)
                 .add("lastKnownSyncToken", lastKnownSyncToken)

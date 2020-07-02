@@ -17,10 +17,6 @@
 
 package com.zimbra.soap.account.message;
 
-import com.google.common.base.Objects;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -32,6 +28,9 @@ import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.account.type.ContactInfo;
@@ -78,7 +77,14 @@ public class SyncGalResponse {
      */
     @XmlAttribute(name=MailConstants.A_GALSYNC_FULLSYNC_RECOMMENDED /* fullSyncRecommended */, required=false)
     private ZmBoolean fullSyncRecommended;
-    
+
+    /**
+     * @zm-api-field-tag remain
+     * @zm-api-field-description count of records still to be returned in paginated response
+     */
+    @XmlAttribute(name=MailConstants.A_REMAIN /* remain */, required=false)
+    private Integer remain;
+
     /**
      * @zm-api-field-description Details of contact.  For element names <b>&lt;deleted</b> - gives details of deleted
      * entries.
@@ -117,20 +123,21 @@ public class SyncGalResponse {
         return Collections.unmodifiableList(hits);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(
+                MoreObjects.ToStringHelper helper) {
         return helper
             .add("more", more)
             .add("token", token)
             .add("galDefinitionLastModified", galDefinitionLastModified)
             .add("throttled", throttled)
             .add("fullSyncRecommended", fullSyncRecommended)
-            .add("hits", hits);
+            .add("hits", hits)
+            .add("remain", remain);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
+        return addToStringInfo(MoreObjects.toStringHelper(this))
                 .toString();
     }
 }

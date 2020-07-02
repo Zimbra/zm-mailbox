@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2018, 2019 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -32,6 +32,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.Future;
 
+import org.apache.http.HttpException;
 import org.apache.http.HttpResponse;
 import org.apache.http.concurrent.FutureCallback;
 
@@ -107,12 +108,16 @@ import com.zimbra.soap.account.message.CreateIdentityRequest;
 import com.zimbra.soap.account.message.CreateIdentityResponse;
 import com.zimbra.soap.account.message.DeleteIdentityRequest;
 import com.zimbra.soap.account.message.EndSessionRequest;
+import com.zimbra.soap.account.message.GetDistributionListMembersRequest;
+import com.zimbra.soap.account.message.GetDistributionListMembersResponse;
 import com.zimbra.soap.account.message.GetIdentitiesRequest;
 import com.zimbra.soap.account.message.GetIdentitiesResponse;
 import com.zimbra.soap.account.message.ModifyIdentityRequest;
+import com.zimbra.soap.account.type.HABGroupMember;
 import com.zimbra.soap.account.type.NameId;
 import com.zimbra.soap.admin.message.*;
 import com.zimbra.soap.admin.message.AutoProvTaskControlRequest.Action;
+import com.zimbra.soap.admin.message.HABOrgUnitRequest.HabOp;
 import com.zimbra.soap.admin.type.AccountInfo;
 import com.zimbra.soap.admin.type.AccountLoggerInfo;
 import com.zimbra.soap.admin.type.AccountQuotaInfo;
@@ -141,11 +146,14 @@ import com.zimbra.soap.admin.type.DomainSelector;
 import com.zimbra.soap.admin.type.EffectiveRightsTargetSelector;
 import com.zimbra.soap.admin.type.GranteeSelector;
 import com.zimbra.soap.admin.type.GranteeSelector.GranteeBy;
+import com.zimbra.soap.admin.type.HABGroupOperation;
+import com.zimbra.soap.admin.type.HABGroupOperation.HabGroupOp;
 import com.zimbra.soap.admin.type.LoggerInfo;
 import com.zimbra.soap.admin.type.MailboxByAccountIdSelector;
 import com.zimbra.soap.admin.type.MailboxWithMailboxId;
 import com.zimbra.soap.admin.type.PackageRightsInfo;
 import com.zimbra.soap.admin.type.PackageSelector;
+import com.zimbra.soap.admin.type.PurgeMessagesStatus;
 import com.zimbra.soap.admin.type.ReindexMailboxInfo;
 import com.zimbra.soap.admin.type.ReindexProgressInfo;
 import com.zimbra.soap.admin.type.RightInfo;
@@ -464,7 +472,7 @@ public class SoapProvisioning extends Provisioning {
             throw ServiceException.FAILURE("transport has not been initialized", null);
     }
 
-    private Element invokeRequest(Element request) throws ServiceException, IOException {
+    private Element invokeRequest(Element request) throws ServiceException, IOException, HttpException {
         if (mNeedSession) {
             return mTransport.invoke(request);
         } else {
@@ -516,7 +524,7 @@ public class SoapProvisioning extends Provisioning {
             return invokeRequest(request);
         } catch (SoapFaultException e) {
             throw e; // for now, later, try to map to more specific exception
-        } catch (IOException e) {
+        } catch (IOException | HttpException e) {
             throw ZClientException.IO_ERROR("invoke "+e.getMessage()+", server: "+serverName(), e);
         }
     }
@@ -530,7 +538,7 @@ public class SoapProvisioning extends Provisioning {
             return invokeRequest(request);
         } catch (SoapFaultException e) {
             throw e; // for now, later, try to map to more specific exception
-        } catch (IOException e) {
+        } catch (IOException | HttpException e) {
             throw ZClientException.IO_ERROR("invoke "+e.getMessage()+", server: "+serverName(), e);
         } finally {
             mTransport.setTargetAcctId(oldTarget);
@@ -550,7 +558,7 @@ public class SoapProvisioning extends Provisioning {
             return invokeRequest(request);
         } catch (SoapFaultException e) {
             throw e; // for now, later, try to map to more specific exception
-        } catch (IOException e) {
+        } catch (IOException | HttpException e) {
             throw ZClientException.IO_ERROR("invoke "+e.getMessage()+", server: "+serverName, e);
         } finally {
             if (diff) {
@@ -839,6 +847,11 @@ public class SoapProvisioning extends Provisioning {
     @Override
     public void deleteGroup(String zimbraId) throws ServiceException {
         invokeJaxb(new DeleteDistributionListRequest(zimbraId));
+    }
+
+    @Override
+    public void deleteGroup(String zimbraId, boolean cascadeDelete) throws ServiceException {
+        invokeJaxb(new DeleteDistributionListRequest(zimbraId, cascadeDelete));
     }
 
     @Override
@@ -1216,13 +1229,15 @@ public class SoapProvisioning extends Provisioning {
         }
 
         public static final class Progress {
+            private int statusCode;
             private long numSucceeded;
             private long numFailed;
             private long numRemaining;
+            private String accountId;
 
             public long getNumSucceeded() {
                 return numSucceeded;
-        }
+            }
 
             public long getNumFailed() {
                 return numFailed;
@@ -1235,19 +1250,59 @@ public class SoapProvisioning extends Provisioning {
             Progress() {
             }
 
-            Progress(long succeeded, long failed, long remaining) {
+            public int getStatusCode() {
+                return statusCode;
+            }
+
+            Progress(int status, long succeeded, long failed, long remaining, String account) {
+                statusCode = status;
                 numSucceeded = succeeded;
                 numFailed = failed;
                 numRemaining = remaining;
+                accountId = account;
+            }
+
+            public String getAccountId() {
+                return accountId;
             }
         }
     }
 
-    public ReIndexInfo reIndex(Account acct, String action, ReIndexBy by,
+
+    public List<ReIndexInfo.Progress> reIndex(List<Account> accts, String action)
+            throws ServiceException {
+        //when more then one mailbox is present in the request, the server will proxy the requests,
+        //so we just pick the server for the first account
+        Account account = accts.get(0);
+        Server server = getServer(account);
+        List<ReindexMailboxInfo> mailboxes = Lists.newArrayList();
+        for(Account acct : accts) {
+            mailboxes.add(new ReindexMailboxInfo(acct.getId()));
+        }
+
+        ReIndexRequest req = new ReIndexRequest(action, mailboxes);
+        ReIndexResponse resp = this.invokeJaxb(req,
+                server.getAttr(A_zimbraServiceHostname));
+        List<ReindexProgressInfo> progInfo = resp.getMbox();
+        List<ReIndexInfo.Progress> retVal = Lists.newArrayList();
+        if (progInfo != null) {
+            for(ReindexProgressInfo pInfo : progInfo) {
+                retVal.add(new ReIndexInfo.Progress(pInfo.getStatusCode(),
+                        pInfo.getNumSucceeded(),
+                        pInfo.getNumFailed(),
+                        pInfo.getNumRemaining(), pInfo.getAccountId()));
+            }
+        }
+        return retVal;
+    }
+
+    //re-index one mailbox by item id, item type or chronologically
+    public ReIndexInfo reIndex(Account account, String action, ReIndexBy by,
             String[] values)
     throws ServiceException {
-        Server server = getServer(acct);
-        ReindexMailboxInfo mbox = new ReindexMailboxInfo(acct.getId());
+        Server server = getServer(account);
+        List<ReindexMailboxInfo> mailboxes = Lists.newArrayList();
+        ReindexMailboxInfo mbox = new ReindexMailboxInfo(account.getId());
         if (by != null) {
             String vals = StringUtil.join(",", values);
             if (by == ReIndexBy.types) {
@@ -1256,17 +1311,37 @@ public class SoapProvisioning extends Provisioning {
                 mbox.setIds(vals);
             }
         }
-        ReIndexRequest req = new ReIndexRequest(action, mbox);
+        mailboxes.add(mbox);
+
+        ReIndexRequest req = new ReIndexRequest(action, mailboxes);
         ReIndexResponse resp = this.invokeJaxb(req,
                 server.getAttr(A_zimbraServiceHostname));
         ReIndexInfo.Progress progress = null;
-        ReindexProgressInfo progInfo = resp.getProgress();
+        List<ReindexProgressInfo> progInfo = resp.getMbox();
         if (progInfo != null) {
-            progress = new ReIndexInfo.Progress(progInfo.getNumSucceeded(),
-                    progInfo.getNumFailed(),
-                    progInfo.getNumRemaining());
+            ReindexProgressInfo pInfo = progInfo.get(0);
+            progress = new ReIndexInfo.Progress(pInfo.getStatusCode(),
+                    pInfo.getNumSucceeded(),
+                    pInfo.getNumFailed(),
+                    pInfo.getNumRemaining(), pInfo.getAccountId());
         }
         return new ReIndexInfo(resp.getStatus(), progress);
+    }
+
+    public static enum ManageIndexType {
+        disableIndexing, enableIndexing;
+    }
+
+    public String manageIndex(Account acct, ManageIndexType type)
+    throws ServiceException {
+        MailboxByAccountIdSelector mbox = new MailboxByAccountIdSelector(acct.getId());
+        String action = null;
+        if (type != null) {
+            action = type.toString();
+        }
+        ManageIndexRequest req = new ManageIndexRequest(action, mbox);
+        ManageIndexResponse resp = this.invokeJaxb(req, Provisioning.affinityServer(acct));
+        return resp.getStatus();
     }
 
     public String compactIndex(Account acct, String action)
@@ -1626,6 +1701,12 @@ public class SoapProvisioning extends Provisioning {
     public void renameAccount(String zimbraId, String newName)
             throws ServiceException {
         invokeJaxb(new RenameAccountRequest(zimbraId, newName));
+    }
+
+    public void changePrimaryEmail(String zimbraId, String newName)
+            throws ServiceException {
+        AccountSelector acctSel = new AccountSelector(com.zimbra.soap.type.AccountBy.id, zimbraId);
+        invokeJaxb(new ChangePrimaryEmailRequest(acctSel, newName));
     }
 
     @Override
@@ -2358,16 +2439,18 @@ public class SoapProvisioning extends Provisioning {
         invokeJaxb(new DeleteMailboxRequest(accountId));
     }
 
-    public MailboxWithMailboxId purgeMessages(Account account) throws ServiceException {
-        Server server = account.getServer();
-        String serviceHost = server.getAttr(A_zimbraServiceHostname);
-        PurgeMessagesResponse resp = invokeJaxb(new PurgeMessagesRequest(account.getId()), serviceHost);
-        if (resp.getMailboxes().isEmpty())
+    public PurgeMessagesStatus purgeMessages(String accountId, String serviceHost) throws ServiceException {
+        PurgeMessagesResponse resp = invokeJaxb(new PurgeMessagesRequest(accountId), serviceHost);
+        if (resp.getMailboxes().isEmpty()) {
             return null;
-        else
+        } else {
             return resp.getMailboxes().get(0);
+        }
     }
 
+    public PurgeMessagesStatus purgeMessages(Account account) throws ServiceException {
+        return purgeMessages(account.getId(), Provisioning.affinityServer(account));
+    }
 
     //
     // rights
@@ -2941,6 +3024,111 @@ public class SoapProvisioning extends Provisioning {
     @Override
     public void refreshUserCredentials(Account account) {
         throw new UnsupportedOperationException("Currently no way to refresh required attributes over SOAP");
+    }
+
+
+    @Override
+    public Set<String> createHabOrgUnit(Domain domain, String habOrgUnitName) throws ServiceException {
+        DomainSelector domSel =
+            new DomainSelector(toJaxb(DomainBy.name), domain.getName());
+        HABOrgUnitResponse resp = invokeJaxb(new HABOrgUnitRequest(domSel, habOrgUnitName, HabOp.create));
+        Set<String> habOrgList = new HashSet<String>();
+        habOrgList.addAll(resp.getHabOrgList());
+        return habOrgList;
+    }
+
+    @Override
+    public Set<String> listHabOrgUnit(Domain domain) throws ServiceException {
+        DomainSelector domSel = new DomainSelector(toJaxb(DomainBy.name), domain.getName());
+        HABOrgUnitResponse resp = invokeJaxb(new HABOrgUnitRequest(domSel, HabOp.list));
+        Set<String> habOrgList = new HashSet<String>();
+        habOrgList.addAll(resp.getHabOrgList());
+        return habOrgList;
+    }
+
+    @Override
+    public  Set<String> renameHabOrgUnit(Domain domain, String habOrgUnitName, String newHabOrgUnitName) throws ServiceException {
+        DomainSelector domSel =
+            new DomainSelector(toJaxb(DomainBy.name), domain.getName());
+        HABOrgUnitResponse resp = invokeJaxb(new HABOrgUnitRequest(domSel, habOrgUnitName, newHabOrgUnitName, HabOp.rename));
+        Set<String> habOrgList = new HashSet<String>();
+        habOrgList.addAll(resp.getHabOrgList());
+        return habOrgList;
+    }
+
+    @Override
+    public void deleteHabOrgUnit(Domain domain, String habOrgUnitName) throws ServiceException {
+        DomainSelector domSel =
+            new DomainSelector(toJaxb(DomainBy.name), domain.getName());
+        invokeJaxb(new HABOrgUnitRequest(domSel, habOrgUnitName, HabOp.delete));
+    }
+
+    /**
+     * @param habGroupName name of HAB group
+     * @param ouName name of HAB Org Unit
+     * @param aName HAB account name
+     * @param dynamic set as dynamic or not
+     * @param listAttrs distributionListInfo Attrbutes
+     * @throws ServiceException if an error occurs while fetching hierarchy from ldap
+     */
+    public DistributionList createHabGroup(String habGroupName, String ouName, String aName, String dynamic,  Map<String, Object> listAttrs) throws ServiceException {
+        Boolean isDynamic = Boolean.valueOf(dynamic);
+        CreateHABGroupRequest req = new CreateHABGroupRequest(
+            habGroupName, ouName, aName, Attr.mapToList(listAttrs), isDynamic);
+        CreateHABGroupResponse resp = invokeJaxb(req);
+        return new SoapDistributionList(resp.getDl(), this);
+    }
+
+    /**
+     *
+     * @param rootHabGroupId the group for which HAB is required
+     * @return GetHabResponse object
+     * @throws ServiceException if an error occurs while fetching hierarchy from ldap
+     */
+    public Element getHab(String rootHabGroupId) throws ServiceException {
+        XMLElement req = new XMLElement(AccountConstants.GET_HAB_REQUEST);
+        req.addAttribute(AccountConstants.A_HAB_ROOT_GROUP_ID, rootHabGroupId);
+        Element resp = invoke(req);
+        return resp;
+    }
+
+    /**
+     *
+     * @param habGroupId HAB group to be moved
+     * @param currentParentGroupId current HAB parent id
+     * @param targetParentGroupId target parent id
+     * @throws ServiceException
+     */
+    public void modifyHabGroup(String habGroupId, String currentParentGroupId,
+        String targetParentGroupId) throws ServiceException {
+        HABGroupOperation operation = new HABGroupOperation(habGroupId, currentParentGroupId,
+            targetParentGroupId, HabGroupOp.move);
+        invokeJaxb(new ModifyHABGroupRequest(operation));
+    }
+
+    /**
+     *
+     * @param habGroupId HAB group to be modified
+     * @param seniorityIndex seniority index
+     * @throws ServiceException if an error occurs while modifying the HAB group
+     */
+    public void modifyHabGroupSeniority(String habGroupId, String seniorityIndex)
+        throws ServiceException {
+        HABGroupOperation operation = new HABGroupOperation(habGroupId,
+            Integer.parseInt(seniorityIndex), HabGroupOp.assignSeniority);
+        invokeJaxb(new ModifyHABGroupRequest(operation));
+
+    }
+
+    /**
+     *
+     * @param group HAB group whose members will be returned
+     * @throws ServiceException if an error occurs while getting the HAB group members
+     */
+    @Override
+    public List<HABGroupMember> getHABGroupMembers(Group group) throws ServiceException {
+        GetDistributionListMembersResponse resp = invokeJaxb(new GetDistributionListMembersRequest(0, 0, group.getName()));
+        return resp.getHABGroupMembers();
     }
 
 }

@@ -17,15 +17,22 @@
 
 package com.zimbra.soap.mail.type;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.RecurIdInfoInterface;
 
+import io.leangen.graphql.annotations.GraphQLInputField;
+import io.leangen.graphql.annotations.GraphQLNonNull;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name=GqlConstants.CLASS_RECURRENCE_ID_INFORMATION, description="Recurrence ID Information")
 public class RecurIdInfo implements RecurIdInfoInterface {
 
     /**
@@ -74,30 +81,38 @@ public class RecurIdInfo implements RecurIdInfoInterface {
     }
 
     @Override
+    @GraphQLInputField(name=GqlConstants.RECURRENCE_RANGE_TYPE, description="Recurrence range type")
     public void setRecurrenceRangeType(int recurrenceRangeType) {
         this.recurrenceRangeType = recurrenceRangeType;
     }
 
     @Override
-    public void setRecurrenceId(String recurrenceId) {
+    @GraphQLInputField(name=GqlConstants.RECURRENCE_ID, description="Recurrence ID in format : YYMMDD[THHMMSS[Z]]")
+    public void setRecurrenceId(@GraphQLNonNull String recurrenceId) {
         this.recurrenceId = recurrenceId;
     }
 
     @Override
+    @GraphQLInputField(name=GqlConstants.TIMEZONE, description="Timezone name")
     public void setTimezone(String timezone) { this.timezone = timezone; }
     @Override
+    @GraphQLInputField(name=GqlConstants.RECURRENCE_ID_Z, description="Recurrence-id in UTC time zone; used in non-all-day appointments only")
     public void setRecurIdZ(String recurIdZ) { this.recurIdZ = recurIdZ; }
 
     @Override
+    @GraphQLQuery(name=GqlConstants.RECURRENCE_RANGE_TYPE, description="Recurrence range type")
     public int getRecurrenceRangeType() { return recurrenceRangeType; }
     @Override
+    @GraphQLQuery(name=GqlConstants.RECURRENCE_ID, description="Recurrence ID in format : YYMMDD[THHMMSS[Z]]")
     public String getRecurrenceId() { return recurrenceId; }
     @Override
+    @GraphQLQuery(name=GqlConstants.TIMEZONE, description="Timezone name")
     public String getTimezone() { return timezone; }
     @Override
+    @GraphQLQuery(name=GqlConstants.RECURRENCE_ID_Z, description="Recurrence-id in UTC time zone; used in non-all-day appointments only")
     public String getRecurIdZ() { return recurIdZ; }
 
-    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         return helper
             .add("recurrenceRangeType", getRecurrenceRangeType())
             .add("recurrenceId", getRecurrenceId())
@@ -107,6 +122,6 @@ public class RecurIdInfo implements RecurIdInfoInterface {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this)).toString();
+        return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
     }
 }

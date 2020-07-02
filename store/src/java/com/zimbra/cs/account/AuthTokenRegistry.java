@@ -40,13 +40,13 @@ import com.zimbra.soap.admin.message.RefreshRegisteredAuthTokensRequest;
 public final class AuthTokenRegistry {
     private static final Log mLOG = LogFactory.getLog(AuthTokenRegistry.class);
     //queue of deregistered authtokens
-    final private static ConcurrentLinkedQueue<ZimbraAuthToken> deregisteredOutAuthTokens = new ConcurrentLinkedQueue<ZimbraAuthToken>();
+    final private static ConcurrentLinkedQueue<AuthToken> deregisteredOutAuthTokens = new ConcurrentLinkedQueue<AuthToken>();
 
     /**
      * adds a token to the queue of deregistered tokens
      * @param token
      */
-    final public static void addTokenToQueue(ZimbraAuthToken token) {
+    final public static void addTokenToQueue(AuthToken token) {
         while(deregisteredOutAuthTokens.size() > LC.zimbra_deregistered_authtoken_queue_size.intValue() && !deregisteredOutAuthTokens.isEmpty()) {
             //throw out oldest tokens to make space
             deregisteredOutAuthTokens.remove();
@@ -90,8 +90,8 @@ public final class AuthTokenRegistry {
                         soapProv.soapZimbraAdminAuthenticate();
                         RefreshRegisteredAuthTokensRequest req = new RefreshRegisteredAuthTokensRequest();
                         for(Object ztoken : copy) {
-                            if(!((ZimbraAuthToken)ztoken).isExpired()) {//no need to broadcast expired tokens, since they will be cleaned up automatically
-                                req.addToken(((ZimbraAuthToken)ztoken).getEncoded());
+                            if(!((AuthToken)ztoken).isExpired()) {//no need to broadcast expired tokens, since they will be cleaned up automatically
+                                req.addToken(((AuthToken)ztoken).getEncoded());
                             }
                         }
                         for(Server server : mailServers) {

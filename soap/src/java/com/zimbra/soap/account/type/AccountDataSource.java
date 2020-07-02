@@ -17,7 +17,7 @@
 
 package com.zimbra.soap.account.type;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
@@ -31,13 +31,19 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.DataSource;
 import com.zimbra.soap.type.ZmBoolean;
 
+import io.leangen.graphql.annotations.GraphQLIgnore;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"lastError", "attributes"})
 @XmlRootElement
+@GraphQLType(name=GqlConstants.CLASS_ACCOUNT_DATA_SOURCE, description="Account data source")
 public class AccountDataSource implements DataSource {
 
     /**
@@ -317,59 +323,92 @@ public class AccountDataSource implements DataSource {
     }
 
     @Override
+    @GraphQLQuery(name=GqlConstants.ID, description="Unique ID for data source")
     public String getId() { return id; }
     @Override
+    @GraphQLQuery(name=GqlConstants.NAME, description="Name for data source")
     public String getName() { return name; }
     @Override
+    @GraphQLQuery(name=GqlConstants.FOLDER_ID, description="Folder ID for data source")
     public String getFolderId() { return folderId; }
     @Override
+    @GraphQLQuery(name=GqlConstants.ENABLED, description="Flag whether or not the data source is enabled")
     public Boolean isEnabled() { return ZmBoolean.toBool(enabled); }
     @Override
+    @GraphQLQuery(name=GqlConstants.IMPORT_ONLY,
+        description="indicates that this datasource is used for one way (incoming) import versus")
     public Boolean isImportOnly() { return ZmBoolean.toBool(importOnly); }
     @Override
+    @GraphQLQuery(name=GqlConstants.HOST, description="Name of server")
     public String getHost() { return host; }
     @Override
+    @GraphQLQuery(name=GqlConstants.PORT, description="Port number of server")
     public Integer getPort() { return port; }
+    @GraphQLQuery(name=GqlConstants.ADS_CONNECTION_TYPE,
+            description="Which security layer to use for connection (cleartext, ssl, tls, or tls if available)."
+                    + " If not set on data source, fallback to the value on global config.")
     public AdsConnectionType getAdsConnectionType() { return adsConnectionType; }
     @Override
+    @GraphQLQuery(name=GqlConstants.USERNAME, description="Login string on {data-source-server}, for example a user name")
     public String getUsername() { return username; }
     @Override
+    @GraphQLQuery(name=GqlConstants.PASSWORD, description="Login password for data source")
     public String getPassword() { return password; }
     @Override
+    @GraphQLQuery(name=GqlConstants.POLLING_INTERVAL, description="The time interval between automated data imports for a data source."
+            + " If unset or 0, the data source will not be scheduled for automated polling. Must be in valid duration format:\n"
+            + "{digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - * minutes, s - seconds, d - days, ms - milliseconds.\n"
+            + "If time unit is not specified, the default is s(seconds).")
     public String getPollingInterval() { return pollingInterval; }
     @Override
+    @GraphQLQuery(name=GqlConstants.EMAIL_ADDRESS, description="Email address for the data-source")
     public String getEmailAddress() { return emailAddress; }
     @Override
+    @GraphQLQuery(name=GqlConstants.USE_ADDRESS_FOR_FORWARD_REPLY, description="When forwarding or replying to messages sent to this data source,"
+            + " this flags whether or not to use the email address of the data source for the from address and the designated signature/replyTo"
+            + " of the data source for the outgoing message.")
     public Boolean isUseAddressForForwardReply() { return ZmBoolean.toBool(useAddressForForwardReply); }
     @Override
+    @GraphQLQuery(name=GqlConstants.DEFAULT_SIGNATURE, description="ID for default signature")
     public String getDefaultSignature() { return defaultSignature; }
     @Override
+    @GraphQLQuery(name=GqlConstants.FORWARD_REPLY_SIGNATURE, description="Forward / Reply Signature ID for data source")
     public String getForwardReplySignature() { return forwardReplySignature; }
     @Override
+    @GraphQLQuery(name=GqlConstants.FROM_DISPLAY, description="Personal part of email address to put in the from header")
     public String getFromDisplay() { return fromDisplay; }
     @Override
+    @GraphQLQuery(name=GqlConstants.REPLY_TO_ADDRESS, description="Email address to put in the reply-to header")
     public String getReplyToAddress() { return replyToAddress; }
     @Override
+    @GraphQLQuery(name=GqlConstants.REPLY_TO_DISPLAY, description="Personal part of Email address to put in the reply-to header")
     public String getReplyToDisplay() { return replyToDisplay; }
     @Override
+    @GraphQLQuery(name=GqlConstants.IMPORT_CLASS, description="Data import class used bt this data source")
     public String getImportClass() { return importClass; }
     @Override
+    @GraphQLQuery(name=GqlConstants.FAILING_SINCE, description="Failing since")
     public Long getFailingSince() { return failingSince; }
     @Override
+    @GraphQLQuery(name=GqlConstants.LAST_ERROR, description="Last error")
     public String getLastError() { return lastError; }
     @Override
+    @GraphQLQuery(name=GqlConstants.ATTRIBUTES, description="Properties for the data source")
     public List<String> getAttributes() {
         return Collections.unmodifiableList(attributes);
     }
     @Override
     public void setRefreshToken(String refreshToken) { this.refreshToken = refreshToken; }
     @Override
+    @GraphQLQuery(name=GqlConstants.REFRESH_TOKEN, description="refresh token for refreshing data source oauth token")
     public String getRefreshToken() { return refreshToken; }
     @Override
     public void setRefreshTokenUrl(String refreshTokenUrl) { this.refreshTokenUrl = refreshTokenUrl; }
     @Override
+    @GraphQLQuery(name=GqlConstants.REFRESH_TOKEN, description="refresh token for refreshing data source oauth token")
     public String getRefreshTokenUrl() { return refreshTokenUrl; }
     @Override
+    @GraphQLIgnore
     public ConnectionType getConnectionType() {
         return AdsConnectionType.ACT_TO_CT.apply(adsConnectionType);
     }
@@ -378,8 +417,8 @@ public class AccountDataSource implements DataSource {
         this.adsConnectionType = AdsConnectionType.CT_TO_ACT.apply(connectionType);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(
+                MoreObjects.ToStringHelper helper) {
         return helper
             .add("id", id)
             .add("name", name)
@@ -409,7 +448,7 @@ public class AccountDataSource implements DataSource {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
+        return addToStringInfo(MoreObjects.toStringHelper(this))
                 .toString();
     }
 }

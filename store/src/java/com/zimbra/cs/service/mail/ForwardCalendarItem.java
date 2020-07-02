@@ -46,6 +46,7 @@ import com.zimbra.common.calendar.ZCalendar.ZComponent;
 import com.zimbra.common.calendar.ZCalendar.ZParameter;
 import com.zimbra.common.calendar.ZCalendar.ZProperty;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
+import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException;
@@ -147,8 +148,7 @@ public class ForwardCalendarItem extends CalendarRequest {
         List<MimeMessage> fwdMsgs = new ArrayList<MimeMessage>();
         List<MimeMessage> notifyMsgs = new ArrayList<MimeMessage>();
         Pair<List<MimeMessage>, List<MimeMessage>> pair = new Pair<List<MimeMessage>, List<MimeMessage>>(fwdMsgs, notifyMsgs);
-        mbox.lock.lock();
-        try {
+        try (final MailboxLock l = mbox.getWriteLockAndLockIt()) {
             if (rid == null) {
                 // Forwarding entire appointment
                 pair = getSeriesFwdMsgs(octxt, senderAcct, calItem, mm);
@@ -189,8 +189,6 @@ public class ForwardCalendarItem extends CalendarRequest {
                     notifyMsgs.add(instancePair.getSecond());
                 }
             }
-        } finally {
-            mbox.lock.release();
         }
         return pair;
     }
@@ -199,7 +197,7 @@ public class ForwardCalendarItem extends CalendarRequest {
             throws ServiceException {
         return CalendarMailSender.sendPartial(octxt, mbox, mmFwd, null, null, null, null, false);
     }
-    
+
     protected static ItemId sendFwdNotifyMsg(OperationContext octxt, Mailbox mbox, MimeMessage mmFwd)
             throws ServiceException {
         return CalendarMailSender.sendPartial(octxt, mbox, mmFwd, null, null, null, null, false, true);
@@ -258,9 +256,9 @@ public class ForwardCalendarItem extends CalendarRequest {
                 }
 
                 MimeMessage mmInv = calItem.getSubpartMessage(inv.getMailItemId());
-                Pair<MimeMessage, MimeMessage> fwdMsgPair = makeFwdMsg(senderAcct, inv, mmInv, cal, mmFwdWrapper, 
+                Pair<MimeMessage, MimeMessage> fwdMsgPair = makeFwdMsg(senderAcct, inv, mmInv, cal, mmFwdWrapper,
                         plainDescPart, htmlDescPart, firstInv);
-                
+
                 if (fwdMsgPair.getFirst() != null) {
                     msgs.add(fwdMsgPair.getFirst());
                 }
@@ -421,14 +419,14 @@ public class ForwardCalendarItem extends CalendarRequest {
         }
         mm.setSubject(mmFwdWrapper.getSubject());
         mm.saveChanges();
-        
+
         // Create a Forward Notification message if the invitation is originally from ZCS user.
         MimeMessage notifyMimeMsg = null;
         if (org != null) {
             String orgAddress = org.getAddress();
             Account orgAccount = Provisioning.getInstance().getAccountByName(orgAddress);
             if (orgAccount != null && !orgAccount.getId().equals(senderAcct.getId())) {
-                notifyMimeMsg = CalendarMailSender.createForwardNotifyMessage(senderAcct, 
+                notifyMimeMsg = CalendarMailSender.createForwardNotifyMessage(senderAcct,
                         orgAccount, orgAddress, mmFwdWrapper.getAllRecipients(), inv);
             }
         }

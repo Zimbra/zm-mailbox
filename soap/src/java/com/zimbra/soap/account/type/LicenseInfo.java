@@ -17,7 +17,7 @@
 
 package com.zimbra.soap.account.type;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
@@ -28,10 +28,16 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.type.LicenseStatus;
 
+import io.leangen.graphql.annotations.GraphQLNonNull;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name=GqlConstants.CLASS_LICENSE_INFO, description="License information")
 public class LicenseInfo {
 
     /**
@@ -66,12 +72,15 @@ public class LicenseInfo {
         this.attrs.add(attr);
     }
 
+    @GraphQLNonNull
+    @GraphQLQuery(name=GqlConstants.STATUS, description="Status")
     public LicenseStatus getStatus() { return status; }
+    @GraphQLQuery(name=GqlConstants.ATTRS, description="attrs")
     public List<LicenseAttr> getAttrs() {
         return attrs;
     }
 
-    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         return helper
             .add("status", status)
             .add("attrs", attrs);
@@ -79,6 +88,6 @@ public class LicenseInfo {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this)).toString();
+        return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
     }
 }

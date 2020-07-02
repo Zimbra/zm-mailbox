@@ -16,7 +16,7 @@
  */
 package com.zimbra.cs.mailbox;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
@@ -29,9 +29,13 @@ public class Comment extends MailItem {
     Comment(Mailbox mbox, UnderlyingData data) throws ServiceException {
         this(mbox, data, false);
     }
-    
+
     Comment(Mailbox mbox, UnderlyingData data, boolean skipCache) throws ServiceException {
         super(mbox, data, skipCache);
+    }
+
+    Comment(Account acc, UnderlyingData data, int mailboxId) throws ServiceException {
+        super(acc, data, mailboxId);
     }
 
     public static Comment create(Mailbox mbox, MailItem parent, int id, String uuid, String text, String creatorId, CustomMetadata custom) throws ServiceException {
@@ -120,7 +124,7 @@ public class Comment extends MailItem {
 
     @Override
     Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mRGBColor, mMetaVersion, mVersion, mCreatorId, mExtendedData);
+        return encodeMetadata(meta, state.getColor(), state.getMetadataVersion(), state.getVersion(), mCreatorId, mExtendedData);
     }
 
     private static String encodeMetadata(Color color, int metaVersion, int version, String accountId, CustomMetadata custom) {
@@ -143,7 +147,7 @@ public class Comment extends MailItem {
 
     @Override
     public String toString() {
-        Objects.ToStringHelper helper = Objects.toStringHelper(this);
+        MoreObjects.ToStringHelper helper = MoreObjects.toStringHelper(this);
         appendCommonMembers(helper);
         helper.add("type", getType());
         helper.add("creator", mCreatorId);

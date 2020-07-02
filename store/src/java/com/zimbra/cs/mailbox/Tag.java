@@ -22,24 +22,29 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.base.CharMatcher;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Sets;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.mailbox.ZimbraTag;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbTag;
+import com.zimbra.cs.mailbox.MailItemState.AccessMode;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
+import com.zimbra.cs.mailbox.cache.SharedState;
+import com.zimbra.cs.mailbox.cache.SharedStateAccessor;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.soap.mail.type.RetentionPolicy;
 
 /**
  * @since Jul 12, 2004
  */
-public class Tag extends MailItem implements ZimbraTag {
+public class Tag extends MailItem implements ZimbraTag, SharedState {
     public static class NormalizedTags {
         private static final String[] NO_TAGS = new String[0];
 
@@ -54,7 +59,9 @@ public class Tag extends MailItem implements ZimbraTag {
         }
 
         NormalizedTags(Mailbox mbox, String[] tagsFromClient, boolean create, boolean imapVisible) throws ServiceException {
-            assert mbox.isTransactionActive() : "cannot instantiate NormalizedTags outside of a transaction";
+			// @Raffaell0 not all callers will be holding a mailbox lock, no reasonable way
+			// to pipe in MailboxLock instances here for this assertion
+			// assert mbox.isTransactionActive() : "cannot instantiate NormalizedTags outside of a transaction";
 
             if (ArrayUtil.isEmpty(tagsFromClient)) {
                 this.tags = NO_TAGS;
@@ -113,26 +120,29 @@ public class Tag extends MailItem implements ZimbraTag {
     // also used in searches for a tag which doesn't exist.
     public static final int NONEXISTENT_TAG = -32;
 
-    private boolean isListed;
-
-    // If this is true, an a newly-created unlisted tag will still be returned as a pending remote modification
-    private boolean isImapVisible = false;
-
-    private RetentionPolicy retentionPolicy;
-
     Tag(Mailbox mbox, UnderlyingData ud) throws ServiceException {
         this(mbox, ud, false);
     }
 
     Tag(Mailbox mbox, UnderlyingData ud, boolean skipCache) throws ServiceException {
         super(mbox, ud, skipCache);
-        if (mData.type != Type.TAG.toByte() && mData.type != Type.FLAG.toByte()) {
+        init();
+    }
+
+    Tag(Account acc, UnderlyingData data, int mailboxId) throws ServiceException {
+        super(acc, data, mailboxId);
+        init();
+    }
+
+    private void init() throws ServiceException {
+        UnderlyingData data = state.getUnderlyingData();
+        if (data.type != Type.TAG.toByte() && data.type != Type.FLAG.toByte() && data.type != Type.SMARTFOLDER.toByte()) {
             throw new IllegalArgumentException();
         }
-        if (retentionPolicy == null) {
+        if (state.getRetentionPolicy() == null) {
             // Retention policy is initialized in Tag's encodeMetadata(), but
             // not in Flag's.
-            retentionPolicy = new RetentionPolicy();
+            state.setRetentionPolicy(new RetentionPolicy());
         }
     }
 
@@ -156,7 +166,7 @@ public class Tag extends MailItem implements ZimbraTag {
         }
         markItemModified(Change.SIZE);
         // if we go negative, that's OK!  just pretend we're at 0.
-        mData.size = Math.max(0, mData.size + delta);
+        state.setSize(Math.max(0, state.getSize() + delta));
     }
 
     @Override
@@ -197,7 +207,7 @@ public class Tag extends MailItem implements ZimbraTag {
 
     /** Returns the retention policy for this tag.  Does not return {@code null}. */
     public RetentionPolicy getRetentionPolicy() {
-        return retentionPolicy;
+        return state.getRetentionPolicy();
     }
 
     public void setRetentionPolicy(RetentionPolicy rp) throws ServiceException {
@@ -206,17 +216,18 @@ public class Tag extends MailItem implements ZimbraTag {
         }
 
         markItemModified(Change.RETENTION_POLICY);
-        retentionPolicy = rp == null ? new RetentionPolicy() : rp;
+        state.setRetentionPolicy(rp == null ? new RetentionPolicy() : rp);
         saveMetadata();
     }
 
     public boolean isListed() {
-        return isListed;
+        return getState().isListed();
     }
 
-    void setListed() throws ServiceException {
-        if (!isListed) {
-            isListed = true;
+    public void setListed() throws ServiceException {
+        TagState fields = getState();
+        if (!fields.isListed()) {
+            fields.setListed(true);
             saveMetadata();
         }
     }
@@ -306,6 +317,9 @@ public class Tag extends MailItem implements ZimbraTag {
 
     static final String FLAG_NAME_PREFIX = "\\";
 
+    //extends flag prefix to avoid potential name collisions with existing tags
+    static final String SMARTFOLDER_NAME_PREFIX = "\\\\";
+
     private static final CharMatcher INVALID_TAG_CHARS = CharMatcher.anyOf(":\\");
 
     static String validateItemName(String name) throws ServiceException {
@@ -341,7 +355,7 @@ public class Tag extends MailItem implements ZimbraTag {
 
         // actually rename the tag
         markItemModified(Change.NAME);
-        mData.name = newName;
+        state.setName(newName);
         contentChanged();
         DbTag.renameTag(this);
         // dump entire item cache because tag names on cached items are now stale
@@ -378,7 +392,7 @@ public class Tag extends MailItem implements ZimbraTag {
     /** Persists the tag's current unread count to the database. */
     protected void saveTagCounts() throws ServiceException {
         DbTag.persistCounts(this);
-        ZimbraLog.mailbox.debug("\"%s\": updating tag counts (s%d/u%d)", getName(), (int) mData.size, mData.unreadCount);
+        ZimbraLog.mailbox.debug("\"%s\": updating tag counts (s%d/u%d)", getName(), (int) state.getSize(), state.getUnreadCount());
     }
 
     @Override
@@ -390,20 +404,21 @@ public class Tag extends MailItem implements ZimbraTag {
     @Override
     void decodeMetadata(Metadata meta) throws ServiceException {
         super.decodeMetadata(meta);
-
-        isListed = meta.getBool(Metadata.FN_LISTED, false);
+        TagState fields = getState();
+        fields.setListed(meta.getBool(Metadata.FN_LISTED, false), AccessMode.LOCAL_ONLY);
 
         Metadata rp = meta.getMap(Metadata.FN_RETENTION_POLICY, true);
         if (rp != null) {
-            retentionPolicy = RetentionPolicyManager.retentionPolicyFromMetadata(rp, true);
+            fields.setRetentionPolicy(RetentionPolicyManager.retentionPolicyFromMetadata(rp, true), AccessMode.LOCAL_ONLY);
         } else {
-            retentionPolicy = new RetentionPolicy();
+            fields.setRetentionPolicy(new RetentionPolicy(), AccessMode.LOCAL_ONLY);
         }
     }
 
     @Override
     Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mRGBColor, mMetaVersion, mVersion, retentionPolicy, isListed);
+        TagState fields = getState();
+        return encodeMetadata(meta, fields.getColor(), fields.getMetadataVersion(), fields.getVersion(), fields.getRetentionPolicy(), fields.isListed());
     }
 
     public static String encodeMetadata(Color color, int metaVersion, int version, RetentionPolicy rp, boolean listed) {
@@ -423,7 +438,7 @@ public class Tag extends MailItem implements ZimbraTag {
 
     @Override
     public String toString() {
-        Objects.ToStringHelper helper = Objects.toStringHelper(this);
+        MoreObjects.ToStringHelper helper = MoreObjects.toStringHelper(this);
         appendCommonMembers(helper);
         return helper.toString();
     }
@@ -439,10 +454,57 @@ public class Tag extends MailItem implements ZimbraTag {
     }
 
     public void setIsImapVisible(boolean visible) {
-        isImapVisible = visible;
+        getState().setImapVisible(visible);
     }
 
     public boolean isImapVisible()  {
-        return isImapVisible;
+        return getState().isImapVisible();
+    }
+
+    @Override
+    public void attach(SharedStateAccessor accessor) {
+        TagState state = getState();
+        if (state instanceof SynchronizableTagState) {
+            ((SynchronizableTagState) state).setSharedStateAccessor(accessor);
+        }
+    }
+
+    @Override
+    public void detatch() {
+        TagState state = getState();
+        if (state instanceof SynchronizableTagState) {
+            ((SynchronizableTagState) state).clearSharedStateAccessor();
+        }
+    }
+
+    @Override
+    protected MailItemState initFieldCache(UnderlyingData data) {
+        if (LC.redis_cache_synchronize_folders_tags.booleanValue()) {
+            return new SynchronizableTagState(data);
+        } else {
+            return new LocalTagState(data);
+        }
+    }
+
+    protected TagState getState() {
+        return (TagState) state;
+    }
+
+    @Override
+    public boolean isAttached() {
+        TagState state = getState();
+        if (state instanceof SynchronizableTagState) {
+            return ((SynchronizableTagState) state).hasSharedStateAccessor();
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public void sync() {
+        TagState state = getState();
+        if (state instanceof SynchronizableTagState) {
+            ((SynchronizableTagState) state).syncWithSharedState(this);
+        }
     }
 }

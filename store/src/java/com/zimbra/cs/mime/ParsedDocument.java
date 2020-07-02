@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2016, 2017 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -11,7 +11,7 @@
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
  * You should have received a copy of the GNU General Public License along with this program.
- * If not, see <https://www.gnu.org/licenses/>.
+ * If not, see <http://www.gnu.org/licenses/>.
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.cs.mime;
@@ -29,8 +29,6 @@ import com.zimbra.cs.convert.ConversionException;
 import com.zimbra.cs.index.Fragment;
 import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.LuceneFields;
-import com.zimbra.cs.index.ZimbraAnalyzer;
-import com.zimbra.cs.index.analysis.RFC822AddressTokenStream;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
 
@@ -81,8 +79,9 @@ public final class ParsedDocument {
         this.creator = creator;
         this.description = description;
         this.descEnabled = descEnabled;
-        if (LC.documents_disable_instant_parsing.booleanValue() == false)
+        if (LC.documents_disable_instant_parsing.booleanValue() == false) {
             performExtraction();
+        }
     }
 
     /**
@@ -109,7 +108,7 @@ public final class ParsedDocument {
                     ZimbraLog.doc.warn("Temporary failure extracting from the document.  (is convertd down?)", e);
                     temporaryAnalysisFailure = true;
                 } else {
-                    ZimbraLog.index.warn("Failure indexing wiki document "+ filename + ".  Item will be partially indexed", e);
+                    ZimbraLog.index.warnQuietly("Failure indexing wiki document "+ filename + ".  Item will be partially indexed", e);
                 }
             }
             fragment = Fragment.getFragment(textContent, Fragment.Source.NOTEBOOK);
@@ -122,25 +121,23 @@ public final class ParsedDocument {
             }
 
             StringBuilder content = new StringBuilder();
-            appendToContent(content, filename);
-            appendToContent(content, ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_FILENAME, filename));
             appendToContent(content, textContent);
             appendToContent(content, description);
 
             document.addContent(content.toString());
-            document.addFrom(new RFC822AddressTokenStream(creator));
+            document.addFrom(creator);
             document.addFilename(filename);
             long elapsed = System.currentTimeMillis() - start;
             ZimbraLog.doc.debug("ParsedDocument performExtraction elapsed=" + elapsed);
         } catch (MimeHandlerException mhe) {
             if (ConversionException.isTemporaryCauseOf(mhe)) {
-                ZimbraLog.doc.warn("Temporary failure extracting from the document.  (is convertd down?)", mhe);
+                ZimbraLog.doc.warnQuietly("Temporary failure extracting from the document.  (is convertd down?)", mhe);
                 temporaryAnalysisFailure = true;
             } else {
-                ZimbraLog.doc.error("cannot create ParsedDocument", mhe);
+                ZimbraLog.doc.errorQuietly("cannot create ParsedDocument", mhe);
             }
         } catch (Exception e) {
-            ZimbraLog.index.warn("Failure indexing wiki document " + filename + ".  Item will be partially indexed", e);
+            ZimbraLog.index.warnQuietly("Failure indexing wiki document " + filename + ".  Item will be partially indexed", e);
         } finally {
             parsed = true;
         }
@@ -229,6 +226,10 @@ public final class ParsedDocument {
 
     public boolean hasTemporaryAnalysisFailure() {
         return temporaryAnalysisFailure;
+    }
+
+    public int getNumIndexDocs() {
+        return 1;
     }
 
 }

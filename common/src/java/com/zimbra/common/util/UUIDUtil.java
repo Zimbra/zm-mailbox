@@ -29,4 +29,8 @@ public class UUIDUtil {
     public static String generateUUID() {
         return UUID.randomUUID().toString();
     }
+
+    public static String generateAccountAndTimeBasedUUID(String accountId) {
+        return UUID.nameUUIDFromBytes((accountId + System.currentTimeMillis()).getBytes()).toString();
+    }
 }

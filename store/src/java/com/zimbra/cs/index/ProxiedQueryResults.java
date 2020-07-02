@@ -17,8 +17,13 @@
 
 package com.zimbra.cs.index;
 
-import com.google.common.base.Objects;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -26,17 +31,13 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.soap.DocumentHandler;
-import com.zimbra.soap.ProxyTarget;
+import com.zimbra.soap.IpProxyTarget;
 import com.zimbra.soap.ZimbraSoapContext;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
 /**
  * Represents the results of a query made on a remote server. This class takes
@@ -77,6 +78,7 @@ public final class ProxiedQueryResults extends ZimbraQueryResultsImpl {
     private long mTimeout = -1;
 
     private List<QueryInfo> queryInfo = new ArrayList<QueryInfo>();
+    private boolean relevanceSortSupported = true;
 
     /**
      * A search request in the current mailbox on a different server.
@@ -206,13 +208,13 @@ public final class ProxiedQueryResults extends ZimbraQueryResultsImpl {
 
     @Override
     public String toString() {
-        String url;
-        try {
-            url = URLUtil.getAdminURL(Provisioning.getInstance().get(Key.ServerBy.name, server));
-        } catch (ServiceException ex) {
-            url = server;
-        }
-        return Objects.toStringHelper(this).add("url", url).add("acctId", targetAcctId).toString();
+    	String url;
+    	try {
+    		url = URLUtil.getAdminURL(Provisioning.getInstance().get(Key.ServerBy.name, server));
+    	} catch (ServiceException ex) {
+    		url = server;
+    	}
+    	return MoreObjects.toStringHelper(this).add("url", url).add("acctId", targetAcctId).toString();
     }
 
     /**
@@ -245,6 +247,7 @@ public final class ProxiedQueryResults extends ZimbraQueryResultsImpl {
 
         searchParams.setOffset(bufferStartOffset);
         searchParams.setLimit(chunkSizeToUse);
+        searchParams.setLogSearch(false);
         searchParams.encodeParams(searchElt);
         if (singleShotRemoteRequest && (searchParams.getCursor() != null)) {
             Element cursorElt = searchElt.addElement(MailConstants.E_CURSOR);
@@ -258,16 +261,19 @@ public final class ProxiedQueryResults extends ZimbraQueryResultsImpl {
         }
 
         // call the remote server now!
-        Server targetServer = Provisioning.getInstance().get(Key.ServerBy.name, server);
+        Provisioning prov = Provisioning.getInstance();
+        Account acct = prov.getAccount(prov, AccountBy.id, targetAcctId, authToken);
+        String targetServer = Provisioning.affinityServer(acct);
+
         String baseurl = null;
         try {
-            baseurl = URLUtil.getSoapURL(targetServer, false);
+            baseurl = URLUtil.getSoapURL(targetServer, URLUtil.getPort(), false);
         } catch (ServiceException e) {
         }
         if (baseurl == null) {
-            baseurl = URLUtil.getAdminURL(targetServer, AdminConstants.ADMIN_SERVICE_URI, true);
+            baseurl = URLUtil.getAdminURL(targetServer, URLUtil.getPort(), AdminConstants.ADMIN_SERVICE_URI, true);
         }
-        ProxyTarget proxy = new ProxyTarget(targetServer, authToken, baseurl + MailConstants.SEARCH_REQUEST.getName());
+        IpProxyTarget proxy = new IpProxyTarget(targetServer, authToken, baseurl + MailConstants.SEARCH_REQUEST.getName());
         if (mTimeout != -1) {
             proxy.setTimeouts(mTimeout);
         }
@@ -311,6 +317,8 @@ public final class ProxiedQueryResults extends ZimbraQueryResultsImpl {
             hitOffset = (int) searchResp.getAttributeLong(MailConstants.A_QUERY_OFFSET);
         }
         boolean hasMore = searchResp.getAttributeBool(MailConstants.A_QUERY_MORE);
+
+        relevanceSortSupported = searchResp.getAttributeBool(MailConstants.A_RELEVANCE_SORT_SUPPORTED, true);
 
         assert(bufferStartOffset == hitOffset);
 
@@ -368,5 +376,10 @@ public final class ProxiedQueryResults extends ZimbraQueryResultsImpl {
     @Override
     public boolean isPreSorted() {
         return true;
+    }
+
+    @Override
+    public boolean isRelevanceSortSupported() {
+        return relevanceSortSupported;
     }
 }

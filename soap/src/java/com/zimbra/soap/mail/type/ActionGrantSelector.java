@@ -17,14 +17,20 @@
 
 package com.zimbra.soap.mail.type;
 
-import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.soap.MailConstants;
 
+import io.leangen.graphql.annotations.GraphQLIgnore;
+import io.leangen.graphql.annotations.GraphQLNonNull;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name="ActionGrantSelector", description="Input for grants")
 public class ActionGrantSelector {
 
     /**
@@ -32,6 +38,8 @@ public class ActionGrantSelector {
      * @zm-api-field-description Rights
      */
     @XmlAttribute(name=MailConstants.A_RIGHTS /* perm */, required=true)
+    @GraphQLNonNull
+    @GraphQLQuery(name="permissions", description="Rights - Some combination of (r)ead, (w)rite, (i)nsert, (d)elete, (a)dminister, workflow action (x), view (p)rivate, view (f)reebusy, (c)reate subfolder")
     private final String rights;
 
     // FolderActionRequest/action/grant/gt - FolderAction uses com.zimbra.cs.mailbox.ACL.stringToType
@@ -41,6 +49,8 @@ public class ActionGrantSelector {
      * @zm-api-field-description Grantee Type - usr | grp | cos | dom | all | pub | guest | key
      */
     @XmlAttribute(name=MailConstants.A_GRANT_TYPE /* gt */, required=true)
+    @GraphQLNonNull
+    @GraphQLQuery(name="granteeType", description="Grantee Type - usr | grp | cos | dom | all | pub | guest | key")
     private final String grantType;
 
     /**
@@ -48,6 +58,7 @@ public class ActionGrantSelector {
      * @zm-api-field-description Zimbra ID
      */
     @XmlAttribute(name=MailConstants.A_ZIMBRA_ID /* zid */, required=false)
+    @GraphQLQuery(name="granteeId", description="Zimbra id")
     private String zimbraId;
 
     /**
@@ -56,6 +67,7 @@ public class ActionGrantSelector {
      * Not present if <b>{grantee-type}</b> is "all" or "pub"
      */
     @XmlAttribute(name=MailConstants.A_DISPLAY /* d */, required=false)
+    @GraphQLQuery(name="granteeName", description="Name or email address of the grantee. Not present if granteeType is all or pub")
     private String displayName;
 
     // See Bug 30891
@@ -64,6 +76,7 @@ public class ActionGrantSelector {
      * @zm-api-field-description Retained for backwards compatibility.  Old way of specifying password
      */
     @XmlAttribute(name=MailConstants.A_ARGS /* args */, required=false)
+    @GraphQLIgnore
     private String args;
 
     /**
@@ -71,6 +84,7 @@ public class ActionGrantSelector {
      * @zm-api-field-description Optional argument.  Password when <b>{grantee-type}</b> is "gst" (not yet supported)
      */
     @XmlAttribute(name=MailConstants.A_PASSWORD /* pw */, required=false)
+    @GraphQLQuery(name="password", description="Password when granteeType is gst")
     private String password;
 
     /**
@@ -78,6 +92,7 @@ public class ActionGrantSelector {
      * @zm-api-field-description Optional argument.  Access key when <b>{grantee-type}</b> is "key"
      */
     @XmlAttribute(name=MailConstants.A_ACCESSKEY /* key */, required=false)
+    @GraphQLQuery(name="accessKey", description="Access key when granteeType is key")
     private String accessKey;
 
     /**
@@ -106,7 +121,7 @@ public class ActionGrantSelector {
     public String getPassword() { return password; }
     public String getAccessKey() { return accessKey; }
 
-    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         return helper
             .add("rights", rights)
             .add("grantType", grantType)
@@ -119,6 +134,6 @@ public class ActionGrantSelector {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this)).toString();
+        return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
     }
 }

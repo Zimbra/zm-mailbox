@@ -17,15 +17,27 @@
 
 package com.zimbra.soap.mail.type;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.soap.base.ByMonthDayRuleInterface;
 
+import io.leangen.graphql.annotations.GraphQLInputField;
+import io.leangen.graphql.annotations.GraphQLNonNull;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name=GqlConstants.CLASS_BY_MONTH_DAY_RULE, description="By-month-day rule")
 public class ByMonthDayRule implements ByMonthDayRuleInterface {
 
     /**
@@ -38,6 +50,8 @@ public class ByMonthDayRule implements ByMonthDayRuleInterface {
      * means first day of the month, plus the 2nd day of the month, plus the 7th from last day of the month.
      */
     @XmlAttribute(name=MailConstants.A_CAL_RULE_BYMONTHDAY_MODAYLIST /* modaylist */, required=true)
+    @GraphQLNonNull
+    @GraphQLQuery(name=GqlConstants.LIST, description="Comma separated list of day numbers from either the start (positive) or the end (negative) of the month - format : <b>[[+]|-]num[,...]</b>   where num between 1 to 31")
     private final String list;
 
     /**
@@ -48,7 +62,7 @@ public class ByMonthDayRule implements ByMonthDayRuleInterface {
         this((String) null);
     }
 
-    public ByMonthDayRule(String list) {
+    public ByMonthDayRule(@GraphQLNonNull @GraphQLInputField String list) {
         this.list = list;
     }
 
@@ -60,9 +74,21 @@ public class ByMonthDayRule implements ByMonthDayRuleInterface {
     @Override
     public String getList() { return list; }
 
+    public List<Integer> getAsList() {
+        if (StringUtil.isNullOrEmpty(list)) {
+            return null;
+        }
+        String[] arr = list.split(",");
+        List<Integer> toReturn = new ArrayList<Integer>();
+        for (String a : arr) {
+            toReturn.add(Integer.valueOf(a));
+        }
+        return toReturn;
+    }
+
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
             .add("list", list)
             .toString();
     }

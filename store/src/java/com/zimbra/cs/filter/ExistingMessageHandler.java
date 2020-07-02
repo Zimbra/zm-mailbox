@@ -67,7 +67,13 @@ public final class ExistingMessageHandler implements FilterHandler {
 
     @Override
     public String getDefaultFolderPath() throws ServiceException {
-        return getDefaultFolder().getPath();
+        Folder defaultFolder = getDefaultFolder();
+        if(null != defaultFolder)
+        {
+            return defaultFolder.getPath();
+        }
+        ZimbraLog.filter.error("ExistingMessageHandler.getDefaultFolderPath default folder is null for message id %d.", messageId);
+        throw ServiceException.NOT_FOUND(String.format("ExistingMessageHandler.getDefaultFolderPath default folder is null for message id %d.", messageId));
     }
 
     private Folder getDefaultFolder() throws ServiceException {
@@ -182,7 +188,7 @@ public final class ExistingMessageHandler implements FilterHandler {
         ItemId id = FilterUtil.addMessage(new DeliveryContext(), mailbox, getParsedMessage(),
                                           mailbox.getAccount().getName(), folderPath, false,
                                           FilterUtil.getFlagBitmask(flagActions, source.getFlagBitmask()),
-                                          tags, Mailbox.ID_AUTO_INCREMENT, octxt);
+                                          tags, Mailbox.ID_AUTO_INCREMENT, octxt, getMessageCallbackContext());
         if (id != null) {
             filtered = true;
             filed = true;

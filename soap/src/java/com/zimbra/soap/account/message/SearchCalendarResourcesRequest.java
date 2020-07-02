@@ -17,7 +17,7 @@
 
 package com.zimbra.soap.account.message;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -170,7 +170,7 @@ extends AttributeSelectorImpl {
     public String getName() { return name; }
     public EntrySearchFilterInfo getSearchFilter() { return searchFilter; }
 
-    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);
         return helper
             .add("quick", quick)
@@ -186,7 +186,7 @@ extends AttributeSelectorImpl {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this)).toString();
+        return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
     }
 
 }

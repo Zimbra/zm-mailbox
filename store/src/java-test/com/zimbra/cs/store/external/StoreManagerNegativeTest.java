@@ -17,6 +17,7 @@
 package com.zimbra.cs.store.external;
 
 import java.io.File;
+import org.junit.Ignore;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -45,7 +46,7 @@ import com.zimbra.cs.store.StagedBlob;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.qa.unittest.TestUtil;
 
-public class StoreManagerNegativeTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public class StoreManagerNegativeTest {
 
     static StoreManager originalStoreManager;
 

@@ -20,8 +20,12 @@ package com.zimbra.soap.mail.type;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.ZmBoolean;
+
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
 
 /*
             <link id="1" name="new-mount-point" l="1" n="6" u="1" f="u" owner="user1@example.com" zid="151bd192-e19a-40be-b8c9-259b21ffac48" rid="2" oname="user1folder">
@@ -29,6 +33,7 @@ import com.zimbra.soap.type.ZmBoolean;
  */
 // Root element name needed to differentiate between types of folder
 @XmlRootElement(name=MailConstants.E_MOUNT /* link */)
+@GraphQLType(name=GqlConstants.CLASS_MOUNTPOINT, description="mountpoint details")
 public class Mountpoint
 extends Folder {
 
@@ -84,22 +89,27 @@ extends Folder {
     public Mountpoint() {
     }
 
+    @GraphQLQuery(name=GqlConstants.OWNER_EMAIL, description="Primary email address of the owner of the linked-to resource")
     public String getOwnerEmail() {
         return ownerEmail;
     }
 
+    @GraphQLQuery(name=GqlConstants.OWNER_ACCOUNT_ID, description="Zimbra ID (guid) of the owner of the linked-to resource")
     public String getOwnerAccountId() {
         return ownerAccountId;
     }
 
+    @GraphQLQuery(name=GqlConstants.REMOTE_FOLDER_ID, description="Item ID of the linked-to resource in the remote mailbox")
     public int getRemoteFolderId() {
         return remoteFolderId;
     }
 
+    @GraphQLQuery(name=GqlConstants.OWNER_FOLDER_NAME, description="The name presently used for the item by the owner")
     public String getRemoteFolderName() {
         return remoteFolderName;
     }
 
+    @GraphQLQuery(name=GqlConstants.REMINDER_ENABLED, description="If set, client should display reminders for shared appointments/tasks")
     public Boolean getReminderEnabled() {
         return ZmBoolean.toBool(reminderEnabled);
     }
@@ -124,6 +134,7 @@ extends Folder {
         this.reminderEnabled = ZmBoolean.fromBool(reminderEnabled);
     }
 
+    @GraphQLQuery(name=GqlConstants.IS_BROKEN, description="If \"tr\" is true in the request, broken is set if this is a broken link")
     public Boolean getBroken() {
         return ZmBoolean.toBool(broken);
     }
@@ -132,6 +143,7 @@ extends Folder {
         this.broken = ZmBoolean.fromBool(broken);
     }
 
+    @GraphQLQuery(name=GqlConstants.REMOTE_UUID, description="UUID of the linked-to resource in the remote mailbox")
     public String getRemoteUuid() {
         return remoteUuid;
     }

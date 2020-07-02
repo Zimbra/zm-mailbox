@@ -41,6 +41,7 @@ import com.zimbra.soap.type.ZmBoolean;
  <AuthRequest xmlns="urn:zimbraAccount">
    [<account by="name|id|foreignPrincipal">...</account>]
    [<password>...</password>]
+   [<recoveryCode>...</recoveryCode>]
    [<preauth timestamp="{timestamp}" expires="{expires}">{computed-preauth-value}</preauth>]
    [<authToken>...</authToken>]
    [<virtualHost>{virtual-host}</virtualHost>]
@@ -51,8 +52,9 @@ import com.zimbra.soap.type.ZmBoolean;
  * @zm-api-command-auth-required false - can't require auth on auth request
  * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Authenticate for an account
- * @zm-api-request-description when specifying an account, one of <b>&lt;password></b> or <b>&lt;preauth></b> must be
- * specified.  See preauth.txt for a discussion of preauth.<br />
+ * @zm-api-request-description when specifying an account, one of <b>&lt;password></b> or <b>&lt;preauth></b> or
+ * <b>&lt;recoveryCode></b> must be specified.
+ * See preauth.txt for a discussion of preauth.<br />
  * An authToken can be passed instead of account/password/preauth to validate an existing auth token.
  * If <b>{verifyAccount}="1"</b>, <b>&lt;account></b> is required and the account in the auth token is compared to the
  * named account.<br />
@@ -97,6 +99,12 @@ public class AuthRequest {
     private String password;
 
     /**
+     * @zm-api-field-description RecoveryCode to use in conjunction with an account in case of forgot password flow.
+     */
+    @XmlElement(name=AccountConstants.E_RECOVERY_CODE, required=false)
+    private String recoveryCode;
+
+    /**
      * @zm-api-field-description &lt;preauth> is an alternative to &lt;account>.  See preauth.txt
      */
     @XmlElement(name=AccountConstants.E_PREAUTH /* preauth */, required=false)
@@ -112,6 +120,12 @@ public class AuthRequest {
      */
     @XmlElement(name=AccountConstants.E_AUTH_TOKEN /* authToken */, required=false)
     private AuthToken authToken;
+
+    /**
+     * @zm-api-field-description JWT auth token
+     */
+    @XmlElement(name=AccountConstants.E_JWT_TOKEN /* jwtToken */, required=false)
+    private String jwtToken;
 
     /**
      * @zm-api-field-tag virtual-host
@@ -176,6 +190,13 @@ public class AuthRequest {
     @XmlAttribute(name=AccountConstants.A_GENERATE_DEVICE_ID /* generateDeviceId */, required=false)
     private ZmBoolean generateDeviceId;
 
+    /**
+     * @zm-api-field-description type of token to be returned, it can be auth or jwt
+     * 
+     */
+    @XmlAttribute(name = AccountConstants.A_TOKEN_TYPE /* token type to be returned */, required = false)
+    private String tokenType;
+
     public AuthRequest() {
     }
 
@@ -193,17 +214,31 @@ public class AuthRequest {
         this.persistAuthTokenCookie = ZmBoolean.fromBool(persistAuthTokenCookie);
     }
 
+    public String getTokenType() {
+        return tokenType;
+    }
+
+    public void setTokenType(String tokenType) {
+        this.tokenType = tokenType;
+    }
+
     public AccountSelector getAccount() { return account; }
     public AuthRequest setAccount(AccountSelector account) { this.account = account; return this; }
 
     public String getPassword() { return password; }
     public AuthRequest setPassword(String password) { this.password = password; return this; }
 
+    public String getRecoveryCode() { return recoveryCode; }
+    public AuthRequest setRecoveryCode(String recoveryCode) { this.recoveryCode = recoveryCode; return this; }
+
     public PreAuth getPreauth() { return preauth; }
     public AuthRequest setPreauth(PreAuth preauth) { this.preauth = preauth; return this; }
 
     public AuthToken getAuthToken() { return authToken; }
     public AuthRequest setAuthToken(AuthToken authToken) { this.authToken = authToken; return this; }
+
+    public String getJwtToken() { return jwtToken; }
+    public AuthRequest setJwtToken(String jwtToken) { this.jwtToken = jwtToken; return this; }
 
     public String getVirtualHost() { return virtualHost; }
     public AuthRequest setVirtualHost(String host) { this.virtualHost = host; return this; }

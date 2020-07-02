@@ -17,18 +17,24 @@
 
 package com.zimbra.soap.account.type;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlValue;
 
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.AccountConstants;
+
+import io.leangen.graphql.annotations.GraphQLNonNull;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
 
 /*
  * Used in GetInfoResponse if ZimbraLicenseExtension is installed
  */
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name=GqlConstants.CLASS_LICENSE_ATTR, description="License attributes")
 public class LicenseAttr {
 
     /**
@@ -50,10 +56,13 @@ public class LicenseAttr {
 
     public void setName(String name) { this.name = name; }
     public void setContent(String content) { this.content = content; }
+    @GraphQLNonNull
+    @GraphQLQuery(name=GqlConstants.NAME, description="Name of license attribute")
     public String getName() { return name; }
+    @GraphQLQuery(name=GqlConstants.CONTENT, description="Value of license attribute")
     public String getContent() { return content; }
 
-    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         return helper
             .add("name", name)
             .add("content", content);
@@ -61,6 +70,6 @@ public class LicenseAttr {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this)).toString();
+        return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
     }
 }

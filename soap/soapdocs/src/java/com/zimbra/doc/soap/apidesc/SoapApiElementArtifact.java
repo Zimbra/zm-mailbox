@@ -16,7 +16,8 @@
  */
 package com.zimbra.doc.soap.apidesc;
 
-import org.codehaus.jackson.annotate.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 /**
  * Used for conveying element related information appropriate at a certain level.
  * For instance, ordinary elements have an associated data type

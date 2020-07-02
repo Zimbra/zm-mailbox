@@ -25,11 +25,11 @@ import javax.servlet.http.HttpServletRequest;
 import org.dom4j.QName;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapFaultException;
+import com.zimbra.common.soap.ZimbraNamespace;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.Version;
 import com.zimbra.common.util.ZimbraLog;
@@ -43,12 +43,16 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.pubsub.PubSubService;
+import com.zimbra.cs.pubsub.message.FlushCacheMsg;
 import com.zimbra.cs.session.AdminSession;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.SoapSession;
-import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.ZimbraSoapContext.SessionInfo;
+import com.zimbra.soap.admin.type.CacheEntrySelector;
+import com.zimbra.soap.admin.type.CacheEntryType;
+import com.zimbra.soap.admin.type.CacheSelector;
 
 /**
  * @since May 26, 2004
@@ -81,25 +85,25 @@ public abstract class DocumentHandler {
     private static String LOCAL_HOST_ID = "";
 
     public static String getLocalHost() {
-        synchronized (LOCAL_HOST) {
-            if (LOCAL_HOST.length() == 0) {
-                try {
-                    Server localServer = Provisioning.getInstance().getLocalServer();
-                    LOCAL_HOST = localServer.getAttr(Provisioning.A_zimbraServiceHostname);
-                    LOCAL_HOST_ID = localServer.getId();
-                } catch (Exception e) {
-                    Zimbra.halt("could not fetch local server name from LDAP for request proxying");
-                }
-            }
-        }
-        return LOCAL_HOST;
+    	synchronized (LOCAL_HOST) {
+    		if (LOCAL_HOST.length() == 0) {
+    			try {
+    				Server localServer = Provisioning.getInstance().getLocalServer();
+    				LOCAL_HOST = localServer.getAttr(Provisioning.A_zimbraServiceHostname);
+    				LOCAL_HOST_ID = localServer.getId();
+    			} catch (Exception e) {
+    				ZimbraLog.session.warn("could not fetch local server name from LDAP for request proxying");
+    			}
+    		}
+    	}
+    	return LOCAL_HOST;
     }
 
     public static String getLocalHostId() {
-        if (LOCAL_HOST_ID.length() == 0) {
-            getLocalHost();
-        }
-        return LOCAL_HOST_ID;
+    	if (LOCAL_HOST_ID.length() == 0) {
+    		getLocalHost();
+    	}
+    	return LOCAL_HOST_ID;
     }
 
     public void preProxy(Element request, Map<String, Object> context) throws ServiceException {}
@@ -370,9 +374,20 @@ public abstract class DocumentHandler {
         if (sinfo != null) {
             s = SessionCache.lookup(sinfo.sessionId, authAccountId);
             if (s == null) {
-                // purge dangling references from the context's list of referenced sessions
-                ZimbraLog.session.info("requested session no longer exists: " + sinfo.sessionId);
-                zsc.clearSessionInfo();
+                if (SessionCache.soapSessionExists(sinfo.sessionId)) {
+                    //the session is registered somewhere else one the cluster - we create a new instance here,
+                    //with the same ID and sequence number
+                    ZimbraLog.session.info("session %s is not in the local cache", sinfo.sessionId);
+                    try {
+                        s = SoapSessionFactory.getInstance().getSoapSession(zsc, sinfo.sessionId).register();
+                    } catch (ServiceException e) {
+                        ZimbraLog.session.info("exception while creating session for existing ID %s", sinfo.sessionId, e);
+                    }
+                } else {
+                    // purge dangling references from the context's list of referenced sessions
+                    ZimbraLog.session.info("requested session no longer exists: " + sinfo.sessionId);
+                    zsc.clearSessionInfo();
+                }
             } else if (s.getSessionType() != stype) {
                 // only want a session of the appropriate type
                 s = null;
@@ -422,32 +437,21 @@ public abstract class DocumentHandler {
     }
 
 
-    /** Returns the {@link Server} object where an Account (specified by ID)
-     *  is homed.  This is similar to {@link Provisioning#getServer(Account),
-     *  except that the account is specified by ID and exceptions are thrown
-     *  on failure rather than returning null.
+    /** Returns the {@link PodIP} object where an Account (specified by ID)
+     *  is homed.
      *
      * @param acctId  The Zimbra ID of the account.
      * @throws ServiceException  The following error codes are possible:<ul>
      *    <li><tt>account.NO_SUCH_ACCOUNT</tt> - if there is no Account
      *        with the specified ID
-     *    <li><tt>account.PROXY_ERROR</tt> - if the Server associated
-     *        with the Account does not exist</ul> */
-    protected static Server getServer(String acctId) throws ServiceException {
+     **/
+    protected static String getPodIP(String acctId) throws ServiceException {
         Account acct = Provisioning.getInstance().get(AccountBy.id, acctId);
         if (acct == null) {
             throw AccountServiceException.NO_SUCH_ACCOUNT(acctId);
         }
-
-        String hostname = acct.getAttr(Provisioning.A_zimbraMailHost);
-        if (hostname == null) {
-            throw ServiceException.PROXY_ERROR(AccountServiceException.NO_SUCH_SERVER(""), "");
-        }
-        Server server = Provisioning.getInstance().get(Key.ServerBy.name, hostname);
-        if (server == null) {
-            throw ServiceException.PROXY_ERROR(AccountServiceException.NO_SUCH_SERVER(hostname), "");
-        }
-        return server;
+        String affinityIp = Provisioning.affinityServer(acct);
+        return affinityIp;
     }
 
     protected static String getXPath(Element request, String[] xpath) {
@@ -511,7 +515,7 @@ public abstract class DocumentHandler {
         // and an incremented hop count
         ZimbraSoapContext zscTarget = new ZimbraSoapContext(zsc, acctId);
 
-        return proxyRequest(request, context, getServer(acctId), zscTarget);
+        return proxyRequest(request, context, getPodIP(acctId), zscTarget);
     }
 
     protected Element proxyRequest(Element request, Map<String, Object> context, AuthToken authToken, String acctId)
@@ -522,27 +526,23 @@ public abstract class DocumentHandler {
         // and an incremented hop count
         ZimbraSoapContext zscTarget = new ZimbraSoapContext(zsc, authToken, acctId, null);
 
-        return proxyRequest(request, context, getServer(acctId), zscTarget);
+        return proxyRequest(request, context, getPodIP(acctId), zscTarget);
     }
 
     protected Element proxyRequest(Element request, Map<String, Object> context, Server server)
     throws ServiceException {
-        ZimbraSoapContext zsc = getZimbraSoapContext(context);
-
-        // new context for proxied request has an incremented hop count
-        ZimbraSoapContext pxyCtxt = new ZimbraSoapContext(zsc);
-        return proxyRequest(request, context, server, pxyCtxt);
+        throw ServiceException.PROXY_ERROR("proxying by Server values is not supported!", server.getName());
     }
 
     protected String getProxyAuthToken(String requestedAccountId, Map<String, Object> context) throws ServiceException {
         return Provisioning.getInstance().getProxyAuthToken(requestedAccountId, context);
     }
 
-    protected Element proxyRequest(Element request, Map<String, Object> context, Server server, ZimbraSoapContext zsc)
+    protected Element proxyRequest(Element request, Map<String, Object> context, String podIP, ZimbraSoapContext zsc)
     throws ServiceException {
         // figure out whether we can just re-dispatch or if we need to proxy via HTTP
         SoapEngine engine = (SoapEngine) context.get(SoapEngine.ZIMBRA_ENGINE);
-        boolean isLocal = getLocalHostId().equalsIgnoreCase(server.getId());
+        boolean isLocal = Provisioning.isMyIpAddress(podIP);
 
         //reset proxy token if proxying locally; it could previously be set to wrong account
         if (isLocal) {
@@ -570,8 +570,8 @@ public abstract class DocumentHandler {
             contextTarget.put(SoapEngine.ZIMBRA_ENGINE, engine);
             contextTarget.put(SoapEngine.ZIMBRA_CONTEXT, zsc);
             if (ZimbraLog.soap.isDebugEnabled()) {
-                ZimbraLog.soap.debug("Proxying request locally: targetServer=%s (id=%s) localHost=%s (id=%s)",
-                        server.getName(), server.getId(), LOCAL_HOST, LOCAL_HOST_ID);
+                ZimbraLog.soap.debug("Proxying request locally: targetServerIP=%s localHost=%s (id=%s)",
+                		podIP, LOCAL_HOST, LOCAL_HOST_ID);
             }
             response = engine.dispatchRequest(request, contextTarget, zsc);
             if (zsc.getResponseProtocol().isFault(response)) {
@@ -583,7 +583,7 @@ public abstract class DocumentHandler {
             preProxy(request, context);
             // executing remotely; find our target and proxy there
             HttpServletRequest httpreq = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
-            ProxyTarget proxy = new ProxyTarget(server.getId(), zsc.getAuthToken(), httpreq);
+            IpProxyTarget proxy = new IpProxyTarget(podIP, zsc.getAuthToken(), httpreq);
             if (proxyTimeout >= 0) {
                 proxy.setTimeouts(proxyTimeout);
             }
@@ -594,15 +594,15 @@ public abstract class DocumentHandler {
         return response;
     }
 
-    public static Element proxyWithNotification(Element request, ProxyTarget proxy, ZimbraSoapContext zscProxy, ZimbraSoapContext zscInbound)
+    public static Element proxyWithNotification(Element request, IpProxyTarget proxy, ZimbraSoapContext zscProxy, ZimbraSoapContext zscInbound)
     throws ServiceException {
         return proxyWithNotification(request, proxy, zscProxy, getReferencedSession(zscInbound));
     }
 
-    public static Element proxyWithNotification(Element request, ProxyTarget proxy, ZimbraSoapContext zscProxy, Session localSession)
+    public static Element proxyWithNotification(Element request, IpProxyTarget proxy, ZimbraSoapContext zscProxy, Session localSession)
     throws ServiceException {
-        Server server = proxy.getServer();
-        boolean isLocal = getLocalHostId().equalsIgnoreCase(server.getId());
+        String affinityIp = proxy.getIp();
+        boolean isLocal = Provisioning.isMyIpAddress(affinityIp);
 
         if (isLocal) {
             zscProxy.resetProxyAuthToken();
@@ -617,7 +617,7 @@ public abstract class DocumentHandler {
             if (!(localSession instanceof SoapSession) || localSession.getMailbox() == null) {
                 zscProxy.disableNotifications();
             } else if (!isLocal) {
-                zscProxy.setProxySession(((SoapSession) localSession).getRemoteSessionId(server));
+                zscProxy.setProxySession(((SoapSession) localSession).getRemoteSessionId(zscProxy.getRequestedAccountId(), affinityIp));
             } else {
                 zscProxy.setProxySession(localSession.getSessionId());
             }
@@ -625,8 +625,12 @@ public abstract class DocumentHandler {
 
         Pair<Element, Element> envelope = proxy.execute(request, zscProxy);
         // if we've got a SOAP session, handle the returned notifications and session ID
-        if (localSession instanceof SoapSession && zscProxy.isNotificationEnabled())
-            ((SoapSession) localSession).handleRemoteNotifications(server, envelope.getFirst());
+        if (localSession instanceof SoapSession && zscProxy.isNotificationEnabled()) {
+            if (envelope.getFirst().getOptionalElement(ZimbraNamespace.E_REFRESH) == null) {
+                envelope.getFirst().addUniqueElement(ZimbraNamespace.E_REFRESH);
+            }
+            ((SoapSession) localSession).handleRemoteNotifications(affinityIp, envelope.getFirst());   
+        }
         return envelope.getSecond().detach();
     }
 
@@ -708,5 +712,24 @@ public abstract class DocumentHandler {
 
         LOCAL_HOST = "";
         LOCAL_HOST_ID = "";
+    }
+
+    protected void clearConfigCacheOnAllServers(String accountId)
+    {
+        ZimbraLog.filter.debug("DocumentHandler.clearConfigCacheOnAllServers Going to execute clearConfigCacheOnAllServers with accountId: %s", accountId);
+        CacheSelector selector = new CacheSelector(true, CacheEntryType.account.name());
+        CacheEntrySelector.CacheEntryBy enumVal = CacheEntrySelector.CacheEntryBy.id;
+        CacheEntrySelector ceSel = new CacheEntrySelector(enumVal,accountId);
+        selector.addEntry(ceSel);
+        PubSubService.getInstance().publish(PubSubService.BROADCAST, new FlushCacheMsg(selector));
+    }
+
+    protected Element proxyToAccountHostIp(String accountHostIp, Element request, Map<String, Object> context, ZimbraSoapContext zsc)
+            throws ServiceException {
+        AuthToken authToken = zsc.getAuthToken();
+        HttpServletRequest httpreq = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
+        ProxyTarget target = new IpProxyTarget(accountHostIp, authToken, httpreq);
+        Pair<Element, Element> envelope = target.execute(request.detach(), zsc, true);
+        return envelope.getSecond().detach();
     }
 }

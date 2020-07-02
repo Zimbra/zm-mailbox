@@ -24,11 +24,18 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlTransient;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Splitter;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 
+import io.leangen.graphql.annotations.GraphQLIgnore;
+import io.leangen.graphql.annotations.GraphQLNonNull;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name=GqlConstants.CLASS_ACTION_RESULT, description="Action response")
 public class ActionResult {
 
     private final static Splitter COMMA_SPLITTER = Splitter.on(",");
@@ -38,6 +45,8 @@ public class ActionResult {
      * @zm-api-field-description Comma-separated list of ids which have been successfully processed
      */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=true)
+    @GraphQLNonNull
+    @GraphQLQuery(name=GqlConstants.IDS, description="Comma-separated list of ids which have been successfully processed")
     private final String id;
 
     /**
@@ -45,6 +54,7 @@ public class ActionResult {
      * @zm-api-field-description Operation
      */
     @XmlAttribute(name=MailConstants.A_OPERATION /* op */, required=true)
+    @GraphQLIgnore
     private final String operation;
 
     /**
@@ -52,6 +62,7 @@ public class ActionResult {
      * @zm-api-field-description Comma-separated list of non-existent ids (if requested)
      */
     @XmlAttribute(name=MailConstants.A_NON_EXISTENT_IDS /* nei */, required=false)
+    @GraphQLQuery(name=GqlConstants.NON_EXISTENT_IDS, description="Comma-separated list of non-existent ids (if requested)")
     protected String nonExistentIds;
 
     /**
@@ -59,6 +70,7 @@ public class ActionResult {
      * @zm-api-field-description Comma-separated list of newly created ids (if requested)
      */
     @XmlAttribute(name=MailConstants.A_NEWLY_CREATED_IDS /* nci */, required=false)
+    @GraphQLIgnore
     private String newlyCreatedIds;
 
     /**
@@ -73,13 +85,18 @@ public class ActionResult {
         this.operation = operation;
     }
 
+    @GraphQLNonNull
+    @GraphQLQuery(name=GqlConstants.IDS, description="Comma-separated list of ids which have been successfully processed")
     public String getId() { return id; }
+    @GraphQLIgnore
     public String getOperation() { return operation; }
 
     public void setNonExistentIds(String ids) { this.nonExistentIds = ids; };
+    @GraphQLQuery(name=GqlConstants.NON_EXISTENT_IDS, description="Comma-separated list of non-existent ids (if requested)")
     public String getNonExistentIds() { return nonExistentIds; };
     public void setNewlyCreatedIds(String newlyCreatedIds) { this.newlyCreatedIds = newlyCreatedIds; }
     @XmlTransient
+    @GraphQLIgnore
     public Iterable<String> getNewlyCreatedIds() {
         if (null == newlyCreatedIds) {
             return Collections.emptyList();
@@ -87,7 +104,7 @@ public class ActionResult {
         return COMMA_SPLITTER.split(newlyCreatedIds);
     }
 
-    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         return helper
             .add("id", id)
             .add("operation", operation)
@@ -97,7 +114,7 @@ public class ActionResult {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this)).toString();
+        return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
     }
 
 }

@@ -110,7 +110,8 @@ public class ZimbraInvalidLoginFilter extends DoSFilter {
         HttpServletRequest req = (HttpServletRequest) request;
         HttpServletResponse res = (HttpServletResponse) response;
         RemoteIP remoteIp = new RemoteIP(req, ZimbraServlet.getTrustedIPs());
-        String clientIp = remoteIp.getOrigIP();
+        String origIp = remoteIp.getOrigIP();
+        String clientIp = getFirstExternalIp(origIp);
         if (clientIp == null || checkWhitelist(clientIp)) {
             // Bug: 89930 Account for request coming from local server
             // or case where the proxy server has not been added to zimbraMailTrustedIP
@@ -198,5 +199,16 @@ public class ZimbraInvalidLoginFilter extends DoSFilter {
             }
         }
 
+    }
+
+    private String getFirstExternalIp(String origIPs) {
+        if (origIPs == null) {
+            return null;
+        }
+        if (origIPs.indexOf(",") > 0) {
+            return origIPs.split(",")[0].trim();
+        } else {
+            return origIPs;
+        }
     }
 }

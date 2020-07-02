@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.calendar.CalendarUtil;
@@ -922,7 +922,7 @@ public class CalendarUtils {
                     "\" and no " + MailConstants.A_CAL_TZ_STDOFFSET + " specified", null);
         }
         int standardOffset = calTZ.getTzStdOffset();
-        int daylightOffset = Objects.firstNonNull(calTZ.getTzDayOffset(), standardOffset);
+        int daylightOffset = MoreObjects.firstNonNull(calTZ.getTzDayOffset(), standardOffset);
         // minutes to milliseconds
         standardOffset *= 60 * 1000;
         daylightOffset *= 60 * 1000;
@@ -947,16 +947,16 @@ public class CalendarUtils {
 
     private static SimpleOnset parseSimpleOnset(TzOnsetInfo onsetInfo)
     throws ServiceException {
-        int week = Objects.firstNonNull(onsetInfo.getWeek(), 0);
-        int wkday = Objects.firstNonNull(onsetInfo.getDayOfWeek(), 0);
+        int week = MoreObjects.firstNonNull(onsetInfo.getWeek(), 0);
+        int wkday = MoreObjects.firstNonNull(onsetInfo.getDayOfWeek(), 0);
         if (null == onsetInfo.getMonth()) {
                 throw ServiceException.INVALID_REQUEST("Timezone onset information missing month", null);
         }
         int month = onsetInfo.getMonth();
-        int mday = Objects.firstNonNull(onsetInfo.getDayOfMonth(), 0);
-        int hour = Objects.firstNonNull(onsetInfo.getHour(), 0);
-        int minute = Objects.firstNonNull(onsetInfo.getMinute(), 0);
-        int second = Objects.firstNonNull(onsetInfo.getSecond(), 0);
+        int mday = MoreObjects.firstNonNull(onsetInfo.getDayOfMonth(), 0);
+        int hour = MoreObjects.firstNonNull(onsetInfo.getHour(), 0);
+        int minute = MoreObjects.firstNonNull(onsetInfo.getMinute(), 0);
+        int second = MoreObjects.firstNonNull(onsetInfo.getSecond(), 0);
         return new SimpleOnset(week, wkday, month, mday, hour, minute, second);
     }
 

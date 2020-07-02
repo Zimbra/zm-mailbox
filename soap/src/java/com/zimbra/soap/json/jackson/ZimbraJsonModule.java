@@ -16,14 +16,18 @@
  */
 package com.zimbra.soap.json.jackson;
 
-import org.codehaus.jackson.Version;
-import org.codehaus.jackson.map.module.SimpleModule;
+import com.fasterxml.jackson.core.Version;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 
 /**
  * Module that augments basic module to handle differences between
  * Zimbra-style JSON and standard Jackson-style JSON.
  */
 public class ZimbraJsonModule extends SimpleModule {
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -4809416138833975969L;
     private final static Version VERSION = new Version(0, 1, 0, null);
 
     public ZimbraJsonModule() {

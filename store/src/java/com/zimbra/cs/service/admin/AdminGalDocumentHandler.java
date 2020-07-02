@@ -24,14 +24,14 @@ import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public abstract class AdminGalDocumentHandler extends AdminDocumentHandler {
     private static final String[] TARGET_ACCOUNT_PATH = new String[] { AccountConstants.A_GAL_ACCOUNT_ID };
-    
-    protected String[] getProxiedAccountPath() { 
+
+    @Override
+    protected String[] getProxiedAccountPath() {
         return TARGET_ACCOUNT_PATH;
     }
     
@@ -66,8 +66,7 @@ public abstract class AdminGalDocumentHandler extends AdminDocumentHandler {
                             /*
                              * normal path
                              */
-                            Server server = acct.getServer();
-                            return proxyRequest(request, context, server);
+                            return proxyRequest(request, context, acctId);
                         }
                     } else {
                         // galAcctId is on local server

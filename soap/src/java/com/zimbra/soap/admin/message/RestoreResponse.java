@@ -17,10 +17,6 @@
 
 package com.zimbra.soap.admin.message;
 
-import com.google.common.base.Objects;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -31,6 +27,9 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.zimbra.common.soap.BackupConstants;
 import com.zimbra.soap.admin.type.Name;
 import com.zimbra.soap.type.ZmBoolean;
@@ -38,7 +37,7 @@ import com.zimbra.soap.type.ZmBoolean;
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=BackupConstants.E_RESTORE_RESPONSE)
 @XmlType(propOrder = {})
-public class RestoreResponse {
+public class RestoreResponse extends BackupRestoreBase {
 
     /**
      * @zm-api-field-description Status - one of <b>ok|interrupted|err</b>
@@ -60,6 +59,7 @@ public class RestoreResponse {
     private List<Name> accounts = Lists.newArrayList();
 
     public RestoreResponse() {
+        super();
     }
 
     public void setStatus(String status) { this.status = status; }
@@ -81,8 +81,8 @@ public class RestoreResponse {
         return Collections.unmodifiableList(accounts);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(
+                MoreObjects.ToStringHelper helper) {
         return helper
             .add("status", status)
             .add("rebuildSchema", rebuildSchema)
@@ -91,7 +91,7 @@ public class RestoreResponse {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
+        return addToStringInfo(MoreObjects.toStringHelper(this))
                 .toString();
     }
 }

@@ -59,19 +59,21 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
         IncomingDirectory.setSweptDirectories(incoming);
         IncomingDirectory.startSweeper();
 
-        // create a local cache for downloading remote blobs
-        File tmpDir = new File(LC.zimbra_tmp_directory.value());
-        File localCacheDir = new File(tmpDir, "blobs");
+        File localCacheDir = new File(LC.external_store_local_cache_dir.value());
         FileUtil.deleteDir(localCacheDir);
-        FileUtil.ensureDirExists(localCacheDir);
-        localCache = FileCache.Builder.createWithStringKey(localCacheDir, false)
+        // create a local cache for downloading remote blobs
+        File blobsCacheDir = new File(localCacheDir, "blobs");
+        FileUtil.deleteDir(blobsCacheDir);
+        FileUtil.ensureDirExists(blobsCacheDir);
+        localCache = FileCache.Builder.createWithStringKey(blobsCacheDir, false)
             .maxFiles(LC.external_store_local_cache_max_files.intValue())
             .maxBytes(LC.external_store_local_cache_max_bytes.longValue())
             .minLifetime(LC.external_store_local_cache_min_lifetime.longValue())
             .removeCallback(new MessageCacheChecker()).build();
 
         // initialize file uncompressed file cache and file descriptor cache
-        File ufCacheDir = new File(tmpDir, "uncompressed");
+        File ufCacheDir = new File(localCacheDir, "uncompressed");
+        FileUtil.deleteDir(ufCacheDir);
         FileUtil.ensureDirExists(ufCacheDir);
         FileCache<String> ufCache = FileCache.Builder.createWithStringKey(ufCacheDir, false)
             .maxFiles(LC.external_store_local_cache_max_files.intValue())
@@ -79,7 +81,6 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
             .minLifetime(LC.external_store_local_cache_min_lifetime.longValue())
             .removeCallback(new MessageCacheChecker()).build();
         BlobInputStream.setFileDescriptorCache(new FileDescriptorCache(ufCache).loadSettings());
-
     }
 
     private class MessageCacheChecker implements FileCache.RemoveCallback {
@@ -309,6 +310,11 @@ public abstract class ExternalStoreManager extends StoreManager implements Exter
      */
     public List<String> getAllBlobPaths(Mailbox mbox) throws IOException {
         return new ArrayList<String>();
+    }
+
+    @Override
+    public boolean supports(StoreFeature feature, String locator) {
+      return supports(feature);
     }
 
     @Override

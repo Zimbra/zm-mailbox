@@ -6,7 +6,7 @@ import java.util.List;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.zimbra.common.soap.MailConstants;
@@ -16,34 +16,50 @@ public class GetModifiedItemsIDsResponse {
     /**
      * @zm-api-field-description IDs of modified items
      */
-    @XmlElement(name=MailConstants.A_IDS /* ids */, required=false)
-    private List<Integer> ids = Lists.newArrayList();
+    @XmlElement(name=MailConstants.A_MODIFIED_IDS /* mids */, required=false)
+    private List<Integer> mids = Lists.newArrayList();
+    /**
+     * @zm-api-field-description IDs of deleted items
+     */
+    @XmlElement(name=MailConstants.A_DELETED_IDS /* dids */, required=false)
+    private List<Integer> dids = Lists.newArrayList();
 
     public GetModifiedItemsIDsResponse() {
     }
 
-    public void setIds(Iterable <Integer> ids) {
-        this.ids.clear();
-        if (ids != null) {
-            Iterables.addAll(this.ids,ids);
+    public void setMids(Iterable <Integer> mids) {
+        this.mids.clear();
+        if (mids != null) {
+            Iterables.addAll(this.mids,mids);
+        }
+    }
+
+    public void setDids(Iterable <Integer> dids) {
+        this.dids.clear();
+        if (dids != null) {
+            Iterables.addAll(this.dids,dids);
         }
     }
 
     public GetModifiedItemsIDsResponse addId(Integer id) {
-        this.ids.add(id);
+        this.mids.add(id);
         return this;
     }
 
-    public List<Integer> getIds() {
-        return Collections.unmodifiableList(ids);
+    public List<Integer> getMids() {
+        return Collections.unmodifiableList(mids);
     }
 
-    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
-        return helper.add("ids", ids);
+    public List<Integer> getDids() {
+        return Collections.unmodifiableList(dids);
+    }
+
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
+        return helper.add("mids", mids).add("dids", dids);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this)).toString();
+        return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
     }
 }

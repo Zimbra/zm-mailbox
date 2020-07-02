@@ -17,7 +17,7 @@
 
 package com.zimbra.soap.mail.type;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
@@ -31,11 +31,19 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlType;
 
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.json.jackson.annotate.ZimbraJsonArrayForWrapper;
 
+import io.leangen.graphql.annotations.GraphQLIgnore;
+import io.leangen.graphql.annotations.GraphQLInputField;
+import io.leangen.graphql.annotations.GraphQLNonNull;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"timezones", "calendarReplies", "inviteComponents"})
+@GraphQLType(name=GqlConstants.CLASS_MP_INVITE_INFORMATION, description="MP invite information")
 public class MPInviteInfo {
 
     /**
@@ -43,6 +51,7 @@ public class MPInviteInfo {
      * @zm-api-field-description Calendar item type - <b>appt|task</b>
      */
     @XmlAttribute(name=MailConstants.A_CAL_ITEM_TYPE /* type */, required=true)
+    @GraphQLQuery(name=GqlConstants.CALENDAR_ITEM_TYPE, description="Calendar item type - appt|task")
     private final String calItemType;
 
     /**
@@ -73,10 +82,11 @@ public class MPInviteInfo {
         this((String) null);
     }
 
-    public MPInviteInfo(String calItemType) {
+    public MPInviteInfo(@GraphQLNonNull @GraphQLInputField(name=GqlConstants.CALENDAR_ITEM_TYPE) String calItemType) {
         this.calItemType = calItemType;
     }
 
+    @GraphQLInputField(name=GqlConstants.TIMEZONES, description="Timezones")
     public void setTimezones(Iterable <CalTZInfo> timezones) {
         this.timezones.clear();
         if (timezones != null) {
@@ -84,10 +94,12 @@ public class MPInviteInfo {
         }
     }
 
+    @GraphQLIgnore
     public void addTimezone(CalTZInfo timezone) {
         this.timezones.add(timezone);
     }
 
+    @GraphQLInputField(name=GqlConstants.CALENDAR_REPLIES, description="Replies")
     public void setCalendarReplies(Iterable <CalendarReply> calendarReplies) {
         this.calendarReplies.clear();
         if (calendarReplies != null) {
@@ -95,10 +107,12 @@ public class MPInviteInfo {
         }
     }
 
+    @GraphQLIgnore
     public void addCalendarReply(CalendarReply calendarReply) {
         this.calendarReplies.add(calendarReply);
     }
 
+    @GraphQLInputField(name=GqlConstants.INVITE_COMPONENTS, description="Invite components")
     public void setInviteComponents(
                     Iterable <InviteComponent> inviteComponents) {
         this.inviteComponents.clear();
@@ -107,22 +121,27 @@ public class MPInviteInfo {
         }
     }
 
+    @GraphQLIgnore
     public void addInviteComponent(InviteComponent inviteComponent) {
         this.inviteComponents.add(inviteComponent);
     }
 
+    @GraphQLQuery(name=GqlConstants.CALENDAR_ITEM_TYPE, description="Calendar item type - appt|task")
     public String getCalItemType() { return calItemType; }
+    @GraphQLQuery(name=GqlConstants.TIMEZONES, description="Timezones")
     public List<CalTZInfo> getTimezones() {
         return Collections.unmodifiableList(timezones);
     }
+    @GraphQLQuery(name=GqlConstants.CALENDAR_REPLIES, description="Replies")
     public List<CalendarReply> getCalendarReplies() {
         return Collections.unmodifiableList(calendarReplies);
     }
+    @GraphQLQuery(name=GqlConstants.INVITE_COMPONENTS, description="Invite components")
     public List<InviteComponent> getInviteComponents() {
         return Collections.unmodifiableList(inviteComponents);
     }
 
-    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         return helper
             .add("calItemType", calItemType)
             .add("timezones", timezones)
@@ -132,6 +151,6 @@ public class MPInviteInfo {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this)).toString();
+        return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
     }
 }

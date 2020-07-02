@@ -10,10 +10,24 @@ use File::Basename;
 use File::Copy;
 use File::Path qw/make_path/;
 use Getopt::Long;
+use Getopt::Std;
 use IPC::Cmd qw/run can_run/;
 use Term::ANSIColor;
 
 my %DEFINES = ();
+
+my $sc_name = basename("$0");
+my $usage   = "usage: $sc_name -v package_version -r package_release\n";
+our($opt_v, $opt_r);
+
+getopts('v:r:') or die "$usage";
+
+die "$usage" if (!$opt_v);
+die "$usage" if (!$opt_r);
+my $version = "$opt_v";
+$version =~ s/_/./g;
+my $revision = $opt_r;
+
 
 sub parse_defines()
 {
@@ -61,8 +75,8 @@ sub git_timestamp_from_dirs($)
 my %PKG_GRAPH = (
    "zimbra-mbox-service" => {
       summary   => "Zimbra Mailbox Service",
-      version   => "1.0.0",
-      revision  => 1,
+      version   => "$version",
+      revision  => $revision,
       hard_deps => [
          "zimbra-mbox-war",
          "zimbra-mbox-conf",
@@ -84,8 +98,8 @@ my %PKG_GRAPH = (
 
    "zimbra-mbox-war" => {
       summary    => "Zimbra Mailbox Service War",
-      version    => "1.0.0",
-      revision   => 1,
+      version    => "$version",
+      revision   => $revision,
       hard_deps  => [],
       soft_deps  => [],
       other_deps => ["zimbra-store-components"],
@@ -96,8 +110,8 @@ my %PKG_GRAPH = (
 
    "zimbra-mbox-conf" => {
       summary    => "Zimbra Mailbox Service Configuration",
-      version    => "1.0.0",
-      revision   => 1,
+      version    => "$version",
+      revision   => $revision,
       hard_deps  => [],
       soft_deps  => [],
       other_deps => ["zimbra-store-components"],
@@ -108,8 +122,8 @@ my %PKG_GRAPH = (
 
    "zimbra-common-mbox-conf" => {
       summary    => "Zimbra Core Mailbox Configuration",
-      version    => "1.0.0",
-      revision   => 1,
+      version    => "$version",
+      revision   => $revision,
       hard_deps  => [],
       soft_deps  => [],
       other_deps => ["zimbra-core-components"],
@@ -120,8 +134,8 @@ my %PKG_GRAPH = (
 
    "zimbra-common-mbox-db" => {
       summary    => "Zimbra Core Mailbox DB Files",
-      version    => "1.0.0",
-      revision   => 1,
+      version    => "$version",
+      revision   => $revision,
       hard_deps  => [],
       soft_deps  => [],
       other_deps => ["zimbra-core-components"],
@@ -132,8 +146,8 @@ my %PKG_GRAPH = (
 
    "zimbra-common-mbox-native-lib" => {
       summary    => "Zimbra Core Mailbox Native Libs",
-      version    => "1.0.0",
-      revision   => 1,
+      version    => "$version",
+      revision   => $revision,
       hard_deps  => [],
       soft_deps  => [],
       other_deps => ["zimbra-core-components"],
@@ -144,8 +158,8 @@ my %PKG_GRAPH = (
 
    "zimbra-common-mbox-conf-msgs" => {
       summary    => "Zimbra Core Mailbox Message Locale Files",
-      version    => "1.0.0",
-      revision   => 1,
+      version    => "$version",
+      revision   => $revision,
       hard_deps  => [],
       soft_deps  => [],
       other_deps => ["zimbra-core-components"],
@@ -156,8 +170,8 @@ my %PKG_GRAPH = (
 
    "zimbra-common-mbox-conf-rights" => {
       summary    => "Zimbra Core Mailbox Rights Configuration",
-      version    => "1.0.0",
-      revision   => 1,
+      version    => "$version",
+      revision   => $revision,
       hard_deps  => [],
       soft_deps  => [],
       other_deps => ["zimbra-core-components"],
@@ -168,8 +182,8 @@ my %PKG_GRAPH = (
 
    "zimbra-common-mbox-conf-attrs" => {
       summary    => "Zimbra Core Mailbox Attributes Configuration",
-      version    => "1.0.0",
-      revision   => 1,
+      version    => "$version",
+      revision   => $revision,
       hard_deps  => [],
       soft_deps  => [],
       other_deps => ["zimbra-core-components"],
@@ -180,8 +194,8 @@ my %PKG_GRAPH = (
 
    "zimbra-common-mbox-docs" => {
       summary    => "Zimbra Core Mailbox Docs",
-      version    => "1.0.0",
-      revision   => 1,
+      version    => "$version",
+      revision   => $revision,
       hard_deps  => [],
       soft_deps  => [],
       other_deps => ["zimbra-core-components"],
@@ -189,11 +203,11 @@ my %PKG_GRAPH = (
       file_list  => ['/opt/zimbra/*'],
       stage_fun  => sub { &stage_zimbra_common_mbox_docs(@_); },
    },
-   
+
    "zimbra-common-core-jar" => {
       summary    => "Zimbra Core Jars",
-      version    => "1.0.0",
-      revision   => 1,
+      version    => "$version",
+      revision   => $revision,
       hard_deps  => [],
       soft_deps  => [],
       other_deps => ["zimbra-core-components"],
@@ -211,6 +225,7 @@ sub stage_zimbra_mbox_war($)
    make_path("$stage_base_dir/opt/zimbra/jetty_base/webapps/service");
    System("cd $stage_base_dir/opt/zimbra/jetty_base/webapps/service && jar -xf @{[getcwd()]}/store/build/service.war");
    cpy_file( "store/conf/web.xml.production", "$stage_base_dir/opt/zimbra/jetty_base/etc/service.web.xml.in" );
+   cpy_file( "store-conf/conf/logback-access.xml", "$stage_base_dir/opt/zimbra/jetty_base/resources/logback-access.xml" );
 
    return ["."];
 }
@@ -242,6 +257,7 @@ sub stage_zimbra_mbox_conf()
    cpy_file( "store-conf/conf/globs2.zimbra",                      "$stage_base_dir/opt/zimbra/conf/globs2.zimbra" );
    cpy_file( "store-conf/conf/spnego_java_options.in",             "$stage_base_dir/opt/zimbra/conf/spnego_java_options.in" );
    cpy_file( "store-conf/conf/contacts/zimbra-contact-fields.xml", "$stage_base_dir/opt/zimbra/conf/zimbra-contact-fields.xml" );
+   cpy_file( "store-conf/conf/common-passwords.txt",               "$stage_base_dir/opt/zimbra/conf/common-passwords.txt" );
 
    return ["store-conf/conf"];
 }
@@ -518,7 +534,7 @@ sub make_package($)
    push( @cmd, @{ [ map { "--pkg-replaces=$_"; } @{ $pkg_info->{replaces} } ] } )                                                              if ( $pkg_info->{replaces} );
    push( @cmd, @{ [ map { "--pkg-depends=$_"; } @{ $pkg_info->{other_deps} } ] } )                                                             if ( $pkg_info->{other_deps} );
    push( @cmd, @{ [ map { "--pkg-depends=$_ (>= $PKG_GRAPH{$_}->{version})"; } @{ $pkg_info->{soft_deps} } ] } )                               if ( $pkg_info->{soft_deps} );
-   push( @cmd, @{ [ map { "--pkg-depends=$_ (= $PKG_GRAPH{$_}->{_version_ts}-$PKG_GRAPH{$_}->{revision})"; } @{ $pkg_info->{hard_deps} } ] } ) if ( $pkg_info->{hard_deps} );
+   push( @cmd, @{ [ map { "--pkg-depends=$_ (>= $PKG_GRAPH{$_}->{_version_ts}-$PKG_GRAPH{$_}->{revision})"; } @{ $pkg_info->{hard_deps} } ] } ) if ( $pkg_info->{hard_deps} );
 
    System(@cmd);
 }

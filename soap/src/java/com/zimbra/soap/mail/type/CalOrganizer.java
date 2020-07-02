@@ -25,14 +25,21 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.CalOrganizerInterface;
 import com.zimbra.soap.base.XParamInterface;
 
+import io.leangen.graphql.annotations.GraphQLIgnore;
+import io.leangen.graphql.annotations.GraphQLInputField;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name=GqlConstants.CLASS_CALENDAR_ORGANIZER, description="Calendar organizer")
 public class CalOrganizer implements CalOrganizerInterface {
 
     /**
@@ -83,6 +90,7 @@ public class CalOrganizer implements CalOrganizerInterface {
      * @zm-api-field-description Non-standard parameters (XPARAMs)
      */
     @XmlElement(name=MailConstants.E_CAL_XPARAM /* xparam */, required=false)
+    @GraphQLQuery(name=GqlConstants.XPARAMS, description="Non-standard parameters")
     private final List<XParam> xParams = Lists.newArrayList();
 
     public CalOrganizer() {
@@ -95,19 +103,26 @@ public class CalOrganizer implements CalOrganizerInterface {
     }
 
     @Override
+    @GraphQLInputField(name=GqlConstants.ADDRESS, description="Email address (without MAILTO:)")
     public void setAddress(String address) { this.address = address; }
     @Override
+    @GraphQLInputField(name=GqlConstants.URL, description="URL - has same value as emailAddress")
     public void setUrl(String url) { this.url = url; }
     @Override
+    @GraphQLInputField(name=GqlConstants.DISPLAY_NAME, description="Friendly name - CN in iCalendar")
     public void setDisplayName(String displayName) {
         this.displayName = displayName;
     }
     @Override
+    @GraphQLInputField(name=GqlConstants.SENT_BY, description="iCalendar SENT_BY")
     public void setSentBy(String sentBy) { this.sentBy = sentBy; }
     @Override
+    @GraphQLInputField(name=GqlConstants.DIRECTORY, description="iCalendar DIR - Reference to a directory entry associated with the calendar user")
     public void setDir(String dir) { this.dir = dir; }
     @Override
+    @GraphQLInputField(name=GqlConstants.LANGUAGE, description="iCalendar LANGUAGE - As defined in RFC5646 * (e.g. \"en-US\")")
     public void setLanguage(String language) { this.language = language; }
+    @GraphQLInputField(name=GqlConstants.XPARAMS, description="Non-standard parameters")
     public void setXParams(Iterable <XParam> xParams) {
         this.xParams.clear();
         if (xParams != null) {
@@ -115,43 +130,54 @@ public class CalOrganizer implements CalOrganizerInterface {
         }
     }
 
+    @GraphQLIgnore
     public CalOrganizer addXParam(XParam xParam) {
         this.xParams.add(xParam);
         return this;
     }
 
     @Override
+    @GraphQLQuery(name=GqlConstants.ADDRESS, description="Email address (without MAILTO:)")
     public String getAddress() { return address; }
     @Override
+    @GraphQLQuery(name=GqlConstants.URL, description="URL - has same value as emailAddress")
     public String getUrl() { return url; }
     @Override
+    @GraphQLQuery(name=GqlConstants.DISPLAY_NAME, description="Friendly name - CN in iCalendar")
     public String getDisplayName() { return displayName; }
     @Override
+    @GraphQLQuery(name=GqlConstants.SENT_BY, description="iCalendar SENT_BY")
     public String getSentBy() { return sentBy; }
     @Override
+    @GraphQLQuery(name=GqlConstants.DIRECTORY, description="iCalendar DIR - Reference to a directory entry associated with the calendar user")
     public String getDir() { return dir; }
     @Override
+    @GraphQLQuery(name=GqlConstants.LANGUAGE, description="iCalendar LANGUAGE - As defined in RFC5646 * (e.g. \"en-US\")")
     public String getLanguage() { return language; }
+    @GraphQLQuery(name=GqlConstants.XPARAMS, description="Non-standard parameters")
     public List<XParam> getXParams() {
         return Collections.unmodifiableList(xParams);
     }
 
     @Override
+    @GraphQLIgnore
     public void setXParamInterfaces(Iterable<XParamInterface> xParams) {
         setXParams(XParam.fromInterfaces(xParams));
     }
 
     @Override
+    @GraphQLIgnore
     public void addXParamInterface(XParamInterface xParam) {
         addXParam((XParam) xParam);
     }
 
     @Override
+    @GraphQLIgnore
     public List<XParamInterface> getXParamInterfaces() {
         return XParam.toInterfaces(xParams);
     }
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(
+                MoreObjects.ToStringHelper helper) {
         return helper
             .add("address", address)
             .add("url", url)
@@ -164,7 +190,7 @@ public class CalOrganizer implements CalOrganizerInterface {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
+        return addToStringInfo(MoreObjects.toStringHelper(this))
                 .toString();
     }
 }

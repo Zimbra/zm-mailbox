@@ -60,6 +60,7 @@ public class ServiceException extends Exception {
     public static final String FORBIDDEN = "service.FORBIDDEN";
     // generic "not found" error for objects other than mail items
     public static final String NOT_FOUND = "service.NOT_FOUND";
+    public static final String LOCK_FAILED = "mail.LOCK_FAILED";
 
     //smime
     public static final String LOAD_CERTIFICATE_FAILED = "smime.LOAD_CERTIFICATE_FAILED";
@@ -350,6 +351,10 @@ public class ServiceException extends Exception {
         return new ServiceException("no valid authtoken present", AUTH_REQUIRED, SENDERS_FAULT);
     }
 
+    public static ServiceException AUTH_REQUIRED(String email) {
+        return new ServiceException("no valid authtoken present for " + email, AUTH_REQUIRED, SENDERS_FAULT);
+    }
+
     public static ServiceException CANNOT_DISABLE_TWO_FACTOR_AUTH() {
         return new ServiceException("cannot disable two-factor authentication", CANNOT_DISABLE_TWO_FACTOR_AUTH, SENDERS_FAULT);
     }
@@ -434,5 +439,25 @@ public class ServiceException extends Exception {
 
     public static ServiceException NETWORK_MODULES_NG_ENABLED(String str) {
         return new ServiceException("ZimbraNetworkModulesNG: "+ str + " is not enabled.", ZIMBRA_NETWORK_MODULES_NG_ENABLED, RECEIVERS_FAULT);
+    }
+
+    public static ServiceException LOCK_FAILED(String message) {
+        return new ServiceException(message, LOCK_FAILED, RECEIVERS_FAULT, (Throwable) null);
+    }
+
+    public static ServiceException LOCK_FAILED(String message, Throwable cause) {
+        return new ServiceException(message, LOCK_FAILED, RECEIVERS_FAULT, cause);
+    }
+
+    public static class TransactionRollbackException extends ServiceException {
+        public TransactionRollbackException(Throwable cause) {
+            super("system failure: statement was automatically rolled back by the " +
+                            " database because of deadlock or other transaction serialization failures",
+                    FAILURE, RECEIVERS_FAULT, cause);
+        }
+    }
+
+    public static TransactionRollbackException TRANSACTION_ROLLBACK(Throwable cause) {
+        return new TransactionRollbackException(cause);
     }
 }

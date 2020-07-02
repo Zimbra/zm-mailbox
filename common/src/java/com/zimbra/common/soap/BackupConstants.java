@@ -195,4 +195,8 @@ public final class BackupConstants {
     public static final String V_EXCLUDE = "exclude";
     public static final String V_CONFIG = "config";
     public static final String A_FORCE_DELETE_BLOBS = "forceDeleteBlobs";
+
+    public static final String E_REMOTE_BACKUP_HOSTS = "backupHosts";
+    public static final String E_REMOTE_BACKUP_HOST = "host";
+    public static final String A_BACKUP_HOST_NAME = "name";
 }

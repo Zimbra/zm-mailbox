@@ -18,6 +18,7 @@
 package com.zimbra.cs.mailbox;
 
 import static org.junit.Assert.assertTrue;
+import org.junit.Ignore;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -44,7 +45,7 @@ import com.zimbra.qa.unittest.TestUtil;
 /**
  * Unit test for {@link Document}.
  */
-public final class DocumentTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public final class DocumentTest {
 
     @BeforeClass
     public static void init() throws Exception {

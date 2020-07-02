@@ -22,26 +22,31 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.servlet.ServletException;
 import javax.servlet.UnavailableException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.httpclient.HttpVersion;
-import org.apache.commons.httpclient.ProtocolException;
+import org.apache.http.HttpVersion;
+import org.apache.http.ParseException;
+import org.apache.http.ProtocolVersion;
+import org.apache.http.message.BasicLineParser;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
-import com.google.common.collect.MapMaker;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.BufferStream;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.LoadingCacheUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.RemoteIP;
@@ -73,6 +78,14 @@ public class SoapServlet extends ZimbraServlet {
     /** Flag for requests that want to force invalidation of client cookies */
     public static final String INVALIDATE_COOKIES = "zimbra.invalidateCookies";
 
+    /**
+     * Keeps track of extra services added by extensions.
+     */
+    private static LoadingCache<String, List<DocumentService>> sExtraServices = CacheBuilder.newBuilder()
+        .build(CacheLoader.from(new ArrayListFactory()));
+
+    private static Log sLog = LogFactory.getLog(SoapServlet.class);
+    private SoapEngine mEngine;
 
     // Used by sExtraServices
     private static class ArrayListFactory implements Function<String, List<DocumentService>> {
@@ -81,15 +94,6 @@ public class SoapServlet extends ZimbraServlet {
             return new ArrayList<DocumentService>();
         }
     }
-
-    /**
-     * Keeps track of extra services added by extensions.
-     */
-    private static Map<String, List<DocumentService>> sExtraServices =
-        new MapMaker().makeComputingMap(new ArrayListFactory());
-
-    private static Log sLog = LogFactory.getLog(SoapServlet.class);
-    private SoapEngine mEngine;
 
     @Override
     public void init() throws ServletException {
@@ -110,7 +114,7 @@ public class SoapServlet extends ZimbraServlet {
 
         // See if any extra services were previously added by extensions
         synchronized (sExtraServices) {
-            List<DocumentService> services = sExtraServices.get(getServletName());
+            List<DocumentService> services = LoadingCacheUtil.get(sExtraServices, getServletName());
             for (DocumentService service : services) {
                 addService(service);
                 i++;
@@ -194,7 +198,7 @@ public class SoapServlet extends ZimbraServlet {
             } else {
                 sLog.debug("addService(%s, %s): servlet has not been initialized",
                         servletName, service.getClass().getSimpleName());
-                List<DocumentService> services = sExtraServices.get(servletName);
+                List<DocumentService> services = LoadingCacheUtil.get(sExtraServices, servletName);
                 services.add(service);
             }
         }
@@ -298,6 +302,7 @@ public class SoapServlet extends ZimbraServlet {
 
         //checkAuthToken(req.getCookies(), context);
         context.put(SoapEngine.REQUEST_PORT, req.getServerPort());
+        context.put(SoapEngine.ORIG_REQUEST_USER_AGENT, req.getHeader(HeaderConstants.HTTP_HEADER_ORIG_USER_AGENT));
         Element envelope = null;
         try {
             envelope = mEngine.dispatch(req.getRequestURI(), buffer, context);
@@ -317,7 +322,18 @@ public class SoapServlet extends ZimbraServlet {
             if (e.getClass().getName().equals("org.eclipse.jetty.continuation.ContinuationThrowable"))
                 throw (Error) e;
 
-            ZimbraLog.soap.warn("handler exception", e);
+            if (e instanceof com.zimbra.common.service.ServiceException) {
+                com.zimbra.common.service.ServiceException se = (com.zimbra.common.service.ServiceException)e;
+                if (se.isReceiversFault()) {
+                    ZimbraLog.soap.warn("SoapServlet: handler exception", e);
+                } else {
+                    ZimbraLog.soap.warnQuietly("SoapServlet: %s %s",
+                            e.getMessage(), e);
+                }
+            } else {
+                ZimbraLog.soap.warn("SoapServlet: handler exception", e);
+            }
+
             Element fault = SoapProtocol.Soap12.soapFault(ServiceException.FAILURE(e.toString(), e));
             envelope = SoapProtocol.Soap12.soapEnvelope(fault);
         }
@@ -347,9 +363,9 @@ public class SoapServlet extends ZimbraServlet {
             // disable chunking if proto < HTTP 1.1
             String proto = req.getProtocol();
             try {
-                HttpVersion httpVer = HttpVersion.parse(proto);
+                ProtocolVersion httpVer = BasicLineParser.parseProtocolVersion(proto, new BasicLineParser());
                 chunkingEnabled = !httpVer.lessEquals(HttpVersion.HTTP_1_0);
-            } catch (ProtocolException e) {
+            } catch (ParseException e) {
                 ZimbraLog.soap.warn("cannot parse http version in request: %s, http chunked transfer encoding disabled",
                         proto, e);
                 chunkingEnabled = false;

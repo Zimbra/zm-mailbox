@@ -34,6 +34,7 @@ import java.util.Set;
 
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.StringUtil;
@@ -44,7 +45,6 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxVersion;
 import com.zimbra.cs.mailbox.Metadata;
-import com.zimbra.cs.util.Zimbra;
 
 /**
  * @since Oct 28, 2004
@@ -313,12 +313,11 @@ public final class DbMailbox {
      * @throws ServiceException if the database creation fails */
     public static void createMailboxDatabase(DbConnection conn, int mailboxId, int groupId)
     throws ServiceException {
-        ZimbraLog.mailbox.debug("createMailboxDatabase(" + mailboxId + ")");
+        ZimbraLog.mailbox.debug("createMailboxDatabase(mailboxId=%s, groupId=%s)", mailboxId, groupId);
 
         File file = new File(LC.mailboxd_directory.value() + "/../db/create_database.sql");
 
         boolean succeeded = false;
-        PreparedStatement stmt = null;
         try {
             String dbname = getDatabaseName(groupId);
             if (Db.getInstance().databaseExists(conn, dbname)) {
@@ -332,7 +331,7 @@ public final class DbMailbox {
             Db.getInstance().precreateDatabase(dbname);
 
             // create the new database
-            ZimbraLog.mailbox.info("Creating database " + dbname);
+            ZimbraLog.mailbox.info("Creating database %s", dbname);
             Db.getInstance().registerDatabaseInterest(conn, dbname);
 
             String template = new String(ByteUtil.getContent(file));
@@ -347,7 +346,6 @@ public final class DbMailbox {
         } catch (SQLException e) {
             throw ServiceException.FAILURE("createMailboxDatabase(" + mailboxId + ")", e);
         } finally {
-            DbPool.closeStatement(stmt);
             if (succeeded) {
                 for (DbTableCallback callback : callbacks) {
                     callback.create(conn, mailboxId, groupId);
@@ -507,10 +505,11 @@ public final class DbMailbox {
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement("UPDATE " + qualifyZimbraTableName(mbox, TABLE_MAILBOX) +
-                    " SET item_id_checkpoint = ?, contact_count = ?, change_checkpoint = ?," +
+                    " SET item_id_checkpoint = ?, search_id_checkpoint = ?, contact_count = ?, change_checkpoint = ?," +
                     "  size_checkpoint = ?, new_messages = ? WHERE id = ?");
             int pos = 1;
             stmt.setInt(pos++, mbox.getLastItemId());
+            stmt.setInt(pos++, mbox.getLastSearchId());
             stmt.setInt(pos++, mbox.getContactCount());
             stmt.setInt(pos++, mbox.getLastChangeID());
             stmt.setLong(pos++, mbox.getSize());
@@ -865,8 +864,11 @@ public final class DbMailbox {
         }
     }
 
-    public static final int CHANGE_CHECKPOINT_INCREMENT = Zimbra.isAlwaysOn() ? 1 : Math.max(1, LC.zimbra_mailbox_change_checkpoint_frequency.intValue());
-    public static final int ITEM_CHECKPOINT_INCREMENT   = Zimbra.isAlwaysOn() ? 1 : 20;
+    //id checkpoint increments are disabled in Zimbra X, since they can result
+    //in ids not being monotonically increasing, leading to collisions
+    public static final int CHANGE_CHECKPOINT_INCREMENT = 1;
+    public static final int ITEM_CHECKPOINT_INCREMENT   = 1;
+    public static final int SEARCH_ID_CHECKPOINT_INCREMENT = 1;
 
     public static Mailbox.MailboxData getMailboxStats(DbConnection conn, int mailboxId) throws ServiceException {
         // no locking check because it's a mailbox-level op done before the Mailbox object is instantiated...
@@ -882,7 +884,7 @@ public final class DbMailbox {
             stmt = conn.prepareStatement(
                     "SELECT account_id," + (DebugConfig.disableMailboxGroups ? mailboxId : " group_id") + "," +
                     " size_checkpoint, contact_count, item_id_checkpoint, change_checkpoint, tracking_sync," +
-                    " tracking_imap, index_volume_id, last_soap_access, new_messages, version, itemcache_checkpoint" +
+                    " tracking_imap, index_volume_id, last_soap_access, new_messages, version, itemcache_checkpoint, search_id_checkpoint" +
                     " FROM " + qualifyZimbraTableName(mailboxId, TABLE_MAILBOX) + " WHERE id = ?");
             stmt.setInt(1, mailboxId);
 
@@ -919,10 +921,12 @@ public final class DbMailbox {
                 mbd.version = MailboxVersion.parse(version);
             }
             mbd.itemcacheCheckpoint = rs.getInt(pos++);
+            mbd.lastSearchId = rs.getInt(pos++);
 
-            // round lastItemId and lastChangeId up so that they get written on the next change
+            // round lastItemId, lastChangeId, and lastSearchId up so that they get written on the next change
             mbd.lastItemId += ITEM_CHECKPOINT_INCREMENT - 1;
             mbd.lastChangeId += CHANGE_CHECKPOINT_INCREMENT - 1;
+            mbd.lastSearchId += SEARCH_ID_CHECKPOINT_INCREMENT - 1;
             int rounding = mbd.lastItemId % ITEM_CHECKPOINT_INCREMENT;
             if (rounding != ITEM_CHECKPOINT_INCREMENT - 1) {
                 mbd.lastItemId -= rounding + 1;
@@ -930,6 +934,10 @@ public final class DbMailbox {
             rounding = mbd.lastChangeId % CHANGE_CHECKPOINT_INCREMENT;
             if (rounding != CHANGE_CHECKPOINT_INCREMENT - 1) {
                 mbd.lastChangeId -= rounding + 1;
+            }
+            rounding = mbd.lastSearchId % SEARCH_ID_CHECKPOINT_INCREMENT;
+            if (rounding != SEARCH_ID_CHECKPOINT_INCREMENT - 1) {
+                mbd.lastSearchId -= rounding + 1;
             }
 
             rs.close();
@@ -1242,8 +1250,8 @@ public final class DbMailbox {
         return results;
     }
 
-    public static void optimize(DbConnection conn, Mailbox mbox, int level) throws ServiceException {
-        assert(mbox.lock.isWriteLockedByCurrentThread());
+    public static void optimize(DbConnection conn, Mailbox mbox, int level, MailboxLock l) throws ServiceException {
+        assert(l.isWriteLockedByCurrentThread());
 
         String name = getDatabaseName(mbox);
 
@@ -1297,4 +1305,68 @@ public final class DbMailbox {
 
         return groups;
     }
+
+    public static Integer getMailboxCount(DbConnection conn) throws ServiceException {
+       Integer mailboxesCount = 0;
+
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            stmt = conn.prepareStatement("SELECT COUNT(id) FROM mailbox");
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+                mailboxesCount = rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("getting mailbox count", e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+
+        return mailboxesCount;
+    }
+
+    public static Integer getMailboxKey(DbConnection conn, String accountId) throws ServiceException {
+
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            stmt = conn.prepareStatement("SELECT id FROM mailbox WHERE account_id = ?");
+            int pos = 1;
+            stmt.setString(pos++, accountId);
+            rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+            return null;
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("fetching mailboxId", e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+    }
+
+    public static String getAccountIdByMailboxId(DbConnection conn, Integer mailboxId) throws ServiceException {
+
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            stmt = conn.prepareStatement("SELECT account_id FROM mailbox WHERE id = ?");
+            int pos = 1;
+            stmt.setInt(pos++, mailboxId);
+            rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getString(1);
+            }
+            return null;
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE(String.format("error fetching account ID for mailbox %s", mailboxId), e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+    }
+
 }

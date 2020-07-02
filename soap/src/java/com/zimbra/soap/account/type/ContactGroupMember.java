@@ -19,7 +19,7 @@ package com.zimbra.soap.account.type;
 
 import java.util.List;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
@@ -28,11 +28,17 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.ContactGroupMemberInterface;
 import com.zimbra.soap.base.ContactInterface;
 
+import io.leangen.graphql.annotations.GraphQLNonNull;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name=GqlConstants.CLASS_ACCOUNT_CONTACT_GROUP_MEMBER, description="Contact group member")
 public class ContactGroupMember
 implements ContactGroupMemberInterface {
 
@@ -76,10 +82,15 @@ implements ContactGroupMemberInterface {
     public void setValue(String value) { this.value = value; }
     public void setContact(ContactInfo contact) { this.contact = contact; }
     @Override
+    @GraphQLNonNull
+    @GraphQLQuery(name=GqlConstants.TYPE, description="Member type. C|G|I")
     public String getType() { return type; }
     @Override
+    @GraphQLNonNull
+    @GraphQLQuery(name=GqlConstants.VALUE, description="Member value")
     public String getValue() { return value; }
     @Override
+    @GraphQLQuery(name=GqlConstants.CONTACT, description="Contact information for dereferenced member")
     public ContactInfo getContact() { return contact; }
 
     @Override
@@ -105,8 +116,8 @@ implements ContactGroupMemberInterface {
         return newList;
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(
+                MoreObjects.ToStringHelper helper) {
         return helper
             .add("type", type)
             .add("value", value)
@@ -115,7 +126,7 @@ implements ContactGroupMemberInterface {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
+        return addToStringInfo(MoreObjects.toStringHelper(this))
                 .toString();
     }
 }

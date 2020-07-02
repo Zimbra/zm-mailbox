@@ -20,7 +20,7 @@ import java.util.Map;
 
 import org.apache.jsieve.mail.Action;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableMap;
 
 /**
@@ -65,6 +65,6 @@ public final class ActionFlag implements Action {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this).add("name", name).add("set", set).toString();
+        return MoreObjects.toStringHelper(this).add("name", name).add("set", set).toString();
     }
 }

@@ -18,6 +18,8 @@
 package com.zimbra.cs.servlet;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
@@ -39,6 +41,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.servlet.util.AuthUtil;
+import com.zimbra.soap.SoapServlet;
 
 /**
  * This Servlet {@link Filter} limits the number of concurrent HTTP requests per
@@ -71,8 +74,14 @@ public class ZimbraQoSFilter implements Filter {
                 HttpServletRequest req = (HttpServletRequest) request;
                 boolean isAdminRequest = AuthUtil.isAdminRequest(req);
                 AuthToken at = AuthProvider.getAuthToken(req, isAdminRequest);
-                if (at != null)
+                if (at == null) {
+                    Map <Object, Object> engineCtxt = new HashMap<Object, Object>();
+                    engineCtxt.put(SoapServlet.SERVLET_REQUEST, req);
+                    at = AuthProvider.getJWToken(null, engineCtxt);
+                }
+                if (at != null) {
                     return at.getAccountId();
+                }
                 // Check if this is Http Basic Authentication, if so return authorization string.
                 String auth = req.getHeader("Authorization");
                 if (auth != null) {

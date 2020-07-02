@@ -33,6 +33,7 @@ import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -46,6 +47,7 @@ import java.util.Properties;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 
 import javax.mail.MessagingException;
@@ -59,7 +61,10 @@ import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.lang.StringUtils;
 
+import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 import com.zimbra.client.ZAce;
 import com.zimbra.client.ZAppointmentHit;
 import com.zimbra.client.ZAutoCompleteMatch;
@@ -96,6 +101,7 @@ import com.zimbra.client.ZSearchPagerResult;
 import com.zimbra.client.ZSearchParams;
 import com.zimbra.client.ZSearchResult;
 import com.zimbra.client.ZSignature;
+import com.zimbra.client.ZSmartFolder;
 import com.zimbra.client.ZTag;
 import com.zimbra.client.ZTag.Color;
 import com.zimbra.client.event.ZCreateEvent;
@@ -127,9 +133,17 @@ import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.soap.SoapAccountInfo;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning.DelegateAuthResponse;
+import com.zimbra.cs.contacts.RelatedContactsParams.AffinityType;
 import com.zimbra.cs.ldap.LdapDateUtil;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.SoapCLI;
+import com.zimbra.soap.mail.message.GetContactFrequencyResponse;
+import com.zimbra.soap.mail.message.GetRelatedContactsResponse;
+import com.zimbra.soap.mail.type.ContactFrequencyData;
+import com.zimbra.soap.mail.type.ContactFrequencyDataPoint;
+import com.zimbra.soap.mail.type.ContactFrequencyGraphSpec;
+import com.zimbra.soap.mail.type.RelatedContactResult;
+import com.zimbra.soap.mail.type.RelatedContactsTarget;
 import com.zimbra.soap.type.SearchSortBy;
 
 /**
@@ -389,6 +403,7 @@ public class ZMailboxUtil implements DebugListener {
         AUTO_COMPLETE("autoComplete", "ac", "{query}", "contact auto autocomplete", Category.CONTACT,  1, 1, O_VERBOSE),
         AUTO_COMPLETE_GAL("autoCompleteGal", "acg", "{query}", "gal auto autocomplete", Category.CONTACT,  1, 1, O_VERBOSE),
         CHECK_RIGHT("checkRight", "ckr", "{name} {right}", "check if the user has the specified right on target.", Category.RIGHT, 2, 2, O_VERBOSE),
+        CLEAR_SEARCH_HISTORY("clearSearchHistory", "csh", "", "clear search history for this user", Category.SEARCH, 0, 0),
         CREATE_CONTACT("createContact", "cct", "[attr1 value1 [attr2 value2...]]", "create contact", Category.CONTACT, 2, Integer.MAX_VALUE, O_FOLDER, O_IGNORE, O_TAGS),
         CREATE_FOLDER("createFolder", "cf", "{folder-path}", "create folder", Category.FOLDER, 1, 1, O_VIEW, O_COLOR, O_FLAGS, O_URL),
         CREATE_IDENTITY("createIdentity", "cid", "{identity-name} [attr1 value1 [attr2 value2...]]", "create identity", Category.ACCOUNT, 1, Integer.MAX_VALUE),
@@ -416,9 +431,11 @@ public class ZMailboxUtil implements DebugListener {
         FLAG_MESSAGE("flagMessage", "fm", "{msg-ids} [0|1*]", "flag/unflag message(s)", Category.MESSAGE, 1, 2),
         GET_ALL_CONTACTS("getAllContacts", "gact", "[attr1 [attr2...]]", "get all contacts", Category.CONTACT, 0, Integer.MAX_VALUE, O_VERBOSE, O_FOLDER),
         GET_ALL_FOLDERS("getAllFolders", "gaf", "", "get all folders", Category.FOLDER, 0, 0, O_VERBOSE),
+        GET_ALL_SMART_FOLDERS("getAllSmartFolders", "gasf", "", "get all smart folders", Category.TAG, 0, 0, O_VERBOSE),
         GET_ALL_TAGS("getAllTags", "gat", "", "get all tags", Category.TAG, 0, 0, O_VERBOSE),
         GET_APPOINTMENT_SUMMARIES("getAppointmentSummaries", "gaps", "{start-date-spec} {end-date-spec} {folder-path}", "get appointment summaries", Category.APPOINTMENT, 2, 3, O_VERBOSE),
         GET_CONTACTS("getContacts", "gct", "{contact-ids} [attr1 [attr2...]]", "get contact(s)", Category.CONTACT, 1, Integer.MAX_VALUE, O_VERBOSE),
+        GET_CONTACT_FREQUENCY("getContactFrequency", "gcf", "{contactEmail} {frequencyRange} {frequencyInterval} [{offsetInMinutes}]", "get contact frequency graphs", Category.CONTACT, 3, 4),
         GET_CONVERSATION("getConversation", "gc", "{conv-id}", "get a converation", Category.CONVERSATION, 1, 1, O_VERBOSE),
         GET_IDENTITIES("getIdentities", "gid", "", "get all identites", Category.ACCOUNT, 0, 0, O_VERBOSE),
         GET_INCOMING_FILTER_RULES("getFilterRules", "gfrl", "", "get incoming filter rules", Category.FILTER,  0, 0),
@@ -428,9 +445,11 @@ public class ZMailboxUtil implements DebugListener {
         GET_FOLDER_GRANT("getFolderGrant", "gfg", "{folder-path}", "get folder grants", Category.FOLDER, 1, 1, O_VERBOSE),
         GET_MESSAGE("getMessage", "gm", "{msg-id}", "get a message", Category.MESSAGE, 1, 1, O_VERBOSE),
         GET_MAILBOX_SIZE("getMailboxSize", "gms", "", "get mailbox size", Category.MISC, 0, 0, O_VERBOSE),
+        GET_RELATED_CONTACTS("getRelatedContacts", "grc", "target [target [...]] [field:all*|to|cc|bcc] [limit:#]", "get related contacts", Category.CONTACT, 1, Integer.MAX_VALUE, O_VERBOSE),
         GET_RIGHTS("getRights", "gr", "[right1 [right2...]]", "get rights currently granted", Category.RIGHT, 0, Integer.MAX_VALUE, O_VERBOSE),
         GET_REST_URL("getRestURL", "gru", "{relative-path}", "do a GET on a REST URL relative to the mailbox", Category.MISC, 1, 1,
                 O_OUTPUT_FILE, O_START_TIME, O_END_TIME, O_URL),
+        GET_SEARCH_HISTORY("getSearchHistory", "gsh", "[limit]", "get search history", Category.SEARCH, 0, 1, O_VERBOSE),
         GET_SIGNATURES("getSignatures", "gsig", "", "get all signatures", Category.ACCOUNT, 0, 0, O_VERBOSE),
         GRANT_RIGHT("grantRight", "grr", "{account {name}|group {name}|domain {name}||all|public|guest {email} [{password}]|key {email} [{accesskey}] {[-]right}}", "allow or deny a right to a grantee or a group of grantee. to deny a right, put a '-' in front of the right", Category.RIGHT, 2, 4),
         HELP("help", "?", "commands", "return help on a group of commands, or all commands. Use -v for detailed help.", Category.MISC, 0, 1, O_VERBOSE),
@@ -465,6 +484,7 @@ public class ZMailboxUtil implements DebugListener {
         POST_REST_URL("postRestURL", "pru", "{relative-path} {file-name}", "do a POST on a REST URL relative to the mailbox", Category.MISC, 2, 2,
                 O_CONTENT_TYPE, O_IGNORE_ERROR, O_PRESERVE_ALARMS, O_URL),
         RECOVER_ITEM("recoverItem", "ri", "{item-ids} {dest-folder-path}", "recover item(s) from the dumpster to a folder", Category.ITEM, 2, 2),
+        REJECT_SAVED_SEARCH_PROMPT("rejectSavedSearchPrompt", "rssp", "{query}", "reject a prompt to create a saved search folder", Category.SEARCH, 1, 1),
         RENAME_FOLDER("renameFolder", "rf", "{folder-path} {new-folder-path}", "rename folder", Category.FOLDER, 2, 2),
         RENAME_SIGNATURE("renameSignature", "rsig", "{signature-name|signature-id} {new-name}", "rename signature", Category.ACCOUNT, 2, 2),
         RENAME_TAG("renameTag", "rt", "{tag-name} {new-tag-name}", "rename tag", Category.TAG, 2, 2),
@@ -472,6 +492,7 @@ public class ZMailboxUtil implements DebugListener {
         SEARCH("search", "s", "{query}", "perform search", Category.SEARCH, 0, 1, O_LIMIT, O_SORT, O_TYPES, O_VERBOSE, O_CURRENT, O_NEXT, O_PREVIOUS, O_DUMPSTER),
         SEARCH_CONVERSATION("searchConv", "sc", "{conv-id} {query}", "perform search on conversation", Category.SEARCH, 0, 2, O_LIMIT, O_SORT, O_TYPES, O_VERBOSE, O_CURRENT, O_NEXT, O_PREVIOUS),
         SELECT_MAILBOX("selectMailbox", "sm", "{name}", "select a different mailbox. can only be used by an admin", Category.ADMIN, 1, 1, O_AUTH, O_AS_ADMIN),
+        SEARCH_SUGGEST("searchSuggest", "ss", "{query} [limit]", "return search suggestions based on search history", Category.SEARCH, 1, 2),
         SYNC_FOLDER("syncFolder", "sf", "{folder-path}", "synchronize folder's contents to the remote feed specified by folder's {url}", Category.FOLDER, 1, 1),
         TAG_CONTACT("tagContact", "tct", "{contact-ids} {tag-name} [0|1*]", "tag/untag contact(s)", Category.CONTACT, 2, 3),
         TAG_CONVERSATION("tagConversation", "tc", "{conv-ids} {tag-name} [0|1*]", "tag/untag conversation(s)", Category.CONVERSATION, 2, 3),
@@ -1090,6 +1111,9 @@ public class ZMailboxUtil implements DebugListener {
         case CHECK_RIGHT:
             doCheckRight(args);
             break;
+        case CLEAR_SEARCH_HISTORY:
+            doClearSearchHistory();
+            break;
         case CREATE_CONTACT:
             String ccId = mMbox.createContact(lookupFolderId(folderOpt()),tagsOpt(), getContactMap(args, 0, !ignoreOpt())).getId();
             stdout.println(ccId);
@@ -1173,6 +1197,9 @@ public class ZMailboxUtil implements DebugListener {
         case GET_CONTACTS:
             doGetContacts(args);
             break;
+        case GET_CONTACT_FREQUENCY:
+            doGetContactFrequency(args);
+            break;
         case GET_IDENTITIES:
             doGetIdentities();
             break;
@@ -1181,6 +1208,9 @@ public class ZMailboxUtil implements DebugListener {
             break;
         case GET_ALL_FOLDERS:
             doGetAllFolders();
+            break;
+        case GET_ALL_SMART_FOLDERS:
+            doGetAllSmartFolders();
             break;
         case GET_ALL_TAGS:
             doGetAllTags();
@@ -1216,8 +1246,14 @@ public class ZMailboxUtil implements DebugListener {
         case GET_RIGHTS:
             doGetRights(args);
             break;
+        case GET_RELATED_CONTACTS:
+            doGetRelatedContacts(args);
+            break;
         case GET_REST_URL:
             doGetRestURL(args);
+            break;
+        case GET_SEARCH_HISTORY:
+            doGetSearchHistory(args);
             break;
         case GRANT_RIGHT:
             doGrantRight(args);
@@ -1315,6 +1351,9 @@ public class ZMailboxUtil implements DebugListener {
         case RECOVER_ITEM:
             mMbox.recoverItem(id(args[0]), lookupFolderId(param(args, 1)));
             break;
+        case REJECT_SAVED_SEARCH_PROMPT:
+            mMbox.rejectSaveSearchFolderPrompt(args[0]);
+            break;
         case RENAME_FOLDER:
             mMbox.renameFolder(lookupFolderId(args[0]), args[1]);
             break;
@@ -1332,6 +1371,9 @@ public class ZMailboxUtil implements DebugListener {
             break;
         case SEARCH_CONVERSATION:
             doSearchConv(args);
+            break;
+        case SEARCH_SUGGEST:
+            doSearchSuggest(args);
             break;
         case SELECT_MAILBOX:
             doSelectMailbox(args);
@@ -2193,6 +2235,86 @@ public class ZMailboxUtil implements DebugListener {
         dumpConvSearch(mMbox.searchConversation(mConvSearchConvId, mConvSearchParams), verboseOpt());
     }
 
+    private void doClearSearchHistory() throws ServiceException {
+        mMbox.clearSearchHistory();
+    }
+
+    private void doSearchSuggest(String[] args) throws ServiceException {
+        String prefix = args[0];
+        if (args.length == 1) {
+            dumpSearches(mMbox.getSearchSuggestions(prefix), "Search Suggestions");
+        } else {
+            int limit = Integer.parseInt(args[1]);
+            dumpSearches(mMbox.getSearchSuggestions(prefix, limit), "Search Suggestions");
+        }
+    }
+
+    private void doGetSearchHistory(String[] args) throws ServiceException {
+        if (args.length == 0) {
+            dumpSearches(mMbox.getSearchHistory(), "Search History");
+        } else {
+            int limit = Integer.parseInt(args[0]);
+            dumpSearches(mMbox.getSearchHistory(limit), "Search History");
+        }
+    }
+
+    private void dumpSearches(List<String> searches, String header) {
+        if (searches.isEmpty()) {
+            stdout.println("no results");
+            return;
+        }
+        int maxLength = searches.stream().map(str -> str.length()).max(Integer::compare).get();
+        stdout.println(header);
+        stdout.println(StringUtils.repeat("-", maxLength));
+        for (String s: searches) {
+            stdout.println(s);
+        }
+    }
+
+    private void doGetRelatedContacts(String[] args) throws ServiceException {
+        String requestedAffinityType = AffinityType.all.name();
+        Integer limit = null;
+        List<RelatedContactsTarget> targets = Lists.newArrayList();
+        for (int i=0; i<=args.length-1; i++) {
+            String arg = args[i];
+            String targetEmail;
+            String targetAffinity;
+            if (arg.indexOf(":") > -1) {
+                String[] tokens = arg.split(":", 2);
+                String tok = tokens[0];
+                String val = tokens[1];
+                if (tok.equals("limit")) {
+                    limit = Integer.valueOf(val);
+                    continue;
+                } else if (tok.equals("field")) {
+                    requestedAffinityType = val;
+                    continue;
+                } else {
+                    targetAffinity = tok;
+                    targetEmail = val;
+                }
+            } else {
+                targetAffinity = "";
+                targetEmail = arg;
+            }
+            targets.add(new RelatedContactsTarget(targetEmail, targetAffinity));
+        }
+        GetRelatedContactsResponse resp = mMbox.getRelatedContacts(targets, requestedAffinityType, limit);
+        List<String> relatedContacts = resp.getRelatedContacts().stream().map(r -> toRelatedContactRow(r)).collect(Collectors.toList());
+        dumpSearches(relatedContacts, "Related Contacts");
+    }
+
+    private String toRelatedContactRow(RelatedContactResult result) {
+        String email = result.getEmail();
+        String name = result.getName();
+        int scope = result.getScope();
+        if (name != null) {
+            return String.format("[scope=%d] %s (%s)", scope, email, name);
+        } else {
+            return String.format("[scope=%d] %s", scope, email);
+        }
+    }
+
     private void doSearchConvRedisplay() {
         ZSearchResult sr = mConvSearchResult;
         if (sr == null) return;
@@ -2239,7 +2361,15 @@ public class ZMailboxUtil implements DebugListener {
         int first = offset+1;
         int last = offset+sr.getHits().size();
 
-        stdout.printf("num: %d, more: %s%n%n", sr.getHits().size(), sr.hasMore());
+        StringBuilder header = new StringBuilder("num: %d, more: %s");
+        if (sr.hasSavedSearchPrompt()) {
+            header.append(" saveSearchPrompt: true");
+        }
+        if (sr.isReIndexInProgress()) {
+            header.append(" reIndexInProgress: true");
+        }
+        header.append("%n%n");
+        stdout.printf(header.toString(), sr.getHits().size(), sr.hasMore());
         int width = colWidth(last);
 
         if (sr.getHits().size() == 0) {
@@ -2251,7 +2381,6 @@ public class ZMailboxUtil implements DebugListener {
         for (ZSearchHit hit: sr.getHits()) {
             id_len = Math.max(id_len, hit.getId().length());
         }
-
         Calendar cal = Calendar.getInstance();
         String headerFormat = String.format("%%%d.%ds  %%%d.%ds  %%4s   %%-20.20s  %%-50.50s  %%s%%n",
                 width, width, id_len, id_len);
@@ -2366,6 +2495,26 @@ public class ZMailboxUtil implements DebugListener {
             }
         }
         stdout.println();
+    }
+
+    private void doGetAllSmartFolders() throws ServiceException {
+        if (verboseOpt()) {
+            StringBuilder sb = new StringBuilder();
+            for (ZSmartFolder sf: mMbox.getSmartFolders()) {
+                if (sb.length() > 0) sb.append(",\n");
+                sb.append(sf.dump());
+            }
+            stdout.format("[%n%s%n]%n", sb.toString());
+        } else {
+            List<ZSmartFolder> smartFolders = mMbox.getSmartFolders();
+            if (smartFolders.isEmpty()) return;
+            String hdrFormat = "%10.10s  %10.10s  %s%n";
+            stdout.format(hdrFormat, "Id", "Unread", "Name");
+            stdout.format(hdrFormat, "----------", "----------", "----------");
+            for (ZSmartFolder sf: smartFolders) {
+                stdout.format("%10.10s  %10d  %s%n", sf.getId(), sf.getUnreadCount(), sf.getName());
+            }
+        }
     }
 
     private void doGetAllTags() throws ServiceException {
@@ -2556,6 +2705,43 @@ public class ZMailboxUtil implements DebugListener {
         dumpContacts(mMbox.getContacts(id(args[0]), null, true, getList(args, 1)));
     }
 
+    private void doGetContactFrequency(String[] args) throws ServiceException {
+        String email = args[0];
+        String range = args[1];
+        String interval = args[2];
+        ContactFrequencyGraphSpec spec = new ContactFrequencyGraphSpec(range, interval);
+        GetContactFrequencyResponse resp;
+        if(args.length > 3) {
+            Integer offsetInMinutes = Integer.parseInt(args[3]);
+            resp = mMbox.getContactFrequency(email, offsetInMinutes, spec);
+        } else {
+            resp = mMbox.getContactFrequency(email, spec);
+        }
+        for (ContactFrequencyData data: resp.getFrequencyGraphs()) {
+            dumpFrequencyGraph(data);
+        }
+        stdout.println("Date labels shown in UTC; other clients may show the browser's timezone instead");
+    }
+
+    private void dumpFrequencyGraph(ContactFrequencyData graphData) {
+        ContactFrequencyGraphSpec spec = graphData.getGraphSpec();
+        for (ContactFrequencyDataPoint dataPoint : graphData.getDataPoints()) {
+            String unixTimestamp = dataPoint.getLabel();
+            Instant utcTimestamp = Instant.ofEpochMilli(Long.parseLong(unixTimestamp));
+            dataPoint.setLabel(utcTimestamp.toString());
+        }
+        stdout.println(String.format("Range: %s, Interval: %s", spec.getRange(), spec.getInterval()));
+        List<ContactFrequencyDataPoint> dataPoints = graphData.getDataPoints();
+        int maxLabelLength = dataPoints.stream().map(p -> p.getLabel().length()).max(Integer::compare).get();
+        for (ContactFrequencyDataPoint point: dataPoints) {
+            String label = Strings.padStart(point.getLabel(), maxLabelLength + 1, ' ');
+            int value = point.getValue();
+            String bar = Strings.repeat(":", value);
+            String row = String.format("%s|%s %d", label, bar, value);
+            stdout.println(row);
+        }
+
+    }
     private void doAutoComplete(String[] args) throws ServiceException {
         dumpAutoCompleteMatches(mMbox.autoComplete(args[0], 20));
     }

@@ -38,7 +38,7 @@ import java.util.TreeSet;
 import org.dom4j.Element;
 import org.dom4j.QName;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
 import com.zimbra.common.calendar.ICalTimeZone;
 import com.zimbra.common.localconfig.LC;
@@ -823,7 +823,7 @@ public final class ContactCSV {
 
         @Override
         public String toString() {
-            Objects.ToStringHelper helper = Objects.toStringHelper(this)
+            MoreObjects.ToStringHelper helper = MoreObjects.toStringHelper(this)
                 .add("name", name).add("field", field).add("type", colType);
             if (colType == ColType.MULTIVALUE) {
                 helper.add("cols", names);
@@ -890,7 +890,7 @@ public final class ContactCSV {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this).add("name", name).add("locale", locale).add("flags", flags).toString();
+            return MoreObjects.toStringHelper(this).add("name", name).add("locale", locale).add("flags", flags).toString();
         }
 
         public String key() {

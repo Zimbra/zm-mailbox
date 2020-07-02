@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.zip.GZIPInputStream;
 
 import javax.activation.DataSource;
@@ -55,12 +56,13 @@ import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
 
 public class CreateMessage extends RedoableOp
-implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
+implements CreateCalendarItemPlayer, CreateCalendarItemRecorder, BlobRecorder {
 
     private static final long RECEIVED_DATE_UNSET = -1;
 
-    private static final byte MSGBODY_INLINE = 1;   // message body buffer is included in this op
-    private static final byte MSGBODY_LINK   = 2;   // message link information is included in this op
+    protected static final byte MSGBODY_INLINE = 1;   // message body buffer is included in this op
+    protected static final byte MSGBODY_LINK   = 2;   // message link information is included in this op
+    protected static final byte MSGBODY_EXTERNAL = 3;   // digest of blob, to be looked up in RedoLogBlobStore
 
     protected long mReceivedDate;     // email received date; not necessarily equal to operation time
     private String mRcptEmail;      // email address the message was delivered to
@@ -83,9 +85,11 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
     private CustomMetadata mExtendedData; // extra data associated with the message at delivery time
     protected RedoableOpData mData;
 
-    private byte mMsgBodyType;
-    private String mPath;           // if mMsgBodyType == MSGBODY_LINK, source file to link to
-    // if mMsgBodyType == MSGBODY_INLINE, path of saved blob file
+    protected byte mMsgBodyType;
+    protected String mPath;           // if mMsgBodyType == MSGBODY_LINK, source file to link to
+                                      // if mMsgBodyType == MSGBODY_INLINE, path of saved blob file
+                                      // if mMsgBodyType == MSGBODY_EXTERNAL, :external:
+
 
     public CreateMessage() {
         super(MailboxOperation.CreateMessage);
@@ -96,7 +100,7 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
         mConvFirstMsgId = UNKNOWN_ID;
         mMergedConvIds = Collections.emptyList();
         mFlags = 0;
-        mMsgBodyType = MSGBODY_INLINE;
+        mMsgBodyType = MSGBODY_EXTERNAL;
         mNoICal = false;
     }
 
@@ -123,7 +127,7 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
         mMergedConvIds = Collections.emptyList();
         mFlags = flags;
         mTags = tags != null ? tags : new String[0];
-        mMsgBodyType = MSGBODY_INLINE;
+        mMsgBodyType = MSGBODY_EXTERNAL;
         mNoICal = noICal;
         mExtendedData = extended;
     }
@@ -135,7 +139,7 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
         }
     }
 
-    @Override public synchronized void commit() {
+    @Override public synchronized void commit() throws ServiceException {
         // Override commit() and abort().  Null out mData (reference to message
         // body byte array) after calling superclass' commit/abort.
         // Indexer keeps many IndexItem redo objects in memory because of batch
@@ -310,8 +314,10 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
         sb.append(", bodyType=").append(mMsgBodyType);
         if (mMsgBodyType == MSGBODY_LINK) {
             sb.append(", linkSourcePath=").append(mPath);
-        } else {
+        } else if (mMsgBodyType == MSGBODY_INLINE){
             sb.append(", path=").append(mPath);
+        } else {
+            sb.append(", [external blob]");
         }
         return sb.toString();
     }
@@ -490,8 +496,15 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
 
         DeliveryContext dctxt = new DeliveryContext(mShared, Arrays.asList(mboxId));
 
+        Blob blob = null;
         if (mMsgBodyType == MSGBODY_LINK) {
-            Blob blob = StoreIncomingBlob.fetchBlob(mPath);
+            // backwards compatibility - if using StoreIncomingBlob ops,
+            // the blob is referenced by its path
+            blob = mRedoLogMgr.getBlobStore().fetchBlob(mPath);
+        } else if (mMsgBodyType == MSGBODY_EXTERNAL) {
+            blob = getExternalBlob();
+        }
+        if (mMsgBodyType == MSGBODY_LINK || mMsgBodyType == MSGBODY_EXTERNAL) {
             if (blob == null)
                 throw new RedoException("Missing link source blob " + mPath + " (digest=" + mDigest + ")", this);
             dctxt.setIncomingBlob(blob);
@@ -538,5 +551,47 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
                 ByteUtil.closeStream(in);
             }
         }
+    }
+
+    protected Blob getExternalBlob() throws ServiceException, IOException {
+        return mRedoLogMgr.getBlobStore().fetchBlob(getBlobDigest());
+    }
+
+    @Override
+    public String getBlobDigest() {
+        return mDigest;
+    }
+
+    @Override
+    public InputStream getBlobInputStream() throws IOException {
+        if (mData != null) {
+            return mData.getInputStream();
+        } else {
+            return null;
+        }
+    }
+
+    @Override
+    public void setBlobDataFromDataSource(DataSource ds, long size) {
+        mMsgBodyType = MSGBODY_EXTERNAL;
+        mData = new RedoableOpData(ds, (int) size);
+        mPath = ":external:";
+    }
+
+    @Override
+    public void setBlobDataFromFile(File file) {
+        mMsgBodyType = MSGBODY_EXTERNAL;
+        mData = new RedoableOpData(file);
+        mPath = ":external:";
+    }
+
+    @Override
+    public long getBlobSize() {
+        return mMsgSize;
+    }
+
+    @Override
+    public Set<Integer> getReferencedMailboxIds() {
+        return Collections.singleton(getMailboxId());
     }
 }

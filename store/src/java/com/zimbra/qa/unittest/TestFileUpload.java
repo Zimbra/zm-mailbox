@@ -18,21 +18,24 @@ package com.zimbra.qa.unittest;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
 
-import org.apache.commons.httpclient.HeaderElement;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.HttpState;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.cookie.CookiePolicy;
-import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.httpclient.methods.multipart.ByteArrayPartSource;
-import org.apache.commons.httpclient.methods.multipart.FilePart;
-import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
-import org.apache.commons.httpclient.methods.multipart.Part;
-import org.apache.commons.httpclient.methods.multipart.StringPart;
+import org.apache.http.Header;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpException;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.CookieSpecs;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.mime.FormBodyPartBuilder;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.impl.client.BasicCookieStore;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.cookie.BasicClientCookie;
+import org.apache.http.util.EntityUtils;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -117,21 +120,35 @@ public class TestFileUpload {
             ZimbraLog.test.error("Unable to get admin SOAP port", e);
         }
         String Url = "https://localhost:" + port + ADMIN_UPLOAD_URL;
-        PostMethod post = new PostMethod(Url);
-        FilePart part = new FilePart(FILE_NAME, new ByteArrayPartSource(FILE_NAME, "some file content".getBytes()));
+        HttpPost post = new HttpPost(Url);
         String contentType = "application/x-msdownload";
-        part.setContentType(contentType);
-        HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
-        HttpState state = new HttpState();
-        state.addCookie(new org.apache.commons.httpclient.Cookie("localhost", ZimbraCookie.authTokenCookieName(true),
-                authToken, "/", null, false));
-        client.getParams().setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
-        client.setState(state);
-        post.setRequestEntity(new MultipartRequestEntity(new Part[] { part }, post.getParams()));
-        post.addRequestHeader(Constants.CSRF_TOKEN, csrfToken);
-        int statusCode = HttpClientUtil.executeMethod(client, post);
+        
+        HttpClientBuilder clientBuilder = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+        BasicCookieStore state = new BasicCookieStore();
+        BasicClientCookie cookie = new BasicClientCookie(ZimbraCookie.authTokenCookieName(true), authToken);
+        cookie.setDomain("localhost");
+        cookie.setPath("/");
+        cookie.setSecure(false);
+        state.addCookie(cookie);
+
+        clientBuilder.setDefaultCookieStore(state);
+        RequestConfig reqConfig = RequestConfig.copy(
+            ZimbraHttpConnectionManager.getInternalHttpConnMgr().getZimbraConnMgrParams().getReqConfig())
+            .setCookieSpec(CookieSpecs.BROWSER_COMPATIBILITY).build();
+        clientBuilder.setDefaultRequestConfig(reqConfig);
+        
+        MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+        builder.addBinaryBody(FILE_NAME, "some file content".getBytes(), ContentType.create(contentType), FILE_NAME);
+        HttpEntity httpEntity = builder.build();
+        post.setEntity(httpEntity);
+        HttpClient client = clientBuilder.build();
+        post.addHeader(Constants.CSRF_TOKEN, csrfToken);
+       
+        HttpResponse httpResponse = HttpClientUtil.executeMethod(client, post);
+        int statusCode = httpResponse.getStatusLine().getStatusCode();
+
         Assert.assertEquals("This request should succeed. Getting status code " + statusCode, HttpStatus.SC_OK, statusCode);
-        String resp = post.getResponseBodyAsString();
+        String resp = EntityUtils.toString(httpResponse.getEntity());
         Assert.assertNotNull("Response should not be empty", resp);
         Assert.assertTrue("Incorrect HTML response", resp.contains(RESP_STR));
     }
@@ -152,20 +169,34 @@ public class TestFileUpload {
             ZimbraLog.test.error("Unable to get admin SOAP port", e);
         }
         String Url = "https://localhost:" + port + ADMIN_UPLOAD_URL;
-        PostMethod post = new PostMethod(Url);
-        FilePart part = new FilePart(FILE_NAME, new ByteArrayPartSource(FILE_NAME, "some file content".getBytes()));
+        HttpPost post = new HttpPost(Url);
         String contentType = "application/x-msdownload";
-        part.setContentType(contentType);
-        HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
-        HttpState state = new HttpState();
-        state.addCookie(new org.apache.commons.httpclient.Cookie("localhost", ZimbraCookie.authTokenCookieName(true),
-                authToken, "/", null, false));
-        client.getParams().setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
-        client.setState(state);
-        post.setRequestEntity(new MultipartRequestEntity(new Part[] { part }, post.getParams()));
-        int statusCode = HttpClientUtil.executeMethod(client, post);
+        
+        HttpClientBuilder clientBuilder = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+        BasicCookieStore state = new BasicCookieStore();
+        BasicClientCookie cookie = new BasicClientCookie(ZimbraCookie.authTokenCookieName(true), authToken);
+        cookie.setDomain("localhost");
+        cookie.setPath("/");
+        cookie.setSecure(false);
+        state.addCookie(cookie);
+
+        clientBuilder.setDefaultCookieStore(state);
+        RequestConfig reqConfig = RequestConfig.copy(
+            ZimbraHttpConnectionManager.getInternalHttpConnMgr().getZimbraConnMgrParams().getReqConfig())
+            .setCookieSpec(CookieSpecs.BROWSER_COMPATIBILITY).build();
+        clientBuilder.setDefaultRequestConfig(reqConfig);
+        
+        MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+        builder.addBinaryBody(FILE_NAME, "some file content".getBytes(), ContentType.create(contentType), FILE_NAME);
+        HttpEntity httpEntity = builder.build();
+        post.setEntity(httpEntity);
+        HttpClient client = clientBuilder.build();
+       
+        HttpResponse httpResponse = HttpClientUtil.executeMethod(client, post);
+        int statusCode = httpResponse.getStatusLine().getStatusCode();
+      
         Assert.assertEquals("This request should succeed. Getting status code " + statusCode, HttpStatus.SC_OK, statusCode);
-        String resp = post.getResponseBodyAsString();
+        String resp = EntityUtils.toString(httpResponse.getEntity());
         Assert.assertNotNull("Response should not be empty", resp);
         Assert.assertTrue("Incorrect HTML response", resp.contains(RESP_STR));
     }
@@ -187,21 +218,34 @@ public class TestFileUpload {
             ZimbraLog.test.error("Unable to get admin SOAP port", e);
         }
         String Url = "https://localhost:" + port + ADMIN_UPLOAD_URL;
-        PostMethod post = new PostMethod(Url);
-        FilePart part = new FilePart(FILE_NAME, new ByteArrayPartSource(FILE_NAME, "some file content".getBytes()));
-        Part csrfPart = new StringPart("csrfToken", csrfToken);
+        HttpPost post = new HttpPost(Url);
         String contentType = "application/x-msdownload";
-        part.setContentType(contentType);
-        HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
-        HttpState state = new HttpState();
-        state.addCookie(new org.apache.commons.httpclient.Cookie("localhost", ZimbraCookie.authTokenCookieName(true),
-                authToken, "/", null, false));
-        client.getParams().setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
-        client.setState(state);
-        post.setRequestEntity(new MultipartRequestEntity(new Part[] { part, csrfPart }, post.getParams()));
-        int statusCode = HttpClientUtil.executeMethod(client, post);
+        
+        HttpClientBuilder clientBuilder = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+        BasicCookieStore state = new BasicCookieStore();
+        BasicClientCookie cookie = new BasicClientCookie(ZimbraCookie.authTokenCookieName(true), authToken);
+        cookie.setDomain("localhost");
+        cookie.setPath("/");
+        cookie.setSecure(false);
+        state.addCookie(cookie);
+
+        clientBuilder.setDefaultCookieStore(state);
+        RequestConfig reqConfig = RequestConfig.copy(
+            ZimbraHttpConnectionManager.getInternalHttpConnMgr().getZimbraConnMgrParams().getReqConfig())
+            .setCookieSpec(CookieSpecs.BROWSER_COMPATIBILITY).build();
+        clientBuilder.setDefaultRequestConfig(reqConfig);
+        
+        MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+        builder.addBinaryBody(FILE_NAME, "some file content".getBytes(), ContentType.create(contentType), FILE_NAME);
+        builder.addPart(FormBodyPartBuilder.create().addField("csrfToken", csrfToken).build());
+        HttpEntity httpEntity = builder.build();
+        post.setEntity(httpEntity);
+        HttpClient client = clientBuilder.build();
+       
+        HttpResponse httpResponse = HttpClientUtil.executeMethod(client, post);
+        int statusCode = httpResponse.getStatusLine().getStatusCode();
         Assert.assertEquals("This request should succeed. Getting status code " + statusCode, HttpStatus.SC_OK, statusCode);
-        String resp = post.getResponseBodyAsString();
+        String resp =  EntityUtils.toString(httpResponse.getEntity());
         Assert.assertNotNull("Response should not be empty", resp);
         Assert.assertTrue("Incorrect HTML response", resp.contains(RESP_STR));
     }
@@ -229,37 +273,42 @@ public class TestFileUpload {
     }
 
     private String postAndVerify(ZMailbox mbox, URI uri, boolean clearCookies)
-    throws IOException {
+    throws IOException , HttpException{
         return postAndVerify(mbox, uri, clearCookies, "myReqId", "some data");
     }
 
     private String postAndVerify(ZMailbox mbox, URI uri, boolean clearCookies, String requestId, String attContent)
-    throws IOException {
-        HttpClient client = mbox.getHttpClient(uri);
-        if (clearCookies) {
-            client.getState().clearCookies();
-        }
+    throws IOException, HttpException {
+        HttpClientBuilder clientBuilder = mbox.getHttpClientBuilder(uri);
+//        if (clearCookies) {
+//            clientBuilder.
+//        }
 
-        List<Part> parts = new ArrayList<Part>();
-        parts.add(new StringPart("requestId", requestId));
+        MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+        builder.addPart(FormBodyPartBuilder.create().addField("requestId", requestId).build());
+        
         if (attContent != null) {
-            parts.add(mbox.createAttachmentPart("test.txt", attContent.getBytes()));
+            builder.addBinaryBody("test.txt", attContent.getBytes());
         }
 
-        PostMethod post = new PostMethod(uri.toString());
-        post.setRequestEntity(new MultipartRequestEntity(parts.toArray(new Part[parts.size()]), post.getParams()));
-        int status = HttpClientUtil.executeMethod(client, post);
+        HttpPost post = new HttpPost(uri.toString());
+        HttpEntity httpEntity = builder.build();
+        post.setEntity(httpEntity);
+        HttpClient client = clientBuilder.build();
+        
+        HttpResponse httpResponse = HttpClientUtil.executeMethod(client, post);
+        int status = httpResponse.getStatusLine().getStatusCode();
         Assert.assertEquals(200, status);
 
         String contentType = getHeaderValue(post, "Content-Type");
         Assert.assertTrue(contentType, contentType.startsWith("text/html"));
-        String content = post.getResponseBodyAsString();
+        String content = EntityUtils.toString(httpResponse.getEntity());
         post.releaseConnection();
         return content;
     }
 
-    private String getHeaderValue(HttpMethod method, String name) {
-        HeaderElement[] header = method.getResponseHeader(name).getElements();
+    private String getHeaderValue(HttpRequestBase method, String name) {
+        Header[] header = method.getHeaders(name);
         String value = null;
         if(header.length > 0) {
             value = header[0].getName();

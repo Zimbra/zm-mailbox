@@ -17,16 +17,22 @@
 
 package com.zimbra.soap.mail.type;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.Id;
 
+import io.leangen.graphql.annotations.GraphQLIgnore;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name=GqlConstants.CLASS_CALENDAR_ACTION_RESPONSE, description="Contains response information for calendar actions (create, modify, reply)")
 public class CreateCalendarItemResponse {
 
     /**
@@ -94,16 +100,23 @@ public class CreateCalendarItemResponse {
     public void setRevision(Integer revision) { this.revision = revision; }
     public void setMsg(Id msg) { this.msg = msg; }
     public void setEcho(CalEcho echo) { this.echo = echo; }
+    @GraphQLQuery(name=GqlConstants.CALENDAR_ITEM_ID, description="Appointment ID")
     public String getCalItemId() { return calItemId; }
     @Deprecated
+    @GraphQLIgnore
     public String getDeprecatedApptId() { return deprecatedApptId; }
+    @GraphQLQuery(name=GqlConstants.CALENDAR_INVITE_ID, description="Invite message ID")
     public String getCalInvId() { return calInvId; }
+    @GraphQLQuery(name=GqlConstants.MODIFIED_SEQUENCE, description="Change sequence")
     public Integer getModifiedSequence() { return modifiedSequence; }
+    @GraphQLQuery(name=GqlConstants.REVISION, description="Revision")
     public Integer getRevision() { return revision; }
+    @GraphQLQuery(name=GqlConstants.MESSAGE_ID, description="Message information")
     public Id getMsg() { return msg; }
+    @GraphQLQuery(name=GqlConstants.ECHO, description="Included if includeEcho was specified")
     public CalEcho getEcho() { return echo; }
 
-    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         return helper
             .add("calItemId", calItemId)
             .add("deprecatedApptId", deprecatedApptId)
@@ -116,6 +129,6 @@ public class CreateCalendarItemResponse {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this)).toString();
+        return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
     }
 }

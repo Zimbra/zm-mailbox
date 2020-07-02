@@ -162,6 +162,15 @@ public class ContextPathBasedThreadPoolBalancerFilter implements Filter {
             int activeRequestsCount = count == null ? 0 : count.intValue();
             ZimbraLog.misc.debug("Servlet (contextPath=%s active=%d), Jetty pool (threads=%d, idle=%d, busy=%d, room=%d)", getLoggableContextPath(contextPath), activeRequestsCount, threads, idleThreads, busyThreads, roomInPoolForNewThreads);
 
+            if (activeRequestsCount > busyThreads && roomInPoolForNewThreads > 0) {
+                ZimbraLog.misc.warn("ContextPathBasedThreadPoolBalancerFilter: activeRequestsCount: %d > busyThreads: %d\n" +
+                                "Setting activeRequestsCount == %d \n(contextPath=%s active=%d), " +
+                                "Jetty pool (threads=%d, idle=%d, busy=%d, room=%d)",
+                                activeRequestsCount, busyThreads, busyThreads, getLoggableContextPath(contextPath),
+                                activeRequestsCount, threads, idleThreads, busyThreads, roomInPoolForNewThreads);
+                activeRequestsCount = busyThreads;
+            }
+
             // Enforce max count
             if (rules.max != null) {
                 if (activeRequestsCount > rules.max) {

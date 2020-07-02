@@ -279,7 +279,16 @@ public class L10nUtil {
         //forwarding email address verification
         verifyEmailSubject,
         verifyEmailBodyText,
-        verifyEmailBodyHtml
+        verifyEmailBodyHtml,
+
+        // recovery email address verification
+        verifyRecoveryEmailSubject,
+        verifyRecoveryEmailBodyText,
+        verifyRecoveryEmailBodyHtml,
+        sendPasswordRecoveryEmailSubject,
+        sendPasswordRecoveryEmailBodyText,
+        sendPasswordRecoveryEmailBodyHtml
+
         // add other messages in the future...
     }
 
@@ -336,7 +345,17 @@ public class L10nUtil {
     public static String getMessage(String key, HttpServletRequest request, Object... args) {
         Locale locale = null;
         if (request != null) {
-            locale = lookupLocale(request.getParameter(P_LOCALE_ID));
+            try {
+                locale = lookupLocale(request.getParameter(P_LOCALE_ID));
+            } catch (IllegalArgumentException ex) {
+                /* curl --data-binary with a .tgz file will use `Content-Type: application/x-www-form-urlencoded`
+                 * unless content type is over-ridden using e.g. -H 'Content-Type: application/octet-stream'
+                 * That can result in very noisy logging error handling - presumably looking in the "form"
+                 * for this parameter and also throwing:
+                 * org.eclipse.jetty.util.Utf8Appendable$NotUtf8Exception: Not valid UTF8! byte Ef in state 5.
+                 * As people may often be lazy when using curl, worth suppressing the errors. */
+                ZimbraLog.misc.warnQuietly("Problem getting HttpServletRequest parameter '%s'", P_LOCALE_ID, ex);
+            }
         }
         // TODO: If not specified in params, get locale from config
         if (locale == null && request != null) {
@@ -362,7 +381,11 @@ public class L10nUtil {
     }
 
     public static String getMessage(String basename, String key, Locale lc, Object... args) {
-        ResourceBundle rb;
+        return getMessage(true /* shoutIfMissing */, basename, key, lc, args);
+    }
+
+    public static String getMessage(boolean shoutIfMissing, String basename, String key, Locale lc, Object... args) {
+        ResourceBundle rb = null;
         try {
             if (lc == null) {
                 lc = Locale.getDefault();
@@ -375,8 +398,23 @@ public class L10nUtil {
                 return fmt;
             }
         } catch (MissingResourceException e) {
-            ZimbraLog.misc.warn("no resource bundle for base name " + basename + " can be found, " +
-                    "(locale=" + key + ")", e);
+            if (rb == null) {
+                if (shoutIfMissing) {
+                    ZimbraLog.misc.warn("no resource bundle found for (basename='%s', key='%s' locale='%s')",
+                            basename, key, lc, e);
+                } else {
+                    ZimbraLog.misc.info("no resource bundle found for (basename='%s', key='%s' locale='%s')",
+                            basename, key, lc);
+                }
+            } else {
+                if (shoutIfMissing) {
+                    ZimbraLog.misc.warn("no resource string found in bundle for (basename='%s', key='%s' locale='%s')",
+                            basename, key, lc, e);
+                } else {
+                    ZimbraLog.misc.info("no resource string found in bundle for (basename='%s', key='%s' locale='%s')",
+                            basename, key, lc);
+                }
+            }
             return null;
         }
     }

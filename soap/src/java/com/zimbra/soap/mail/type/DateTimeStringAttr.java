@@ -17,15 +17,22 @@
 
 package com.zimbra.soap.mail.type;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.DateTimeStringAttrInterface;
 
+import io.leangen.graphql.annotations.GraphQLInputField;
+import io.leangen.graphql.annotations.GraphQLNonNull;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name=GqlConstants.CLASS_DATE_TIME_STRING_ATTRIBUTE, description="Date time string attribute")
 public class DateTimeStringAttr
 implements DateTimeStringAttrInterface {
 
@@ -34,6 +41,8 @@ implements DateTimeStringAttrInterface {
      * @zm-api-field-description Date in format : YYYYMMDD[ThhmmssZ]
      */
     @XmlAttribute(name=MailConstants.A_CAL_DATETIME, required=true)
+    @GraphQLNonNull
+    @GraphQLQuery(name=GqlConstants.DATE_TIME, description="Date in format : YYYYMMDD[ThhmmssZ]")
     private final String dateTime;
 
     /**
@@ -44,7 +53,7 @@ implements DateTimeStringAttrInterface {
         this((String) null);
     }
 
-    public DateTimeStringAttr(String dateTime) {
+    public DateTimeStringAttr(@GraphQLNonNull @GraphQLInputField String dateTime) {
         this.dateTime = dateTime;
     }
 
@@ -58,7 +67,7 @@ implements DateTimeStringAttrInterface {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
             .add("dateTime", dateTime)
             .toString();
     }

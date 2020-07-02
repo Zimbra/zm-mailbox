@@ -17,6 +17,7 @@
 package com.zimbra.cs.index;
 
 import java.util.Collections;
+import org.junit.Ignore;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
@@ -26,7 +27,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.google.common.io.Closeables;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
@@ -45,13 +45,14 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.util.IOUtil;
 
 /**
  * Unit test for {@link ZimbraQuery}.
  *
  * @author ysasaki
  */
-public final class ZimbraQueryTest {
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci") public final class ZimbraQueryTest {
 
     @BeforeClass
     public static void init() throws Exception {
@@ -132,7 +133,6 @@ public final class ZimbraQueryTest {
         Map<String, Object> fields = new HashMap<String, Object>();
         fields.put(ContactConstants.A_email, "test1@zimbra.com");
         Contact contact = mbox.createContact(null, new ParsedContact(fields), Mailbox.ID_FOLDER_CONTACTS, null);
-        MailboxTestUtil.index(mbox);
 
         SearchParams params = new SearchParams();
         params.setQueryString("contact:test");
@@ -144,7 +144,7 @@ public final class ZimbraQueryTest {
         ZimbraQueryResults result = query.execute();
         Assert.assertTrue(result.hasNext());
         Assert.assertEquals(contact.getId(), result.getNext().getItemId());
-        Closeables.closeQuietly(result);
+        IOUtil.closeQuietly(result);
     }
 
     @Test
@@ -207,7 +207,7 @@ public final class ZimbraQueryTest {
         Assert.assertEquals(104, result.getNext().getItemId());
         Assert.assertEquals(105, result.getNext().getItemId());
         Assert.assertEquals(null, result.getNext());
-        Closeables.closeQuietly(result);
+        IOUtil.closeQuietly(result);
     }
 
     @Test
@@ -216,7 +216,6 @@ public final class ZimbraQueryTest {
 
         Contact contact = mbox.createContact(null, new ParsedContact(Collections.singletonMap(
                 ContactConstants.A_email, "test1@zimbra.com")), Mailbox.ID_FOLDER_CONTACTS, null);
-        MailboxTestUtil.index(mbox);
 
         mbox.createContact(null, new ParsedContact(Collections.singletonMap(
                 ContactConstants.A_email, "test2@zimbra.com")), Mailbox.ID_FOLDER_CONTACTS, null);
@@ -232,7 +231,7 @@ public final class ZimbraQueryTest {
         Assert.assertTrue("Expected at least 1 result", result.hasNext());
         Assert.assertEquals("Result item ID not as expected", contact.getId(), result.getNext().getItemId());
         Assert.assertFalse("More hits than expected", result.hasNext());
-        Closeables.closeQuietly(result);
+        IOUtil.closeQuietly(result);
     }
 
     @Test
@@ -241,7 +240,6 @@ public final class ZimbraQueryTest {
         DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
         Message msg = mbox.addMessage(null, new ParsedMessage("Subject: all hands meeting".getBytes(), false),
                 dopt, null);
-        MailboxTestUtil.index(mbox);
 
         SearchParams params = new SearchParams();
         params.setQueryString("all hands me");
@@ -252,7 +250,7 @@ public final class ZimbraQueryTest {
         ZimbraQuery query = new ZimbraQuery(new OperationContext(mbox), SoapProtocol.Soap12, mbox, params);
         ZimbraQueryResults result = query.execute();
         Assert.assertEquals(msg.getId(), result.getNext().getItemId());
-        Closeables.closeQuietly(result);
+        IOUtil.closeQuietly(result);
     }
 
     @Test

@@ -28,13 +28,17 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlEnum;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.EmailAddrInfo;
 import com.zimbra.soap.type.Id;
+
+import io.leangen.graphql.annotations.GraphQLEnumValue;
+import io.leangen.graphql.annotations.types.GraphQLType;
 
 /**
  * @zm-api-command-auth-required true
@@ -117,7 +121,7 @@ public class SendShareNotificationRequest {
     }
     public String getNotes() { return notes; }
 
-    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         return helper
             .add("item", item)
             .add("email", emailAddresses)
@@ -127,7 +131,7 @@ public class SendShareNotificationRequest {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this)).toString();
+        return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
     }
 
     public Action getAction() {
@@ -139,8 +143,11 @@ public class SendShareNotificationRequest {
     }
 
     @XmlEnum
+    @GraphQLType(name = GqlConstants.CLASS_ACTION, description = "sharing action")
     public static enum Action {
-        edit, revoke, expire;
+        @GraphQLEnumValue(description = "edit share") edit,
+        @GraphQLEnumValue(description = "revoke share") revoke,
+        @GraphQLEnumValue(description = "share expired") expire;
 
         public static Action fromString(String value) throws ServiceException {
             if (value == null) {

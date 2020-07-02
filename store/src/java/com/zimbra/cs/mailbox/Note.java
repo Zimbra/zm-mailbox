@@ -19,18 +19,19 @@ package com.zimbra.cs.mailbox;
 import java.util.Collections;
 import java.util.List;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.db.DbMailItem;
-import com.zimbra.cs.index.LuceneFields;
-import com.zimbra.cs.index.IndexDocument;
-import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
-import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.index.IndexDocument;
+import com.zimbra.cs.index.LuceneFields;
+import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
+import com.zimbra.cs.session.PendingModifications.Change;
 
 /**
  * @since Sep 7, 2004
@@ -67,13 +68,22 @@ public class Note extends MailItem {
     private Rectangle mBounds;
 
 
-    public Note(Mailbox mbox, UnderlyingData data) throws ServiceException {
+    Note(Mailbox mbox, UnderlyingData data) throws ServiceException {
         this(mbox, data, false);
     }
-    
-    public Note(Mailbox mbox, UnderlyingData data, boolean skipCache) throws ServiceException {
+
+    Note(Mailbox mbox, UnderlyingData data, boolean skipCache) throws ServiceException {
         super(mbox, data, skipCache);
-        if (mData.type != Type.NOTE.toByte()) {
+        init();
+    }
+
+    Note(Account acc, UnderlyingData data, int mailboxId) throws ServiceException {
+        super(acc, data, mailboxId);
+        init();
+    }
+
+    private void init() throws ServiceException {
+        if (type != Type.NOTE.toByte()) {
             throw new IllegalArgumentException();
         }
     }
@@ -163,7 +173,7 @@ public class Note extends MailItem {
         }
         data.date = mbox.getOperationTimestamp();
         data.setSubject(content);
-        data.metadata = encodeMetadata(color, 1, 1, custom, location);
+        data.metadata = encodeMetadata(color, 1, 1, custom, location, 1);
         data.contentChanged(mbox);
         ZimbraLog.mailop.info("Adding Note: id=%d, folderId=%d, folderName=%s.",
                 data.id, folder.getId(), folder.getName());
@@ -174,7 +184,6 @@ public class Note extends MailItem {
         return note;
     }
 
-    @Override
     public List<IndexDocument> generateIndexData() {
         String toIndex = getText();
         IndexDocument doc = new IndexDocument();
@@ -182,6 +191,11 @@ public class Note extends MailItem {
         doc.addSubject(toIndex);
         doc.addPartName(LuceneFields.L_PARTNAME_NOTE);
         return Collections.singletonList(doc);
+    }
+
+    @Override
+    public List<IndexDocument> generateIndexDataAsync(boolean indexAttachments) {
+        return checkNumIndexDocs(generateIndexData());
     }
 
     void setContent(String content) throws ServiceException {
@@ -195,14 +209,14 @@ public class Note extends MailItem {
         if (Strings.isNullOrEmpty(content)) {
             throw ServiceException.INVALID_REQUEST("notes may not be empty", null);
         }
-        if (content.equals(mData.getSubject())) {
+        if (content.equals(state.getSubject())) {
             return;
         }
         addRevision(false);
         markItemModified(Change.CONTENT | Change.DATE);
         // XXX: should probably update both mData.size and the Mailbox's size
-        mData.setSubject(content);
-        mData.date = mMailbox.getOperationTimestamp();
+        state.setSubject(content);
+        state.setDate(mMailbox.getOperationTimestamp());
         saveData(new DbMailItem(mMailbox));
     }
 
@@ -237,17 +251,17 @@ public class Note extends MailItem {
 
     @Override
     Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mRGBColor, mMetaVersion, mVersion, mExtendedData, mBounds);
+        return encodeMetadata(meta, state.getColor(), state.getMetadataVersion(), state.getVersion(), mExtendedData, mBounds, state.getNumIndexDocs());
     }
 
-    private static String encodeMetadata(Color color, int metaVersion, int version, CustomMetadata custom, Rectangle bounds) {
+    private static String encodeMetadata(Color color, int metaVersion, int version, CustomMetadata custom, Rectangle bounds, int numIndexDocs) {
         CustomMetadataList extended = (custom == null ? null : custom.asList());
-        return encodeMetadata(new Metadata(), color, metaVersion, version, extended, bounds).toString();
+        return encodeMetadata(new Metadata(), color, metaVersion, version, extended, bounds, numIndexDocs).toString();
     }
 
-    static Metadata encodeMetadata(Metadata meta, Color color, int metaVersion, int version, CustomMetadataList extended, Rectangle bounds) {
+    static Metadata encodeMetadata(Metadata meta, Color color, int metaVersion, int version, CustomMetadataList extended, Rectangle bounds, int numIndexDocs) {
         meta.put(Metadata.FN_BOUNDS, bounds);
-        return MailItem.encodeMetadata(meta, color, null, metaVersion, version, extended);
+        return MailItem.encodeMetadata(meta, color, null, metaVersion, version, numIndexDocs, extended);
     }
 
 
@@ -255,7 +269,7 @@ public class Note extends MailItem {
 
     @Override
     public String toString() {
-        Objects.ToStringHelper helper = Objects.toStringHelper(this);
+        MoreObjects.ToStringHelper helper = MoreObjects.toStringHelper(this);
         appendCommonMembers(helper);
         helper.add(CN_BOUNDS, mBounds);
         return helper.toString();

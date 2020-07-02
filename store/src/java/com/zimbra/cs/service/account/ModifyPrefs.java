@@ -55,6 +55,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.service.util.FileUploadServletUtil;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -76,14 +77,16 @@ public class ModifyPrefs extends AccountDocumentHandler {
 
         HashMap<String, Object> prefs = new HashMap<String, Object>();
         Map<String, Set<String>> name2uniqueAttrValues = new HashMap<String, Set<String>>();
-        for (KeyValuePair kvp : request.listKeyValuePairs(AccountConstants.E_PREF, AccountConstants.A_NAME)) {
+        for (KeyValuePair kvp : request.listKeyValuePairs(AccountConstants.E_PREF,
+            AccountConstants.A_NAME)) {
             String name = kvp.getKey(), value = kvp.getValue();
             char ch = name.length() > 0 ? name.charAt(0) : 0;
             int offset = ch == '+' || ch == '-' ? 1 : 0;
             if (!name.startsWith(PREF_PREFIX, offset))
-                throw ServiceException.INVALID_REQUEST("pref name must start with " + PREF_PREFIX, null);
-
-            AttributeInfo attrInfo = AttributeManager.getInstance().getAttributeInfo(name.substring(offset));
+                throw ServiceException.INVALID_REQUEST("pref name must start with " + PREF_PREFIX,
+                    null);
+            AttributeInfo attrInfo = AttributeManager.getInstance()
+                .getAttributeInfo(name.substring(offset));
             if (attrInfo == null) {
                 throw ServiceException.INVALID_REQUEST("no such attribute: " + name, null);
             }
@@ -109,12 +112,12 @@ public class ModifyPrefs extends AccountDocumentHandler {
             if (!account.getBooleanAttr(Provisioning.A_zimbraFeatureMailForwardingEnabled, false)) {
                 throw ServiceException.PERM_DENIED("forwarding not enabled");
             } else {
-                if (account.getBooleanAttr(
-                    Provisioning.A_zimbraFeatureAddressVerificationEnabled, false)) {
+                if (account.getBooleanAttr(Provisioning.A_zimbraFeatureAddressVerificationEnabled,
+                    false)) {
                     /*
                      * forwarding address verification enabled, store the email
-                     * ID in 'zimbraFeatureAddressUnderVerification'
-                     * till the time it's verified
+                     * ID in 'zimbraFeatureAddressUnderVerification' till the
+                     * time it's verified
                      */
                     String emailIdToVerify = (String) prefs
                         .get(Provisioning.A_zimbraPrefMailForwardingAddress);

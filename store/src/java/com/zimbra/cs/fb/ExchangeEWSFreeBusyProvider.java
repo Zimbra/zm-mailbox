@@ -60,11 +60,15 @@ import com.microsoft.schemas.exchange.services._2006.messages.GetFolderResponseT
 import com.microsoft.schemas.exchange.services._2006.messages.GetFolderType;
 import com.microsoft.schemas.exchange.services._2006.messages.GetUserAvailabilityRequestType;
 import com.microsoft.schemas.exchange.services._2006.messages.GetUserAvailabilityResponseType;
+import com.microsoft.schemas.exchange.services._2006.messages.ResponseCodeType;
 import com.microsoft.schemas.exchange.services._2006.messages.ResponseMessageType;
 import com.microsoft.schemas.exchange.services._2006.messages.UpdateItemResponseType;
 import com.microsoft.schemas.exchange.services._2006.messages.UpdateItemType;
+import com.microsoft.schemas.exchange.services._2006.types.ArrayOfCalendarEvent;
 import com.microsoft.schemas.exchange.services._2006.types.ArrayOfMailboxData;
 import com.microsoft.schemas.exchange.services._2006.types.BaseFolderType;
+import com.microsoft.schemas.exchange.services._2006.types.CalendarEvent;
+import com.microsoft.schemas.exchange.services._2006.types.CalendarEventDetails;
 import com.microsoft.schemas.exchange.services._2006.types.ConflictResolutionType;
 import com.microsoft.schemas.exchange.services._2006.types.ConstantValueType;
 import com.microsoft.schemas.exchange.services._2006.types.ContainmentModeType;
@@ -89,6 +93,7 @@ import com.microsoft.schemas.exchange.services._2006.types.ItemChangeType;
 import com.microsoft.schemas.exchange.services._2006.types.ItemQueryTraversalType;
 import com.microsoft.schemas.exchange.services._2006.types.ItemResponseShapeType;
 import com.microsoft.schemas.exchange.services._2006.types.ItemType;
+import com.microsoft.schemas.exchange.services._2006.types.LegacyFreeBusyType;
 import com.microsoft.schemas.exchange.services._2006.types.MailboxCultureType;
 import com.microsoft.schemas.exchange.services._2006.types.MailboxData;
 import com.microsoft.schemas.exchange.services._2006.types.ManagementRoleType;
@@ -871,24 +876,23 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
                 new FreeBusyViewOptionsType();
             availabilityOpts.setMergedFreeBusyIntervalInMinutes(fb_interval);
 
-            availabilityOpts.getRequestedView().add("MergedOnly");
+            // Request for highest hierarchy view. The rest hierarchy will be Detailed->FreeBusy->MergedOnly->None
+            availabilityOpts.getRequestedView().add("DetailedMerged");
             availabilityOpts.setTimeWindow(duration);
-            GetUserAvailabilityRequestType availabilityRequest =
-                new GetUserAvailabilityRequestType();
+            GetUserAvailabilityRequestType availabilityRequest = new GetUserAvailabilityRequestType();
             // TODO: check if we need to set request timezone
             SerializableTimeZone timezone = new SerializableTimeZone();
             timezone.setBias(0);
-            SerializableTimeZoneTime standardTime =
-                new SerializableTimeZoneTime();
+            SerializableTimeZoneTime standardTime = new SerializableTimeZoneTime();
             standardTime.setTime("00:00:00");
             standardTime.setDayOrder((short)1);
             standardTime.setDayOfWeek(DayOfWeekType.SUNDAY);
             timezone.setStandardTime(standardTime);
             timezone.setDaylightTime(standardTime);
             availabilityRequest.setTimeZone(timezone);
-
             availabilityRequest.setFreeBusyViewOptions(availabilityOpts);
             availabilityRequest.setMailboxDataArray(attendees);
+            
             RequestServerVersion serverVersion = new RequestServerVersion();
             serverVersion.setVersion(ExchangeVersionType.EXCHANGE_2010_SP_1);
             Holder<GetUserAvailabilityResponseType> availabilityResponse =
@@ -917,44 +921,132 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
         }
 
         for (Request re : req) {
-            String fb = "";
+            
             int i = 0;
+            long startTime = req.get(0).start;
+            long endTime = req.get(0).end;
             for (FreeBusyResponseType attendeeAvailability : results) {
-                if (re.email == attendees.getMailboxData().get(i).getEmail()
-                        .getAddress()) {
-                    if (ResponseClassType.SUCCESS != attendeeAvailability
-                            .getResponseMessage().getResponseClass()) {
-                        ZimbraLog.fb
-                                .warn(attendeeAvailability.getResponseMessage().getMessageText());
-                        ZimbraLog.fb
-                                .warn("Error in response. continuing to next one");
+                if (attendeeAvailability.getFreeBusyView() != null) {
+                    	String fbResponseViewType = attendeeAvailability.getFreeBusyView().getFreeBusyViewType().get(0);
+                    	String emailAddress = attendees.getMailboxData().get(i).getEmail().getAddress();
+                    	ZimbraLog.fb.debug("For user :%s free busy response type received is : %s", emailAddress, fbResponseViewType);
+                	
+                    if (re.email == emailAddress) {
+                        if (ResponseClassType.ERROR == attendeeAvailability.getResponseMessage().getResponseClass()) {
+                            ZimbraLog.fb.debug("Unable to fetch free busy for %s  error code %s :: %s",
+                                emailAddress,
+                                attendeeAvailability.getResponseMessage().getResponseCode(),
+                                attendeeAvailability.getResponseMessage().getMessageText());
+                           
+                            FreeBusy npFreeBusy = FreeBusy.nodataFreeBusy(emailAddress, startTime, endTime);
+                            ret.add(npFreeBusy);
+                            if (attendeeAvailability.getResponseMessage().getResponseCode().equals(ResponseCodeType.ERROR_NO_FREE_BUSY_ACCESS)) {
+                                	npFreeBusy.mList.getHead().hasPermission = false;
+                            }
+                            ZimbraLog.fb.info("Error in response. continuing to next one sending nodata as response");
+                            i++;
+                            continue;
+                        }
+                        String fb = attendeeAvailability.getFreeBusyView().getMergedFreeBusy();
+                        ZimbraLog.fb.info("Merged view Free Busy info received for user:%s is %s: ", emailAddress, fb);
+                        ArrayList<FreeBusy> userIntervals = new ArrayList<FreeBusy>();
+                        
+                        if (fb == null) {
+                            ZimbraLog.fb.warn("Merged view Free Busy info not avaiable for the user");
+                            fb = "";  //Avoid NPE.
+                        } else {
+                            userIntervals.add(new ExchangeFreeBusyProvider.ExchangeUserFreeBusy(fb,
+                                re.email, fb_interval, startTime, endTime));
+                            ret.addAll(userIntervals);
+                        }
 
-                        i++;
-                        continue;
+                        // Parsing Detailed fb view response
+                        if ("DetailedMerged".equals(fbResponseViewType) || "FreeBusyMerged".equals(fbResponseViewType)) {
+
+                            parseDetailedFreeBusyResponse(emailAddress, startTime, endTime, attendeeAvailability, userIntervals);
+                            ret.addAll(userIntervals);
+                        } else {  // No FreeBusy view information available. returning nodata freebusy in response
+
+                        	     ZimbraLog.fb.debug("No Free Busy view info avaiable for [%s], free busy view type from response : %s", emailAddress, fbResponseViewType);
+                        	     ret.add(FreeBusy.nodataFreeBusy(emailAddress, startTime, endTime));
+                        }
                     }
-                    ZimbraLog.fb.debug("Availability for "
-                            + attendees.getMailboxData().get(i).getEmail()
-                                    .getAddress()
-                            + " ["
-                            + attendeeAvailability.getFreeBusyView()
-                                    .getMergedFreeBusy() + "]");
-
-                    fb = attendeeAvailability.getFreeBusyView().getMergedFreeBusy();
-                    if (fb == null) {
-                        ZimbraLog.fb.warn("Merged view Free Busy info not avaiable");
-                        fb = "";  //Avoid NPE.
-                    }
-                    break;
-                }
-
-                i++;
+                    i++;
+            	}
             }
-
-            ret.add(new ExchangeFreeBusyProvider.ExchangeUserFreeBusy(fb,
-                    re.email, fb_interval, req.get(0).start, req.get(0).end));
         }
-
         return ret;
+    }
+    
+   /*
+    * This method parse the Detailed and FreeBusy view response information for each individual user,
+    * who has those view information.
+    */
+    private static void parseDetailedFreeBusyResponse(String name, long start, long end, FreeBusyResponseType freeBusyResponse, ArrayList<FreeBusy> ret) {
+        	ArrayOfCalendarEvent arrayOfCalendarEvent = null;
+        	List<CalendarEvent> calendarEvents  = null;
+        if (freeBusyResponse.getFreeBusyView() != null) {
+            arrayOfCalendarEvent = freeBusyResponse.getFreeBusyView().getCalendarEventArray();
+
+            if (arrayOfCalendarEvent != null) {
+                calendarEvents = arrayOfCalendarEvent.getCalendarEvent();
+                LegacyFreeBusyType legacyType;
+
+                if (calendarEvents != null && calendarEvents.size() > 0) {
+    
+                    for (CalendarEvent event : calendarEvents) {
+                        legacyType = event.getBusyType();
+                        FreeBusy.Interval interval = getFreeBusyInterval(ret, event);
+                        ZimbraLog.fb.debug(
+                            "For user %s FB data received is: legacyType : %s, startTime : %s, "
+                                + "endTime : %s",name, legacyType, event.getStartTime(), event.getEndTime());
+                        if (event.getCalendarEventDetails() != null && interval != null) {
+    
+                            CalendarEventDetails calendarEventDetails = event.getCalendarEventDetails();
+                            interval.id = calendarEventDetails.getID();
+                            interval.location = calendarEventDetails.getLocation();
+                            interval.subject = calendarEventDetails.getSubject();
+                            interval.isMeeting = calendarEventDetails.isIsMeeting();
+                            interval.isRecurring = calendarEventDetails.isIsRecurring();
+                            interval.isException = calendarEventDetails.isIsException();
+                            interval.isReminderSet = calendarEventDetails.isIsReminderSet();
+                            interval.isPrivate = calendarEventDetails.isIsPrivate();
+                            interval.detailsExist = true;
+                            ZimbraLog.fb.debug("eventID : %s, location : %s, subject : %s, isMeeting : %b, "
+                            + "isRecurring : %b, isException : %b, isReminderSet : %b, isPrivate : %b", 
+                            interval.id, interval.location, interval.subject, interval.isMeeting,
+                            interval.isRecurring, interval.isException, interval.isReminderSet, 
+                            interval.isPrivate);
+                    } else {
+                        ZimbraLog.fb.debug("Calendar Event details not found for the user %s",
+                            name);
+                    }
+                }
+            } else {
+                    ZimbraLog.fb.debug("No Calendar Information available for the user : %s", name);
+                }
+            }
+        }
+    }
+
+    /**
+     * @param ret
+     * @param event
+     * @return
+     */
+    private static FreeBusy.Interval getFreeBusyInterval(ArrayList<FreeBusy> ret, CalendarEvent event) {
+
+        int tzOffset = TimeZone.getTimeZone("Z").getRawOffset();
+        event.getStartTime().setTimezone(tzOffset);
+        event.getEndTime().setTimezone(tzOffset);
+        long startTime = event.getStartTime().toGregorianCalendar().getTimeInMillis();
+        long endTime = event.getEndTime().toGregorianCalendar().getTimeInMillis();
+        for (FreeBusy.Interval fbI : ret.get(0).mList ){
+            if (fbI.mStart == startTime && fbI.mEnd == endTime) {
+                return fbI;
+            }
+        }
+        return null;
     }
 
     public static int checkAuth(ServerInfo info, Account requestor)

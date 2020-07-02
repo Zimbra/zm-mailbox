@@ -36,6 +36,7 @@ CREATE TABLE *{DATABASE_NAME}.mail_item (
    flags         INTEGER DEFAULT 0 NOT NULL,
    tags          BIGINT DEFAULT 0 NOT NULL,
    tag_names     VARCHAR(255),
+   event_flag    TINYINT,
    sender        VARCHAR(128),
    recipients    VARCHAR(128),
    subject       VARCHAR(255),
@@ -79,6 +80,7 @@ CREATE TABLE *{DATABASE_NAME}.mail_item_dumpster (
    change_date   INTEGER,
    mod_content   INTEGER NOT NULL,
    uuid          VARCHAR(127),               -- e.g. "d94e42c4-1636-11d9-b904-4dd689d02402"
+   event_flag    TINYINT,
 
    CONSTRAINT pk_mail_item_dumpster PRIMARY KEY (mailbox_id, id),
    CONSTRAINT fk_mail_item_dumpster_mailbox_id FOREIGN KEY (mailbox_id) REFERENCES zimbra.mailbox(id)
@@ -249,4 +251,48 @@ CREATE TABLE *{DATABASE_NAME}.data_source_item (
    CONSTRAINT pk_data_source_item PRIMARY KEY (mailbox_id, item_id),
    CONSTRAINT i_remote_id UNIQUE (mailbox_id, data_source_id, remote_id),
    CONSTRAINT fk_data_source_item_mailbox_id FOREIGN KEY (mailbox_id) REFERENCES zimbra.mailbox(id) ON DELETE CASCADE
+);
+
+-- Search History
+
+CREATE TABLE *{DATABASE_NAME}.searches (
+   mailbox_id       INTEGER NOT NULL,
+   id               INTEGER NOT NULL, -- ID of the query string
+   search           VARCHAR(255), -- the search query string
+   status           TINYINT DEFAULT 0 NOT NULL, -- status of the saved search prompt
+   last_search_date DATETIME, -- timestamp of the last time this was searched
+
+   CONSTRAINT pk_search PRIMARY KEY (mailbox_id, id),
+   CONSTRAINT fk_searches_mailbox_id FOREIGN KEY (mailbox_id) REFERENCES zimbra.mailbox(id) ON DELETE CASCADE
+);
+
+CREATE TABLE *{DATABASE_NAME}.search_history (
+   mailbox_id    INTEGER NOT NULL,
+   search_id     INTEGER NOT NULL,
+   date          DATETIME NOT NULL,
+
+   CONSTRAINT fk_search_history_mailbox_id FOREIGN KEY (mailbox_id) REFERENCES zimbra.mailbox(id) ON DELETE CASCADE,
+   CONSTRAINT fk_search_id FOREIGN KEY (mailbox_id, search_id) REFERENCES searches(mailbox_id, id) ON DELETE CASCADE
+);
+
+CREATE TABLE *{DATABASE_NAME}.event (
+   mailbox_id    INTEGER NOT NULL,
+   account_id    VARCHAR(36) NOT NULL,  -- user performing the action (email address or guid)
+   item_id       INTEGER NOT NULL,  -- itemId for the event
+   folder_id     INTEGER NOT NULL,  -- folderId for the item in the event
+   op            TINYINT NOT NULL,  -- operation
+   ts            INTEGER NOT NULL,  -- timestamp
+   version       INTEGER,           -- version of the item
+   user_agent    VARCHAR(128),      -- identifier of device if available
+   arg           VARCHAR(10240),    -- operation specific argument
+
+   CONSTRAINT fk_event_mailbox_id FOREIGN KEY (mailbox_id) REFERENCES zimbra.mailbox(id) ON DELETE CASCADE
+);
+
+CREATE TABLE *{DATABASE_NAME}.watch (
+   mailbox_id   INTEGER NOT NULL,
+   target       VARCHAR(36) NOT NULL,  -- watch target account id
+   item_id      INTEGER NOT NULL,  -- target item id
+
+   CONSTRAINT pk_watch PRIMARY KEY (mailbox_id, target, item_id)
 );

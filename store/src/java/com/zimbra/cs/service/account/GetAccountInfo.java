@@ -39,6 +39,7 @@ import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
@@ -77,6 +78,10 @@ public class GetAccountInfo extends AccountDocumentHandler  {
         response.addKeyValuePair(Provisioning.A_zimbraId, account.getId(), AccountConstants.E_ATTR, AccountConstants.A_NAME);
         response.addKeyValuePair(Provisioning.A_zimbraMailHost, account.getAttr(Provisioning.A_zimbraMailHost), AccountConstants.E_ATTR, AccountConstants.A_NAME);
         response.addKeyValuePair(Provisioning.A_displayName, account.getAttr(Provisioning.A_displayName), AccountConstants.E_ATTR, AccountConstants.A_NAME);
+        String serviceAccountNumber = account.getAttr(Provisioning.A_zimbraServiceAccountNumber);
+        if(!StringUtil.isNullOrEmpty(serviceAccountNumber)) {
+            response.addKeyValuePair(Provisioning.A_zimbraServiceAccountNumber, serviceAccountNumber, AccountConstants.E_ATTR, AccountConstants.A_NAME);
+        }
         addUrls(response, account);
         return response;
     }

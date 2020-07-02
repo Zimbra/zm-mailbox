@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
 import com.google.common.base.Supplier;
@@ -1535,7 +1536,7 @@ public interface DbSearchConstraints extends Cloneable {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this).add("min", min).add("max", max).add("sort", sortBy).toString();
+            return MoreObjects.toStringHelper(this).add("min", min).add("max", max).add("sort", sortBy).toString();
         }
     }
 

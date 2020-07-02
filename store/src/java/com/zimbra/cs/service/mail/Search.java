@@ -17,6 +17,7 @@
 
 package com.zimbra.cs.service.mail;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -24,10 +25,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.base.Objects;
+import com.google.common.base.Joiner;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
-import com.google.common.io.Closeables;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
@@ -36,11 +37,13 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
+import com.zimbra.cs.event.logger.EventLogger;
+import com.zimbra.cs.index.ConversationHit;
 import com.zimbra.cs.index.MessageHit;
 import com.zimbra.cs.index.QueryInfo;
 import com.zimbra.cs.index.ResultsPager;
@@ -49,11 +52,15 @@ import com.zimbra.cs.index.SearchParams.ExpandResults;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
+import com.zimbra.cs.index.history.SearchHistory;
 import com.zimbra.cs.mailbox.ContactMemberOfMap;
+import com.zimbra.cs.mailbox.Conversation;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.Message.EventFlag;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.cache.CacheToXML;
 import com.zimbra.cs.mailbox.calendar.cache.CalSummaryCache;
@@ -80,12 +87,14 @@ public class Search extends MailDocumentHandler  {
         OperationContext octxt = getOperationContext(zsc, context);
         fixBooleanRecipients(request);
         SearchRequest req = zsc.elementToJaxb(request);
-        if (Objects.firstNonNull(req.getWarmup(), false)) {
+        if (MoreObjects.firstNonNull(req.getWarmup(), false)) {
             mbox.index.getIndexStore().warmup();
             return zsc.createElement(MailConstants.SEARCH_RESPONSE);
         }
+        boolean addToHistory = req.getLogSearch();
+        String defaultSearch = account.getPrefMailInitialSearch();
+        SearchParams params = SearchParams.parse(req, zsc, defaultSearch);
 
-        SearchParams params = SearchParams.parse(req, zsc, account.getPrefMailInitialSearch());
         if (params.getLocale() == null) {
             params.setLocale(mbox.getAccount().getLocale());
         }
@@ -107,19 +116,44 @@ public class Search extends MailDocumentHandler  {
             memberOfMap = ContactMemberOfMap.getMemberOfMap(mbox, octxt);
         }
 
-
-        ZimbraQueryResults results = mbox.index.search(zsc.getResponseProtocol(), octxt, params);
-        try {
-            // create the XML response Element
-            Element response = zsc.createElement(MailConstants.SEARCH_RESPONSE);
+        // create the XML response Element
+        Element response = zsc.createElement(MailConstants.SEARCH_RESPONSE);
+        try (ZimbraQueryResults results = mbox.index.search(zsc.getResponseProtocol(), octxt,
+            params)) {
             // must use results.getSortBy() because the results might have ignored our sortBy
             // request and used something else...
             response.addAttribute(MailConstants.A_SORTBY, results.getSortBy().toString());
-            putHits(zsc, octxt, response, results, params, memberOfMap);
-            return response;
-        } finally {
-            Closeables.closeQuietly(results);
+            putHits(zsc, octxt, response, results, params, memberOfMap, mbox);
+
+            if (addToSearchHistory(octxt, account, mbox, addToHistory, params, defaultSearch)) {
+                response.addAttribute(MailConstants.A_SAVE_SEARCH_PROMPT, true);
+            }
+            if (!results.isRelevanceSortSupported()) {
+                response.addAttribute(MailConstants.A_RELEVANCE_SORT_SUPPORTED, false);
+            }
+            if (mbox.index.isReIndexInProgress()) {
+                response.addAttribute(MailConstants.A_REINDEX_IN_PROGRESS, true);
+            }
+        } catch (IOException e) {
         }
+        return response;
+    }
+
+    private boolean addToSearchHistory(OperationContext octxt, Account account, Mailbox mbox, boolean addToHistoryParam, SearchParams params, String defaultQuery) {
+        try {
+            if (!addToHistoryParam // client can explicitly disallow logging the search
+                || defaultQuery.equals(params.getQueryString()) //don't log the default query string
+                || !SearchHistory.featureEnabled(account) //feature is disabled
+                || !SearchHistory.shouldSaveInHistory(params)) //query is filtered for other reasons
+            {
+                return false;
+            } else {
+                return mbox.addToSearchHistory(octxt, params.getQueryString(), System.currentTimeMillis());
+            }
+        } catch (ServiceException e) {
+            ZimbraLog.search.error("unable to update search history", e);
+        }
+        return false;
     }
 
     protected static void putInfo(Element response, ZimbraQueryResults results) {
@@ -133,7 +167,7 @@ public class Search extends MailDocumentHandler  {
     }
 
     private void putHits(ZimbraSoapContext zsc, OperationContext octxt, Element el, ZimbraQueryResults results,
-            SearchParams params, Map<String,Set<String>> memberOfMap) throws ServiceException {
+            SearchParams params, Map<String,Set<String>> memberOfMap, Mailbox mbox) throws ServiceException {
 
         if (params.getInlineRule() == ExpandResults.HITS ||
             params.getInlineRule() == ExpandResults.FIRST_MSG ||
@@ -164,9 +198,13 @@ public class Search extends MailDocumentHandler  {
         boolean expand;
         ExpandResults expandValue = params.getInlineRule();
         int hitNum = 0;
-        while (pager.hasNext() && resp.size() < params.getLimit()) {
+        List<Message> unprocessedMsgs = new ArrayList<>();
+        List<Conversation> unprocessedConvs = new ArrayList<>();
+        List<Pair<ZimbraHit,Boolean>> bufferedHits = new ArrayList<>();
+        while (pager.hasNext() && hitNum < params.getLimit()) {
             hitNum ++;
             ZimbraHit hit = pager.getNextHit();
+            expand = false;
             if (hit instanceof MessageHit) {
                 /*
                  * Determine whether or not to expand MessageHits.
@@ -184,14 +222,62 @@ public class Search extends MailDocumentHandler  {
                 } else {
                     expand = expandValue.matches(hit.getParsedItemID());
                 }
-                resp.add(hit, expand);
-            } else {
-                resp.add(hit);
+                unprocessedMsgs.add(((MessageHit) hit).getMessage());
+            } else if (hit instanceof ConversationHit) {
+                unprocessedConvs.add(((ConversationHit) hit).getConversation());
             }
+            bufferedHits.add(new Pair<ZimbraHit,Boolean>(hit, expand));
+            if ((bufferedHits.size() % LC.search_put_hits_chunk_size.intValue()) == 0) {
+                processChunk(zsc, octxt, resp, mbox, bufferedHits, unprocessedMsgs, unprocessedConvs);
+            }
+        }
+        if (!bufferedHits.isEmpty()) {
+            processChunk(zsc, octxt, resp, mbox, bufferedHits, unprocessedMsgs, unprocessedConvs);
         }
         resp.addHasMore(pager.hasNext());
         resp.add(results.getResultInfo());
     }
+
+    private void processChunk(ZimbraSoapContext zsc, OperationContext octxt, SearchResponse resp,
+            Mailbox mbox, List<Pair<ZimbraHit,Boolean>> bufferedHits,
+            List<Message> unprocessedMsgs, List<Conversation> unprocessedConvs) throws ServiceException {
+        /* This also updates unprocessedConvs so that fewer future DB calls are needed */
+        List<Message> msgsInConvs = mbox.getMessagesByConversations(
+                octxt, unprocessedConvs, SortBy.DATE_ASC, -1, false);
+        for (Pair<ZimbraHit,Boolean> hit : bufferedHits) {
+            resp.add(hit.getFirst(), hit.getSecond());
+        }
+        bufferedHits.clear();
+        flagMessagesAsSeen(octxt, mbox, new ArrayList<>(unprocessedMsgs));
+        unprocessedMsgs.clear();
+        flagMessagesAsSeen(octxt, mbox, new ArrayList<>(msgsInConvs));
+        msgsInConvs.clear();
+    }
+
+    /** kicks off a background thread to flag messages as seen to avoid delaying return of search results
+     *  longer than necessary */
+    private void flagMessagesAsSeen(OperationContext octxt, Mailbox mbox, List<Message> msgs)
+            throws ServiceException {
+        if (msgs.isEmpty() || !EventLogger.getEventLogger().isEnabled()) {
+            return;
+        }
+        new Thread(new Runnable() {
+            @Override public void run() {
+                long start = System.currentTimeMillis();
+                try {
+                    List<Integer> affectedMsgIds = mbox.advanceMessageEventFlags(octxt, msgs, EventFlag.seen);
+                    if (affectedMsgIds.size() > 0) {
+                        ZimbraLog.search.info("messages marked seen: %s", Joiner.on(",").join(affectedMsgIds));
+                    }
+                } catch (ServiceException e) {
+                    ZimbraLog.search.error("error flagging searched messages as seen", e);
+                }
+                ZimbraLog.search.debug("Search flagMessagesAsSeen Thread (msgs size=%d) %s",
+                        msgs.size(), ZimbraLog.elapsedSince(start));
+            }
+        }, "flagMessagesAsSeen-" + Thread.currentThread().getId()).start();
+    }
+
     // Calendar summary cache stuff
 
     /**
@@ -286,9 +372,9 @@ public class Search extends MailDocumentHandler  {
 
         Provisioning prov = Provisioning.getInstance();
         MailboxManager mboxMgr = MailboxManager.getInstance();
-        Server localServer = prov.getLocalServer();
+        String localIp = Provisioning.getLocalIp();
 
-        Map<Server, Map<String /* account id */, List<Integer> /* folder ids */>> groupedByServer =
+        Map<String, Map<String /* account id */, List<Integer> /* folder ids */>> groupedByServer =
             groupByServer(ItemId.groupFoldersByAccount(octxt, mbox, folderIids));
 
         // Look up in calendar cache first.
@@ -296,9 +382,9 @@ public class Search extends MailDocumentHandler  {
             CalSummaryCache calCache = CalendarCacheManager.getInstance().getSummaryCache();
             long rangeStart = params.getCalItemExpandStart();
             long rangeEnd = params.getCalItemExpandEnd();
-            for (Iterator<Map.Entry<Server, Map<String, List<Integer>>>> serverIter = groupedByServer.entrySet().iterator();
+            for (Iterator<Map.Entry<String, Map<String, List<Integer>>>> serverIter = groupedByServer.entrySet().iterator();
                  serverIter.hasNext(); ) {
-                Map.Entry<Server, Map<String, List<Integer>>> serverMapEntry = serverIter.next();
+                Map.Entry<String, Map<String, List<Integer>>> serverMapEntry = serverIter.next();
                 Map<String, List<Integer>> accountFolders = serverMapEntry.getValue();
                 // for each account
                 for (Iterator<Map.Entry<String, List<Integer>>> acctIter = accountFolders.entrySet().iterator();
@@ -345,10 +431,10 @@ public class Search extends MailDocumentHandler  {
         }
 
         // For any remaining calendars, we have to get the data the hard way.
-        for (Map.Entry<Server, Map<String, List<Integer>>> serverMapEntry : groupedByServer.entrySet()) {
-            Server server = serverMapEntry.getKey();
+        for (Map.Entry<String, Map<String, List<Integer>>> serverMapEntry : groupedByServer.entrySet()) {
+            String serverIp = serverMapEntry.getKey();
             Map<String, List<Integer>> accountFolders = serverMapEntry.getValue();
-            if (server.equals(localServer)) {  // local server
+            if (serverIp.equals(localIp)) {  // local server
                 for (Map.Entry<String, List<Integer>> entry : accountFolders.entrySet()) {
                     String acctId = entry.getKey();
                     List<Integer> folderIds = entry.getValue();
@@ -460,11 +546,11 @@ public class Search extends MailDocumentHandler  {
         }
     }
 
-    static Map<Server, Map<String /* account id */, List<Integer> /* folder ids */>> groupByServer(
+    static Map<String, Map<String /* account id */, List<Integer> /* folder ids */>> groupByServer(
             Map<String /* account id */, List<Integer> /* folder ids */> acctFolders)
     throws ServiceException {
-        Map<Server, Map<String /* account id */, List<Integer> /* folder ids */>> groupedByServer =
-            new HashMap<Server, Map<String, List<Integer>>>();
+        Map<String, Map<String /* account id */, List<Integer> /* folder ids */>> groupedByServer =
+            new HashMap<String, Map<String, List<Integer>>>();
         Provisioning prov = Provisioning.getInstance();
         for (Map.Entry<String, List<Integer>> entry : acctFolders.entrySet()) {
             String acctId = entry.getKey();
@@ -474,15 +560,15 @@ public class Search extends MailDocumentHandler  {
                 ZimbraLog.calendar.warn("Skipping unknown account " + acctId + " during calendar search");
                 continue;
             }
-            Server server = prov.getServer(acct);
-            if (server == null) {
+            String podIp = Provisioning.affinityServer(acct);
+            if (podIp == null) {
                 ZimbraLog.calendar.warn("Skipping account " + acctId + " during calendar search because its home server is unknown");
                 continue;
             }
-            Map<String, List<Integer>> map = groupedByServer.get(server);
+            Map<String, List<Integer>> map = groupedByServer.get(podIp);
             if (map == null) {
                 map = new HashMap<String, List<Integer>>();
-                groupedByServer.put(server, map);
+                groupedByServer.put(podIp, map);
             }
             map.put(acctId, folderIds);
         }

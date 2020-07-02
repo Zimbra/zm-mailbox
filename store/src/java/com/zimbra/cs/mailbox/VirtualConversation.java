@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
@@ -40,7 +41,16 @@ public class VirtualConversation extends Conversation {
 
     VirtualConversation(Mailbox mbox, UnderlyingData data, boolean skipCache) throws ServiceException {
         super(mbox, data, skipCache);
-        if (mData.type != Type.VIRTUAL_CONVERSATION.toByte()) {
+        init();
+    }
+
+    VirtualConversation(Account acc, UnderlyingData data, int mailboxId) throws ServiceException {
+        super(acc, data, mailboxId);
+        init();
+    }
+
+    private void init() throws ServiceException {
+        if (type != Type.VIRTUAL_CONVERSATION.toByte()) {
             throw new IllegalArgumentException();
         }
     }
@@ -58,13 +68,18 @@ public class VirtualConversation extends Conversation {
     @Override
     SenderList recalculateMetadata(List<Message> msgs) throws ServiceException {
         Message msg = msgs.get(0);
-        mData = wrapMessage(msg);
+        initFieldCache(wrapMessage(msg));
         mExtendedData = MetadataCallback.duringConversationAdd(null, msg);
         return getSenderList();
     }
 
-
     Message getMessage() throws ServiceException {
+        /* messages might be populated if we are using a non-cached object in order
+         * to produce a search result or some such. */
+        List<Message> mymsgs = messages; /* use own reference for safety */
+        if (mymsgs != null && mymsgs.size() >= 1) {
+            return mymsgs.get(0);
+        }
         return mMailbox.getMessageById(getMessageId());
     }
 

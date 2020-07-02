@@ -18,14 +18,20 @@ package com.zimbra.cs.index;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxIndex.IndexType;
 import com.zimbra.cs.util.Zimbra;
 
 /**
@@ -35,17 +41,39 @@ import com.zimbra.cs.util.Zimbra;
  */
 public abstract class IndexStore {
 
+    private static Map<String, String> INDEX_FACTORIES = new HashMap<String, String>();
     private static Factory factory;
 
     /**
-     * {@link Indexer#close()} must be called after use.
+     *
+     * @param prefix - prefix that identifies this index factory in zimbraIndexURL
+     * @param clazz - string name of the Factory class
+     * @throws ServiceException
      */
-    public abstract Indexer openIndexer() throws IOException;
+    public static void registerIndexFactory(String prefix, String clazz) {
+        if (INDEX_FACTORIES.containsKey(prefix)) {
+            ZimbraLog.index.warn(
+                    "Replacing index factory class '%s' registered for prefix '%s' with another factory class: '%s'",
+                    INDEX_FACTORIES.get(prefix), prefix, clazz);
+        }
+        INDEX_FACTORIES.put(prefix, clazz);
+    }
+
+    public static String getIndexFactory(String prefix) {
+        return INDEX_FACTORIES.get(prefix);
+    }
+
+    /**
+     * {@link Indexer#close()} must be called after use.
+     * @throws ServiceException
+     */
+    public abstract Indexer openIndexer() throws IOException, ServiceException;
 
     /**
      * {@link ZimbraIndexSearcher#close()} must be called after use.
+     * @throws ServiceException
      */
-    public abstract ZimbraIndexSearcher openSearcher() throws IOException;
+    public abstract ZimbraIndexSearcher openSearcher() throws IOException, ServiceException;
 
     /**
      * Prime the index.
@@ -58,9 +86,17 @@ public abstract class IndexStore {
     public abstract void evict();
 
     /**
-     * Deletes the whole index data for the mailbox.
+     * Delete index data corresponding to the given index types
      */
-    public abstract void deleteIndex() throws IOException;
+    public abstract void deleteIndex(Collection<IndexType> types) throws IOException, ServiceException;
+
+    /**
+     * Deletes the whole index data for the mailbox.
+     * @throws ServiceException
+     */
+    public void deleteIndex() throws IOException, ServiceException {
+        deleteIndex(EnumSet.of(IndexType.CONTACTS, IndexType.MAILBOX));
+    }
 
     /**
      * Get value of Flag that indicates that the index is scheduled for deletion
@@ -83,9 +119,17 @@ public abstract class IndexStore {
      */
     public abstract boolean verify(PrintStream out) throws IOException;
 
-    public static Factory getFactory() {
+    public static Factory getFactory() throws ServiceException {
         if (factory == null) {
-            setFactory(LC.zimbra_class_index_store_factory.value());
+            String factoryClass = null;
+            String indexURL = Provisioning.getInstance().getLocalServer().getIndexURL();
+            if (indexURL != null) {
+                String[] toks = indexURL.split(":");
+                if (toks != null && toks.length > 0) {
+                    factoryClass = getIndexFactory(toks[0]);
+                }
+            }
+            setFactory(factoryClass);
         }
         return factory;
     }
@@ -146,11 +190,21 @@ public abstract class IndexStore {
         /**
          * Get an IndexStore instance for a particular mailbox
          */
-        IndexStore getIndexStore(Mailbox mbox) throws ServiceException;
+        IndexStore getIndexStore(String accountId) throws ServiceException;
 
         /**
          * Cleanup any caches etc associated with the IndexStore
          */
         void destroy();
+    }
+
+    /**
+     * Fetches the list of index files
+     * @param gen generation of index.
+     * @param account ID
+     * @throws ServiceException
+     */
+    public List<Map<String, Object>> fetchFileList(long gen, String accountId) throws ServiceException {
+        return Collections.emptyList();
     }
 }

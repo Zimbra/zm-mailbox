@@ -20,7 +20,7 @@ package com.zimbra.soap.admin.message;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.SyncAdminConstants;
 import com.zimbra.common.soap.SyncConstants;
@@ -39,14 +39,21 @@ public class GetDeviceStatusRequest {
     /**
      * @zm-api-field-description Account
      */
-    @XmlElement(name=AdminConstants.E_ACCOUNT, required=true)
-    private final AccountSelector account;
+    @XmlElement(name=AdminConstants.E_ACCOUNT, required = false)
+    private AccountSelector account;
 
     /**
-     * @zm-api-field-description Device specification
+     * @zm-api-field-description Device id
      */
     @XmlElement(name = SyncConstants.E_DEVICE, required = false)
     private DeviceId deviceId;
+
+    /**
+     * @zm-api-field-tag device-status
+     * @zm-api-field-description Device status
+     */
+    @XmlElement(name=SyncConstants.E_STATUS /* status */, required = false)
+    private Byte status;
 
     /**
      * no-argument constructor wanted by JAXB
@@ -57,7 +64,13 @@ public class GetDeviceStatusRequest {
     }
 
     public GetDeviceStatusRequest(AccountSelector account) {
+        this(account, null, null);
+    }
+
+    public GetDeviceStatusRequest(AccountSelector account, DeviceId deviceId, Byte status) {
         this.account = account;
+        this.deviceId = deviceId;
+        this.status = status;
     }
 
     public DeviceId getDeviceId() {
@@ -72,8 +85,20 @@ public class GetDeviceStatusRequest {
         return this.account;
     }
 
+    public void setAccount(AccountSelector account) {
+        this.account = account;
+    }
+
+    public Byte getStatus() {
+        return this.status;
+    }
+
+    public void setStatus(Byte status) {
+        this.status = status;
+    }
+
     @Override
     public String toString() {
-        return Objects.toStringHelper(this).add("account", this.account).add("device", this.deviceId).toString();
+        return MoreObjects.toStringHelper(this).add("account", this.account).add("device", this.deviceId).add("status", this.status).toString();
     }
 }

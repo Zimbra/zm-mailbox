@@ -22,11 +22,13 @@ package com.zimbra.cs.account;
 
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.HttpState;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.impl.client.BasicCookieStore;
+import org.apache.http.impl.client.HttpClientBuilder;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.auth.ZAuthToken;
@@ -177,13 +179,13 @@ public abstract class AuthToken {
      * @param cookieDomain
      * @throws ServiceException
      */
-    public abstract void encode(HttpClient client, HttpMethod method, boolean isAdminReq, String cookieDomain) throws ServiceException;
+    public abstract void encode(HttpClient client, HttpRequestBase method, boolean isAdminReq, String cookieDomain) throws ServiceException;
 
     /**
      * AP-TODO-4:
      *     This API is called only from ZimbraServlet.proxyServletRequest when the first hop is http basic auth(REST basic auth and DAV).
      *     For the next hop we encode the String auth token in cookie.  For all other cases, the original cookies are copied "as is"
-     *     to the next hop.  See ZimbraServlet.proxyServletRequest(HttpServletRequest req, HttpServletResponse resp, HttpMethod method, HttpState state)
+     *     to the next hop.  See ZimbraServlet.proxyServletRequest(HttpServletRequest req, HttpServletResponse resp, HttpMethod method, BasicCookieStore state)
      *     We should clean this after AP-TODO-3 is resolved.
      *
      * Encode original auth info into an outgoing http request cookie.
@@ -193,7 +195,7 @@ public abstract class AuthToken {
      * @param cookieDomain
      * @throws ServiceException
      */
-    public abstract void encode(HttpState state, boolean isAdminReq, String cookieDomain) throws ServiceException;
+    public abstract void encode(BasicCookieStore state, boolean isAdminReq, String cookieDomain) throws ServiceException;
 
     /**
      * Encode original auth info into an HttpServletResponse
@@ -210,6 +212,38 @@ public abstract class AuthToken {
             boolean secureCookie, boolean rememberMe)
     throws ServiceException;
 
+    /**
+     *  It's overridden in ZimbraJWToken class where actions specific to jwt flow have been implemented.
+     *  For other implementations of AuthToken, this method calls an already existing abstract method.
+     */
+    public void encode(HttpServletRequest reqst, HttpServletResponse resp, boolean isAdminReq, boolean secureCookie, boolean rememberMe)
+    throws ServiceException {
+        encode(resp, isAdminReq, secureCookie, rememberMe);
+    }
+
+    /**
+     * This method is needed for ZimbraJWToken class which overrides this method.
+     * At present, it has no significance for other implementations of AuthToken class.
+     * If any implementation want to use this method, they can override it.
+     * Can't keep this method abstract in AuthToken as that would force all existing implementations
+     * of AuthToken to implement this method and it would break code of other people who have overridden
+     * AuthToken class.
+     */
+    public void encode(HttpServletRequest reqst, HttpServletResponse resp, boolean deregister) throws ServiceException {
+        //do nothing
+    }
+
+    /**
+     *
+     * @param clientBuilder
+     * @param method
+     * @param isAdminReq
+     * @param cookieDomain
+     * @throws ServiceException
+     */
+    public void encode(HttpClientBuilder clientBuilder, HttpRequestBase method, boolean isAdminReq, String cookieDomain) throws ServiceException{
+        // EMpty method which can be implemented by  extending classes, avoiding changing existing signature
+    }
     public abstract void encodeAuthResp(Element parent, boolean isAdmin) throws ServiceException;
 
     public abstract ZAuthToken toZAuthToken() throws ServiceException;
@@ -253,6 +287,27 @@ public abstract class AuthToken {
                 }
             }
             throw ServiceException.FAILURE("unknown auth token usage value: " + code, null);
+        }
+    }
+
+    public static enum TokenType {
+        AUTH("auth"), JWT("jwt");
+        private String code;
+
+        private TokenType(String code) {
+            this.code = code;
+        }
+
+        public String getCode() {
+            return code;
+        }
+
+        public static TokenType fromCode(String code) throws ServiceException {
+             if ("jwt".equalsIgnoreCase(code)) {
+                 return TokenType.JWT;
+             } else {
+                 return TokenType.AUTH;
+             }
         }
     }
 }

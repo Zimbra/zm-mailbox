@@ -17,10 +17,11 @@
 
 package com.zimbra.soap.mail.type;
 
-import com.google.common.base.Objects;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
 
@@ -29,6 +30,10 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.AlarmInfoInterface;
 import com.zimbra.soap.base.AlarmTriggerInfoInterface;
@@ -37,7 +42,14 @@ import com.zimbra.soap.base.CalendarAttendeeInterface;
 import com.zimbra.soap.base.DurationInfoInterface;
 import com.zimbra.soap.base.XPropInterface;
 
+import io.leangen.graphql.annotations.GraphQLIgnore;
+import io.leangen.graphql.annotations.GraphQLInputField;
+import io.leangen.graphql.annotations.GraphQLNonNull;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name=GqlConstants.CLASS_ALARM_INFORMATION, description="Alarm information")
 public class AlarmInfo implements AlarmInfoInterface {
 
     /**
@@ -49,6 +61,10 @@ public class AlarmInfo implements AlarmInfoInterface {
      * <b>DISPLAY|AUDIO|EMAIL|PROCEDURE|X_YAHOO_CALENDAR_ACTION_IM|X_YAHOO_CALENDAR_ACTION_MOBILE</b>
      */
     @XmlAttribute(name=MailConstants.A_CAL_ALARM_ACTION /* action */, required=true)
+    @GraphQLNonNull
+    @GraphQLQuery(name=GqlConstants.ACTION, description="Alarm action\n "
+        + "> Possible values:\n "
+        + "* DISPLAY|AUDIO|EMAIL|PROCEDURE|X_YAHOO_CALENDAR_ACTION_IM|X_YAHOO_CALENDAR_ACTION_MOBILE")
     private final String action;
 
     /**
@@ -93,6 +109,7 @@ public class AlarmInfo implements AlarmInfoInterface {
      * @zm-api-field-description Attendee information
      */
     @XmlElement(name=MailConstants.E_CAL_ATTENDEE /* at */, required=false)
+    @GraphQLQuery(name=GqlConstants.ATTENDEES, description="Attendee information")
     private List<CalendarAttendee> attendees = Lists.newArrayList();
 
     /**
@@ -112,6 +129,7 @@ public class AlarmInfo implements AlarmInfoInterface {
      * </pre>
      */
     @XmlElement(name=MailConstants.E_CAL_XPROP /* xprop */, required=false)
+    @GraphQLQuery(name=GqlConstants.XPROPS, description="Non-standard properties")
     private List<XProp> xProps = Lists.newArrayList();
 
     /**
@@ -122,7 +140,8 @@ public class AlarmInfo implements AlarmInfoInterface {
         this((String) null);
     }
 
-    public AlarmInfo(String action) {
+    public AlarmInfo(
+        @GraphQLNonNull @GraphQLInputField(name=GqlConstants.ACTION) String action) {
         this.action = action;
     }
 
@@ -131,19 +150,28 @@ public class AlarmInfo implements AlarmInfoInterface {
         return new AlarmInfo(action);
     }
 
+    @GraphQLInputField(name=GqlConstants.TRIGGER, description="Alarm trigger information")
     public void setTrigger(AlarmTriggerInfo trigger) {
         this.trigger = trigger;
     }
 
+    @GraphQLInputField(name=GqlConstants.REPEAT, description="Alarm repeat information")
     public void setRepeat(DurationInfo repeat) { this.repeat = repeat; }
     @Override
+    @GraphQLInputField(name=GqlConstants.DESCRIPTION, description="Alarm description\n "
+        + "* action=DISPLAY: Reminder text to display\n "
+        + "* action=EMAIL|X_YAHOO_CALENDAR_ACTION_IM|X_YAHOO_CALENDAR_ACTION_MOBILE: EMail body \n"
+        + "* action=PROCEDURE: Description text")
     public void setDescription(String description) {
         this.description = description;
     }
 
+    @GraphQLInputField(name=GqlConstants.ATTACHMENT, description="Information on attachment")
     public void setAttach(CalendarAttach attach) { this.attach = attach; }
     @Override
+    @GraphQLInputField(name=GqlConstants.SUMMARY, description="Alarm summary")
     public void setSummary(String summary) { this.summary = summary; }
+    @GraphQLInputField(name=GqlConstants.ATTENDEES, description="Attendee information")
     public void setAttendees(Iterable <CalendarAttendee> attendees) {
         this.attendees.clear();
         if (attendees != null) {
@@ -151,10 +179,12 @@ public class AlarmInfo implements AlarmInfoInterface {
         }
     }
 
+    @GraphQLIgnore
     public void addAttendee(CalendarAttendee attendee) {
         this.attendees.add(attendee);
     }
 
+    @GraphQLInputField(name=GqlConstants.XPROPS, description="Non-standard properties")
     public void setXProps(Iterable <XProp> xProps) {
         this.xProps.clear();
         if (xProps != null) {
@@ -162,28 +192,39 @@ public class AlarmInfo implements AlarmInfoInterface {
         }
     }
 
+    @GraphQLIgnore
     public void addXProp(XProp xProp) {
         this.xProps.add(xProp);
     }
 
     @Override
     public String getAction() { return action; }
+    @GraphQLQuery(name=GqlConstants.TRIGGER, description="Alarm trigger information")
     public AlarmTriggerInfo getTrigger() { return trigger; }
+    @GraphQLQuery(name=GqlConstants.REPEAT, description="Alarm repeat information")
     public DurationInfo getRepeat() { return repeat; }
     @Override
+    @GraphQLQuery(name=GqlConstants.DESCRIPTION, description="Alarm description\n "
+        + "* action=DISPLAY: Reminder text to display\n "
+        + "* action=EMAIL|X_YAHOO_CALENDAR_ACTION_IM|X_YAHOO_CALENDAR_ACTION_MOBILE: EMail body \n"
+        + "* action=PROCEDURE: Description text")
     public String getDescription() { return description; }
+    @GraphQLQuery(name=GqlConstants.ATTACHMENT, description="Information on attachment")
     public CalendarAttach getAttach() { return attach; }
     @Override
+    @GraphQLQuery(name=GqlConstants.SUMMARY, description="Alarm summary")
     public String getSummary() { return summary; }
+    @GraphQLQuery(name=GqlConstants.ATTENDEES, description="Attendee information")
     public List<CalendarAttendee> getAttendees() {
         return Collections.unmodifiableList(attendees);
     }
+    @GraphQLQuery(name=GqlConstants.XPROPS, description="Non-standard properties")
     public List<XProp> getXProps() {
         return Collections.unmodifiableList(xProps);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(
+                MoreObjects.ToStringHelper helper) {
         return helper
             .add("action", action)
             .add("trigger", trigger)
@@ -197,67 +238,79 @@ public class AlarmInfo implements AlarmInfoInterface {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
+        return addToStringInfo(MoreObjects.toStringHelper(this))
                 .toString();
     }
 
     @Override
+    @GraphQLIgnore
     public void setTriggerInterface(AlarmTriggerInfoInterface trigger) {
         setTrigger((AlarmTriggerInfo) trigger);
     }
 
     @Override
+    @GraphQLIgnore
     public void setRepeatInterface(DurationInfoInterface repeat) {
         setRepeat((DurationInfo) repeat);
     }
 
     @Override
+    @GraphQLIgnore
     public void setAttachInterface(CalendarAttachInterface attach) {
         setAttach((CalendarAttach) attach);
     }
 
     @Override
+    @GraphQLIgnore
     public void setAttendeeInterfaces(
             Iterable<CalendarAttendeeInterface> attendees) {
         setAttendees(CalendarAttendee.fromInterfaces(attendees));
     }
 
     @Override
+    @GraphQLIgnore
     public void addAttendeeInterface(CalendarAttendeeInterface attendee) {
         addAttendee((CalendarAttendee) attendee);
     }
 
     @Override
+    @GraphQLIgnore
     public void setXPropsInterface(Iterable<XPropInterface> xProps) {
         setXProps(XProp.fromInterfaces(xProps));
     }
 
     @Override
+    @GraphQLIgnore
     public void addXPropInterface(XPropInterface xProp) {
         addXProp((XProp) xProp);
     }
 
     @Override
+    @GraphQLIgnore
     public AlarmTriggerInfoInterface getTriggerInfo() {
         return trigger;
     }
 
     @Override
+    @GraphQLIgnore
     public DurationInfoInterface getRepeatInfo() {
         return repeat;
     }
 
     @Override
+    @GraphQLIgnore
     public CalendarAttachInterface getAttachInfo() {
         return attach;
     }
 
     @Override
+    @GraphQLIgnore
     public List<CalendarAttendeeInterface> getAttendeeInterfaces() {
         return CalendarAttendee.toInterfaces(attendees);
     }
 
     @Override
+    @GraphQLIgnore
     public List<XPropInterface> getXPropInterfaces() {
         return XProp.toInterfaces(xProps);
     }
@@ -278,5 +331,93 @@ public class AlarmInfo implements AlarmInfoInterface {
         List <AlarmInfoInterface> newList = Lists.newArrayList();
         Iterables.addAll(newList, params);
         return newList;
+    }
+
+    /**
+     * Returns the alarm trigger time in millis.
+     * Both start and end times of the appointment/task instance are required because the alarm
+     * may be specified relative to either start or end time.
+     * @param instStart start time of the appointment/task instance
+     * @param instEnd end time of the appointment/task instance
+     * @return
+     */
+    @GraphQLIgnore
+    public long getTriggerTime(long instStart, long instEnd) {
+        if (trigger == null) {
+            return instStart;// start time is the trigger time, if trigger not found
+        }
+        if (trigger.getAbsolute() != null) {
+            DateAttr da = trigger.getAbsolute();
+            LocalDateTime ldt = LocalDateTime.parse(da.getDate(), DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'"));
+            return ldt.toInstant(ZoneOffset.UTC).toEpochMilli();
+        } else if (trigger.getRelative() != null) {
+            DurationInfo di = trigger.getRelative();
+            String rel = di.getRelated();
+            if ("END".equals(rel)) {
+                Instant ednInst = Instant.ofEpochMilli(instEnd);
+                if (di.getDurationNegative() != null && di.getDurationNegative()) {
+                    if (di.getWeeks() != null) {
+                        return ednInst.minus(di.getWeeks().intValue(), ChronoUnit.WEEKS).toEpochMilli();
+                    } else if (di.getDays() != null) {
+                        return ednInst.minus(di.getDays().intValue(), ChronoUnit.DAYS).toEpochMilli();
+                    } else if (di.getHours() != null) {
+                        return ednInst.minus(di.getHours().intValue(), ChronoUnit.HOURS).toEpochMilli();
+                    } else if (di.getMinutes() != null) {
+                        return ednInst.minus(di.getMinutes().intValue(), ChronoUnit.MINUTES).toEpochMilli();
+                    } else if (di.getSeconds() != null) {
+                        return ednInst.minus(di.getSeconds().intValue(), ChronoUnit.SECONDS).toEpochMilli();
+                    } else {
+                        return instEnd;
+                    }
+                } else {
+                    if (di.getWeeks() != null) {
+                        return ednInst.plus(di.getWeeks().intValue(), ChronoUnit.WEEKS).toEpochMilli();
+                    } else if (di.getDays() != null) {
+                        return ednInst.plus(di.getDays().intValue(), ChronoUnit.DAYS).toEpochMilli();
+                    } else if (di.getHours() != null) {
+                        return ednInst.plus(di.getHours().intValue(), ChronoUnit.HOURS).toEpochMilli();
+                    } else if (di.getMinutes() != null) {
+                        return ednInst.plus(di.getMinutes().intValue(), ChronoUnit.MINUTES).toEpochMilli();
+                    } else if (di.getSeconds() != null) {
+                        return ednInst.plus(di.getSeconds().intValue(), ChronoUnit.SECONDS).toEpochMilli();
+                    } else {
+                        return instEnd;
+                    }
+                }
+            } else {
+                Instant startInst = Instant.ofEpochMilli(instStart);
+                if (di.getDurationNegative() != null && di.getDurationNegative()) {
+                    if (di.getWeeks() != null) {
+                        return startInst.minus(di.getWeeks().intValue(), ChronoUnit.WEEKS).toEpochMilli();
+                    } else if (di.getDays() != null) {
+                        return startInst.minus(di.getDays().intValue(), ChronoUnit.DAYS).toEpochMilli();
+                    } else if (di.getHours() != null) {
+                        return startInst.minus(di.getHours().intValue(), ChronoUnit.HOURS).toEpochMilli();
+                    } else if (di.getMinutes() != null) {
+                        return startInst.minus(di.getMinutes().intValue(), ChronoUnit.MINUTES).toEpochMilli();
+                    } else if (di.getSeconds() != null) {
+                        return startInst.minus(di.getSeconds().intValue(), ChronoUnit.SECONDS).toEpochMilli();
+                    } else {
+                        return instStart;
+                    }
+                } else {
+                    if (di.getWeeks() != null) {
+                        return startInst.plus(di.getWeeks().intValue(), ChronoUnit.WEEKS).toEpochMilli();
+                    } else if (di.getDays() != null) {
+                        return startInst.plus(di.getDays().intValue(), ChronoUnit.DAYS).toEpochMilli();
+                    } else if (di.getHours() != null) {
+                        return startInst.plus(di.getHours().intValue(), ChronoUnit.HOURS).toEpochMilli();
+                    } else if (di.getMinutes() != null) {
+                        return startInst.plus(di.getMinutes().intValue(), ChronoUnit.MINUTES).toEpochMilli();
+                    } else if (di.getSeconds() != null) {
+                        return startInst.plus(di.getSeconds().intValue(), ChronoUnit.SECONDS).toEpochMilli();
+                    } else {
+                        return instStart;
+                    }
+                }
+            }
+        } else {
+            return instStart;// start time is the trigger time, if trigger type is neither absolute nor relative
+        }
     }
 }

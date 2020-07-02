@@ -17,6 +17,7 @@
 package com.zimbra.cs.service.mail;
 
 import java.util.List;
+import org.junit.Ignore;
 import java.util.Map;
 import java.util.UUID;
 
@@ -56,7 +57,8 @@ import com.zimbra.soap.type.SearchHit;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ SoapHttpTransport.class })
-@PowerMockIgnore({ "javax.crypto.*", "javax.xml.bind.annotation.*" })
+@PowerMockIgnore({ "javax.crypto.*", "javax.xml.bind.annotation.*", "javax.net.ssl.*" })
+@Ignore("ZCS-5608 - Please restore when redis is setup on Circleci")
 public class SearchActionTest {
 
     @Rule

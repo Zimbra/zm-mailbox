@@ -25,7 +25,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.zimbra.common.soap.MailConstants;
@@ -33,7 +33,14 @@ import com.zimbra.soap.type.AttributeName;
 import com.zimbra.soap.type.MsgContent;
 import com.zimbra.soap.type.ZmBoolean;
 
+import com.zimbra.common.gql.GqlConstants;
+import io.leangen.graphql.annotations.GraphQLIgnore;
+import io.leangen.graphql.annotations.GraphQLInputField;
+import io.leangen.graphql.annotations.GraphQLNonNull;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name=GqlConstants.CLASS_MESSAGE_SPECIFICATION, description="Message Specifications.")
 public class MsgSpec {
 
     /**
@@ -162,25 +169,49 @@ public class MsgSpec {
         this((String) null);
     }
 
-    public MsgSpec(String id) {
+    public MsgSpec(@GraphQLNonNull @GraphQLInputField String id) {
         this.id = id;
     }
 
+    @GraphQLInputField(name=GqlConstants.MESSAGE_PART, description="Set the part or message or rfc822 part.")
     public void setPart(String part) { this.part = part; }
+
+    @GraphQLInputField(name=GqlConstants.INCLUDE_RAW_MESSAGE, description="Set to return the raw message content rather than a parsed mime structure.")
     public void setRaw(Boolean raw) { this.raw = ZmBoolean.fromBool(raw); }
+
+    @GraphQLInputField(name=GqlConstants.MARK_MESSAGE_AS_READ, description="Set to true to mark the message as read.")
     public void setMarkRead(Boolean markRead) { this.markRead = ZmBoolean.fromBool(markRead); }
+
+    @GraphQLInputField(name=GqlConstants.INLINED_TEXT_LENGTH, description="Set the length of the text inlined into body.")
     public void setMaxInlinedLength(Integer maxInlinedLength) {
         this.maxInlinedLength = maxInlinedLength;
     }
+
+    @GraphQLInputField(name=GqlConstants.INCLUDE_URL_CONTENT, description="Set the content to raw or url method.")
     public void setUseContentUrl(Boolean useUrl) { this.useContentUrl = ZmBoolean.fromBool(useUrl); }
+
+    @GraphQLInputField(name=GqlConstants.INCLUDE_HTML, description="Set to return defanged html content.")
     public void setWantHtml(Boolean wantHtml) { this.wantHtml = ZmBoolean.fromBool(wantHtml); }
+
+    @GraphQLInputField(name=GqlConstants.INCLUDE_IMAP_UID, description="Set to return the IMAP UID.")
     public void setWantImapUid(Boolean wantImapUid) { this.wantImapUid = ZmBoolean.fromBool(wantImapUid); }
+
+    @GraphQLInputField(name=GqlConstants.INCLUDE_MODIFIED_SEQUENCE, description="Set to return modified sequence.")
     public void setWantModifiedSequence(Boolean wantModSeq) { this.wantModifiedSequence = ZmBoolean.fromBool(wantModSeq); }
-    public boolean getWantModifiedSequence() { return ZmBoolean.toBool(wantModifiedSequence, false); }
+
+    @GraphQLInputField(name=GqlConstants.HIDE_IMAGES, description="Set to not display images by default.")
     public void setNeuter(Boolean neuter) { this.neuter = ZmBoolean.fromBool(neuter); }
+
+    @GraphQLInputField(name=GqlConstants.RECURRENCE_DATE_ID, description="Set the date-time data to open an instance of a recurring appointment.")
     public void setRecurIdZ(String recurIdZ) { this.recurIdZ = recurIdZ; }
+
+    @GraphQLInputField(name=GqlConstants.CONTENT_TYPE, description="Set the message content type.")
     public void setWantContent(MsgContent msgContent) { this.wantContent = msgContent; }
+
+    @GraphQLInputField(name=GqlConstants.INCLUDE_GROUP_INFO, description="Set to return group info in the response ")
     public void setNeedCanExpand(Boolean needCanExpand) { this.needCanExpand = ZmBoolean.fromBool(needCanExpand); }
+
+    @GraphQLInputField(name=GqlConstants.HEADERS, description="Set the headers to add.")
     public void setHeaders(Iterable <AttributeName> headers) {
         this.headers.clear();
         if (headers != null) {
@@ -188,6 +219,7 @@ public class MsgSpec {
         }
     }
 
+    @GraphQLIgnore
     public void addHeader(AttributeName header) {
         this.headers.add(header);
     }
@@ -199,16 +231,17 @@ public class MsgSpec {
     public Integer getMaxInlinedLength() { return maxInlinedLength; }
     public Boolean getUseContentUrl() { return ZmBoolean.toBool(useContentUrl); }
     public Boolean getWantHtml() { return ZmBoolean.toBool(wantHtml); }
-    public boolean getWantImapUid() { return ZmBoolean.toBool(wantImapUid, false); }
+    public Boolean getWantImapUid() { return ZmBoolean.toBool(wantImapUid, false); }
+    public Boolean getWantModifiedSequence() { return ZmBoolean.toBool(wantModifiedSequence, false); }
     public Boolean getNeuter() { return ZmBoolean.toBool(neuter); }
     public String getRecurIdZ() { return recurIdZ; }
-    public Boolean getNeedCanExpand() { return ZmBoolean.toBool(needCanExpand); }
     public MsgContent getWantContent() { return wantContent; }
+    public Boolean getNeedCanExpand() { return ZmBoolean.toBool(needCanExpand); }
     public List<AttributeName> getHeaders() {
         return Collections.unmodifiableList(headers);
     }
 
-    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         return helper
             .add("id", id)
             .add("part", part)
@@ -228,6 +261,6 @@ public class MsgSpec {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this)).toString();
+        return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
     }
 }

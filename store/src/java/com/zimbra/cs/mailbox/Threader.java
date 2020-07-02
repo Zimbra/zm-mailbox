@@ -26,7 +26,7 @@ import java.util.Random;
 
 import javax.mail.internet.MimeMessage;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.zimbra.common.account.ZAttrProvisioning.MailThreadingAlgorithm;
@@ -493,7 +493,7 @@ public final class Threader {
 
     @Override
     public String toString() {
-        Objects.ToStringHelper tostr = Objects.toStringHelper(this);
+        MoreObjects.ToStringHelper tostr = MoreObjects.toStringHelper(this);
         tostr.add("mode", mode);
         if (subjHash != null) {
             tostr.add("subjHash", subjHash);

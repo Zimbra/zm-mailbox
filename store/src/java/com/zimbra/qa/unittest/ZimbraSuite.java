@@ -160,6 +160,15 @@ public class ZimbraSuite  {
         sClasses.add(TestGetContactsRequest.class);
         sClasses.add(TestRemoteImapSoapSessions.class);
         sClasses.add(TestMetadataDump.class);
+        sClasses.add(TestSavedSearchPrompt.class);
+        sClasses.add(TestSearchHistory.class);
+        sClasses.add(TestSolrCloudEventStore.class);
+        sClasses.add(TestStandaloneSolrEventStore.class);
+        sClasses.add(TestRelatedContacts.class);
+        sClasses.add(TestSearchSortByRelevance.class);
+        sClasses.add(TestSmartFolders.class);
+        sClasses.add(TestSolrHeaderSearch.class);
+        sClasses.add(TestMailboxLock.class);
     }
 
     /**

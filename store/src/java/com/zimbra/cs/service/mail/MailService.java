@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2020 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -18,6 +18,7 @@ package com.zimbra.cs.service.mail;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.OctopusXmlConstants;
 import com.zimbra.soap.DocumentDispatcher;
 import com.zimbra.soap.DocumentService;
 
@@ -42,6 +43,12 @@ public final class MailService implements DocumentService {
         dispatcher.registerHandler(MailConstants.BROWSE_REQUEST, new Browse());
         dispatcher.registerHandler(MailConstants.SEARCH_REQUEST, new Search());
         dispatcher.registerHandler(MailConstants.SEARCH_CONV_REQUEST, new SearchConv());
+
+        //search history
+        dispatcher.registerHandler(MailConstants.REJECT_SAVE_SEARCH_PROMPT_REQUEST, new RejectSaveSearchPrompt());
+        dispatcher.registerHandler(MailConstants.CLEAR_SEARCH_HISTORY_REQUEST, new ClearSearchHistory());
+        dispatcher.registerHandler(MailConstants.SEARCH_SUGGEST_REQUEST, new SearchSuggest());
+        dispatcher.registerHandler(MailConstants.GET_SEARCH_HISTORY_REQUEST, new GetSearchHistory());
 
         // dumpster
         dispatcher.registerHandler(MailConstants.EMPTY_DUMPSTER_REQUEST, new EmptyDumpster());
@@ -98,6 +105,7 @@ public final class MailService implements DocumentService {
         dispatcher.registerHandler(MailConstants.EXPORT_CONTACTS_REQUEST, new ExportContacts());
         dispatcher.registerHandler(MailConstants.IMPORT_CONTACTS_REQUEST, new ImportContacts());
         dispatcher.registerHandler(MailConstants.GET_CONTACT_BACKUP_LIST_REQUEST, new GetContactBackupList());
+        dispatcher.registerHandler(MailConstants.GET_RELATED_CONTACTS_REQUEST, new GetRelatedContacts());
 
         // notes
         if (LC.notes_enabled.booleanValue()) {
@@ -121,6 +129,8 @@ public final class MailService implements DocumentService {
 
         dispatcher.registerHandler(MailConstants.GET_APPT_SUMMARIES_REQUEST, new GetApptSummaries());
         dispatcher.registerHandler(MailConstants.GET_APPOINTMENT_REQUEST, new GetAppointment());
+        dispatcher.registerHandler(MailConstants.GET_APPOINTMENT_IDS_IN_RANGE_REQUEST, new GetAppointmentIdsInRange());
+        dispatcher.registerHandler(MailConstants.GET_APPOINTMENT_IDS_SINCE_REQUEST, new GetAppointmentIdsSince());
         dispatcher.registerHandler(MailConstants.SET_APPOINTMENT_REQUEST, new SetAppointment());
         dispatcher.registerHandler(MailConstants.CREATE_APPOINTMENT_REQUEST, new CreateAppointment());
         dispatcher.registerHandler(MailConstants.CREATE_APPOINTMENT_EXCEPTION_REQUEST, new CreateAppointmentException());
@@ -239,5 +249,22 @@ public final class MailService implements DocumentService {
 
         // Profile Image API
         dispatcher.registerHandler(MailConstants.MODIFY_PROFILE_IMAGE_REQUEST, new ModifyProfileImage());
+
+        // Password reset API
+        dispatcher.registerHandler(MailConstants.RECOVER_ACCOUNT_REQUEST, new RecoverAccount());
+        dispatcher.registerHandler(MailConstants.SET_RECOVERY_EMAIL_REQUEST, new SetRecoveryAccount());
+
+        // Contact Analytics
+        dispatcher.registerHandler(MailConstants.GET_CONTACT_FREQUENCY_REQUEST, new GetContactFrequency());
+
+        //Smart Folders
+        dispatcher.registerHandler(MailConstants.GET_SMART_FOLDERS_REQUEST, new GetSmartFolders());
+
+        //Document action API
+        dispatcher.registerHandler(OctopusXmlConstants.DOCUMENT_ACTION_REQUEST, new DocumentAction());
+        dispatcher.registerHandler(OctopusXmlConstants.GET_WATCHING_ITEMS_REQUEST, new GetWatchingItems());
+        dispatcher.registerHandler(OctopusXmlConstants.GET_NOTIFICATIONS_REQUEST, new GetNotifications());
+        dispatcher.registerHandler(OctopusXmlConstants.GET_DOCUMENT_SHARE_URL_REQUEST, new GetDocumentShareURL());
+        dispatcher.registerHandler(OctopusXmlConstants.GET_SHARE_DETAILS_REQUEST, new GetShareDetails());
     }
 }

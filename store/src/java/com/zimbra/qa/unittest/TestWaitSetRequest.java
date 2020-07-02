@@ -39,7 +39,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 
-import org.apache.commons.httpclient.HttpStatus;
+import org.apache.http.HttpStatus;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -264,9 +264,7 @@ public class TestWaitSetRequest {
         ZMailbox mbox = TestUtil.getZMailbox(user1Name);
         String acctId = mbox.getAccountId();
         String authToken = mbox.getAuthToken().getValue();
-        ZimbraLog.test.info("GREN 1");
         String adminAuthToken = TestUtil.getAdminSoapTransport().getAuthToken().getValue();
-        ZimbraLog.test.info("GREN 2");
         ZFolder myFolder = TestUtil.createFolder(mbox, "funFolder");
         Set<Integer> folderInterest = Sets.newHashSet();
         folderInterest.add(myFolder.getFolderIdInOwnerMailbox());

@@ -17,16 +17,21 @@
 
 package com.zimbra.soap.account.type;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlValue;
 
+import com.zimbra.common.gql.GqlConstants;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.type.SMIMEStoreType;
 
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
+
 @XmlAccessorType(XmlAccessType.NONE)
+@GraphQLType(name=GqlConstants.CLASS_SMIME_PUBLIC_CERT_INFO, description="SMIMEPublicCertInfo")
 public class SMIMEPublicCertInfo {
 
     /**
@@ -75,12 +80,15 @@ public class SMIMEPublicCertInfo {
     public void setField(String field) { this.field = field; }
     public void setValue(String value) { this.value = value; }
 
+    @GraphQLQuery(name=GqlConstants.STORE_TYPE, description="store type")
     public SMIMEStoreType getStoreType() { return storeType; }
+    @GraphQLQuery(name=GqlConstants.FIELD, description="field containing the certificate")
     public String getField() { return field; }
+    @GraphQLQuery(name=GqlConstants.VALUE, description="Base64 encoded cert")
     public String getValue() { return value; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(
+                MoreObjects.ToStringHelper helper) {
         return helper
             .add("storeType", storeType)
             .add("value", value);
@@ -88,7 +96,7 @@ public class SMIMEPublicCertInfo {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
+        return addToStringInfo(MoreObjects.toStringHelper(this))
                 .toString();
     }
 }

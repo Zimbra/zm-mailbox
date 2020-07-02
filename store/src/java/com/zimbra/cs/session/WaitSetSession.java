@@ -18,7 +18,7 @@ package com.zimbra.cs.session;
 
 import java.util.Set;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Sets;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem;
@@ -94,7 +94,7 @@ public class WaitSetSession extends Session {
     protected long getSessionIdleLifetime() { return 0; }
 
     @Override
-    public void notifyPendingChanges(PendingModifications pns, int changeId, Session source) {
+    public void notifyPendingChanges(PendingModifications pns, int changeId, SourceSessionInfo source) {
         boolean trace = ZimbraLog.session.isTraceEnabled();
         if (trace) {
             ZimbraLog.session.trace("Notifying WaitSetSession %s: change id=%s changedFolders=%s changesTypes='%s'",
@@ -127,8 +127,8 @@ public class WaitSetSession extends Session {
             }
             return;
         }
-        if (source != null && source instanceof SoapSession) {
-            String curWaitSetID = ((SoapSession) source).getCurWaitSetID();
+        if (source != null && source.getWaitSetId() != null) {
+            String curWaitSetID = source.getWaitSetId();
             if (curWaitSetID != null && curWaitSetID.equals(mWs.getWaitSetId())) {
                 if (trace) {
                     ZimbraLog.session.trace("Not signaling waitset; changes will be returned in SOAP headers");
@@ -151,7 +151,7 @@ public class WaitSetSession extends Session {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
                 .add("syncToken", mSyncToken)
                 .add("highestChangeId", mHighestChangeId)
                 .add("interests", interest)
