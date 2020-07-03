@@ -43,6 +43,7 @@ import org.apache.commons.codec.binary.Hex;
 
 import com.sun.mail.smtp.SMTPMessage;
 import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
@@ -61,7 +62,6 @@ import com.zimbra.common.zmime.ZMimeMultipart;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
-import com.zimbra.cs.account.accesscontrol.generated.RightConsts;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Domain;
@@ -71,6 +71,7 @@ import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.TokenUtil;
+import com.zimbra.cs.account.accesscontrol.generated.RightConsts;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -862,7 +863,7 @@ public class AccountUtil {
     }
 
     /**
-     * 
+     *
      * @param acct
      * @return SMTPMessage object
      * @throws ServiceException
@@ -918,14 +919,22 @@ public class AccountUtil {
         return false;
     }
 
-    public static boolean isDataSourceAddress(Account account, String fromEmailAddress) throws ServiceException {
-        List<DataSource> dsList = account.getAllDataSources();
-        for (DataSource ds : dsList) {
-            if (ds.getEmailAddress().equals(fromEmailAddress) && (ds.getType().equals(DataSourceType.imap) ||
-                    ds.getType().equals(DataSourceType.pop3))) {
-                return true;
+    /**
+     * @param fromAddress
+     * @param account
+     * @return
+     * @throws ServiceException
+     */
+    public static Account getAccountForFromAddress(String fromAddress, Account account) throws ServiceException {
+        List<Identity> identityList = Provisioning.getInstance().getAllIdentities(account);
+
+        for (Identity identity: identityList) {
+            String idEmailAddress = identity.getAttr("zimbraPrefFromAddress", null);
+            if (idEmailAddress != null && idEmailAddress.equalsIgnoreCase(fromAddress) ) {
+                Account  delgAcct  = Provisioning.getInstance().get(AccountBy.name, fromAddress);
+                return delgAcct
             }
         }
-        return false;
+        return null;
     }
 }

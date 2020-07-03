@@ -286,7 +286,7 @@ public final class ZimbraSoapContext {
     public ZimbraSoapContext(Element ctxt, QName requestName, DocumentHandler handler, Map<String, Object> context,
             SoapProtocol requestProtocol, Element body) throws ServiceException {
 
-        if (ctxt != null && !ctxt.getQName().equals(HeaderConstants.CONTEXT))
+       if (ctxt != null && !ctxt.getQName().equals(HeaderConstants.CONTEXT))
             throw new IllegalArgumentException("expected ctxt, got: " + ctxt.getQualifiedName());
 
         Provisioning prov = Provisioning.getInstance();
@@ -355,45 +355,35 @@ public final class ZimbraSoapContext {
                     throw ServiceException.AUTH_REQUIRED();
                 }
                 Account account = prov.get(AccountBy.name, value, mAuthToken);
+                if (account == null) {
+                    if (!mAuthToken.isAdmin()) {
+                        throw ServiceException.DEFEND_ACCOUNT_HARVEST(value);
+                    } else {
+                        throw AccountServiceException.NO_SUCH_ACCOUNT(value);
+                    }
+                }
+
                 // Overriding the value for sendMsgRequest if the account in header is not equal to the from address.
                 // Because in case of Persona(added for the owner's account), the account passed in header is not equal to from address.
                 // if zimbraAllowAnyFromAddress = TRUE for delegate's account then we can create Persona with any email address and the
                 // from address could be different in this case.
                 if (body != null && requestName.equals(MailConstants.SEND_MSG_REQUEST)) {
+                   Account delegatedAccount = null;
                    String fromAddress = AccountUtil.extractFromAddress(body);
-                   if (!StringUtil.isNullOrEmpty(fromAddress) && !AccountUtil.isDataSourceAddress(account, fromAddress)) {
-                       if (!value.equals(fromAddress) && !account.getBooleanAttr(Provisioning.A_zimbraAllowAnyFromAddress, false)) {
-                           value = fromAddress;
-                           account = prov.get(AccountBy.name, value, mAuthToken);
-                       }
+                   delegatedAccount = AccountUtil.getAccountForFromAddress(fromAddress, account);
+                   if (delegatedAccount != null) {
+                       account  = delegatedAccount;
+                       value  = fromAddress;
                    }
                 }
-                if (account == null) {
-                    if (!mAuthToken.isAdmin()) {
-                        throw ServiceException.DEFEND_ACCOUNT_HARVEST(value);
-                    } else {
-                        throw AccountServiceException.NO_SUCH_ACCOUNT(value);
-                    }
-                }
-
-                mRequestedAccountId = account.getId();
                 validateDelegatedAccess(account, handler, requestName, value);
+                mRequestedAccountId = account.getId();
+
             } else if (key.equals(HeaderConstants.BY_ID)) {
                 if (mAuthToken == null) {
                     throw ServiceException.AUTH_REQUIRED();
                 }
                 Account account = prov.get(AccountBy.id, value, mAuthToken);
-                if (body != null && requestName.equals(MailConstants.SEND_MSG_REQUEST)) {
-                    String fromAddress = AccountUtil.extractFromAddress(body);
-                    if (!StringUtil.isNullOrEmpty(fromAddress) && !AccountUtil.isDataSourceAddress(account, fromAddress) &&
-                            !account.getBooleanAttr(Provisioning.A_zimbraAllowAnyFromAddress, false)) {
-                        Account fromAccount = prov.get(AccountBy.name, fromAddress, mAuthToken);
-                        if(!value.equals(fromAccount.getId())) {
-                            value = fromAccount.getId();
-                            account = prov.get(AccountBy.id, value, mAuthToken);
-                        }
-                    }
-                }
                 if (account == null) {
                     if (!mAuthToken.isAdmin()) {
                         throw ServiceException.DEFEND_ACCOUNT_HARVEST(value);
@@ -401,8 +391,17 @@ public final class ZimbraSoapContext {
                         throw AccountServiceException.NO_SUCH_ACCOUNT(value);
                     }
                 }
+                if (body != null && requestName.equals(MailConstants.SEND_MSG_REQUEST)) {
+                    Account delegatedAccount = null;
+                    String fromAddress = AccountUtil.extractFromAddress(body);
+                    delegatedAccount = AccountUtil.getAccountForFromAddress(fromAddress, account);
+                    if (delegatedAccount != null) {
+                        account  = delegatedAccount;
+                        value  = fromAddress;
+                    }
+                }
 
-                mRequestedAccountId = value;
+                mRequestedAccountId = account.getId();
                 validateDelegatedAccess(account, handler, requestName, value);
             } else {
                 throw ServiceException.INVALID_REQUEST("unknown value for by: " + key, null);
@@ -420,7 +419,7 @@ public final class ZimbraSoapContext {
             mRequestedAccountId = authAccount.getId();
             String fromAddress = AccountUtil.extractFromAddress(body);
             String identityId = body.getElement(MailConstants.E_MSG).getAttribute(MailConstants.A_IDENTITY_ID, null);
-            if (!StringUtil.isNullOrEmpty(fromAddress) && !AccountUtil.isDataSourceAddress(authAccount, fromAddress) &&
+            if (!StringUtil.isNullOrEmpty(fromAddress) &&
                     AccountUtil.isMessageSentUsingOwnersPersona(identityId, authAccount, mAuthToken)) {
                 Account account = prov.get(AccountBy.name, fromAddress, mAuthToken);
                 if (account == null) {
