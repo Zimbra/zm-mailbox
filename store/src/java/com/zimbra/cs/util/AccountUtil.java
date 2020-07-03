@@ -932,7 +932,7 @@ public class AccountUtil {
             String idEmailAddress = identity.getAttr("zimbraPrefFromAddress", null);
             if (idEmailAddress != null && idEmailAddress.equalsIgnoreCase(fromAddress) ) {
                 Account  delgAcct  = Provisioning.getInstance().get(AccountBy.name, fromAddress);
-                return delgAcct
+                return delgAcct;
             }
         }
         return null;
