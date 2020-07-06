@@ -3,41 +3,37 @@ package com.zimbra.cs.redolog.logger;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
 import org.redisson.api.RFuture;
 import org.redisson.api.RStream;
-import org.redisson.api.RedissonClient;
 import org.redisson.api.StreamMessageId;
-import org.redisson.client.codec.ByteArrayCodec;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
 import com.google.common.io.ByteStreams;
 import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
-import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.MailboxOperation;
-import com.zimbra.cs.mailbox.RedissonClientHolder;
+import com.zimbra.cs.redolog.BackupHostManager;
 import com.zimbra.cs.redolog.RedoLogProvider;
+import com.zimbra.cs.redolog.RedoStreamSelector;
+import com.zimbra.cs.redolog.RedoStreamSelector.RedoStreamSpec;
 import com.zimbra.cs.redolog.TransactionId;
-import com.zimbra.cs.redolog.logger.DistributedLogReaderService.RedoStreamSelector;
 import com.zimbra.cs.redolog.op.BlobRecorder;
 import com.zimbra.cs.redolog.op.CommitTxn;
 import com.zimbra.cs.redolog.op.RedoableOp;
 
 public class DistributedLogWriter implements LogWriter {
-
-    private static RedissonClient client;
-    private static int streamsCount;
-    private List<RStream<byte[], byte[]>> streams;
 
     public static final byte[] F_DATA = "d".getBytes();
     public static final byte[] F_TIMESTAMP = "t".getBytes();
@@ -54,21 +50,11 @@ public class DistributedLogWriter implements LogWriter {
     private Map<TransactionId, CountDownLatch> pendingOps = new HashMap<>();
     private boolean externalBlobStore;
     private Joiner joiner = Joiner.on(",");
-    private RedoStreamSelector streamSelector;
+    private Provisioning prov;
 
     public DistributedLogWriter() {
-        client = RedissonClientHolder.getInstance().getRedissonClient();
-        streamsCount = LC.redis_num_redolog_streams.intValue();
-        streams = new ArrayList<RStream<byte[], byte[]>>(streamsCount);
-
-        ZimbraLog.redolog.info("DistributedLogWriter streamsCount: %d", streamsCount);
-
-        for (int i=0; i<streamsCount ; i++) {
-            streams.add(client.getStream(LC.redis_streams_redo_log_stream_prefix.value()+i, ByteArrayCodec.INSTANCE));
-        }
-
         externalBlobStore = RedoLogProvider.getInstance().getRedoLogManager().hasExternalBlobStore();
-        streamSelector = new RedoStreamSelector();
+        prov = Provisioning.getInstance();
     }
 
     @Override
@@ -77,6 +63,10 @@ public class DistributedLogWriter implements LogWriter {
 
     @Override
     public void close() throws IOException {
+    }
+
+    private RedoStreamSelector getStreamSelector() {
+        return BackupHostManager.getInstance().getStreamSelector();
     }
 
     private void addBlobDataFields(Map<byte[], byte[]> fields, CommitTxn commit) throws IOException {
@@ -103,6 +93,20 @@ public class DistributedLogWriter implements LogWriter {
 
     @Override
     public void log(RedoableOp op, InputStream data, boolean synchronous) throws IOException {
+
+        String acctId = op.getAccountId();
+        if (!Strings.isNullOrEmpty(acctId)) {
+            try {
+                Account acct = prov.getAccountById(acctId);
+                if (!acct.isBackupEnabled()) {
+                    ZimbraLog.redolog.debug("backup is not enabled for mailbox %s, not logging operation", op.getMailboxId());
+                    return;
+                }
+            } catch (ServiceException e) {
+                ZimbraLog.redolog.error("error getting account to determine whether backup is enabled!", e);
+                return;
+            }
+        }
         if (externalBlobStore && op.getOperation() == MailboxOperation.StoreIncomingBlob) {
             // we don't actually send StoreIncomingBlob operations to the backup pods if an external redolog blob store
             // is configured. Its CommitTxn does get logged, which contains the actual blob data to be
@@ -158,10 +162,20 @@ public class DistributedLogWriter implements LogWriter {
             }
         }
         long start = System.currentTimeMillis();
-
-        int streamIndex = streamSelector.getStreamIndex(op);
-        ZimbraLog.redolog.debug("sending %s txnId=%s mboxId=%s to stream %s", op.getOperation(), op.getTransactionId(), op.getMailboxId(), streamIndex);
-        RFuture<StreamMessageId> future = streams.get(streamIndex).addAllAsync(fields);
+        RedoStreamSpec streamSpec;
+        try {
+            streamSpec = getStreamSelector().getStream(op);
+            if (streamSpec == null) {
+                ZimbraLog.redolog.warn("can't find redolog stream for %s, operation will not be recorded!");
+                return;
+            }
+        } catch (ServiceException e) {
+            // something went wrong contacting the backup host mappings store - wrap in IOException and re-throw
+            throw new IOException(e);
+        }
+        ZimbraLog.redolog.debug("sending %s txnId=%s mboxId=%s to stream %s", op.getOperation(), op.getTransactionId(), op.getMailboxId(), streamSpec);
+        RStream<byte[], byte[]> stream = streamSpec.getStream();
+        RFuture<StreamMessageId> future = stream.addAllAsync(fields);
         future.onComplete((streamId, e) -> {
             long elapsed = System.currentTimeMillis() - start;
             if (isStartMarker) {
@@ -209,9 +223,10 @@ public class DistributedLogWriter implements LogWriter {
      */
     @Override
     public boolean isEmpty() throws IOException {
-        for (int i=0; i<streamsCount ; i++) {
-            if (streams.get(i).size() > 0)
+        for (RedoStreamSpec stream: getStreamSelector().getAllStreams()) {
+            if (stream.getStream().size() > 0) {
                 return false;
+            }
         }
         return true;
     }
@@ -221,8 +236,8 @@ public class DistributedLogWriter implements LogWriter {
      */
     @Override
     public boolean exists() {
-        for (int i=0; i<streamsCount ; i++) {
-            if (streams.get(i).isExists())
+        for (RedoStreamSpec stream: getStreamSelector().getAllStreams()) {
+            if (stream.getStream().isExists())
                 return true;
         }
         return false;
@@ -244,8 +259,8 @@ public class DistributedLogWriter implements LogWriter {
     @Override
     public boolean delete() throws IOException {
         boolean returnCode = false;
-        for (int i=0; i<streamsCount ; i++) {
-            returnCode = streams.get(i).delete();
+        for (RedoStreamSpec stream: getStreamSelector().getAllStreams()) {
+            returnCode = stream.getStream().delete();
         }
         return returnCode;
     }
