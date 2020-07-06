@@ -9162,6 +9162,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMailboxIndexName = "zimbraMailboxIndexName";
 
     /**
+     * Whether a mailbox has been initialized for this account
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9013)
+    public static final String A_zimbraMailboxInitialized = "zimbraMailboxInitialized";
+
+    /**
      * serverId:mboxId of mailbox before being moved
      */
     @ZAttr(id=346)
