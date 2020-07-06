@@ -47,6 +47,7 @@ public class AbortTxn extends ControlOp {
         super(MailboxOperation.AbortTxn, changeEntry.getTransactionId());
         setMailboxId(changeEntry.getMailboxId());
         setAccountId(changeEntry.getAccountId());
+        setBackupHost(changeEntry.getBackupHost());
         mTxnOpCode = changeEntry.getOperation();
     }
 

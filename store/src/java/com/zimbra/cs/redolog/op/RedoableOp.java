@@ -40,6 +40,7 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.redolog.BackupHostManager.BackupHost;
 import com.zimbra.cs.redolog.RedoCommitCallback;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogManager;
@@ -74,7 +75,8 @@ public abstract class RedoableOp {
     protected RedoLogManager mRedoLogMgr;
     private boolean mUnloggedReplay;  // true if redo of this op is not redo-logged
     protected RedoCommitCallback mCommitCallback;
-    private String mAccountId = null; // used for routing to redolog streams
+    private String mAccountId = null;
+    private BackupHost mBackupHost = null;
 
     protected RedoableOp(MailboxOperation op, RedoLogManager mgr) {
         mOperation = op;
@@ -251,11 +253,19 @@ public abstract class RedoableOp {
     }
 
     public void setAccountId(String accountId) {
-        mAccountId = accountId;
+        this.mAccountId = accountId;
     }
 
     public String getAccountId() {
         return mAccountId;
+    }
+
+    public void setBackupHost(BackupHost backupHost) {
+        this.mBackupHost = backupHost;
+    }
+
+    public BackupHost getBackupHost() {
+        return mBackupHost;
     }
 
     protected void serializeHeader(RedoLogOutput out) throws IOException {
