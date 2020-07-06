@@ -147,6 +147,7 @@ public final class BackupConstants {
     public static final String A_BEFORE = "before";
     public static final String A_INCR_LABEL = "incr-label";
     public static final String A_SKIP_DELETED_ACCT = "skipDeletedAccounts";
+    public static final String A_SKIP_REHOSTED_ACCT = "skipRehostedAccounts";
     public static final String A_RESTORE_TO_TIME = "restoreToTime";
     public static final String A_RESTORE_TO_REDO_SEQ = "restoreToRedoSeq";
     public static final String A_RESTORE_TO_INCR_LABEL = "restoreToIncrLabel";
