@@ -62,6 +62,7 @@ public abstract class MailboxState {
         data.recentMessages = getIntField(MailboxField.RECENT_MESSAGES).setIfNotExists(data.recentMessages);
         data.trackImap      = getBoolField(MailboxField.TRACKING_IMAP).setIfNotExists(data.trackImap);
         data.trackSync      = getIntField(MailboxField.TRACK_SYNC).setIfNotExists(data.trackSync);
+        data.backupHostId   = getIntField(MailboxField.BACKUP_HOST_ID).setIfNotExists(data.backupHostId);
     }
 
     protected abstract SynchronizedField<?> initField(MailboxField fieldType);
@@ -131,6 +132,9 @@ public abstract class MailboxState {
         return getIntField(MailboxField.CHANGE_ID).value();
     }
 
+    public int getBackupHostId() {
+        return getIntField(MailboxField.BACKUP_HOST_ID).value();
+    }
 
     public void setSize(long size) {
         getLongField(MailboxField.SIZE).set(size);
@@ -190,6 +194,11 @@ public abstract class MailboxState {
     public void setChangeId(int value) {
         getIntField(MailboxField.CHANGE_ID).set(value);
         data.lastChangeId = value;
+    }
+
+    public void setBackupHostId(int value) {
+        getIntField(MailboxField.BACKUP_HOST_ID).set(value);
+        data.backupHostId = value;
     }
 
     public void addConfigKey(String key) {
@@ -274,7 +283,8 @@ public abstract class MailboxState {
         TRACKING_IMAP(FieldType.BOOL),
         TRACK_SYNC(FieldType.INT),
         CONFIG_KEYS(FieldType.SET),
-        ITEMCACHE_CHECKPOINT(FieldType.INT);
+        ITEMCACHE_CHECKPOINT(FieldType.INT),
+        BACKUP_HOST_ID(FieldType.INT);
 
         private FieldType type;
 

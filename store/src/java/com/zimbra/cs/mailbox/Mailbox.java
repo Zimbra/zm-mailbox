@@ -186,6 +186,9 @@ import com.zimbra.cs.mime.ParsedMessageOptions;
 import com.zimbra.cs.ml.ClassificationExecutionContext;
 import com.zimbra.cs.ml.classifier.ClassifierManager;
 import com.zimbra.cs.pop3.Pop3Message;
+import com.zimbra.cs.redolog.BackupHostManager;
+import com.zimbra.cs.redolog.BackupHostManager.BackupHost;
+import com.zimbra.cs.redolog.BackupHostManager.BackupHostAssignment;
 import com.zimbra.cs.redolog.RedoLogBlobStore;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.redolog.RedoOpBlobStore;
@@ -356,6 +359,7 @@ public class Mailbox implements MailboxStore {
         public MailboxVersion version;
         public int itemcacheCheckpoint;
         public int lastSearchId;
+        public int backupHostId;
 
         @Override
         protected MailboxData clone() {
@@ -2133,6 +2137,7 @@ public class Mailbox implements MailboxStore {
 
             DeleteMailbox redoRecorder = new DeleteMailbox(mId);
             redoRecorder.setAccountId(getAccountId());
+            redoRecorder.setBackupHost(getBackupHost());
             boolean needRedo = needRedo(null, redoRecorder);
             boolean success = false;
             try {
@@ -10181,6 +10186,7 @@ public class Mailbox implements MailboxStore {
                 // Log the change redo record for main transaction.
                 if (redoRecorder != null && needRedo) {
                     redoRecorder.setAccountId(getAccountId());
+                    redoRecorder.setBackupHost(getBackupHost());
                     redoRecorder.log(true);
                 }
                 boolean dbCommitSuccess = false;
@@ -10395,6 +10401,36 @@ public class Mailbox implements MailboxStore {
     public boolean isInTransaction() {
         MailboxChange change = MailboxChangeSingleton.getInstance().getThreadLocal().get();
         return change != null && change.isActive() && change.mailbox.getId() == getId();
+    }
+
+    private BackupHost assignBackupHost() throws ServiceException {
+        Account acct = getAccount();
+        BackupHostAssignment assignment = BackupHostManager.getInstance().getBackupHostAssignment(acct.getId());
+        if (assignment != null) {
+            BackupHost host = assignment.getHost();
+            ZimbraLog.mailbox.info("backup is enabled for %s but no backup host is assigned, assigning to %s", acct.getName(), host.getHost());
+            state.setBackupHostId(host.getHostId());
+            DbMailbox.setBackupHostForAccount(getOperationConnection(), acct.getId(), host);
+            return host;
+        } else {
+            ZimbraLog.mailbox.info("backup is enabled for %s, but couldn't assign a backup host!", acct.getName());
+            return null;
+        }
+    }
+
+    public BackupHost getBackupHost() throws ServiceException {
+        boolean backupEnabled = getAccount().isBackupEnabled();
+        if (!backupEnabled) {
+            // short-circuit here even if a backup host is assigned
+            return null;
+        }
+        int backupHostId = state.getBackupHostId();
+        if (backupHostId == 0) {
+            // no backup host, so assign one
+            return assignBackupHost();
+        } else {
+            return BackupHostManager.getInstance().getBackupHost(backupHostId);
+        }
     }
 
     private class FolderTagCacheReadWriteLock {
