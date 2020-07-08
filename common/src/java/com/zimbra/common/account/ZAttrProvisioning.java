@@ -3971,6 +3971,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraBackupAutoGroupedThrottled = "zimbraBackupAutoGroupedThrottled";
 
     /**
+     * Whether backups are enabled for this account or COS
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9014)
+    public static final String A_zimbraBackupEnabled = "zimbraBackupEnabled";
+
+    /**
      * Minimum percentage or TB/GB/MB/KB/bytes of free space on backup target
      * to allow a full or auto-grouped backup to start; 0 = no minimum is
      * enforced. Examples: 25%, 10GB

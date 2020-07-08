@@ -10058,4 +10058,8 @@ TODO: delete them permanently from here
 <attr id="9013" name="zimbraMailboxInitialized" type="boolean" cardinality="single" optionalIn="account" since="8.9.0">
   <desc>Whether a mailbox has been initialized for this account</desc>
 </attr>
+<attr id="9014" name="zimbraBackupEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.9.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>Whether backups are enabled for this account or COS</desc>
+</attr>
 </attrs>
