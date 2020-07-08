@@ -34,6 +34,7 @@ import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.db.Db;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbMailbox;
@@ -44,6 +45,9 @@ import com.zimbra.cs.db.DbUtil;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.acl.AclPushSerializer;
+import com.zimbra.cs.redolog.BackupHostManager;
+import com.zimbra.cs.redolog.BackupHostManager.BackupHost;
+import com.zimbra.cs.redolog.BackupHostManager.BackupHostAssignment;
 import com.zimbra.cs.service.util.SyncToken;
 
 /**
@@ -342,6 +346,33 @@ public final class MailboxUpgrade {
 
             DbTag.createTag(conn, mbox, Flag.FlagInfo.MUTED.toFlag(mbox).getUnderlyingData(), null, false);
             conn.commit();
+        } catch (ServiceException e) {
+            conn.rollback();
+            throw e;
+        } finally {
+            conn.closeQuietly();
+        }
+    }
+
+    /** Assign a backup host. */
+    public static void upgradeTo2_8(Mailbox mbox) throws ServiceException {
+        Account acct = mbox.getAccount();
+        mbox.getAccount().setMailboxInitialized(true);
+        if (!(acct.isBackupEnabled())) {
+            return;
+        }
+        DbConnection conn = DbPool.getConnection(mbox);
+        String accountId = mbox.getAccountId();
+        BackupHostManager backupHostManager = BackupHostManager.getInstance();
+        BackupHostAssignment hostAssignment = backupHostManager.getBackupHostAssignment(accountId);
+        if (hostAssignment == null) {
+            return;
+        }
+        BackupHost host = hostAssignment.getHost();
+        try {
+            ZimbraLog.mailbox.info("assigning %s to %s during mailbox upgrade", mbox.getAccount().getName(), host);
+            DbMailbox.setBackupHostForAccount(conn, accountId, hostAssignment.getHost());
+            mbox.clearStaleCaches(false);
         } catch (ServiceException e) {
             conn.rollback();
             throw e;

@@ -864,6 +864,11 @@ public class Mailbox implements MailboxStore {
                     MailboxUpgrade.upgradeTo2_7(this);
                     updateVersion(new MailboxVersion((short) 2, (short) 7));
                 }
+                if (!mData.version.atLeast(2, 8)) {
+                    ZimbraLog.mailbox.info("Upgrade mailbox from %s to 2.8", getVersion());
+                    MailboxUpgrade.upgradeTo2_8(this);
+                    updateVersion(new MailboxVersion((short) 2, (short) 8));
+                }
             }
 
             // done!
