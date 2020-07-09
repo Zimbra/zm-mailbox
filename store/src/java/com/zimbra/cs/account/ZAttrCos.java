@@ -12241,19 +12241,17 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Deprecated since: 7.0.0. Deprecated per bugs 50465, 56201. Orig desc:
      * Whether notebook feature should be allowed for this account or in this
      * cos
      *
-     * @return zimbraFeatureNotebookEnabled, or false if unset
+     * @return zimbraFeatureNotebookEnabled, or true if unset
      */
     @ZAttr(id=356)
     public boolean isFeatureNotebookEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraFeatureNotebookEnabled, false, true);
+        return getBooleanAttr(Provisioning.A_zimbraFeatureNotebookEnabled, true, true);
     }
 
     /**
-     * Deprecated since: 7.0.0. Deprecated per bugs 50465, 56201. Orig desc:
      * Whether notebook feature should be allowed for this account or in this
      * cos
      *
@@ -12268,7 +12266,6 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Deprecated since: 7.0.0. Deprecated per bugs 50465, 56201. Orig desc:
      * Whether notebook feature should be allowed for this account or in this
      * cos
      *
@@ -12284,7 +12281,6 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Deprecated since: 7.0.0. Deprecated per bugs 50465, 56201. Orig desc:
      * Whether notebook feature should be allowed for this account or in this
      * cos
      *
@@ -12298,7 +12294,6 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Deprecated since: 7.0.0. Deprecated per bugs 50465, 56201. Orig desc:
      * Whether notebook feature should be allowed for this account or in this
      * cos
      *

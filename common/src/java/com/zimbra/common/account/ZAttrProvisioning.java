@@ -6918,7 +6918,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureNewMailNotificationEnabled = "zimbraFeatureNewMailNotificationEnabled";
 
     /**
-     * Deprecated since: 7.0.0. Deprecated per bugs 50465, 56201. Orig desc:
      * Whether notebook feature should be allowed for this account or in this
      * cos
      */
