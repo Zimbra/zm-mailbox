@@ -1924,10 +1924,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Skin to use for this account</desc>
 </attr>
 
-<attr id="356" name="zimbraFeatureNotebookEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" deprecatedSince="7.0.0">
-  <defaultCOSValue>FALSE</defaultCOSValue>
+<attr id="356" name="zimbraFeatureNotebookEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
+  <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>Whether notebook feature should be allowed for this account or in this cos</desc>
-  <deprecateDesc>Deprecated per bugs 50465, 56201</deprecateDesc>
 </attr>
 
 <attr id="357" name="zimbraShareInfo" type="string" max="1024" cardinality="multi" optionalIn="account,distributionList" deprecatedSince="8.0.0">
