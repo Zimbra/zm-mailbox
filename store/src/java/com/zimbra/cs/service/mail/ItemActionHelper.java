@@ -741,7 +741,7 @@ public class ItemActionHelper {
                 for (String key : fields.keySet()) {
                     if (ContactConstants.A_groupMember.equals(key)) {
                         String memberEncoded = fields.get(key);
-                        ContactGroup group = ContactGroup.init(memberEncoded);
+                        ContactGroup group = ContactGroup.init(memberEncoded, ct.getMailbox().getAccountId());
                         for (Member m : group.getMembers()) {
                             members.put(m.getValue(), m.getType().getSoapEncoded());
                         }

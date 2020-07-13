@@ -124,7 +124,7 @@ public class ContactFolderFormatter extends Formatter {
         Map<String,String> fields = ((Contact) item).getFields();
         for (String k : fields.keySet()) {
             if (ContactConstants.A_groupMember.equals(k)) {
-                printContactGroup(fields.get(k), out);
+                printContactGroup(fields.get(k), out, item.getMailbox().getAccountId());
             } else {
                 out.write(FIELD_DELIMITER);
                 out.write(k.getBytes("UTF-8"));
@@ -155,11 +155,11 @@ public class ContactFolderFormatter extends Formatter {
         }
     }
 
-    private void printContactGroup(String encodedContactGroup, OutputStream out) throws IOException {
+    private void printContactGroup(String encodedContactGroup, OutputStream out, String ownerAcctId) throws IOException {
         ContactGroup contactGroup = null;
 
         try {
-            contactGroup = ContactGroup.init(encodedContactGroup);
+            contactGroup = ContactGroup.init(encodedContactGroup, ownerAcctId);
         } catch (ServiceException e) {
             ZimbraLog.contact.warn("unable to init contact group", e);
         }

@@ -316,7 +316,7 @@ public class CreateContact extends MailDocumentHandler  {
             }
         }
 
-        return new ParsedContact(existing).modify(deltaList, attachments, discardExistingMembers);
+        return new ParsedContact(existing).modify(deltaList, attachments, discardExistingMembers, mbox.getAccountId());
     }
 
     private static String parseCertificate(Element elt, String name, ZimbraSoapContext zsc, OperationContext octxt,

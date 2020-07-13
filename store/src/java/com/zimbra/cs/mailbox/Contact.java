@@ -600,9 +600,19 @@ public class Contact extends MailItem {
     }
 
     public List<String> getEmailAddresses(DerefGroupMembersOption derefGroupMemberOpt) {
-        return getEmailAddresses(emailFields, contactFields, derefGroupMemberOpt);
+        return getEmailAddresses(emailFields, fields, derefGroupMemberOpt, getMailbox().getAccountId() );
+    }
+    
+    /**
+     * Returns a list of all email address fields for this contact.
+     */
+    public List<String> getEmailAddresses() {
+        return getEmailAddresses(emailFields, fields, DerefGroupMembersOption.INLINE_ONLY, getMailbox().getAccountId() );
     }
 
+    public List<String> getEmailAddresses(DerefGroupMembersOption derefGroupMemberOpt) {
+        return getEmailAddresses(emailFields, fields, derefGroupMemberOpt, getMailbox().getAccountId() );
+    }
     public static final boolean isEmailField(String[] emailFields, String fieldName) {
         if (fieldName == null)
             return false;
@@ -617,7 +627,7 @@ public class Contact extends MailItem {
     }
 
     public static final List<String> getEmailAddresses(String[] fieldNames,
-            Map<String, String> fields, DerefGroupMembersOption derefGroupMemberOpt) {
+            Map<String, String> fields, DerefGroupMembersOption derefGroupMemberOpt, String ownerAcctId) {
         List<String> result = new ArrayList<String>();
         for (String name : fieldNames) {
             String addr = fields.get(name);
@@ -630,7 +640,7 @@ public class Contact extends MailItem {
             String encodedGroupMembers = fields.get(ContactConstants.A_groupMember);
             if (encodedGroupMembers != null) {
                 try {
-                    ContactGroup contactGroup = ContactGroup.init(encodedGroupMembers);
+                    ContactGroup contactGroup = ContactGroup.init(encodedGroupMembers, ownerAcctId);
                     List<String> emailAddrs = contactGroup.getInlineEmailAddresses();
                     for (String addr : emailAddrs) {
                         result.add(addr);
