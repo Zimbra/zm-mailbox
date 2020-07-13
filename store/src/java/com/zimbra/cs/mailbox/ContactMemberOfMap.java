@@ -62,7 +62,7 @@ public class ContactMemberOfMap {
                     Contact contact = ((ContactHit)hit).getContact();
                     ContactGroup contactGroup = null;
                     try {
-                        contactGroup = ContactGroup.init(contact.get(ContactConstants.A_groupMember));
+                        contactGroup = ContactGroup.init(contact.get(ContactConstants.A_groupMember), mbox.getAccountId());
                         List<Member> members = contactGroup.getMembers();
                         if (members == null) {
                             continue;

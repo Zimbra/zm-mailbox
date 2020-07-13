@@ -414,7 +414,7 @@ public final class ParsedContact {
     }
 
     // convert legacy API to the new API
-    public ParsedContact modify(Map<String, String> fieldDelta, List<Attachment> attachDelta)
+    public ParsedContact modify(Map<String, String> fieldDelta, List<Attachment> attachDelta, String ownerAcctId)
     throws ServiceException {
         FieldDeltaList fieldDeltaList = new FieldDeltaList();
 
@@ -422,15 +422,15 @@ public final class ParsedContact {
             fieldDeltaList.addAttrDelta(entry.getKey(), entry.getValue(), null);
         }
 
-        return modify(fieldDeltaList, attachDelta);
+        return modify(fieldDeltaList, attachDelta, ownerAcctId);
     }
 
-    public ParsedContact modify(FieldDeltaList fieldDeltaList, List<Attachment> attachDelta)
+    public ParsedContact modify(FieldDeltaList fieldDeltaList, List<Attachment> attachDelta, String ownerAcctId)
     throws ServiceException {
-        return modify(fieldDeltaList, attachDelta, false);
+        return modify(fieldDeltaList, attachDelta, false, ownerAcctId );
     }
     public ParsedContact modify(FieldDeltaList fieldDeltaList, List<Attachment> attachDelta,
-            boolean discardExistingMembers)
+                                boolean discardExistingMembers, String ownerAcctId)
     throws ServiceException {
         if (attachDelta != null && !attachDelta.isEmpty()) {
             try {
@@ -454,7 +454,7 @@ public final class ParsedContact {
         ContactGroup contactGroup = null;
         String encodedContactGroup = contactFields.get(ContactConstants.A_groupMember);
         contactGroup = encodedContactGroup == null?
-                ContactGroup.init() : ContactGroup.init(encodedContactGroup);
+                ContactGroup.init() : ContactGroup.init(encodedContactGroup, ownerAcctId);
 
         boolean contactGroupMemberChanged = false;
         if (discardExistingMembers && contactGroup.hasMembers()) {
@@ -742,7 +742,7 @@ public final class ParsedContact {
         // fetch all the 'email' addresses for this contact into a single concatenated string
         // We don't index members in a contact group because it's only confusing when searching.
         StringBuilder emails  = new StringBuilder();
-        for (String email : Contact.getEmailAddresses(emailFields, getFields(), DerefGroupMembersOption.NONE)) {
+        for (String email : Contact.getEmailAddresses(emailFields, getFields(), DerefGroupMembersOption.NONE, acct.getId() )) {
             emails.append(email).append(',');
         }
 

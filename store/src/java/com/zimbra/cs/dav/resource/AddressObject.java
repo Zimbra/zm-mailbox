@@ -163,7 +163,7 @@ public class AddressObject extends MailItemResource {
         }
         ContactGroup contactGroup = null;
         try {
-            contactGroup = ContactGroup.init(contact.get(ContactConstants.A_groupMember));
+            contactGroup = ContactGroup.init(contact.get(ContactConstants.A_groupMember), contact.getMailbox().getAccountId());
         } catch (ServiceException e) {
             ZimbraLog.dav.warn("can't get group members for Contact %d", contact.getId(), e);
         }
