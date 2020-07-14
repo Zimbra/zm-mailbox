@@ -231,7 +231,9 @@ public final class DbMailbox {
         if (comment != null) {
             removeFromDeletedAccount(conn, comment);
         }
-
+        if (backupHost != null) {
+            deletePendingBackupHostAssignment(conn, accountId);
+        }
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
