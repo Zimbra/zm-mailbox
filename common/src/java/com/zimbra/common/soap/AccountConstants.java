@@ -324,13 +324,13 @@ public class AccountConstants {
     public static final QName GET_OAUTH_CONSUMERS_RESPONSE = QName.get(E_GET_OAUTH_CONSUMERS_RESPONSE, NAMESPACE);
     public static final QName REVOKE_OAUTH_CONSUMER_REQUEST = QName.get(E_REVOKE_OAUTH_CONSUMER_REQUEST, NAMESPACE);
     public static final QName REVOKE_OAUTH_CONSUMER_RESPONSE = QName.get(E_REVOKE_OAUTH_CONSUMER_RESPONSE, NAMESPACE);
-    
+
     //HAB
     public static final String E_GET_HAB_REQUEST = "GetHABRequest";
     public static final String E_GET_HAB_RESPONSE = "GetHABResponse";
     public static final QName GET_HAB_REQUEST = QName.get( E_GET_HAB_REQUEST, NAMESPACE);
     public static final QName GET_HAB_RESPONSE = QName.get(E_GET_HAB_RESPONSE, NAMESPACE);
-    
+
     public static final QName GET_ADDRESS_LIST_MEMBERS_REQUEST = QName.get(E_GET_ADDRESS_LIST_MEMBERS_REQUEST, NAMESPACE);
     public static final QName GET_ADDRESS_LIST_MEMBERS_RESPONSE = QName.get(E_GET_ADDRESS_LIST_MEMBERS_RESPONSE, NAMESPACE);
 
@@ -421,6 +421,7 @@ public class AccountConstants {
     public static final String E_BOSH_URL = "boshURL";
     public static final String E_SUBSCRIPTION = "sub";
     public static final String E_IS_TRACKING_IMAP = "isTrackingIMAP";
+    public static final String E_DRYRUN = "dryRun";
 
     public static final String A_ACTIVE = "active";
     public static final String A_ATTRS = "attrs";
@@ -594,7 +595,7 @@ public class AccountConstants {
     public static final String A_CONSUMER_APP_NAME = "appName";
     public static final String A_APPROVED_ON = "approvedOn";
     public static final String A_CONSUMER_DEVICE = "device";
-    
+
     //ext user prov URL metadata constants
     public static final String P_ACCOUNT_ID = "aid";
     public static final String P_FOLDER_ID = "fid";
