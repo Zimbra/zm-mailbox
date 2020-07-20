@@ -2303,7 +2303,7 @@ public class ProvUtil implements HttpDebugListener {
     private void doRenameAccount(String[] args) throws ServiceException {
         if (prov instanceof LdapProv) {
             boolean confirmed = confirm("-l option is specified.  "
-                    + "Only the LDAP portion of the account will be deleted.\n"
+                    + "Only the LDAP portion of the account will be renamed.\n"
                     + "DB data of the account will not be renamed.\n");
 
             if (!confirmed) {
