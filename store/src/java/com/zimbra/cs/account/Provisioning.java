@@ -56,8 +56,8 @@ import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.Zimbra;
-import com.zimbra.soap.account.type.HABGroupMember;
 import com.zimbra.soap.account.type.AddressListInfo;
+import com.zimbra.soap.account.type.HABGroupMember;
 import com.zimbra.soap.admin.type.CacheEntryType;
 import com.zimbra.soap.admin.type.CmdRightsInfo;
 import com.zimbra.soap.admin.type.CountObjectsType;
@@ -279,7 +279,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     /** do not fixup return attrs for searchObject, onlt used from LdapUpgrade */
     public static final int SO_NO_FIXUP_RETURNATTRS = 0x400;
-    
+
     /** return distribution lists from searchAccounts/searchDirectory */
     public static final int SD_HAB_FLAG = 0x12;
 
@@ -1278,6 +1278,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     throws ServiceException;
 
     public abstract void changePassword(Account acct, String currentPassword, String newPassword) throws ServiceException;
+    public abstract void changePassword(Account acct, String currentPassword, String newPassword,  boolean dryRun) throws ServiceException;
 
     public static class SetPasswordResult {
         private String msg;
@@ -2373,7 +2374,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public abstract List<XMPPComponent> getAllXMPPComponents() throws ServiceException;
 
     public abstract void deleteXMPPComponent(XMPPComponent comp) throws ServiceException;
-    
+
     public abstract Set<String> createHabOrgUnit(Domain domain, String habOrgUnitName) throws ServiceException;
     public abstract Set<String> listHabOrgUnit(Domain domain) throws ServiceException;
     public abstract Set<String> renameHabOrgUnit(Domain domain, String habOrgUnitName, String newHabOrgUnitName) throws ServiceException;
@@ -2709,7 +2710,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public void removeConfigSMIMEConfig(String configName) throws ServiceException {
         throw ServiceException.UNSUPPORTED();
     }
-    
+
     public AddressList getAddressList(String id) throws ServiceException {
         throw ServiceException.UNSUPPORTED();
     }
@@ -2717,7 +2718,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public AddressListInfo getAddressListByName(String name, Domain domain) throws ServiceException {
         throw ServiceException.UNSUPPORTED();
     }
-    
+
 
     public List<AddressListInfo> getAllAddressLists(Domain domain, boolean activeOnly) throws ServiceException {
         throw ServiceException.UNSUPPORTED();
@@ -2757,7 +2758,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     /**
      * @param domain
-     * @param rootDn 
+     * @param rootDn
      * @return
      */
     public List<LdapDistributionList> getAllHabGroups(Domain domain, String rootDn) throws ServiceException {
