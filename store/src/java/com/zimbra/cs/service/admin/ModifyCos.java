@@ -40,34 +40,37 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class ModifyCos extends AdminDocumentHandler {
 
-	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+	@Override
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
 	    Provisioning prov = Provisioning.getInstance();
 
 	    String id = request.getElement(AdminConstants.E_ID).getText();
 	    Map<String, Object> attrs = AdminService.getAttrs(request);
-	    
+
+	    attrs.remove("zimbraPasswordBlockCommonEnabled", attrs.get("zimbraPasswordBlockCommonEnabled"));
+
 	    Cos cos = prov.get(Key.CosBy.id, id);
         if (cos == null)
             throw AccountServiceException.NO_SUCH_COS(id);
-        
+
         checkRight(zsc, context, cos, attrs);
-        
+
         // pass in true to checkImmutable
         prov.modifyAttrs(cos, attrs, true);
 
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "ModifyCos","name", cos.getName()}, attrs));
-        
+
 	    Element response = zsc.createElement(AdminConstants.MODIFY_COS_RESPONSE);
 	    GetCos.encodeCos(response, cos);
 	    return response;
 	}
-	
+
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
-        notes.add(String.format(AdminRightCheckPoint.Notes.MODIFY_ENTRY, 
+        notes.add(String.format(AdminRightCheckPoint.Notes.MODIFY_ENTRY,
                 Admin.R_modifyCos.getName(), "cos"));
     }
 

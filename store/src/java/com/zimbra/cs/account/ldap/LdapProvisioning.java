@@ -67,6 +67,7 @@ import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.SetUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.SystemUtil;
+import com.zimbra.common.util.UnmodifiableBloomFilter;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
@@ -219,8 +220,8 @@ import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.zimlet.ZimletException;
 import com.zimbra.cs.zimlet.ZimletUtil;
-import com.zimbra.soap.account.type.HABGroupMember;
 import com.zimbra.soap.account.type.AddressListInfo;
+import com.zimbra.soap.account.type.HABGroupMember;
 import com.zimbra.soap.admin.type.CacheEntryType;
 import com.zimbra.soap.admin.type.CountObjectsType;
 import com.zimbra.soap.admin.type.DataSourceType;
@@ -1896,7 +1897,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             bases[0] = options.getHabRootGroupDn();
         } else {
 	    bases = getSearchBases(domain, types);
-	} 
+	}
 
         /*
          * filter
@@ -5943,11 +5944,17 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     @Override
     public void changePassword(Account acct, String currentPassword, String newPassword)
     throws ServiceException {
+        changePassword (acct, currentPassword, newPassword, false);
+    }
+
+    @Override
+    public void changePassword(Account acct, String currentPassword, String newPassword, boolean dryRun)
+    throws ServiceException {
         authAccount(acct, currentPassword, false, null);
         boolean locked = acct.getBooleanAttr(Provisioning.A_zimbraPasswordLocked, false);
         if (locked)
             throw AccountServiceException.PASSWORD_LOCKED();
-        setPassword(acct, newPassword, true, false);
+        setPassword(acct, newPassword, true, dryRun);
     }
 
     /**
@@ -10965,7 +10972,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         ZLdapContext zlc = null;
         try {
             zlc = LdapClient.getContext(LdapServerType.REPLICA, LdapUsage.GET_GROUP_MEMBER);
-            String[] memberEmails = null; 
+            String[] memberEmails = null;
             DistributionList dl = get(DistributionListBy.id, group.getId());
             memberEmails =  dl.getMultiAttr(Provisioning.A_zimbraMailForwardingAddress);
 
@@ -11012,6 +11019,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         return members;
     }
 
+    @Override
     public boolean dlIsInDynamicHABGroup(DynamicGroup group, List<String> dlsToCheck) {
         ZLdapContext zlc = null;
         try {
@@ -11274,7 +11282,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         } finally {
             LdapClient.closeContext(zlc);
         }
-        
+
         return habOrgList;
     }
 
@@ -11326,12 +11334,12 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             LdapClient.closeContext(zlc);
         }
     }
-    
+
     /**
      * @param habOrgUnitName  organizational unit name
      * @param domainDn the domain distinguishedd name
      * @return true if the ou has groups or false if empty
-     * @throws ServiceException 
+     * @throws ServiceException
      */
     private static boolean isEmptyOu(String habOrgUnitName, String domainDn) throws ServiceException {
         ZLdapContext zlc = null;
@@ -11358,9 +11366,9 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         }
         return empty;
     }
-    
+
     /**
-     * 
+     *
      * @param domain domain for which HAB org unit list is requested
      * @return HAB org unit list under the given domain
      * @throws ServiceException
@@ -11376,14 +11384,14 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             ZLdapFilter zFilter = ZLdapFilterFactory.getInstance().fromFilterString(FilterId.ANY_ENTRY, filter);
 
             ZSearchControls searchControls = ZSearchControls.createSearchControls(
-                    ZSearchScope.SEARCH_SCOPE_SUBTREE, ZSearchControls.SIZE_UNLIMITED, 
+                    ZSearchScope.SEARCH_SCOPE_SUBTREE, ZSearchControls.SIZE_UNLIMITED,
                     returnAttrs);
 
             ZSearchResultEnumeration ne = zlc.searchDir(domainDn, zFilter, searchControls);
 
             while(ne.hasMore()) {
                 habList.add(ne.next().getAttributes().getAttrString("ou"));
-               
+
             }
             ZimbraLog.misc.debug("The HAB orgunits under:%s, are: (%s)", domain.getName(), habList);
 
@@ -11394,9 +11402,9 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         }
         return habList;
     }
-    
+
     /**
-     * 
+     *
      * @param ouName organizational unit name
      * @param baseDn distinguishedd name
      * @return the dn with ou
@@ -11407,7 +11415,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         sb.append(ouName);
         sb.append(",");
         sb.append(baseDn);
-        
+
         return sb.toString();
     }
 
@@ -11445,10 +11453,10 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         }
 
         return zimbraIdStr;
-   } 
+   }
 
     /**
-     * 
+     *
      * @param id id of the address list
      * @return AddressList object
      * @throws ServiceException if an error occurs while querying LDAP.

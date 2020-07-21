@@ -865,6 +865,14 @@ public class SoapProvisioning extends Provisioning {
     }
 
     @Override
+    public void changePassword(Account acct, String currentPassword,
+        String newPassword, boolean dryRun) throws ServiceException {
+        com.zimbra.soap.type.AccountSelector jaxbAcct =
+            new com.zimbra.soap.type.AccountSelector(com.zimbra.soap.type.AccountBy.name, acct.getName());
+        invokeJaxb(new ChangePasswordRequest(jaxbAcct, currentPassword, newPassword, dryRun));
+    }
+
+    @Override
     public Account createAccount(String emailAddress, String password, Map<String, Object> attrs)
         throws ServiceException
     {
@@ -3160,7 +3168,7 @@ public class SoapProvisioning extends Provisioning {
     }
 
     /**
-     * 
+     *
      * @param rootHabGroupId the group for which HAB is required
      * @return GetHabResponse object
      * @throws ServiceException if an error occurs while fetching hierarchy from ldap
@@ -3173,7 +3181,7 @@ public class SoapProvisioning extends Provisioning {
     }
 
     /**
-     * 
+     *
      * @param habGroupId HAB group to be moved
      * @param currentParentGroupId current HAB parent id
      * @param targetParentGroupId target parent id
@@ -3187,7 +3195,7 @@ public class SoapProvisioning extends Provisioning {
     }
 
     /**
-     * 
+     *
      * @param habGroupId HAB group to be modified
      * @param seniorityIndex seniority index
      * @throws ServiceException if an error occurs while modifying the HAB group
@@ -3201,10 +3209,11 @@ public class SoapProvisioning extends Provisioning {
     }
 
     /**
-     * 
+     *
      * @param group HAB group whose members will be returned
      * @throws ServiceException if an error occurs while getting the HAB group members
      */
+    @Override
     public List<HABGroupMember> getHABGroupMembers(Group group) throws ServiceException {
         GetDistributionListMembersResponse resp = invokeJaxb(new GetDistributionListMembersRequest(0, 0, group.getName()));
         return resp.getHABGroupMembers();
