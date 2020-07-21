@@ -25,7 +25,6 @@ import org.junit.Test;
 import org.junit.rules.MethodRule;
 import org.junit.rules.TestName;
 
-import com.zimbra.cs.util.ZTestWatchman;
 
 public class UnmodifiableBloomFilterTest {
 
