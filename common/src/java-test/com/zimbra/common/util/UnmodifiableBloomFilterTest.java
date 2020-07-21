@@ -20,12 +20,20 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.MethodRule;
+import org.junit.rules.TestName;
+
+import com.zimbra.cs.util.ZTestWatchman;
 
 public class UnmodifiableBloomFilterTest {
 
-    protected UnmodifiableBloomFilter<String> bloomFilter = UnmodifiableBloomFilter
-        .createFilterFromFile("src/java-test/common-passwords.txt");
+    @Rule public TestName testName = new TestName();
+    @Rule public MethodRule watchman = new ZTestWatchman();
+    protected static UnmodifiableBloomFilter<String> bloomFilter  =  UnmodifiableBloomFilter
+        .createFilterFromFile("common/src/java-test/common-passwords.txt");
+
 
     @Before
     public void setUp() {
@@ -79,7 +87,7 @@ public class UnmodifiableBloomFilterTest {
     @Test
     public void testMightContainLazyLoad() {
         UnmodifiableBloomFilter<String> lazyFilter = UnmodifiableBloomFilter
-            .createLazyFilterFromFile("src/java-test/common-passwords.txt");
+            .createLazyFilterFromFile("common/src/java-test/common-passwords.txt");
         // expect to initialize on demand
         assertFalse(lazyFilter.isInitialized());
         assertFalse(lazyFilter.isDisabled());

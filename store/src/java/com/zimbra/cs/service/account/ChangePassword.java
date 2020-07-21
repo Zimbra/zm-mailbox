@@ -64,6 +64,17 @@ public class ChangePassword extends AccountDocumentHandler {
                 name = name + "@" + d.getName();
         }
 
+        Element dryRunEl = request.getOptionalElement(AccountConstants.E_DRYRUN);
+        String text =  dryRunEl == null ? null : dryRunEl.getText();
+
+        boolean dryRun   = false;
+        if (!StringUtil.isNullOrEmpty(text)) {
+            if (text.equals("1") || text.equalsIgnoreCase("true")) {
+                dryRun = true;
+            }
+        }
+
+
         Account acct = prov.get(AccountBy.name, name, zsc.getAuthToken());
         if (acct == null)
             throw AuthFailedServiceException.AUTH_FAILED(name, namePassedIn, "account not found");
@@ -87,7 +98,7 @@ public class ChangePassword extends AccountDocumentHandler {
             prov.setPassword(acct, newPassword, true);
             acct.setVirtualAccountInitialPasswordSet(true);
         } else {
-		    prov.changePassword(acct, oldPassword, newPassword);
+		    prov.changePassword(acct, oldPassword, newPassword, dryRun);
         }
         AuthToken at = AuthProvider.getAuthToken(acct);
         AccountUtil.broadcastFlushCache(acct);

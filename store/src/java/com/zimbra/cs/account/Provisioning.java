@@ -1295,6 +1295,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     throws ServiceException;
 
     public abstract void changePassword(Account acct, String currentPassword, String newPassword) throws ServiceException;
+    public abstract void changePassword(Account acct, String currentPassword, String newPassword,  boolean dryRun) throws ServiceException;
 
     public static class SetPasswordResult {
         private String msg;

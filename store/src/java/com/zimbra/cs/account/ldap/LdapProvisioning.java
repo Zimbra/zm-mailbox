@@ -5965,11 +5965,17 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     @Override
     public void changePassword(Account acct, String currentPassword, String newPassword)
     throws ServiceException {
+        changePassword (acct, currentPassword, newPassword, false);
+    }
+
+    @Override
+    public void changePassword(Account acct, String currentPassword, String newPassword, boolean dryRun)
+    throws ServiceException {
         authAccount(acct, currentPassword, false, null);
         boolean locked = acct.getBooleanAttr(Provisioning.A_zimbraPasswordLocked, false);
         if (locked)
             throw AccountServiceException.PASSWORD_LOCKED();
-        setPassword(acct, newPassword, true, false);
+        setPassword(acct, newPassword, true, dryRun);
     }
 
     /**

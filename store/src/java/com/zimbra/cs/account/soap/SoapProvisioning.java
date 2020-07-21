@@ -721,6 +721,14 @@ public class SoapProvisioning extends Provisioning {
     }
 
     @Override
+    public void changePassword(Account acct, String currentPassword,
+        String newPassword, boolean dryRun) throws ServiceException {
+        com.zimbra.soap.type.AccountSelector jaxbAcct =
+            new com.zimbra.soap.type.AccountSelector(com.zimbra.soap.type.AccountBy.name, acct.getName());
+        invokeJaxb(new ChangePasswordRequest(jaxbAcct, currentPassword, newPassword, dryRun));
+    }
+
+    @Override
     public Account createAccount(String emailAddress, String password, Map<String, Object> attrs)
         throws ServiceException
     {
