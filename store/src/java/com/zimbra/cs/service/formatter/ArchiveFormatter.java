@@ -52,8 +52,6 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimePart;
 import javax.servlet.http.HttpServletResponse;
 
-import com.zimbra.cs.util.IOUtil;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.common.cache.Cache;
@@ -118,6 +116,7 @@ import com.zimbra.cs.service.mail.ImportContacts;
 import com.zimbra.cs.service.util.ItemData;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.servlet.util.JettyUtil;
+import com.zimbra.cs.util.IOUtil;
 
 public abstract class ArchiveFormatter extends Formatter {
     private final Pattern ILLEGAL_FILE_CHARS = Pattern.compile("[\\/\\:\\*\\?\\\"\\<\\>\\|\\\0]");
@@ -637,7 +636,7 @@ public abstract class ArchiveFormatter extends Formatter {
                             throw MailServiceException.NO_SUCH_PART(part);
                         }
                         name = Mime.getFilename(mp);
-                        if (!Normalizer.isNormalized(name, Normalizer.Form.NFC)) {
+                        if (name != null && !Normalizer.isNormalized(name, Normalizer.Form.NFC)) {
                             name = Normalizer.normalize(name, Normalizer.Form.NFC);
                         }
                         ext = null;
