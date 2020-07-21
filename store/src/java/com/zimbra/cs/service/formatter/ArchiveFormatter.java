@@ -636,7 +636,7 @@ public abstract class ArchiveFormatter extends Formatter {
                             throw MailServiceException.NO_SUCH_PART(part);
                         }
                         name = Mime.getFilename(mp);
-                        if (name != null && !Normalizer.isNormalized(name, Normalizer.Form.NFC)) {
+                        if (!StringUtil.isNullOrEmpty(name) && !Normalizer.isNormalized(name, Normalizer.Form.NFC)) {
                             name = Normalizer.normalize(name, Normalizer.Form.NFC);
                         }
                         ext = null;
