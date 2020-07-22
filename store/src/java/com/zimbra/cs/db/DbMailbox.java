@@ -1559,4 +1559,29 @@ public final class DbMailbox {
             DbPool.closeStatement(delStmt);
         }
     }
+
+    public static List<String> getAccountIdsWithoutBackupHosts() throws ServiceException {
+        DbConnection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            List<String> accountIds = new ArrayList<>();
+            conn = DbPool.getConnection();
+            String sql =
+                    "SELECT account_id FROM mailbox WHERE backup_host_id IS NULL " +
+                    "AND account_id NOT IN (SELECT account_id FROM pending_backup_host_assignments)";
+            stmt = conn.prepareStatement(sql);
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+                accountIds.add(rs.getString(1));
+            }
+            return accountIds;
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("error getting initialized accounts without backup host mappings", e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+            DbPool.quietClose(conn);
+        }
+    }
 }
