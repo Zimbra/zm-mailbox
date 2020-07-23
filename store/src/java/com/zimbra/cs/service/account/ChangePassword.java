@@ -106,11 +106,13 @@ public class ChangePassword extends AccountDocumentHandler {
         } else {
 		    prov.changePassword(acct, oldPassword, newPassword, dryRun);
         }
-        AuthToken at = AuthProvider.getAuthToken(acct);
 
         Element response = zsc.createElement(AccountConstants.CHANGE_PASSWORD_RESPONSE);
-        at.encodeAuthResp(response, false);
-        response.addAttribute(AccountConstants.E_LIFETIME, at.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);
+        if (!dryRun) { 
+           AuthToken at = AuthProvider.getAuthToken(acct);
+           at.encodeAuthResp(response, false);
+           response.addAttribute(AccountConstants.E_LIFETIME, at.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);
+        }
         return response;
 	}
 
