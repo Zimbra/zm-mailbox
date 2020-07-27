@@ -696,6 +696,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.RenameCosResponse.class,
             com.zimbra.soap.admin.message.RenameDistributionListRequest.class,
             com.zimbra.soap.admin.message.RenameDistributionListResponse.class,
+            com.zimbra.soap.admin.message.RenameDomainRequest.class,
+            com.zimbra.soap.admin.message.RenameDomainResponse.class,
             com.zimbra.soap.admin.message.RenameLDAPEntryRequest.class,
             com.zimbra.soap.admin.message.RenameLDAPEntryResponse.class,
             com.zimbra.soap.admin.message.RenameUCServiceRequest.class,

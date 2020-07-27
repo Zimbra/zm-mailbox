@@ -87,6 +87,8 @@ public final class AdminConstants {
     public static final String E_MODIFY_DOMAIN_RESPONSE = "ModifyDomainResponse";
     public static final String E_DELETE_DOMAIN_REQUEST = "DeleteDomainRequest";
     public static final String E_DELETE_DOMAIN_RESPONSE = "DeleteDomainResponse";
+    public static final String E_RENAME_DOMAIN_REQUEST = "RenameDomainRequest";
+    public static final String E_RENAME_DOMAIN_RESPONSE = "RenameDomainResponse";
     public static final String E_GET_ALL_DOMAINS_REQUEST = "GetAllDomainsRequest";
     public static final String E_GET_ALL_DOMAINS_RESPONSE = "GetAllDomainsResponse";
 
