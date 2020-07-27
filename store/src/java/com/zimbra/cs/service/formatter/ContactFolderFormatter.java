@@ -124,7 +124,12 @@ public class ContactFolderFormatter extends Formatter {
         Map<String,String> fields = ((Contact) item).getFields();
         for (String k : fields.keySet()) {
             if (ContactConstants.A_groupMember.equals(k)) {
-                printContactGroup(fields.get(k), out, item.getMailbox().getAccountId());
+                try {
+                    String ownerAcctId = item.getMailbox().getAccountId();
+                    printContactGroup(fields.get(k), out, ownerAcctId);
+                } catch (ServiceException e) {
+                    ZimbraLog.contact.warn("unable to decode and print contact group", e);
+                }
             } else {
                 out.write(FIELD_DELIMITER);
                 out.write(k.getBytes("UTF-8"));

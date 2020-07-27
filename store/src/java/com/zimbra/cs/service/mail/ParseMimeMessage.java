@@ -16,8 +16,11 @@
  */
 package com.zimbra.cs.service.mail;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -31,10 +34,12 @@ import javax.mail.MessagingException;
 import javax.mail.Part;
 import javax.mail.SendFailedException;
 import javax.mail.internet.InternetAddress;
+import javax.mail.internet.InternetHeaders;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.MimePart;
+import javax.mail.internet.MimeUtility;
 import javax.mail.util.SharedByteArrayInputStream;
 
 import com.google.common.base.Charsets;

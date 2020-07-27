@@ -592,26 +592,30 @@ public class Contact extends MailItem {
         attrs.put(ContactConstants.A_fileAs, Integer.valueOf(ContactConstants.FA_EXPLICIT).toString() + ':' + fileAs);
     }
 
+
     /**
      * Returns a list of all email address fields for this contact.
+     * @throws ServiceException
      */
-    public List<String> getEmailAddresses() {
-        return getEmailAddresses(emailFields, contactFields, DerefGroupMembersOption.INLINE_ONLY);
+    public List<String> getEmailAddresses()  {
+        try {
+            String ownerAcctId = getMailbox().getAccountId();
+            return getEmailAddresses(emailFields, contactFields, DerefGroupMembersOption.INLINE_ONLY, ownerAcctId );
+        } catch (ServiceException e) {
+            ZimbraLog.contact.warn("unable to decode contact group", e);
+        }
+        return  new ArrayList<String>();
+
     }
 
     public List<String> getEmailAddresses(DerefGroupMembersOption derefGroupMemberOpt) {
-        return getEmailAddresses(emailFields, fields, derefGroupMemberOpt, getMailbox().getAccountId() );
-    }
-    
-    /**
-     * Returns a list of all email address fields for this contact.
-     */
-    public List<String> getEmailAddresses() {
-        return getEmailAddresses(emailFields, fields, DerefGroupMembersOption.INLINE_ONLY, getMailbox().getAccountId() );
-    }
-
-    public List<String> getEmailAddresses(DerefGroupMembersOption derefGroupMemberOpt) {
-        return getEmailAddresses(emailFields, fields, derefGroupMemberOpt, getMailbox().getAccountId() );
+        try {
+            String ownerAcctId = getMailbox().getAccountId();
+            return getEmailAddresses(emailFields, contactFields, derefGroupMemberOpt,ownerAcctId );
+        } catch (ServiceException e) {
+            ZimbraLog.contact.warn("unable to decode contact group", e);
+        }
+        return  new ArrayList<String>();
     }
     public static final boolean isEmailField(String[] emailFields, String fieldName) {
         if (fieldName == null)
@@ -640,6 +644,7 @@ public class Contact extends MailItem {
             String encodedGroupMembers = fields.get(ContactConstants.A_groupMember);
             if (encodedGroupMembers != null) {
                 try {
+
                     ContactGroup contactGroup = ContactGroup.init(encodedGroupMembers, ownerAcctId);
                     List<String> emailAddrs = contactGroup.getInlineEmailAddresses();
                     for (String addr : emailAddrs) {
