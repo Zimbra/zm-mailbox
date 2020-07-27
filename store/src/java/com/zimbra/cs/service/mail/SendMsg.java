@@ -45,7 +45,6 @@ import com.zimbra.common.calendar.ZCalendar.ZParameter;
 import com.zimbra.common.calendar.ZCalendar.ZProperty;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
@@ -56,11 +55,14 @@ import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zmime.ZMimeMessage;
+import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.accesscontrol.Rights;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailSender;
@@ -138,15 +140,21 @@ public class SendMsg extends MailDocumentHandler {
                String draftId = msgElem.getAttribute(MailConstants.A_DRAFT_ID, null);
                boolean sendFromDraft = msgElem.getAttributeBool(MailConstants.A_SEND_FROM_DRAFT, false);
 
-               // ZBUG-903
-               // As the draft is always part of authUser's context, append the authUser accountId with draftId
-               // so that the draft will be deleted when message will be sent successfully in case of persona.
-               // Because in case of sendAs and sendOnBehalfOf the draftId pattern is accountId:itemId.
-               if (AccountUtil.isMessageSentUsingOwnersPersona(identityId, authAcct, authToken)) {
-                   if(draftId != null && draftId.indexOf(ItemIdentifier.ACCOUNT_DELIMITER) == -1) {
-                       draftId = authAcct.getId() + ItemIdentifier.ACCOUNT_DELIMITER + draftId;
+               Account delegatedAccount = authAcct;
+               Mailbox  delegatedMailbox = null;
+               if (!StringUtil.isNullOrEmpty(identityId) && !identityId.equals(authAcct.getId()) ) {
+
+                   Account acctReq = AccountUtil.getRequestedAccount(identityId, authAcct);
+                   if (acctReq != null) {
+                       AccessManager accessMgr = AccessManager.getInstance();
+                       if (accessMgr.canDo(authAcct, acctReq, Rights.User.R_sendAs, false) ||
+                               accessMgr.canDo(authAcct, acctReq, Rights.User.R_sendOnBehalfOf, false)) {
+                           delegatedAccount = acctReq;
+                           delegatedMailbox = MailboxManager.getInstance().getMailboxByAccountId(delegatedAccount.getId());
+                       }
                    }
                }
+
                ItemId iidDraft = draftId == null ? null : new ItemId(draftId, zsc);
                SendState state = SendState.NEW;
                ItemId savedMsgId = null;
@@ -187,11 +195,17 @@ public class SendMsg extends MailDocumentHandler {
                            Message msg = mbox.getMessageById(octxt, iidDraft.getId());
                            mm = msg.getMimeMessage(false);
                        } else {
-                           mm = ParseMimeMessage.parseMimeMsgSoap(zsc, octxt, mbox, msgElem, null, mimeData);
+                           Mailbox loggedUserMbox = MailboxManager.getInstance().getMailboxByAccountId(authAcct.getId());
+                           mm = ParseMimeMessage.parseMimeMsgSoap(zsc, octxt, loggedUserMbox, msgElem, null, mimeData);
                        }
 
-                       savedMsgId = doSendMessage(octxt, mbox, mm, mimeData.uploads, iidOrigId, replyType, identityId,
+                       if  (delegatedMailbox  != null) {
+                           savedMsgId = doSendMessage(octxt, delegatedMailbox, mm, mimeData.uploads, iidOrigId, replyType, identityId,
                                dataSourceId, noSaveToSent, needCalendarSentByFixup, isCalendarForward);
+                       } else  {
+                           savedMsgId = doSendMessage(octxt, mbox, mm, mimeData.uploads, iidOrigId, replyType, identityId,
+                               dataSourceId, noSaveToSent, needCalendarSentByFixup, isCalendarForward);
+                       }
 
                        // (need to make sure that *something* gets recorded, because caching
                        //   a null ItemId makes the send appear to still be PENDING)
