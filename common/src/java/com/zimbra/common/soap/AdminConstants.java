@@ -87,6 +87,8 @@ public final class AdminConstants {
     public static final String E_MODIFY_DOMAIN_RESPONSE = "ModifyDomainResponse";
     public static final String E_DELETE_DOMAIN_REQUEST = "DeleteDomainRequest";
     public static final String E_DELETE_DOMAIN_RESPONSE = "DeleteDomainResponse";
+    public static final String E_RENAME_DOMAIN_REQUEST = "RenameDomainRequest";
+    public static final String E_RENAME_DOMAIN_RESPONSE = "RenameDomainResponse";
     public static final String E_GET_ALL_DOMAINS_REQUEST = "GetAllDomainsRequest";
     public static final String E_GET_ALL_DOMAINS_RESPONSE = "GetAllDomainsResponse";
 
@@ -596,6 +598,8 @@ public final class AdminConstants {
     public static final QName MODIFY_DOMAIN_RESPONSE = QName.get(E_MODIFY_DOMAIN_RESPONSE, NAMESPACE);
     public static final QName DELETE_DOMAIN_REQUEST = QName.get(E_DELETE_DOMAIN_REQUEST, NAMESPACE);
     public static final QName DELETE_DOMAIN_RESPONSE = QName.get(E_DELETE_DOMAIN_RESPONSE, NAMESPACE);
+    public static final QName RENAME_DOMAIN_REQUEST = QName.get(E_RENAME_DOMAIN_REQUEST, NAMESPACE);
+    public static final QName RENAME_DOMAIN_RESPONSE = QName.get(E_RENAME_DOMAIN_RESPONSE, NAMESPACE);
     public static final QName GET_ALL_DOMAINS_REQUEST = QName.get(E_GET_ALL_DOMAINS_REQUEST, NAMESPACE);
     public static final QName GET_ALL_DOMAINS_RESPONSE = QName.get(E_GET_ALL_DOMAINS_RESPONSE, NAMESPACE);
 
