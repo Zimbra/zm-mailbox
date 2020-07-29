@@ -60,6 +60,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zmime.ZMimeMessage;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.Rights;
@@ -150,6 +151,11 @@ public class SendMsg extends MailDocumentHandler {
                        if (accessMgr.canDo(authAcct, acctReq, Rights.User.R_sendAs, false) ||
                                accessMgr.canDo(authAcct, acctReq, Rights.User.R_sendOnBehalfOf, false)) {
                            delegatedAccount = acctReq;
+                           if (AccountUtil.isDelegatedAccountInActive(authToken, delegatedAccount)) {
+                               throw AccountServiceException.ACCOUNT_INACTIVE(delegatedAccount == null ?
+                                               zsc.getRequestedAccountId() : delegatedAccount.getName());
+                           }
+
                            delegatedMailbox = MailboxManager.getInstance().getMailboxByAccountId(delegatedAccount.getId());
                        }
                    }
