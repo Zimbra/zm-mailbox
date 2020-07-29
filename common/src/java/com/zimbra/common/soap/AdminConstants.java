@@ -598,9 +598,11 @@ public final class AdminConstants {
     public static final QName MODIFY_DOMAIN_RESPONSE = QName.get(E_MODIFY_DOMAIN_RESPONSE, NAMESPACE);
     public static final QName DELETE_DOMAIN_REQUEST = QName.get(E_DELETE_DOMAIN_REQUEST, NAMESPACE);
     public static final QName DELETE_DOMAIN_RESPONSE = QName.get(E_DELETE_DOMAIN_RESPONSE, NAMESPACE);
+    public static final QName RENAME_DOMAIN_REQUEST = QName.get(E_RENAME_DOMAIN_REQUEST, NAMESPACE);
+    public static final QName RENAME_DOMAIN_RESPONSE = QName.get(E_RENAME_DOMAIN_RESPONSE, NAMESPACE);
     public static final QName GET_ALL_DOMAINS_REQUEST = QName.get(E_GET_ALL_DOMAINS_REQUEST, NAMESPACE);
     public static final QName GET_ALL_DOMAINS_RESPONSE = QName.get(E_GET_ALL_DOMAINS_RESPONSE, NAMESPACE);
-
+    
     public static final QName CREATE_COS_REQUEST = QName.get(E_CREATE_COS_REQUEST, NAMESPACE);
     public static final QName CREATE_COS_RESPONSE = QName.get(E_CREATE_COS_RESPONSE, NAMESPACE);
     public static final QName COPY_COS_REQUEST = QName.get(E_COPY_COS_REQUEST, NAMESPACE);
