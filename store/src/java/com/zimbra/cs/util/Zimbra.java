@@ -72,6 +72,7 @@ import com.zimbra.cs.mailbox.acl.AclPushTask;
 import com.zimbra.cs.mailbox.util.MailboxClusterUtil;
 import com.zimbra.cs.memcached.MemcachedConnector;
 import com.zimbra.cs.pubsub.PubSubService;
+import com.zimbra.cs.redolog.BackupHostManager;
 import com.zimbra.cs.redolog.RedoConfig;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.redolog.logger.DistributedLogReaderService;
@@ -339,7 +340,9 @@ public final class Zimbra {
             NotificationPubSub.setFactory(new RedisPubSub.Factory());
         }
 
+        BackupHostManager.getInstance().initStreamSelector();
         if (MailboxClusterUtil.isBackupRestorePod() && RedoConfig.redoLogEnabled()) {
+            BackupHostManager.getInstance().registerAsHost();
             DistributedLogReaderService.getInstance().startUp();
         }
 

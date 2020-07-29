@@ -46,6 +46,9 @@ import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.index.IndexStore;
 import com.zimbra.cs.mailbox.Mailbox.MailboxData;
 import com.zimbra.cs.mailbox.Mailbox.MailboxTransaction;
+import com.zimbra.cs.redolog.BackupHostManager;
+import com.zimbra.cs.redolog.BackupHostManager.BackupHost;
+import com.zimbra.cs.redolog.BackupHostManager.BackupHostAssignment;
 import com.zimbra.cs.redolog.op.CreateMailbox;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.util.AccountUtil;
@@ -856,6 +859,15 @@ public class MailboxManager {
         Mailbox mbox = null;
         MailboxTransaction mboxTransaction = null;
         DbConnection conn = DbPool.getConnection();
+        BackupHost backupHost = null;
+        BackupHostAssignment backupHostAssignment = null;
+        if (account.isBackupEnabled()) {
+            backupHostAssignment = assignBackupHost(account);
+            if (backupHostAssignment != null) {
+                backupHost = backupHostAssignment.getHost();
+                ZimbraLog.backup.info("assigned account %s to backup host %s during mailbox creation", account.getName(), backupHost.getHost());
+            }
+        }
         try {
             CreateMailbox redoPlayer = (octxt == null ? null : (CreateMailbox) octxt.getPlayer());
             int id = (redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getMailboxId());
@@ -864,7 +876,7 @@ public class MailboxManager {
             MailboxData data;
             boolean created = false;
             try {
-                data = DbMailbox.createMailbox(conn, id, account.getId(), account.getName(), -1);
+                data = DbMailbox.createMailbox(conn, id, account.getId(), account.getName(), -1, backupHost);
                 ZimbraLog.mailbox.info("Creating mailbox with id %d and group id %d for %s.", data.id, data.schemaGroupId, account.getName());
                 created = true;
             } catch (ServiceException se) {
@@ -889,6 +901,7 @@ public class MailboxManager {
             if (created) {
                 // create the default folders
                 mbox.initialize();
+                account.setMailboxInitialized(true);
             }
 
             // cache the accountID-to-mailboxID and mailboxID-to-Mailbox relationships
@@ -896,8 +909,10 @@ public class MailboxManager {
             cacheManager.cacheMailbox(mbox);
             redoRecorder.setMailboxId(mbox.getId());
             redoRecorder.setAccountId(account.getId());
+            if (backupHost != null) {
+                redoRecorder.setBackupHost(backupHost);
+            }
             mboxTransaction.commit();
-
         } catch (ServiceException e) {
             // Log exception here, just in case.  If badness happens during rollback
             // the original exception will be lost.
@@ -1005,5 +1020,9 @@ public class MailboxManager {
         }finally {
             DbPool.quietClose(conn);
         }
+    }
+
+    private BackupHostAssignment assignBackupHost(Account account) throws ServiceException {
+        return BackupHostManager.getInstance().getBackupHostAssignment(account.getId());
     }
 }

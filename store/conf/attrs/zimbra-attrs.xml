@@ -10055,4 +10055,11 @@ TODO: delete them permanently from here
 <attr id="9011" name="zimbraDomainTrialConvertAtExpiration" type="boolean" cardinality="single" optionalIn="domain" flags="accountInfo" since="8.9.0">
   <desc>Can be used by an external service to indicate that a trial is set to convert to active at expiration.</desc>
 </attr>
+<attr id="9013" name="zimbraMailboxInitialized" type="boolean" cardinality="single" optionalIn="account" immutable="1" since="8.9.0">
+  <desc>Whether a mailbox has been initialized for this account</desc>
+</attr>
+<attr id="9014" name="zimbraBackupEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.9.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>Whether backups are enabled for this account or COS</desc>
+</attr>
 </attrs>

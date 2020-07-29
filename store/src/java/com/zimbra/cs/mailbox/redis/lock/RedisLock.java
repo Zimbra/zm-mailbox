@@ -21,7 +21,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import org.redisson.api.RedissonClient;
 import org.redisson.client.codec.Codec;
+import org.redisson.client.codec.StringCodec;
 import org.redisson.client.handler.State;
 import org.redisson.client.protocol.Decoder;
 import org.redisson.client.protocol.RedisCommand;
@@ -302,5 +304,19 @@ public abstract class RedisLock {
                 return new LockResponse(ttl, holderUuids);
             }
         }
+    }
+
+    /*
+     * Utility method for forcing a cache reload without initializing a Mailbox object.
+     * This method determines the redis key corresponding to the last_writer of the specified account ID,
+     * and deletes it, forcing the next lock acquisition to result in a cache reload.
+     */
+    public static void forceCacheFlushOnNextLock(String accountId) {
+        RedissonClient client = RedissonClientHolder.getInstance().getRedissonClient();
+        RedisLockChannel lockChannel = RedisLockChannelManager.getInstance().getLockChannel(accountId);
+        String lockBaseName = accountId + "-LOCK";
+        String lockName = RedisUtils.createAccountRoutedKey(lockChannel.getChannelName().getHashTag(), lockBaseName);
+        String lastWriterKey = lockName + ":last_writer";
+        client.getBucket(lastWriterKey, StringCodec.INSTANCE).delete();
     }
 }

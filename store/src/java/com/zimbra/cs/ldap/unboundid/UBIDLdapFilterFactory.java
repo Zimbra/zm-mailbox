@@ -83,6 +83,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     private static Filter FILTER_WITH_ARCHIVE;
     private static Filter FILTER_ALL_INTERNAL_ACCOUNTS;
     private static Filter FILTER_ALL_ADDRESS_LISTS;
+    private static Filter FILTER_IS_INITIALIZED_ACCOUNT;
 
 
     private static boolean initialized = false;
@@ -274,6 +275,10 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
 
         FILTER_ALL_ADDRESS_LISTS = Filter.createEqualityFilter(
                 LdapConstants.ATTR_objectClass, AttributeClass.OC_zimbraAddressList);
+
+        FILTER_IS_INITIALIZED_ACCOUNT =
+                Filter.createEqualityFilter(
+                Provisioning.A_zimbraMailboxInitialized, LdapConstants.LDAP_TRUE);
     }
 
     @Override
@@ -1333,5 +1338,17 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                 Filter.createANDFilter(
                         Filter.createEqualityFilter(Provisioning.A_uid, name),
                         FILTER_ALL_ADDRESS_LISTS));
+    }
+
+    @Override
+    public ZLdapFilter allUninitializedAccounts() {
+        return new UBIDLdapFilter(
+                FilterId.ALL_UNINITIALIZED_ACCOUNTS,
+                Filter.createANDFilter(
+                        FILTER_ALL_ACCOUNTS,
+                        Filter.createORFilter(
+                                Filter.createNOTFilter(Filter.createPresenceFilter(Provisioning.A_zimbraMailboxInitialized)),
+                                Filter.createNOTFilter(
+                                        Filter.createEqualityFilter(Provisioning.A_zimbraMailboxInitialized, LdapConstants.LDAP_TRUE)))));
     }
 }

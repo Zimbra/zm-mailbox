@@ -45,7 +45,6 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.RedissonClientHolder;
 import com.zimbra.cs.mailbox.util.MailboxClusterUtil;
-import com.zimbra.cs.redolog.logger.DbLogWriter;
 import com.zimbra.cs.redolog.logger.DistributedLogWriter;
 import com.zimbra.cs.redolog.logger.FileLogReader;
 import com.zimbra.cs.redolog.logger.FileLogWriter;
@@ -242,10 +241,6 @@ public class RedoLogManager {
         return new FileLogWriter(redoMgr, logfile, fsyncIntervalMS);
     }
 
-    public LogWriter createLogWriter(RedoLogManager redoMgr) {
-        return new DbLogWriter(redoMgr);
-    }
-
     private void setInCrashRecovery(boolean b) {
         synchronized (mInCrashRecoveryGuard) {
             mInCrashRecovery = b;
@@ -303,10 +298,7 @@ public class RedoLogManager {
         }
 
         try {
-            // rollover only is needed when use FileLogWriter mechanism
-            if (!(getLogWriter() instanceof DbLogWriter)) {
-                forceRollover();
-            }
+            forceRollover();
             mLogWriter.flush();
             mLogWriter.close();
         } catch (Exception e) {

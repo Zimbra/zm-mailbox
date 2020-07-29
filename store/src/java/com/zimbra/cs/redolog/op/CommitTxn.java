@@ -57,6 +57,7 @@ public class CommitTxn extends ControlOp {
         setAccountId(changeEntry.getAccountId());
         mTxnOpCode = changeEntry.getOperation();
         mCommitCallback = changeEntry.getCommitCallback();
+        setBackupHost(changeEntry.getBackupHost());
         if (changeEntry instanceof BlobRecorder) {
             try {
                 this.blobData = new RedoLogBlobData((BlobRecorder) changeEntry);

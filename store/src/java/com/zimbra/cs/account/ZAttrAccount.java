@@ -5354,6 +5354,78 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Whether backups are enabled for this account or COS
+     *
+     * @return zimbraBackupEnabled, or false if unset
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9014)
+    public boolean isBackupEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraBackupEnabled, false, true);
+    }
+
+    /**
+     * Whether backups are enabled for this account or COS
+     *
+     * @param zimbraBackupEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9014)
+    public void setBackupEnabled(boolean zimbraBackupEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupEnabled, zimbraBackupEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether backups are enabled for this account or COS
+     *
+     * @param zimbraBackupEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9014)
+    public Map<String,Object> setBackupEnabled(boolean zimbraBackupEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupEnabled, zimbraBackupEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether backups are enabled for this account or COS
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9014)
+    public void unsetBackupEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether backups are enabled for this account or COS
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9014)
+    public Map<String,Object> unsetBackupEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupEnabled, "");
+        return attrs;
+    }
+
+    /**
      * Batch size to use when indexing data
      *
      * @return zimbraBatchedIndexingSize, or 20 if unset
@@ -28923,6 +28995,78 @@ public abstract class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetMailboxIndexName(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailboxIndexName, "");
+        return attrs;
+    }
+
+    /**
+     * Whether a mailbox has been initialized for this account
+     *
+     * @return zimbraMailboxInitialized, or false if unset
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9013)
+    public boolean isMailboxInitialized() {
+        return getBooleanAttr(Provisioning.A_zimbraMailboxInitialized, false, true);
+    }
+
+    /**
+     * Whether a mailbox has been initialized for this account
+     *
+     * @param zimbraMailboxInitialized new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9013)
+    public void setMailboxInitialized(boolean zimbraMailboxInitialized) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxInitialized, zimbraMailboxInitialized ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether a mailbox has been initialized for this account
+     *
+     * @param zimbraMailboxInitialized new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9013)
+    public Map<String,Object> setMailboxInitialized(boolean zimbraMailboxInitialized, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxInitialized, zimbraMailboxInitialized ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether a mailbox has been initialized for this account
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9013)
+    public void unsetMailboxInitialized() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxInitialized, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether a mailbox has been initialized for this account
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9013)
+    public Map<String,Object> unsetMailboxInitialized(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxInitialized, "");
         return attrs;
     }
 

@@ -45,6 +45,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxVersion;
 import com.zimbra.cs.mailbox.Metadata;
+import com.zimbra.cs.redolog.BackupHostManager.BackupHost;
 
 /**
  * @since Oct 28, 2004
@@ -69,6 +70,8 @@ public final class DbMailbox {
     public static final int CI_HIGHEST_INDEXED;
     public static final int CI_VERSION;
     public static final int CI_LAST_PURGE_AT;
+    public static final int CI_ITEMCACHE_CHECKPOINT;
+    public static final int CI_BACKUP_HOST_ID;
 
     static {
         int pos = 1;
@@ -92,6 +95,8 @@ public final class DbMailbox {
         CI_HIGHEST_INDEXED = pos++;
         CI_VERSION = pos++;
         CI_LAST_PURGE_AT = pos++;
+        CI_ITEMCACHE_CHECKPOINT = pos++;
+        CI_BACKUP_HOST_ID = pos++;
     }
 
     public static final int CI_METADATA_MAILBOX_ID = 1;
@@ -203,7 +208,12 @@ public final class DbMailbox {
     }
 
     public synchronized static Mailbox.MailboxData createMailbox(DbConnection conn, int requestedMailboxId, String accountId,
-                                                                 String comment, int lastBackupAt)
+            String comment, int lastBackupAt) throws ServiceException {
+        return createMailbox(conn, requestedMailboxId, accountId, comment, lastBackupAt, null);
+    }
+
+    public synchronized static Mailbox.MailboxData createMailbox(DbConnection conn, int requestedMailboxId, String accountId,
+                                                                 String comment, int lastBackupAt, BackupHost backupHost)
     throws ServiceException {
         String limitClause = Db.supports(Db.Capability.LIMIT_CLAUSE) ? " ORDER BY index_volume_id " + Db.getInstance().limit(1) : "";
 
@@ -221,7 +231,9 @@ public final class DbMailbox {
         if (comment != null) {
             removeFromDeletedAccount(conn, comment);
         }
-
+        if (backupHost != null) {
+            deletePendingBackupHostAssignment(conn, accountId);
+        }
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
@@ -272,8 +284,8 @@ public final class DbMailbox {
             } else {
                 // then create the primary lookup row in ZIMBRA.MAILBOX
                 stmt = conn.prepareStatement("INSERT INTO mailbox" +
-                        "(account_id, id, group_id, index_volume_id, item_id_checkpoint, last_backup_at, comment, version)" +
-                        " VALUES (?, ?, ?, ?, " + (Mailbox.FIRST_USER_ID - 1) + ", ?, ?, ?)");
+                        "(account_id, id, group_id, index_volume_id, item_id_checkpoint, last_backup_at, comment, version, backup_host_id)" +
+                        " VALUES (?, ?, ?, ?, " + (Mailbox.FIRST_USER_ID - 1) + ", ?, ?, ?, ?)");
                 stmt.setString(1, accountId.toLowerCase());
                 stmt.setInt(2, mailboxId);
                 stmt.setInt(3, groupId);
@@ -285,6 +297,11 @@ public final class DbMailbox {
                 }
                 stmt.setString(6, comment);
                 stmt.setString(7, MailboxVersion.getCurrent().toString());
+                if (backupHost != null) {
+                    stmt.setInt(8, backupHost.getHostId());
+                } else {
+                    stmt.setNull(8, java.sql.Types.INTEGER);
+                }
                 stmt.executeUpdate();
             }
 
@@ -295,6 +312,7 @@ public final class DbMailbox {
             data.schemaGroupId = groupId;
             data.indexVolumeId = indexVolume;
             data.version = MailboxVersion.getCurrent();
+            data.backupHostId = backupHost == null ? 0 : backupHost.getHostId();
             return data;
         } catch (SQLException e) {
         	if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW)) {
@@ -884,7 +902,8 @@ public final class DbMailbox {
             stmt = conn.prepareStatement(
                     "SELECT account_id," + (DebugConfig.disableMailboxGroups ? mailboxId : " group_id") + "," +
                     " size_checkpoint, contact_count, item_id_checkpoint, change_checkpoint, tracking_sync," +
-                    " tracking_imap, index_volume_id, last_soap_access, new_messages, version, itemcache_checkpoint, search_id_checkpoint" +
+                    " tracking_imap, index_volume_id, last_soap_access, new_messages, version, itemcache_checkpoint," +
+                    " search_id_checkpoint, backup_host_id" +
                     " FROM " + qualifyZimbraTableName(mailboxId, TABLE_MAILBOX) + " WHERE id = ?");
             stmt.setInt(1, mailboxId);
 
@@ -922,6 +941,7 @@ public final class DbMailbox {
             }
             mbd.itemcacheCheckpoint = rs.getInt(pos++);
             mbd.lastSearchId = rs.getInt(pos++);
+            mbd.backupHostId = rs.getInt(pos++);
 
             // round lastItemId, lastChangeId, and lastSearchId up so that they get written on the next change
             mbd.lastItemId += ITEM_CHECKPOINT_INCREMENT - 1;
@@ -1063,8 +1083,8 @@ public final class DbMailbox {
             // add the mailbox's account to deleted_account table
             String command = supportsReplaceInto ? "REPLACE" : "INSERT";
             stmt = conn.prepareStatement(
-                    command + " INTO deleted_account (email, account_id, mailbox_id, deleted_at) " +
-                    "SELECT ?, account_id, id, ? FROM mailbox WHERE id = ?");
+                    command + " INTO deleted_account (email, account_id, mailbox_id, deleted_at, backup_host_id) " +
+                    "SELECT ?, account_id, id, ?, backup_host_id FROM mailbox WHERE id = ?");
             stmt.setString(1, email.toLowerCase());
             stmt.setInt(2, (int) (System.currentTimeMillis() / 1000));
             stmt.setInt(3, mbox.getId());
@@ -1092,7 +1112,7 @@ public final class DbMailbox {
         ResultSet rs = null;
         try {
             stmt = conn.prepareStatement(
-                    "SELECT email, account_id, mailbox_id, deleted_at " +
+                    "SELECT email, account_id, mailbox_id, deleted_at, backup_host_id " +
                     "FROM deleted_account WHERE email = ?");
             stmt.setString(1, email.toLowerCase());
             rs = stmt.executeQuery();
@@ -1101,7 +1121,8 @@ public final class DbMailbox {
                 String accountId = rs.getString(2).toLowerCase();
                 int mailboxId = rs.getInt(3);
                 long deletedAt = rs.getLong(4) * 1000;
-                return new DeletedAccount(emailCol, accountId, mailboxId, deletedAt);
+                int backupHostId = rs.getInt(5);
+                return new DeletedAccount(emailCol, accountId, mailboxId, deletedAt, backupHostId);
             } else {
                 return null;
             }
@@ -1118,12 +1139,14 @@ public final class DbMailbox {
         private final String mAccountId;
         private final int mMailboxId;
         private final long mDeletedAt;
+        private final int mBackupHostId;
 
-        public DeletedAccount(String email, String accountId, int mailboxId, long deletedAt) {
+        public DeletedAccount(String email, String accountId, int mailboxId, long deletedAt, int backupHostId) {
             mEmail = email;
             mAccountId = accountId;
             mMailboxId = mailboxId;
             mDeletedAt = deletedAt;
+            mBackupHostId = backupHostId;
         }
 
         public String getEmail() {
@@ -1140,6 +1163,10 @@ public final class DbMailbox {
 
         public long getDeletedAt() {
             return mDeletedAt;
+        }
+
+        public int getBackupHostId() {
+            return mBackupHostId;
         }
     }
 
@@ -1369,4 +1396,192 @@ public final class DbMailbox {
         }
     }
 
+
+    public static void setBackupHostForAccount(DbConnection conn, String accountId, BackupHost host) throws ServiceException {
+        PreparedStatement stmt1 = null;
+        PreparedStatement stmt2 = null;
+        try {
+            String sql = "UPDATE mailbox SET backup_host_id = ? WHERE account_id = ?";
+            stmt1 = conn.prepareStatement(sql);
+            stmt1.setInt(1, host.getHostId());
+            stmt1.setString(2, accountId);
+            int affected = stmt1.executeUpdate();
+            if (affected == 0 ) {
+                // perhaps there is a pending entry
+                sql = "UPDATE pending_backup_host_assignments SET backup_host_id = ? WHERE account_id = ?";
+                stmt2 = conn.prepareStatement(sql);
+                stmt2.setInt(1, host.getHostId());
+                stmt2.setString(2, accountId);
+                stmt2.executeUpdate();
+            } else {
+                deletePendingBackupHostAssignment(conn, accountId);
+            }
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE(String.format("error mapping %s to backup host %s", accountId, host.getHost()), e);
+        } finally {
+            DbPool.closeStatement(stmt1);
+            DbPool.closeStatement(stmt2);
+        }
+    }
+
+    public static void setPendingBackupHostForAccount(String accountId, String email, BackupHost host) throws ServiceException {
+        PreparedStatement stmt = null;
+        DbConnection conn = null;
+        boolean supportsOnDuplicateKey = Db.supports(Db.Capability.ON_DUPLICATE_KEY);
+        try {
+            StringBuilder sql = new StringBuilder("INSERT INTO pending_backup_host_assignments (account_id, email, backup_host_id) values (?, ?, ?)");
+            if (supportsOnDuplicateKey) {
+                sql.append(" ON DUPLICATE KEY UPDATE backup_host_id = ?");
+            }
+            conn = DbPool.getConnection();
+            if (!supportsOnDuplicateKey) {
+                // first delete any existing mapping
+                deletePendingBackupHostAssignment(conn, accountId);
+            }
+            stmt = conn.prepareStatement(sql.toString());
+            stmt.setString(1, accountId);
+            stmt.setString(2, email);
+            stmt.setInt(3, host.getHostId());
+            if (supportsOnDuplicateKey) {
+                stmt.setInt(4, host.getHostId());
+            }
+            stmt.executeUpdate();
+            conn.commit();
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE(String.format("error adding %s as a pending backup host for account %s (%s)", host.getHost(), accountId, email), e);
+        } finally {
+            DbPool.closeStatement(stmt);
+            DbPool.quietClose(conn);
+        }
+    }
+
+    public static BackupHost getPendingBackupHostAssignment(String accountId) throws ServiceException {
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        DbConnection conn = null;
+        try {
+            String sql = "SELECT id, host, created_at, flags FROM backup_hosts WHERE id = (SELECT backup_host_id from pending_backup_host_assignments where account_id = ?)";
+            conn = DbPool.getConnection();
+            stmt = conn.prepareStatement(sql);
+            stmt.setString(1, accountId);
+            rs = stmt.executeQuery();
+            if (rs.next()) {
+                return DbBackupHosts.toBackupHost(rs);
+            } else {
+                return null;
+            }
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE(String.format("error getting pending backup host assignment for account %s", accountId), e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+            DbPool.quietClose(conn);
+        }
+    }
+
+    private static void deletePendingBackupHostAssignment(DbConnection conn, String accountId) throws ServiceException {
+        PreparedStatement stmt = null;
+        try {
+            String sql = "DELETE FROM pending_backup_host_assignments WHERE account_id = ?";
+            stmt = conn.prepareStatement(sql);
+            stmt.setString(1, accountId);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE(String.format("error deleting pending backup host assignment for account %s", accountId), e);
+        } finally {
+            DbPool.closeStatement(stmt);
+        }
+    }
+
+    public static List<String> getAccountsForBackupHost(BackupHost host, boolean includeDeleted) throws ServiceException {
+        DbConnection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            List<String> accountIds = new ArrayList<>();
+            conn = DbPool.getConnection();
+            StringBuilder sql = new StringBuilder("SELECT account_id FROM mailbox WHERE backup_host_id = ?");
+            sql.append(" UNION SELECT account_id from pending_backup_host_assignments WHERE backup_host_id = ?");
+            if (includeDeleted) {
+                sql.append(" UNION SELECT account_id from delete_account WHERE backup_host_id = ?");
+            }
+            stmt = conn.prepareStatement(sql.toString());
+            stmt.setInt(1, host.getHostId());
+            stmt.setInt(2, host.getHostId());
+            if (includeDeleted) {
+                stmt.setInt(3, host.getHostId());
+            }
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+                accountIds.add(rs.getString(1));
+            }
+            return accountIds;
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE(String.format("error getting accounts mapped to host %s", host.getHost()), e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+            DbPool.quietClose(conn);
+        }
+    }
+
+    public static BackupHost getBackupHostForAccount(DbConnection conn, String accountId, boolean checkDeleted) throws ServiceException {
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        PreparedStatement delStmt = null;
+        ResultSet delRs = null;
+        try {
+            String sql = "SELECT id, host, created_at, flags FROM backup_hosts WHERE id = (SELECT backup_host_id from mailbox where account_id = ?)";
+            stmt = conn.prepareStatement(sql);
+            stmt.setString(1, accountId);
+            rs = stmt.executeQuery();
+            if (rs.next()) {
+                return DbBackupHosts.toBackupHost(rs);
+            } else if (checkDeleted) {
+                sql = "SELECT id, host, created_at, flags FROM backup_hosts WHERE id = (SELECT backup_host_id from deleted_account where account_id = ?)";
+                delStmt = conn.prepareStatement(sql);
+                delStmt.setString(1, accountId);
+                delRs = delStmt.executeQuery();
+                if (delRs.next()) {
+                    return DbBackupHosts.toBackupHost(delRs);
+                } else {
+                    return null;
+                }
+            } else {
+                return null;
+            }
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE(String.format("error getting backup host for account %s", accountId), e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeResults(delRs);
+            DbPool.closeStatement(stmt);
+            DbPool.closeStatement(delStmt);
+        }
+    }
+
+    public static List<String> getAccountIdsWithoutBackupHosts() throws ServiceException {
+        DbConnection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            List<String> accountIds = new ArrayList<>();
+            conn = DbPool.getConnection();
+            String sql =
+                    "SELECT account_id FROM mailbox WHERE backup_host_id IS NULL " +
+                    "AND account_id NOT IN (SELECT account_id FROM pending_backup_host_assignments)";
+            stmt = conn.prepareStatement(sql);
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+                accountIds.add(rs.getString(1));
+            }
+            return accountIds;
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("error getting initialized accounts without backup host mappings", e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+            DbPool.quietClose(conn);
+        }
+    }
 }

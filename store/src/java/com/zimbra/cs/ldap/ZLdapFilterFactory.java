@@ -59,6 +59,7 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
         ALL_ACCOUNTS(SINGLETON.allAccounts()),
         ALL_ACCOUNTS_ONLY(SINGLETON.allAccountsOnly()),
         ALL_ACCOUNTS_ONLY_BY_COS(SINGLETON.allAccountsOnlyByCos("{COS-ID}")),
+        ALL_UNINITIALIZED_ACCOUNTS(SINGLETON.allUninitializedAccounts()),
         ALL_ADMIN_ACCOUNTS(SINGLETON.allAdminAccounts()),
         ALL_ALIASES(SINGLETON.allAliases()),
         ALL_CALENDAR_RESOURCES(SINGLETON.allCalendarResources()),
@@ -151,7 +152,7 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
         VELODROME_ALL_GROUPS_BY_DOMAIN(SINGLETON.velodromeAllGroupsByDomain("{DOMAIN-NAME}")),
 
         HAB_ORG_UNIT_BY_NAME(SINGLETON.habOrgUnitByName("{ORG-UNIT-NAME}")),
-        
+
 	//address lists
         ALL_ADDRESS_LISTS(SINGLETON.allAddressLists()),
         ADDRESS_LIST_BY_ID(SINGLETON.addressListById("{ADDRESS-LIST-ID}")),
@@ -524,4 +525,9 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
      * HAB
      */
     public abstract ZLdapFilter habOrgUnitByName(String name);
+
+    /**
+     * used by backup/restore
+     */
+    public abstract ZLdapFilter allUninitializedAccounts();
 }

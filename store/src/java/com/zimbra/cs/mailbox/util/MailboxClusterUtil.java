@@ -7,6 +7,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.util.Arrays;
+import java.util.Objects;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.io.Files;
@@ -203,6 +204,10 @@ public class MailboxClusterUtil {
             return String.format("%s.%s.default.svc.cluster.local", getName(), getType().getServiceName());
         }
 
+        public boolean isLocal() {
+            return this.equals(MailboxClusterUtil.getPodInfo());
+        }
+
         @Override
         public boolean equals(Object o) {
             if (o instanceof PodInfo) {
@@ -210,6 +215,10 @@ public class MailboxClusterUtil {
                 return otherPod.podIndex == podIndex && otherPod.getType() == podType;
             }
             return false;
+        }
+        @Override
+        public int hashCode() {
+            return Objects.hash(podType, podIndex);
         }
 
         @Override

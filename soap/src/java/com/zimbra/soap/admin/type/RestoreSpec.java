@@ -17,10 +17,6 @@
 
 package com.zimbra.soap.admin.type;
 
-import com.google.common.base.MoreObjects;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -30,6 +26,9 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.zimbra.common.soap.BackupConstants;
 import com.zimbra.soap.type.ZmBoolean;
 
@@ -164,6 +163,13 @@ public class RestoreSpec {
     private ZmBoolean skipDeletedAccounts;
 
     /**
+     * @zm-api-field-tag skip-rehosted-accounts
+     * @zm-api-field-description Skip rehosted accounts.  Default <b>0 (true)</b>
+     */
+    @XmlAttribute(name=BackupConstants.A_SKIP_REHOSTED_ACCT /* skipRehostedAccounts */, required=false)
+    private ZmBoolean skipRehostedAccounts;
+
+    /**
      * @zm-api-field-description File copier specification
      */
     @XmlElement(name=BackupConstants.E_FILE_COPIER /* fileCopier */, required=false)
@@ -217,6 +223,11 @@ public class RestoreSpec {
     public void setSkipDeletedAccounts(Boolean skipDeletedAccounts) {
         this.skipDeletedAccounts = ZmBoolean.fromBool(skipDeletedAccounts);
     }
+
+    public void setSkipRehostedAccounts(Boolean skipRehostedAccounts) {
+        this.skipRehostedAccounts = ZmBoolean.fromBool(skipRehostedAccounts);
+    }
+
     public void setFileCopier(FileCopierSpec fileCopier) {
         this.fileCopier = fileCopier;
     }
@@ -248,6 +259,7 @@ public class RestoreSpec {
     public Boolean getIgnoreRedoErrors() { return ZmBoolean.toBool(ignoreRedoErrors); }
     public Boolean getSkipDeleteOps() { return ZmBoolean.toBool(skipDeleteOps); }
     public Boolean getSkipDeletedAccounts() { return ZmBoolean.toBool(skipDeletedAccounts); }
+    public Boolean getSkipRehostedAccounts() { return ZmBoolean.toBool(skipRehostedAccounts); }
     public FileCopierSpec getFileCopier() { return fileCopier; }
     public List<Name> getAccounts() {
         return Collections.unmodifiableList(accounts);

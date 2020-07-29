@@ -2,8 +2,11 @@ package com.zimbra.cs.pubsub;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.mailbox.util.MailboxClusterUtil;
+import com.zimbra.cs.pubsub.message.BackupHostMsg;
 import com.zimbra.cs.pubsub.message.FlushCacheMsg;
 import com.zimbra.cs.pubsub.message.PubSubMsg;
+import com.zimbra.cs.redolog.BackupHostManager;
 import com.zimbra.cs.service.admin.FlushCache;
 
 public class PubSubService {
@@ -86,8 +89,13 @@ public class PubSubService {
                 } catch (ServiceException e) {
                     ZimbraLog.pubsub.warn("Exception encountered processing '%s' message. \n%s", msg, e);
                 }
+            } else if (msg instanceof BackupHostMsg) {
+                String origin = ((BackupHostMsg) msg).getOriginatingHost();
+                ZimbraLog.backup.debug("received pubsub message that backup hosts have changed (origin=%s)", origin);
+                if (!origin.equals(MailboxClusterUtil.getPodInfo().getName())) {
+                    BackupHostManager.getInstance().getStreamSelector().reload();
+                }
             }
         }
     }
-
 }
