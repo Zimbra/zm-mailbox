@@ -25,6 +25,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.OctopusXmlConstants;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
@@ -126,10 +127,15 @@ public class DocumentAction extends ItemAction {
                 expiry = validateGrantExpiry(grant.getAttribute(MailConstants.A_EXPIRY, null),
                         mbox.getAccount().getFilePublicShareLifetime());
                 break;
+            case ACL.GRANTEE_USER:
+                zid = grant.getAttribute(MailConstants.A_ZIMBRA_ID);
+                break;
             default:
                 throw ServiceException.INVALID_REQUEST("unsupported gt: " + gtype, null);
             }
 
+            ZimbraLog.soap.debug("The user: %s has been granted: %s for item:  %s", zid, ACL.rightsToString(rights),
+                iid.getId());
             mbox.grantAccess(octxt, iid.getId(), zid, gtypeByte, rights, secret, expiry);
 
         } else {
