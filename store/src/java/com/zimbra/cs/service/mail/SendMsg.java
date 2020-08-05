@@ -60,7 +60,6 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zmime.ZMimeMessage;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.Rights;
@@ -151,9 +150,14 @@ public class SendMsg extends MailDocumentHandler {
                        if (accessMgr.canDo(authAcct, acctReq, Rights.User.R_sendAs, false) ||
                                accessMgr.canDo(authAcct, acctReq, Rights.User.R_sendOnBehalfOf, false)) {
                            delegatedAccount = acctReq;
-                           if (AccountUtil.isDelegatedAccountInActive(authToken, delegatedAccount)) {
-                               throw AccountServiceException.ACCOUNT_INACTIVE(delegatedAccount == null ?
-                                               zsc.getRequestedAccountId() : delegatedAccount.getName());
+
+                           Provisioning prov = Provisioning.getInstance();
+                           boolean active = delegatedAccount != null && Provisioning.ACCOUNT_STATUS_ACTIVE.equals(
+                               delegatedAccount.getAccountStatus(prov));
+                           if (!active) {
+                               ZimbraLog.soap.info("The delegated account:%s is inactive, for mail operations user context will be :%s",
+                                   authAcct.getName(), delegatedAccount.getName());
+                               delegatedAccount = authAcct;
                            }
 
                            delegatedMailbox = MailboxManager.getInstance().getMailboxByAccountId(delegatedAccount.getId());

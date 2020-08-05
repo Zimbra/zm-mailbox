@@ -885,22 +885,4 @@ public class AccountUtil {
         }
         return null;
     }
-
-
-    /**
-     * @param authToken
-     * @param delegatedAccount
-     * @return
-     * @throws ServiceException
-     */
-    public static boolean isDelegatedAccountInActive(AuthToken authToken, Account delegatedAccount)
-        throws ServiceException {
-        Provisioning prov = Provisioning.getInstance();
-           boolean inactive = delegatedAccount == null || Provisioning.ACCOUNT_STATUS_MAINTENANCE.equals(
-               delegatedAccount.getAccountStatus(prov));
-           if (!inactive && (!authToken.isAdmin() || !AccessManager.getInstance().canAccessAccount(authToken, delegatedAccount))) {
-               inactive = !delegatedAccount.getAccountStatus(prov).equals(Provisioning.ACCOUNT_STATUS_ACTIVE);
-           }
-        return inactive;
-    }
 }
