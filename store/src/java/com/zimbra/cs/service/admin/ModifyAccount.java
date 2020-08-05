@@ -126,8 +126,22 @@ public class ModifyAccount extends AdminDocumentHandler {
             defendAgainstServerNameHarvesting(newServer, Key.ServerBy.name, newServerName, zsc, Admin.R_listServer);
         }
 
-        // pass in true to checkImmutable
-        prov.modifyAttrs(account, attrs, true);
+            // pass in true to checkImmutable
+            prov.modifyAttrs(account, attrs, true);
+
+            // If request is for `zimbraTwoFactorAuthEnabled = FALSE` and both zimbraFeatureTwoFactorAuthAvailable and zimbraFeatureTwoFactorAuthRequired is set to TRUE
+            // for the user, clear all the trusted devices so that the user would re-setup 2FA in the next login after LDAP updation is successful.
+            if (attrs.containsKey(Provisioning.A_zimbraTwoFactorAuthEnabled)) {
+                String value = (String) attrs.get(Provisioning.A_zimbraTwoFactorAuthEnabled);
+                if (!StringUtil.isNullOrEmpty(value) && value.equalsIgnoreCase("false") && account.isFeatureTwoFactorAuthAvailable() && account.isFeatureTwoFactorAuthRequired()) {
+                    String []trustedDevices = account.getTwoFactorAuthTrustedDevices();
+                    if (trustedDevices != null && trustedDevices.length > 0) {
+                        for (String encoded : trustedDevices) {
+                            account.removeTwoFactorAuthTrustedDevices(encoded);
+                        }
+                    }
+                }
+            }
 
         // get account again, in the case when zimbraCOSId or zimbraForeignPrincipal
         // is changed, the cache object(he one we are holding on to) would'd been
