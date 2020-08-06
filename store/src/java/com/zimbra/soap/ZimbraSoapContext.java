@@ -33,12 +33,10 @@ import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.HeaderConstants;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
-import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
@@ -58,7 +56,6 @@ import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.SoapSession;
 import com.zimbra.cs.session.SoapSession.PushChannel;
-import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.BuildInfo;
 
 /**
@@ -271,22 +268,8 @@ public final class ZimbraSoapContext {
      * @param requestProtocol  The SOAP protocol used for the request */
     public ZimbraSoapContext(Element ctxt, QName requestName, DocumentHandler handler, Map<String, Object> context,
             SoapProtocol requestProtocol) throws ServiceException {
-        this(ctxt, requestName, handler, context, requestProtocol, null);
-    }
 
-    /**
-     * Creates a {@link ZimbraSoapContext} from the {@code <context>}
-     * {@link Element} from the SOAP header.
-     *
-     * @param ctxt {@code <context>} Element (can be null if not present in request)
-     * @param requestName - The SOAP request name - may be null
-     * @param context The engine context, which might contain the auth token
-     * @param requestProtocol  The SOAP protocol used for the request
-     * @param body The SOAP request body */
-    public ZimbraSoapContext(Element ctxt, QName requestName, DocumentHandler handler, Map<String, Object> context,
-            SoapProtocol requestProtocol, Element body) throws ServiceException {
-
-       if (ctxt != null && !ctxt.getQName().equals(HeaderConstants.CONTEXT))
+        if (ctxt != null && !ctxt.getQName().equals(HeaderConstants.CONTEXT))
             throw new IllegalArgumentException("expected ctxt, got: " + ctxt.getQualifiedName());
 
         Provisioning prov = Provisioning.getInstance();
@@ -363,22 +346,9 @@ public final class ZimbraSoapContext {
                     }
                 }
 
-                // Overriding the value for sendMsgRequest if the account in header is not equal to the from address.
-                // Because in case of Persona(added for the owner's account), the account passed in header is not equal to from address.
-                // if zimbraAllowAnyFromAddress = TRUE for delegate's account then we can create Persona with any email address and the
-                // from address could be different in this case.
-                if (body != null && requestName.equals(MailConstants.SEND_MSG_REQUEST)) {
-                   Account delegatedAccount = null;
-                   String fromAddress = AccountUtil.extractFromAddress(body);
-                   delegatedAccount = AccountUtil.getAccountForFromAddress(fromAddress, account);
-                   if (delegatedAccount != null) {
-                       account  = delegatedAccount;
-                       value  = fromAddress;
-                   }
-                }
-                validateDelegatedAccess(account, handler, requestName, value);
-                mRequestedAccountId = account.getId();
 
+                 mRequestedAccountId = account.getId();
+                 validateDelegatedAccess(account, handler, requestName, value);
             } else if (key.equals(HeaderConstants.BY_ID)) {
                 if (mAuthToken == null) {
                     throw ServiceException.AUTH_REQUIRED();
@@ -391,49 +361,14 @@ public final class ZimbraSoapContext {
                         throw AccountServiceException.NO_SUCH_ACCOUNT(value);
                     }
                 }
-                if (body != null && requestName.equals(MailConstants.SEND_MSG_REQUEST)) {
-                    Account delegatedAccount = null;
-                    String fromAddress = AccountUtil.extractFromAddress(body);
-                    delegatedAccount = AccountUtil.getAccountForFromAddress(fromAddress, account);
-                    if (delegatedAccount != null) {
-                        account  = delegatedAccount;
-                        value  = fromAddress;
-                    }
-                }
 
-                mRequestedAccountId = account.getId();
+                mRequestedAccountId = value;
                 validateDelegatedAccess(account, handler, requestName, value);
             } else {
                 throw ServiceException.INVALID_REQUEST("unknown value for by: " + key, null);
             }
 
             mMountpointTraversed = eAccount.getAttributeBool(HeaderConstants.A_MOUNTPOINT, false);
-        } else if (body != null && requestName.equals(MailConstants.SEND_MSG_REQUEST)) {
-            // To handle SendMsgRequest sent using zmsoap command where header does not exists.
-            // Check if from Address is not equal to auth user email address then set `mRequestedAccountId`
-            // as the from address accountId.
-            if (mAuthToken == null) {
-                throw ServiceException.AUTH_REQUIRED();
-            }
-            Account authAccount = mAuthToken.getAccount();
-            mRequestedAccountId = authAccount.getId();
-            String fromAddress = AccountUtil.extractFromAddress(body);
-            String identityId = body.getElement(MailConstants.E_MSG).getAttribute(MailConstants.A_IDENTITY_ID, null);
-            if (!StringUtil.isNullOrEmpty(fromAddress) &&
-                    AccountUtil.isMessageSentUsingOwnersPersona(identityId, authAccount, mAuthToken)) {
-                Account account = prov.get(AccountBy.name, fromAddress, mAuthToken);
-                if (account == null) {
-                    if (!mAuthToken.isAdmin()) {
-                        throw ServiceException.DEFEND_ACCOUNT_HARVEST(fromAddress);
-                    } else {
-                        throw AccountServiceException.NO_SUCH_ACCOUNT(fromAddress);
-                    }
-                }
-                if (!account.getId().equals(authAccount.getId())) {
-                    mRequestedAccountId = account.getId();
-                    validateDelegatedAccess(account, handler, requestName, fromAddress);
-                }
-            }
         } else {
             mRequestedAccountId = null;
         }
