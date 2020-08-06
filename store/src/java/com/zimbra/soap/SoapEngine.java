@@ -326,11 +326,7 @@ public class SoapEngine {
         ZimbraSoapContext zsc = null;
         Element ectxt = soapProto.getHeader(envelope, HeaderConstants.CONTEXT);
         try {
-            if (doc.getName().equals(MailConstants.E_SEND_MSG_REQUEST)) {
-                zsc = new ZimbraSoapContext(ectxt, doc.getQName(), handler, context, soapProto, doc);
-            } else {
-                zsc = new ZimbraSoapContext(ectxt, doc.getQName(), handler, context, soapProto);
-            }
+            zsc = new ZimbraSoapContext(ectxt, doc.getQName(), handler, context, soapProto);
         } catch (ServiceException e) {
             return soapFaultEnv(soapProto, "unable to construct SOAP context", e);
         }

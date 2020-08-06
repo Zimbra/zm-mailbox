@@ -50,7 +50,6 @@ import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
-import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.BlobMetaData;
 import com.zimbra.common.util.CharsetUtil;
 import com.zimbra.common.util.EmailUtil;
@@ -71,19 +70,14 @@ import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.TokenUtil;
-import com.zimbra.cs.account.accesscontrol.generated.RightConsts;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.MetadataList;
 import com.zimbra.cs.mime.Mime;
-import com.zimbra.cs.service.mail.ToXML.EmailType;
 import com.zimbra.cs.servlet.ZimbraServlet;
-import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.admin.type.DataSourceType;
-import com.zimbra.soap.mail.message.SendMsgRequest;
-import com.zimbra.soap.mail.type.EmailAddrInfo;
 
 public class AccountUtil {
     public static final String FN_SUBSCRIPTIONS = "subs";
@@ -873,65 +867,19 @@ public class AccountUtil {
         return new SMTPMessage(JMSession.getSmtpSession(Provisioning.getInstance().getDomain(acct)));
     }
 
-    /**
-     * Extract (f)rom address from sendMsg SOAP Request.
-     * @param body SOAP request body.
-     * @return from address
-     * @throws ServiceException
-     */
-    public static String extractFromAddress(Element body) throws ServiceException {
-        String fromAddress = null;
-        SendMsgRequest req = JaxbUtil.elementToJaxb(body, SendMsgRequest.class);
-        for (EmailAddrInfo addr : req.getMsg().getEmailAddresses()) {
-            if (addr.getAddressType().equals(EmailType.FROM.toString())) {
-                fromAddress = addr.getAddress();
-                break;
-            }
-        }
-        return fromAddress;
-    }
 
     /**
-     * This method will check if the mail has sent using persona of owner account or not.
-     * If <b>zimbraAllowAnyFromAddress</b> is set to true on auth user account, then this method will return false.
-     * @param identityId persona id.
-     * @param authAcct authUser account
-     * @param authTokenn authToken.
-     * @return true/false
-     * @throws ServiceException s
-     */
-    public static boolean isMessageSentUsingOwnersPersona(String identityId, Account authAcct, AuthToken authToken) throws ServiceException {
-        if (identityId != null) {
-            Identity identity = Provisioning.getInstance().get(authAcct, Key.IdentityBy.id, identityId);
-            Identity defaultIdentity = Provisioning.getInstance().getDefaultIdentity(authAcct);
-            if (identity != null && defaultIdentity != null && !defaultIdentity.getId().equals(identity.getId())) {
-                String fromAddrPrefType = identity.getAttr(Provisioning.A_zimbraPrefFromAddressType, null);
-                String fromAddrPrefValue = identity.getAttr(Provisioning.A_zimbraPrefFromAddress, null);
-                if (!StringUtil.isNullOrEmpty(fromAddrPrefType) && !StringUtil.isNullOrEmpty(fromAddrPrefValue)
-                        && !authToken.isAdmin() && !authAcct.isAllowAnyFromAddress()
-                        && !authAcct.getMail().equals(fromAddrPrefValue)
-                        && (fromAddrPrefType.equals(RightConsts.RT_sendAs)
-                                || fromAddrPrefType.equals(RightConsts.RT_sendOnBehalfOf))) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    /**
-     * @param fromAddress
-     * @param account
+     * @param identityId
+     * @param authAcct
      * @return
      * @throws ServiceException
      */
-    public static Account getAccountForFromAddress(String fromAddress, Account account) throws ServiceException {
-        List<Identity> identityList = Provisioning.getInstance().getAllIdentities(account);
-
-        for (Identity identity: identityList) {
+    public static Account getRequestedAccount(String identityId, Account authAcct) throws ServiceException {
+        Identity identity = Provisioning.getInstance().get(authAcct, Key.IdentityBy.id, identityId);
+        if (identity  != null) {
             String idEmailAddress = identity.getAttr("zimbraPrefFromAddress", null);
-            if (idEmailAddress != null && idEmailAddress.equalsIgnoreCase(fromAddress) ) {
-                Account  delgAcct  = Provisioning.getInstance().get(AccountBy.name, fromAddress);
+            if (idEmailAddress != null ) {
+                Account  delgAcct  = Provisioning.getInstance().get(AccountBy.name, idEmailAddress);
                 return delgAcct;
             }
         }
