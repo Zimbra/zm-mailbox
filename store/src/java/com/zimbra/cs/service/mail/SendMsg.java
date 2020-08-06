@@ -56,11 +56,14 @@ import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zmime.ZMimeMessage;
+import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.accesscontrol.Rights;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailSender;
@@ -137,6 +140,31 @@ public class SendMsg extends MailDocumentHandler {
                ItemId iidDraft = draftId == null ? null : new ItemId(draftId, zsc);
                boolean sendFromDraft = msgElem.getAttributeBool(MailConstants.A_SEND_FROM_DRAFT, false);
 
+               Account delegatedAccount = authAcct;
+               Mailbox  delegatedMailbox = null;
+               if (!StringUtil.isNullOrEmpty(identityId) && !identityId.equals(authAcct.getId()) ) {
+
+                   Account acctReq = AccountUtil.getRequestedAccount(identityId, authAcct);
+                   if (acctReq != null) {
+                       AccessManager accessMgr = AccessManager.getInstance();
+                       if (accessMgr.canDo(authAcct, acctReq, Rights.User.R_sendAs, false) ||
+                               accessMgr.canDo(authAcct, acctReq, Rights.User.R_sendOnBehalfOf, false)) {
+                           delegatedAccount = acctReq;
+
+                           Provisioning prov = Provisioning.getInstance();
+                           boolean active = delegatedAccount != null && Provisioning.ACCOUNT_STATUS_ACTIVE.equals(
+                               delegatedAccount.getAccountStatus(prov));
+                           if (!active) {
+                               ZimbraLog.soap.info("The delegated account:%s is inactive, for mail operations user context will be :%s",
+                                   authAcct.getName(), delegatedAccount.getName());
+                               delegatedAccount = authAcct;
+                           }
+
+                           delegatedMailbox = MailboxManager.getInstance().getMailboxByAccountId(delegatedAccount.getId());
+                       }
+                   }
+               }
+
                SendState state = SendState.NEW;
                ItemId savedMsgId = null;
                Pair<String, ItemId> sendRecord = null;
@@ -176,11 +204,17 @@ public class SendMsg extends MailDocumentHandler {
                            Message msg = mbox.getMessageById(octxt, iidDraft.getId());
                            mm = msg.getMimeMessage(false);
                        } else {
-                           mm = ParseMimeMessage.parseMimeMsgSoap(zsc, octxt, mbox, msgElem, null, mimeData);
+                           Mailbox loggedUserMbox = MailboxManager.getInstance().getMailboxByAccountId(authAcct.getId());
+                           mm = ParseMimeMessage.parseMimeMsgSoap(zsc, octxt, loggedUserMbox, msgElem, null, mimeData);
                        }
 
-                       savedMsgId = doSendMessage(octxt, mbox, mm, mimeData.uploads, iidOrigId, replyType, identityId,
+                       if  (delegatedMailbox  != null) {
+                           savedMsgId = doSendMessage(octxt, delegatedMailbox, mm, mimeData.uploads, iidOrigId, replyType, identityId,
                                dataSourceId, noSaveToSent, needCalendarSentByFixup, isCalendarForward);
+                       } else  {
+                           savedMsgId = doSendMessage(octxt, mbox, mm, mimeData.uploads, iidOrigId, replyType, identityId,
+                               dataSourceId, noSaveToSent, needCalendarSentByFixup, isCalendarForward);
+                       }
 
                        // (need to make sure that *something* gets recorded, because caching
                        //   a null ItemId makes the send appear to still be PENDING)

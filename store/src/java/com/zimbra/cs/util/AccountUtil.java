@@ -895,5 +895,23 @@ public class AccountUtil {
         acct.setAccountStatus(AccountStatus.active);
         broadcastFlushCache(acct);
     }
+
+    /**
+     * @param identityId
+     * @param authAcct
+     * @return
+     * @throws ServiceException
+     */
+    public static Account getRequestedAccount(String identityId, Account authAcct) throws ServiceException {
+        Identity identity = Provisioning.getInstance().get(authAcct, Key.IdentityBy.id, identityId);
+        if (identity  != null) {
+            String idEmailAddress = identity.getAttr("zimbraPrefFromAddress", null);
+            if (idEmailAddress != null ) {
+                Account  delgAcct  = Provisioning.getInstance().get(AccountBy.name, idEmailAddress);
+                return delgAcct;
+            }
+        }
+        return null;
+    }
 }
 
