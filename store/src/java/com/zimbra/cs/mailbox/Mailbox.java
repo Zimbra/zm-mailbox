@@ -7050,6 +7050,7 @@ public class Mailbox implements MailboxStore {
             }
             // check if mailbox has enough quota available to copy all the item.
             if (requiredQuota > 0) {
+                ZimbraLog.mailbox.info("total space required to copy items = %d", requiredQuota);
                 checkSizeChange(getEffectiveSize(requiredQuota));
             }
 
@@ -7160,6 +7161,7 @@ public class Mailbox implements MailboxStore {
 
             // check if mailbox has enough quota available to copy all the item.
             if (requiredQuota > 0) {
+                ZimbraLog.mailbox.info("total space required to copy items = %d", requiredQuota);
                 checkSizeChange(getEffectiveSize(requiredQuota));
             }
 
