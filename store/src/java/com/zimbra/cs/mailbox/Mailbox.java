@@ -1446,9 +1446,7 @@ public class Mailbox implements MailboxStore {
             return;
         }
 
-        // if we go negative, that's OK! just pretend we're at 0.
-        long size = Math.max(0, (currentChange().size == MailboxChange.NO_CHANGE ? mData.size : currentChange().size)
-                        + delta);
+        long size = getEffectiveSize(delta);
         if (delta > 0 && checkQuota) {
             checkSizeChange(size);
         }
@@ -1468,6 +1466,12 @@ public class Mailbox implements MailboxStore {
                         && !AccountUtil.isReceiveAllowedOverAggregateQuota(domain)) {
             throw MailServiceException.DOMAIN_QUOTA_EXCEEDED(domain.getDomainAggregateQuota());
         }
+    }
+
+    long getEffectiveSize(long delta) {
+        // if we go negative, that's OK! just pretend we're at 0.
+        return Math.max(0, (currentChange().size == MailboxChange.NO_CHANGE ? mData.size : currentChange().size)
+                        + delta);
     }
 
     /** Returns the last time that the mailbox had a write op caused by a SOAP
@@ -7037,12 +7041,23 @@ public class Mailbox implements MailboxStore {
             Folder folder = getFolderById(folderId);
 
             MailItem[] items = getItemById(itemIds, type, fromDumpster);
+            long requiredQuota = 0;
             for (MailItem item : items) {
                 checkItemChangeID(item);
+                if(item.isQuotaCheckRequired()) {
+                    requiredQuota = requiredQuota + item.getSize();
+                }
             }
+            // check if mailbox has enough quota available to copy all the item.
+            if (requiredQuota > 0) {
+                checkSizeChange(getEffectiveSize(requiredQuota));
+            }
+
             for (MailItem item : items) {
                 MailItem copy;
-
+                if (item.isQuotaCheckRequired()) {
+                    checkSizeChange(getEffectiveSize(item.getSize()));
+                }
                 if (item instanceof Conversation) {
                     // this should be done in Conversation.copy(), but redolog issues make that impossible
                     Conversation conv = (Conversation) item;
@@ -7135,9 +7150,19 @@ public class Mailbox implements MailboxStore {
 
             // fetch the items to copy and make sure the caller is up-to-date on change IDs
             MailItem[] items = getItemById(itemIds, type);
+            long requiredQuota = 0;
             for (MailItem item : items) {
                 checkItemChangeID(item);
+                if(item.isQuotaCheckRequired()) {
+                    requiredQuota = requiredQuota + item.getSize();
+                }
             }
+
+            // check if mailbox has enough quota available to copy all the item.
+            if (requiredQuota > 0) {
+                checkSizeChange(getEffectiveSize(requiredQuota));
+            }
+
             List<MailItem> result = new ArrayList<MailItem>();
 
             for (MailItem item : items) {
