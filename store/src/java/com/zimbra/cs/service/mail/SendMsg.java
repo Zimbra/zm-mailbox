@@ -116,6 +116,8 @@ public class SendMsg extends MailDocumentHandler {
                ZimbraSoapContext zsc = getZimbraSoapContext(context);
                Mailbox mbox = getRequestedMailbox(zsc);
                AccountUtil.checkQuotaWhenSendMail(mbox);
+	       AuthToken authToken = zsc.getAuthToken();
+               Account authAcct = getAuthenticatedAccount(zsc);
 
                OperationContext octxt = getOperationContext(zsc, context);
                ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
