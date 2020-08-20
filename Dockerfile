@@ -41,7 +41,8 @@ RUN mkdir -p /opt/zimbra/lib/ext /opt/zimbra/extensions-extra /opt/zimbra/lib/ex
 && curl -k -s -o /opt/zimbra/bin/zmhactl ${EXT_REPO_URL}/zm-license-tools/latest/zmhactl \
 && curl -k -s -o /opt/zimbra/bin/zmlicense ${EXT_REPO_URL}/zm-license-tools/latest/zmlicense \
 && curl -k -s -o /opt/zimbra/libexec/vmware-heartbeat ${EXT_REPO_URL}/zm-license-tools/latest/vmware-heartbeat \
-&& curl -k -s -o /opt/zimbra/lib/ext/zimbra-license/zimbra-license.jar ${EXT_REPO_URL}/zm-license-store/latest/zimbra-license.jar
+&& curl -k -s -o /opt/zimbra/lib/ext/zimbra-license/zimbra-license.jar ${EXT_REPO_URL}/zm-license-store/latest/zimbra-license.jar \
+&& curl -k -s -o /opt/zimbra/lib/ext-common/zm-oauth-social-common.jar ${EXT_REPO_URL}/zm-oauth-social/latest/zm-oauth-social-common.jar 
 
 # zm-gql and zm-gql-admin
 RUN mkdir -p /opt/zimbra/lib/ext/zm-gql /opt/zimbra/lib/ext/zm-gql-admin \

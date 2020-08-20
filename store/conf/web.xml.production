@@ -218,6 +218,12 @@
       <param-name>allowed.ports</param-name>
       <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, %%zimbraAdminPort%%, 7070, 7072, 7443</param-value>
     </init-param>
+    <multipart-config>
+      <location>/opt/zimbra/data/tmp</location>
+      <max-file-size>%%zimbraFileUploadMaxSize%%</max-file-size>
+      <max-request-size>%%zimbraMailContentMaxSize%%</max-request-size>
+      <file-size-threshold>%%zimbraFileUploadMaxSize%%</file-size-threshold>
+    </multipart-config>
   </servlet>
 
   <servlet>
