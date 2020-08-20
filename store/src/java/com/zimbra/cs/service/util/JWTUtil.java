@@ -16,6 +16,8 @@
  */
 package com.zimbra.cs.service.util;
 
+import java.io.File;
+import java.io.IOException;
 import java.security.Key;
 import java.util.Date;
 import java.util.Map;
@@ -25,8 +27,10 @@ import javax.crypto.spec.SecretKeySpec;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 
+import com.google.common.base.Charsets;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.io.Files;
 import com.google.common.primitives.Bytes;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.localconfig.LC;
@@ -40,13 +44,13 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
-import com.zimbra.cs.mailbox.cache.JWTInfo;
-import com.zimbra.cs.mailbox.cache.RedisJwtCache;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenKey;
 import com.zimbra.cs.account.AuthTokenProperties;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ZimbraJWToken;
+import com.zimbra.cs.mailbox.cache.JWTInfo;
+import com.zimbra.cs.mailbox.cache.RedisJwtCache;
 import com.zimbra.soap.SoapEngine;
 import com.zimbra.soap.SoapServlet;
 
@@ -73,7 +77,7 @@ public class JWTUtil {
      * @param expires       time after which jwt expires
      * @param account       account for jwt is being generated
      * @return              jwt
-     * @throws ServiceException 
+     * @throws ServiceException
      */
     public static final String generateJWT(byte[] jwtKey, String salt, long issuedAt, AuthTokenProperties properties, long keyVersion) throws ServiceException {
         if (properties != null) {
@@ -105,7 +109,7 @@ public class JWTUtil {
             RedisJwtCache.put(jti, new JWTInfo(salt, properties.getExpires()));
             return builder.signWith(SignatureAlgorithm.HS512, key).compact();
         } else {
-            throw AuthFailedServiceException.AUTH_FAILED("properties is required"); 
+            throw AuthFailedServiceException.AUTH_FAILED("properties is required");
         }
     }
 
@@ -345,11 +349,16 @@ public class JWTUtil {
      * get the salt corresponding to the jwt
      * @param jwt
      * @return
-     * @throws ServiceException 
+     * @throws ServiceException
      */
     public static String getJWTSalt(String jwt) throws ServiceException {
         String jti = getJTI(jwt);
         JWTInfo jwtInfo = RedisJwtCache.get(jti);
         return jwtInfo != null ? jwtInfo.getSalt() : null;
+    }
+
+    public static String getJwtSecretFromPath(String secretPath) throws IOException {
+        File file = new File(secretPath);
+        return Files.asCharSource(file, Charsets.UTF_8).read();
     }
 }

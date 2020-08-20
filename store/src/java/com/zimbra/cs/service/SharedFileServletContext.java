@@ -97,7 +97,7 @@ public class SharedFileServletContext extends UserServletContext {
         ZimbraLog.doc.debug("Looking for item :%s, for account:%s", itemUuid, accountId);
     }
 
-    static class EncodedId {
+    public static class EncodedId {
         private String itemUuid;
         private String containerUuid;
         private boolean isShare;  // true = container is a share, false = container is an account
