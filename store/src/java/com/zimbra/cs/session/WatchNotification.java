@@ -39,6 +39,7 @@ public class WatchNotification extends ExternalEventNotification {
     private final long timestamp;
     private final ItemId itemId;
     private final MailItem item;
+    private final int version;
 
     public WatchNotification(MailboxOperation op, Account account, String userAgent, long timestamp, MailItem item) throws ServiceException {
         this.op = op;
@@ -47,6 +48,17 @@ public class WatchNotification extends ExternalEventNotification {
         this.timestamp = timestamp;
         this.item = item;
         this.itemId = new ItemId(item.getMailbox().getAccountId(), item.getId());
+        this.version = 1;
+    }
+
+    public WatchNotification(MailboxOperation op, Account account, String userAgent, long timestamp, MailItem item, int version) throws ServiceException {
+        this.op = op;
+        this.account = account;
+        this.userAgent = userAgent;
+        this.timestamp = timestamp;
+        this.item = item;
+        this.itemId = new ItemId(item.getMailbox().getAccountId(), item.getId());
+        this.version = version;
     }
 
     @Override
@@ -74,6 +86,6 @@ public class WatchNotification extends ExternalEventNotification {
     }
 
     public MailboxEvent toActivity() {
-        return new MailboxEvent(account.getId(), op, item.getId(), 0, item.getFolderId(), timestamp, userAgent, EventListener.getArgs(op, item, null, null));
+        return new MailboxEvent(account.getId(), op, item.getId(), version, item.getFolderId(), timestamp, userAgent, EventListener.getArgs(op, item, null, null));
     }
 }

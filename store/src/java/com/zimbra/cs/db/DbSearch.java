@@ -47,6 +47,7 @@ import com.zimbra.cs.mailbox.Flag.FlagInfo;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.Tag;
 
 /**
@@ -82,6 +83,7 @@ public final class DbSearch {
     };
 
     private final Mailbox mailbox;
+    private Mailbox authMailbox;
     private final boolean dumpster;
     private final StringBuilder sql = new StringBuilder();
     private final List<Object> params = new ArrayList<Object>();
@@ -98,9 +100,14 @@ public final class DbSearch {
     }
 
     public DbSearch(Mailbox mbox, boolean dumpster, LuceneResultsChunk luceneResults) {
+        this(mbox, dumpster, luceneResults, null);
+    }
+
+    public DbSearch(Mailbox mbox, boolean dumpster, LuceneResultsChunk luceneResults, Mailbox authMailbox) {
         this.mailbox = mbox;
         this.dumpster = dumpster;
         this.luceneResults = luceneResults;
+        this.authMailbox = authMailbox;
     }
     /**
      * Returns true if this field is case-sensitive for search/sort, i.e. whether or not we need to do an UPPER() on it
@@ -188,6 +195,9 @@ public final class DbSearch {
             return "";
         }
         StringBuilder orderBy = new StringBuilder(" ORDER BY ");
+        if (sort.getKey() == SortBy.Key.RECENTLYVIEWED) {
+            return orderBy.append("e.ts DESC, mi.date DESC").toString();
+        }
         orderBy.append(alias ? SORT_COLUMN_ALIAS : toSortField(sort));
         if (sort.getDirection() == SortBy.Direction.DESC) {
             orderBy.append(" DESC");
@@ -315,6 +325,13 @@ public final class DbSearch {
         }
         if (joinTaggedItem) {
             sql.append(", ").append(DbTag.getTaggedItemTableName(mailbox, "ti"));
+        }
+        if (!joinAppt && !joinTaggedItem && sort != null && sort.equals(SortBy.RECENTLY_VIEWED)) {
+            Mailbox joinMailbox = mailbox;
+            if (authMailbox != null && mailbox.getId() != authMailbox.getId()) {
+                joinMailbox = authMailbox;
+            }
+            sql.append(" LEFT JOIN ").append(DbEvent.getEventTableName(joinMailbox, "e")).append(" ON mi.id = e.item_id and e.op = " + MailboxOperation.View.getCode());
         }
         sql.append(" WHERE ");
         if (!DebugConfig.disableMailboxGroups) {
@@ -565,14 +582,14 @@ public final class DbSearch {
             // run each toplevel ORed part as a separate SQL query, then merge the results in memory
             if (node instanceof DbSearchConstraints.Union) {
                 for (DbSearchConstraints child : node.getChildren()) {
-                    result.addAll(new DbSearch(mailbox, dumpster).search(conn, child, sort, offset, limit, fetch));
+                    result.addAll(new DbSearch(mailbox, dumpster, null, authMailbox).search(conn, child, sort, offset, limit, fetch));
                 }
                 Collections.sort(result, new ResultComparator(sort));
             } else if (node instanceof DbSearchConstraints.Intersection) {
                 List<List<Result>> resultLists = new ArrayList<List<Result>>();
 
                 for (DbSearchConstraints child : node.getChildren()) {
-                    resultLists.add(new DbSearch(mailbox, dumpster).search(conn, child, sort, offset, limit, fetch));
+                    resultLists.add(new DbSearch(mailbox, dumpster, null, authMailbox).search(conn, child, sort, offset, limit, fetch));
                 }
                 result = intersectSortedLists(result, resultLists);
             } else {
@@ -595,7 +612,7 @@ public final class DbSearch {
                     DbSearchConstraints.Leaf subsetNode = leafNode.clone();
                     List<Folder> subList = folderList.subList(start, end);
                     subsetNode.folders.addAll(subList);
-                    result.addAll(new DbSearch(mailbox, dumpster).search(conn, subsetNode, sort, offset, limit, fetch));
+                    result.addAll(new DbSearch(mailbox, dumpster, null, authMailbox).search(conn, subsetNode, sort, offset, limit, fetch));
                     end -= softLimit;
                     start -= softLimit;
                 }
@@ -603,7 +620,7 @@ public final class DbSearch {
                 DbSearchConstraints.Leaf subsetNode = leafNode.clone();
                 List<Folder> subList = folderList.subList(0, end);
                 subsetNode.folders.addAll(subList);
-                result.addAll(new DbSearch(mailbox, dumpster).search(conn, subsetNode, sort, offset, limit, fetch));
+                result.addAll(new DbSearch(mailbox, dumpster, null, authMailbox).search(conn, subsetNode, sort, offset, limit, fetch));
                 Collections.sort(result, new ResultComparator(sort));
             } else {
                 throw ServiceException.FAILURE("splitting failed, too many constraints but not caused entirely by folders", null);

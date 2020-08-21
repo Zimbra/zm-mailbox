@@ -575,9 +575,17 @@ public final class MailboxIndex {
      */
     public List<DbSearch.Result> search(DbSearchConstraints constraints,
                                         DbSearch.FetchMode fetch, SortBy sort, int offset, int size, boolean inDumpster, LuceneResultsChunk luceneResults) throws ServiceException {
+        return search(constraints, fetch, sort, offset, size, inDumpster, luceneResults, null);
+    }
+
+    /**
+     * Executes a DB search in a mailbox transaction.
+     */
+    public List<DbSearch.Result> search(DbSearchConstraints constraints,
+                                        DbSearch.FetchMode fetch, SortBy sort, int offset, int size, boolean inDumpster, LuceneResultsChunk luceneResults, Mailbox authMailbox) throws ServiceException {
         List<DbSearch.Result> result;
         try (final Mailbox.MailboxTransaction t = mailbox.mailboxReadTransaction("search", null)) {
-            result = new DbSearch(mailbox, inDumpster, luceneResults).search(mailbox.getOperationConnection(),
+            result = new DbSearch(mailbox, inDumpster, luceneResults, authMailbox).search(mailbox.getOperationConnection(),
                     constraints, sort, offset, size, fetch);
             if (fetch == DbSearch.FetchMode.MAIL_ITEM) {
                 // Convert UnderlyingData to MailItem

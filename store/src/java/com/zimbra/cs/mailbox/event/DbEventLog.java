@@ -27,6 +27,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.db.DbEvent;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.event.MailboxEvent.EventFilter;
 
@@ -66,7 +67,18 @@ public class DbEventLog extends ItemEventLog {
     @Override
     public void addEvent(MailboxEvent event) throws ServiceException {
         LogEvent(event);
-        DbEvent.logEvent(mbox, event);
+        Mailbox mboxAccount = MailboxManager.getInstance().getMailboxByAccountId(event.getAccountId());
+        Mailbox targetMbox = mbox;
+        if (mbox.getId() != mboxAccount.getId()) {
+            targetMbox = mboxAccount;
+        }
+
+        if (event.getOperation().getCode() ==  MailboxOperation.View.getCode() &&
+                DbEvent.getEventCount(targetMbox, itemIds, new EventFilter(event.getAccountId(), MailboxOperation.View.toString())) > 0) {
+            DbEvent.updateEvent(targetMbox, event);
+        } else {
+            DbEvent.logEvent(targetMbox, event);
+        }
     }
 
     public DbEventLog(MailItem item) throws ServiceException {

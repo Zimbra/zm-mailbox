@@ -666,7 +666,7 @@ public class DBQueryOperation extends QueryOperation {
     private void dbSearch(List<DbSearch.Result> results, SortBy sort, int offset, int size) throws ServiceException {
         long start = System.currentTimeMillis();
         results.addAll(context.getMailbox().index.search(constraints, fetch, sort, offset, size,
-                context.getParams().inDumpster(), luceneChunk));
+                context.getParams().inDumpster(), luceneChunk, authMailbox));
         ZimbraLog.search.debug("DBSearch elapsed=%d", System.currentTimeMillis() - start);
     }
 

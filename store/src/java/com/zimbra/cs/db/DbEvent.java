@@ -26,6 +26,7 @@ import java.util.EnumSet;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -75,6 +76,40 @@ public class DbEvent {
             succeeded = true;
         } catch (SQLException e) {
             throw ServiceException.FAILURE("can't add event", e);
+        } finally {
+            DbPool.closeStatement(stmt);
+            commit(conn, succeeded);
+        }
+    }
+
+    public static void updateEvent(Mailbox mbox, MailboxEvent ev) throws ServiceException {
+        DbConnection conn = DbPool.getConnection();
+        PreparedStatement stmt = null;
+        boolean succeeded = false;
+        try {
+            stmt = conn.prepareStatement("UPDATE " + getEventTableName(mbox) +
+                        " set ts = ?, version = ?, user_agent = ?, arg = ? " +
+                        "where mailbox_id = ? AND account_id = ? AND item_id = ? AND folder_id = ? AND op = ?");
+            int pos = 1;
+            stmt.setInt(pos++, (int)(ev.getTimestamp() / 1000L));
+            stmt.setInt(pos++, ev.getVersion());
+            stmt.setString(pos++, ev.getUserAgent());
+            stmt.setString(pos++, ev.getArgString());
+
+            stmt.setInt(pos++, mbox.getId());
+            stmt.setString(pos++, ev.getAccountId());
+            stmt.setInt(pos++, ev.getItemId().getId());
+            stmt.setInt(pos++, ev.getFolderId());
+            stmt.setByte(pos++, (byte)ev.getOperation().getCode());
+
+            if (stmt.executeUpdate() != 1) {
+                ZimbraLog.activity.info("Update event failed while updating event table");
+                throw ServiceException.FAILURE("can't update event", null);
+            }
+            succeeded = true;
+        } catch (SQLException e) {
+            ZimbraLog.activity.info("Update event failed while updating event table");
+            throw ServiceException.FAILURE("can't update event", e);
         } finally {
             DbPool.closeStatement(stmt);
             commit(conn, succeeded);
@@ -436,6 +471,10 @@ public class DbEvent {
 
     public static String getEventTableName(Mailbox mbox) {
         return DbMailbox.qualifyTableName(mbox, TABLE_EVENT);
+    }
+
+    public static String getEventTableName(Mailbox mbox, String alias) {
+        return getEventTableName(mbox) + " AS " + alias;
     }
 
     public static String getWatchTableName(Mailbox mbox) {

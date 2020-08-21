@@ -30,6 +30,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.ACL;
+import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxOperation;
@@ -50,7 +51,8 @@ public class DocumentAction extends ItemAction {
     public static final String OP_UNWATCH = "!watch";
     public static final String OP_GRANT = "grant";
     public static final String OP_REVOKE = "!grant";
-    private static final Set<String> OPS = ImmutableSet.of(OP_WATCH, OP_UNWATCH, OP_GRANT, OP_REVOKE);
+    public static final String OP_VIEW = "view";
+    private static final Set<String> OPS = ImmutableSet.of(OP_WATCH, OP_UNWATCH, OP_GRANT, OP_REVOKE, OP_VIEW);
 
     @Override
     protected String[] getProxiedIdPath(Element request) { return TARGET_ITEM_PATH; }
@@ -95,6 +97,7 @@ public class DocumentAction extends ItemAction {
 
         // check the access and make sure the item exists and the authUser has access to it
         MailItem watchedItem = mbox.getItemById(octxt, iid.getId(), MailItem.Type.DOCUMENT);
+        Document doc = (Document) watchedItem;
 
         if (operation.equals(OP_WATCH)) {
             // add the watch mapping
@@ -137,7 +140,8 @@ public class DocumentAction extends ItemAction {
             ZimbraLog.soap.debug("The user: %s has been granted: %s for item:  %s", zid, ACL.rightsToString(rights),
                 iid.getId());
             mbox.grantAccess(octxt, iid.getId(), zid, gtypeByte, rights, secret, expiry);
-
+        } else if (operation.equals(OP_VIEW) && allowDocumentAccessedTimeLogging(octxt)) {
+                notification = new WatchNotification(MailboxOperation.View, octxt.getAuthenticatedUser(), octxt.getUserAgent(), timestamp, watchedItem, doc.getVersion());
         } else {
             throw ServiceException.INVALID_REQUEST("unknown operation: " + operation, null);
         }
@@ -153,5 +157,17 @@ public class DocumentAction extends ItemAction {
         }
 
         return ifmt.formatItemId(iid);
+    }
+
+    private boolean allowDocumentAccessedTimeLogging(OperationContext octxt) {
+        if (octxt != null) {
+            Account account = octxt.getAuthenticatedUser();
+            if (account != null && !account.getId().equals(GuestAccount.GUID_PUBLIC)
+                    && !account.getId().equals(GuestAccount.GUID_AUTHUSER)
+                    && account.isDocumentRecentlyViewedEnabled()) {
+                return true;
+            }
+        }
+        return false;
     }
 }

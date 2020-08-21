@@ -48320,6 +48320,79 @@ public abstract class ZAttrCos extends NamedEntry {
         return attrs;
     }
 
+    /**
+     * whether or not log document accessed time to view recently viewed documents
+     *
+     * @return zimbraDocumentRecentlyViewedEnabled, or false if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=9015)
+    public boolean isDocumentRecentlyViewedEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraDocumentRecentlyViewedEnabled, false, true);
+    }
+
+    /**
+     * whether or not log document accessed time to sort by recently viewed documents
+     *
+     * @param zimbraDocumentRecentlyViewedEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=9015)
+    public void setDocumentRecentlyViewedEnabled(boolean zimbraDocumentRecentlyViewedEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDocumentRecentlyViewedEnabled, zimbraDocumentRecentlyViewedEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether or not log document accessed time to sort by recently viewed documents
+     *
+     * @param zimbraDocumentRecentlyViewedEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=9015)
+    public Map<String,Object> setDocumentRecentlyViewedEnabled(boolean zimbraDocumentRecentlyViewedEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDocumentRecentlyViewedEnabled, zimbraDocumentRecentlyViewedEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether or not log document accessed time to sort by recently viewed documents
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=9015)
+    public void unsetDocumentRecentlyViewedEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDocumentRecentlyViewedEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether or not log document accessed time to sort by recently viewed documents
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=9015)
+    public Map<String,Object> unsetDocumentRecentlyViewedEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDocumentRecentlyViewedEnabled, "");
+        return attrs;
+    }
+
+
     ///// END-AUTO-GEN-REPLACE
 
 }

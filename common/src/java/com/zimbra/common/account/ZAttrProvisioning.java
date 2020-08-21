@@ -18107,6 +18107,15 @@ public class ZAttrProvisioning {
     @ZAttr(id=1447)
     public static final String A_zimbraZookeeperClientServerList = "zimbraZookeeperClientServerList";
 
+    /**
+     * When enabled documents accessed time will get logged to get recently viewed documents
+     * set true to enable it
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=9015)
+    public static final String A_zimbraDocumentRecentlyViewedEnabled = "zimbraDocumentRecentlyViewedEnabled";
+
     ///// END-AUTO-GEN-REPLACE
 }
 
