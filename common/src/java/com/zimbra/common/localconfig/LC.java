@@ -1333,6 +1333,8 @@ public final class LC {
 
     // enable blocking common passwords
     public static final KnownKey zimbra_block_common_passwords_enabled = KnownKey.newKey(false);
+ // enable blocking common passwords
+    public static final KnownKey zimbra_imap_folder_pagination_size =  KnownKey.newKey(2000);
 
     static {
         // Automatically set the key name with the variable name.
