@@ -52,6 +52,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZSharedFolder;
@@ -2150,17 +2151,20 @@ public abstract class ImapHandler {
 
         boolean selectRecursive = (selectOptions & SELECT_RECURSIVE) != 0;
 
+        int paginationSize = LC.zimbra_imap_folder_pagination_size.intValue();
         Map<ImapPath, Object> ownerMatches = new TreeMap<ImapPath, Object>();
         Map<ImapPath, Object> mountMatches = new TreeMap<ImapPath, Object>();
+        Map<ImapPath, ItemId> ownerPaths = new HashMap<ImapPath, ItemId>();
+        Map<ImapPath, ItemId> mountPaths = new HashMap<ImapPath, ItemId>();
+        Set<ImapPath> ownerSelected = new HashSet<ImapPath>();
+        Set<ImapPath> mountSelected = new HashSet<ImapPath>();
+        List<Pattern> patterns = new ArrayList<Pattern>(mailboxNames.size());
         try {
             if (returnSubscribed) {
                 remoteSubscriptions = credentials.listSubscriptions();
             }
-            Map<ImapPath, ItemId> ownerPaths = new HashMap<ImapPath, ItemId>();
-            Map<ImapPath, ItemId> mountPaths = new HashMap<ImapPath, ItemId>();
-            Set<ImapPath> ownerSelected = new HashSet<ImapPath>();
-            Set<ImapPath> mountSelected = new HashSet<ImapPath>();
-            List<Pattern> patterns = new ArrayList<Pattern>(mailboxNames.size());
+
+
 
             for (String mailboxName : mailboxNames) {
                 // RFC 5258 3: "In particular, if an extended LIST command has multiple mailbox
@@ -2227,41 +2231,84 @@ public abstract class ImapHandler {
                 }
             }
 
-            // return only the selected folders (and perhaps their parents) matching the pattern
-            // for owner folders
-            populateFoldersList(ownerPaths, ownerSelected, ownerMatches, returnOptions, remoteSubscriptions, patterns, command, status, selectRecursive, false);
-            // for shared(mounted) folders
-            populateFoldersList(mountPaths, mountSelected, mountMatches, returnOptions, remoteSubscriptions, patterns, command, status, selectRecursive, true);
+            if (ownerSelected.size() <= paginationSize) {
+                ZimbraLog.imap.info("Total folder count is less than folder pagination size.");
+                // return only the selected folders (and perhaps their parents) matching the pattern
+                // for owner folders
+                populateFoldersList(ownerPaths, ownerSelected, ownerMatches, returnOptions, remoteSubscriptions, patterns, command, status, selectRecursive, false);
+                // for shared(mounted) folders
+                populateFoldersList(mountPaths, mountSelected, mountMatches, returnOptions, remoteSubscriptions, patterns, command, status, selectRecursive, true);
+            }
         } catch (ServiceException e) {
             ZimbraLog.imap.warn(command + " failed", e);
             sendNO(tag, command + " failed");
             return canContinue(e);
         }
 
-        // send owners list first
-        if (!ownerMatches.isEmpty()) {
-            for (Object match : ownerMatches.values()) {
-                if (match instanceof String[]) {
-                    for (String response : (String[]) match) {
-                        sendUntagged(response);
-                    }
-                } else {
-                    sendUntagged((String) match);
-                }
-            }
-        }
+        if (ownerSelected.size() > paginationSize) {
+            try {
+              Iterable<List<ImapPath>> lists = Iterables.partition(ownerSelected, paginationSize);
+              for (List<ImapPath> listChunk: lists) {
 
-        // send shared(mounted) folders list
-        if (!mountMatches.isEmpty()) {
-            for (Object match : mountMatches.values()) {
-                if (match instanceof String[]) {
-                    for (String response : (String[]) match) {
-                        sendUntagged(response);
-                    }
-                } else {
-                    sendUntagged((String) match);
-                }
-            }
+                  Set<ImapPath> ownerSelectedChunk = new HashSet<ImapPath>();
+                  ownerSelectedChunk.addAll(listChunk);
+                  populateFoldersList(ownerPaths, ownerSelectedChunk, ownerMatches, returnOptions, remoteSubscriptions, patterns, command, status, selectRecursive, false);
+                  // send owners list first
+                  if (!ownerMatches.isEmpty()) {
+                      for (Object match : ownerMatches.values()) {
+                          if (match instanceof String[]) {
+                              for (String response : (String[]) match) {
+                                  sendUntagged(response);
+                              }
+                          } else {
+                              sendUntagged((String) match);
+                          }
+                      }
+                  }
+
+                  ownerSelectedChunk.clear();
+                  ownerMatches.clear();
+                  ownerSelectedChunk = null;
+                  ownerMatches = new TreeMap<ImapPath, Object>();
+              }
+          }  catch  (ServiceException e) {
+              ZimbraLog.imap.warn(command + " failed", e);
+              sendNO(tag, command + " failed");
+              return canContinue(e);
+          }
+
+          // send shared(mounted) folders list
+          try {
+              Iterable<List<ImapPath>> lists = Iterables.partition(mountSelected, paginationSize);
+
+              // send owners list first
+              for (List<ImapPath> listChunk: lists) {
+                  Set<ImapPath> mountSelectedChunk = new HashSet<ImapPath>();
+                  mountSelectedChunk.addAll(listChunk);
+                  populateFoldersList(mountPaths, mountSelectedChunk, mountMatches, returnOptions, remoteSubscriptions, patterns, command, status, selectRecursive, true);
+
+              // send shared(mounted) folders list
+                  if (!mountMatches.isEmpty()) {
+                      for (Object match : mountMatches.values()) {
+                          if (match instanceof String[]) {
+                              for (String response : (String[]) match) {
+                                  sendUntagged(response);
+                              }
+                          } else {
+                              sendUntagged((String) match);
+                          }
+                      }
+                  }
+                  mountSelected.clear();
+                  mountMatches.clear();
+                  mountSelected = null;
+                  mountMatches = new TreeMap<ImapPath, Object>();
+              }
+          }  catch (ServiceException e) {
+              ZimbraLog.imap.warn(command + " failed", e);
+              sendNO(tag, command + " failed");
+              return canContinue(e);
+          }
         }
 
         sendNotifications(true, false);
