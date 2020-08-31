@@ -63,8 +63,7 @@ public class ChangePassword extends AccountDocumentHandler {
                 name = name + "@" + d.getName();
         }
 
-        Element dryRunEl = request.getOptionalElement(AccountConstants.E_DRYRUN);
-        String text =  dryRunEl == null ? null : dryRunEl.getText();
+        String text =  request.getAttribute(AccountConstants.E_DRYRUN);
 
         boolean dryRun   = false;
         if (!StringUtil.isNullOrEmpty(text)) {
@@ -72,7 +71,6 @@ public class ChangePassword extends AccountDocumentHandler {
                 dryRun = true;
             }
         }
-
 
         Account acct = prov.get(AccountBy.name, name, zsc.getAuthToken());
         if (acct == null)
@@ -108,7 +106,7 @@ public class ChangePassword extends AccountDocumentHandler {
         }
 
         Element response = zsc.createElement(AccountConstants.CHANGE_PASSWORD_RESPONSE);
-        if (!dryRun) { 
+        if (!dryRun) {
            AuthToken at = AuthProvider.getAuthToken(acct);
            at.encodeAuthResp(response, false);
            response.addAttribute(AccountConstants.E_LIFETIME, at.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);
