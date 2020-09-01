@@ -160,7 +160,12 @@ public class SendMsg extends MailDocumentHandler {
                                delegatedAccount = authAcct;
                            }
 
-                           delegatedMailbox = MailboxManager.getInstance().getMailboxByAccountId(delegatedAccount.getId());
+                           delegatedMailbox = mbox;
+                           if (Provisioning.onLocalServer(delegatedAccount)) {
+                               delegatedMailbox = MailboxManager.getInstance().getMailboxByAccountId(delegatedAccount.getId());
+                           } else {
+                               return  proxyRequest(request, context, authToken, delegatedAccount.getId());
+                           }
                        }
                    }
                }
@@ -205,8 +210,12 @@ public class SendMsg extends MailDocumentHandler {
                            Message msg = mbox.getMessageById(octxt, iidDraft.getId());
                            mm = msg.getMimeMessage(false);
                        } else {
-                           Mailbox loggedUserMbox = MailboxManager.getInstance().getMailboxByAccountId(authAcct.getId());
-                           mm = ParseMimeMessage.parseMimeMsgSoap(zsc, octxt, loggedUserMbox, msgElem, null, mimeData);
+                           if (Provisioning.onLocalServer(authAcct)) {
+                               Mailbox loggedUserMbox = MailboxManager.getInstance().getMailboxByAccountId(authAcct.getId());
+                               mm = ParseMimeMessage.parseMimeMsgSoap(zsc, octxt, loggedUserMbox, msgElem, null, mimeData);
+                           } else {
+                               mm = ParseMimeMessage.parseMimeMsgSoap(zsc, octxt, mbox, msgElem, null, mimeData);
+                           }
                        }
 
                        if  (delegatedMailbox  != null) {
