@@ -753,7 +753,6 @@ public class Mailbox implements MailboxStore {
     private volatile boolean open = false;
     private boolean galSyncMailbox = false;
     private volatile boolean requiresWriteLock = true;
-
     protected Mailbox(MailboxData data) {
         mId = data.id;
         mData = data;
@@ -4350,6 +4349,23 @@ public class Mailbox implements MailboxStore {
     public List<Folder> getFolderList(OperationContext octxt, SortBy sort) throws ServiceException {
         List<Folder> folders = new ArrayList<Folder>();
         for (MailItem item : getItemList(octxt, MailItem.Type.FOLDER, -1, sort)) {
+            folders.add((Folder) item);
+        }
+        return folders;
+    }
+    /**
+     * ZBUG 1634
+     * setting the FOLDER ID for which delegation has been called
+     * e.g If user1 shares his Inbox, Sent and a Calendar to user2,
+     * and user2 tries to use delegation in Apple calDAV, it fails.
+     * Reason being
+     * public List<MailItem> getItemList(OperationContext octxt, MailItem.Type type, int folderId, SortBy sort)
+     * receives -1 as folderID , and the code tries to check if user2 has fullaccess on the folders of user1 mailbox.
+     * To mitigate that a folderid parameter is being set so that in case of Delegation, particular folder's access is only checked for user2.
+     */
+    public List<Folder> getFolderList(OperationContext octxt, SortBy sort,int folderId) throws ServiceException {
+        List<Folder> folders = new ArrayList<Folder>();
+        for (MailItem item : getItemList(octxt, MailItem.Type.FOLDER, folderId, sort)) {
             folders.add((Folder) item);
         }
         return folders;
