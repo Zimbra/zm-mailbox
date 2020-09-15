@@ -2240,6 +2240,30 @@ public abstract class ImapHandler {
                 populateFoldersList(ownerPaths, ownerSelected, ownerMatches, returnOptions, remoteSubscriptions, patterns, command, status, selectRecursive, false);
                 // for shared(mounted) folders
                 populateFoldersList(mountPaths, mountSelected, mountMatches, returnOptions, remoteSubscriptions, patterns, command, status, selectRecursive, true);
+                // send owners list first
+                if (!ownerMatches.isEmpty()) {
+                    for (Object match : ownerMatches.values()) {
+                        if (match instanceof String[]) {
+                            for (String response : (String[]) match) {
+                                sendUntagged(response);
+                            }
+                        } else {
+                            sendUntagged((String) match);
+                        }
+                    }
+                }
+                // send shared(mounted) folders list
+                if (!mountMatches.isEmpty()) {
+                    for (Object match : mountMatches.values()) {
+                        if (match instanceof String[]) {
+                            for (String response : (String[]) match) {
+                                sendUntagged(response);
+                            }
+                        } else {
+                            sendUntagged((String) match);
+                        }
+                    }
+                }
             }
         } catch (ServiceException e) {
             ZimbraLog.imap.warn(command + " failed", e);
@@ -2283,7 +2307,6 @@ public abstract class ImapHandler {
           try {
               Iterable<List<ImapPath>> lists = Iterables.partition(mountSelected, paginationSize);
 
-              // send owners list first
               for (List<ImapPath> listChunk: lists) {
                   Set<ImapPath> mountSelectedChunk = new HashSet<ImapPath>();
                   mountSelectedChunk.addAll(listChunk);
