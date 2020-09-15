@@ -21,6 +21,7 @@ import java.util.Set;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -110,14 +111,14 @@ public class DocumentAction extends ItemAction {
             notification = new WatchNotification(MailboxOperation.Unwatch, octxt.getAuthenticatedUser(), octxt.getUserAgent(), timestamp, watchedItem);
             mbox.markMetadataChanged(octxt, iid.getId());
         } else if (operation.equals(OP_REVOKE)) {
-            String zid = action.getAttribute(MailConstants.A_ZIMBRA_ID);
+            String zid = getZimbraId(action);
             mbox.revokeAccess(octxt, iid.getId(), zid);
         } else if (operation.equals(OP_GRANT)) {
             // file level shares can be granted to all users or public
             Element grant = action.getElement(MailConstants.E_GRANT);
             short rights = ACL.stringToRights(grant.getAttribute(MailConstants.A_RIGHTS));
             String gtype = grant.getAttribute(MailConstants.A_GRANT_TYPE);
-            String zid;
+            String zid = null;
             String secret = null;
             long expiry = grant.getAttributeLong(MailConstants.A_EXPIRY, 0);
             byte gtypeByte = ACL.stringToType(gtype);
@@ -131,7 +132,7 @@ public class DocumentAction extends ItemAction {
                         mbox.getAccount().getFilePublicShareLifetime());
                 break;
             case ACL.GRANTEE_USER:
-                zid = grant.getAttribute(MailConstants.A_ZIMBRA_ID);
+                zid = getZimbraId(grant);
                 break;
             default:
                 throw ServiceException.INVALID_REQUEST("unsupported gt: " + gtype, null);
@@ -169,5 +170,23 @@ public class DocumentAction extends ItemAction {
             }
         }
         return false;
+    }
+
+    private String getZimbraId(Element request) throws ServiceException {
+        String zid = request.getAttribute(MailConstants.A_ZIMBRA_ID);
+        if (zid == null) {
+            // if zid == null, check if email exist in the request and try to get the account using the email
+            String email = request.getAttribute(MailConstants.A_ZIMBRA_USER_EMAIL);
+            if (email == null || email == "") {
+                throw ServiceException.FAILURE("Either zid or email is missing", null);
+            } else {
+                Account account = Provisioning.getInstance().get(AccountBy.name, email);
+                if (account == null) {
+                    throw ServiceException.FAILURE(String.format("User does not exist with email %s", email), null);
+                }
+                zid = account.getId();
+            }
+        }
+        return zid;
     }
 }

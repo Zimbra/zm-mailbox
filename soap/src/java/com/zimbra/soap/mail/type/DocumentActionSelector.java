@@ -37,6 +37,9 @@ extends ActionSelector {
     @XmlAttribute(name=MailConstants.A_ZIMBRA_ID /* zid */, required=false)
     private String zimbraId;
 
+    @XmlAttribute(name=MailConstants.A_ZIMBRA_USER_EMAIL /* zemail */, required=false)
+    private String zimbraUserEmail;
+
     /**
      * @zm-api-field-description Used for "grant" operation
      */
@@ -56,14 +59,17 @@ extends ActionSelector {
     }
 
     public void setZimbraId(String zimbraId) { this.zimbraId = zimbraId; }
+    public void setZimbraUserEmail(String zimbraUserEmail) { this.zimbraUserEmail = zimbraUserEmail; }
     public void setGrant(DocumentActionGrant grant) { this.grant = grant; }
     public String getZimbraId() { return zimbraId; }
+    public String getZimbraUserEmail() { return zimbraUserEmail; }
     public DocumentActionGrant getGrant() { return grant; }
 
     public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);
         return helper
             .add("zimbraId", zimbraId)
+            .add("zimbraUserEmail", zimbraUserEmail)
             .add("grant", grant);
     }
 
