@@ -173,10 +173,10 @@ public class DocumentAction extends ItemAction {
     }
 
     private String getZimbraId(Element request) throws ServiceException {
-        String zid = request.getAttribute(MailConstants.A_ZIMBRA_ID);
+        String zid = request.getAttribute(MailConstants.A_ZIMBRA_ID, null);
         if (zid == null) {
             // if zid == null, check if email exist in the request and try to get the account using the email
-            String email = request.getAttribute(MailConstants.A_ZIMBRA_USER_EMAIL);
+            String email = request.getAttribute(MailConstants.A_ZIMBRA_USER_EMAIL, null);
             if (email == null || email == "") {
                 throw ServiceException.FAILURE("Either zid or email is missing", null);
             } else {

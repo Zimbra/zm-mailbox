@@ -35,8 +35,8 @@ public class DocumentActionGrant {
     private String rights;
 
     /**
-     * @zm-api-field-tag grant-type-all|pub
-     * @zm-api-field-description Grant type - <b>all|pub</b>
+     * @zm-api-field-tag grant-type-all|pub|usr
+     * @zm-api-field-description Grant type - <b>all|pub|usr</b>
      */
     @XmlAttribute(name=MailConstants.A_GRANT_TYPE /* gt */, required=true)
     private String grantType;
