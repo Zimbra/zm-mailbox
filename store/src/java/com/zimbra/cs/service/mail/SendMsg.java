@@ -139,6 +139,7 @@ public class SendMsg extends MailDocumentHandler {
                String dataSourceId = msgElem.getAttribute(MailConstants.A_DATASOURCE_ID, null);
                String draftId = msgElem.getAttribute(MailConstants.A_DRAFT_ID, null);
                boolean sendFromDraft = msgElem.getAttributeBool(MailConstants.A_SEND_FROM_DRAFT, false);
+               ItemId iidDraft = draftId == null ? null : new ItemId(draftId, zsc);
 
                Account delegatedAccount = authAcct;
                Mailbox  delegatedMailbox = null;
@@ -156,7 +157,7 @@ public class SendMsg extends MailDocumentHandler {
                                delegatedAccount.getAccountStatus(prov));
                            if (!active) {
                                ZimbraLog.soap.info("The delegated account:%s is inactive, for mail operations user context will be :%s",
-                                   authAcct.getName(), delegatedAccount.getName());
+                                       delegatedAccount.getName(), authAcct.getName());
                                delegatedAccount = authAcct;
                            }
 
@@ -164,13 +165,16 @@ public class SendMsg extends MailDocumentHandler {
                            if (Provisioning.onLocalServer(delegatedAccount)) {
                                delegatedMailbox = MailboxManager.getInstance().getMailboxByAccountId(delegatedAccount.getId());
                            } else {
-                               return  proxyRequest(request, context, authToken, delegatedAccount.getId());
+                               Element response = proxyRequest(request, context, authToken, delegatedAccount.getId());
+                               if (iidDraft != null) {
+                                   deleteDraft(iidDraft, octxt, mbox, zsc);
+                               }
+                               return response;
                            }
                        }
                    }
                }
 
-               ItemId iidDraft = draftId == null ? null : new ItemId(draftId, zsc);
                SendState state = SendState.NEW;
                ItemId savedMsgId = null;
                Pair<String, ItemId> sendRecord = null;
