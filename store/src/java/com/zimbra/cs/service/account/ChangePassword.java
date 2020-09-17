@@ -64,7 +64,7 @@ public class ChangePassword extends AccountDocumentHandler {
                 name = name + "@" + d.getName();
         }
 
-        String text = request.getAttribute(AccountConstants.E_DRYRUN);
+        String text = request.getAttribute(AccountConstants.E_DRYRUN, null);
 
         boolean dryRun   = false;
         if (!StringUtil.isNullOrEmpty(text)) {
