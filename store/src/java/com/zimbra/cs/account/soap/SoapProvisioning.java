@@ -113,6 +113,7 @@ import com.zimbra.soap.account.message.GetDistributionListMembersResponse;
 import com.zimbra.soap.account.message.GetIdentitiesRequest;
 import com.zimbra.soap.account.message.GetIdentitiesResponse;
 import com.zimbra.soap.account.message.ModifyIdentityRequest;
+import com.zimbra.soap.account.message.ResetPasswordRequest;
 import com.zimbra.soap.account.type.HABGroupMember;
 import com.zimbra.soap.account.type.NameId;
 import com.zimbra.soap.admin.message.AddAccountAliasRequest;
@@ -870,6 +871,16 @@ public class SoapProvisioning extends Provisioning {
         com.zimbra.soap.type.AccountSelector jaxbAcct =
             new com.zimbra.soap.type.AccountSelector(com.zimbra.soap.type.AccountBy.name, acct.getName());
         invokeJaxb(new ChangePasswordRequest(jaxbAcct, currentPassword, newPassword, dryRun));
+    }
+
+    public SetPasswordResult resetPassword(Account acct, String newPassword, boolean dryRun) throws ServiceException {
+    		SetPasswordResponse resp =
+                invokeJaxb(new SetPasswordRequest(acct.getId(), newPassword, dryRun));
+	    	SetPasswordResult result = new SetPasswordResult();
+	    	String eMsg = resp.getMessage();
+	    	if (eMsg != null)
+	    		result.setMessage(eMsg);
+	    	return result;
     }
 
     @Override
@@ -3218,5 +3229,4 @@ public class SoapProvisioning extends Provisioning {
         GetDistributionListMembersResponse resp = invokeJaxb(new GetDistributionListMembersRequest(0, 0, group.getName()));
         return resp.getHABGroupMembers();
     }
-
 }
