@@ -1278,7 +1278,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     throws ServiceException;
 
     public abstract void changePassword(Account acct, String currentPassword, String newPassword) throws ServiceException;
-    public abstract void changePassword(Account acct, String currentPassword, String newPassword,  boolean dryRun) throws ServiceException;
+    public abstract void changePassword(Account acct, String currentPassword, String newPassword, boolean dryRun) throws ServiceException;
 
     public static class SetPasswordResult {
         private String msg;
@@ -1309,6 +1309,8 @@ public abstract class Provisioning extends ZAttrProvisioning {
     throws ServiceException {
         throw ServiceException.UNSUPPORTED();
     }
+
+    public abstract SetPasswordResult resetPassword(Account acct, String newPassword, boolean dryRun) throws ServiceException;
 
     public abstract void checkPasswordStrength(Account acct, String password) throws ServiceException;
 
