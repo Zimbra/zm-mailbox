@@ -63421,7 +63421,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-    * whether or not not document editing in briefcase
+    * whether or not to allow document editing in briefcase
     *
     * @return zimbraFeatureDocumentEditingEnabled, or false if unset
     *
@@ -63433,7 +63433,7 @@ public abstract class ZAttrAccount  extends MailTarget {
    }
 
    /**
-    * whether or not not document editing in briefcase
+    * whether or not to allow document editing in briefcase
     *
     * @param zimbraFeatureDocumentEditingEnabled new value
     * @throws com.zimbra.common.service.ServiceException if error during update
@@ -63448,7 +63448,7 @@ public abstract class ZAttrAccount  extends MailTarget {
    }
 
    /**
-    * whether or not not document editing in briefcase
+    * whether or not to allow document editing in briefcase
     *
     * @param zimbraFeatureDocumentEditingEnabled new value
     * @param attrs existing map to populate, or null to create a new map
@@ -63464,7 +63464,7 @@ public abstract class ZAttrAccount  extends MailTarget {
    }
 
    /**
-    * whether or not not document editing in briefcase
+    * whether or not to allow document editing in briefcase
     *
     * @throws com.zimbra.common.service.ServiceException if error during update
     *
@@ -63478,7 +63478,7 @@ public abstract class ZAttrAccount  extends MailTarget {
    }
 
    /**
-    * whether or not not document editing in briefcase
+    * whether or not to allow document editing in briefcase
     *
     * @param attrs existing map to populate, or null to create a new map
     * @return populated map to pass into Provisioning.modifyAttrs

@@ -18117,7 +18117,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDocumentRecentlyViewedEnabled = "zimbraDocumentRecentlyViewedEnabled";
     
     /**
-     * When enabled document document editing will be enabled
+     * When enabled document document editing will be enabled within briefcase
      * set true to enable it
      *
      * @since ZCS 9.0.0

@@ -10068,6 +10068,6 @@ TODO: delete them permanently from here
 </attr>
 <attr id="9016" name="zimbraFeatureDocumentEditingEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="9.0.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
-  <desc>Whether or not to document editing feature is enabled</desc>
+  <desc>Whether or not document editing feature is enabled within briefcase</desc>
 </attr>
 </attrs>
