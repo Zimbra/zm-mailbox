@@ -18115,6 +18115,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=9015)
     public static final String A_zimbraDocumentRecentlyViewedEnabled = "zimbraDocumentRecentlyViewedEnabled";
+    
+    /**
+     * When enabled document document editing will be enabled
+     * set true to enable it
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=9016)
+    public static final String A_zimbraFeatureDocumentEditingEnabled = "zimbraFeatureDocumentEditingEnabled";
 
     ///// END-AUTO-GEN-REPLACE
 }
