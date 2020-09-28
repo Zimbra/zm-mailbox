@@ -42,10 +42,10 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class ChangePassword extends AccountDocumentHandler {
 
-	@Override
+    @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 
-	    if (!checkPasswordSecurity(context))
+        if (!checkPasswordSecurity(context))
             throw ServiceException.INVALID_REQUEST("clear text password is not allowed", null);
 
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
@@ -63,7 +63,7 @@ public class ChangePassword extends AccountDocumentHandler {
                 name = name + "@" + d.getName();
         }
 
-        String text =  request.getAttribute(AccountConstants.E_DRYRUN);
+        String text =  request.getAttribute(AccountConstants.E_DRYRUN, null);
 
         boolean dryRun   = false;
         if (!StringUtil.isNullOrEmpty(text)) {
@@ -93,8 +93,8 @@ public class ChangePassword extends AccountDocumentHandler {
             }
         }
 
-		String oldPassword = request.getAttribute(AccountConstants.E_OLD_PASSWORD);
-		String newPassword = request.getAttribute(AccountConstants.E_PASSWORD);
+        String oldPassword = request.getAttribute(AccountConstants.E_OLD_PASSWORD);
+        String newPassword = request.getAttribute(AccountConstants.E_PASSWORD);
         if (acct.isIsExternalVirtualAccount() && StringUtil.isNullOrEmpty(oldPassword)
                 && !acct.isVirtualAccountInitialPasswordSet() && acct.getId().equals(zsc.getAuthtokenAccountId())) {
             // need a valid auth token in this case
@@ -102,7 +102,7 @@ public class ChangePassword extends AccountDocumentHandler {
             prov.setPassword(acct, newPassword, true);
             acct.setVirtualAccountInitialPasswordSet(true);
         } else {
-		    prov.changePassword(acct, oldPassword, newPassword, dryRun);
+            prov.changePassword(acct, oldPassword, newPassword, dryRun);
         }
 
         Element response = zsc.createElement(AccountConstants.CHANGE_PASSWORD_RESPONSE);
