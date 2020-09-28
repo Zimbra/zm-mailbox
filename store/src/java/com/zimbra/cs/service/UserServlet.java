@@ -617,6 +617,8 @@ public class UserServlet extends ZimbraServlet {
                     MailItem item = resolveItem(context);
                     System.out.println("###### MailItem ###########  : "+ item.toString());
                     log.info("###### MailItem ###########  : "+ item.toString());
+                    
+                    System.out.println(" ####### calling isEditEnabled(item) ########## "+ isEditEnabled(item).toString());
                     if (proxyIfMountpoint(req, resp, context, item)) {
                         // if the target is a mountpoint, the request was already proxied to the resolved target
                         return;
