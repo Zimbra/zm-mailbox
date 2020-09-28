@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -50,6 +51,7 @@ import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.util.EntityUtils;
 
+import com.google.common.io.Files;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.account.Key.AccountBy;
@@ -613,9 +615,19 @@ public class UserServlet extends ZimbraServlet {
             } else {
                 if (this instanceof UserServlet) {
                     MailItem item = resolveItem(context);
+                    System.out.println("###### MailItem ###########  : "+ item.toString());
+                    log.info("###### MailItem ###########  : "+ item.toString());
                     if (proxyIfMountpoint(req, resp, context, item)) {
                         // if the target is a mountpoint, the request was already proxied to the resolved target
                         return;
+                    }
+                    //check if it is doc-server-ext enabled
+                    else if(isEditEnabled(item)){
+                        //redirect to /service/extension/doc/{briefcase-doc-id}
+                        // item.getDigest() is the docId
+                        System.out.println(" ##### REDIRECTING TO  ###### : "+(req.getContextPath() + "/service/extension/doc/"+item.getId()));
+                        log.info(" ##### REDIRECTING TO  ###### : "+(req.getContextPath() + "/service/extension/doc/"+item.getId()));
+                        resp.sendRedirect(req.getContextPath() + "/service/extension/doc/"+item.getId());
                     }
                     context.target = item;  /* imap_id resolution needs this. */
                 } else if (this instanceof SharedFileServlet) {
@@ -656,6 +668,36 @@ public class UserServlet extends ZimbraServlet {
         }
 
         context.formatter.format(context);
+    }
+
+    /**
+     * In case of download of a file from Briefcase, if the following conditions are met
+     * redirect to /service/extension/doc/{briefcase-doc-id}
+     * checks the following conditions
+     * 1. extension available
+     * 2. document supported type
+     * 3. public shared or user.enabled
+     * @param item
+     * @return
+     */
+    private Boolean isEditEnabled(MailItem item) {
+
+        return (LC.doc_server_ext_enabled.booleanValue() && isAllowedDocType(item));
+    }
+
+    // check if it is one of the allowed file extensions
+    private Boolean isAllowedDocType(MailItem item) {
+
+        HashSet<String> allowedTypes = new HashSet<String>();
+
+        allowedTypes.addAll(Arrays.asList(LC.supported_document_formats.toString().split(",")));
+        allowedTypes.addAll(Arrays.asList(LC.supported_spreadsheet_formats.toString().split(",")));
+        allowedTypes.addAll(Arrays.asList(LC.supported_presentation_formats.toString().split(",")));
+
+        // check if the extension is present
+//        String[] fileProps = item.getName().split(".");
+        log.info(" ####### inside isAllowedDocType : FIle name = " +item.getName() );
+        return allowedTypes.contains( Files.getFileExtension( item.getName() ) );
     }
 
     /**
