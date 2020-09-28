@@ -728,6 +728,16 @@ public class SoapProvisioning extends Provisioning {
         invokeJaxb(new ChangePasswordRequest(jaxbAcct, currentPassword, newPassword, dryRun));
     }
 
+    public SetPasswordResult resetPassword(Account acct, String newPassword, boolean dryRun) throws ServiceException {
+        SetPasswordResponse resp =
+                invokeJaxb(new SetPasswordRequest(acct.getId(), newPassword, dryRun));
+        SetPasswordResult result = new SetPasswordResult();
+        String eMsg = resp.getMessage();
+        if (eMsg != null)
+            result.setMessage(eMsg);
+        return result;
+    }
+
     @Override
     public Account createAccount(String emailAddress, String password, Map<String, Object> attrs)
         throws ServiceException
