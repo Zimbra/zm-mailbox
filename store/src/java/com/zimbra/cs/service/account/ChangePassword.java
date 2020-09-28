@@ -43,10 +43,10 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class ChangePassword extends AccountDocumentHandler {
 
-	@Override
+    @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 
-	    if (!checkPasswordSecurity(context))
+        if (!checkPasswordSecurity(context))
             throw ServiceException.INVALID_REQUEST("clear text password is not allowed", null);
 
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
@@ -64,8 +64,7 @@ public class ChangePassword extends AccountDocumentHandler {
                 name = name + "@" + d.getName();
         }
 
-        Element dryRunEl = request.getOptionalElement(AccountConstants.E_DRYRUN);
-        String text =  dryRunEl == null ? null : dryRunEl.getText();
+        String text = request.getAttribute(AccountConstants.E_DRYRUN, null);
 
         boolean dryRun   = false;
         if (!StringUtil.isNullOrEmpty(text)) {
@@ -73,7 +72,6 @@ public class ChangePassword extends AccountDocumentHandler {
                 dryRun = true;
             }
         }
-
 
         Account acct = prov.get(AccountBy.name, name, zsc.getAuthToken());
         if (acct == null)
@@ -89,8 +87,8 @@ public class ChangePassword extends AccountDocumentHandler {
             return proxyToAccountHostIp(accountHostIp, request, context, zsc);
         }
 
-		String oldPassword = request.getAttribute(AccountConstants.E_OLD_PASSWORD);
-		String newPassword = request.getAttribute(AccountConstants.E_PASSWORD);
+        String oldPassword = request.getAttribute(AccountConstants.E_OLD_PASSWORD);
+        String newPassword = request.getAttribute(AccountConstants.E_PASSWORD);
         if (acct.isIsExternalVirtualAccount() && StringUtil.isNullOrEmpty(oldPassword)
                 && !acct.isVirtualAccountInitialPasswordSet() && acct.getId().equals(zsc.getAuthtokenAccountId())) {
             // need a valid auth token in this case
@@ -98,18 +96,18 @@ public class ChangePassword extends AccountDocumentHandler {
             prov.setPassword(acct, newPassword, true);
             acct.setVirtualAccountInitialPasswordSet(true);
         } else {
-		    prov.changePassword(acct, oldPassword, newPassword, dryRun);
+            prov.changePassword(acct, oldPassword, newPassword, dryRun);
         }
 
         Element response = zsc.createElement(AccountConstants.CHANGE_PASSWORD_RESPONSE);
-        if (!dryRun) { 
+        if (!dryRun) {
            AuthToken at = AuthProvider.getAuthToken(acct);
            AccountUtil.broadcastFlushCache(acct);
            at.encodeAuthResp(response, false);
            response.addAttribute(AccountConstants.E_LIFETIME, at.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);
         }
         return response;
-	}
+    }
 
     @Override
     public boolean needsAuth(Map<String, Object> context) {
