@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
@@ -674,10 +675,7 @@ public class UserServlet extends ZimbraServlet {
      * checks the following conditions
      * 1. extension available
      * 2. document supported type
-     * 3. public shared or user.enabled // haven't been check
-     * @param item
-     * @return
-     */
+     * */
     private Boolean isEditEnabled(MailItem item,UserServletContext context) {
 
         boolean zimbraFeatureDocumentEditingEnabled = false;
@@ -690,14 +688,10 @@ public class UserServlet extends ZimbraServlet {
 
     // check if it is one of the allowed file extensions
     private Boolean isAllowedDocType(MailItem item) {
-
         HashSet<String> allowedTypes = new HashSet<String>();
-
         allowedTypes.addAll(Arrays.asList(LC.supported_document_formats.value().toString().split(",")));
         allowedTypes.addAll(Arrays.asList(LC.supported_spreadsheet_formats.value().toString().split(",")));
         allowedTypes.addAll(Arrays.asList(LC.supported_presentation_formats.value().toString().split(",")));
-
-        // check if the extension is present
         return allowedTypes.contains( Files.getFileExtension( item.getName() ) );
     }
 
