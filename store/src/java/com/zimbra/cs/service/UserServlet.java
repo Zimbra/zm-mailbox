@@ -605,7 +605,11 @@ public class UserServlet extends ZimbraServlet {
             if (queryParam != null) reqURL.append('?').append(queryParam);
             log.debug("UserServlet: " + reqURL.toString());
         }
-
+        log.info("INSTANCE OF  : "+ this.getClass());
+        log.info("INSTANCE OF this instanceof UserServlet : "+(this instanceof UserServlet));
+        log.info("INSTANCE OF this instanceof SharedFileServlet : "+(this instanceof SharedFileServlet));
+        log.info(" Req URL :: context.req.getRequestURL() ---- > " +context.req.getRequestURL());
+        
         context.opContext = new OperationContext(context.getAuthAccount(), isAdminRequest(req));
         Mailbox mbox = UserServletUtil.getTargetMailbox(context);
         if (mbox != null) {
@@ -613,12 +617,11 @@ public class UserServlet extends ZimbraServlet {
             if (context.reqListIds != null) {
                 resolveItems(context);
             } else {
-                if (this instanceof UserServlet) {
-                    MailItem item = resolveItem(context);
+                if (this instanceof SharedFileServlet) {
+                    SharedFileServlet sfs = (SharedFileServlet) this;
+                    MailItem item =  sfs.resolveItem(context);
                     log.info("###### MailItem ###########  : "+ item.toString());
-                    
-                    System.out.println(" ####### calling isEditEnabled(item) ########## "+ isEditEnabled(item).toString());
-                    if (proxyIfMountpoint(req, resp, context, item)) {
+                    if (sfs.proxyIfMountpoint(req, resp, context, item)) {
                         // if the target is a mountpoint, the request was already proxied to the resolved target
                         return;
                     }
@@ -635,15 +638,15 @@ public class UserServlet extends ZimbraServlet {
                         dispatcher.forward(req, resp);
                     }
                     context.target = item;  /* imap_id resolution needs this. */
-                } else if (this instanceof SharedFileServlet) {
-                    SharedFileServlet sfs = (SharedFileServlet) this;
-                    MailItem item =  sfs.resolveItem(context);
-                    if (sfs.proxyIfMountpoint(req, resp, context, item)) {
+                }
+                else if (this instanceof UserServlet) {
+                    MailItem item = resolveItem(context);
+                    if (proxyIfMountpoint(req, resp, context, item)) {
                         // if the target is a mountpoint, the request was already proxied to the resolved target
                         return;
                     }
                     context.target = item;  /* imap_id resolution needs this. */
-                }
+                } 
             }
         }
 
