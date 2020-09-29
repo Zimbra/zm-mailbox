@@ -677,6 +677,7 @@ public class UserServlet extends ZimbraServlet {
      * checks the following conditions
      * 1. extension available
      * 2. document supported type
+<<<<<<< HEAD
      * */
     private Boolean isEditEnabled(MailItem item,UserServletContext context) {
 
