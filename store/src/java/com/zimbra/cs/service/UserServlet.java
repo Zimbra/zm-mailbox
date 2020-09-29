@@ -605,11 +605,6 @@ public class UserServlet extends ZimbraServlet {
             if (queryParam != null) reqURL.append('?').append(queryParam);
             log.debug("UserServlet: " + reqURL.toString());
         }
-        log.info("INSTANCE OF  : "+ this.getClass());
-        log.info("INSTANCE OF this instanceof UserServlet : "+(this instanceof UserServlet));
-        log.info("INSTANCE OF this instanceof SharedFileServlet : "+(this instanceof SharedFileServlet));
-        log.info(" Req URL :: context.req.getRequestURL() ---- > " +context.req.getRequestURL());
-        
         context.opContext = new OperationContext(context.getAuthAccount(), isAdminRequest(req));
         Mailbox mbox = UserServletUtil.getTargetMailbox(context);
         if (mbox != null) {
@@ -620,7 +615,6 @@ public class UserServlet extends ZimbraServlet {
                 if (this instanceof SharedFileServlet) {
                     SharedFileServlet sfs = (SharedFileServlet) this;
                     MailItem item =  sfs.resolveItem(context);
-                    log.info("###### MailItem ###########  : "+ item.toString());
                     if (sfs.proxyIfMountpoint(req, resp, context, item)) {
                         // if the target is a mountpoint, the request was already proxied to the resolved target
                         return;
@@ -629,10 +623,6 @@ public class UserServlet extends ZimbraServlet {
                     else if (isEditEnabled(item)) {
                         // redirect to /service/extension/doc/{briefcase-doc-id}
                         // item.getDigest() is the docId
-                        log.info(" ##### REDIRECTING TO  ###### : "
-                                + (req.getContextPath() + "/extension/doc/" + item.getId()));
-                        // resp.sendRedirect(req.getContextPath() +
-                        // "/extension/doc/"+item.getId());
                         RequestDispatcher dispatcher = getServletContext()
                                 .getRequestDispatcher("/extension/doc/" + item.getId());
                         dispatcher.forward(req, resp);
@@ -689,11 +679,6 @@ public class UserServlet extends ZimbraServlet {
      * @return
      */
     private Boolean isEditEnabled(MailItem item) {
-//        log.info(" ### inside isEditEnabled ### ");
-//        log.info(" LC.doc_server_ext_enabled.booleanValue() "+LC.doc_server_ext_enabled.booleanValue());
-//        log.info(" item.getName() "+item.getName());
-//        log.info(" Files.getFileExtension( item.getName() ) " + Files.getFileExtension( item.getName() ));
-//        log.info(" isAllowedDocType(item) "+isAllowedDocType(item).toString());
 
         return (LC.doc_server_ext_enabled.booleanValue() && isAllowedDocType(item));
     }
@@ -708,9 +693,6 @@ public class UserServlet extends ZimbraServlet {
         allowedTypes.addAll(Arrays.asList(LC.supported_presentation_formats.value().toString().split(",")));
 
         // check if the extension is present
-//        String[] fileProps = item.getName().split(".")
-//        log.info(" ####### inside isAllowedDocType : FIle name = " +item.getName() );
-//        log.info(" ####### allowedTypes ########## "+allowedTypes.toString());
         return allowedTypes.contains( Files.getFileExtension( item.getName() ) );
     }
 
