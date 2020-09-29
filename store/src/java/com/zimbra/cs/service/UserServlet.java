@@ -26,8 +26,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
+import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -623,11 +623,16 @@ public class UserServlet extends ZimbraServlet {
                         return;
                     }
                     //check if it is doc-server-ext enabled
-                    else if(isEditEnabled(item)){
-                        //redirect to /service/extension/doc/{briefcase-doc-id}
+                    else if (isEditEnabled(item)) {
+                        // redirect to /service/extension/doc/{briefcase-doc-id}
                         // item.getDigest() is the docId
-                        log.info(" ##### REDIRECTING TO  ###### : "+(req.getContextPath() + "/service/extension/doc/"+item.getId()));
-                        resp.sendRedirect(req.getContextPath() + "/service/extension/doc/"+item.getId());
+                        log.info(" ##### REDIRECTING TO  ###### : "
+                                + (req.getContextPath() + "/extension/doc/" + item.getId()));
+                        // resp.sendRedirect(req.getContextPath() +
+                        // "/extension/doc/"+item.getId());
+                        RequestDispatcher dispatcher = getServletContext()
+                                .getRequestDispatcher("/extension/doc/" + item.getId());
+                        dispatcher.forward(req, resp);
                     }
                     context.target = item;  /* imap_id resolution needs this. */
                 } else if (this instanceof SharedFileServlet) {
@@ -681,11 +686,11 @@ public class UserServlet extends ZimbraServlet {
      * @return
      */
     private Boolean isEditEnabled(MailItem item) {
-        log.info(" ### inside isEditEnabled ### ");
-        log.info(" LC.doc_server_ext_enabled.booleanValue() "+LC.doc_server_ext_enabled.booleanValue());
-        log.info(" item.getName() "+item.getName());
-        log.info(" Files.getFileExtension( item.getName() ) " + Files.getFileExtension( item.getName() ));
-        log.info(" isAllowedDocType(item) "+isAllowedDocType(item).toString());
+//        log.info(" ### inside isEditEnabled ### ");
+//        log.info(" LC.doc_server_ext_enabled.booleanValue() "+LC.doc_server_ext_enabled.booleanValue());
+//        log.info(" item.getName() "+item.getName());
+//        log.info(" Files.getFileExtension( item.getName() ) " + Files.getFileExtension( item.getName() ));
+//        log.info(" isAllowedDocType(item) "+isAllowedDocType(item).toString());
 
         return (LC.doc_server_ext_enabled.booleanValue() && isAllowedDocType(item));
     }
@@ -701,8 +706,8 @@ public class UserServlet extends ZimbraServlet {
 
         // check if the extension is present
 //        String[] fileProps = item.getName().split(".")
-        log.info(" ####### inside isAllowedDocType : FIle name = " +item.getName() );
-        log.info(" ####### allowedTypes ########## "+allowedTypes.toString());
+//        log.info(" ####### inside isAllowedDocType : FIle name = " +item.getName() );
+//        log.info(" ####### allowedTypes ########## "+allowedTypes.toString());
         return allowedTypes.contains( Files.getFileExtension( item.getName() ) );
     }
 
