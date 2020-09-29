@@ -196,7 +196,7 @@ public class DocumentAction extends ItemAction {
                 throw ServiceException.INVALID_REQUEST("invalid email id", null);
             } else {
                 try {
-                    nentry = FolderAction.lookupGranteeByName(zid, ACL.GRANTEE_USER, zsc);
+                    nentry = FolderAction.lookupGranteeByName(email, ACL.GRANTEE_USER, zsc);
                     if (nentry instanceof MailTarget) {
                         Domain domain = Provisioning.getInstance().getDomain(mbox.getAccount());
                         String granteeDomainName = ((MailTarget) nentry).getDomainName();
