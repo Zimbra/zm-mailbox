@@ -695,13 +695,14 @@ public class UserServlet extends ZimbraServlet {
 
         HashSet<String> allowedTypes = new HashSet<String>();
 
-        allowedTypes.addAll(Arrays.asList(LC.supported_document_formats.toString().split(",")));
-        allowedTypes.addAll(Arrays.asList(LC.supported_spreadsheet_formats.toString().split(",")));
-        allowedTypes.addAll(Arrays.asList(LC.supported_presentation_formats.toString().split(",")));
+        allowedTypes.addAll(Arrays.asList(LC.supported_document_formats.value().toString().split(",")));
+        allowedTypes.addAll(Arrays.asList(LC.supported_spreadsheet_formats.value().toString().split(",")));
+        allowedTypes.addAll(Arrays.asList(LC.supported_presentation_formats.value().toString().split(",")));
 
         // check if the extension is present
-//        String[] fileProps = item.getName().split(".");
+//        String[] fileProps = item.getName().split(".")
         log.info(" ####### inside isAllowedDocType : FIle name = " +item.getName() );
+        log.info(" ####### allowedTypes ########## "+allowedTypes.toString());
         return allowedTypes.contains( Files.getFileExtension( item.getName() ) );
     }
 
