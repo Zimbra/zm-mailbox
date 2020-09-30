@@ -620,7 +620,7 @@ public class UserServlet extends ZimbraServlet {
                         return;
                     }
                     //check if it is doc-server-ext enabled
-                    else if (isEditEnabled(item)) {
+                    else if (isEditEnabled(item, context)) {
                         // redirect to /service/extension/doc/{briefcase-doc-id}
                         // item.getDigest() is the docId
                         RequestDispatcher dispatcher = getServletContext()
@@ -674,13 +674,18 @@ public class UserServlet extends ZimbraServlet {
      * checks the following conditions
      * 1. extension available
      * 2. document supported type
-     * 3. public shared or user.enabled
+     * 3. public shared or user.enabled // haven't been check
      * @param item
      * @return
      */
-    private Boolean isEditEnabled(MailItem item) {
+    private Boolean isEditEnabled(MailItem item,UserServletContext context) {
 
-        return (LC.doc_server_ext_enabled.booleanValue() && isAllowedDocType(item));
+        boolean zimbraFeatureDocumentEditingEnabled = false;
+        Account account  = context.getAuthAccount();
+        if (account != null) {
+            zimbraFeatureDocumentEditingEnabled = account.isFeatureDocumentEditingEnabled();
+        }
+        return (zimbraFeatureDocumentEditingEnabled && isAllowedDocType(item));
     }
 
     // check if it is one of the allowed file extensions

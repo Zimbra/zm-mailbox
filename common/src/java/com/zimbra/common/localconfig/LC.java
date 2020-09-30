@@ -1551,11 +1551,7 @@ public final class LC {
     // to switch to Tika com.zimbra.cs.convert.TikaExtractionClient
     public static final KnownKey attachment_extraction_client_class = KnownKey.newKey("com.zimbra.cs.convert.TikaExtractionClient");
 
-    //to check if doc-server-ext is enabled
-    public static final KnownKey doc_server_ext_enabled = KnownKey.newKey(false);
-
     //allowed file extensions for doc server
-
     public static final KnownKey supported_document_formats = KnownKey.newKey("doc,docx,docm,dot,dotx,dotm,odt,fodt,ott,rtf,txt,html,htm,mht,pdf,djvu,fb2,epub,xps");
 
     public static final KnownKey supported_spreadsheet_formats = KnownKey.newKey("xls,xlsx,xlsm,xlt,xltx,xltm,ods,fods,ots,csv");
