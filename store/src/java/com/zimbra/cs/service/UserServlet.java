@@ -687,6 +687,7 @@ public class UserServlet extends ZimbraServlet {
         Account account  = context.getAuthAccount();
         if (account != null) {
             zimbraFeatureDocumentEditingEnabled = account.isFeatureDocumentEditingEnabled();
+            log.info(" account.isFeatureDocumentEditingEnabled() :: "+account.isFeatureDocumentEditingEnabled());
         }
         
         log.info("zimbraFeatureDocumentEditingEnabled : "+zimbraFeatureDocumentEditingEnabled);
