@@ -297,6 +297,9 @@ public class UserServlet extends ZimbraServlet {
     public static final String QP_TZ = "tz";
     public static final String QP_USE_INSTANCE = "useInstance";
     public static final String QP_XIM = "xim";
+    
+    private static final String SHARED_DOC_EXT_URL_FOR_EDIT = "/extension/doc/";
+    
 
     public static final Log log = LogFactory.getLog(UserServlet.class);
 
@@ -625,7 +628,7 @@ public class UserServlet extends ZimbraServlet {
                         // redirect to /service/extension/doc/{briefcase-doc-id}
                         // item.getDigest() is the docId
                         RequestDispatcher dispatcher = getServletContext()
-                                .getRequestDispatcher("/extension/doc/" + item.getId());
+                                .getRequestDispatcher(SHARED_DOC_EXT_URL_FOR_EDIT + item.getId());
                         dispatcher.forward(req, resp);
                     }
                     context.target = item;  /* imap_id resolution needs this. */
