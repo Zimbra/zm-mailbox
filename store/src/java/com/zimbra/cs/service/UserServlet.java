@@ -297,8 +297,7 @@ public class UserServlet extends ZimbraServlet {
     public static final String QP_USE_INSTANCE = "useInstance";
     public static final String QP_XIM = "xim";
     
-    private static final String SHARED_DOC_EXT_URL_FOR_EDIT = "/extension/doc/";
-    
+    private static final String DOC_EXCHANGE_FORWARD_URL_FOR_EDIT= "/extension/doc/";
 
     public static final Log log = LogFactory.getLog(UserServlet.class);
 
@@ -610,6 +609,7 @@ public class UserServlet extends ZimbraServlet {
         }
         context.opContext = new OperationContext(context.getAuthAccount(), isAdminRequest(req));
         Mailbox mbox = UserServletUtil.getTargetMailbox(context);
+        log.info("this instanceof SharedFileServlet : "+(this instanceof SharedFileServlet));
         if (mbox != null) {
             ZimbraLog.addMboxToContext(mbox.getId());
             if (context.reqListIds != null) {
@@ -618,6 +618,8 @@ public class UserServlet extends ZimbraServlet {
                 if (this instanceof SharedFileServlet) {
                     SharedFileServlet sfs = (SharedFileServlet) this;
                     MailItem item =  sfs.resolveItem(context);
+                    log.info("MailItem : "+item);
+                    log.info("isEditEnabled(item, context) : "+ isEditEnabled(item, context).toString());
                     if (sfs.proxyIfMountpoint(req, resp, context, item)) {
                         // if the target is a mountpoint, the request was already proxied to the resolved target
                         return;
@@ -627,7 +629,7 @@ public class UserServlet extends ZimbraServlet {
                         // redirect to /service/extension/doc/{briefcase-doc-id}
                         // item.getDigest() is the docId
                         RequestDispatcher dispatcher = getServletContext()
-                                .getRequestDispatcher(SHARED_DOC_EXT_URL_FOR_EDIT + item.getId());
+                                .getRequestDispatcher(DOC_EXCHANGE_FORWARD_URL_FOR_EDIT + item.getId());
                         dispatcher.forward(req, resp);
                     }
                     context.target = item;  /* imap_id resolution needs this. */
@@ -686,6 +688,9 @@ public class UserServlet extends ZimbraServlet {
         if (account != null) {
             zimbraFeatureDocumentEditingEnabled = account.isFeatureDocumentEditingEnabled();
         }
+        
+        log.info("zimbraFeatureDocumentEditingEnabled : "+zimbraFeatureDocumentEditingEnabled);
+        log.info("isAllowedDocType(item) :" + isAllowedDocType(item));
         return (zimbraFeatureDocumentEditingEnabled && isAllowedDocType(item));
     }
 
