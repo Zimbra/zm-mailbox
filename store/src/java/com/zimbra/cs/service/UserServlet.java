@@ -690,9 +690,9 @@ public class UserServlet extends ZimbraServlet {
     // check if it is one of the allowed file extensions
     private Boolean isAllowedDocType(MailItem item) {
         HashSet<String> allowedTypes = new HashSet<String>();
-        allowedTypes.addAll(Arrays.asList(LC.supported_document_formats.value().toString().split(",")));
-        allowedTypes.addAll(Arrays.asList(LC.supported_spreadsheet_formats.value().toString().split(",")));
-        allowedTypes.addAll(Arrays.asList(LC.supported_presentation_formats.value().toString().split(",")));
+        allowedTypes.addAll(Arrays.asList(LC.doc_editing_supported_document_formats.value().toString().split(",")));
+        allowedTypes.addAll(Arrays.asList(LC.doc_editing_supported_spreadsheet_formats.value().toString().split(",")));
+        allowedTypes.addAll(Arrays.asList(LC.doc_editing_supported_presentation_formats.value().toString().split(",")));
         return allowedTypes.contains( Files.getFileExtension( item.getName() ) );
     }
 
