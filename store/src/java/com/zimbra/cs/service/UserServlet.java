@@ -609,7 +609,6 @@ public class UserServlet extends ZimbraServlet {
         }
         context.opContext = new OperationContext(context.getAuthAccount(), isAdminRequest(req));
         Mailbox mbox = UserServletUtil.getTargetMailbox(context);
-        log.info("this instanceof SharedFileServlet : "+(this instanceof SharedFileServlet));
         if (mbox != null) {
             ZimbraLog.addMboxToContext(mbox.getId());
             if (context.reqListIds != null) {
@@ -618,8 +617,6 @@ public class UserServlet extends ZimbraServlet {
                 if (this instanceof SharedFileServlet) {
                     SharedFileServlet sfs = (SharedFileServlet) this;
                     MailItem item =  sfs.resolveItem(context);
-                    log.info("MailItem : "+item);
-                    log.info("isEditEnabled(item, context) : "+ isEditEnabled(item, context).toString());
                     if (sfs.proxyIfMountpoint(req, resp, context, item)) {
                         // if the target is a mountpoint, the request was already proxied to the resolved target
                         return;
@@ -679,7 +676,6 @@ public class UserServlet extends ZimbraServlet {
      * checks the following conditions
      * 1. extension available
      * 2. document supported type
-<<<<<<< HEAD
      * */
     private Boolean isEditEnabled(MailItem item,UserServletContext context) {
 
@@ -687,11 +683,7 @@ public class UserServlet extends ZimbraServlet {
         Account account  = context.getAuthAccount();
         if (account != null) {
             zimbraFeatureDocumentEditingEnabled = account.isFeatureDocumentEditingEnabled();
-            log.info(" account.isFeatureDocumentEditingEnabled() :: "+account.isFeatureDocumentEditingEnabled());
         }
-        
-        log.info("zimbraFeatureDocumentEditingEnabled : "+zimbraFeatureDocumentEditingEnabled);
-        log.info("isAllowedDocType(item) :" + isAllowedDocType(item));
         return (zimbraFeatureDocumentEditingEnabled && isAllowedDocType(item));
     }
 
