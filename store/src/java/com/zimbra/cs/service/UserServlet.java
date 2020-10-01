@@ -626,7 +626,7 @@ public class UserServlet extends ZimbraServlet {
                         // redirect to /service/extension/doc/{briefcase-doc-id}
                         // item.getDigest() is the docId
                         RequestDispatcher dispatcher = getServletContext()
-                                .getRequestDispatcher(DOC_EXCHANGE_FORWARD_URL_FOR_EDIT + item.getId());
+                                .getRequestDispatcher(DOC_EXCHANGE_FORWARD_URL_FOR_EDIT + getSharedDocId(context.req.getRequestURL().toString()));
                         dispatcher.forward(req, resp);
                     }
                     context.target = item;  /* imap_id resolution needs this. */
@@ -694,6 +694,17 @@ public class UserServlet extends ZimbraServlet {
         allowedTypes.addAll(Arrays.asList(LC.doc_editing_supported_spreadsheet_formats.value().toString().split(",")));
         allowedTypes.addAll(Arrays.asList(LC.doc_editing_supported_presentation_formats.value().toString().split(",")));
         return allowedTypes.contains( Files.getFileExtension( item.getName() ) );
+    }
+
+    /**
+     * Extract the shared doc id passed in the URL
+     *
+     * @param url
+     * @return
+     */
+    private String getSharedDocId(final String url) {
+        String[] urlParts = url.split("/");
+        return urlParts[urlParts.length - 1];
     }
 
     /**
