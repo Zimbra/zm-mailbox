@@ -271,12 +271,11 @@ public class SendShareNotification extends MailDocumentHandler {
             ZimbraLog.account.debug("Adding sharing information for document %s", item.getName());
             Document doc = (Document) item;
             ACL acl = doc.getEffectiveACL();
-            if (acl == null) {
-                matchingGrant = null;
-            }
-            for (ACL.Grant grant : acl.getGrants()) {
-                if (grant.getGranteeType() == granteeType && grant.getGranteeId().equals(granteeId)) {
-                    matchingGrant =  new MatchingGrant(grant);
+            if (acl != null) {
+                for (ACL.Grant grant : acl.getGrants()) {
+                    if (grant.getGranteeType() == granteeType && grant.getGranteeId().equals(granteeId)) {
+                        matchingGrant =  new MatchingGrant(grant);
+                    }
                 }
             }
         } else {
