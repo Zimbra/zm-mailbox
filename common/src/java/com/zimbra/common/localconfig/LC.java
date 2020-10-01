@@ -1551,6 +1551,13 @@ public final class LC {
     // to switch to Tika com.zimbra.cs.convert.TikaExtractionClient
     public static final KnownKey attachment_extraction_client_class = KnownKey.newKey("com.zimbra.cs.convert.TikaExtractionClient");
 
+    //allowed file extensions for doc server
+    public static final KnownKey doc_editing_supported_document_formats = KnownKey.newKey("doc,docx,docm,dot,dotx,dotm,odt,fodt,ott,rtf,txt,html,htm,mht,pdf,djvu,fb2,epub,xps");
+
+    public static final KnownKey doc_editing_supported_spreadsheet_formats = KnownKey.newKey("xls,xlsx,xlsm,xlt,xltx,xltm,ods,fods,ots,csv");
+
+    public static final KnownKey doc_editing_supported_presentation_formats = KnownKey.newKey("pps,ppsx,ppsm,ppt,pptx,pptm,pot,potx,potm,odp,fodp,otp");
+
     static {
         // Automatically set the key name with the variable name.
         for (Field field : LC.class.getFields()) {

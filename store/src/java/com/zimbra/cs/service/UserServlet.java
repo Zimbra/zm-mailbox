@@ -27,6 +27,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -50,6 +51,7 @@ import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.util.EntityUtils;
 
+import com.google.common.io.Files;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.account.Key.AccountBy;
@@ -294,6 +296,8 @@ public class UserServlet extends ZimbraServlet {
     public static final String QP_TZ = "tz";
     public static final String QP_USE_INSTANCE = "useInstance";
     public static final String QP_XIM = "xim";
+    
+    private static final String DOC_EXCHANGE_FORWARD_URL_FOR_EDIT= "/extension/doc/";
 
     public static final Log log = LogFactory.getLog(UserServlet.class);
 
@@ -603,7 +607,6 @@ public class UserServlet extends ZimbraServlet {
             if (queryParam != null) reqURL.append('?').append(queryParam);
             log.debug("UserServlet: " + reqURL.toString());
         }
-
         context.opContext = new OperationContext(context.getAuthAccount(), isAdminRequest(req));
         Mailbox mbox = UserServletUtil.getTargetMailbox(context);
         if (mbox != null) {
@@ -611,22 +614,37 @@ public class UserServlet extends ZimbraServlet {
             if (context.reqListIds != null) {
                 resolveItems(context);
             } else {
-                if (this instanceof UserServlet) {
+                if (this instanceof SharedFileServlet) {
+                    SharedFileServlet sfs = (SharedFileServlet) this;
+                    MailItem item =  sfs.resolveItem(context);
+                    log.debug("isEditEnabled(item, context) --> " + isEditEnabled(item, context));
+                    if (sfs.proxyIfMountpoint(req, resp, context, item)) {
+                        // if the target is a mountpoint, the request was already proxied to the resolved target
+                        return;
+                    }
+                    //check if it is doc-server-ext enabled
+                    else if (isEditEnabled(item, context)) {
+                        // redirect to /service/extension/doc/{briefcase-doc-id}
+                        // item.getDigest() is the docId
+                        try {
+                            log.debug("Redirecting to Doc Extension Server ---> " + DOC_EXCHANGE_FORWARD_URL_FOR_EDIT + getSharedDocId(context.req.getRequestURL().toString()));
+                            RequestDispatcher dispatcher = getServletContext()
+                                    .getRequestDispatcher(DOC_EXCHANGE_FORWARD_URL_FOR_EDIT + getSharedDocId(context.req.getRequestURL().toString()));
+                            dispatcher.forward(req, resp);
+                        }catch (Exception e) {
+                            log.error(e);
+                        }
+                    }
+                    context.target = item;  /* imap_id resolution needs this. */
+                }
+                else if (this instanceof UserServlet) {
                     MailItem item = resolveItem(context);
                     if (proxyIfMountpoint(req, resp, context, item)) {
                         // if the target is a mountpoint, the request was already proxied to the resolved target
                         return;
                     }
                     context.target = item;  /* imap_id resolution needs this. */
-                } else if (this instanceof SharedFileServlet) {
-                    SharedFileServlet sfs = (SharedFileServlet) this;
-                    MailItem item =  sfs.resolveItem(context);
-                    if (sfs.proxyIfMountpoint(req, resp, context, item)) {
-                        // if the target is a mountpoint, the request was already proxied to the resolved target
-                        return;
-                    }
-                    context.target = item;  /* imap_id resolution needs this. */
-                }
+                } 
             }
         }
 
@@ -656,6 +674,45 @@ public class UserServlet extends ZimbraServlet {
         }
 
         context.formatter.format(context);
+    }
+
+    /**
+     * In case of download of a file from Briefcase, if the following conditions are met
+     * redirect to /service/extension/doc/{briefcase-doc-id}
+     * checks the following conditions
+     * 1. extension available
+     * 2. document supported type
+     * */
+    private Boolean isEditEnabled(MailItem item,UserServletContext context) {
+
+        boolean zimbraFeatureDocumentEditingEnabled = false;
+        Account account  = context.getAuthAccount();
+        if (account != null) {
+            zimbraFeatureDocumentEditingEnabled = account.isFeatureDocumentEditingEnabled();
+            log.debug("account.isFeatureDocumentEditingEnabled() --> " + account.isFeatureDocumentEditingEnabled());
+        }
+        log.debug("isAllowedDocType(item) --> " + isAllowedDocType(item));
+        return (zimbraFeatureDocumentEditingEnabled && isAllowedDocType(item));
+    }
+
+    // check if it is one of the allowed file extensions
+    private Boolean isAllowedDocType(MailItem item) {
+        HashSet<String> allowedTypes = new HashSet<String>();
+        allowedTypes.addAll(Arrays.asList(LC.doc_editing_supported_document_formats.value().toString().split(",")));
+        allowedTypes.addAll(Arrays.asList(LC.doc_editing_supported_spreadsheet_formats.value().toString().split(",")));
+        allowedTypes.addAll(Arrays.asList(LC.doc_editing_supported_presentation_formats.value().toString().split(",")));
+        return allowedTypes.contains( Files.getFileExtension( item.getName() ) );
+    }
+
+    /**
+     * Extract the shared doc id passed in the URL
+     *
+     * @param url
+     * @return
+     */
+    private String getSharedDocId(final String url) {
+        String[] urlParts = url.split("/");
+        return urlParts[urlParts.length - 1];
     }
 
     /**
