@@ -617,6 +617,7 @@ public class UserServlet extends ZimbraServlet {
                 if (this instanceof SharedFileServlet) {
                     SharedFileServlet sfs = (SharedFileServlet) this;
                     MailItem item =  sfs.resolveItem(context);
+                    log.debug("isEditEnabled(item, context) --> " + isEditEnabled(item, context));
                     if (sfs.proxyIfMountpoint(req, resp, context, item)) {
                         // if the target is a mountpoint, the request was already proxied to the resolved target
                         return;
@@ -625,9 +626,14 @@ public class UserServlet extends ZimbraServlet {
                     else if (isEditEnabled(item, context)) {
                         // redirect to /service/extension/doc/{briefcase-doc-id}
                         // item.getDigest() is the docId
-                        RequestDispatcher dispatcher = getServletContext()
-                                .getRequestDispatcher(DOC_EXCHANGE_FORWARD_URL_FOR_EDIT + getSharedDocId(context.req.getRequestURL().toString()));
-                        dispatcher.forward(req, resp);
+                        try {
+                            log.debug("Redirecting to Doc Extension Server ---> " + DOC_EXCHANGE_FORWARD_URL_FOR_EDIT + getSharedDocId(context.req.getRequestURL().toString()));
+                            RequestDispatcher dispatcher = getServletContext()
+                                    .getRequestDispatcher(DOC_EXCHANGE_FORWARD_URL_FOR_EDIT + getSharedDocId(context.req.getRequestURL().toString()));
+                            dispatcher.forward(req, resp);
+                        }catch (Exception e) {
+                            log.error(e);
+                        }
                     }
                     context.target = item;  /* imap_id resolution needs this. */
                 }
@@ -683,7 +689,9 @@ public class UserServlet extends ZimbraServlet {
         Account account  = context.getAuthAccount();
         if (account != null) {
             zimbraFeatureDocumentEditingEnabled = account.isFeatureDocumentEditingEnabled();
+            log.debug("account.isFeatureDocumentEditingEnabled() --> " + account.isFeatureDocumentEditingEnabled());
         }
+        log.debug("isAllowedDocType(item) --> " + isAllowedDocType(item));
         return (zimbraFeatureDocumentEditingEnabled && isAllowedDocType(item));
     }
 
