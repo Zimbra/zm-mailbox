@@ -22,7 +22,6 @@ import java.util.Set;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -30,7 +29,6 @@ import com.zimbra.common.soap.OctopusXmlConstants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
-import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.MailTarget;
 import com.zimbra.cs.account.NamedEntry;
@@ -70,26 +68,22 @@ public class DocumentAction extends ItemAction {
         Element action = request.getElement(MailConstants.E_ACTION);
         String operation = action.getAttribute(MailConstants.A_OPERATION).toLowerCase();
 
-        String successes = null;
-        ItemActionResult itemActionResult = null;
-        if (OPS.contains(operation)) {
-            successes = handleDocument(context, request, operation);
-        } else {
-            itemActionResult = handleCommon(context, request, MailItem.Type.DOCUMENT);
-        }
-
         Element response = zsc.createElement(OctopusXmlConstants.DOCUMENT_ACTION_RESPONSE);
         Element result = response.addUniqueElement(MailConstants.E_ACTION);
+
+        String successes = null;
         if (OPS.contains(operation)) {
-            result.addAttribute(MailConstants.A_ID, successes);
+            successes = handleDocument(context, request, operation, result);
         } else {
-            result.addAttribute(MailConstants.A_ID, Joiner.on(",").join(itemActionResult.getSuccessIds()));
+            successes = Joiner.on(",").join(handleCommon(context, request, MailItem.Type.DOCUMENT).getSuccessIds());
         }
+
+        result.addAttribute(MailConstants.A_ID, successes);
         result.addAttribute(MailConstants.A_OPERATION, operation);
         return response;
     }
 
-    private String handleDocument(Map<String,Object> context, Element request, String operation) throws ServiceException {
+    private String handleDocument(Map<String,Object> context, Element request, String operation, Element result) throws ServiceException {
         Element action = request.getElement(MailConstants.E_ACTION);
 
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
@@ -137,7 +131,7 @@ public class DocumentAction extends ItemAction {
                         mbox.getAccount().getFilePublicShareLifetime());
                 break;
             case ACL.GRANTEE_USER:
-                zid = getZimbraId(grant, zsc, mbox);
+                zid = getZimbraId(grant, zsc, mbox, result);
                 break;
             default:
                 throw ServiceException.INVALID_REQUEST("unsupported gt: " + gtype, null);
@@ -184,7 +178,7 @@ public class DocumentAction extends ItemAction {
      * @return zid
      * @throws ServiceException
      */
-    private String getZimbraId(Element grant, ZimbraSoapContext zsc, Mailbox mbox) throws ServiceException {
+    private String getZimbraId(Element grant, ZimbraSoapContext zsc, Mailbox mbox, Element result) throws ServiceException {
         String zid = grant.getAttribute(MailConstants.A_ZIMBRA_ID, null);
         NamedEntry nentry = null;
         if (zid == null) {
@@ -204,10 +198,14 @@ public class DocumentAction extends ItemAction {
                                 domain.getName().equals(granteeDomainName) ||
                                 Sets.newHashSet(domain.getInternalSharingDomain()).contains(granteeDomainName)) {
                             zid = nentry.getId();
+                            result.addAttribute(MailConstants.A_ZIMBRA_ID, zid);
+                            result.addAttribute(MailConstants.A_DISPLAY, nentry.getName());
                         }
                     }
-                } catch (ServiceException e) {
+                } catch (ServiceException se) {
                     // this is the normal path, where lookupGranteeByName throws account.NO_SUCH_USER
+                    ZimbraLog.soap.debug("Exception while lookupGranteeByName : %s", se);
+                    throw se;
                 }
             }
         }
