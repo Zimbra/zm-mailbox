@@ -63491,6 +63491,78 @@ public abstract class ZAttrAccount  extends MailTarget {
        attrs.put(Provisioning.A_zimbraFeatureDocumentEditingEnabled, "");
        return attrs;
    }
+
+   /**
+    * whether or not to allow zulip chat
+    *
+    * @return zimbraFeatureZulipChatEnabled, or false if unset
+    *
+    * @since ZCS 9.0.0
+    */
+   @ZAttr(id=9017)
+   public boolean isFeatureZulipChatEnabled() {
+       return getBooleanAttr(Provisioning.A_zimbraFeatureZulipChatEnabled, false, true);
+   }
+
+   /**
+    * whether or not to allow zulip chat
+    *
+    * @param zimbraFeatureZulipChatEnabled new value
+    * @throws com.zimbra.common.service.ServiceException if error during update
+    *
+    * @since ZCS 9.0.0
+    */
+   @ZAttr(id=9017)
+   public void setFeatureZulipChatEnabled(boolean zimbraFeatureZulipChatEnabled) throws com.zimbra.common.service.ServiceException {
+       HashMap<String,Object> attrs = new HashMap<String,Object>();
+       attrs.put(Provisioning.A_zimbraFeatureZulipChatEnabled, zimbraFeatureZulipChatEnabled ? TRUE : FALSE);
+       getProvisioning().modifyAttrs(this, attrs);
+   }
+
+   /**
+    * whether or not to allow zulip chat
+    *
+    * @param zimbraFeatureZulipChatEnabled new value
+    * @param attrs existing map to populate, or null to create a new map
+    * @return populated map to pass into Provisioning.modifyAttrs
+    *
+    * @since ZCS 9.0.0
+    */
+   @ZAttr(id=9017)
+   public Map<String,Object> setFeatureZulipChatEnabled(boolean zimbraFeatureZulipChatEnabled, Map<String,Object> attrs) {
+       if (attrs == null) attrs = new HashMap<String,Object>();
+       attrs.put(Provisioning.A_zimbraFeatureZulipChatEnabled, zimbraFeatureZulipChatEnabled ? TRUE : FALSE);
+       return attrs;
+   }
+
+   /**
+    * whether or not to allow zulip chat
+    *
+    * @throws com.zimbra.common.service.ServiceException if error during update
+    *
+    * @since ZCS 9.0.0
+    */
+   @ZAttr(id=9017)
+   public void unsetFeatureZulipChatEnabled() throws com.zimbra.common.service.ServiceException {
+       HashMap<String,Object> attrs = new HashMap<String,Object>();
+       attrs.put(Provisioning.A_zimbraFeatureZulipChatEnabled, "");
+       getProvisioning().modifyAttrs(this, attrs);
+   }
+
+   /**
+    * whether or not to allow zulip chat
+    *
+    * @param attrs existing map to populate, or null to create a new map
+    * @return populated map to pass into Provisioning.modifyAttrs
+    *
+    * @since ZCS 9.0.0
+    */
+   @ZAttr(id=9017)
+   public Map<String,Object> unsetFeatureZulipChatEnabled(Map<String,Object> attrs) {
+       if (attrs == null) attrs = new HashMap<String,Object>();
+       attrs.put(Provisioning.A_zimbraFeatureZulipChatEnabled, "");
+       return attrs;
+   }
     ///// END-AUTO-GEN-REPLACE
 
 }

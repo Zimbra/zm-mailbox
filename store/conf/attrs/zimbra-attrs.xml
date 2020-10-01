@@ -10070,4 +10070,15 @@ TODO: delete them permanently from here
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>Whether or not document editing feature is enabled within briefcase</desc>
 </attr>
+<attr id="9017" name="A_zimbraFeatureZulipChatEnabled" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountInfo,accountInherited,domainAdminModifiable" since="9.0.0">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>Whether or not zulip chat is enabled.
+        If false at domain level, feature not available at domain, cos & account.
+        If true at domain and false at cos, feature not available at cos & account.
+        If true at domain & cos and false at account, feature not available at account.
+  </desc>
+</attr>
+<attr id="9018" name="zimbraZulipChatDomainId" type="string" cardinality="single" optionalIn="domain" flags="domainInfo" since="9.0.0">
+  <desc>Zulip chat domain ID</desc>
+</attr>
 </attrs>
