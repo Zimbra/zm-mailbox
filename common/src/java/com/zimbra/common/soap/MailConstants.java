@@ -759,7 +759,6 @@ public final class MailConstants {
     public static final String E_REVOKE = "revoke";
     public static final String A_EXPIRE = "expire";
     public static final String A_ZIMBRA_ID = "zid";
-    public static final String A_ZIMBRA_USER_EMAIL = "zemail";
     public static final String A_RIGHTS = "perm";
     public static final String A_GRANT_TYPE = "gt";
     public static final String A_PASSWORD = "pw";
