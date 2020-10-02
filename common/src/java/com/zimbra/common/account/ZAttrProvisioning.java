@@ -18115,7 +18115,7 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=9015)
     public static final String A_zimbraDocumentRecentlyViewedEnabled = "zimbraDocumentRecentlyViewedEnabled";
-    
+
     /**
      * When enabled document document editing will be enabled within briefcase
      * set true to enable it
@@ -18125,6 +18125,23 @@ public class ZAttrProvisioning {
     @ZAttr(id=9016)
     public static final String A_zimbraFeatureDocumentEditingEnabled = "zimbraFeatureDocumentEditingEnabled";
 
+    /**
+     * When enabled zulip chat is available
+     * set true to enable it
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=9017)
+    public static final String A_zimbraFeatureZulipChatEnabled = "zimbraFeatureZulipChatEnabled";
+
+    /**
+     * Zulip chat domainId. It is in the format of 
+     * zimbra domain:zulip realm(subdomain).
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=9018)
+    public static final String A_zimbraZulipChatDomainId = "zimbraZulipChatDomainId";
     ///// END-AUTO-GEN-REPLACE
 }
 
