@@ -1558,6 +1558,12 @@ public final class LC {
 
     public static final KnownKey doc_editing_supported_presentation_formats = KnownKey.newKey("pps,ppsx,ppsm,ppt,pptx,pptm,pot,potx,potm,odp,fodp,otp");
 
+    // base host for zulip
+    public static final KnownKey zulip_base_host = KnownKey.newKey("https://%s.zimbracloud.com");
+
+    // zulip jwt secret
+    public static final KnownKey zulip_jwt_secret = KnownKey.newKey("MOVE_ME_TO_A_SECRET");
+
     static {
         // Automatically set the key name with the variable name.
         for (Field field : LC.class.getFields()) {
