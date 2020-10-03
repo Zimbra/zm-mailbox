@@ -11,6 +11,7 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
+import com.zimbra.cs.listeners.DomainListener;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.RenameDomainRequest;
 
@@ -35,6 +36,9 @@ public class RenameDomain extends AdminDocumentHandler {
         Element response = zsc.createElement(AdminConstants.RENAME_DOMAIN_RESPONSE);
         domain = lp.getDomain(DomainBy.id, domain.getId(), false);
         GetDomain.encodeDomain(response, domain);
+        
+        DomainListener.invokeOnRenameDomain(domain, domain.getName(), req.getName());
+        
         return response;
     }
 }
