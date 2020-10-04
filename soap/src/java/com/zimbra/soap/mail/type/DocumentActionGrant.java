@@ -25,21 +25,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class DocumentActionGrant {
-
-    /**
-     * @zm-api-field-tag rights-rwd
-     * @zm-api-field-description Permissions - (r)ead, (w)rite, (d)elete
-     */
-    @XmlAttribute(name=MailConstants.A_RIGHTS /* perm */, required=true)
-    private String rights;
-
-    /**
-     * @zm-api-field-tag grant-type-all|pub
-     * @zm-api-field-description Grant type - <b>all|pub</b>
-     */
-    @XmlAttribute(name=MailConstants.A_GRANT_TYPE /* gt */, required=true)
-    private String grantType;
+public class DocumentActionGrant extends ActionGrantSelector {
 
     /**
      * @zm-api-field-tag expiry-millis
@@ -57,8 +43,7 @@ public class DocumentActionGrant {
     }
 
     private DocumentActionGrant(String rights, String grantType, Long expiry) {
-        setRights(rights);
-        setGrantType(grantType);
+        super(rights, grantType);
         setExpiry(expiry);
     }
 
@@ -70,17 +55,11 @@ public class DocumentActionGrant {
         return new DocumentActionGrant(rights, grantType, expiry);
     }
 
-    public void setRights(String rights) { this.rights = rights; }
-    public void setGrantType(String grantType) { this.grantType = grantType; }
     public void setExpiry(Long expiry) { this.expiry = expiry; }
-    public String getRights() { return rights; }
-    public String getGrantType() { return grantType; }
     public Long getExpiry() { return expiry; }
 
     public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         return helper
-            .add("rights", rights)
-            .add("grantType", grantType)
             .add("expiry", expiry);
     }
 

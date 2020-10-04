@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011, 2012, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2011, 2012, 2013, 2014, 2016, 2020 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -17,16 +17,16 @@
 
 package com.zimbra.soap.mail.message;
 
-import com.google.common.base.MoreObjects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.OctopusXmlConstants;
-import com.zimbra.soap.mail.type.ActionResult;
 import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
+import com.zimbra.soap.mail.type.DocumentActionResult;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=OctopusXmlConstants.E_DOCUMENT_ACTION_RESPONSE)
@@ -37,22 +37,22 @@ public class DocumentActionResponse {
      */
     @ZimbraUniqueElement
     @XmlElement(name=MailConstants.E_ACTION /* action */, required=true)
-    private ActionResult action;
+    private DocumentActionResult action;
 
     @SuppressWarnings("unused")
     private DocumentActionResponse() {
     }
 
-    public DocumentActionResponse(ActionResult action) {
+    public DocumentActionResponse(DocumentActionResult action) {
         setAction(action);
     }
 
-    public static DocumentActionResponse create (ActionResult action) {
+    public static DocumentActionResponse create(DocumentActionResult action) {
         return new DocumentActionResponse(action);
     }
 
-    public void setAction(ActionResult action) { this.action = action; }
-    public ActionResult getAction() { return action; }
+    public void setAction(DocumentActionResult action) { this.action = action; }
+    public DocumentActionResult getAction() { return action; }
 
     public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         return helper
