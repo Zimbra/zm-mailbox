@@ -346,12 +346,7 @@ public class UserServlet extends ZimbraServlet {
         ZimbraLog.clearContext();
         addRemoteIpToLoggingContext(req);
         try {
-            if (this instanceof SharedFileServlet) {
-                SharedFileServlet sfs = (SharedFileServlet) this;
-                context = sfs.createContext(req, resp, sfs);
-            } else {
-                context = createContext(req, resp, this);
-            }
+            context = createContext(req, resp, this);
             if (!checkAuthentication(context)) {
                 sendError(context, req, resp, L10nUtil.getMessage(MsgKey.errMustAuthenticate, req));
                 return;
