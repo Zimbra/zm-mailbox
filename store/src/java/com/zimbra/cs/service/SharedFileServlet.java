@@ -125,8 +125,8 @@ public class SharedFileServlet extends UserServlet {
                 RequestDispatcher dispatcher = getServletContext()
                         .getRequestDispatcher(DOC_EXCHANGE_FORWARD_URL_FOR_EDIT + getSharedDocId(ct.req.getRequestURL().toString()));
                 dispatcher.forward(req, resp);
-            }catch (Exception e) {
-                log.error(e);
+            } catch (ServletException e) {
+                throw ServiceException.PROXY_ERROR(e, DOC_EXCHANGE_FORWARD_URL_FOR_EDIT);
             }
         }
         return false;
@@ -142,7 +142,7 @@ public class SharedFileServlet extends UserServlet {
     private Boolean isEditEnabled(MailItem item,UserServletContext context) {
 
         boolean zimbraFeatureDocumentEditingEnabled = false;
-        Account account  = context.getAuthAccount();
+        Account account  = context.targetAccount;
         if (account != null) {
             zimbraFeatureDocumentEditingEnabled = account.isFeatureDocumentEditingEnabled();
             log.debug("account.isFeatureDocumentEditingEnabled() --> " + account.isFeatureDocumentEditingEnabled());
