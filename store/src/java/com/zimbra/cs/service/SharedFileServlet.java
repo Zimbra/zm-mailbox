@@ -145,19 +145,20 @@ public class SharedFileServlet extends UserServlet {
         Account account  = context.targetAccount;
         if (account != null) {
             zimbraFeatureDocumentEditingEnabled = account.isFeatureDocumentEditingEnabled();
-            log.debug("account.isFeatureDocumentEditingEnabled() --> " + account.isFeatureDocumentEditingEnabled());
+            log.debug("Document editing account = %s, enabled = %s ", account.getName(), zimbraFeatureDocumentEditingEnabled);
         }
-        log.debug("isAllowedDocType(item) --> " + isAllowedDocType(item));
+        log.debug("Document supported for editing = %s" , isAllowedDocType(item));
         return (zimbraFeatureDocumentEditingEnabled && isAllowedDocType(item));
     }
 
     // check if it is one of the allowed file extensions
     private boolean isAllowedDocType(MailItem item) {
+        // Todo: Initialize only once. This will create lot of strings on every document edit.
         HashSet<String> allowedTypes = new HashSet<String>();
         allowedTypes.addAll(Arrays.asList(LC.doc_editing_supported_document_formats.value().toString().split(",")));
         allowedTypes.addAll(Arrays.asList(LC.doc_editing_supported_spreadsheet_formats.value().toString().split(",")));
         allowedTypes.addAll(Arrays.asList(LC.doc_editing_supported_presentation_formats.value().toString().split(",")));
-        return allowedTypes.contains( Files.getFileExtension( item.getName() ) );
+        return allowedTypes.contains(Files.getFileExtension(item.getName()));
     }
 
     /**
