@@ -17,16 +17,22 @@
 package com.zimbra.cs.service;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashSet;
 
+import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.http.HttpException;
 
+import com.google.common.io.Files;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.MailItem;
@@ -36,6 +42,7 @@ import com.zimbra.cs.mailbox.MailServiceException;
 public class SharedFileServlet extends UserServlet {
 
     private static final String SERVLET_PATH = "/shf";
+    private static final String DOC_EXCHANGE_FORWARD_URL_FOR_EDIT= "/extension/doc/";
 
     @Override
     public void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -110,9 +117,60 @@ public class SharedFileServlet extends UserServlet {
     @Override
     protected boolean proxyIfMountpoint(HttpServletRequest req, HttpServletResponse resp, UserServletContext ct, MailItem item)
     throws IOException, ServiceException, UserServletException {
+        if (isEditEnabled(item, ct)) {
+            // redirect to /service/extension/doc/{briefcase-doc-id}
+            // item.getDigest() is the docId
+            try {
+                log.debug("Redirecting to Doc Extension Server %s", getSharedDocId(ct.req.getRequestURL().toString()));
+                RequestDispatcher dispatcher = getServletContext()
+                        .getRequestDispatcher(DOC_EXCHANGE_FORWARD_URL_FOR_EDIT + getSharedDocId(ct.req.getRequestURL().toString()));
+                dispatcher.forward(req, resp);
+            } catch (ServletException e) {
+                throw ServiceException.PROXY_ERROR(e, DOC_EXCHANGE_FORWARD_URL_FOR_EDIT);
+            }
+        }
         return false;
     }
 
+    /**
+     * In case of download of a file from Briefcase, if the following conditions are met
+     * redirect to /service/extension/doc/{briefcase-doc-id}
+     * checks the following conditions
+     * 1. extension available
+     * 2. document supported type
+     * */
+    private boolean isEditEnabled(MailItem item,UserServletContext context) {
+
+        boolean zimbraFeatureDocumentEditingEnabled = false;
+        Account account  = context.targetAccount;
+        if (account != null) {
+            zimbraFeatureDocumentEditingEnabled = account.isFeatureDocumentEditingEnabled();
+            log.debug("Document editing account = %s, enabled = %s ", account.getName(), zimbraFeatureDocumentEditingEnabled);
+        }
+        log.debug("Document supported for editing = %s" , isAllowedDocType(item));
+        return (zimbraFeatureDocumentEditingEnabled && isAllowedDocType(item));
+    }
+
+    // check if it is one of the allowed file extensions
+    private boolean isAllowedDocType(MailItem item) {
+        // Todo: Initialize only once. This will create lot of strings on every document edit.
+        HashSet<String> allowedTypes = new HashSet<String>();
+        allowedTypes.addAll(Arrays.asList(LC.doc_editing_supported_document_formats.value().toString().split(",")));
+        allowedTypes.addAll(Arrays.asList(LC.doc_editing_supported_spreadsheet_formats.value().toString().split(",")));
+        allowedTypes.addAll(Arrays.asList(LC.doc_editing_supported_presentation_formats.value().toString().split(",")));
+        return allowedTypes.contains(Files.getFileExtension(item.getName()));
+    }
+
+    /**
+     * Extract the shared doc id passed in the URL
+     *
+     * @param url
+     * @return
+     */
+    private String getSharedDocId(final String url) {
+        String[] urlParts = url.split("/");
+        return urlParts[urlParts.length - 1];
+    }
 
     @Override
     public void init() throws ServletException {
