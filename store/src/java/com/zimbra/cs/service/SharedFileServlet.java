@@ -121,7 +121,7 @@ public class SharedFileServlet extends UserServlet {
             // redirect to /service/extension/doc/{briefcase-doc-id}
             // item.getDigest() is the docId
             try {
-                log.debug("Redirecting to Doc Extension Server ---> " + DOC_EXCHANGE_FORWARD_URL_FOR_EDIT + getSharedDocId(ct.req.getRequestURL().toString()));
+                log.debug("Redirecting to Doc Extension Server %s", getSharedDocId(ct.req.getRequestURL().toString()));
                 RequestDispatcher dispatcher = getServletContext()
                         .getRequestDispatcher(DOC_EXCHANGE_FORWARD_URL_FOR_EDIT + getSharedDocId(ct.req.getRequestURL().toString()));
                 dispatcher.forward(req, resp);
@@ -139,7 +139,7 @@ public class SharedFileServlet extends UserServlet {
      * 1. extension available
      * 2. document supported type
      * */
-    private Boolean isEditEnabled(MailItem item,UserServletContext context) {
+    private boolean isEditEnabled(MailItem item,UserServletContext context) {
 
         boolean zimbraFeatureDocumentEditingEnabled = false;
         Account account  = context.targetAccount;
@@ -152,7 +152,7 @@ public class SharedFileServlet extends UserServlet {
     }
 
     // check if it is one of the allowed file extensions
-    private Boolean isAllowedDocType(MailItem item) {
+    private boolean isAllowedDocType(MailItem item) {
         HashSet<String> allowedTypes = new HashSet<String>();
         allowedTypes.addAll(Arrays.asList(LC.doc_editing_supported_document_formats.value().toString().split(",")));
         allowedTypes.addAll(Arrays.asList(LC.doc_editing_supported_spreadsheet_formats.value().toString().split(",")));
