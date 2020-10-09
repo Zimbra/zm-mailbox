@@ -610,12 +610,12 @@ public class SendShareNotification extends MailDocumentHandler {
         }
 
         String mimePartText = ShareInfo.NotificationSender.getMimePartText(sid, notes, locale,
-            action, extUserShareAcceptUrl, extUserLoginUrl);
+            action, extUserShareAcceptUrl, extUserLoginUrl, notifyForDocument);
         String mimePartHtml = ShareInfo.NotificationSender.getMimePartHtml(sid, notes, locale,
-            action, extUserShareAcceptUrl, extUserLoginUrl);
+            action, extUserShareAcceptUrl, extUserLoginUrl, notifyForDocument);
 
         String mimePartXml = null;
-        if (!goesToExternalAddr && !notifyForDocument) {
+        if (!goesToExternalAddr) {
             mimePartXml = ShareInfo.NotificationSender.genXmlPart(sid, notes, null, action);
         }
 

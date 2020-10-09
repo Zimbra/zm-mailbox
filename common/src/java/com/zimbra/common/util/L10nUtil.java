@@ -146,6 +146,7 @@ public class L10nUtil {
         shareNotifBodyGranteeRoleCustom,
 
         shareNotifBodyFolderDesc,
+        shareNotifyFileBodyDesc,
         shareNotifBodyExternalShareText,
         shareNotifBodyExternalShareHtml,
         shareNotifBodyNotesText,
