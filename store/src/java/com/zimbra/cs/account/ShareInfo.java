@@ -708,8 +708,8 @@ public class ShareInfo {
             return sb.append(L10nUtil.getMessage(
                     msgKey, locale, AccountUtil.getTranslatedFolderName(sid, locale),
                     formatFolderDesc(locale, sid, notifyForDocument),
-                    sid.getOwnerNotifName(),
-                    sid.getGranteeNotifName(),
+                    IDNUtil.toUnicode(sid.getOwnerNotifName()),
+                    IDNUtil.toUnicode(sid.getGranteeNotifName()),
                     getRoleFromRights(sid, locale),
                     getRightsText(sid, locale),
                     Strings.nullToEmpty(externalShareInfo),
