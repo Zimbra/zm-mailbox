@@ -2166,8 +2166,6 @@ public abstract class ImapHandler {
                 remoteSubscriptions = credentials.listSubscriptions();
             }
 
-
-
             for (String mailboxName : mailboxNames) {
                 // RFC 5258 3: "In particular, if an extended LIST command has multiple mailbox
                 //              names and one (or more) of them is the empty string, the empty
@@ -2234,7 +2232,7 @@ public abstract class ImapHandler {
             }
 
             if (ownerSelected.size() <= paginationSize) {
-                ZimbraLog.imap.info("Total folder count is less than folder pagination size.");
+                ZimbraLog.imap.info("Total folder count - %s is less than folder pagination size - %s ", ownerSelected.size(), paginationSize);
                 // return only the selected folders (and perhaps their parents) matching the pattern
                 // for owner folders
                 populateFoldersList(ownerPaths, ownerSelected, ownerMatches, returnOptions, remoteSubscriptions, patterns, command, status, selectRecursive, false);
@@ -2272,12 +2270,14 @@ public abstract class ImapHandler {
         }
 
         if (ownerSelected.size() > paginationSize) {
+            ZimbraLog.imap.info("Total folder count - %s is greater than folder pagination size - %s", ownerSelected.size(), paginationSize);
             try {
               Iterable<List<ImapPath>> lists = Iterables.partition(ownerSelected, paginationSize);
               for (List<ImapPath> listChunk: lists) {
 
                   Set<ImapPath> ownerSelectedChunk = new HashSet<ImapPath>();
                   ownerSelectedChunk.addAll(listChunk);
+                  ZimbraLog.imap.debug("Populate folder list : %s", ownerSelectedChunk.size());
                   populateFoldersList(ownerPaths, ownerSelectedChunk, ownerMatches, returnOptions, remoteSubscriptions, patterns, command, status, selectRecursive, false);
                   // send owners list first
                   if (!ownerMatches.isEmpty()) {
@@ -2292,9 +2292,8 @@ public abstract class ImapHandler {
                       }
                   }
 
-                  ownerSelectedChunk.clear();
                   ownerMatches.clear();
-                  ownerSelectedChunk = null;
+                  ownerMatches = null;
                   ownerMatches = new TreeMap<ImapPath, Object>();
               }
           }  catch  (ServiceException e) {
@@ -2324,9 +2323,8 @@ public abstract class ImapHandler {
                           }
                       }
                   }
-                  mountSelected.clear();
                   mountMatches.clear();
-                  mountSelected = null;
+                  mountMatches = null;
                   mountMatches = new TreeMap<ImapPath, Object>();
               }
           }  catch (ServiceException e) {
