@@ -44,6 +44,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Group;
+import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.MailTarget;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
@@ -606,6 +607,7 @@ public class SendShareNotification extends MailDocumentHandler {
         if (ownerAcctDisplayName == null) {
             ownerAcctDisplayName = ownerAccount.getName();
         }
+        ownerAcctDisplayName = IDNUtil.toUnicode(ownerAcctDisplayName);
         subject += L10nUtil.getMessage(MsgKey.sharedBySubject, locale, AccountUtil.getTranslatedFolderName(sid, locale),
             ownerAcctDisplayName);
         String recipient = sid.getGranteeName();
