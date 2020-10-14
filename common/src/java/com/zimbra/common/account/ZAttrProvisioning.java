@@ -1667,7 +1667,7 @@ public class ZAttrProvisioning {
     public static enum PrefClientType {
         standard("standard"),
         advanced("advanced"),
-        zimbrax("zimbrax");
+        modern("modern");
         private String mValue;
         private PrefClientType(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -1679,7 +1679,7 @@ public class ZAttrProvisioning {
         }
         public boolean isStandard() { return this == standard;}
         public boolean isAdvanced() { return this == advanced;}
-        public boolean isZimbrax() { return this == zimbrax;}
+        public boolean isModern() { return this == modern;}
     }
 
     public static enum PrefComposeDirection {
@@ -12051,6 +12051,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1256)
     public static final String A_zimbraPasswordAllowedPunctuationChars = "zimbraPasswordAllowedPunctuationChars";
+
+    /**
+     * whether or not blocking common passwords is enabled
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3081)
+    public static final String A_zimbraPasswordBlockCommonEnabled = "zimbraPasswordBlockCommonEnabled";
 
     /**
      * registered change password listener name

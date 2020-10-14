@@ -34872,6 +34872,78 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * whether or not blocking common passwords is enabled
+     *
+     * @return zimbraPasswordBlockCommonEnabled, or false if unset
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3081)
+    public boolean isPasswordBlockCommonEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraPasswordBlockCommonEnabled, false, true);
+    }
+
+    /**
+     * whether or not blocking common passwords is enabled
+     *
+     * @param zimbraPasswordBlockCommonEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3081)
+    public void setPasswordBlockCommonEnabled(boolean zimbraPasswordBlockCommonEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordBlockCommonEnabled, zimbraPasswordBlockCommonEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether or not blocking common passwords is enabled
+     *
+     * @param zimbraPasswordBlockCommonEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3081)
+    public Map<String,Object> setPasswordBlockCommonEnabled(boolean zimbraPasswordBlockCommonEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordBlockCommonEnabled, zimbraPasswordBlockCommonEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether or not blocking common passwords is enabled
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3081)
+    public void unsetPasswordBlockCommonEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordBlockCommonEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether or not blocking common passwords is enabled
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3081)
+    public Map<String,Object> unsetPasswordBlockCommonEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordBlockCommonEnabled, "");
+        return attrs;
+    }
+
+    /**
      * whether or not to enforce password history. Number of unique passwords
      * a user must have before being allowed to re-use an old one. A value of
      * 0 means no password history.
@@ -41743,31 +41815,31 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * user preference of client type
      *
-     * <p>Valid values: [standard, advanced, zimbrax]
+     * <p>Valid values: [standard, advanced, modern]
      *
-     * @return zimbraPrefClientType, or ZAttrProvisioning.PrefClientType.advanced if unset and/or has invalid value
+     * @return zimbraPrefClientType, or ZAttrProvisioning.PrefClientType.modern if unset and/or has invalid value
      */
     @ZAttr(id=453)
     public ZAttrProvisioning.PrefClientType getPrefClientType() {
-        try { String v = getAttr(Provisioning.A_zimbraPrefClientType, true, true); return v == null ? ZAttrProvisioning.PrefClientType.advanced : ZAttrProvisioning.PrefClientType.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.PrefClientType.advanced; }
+        try { String v = getAttr(Provisioning.A_zimbraPrefClientType, true, true); return v == null ? ZAttrProvisioning.PrefClientType.modern : ZAttrProvisioning.PrefClientType.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.PrefClientType.modern; }
     }
 
     /**
      * user preference of client type
      *
-     * <p>Valid values: [standard, advanced, zimbrax]
+     * <p>Valid values: [standard, advanced, modern]
      *
-     * @return zimbraPrefClientType, or "advanced" if unset
+     * @return zimbraPrefClientType, or "modern" if unset
      */
     @ZAttr(id=453)
     public String getPrefClientTypeAsString() {
-        return getAttr(Provisioning.A_zimbraPrefClientType, "advanced", true);
+        return getAttr(Provisioning.A_zimbraPrefClientType, "modern", true);
     }
 
     /**
      * user preference of client type
      *
-     * <p>Valid values: [standard, advanced, zimbrax]
+     * <p>Valid values: [standard, advanced, modern]
      *
      * @param zimbraPrefClientType new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -41782,7 +41854,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * user preference of client type
      *
-     * <p>Valid values: [standard, advanced, zimbrax]
+     * <p>Valid values: [standard, advanced, modern]
      *
      * @param zimbraPrefClientType new value
      * @param attrs existing map to populate, or null to create a new map
@@ -41798,7 +41870,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * user preference of client type
      *
-     * <p>Valid values: [standard, advanced, zimbrax]
+     * <p>Valid values: [standard, advanced, modern]
      *
      * @param zimbraPrefClientType new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -41813,7 +41885,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * user preference of client type
      *
-     * <p>Valid values: [standard, advanced, zimbrax]
+     * <p>Valid values: [standard, advanced, modern]
      *
      * @param zimbraPrefClientType new value
      * @param attrs existing map to populate, or null to create a new map
@@ -41829,7 +41901,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * user preference of client type
      *
-     * <p>Valid values: [standard, advanced, zimbrax]
+     * <p>Valid values: [standard, advanced, modern]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -41843,7 +41915,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * user preference of client type
      *
-     * <p>Valid values: [standard, advanced, zimbrax]
+     * <p>Valid values: [standard, advanced, modern]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
