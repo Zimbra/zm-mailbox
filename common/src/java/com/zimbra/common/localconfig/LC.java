@@ -1331,9 +1331,6 @@ public final class LC {
     // list file for blocking common passwords
     public static final KnownKey common_passwords_txt = KnownKey.newKey("${zimbra_home}/conf/common-passwords.txt");
 
-    // enable blocking common passwords
-    public static final KnownKey zimbra_block_common_passwords_enabled = KnownKey.newKey(false);
-    // imap folder pagination size
     public static final KnownKey zimbra_imap_folder_pagination_size =  KnownKey.newKey(2000);
 
     // imap folder pagination enabled

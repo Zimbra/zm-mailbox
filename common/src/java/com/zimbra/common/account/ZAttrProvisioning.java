@@ -12052,6 +12052,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPasswordAllowedPunctuationChars = "zimbraPasswordAllowedPunctuationChars";
 
     /**
+     * whether or not blocking common passwords is enabled
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3081)
+    public static final String A_zimbraPasswordBlockCommonEnabled = "zimbraPasswordBlockCommonEnabled";
+
+    /**
      * registered change password listener name
      *
      * @since ZCS 5.0.1
