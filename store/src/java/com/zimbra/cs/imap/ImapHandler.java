@@ -2154,6 +2154,7 @@ public abstract class ImapHandler {
         boolean selectRecursive = (selectOptions & SELECT_RECURSIVE) != 0;
 
         int paginationSize = LC.zimbra_imap_folder_pagination_size.intValue();
+        boolean imapFolderPaginationEnabled = LC.zimbra_imap_folder_pagination_enabled.booleanValue();
         Map<ImapPath, Object> ownerMatches = new TreeMap<ImapPath, Object>();
         Map<ImapPath, Object> mountMatches = new TreeMap<ImapPath, Object>();
         Map<ImapPath, ItemId> ownerPaths = new HashMap<ImapPath, ItemId>();
@@ -2231,8 +2232,9 @@ public abstract class ImapHandler {
                 }
             }
 
-            if (ownerSelected.size() <= paginationSize) {
-                ZimbraLog.imap.info("Total folder count - %s is less than folder pagination size - %s ", ownerSelected.size(), paginationSize);
+            if (!imapFolderPaginationEnabled) {
+                ZimbraLog.imap.info("Imap folder pagination not enabled");
+                ZimbraLog.imap.info("Total folder count - %s", ownerSelected.size());
                 // return only the selected folders (and perhaps their parents) matching the pattern
                 // for owner folders
                 populateFoldersList(ownerPaths, ownerSelected, ownerMatches, returnOptions, remoteSubscriptions, patterns, command, status, selectRecursive, false);
@@ -2266,14 +2268,14 @@ public abstract class ImapHandler {
                 ownerSelected = null;
                 mountMatches = null;
                 mountSelected = null;
-            } else if (ownerSelected.size() > paginationSize) {
+            } else {
+                ZimbraLog.imap.info("Imap folder pagination is enabled");
                 ZimbraLog.imap.info("Total folder count - %s is greater than folder pagination size - %s", ownerSelected.size(), paginationSize);
                 // send owners list first
                 Iterable<List<ImapPath>> ownerLists = Iterables.partition(ownerSelected, paginationSize);
                 for (List<ImapPath> listChunk: ownerLists) {
                     Set<ImapPath> ownerSelectedChunk = new HashSet<ImapPath>();
                     ownerSelectedChunk.addAll(listChunk);
-                    ZimbraLog.imap.info("Populate selected folder list : %s", ownerSelectedChunk.size());
                     populateFoldersList(ownerPaths, ownerSelectedChunk, ownerMatches, returnOptions, remoteSubscriptions, patterns, command, status, selectRecursive, false);
 
                     if (!ownerMatches.isEmpty()) {
