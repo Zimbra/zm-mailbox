@@ -1317,8 +1317,11 @@ public final class LC {
     // XML 1.0 invalid characters regex pattern
     public static final KnownKey xml_invalid_chars_regex = KnownKey.newKey("\\&\\#(?:x([0-9a-fA-F]+)|([0-9]+))\\;");
 
- // enable blocking common passwords
+    // imap folder pagination size
     public static final KnownKey zimbra_imap_folder_pagination_size =  KnownKey.newKey(2000);
+
+    // imap folder pagination enabled
+    public static final KnownKey zimbra_imap_folder_pagination_enabled =  KnownKey.newKey(false);
 
     static {
         // Automatically set the key name with the variable name.
