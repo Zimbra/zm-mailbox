@@ -610,12 +610,12 @@ public class SendShareNotification extends MailDocumentHandler {
         }
 
         String mimePartText = ShareInfo.NotificationSender.getMimePartText(sid, notes, locale,
-            action, extUserShareAcceptUrl, extUserLoginUrl);
+            action, extUserShareAcceptUrl, extUserLoginUrl, notifyForDocument);
         String mimePartHtml = ShareInfo.NotificationSender.getMimePartHtml(sid, notes, locale,
-            action, extUserShareAcceptUrl, extUserLoginUrl);
+            action, extUserShareAcceptUrl, extUserLoginUrl, notifyForDocument);
 
         String mimePartXml = null;
-        if (!goesToExternalAddr && !notifyForDocument) {
+        if (!goesToExternalAddr) {
             mimePartXml = ShareInfo.NotificationSender.genXmlPart(sid, notes, null, action);
         }
 
@@ -638,7 +638,7 @@ public class SendShareNotification extends MailDocumentHandler {
         // get owner mailbox and find the item.
         Mailbox ownerMbox = MailboxManager.getInstance().getMailboxByAccount(ownerAccount);
         ItemId iid = new ItemId(ownerAccount.getId(), sid.getItemId());
-        MailItem item = ownerMbox .getItemById(octxt, iid.getId(), MailItem.Type.UNKNOWN);
+        MailItem item = ownerMbox.getItemById(octxt, iid.getId(), MailItem.Type.UNKNOWN);
         MimeMessage mm = null;
         if (item instanceof Document) {
             ZimbraLog.account.debug("Sending share notification to [ %s ] for document %s", sid.getGranteeName(), item.getName());
