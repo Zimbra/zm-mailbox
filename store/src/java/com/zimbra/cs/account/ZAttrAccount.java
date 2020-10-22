@@ -18550,6 +18550,78 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Whether Powerpaste functionality is enabled or not.
+     *
+     * @return zimbraFeaturePowerPasteEnabled, or true if unset
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3084)
+    public boolean isFeaturePowerPasteEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeaturePowerPasteEnabled, true, true);
+    }
+
+    /**
+     * Whether Powerpaste functionality is enabled or not.
+     *
+     * @param zimbraFeaturePowerPasteEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3084)
+    public void setFeaturePowerPasteEnabled(boolean zimbraFeaturePowerPasteEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeaturePowerPasteEnabled, zimbraFeaturePowerPasteEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether Powerpaste functionality is enabled or not.
+     *
+     * @param zimbraFeaturePowerPasteEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3084)
+    public Map<String,Object> setFeaturePowerPasteEnabled(boolean zimbraFeaturePowerPasteEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeaturePowerPasteEnabled, zimbraFeaturePowerPasteEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether Powerpaste functionality is enabled or not.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3084)
+    public void unsetFeaturePowerPasteEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeaturePowerPasteEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether Powerpaste functionality is enabled or not.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3084)
+    public Map<String,Object> unsetFeaturePowerPasteEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeaturePowerPasteEnabled, "");
+        return attrs;
+    }
+
+    /**
      * whether priority inbox feature is enabled
      *
      * @return zimbraFeaturePriorityInboxEnabled, or true if unset

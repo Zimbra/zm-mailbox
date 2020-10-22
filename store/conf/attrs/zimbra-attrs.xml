@@ -10081,4 +10081,9 @@ TODO: delete them permanently from here
 <attr id="9018" name="zimbraZulipChatDomainId" type="string" cardinality="single" optionalIn="domain" flags="domainInfo" since="9.0.0">
   <desc>Zulip chat domain ID</desc>
 </attr>
+
+<attr id="3084" name="zimbraFeaturePowerPasteEnabled" type="boolean" cardinality="single" flags="accountInfo,accountInherited" optionalIn="account,cos" since="9.1.0">
+    <defaultCOSValue>TRUE</defaultCOSValue>
+    <desc>Whether Powerpaste functionality is enabled or not.</desc>
+</attr>
 </attrs>
