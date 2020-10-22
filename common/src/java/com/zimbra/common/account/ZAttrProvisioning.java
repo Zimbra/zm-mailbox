@@ -6806,6 +6806,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeaturePortalEnabled = "zimbraFeaturePortalEnabled";
 
     /**
+     * Whether Powerpaste functionality is enabled or not.
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3084)
+    public static final String A_zimbraFeaturePowerPasteEnabled = "zimbraFeaturePowerPasteEnabled";
+
+    /**
      * whether priority inbox feature is enabled
      *
      * @since ZCS 8.0.0
