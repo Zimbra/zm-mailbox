@@ -21,8 +21,6 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import com.google.common.base.MoreObjects;
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.SyncAdminConstants;
 import com.zimbra.common.soap.SyncConstants;
@@ -54,16 +52,18 @@ public class GetDeviceStatusRequest {
     private int limit = 0;
 
     /**
+     * @zm-api-field-tag account
      * @zm-api-field-description Account
      */
-    @XmlElement(name=AdminConstants.E_ACCOUNT, required = false)
+    @XmlElement(name=AdminConstants.E_ACCOUNT /* account */, required = false)
     private AccountSelector account;
 
     /**
+     * @zm-api-field-tag device
      * @zm-api-field-description Device id
      */
-    @XmlElement(name = SyncConstants.E_DEVICE, required = false)
-    private DeviceId deviceId;
+    @XmlElement(name = SyncConstants.E_DEVICE /* device */, required = false)
+    private DeviceId device;
 
     /**
      * @zm-api-field-tag device-status
@@ -143,7 +143,7 @@ public class GetDeviceStatusRequest {
         this.offset = offset;
         this.limit = limit;
         this.account = account;
-        this.deviceId = deviceId;
+        this.device = device;
         this.status = status;
         this.deviceName = deviceName;
         this.deviceType = deviceType;
@@ -168,12 +168,12 @@ public class GetDeviceStatusRequest {
         this.limit = limit;
     }
 
-    public DeviceId getDeviceId() {
-        return this.deviceId;
+    public DeviceId getDevice() {
+        return device;
     }
 
-    public void setDeviceId(DeviceId deviceId) {
-        this.deviceId = deviceId;
+    public void setDevice(DeviceId device) {
+        this.device = device;
     }
 
     public AccountSelector getAccount() {
