@@ -22,6 +22,7 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
@@ -35,6 +36,7 @@ import com.zimbra.soap.account.message.ResetPasswordRequest;
 
 public class ResetPassword extends AccountDocumentHandler {
 
+	@Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         if (!checkPasswordSecurity(context)) {
             throw ServiceException.INVALID_REQUEST("clear text password is not allowed", null);
@@ -46,6 +48,8 @@ public class ResetPassword extends AccountDocumentHandler {
 
         AuthToken at = zsc.getAuthToken();
         AuthProvider.validateAuthToken(prov, at, false);
+
+        boolean dryRun = request.getAttributeBool(AccountConstants.E_DRYRUN, false);
 
         Account acct = at.getAccount();
         boolean locked = acct.getBooleanAttr(Provisioning.A_zimbraPasswordLocked, false);
@@ -71,15 +75,23 @@ public class ResetPassword extends AccountDocumentHandler {
             }
         }
 
-        setPasswordAndPurgeAuthTokens(prov, acct, newPassword);
+        setPasswordAndPurgeAuthTokens(prov, acct, newPassword, dryRun);
 
         Element response = zsc.createElement(AccountConstants.E_RESET_PASSWORD_RESPONSE);
+        if (!dryRun) { 
+            at.encodeAuthResp(response, false);
+            response.addAttribute(AccountConstants.E_LIFETIME, at.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);
+         }
         return response;
     }
 
-    protected void setPasswordAndPurgeAuthTokens(Provisioning prov, Account acct, String newPassword) throws ServiceException {
+    protected void setPasswordAndPurgeAuthTokens(Provisioning prov, Account acct, String newPassword, boolean dryRun) throws ServiceException {
         // set new password
-        prov.setPassword(acct, newPassword);
+    	    if (dryRun) {
+    	    		prov.resetPassword(acct, newPassword, dryRun);
+    	    } else {
+    	    		prov.setPassword(acct, newPassword);
+    	    }
         // purge old auth tokens to invalidate existing sessions
         acct.purgeAuthTokens();
     }
