@@ -6036,6 +6036,12 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     @Override
+    public SetPasswordResult resetPassword(Account acct, String newPassword, boolean dryRun) 
+    throws ServiceException {
+        return setPassword(acct, newPassword, dryRun);
+    }
+
+    @Override
     public SetPasswordResult setPassword(Account acct, String newPassword,
             boolean enforcePasswordPolicy)
     throws ServiceException {

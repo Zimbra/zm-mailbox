@@ -20,9 +20,11 @@ package com.zimbra.soap.admin.message;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 
 /**
@@ -52,6 +54,9 @@ public class SetPasswordRequest {
     @XmlAttribute(name=AdminConstants.E_NEW_PASSWORD, required=true)
     private final String newPassword;
 
+    @XmlElement(name=AccountConstants.E_DRYRUN, required=false)
+    private boolean dryRun;
+
     /**
      * no-argument constructor wanted by JAXB
      */
@@ -64,7 +69,21 @@ public class SetPasswordRequest {
         this.newPassword = newPassword;
     }
 
+    public SetPasswordRequest(String id, String newPassword, boolean dryRun) {
+        this.id = id;
+        this.newPassword = newPassword;
+        setDryRun(dryRun);
+    }
+
     public String getId() { return id; }
     public String getNewPassword() { return newPassword; }
+
+    public boolean isDryRun() {
+        return dryRun;
+    }
+
+    public void setDryRun(boolean dryRun) {
+        this.dryRun = dryRun;
+    }
 
 }
