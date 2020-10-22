@@ -18,6 +18,7 @@ package com.zimbra.cs.service.mail;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.OctopusXmlConstants;
 import com.zimbra.soap.DocumentDispatcher;
 import com.zimbra.soap.DocumentService;
 
@@ -243,5 +244,13 @@ public final class MailService implements DocumentService {
         // Password reset API
         dispatcher.registerHandler(MailConstants.RECOVER_ACCOUNT_REQUEST, new RecoverAccount());
         dispatcher.registerHandler(MailConstants.SET_RECOVERY_EMAIL_REQUEST, new SetRecoveryAccount());
+
+        
+        //Document action API
+        dispatcher.registerHandler(OctopusXmlConstants.DOCUMENT_ACTION_REQUEST, new DocumentAction());
+        dispatcher.registerHandler(OctopusXmlConstants.GET_WATCHING_ITEMS_REQUEST, new GetWatchingItems());
+        dispatcher.registerHandler(OctopusXmlConstants.GET_NOTIFICATIONS_REQUEST, new GetNotifications());
+        dispatcher.registerHandler(OctopusXmlConstants.GET_DOCUMENT_SHARE_URL_REQUEST, new GetDocumentShareURL());
+        dispatcher.registerHandler(OctopusXmlConstants.GET_SHARE_DETAILS_REQUEST, new GetShareDetails());
     }
 }

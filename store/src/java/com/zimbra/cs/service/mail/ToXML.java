@@ -129,6 +129,8 @@ import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxNotificationInfo;
+import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.Note;
@@ -139,6 +141,7 @@ import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.mailbox.SenderList;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.WikiItem;
+import com.zimbra.cs.mailbox.cache.WatchCache;
 import com.zimbra.cs.mailbox.calendar.Alarm;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
@@ -158,7 +161,9 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.smime.SmimeHandler;
+import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.admin.type.DataSourceType;
+import com.zimbra.soap.mail.type.ActivityInfo;
 import com.zimbra.soap.mail.type.AlarmDataInfo;
 import com.zimbra.soap.mail.type.CalendarReply;
 import com.zimbra.soap.mail.type.Policy;
@@ -175,6 +180,7 @@ import com.zimbra.soap.type.WantRecipsSetting;
  */
 public final class ToXML {
     private static final Log LOG = LogFactory.getLog(ToXML.class);
+    private static final String A_WATCH = "watch";
 
     public static enum OutputParticipants {
         PUT_SENDERS(0),
@@ -3589,5 +3595,42 @@ throws ServiceException {
 
     public static void addExtension(ToXMLExtension e) {
         extensions.add(e);
+    }
+
+    public static void addWatchActivity(Element notify, Account account, String op, long timestamp, String itemId, String userAgent, Map<String,String> args) {
+        ActivityInfo activity = new ActivityInfo(op, timestamp, itemId);
+        if (account != null)
+            activity.setEmail(account.getName());
+        if (userAgent != null)
+            activity.setUserAgent(userAgent);
+        activity.setArgs(args);
+        JaxbUtil.addChildElementFromJaxb(notify, MailConstants.E_A,
+                MailConstants.NAMESPACE_STR, activity);
+    }
+
+    public Element encodeDocumentAdditionalAttribute(Element elem, ItemIdFormatter ifmt, OperationContext octxt, Document doc, int fields) {
+        WatchCache cache = WatchCache.get(octxt);
+        if (cache.hasMapping(doc)) {
+            return encodeDocumentWatchAttribute(elem, true);
+        }
+        return elem;
+    }
+
+    public static Element encodeDocumentWatchAttribute(Element elem, boolean watched) {
+        return elem.addAttribute(A_WATCH, watched);
+    }
+
+    public static ActivityInfo toActivityInfo(Account account, MailboxOperation op,
+            long timestamp, String itemId, int version, String userAgent, Map<String,String> args) {
+        ActivityInfo activity =
+            ActivityInfo.fromOperationTimeStampItemId(op.name(), timestamp, itemId);
+        if (version > 0)
+            activity.setVersion(version);
+        if (userAgent != null)
+            activity.setUserAgent(userAgent);
+        if (account != null)
+            activity.setEmail(account.getName());
+        activity.setArgs(args);
+        return activity;
     }
 }
