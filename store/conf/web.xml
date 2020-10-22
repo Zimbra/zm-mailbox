@@ -722,6 +722,21 @@
     <url-pattern>/error/attachment_blocked.jsp</url-pattern>
     <url-pattern>/error/sfdc_preauth.jsp</url-pattern>
   </servlet-mapping>
+
+  <servlet>
+	<servlet-name>RecaptchaServlet</servlet-name>
+	<servlet-class>com.zimbra.cs.servlet.RecaptchaServlet</servlet-class>
+	<async-supported>true</async-supported>
+	<init-param>
+		<param-name>allowed.ports</param-name>
+		<param-value>80, 8443, 8080, 443, 7070, 7443, 7071</param-value>
+	</init-param>
+  </servlet>
+  <servlet-mapping>
+	<servlet-name>RecaptchaServlet</servlet-name>
+	<url-pattern>/captcha</url-pattern>
+  </servlet-mapping>
+
   <env-entry>
     <description>
         Zimbra Services Installed on the server.
