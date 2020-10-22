@@ -49,8 +49,6 @@ public class ModifyCos extends AdminDocumentHandler {
 	    String id = request.getElement(AdminConstants.E_ID).getText();
 	    Map<String, Object> attrs = AdminService.getAttrs(request);
 
-	    attrs.remove("zimbraPasswordBlockCommonEnabled", attrs.get("zimbraPasswordBlockCommonEnabled"));
-
 	    Cos cos = prov.get(Key.CosBy.id, id);
         if (cos == null)
             throw AccountServiceException.NO_SUCH_COS(id);
