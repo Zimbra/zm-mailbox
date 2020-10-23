@@ -953,9 +953,8 @@ public final class MockProvisioning extends Provisioning {
     }
 
 	@Override
-	public SetPasswordResult resetPassword(Account acct, String newPassword, boolean dryRun) throws ServiceException {
+	public void resetPassword(Account acct, String newPassword, boolean dryRun) throws ServiceException {
 		// TODO Auto-generated method stub
-		return null;
 	}
 
 }
