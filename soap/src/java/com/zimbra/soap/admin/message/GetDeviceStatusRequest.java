@@ -58,11 +58,11 @@ public class GetDeviceStatusRequest {
     private AccountSelector account;
 
     /**
-     * @zm-api-field-tag device
+     * @zm-api-field-tag deviceId
      * @zm-api-field-description Device id
      */
     @XmlElement(name = SyncConstants.E_DEVICE /* device */, required = false)
-    private DeviceId device;
+    private DeviceId deviceId;
 
     /**
      * @zm-api-field-tag device-status
@@ -124,12 +124,12 @@ public class GetDeviceStatusRequest {
      * @param deviceLastUsed
      * @param deviceSyncVersion
      */
-    public GetDeviceStatusRequest(int offset, int limit, AccountSelector account, DeviceId device, Byte status, String deviceName,
+    public GetDeviceStatusRequest(int offset, int limit, AccountSelector account, DeviceId deviceId, Byte status, String deviceName,
             String deviceType, String deviceLastUsed, String deviceSyncVersion) {
         this.offset = offset;
         this.limit = limit;
         this.account = account;
-        this.device = device;
+        this.deviceId = deviceId;
         this.status = status;
         this.deviceName = deviceName;
         this.deviceType = deviceType;
@@ -153,12 +153,12 @@ public class GetDeviceStatusRequest {
         this.limit = limit;
     }
 
-    public DeviceId getDevice() {
-        return device;
+    public DeviceId getDeviceId() {
+        return deviceId;
     }
 
-    public void setDevice(DeviceId device) {
-        this.device = device;
+    public void setDeviceId(DeviceId deviceId) {
+        this.deviceId = deviceId;
     }
 
     public AccountSelector getAccount() {
@@ -211,7 +211,7 @@ public class GetDeviceStatusRequest {
 
     @Override
     public String toString() {
-        return "GetDeviceStatusRequest [account=" + account + ", device=" + device + ", status=" + status
+        return "GetDeviceStatusRequest [account=" + account + ", deviceId=" + deviceId + ", status=" + status
                 + ", deviceName=" + deviceName + ", deviceType=" + deviceType + ", deviceLastUsed=" + deviceLastUsed
                 + ", deviceSyncVersion=" + deviceSyncVersion + "]";
     }
