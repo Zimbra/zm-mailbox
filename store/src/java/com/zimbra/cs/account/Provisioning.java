@@ -1327,7 +1327,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
         throw ServiceException.UNSUPPORTED();
     }
 
-    public abstract SetPasswordResult resetPassword(Account acct, String newPassword, boolean dryRun) throws ServiceException;
+    public abstract void resetPassword(Account acct, String newPassword, boolean dryRun) throws ServiceException;
 
     public abstract void checkPasswordStrength(Account acct, String password) throws ServiceException;
 
