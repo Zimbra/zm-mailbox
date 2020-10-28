@@ -1100,6 +1100,19 @@ public final class AdminConstants {
     public static final QName GET_ADDRESS_LIST_INFO_REQUEST = QName.get(E_GET_ADDRESS_LIST_INFO_REQUEST, NAMESPACE);
     public static final QName GET_ADDRESS_LIST_INFO_RESPONSE = QName.get(E_GET_ADDRESS_LIST_INFO_RESPONSE, NAMESPACE);
 
+    // Z2Z migration
+    public static final String E_VALIDATE_REMOTE_ZIMBRA_CONNECTION_REQUEST = "ValidateRemoteZimbraConnectionRequest";
+    public static final String E_VALIDATE_REMOTE_ZIMBRA_CONNECTION_RESPONSE = "ValidateRemoteZimbraConnectionResponse";
+    public static final QName VALIDATE_REMOTE_ZIMBRA_CONNECTION_REQUEST = QName.get(E_VALIDATE_REMOTE_ZIMBRA_CONNECTION_REQUEST, NAMESPACE);
+    public static final QName VALIDATE_REMOTE_ZIMBRA_CONNECTION_RESPONSE = QName.get(E_VALIDATE_REMOTE_ZIMBRA_CONNECTION_RESPONSE, NAMESPACE);
+    public static final String E_FETCH_ALL_REMOTE_ACCOUNTS_REQUEST = "FetchAllRemoteAccountsRequest";
+    public static final String E_FETCH_ALL_REMOTE_ACCOUNTS_RESPONSE = "FetchAllRemoteAccountsResponse";
+    public static final QName FETCH_ALL_REMOTE_ACCOUNTS_REQUEST = QName.get(E_FETCH_ALL_REMOTE_ACCOUNTS_REQUEST, NAMESPACE);
+    public static final QName FETCH_ALL_REMOTE_ACCOUNTS_RESPONSE = QName.get(E_FETCH_ALL_REMOTE_ACCOUNTS_RESPONSE, NAMESPACE);
+    public static final String E_MIGRATE_USERS_DATA_REQUEST = "MigrateUsersDataRequest";
+    public static final String E_MIGRATE_USERS_DATA_RESPONSE = "MigrateUsersDataResponse";
+    public static final QName MIGRATE_USERS_DATA_REQUEST = QName.get(E_MIGRATE_USERS_DATA_REQUEST, NAMESPACE);
+    public static final QName MIGRATE_USERS_DATA_RESPONSE = QName.get(E_MIGRATE_USERS_DATA_RESPONSE, NAMESPACE);
 
     // DumpSessions
     public static final String E_SESSION = "session";
