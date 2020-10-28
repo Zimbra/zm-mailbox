@@ -24,4 +24,24 @@ public class FetchAllRemoteAccountsRequest {
      */
     @XmlElement(name=AdminConstants.E_DOMAIN, required=false)
     private DomainSelector domain;
+
+    public FetchAllRemoteAccountsRequest() {
+        this(null, null);
+    }
+
+    public FetchAllRemoteAccountsRequest(ServerSelector server, DomainSelector domain) {
+        setServer(server);
+        setDomain(domain);
+    }
+
+    public void setServer(ServerSelector server) {
+        this.server = server;
+    }
+
+    public void setDomain(DomainSelector domain) {
+        this.domain = domain;
+    }
+
+    public ServerSelector getServer() { return server; }
+    public DomainSelector getDomain() { return domain; }
 }
