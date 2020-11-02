@@ -5763,6 +5763,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDNSUseUDP = "zimbraDNSUseUDP";
 
     /**
+     * Whether or not to log document accessed time
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=9015)
+    public static final String A_zimbraDocumentRecentlyViewedEnabled = "zimbraDocumentRecentlyViewedEnabled";
+
+    /**
      * maximum amount of mail quota a domain admin can set on a user
      */
     @ZAttr(id=398)
@@ -6658,6 +6666,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureDistributionListFolderEnabled = "zimbraFeatureDistributionListFolderEnabled";
 
     /**
+     * Whether or not document editing feature is enabled within briefcase
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=9016)
+    public static final String A_zimbraFeatureDocumentEditingEnabled = "zimbraFeatureDocumentEditingEnabled";
+
+    /**
      * Whether to allow a user to access EWS service
      *
      * @since ZCS 8.5.0
@@ -7223,6 +7239,18 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=544)
     public static final String A_zimbraFeatureZimbraAssistantEnabled = "zimbraFeatureZimbraAssistantEnabled";
+
+    /**
+     * Whether or not zulip chat is enabled. If false at domain level,
+     * feature not available at domain, cos &amp; account. If true at domain
+     * and false at cos, feature not available at cos &amp; account. If true
+     * at domain &amp; cos and false at account, feature not available at
+     * account.
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=9017)
+    public static final String A_zimbraFeatureZulipChatEnabled = "zimbraFeatureZulipChatEnabled";
 
     /**
      * Whether to allow a user to access Zimbra X desktop
@@ -18108,40 +18136,13 @@ public class ZAttrProvisioning {
     public static final String A_zimbraZookeeperClientServerList = "zimbraZookeeperClientServerList";
 
     /**
-     * When enabled documents accessed time will get logged to get recently viewed documents
-     * set true to enable it
-     *
-     * @since ZCS 9.0.0
-     */
-    @ZAttr(id=9015)
-    public static final String A_zimbraDocumentRecentlyViewedEnabled = "zimbraDocumentRecentlyViewedEnabled";
-
-    /**
-     * When enabled document document editing will be enabled within briefcase
-     * set true to enable it
-     *
-     * @since ZCS 9.0.0
-     */
-    @ZAttr(id=9016)
-    public static final String A_zimbraFeatureDocumentEditingEnabled = "zimbraFeatureDocumentEditingEnabled";
-
-    /**
-     * When enabled zulip chat is available
-     * set true to enable it
-     *
-     * @since ZCS 9.0.0
-     */
-    @ZAttr(id=9017)
-    public static final String A_zimbraFeatureZulipChatEnabled = "zimbraFeatureZulipChatEnabled";
-
-    /**
-     * Zulip chat domainId. It is in the format of 
-     * zimbra domain:zulip realm(subdomain).
+     * Zulip chat domain ID
      *
      * @since ZCS 9.0.0
      */
     @ZAttr(id=9018)
     public static final String A_zimbraZulipChatDomainId = "zimbraZulipChatDomainId";
+
     ///// END-AUTO-GEN-REPLACE
 }
 

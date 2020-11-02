@@ -10841,6 +10841,78 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Whether or not to log document accessed time
+     *
+     * @return zimbraDocumentRecentlyViewedEnabled, or true if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=9015)
+    public boolean isDocumentRecentlyViewedEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraDocumentRecentlyViewedEnabled, true, true);
+    }
+
+    /**
+     * Whether or not to log document accessed time
+     *
+     * @param zimbraDocumentRecentlyViewedEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=9015)
+    public void setDocumentRecentlyViewedEnabled(boolean zimbraDocumentRecentlyViewedEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDocumentRecentlyViewedEnabled, zimbraDocumentRecentlyViewedEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not to log document accessed time
+     *
+     * @param zimbraDocumentRecentlyViewedEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=9015)
+    public Map<String,Object> setDocumentRecentlyViewedEnabled(boolean zimbraDocumentRecentlyViewedEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDocumentRecentlyViewedEnabled, zimbraDocumentRecentlyViewedEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether or not to log document accessed time
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=9015)
+    public void unsetDocumentRecentlyViewedEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDocumentRecentlyViewedEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not to log document accessed time
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=9015)
+    public Map<String,Object> unsetDocumentRecentlyViewedEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDocumentRecentlyViewedEnabled, "");
+        return attrs;
+    }
+
+    /**
      * maximum amount of mail quota a domain admin can set on a user
      *
      * @return zimbraDomainAdminMaxMailQuota, or -1 if unset
@@ -15436,6 +15508,78 @@ public abstract class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetFeatureDistributionListFolderEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureDistributionListFolderEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Whether or not document editing feature is enabled within briefcase
+     *
+     * @return zimbraFeatureDocumentEditingEnabled, or true if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=9016)
+    public boolean isFeatureDocumentEditingEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureDocumentEditingEnabled, true, true);
+    }
+
+    /**
+     * Whether or not document editing feature is enabled within briefcase
+     *
+     * @param zimbraFeatureDocumentEditingEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=9016)
+    public void setFeatureDocumentEditingEnabled(boolean zimbraFeatureDocumentEditingEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureDocumentEditingEnabled, zimbraFeatureDocumentEditingEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not document editing feature is enabled within briefcase
+     *
+     * @param zimbraFeatureDocumentEditingEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=9016)
+    public Map<String,Object> setFeatureDocumentEditingEnabled(boolean zimbraFeatureDocumentEditingEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureDocumentEditingEnabled, zimbraFeatureDocumentEditingEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether or not document editing feature is enabled within briefcase
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=9016)
+    public void unsetFeatureDocumentEditingEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureDocumentEditingEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not document editing feature is enabled within briefcase
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=9016)
+    public Map<String,Object> unsetFeatureDocumentEditingEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureDocumentEditingEnabled, "");
         return attrs;
     }
 
@@ -20939,6 +21083,98 @@ public abstract class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetFeatureZimbraAssistantEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureZimbraAssistantEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Whether or not zulip chat is enabled. If false at domain level,
+     * feature not available at domain, cos &amp; account. If true at domain
+     * and false at cos, feature not available at cos &amp; account. If true
+     * at domain &amp; cos and false at account, feature not available at
+     * account.
+     *
+     * @return zimbraFeatureZulipChatEnabled, or true if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=9017)
+    public boolean isFeatureZulipChatEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureZulipChatEnabled, true, true);
+    }
+
+    /**
+     * Whether or not zulip chat is enabled. If false at domain level,
+     * feature not available at domain, cos &amp; account. If true at domain
+     * and false at cos, feature not available at cos &amp; account. If true
+     * at domain &amp; cos and false at account, feature not available at
+     * account.
+     *
+     * @param zimbraFeatureZulipChatEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=9017)
+    public void setFeatureZulipChatEnabled(boolean zimbraFeatureZulipChatEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureZulipChatEnabled, zimbraFeatureZulipChatEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not zulip chat is enabled. If false at domain level,
+     * feature not available at domain, cos &amp; account. If true at domain
+     * and false at cos, feature not available at cos &amp; account. If true
+     * at domain &amp; cos and false at account, feature not available at
+     * account.
+     *
+     * @param zimbraFeatureZulipChatEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=9017)
+    public Map<String,Object> setFeatureZulipChatEnabled(boolean zimbraFeatureZulipChatEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureZulipChatEnabled, zimbraFeatureZulipChatEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether or not zulip chat is enabled. If false at domain level,
+     * feature not available at domain, cos &amp; account. If true at domain
+     * and false at cos, feature not available at cos &amp; account. If true
+     * at domain &amp; cos and false at account, feature not available at
+     * account.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=9017)
+    public void unsetFeatureZulipChatEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureZulipChatEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not zulip chat is enabled. If false at domain level,
+     * feature not available at domain, cos &amp; account. If true at domain
+     * and false at cos, feature not available at cos &amp; account. If true
+     * at domain &amp; cos and false at account, feature not available at
+     * account.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=9017)
+    public Map<String,Object> unsetFeatureZulipChatEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureZulipChatEnabled, "");
         return attrs;
     }
 
@@ -63348,221 +63584,6 @@ public abstract class ZAttrAccount  extends MailTarget {
         return attrs;
     }
 
-    /**
-     * whether or not not log document accessed time to sort by recently viewed documents
-     *
-     * @return zimbraDocumentRecentlyViewedEnabled, or false if unset
-     *
-     * @since ZCS 9.0.0
-     */
-    @ZAttr(id=9015)
-    public boolean isDocumentRecentlyViewedEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraDocumentRecentlyViewedEnabled, false, true);
-    }
-
-    /**
-     * whether or not not log document accessed time to sort by recently viewed documents
-     *
-     * @param zimbraDocumentRecentlyViewedEnabled new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 9.0.0
-     */
-    @ZAttr(id=9015)
-    public void setDocumentRecentlyViewedEnabled(boolean zimbraDocumentRecentlyViewedEnabled) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraDocumentRecentlyViewedEnabled, zimbraDocumentRecentlyViewedEnabled ? TRUE : FALSE);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * whether or not log document accessed time to sort by recently viewed documents
-     *
-     * @param zimbraDocumentRecentlyViewedEnabled new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 9.0.0
-     */
-    @ZAttr(id=9015)
-    public Map<String,Object> setDocumentRecentlyViewedEnabled(boolean zimbraDocumentRecentlyViewedEnabled, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraDocumentRecentlyViewedEnabled, zimbraDocumentRecentlyViewedEnabled ? TRUE : FALSE);
-        return attrs;
-    }
-
-    /**
-     * whether or not log document accessed time to sort by recently viewed documents
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 9.0.0
-     */
-    @ZAttr(id=9015)
-    public void unsetDocumentRecentlyViewedEnabled() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraDocumentRecentlyViewedEnabled, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * whether or not log document accessed time to sort by recently viewed documents
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 9.0.0
-     */
-    @ZAttr(id=9015)
-    public Map<String,Object> unsetDocumentRecentlyViewedEnabled(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraDocumentRecentlyViewedEnabled, "");
-        return attrs;
-    }
-
-    /**
-    * whether or not to allow document editing in briefcase
-    *
-    * @return zimbraFeatureDocumentEditingEnabled, or false if unset
-    *
-    * @since ZCS 9.0.0
-    */
-   @ZAttr(id=9016)
-   public boolean isFeatureDocumentEditingEnabled() {
-       return getBooleanAttr(Provisioning.A_zimbraFeatureDocumentEditingEnabled, false, true);
-   }
-
-   /**
-    * whether or not to allow document editing in briefcase
-    *
-    * @param zimbraFeatureDocumentEditingEnabled new value
-    * @throws com.zimbra.common.service.ServiceException if error during update
-    *
-    * @since ZCS 9.0.0
-    */
-   @ZAttr(id=9016)
-   public void setFeatureDocumentEditingEnabled(boolean zimbraFeatureDocumentEditingEnabled) throws com.zimbra.common.service.ServiceException {
-       HashMap<String,Object> attrs = new HashMap<String,Object>();
-       attrs.put(Provisioning.A_zimbraFeatureDocumentEditingEnabled, zimbraFeatureDocumentEditingEnabled ? TRUE : FALSE);
-       getProvisioning().modifyAttrs(this, attrs);
-   }
-
-   /**
-    * whether or not to allow document editing in briefcase
-    *
-    * @param zimbraFeatureDocumentEditingEnabled new value
-    * @param attrs existing map to populate, or null to create a new map
-    * @return populated map to pass into Provisioning.modifyAttrs
-    *
-    * @since ZCS 9.0.0
-    */
-   @ZAttr(id=9016)
-   public Map<String,Object> setFeatureDocumentEditingEnabled(boolean zimbraFeatureDocumentEditingEnabled, Map<String,Object> attrs) {
-       if (attrs == null) attrs = new HashMap<String,Object>();
-       attrs.put(Provisioning.A_zimbraFeatureDocumentEditingEnabled, zimbraFeatureDocumentEditingEnabled ? TRUE : FALSE);
-       return attrs;
-   }
-
-   /**
-    * whether or not to allow document editing in briefcase
-    *
-    * @throws com.zimbra.common.service.ServiceException if error during update
-    *
-    * @since ZCS 9.0.0
-    */
-   @ZAttr(id=9016)
-   public void unsetFeatureDocumentEditingEnabled() throws com.zimbra.common.service.ServiceException {
-       HashMap<String,Object> attrs = new HashMap<String,Object>();
-       attrs.put(Provisioning.A_zimbraFeatureDocumentEditingEnabled, "");
-       getProvisioning().modifyAttrs(this, attrs);
-   }
-
-   /**
-    * whether or not to allow document editing in briefcase
-    *
-    * @param attrs existing map to populate, or null to create a new map
-    * @return populated map to pass into Provisioning.modifyAttrs
-    *
-    * @since ZCS 9.0.0
-    */
-   @ZAttr(id=9016)
-   public Map<String,Object> unsetFeatureDocumentEditingEnabled(Map<String,Object> attrs) {
-       if (attrs == null) attrs = new HashMap<String,Object>();
-       attrs.put(Provisioning.A_zimbraFeatureDocumentEditingEnabled, "");
-       return attrs;
-   }
-
-   /**
-    * whether or not to allow zulip chat
-    *
-    * @return zimbraFeatureZulipChatEnabled, or false if unset
-    *
-    * @since ZCS 9.0.0
-    */
-   @ZAttr(id=9017)
-   public boolean isFeatureZulipChatEnabled() {
-       return getBooleanAttr(Provisioning.A_zimbraFeatureZulipChatEnabled, false, true);
-   }
-
-   /**
-    * whether or not to allow zulip chat
-    *
-    * @param zimbraFeatureZulipChatEnabled new value
-    * @throws com.zimbra.common.service.ServiceException if error during update
-    *
-    * @since ZCS 9.0.0
-    */
-   @ZAttr(id=9017)
-   public void setFeatureZulipChatEnabled(boolean zimbraFeatureZulipChatEnabled) throws com.zimbra.common.service.ServiceException {
-       HashMap<String,Object> attrs = new HashMap<String,Object>();
-       attrs.put(Provisioning.A_zimbraFeatureZulipChatEnabled, zimbraFeatureZulipChatEnabled ? TRUE : FALSE);
-       getProvisioning().modifyAttrs(this, attrs);
-   }
-
-   /**
-    * whether or not to allow zulip chat
-    *
-    * @param zimbraFeatureZulipChatEnabled new value
-    * @param attrs existing map to populate, or null to create a new map
-    * @return populated map to pass into Provisioning.modifyAttrs
-    *
-    * @since ZCS 9.0.0
-    */
-   @ZAttr(id=9017)
-   public Map<String,Object> setFeatureZulipChatEnabled(boolean zimbraFeatureZulipChatEnabled, Map<String,Object> attrs) {
-       if (attrs == null) attrs = new HashMap<String,Object>();
-       attrs.put(Provisioning.A_zimbraFeatureZulipChatEnabled, zimbraFeatureZulipChatEnabled ? TRUE : FALSE);
-       return attrs;
-   }
-
-   /**
-    * whether or not to allow zulip chat
-    *
-    * @throws com.zimbra.common.service.ServiceException if error during update
-    *
-    * @since ZCS 9.0.0
-    */
-   @ZAttr(id=9017)
-   public void unsetFeatureZulipChatEnabled() throws com.zimbra.common.service.ServiceException {
-       HashMap<String,Object> attrs = new HashMap<String,Object>();
-       attrs.put(Provisioning.A_zimbraFeatureZulipChatEnabled, "");
-       getProvisioning().modifyAttrs(this, attrs);
-   }
-
-   /**
-    * whether or not to allow zulip chat
-    *
-    * @param attrs existing map to populate, or null to create a new map
-    * @return populated map to pass into Provisioning.modifyAttrs
-    *
-    * @since ZCS 9.0.0
-    */
-   @ZAttr(id=9017)
-   public Map<String,Object> unsetFeatureZulipChatEnabled(Map<String,Object> attrs) {
-       if (attrs == null) attrs = new HashMap<String,Object>();
-       attrs.put(Provisioning.A_zimbraFeatureZulipChatEnabled, "");
-       return attrs;
-   }
     ///// END-AUTO-GEN-REPLACE
 
 }
