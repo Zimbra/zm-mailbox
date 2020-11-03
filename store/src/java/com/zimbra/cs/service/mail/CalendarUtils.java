@@ -684,8 +684,14 @@ public class CalendarUtils {
     }
 
     static Recurrence.IRecurrence parseRecur(Element recurElt, TimeZoneMap invTzMap,
+                ParsedDateTime dtStart, ParsedDateTime dtEnd, ParsedDuration dur, RecurId recurId)
+                throws ServiceException {
+        return parseRecur(recurElt, invTzMap, dtStart, dtEnd, dur, recurId, false);
+    }
+
+    static Recurrence.IRecurrence parseRecur(Element recurElt, TimeZoneMap invTzMap,
                                                     ParsedDateTime dtStart, ParsedDateTime dtEnd,
-                                                    ParsedDuration dur, RecurId recurId)
+                                                    ParsedDuration dur, RecurId recurId, boolean allDay)
     throws ServiceException {
         if (dur == null && dtStart != null && dtEnd != null)
             dur = dtEnd.difference(dtStart);
@@ -863,6 +869,15 @@ public class CalendarUtils {
 
                     try {
                         ZRecur recur = new ZRecur(recurBuf.toString(), invTzMap);
+                        if (recur.getCount() > 0) {
+                            int estimatedCount = recur.getEstimatedCount(dtStart);
+                            ZimbraLog.calendar.debug("Estimated count = %s", String.valueOf(estimatedCount));
+                            recur.setCount(estimatedCount);
+                        } else {
+                            Date estimatedEnd = recur.getEstimatedEndTime(dtStart, allDay);
+                            ZimbraLog.calendar.debug("Estimated end date = %s", estimatedEnd == null ? "" : estimatedEnd.toString());
+                            recur.setUntil(ParsedDateTime.fromUTCTime(estimatedEnd.getTime()));
+                        }
                         if (exclude) {
                             subRules.add(new Recurrence.SimpleRepeatingRule(dtStart, dur, recur, null));
                         } else {
@@ -1304,7 +1319,7 @@ public class CalendarUtils {
             }
             Recurrence.IRecurrence recurrence = parseRecur(
                     recur, tzMap, newInv.getStartTime(), newInv.getEndTime(),
-                    newInv.getDuration(), newInv.getRecurId());
+                    newInv.getDuration(), newInv.getRecurId(), allDay);
             newInv.setRecurrence(recurrence);
         }
 
