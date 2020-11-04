@@ -540,6 +540,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.GetMailboxVolumesResponse.class,
             com.zimbra.soap.admin.message.GetMemcachedClientConfigRequest.class,
             com.zimbra.soap.admin.message.GetMemcachedClientConfigResponse.class,
+            com.zimbra.soap.admin.message.GetMigrationStatusRequest.class,
+            com.zimbra.soap.admin.message.GetMigrationStatusResponse.class,
             com.zimbra.soap.admin.message.GetOutgoingFilterRulesRequest.class,
             com.zimbra.soap.admin.message.GetOutgoingFilterRulesResponse.class,
             com.zimbra.soap.admin.message.GetQuotaUsageRequest.class,

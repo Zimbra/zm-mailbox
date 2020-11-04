@@ -11,11 +11,11 @@ import com.zimbra.common.soap.AdminConstants;
 @XmlRootElement(name=AdminConstants.E_VALIDATE_REMOTE_ZIMBRA_CONNECTION_REQUEST)
 public class ValidateRemoteZimbraConnectionRequest {
 
-    @XmlAttribute(name = "sHost", required = true)
+    @XmlAttribute(name = AdminConstants.A_SOURCE_HOST, required = true)
     private String sourceHost;
-    @XmlAttribute(name = "sAdminUser", required = true)
+    @XmlAttribute(name = AdminConstants.A_SOURCE_ADMIN_USER, required = true)
     private String sourceAdminUserName;
-    @XmlAttribute(name = "sAdminPassword", required = true)
+    @XmlAttribute(name = AdminConstants.A_SOURCE_ADMIN_PASSWORD, required = true)
     private String sourceAdminPassword;
 
     public ValidateRemoteZimbraConnectionRequest() {
