@@ -70,6 +70,10 @@ public final class SyncConstants {
     public static final String E_SYNCSTATE = "syncState";
     public static final String E_ITEMS = "item";
     public static final String E_MAILBOX = "mailbox";
+    public static final String E_DEVICE_NAME = "deviceName";
+    public static final String E_DEVICE_TYPE = "deviceType";
+    public static final String E_DEVICE_LAST_USED = "deviceLastUsed";
+    public static final String E_DEVICE_SYNC_VERSION = "deviceSyncVersion";
 
     public static final String A_ID = "id";
     public static final String A_TYPE = "type";
@@ -83,6 +87,8 @@ public final class SyncConstants {
     public static final String A_PHONENUMBER = "phone_number";
     public static final String A_CLASS = "class";
     public static final String A_SHOWITEM = "showItems";
+    public static final String A_OFFSET = "offset";
+    public static final String A_LIMIT = "limit";
 
     // Sync command response statuses
     // Reference - https://msdn.microsoft.com/en-us/library/gg675457(v=exchg.80).aspx
