@@ -6992,6 +6992,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeaturePortalEnabled = "zimbraFeaturePortalEnabled";
 
     /**
+     * Whether Powerpaste Feature is enabled or not
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=3084)
+    public static final String A_zimbraFeaturePowerPasteEnabled = "zimbraFeaturePowerPasteEnabled";
+
+    /**
      * whether priority inbox feature is enabled
      *
      * @since ZCS 8.0.0
@@ -14244,6 +14252,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1166)
     public static final String A_zimbraPrefPop3IncludeSpam = "zimbraPrefPop3IncludeSpam";
+
+    /**
+     * Whether Powerpaste preference is enabled by user or admin
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=3085)
+    public static final String A_zimbraPrefPowerPasteEnabled = "zimbraPrefPowerPasteEnabled";
 
     /**
      * quick command encoded by the client
