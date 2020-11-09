@@ -5,6 +5,7 @@ import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -12,14 +13,28 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.MigrationInfo;
+import com.zimbra.soap.type.ZmBoolean;
 
+/**
+ * @zm-api-command-admin-auth-required true
+ * @zm-api-command-description Migrate users from source system to destination system
+ */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name = AdminConstants.E_MIGRATE_USERS_DATA_REQUEST)
 public class MigrateUsersDataRequest {
 
-    @XmlElement(name = "migrate", required = true)
+    @XmlAttribute(name = AdminConstants.A_IS_SSL, required = false)
+    private ZmBoolean isSsl;
+
+    @XmlAttribute(name = AdminConstants.A_IS_SSL_VERIFY, required = false)
+    private ZmBoolean isSslVerify;
+
+    @XmlElement(name = AdminConstants.E_MIGRATE, required = true)
     private List<MigrationInfo> migrate = Lists.newArrayList();
 
+    /**
+     * no-argument constructor wanted by JAXB
+     */
     public MigrateUsersDataRequest() {
     }
 

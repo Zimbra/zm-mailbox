@@ -9,6 +9,10 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.DomainSelector;
 import com.zimbra.soap.admin.type.ServerSelector;
 
+/**
+ * @zm-api-command-admin-auth-required true
+ * @zm-api-command-description Fetch all users from the remote zimbra system.
+ */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_FETCH_ALL_REMOTE_ACCOUNTS_REQUEST)
 public class FetchAllRemoteAccountsRequest {

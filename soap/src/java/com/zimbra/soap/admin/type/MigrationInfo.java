@@ -4,16 +4,34 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
+import com.zimbra.common.soap.AdminConstants;
+
 @XmlAccessorType(XmlAccessType.NONE)
 public class MigrationInfo {
 
-    @XmlAttribute
+    /**
+     * @zm-api-field-tag sourceUser
+     * @zm-api-field-description source System user account from where data will be migrated
+     */
+    @XmlAttribute(name = AdminConstants.A_SOURCE_USER, required = true)
     private String sourceUser;
-    @XmlAttribute
+
+    @XmlAttribute(name = AdminConstants.A_SOURCE_USER_PASSWORD, required = false)
     private String sourceUserPassword;
-    @XmlAttribute
+
+    /**
+     * @zm-api-field-tag targetUser
+     * @zm-api-field-description Target system user account to where data will be migrated
+     */
+    @XmlAttribute(name = AdminConstants.A_TARGET_USER, required = true)
     private String targetUser;
-    @XmlAttribute
+
+    /**
+     * @zm-api-field-tag typesOfdata
+     * @zm-api-field-description Which types of data is to be migrated.
+     * e.g; imap(mail), caldav(calendar), contact, file(document), task
+     */
+    @XmlAttribute(name = AdminConstants.A_TYPES_OF_DATA, required = true)
     private String typesOfData;
 
     public MigrationInfo() {
@@ -58,6 +76,4 @@ public class MigrationInfo {
     public void setTypesOfData(String typesOfData) {
         this.typesOfData = typesOfData;
     }
-
-    
 }

@@ -1119,9 +1119,15 @@ public final class AdminConstants {
     public static final QName GET_MIGRATION_STATUS_RESPONSE = QName.get(E_GET_MIGRATION_STATUS_RESPONSE, NAMESPACE);
 
     // Z2Z migration constants
-    public static final String A_SOURCE_HOST = "sourceHost";
-    public static final String A_SOURCE_ADMIN_USER = "sourceAdminUser";
-    public static final String A_SOURCE_ADMIN_PASSWORD = "sourceAdminPassword";
+    public static final String A_SOURCE_HOST = "sh";
+    public static final String A_SOURCE_ADMIN_USER = "sau";
+    public static final String A_SOURCE_ADMIN_PASSWORD = "sap";
+    public static final String A_IS_SSL = "isSsl";
+    public static final String A_IS_SSL_VERIFY = "isSslVerify";
+    public static final String A_SOURCE_USER = "su";
+    public static final String A_SOURCE_USER_PASSWORD = "sup";
+    public static final String A_TARGET_USER = "tu";
+    public static final String A_TYPES_OF_DATA = "tod";
 
     // DumpSessions
     public static final String E_SESSION = "session";
