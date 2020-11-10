@@ -592,10 +592,12 @@ public class MobileConfigFormatter extends Formatter {
         if (server.getMtaTlsSecurityLevel() == MtaTlsSecurityLevel.none) {
             useSSL = false;
         }
-        if (domain.getSMTPPublicServiceProtocol().isSsl() || domain.getSMTPPublicServiceProtocol().isTls()) {
-            useSSL = true;
-        } else if (domain.getSMTPPublicServiceProtocol().isNone()) {
-            useSSL = false;
+        if (domain.getSMTPPublicServiceProtocol() != null) {
+            if (domain.getSMTPPublicServiceProtocol().isSsl() || domain.getSMTPPublicServiceProtocol().isTls()) {
+                useSSL = true;
+            } else if (domain.getSMTPPublicServiceProtocol().isNone()) {
+                useSSL = false;
+            }
         }
         Element stringOutgoingMailServerUseSSLElement = document.createElement(useSSL.toString()); // string element
         dictElement.appendChild(stringOutgoingMailServerUseSSLElement);
