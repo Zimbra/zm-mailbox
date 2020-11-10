@@ -4078,6 +4078,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraBatchedIndexingSize = "zimbraBatchedIndexingSize";
 
     /**
+     * Name of the folder in modern webclient from which branding assets
+     * should be picked.
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9024)
+    public static final String A_zimbraBrandingFolderName = "zimbraBrandingFolderName";
+
+    /**
      * alternate location for calendar and task folders
      *
      * @since ZCS 5.0.6

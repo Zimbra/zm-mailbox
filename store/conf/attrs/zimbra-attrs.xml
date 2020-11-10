@@ -10096,6 +10096,9 @@ TODO: delete them permanently from here
 <attr id="9023" name="zimbraMobileConfigSigningKey" type="astring" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" since="8.9.0">
   <desc>Key to sign Mobileconfig file</desc>
 </attr>
+<attr id="9024" name="zimbraBrandingFolderName" type="string" max="200" cardinality="single" optionalIn="account,cos,domain" flags="domainInfo,accountInfo,accountCosDomainInherited,domainAdminModifiable" since="8.9.0">
+    <desc>Name of the folder in modern webclient from which branding assets should be picked.</desc>
+</attr>
 <attr id="3084" name="zimbraFeaturePowerPasteEnabled" type="boolean" cardinality="single" flags="accountInfo,accountInherited,domainAdminModifiable" optionalIn="account,cos" since="9.0.0">
     <defaultCOSValue>TRUE</defaultCOSValue>
     <desc>Whether Powerpaste Feature is enabled or not</desc>
