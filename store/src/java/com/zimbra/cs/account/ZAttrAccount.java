@@ -5498,8 +5498,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Name of the folder in modern webclient from which branding assets
-     * should be picked.
+     * Name of the folder in modern webclient from which branding assets to
+     * be picked.
      *
      * @return zimbraBrandingFolderName, or null if unset
      *
@@ -5511,8 +5511,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Name of the folder in modern webclient from which branding assets
-     * should be picked.
+     * Name of the folder in modern webclient from which branding assets to
+     * be picked.
      *
      * @param zimbraBrandingFolderName new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -5527,8 +5527,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Name of the folder in modern webclient from which branding assets
-     * should be picked.
+     * Name of the folder in modern webclient from which branding assets to
+     * be picked.
      *
      * @param zimbraBrandingFolderName new value
      * @param attrs existing map to populate, or null to create a new map
@@ -5544,8 +5544,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Name of the folder in modern webclient from which branding assets
-     * should be picked.
+     * Name of the folder in modern webclient from which branding assets to
+     * be picked.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -5559,8 +5559,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Name of the folder in modern webclient from which branding assets
-     * should be picked.
+     * Name of the folder in modern webclient from which branding assets to
+     * be picked.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

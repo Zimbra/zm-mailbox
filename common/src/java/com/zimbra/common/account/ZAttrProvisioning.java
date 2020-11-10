@@ -4078,8 +4078,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraBatchedIndexingSize = "zimbraBatchedIndexingSize";
 
     /**
-     * Name of the folder in modern webclient from which branding assets
-     * should be picked.
+     * Name of the folder in modern webclient from which branding assets to
+     * be picked.
      *
      * @since ZCS 8.9.0
      */
