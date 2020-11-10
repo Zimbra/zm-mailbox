@@ -265,11 +265,12 @@ public class MobileConfigFormatter extends Formatter {
         if (domain != null) {
             certStr = domain.getMobileConfigSigningCertificate();
             pvtKeyStr = domain.getMobileConfigSigningKey();
-            if (StringUtil.isNullOrEmpty(certStr) && server != null) {
+            if (StringUtil.isNullOrEmpty(certStr) || StringUtil.isNullOrEmpty(pvtKeyStr)) {
                 certStr = domain.getSSLCertificate();
                 pvtKeyStr = domain.getSSLPrivateKey();
             }
-            if (StringUtil.isNullOrEmpty(certStr) && server != null) {
+            if ((StringUtil.isNullOrEmpty(certStr) || StringUtil.isNullOrEmpty(pvtKeyStr)) 
+                    && server != null) {
                 certStr = server.getSSLCertificate();
                 pvtKeyStr = server.getSSLPrivateKey();
             }
