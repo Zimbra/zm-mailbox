@@ -2350,6 +2350,24 @@ public class ZAttrProvisioning {
         public boolean isSTARTTLS() { return this == STARTTLS;}
     }
 
+    public static enum SMTPPublicServiceProtocol {
+        none("none"),
+        ssl("ssl"),
+        tls("tls");
+        private String mValue;
+        private SMTPPublicServiceProtocol(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static SMTPPublicServiceProtocol fromString(String s) throws ServiceException {
+            for (SMTPPublicServiceProtocol value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isNone() { return this == none;}
+        public boolean isSsl() { return this == ssl;}
+        public boolean isTls() { return this == tls;}
+    }
+
     public static enum TableMaintenanceOperation {
         ANALYZE("ANALYZE"),
         OPTIMIZE("OPTIMIZE");
@@ -10161,6 +10179,22 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMobileAttachSkippedItemEnabled = "zimbraMobileAttachSkippedItemEnabled";
 
     /**
+     * Certificate to sign Mobileconfig file
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9022)
+    public static final String A_zimbraMobileConfigSigningCertificate = "zimbraMobileConfigSigningCertificate";
+
+    /**
+     * Key to sign Mobileconfig file
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9023)
+    public static final String A_zimbraMobileConfigSigningKey = "zimbraMobileConfigSigningKey";
+
+    /**
      * Whether to force devices using Active Sync 2.5
      *
      * @since ZCS 8.0.7
@@ -16736,6 +16770,30 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=98)
     public static final String A_zimbraSmtpPort = "zimbraSmtpPort";
+
+    /**
+     * outgoing SMTP server hostname typically used in MobileConfig file.
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9019)
+    public static final String A_zimbraSMTPPublicServiceHostname = "zimbraSMTPPublicServiceHostname";
+
+    /**
+     * Outgoing SMTP server port typically used in MobileConfig file.
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9020)
+    public static final String A_zimbraSMTPPublicServicePort = "zimbraSMTPPublicServicePort";
+
+    /**
+     * outgoing SMTP server protocol typically used in Mobileconfig file
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9021)
+    public static final String A_zimbraSMTPPublicServiceProtocol = "zimbraSMTPPublicServiceProtocol";
 
     /**
      * If TRUE, the address for MAIL FROM in the SMTP session will always be

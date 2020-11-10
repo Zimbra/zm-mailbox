@@ -263,9 +263,14 @@ public class MobileConfigFormatter extends Formatter {
         String certStr = null;
         String pvtKeyStr = null;
         if (domain != null) {
-            certStr = domain.getSSLCertificate();
-            pvtKeyStr = domain.getSSLPrivateKey();
-            if (StringUtil.isNullOrEmpty(certStr) && server != null) {
+            certStr = domain.getMobileConfigSigningCertificate();
+            pvtKeyStr = domain.getMobileConfigSigningKey();
+            if (StringUtil.isNullOrEmpty(certStr) || StringUtil.isNullOrEmpty(pvtKeyStr)) {
+                certStr = domain.getSSLCertificate();
+                pvtKeyStr = domain.getSSLPrivateKey();
+            }
+            if ((StringUtil.isNullOrEmpty(certStr) || StringUtil.isNullOrEmpty(pvtKeyStr)) 
+                    && server != null) {
                 certStr = server.getSSLCertificate();
                 pvtKeyStr = server.getSSLPrivateKey();
             }
@@ -552,7 +557,11 @@ public class MobileConfigFormatter extends Formatter {
         keyOutgoingMailServerHostNameElement.appendChild(outgoingMailServerHostName);
         dictElement.appendChild(keyOutgoingMailServerHostNameElement);
         Element stringOutgoingMailServerHostNameElement = document.createElement(ConfigEnum.STRING.toString()); // string element
-        outgoingMailServerHostName = document.createTextNode(server.getSmtpHostname()[0]);
+        String smtpHostName = server.getSmtpHostname()[0];
+        if (!StringUtil.isNullOrEmpty(domain.getSMTPPublicServiceHostname())) {
+            smtpHostName = domain.getSMTPPublicServiceHostname();
+        }
+        outgoingMailServerHostName = document.createTextNode(smtpHostName);
         stringOutgoingMailServerHostNameElement.appendChild(outgoingMailServerHostName);
         dictElement.appendChild(stringOutgoingMailServerHostNameElement);
 
@@ -566,6 +575,9 @@ public class MobileConfigFormatter extends Formatter {
         if (server.getMtaTlsSecurityLevel() == MtaTlsSecurityLevel.none) {
             outgoingPort = String.valueOf(server.getSmtpPort());
         }
+        if (!StringUtil.isNullOrEmpty(domain.getSMTPPublicServicePortAsString())) {
+            outgoingPort = domain.getSMTPPublicServicePortAsString();
+        }
         outgoingMailServerPortNumber = document.createTextNode(outgoingPort);
         stringOutgoingMailServerPortNumberElement.appendChild(outgoingMailServerPortNumber);
         dictElement.appendChild(stringOutgoingMailServerPortNumberElement);
@@ -575,10 +587,17 @@ public class MobileConfigFormatter extends Formatter {
         Node outgoingMailServerUseSSL = document.createTextNode(ImapEnum.OUTGOING_MAIL_SERVER_USE_SSL.toString());
         keyOutgoingMailServerUseSSLElement.appendChild(outgoingMailServerUseSSL);
         dictElement.appendChild(keyOutgoingMailServerUseSSLElement);
-        Element stringOutgoingMailServerUseSSLElement = document.createElement(Boolean.TRUE.toString()); // string element
+        Boolean useSSL = true;
+        // server.getMtaTlsSecurityLevel() is incorrect to check on mailbox server. however keeping it for backward compatibility. 
         if (server.getMtaTlsSecurityLevel() == MtaTlsSecurityLevel.none) {
-            stringOutgoingMailServerUseSSLElement = document.createElement(Boolean.FALSE.toString());
+            useSSL = false;
         }
+        if (domain.getSMTPPublicServiceProtocol().isSsl() || domain.getSMTPPublicServiceProtocol().isTls()) {
+            useSSL = true;
+        } else if (domain.getSMTPPublicServiceProtocol().isNone()) {
+            useSSL = false;
+        }
+        Element stringOutgoingMailServerUseSSLElement = document.createElement(useSSL.toString()); // string element
         dictElement.appendChild(stringOutgoingMailServerUseSSLElement);
 
         // OutgoingMailServerUsername

@@ -16728,6 +16728,150 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
+     * Certificate to sign Mobileconfig file
+     *
+     * @return zimbraMobileConfigSigningCertificate, or null if unset
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9022)
+    public String getMobileConfigSigningCertificate() {
+        return getAttr(Provisioning.A_zimbraMobileConfigSigningCertificate, null, true);
+    }
+
+    /**
+     * Certificate to sign Mobileconfig file
+     *
+     * @param zimbraMobileConfigSigningCertificate new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9022)
+    public void setMobileConfigSigningCertificate(String zimbraMobileConfigSigningCertificate) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileConfigSigningCertificate, zimbraMobileConfigSigningCertificate);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Certificate to sign Mobileconfig file
+     *
+     * @param zimbraMobileConfigSigningCertificate new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9022)
+    public Map<String,Object> setMobileConfigSigningCertificate(String zimbraMobileConfigSigningCertificate, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileConfigSigningCertificate, zimbraMobileConfigSigningCertificate);
+        return attrs;
+    }
+
+    /**
+     * Certificate to sign Mobileconfig file
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9022)
+    public void unsetMobileConfigSigningCertificate() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileConfigSigningCertificate, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Certificate to sign Mobileconfig file
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9022)
+    public Map<String,Object> unsetMobileConfigSigningCertificate(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileConfigSigningCertificate, "");
+        return attrs;
+    }
+
+    /**
+     * Key to sign Mobileconfig file
+     *
+     * @return zimbraMobileConfigSigningKey, or null if unset
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9023)
+    public String getMobileConfigSigningKey() {
+        return getAttr(Provisioning.A_zimbraMobileConfigSigningKey, null, true);
+    }
+
+    /**
+     * Key to sign Mobileconfig file
+     *
+     * @param zimbraMobileConfigSigningKey new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9023)
+    public void setMobileConfigSigningKey(String zimbraMobileConfigSigningKey) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileConfigSigningKey, zimbraMobileConfigSigningKey);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Key to sign Mobileconfig file
+     *
+     * @param zimbraMobileConfigSigningKey new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9023)
+    public Map<String,Object> setMobileConfigSigningKey(String zimbraMobileConfigSigningKey, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileConfigSigningKey, zimbraMobileConfigSigningKey);
+        return attrs;
+    }
+
+    /**
+     * Key to sign Mobileconfig file
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9023)
+    public void unsetMobileConfigSigningKey() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileConfigSigningKey, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Key to sign Mobileconfig file
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9023)
+    public Map<String,Object> unsetMobileConfigSigningKey(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileConfigSigningKey, "");
+        return attrs;
+    }
+
+    /**
      * Max size of items in a folder that server tracks, categorized by
      * collection type (Email,Calendar,Contacts,Tasks). e.g. Email:3000 makes
      * the max size of items to track for an Email folder to be 3000. If not
@@ -21557,6 +21701,328 @@ public abstract class ZAttrDomain extends NamedEntry {
     public Map<String,Object> unsetSMIMELdapURL(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSMIMELdapURL, "");
+        return attrs;
+    }
+
+    /**
+     * outgoing SMTP server hostname typically used in MobileConfig file.
+     *
+     * @return zimbraSMTPPublicServiceHostname, or null if unset
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9019)
+    public String getSMTPPublicServiceHostname() {
+        return getAttr(Provisioning.A_zimbraSMTPPublicServiceHostname, null, true);
+    }
+
+    /**
+     * outgoing SMTP server hostname typically used in MobileConfig file.
+     *
+     * @param zimbraSMTPPublicServiceHostname new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9019)
+    public void setSMTPPublicServiceHostname(String zimbraSMTPPublicServiceHostname) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMTPPublicServiceHostname, zimbraSMTPPublicServiceHostname);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * outgoing SMTP server hostname typically used in MobileConfig file.
+     *
+     * @param zimbraSMTPPublicServiceHostname new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9019)
+    public Map<String,Object> setSMTPPublicServiceHostname(String zimbraSMTPPublicServiceHostname, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMTPPublicServiceHostname, zimbraSMTPPublicServiceHostname);
+        return attrs;
+    }
+
+    /**
+     * outgoing SMTP server hostname typically used in MobileConfig file.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9019)
+    public void unsetSMTPPublicServiceHostname() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMTPPublicServiceHostname, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * outgoing SMTP server hostname typically used in MobileConfig file.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9019)
+    public Map<String,Object> unsetSMTPPublicServiceHostname(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMTPPublicServiceHostname, "");
+        return attrs;
+    }
+
+    /**
+     * Outgoing SMTP server port typically used in MobileConfig file.
+     *
+     * <p>Use getSMTPPublicServicePortAsString to access value as a string.
+     *
+     * @see #getSMTPPublicServicePortAsString()
+     *
+     * @return zimbraSMTPPublicServicePort, or -1 if unset
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9020)
+    public int getSMTPPublicServicePort() {
+        return getIntAttr(Provisioning.A_zimbraSMTPPublicServicePort, -1, true);
+    }
+
+    /**
+     * Outgoing SMTP server port typically used in MobileConfig file.
+     *
+     * @return zimbraSMTPPublicServicePort, or null if unset
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9020)
+    public String getSMTPPublicServicePortAsString() {
+        return getAttr(Provisioning.A_zimbraSMTPPublicServicePort, null, true);
+    }
+
+    /**
+     * Outgoing SMTP server port typically used in MobileConfig file.
+     *
+     * @param zimbraSMTPPublicServicePort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9020)
+    public void setSMTPPublicServicePort(int zimbraSMTPPublicServicePort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMTPPublicServicePort, Integer.toString(zimbraSMTPPublicServicePort));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Outgoing SMTP server port typically used in MobileConfig file.
+     *
+     * @param zimbraSMTPPublicServicePort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9020)
+    public Map<String,Object> setSMTPPublicServicePort(int zimbraSMTPPublicServicePort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMTPPublicServicePort, Integer.toString(zimbraSMTPPublicServicePort));
+        return attrs;
+    }
+
+    /**
+     * Outgoing SMTP server port typically used in MobileConfig file.
+     *
+     * @param zimbraSMTPPublicServicePort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9020)
+    public void setSMTPPublicServicePortAsString(String zimbraSMTPPublicServicePort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMTPPublicServicePort, zimbraSMTPPublicServicePort);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Outgoing SMTP server port typically used in MobileConfig file.
+     *
+     * @param zimbraSMTPPublicServicePort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9020)
+    public Map<String,Object> setSMTPPublicServicePortAsString(String zimbraSMTPPublicServicePort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMTPPublicServicePort, zimbraSMTPPublicServicePort);
+        return attrs;
+    }
+
+    /**
+     * Outgoing SMTP server port typically used in MobileConfig file.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9020)
+    public void unsetSMTPPublicServicePort() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMTPPublicServicePort, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Outgoing SMTP server port typically used in MobileConfig file.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9020)
+    public Map<String,Object> unsetSMTPPublicServicePort(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMTPPublicServicePort, "");
+        return attrs;
+    }
+
+    /**
+     * outgoing SMTP server protocol typically used in Mobileconfig file
+     *
+     * <p>Valid values: [none, ssl, tls]
+     *
+     * @return zimbraSMTPPublicServiceProtocol, or null if unset and/or has invalid value
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9021)
+    public ZAttrProvisioning.SMTPPublicServiceProtocol getSMTPPublicServiceProtocol() {
+        try { String v = getAttr(Provisioning.A_zimbraSMTPPublicServiceProtocol, true, true); return v == null ? null : ZAttrProvisioning.SMTPPublicServiceProtocol.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+    }
+
+    /**
+     * outgoing SMTP server protocol typically used in Mobileconfig file
+     *
+     * <p>Valid values: [none, ssl, tls]
+     *
+     * @return zimbraSMTPPublicServiceProtocol, or null if unset
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9021)
+    public String getSMTPPublicServiceProtocolAsString() {
+        return getAttr(Provisioning.A_zimbraSMTPPublicServiceProtocol, null, true);
+    }
+
+    /**
+     * outgoing SMTP server protocol typically used in Mobileconfig file
+     *
+     * <p>Valid values: [none, ssl, tls]
+     *
+     * @param zimbraSMTPPublicServiceProtocol new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9021)
+    public void setSMTPPublicServiceProtocol(ZAttrProvisioning.SMTPPublicServiceProtocol zimbraSMTPPublicServiceProtocol) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMTPPublicServiceProtocol, zimbraSMTPPublicServiceProtocol.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * outgoing SMTP server protocol typically used in Mobileconfig file
+     *
+     * <p>Valid values: [none, ssl, tls]
+     *
+     * @param zimbraSMTPPublicServiceProtocol new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9021)
+    public Map<String,Object> setSMTPPublicServiceProtocol(ZAttrProvisioning.SMTPPublicServiceProtocol zimbraSMTPPublicServiceProtocol, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMTPPublicServiceProtocol, zimbraSMTPPublicServiceProtocol.toString());
+        return attrs;
+    }
+
+    /**
+     * outgoing SMTP server protocol typically used in Mobileconfig file
+     *
+     * <p>Valid values: [none, ssl, tls]
+     *
+     * @param zimbraSMTPPublicServiceProtocol new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9021)
+    public void setSMTPPublicServiceProtocolAsString(String zimbraSMTPPublicServiceProtocol) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMTPPublicServiceProtocol, zimbraSMTPPublicServiceProtocol);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * outgoing SMTP server protocol typically used in Mobileconfig file
+     *
+     * <p>Valid values: [none, ssl, tls]
+     *
+     * @param zimbraSMTPPublicServiceProtocol new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9021)
+    public Map<String,Object> setSMTPPublicServiceProtocolAsString(String zimbraSMTPPublicServiceProtocol, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMTPPublicServiceProtocol, zimbraSMTPPublicServiceProtocol);
+        return attrs;
+    }
+
+    /**
+     * outgoing SMTP server protocol typically used in Mobileconfig file
+     *
+     * <p>Valid values: [none, ssl, tls]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9021)
+    public void unsetSMTPPublicServiceProtocol() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMTPPublicServiceProtocol, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * outgoing SMTP server protocol typically used in Mobileconfig file
+     *
+     * <p>Valid values: [none, ssl, tls]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9021)
+    public Map<String,Object> unsetSMTPPublicServiceProtocol(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMTPPublicServiceProtocol, "");
         return attrs;
     }
 

@@ -10081,12 +10081,25 @@ TODO: delete them permanently from here
 <attr id="9018" name="zimbraZulipChatDomainId" type="string" cardinality="single" optionalIn="domain" flags="domainInfo" since="9.0.0">
   <desc>Zulip chat domain ID</desc>
 </attr>
-
+<attr id="9019" name="zimbraSMTPPublicServiceHostname" type="string" max="256" cardinality="single" optionalIn="domain,globalConfig" flags="domainInfo,domainInherited"  since="8.9.0">
+  <desc>outgoing SMTP server hostname typically used in MobileConfig file.</desc>
+</attr>
+<attr id="9020" name="zimbraSMTPPublicServicePort" type="port" max="256" cardinality="single" optionalIn="domain,globalConfig" flags="domainInfo,domainInherited" since="8.9.0">
+  <desc>Outgoing SMTP server port typically used in MobileConfig file.</desc>
+</attr>
+<attr id="9021" name="zimbraSMTPPublicServiceProtocol" type="enum" value="none,ssl,tls" cardinality="single" optionalIn="domain,globalConfig" flags="domainInfo,domainInherited" since="8.9.0">
+  <desc>outgoing SMTP server protocol typically used in Mobileconfig file</desc>
+</attr>
+<attr id="9022" name="zimbraMobileConfigSigningCertificate" type="astring" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" since="8.9.0">
+  <desc>Certificate to sign Mobileconfig file</desc>
+</attr>
+<attr id="9023" name="zimbraMobileConfigSigningKey" type="astring" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" since="8.9.0">
+  <desc>Key to sign Mobileconfig file</desc>
+</attr>
 <attr id="3084" name="zimbraFeaturePowerPasteEnabled" type="boolean" cardinality="single" flags="accountInfo,accountInherited,domainAdminModifiable" optionalIn="account,cos" since="9.0.0">
     <defaultCOSValue>TRUE</defaultCOSValue>
     <desc>Whether Powerpaste Feature is enabled or not</desc>
 </attr>
-
 <attr id="3085" name="zimbraPrefPowerPasteEnabled" type="boolean" cardinality="single" flags="accountInfo,accountInherited" optionalIn="account,cos" since="9.0.0">
     <defaultCOSValue>TRUE</defaultCOSValue>
     <desc>Whether Powerpaste preference is enabled by user or admin</desc>
