@@ -1951,6 +1951,83 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * Name of the folder in modern webclient from which branding assets to
+     * be picked.
+     *
+     * @return zimbraBrandingFolderName, or null if unset
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9024)
+    public String getBrandingFolderName() {
+        return getAttr(Provisioning.A_zimbraBrandingFolderName, null, true);
+    }
+
+    /**
+     * Name of the folder in modern webclient from which branding assets to
+     * be picked.
+     *
+     * @param zimbraBrandingFolderName new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9024)
+    public void setBrandingFolderName(String zimbraBrandingFolderName) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBrandingFolderName, zimbraBrandingFolderName);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Name of the folder in modern webclient from which branding assets to
+     * be picked.
+     *
+     * @param zimbraBrandingFolderName new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9024)
+    public Map<String,Object> setBrandingFolderName(String zimbraBrandingFolderName, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBrandingFolderName, zimbraBrandingFolderName);
+        return attrs;
+    }
+
+    /**
+     * Name of the folder in modern webclient from which branding assets to
+     * be picked.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9024)
+    public void unsetBrandingFolderName() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBrandingFolderName, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Name of the folder in modern webclient from which branding assets to
+     * be picked.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=9024)
+    public Map<String,Object> unsetBrandingFolderName(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBrandingFolderName, "");
+        return attrs;
+    }
+
+    /**
      * CalDAV shared folder cache duration. Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
