@@ -1125,7 +1125,6 @@ public final class AdminConstants {
     public static final String A_IS_SSL = "isSsl";
     public static final String A_IS_SSL_VERIFY = "isSslVerify";
     public static final String A_SOURCE_USER = "su";
-    public static final String A_SOURCE_USER_PASSWORD = "sup";
     public static final String A_TARGET_USER = "tu";
     public static final String A_TYPES_OF_DATA = "tod";
 
