@@ -1700,7 +1700,7 @@ public class Folder extends MailItem implements FolderStore, SharedState {
      * @return
      */
     boolean isShare() {
-        return isTagged(Flag.FlagInfo.NO_INHERIT);
+        return getEffectiveACL() != null && !getEffectiveACL().isEmpty();
     }
 
     /**
