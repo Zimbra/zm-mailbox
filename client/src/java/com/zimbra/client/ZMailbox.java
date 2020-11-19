@@ -1328,15 +1328,14 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             mTransport.setMaxNotifySeq(0);
             mSize = event.getSize();
             if (root != null) {
+                mUserRoot = root;
                 try {
                     // skip the cache update if invalid auth/zmailbox instance
                     mailbox.getAccountId();
+                    addIdMappings(mUserRoot);
                 } catch (ServiceException e) {
                     ZimbraLog.cache.error("Unable to refresh mailbox item id mappings due to missing auth info.");
-                    return;
                 }
-                mUserRoot = root;
-                addIdMappings(mUserRoot);
             }
             if (tags != null) {
                 if (mNameToTag == null) {
