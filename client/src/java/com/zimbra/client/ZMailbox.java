@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -1019,13 +1020,14 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         try (final MailboxLock l = getReadLockAndLockIt()) {
             try {
                 boolean nosession = mNotifyPreference == SessionPreference.nosession;
+                final String uuid = UUID.randomUUID().toString();
                 Element response = null;
                 if (nosession) {
-                    response = mTransport.invoke(wrapRequest(request), false, nosession, requestedAccountId);
+                    response = mTransport.invoke(wrapRequest(request, uuid), false, nosession, requestedAccountId);
                 } else {
-                    response = mTransport.invoke(wrapRequest(request), nosession, requestedAccountId, this.mNotificationFormat, this.mCurWaitSetID);
+                    response = mTransport.invoke(wrapRequest(request, uuid), nosession, requestedAccountId, this.mNotificationFormat, this.mCurWaitSetID);
                 }
-                return unwrapResponse(response, request.getQName());
+                return unwrapResponse(response, request.getQName(), uuid);
             } catch (SoapFaultException e) {
                 throw e; // for now, later, try to map to more specific exception
             } catch (IOException e) {
@@ -1042,46 +1044,61 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         }
     }
 
-    private Element wrapRequest(Element req) throws ServiceException {
-        // business as usual if accountId is present, getInfo has already been retrieved, this is getInfo, or batch request
+    private Element wrapRequest(Element req, String uuid) throws ServiceException {
+        // business as usual if accountId is present, getInfo has already been retrieved, or this is getInfo
         if (accountId != null || mGetInfoResult != null
-            || AccountConstants.GET_INFO_REQUEST.equals(req.getQName())
-            || ZimbraNamespace.E_BATCH_REQUEST.equals(req.getQName())) {
+            || AccountConstants.GET_INFO_REQUEST.equals(req.getQName())) {
             return req;
         }
-        ZimbraLog.mailbox.debug("Wrapping request with info request: %s.", req.getName());
         // batch for the account info after the outgoing request.
         // this works even if the first request is an auth request
-        Element infoRequest = JaxbUtil.jaxbToElement(new GetInfoRequest(NOT_ZIMLETS));
-        Element batchRequest = Element.create(SoapProtocol.Soap12, ZimbraNamespace.E_BATCH_REQUEST);
-        batchRequest.addNonUniqueElement(req);
-        batchRequest.addNonUniqueElement(infoRequest);
+        ZimbraLog.mailbox.debug("Adding info request to: %s.", req.getName());
+        // make sure we have a batch request or create one and add the original
+        Element batchRequest = req;
+        if (!ZimbraNamespace.E_BATCH_REQUEST.equals(req.getQName())) {
+            batchRequest = Element.create(SoapProtocol.Soap12, ZimbraNamespace.E_BATCH_REQUEST);
+            batchRequest.addNonUniqueElement(req);
+        }
+        // create and add the info request with a correlator if not already present
+        Element infoRequest = batchRequest.getOptionalElement(AccountConstants.GET_INFO_REQUEST);
+        if (infoRequest == null) {
+            infoRequest = JaxbUtil.jaxbToElement(new GetInfoRequest(NOT_ZIMLETS));
+            infoRequest.addAttribute(ZimbraNamespace.A_REQUEST_ID, uuid);
+            batchRequest.addNonUniqueElement(infoRequest);
+        }
         return batchRequest;
     }
 
-    private Element unwrapResponse(Element res, QName originalRequestName) throws ServiceException {
+    private Element unwrapResponse(Element res, QName originalRequestName, String uuid) throws ServiceException {
         // nothing to unwrap if this isn't a batch response with child elements
-        if (res == null || !ZimbraNamespace.E_BATCH_RESPONSE.equals(res.getQName()) || !res.hasChildren()
-            // or if the original request was already a batch request
-            || ZimbraNamespace.E_BATCH_REQUEST.equals(originalRequestName)) {
+        if (res == null || !ZimbraNamespace.E_BATCH_RESPONSE.equals(res.getQName()) || !res.hasChildren()) {
             return res;
         }
         ZimbraLog.mailbox.debug("Unwrapping response: %s.", res.getName());
-        // cache any info response so subsequent requests don't need to fetch it
+        // if not already cached, cache any info response so subsequent requests don't need to fetch it
         final Element infoElement = res.getOptionalElement(AccountConstants.E_GET_INFO_RESPONSE);
-        if (infoElement != null) {
+        if (infoElement != null && mGetInfoResult == null) {
             GetInfoResponse infoResponse = JaxbUtil.elementToJaxb(infoElement);
             mGetInfoResult = new ZGetInfoResult(infoResponse);
             accountId = mGetInfoResult.getId();
+            // remove the info response if we added it to the request in wrapRequest
+            if (uuid.equals(infoElement.getAttribute(ZimbraNamespace.A_REQUEST_ID, ""))) {
+                infoElement.detach();
+            }
         }
-        // return the first non-getinfo response (there should only be 2 elements)
+        // if the original request was a batch request we're done
+        if (ZimbraNamespace.E_BATCH_REQUEST.equals(originalRequestName)) {
+            return res;
+        }
+        // return the first non-getinfo response (there should only be 1 child element at this point)
         for (Element e: res.listElements()) {
             if (!AccountConstants.GET_INFO_RESPONSE.equals(e.getQName())) {
                 return e;
             }
         }
         // we shouldn't get here as long as this method is only used to unwrap responses from requests created
-        // by wrapResponse. if we do get here, check wrapResponse's elements and where it is being used
+        // by wrapResponse. if we do get here, check wrapResponse's elements and where it is being used.
+        // wrapResponse should only be wrapping things if accountId and mGetInfoResult are null
         ZimbraLog.mailbox.error("Batch response was missing the primary request.");
         throw ServiceException.FAILURE("Batch response was missing the primary request.", null);
     }
