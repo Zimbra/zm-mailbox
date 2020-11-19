@@ -1305,11 +1305,10 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
                 try {
                     // skip the cache update if invalid auth/zmailbox instance
                     mailbox.getAccountId();
+                    addIdMappings(mUserRoot);
                 } catch (ServiceException e) {
                     ZimbraLog.cache.error("Unable to refresh mailbox item id mappings due to missing auth info.");
-                    return;
                 }
-                addIdMappings(mUserRoot);
             }
             if (tags != null) {
                 if (mNameToTag == null) {
