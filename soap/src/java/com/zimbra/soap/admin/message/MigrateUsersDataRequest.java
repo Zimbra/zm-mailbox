@@ -43,9 +43,6 @@ public class MigrateUsersDataRequest {
     @XmlAttribute(name = AdminConstants.A_IS_SSL, required = false)
     private ZmBoolean isSsl;
 
-    @XmlAttribute(name = AdminConstants.A_IS_SSL_VERIFY, required = false)
-    private ZmBoolean isSslVerify;
-
     @XmlElement(name = AdminConstants.E_MIGRATE, required = true)
     private List<MigrationInfo> migrate = Lists.newArrayList();
 
