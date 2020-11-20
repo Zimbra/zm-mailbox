@@ -1129,8 +1129,10 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         if (ZimbraNamespace.E_BATCH_REQUEST.equals(originalRequestName)) {
             return res;
         }
-        // return the first non-getinfo response (there should only be 1 child element at this point)
+        // return the first non-getinfo response (there should only be 1 child element if no errors)
         for (Element e : res.listElements()) {
+            // always check for errors in order
+            ensureNotSoapFault(e);
             if (!AccountConstants.GET_INFO_RESPONSE.equals(e.getQName())) {
                 return e;
             }
@@ -1140,6 +1142,17 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         // wrapRequest should only be wrapping things if accountId and mGetInfoResult are null
         ZimbraLog.mailbox.error("Batch response was missing the primary request.");
         throw ServiceException.FAILURE("Batch response was missing the primary request.", null);
+    }
+
+    private void ensureNotSoapFault(Element e) throws ServiceException {
+        final SoapProtocol proto = mTransport.getRequestProtocol();
+        if (e != null && proto.isFault(e)) {
+            // make sure the target account id is properly set
+            if (mTransport.getTargetAcctId() != null) {
+                proto.updateArgumentsForRemoteFault(e, mTransport.getTargetAcctId());
+            }
+            throw proto.soapFault(e);
+        }
     }
 
     private void doConnectionAndSSLFailures(Exception e) throws RemoteServiceException {
