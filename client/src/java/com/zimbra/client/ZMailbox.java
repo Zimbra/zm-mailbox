@@ -1027,7 +1027,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
                 } else {
                     response = mTransport.invoke(wrapRequest(request, uuid), nosession, requestedAccountId, this.mNotificationFormat, this.mCurWaitSetID);
                 }
-                return unwrapResponse(response, request.getQName(), uuid);
+                return unwrapAndHandleResponse(response, request.getQName(), uuid);
             } catch (SoapFaultException e) {
                 throw e; // for now, later, try to map to more specific exception
             } catch (IOException e) {
@@ -1069,14 +1069,30 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         return batchRequest;
     }
 
-    private Element unwrapResponse(Element res, QName originalRequestName, String uuid) throws ServiceException {
+    private Element unwrapAndHandleResponse(Element res, QName originalRequestName, String uuid) throws ServiceException {
         // nothing to unwrap if this isn't a batch response with child elements
         if (res == null || !ZimbraNamespace.E_BATCH_RESPONSE.equals(res.getQName()) || !res.hasChildren()) {
             return res;
         }
         ZimbraLog.mailbox.debug("Unwrapping response: %s.", res.getName());
+        // if not already cached, cache any auth result so context notification handling has immediate access
+        final Element authElement = res.getOptionalElement(AccountConstants.AUTH_RESPONSE);
+        if (authElement != null && mAuthResult == null) {
+            final AuthResponse authResponse = JaxbUtil.elementToJaxb(authElement);
+            mAuthResult = new ZAuthResult(authResponse);
+            mAuthResult.setSessionId(mTransport.getSessionId());
+            initCsrfToken(mAuthResult.getCsrfToken());
+            initAuthToken(mAuthResult.getAuthToken());
+            initTrustedToken(mAuthResult.getTrustedToken());
+            // attempt to match whatever AccountBy was originally being used
+            if (name != null) {
+                initTargetAccountForTransport(name, AccountBy.name);
+            } else if (accountId != null) {
+                initTargetAccountForTransport(accountId, AccountBy.id);
+            }
+        }
         // if not already cached, cache any info response so subsequent requests don't need to fetch it
-        final Element infoElement = res.getOptionalElement(AccountConstants.E_GET_INFO_RESPONSE);
+        final Element infoElement = res.getOptionalElement(AccountConstants.GET_INFO_RESPONSE);
         if (infoElement != null && mGetInfoResult == null) {
             GetInfoResponse infoResponse = JaxbUtil.elementToJaxb(infoElement);
             mGetInfoResult = new ZGetInfoResult(infoResponse);
@@ -1097,8 +1113,8 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             }
         }
         // we shouldn't get here as long as this method is only used to unwrap responses from requests created
-        // by wrapResponse. if we do get here, check wrapResponse's elements and where it is being used.
-        // wrapResponse should only be wrapping things if accountId and mGetInfoResult are null
+        // by wrapRequest. if we do get here, check wrapRequest's elements and where it is being used.
+        // wrapRequest should only be wrapping things if accountId and mGetInfoResult are null
         ZimbraLog.mailbox.error("Batch response was missing the primary request.");
         throw ServiceException.FAILURE("Batch response was missing the primary request.", null);
     }
