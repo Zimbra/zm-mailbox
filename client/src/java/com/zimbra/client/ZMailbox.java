@@ -985,7 +985,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      * @throws ServiceException If there are issues parsing or handling the request
      */
     @SuppressWarnings("unchecked")
-    public <T> T invokeJaxb(Object jaxbObject, Consumer<Element> bodyHandler) throws ServiceException {
+    private <T> T invokeJaxb(Object jaxbObject, Consumer<Element> bodyHandler) throws ServiceException {
         Element res = invoke(JaxbUtil.jaxbToElement(jaxbObject), null, bodyHandler);
         return (T) JaxbUtil.elementToJaxb(res);
     }
@@ -1024,7 +1024,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         return invoke(request, requestedAccountId, null);
     }
 
-    public Element invoke(Element request, String requestedAccountId, Consumer<Element> bodyHandler) throws ServiceException {
+    private Element invoke(Element request, String requestedAccountId, Consumer<Element> bodyHandler) throws ServiceException {
         lock();
         try {
             try {
@@ -1398,13 +1398,21 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
                 }
             } else if (event instanceof ZModifyFolderEvent) {
                 ZModifyFolderEvent mfe = (ZModifyFolderEvent) event;
-                ZFolder f = getFolderById(mfe.getId());
-                if (f != null) {
-                    String newParentId = mfe.getParentId(null);
-                    if (newParentId != null && !newParentId.equals(f.getParentId())) {
-                        reparent(f, newParentId);
+                // don't allow modify events to force refresh folders
+                // this will prevent overflow if a lot of modification events are happening
+                boolean backupAlwaysRefreshFolders = alwaysRefreshFolders;
+                try {
+                    alwaysRefreshFolders = false;
+                    ZFolder f = getFolderById(mfe.getId());
+                    if (f != null) {
+                        String newParentId = mfe.getParentId(null);
+                        if (newParentId != null && !newParentId.equals(f.getParentId())) {
+                            reparent(f, newParentId);
+                        }
+                        f.modifyNotification(event);
                     }
-                    f.modifyNotification(event);
+                } finally {
+                    alwaysRefreshFolders = backupAlwaysRefreshFolders;
                 }
             } else if (event instanceof ZModifyMailboxEvent) {
                 ZModifyMailboxEvent mme = (ZModifyMailboxEvent) event;
