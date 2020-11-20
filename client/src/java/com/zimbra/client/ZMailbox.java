@@ -41,6 +41,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
+import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -737,10 +738,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         }
         if (options.getAuthToken() != null) {
             if (options.getAuthAuthToken()) {
-                mAuthResult = authByAuthToken(options);
-                initCsrfToken(mAuthResult.getCsrfToken());
-                initAuthToken(mAuthResult.getAuthToken());
-                initTrustedToken(mAuthResult.getTrustedToken());
+                authByAuthToken(options);
             } else {
                 initAuthToken(options.getAuthToken());
             }
@@ -752,10 +750,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             } else {
                 password = options.getPassword();
             }
-            mAuthResult = authByPassword(options, password);
-            initAuthToken(mAuthResult.getAuthToken());
-            initCsrfToken(mAuthResult.getCsrfToken());
-            initTrustedToken(mAuthResult.getTrustedToken());
+            authByPassword(options, password);
         }
         if (options.getTargetAccount() != null) {
             /* ZCS-4341 do this only AFTER finished authenticating */
@@ -883,10 +878,14 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         }
         addAttrsAndPrefs(auth, options);
 
-        AuthResponse authRes = invokeJaxb(auth);
-        ZAuthResult r = new ZAuthResult(authRes);
-        r.setSessionId(mTransport.getSessionId());
-        return r;
+        invokeJaxb(auth, (r) -> {
+            try {
+                handleAuthResponse(r, options);
+            } catch (ServiceException e) {
+                ZimbraLog.extensions.error("Failed to parse auth response.", e);
+            }
+        });
+        return mAuthResult;
     }
 
     public ZAuthResult authByAuthToken(Options options) throws ServiceException {
@@ -903,10 +902,27 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         req.setDeviceTrusted(options.getTrustedDevice());
         addAttrsAndPrefs(req, options);
 
-        AuthResponse res = invokeJaxb(req);
-        ZAuthResult r = new ZAuthResult(res);
-        r.setSessionId(mTransport.getSessionId());
-        return r;
+        invokeJaxb(req, (r) -> {
+            try {
+                handleAuthResponse(r, options);
+            } catch (ServiceException e) {
+                ZimbraLog.extensions.error("Failed to parse auth response.", e);
+            }
+        });
+        return mAuthResult;
+    }
+
+    protected void handleAuthResponse(Element res, Options options) throws ServiceException {
+        if (res == null) {
+            return;
+        }
+        final AuthResponse authResponse = JaxbUtil.elementToJaxb(res);
+        final ZAuthResult authResult = new ZAuthResult(authResponse);
+        authResult.setSessionId(mTransport.getSessionId());
+        mAuthResult = authResult;
+        initCsrfToken(mAuthResult.getCsrfToken());
+        initAuthToken(mAuthResult.getAuthToken());
+        initTrustedToken(mAuthResult.getTrustedToken());
     }
 
     public ZAuthResult getAuthResult() {
@@ -963,6 +979,18 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     }
 
     /**
+     * @param jaxbObject The request object
+     * @param bodyHandler A consumer to process the response body before response context is processed
+     * @return The jaxb response object
+     * @throws ServiceException If there are issues parsing or handling the request
+     */
+    @SuppressWarnings("unchecked")
+    public <T> T invokeJaxb(Object jaxbObject, Consumer<Element> bodyHandler) throws ServiceException {
+        Element res = invoke(JaxbUtil.jaxbToElement(jaxbObject), null, bodyHandler);
+        return (T) JaxbUtil.elementToJaxb(res);
+    }
+
+    /**
      * It is sometimes useful to use JAXB for the request but get the response as an Element
      * as a first stage in complete migration to JAXB
      */
@@ -993,10 +1021,15 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     }
 
     public Element invoke(Element request, String requestedAccountId) throws ServiceException {
+        return invoke(request, requestedAccountId, null);
+    }
+
+    public Element invoke(Element request, String requestedAccountId, Consumer<Element> bodyHandler) throws ServiceException {
         lock();
         try {
             try {
                 boolean nosession = mNotifyPreference == SessionPreference.nosession;
+                // correlation id for unwrapping response if necessary
                 final String uuid = UUID.randomUUID().toString();
                 Element response = null;
                 if (nosession) {
@@ -1004,7 +1037,13 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
                 } else {
                     response = mTransport.invoke(wrapRequest(request, uuid), nosession, requestedAccountId, this.mNotificationFormat, this.mCurWaitSetID);
                 }
-                return unwrapAndHandleResponse(response, request.getQName(), uuid);
+                // unwrap the response if it was wrapped
+                Element unwrappedRes = unwrapResponse(response, request.getQName(), uuid);
+                // allow caller to handle body before proceeding to handle context (refresh, notifications, etc)
+                if (bodyHandler != null) {
+                    bodyHandler.accept(unwrappedRes);
+                }
+                return unwrappedRes;
             } catch (SoapFaultException e) {
                 throw e; // for now, later, try to map to more specific exception
             } catch (IOException e) {
@@ -1035,7 +1074,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         // make sure we have a batch request or create one and add the original
         Element batchRequest = req;
         if (!ZimbraNamespace.E_BATCH_REQUEST.equals(req.getQName())) {
-            batchRequest = Element.create(SoapProtocol.Soap12, ZimbraNamespace.E_BATCH_REQUEST);
+            batchRequest = newRequestElement(ZimbraNamespace.E_BATCH_REQUEST);
             batchRequest.addNonUniqueElement(req);
         }
         // create and add the info request with a correlator if not already present
@@ -1048,28 +1087,12 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         return batchRequest;
     }
 
-    private Element unwrapAndHandleResponse(Element res, QName originalRequestName, String uuid) throws ServiceException {
+    private Element unwrapResponse(Element res, QName originalRequestName, String uuid) throws ServiceException {
         // nothing to unwrap if this isn't a batch response with child elements
         if (res == null || !ZimbraNamespace.E_BATCH_RESPONSE.equals(res.getQName()) || !res.hasChildren()) {
             return res;
         }
         ZimbraLog.mailbox.debug("Unwrapping response: %s.", res.getName());
-        // if not already cached, cache any auth result so context notification handling has immediate access
-        final Element authElement = res.getOptionalElement(AccountConstants.AUTH_RESPONSE);
-        if (authElement != null && mAuthResult == null) {
-            final AuthResponse authResponse = JaxbUtil.elementToJaxb(authElement);
-            mAuthResult = new ZAuthResult(authResponse);
-            mAuthResult.setSessionId(mTransport.getSessionId());
-            initCsrfToken(mAuthResult.getCsrfToken());
-            initAuthToken(mAuthResult.getAuthToken());
-            initTrustedToken(mAuthResult.getTrustedToken());
-            // attempt to match whatever AccountBy was originally being used
-            if (name != null) {
-                initTargetAccountForTransport(name, AccountBy.name);
-            } else if (accountId != null) {
-                initTargetAccountForTransport(accountId, AccountBy.id);
-            }
-        }
         // if not already cached, cache any info response so subsequent requests don't need to fetch it
         final Element infoElement = res.getOptionalElement(AccountConstants.GET_INFO_RESPONSE);
         if (infoElement != null && mGetInfoResult == null) {
@@ -1086,7 +1109,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             return res;
         }
         // return the first non-getinfo response (there should only be 1 child element at this point)
-        for (Element e: res.listElements()) {
+        for (Element e : res.listElements()) {
             if (!AccountConstants.GET_INFO_RESPONSE.equals(e.getQName())) {
                 return e;
             }
