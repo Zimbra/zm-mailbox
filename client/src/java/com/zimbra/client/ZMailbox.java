@@ -878,13 +878,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         }
         addAttrsAndPrefs(auth, options);
 
-        invokeJaxb(auth, (r) -> {
-            try {
-                handleAuthResponse(r, options);
-            } catch (ServiceException e) {
-                ZimbraLog.extensions.error("Failed to parse auth response.", e);
-            }
-        });
+        invokeJaxb(auth, (r) -> handleAuthResponse((AuthResponse) r, options));
         return mAuthResult;
     }
 
@@ -902,21 +896,14 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         req.setDeviceTrusted(options.getTrustedDevice());
         addAttrsAndPrefs(req, options);
 
-        invokeJaxb(req, (r) -> {
-            try {
-                handleAuthResponse(r, options);
-            } catch (ServiceException e) {
-                ZimbraLog.extensions.error("Failed to parse auth response.", e);
-            }
-        });
+        invokeJaxb(req, (r) -> handleAuthResponse((AuthResponse) r, options));
         return mAuthResult;
     }
 
-    protected void handleAuthResponse(Element res, Options options) throws ServiceException {
-        if (res == null) {
+    protected void handleAuthResponse(AuthResponse authResponse, Options options) {
+        if (authResponse == null) {
             return;
         }
-        final AuthResponse authResponse = JaxbUtil.elementToJaxb(res);
         final ZAuthResult authResult = new ZAuthResult(authResponse);
         authResult.setSessionId(mTransport.getSessionId());
         mAuthResult = authResult;
@@ -979,14 +966,23 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     }
 
     /**
+     * Allows body processing before context headers.<br>
+     * Takes special care not to make requests when handling the body to prevent
+     * handling context headers out of order.
      * @param jaxbObject The request object
      * @param bodyHandler A consumer to process the response body before response context is processed
      * @return The jaxb response object
      * @throws ServiceException If there are issues parsing or handling the request
      */
     @SuppressWarnings("unchecked")
-    private <T> T invokeJaxb(Object jaxbObject, Consumer<Element> bodyHandler) throws ServiceException {
-        Element res = invoke(JaxbUtil.jaxbToElement(jaxbObject), null, bodyHandler);
+    private <T> T invokeJaxb(Object jaxbObject, Consumer<T> bodyHandler) throws ServiceException {
+        Element res = invoke(JaxbUtil.jaxbToElement(jaxbObject), null, (r) -> {
+            try {
+                bodyHandler.accept(JaxbUtil.elementToJaxb(r));
+            } catch (ServiceException e) {
+                ZimbraLog.mailbox.errorQuietly("Failed to parse jaxb object.", e);
+            }
+        });
         return (T) JaxbUtil.elementToJaxb(res);
     }
 
@@ -1631,8 +1627,11 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     public ZGetInfoResult getAccountInfo(boolean refresh) throws ServiceException {
         if (mGetInfoResult == null || refresh) {
             GetInfoRequest req = new GetInfoRequest(NOT_ZIMLETS);
-            GetInfoResponse res = invokeJaxb(req);
-            mGetInfoResult = new ZGetInfoResult(res);
+            invokeJaxb(req, (r) -> {
+                // set this immediately to prevent handling context headers
+                // without an accountId if the first request is getInfo
+                mGetInfoResult = new ZGetInfoResult((GetInfoResponse) r);
+            });
         }
         return mGetInfoResult;
     }
