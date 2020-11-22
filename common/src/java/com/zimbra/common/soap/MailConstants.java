@@ -1274,6 +1274,7 @@ public final class MailConstants {
 
     public static final String A_CREATOR = "cr";
     public static final String A_TYPE = "t";
+    public static final String A_NEW_DOC_TYPE = "type";
     public static final String E_WIKIWORD = "w";
     public static final String E_DOC = "doc";
     public static final String E_UPLOAD = "upload";
