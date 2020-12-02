@@ -74,6 +74,7 @@ public final class SyncConstants {
     public static final String E_DEVICE_TYPE = "deviceType";
     public static final String E_DEVICE_LAST_USED = "deviceLastUsed";
     public static final String E_DEVICE_SYNC_VERSION = "deviceSyncVersion";
+    public static final String E_EMAIL_ADDRESS = "emailAddress";
 
     public static final String A_ID = "id";
     public static final String A_TYPE = "type";
@@ -127,4 +128,5 @@ public final class SyncConstants {
     public static final Integer ITEMOPERATIONS_STATUS_CREDENTIALS_REQUIRED = 18;
     public static final Integer ITEMOPERATIONS_STATUS_ELEMENT_MISSING = 155;
     public static final Integer ITEMOPERATIONS_STATUS_ACTION_NOT_SUPPORTED = 156;
+    
 }
