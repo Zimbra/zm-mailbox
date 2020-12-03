@@ -19722,6 +19722,78 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * whether to use Web Client feature
+     *
+     * @return zimbraFeatureWebClientEnabled, or true if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=3088)
+    public boolean isFeatureWebClientEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureWebClientEnabled, true, true);
+    }
+
+    /**
+     * whether to use Web Client feature
+     *
+     * @param zimbraFeatureWebClientEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=3088)
+    public void setFeatureWebClientEnabled(boolean zimbraFeatureWebClientEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureWebClientEnabled, zimbraFeatureWebClientEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether to use Web Client feature
+     *
+     * @param zimbraFeatureWebClientEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=3088)
+    public Map<String,Object> setFeatureWebClientEnabled(boolean zimbraFeatureWebClientEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureWebClientEnabled, zimbraFeatureWebClientEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether to use Web Client feature
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=3088)
+    public void unsetFeatureWebClientEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureWebClientEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether to use Web Client feature
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=3088)
+    public Map<String,Object> unsetFeatureWebClientEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureWebClientEnabled, "");
+        return attrs;
+    }
+
+    /**
      * admin setting to enable/disable the web client offline access feature
      *
      * @return zimbraFeatureWebClientOfflineAccessEnabled, or true if unset
@@ -47172,6 +47244,83 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * whether end user choose to use IMAP feature. If it is set to TRUE,
+     * IMAP feature is available only when zimbraImapEnabled is TRUE.
+     *
+     * @return zimbraPrefImapEnabled, or true if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=3086)
+    public boolean isPrefImapEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraPrefImapEnabled, true, true);
+    }
+
+    /**
+     * whether end user choose to use IMAP feature. If it is set to TRUE,
+     * IMAP feature is available only when zimbraImapEnabled is TRUE.
+     *
+     * @param zimbraPrefImapEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=3086)
+    public void setPrefImapEnabled(boolean zimbraPrefImapEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefImapEnabled, zimbraPrefImapEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether end user choose to use IMAP feature. If it is set to TRUE,
+     * IMAP feature is available only when zimbraImapEnabled is TRUE.
+     *
+     * @param zimbraPrefImapEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=3086)
+    public Map<String,Object> setPrefImapEnabled(boolean zimbraPrefImapEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefImapEnabled, zimbraPrefImapEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether end user choose to use IMAP feature. If it is set to TRUE,
+     * IMAP feature is available only when zimbraImapEnabled is TRUE.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=3086)
+    public void unsetPrefImapEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefImapEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether end user choose to use IMAP feature. If it is set to TRUE,
+     * IMAP feature is available only when zimbraImapEnabled is TRUE.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=3086)
+    public Map<String,Object> unsetPrefImapEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefImapEnabled, "");
+        return attrs;
+    }
+
+    /**
      * whether or not the IMAP server exports search folders
      *
      * @return zimbraPrefImapSearchFoldersEnabled, or true if unset
@@ -51974,6 +52123,83 @@ public abstract class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetPrefPop3DownloadSince(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefPop3DownloadSince, "");
+        return attrs;
+    }
+
+    /**
+     * whether end user choose to use POP3 feature. If it is set to TRUE,
+     * POP3 feature is available only when zimbraPop3Enabled is TRUE.
+     *
+     * @return zimbraPrefPop3Enabled, or true if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=3087)
+    public boolean isPrefPop3Enabled() {
+        return getBooleanAttr(Provisioning.A_zimbraPrefPop3Enabled, true, true);
+    }
+
+    /**
+     * whether end user choose to use POP3 feature. If it is set to TRUE,
+     * POP3 feature is available only when zimbraPop3Enabled is TRUE.
+     *
+     * @param zimbraPrefPop3Enabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=3087)
+    public void setPrefPop3Enabled(boolean zimbraPrefPop3Enabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefPop3Enabled, zimbraPrefPop3Enabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether end user choose to use POP3 feature. If it is set to TRUE,
+     * POP3 feature is available only when zimbraPop3Enabled is TRUE.
+     *
+     * @param zimbraPrefPop3Enabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=3087)
+    public Map<String,Object> setPrefPop3Enabled(boolean zimbraPrefPop3Enabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefPop3Enabled, zimbraPrefPop3Enabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether end user choose to use POP3 feature. If it is set to TRUE,
+     * POP3 feature is available only when zimbraPop3Enabled is TRUE.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=3087)
+    public void unsetPrefPop3Enabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefPop3Enabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether end user choose to use POP3 feature. If it is set to TRUE,
+     * POP3 feature is available only when zimbraPop3Enabled is TRUE.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=3087)
+    public Map<String,Object> unsetPrefPop3Enabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefPop3Enabled, "");
         return attrs;
     }
 

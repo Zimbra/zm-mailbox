@@ -243,6 +243,36 @@ public class ImapHandlerTest {
         Assert.assertEquals("Output of SEARCH", "* SEARCH 2\r\nsearchtag OK SEARCH completed\r\n", baos.toString());
     }
 
+    @Test
+    public void testLogin() throws Exception {
+
+        Account acct = Provisioning.getInstance().getAccount("12aa345b-2b47-44e6-8cb8-7fdfa18c1a9f");
+        ImapHandler handler = new MockImapHandler();
+
+        acct.setImapEnabled(true);
+        acct.setPrefImapEnabled(true);
+        handler.setCredentials(null);
+        Assert.assertTrue(handler.authenticate(LOCAL_USER, null, "secret", "logintag", null));
+        Assert.assertTrue(handler.isAuthenticated());
+
+        acct.setImapEnabled(true);
+        acct.setPrefImapEnabled(false);
+        handler.setCredentials(null);
+        Assert.assertTrue(handler.authenticate(LOCAL_USER, null, "secret", "logintag", null));
+        Assert.assertFalse(handler.isAuthenticated());
+
+        acct.setImapEnabled(false);
+        acct.setPrefImapEnabled(true);
+        handler.setCredentials(null);
+        Assert.assertTrue(handler.authenticate(LOCAL_USER, null, "secret", "logintag", null));
+        Assert.assertFalse(handler.isAuthenticated());
+
+        acct.setImapEnabled(false);
+        acct.setPrefImapEnabled(false);
+        handler.setCredentials(null);
+        Assert.assertTrue(handler.authenticate(LOCAL_USER, null, "secret", "logintag", null));
+        Assert.assertFalse(handler.isAuthenticated());
+    }
 
     class MockImapPath extends ImapPath {
 
