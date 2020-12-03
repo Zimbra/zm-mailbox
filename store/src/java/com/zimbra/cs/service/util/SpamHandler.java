@@ -23,9 +23,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.activation.DataHandler;
+import javax.mail.Address;
 import javax.mail.MessagingException;
 import javax.mail.Part;
 import javax.mail.Transport;
+import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
@@ -41,6 +43,7 @@ import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zmime.ZMimeBodyPart;
 import com.zimbra.common.zmime.ZMimeMultipart;
@@ -127,7 +130,20 @@ public class SpamHandler {
             out.addHeader(MailSender.X_ORIGINATING_IP, MailSender.formatXOrigIpHeader(sr.origIp));
 
         out.setRecipient(javax.mail.Message.RecipientType.TO, sr.reportRecipient);
-        out.setEnvelopeFrom(config.getSpamReportEnvelopeFrom());
+
+        String envelopeFrom = config.getSpamReportEnvelopeFrom();
+        out.setEnvelopeFrom(envelopeFrom);
+
+        if(!StringUtil.isNullOrEmpty(envelopeFrom)  &&
+                !envelopeFrom.equals("<>")) {
+            try {
+                Address from =  new InternetAddress(config.getSpamReportEnvelopeFrom());
+                out.setFrom(from);
+            } catch (AddressException e) {
+                ZimbraLog.misc.warn("Invalid from address: %s", envelopeFrom, e);
+            }
+        }
+
         out.setSubject(config.getSpamTrainingSubjectPrefix() + " " + sr.accountName + ": " + isSpamString);
         Transport.send(out);
 
