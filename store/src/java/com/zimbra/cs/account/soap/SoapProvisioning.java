@@ -1948,6 +1948,10 @@ public class SoapProvisioning extends Provisioning {
         return result;
     }
 
+    public List<AccountInfo> getAllRemoteAccounts(Domain d, Server s) throws ServiceException {
+        return getAllAccountsInfo(d, s);
+    }
+
     @Override
     public void getAllAccounts(Domain d, Visitor visitor)
     throws ServiceException {
