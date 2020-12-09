@@ -17,14 +17,15 @@
 
 package com.zimbra.soap.mail.type;
 
-import com.google.common.base.MoreObjects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.Id;
+import com.zimbra.soap.type.NewFileCreationTypes;
 import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
@@ -112,6 +113,18 @@ public class DocumentSpec {
     @XmlElement(name=MailConstants.E_DOC /* doc */, required=false)
     private IdVersion docRevision;
 
+    /**
+     * @zm-api-field-description Action on the Document
+     */
+    @XmlAttribute(name = MailConstants.A_ACTION /* action */, required = false)
+    private String action;
+
+    /**
+     * @zm-api-field-description Type of Document that can be created
+     */
+    @XmlAttribute(name = MailConstants.A_NEW_DOC_TYPE /* type */, required = false)
+    private NewFileCreationTypes type;
+
     public DocumentSpec() {
     }
 
@@ -127,6 +140,8 @@ public class DocumentSpec {
     public void setUpload(Id upload) { this.upload = upload; }
     public void setMessagePart(MessagePartSpec messagePart) { this.messagePart = messagePart; }
     public void setDocRevision(IdVersion docRevision) { this.docRevision = docRevision; }
+    public void setAction(String action) { this.action = action; }
+    public void setType(NewFileCreationTypes type) { this.type = type; }
     public String getName() { return name; }
     public String getContentType() { return contentType; }
     public String getDescription() { return description; }
@@ -139,6 +154,8 @@ public class DocumentSpec {
     public Id getUpload() { return upload; }
     public MessagePartSpec getMessagePart() { return messagePart; }
     public IdVersion getDocRevision() { return docRevision; }
+    public String getAction() { return action; }
+    public NewFileCreationTypes getType() { return type; }
 
     public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         return helper
@@ -153,7 +170,9 @@ public class DocumentSpec {
             .add("flags", flags)
             .add("upload", upload)
             .add("messagePart", messagePart)
-            .add("docRevision", docRevision);
+            .add("docRevision", docRevision)
+            .add("action", action)
+            .add("type", type);
     }
 
     @Override

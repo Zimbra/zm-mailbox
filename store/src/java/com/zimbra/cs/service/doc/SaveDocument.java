@@ -17,9 +17,11 @@
 package com.zimbra.cs.service.doc;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
+import java.util.Objects;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimePart;
@@ -31,7 +33,11 @@ import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.poi.xslf.usermodel.XMLSlideShow;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.xwpf.usermodel.XWPFDocument;
 
+import com.google.common.base.Strings;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.httpclient.HttpClientUtil;
@@ -68,11 +74,19 @@ import com.zimbra.cs.service.mail.UploadScanner;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.type.NewFileCreationTypes;
 
 public class SaveDocument extends DocDocumentHandler {
 
     private static String[] TARGET_DOC_ID_PATH = new String[] { MailConstants.E_DOC, MailConstants.A_ID };
     private static String[] TARGET_DOC_FOLDER_PATH = new String[] { MailConstants.E_DOC, MailConstants.A_FOLDER };
+    private static final String DOCUMENT_EXTENSION = ".docx";
+    private static final String SPREADSHEET_EXTENSION = ".xlsx";
+    private static final String PRESENTATION_EXTENSION = ".pptx";
+    private static final String DOCUMENT_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+    private static final String SPREADSHEET_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+    private static final String PRESENTATION_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+    private static final String ACTION_CREATE = "create";
 
     @Override protected String[] getProxiedIdPath(Element request) {
         String id = getXPath(request, TARGET_DOC_ID_PATH);
@@ -118,6 +132,9 @@ public class SaveDocument extends DocDocumentHandler {
             Element attElem = docElem.getOptionalElement(MailConstants.E_UPLOAD);
             Element msgElem = docElem.getOptionalElement(MailConstants.E_MSG);
             Element docRevElem = docElem.getOptionalElement(MailConstants.E_DOC);
+            // check if it is new file creation
+            String action = docElem.getAttribute(MailConstants.A_ACTION, null);
+            ZimbraLog.mailbox.debug("DocumentAction received : %s", action);
             if (attElem != null) {
                 String aid = attElem.getAttribute(MailConstants.A_ID, null);
                 doc = getUploadedDoc(aid, zsc, explicitName, explicitCtype, description);
@@ -144,6 +161,40 @@ public class SaveDocument extends DocDocumentHandler {
                 // the content from another document
                 if (ver != 0) {
                     doc.name = null;
+                }
+            } else if (Objects.nonNull(action)) {
+                ZimbraLog.mailbox.info(" Action to be performed : %s", action.toString());
+                // if action is create
+                if (ACTION_CREATE.equals(action)) {
+                    ZimbraLog.mailbox.debug("Creating new File ");
+                    if (Strings.isNullOrEmpty(explicitName)) {
+                        throw MailServiceException.INVALID_NAME("Failed to create new file. Name missing.");
+                    }
+                    // get the type to create
+                    NewFileCreationTypes docType = NewFileCreationTypes.fromString(docElem.getAttribute(MailConstants.A_NEW_DOC_TYPE));
+                    try {
+                        switch (docType) {
+                            case document:
+                                ZimbraLog.mailbox.debug("Creating new document ");
+                                doc = new Doc(createDocx(), null, explicitName.concat(DOCUMENT_EXTENSION),
+                                        DOCUMENT_CONTENT_TYPE, description);
+                                break;
+                            case spreadsheet:
+                                ZimbraLog.mailbox.debug("Creating new spreadsheet ");
+                                doc = new Doc(createXlsx(), null, explicitName.concat(SPREADSHEET_EXTENSION),
+                                        SPREADSHEET_CONTENT_TYPE, description);
+                                break;
+                            case presentation:
+                                ZimbraLog.mailbox.debug("Creating new presentation ");
+                                doc = new Doc(createPptx(), null, explicitName.concat(PRESENTATION_EXTENSION),
+                                        PRESENTATION_CONTENT_TYPE, description);
+                                break;
+                            default:
+                                break;
+                        }
+                    }catch (IOException e) {
+                        throw ServiceException.FAILURE("Failed to create new file.", e);
+                    }
                 }
             } else {
                 String inlineContent = docElem.getAttribute(MailConstants.E_CONTENT);
@@ -205,6 +256,85 @@ public class SaveDocument extends DocDocumentHandler {
             }
         }
         return response;
+    }
+
+    private InputStream createXlsx() throws ServiceException, IOException {
+        ZimbraLog.mailbox.debug(" Creating xlsx ");
+        InputStream is = null;
+        ByteArrayOutputStream bos = null;
+        XSSFWorkbook wb = null;
+        try {
+            wb = new XSSFWorkbook();
+            wb.createSheet();
+            bos = new ByteArrayOutputStream();
+            wb.write(bos);
+            byte[] bArray = bos.toByteArray();
+            is = new ByteArrayInputStream(bArray);
+            bos.close();
+            wb.close();
+        } catch (Exception e) {
+            ZimbraLog.mailbox.warn(" Error while creating new Excel File. %s", e);
+            throw ServiceException.FAILURE("can't create new excel file", e);
+        } finally {
+            if (bos != null) {
+                bos.close();
+            }
+            if (wb != null) {
+                wb.close();
+            }
+        }
+        return is;
+    }
+
+    private InputStream createPptx() throws ServiceException, IOException {
+        ZimbraLog.mailbox.debug(" Creating pptx ");
+        InputStream is = null;
+        XMLSlideShow ppt = null;
+        ByteArrayOutputStream bos = null;
+        try {
+            ppt = new XMLSlideShow();
+            ppt.createSlide();
+            bos = new ByteArrayOutputStream();
+            ppt.write(bos);
+            byte[] bArray = bos.toByteArray();
+            is = new ByteArrayInputStream(bArray);
+        } catch (Exception e) {
+            ZimbraLog.mailbox.warn(" Error while creating new Presentation File. %s", e);
+            throw ServiceException.FAILURE("can't create new presentation file", e);
+        } finally {
+            if (bos != null) {
+                bos.close();
+            }
+            if (ppt != null) {
+                ppt.close();
+            }
+        }
+        return is;
+    }
+
+    private InputStream createDocx() throws ServiceException, IOException {
+        ZimbraLog.mailbox.debug(" Creating docx ");
+        InputStream is = null;
+        ByteArrayOutputStream bos = null;
+        XWPFDocument document = null;
+        try {
+            document = new XWPFDocument();
+            bos = new ByteArrayOutputStream();
+            document.write(bos);
+            byte[] bArray = bos.toByteArray();
+            is = new ByteArrayInputStream(bArray);
+        } catch (Exception e) {
+            ZimbraLog.mailbox.warn(" Error while creating new Document File. %s", e);
+            throw ServiceException.FAILURE("can't create new document file", e);
+        } finally {
+            if (bos != null) {
+                bos.close();
+            }
+            if (document != null) {
+                document.close();
+            }
+        }
+        return is;
     }
 
     protected Doc getUploadedDoc(String uploadId, ZimbraSoapContext zsc, String name, String ct, String description) throws ServiceException {
