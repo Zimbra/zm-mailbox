@@ -1720,7 +1720,7 @@ public abstract class ImapHandler {
     throws ServiceException, IOException {
         String command = mechanism != null ? "AUTHENTICATE" : "LOGIN";
         // make sure we can actually login via IMAP on this host
-        if (!account.getBooleanAttr(Provisioning.A_zimbraImapEnabled, false)) {
+        if (!account.getBooleanAttr(Provisioning.A_zimbraImapEnabled, false) || !account.isPrefImapEnabled()) {
             sendNO(tag, "account does not have IMAP access enabled");
             return null;
         }
