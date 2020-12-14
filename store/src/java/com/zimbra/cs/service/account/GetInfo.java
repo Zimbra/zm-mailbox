@@ -16,6 +16,12 @@
  */
 package com.zimbra.cs.service.account;
 
+import java.io.IOException;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -29,6 +35,7 @@ import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ProvisioningConstants;
+import com.zimbra.common.localconfig.KnownKey;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
@@ -53,10 +60,10 @@ import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
 import com.zimbra.cs.mailbox.util.TypedIdList;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.admin.AdminAccessControl;
@@ -254,6 +261,16 @@ public class GetInfo extends AccountDocumentHandler  {
         for (GetInfoExt extension : extensions) {
             extension.handle(zsc, response);
         }
+
+        // we do not have any ldap attrs to define whether powerpaste service is installed and running
+        // so check if powerpaste service is installed and running by checking the installed directory and connectivity
+        // if yes return powerpasteEnabled = true else return powerpasteEnabled = false
+        if (checkIfPowerpasteInstalled()) {
+            response.addAttribute("powerpasteEnabled", true);
+        } else {
+            response.addAttribute("powerpasteEnabled", false);
+        }
+
         return response;
     }
 
@@ -460,5 +477,22 @@ public class GetInfo extends AccountDocumentHandler  {
 
     private void doDiscoverRights(Element eRights, Account account, Set<Right> rights) throws ServiceException {
         DiscoverRights.discoverRights(account, rights, eRights, false);
+    }
+
+    private boolean checkIfPowerpasteInstalled() {
+        String location = new KnownKey("zimbra_powerpaste_service_installed_directory", "${zimbra_home}/common/lib/pasteitcleaned").value();
+        try {
+            Path path = Paths.get(location);
+            if (Files.exists(path) && Files.isDirectory(path) && Files.isReadable(path)) {
+                URL url = new URL(new KnownKey("zimbra_powerpaste_service_url", "http://localhost:5000").value());
+                if (url.openConnection() != null) {
+                    return true;
+                }
+            }
+            return false;
+        } catch(InvalidPathException | SecurityException | IOException ex) {
+            ZimbraLog.account.warn("exception occurred", ex);
+            return false;
+        }
     }
 }
