@@ -31,9 +31,9 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.util.Zimbra;
 
-import ch.ethz.ssh2.Connection;
-import ch.ethz.ssh2.Session;
-import ch.ethz.ssh2.StreamGobbler;
+import com.trilead.ssh2.Connection;
+import com.trilead.ssh2.Session;
+import com.trilead.ssh2.StreamGobbler;
 
 public class RemoteManager {
 
