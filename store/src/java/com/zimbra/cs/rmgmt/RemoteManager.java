@@ -16,11 +16,28 @@
  */
 package com.zimbra.cs.rmgmt;
 
+import java.io.BufferedReader;
+import java.io.CharArrayReader;
+import java.io.CharArrayWriter;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.StringWriter;
+import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.util.Base64;
 import java.util.Map;
+
+import org.bouncycastle.asn1.ASN1Encodable;
+import org.bouncycastle.asn1.ASN1Primitive;
+import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
+import org.bouncycastle.util.io.pem.PemObject;
+import org.bouncycastle.util.io.pem.PemWriter;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
@@ -196,13 +213,25 @@ public class RemoteManager {
 
     private Session getSession() throws ServiceException {
         try {
+            char[] buff = new char[256];
+            CharArrayWriter cw = new CharArrayWriter();
+            FileReader fr = new FileReader(mPrivateKey);
+            while (true)
+            {
+                int len = fr.read(buff);
+                if (len < 0)
+                    break;
+                cw.write(buff, 0, len);
+            }
+            fr.close();
+            char[] pemKey= toPKCS1Format(cw.toCharArray());
             mConnection = new Connection(mHost, mPort);
             mConnection.connect();
-            if (!mConnection.authenticateWithPublicKey(mUser, mPrivateKey, null)) {
+            if (!mConnection.authenticateWithPublicKey(mUser, pemKey, null)) {
                 throw new IOException("auth failed");
             }
             return mConnection.openSession();
-        } catch (IOException ioe) {
+        } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException ioe) {
             if (mConnection != null) {
                 mConnection.close();
             }
@@ -210,6 +239,46 @@ public class RemoteManager {
         }
     }
 
+    public static char[] toPKCS1Format(char[] pkcs8Format ) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
+        char[] pemString = null;
+        String line = null;
+        BufferedReader br = new BufferedReader(new CharArrayReader(pkcs8Format));
+        while (true)
+		{
+            line = br.readLine();
+            if (line == null)
+				throw new IOException("Invalid PEM structure, '-----BEGIN...' missing" + line);
+			line = line.trim();
+			if (line.startsWith("-----BEGIN PRIVATE KEY-----"))
+			{
+				String privateKeyContent = String.valueOf(pkcs8Format);
+				privateKeyContent = privateKeyContent.replaceAll("\\n", "").replace("-----BEGIN PRIVATE KEY-----", "").replace("-----END PRIVATE KEY-----", "");
+				KeyFactory kf = KeyFactory.getInstance("RSA");
+				PKCS8EncodedKeySpec keySpecPKCS8 = new PKCS8EncodedKeySpec(Base64.getDecoder().decode(privateKeyContent));
+				PrivateKey privateKey = kf.generatePrivate(keySpecPKCS8);
+				String keyFormat = privateKey.getFormat();
+				if (keyFormat.equals("PKCS#8")) {
+					byte[] privBytes = privateKey.getEncoded();
+					PrivateKeyInfo pkInfo = PrivateKeyInfo.getInstance(privBytes);
+					ASN1Encodable encodable = pkInfo.parsePrivateKey();
+					ASN1Primitive primitive = encodable.toASN1Primitive();
+					byte[] privateKeyPKCS1 = primitive.getEncoded();
+					PemObject pemObject = new PemObject("RSA PRIVATE KEY", privateKeyPKCS1);
+					StringWriter stringWriter = new StringWriter();
+					PemWriter pemWriter = new PemWriter(stringWriter);
+					pemWriter.writeObject(pemObject);
+					pemWriter.close();
+					pemString = stringWriter.toString().toCharArray();
+		        }
+				break;
+			}
+			else {
+				pemString = pkcs8Format;
+				break;
+			}
+		}
+		return pemString;
+    }
     public static RemoteManager getRemoteManager(Server server) throws ServiceException {
         return new RemoteManager(server);
     }
