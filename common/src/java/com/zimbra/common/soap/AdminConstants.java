@@ -66,6 +66,8 @@ public final class AdminConstants {
     public static final String E_SET_PASSWORD_RESPONSE = "SetPasswordResponse";
     public static final String E_CHECK_PASSWORD_STRENGTH_REQUEST = "CheckPasswordStrengthRequest";
     public static final String E_CHECK_PASSWORD_STRENGTH_RESPONSE = "CheckPasswordStrengthResponse";
+    public static final String E_RESET_ACCOUNT_PASSWORD_REQUEST = "ResetAccountPasswordRequest";
+    public static final String E_RESET_ACCOUNT_PASSWORD_RESPONSE = "ResetAccountPasswordResponse";
 
     public static final String E_ADD_ACCOUNT_ALIAS_REQUEST = "AddAccountAliasRequest";
     public static final String E_ADD_ACCOUNT_ALIAS_RESPONSE = "AddAccountAliasResponse";
@@ -580,6 +582,8 @@ public final class AdminConstants {
     public static final QName SET_PASSWORD_RESPONSE = QName.get(E_SET_PASSWORD_RESPONSE, NAMESPACE);
     public static final QName CHECK_PASSWORD_STRENGTH_REQUEST = QName.get(E_CHECK_PASSWORD_STRENGTH_REQUEST, NAMESPACE);
     public static final QName CHECK_PASSWORD_STRENGTH_RESPONSE = QName.get(E_CHECK_PASSWORD_STRENGTH_RESPONSE, NAMESPACE);
+    public static final QName RESET_ACCOUNT_PASSWORD_REQUEST = QName.get(E_RESET_ACCOUNT_PASSWORD_REQUEST, NAMESPACE);
+    public static final QName RESET_ACCOUNT_PASSWORD_RESPONSE = QName.get(E_RESET_ACCOUNT_PASSWORD_RESPONSE, NAMESPACE);
 
     public static final QName ADD_ACCOUNT_ALIAS_REQUEST = QName.get(E_ADD_ACCOUNT_ALIAS_REQUEST, NAMESPACE);
     public static final QName ADD_ACCOUNT_ALIAS_RESPONSE = QName.get(E_ADD_ACCOUNT_ALIAS_RESPONSE, NAMESPACE);

@@ -25,6 +25,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.soap.DocumentDispatcher;
 import com.zimbra.soap.DocumentService;
+import com.zimbra.soap.admin.message.ResetAccountPasswordRequest;
 
 /**
  * @zm-service-description		The Admin Service includes commands for server, account
@@ -59,6 +60,8 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(AdminConstants.SEARCH_ACCOUNTS_REQUEST, new SearchAccounts());
         dispatcher.registerHandler(AdminConstants.RENAME_ACCOUNT_REQUEST, new RenameAccount());
         dispatcher.registerHandler(AdminConstants.CHANGE_PRIMARY_EMAIL_REQUEST, new ChangePrimaryEmail());
+
+        dispatcher.registerHandler(AdminConstants.RESET_ACCOUNT_PASSWORD_REQUEST, new ResetAccountPassword());
 
         dispatcher.registerHandler(AdminConstants.SEARCH_DIRECTORY_REQUEST, new SearchDirectory());
         dispatcher.registerHandler(AdminConstants.GET_ACCOUNT_MEMBERSHIP_REQUEST, new GetAccountMembership());
