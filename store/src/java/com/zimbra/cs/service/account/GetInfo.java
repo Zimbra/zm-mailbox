@@ -16,12 +16,10 @@
  */
 package com.zimbra.cs.service.account;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -35,7 +33,6 @@ import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ProvisioningConstants;
-import com.zimbra.common.localconfig.KnownKey;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
@@ -266,9 +263,9 @@ public class GetInfo extends AccountDocumentHandler  {
         // so check if powerpaste service is installed and running by checking the installed directory and connectivity
         // if yes return powerpasteEnabled = true else return powerpasteEnabled = false
         if (checkIfPowerpasteInstalled()) {
-            response.addAttribute("powerpasteEnabled", true);
+            response.addAttribute("powerpasteEnabled", true, Element.Disposition.CONTENT);
         } else {
-            response.addAttribute("powerpasteEnabled", false);
+            response.addAttribute("powerpasteEnabled", false, Element.Disposition.CONTENT);
         }
 
         return response;
@@ -480,18 +477,23 @@ public class GetInfo extends AccountDocumentHandler  {
     }
 
     private boolean checkIfPowerpasteInstalled() {
-        String location = new KnownKey("zimbra_powerpaste_service_installed_directory", "${zimbra_home}/common/lib/pasteitcleaned").value();
+        String libLocation = "/opt/zimbra/common/lib/pasteitcleaned";
+        String extLoc = "/opt/zimbra/lib/ext/powerpaste-ext/zm-powerpaste-extension.jar";
         try {
-            Path path = Paths.get(location);
-            if (Files.exists(path) && Files.isDirectory(path) && Files.isReadable(path)) {
-                URL url = new URL(new KnownKey("zimbra_powerpaste_service_url", "http://localhost:5000").value());
-                if (url.openConnection() != null) {
-                    return true;
+            File lib = new File(libLocation);
+            File ext = new File(extLoc);
+            if (lib.exists() && lib.isDirectory() && lib.canRead()) {
+                if (ext.exists() && ext.isFile() && ext.canRead()) {
+                    URL url = new URL("http://localhost:5000");
+                    if (url.openConnection() != null) {
+                        return true;
+                    }
                 }
             }
+            ZimbraLog.account.debug("powerpaste service is not installed or running");
             return false;
         } catch(InvalidPathException | SecurityException | IOException ex) {
-            ZimbraLog.account.warn("exception occurred", ex);
+            ZimbraLog.account.info("exception occurred : %s", ex.getMessage());
             return false;
         }
     }
