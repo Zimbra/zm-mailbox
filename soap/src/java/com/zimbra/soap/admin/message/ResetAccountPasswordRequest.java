@@ -31,7 +31,7 @@ public class ResetAccountPasswordRequest {
     /**
      * @zm-api-field-description Account
      */
-    @XmlElement(name=AccountConstants.E_ACCOUNT, required=false)
+    @XmlElement(name=AccountConstants.E_ACCOUNT, required=true)
     private AccountSelector account;
 
     /**
