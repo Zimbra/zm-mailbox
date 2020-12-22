@@ -18,12 +18,31 @@ package com.zimbra.soap.admin.message;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.mail.type.IdVersionName;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_RESET_ACCOUNT_PASSWORD_RESPONSE)
 public class ResetAccountPasswordResponse {
 
+    /**
+     * @zm-api-field-description Status of the Request
+     */
+    @XmlElement(name=MailConstants.A_STATUS /* doc */, required=false)
+    private String status;
+
+    public ResetAccountPasswordResponse() {
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
 }

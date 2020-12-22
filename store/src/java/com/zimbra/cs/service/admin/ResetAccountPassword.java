@@ -23,11 +23,18 @@ import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.ChannelProvider;
+import com.zimbra.cs.account.ForgetPasswordException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.service.util.ResetPasswordUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.ResetAccountPasswordResponse;
+import com.zimbra.soap.type.Channel;
 
 public class ResetAccountPassword extends AdminDocumentHandler {
     protected ZimbraSoapContext zsc = null;
@@ -35,6 +42,7 @@ public class ResetAccountPassword extends AdminDocumentHandler {
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         zsc = getZimbraSoapContext(context);
+        OperationContext octxt = getOperationContext(zsc, context);
         Element a = request.getElement(AccountConstants.E_ACCOUNT);
         String key = a.getAttribute(AccountConstants.A_BY);
         String value = a.getText();
@@ -52,7 +60,26 @@ public class ResetAccountPassword extends AdminDocumentHandler {
 
         checkAccountRights(zsc, account);
 
+        // send the password reset URL to the recovery email
+        ResetPasswordUtil.validateFeatureResetPasswordStatus(account);
+        if (account.getPrefPasswordRecoveryAddressStatus() == null
+                || !account.getPrefPasswordRecoveryAddressStatus().isVerified()) {
+            ZimbraLog.passwordreset.debug("ResetPasswordURL : Verified recovery email is not found for %s",
+                    account.getName());
+            throw ForgetPasswordException.CONTACT_ADMIN("Something went wrong. Please contact your administrator.");
+        }
+        ChannelProvider provider = ChannelProvider.getProviderForChannel(Channel.EMAIL);
+        String recoveryAccount = provider.getRecoveryAccount(account);
+        if (StringUtil.isNullOrEmpty(recoveryAccount)) {
+            ZimbraLog.passwordreset.debug("ResetPasswordURL : Recovery account missing or unverified for %s",
+                    account.getName());
+            throw ForgetPasswordException.CONTACT_ADMIN("Something went wrong. Please contact your administrator.");
+        }
+
+        provider.sendResetPasswordURL(zsc, octxt, account, recoveryAccount);
+
         ResetAccountPasswordResponse response = new ResetAccountPasswordResponse();
+        response.setStatus("Email sent");
         return zsc.jaxbToElement(response);
     }
 
