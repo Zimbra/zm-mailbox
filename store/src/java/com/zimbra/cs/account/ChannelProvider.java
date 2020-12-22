@@ -77,6 +77,9 @@ public abstract class ChannelProvider {
     public abstract void sendAndStoreResetPasswordRecoveryCode(ZimbraSoapContext zsc, Account account,
             Map<String, String> recoveryCodeMap) throws ServiceException;
 
+    public abstract void sendResetPasswordURL(ZimbraSoapContext zsc, OperationContext octxt, Account account,
+            String sendToEmail) throws ServiceException;
+
     // SetRecoveryAccount API methods
     public Map<String, String> getSetRecoveryAccountCodeMap(Account account) throws ServiceException {
         Map<String, String> recoveryCodeMap = null;

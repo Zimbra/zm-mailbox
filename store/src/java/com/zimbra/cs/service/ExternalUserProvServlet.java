@@ -103,6 +103,7 @@ public class ExternalUserProvServlet extends ZimbraServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        ZimbraLog.account.info("Servlet " + getServletName() + " doGet()");
         String param = req.getParameter("p");
         if (param == null) {
             throw new ServletException("request missing param");
@@ -113,6 +114,7 @@ public class ExternalUserProvServlet extends ZimbraServlet {
         String folderId = (String) tokenMap.get(AccountConstants.P_FOLDER_ID);
         String extUserEmail = (String) tokenMap.get(AccountConstants.P_EMAIL);
         String addressVerification = (String) tokenMap.get(AccountConstants.P_ADDRESS_VERIFICATION);
+        String accountVerification = (String) tokenMap.get(AccountConstants.P_ACCOUNT_VERIFICATION);
         if ("1".equals(addressVerification)) {
             Boolean expired = false;
             if (tokenMap.get(EXPIRED) != null) {
@@ -120,6 +122,9 @@ public class ExternalUserProvServlet extends ZimbraServlet {
             }
             Map<String, String> attributes = handleAddressVerification(req, resp, ownerId, extUserEmail, expired);
             redirectRequest(req, resp, attributes, EXT_USER_PROV_ON_UI_NODE, PUBLIC_ADDRESS_VERIFICATION_JSP);
+        } else if("1".equals(accountVerification)) {
+            ZimbraLog.account.info("Account Verfication and Password Setting");
+//            redirectRequest(req, resp, attributes, EXT_USER_PROV_ON_UI_NODE, PUBLIC_ADDRESS_VERIFICATION_JSP);
         } else {
             Provisioning prov = Provisioning.getInstance();
             Account grantee;
@@ -535,7 +540,11 @@ public class ExternalUserProvServlet extends ZimbraServlet {
                 throw new ServletException("hmac failure");
             }
             String decoded = new String(Hex.decodeHex(data.toCharArray()));
+            ZimbraLog.account.info("**** decoded data : "+decoded);
             map = BlobMetaData.decode(decoded);
+            map.forEach((k,v) -> {
+                ZimbraLog.account.info("**** Key :"+k +"  --- value :"+v);
+            });
         } catch (Exception e) {
             throw new ServletException(e);
         }
@@ -543,6 +552,7 @@ public class ExternalUserProvServlet extends ZimbraServlet {
         if (expiry != null) {
             // check validity
             if (System.currentTimeMillis() > Long.parseLong((String) expiry)) {
+                // check if it is P_ADDRESS_VERIFICATION
                 String addressVerification = (String) map.get(AccountConstants.P_ADDRESS_VERIFICATION);
                 if ("1".equals(addressVerification)) {
                     map.put(EXPIRED, true);

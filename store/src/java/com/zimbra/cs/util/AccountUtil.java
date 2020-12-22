@@ -832,6 +832,15 @@ public class AccountUtil {
         return AccountUtil.generateExtUserProvURL(account, data);
     }
 
+    public static String generateResetPasswordURL(Account account, long expiry) throws ServiceException {
+        StringBuilder encodedBuff = new StringBuilder();
+        BlobMetaData.encodeMetaData(AccountConstants.P_ACCOUNT_ID, account.getId(), encodedBuff);
+        BlobMetaData.encodeMetaData(AccountConstants.P_LINK_EXPIRY, expiry, encodedBuff);
+        BlobMetaData.encodeMetaData(AccountConstants.P_ACCOUNT_VERIFICATION, true, encodedBuff);
+        String data = new String(Hex.encodeHex(encodedBuff.toString().getBytes()));
+        return AccountUtil.generateExtUserProvURL(account, data);
+    }
+
     public static String generateExtUserProvURL(Account account, String data)
         throws ServiceException {
         ExtAuthTokenKey key = ExtAuthTokenKey.getCurrentKey();

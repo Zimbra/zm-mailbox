@@ -36,8 +36,10 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.ChannelProvider;
 import com.zimbra.cs.account.ForgetPasswordException;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.service.util.JWEUtil;
 import com.zimbra.cs.service.util.ResetPasswordUtil;
+import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.mail.message.RecoverAccountRequest;
 import com.zimbra.soap.mail.message.RecoverAccountResponse;
@@ -50,7 +52,7 @@ public final class RecoverAccount extends MailDocumentHandler {
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-
+        OperationContext octxt = getOperationContext(zsc, context);
         RecoverAccountRequest req = zsc.elementToJaxb(request);
         req.validateRecoverAccountRequest();
         RecoverAccountOperation op = req.getOp();
@@ -131,6 +133,10 @@ public final class RecoverAccount extends MailDocumentHandler {
                 }
                 resp.setRecoveryAttemptsLeft(maxAttempts - resendCount);
                 provider.sendAndStoreResetPasswordRecoveryCode(zsc, user, recoveryCodeMap);
+                break;
+
+            case SEND_PASSWORD_RESET_LINK:
+                provider.sendResetPasswordURL(zsc, octxt, user, recoveryAccount);
                 break;
             default:
                 throw ServiceException.INVALID_REQUEST("Invalid op received", null);
