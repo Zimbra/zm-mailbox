@@ -540,11 +540,7 @@ public class ExternalUserProvServlet extends ZimbraServlet {
                 throw new ServletException("hmac failure");
             }
             String decoded = new String(Hex.decodeHex(data.toCharArray()));
-            ZimbraLog.account.info("**** decoded data : "+decoded);
             map = BlobMetaData.decode(decoded);
-            map.forEach((k,v) -> {
-                ZimbraLog.account.info("**** Key :"+k +"  --- value :"+v);
-            });
         } catch (Exception e) {
             throw new ServletException(e);
         }
@@ -552,7 +548,6 @@ public class ExternalUserProvServlet extends ZimbraServlet {
         if (expiry != null) {
             // check validity
             if (System.currentTimeMillis() > Long.parseLong((String) expiry)) {
-                // check if it is P_ADDRESS_VERIFICATION
                 String addressVerification = (String) map.get(AccountConstants.P_ADDRESS_VERIFICATION);
                 if ("1".equals(addressVerification)) {
                     map.put(EXPIRED, true);
