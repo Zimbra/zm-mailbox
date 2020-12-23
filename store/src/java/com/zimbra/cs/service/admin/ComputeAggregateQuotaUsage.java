@@ -142,7 +142,7 @@ public class ComputeAggregateQuotaUsage extends AdminDocumentHandler {
                 if (max != 0 && used * 100 / max > domain.getDomainAggregateQuotaWarnPercent()) {
                     sendWarnMsg(domain, sendWarnMsgExecutor);
                 }
-                Element domainElt = response.addElement(AdminConstants.E_DOMAIN);
+                Element domainElt = response.addNonUniqueElement(AdminConstants.E_DOMAIN);
                 domainElt.addAttribute(AdminConstants.A_NAME, domain.getName());
                 domainElt.addAttribute(AdminConstants.A_ID, domainId);
                 domainElt.addAttribute(AdminConstants.A_QUOTA_USED, used);
