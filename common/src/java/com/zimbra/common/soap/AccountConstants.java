@@ -603,7 +603,7 @@ public class AccountConstants {
     public static final String P_EMAIL = "email";
     public static final String P_ADDRESS_VERIFICATION = "address-verification";
     public static final String P_ACCOUNT_VERIFICATION = "account-verification";
-    public static final String P_CODE = "code";
+    public static final String P_CODE = "recovery_code";
 
     // Password reset feature
     public static final String E_RESET_PASSWORD_REQUEST = "ResetPasswordRequest";

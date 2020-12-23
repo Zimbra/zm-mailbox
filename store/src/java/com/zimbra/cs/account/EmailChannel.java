@@ -22,7 +22,6 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
@@ -179,8 +178,7 @@ public class EmailChannel extends ChannelProvider {
         account.unsetResetPasswordRecoveryCode();
     }
 
-    @Override
-    public void sendResetPasswordURL(ZimbraSoapContext zsc, OperationContext octxt, Account account, String sendToEmail)
+    public static void sendResetPasswordURL(ZimbraSoapContext zsc, OperationContext octxt, Account account, String sendToEmail)
             throws ServiceException {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         Locale locale = account.getLocale();

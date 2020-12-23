@@ -27,6 +27,7 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.ChannelProvider;
+import com.zimbra.cs.account.EmailChannel;
 import com.zimbra.cs.account.ForgetPasswordException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
@@ -62,21 +63,19 @@ public class ResetAccountPassword extends AdminDocumentHandler {
 
         // send the password reset URL to the recovery email
         ResetPasswordUtil.validateFeatureResetPasswordStatus(account);
-        if (account.getPrefPasswordRecoveryAddressStatus() == null
-                || !account.getPrefPasswordRecoveryAddressStatus().isVerified()) {
+        if (account.getPrefPasswordRecoveryAddressStatus() == null) {
             ZimbraLog.passwordreset.debug("ResetPasswordURL : Verified recovery email is not found for %s",
                     account.getName());
             throw ForgetPasswordException.CONTACT_ADMIN("Something went wrong. Please contact your administrator.");
         }
-        ChannelProvider provider = ChannelProvider.getProviderForChannel(Channel.EMAIL);
-        String recoveryAccount = provider.getRecoveryAccount(account);
+        String recoveryAccount = account.getPrefPasswordRecoveryAddress();
         if (StringUtil.isNullOrEmpty(recoveryAccount)) {
             ZimbraLog.passwordreset.debug("ResetPasswordURL : Recovery account missing or unverified for %s",
                     account.getName());
             throw ForgetPasswordException.CONTACT_ADMIN("Something went wrong. Please contact your administrator.");
         }
 
-        provider.sendResetPasswordURL(zsc, octxt, account, recoveryAccount);
+        EmailChannel.sendResetPasswordURL(zsc, octxt, account, recoveryAccount);
 
         ResetAccountPasswordResponse response = new ResetAccountPasswordResponse();
         response.setStatus("Email sent");

@@ -34,12 +34,12 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.ChannelProvider;
+import com.zimbra.cs.account.EmailChannel;
 import com.zimbra.cs.account.ForgetPasswordException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.service.util.JWEUtil;
 import com.zimbra.cs.service.util.ResetPasswordUtil;
-import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.mail.message.RecoverAccountRequest;
 import com.zimbra.soap.mail.message.RecoverAccountResponse;
@@ -136,7 +136,7 @@ public final class RecoverAccount extends MailDocumentHandler {
                 break;
 
             case SEND_RECOVERY_LINK:
-                provider.sendResetPasswordURL(zsc, octxt, user, recoveryAccount);
+                EmailChannel.sendResetPasswordURL(zsc, octxt, user, recoveryAccount);
                 break;
             default:
                 throw ServiceException.INVALID_REQUEST("Invalid op received", null);
