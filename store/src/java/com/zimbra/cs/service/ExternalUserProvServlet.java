@@ -134,17 +134,18 @@ public class ExternalUserProvServlet extends ZimbraServlet {
                 String encoded = account.getResetPasswordRecoveryCode();
                 Map<String, String> recoveryCodeMap =  JWEUtil.getDecodedJWE(encoded);
                 if (recoveryCodeMap != null && !recoveryCodeMap.isEmpty()) {
-                    //check if the codes are same
-                    if(ownerId.equals(recoveryCodeMap.get(CodeConstants.ACCOUNT_ID.toString()))
+                    // check if the codes are same
+                    if (ownerId.equals(recoveryCodeMap.get(CodeConstants.ACCOUNT_ID.toString()))
                             && code.equals(recoveryCodeMap.get(CodeConstants.CODE.toString()))) {
                         ZimbraLog.account.info("Account Verfication with Password Setting : URL authenticated");
-                        //clear ResetPasswordRecoveryCode LDAP entry
+                        // clear ResetPasswordRecoveryCode LDAP entry
                         account.unsetResetPasswordRecoveryCode();
-                        //forward to appropriate page
-//                        redirectRequest(req, resp, attributes, EXT_USER_PROV_ON_UI_NODE, PUBLIC_ADDRESS_VERIFICATION_JSP);
-                    }else {
-                        //unauthorized
-                        ZimbraLog.account.info("Account Verfication and Password Setting Failed. The code or account id for the URL didn't match.");
+                        // forward to appropriate page
+                        // redirectRequest(req, resp, attributes, EXT_USER_PROV_ON_UI_NODE, PUBLIC_ADDRESS_VERIFICATION_JSP);
+                    } else {
+                        // unauthorized
+                        ZimbraLog.account.info(
+                                "Account Verfication and Password Setting Failed. The code or account id for the URL didn't match.");
                         ZimbraLog.account.info("Received : Code : %s  and Account id : %s from the URL.", code, ownerId);
                         ZimbraLog.account.info(
                                 "ResetPasswordRecoveryCode Entry: Code : %s and Account id : %s from the URL.",
@@ -152,23 +153,17 @@ public class ExternalUserProvServlet extends ZimbraServlet {
                                 recoveryCodeMap.get(CodeConstants.ACCOUNT_ID.toString()));
                         throw ServiceException.PERM_DENIED("The URL is invalid.");
                     }
-                }else {
-                    //it has already been processed
+                } else {
+                    // it has already been processed
                     ZimbraLog.account.info(
-                            "Account Verfication and Password Setting Failed. The ResetPasswordRecoveryCode Entry missing.It has already been used once.");
-                    ZimbraLog.account.info("Received : Code : %s  and Account id : %s from the URL.", code, ownerId);
+                            "Account Verfication and Password Setting Failed. The ResetPasswordRecoveryCode entry missing.It has already been used once.");
+                    ZimbraLog.account.debug("Received : Code : %s  and Account id : %s from the URL.", code, ownerId);
                     throw ServiceException.PERM_DENIED("The URL is invalid. It has already been used.");
                 }
-            } catch (ServiceException e) {
-                Map<String, String> errorAttrs = new HashMap<String, String>();
-                errorAttrs.put(ERROR_CODE, e.getCode());
-                errorAttrs.put(ERROR_MESSAGE, e.getMessage());
-                redirectRequest(req, resp, errorAttrs, EXT_USER_PROV_ON_UI_NODE, PUBLIC_EXTUSERPROV_JSP);
+            } catch (ServiceException se) {
+                ZimbraLog.account.warn("Error while resetting the password using URL:", se);
             } catch (Exception e) {
-                Map<String, String> errorAttrs = new HashMap<String, String>();
-                errorAttrs.put(ERROR_CODE, ServiceException.FAILURE);
-                errorAttrs.put(ERROR_MESSAGE, e.getMessage());
-                redirectRequest(req, resp, errorAttrs, EXT_USER_PROV_ON_UI_NODE, PUBLIC_EXTUSERPROV_JSP);
+                ZimbraLog.account.warn("Error while resetting the password using URL:", e);
             }
         } else {
             Provisioning prov = Provisioning.getInstance();
