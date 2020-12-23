@@ -40,6 +40,7 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
 import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.lang.RandomStringUtils;
 
 import com.sun.mail.smtp.SMTPMessage;
 import com.zimbra.common.account.Key;
@@ -832,11 +833,13 @@ public class AccountUtil {
         return AccountUtil.generateExtUserProvURL(account, data);
     }
 
-    public static String generateResetPasswordURL(Account account, long expiry) throws ServiceException {
+    public static String generateResetPasswordURL(Account account, long expiry, String code) throws ServiceException {
         StringBuilder encodedBuff = new StringBuilder();
         BlobMetaData.encodeMetaData(AccountConstants.P_ACCOUNT_ID, account.getId(), encodedBuff);
         BlobMetaData.encodeMetaData(AccountConstants.P_LINK_EXPIRY, expiry, encodedBuff);
         BlobMetaData.encodeMetaData(AccountConstants.P_ACCOUNT_VERIFICATION, true, encodedBuff);
+        BlobMetaData.encodeMetaData(AccountConstants.P_CODE, code, encodedBuff);
+
         String data = new String(Hex.encodeHex(encodedBuff.toString().getBytes()));
         return AccountUtil.generateExtUserProvURL(account, data);
     }

@@ -37,6 +37,7 @@ import com.google.common.collect.Lists;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMountpoint;
+import com.zimbra.common.account.ForgetPasswordEnums.CodeConstants;
 import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.account.ZAttrProvisioning.FeatureAddressVerificationStatus;
 import com.zimbra.common.localconfig.DebugConfig;
@@ -68,6 +69,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.acl.AclPushSerializer;
+import com.zimbra.cs.service.util.JWEUtil;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.WebClientServiceUtil;
@@ -115,6 +117,7 @@ public class ExternalUserProvServlet extends ZimbraServlet {
         String extUserEmail = (String) tokenMap.get(AccountConstants.P_EMAIL);
         String addressVerification = (String) tokenMap.get(AccountConstants.P_ADDRESS_VERIFICATION);
         String accountVerification = (String) tokenMap.get(AccountConstants.P_ACCOUNT_VERIFICATION);
+        String code = (String) tokenMap.get(AccountConstants.P_CODE);
         if ("1".equals(addressVerification)) {
             Boolean expired = false;
             if (tokenMap.get(EXPIRED) != null) {
@@ -123,8 +126,50 @@ public class ExternalUserProvServlet extends ZimbraServlet {
             Map<String, String> attributes = handleAddressVerification(req, resp, ownerId, extUserEmail, expired);
             redirectRequest(req, resp, attributes, EXT_USER_PROV_ON_UI_NODE, PUBLIC_ADDRESS_VERIFICATION_JSP);
         } else if("1".equals(accountVerification)) {
-            ZimbraLog.account.info("Account Verfication and Password Setting");
-//            redirectRequest(req, resp, attributes, EXT_USER_PROV_ON_UI_NODE, PUBLIC_ADDRESS_VERIFICATION_JSP);
+            ZimbraLog.account.info("Account Verfication with Password Setting");
+            //get the ResetPasswordRecoveryCode
+            try {
+                Provisioning prov = Provisioning.getInstance();
+                Account account = prov.getAccountById(ownerId);
+                String encoded = account.getResetPasswordRecoveryCode();
+                Map<String, String> recoveryCodeMap =  JWEUtil.getDecodedJWE(encoded);
+                if (recoveryCodeMap != null && !recoveryCodeMap.isEmpty()) {
+                    //check if the codes are same
+                    if(ownerId.equals(recoveryCodeMap.get(CodeConstants.ACCOUNT_ID.toString()))
+                            && code.equals(recoveryCodeMap.get(CodeConstants.CODE.toString()))) {
+                        ZimbraLog.account.info("Account Verfication with Password Setting : URL authenticated");
+                        //clear ResetPasswordRecoveryCode LDAP entry
+                        account.unsetResetPasswordRecoveryCode();
+                        ZimbraLog.account.info("Account Verfication with Password Setting : ResetPasswordRecoveryCode = %s",account.getResetPasswordRecoveryCode());
+                        //forward to appropriate page
+//                        redirectRequest(req, resp, attributes, EXT_USER_PROV_ON_UI_NODE, PUBLIC_ADDRESS_VERIFICATION_JSP);
+                    }else {
+                        //unauthorized
+                        ZimbraLog.account.info("Account Verfication and Password Setting Failed. The code or account id for the URL didn't match.");
+                        ZimbraLog.account.info("Received : Code : %s  and Account id : %s from the URL.", code, ownerId);
+                        ZimbraLog.account.info(
+                                "ResetPasswordRecoveryCode Entry: Code : %s and Account id : %s from the URL.",
+                                recoveryCodeMap.get(CodeConstants.CODE.toString()),
+                                recoveryCodeMap.get(CodeConstants.ACCOUNT_ID.toString()));
+                        throw ServiceException.PERM_DENIED("The URL is invalid.");
+                    }
+                }else {
+                    //it has already been processed
+                    ZimbraLog.account.info("Account Verfication and Password Setting Failed. The ResetPasswordRecoveryCode Entry missing.");
+                    ZimbraLog.account.info("Received : Code : %s  and Account id : %s from the URL.", code, ownerId);
+                    throw ServiceException.PERM_DENIED("The URL is invalid. It has already been processed.");
+                }
+            } catch (ServiceException e) {
+                Map<String, String> errorAttrs = new HashMap<String, String>();
+                errorAttrs.put(ERROR_CODE, e.getCode());
+                errorAttrs.put(ERROR_MESSAGE, e.getMessage());
+                redirectRequest(req, resp, errorAttrs, EXT_USER_PROV_ON_UI_NODE, PUBLIC_EXTUSERPROV_JSP);
+            } catch (Exception e) {
+                Map<String, String> errorAttrs = new HashMap<String, String>();
+                errorAttrs.put(ERROR_CODE, ServiceException.FAILURE);
+                errorAttrs.put(ERROR_MESSAGE, e.getMessage());
+                redirectRequest(req, resp, errorAttrs, EXT_USER_PROV_ON_UI_NODE, PUBLIC_EXTUSERPROV_JSP);
+            }
         } else {
             Provisioning prov = Provisioning.getInstance();
             Account grantee;
