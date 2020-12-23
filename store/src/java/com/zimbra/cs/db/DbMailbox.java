@@ -792,6 +792,33 @@ public final class DbMailbox {
         }
     }
 
+    /***
+     * Get the sum of size_checkpoints for all accounts.
+     *
+     * @param conn Database connection.
+     * @return Total storage used for all accounts.
+     * @throws ServiceException If a database error occurs.
+     */
+    public static Long getAllMailboxSizes(DbConnection conn) throws ServiceException {
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        Long aggregateQuotaUsage = -1;
+        try {
+            stmt = conn.prepareStatement("SELECT SUM(size_checkpoint) FROM " + TABLE_MAILBOX);
+            rs = stmt.executeQuery();
+            if (rs.next()) {
+                aggregateQuotaUsage = rs.getLong(1);
+            }
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("fetching mailboxes", e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+
+        return aggregateQuotaUsage;
+    }
+
     /** Returns the zimbra IDs and approximate sizes for all mailboxes on
      *  the system.  Note that mailboxes are created lazily, so there may be
      *  accounts homed on this system for whom there is is not yet a mailbox
