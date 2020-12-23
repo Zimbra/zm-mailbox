@@ -135,7 +135,7 @@ public final class RecoverAccount extends MailDocumentHandler {
                 provider.sendAndStoreResetPasswordRecoveryCode(zsc, user, recoveryCodeMap);
                 break;
 
-            case SEND_PASSWORD_RESET_LINK:
+            case SEND_RECOVERY_LINK:
                 provider.sendResetPasswordURL(zsc, octxt, user, recoveryAccount);
                 break;
             default:
