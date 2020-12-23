@@ -140,7 +140,6 @@ public class ExternalUserProvServlet extends ZimbraServlet {
                         ZimbraLog.account.info("Account Verfication with Password Setting : URL authenticated");
                         //clear ResetPasswordRecoveryCode LDAP entry
                         account.unsetResetPasswordRecoveryCode();
-                        ZimbraLog.account.info("Account Verfication with Password Setting : ResetPasswordRecoveryCode = %s",account.getResetPasswordRecoveryCode());
                         //forward to appropriate page
 //                        redirectRequest(req, resp, attributes, EXT_USER_PROV_ON_UI_NODE, PUBLIC_ADDRESS_VERIFICATION_JSP);
                     }else {
@@ -155,9 +154,10 @@ public class ExternalUserProvServlet extends ZimbraServlet {
                     }
                 }else {
                     //it has already been processed
-                    ZimbraLog.account.info("Account Verfication and Password Setting Failed. The ResetPasswordRecoveryCode Entry missing.");
+                    ZimbraLog.account.info(
+                            "Account Verfication and Password Setting Failed. The ResetPasswordRecoveryCode Entry missing.It has already been used once.");
                     ZimbraLog.account.info("Received : Code : %s  and Account id : %s from the URL.", code, ownerId);
-                    throw ServiceException.PERM_DENIED("The URL is invalid. It has already been processed.");
+                    throw ServiceException.PERM_DENIED("The URL is invalid. It has already been used.");
                 }
             } catch (ServiceException e) {
                 Map<String, String> errorAttrs = new HashMap<String, String>();
