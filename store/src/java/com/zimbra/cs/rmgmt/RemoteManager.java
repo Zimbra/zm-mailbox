@@ -22,7 +22,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.util.EnumSet;
@@ -109,14 +108,12 @@ public class RemoteManager {
         RemoteResult result = new RemoteResult();
         try {
             result = executeRemoteCommand(mUser,mHost,mPort,mPrivateKey,mShimCommand,command);
-            if (ZimbraLog.rmgmt.isTraceEnabled()) {
                 try {
                     ZimbraLog.rmgmt.trace("stdout content for cmd:\n%s", new String(result.mStdout, "UTF-8"));
                     ZimbraLog.rmgmt.trace("stderr content for cmd:\n%s", new String(result.mStderr, "UTF-8"));
                 } catch (Exception ex) {
                     ZimbraLog.rmgmt.trace("Problem logging stdout or stderr for cmd - probably not UTF-8");
                 }
-            }
             InputStream stdout = new ByteArrayInputStream(result.mStdout);
             InputStream stderr = new ByteArrayInputStream(result.mStderr);
             handler.read(stdout,stderr);
@@ -146,14 +143,12 @@ public class RemoteManager {
         RemoteResult result = new RemoteResult();
         try {
             result = executeRemoteCommand(mUser,mHost,mPort,mPrivateKey,mShimCommand,command);
-            if (ZimbraLog.rmgmt.isTraceEnabled()) {
                 try {
                     ZimbraLog.rmgmt.trace("stdout content for cmd:\n%s", new String(result.mStdout, "UTF-8"));
                     ZimbraLog.rmgmt.trace("stderr content for cmd:\n%s", new String(result.mStderr, "UTF-8"));
                 } catch (Exception ex) {
                     ZimbraLog.rmgmt.trace("Problem logging stdout or stderr for cmd - probably not UTF-8");
                 }
-            }
         } catch (Exception ioe) {
              throw ServiceException.FAILURE("exception executing command: " + command + " with " + this, ioe);
         }
@@ -171,15 +166,11 @@ public class RemoteManager {
 				.verify(defaultTimeoutSeconds, TimeUnit.SECONDS).getSession()) {
 			session.addPublicKeyIdentity(loadKeypair(privateKey.getAbsolutePath()));
 			session.auth().verify(defaultTimeoutSeconds, TimeUnit.SECONDS);
-			if (ZimbraLog.rmgmt.isDebugEnabled()) {
-				ZimbraLog.rmgmt.debug("executing shim command '%s'", mShimCommand);
-			}
+			ZimbraLog.rmgmt.debug("executing shim command '%s'", mShimCommand);
 			try (ByteArrayOutputStream responseStream = new ByteArrayOutputStream();
 					ByteArrayOutputStream errorResponseStream = new ByteArrayOutputStream();
 					ClientChannel channel = session.createChannel("exec", mShimCommand + "\n")) {
-				if (ZimbraLog.rmgmt.isDebugEnabled()) {
 					ZimbraLog.rmgmt.debug("sending mgmt command '%s'", send);
-				}
 				channel.setIn(inputStream);
 				channel.setOut(responseStream);
 				channel.setErr(errorResponseStream);
@@ -200,7 +191,7 @@ public class RemoteManager {
 					result.mExitSignal = channel.getExitSignal();
 					String errorString = new String(errorResponseStream.toByteArray());
 					if (!errorString.isEmpty()) {
-						throw new Exception(errorString);
+						throw ServiceException.FAILURE("Error occurred while executing command " + send + errorString, null);
 					}
 					return result;
 				} finally {
