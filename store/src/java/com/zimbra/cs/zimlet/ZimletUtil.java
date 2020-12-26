@@ -789,7 +789,7 @@ public class ZimletUtil {
                 try {
                     deactivateZimlet(zimlet, c.getName());
                 } catch (Exception e) {
-                    ZimbraLog.zimlet.warn("Error deactiving Zimlet " + zimlet + " in LDAP.", e);
+                    ZimbraLog.zimlet.warn("Error deactivating Zimlet " + zimlet + " in LDAP.", e);
                 }
             }
             try {
