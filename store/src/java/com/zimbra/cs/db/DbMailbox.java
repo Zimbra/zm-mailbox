@@ -802,7 +802,7 @@ public final class DbMailbox {
     public static Long getAllMailboxSizes(DbConnection conn) throws ServiceException {
         PreparedStatement stmt = null;
         ResultSet rs = null;
-        Long aggregateQuotaUsage = -1;
+        Long aggregateQuotaUsage = -1L;
         try {
             stmt = conn.prepareStatement("SELECT SUM(size_checkpoint) FROM " + TABLE_MAILBOX);
             rs = stmt.executeQuery();
