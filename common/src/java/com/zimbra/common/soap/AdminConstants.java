@@ -1598,4 +1598,6 @@ public final class AdminConstants {
     public static final String A_DISABLE_INDEXING = "disableIndexing";
 
     public static final String A_ZULIP_DOMAIN = "zulipDomain";
+
+    public static final String A_SINGLE_RESULT = "singleResult";
 }

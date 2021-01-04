@@ -63,19 +63,26 @@ public class ComputeAggregateQuotaUsage extends AdminDocumentHandler {
         Element response = zsc.createElement(AdminConstants.COMPUTE_AGGR_QUOTA_USAGE_RESPONSE);
         Map<String, Long> domainAggrQuotaUsed = new HashMap<String, Long>();
 
+        // Aggregate total across all domains?
+        boolean singleResult = request.getAttributeBool(AdminConstants.A_SINGLE_RESULT, false);
+
         Provisioning prov = Provisioning.getInstance();
         final List<Domain> domains = prov.getAllDomains();
-        if (domains.size() == 1) {
-            // Short-circuit LDAP lookups, etc. Just calculate sum of size_checkpoint of all mailboxes.
+        if (singleResult || domains.size() == 1) {
+            // Short-circuit LDAP lookups, etc. Just calculate sum of size_checkpoint of all mailboxes from DB.
             DbConnection conn = null;
             try {
-                Domain domain = domains.get(0);
+                final Domain domain = domains.get(0);
                 conn = DbPool.getConnection();
-                Long aggregateQuotaUsage = DbMailbox.getAllMailboxSizes(conn);
+                final Long aggregateQuotaUsage = DbMailbox.getAllMailboxSizes(conn);
 
                 final Element domainElt = response.addNonUniqueElement(AdminConstants.E_DOMAIN);
-                domainElt.addAttribute(AdminConstants.A_NAME, domain.getName());
-                domainElt.addAttribute(AdminConstants.A_ID, domain.getId());
+                if (singleResult) {
+                    domainElt.addAttribute(AdminConstants.A_NAME, "ALL");
+                } else{
+                    domainElt.addAttribute(AdminConstants.A_NAME, domain.getName());
+                    domainElt.addAttribute(AdminConstants.A_ID, domain.getId());
+                }
                 domainElt.addAttribute(AdminConstants.A_QUOTA_USED, aggregateQuotaUsage);
             } finally {
                 DbPool.quietClose(conn);
