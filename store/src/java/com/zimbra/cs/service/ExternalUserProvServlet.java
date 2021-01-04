@@ -127,38 +127,7 @@ public class ExternalUserProvServlet extends ZimbraServlet {
             redirectRequest(req, resp, attributes, EXT_USER_PROV_ON_UI_NODE, PUBLIC_ADDRESS_VERIFICATION_JSP);
         } else if("1".equals(accountVerification)) {
             ZimbraLog.account.info("Account Verification and Password Setting");
-            //get the ResetPasswordRecoveryCode
-            try {
-                Provisioning prov = Provisioning.getInstance();
-                Account account = prov.getAccountById(ownerId);
-                String encoded = account.getResetPasswordRecoveryCode();
-                Map<String, String> recoveryCodeMap =  JWEUtil.getDecodedJWE(encoded);
-                if (recoveryCodeMap != null && !recoveryCodeMap.isEmpty()) {
-                    // check if the codes are same
-                    if (ownerId.equals(recoveryCodeMap.get(CodeConstants.ACCOUNT_ID.toString()))
-                            && code.equals(recoveryCodeMap.get(CodeConstants.CODE.toString()))) {
-                        ZimbraLog.account.info("Account Verification and Password Setting : URL authenticated");
-                        // clear ResetPasswordRecoveryCode LDAP entry
-                        account.unsetResetPasswordRecoveryCode();
-                        // forward to appropriate page
-                        // redirectRequest(req, resp, attributes, EXT_USER_PROV_ON_UI_NODE, PUBLIC_ADDRESS_VERIFICATION_JSP);
-                    } else {
-                        // unauthorized
-                        ZimbraLog.account.info(
-                                "Account Verification and Password Setting Failed. The code or account id for the URL didn't match.");
-                        throw ServiceException.PERM_DENIED("The URL is invalid.");
-                    }
-                } else {
-                    // it has already been processed
-                    ZimbraLog.account.info(
-                            "Account Verification and Password Setting Failed. The ResetPasswordRecoveryCode entry missing.It has already been used once.");
-                    throw ServiceException.PERM_DENIED("The URL is invalid. It has already been used.");
-                }
-            } catch (ServiceException se) {
-                ZimbraLog.account.warn("Error while resetting the password using URL:", se);
-            } catch (Exception e) {
-                ZimbraLog.account.warn("Error while resetting the password using URL:", e);
-            }
+            handleAccountVerification(req, resp, ownerId, code);
         } else {
             Provisioning prov = Provisioning.getInstance();
             Account grantee;
@@ -298,6 +267,41 @@ public class ExternalUserProvServlet extends ZimbraServlet {
             redirectRequest(req, resp, errorAttrs, EXT_USER_PROV_ON_UI_NODE, PUBLIC_ADDRESS_VERIFICATION_JSP);
         }
         return attrs;
+    }
+
+    public void handleAccountVerification(HttpServletRequest req, HttpServletResponse resp, String ownerAccountId, String code) throws ServletException, IOException {
+        //get the ResetPasswordRecoveryCode
+        try {
+            Provisioning prov = Provisioning.getInstance();
+            Account account = prov.getAccountById(ownerAccountId);
+            String encoded = account.getResetPasswordRecoveryCode();
+            Map<String, String> recoveryCodeMap =  JWEUtil.getDecodedJWE(encoded);
+            if (recoveryCodeMap != null && !recoveryCodeMap.isEmpty()) {
+                // check if the codes are same
+                if (ownerAccountId.equals(recoveryCodeMap.get(CodeConstants.ACCOUNT_ID.toString()))
+                        && code.equals(recoveryCodeMap.get(CodeConstants.CODE.toString()))) {
+                    ZimbraLog.account.info("Account Verification and Password Setting : URL authenticated");
+                    // clear ResetPasswordRecoveryCode LDAP entry
+                    account.unsetResetPasswordRecoveryCode();
+                    // forward to appropriate page
+                    // redirectRequest(req, resp, attributes, EXT_USER_PROV_ON_UI_NODE, PUBLIC_ADDRESS_VERIFICATION_JSP);
+                } else {
+                    // unauthorized
+                    ZimbraLog.account.info(
+                            "Account Verification and Password Setting Failed. The code or account id for the URL didn't match.");
+                    throw ServiceException.PERM_DENIED("The URL is invalid.");
+                }
+            } else {
+                // it has already been processed
+                ZimbraLog.account.info(
+                        "Account Verification and Password Setting Failed. The ResetPasswordRecoveryCode entry missing.It has already been used once.");
+                throw ServiceException.PERM_DENIED("The URL is invalid. It has already been used.");
+            }
+        } catch (ServiceException se) {
+            ZimbraLog.account.warn("Error while resetting the password using URL:", se);
+        } catch (Exception e) {
+            ZimbraLog.account.warn("Error while resetting the password using URL:", e);
+        }
     }
 
     private static String getMountpointName(Account owner, Account grantee, String sharedFolderPath)
