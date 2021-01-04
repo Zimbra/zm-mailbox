@@ -126,7 +126,7 @@ public class ExternalUserProvServlet extends ZimbraServlet {
             Map<String, String> attributes = handleAddressVerification(req, resp, ownerId, extUserEmail, expired);
             redirectRequest(req, resp, attributes, EXT_USER_PROV_ON_UI_NODE, PUBLIC_ADDRESS_VERIFICATION_JSP);
         } else if("1".equals(accountVerification)) {
-            ZimbraLog.account.info("Account Verfication and Password Setting");
+            ZimbraLog.account.info("Account Verification and Password Setting");
             //get the ResetPasswordRecoveryCode
             try {
                 Provisioning prov = Provisioning.getInstance();
@@ -137,7 +137,7 @@ public class ExternalUserProvServlet extends ZimbraServlet {
                     // check if the codes are same
                     if (ownerId.equals(recoveryCodeMap.get(CodeConstants.ACCOUNT_ID.toString()))
                             && code.equals(recoveryCodeMap.get(CodeConstants.CODE.toString()))) {
-                        ZimbraLog.account.info("Account Verfication and Password Setting : URL authenticated");
+                        ZimbraLog.account.info("Account Verification and Password Setting : URL authenticated");
                         // clear ResetPasswordRecoveryCode LDAP entry
                         account.unsetResetPasswordRecoveryCode();
                         // forward to appropriate page
@@ -145,13 +145,13 @@ public class ExternalUserProvServlet extends ZimbraServlet {
                     } else {
                         // unauthorized
                         ZimbraLog.account.info(
-                                "Account Verfication and Password Setting Failed. The code or account id for the URL didn't match.");
+                                "Account Verification and Password Setting Failed. The code or account id for the URL didn't match.");
                         throw ServiceException.PERM_DENIED("The URL is invalid.");
                     }
                 } else {
                     // it has already been processed
                     ZimbraLog.account.info(
-                            "Account Verfication and Password Setting Failed. The ResetPasswordRecoveryCode entry missing.It has already been used once.");
+                            "Account Verification and Password Setting Failed. The ResetPasswordRecoveryCode entry missing.It has already been used once.");
                     throw ServiceException.PERM_DENIED("The URL is invalid. It has already been used.");
                 }
             } catch (ServiceException se) {

@@ -182,7 +182,7 @@ public class EmailChannel extends ChannelProvider {
             throws ServiceException {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         Locale locale = account.getLocale();
-        String ownerAcctDisplayName = account.getName();
+        String accountName = account.getName();
         String subject = L10nUtil.getMessage(MsgKey.sendPasswordResetEmailSubject, locale);
         String charset = account.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, MimeConstants.P_CHARSET_UTF8);
         try {
@@ -202,9 +202,9 @@ public class EmailChannel extends ChannelProvider {
 
             ZimbraLog.account.debug("Expiry of Password Reset link sent to %s is %s", sendToEmail, gmtDate);
             ZimbraLog.account.debug("Password Reset verification URL sent to %s is %s", sendToEmail, url);
-            String mimePartText = L10nUtil.getMessage(MsgKey.sendPasswordResetEmailBodyText, locale, ownerAcctDisplayName, url,
+            String mimePartText = L10nUtil.getMessage(MsgKey.sendPasswordResetEmailBodyText, locale, accountName, url,
                     gmtDate);
-            String mimePartHtml = L10nUtil.getMessage(MsgKey.sendPasswordResetEmailBodyHtml, locale, ownerAcctDisplayName, url,
+            String mimePartHtml = L10nUtil.getMessage(MsgKey.sendPasswordResetEmailBodyHtml, locale, accountName, url,
                     gmtDate);
             MimeMultipart mmp = AccountUtil.generateMimeMultipart(mimePartText, mimePartHtml, null);
             MimeMessage mm = AccountUtil.generateMimeMessage(account, account, subject, charset, null, null,
