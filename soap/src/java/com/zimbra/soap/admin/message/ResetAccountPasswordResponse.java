@@ -29,20 +29,4 @@ import com.zimbra.soap.mail.type.IdVersionName;
 @XmlRootElement(name=AdminConstants.E_RESET_ACCOUNT_PASSWORD_RESPONSE)
 public class ResetAccountPasswordResponse {
 
-    /**
-     * @zm-api-field-description Status of the Request
-     */
-    @XmlElement(name=MailConstants.A_STATUS /* doc */, required=false)
-    private String status;
-
-    public ResetAccountPasswordResponse() {
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
 }

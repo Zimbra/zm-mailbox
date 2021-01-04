@@ -78,7 +78,6 @@ public class ResetAccountPassword extends AdminDocumentHandler {
         EmailChannel.sendResetPasswordURL(zsc, octxt, account, recoveryAccount);
 
         ResetAccountPasswordResponse response = new ResetAccountPasswordResponse();
-        response.setStatus("Email sent");
         return zsc.jaxbToElement(response);
     }
 

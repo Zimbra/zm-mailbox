@@ -182,10 +182,7 @@ public class EmailChannel extends ChannelProvider {
             throws ServiceException {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         Locale locale = account.getLocale();
-        String ownerAcctDisplayName = account.getDisplayName();
-        if (ownerAcctDisplayName == null) {
-            ownerAcctDisplayName = account.getName();
-        }
+        String ownerAcctDisplayName = account.getName();
         String subject = L10nUtil.getMessage(MsgKey.sendPasswordResetEmailSubject, locale);
         String charset = account.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, MimeConstants.P_CHARSET_UTF8);
         try {
