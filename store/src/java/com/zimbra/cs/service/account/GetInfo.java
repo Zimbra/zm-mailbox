@@ -18,6 +18,7 @@ package com.zimbra.cs.service.account;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.file.InvalidPathException;
 import java.util.ArrayList;
@@ -262,11 +263,7 @@ public class GetInfo extends AccountDocumentHandler  {
         // we do not have any ldap attrs to define whether powerpaste service is installed and running
         // so check if powerpaste service is installed and running by checking the installed directory and connectivity
         // if yes return powerpasteEnabled = true else return powerpasteEnabled = false
-        if (checkIfPowerpasteInstalled()) {
-            response.addAttribute("powerpasteEnabled", true, Element.Disposition.CONTENT);
-        } else {
-            response.addAttribute("powerpasteEnabled", false, Element.Disposition.CONTENT);
-        }
+        response.addAttribute("powerpasteEnabled", checkIfPowerpasteInstalled(), Element.Disposition.CONTENT);
 
         return response;
     }
@@ -479,15 +476,16 @@ public class GetInfo extends AccountDocumentHandler  {
     private boolean checkIfPowerpasteInstalled() {
         String libLocation = "/opt/zimbra/common/lib/pasteitcleaned";
         String extLoc = "/opt/zimbra/lib/ext/powerpaste-ext/zm-powerpaste-extension.jar";
+        HttpURLConnection connection = null;
         try {
             File lib = new File(libLocation);
             File ext = new File(extLoc);
             if (lib.exists() && lib.isDirectory() && lib.canRead()) {
                 if (ext.exists() && ext.isFile() && ext.canRead()) {
-                    URL url = new URL("http://localhost:5000");
-                    if (url.openConnection() != null) {
-                        return true;
-                    }
+                    connection = (HttpURLConnection) new URL("http://localhost:5000").openConnection();
+                    connection.setConnectTimeout(1000);
+                    connection.connect();
+                    return true;
                 }
             }
             ZimbraLog.account.debug("powerpaste service is not installed or running");
