@@ -32,9 +32,6 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
-import org.apache.commons.lang.RandomStringUtils;
-
-import com.google.common.base.Strings;
 import com.zimbra.common.account.ForgetPasswordEnums.CodeConstants;
 import com.zimbra.common.account.ZAttrProvisioning.PrefPasswordRecoveryAddressStatus;
 import com.zimbra.common.mime.MimeConstants;
@@ -84,7 +81,7 @@ public class EmailChannel extends ChannelProvider {
                     recoveryCodeMap.get(CodeConstants.EMAIL.toString()), mmp);
             mbox.getMailSender().sendMimeMessage(null, mbox, false, mm, null, null, null, null, false);
         } catch (MessagingException me) {
-            ZimbraLog.passwordreset.debug("RecoverAccount: Error occured while sending recovery code in email to ",
+            ZimbraLog.passwordreset.debug("RecoverAccount: Error occured while sending recovery code in email to %s",
                     recoveryCodeMap.get(CodeConstants.EMAIL.toString()));
             throw ServiceException.FAILURE("Error occured while sending recovery code in email to "
                     + recoveryCodeMap.get(CodeConstants.EMAIL.toString()), me);

@@ -48,10 +48,12 @@ import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraCookie;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.AuthToken.Usage;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.ExtAuthTokenKey;
@@ -78,6 +80,10 @@ import com.zimbra.soap.mail.type.FolderActionSelector;
 
 public class ExternalUserProvServlet extends ZimbraServlet {
 
+    /**
+     *
+     */
+    private static final long serialVersionUID = 6496379855218747384L;
     private static final Log logger = LogFactory.getLog(ExternalUserProvServlet.class);
     private static final String EXT_USER_PROV_ON_UI_NODE = "/fromservice/extuserprov";
     private static final String PUBLIC_LOGIN_ON_UI_NODE = "/fromservice/publiclogin";
@@ -270,38 +276,31 @@ public class ExternalUserProvServlet extends ZimbraServlet {
     }
 
     public void handleAccountVerification(HttpServletRequest req, HttpServletResponse resp, String ownerAccountId, String code, boolean expired) throws ServletException, IOException {
-        //TODO : check if link has expired
-        if (expired) {
-            //throw error
-        }
-        //get the ResetPasswordRecoveryCode
+        Account account = null;
         try {
+            if (expired || StringUtil.isNullOrEmpty(code)) {
+                ZimbraLog.account.warn("Url expired or code invalid.");
+                throw ServiceException.PERM_DENIED("The URL is invalid.");
+            }
             Provisioning prov = Provisioning.getInstance();
-            Account account = prov.getAccountById(ownerAccountId);
+            account = prov.getAccountById(ownerAccountId);
             String encoded = account.getResetPasswordRecoveryCode();
             Map<String, String> recoveryCodeMap =  JWEUtil.getDecodedJWE(encoded);
             if (recoveryCodeMap != null && !recoveryCodeMap.isEmpty()) {
-                // check if the codes are same
-                if (ownerAccountId.equals(recoveryCodeMap.get(CodeConstants.ACCOUNT_ID.toString()))
-                        && code.equals(recoveryCodeMap.get(CodeConstants.CODE.toString()))) {
-                    ZimbraLog.account.info("Account Verification and Password Reset : URL authenticated");
-                    account.unsetResetPasswordRecoveryCode();
-                    // TODO : forward to appropriate page
-                    // redirectRequest(req, resp, attributes, EXT_USER_PROV_ON_UI_NODE, PUBLIC_ADDRESS_VERIFICATION_JSP);
+                if (code.equals(recoveryCodeMap.get(CodeConstants.CODE.toString()))) {
+                    ZimbraLog.account.info("Authentication Successful.");
+                    setResetPasswordCookieAndRedirect(req, resp, account);
                 } else {
-                    // unauthorized
-                    ZimbraLog.account.warn("Account Verification and Password Reset Failed. The code or account id for the URL didn't match.");
+                    ZimbraLog.account.warn("Invaid code.");
                     throw ServiceException.PERM_DENIED("The URL is invalid.");
                 }
             } else {
-                // it has already been processed
-                ZimbraLog.account.warn("Account Verification and Password Reset Failed. It has already been used once.");
-                throw ServiceException.PERM_DENIED("The URL is invalid. It has already been used.");
+                ZimbraLog.account.warn("It has already been used once.");
+                throw ServiceException.PERM_DENIED("The URL is invalid.");
             }
-        } catch (ServiceException se) {
-            ZimbraLog.account.warn("Error while resetting the password using URL:", se);
         } catch (Exception e) {
-            ZimbraLog.account.warn("Error while resetting the password using URL:", e);
+            ZimbraLog.account.warn("Invalid URL:", e);
+            redirectOnResetPasswordError(req, resp, account);
         }
     }
 
@@ -517,6 +516,19 @@ public class ExternalUserProvServlet extends ZimbraServlet {
         AuthToken authToken = AuthProvider.getAuthToken(grantee);
         authToken.encode(resp, false, req.getScheme().equals("https"));
         resp.sendRedirect("/");
+    }
+
+    private static void setResetPasswordCookieAndRedirect(HttpServletRequest req, HttpServletResponse resp, Account account)
+            throws ServiceException, IOException {
+        AuthToken authToken = AuthProvider.getAuthToken(account, Usage.RESET_PASSWORD);
+        authToken.encode(resp, false, req.getScheme().equals("https"));
+        resp.sendRedirect("/?username=" + authToken.getAccount().getName());
+    }
+
+    private static void redirectOnResetPasswordError(HttpServletRequest req, HttpServletResponse resp, Account account)
+            throws IOException {
+        ZimbraCookie.clearCookie(resp, ZimbraCookie.COOKIE_ZM_AUTH_TOKEN);
+        resp.sendRedirect("/?errorCode=invalidLink");
     }
 
     private static int getMptParentFolderId(MailItem.Type viewType, Provisioning prov) throws ServiceException {

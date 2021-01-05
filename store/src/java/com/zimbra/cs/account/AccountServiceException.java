@@ -34,6 +34,7 @@ public class AccountServiceException extends ServiceException {
 
     public static final String AUTH_FAILED        = "account.AUTH_FAILED";
     public static final String CHANGE_PASSWORD    = "account.CHANGE_PASSWORD";
+    public static final String RESET_PASSWORD    = "account.RESET_PASSWORD";
     public static final String PASSWORD_LOCKED    = "account.PASSWORD_LOCKED";
     public static final String PASSWORD_CHANGE_TOO_SOON  = "account.PASSWORD_CHANGE_TOO_SOON";
     public static final String PASSWORD_RECENTLY_USED = "account.PASSWORD_RECENTLY_USED";
@@ -167,6 +168,10 @@ public class AccountServiceException extends ServiceException {
 
     public static AccountServiceException CHANGE_PASSWORD() {
         return new AccountServiceException("must change password", CHANGE_PASSWORD, SENDERS_FAULT, null);
+    }
+
+    public static AccountServiceException RESET_PASSWORD() {
+        return new AccountServiceException("reset password", RESET_PASSWORD, SENDERS_FAULT, null);
     }
 
     public static AccountServiceException PASSWORD_LOCKED() {

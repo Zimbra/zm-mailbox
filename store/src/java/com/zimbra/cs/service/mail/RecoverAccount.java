@@ -72,7 +72,7 @@ public final class RecoverAccount extends MailDocumentHandler {
             ChannelProvider provider = ChannelProvider.getProviderForChannel(channel);
             String recoveryAccount = provider.getRecoveryAccount(user);
             RecoverAccountResponse resp = new RecoverAccountResponse();
-
+            Map<String, String> recoveryCode = null;
             switch (op) {
             case GET_RECOVERY_ACCOUNT:
                 ResetPasswordUtil.validateVerifiedPasswordRecoveryAccount(user);
@@ -81,10 +81,12 @@ public final class RecoverAccount extends MailDocumentHandler {
                 resp.setRecoveryAccount(recoveryAccount);
                 break;
             case SEND_RECOVERY_CODE:
-                provider.sendAndStoreResetPasswordRecoveryCode(zsc, user, generatePasswordRecoveryCode(user, recoveryAccount, zsc, resp));
+                recoveryCode = generatePasswordRecoveryCode(user, recoveryAccount, zsc, resp);
+                provider.sendAndStoreResetPasswordRecoveryCode(zsc, user, recoveryCode);
                 break;
             case SEND_RECOVERY_LINK:
-                EmailChannel.sendAndStoreResetPasswordURL(zsc, octxt, user, generatePasswordRecoveryCode(user, recoveryAccount, zsc, resp));
+                recoveryCode = generatePasswordRecoveryCode(user, recoveryAccount, zsc, resp);
+                EmailChannel.sendAndStoreResetPasswordURL(zsc, octxt, user, recoveryCode);
                 break;
             default:
                 throw ServiceException.INVALID_REQUEST("Invalid op received", null);
