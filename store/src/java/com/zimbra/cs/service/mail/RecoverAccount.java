@@ -58,7 +58,6 @@ public final class RecoverAccount extends MailDocumentHandler {
         RecoverAccountOperation op = req.getOp();
         String email = req.getEmail();
         Account user = Provisioning.getInstance().getAccountByName(email);
-        Account requestingUser = Provisioning.getInstance().getAccountById(zsc.getAuthtokenAccountId());
         if (user == null) {
             ZimbraLog.passwordreset.debug("%s Account not found for %s", LOG_OPERATION, email);
             throw ForgetPasswordException.CONTACT_ADMIN("Something went wrong. Please contact your administrator.");
@@ -72,17 +71,13 @@ public final class RecoverAccount extends MailDocumentHandler {
                 ZimbraLog.passwordreset.debug("%s Verified recovery email is not found for %s", LOG_OPERATION, email);
                 throw ForgetPasswordException.CONTACT_ADMIN("Something went wrong. Please contact your administrator.");
             }
+            ResetPasswordUtil.checkValidRecoveryAccount(user);
             Channel channel = req.getChannel();
             ChannelProvider provider = ChannelProvider.getProviderForChannel(channel);
             String recoveryAccount = provider.getRecoveryAccount(user);
-            if (StringUtil.isNullOrEmpty(recoveryAccount)) {
-                ZimbraLog.passwordreset.debug("%s Recovery account missing or unverified for %s", LOG_OPERATION, email);
-                throw ForgetPasswordException.CONTACT_ADMIN("Something went wrong. Please contact your administrator.");
-            }
             RecoverAccountResponse resp = new RecoverAccountResponse();
             int maxAttempts = user.getPasswordRecoveryMaxAttempts();
-            ZimbraLog.passwordreset.debug("Is Admin Request : ", LOG_OPERATION, requestingUser.isIsAdminAccount());
-            Map<String, String> recoveryCodeMap = fetchAndFormRecoveryCodeParams(user, maxAttempts, recoveryAccount, zsc, requestingUser.isIsAdminAccount());
+            Map<String, String> recoveryCodeMap = fetchAndFormRecoveryCodeParams(user, maxAttempts, recoveryAccount, zsc, false);
             switch (op) {
             case GET_RECOVERY_ACCOUNT:
                 recoveryAccount = StringUtil.maskEmail(recoveryAccount);
@@ -113,7 +108,8 @@ public final class RecoverAccount extends MailDocumentHandler {
             String encoded = account.getResetPasswordRecoveryCode();
             recoveryCodeMap = JWEUtil.getDecodedJWE(encoded);
 
-            if (recoveryCodeMap != null && !recoveryCodeMap.isEmpty()) {
+            if (recoveryCodeMap != null && !recoveryCodeMap.isEmpty()
+                    && recoveryCodeMap.get(CodeConstants.RESEND_COUNT.toString()) != null) {
                 resendCount = Integer.valueOf(recoveryCodeMap.get(CodeConstants.RESEND_COUNT.toString()));
                 if (resendCount >= maxAttempts && !isAdminRequest) {
                     account.setFeatureResetPasswordStatus(FeatureResetPasswordStatus.suspended);

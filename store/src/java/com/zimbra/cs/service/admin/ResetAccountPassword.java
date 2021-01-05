@@ -62,19 +62,8 @@ public class ResetAccountPassword extends AdminDocumentHandler {
 
         checkAccountRights(zsc, account);
 
-        // send the password reset URL to the recovery email
-        ResetPasswordUtil.validateFeatureResetPasswordStatus(account);
-        if (account.getPrefPasswordRecoveryAddressStatus() == null) {
-            ZimbraLog.passwordreset.debug("ResetPasswordURL : Verified recovery email is not found for %s",
-                    account.getName());
-            throw ForgetPasswordException.CONTACT_ADMIN("Something went wrong. Please contact your administrator.");
-        }
+        ResetPasswordUtil.checkValidRecoveryAccount(account);
         String recoveryAccount = account.getPrefPasswordRecoveryAddress();
-        if (StringUtil.isNullOrEmpty(recoveryAccount)) {
-            ZimbraLog.passwordreset.debug("ResetPasswordURL : Recovery account missing or unverified for %s",
-                    account.getName());
-            throw ForgetPasswordException.CONTACT_ADMIN("Something went wrong. Please contact your administrator.");
-        }
         EmailChannel.sendResetPasswordURL(zsc, octxt, account
                 , RecoverAccount.fetchAndFormRecoveryCodeParams(account, account.getPasswordRecoveryMaxAttempts(), recoveryAccount, zsc, true));
 
