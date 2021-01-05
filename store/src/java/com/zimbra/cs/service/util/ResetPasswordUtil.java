@@ -68,4 +68,15 @@ public class ResetPasswordUtil {
             throw ForgetPasswordException.CONTACT_ADMIN("Recovery Account is not found. Please contact your administrator.");
         }
     }
+
+    public static void validateVerifiedPasswordRecoveryAccount(Account account) throws ServiceException {
+        if (account == null) {
+            throw ServiceException.INVALID_REQUEST("account is null.", null);
+        }
+        if (account.getPrefPasswordRecoveryAddressStatus() == null
+                || !account.getPrefPasswordRecoveryAddressStatus().isVerified()) {
+            ZimbraLog.passwordreset.warn("Verified recovery email is not found for %s", account.getName());
+            throw ForgetPasswordException.CONTACT_ADMIN("Recovery Account is not verified. Please contact your administrator.");
+        }
+    }
 }

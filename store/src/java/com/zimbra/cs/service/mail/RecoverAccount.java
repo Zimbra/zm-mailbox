@@ -66,12 +66,8 @@ public final class RecoverAccount extends MailDocumentHandler {
         Element response = proxyIfNecessary(request, context, user);
         if (response == null) {
             ResetPasswordUtil.validateFeatureResetPasswordStatus(user);
-            if (user.getPrefPasswordRecoveryAddressStatus() == null
-                    || !user.getPrefPasswordRecoveryAddressStatus().isVerified()) {
-                ZimbraLog.passwordreset.debug("%s Verified recovery email is not found for %s", LOG_OPERATION, email);
-                throw ForgetPasswordException.CONTACT_ADMIN("Something went wrong. Please contact your administrator.");
-            }
             ResetPasswordUtil.checkValidRecoveryAccount(user);
+            ResetPasswordUtil.validateVerifiedPasswordRecoveryAccount(user);
             Channel channel = req.getChannel();
             ChannelProvider provider = ChannelProvider.getProviderForChannel(channel);
             String recoveryAccount = provider.getRecoveryAccount(user);
