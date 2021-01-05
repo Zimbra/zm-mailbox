@@ -75,7 +75,8 @@ public class ResetAccountPassword extends AdminDocumentHandler {
                     account.getName());
             throw ForgetPasswordException.CONTACT_ADMIN("Something went wrong. Please contact your administrator.");
         }
-        EmailChannel.sendResetPasswordURL(zsc, octxt, account, RecoverAccount.fetchAndFormRecoveryCodeParams(account, account.getPasswordRecoveryMaxAttempts(), recoveryAccount, zsc));
+        EmailChannel.sendResetPasswordURL(zsc, octxt, account
+                , RecoverAccount.fetchAndFormRecoveryCodeParams(account, account.getPasswordRecoveryMaxAttempts(), recoveryAccount, zsc, true));
 
         ResetAccountPasswordResponse response = new ResetAccountPasswordResponse();
         return zsc.jaxbToElement(response);
