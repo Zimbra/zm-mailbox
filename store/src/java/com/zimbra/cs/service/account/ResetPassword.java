@@ -104,11 +104,6 @@ public class ResetPassword extends AccountDocumentHandler {
 
     @Override
     public boolean needsAuth(Map<String, Object> context) {
-        ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        AuthToken at = zsc.getAuthToken();
-        if(at.getUsage() == Usage.RESET_PASSWORD) {
-            return false;
-        }
-        return true;
+        return false;
     }
 }
