@@ -32,6 +32,7 @@ import com.zimbra.cs.account.ForgetPasswordException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.service.mail.RecoverAccount;
 import com.zimbra.cs.service.util.ResetPasswordUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.ResetAccountPasswordResponse;
@@ -74,8 +75,7 @@ public class ResetAccountPassword extends AdminDocumentHandler {
                     account.getName());
             throw ForgetPasswordException.CONTACT_ADMIN("Something went wrong. Please contact your administrator.");
         }
-
-        EmailChannel.sendResetPasswordURL(zsc, octxt, account, recoveryAccount);
+        EmailChannel.sendResetPasswordURL(zsc, octxt, account, RecoverAccount.fetchAndFormRecoveryCodeParams(account, account.getPasswordRecoveryMaxAttempts(), recoveryAccount, zsc));
 
         ResetAccountPasswordResponse response = new ResetAccountPasswordResponse();
         return zsc.jaxbToElement(response);

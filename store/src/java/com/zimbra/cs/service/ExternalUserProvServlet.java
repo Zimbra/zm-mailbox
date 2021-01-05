@@ -126,8 +126,8 @@ public class ExternalUserProvServlet extends ZimbraServlet {
             Map<String, String> attributes = handleAddressVerification(req, resp, ownerId, extUserEmail, expired);
             redirectRequest(req, resp, attributes, EXT_USER_PROV_ON_UI_NODE, PUBLIC_ADDRESS_VERIFICATION_JSP);
         } else if("1".equals(accountVerification)) {
-            ZimbraLog.account.info("Account Verification and Password Setting");
-            handleAccountVerification(req, resp, ownerId, code);
+            ZimbraLog.account.info("Account Verification and Password Reset");
+            handleAccountVerification(req, resp, ownerId, code, tokenMap.get(EXPIRED) != null ? true : false);
         } else {
             Provisioning prov = Provisioning.getInstance();
             Account grantee;
@@ -269,7 +269,11 @@ public class ExternalUserProvServlet extends ZimbraServlet {
         return attrs;
     }
 
-    public void handleAccountVerification(HttpServletRequest req, HttpServletResponse resp, String ownerAccountId, String code) throws ServletException, IOException {
+    public void handleAccountVerification(HttpServletRequest req, HttpServletResponse resp, String ownerAccountId, String code, boolean expired) throws ServletException, IOException {
+        //check if link has expired
+        if (expired) {
+
+        }
         //get the ResetPasswordRecoveryCode
         try {
             Provisioning prov = Provisioning.getInstance();
@@ -587,7 +591,8 @@ public class ExternalUserProvServlet extends ZimbraServlet {
             // check validity
             if (System.currentTimeMillis() > Long.parseLong((String) expiry)) {
                 String addressVerification = (String) map.get(AccountConstants.P_ADDRESS_VERIFICATION);
-                if ("1".equals(addressVerification)) {
+                String accountVerification = (String) map.get(AccountConstants.P_ACCOUNT_VERIFICATION);
+                if ("1".equals(addressVerification) || "1".equals(accountVerification)) {
                     map.put(EXPIRED, true);
                 } else {
                     throw new ServletException("url no longer valid");

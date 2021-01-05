@@ -34,6 +34,7 @@ import javax.mail.internet.MimeMultipart;
 
 import org.apache.commons.lang.RandomStringUtils;
 
+import com.google.common.base.Strings;
 import com.zimbra.common.account.ForgetPasswordEnums.CodeConstants;
 import com.zimbra.common.account.ZAttrProvisioning.PrefPasswordRecoveryAddressStatus;
 import com.zimbra.common.mime.MimeConstants;
@@ -178,45 +179,42 @@ public class EmailChannel extends ChannelProvider {
         account.unsetResetPasswordRecoveryCode();
     }
 
-    public static void sendResetPasswordURL(ZimbraSoapContext zsc, OperationContext octxt, Account account, String sendToEmail)
+    public static void sendResetPasswordURL(ZimbraSoapContext zsc, OperationContext octxt, Account account, Map<String, String> recoveryCodeMap)
             throws ServiceException {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         Locale locale = account.getLocale();
         String accountName = account.getName();
+        String userDisplayName = account.getDisplayName() != null ? String.join("", " ",account.getDisplayName()) : "";
         String subject = L10nUtil.getMessage(MsgKey.sendPasswordResetEmailSubject, locale);
         String charset = account.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, MimeConstants.P_CHARSET_UTF8);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE, d MMM yyyy HH:mm:ss z").withZone(ZoneId.of("GMT"));
         try {
-            long expiry = account.getResetPasswordRecoveryCodeExpiry();
-            Date now = new Date();
-            long expiryTime = now.getTime() + expiry;
-            DateFormat format = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss z");
-            format.setTimeZone(TimeZone.getTimeZone("GMT"));
-            String gmtDate = format.format(expiryTime);
+            Long expiryTimeLong = Long.valueOf(recoveryCodeMap.get(CodeConstants.EXPIRY_TIME.toString()));
+            ZonedDateTime expiryDate = Instant.ofEpochMilli(expiryTimeLong).atZone(ZoneId.of("GMT"));
             //add a code to the URL too which can be verified later on
-            Map<String, String> recoveryCodeMap = new HashMap<String, String>();
             recoveryCodeMap.put(CodeConstants.ACCOUNT_ID.toString(), account.getId());
-            recoveryCodeMap.put(CodeConstants.CODE.toString(), RandomStringUtils.random(8, true, true));
-            recoveryCodeMap.put(CodeConstants.EXPIRY_TIME.toString(), String.valueOf(expiryTime));
 
-            String url = AccountUtil.generateResetPasswordURL(account, expiryTime, recoveryCodeMap.get(CodeConstants.CODE.toString()));
+            String url = AccountUtil.generateResetPasswordURL(account, expiryTimeLong, recoveryCodeMap.get(CodeConstants.CODE.toString()));
 
-            ZimbraLog.account.debug("Expiry of Password Reset link sent to %s is %s", sendToEmail, gmtDate);
-            ZimbraLog.account.debug("Password Reset verification URL sent to %s is %s", sendToEmail, url);
-            String mimePartText = L10nUtil.getMessage(MsgKey.sendPasswordResetEmailBodyText, locale, accountName, url,
-                    gmtDate);
-            String mimePartHtml = L10nUtil.getMessage(MsgKey.sendPasswordResetEmailBodyHtml, locale, accountName, url,
-                    gmtDate);
+            ZimbraLog.account.debug("Expiry of Password Reset link sent to %s is %s", recoveryCodeMap.get(CodeConstants.EMAIL.toString()), expiryDate.format(formatter));
+            ZimbraLog.account.debug("Password Reset verification URL sent to %s is %s", recoveryCodeMap.get(CodeConstants.EMAIL.toString()), url);
+            String mimePartText = L10nUtil.getMessage(MsgKey.sendPasswordResetEmailBodyText, locale, userDisplayName, accountName, url,
+                    expiryDate.format(formatter));
+            String mimePartHtml = L10nUtil.getMessage(MsgKey.sendPasswordResetEmailBodyHtml, locale, userDisplayName, accountName, url,
+                    expiryDate.format(formatter));
             MimeMultipart mmp = AccountUtil.generateMimeMultipart(mimePartText, mimePartHtml, null);
             MimeMessage mm = AccountUtil.generateMimeMessage(account, account, subject, charset, null, null,
-                    sendToEmail, mmp);
+                    recoveryCodeMap.get(CodeConstants.EMAIL.toString()), mmp);
             mbox.getMailSender().sendMimeMessage(octxt, mbox, false, mm, null, null, null, null, false);
 
             HashMap<String, Object> prefs = new HashMap<String, Object>();
             prefs.put(Provisioning.A_zimbraResetPasswordRecoveryCode, JWEUtil.getJWE(recoveryCodeMap));
             Provisioning.getInstance().modifyAttrs(account, prefs, true, null);
         } catch (MessagingException e) {
-            ZimbraLog.account.warn("Failed to send verification link to email ID: '" + sendToEmail + "'", e);
-            throw ServiceException.FAILURE("Failed to send verification link to email ID: " + sendToEmail, e);
+            ZimbraLog.account.warn(String.format("Failed to send verification link to email ID: %s'",
+                    recoveryCodeMap.get(CodeConstants.EMAIL.toString())), e);
+            throw ServiceException.FAILURE(String.format("Failed to send verification link to email ID: ",
+                    recoveryCodeMap.get(CodeConstants.EMAIL.toString())), e);
         }
     }
 }
