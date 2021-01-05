@@ -109,7 +109,7 @@ public final class RecoverAccount extends MailDocumentHandler {
             recoveryCodeMap = JWEUtil.getDecodedJWE(encoded);
 
             if (recoveryCodeMap != null && !recoveryCodeMap.isEmpty()
-                    && recoveryCodeMap.get(CodeConstants.RESEND_COUNT.toString()) != null) {
+                    && !StringUtil.isNullOrEmpty(recoveryCodeMap.get(CodeConstants.RESEND_COUNT.toString()))) {
                 resendCount = Integer.valueOf(recoveryCodeMap.get(CodeConstants.RESEND_COUNT.toString()));
                 if (resendCount >= maxAttempts && !isAdminRequest) {
                     account.setFeatureResetPasswordStatus(FeatureResetPasswordStatus.suspended);
