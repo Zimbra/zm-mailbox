@@ -270,9 +270,9 @@ public class ExternalUserProvServlet extends ZimbraServlet {
     }
 
     public void handleAccountVerification(HttpServletRequest req, HttpServletResponse resp, String ownerAccountId, String code, boolean expired) throws ServletException, IOException {
-        //check if link has expired
+        //TODO : check if link has expired
         if (expired) {
-
+            //throw error
         }
         //get the ResetPasswordRecoveryCode
         try {
@@ -284,21 +284,18 @@ public class ExternalUserProvServlet extends ZimbraServlet {
                 // check if the codes are same
                 if (ownerAccountId.equals(recoveryCodeMap.get(CodeConstants.ACCOUNT_ID.toString()))
                         && code.equals(recoveryCodeMap.get(CodeConstants.CODE.toString()))) {
-                    ZimbraLog.account.info("Account Verification and Password Setting : URL authenticated");
-                    // clear ResetPasswordRecoveryCode LDAP entry
+                    ZimbraLog.account.info("Account Verification and Password Reset : URL authenticated");
                     account.unsetResetPasswordRecoveryCode();
-                    // forward to appropriate page
+                    // TODO : forward to appropriate page
                     // redirectRequest(req, resp, attributes, EXT_USER_PROV_ON_UI_NODE, PUBLIC_ADDRESS_VERIFICATION_JSP);
                 } else {
                     // unauthorized
-                    ZimbraLog.account.info(
-                            "Account Verification and Password Setting Failed. The code or account id for the URL didn't match.");
+                    ZimbraLog.account.warn("Account Verification and Password Reset Failed. The code or account id for the URL didn't match.");
                     throw ServiceException.PERM_DENIED("The URL is invalid.");
                 }
             } else {
                 // it has already been processed
-                ZimbraLog.account.info(
-                        "Account Verification and Password Setting Failed. The ResetPasswordRecoveryCode entry missing.It has already been used once.");
+                ZimbraLog.account.warn("Account Verification and Password Reset Failed. It has already been used once.");
                 throw ServiceException.PERM_DENIED("The URL is invalid. It has already been used.");
             }
         } catch (ServiceException se) {
