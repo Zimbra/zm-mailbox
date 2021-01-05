@@ -18,6 +18,7 @@ package com.zimbra.cs.service.admin;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import com.google.common.base.Strings;
 import com.zimbra.common.account.ForgetPasswordEnums.CodeConstants;
@@ -70,16 +71,18 @@ public class ResetAccountPassword extends AdminDocumentHandler {
             String encoded = account.getResetPasswordRecoveryCode();
             recoveryCodeMap = JWEUtil.getDecodedJWE(encoded);
         } catch (Exception e) {
-            ZimbraLog.account.warn("Error while sending Password Reset link : ", e);
-            throw ServiceException.FAILURE("Error while sending Password Reset link", e);
+            ZimbraLog.account.warn("Error while fetching Password Recovery Code : ", e);
+            throw ServiceException.FAILURE("Error while fetching Password Recovery Code.", e);
         }
-
-        recoveryCodeMap = RecoverAccount.fetchAndFormRecoveryCodeParams(account, recoveryCodeMap, recoveryAccount, zsc);
+        if(Objects.isNull(recoveryCodeMap)) {
+            recoveryCodeMap = new HashMap<String, String>();
+        }
+        RecoverAccount.fetchAndFormRecoveryCodeParams(account, recoveryCodeMap, recoveryAccount, zsc);
         if (recoveryCodeMap != null && StringUtil.isNullOrEmpty(recoveryCodeMap.get(CodeConstants.RESEND_COUNT.toString()))) {
             recoveryCodeMap.put(CodeConstants.RESEND_COUNT.toString(), String.valueOf(ZERO));
         }
-        EmailChannel.sendResetPasswordURL(zsc, octxt, account
-                , RecoverAccount.fetchAndFormRecoveryCodeParams(account, recoveryCodeMap, recoveryAccount, zsc));
+        ZimbraLog.account.debug("Recovery Code Map formed: %s", recoveryCodeMap.toString());
+        EmailChannel.sendAndStoreResetPasswordURL(zsc, octxt, account, recoveryCodeMap);
 
         ResetAccountPasswordResponse response = new ResetAccountPasswordResponse();
         return zsc.jaxbToElement(response);

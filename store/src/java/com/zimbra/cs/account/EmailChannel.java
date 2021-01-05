@@ -179,7 +179,7 @@ public class EmailChannel extends ChannelProvider {
         account.unsetResetPasswordRecoveryCode();
     }
 
-    public static void sendResetPasswordURL(ZimbraSoapContext zsc, OperationContext octxt, Account account, Map<String, String> recoveryCodeMap)
+    public static void sendAndStoreResetPasswordURL(ZimbraSoapContext zsc, OperationContext octxt, Account account, Map<String, String> recoveryCodeMap)
             throws ServiceException {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         Locale locale = account.getLocale();

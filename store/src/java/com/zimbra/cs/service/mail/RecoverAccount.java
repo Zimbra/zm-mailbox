@@ -23,6 +23,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import org.apache.commons.lang.RandomStringUtils;
 
@@ -71,18 +72,7 @@ public final class RecoverAccount extends MailDocumentHandler {
             ChannelProvider provider = ChannelProvider.getProviderForChannel(channel);
             String recoveryAccount = provider.getRecoveryAccount(user);
             RecoverAccountResponse resp = new RecoverAccountResponse();
-            int maxAttempts = user.getPasswordRecoveryMaxAttempts();
 
-            Map<String, String> recoveryCodeMap = null;
-            try {
-                String encoded = user.getResetPasswordRecoveryCode();
-                recoveryCodeMap = JWEUtil.getDecodedJWE(encoded);
-            } catch (Exception e) {
-                ZimbraLog.account.warn("Error while sending Password Reset link : ", e);
-                throw ServiceException.FAILURE("Error while sending Password Reset link", e);
-            }
-            recoveryCodeMap = checkVerifiedRecoveryAccAndSetResendCount(user, recoveryCodeMap, maxAttempts, zsc, resp);
-            recoveryCodeMap = fetchAndFormRecoveryCodeParams(user, recoveryCodeMap, recoveryAccount, zsc);
             switch (op) {
             case GET_RECOVERY_ACCOUNT:
                 ResetPasswordUtil.validateVerifiedPasswordRecoveryAccount(user);
@@ -91,10 +81,10 @@ public final class RecoverAccount extends MailDocumentHandler {
                 resp.setRecoveryAccount(recoveryAccount);
                 break;
             case SEND_RECOVERY_CODE:
-                provider.sendAndStoreResetPasswordRecoveryCode(zsc, user, recoveryCodeMap);
+                provider.sendAndStoreResetPasswordRecoveryCode(zsc, user, generatePasswordRecoveryCode(user, recoveryAccount, zsc, resp));
                 break;
             case SEND_RECOVERY_LINK:
-                EmailChannel.sendResetPasswordURL(zsc, octxt, user, recoveryCodeMap);
+                EmailChannel.sendAndStoreResetPasswordURL(zsc, octxt, user, generatePasswordRecoveryCode(user, recoveryAccount, zsc, resp));
                 break;
             default:
                 throw ServiceException.INVALID_REQUEST("Invalid op received", null);
@@ -104,7 +94,27 @@ public final class RecoverAccount extends MailDocumentHandler {
         return response;
     }
 
-    public static Map<String, String> checkVerifiedRecoveryAccAndSetResendCount(Account account, Map<String, String> recoveryCodeMap, int maxAttempts,
+    private static Map<String, String> generatePasswordRecoveryCode(Account account, String recoveryAccount, ZimbraSoapContext zsc,
+            RecoverAccountResponse resp) throws ServiceException{
+        Map<String, String> recoveryCodeMap = null;
+        int maxAttempts = account.getPasswordRecoveryMaxAttempts();
+        try {
+            String encoded = account.getResetPasswordRecoveryCode();
+            recoveryCodeMap = JWEUtil.getDecodedJWE(encoded);
+        } catch (Exception e) {
+            ZimbraLog.account.warn("Error while fetching Password Recovery Code: ", e);
+            throw ServiceException.FAILURE("Error while fetching Password Recovery Code.", e);
+        }
+        if(Objects.isNull(recoveryCodeMap)) {
+            recoveryCodeMap = new HashMap<String, String>();
+        }
+        checkVerifiedRecoveryAccAndSetResendCount(account, recoveryCodeMap, maxAttempts, zsc, resp);
+        fetchAndFormRecoveryCodeParams(account, recoveryCodeMap, recoveryAccount, zsc);
+        ZimbraLog.account.debug("Recovery Code Map formed: %s", recoveryCodeMap.toString());
+        return recoveryCodeMap;
+    }
+
+    public static void checkVerifiedRecoveryAccAndSetResendCount(Account account, Map<String, String> recoveryCodeMap, int maxAttempts,
             ZimbraSoapContext zsc, RecoverAccountResponse resp) throws ServiceException{
         ResetPasswordUtil.validateVerifiedPasswordRecoveryAccount(account);
         int resendCount = 0;
@@ -128,20 +138,17 @@ public final class RecoverAccount extends MailDocumentHandler {
                 }
             } else {
                 ZimbraLog.passwordreset.debug("%s Recovery code not found for %s, creating new one", LOG_OPERATION, account.getName());
-                recoveryCodeMap = new HashMap<String, String>();
                 recoveryCodeMap.put(CodeConstants.RESEND_COUNT.toString(), String.valueOf(resendCount));
             }
             resp.setRecoveryAttemptsLeft(maxAttempts - resendCount);
         } catch (Exception e) {
-            ZimbraLog.account.warn("Error while sending Password Reset link : ", e);
-            throw ServiceException.FAILURE("Error while sending Password Reset link", e);
+            ZimbraLog.account.warn("Error while setting Password Recovery Resend Count : ", e);
+            throw ServiceException.FAILURE("Error while setting Password Recovery Resend Count.", e);
         }
-        return recoveryCodeMap;
     }
 
-    public static Map<String, String> fetchAndFormRecoveryCodeParams(Account account, Map<String, String> recoveryCodeMap,
-            String recoveryAccount, ZimbraSoapContext zsc)
-            throws ServiceException {
+    public static void fetchAndFormRecoveryCodeParams(Account account, Map<String, String> recoveryCodeMap, String recoveryAccount,
+            ZimbraSoapContext zsc) throws ServiceException {
         ZonedDateTime currentDate = ZonedDateTime.now(ZoneId.systemDefault());
         try {
             if (recoveryCodeMap != null && !recoveryCodeMap.isEmpty()
@@ -163,9 +170,6 @@ public final class RecoverAccount extends MailDocumentHandler {
                 recoveryCodeMap.put(CodeConstants.EMAIL.toString(), recoveryAccount);
             } else {
                 ZimbraLog.passwordreset.debug("%s Recovery code not found for %s, creating new one", LOG_OPERATION, account.getName());
-                if (recoveryCodeMap != null && !recoveryCodeMap.isEmpty()) {
-                    recoveryCodeMap = new HashMap<String, String>();
-                }
                 recoveryCodeMap.put(CodeConstants.EMAIL.toString(), recoveryAccount);
                 recoveryCodeMap.put(CodeConstants.CODE.toString(), RandomStringUtils.random(8, true, true));
                 // add expiry duration in current time.
@@ -174,10 +178,9 @@ public final class RecoverAccount extends MailDocumentHandler {
                 recoveryCodeMap.put(CodeConstants.EXPIRY_TIME.toString(), String.valueOf(val));
             }
         } catch (Exception e) {
-            ZimbraLog.account.warn("Error while sending Password Reset link : ", e);
-            throw ServiceException.FAILURE("Error while sending Password Reset link", e);
+            ZimbraLog.account.warn("Error while setting Password Recovery Params : ", e);
+            throw ServiceException.FAILURE("Error while setting Password Recovery Params.", e);
         }
-        return recoveryCodeMap;
     }
 
     private Element proxyIfNecessary(Element request, Map<String, Object> context, Account acct)
