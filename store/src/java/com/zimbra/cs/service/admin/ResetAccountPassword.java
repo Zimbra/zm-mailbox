@@ -23,6 +23,7 @@ import java.util.Objects;
 import com.google.common.base.Strings;
 import com.zimbra.common.account.ForgetPasswordEnums.CodeConstants;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.ZAttrProvisioning.FeatureResetPasswordStatus;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
@@ -46,7 +47,6 @@ public class ResetAccountPassword extends AdminDocumentHandler {
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         zsc = getZimbraSoapContext(context);
-        OperationContext octxt = getOperationContext(zsc, context);
         Element a = request.getElement(AccountConstants.E_ACCOUNT);
         String key = a.getAttribute(AccountConstants.A_BY);
         String value = a.getText();
@@ -64,6 +64,9 @@ public class ResetAccountPassword extends AdminDocumentHandler {
 
         checkAccountRights(zsc, account);
 
+        if(account.getFeatureResetPasswordStatus().equals(FeatureResetPasswordStatus.suspended)) {
+            account.setFeatureResetPasswordStatus(FeatureResetPasswordStatus.enabled);
+        }
         ResetPasswordUtil.isResetPasswordEnabledAndValidRecoveryAccount(account);
         String recoveryAccount = account.getPrefPasswordRecoveryAddress();
         Map<String, String> recoveryCodeMap = null;
@@ -82,7 +85,7 @@ public class ResetAccountPassword extends AdminDocumentHandler {
             recoveryCodeMap.put(CodeConstants.RESEND_COUNT.toString(), String.valueOf(ZERO));
         }
         ZimbraLog.account.debug("Recovery Code Map formed: %s", recoveryCodeMap.toString());
-        EmailChannel.sendAndStoreResetPasswordURL(zsc, octxt, account, recoveryCodeMap);
+        EmailChannel.sendAndStoreResetPasswordURL(zsc, account, recoveryCodeMap);
 
         ResetAccountPasswordResponse response = new ResetAccountPasswordResponse();
         return zsc.jaxbToElement(response);

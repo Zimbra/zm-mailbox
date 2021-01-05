@@ -53,7 +53,6 @@ public final class RecoverAccount extends MailDocumentHandler {
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        OperationContext octxt = getOperationContext(zsc, context);
         RecoverAccountRequest req = zsc.elementToJaxb(request);
         req.validateRecoverAccountRequest();
         RecoverAccountOperation op = req.getOp();
@@ -86,7 +85,7 @@ public final class RecoverAccount extends MailDocumentHandler {
                 break;
             case SEND_RECOVERY_LINK:
                 recoveryCode = generatePasswordRecoveryCode(user, recoveryAccount, zsc, resp);
-                EmailChannel.sendAndStoreResetPasswordURL(zsc, octxt, user, recoveryCode);
+                EmailChannel.sendAndStoreResetPasswordURL(zsc, user, recoveryCode);
                 break;
             default:
                 throw ServiceException.INVALID_REQUEST("Invalid op received", null);

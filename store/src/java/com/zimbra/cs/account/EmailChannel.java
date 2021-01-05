@@ -176,7 +176,7 @@ public class EmailChannel extends ChannelProvider {
         account.unsetResetPasswordRecoveryCode();
     }
 
-    public static void sendAndStoreResetPasswordURL(ZimbraSoapContext zsc, OperationContext octxt, Account account, Map<String, String> recoveryCodeMap)
+    public static void sendAndStoreResetPasswordURL(ZimbraSoapContext zsc, Account account, Map<String, String> recoveryCodeMap)
             throws ServiceException {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         Locale locale = account.getLocale();
@@ -202,7 +202,7 @@ public class EmailChannel extends ChannelProvider {
             MimeMultipart mmp = AccountUtil.generateMimeMultipart(mimePartText, mimePartHtml, null);
             MimeMessage mm = AccountUtil.generateMimeMessage(account, account, subject, charset, null, null,
                     recoveryCodeMap.get(CodeConstants.EMAIL.toString()), mmp);
-            mbox.getMailSender().sendMimeMessage(octxt, mbox, false, mm, null, null, null, null, false);
+            mbox.getMailSender().sendMimeMessage(null, mbox, false, mm, null, null, null, null, false);
 
             HashMap<String, Object> prefs = new HashMap<String, Object>();
             prefs.put(Provisioning.A_zimbraResetPasswordRecoveryCode, JWEUtil.getJWE(recoveryCodeMap));
