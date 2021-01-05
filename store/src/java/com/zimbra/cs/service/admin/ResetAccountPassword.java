@@ -62,6 +62,7 @@ public class ResetAccountPassword extends AdminDocumentHandler {
 
         checkAccountRights(zsc, account);
 
+        ResetPasswordUtil.validateFeatureResetPasswordStatus(account);
         ResetPasswordUtil.checkValidRecoveryAccount(account);
         String recoveryAccount = account.getPrefPasswordRecoveryAddress();
         EmailChannel.sendResetPasswordURL(zsc, octxt, account
