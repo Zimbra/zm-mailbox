@@ -79,4 +79,9 @@ public class ResetPasswordUtil {
             throw ForgetPasswordException.CONTACT_ADMIN("Recovery Account is not verified. Please contact your administrator.");
         }
     }
+
+    public static void isResetPasswordEnabledAndValidRecoveryAccount(Account account) throws ServiceException {
+        validateFeatureResetPasswordStatus(account);
+        checkValidRecoveryAccount(account);
+    }
 }

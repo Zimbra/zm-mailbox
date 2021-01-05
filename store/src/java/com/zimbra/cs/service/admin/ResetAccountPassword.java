@@ -16,9 +16,11 @@
  */
 package com.zimbra.cs.service.admin;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import com.google.common.base.Strings;
+import com.zimbra.common.account.ForgetPasswordEnums.CodeConstants;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
@@ -26,20 +28,19 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.ChannelProvider;
 import com.zimbra.cs.account.EmailChannel;
-import com.zimbra.cs.account.ForgetPasswordException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.service.mail.RecoverAccount;
+import com.zimbra.cs.service.util.JWEUtil;
 import com.zimbra.cs.service.util.ResetPasswordUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.ResetAccountPasswordResponse;
-import com.zimbra.soap.type.Channel;
 
 public class ResetAccountPassword extends AdminDocumentHandler {
     protected ZimbraSoapContext zsc = null;
+    final int ZERO = 0;
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
@@ -62,11 +63,23 @@ public class ResetAccountPassword extends AdminDocumentHandler {
 
         checkAccountRights(zsc, account);
 
-        ResetPasswordUtil.validateFeatureResetPasswordStatus(account);
-        ResetPasswordUtil.checkValidRecoveryAccount(account);
+        ResetPasswordUtil.isResetPasswordEnabledAndValidRecoveryAccount(account);
         String recoveryAccount = account.getPrefPasswordRecoveryAddress();
+        Map<String, String> recoveryCodeMap = null;
+        try {
+            String encoded = account.getResetPasswordRecoveryCode();
+            recoveryCodeMap = JWEUtil.getDecodedJWE(encoded);
+        } catch (Exception e) {
+            ZimbraLog.account.warn("Error while sending Password Reset link : ", e);
+            throw ServiceException.FAILURE("Error while sending Password Reset link", e);
+        }
+
+        recoveryCodeMap = RecoverAccount.fetchAndFormRecoveryCodeParams(account, recoveryCodeMap, recoveryAccount, zsc);
+        if (recoveryCodeMap != null && StringUtil.isNullOrEmpty(recoveryCodeMap.get(CodeConstants.RESEND_COUNT.toString()))) {
+            recoveryCodeMap.put(CodeConstants.RESEND_COUNT.toString(), String.valueOf(ZERO));
+        }
         EmailChannel.sendResetPasswordURL(zsc, octxt, account
-                , RecoverAccount.fetchAndFormRecoveryCodeParams(account, account.getPasswordRecoveryMaxAttempts(), recoveryAccount, zsc, true));
+                , RecoverAccount.fetchAndFormRecoveryCodeParams(account, recoveryCodeMap, recoveryAccount, zsc));
 
         ResetAccountPasswordResponse response = new ResetAccountPasswordResponse();
         return zsc.jaxbToElement(response);
