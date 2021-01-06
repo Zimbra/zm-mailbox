@@ -29,8 +29,10 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.sshd.client.SshClient;
+import org.apache.sshd.client.channel.ChannelExec;
 import org.apache.sshd.client.channel.ClientChannel;
 import org.apache.sshd.client.channel.ClientChannelEvent;
+import org.apache.sshd.client.future.ConnectFuture;
 import org.apache.sshd.client.session.ClientSession;
 import org.apache.sshd.common.util.security.SecurityUtils;
 
@@ -157,42 +159,44 @@ public class RemoteManager {
 
     public static RemoteResult executeRemoteCommand(String username, String host, int port, File privateKey,
 			String mShimCommand, String command) throws Exception {
-		long defaultTimeoutSeconds = 10l;
-		SshClient client = SshClient.setUpDefaultClient();
-		client.start();
+		long defaultTimeoutSeconds = 100l;
 		String send = "HOST:" + host + " " + command;
 		InputStream inputStream = new ByteArrayInputStream(send.getBytes());
-		try (ClientSession session = client.connect(username, host, port)
-				.verify(defaultTimeoutSeconds, TimeUnit.SECONDS).getSession()) {
+		SshClient client = SshClient.setUpDefaultClient();
+		client.start();
+		ConnectFuture cf = client.connect(username, host, port);
+		try (ClientSession session = cf.verify().getSession();) {
 			session.addPublicKeyIdentity(loadKeypair(privateKey.getAbsolutePath()));
 			session.auth().verify(defaultTimeoutSeconds, TimeUnit.SECONDS);
 			ZimbraLog.rmgmt.debug("executing shim command '%s'", mShimCommand);
 			try (ByteArrayOutputStream responseStream = new ByteArrayOutputStream();
 					ByteArrayOutputStream errorResponseStream = new ByteArrayOutputStream();
-					ClientChannel channel = session.createChannel("exec", mShimCommand + "\n")) {
+					ChannelExec channel = session.createExecChannel(mShimCommand);) {
 					ZimbraLog.rmgmt.debug("sending mgmt command '%s'", send);
 				channel.setIn(inputStream);
 				channel.setOut(responseStream);
 				channel.setErr(errorResponseStream);
-				channel.open();
+				channel.open().await();
 				try {
 					channel.waitFor(EnumSet.of(ClientChannelEvent.CLOSED),
 							TimeUnit.SECONDS.toMillis(defaultTimeoutSeconds));
+					session.close(false);
+					String errorString = new String(errorResponseStream.toByteArray());
+					if (!errorString.isEmpty()) {
+						throw ServiceException.FAILURE("Error occurred while executing command " + send + errorString, null);
+					}
 					RemoteResult result = new RemoteResult();
-					InputStream stdout = new ByteArrayInputStream(responseStream.toByteArray());
-					InputStream stderr = new ByteArrayInputStream(errorResponseStream.toByteArray());
-					result.mStdout = ByteUtil.getContent(stdout, -1);
-					result.mStderr = ByteUtil.getContent(stderr, -1);
+					ClientChannel.validateCommandExitStatusCode(mShimCommand, channel.getExitStatus());
 					result.mExitStatus = channel.getExitStatus();
 					if (result.mExitStatus != 0) {
 						throw new IOException("command failed: exit status=" + result.mExitStatus + ", stdout="
 								+ new String(result.mStdout) + ", stderr=" + new String(result.mStderr));
 					}
 					result.mExitSignal = channel.getExitSignal();
-					String errorString = new String(errorResponseStream.toByteArray());
-					if (!errorString.isEmpty()) {
-						throw ServiceException.FAILURE("Error occurred while executing command " + send + errorString, null);
-					}
+					InputStream stdout = new ByteArrayInputStream(responseStream.toByteArray());
+					InputStream stderr = new ByteArrayInputStream(errorResponseStream.toByteArray());
+					result.mStdout = ByteUtil.getContent(stdout, -1);
+					result.mStderr = ByteUtil.getContent(stderr, -1);
 					return result;
 				} finally {
 					channel.close(false);
