@@ -33,7 +33,6 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.EmailChannel;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
-import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.service.mail.RecoverAccount;
 import com.zimbra.cs.service.util.JWEUtil;
 import com.zimbra.cs.service.util.ResetPasswordUtil;

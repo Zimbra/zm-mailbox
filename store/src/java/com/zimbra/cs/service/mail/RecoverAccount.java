@@ -38,7 +38,6 @@ import com.zimbra.cs.account.ChannelProvider;
 import com.zimbra.cs.account.EmailChannel;
 import com.zimbra.cs.account.ForgetPasswordException;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.service.util.JWEUtil;
 import com.zimbra.cs.service.util.ResetPasswordUtil;
 import com.zimbra.soap.ZimbraSoapContext;
