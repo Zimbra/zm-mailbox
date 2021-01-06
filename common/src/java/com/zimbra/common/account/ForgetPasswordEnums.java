@@ -11,7 +11,8 @@ public class ForgetPasswordEnums {
         CODE("code"),
         EXPIRY_TIME("expiryTime"),
         RESEND_COUNT("resendCount"),
-        SUSPENSION_TIME("suspensionTime");
+        SUSPENSION_TIME("suspensionTime"),
+        ACCOUNT_ID("accountId");
 
         private static Map<String, CodeConstants> nameToCodeConstants = Maps.newHashMap();
         static {

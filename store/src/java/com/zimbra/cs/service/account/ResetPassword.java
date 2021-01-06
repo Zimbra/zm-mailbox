@@ -22,11 +22,11 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.AuthToken.Usage;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.util.ResetPasswordUtil;
@@ -47,7 +47,11 @@ public class ResetPassword extends AccountDocumentHandler {
         req.validateResetPasswordRequest();
 
         AuthToken at = zsc.getAuthToken();
-        AuthProvider.validateAuthToken(prov, at, false);
+        if(at.getUsage() == Usage.RESET_PASSWORD) {
+            AuthProvider.validateAuthToken(prov, at, false, Usage.RESET_PASSWORD);
+        } else {
+            AuthProvider.validateAuthToken(prov, at, false);
+        }
 
         boolean dryRun = request.getAttributeBool(AccountConstants.E_DRYRUN, false);
 
@@ -78,10 +82,7 @@ public class ResetPassword extends AccountDocumentHandler {
         setPasswordAndPurgeAuthTokens(prov, acct, newPassword, dryRun);
 
         Element response = zsc.createElement(AccountConstants.E_RESET_PASSWORD_RESPONSE);
-        if (!dryRun) { 
-            at.encodeAuthResp(response, false);
-            response.addAttribute(AccountConstants.E_LIFETIME, at.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);
-         }
+        acct.unsetResetPasswordRecoveryCode();
         return response;
     }
 
@@ -103,6 +104,6 @@ public class ResetPassword extends AccountDocumentHandler {
 
     @Override
     public boolean needsAuth(Map<String, Object> context) {
-        return true;
+        return false;
     }
 }

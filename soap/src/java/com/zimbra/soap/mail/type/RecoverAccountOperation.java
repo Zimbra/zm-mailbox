@@ -11,7 +11,8 @@ import com.google.common.collect.Maps;
 @XmlEnum
 public enum RecoverAccountOperation {
     @XmlEnumValue("getRecoveryAccount") GET_RECOVERY_ACCOUNT("getRecoveryAccount"),
-    @XmlEnumValue("sendRecoveryCode") SEND_RECOVERY_CODE("sendRecoveryCode");
+    @XmlEnumValue("sendRecoveryCode") SEND_RECOVERY_CODE("sendRecoveryCode"),
+    @XmlEnumValue("sendRecoveryLink") SEND_RECOVERY_LINK("sendRecoveryLink");
 
     private static Map<String, RecoverAccountOperation> nameToRecoverAccountOperations = Maps.newHashMap();
     static {

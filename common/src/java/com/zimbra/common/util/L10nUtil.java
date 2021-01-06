@@ -288,7 +288,12 @@ public class L10nUtil {
         verifyRecoveryEmailBodyHtml,
         sendPasswordRecoveryEmailSubject,
         sendPasswordRecoveryEmailBodyText,
-        sendPasswordRecoveryEmailBodyHtml
+        sendPasswordRecoveryEmailBodyHtml,
+
+        //send password reset email for new users
+        sendPasswordResetEmailSubject,
+        sendPasswordResetEmailBodyText,
+        sendPasswordResetEmailBodyHtml
 
         // add other messages in the future...
     }
