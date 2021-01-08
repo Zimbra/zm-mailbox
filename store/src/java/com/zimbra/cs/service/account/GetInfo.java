@@ -16,6 +16,11 @@
  */
 package com.zimbra.cs.service.account;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.file.InvalidPathException;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -53,10 +58,10 @@ import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
 import com.zimbra.cs.mailbox.util.TypedIdList;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.admin.AdminAccessControl;
@@ -254,6 +259,12 @@ public class GetInfo extends AccountDocumentHandler  {
         for (GetInfoExt extension : extensions) {
             extension.handle(zsc, response);
         }
+
+        // we do not have any ldap attrs to define whether powerpaste service is installed and running
+        // so check if powerpaste service is installed and running by checking the installed directory and connectivity
+        // if yes return powerpasteEnabled = true else return powerpasteEnabled = false
+        response.addAttribute("powerpasteEnabled", checkIfPowerpasteInstalled(), Element.Disposition.CONTENT);
+
         return response;
     }
 
@@ -460,5 +471,28 @@ public class GetInfo extends AccountDocumentHandler  {
 
     private void doDiscoverRights(Element eRights, Account account, Set<Right> rights) throws ServiceException {
         DiscoverRights.discoverRights(account, rights, eRights, false);
+    }
+
+    private boolean checkIfPowerpasteInstalled() {
+        String libLocation = "/opt/zimbra/common/lib/pasteitcleaned";
+        String extLoc = "/opt/zimbra/lib/ext/powerpaste-ext/zm-powerpaste-extension.jar";
+        HttpURLConnection connection = null;
+        try {
+            File lib = new File(libLocation);
+            File ext = new File(extLoc);
+            if (lib.exists() && lib.isDirectory() && lib.canRead()) {
+                if (ext.exists() && ext.isFile() && ext.canRead()) {
+                    connection = (HttpURLConnection) new URL("http://localhost:5000").openConnection();
+                    connection.setConnectTimeout(1000);
+                    connection.connect();
+                    return true;
+                }
+            }
+            ZimbraLog.account.debug("powerpaste service is not installed or running");
+            return false;
+        } catch(InvalidPathException | SecurityException | IOException ex) {
+            ZimbraLog.account.info("exception occurred : %s", ex.getMessage());
+            return false;
+        }
     }
 }
