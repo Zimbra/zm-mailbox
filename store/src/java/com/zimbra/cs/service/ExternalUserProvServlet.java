@@ -284,7 +284,7 @@ public class ExternalUserProvServlet extends ZimbraServlet {
             }
             Provisioning prov = Provisioning.getInstance();
             account = prov.getAccountById(ownerAccountId);
-            account.refreshAccountResetPasswordRecoveryCode();
+            account.refreshUserCredentials();
             String encoded = account.getResetPasswordRecoveryCode();
             Map<String, String> recoveryCodeMap = JWEUtil.getDecodedJWE(encoded);
             if (recoveryCodeMap != null && !recoveryCodeMap.isEmpty()) {

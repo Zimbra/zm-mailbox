@@ -63,7 +63,7 @@ public class ResetAccountPassword extends AdminDocumentHandler {
 
         checkAccountRights(zsc, account);
 
-        account.refreshAccountResetPasswordRecoveryAttributes();
+        account.refreshUserCredentials();
         if(account.getFeatureResetPasswordStatus().equals(FeatureResetPasswordStatus.suspended)) {
             account.setFeatureResetPasswordStatus(FeatureResetPasswordStatus.enabled);
         }
