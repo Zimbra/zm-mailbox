@@ -3042,7 +3042,15 @@ public class SoapProvisioning extends Provisioning {
     public void refreshUserCredentials(Account account) {
         throw new UnsupportedOperationException("Currently no way to refresh required attributes over SOAP");
     }
+    @Override
+    public void refreshAccountResetPasswordRecoveryCode(Account account) throws ServiceException {
+        throw new UnsupportedOperationException("Currently no way to refresh required attributes over SOAP");
+    }
 
+    @Override
+    public void refreshAccountResetPasswordRecoveryAttributes(Account account) throws ServiceException {
+        throw new UnsupportedOperationException("Currently no way to refresh required attributes over SOAP");
+    }
 
     @Override
     public Set<String> createHabOrgUnit(Domain domain, String habOrgUnitName) throws ServiceException {

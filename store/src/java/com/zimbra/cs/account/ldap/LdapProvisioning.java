@@ -11343,6 +11343,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
      * - zimbraPrefPasswordRecoveryAddressStatus
      * @throws ServiceException
      */
+    @Override
     public void refreshAccountResetPasswordRecoveryAttributes(Account account) throws ServiceException {
         ZLdapContext zlc = null;
 
