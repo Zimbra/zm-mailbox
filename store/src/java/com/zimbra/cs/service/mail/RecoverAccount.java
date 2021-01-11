@@ -64,6 +64,7 @@ public final class RecoverAccount extends MailDocumentHandler {
 
         Element response = proxyIfNecessary(request, context, user);
         if (response == null) {
+            user.refreshUserCredentials();
             ResetPasswordUtil.isResetPasswordEnabledAndValidRecoveryAccount(user);
 
             Channel channel = req.getChannel();

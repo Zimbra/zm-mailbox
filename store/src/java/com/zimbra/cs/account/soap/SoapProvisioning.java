@@ -3043,7 +3043,6 @@ public class SoapProvisioning extends Provisioning {
         throw new UnsupportedOperationException("Currently no way to refresh required attributes over SOAP");
     }
 
-
     @Override
     public Set<String> createHabOrgUnit(Domain domain, String habOrgUnitName) throws ServiceException {
         DomainSelector domSel =
