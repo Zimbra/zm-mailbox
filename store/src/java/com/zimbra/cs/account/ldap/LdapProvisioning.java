@@ -11315,6 +11315,58 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     @Override
+    public void refreshAccountResetPasswordRecoveryCode(Account account) throws ServiceException {
+        ZLdapContext zlc = null;
+
+        try {
+            zlc = LdapClient.getContext(LdapServerType.REPLICA, LdapUsage.GET_ENTRY);
+            String[] returnAttrs = {Provisioning.A_zimbraResetPasswordRecoveryCode};
+            ZAttributes attrs = helper.getAttributes(zlc, ((LdapEntry) account).getDN(), returnAttrs);
+            Map<String, Object> finalAttrs = account.getAttrs(false, false);
+            finalAttrs.putAll(attrs.getAttrs());
+            account.setAttrs(finalAttrs);
+            extendLifeInCacheOrFlush(account);  // Put this back into the cache
+        } catch (LdapEntryNotFoundException e) {
+            ZimbraLog.ldap.warn(String.format("ResetPasswordRecoveryCode for '%s' not found", account.getName()), e);
+        } catch (ServiceException e) {
+            ZimbraLog.ldap.warn(String.format("unable to refresh ResetPasswordRecoveryCode for '%s'", account.getName()), e);
+            throw ServiceException.FAILURE(String.format("unable to refresh ResetPasswordRecoveryCode for '%s'", account.getName()), e);
+        } finally {
+            LdapClient.closeContext(zlc);
+        }
+    }
+
+    /**
+     * Updates the values of the following attribute:
+     * - zimbraPrefPasswordRecoveryAddress
+     * - zimbraFeatureResetPasswordStatus
+     * - zimbraPrefPasswordRecoveryAddressStatus
+     * @throws ServiceException
+     */
+    public void refreshAccountResetPasswordRecoveryAttributes(Account account) throws ServiceException {
+        ZLdapContext zlc = null;
+
+        try {
+            zlc = LdapClient.getContext(LdapServerType.REPLICA, LdapUsage.GET_ENTRY);
+            String[] returnAttrs = { Provisioning.A_zimbraPrefPasswordRecoveryAddress,
+                    Provisioning.A_zimbraFeatureResetPasswordStatus,
+                    Provisioning.A_zimbraPrefPasswordRecoveryAddressStatus };
+            ZAttributes attrs = helper.getAttributes(zlc, ((LdapEntry) account).getDN(), returnAttrs);
+            Map<String, Object> finalAttrs = account.getAttrs(false, false);
+            finalAttrs.putAll(attrs.getAttrs());
+            account.setAttrs(finalAttrs);
+            extendLifeInCacheOrFlush(account);  // Put this back into the cache
+        } catch (LdapEntryNotFoundException e) {
+            ZimbraLog.ldap.warn(String.format("ResetPasswordRecoveryAttributes for '%s' not found", account.getName()), e);
+        } catch (ServiceException e) {
+            ZimbraLog.ldap.warn(String.format("unable to refresh ResetPasswordRecoveryAttributes for '%s'", account.getName()), e);
+            throw ServiceException.FAILURE(String.format("unable to refresh ResetPasswordRecoveryAttributes for '%s'", account.getName()), e);
+        } finally {
+            LdapClient.closeContext(zlc);
+        }
+    }
+
+    @Override
     public Set<String> createHabOrgUnit(Domain domain, String habOrgUnitName) throws ServiceException {
         ZLdapContext zlc = null;
         Set<String> habOrgList = null;

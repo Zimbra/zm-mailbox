@@ -400,6 +400,22 @@ public abstract class Provisioning extends ZAttrProvisioning {
      */
     public abstract void refreshUserCredentials(Account account) throws ServiceException;
 
+    /**
+     * Updates the values of the following attribute:
+     * - zimbraResetPasswordRecoveryCode
+     * @throws ServiceException
+     */
+    public abstract void refreshAccountResetPasswordRecoveryCode(Account account) throws ServiceException;
+
+    /**
+     * Updates the values of the following attribute:
+     * - zimbraPrefPasswordRecoveryAddress
+     * - zimbraFeatureResetPasswordStatus
+     * - zimbraPrefPasswordRecoveryAddressStatus
+     * @throws ServiceException
+     */
+    public abstract void refreshAccountResetPasswordRecoveryAttributes(Account account) throws ServiceException;
+
     public boolean idIsUUID() {
         return true;
     }

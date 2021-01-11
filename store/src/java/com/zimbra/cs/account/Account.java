@@ -531,4 +531,24 @@ public class Account extends ZAttrAccount implements GroupedEntry, AliasedEntry 
     public void refreshUserCredentials() throws ServiceException {
         getProvisioning().refreshUserCredentials(this);
     }
+
+    /**
+     * Updates the values of the following attribute:
+     * - zimbraResetPasswordRecoveryCode
+     * @throws ServiceException
+     */
+    public void refreshAccountResetPasswordRecoveryCode() throws ServiceException {
+        getProvisioning().refreshAccountResetPasswordRecoveryCode(this);
+    }
+
+    /**
+     * Updates the values of the following attribute:
+     * - zimbraPrefPasswordRecoveryAddress
+     * - zimbraFeatureResetPasswordStatus
+     * - zimbraPrefPasswordRecoveryAddressStatus
+     * @throws ServiceException
+     */
+    public void refreshAccountResetPasswordRecoveryAttributes() throws ServiceException {
+        getProvisioning().refreshAccountResetPasswordRecoveryAttributes(this);
+    }
 }
