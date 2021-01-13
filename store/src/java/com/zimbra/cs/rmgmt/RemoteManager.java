@@ -181,22 +181,18 @@ public class RemoteManager {
 					channel.waitFor(EnumSet.of(ClientChannelEvent.CLOSED),
 							TimeUnit.SECONDS.toMillis(defaultTimeoutSeconds));
 					session.close(false);
-					String errorString = new String(errorResponseStream.toByteArray());
-					if (!errorString.isEmpty()) {
-						throw ServiceException.FAILURE("Error occurred while executing command " + send + errorString, null);
-					}
 					RemoteResult result = new RemoteResult();
 					ClientChannel.validateCommandExitStatusCode(mShimCommand, channel.getExitStatus());
+					InputStream stdout = new ByteArrayInputStream(responseStream.toByteArray());
+					InputStream stderr = new ByteArrayInputStream(errorResponseStream.toByteArray());
+					result.mStdout = ByteUtil.getContent(stdout, -1);
+					result.mStderr = ByteUtil.getContent(stderr, -1);
 					result.mExitStatus = channel.getExitStatus();
 					if (result.mExitStatus != 0) {
 						throw new IOException("command failed: exit status=" + result.mExitStatus + ", stdout="
 								+ new String(result.mStdout) + ", stderr=" + new String(result.mStderr));
 					}
 					result.mExitSignal = channel.getExitSignal();
-					InputStream stdout = new ByteArrayInputStream(responseStream.toByteArray());
-					InputStream stderr = new ByteArrayInputStream(errorResponseStream.toByteArray());
-					result.mStdout = ByteUtil.getContent(stdout, -1);
-					result.mStderr = ByteUtil.getContent(stderr, -1);
 					return result;
 				} finally {
 					channel.close(false);
