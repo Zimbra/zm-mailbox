@@ -41738,31 +41738,31 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * user preference of client type
      *
-     * <p>Valid values: [standard, advanced, zimbrax]
+     * <p>Valid values: [standard, advanced, modern]
      *
-     * @return zimbraPrefClientType, or ZAttrProvisioning.PrefClientType.advanced if unset and/or has invalid value
+     * @return zimbraPrefClientType, or ZAttrProvisioning.PrefClientType.modern if unset and/or has invalid value
      */
     @ZAttr(id=453)
     public ZAttrProvisioning.PrefClientType getPrefClientType() {
-        try { String v = getAttr(Provisioning.A_zimbraPrefClientType, true, true); return v == null ? ZAttrProvisioning.PrefClientType.advanced : ZAttrProvisioning.PrefClientType.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.PrefClientType.advanced; }
+        try { String v = getAttr(Provisioning.A_zimbraPrefClientType, true, true); return v == null ? ZAttrProvisioning.PrefClientType.modern : ZAttrProvisioning.PrefClientType.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.PrefClientType.modern; }
     }
 
     /**
      * user preference of client type
      *
-     * <p>Valid values: [standard, advanced, zimbrax]
+     * <p>Valid values: [standard, advanced, modern]
      *
-     * @return zimbraPrefClientType, or "advanced" if unset
+     * @return zimbraPrefClientType, or "modern" if unset
      */
     @ZAttr(id=453)
     public String getPrefClientTypeAsString() {
-        return getAttr(Provisioning.A_zimbraPrefClientType, "advanced", true);
+        return getAttr(Provisioning.A_zimbraPrefClientType, "modern", true);
     }
 
     /**
      * user preference of client type
      *
-     * <p>Valid values: [standard, advanced, zimbrax]
+     * <p>Valid values: [standard, advanced, modern]
      *
      * @param zimbraPrefClientType new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -41777,7 +41777,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * user preference of client type
      *
-     * <p>Valid values: [standard, advanced, zimbrax]
+     * <p>Valid values: [standard, advanced, modern]
      *
      * @param zimbraPrefClientType new value
      * @param attrs existing map to populate, or null to create a new map
@@ -41793,7 +41793,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * user preference of client type
      *
-     * <p>Valid values: [standard, advanced, zimbrax]
+     * <p>Valid values: [standard, advanced, modern]
      *
      * @param zimbraPrefClientType new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -41808,7 +41808,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * user preference of client type
      *
-     * <p>Valid values: [standard, advanced, zimbrax]
+     * <p>Valid values: [standard, advanced, modern]
      *
      * @param zimbraPrefClientType new value
      * @param attrs existing map to populate, or null to create a new map
@@ -41824,7 +41824,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * user preference of client type
      *
-     * <p>Valid values: [standard, advanced, zimbrax]
+     * <p>Valid values: [standard, advanced, modern]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -41838,7 +41838,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * user preference of client type
      *
-     * <p>Valid values: [standard, advanced, zimbrax]
+     * <p>Valid values: [standard, advanced, modern]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
