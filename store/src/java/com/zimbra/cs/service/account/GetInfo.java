@@ -63,6 +63,7 @@ import com.zimbra.cs.service.admin.AdminAccessControl;
 import com.zimbra.cs.service.mail.ModifyProfileImage;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SoapSession;
+import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.zimlet.ZimletPresence;
 import com.zimbra.cs.zimlet.ZimletUserProperties;
@@ -319,6 +320,8 @@ public class GetInfo extends AccountDocumentHandler  {
                 // leave this a special case for now, until we have enough incidences to make it a pattern
                 value = config.isAttachmentsBlocked() || acct.isAttachmentsBlocked() ?
                         ProvisioningConstants.TRUE : ProvisioningConstants.FALSE;
+            } else if (Provisioning.A_zimbraFeatureZulipChatEnabled.equals(key)) {
+                value = Boolean.toString(AccountUtil.isZulipChatEnabled(acct));
             } else {
                 value = attrsMap.get(key);
 
