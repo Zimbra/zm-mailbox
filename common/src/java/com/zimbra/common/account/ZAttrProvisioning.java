@@ -12063,7 +12063,7 @@ public class ZAttrProvisioning {
     /**
      * whether or not blocking common passwords is enabled
      *
-     * @since ZCS 8.9.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3081)
     public static final String A_zimbraPasswordBlockCommonEnabled = "zimbraPasswordBlockCommonEnabled";
