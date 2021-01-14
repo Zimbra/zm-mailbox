@@ -1667,7 +1667,7 @@ public class ZAttrProvisioning {
     public static enum PrefClientType {
         standard("standard"),
         advanced("advanced"),
-        zimbrax("zimbrax");
+        modern("modern");
         private String mValue;
         private PrefClientType(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -1679,7 +1679,7 @@ public class ZAttrProvisioning {
         }
         public boolean isStandard() { return this == standard;}
         public boolean isAdvanced() { return this == advanced;}
-        public boolean isZimbrax() { return this == zimbrax;}
+        public boolean isModern() { return this == modern;}
     }
 
     public static enum PrefComposeDirection {
@@ -7003,6 +7003,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=534)
     public static final String A_zimbraFeatureVoiceUpsellURL = "zimbraFeatureVoiceUpsellURL";
+
+    /**
+     * whether to use Web Client feature
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=3088)
+    public static final String A_zimbraFeatureWebClientEnabled = "zimbraFeatureWebClientEnabled";
 
     /**
      * admin setting to enable/disable the web client offline access feature
@@ -13194,6 +13202,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefIdentityName = "zimbraPrefIdentityName";
 
     /**
+     * whether end user choose to use IMAP feature. If it is set to TRUE,
+     * IMAP feature is available only when zimbraImapEnabled is TRUE.
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=3086)
+    public static final String A_zimbraPrefImapEnabled = "zimbraPrefImapEnabled";
+
+    /**
      * whether or not the IMAP server exports search folders
      */
     @ZAttr(id=241)
@@ -13808,6 +13825,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=653)
     public static final String A_zimbraPrefPop3DownloadSince = "zimbraPrefPop3DownloadSince";
+
+    /**
+     * whether end user choose to use POP3 feature. If it is set to TRUE,
+     * POP3 feature is available only when zimbraPop3Enabled is TRUE.
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=3087)
+    public static final String A_zimbraPrefPop3Enabled = "zimbraPrefPop3Enabled";
 
     /**
      * whether or not to include spam messages in POP3 access

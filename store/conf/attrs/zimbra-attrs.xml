@@ -9779,4 +9779,25 @@ TODO: delete them permanently from here
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Whether to allow a user to access Zimbra mobile App</desc>
 </attr>
+
+<attr id="3086" name="zimbraPrefImapEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="9.0.0">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>
+    whether end user choose to use IMAP feature.
+    If it is set to TRUE, IMAP feature is available only when zimbraImapEnabled is TRUE.
+  </desc>
+</attr>
+
+<attr id="3087" name="zimbraPrefPop3Enabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="9.0.0">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>
+    whether end user choose to use POP3 feature.
+    If it is set to TRUE, POP3 feature is available only when zimbraPop3Enabled is TRUE.
+  </desc>
+</attr>
+
+<attr id="3088" name="zimbraFeatureWebClientEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="9.0.0">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>whether to use Web Client feature</desc>
+</attr>
 </attrs>
