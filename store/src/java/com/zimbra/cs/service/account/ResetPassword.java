@@ -22,7 +22,6 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
@@ -58,7 +57,6 @@ public class ResetPassword extends AccountDocumentHandler {
         }
         ResetPasswordUtil.validateFeatureResetPasswordStatus(acct);
         String newPassword = req.getPassword();
-        checkPasswordStrength(prov, acct, newPassword);
 
         // proxy if required
         if (!Provisioning.onLocalServer(acct)) {
@@ -76,25 +74,21 @@ public class ResetPassword extends AccountDocumentHandler {
         }
 
         setPasswordAndPurgeAuthTokens(prov, acct, newPassword, dryRun);
-
         Element response = zsc.createElement(AccountConstants.E_RESET_PASSWORD_RESPONSE);
-        if (!dryRun) { 
-            at.encodeAuthResp(response, false);
-            response.addAttribute(AccountConstants.E_LIFETIME, at.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);
-         }
         return response;
     }
 
-    protected void setPasswordAndPurgeAuthTokens(Provisioning prov, Account acct, String newPassword, boolean dryRun) throws ServiceException {
-        // set new password
-    	    if (dryRun) {
-    	    		prov.resetPassword(acct, newPassword, dryRun);
-    	    } else {
-    	    		prov.setPassword(acct, newPassword);
-    	    }
-        // purge old auth tokens to invalidate existing sessions
-        acct.purgeAuthTokens();
-    }
+	protected void setPasswordAndPurgeAuthTokens(Provisioning prov, Account acct, String newPassword, 
+	        boolean dryRun) throws ServiceException {
+	    if (dryRun) {
+	        prov.resetPassword(acct, newPassword, dryRun);
+	    } else {
+	        // set new password
+	        prov.setPassword(acct, newPassword, true);
+	        // purge old auth tokens to invalidate existing sessions
+	        acct.purgeAuthTokens();
+	    }
+	}
 
     protected void checkPasswordStrength(Provisioning prov, Account acct, String newPassword) throws ServiceException {
         prov.checkPasswordStrength(acct, newPassword);

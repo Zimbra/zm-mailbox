@@ -949,12 +949,11 @@ public final class MockProvisioning extends Provisioning {
     public void changePassword(Account acct, String currentPassword, String newPassword,
         boolean dryRun) throws ServiceException {
         // TODO Auto-generated method stub
-
     }
 
-	@Override
-	public void resetPassword(Account acct, String newPassword, boolean dryRun) throws ServiceException {
-		// TODO Auto-generated method stub
-	}
+    @Override
+    public void resetPassword(Account acct, String newPassword, boolean dryRun) throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
 
 }
