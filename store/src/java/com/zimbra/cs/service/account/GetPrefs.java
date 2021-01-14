@@ -89,6 +89,12 @@ public class GetPrefs extends AccountDocumentHandler  {
                 // Fixup for time zone id.  Always use canonical (Olson ZoneInfo) ID.
                 if (key.equals(Provisioning.A_zimbraPrefTimeZoneId))
                     value = TZIDMapper.canonicalize((String) value);
+                // ZCS-10113
+                if (key.equals(Provisioning.A_zimbraPrefImapEnabled) && !acct.isImapEnabled())
+                    continue;
+                if (key.equals(Provisioning.A_zimbraPrefPop3Enabled) && !acct.isPop3Enabled())
+                    continue;
+
                 prefs.addKeyValuePair(key, (String) value, AccountConstants.E_PREF, AccountConstants.A_NAME);
             }
         }

@@ -176,6 +176,7 @@
     <a n="zimbraImapEnabled"/>
     <a n="zimbraImapEnabled"/>
     <a n="zimbraPop3Enabled"/>
+    <a n="zimbraFeatureWebClientEnabled"/>
     <a n="zimbraFeatureReadReceiptsEnabled"/>
     <a n="zimbraFeatureMailEnabled"/>
     <a n="zimbraFeatureContactsEnabled"/>
@@ -218,6 +219,7 @@
     <a n="zimbraImapEnabled"/>
     <a n="zimbraImapEnabled"/>
     <a n="zimbraPop3Enabled"/>
+    <a n="zimbraFeatureWebClientEnabled"/>
     <a n="zimbraFeatureReadReceiptsEnabled"/>
     <a n="zimbraFeatureMailEnabled"/>
     <a n="zimbraFeatureContactsEnabled"/>
@@ -372,6 +374,8 @@
     <a n="zimbraPrefReadReceiptsToAddress"/>
     <a n="zimbraPrefAdminConsoleWarnOnExit" />
     <a n="zimbraPrefMandatorySpellCheckEnabled"/>
+    <a n="zimbraPrefImapEnabled"/>
+    <a n="zimbraPrefPop3Enabled"/>
   </attrs>
 </right>
 <right name="viewAdminConsoleAccountsPreferencesTab" type="getAttrs" targetType="account">
@@ -450,6 +454,8 @@
     <a n="zimbraPrefReadReceiptsToAddress"/>
     <a n="zimbraPrefAdminConsoleWarnOnExit" />
     <a n="zimbraPrefMandatorySpellCheckEnabled"/>
+    <a n="zimbraPrefImapEnabled"/>
+    <a n="zimbraPrefPop3Enabled"/>
   </attrs>
 </right>
 <right name="adminConsoleAccountsPreferencesTabRights" type="combo">
@@ -1008,6 +1014,7 @@
       <a n="zimbraFeatureFlaggingEnabled"/>
       <a n="zimbraPop3Enabled"/>
       <a n="zimbraImapEnabled"/>
+      <a n="zimbraFeatureWebClientEnabled"/>
       <a n="zimbraFeaturePop3DataSourceEnabled"/>
       <a n="zimbraFeatureImapDataSourceEnabled"/>
       <a n="zimbraFeatureMailForwardingEnabled"/>
@@ -1081,6 +1088,7 @@
       <a n="zimbraFeatureFlaggingEnabled"/>
       <a n="zimbraPop3Enabled"/>
       <a n="zimbraImapEnabled"/>
+      <a n="zimbraFeatureWebClientEnabled"/>
       <a n="zimbraFeaturePop3DataSourceEnabled"/>
       <a n="zimbraFeatureImapDataSourceEnabled"/>
       <a n="zimbraFeatureMailForwardingEnabled"/>
@@ -1213,6 +1221,8 @@
       <!-- <a n="zimbraPrefCalendarToasterEnabled"/> -->
       <!-- <a n="zimbraPrefCalendarShowPastDueReminders"/> -->
       <!-- <a n="zimbraPrefAppleIcalDelegationEnabled"/> -->
+      <a n="zimbraPrefImapEnabled"/>
+      <a n="zimbraPrefPop3Enabled"/>
     </attrs>
   </right>
   <right name="setAdminConsoleCOSPreferencesTab" type="setAttrs" targetType="cos">
@@ -1289,6 +1299,8 @@
       <!-- <a n="zimbraPrefCalendarToasterEnabled"/> -->
       <!-- <a n="zimbraPrefCalendarShowPastDueReminders"/> -->
       <!-- <a n="zimbraPrefAppleIcalDelegationEnabled"/> -->
+      <a n="zimbraPrefImapEnabled"/>
+      <a n="zimbraPrefPop3Enabled"/>
     </attrs>
   </right>
   <right name="adminConsoleCOSPreferencesTabRights" type="combo">
