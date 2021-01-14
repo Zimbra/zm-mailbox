@@ -873,11 +873,6 @@ public class SoapProvisioning extends Provisioning {
         invokeJaxb(new ChangePasswordRequest(jaxbAcct, currentPassword, newPassword, dryRun));
     }
 
-    public void resetPassword(Account acct, String newPassword, boolean dryRun) throws ServiceException {
-    		SetPasswordResponse resp =
-                invokeJaxb(new SetPasswordRequest(acct.getId(), newPassword, dryRun));
-    }
-
     @Override
     public Account createAccount(String emailAddress, String password, Map<String, Object> attrs)
         throws ServiceException
@@ -3224,4 +3219,10 @@ public class SoapProvisioning extends Provisioning {
         GetDistributionListMembersResponse resp = invokeJaxb(new GetDistributionListMembersRequest(0, 0, group.getName()));
         return resp.getHABGroupMembers();
     }
+
+    @Override
+    public void resetPassword(Account acct, String newPassword, boolean dryRun) throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
+
 }

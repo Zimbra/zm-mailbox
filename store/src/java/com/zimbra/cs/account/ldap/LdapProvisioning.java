@@ -6228,6 +6228,11 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             (ch >=123 && ch <= 126);  // { | } ~
     }
 
+    public void resetPassword(Account acct, String newPassword, boolean dryRun) 
+            throws ServiceException {
+        setPassword(acct, newPassword, true, dryRun);
+    }
+
     void setPassword(Account acct, String newPassword, boolean enforcePolicy, boolean dryRun)
     throws ServiceException {
 
@@ -6252,7 +6257,6 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         }
 
         Map<String, Object> attrs = new HashMap<String, Object>();
-
         int enforceHistory = acct.getIntAttr(Provisioning.A_zimbraPasswordEnforceHistory, 0);
         if (enforceHistory > 0) {
             String[] newHistory = updateHistory(
@@ -6261,8 +6265,9 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                     enforceHistory);
             attrs.put(Provisioning.A_zimbraPasswordHistory, newHistory);
 
-            if (enforcePolicy || dryRun)
+            if (enforcePolicy || dryRun) {
                 checkHistory(newPassword, newHistory);
+            }
         }
 
         if (dryRun) {
@@ -11543,10 +11548,5 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             LdapClient.closeContext(zlc);
         }
     }
-
-	@Override
-	public void resetPassword(Account acct, String newPassword, boolean dryRun) throws ServiceException {
-		// TODO Auto-generated method stub	
-	}
 
 }
