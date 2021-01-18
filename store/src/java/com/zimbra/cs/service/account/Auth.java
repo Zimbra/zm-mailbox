@@ -444,7 +444,13 @@ public class Auth extends AccountDocumentHandler {
             }
         }
 
-        AuthToken at = expires ==  0 ? AuthProvider.getAuthToken(acct, tokenType) : AuthProvider.getAuthToken(acct, expires, tokenType);
+        AuthToken at = null;
+        if (recoveryCode != null) {
+            at = AuthProvider.getAuthToken(acct, Usage.RESET_PASSWORD, tokenType);
+        } else {
+            at = expires == 0 ? AuthProvider.getAuthToken(acct, tokenType) : AuthProvider.getAuthToken(acct, expires, tokenType);
+        }
+
         if (registerTrustedDevice && (trustedToken == null || trustedToken.isExpired())) {
             //generate a new trusted device token if there is no existing one or if the current one is no longer valid
             Map<String, Object> attrs = getTrustedDeviceAttrs(zsc, newDeviceId == null? deviceId: newDeviceId);
@@ -512,18 +518,14 @@ public class Auth extends AccountDocumentHandler {
             response.addAttribute(AccountConstants.E_LIFETIME, authToken.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);
             authToken.encodeAuthResp(response, false);
             if (recoveryCode != null) {
-                setResetPasswordCookie(context, requestElement, authToken);
+                HttpServletRequest httpReq = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
+                HttpServletResponse httpResp = (HttpServletResponse) context.get(SoapServlet.SERVLET_RESPONSE);
+                boolean rememberMe = requestElement.getAttributeBool(AccountConstants.A_PERSIST_AUTH_TOKEN_COOKIE, false);
+                authToken.encode(httpReq, httpResp, false, ZimbraCookie.secureCookie(httpReq), rememberMe);
             }
             response.addUniqueElement(AccountConstants.E_TRUSTED_DEVICES_ENABLED).setText(account.isFeatureTrustedDevicesEnabled() ? "true" : "false");
             return response;
         }
-    }
-
-    private void setResetPasswordCookie(Map<String, Object> context, Element requestElement, AuthToken authToken) throws ServiceException {
-        HttpServletRequest httpReq = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
-        HttpServletResponse httpResp = (HttpServletResponse) context.get(SoapServlet.SERVLET_RESPONSE);
-        boolean rememberMe = requestElement.getAttributeBool(AccountConstants.A_PERSIST_AUTH_TOKEN_COOKIE, false);
-        authToken.encode(httpReq, httpResp, false, ZimbraCookie.secureCookie(httpReq), rememberMe);
     }
 
     private Element doResponse(Element request, AuthToken at, ZimbraSoapContext zsc,

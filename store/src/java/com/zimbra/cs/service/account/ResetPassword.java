@@ -17,6 +17,7 @@
 
 package com.zimbra.cs.service.account;
 
+import java.util.Locale;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
@@ -27,11 +28,12 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthToken.Usage;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.AuthProvider;
+import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.util.ResetPasswordUtil;
+import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.account.message.ResetPasswordRequest;
@@ -56,7 +58,6 @@ public class ResetPassword extends AccountDocumentHandler {
         }
 
         boolean dryRun = request.getAttributeBool(AccountConstants.E_DRYRUN, false);
-
         Account acct = at.getAccount();
         boolean locked = acct.getBooleanAttr(Provisioning.A_zimbraPasswordLocked, false);
         if (locked) {
@@ -82,15 +83,6 @@ public class ResetPassword extends AccountDocumentHandler {
 
         setPasswordAndPurgeAuthTokens(prov, acct, newPassword, dryRun);
 
-        if (dryRun) {
-            String secstr = "mbox,attrs,zimlets,props";
-            String rightsStr = null;
-            Account account = getRequestedAccount(zsc);
-            Mailbox mbox = getRequestedMailbox(zsc);
-            OperationContext octxt = getOperationContext(zsc, context);
-            return GetInfo.getInfo(secstr, rightsStr, zsc, account, mbox, octxt, context);
-        }
-
         Element response = zsc.createElement(AccountConstants.E_RESET_PASSWORD_RESPONSE);
         acct.unsetResetPasswordRecoveryCode();
         return response;
@@ -115,5 +107,34 @@ public class ResetPassword extends AccountDocumentHandler {
     @Override
     public boolean needsAuth(Map<String, Object> context) {
         return false;
+    }
+
+    private Element getInfo(ZimbraSoapContext zsc, Account acct) throws ServiceException {
+        Mailbox mbox = getRequestedMailbox(zsc);
+        Element response = zsc.createElement(AccountConstants.GET_INFO_RESPONSE);
+        response.addAttribute(AccountConstants.E_VERSION, BuildInfo.FULL_VERSION, Element.Disposition.CONTENT);
+        response.addAttribute(AccountConstants.E_ID, acct.getId(), Element.Disposition.CONTENT);
+        response.addAttribute(AccountConstants.E_NAME, acct.getUnicodeName(), Element.Disposition.CONTENT);
+        // "mbox,attrs,zimlets,props" sections are being set
+        // for mailbox
+        if (Provisioning.onLocalServer(acct)) {
+            response.addAttribute(AccountConstants.E_REST, UserServlet.getRestUrl(acct), Element.Disposition.CONTENT);
+            response.addAttribute(AccountConstants.E_QUOTA_USED, mbox.getSize(), Element.Disposition.CONTENT);
+            response.addAttribute(AccountConstants.E_IS_TRACKING_IMAP, mbox.isTrackingImap(), Element.Disposition.CONTENT);
+        }
+
+        GetInfo.doCos(acct, response);
+
+        Map<String, Object> attrMap = acct.getUnicodeAttrs();
+        Locale locale = Provisioning.getInstance().getLocale(acct);
+
+        Element attrs = response.addUniqueElement(AccountConstants.E_ATTRS);
+        GetInfo.doAttrs(acct, locale.toString(), attrs, attrMap);
+
+        GetInfo.setZimletAndPropsInfo(response, acct);
+
+        GetAccountInfo.addUrls(response, acct);
+
+        return response;
     }
 }

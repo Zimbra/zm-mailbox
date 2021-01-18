@@ -53,10 +53,10 @@ import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
 import com.zimbra.cs.mailbox.util.TypedIdList;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.admin.AdminAccessControl;
@@ -112,14 +112,8 @@ public class GetInfo extends AccountDocumentHandler  {
             throw ServiceException.PERM_DENIED("can not access account");
         }
 
-        String secstr = request.getAttribute(AccountConstants.A_SECTIONS, null);
-        String rightsStr = request.getAttribute(AccountConstants.A_RIGHTS, null);
-        return getInfo(secstr, rightsStr, zsc, account, mbox, octxt, context);
-    }
-
-    public static Element getInfo(String secstr, String rightsStr, ZimbraSoapContext zsc, Account account,
-            Mailbox mbox, OperationContext octxt, Map<String, Object> context) throws ServiceException {
         // figure out the subset of data the caller wants (default to all data)
+        String secstr = request.getAttribute(AccountConstants.A_SECTIONS, null);
         Set<Section> sections;
         if (!StringUtil.isNullOrEmpty(secstr)) {
             sections = EnumSet.noneOf(Section.class);
@@ -130,6 +124,7 @@ public class GetInfo extends AccountDocumentHandler  {
             sections = EnumSet.allOf(Section.class);
         }
 
+        String rightsStr = request.getAttribute(AccountConstants.A_RIGHTS, null);
         Set<Right> rights = null;
         if (!StringUtil.isNullOrEmpty(rightsStr)) {
             RightManager rightMgr = RightManager.getInstance();
@@ -418,7 +413,7 @@ public class GetInfo extends AccountDocumentHandler  {
         }
     }
 
-    protected static void doChildAccounts(Element response, Account acct, AuthToken authToken) throws ServiceException {
+    protected void doChildAccounts(Element response, Account acct, AuthToken authToken) throws ServiceException {
         String[] childAccounts = acct.getMultiAttr(Provisioning.A_zimbraChildAccount);
         String[] visibleChildAccounts = acct.getMultiAttr(Provisioning.A_zimbraPrefChildVisibleAccount);
 
@@ -451,7 +446,7 @@ public class GetInfo extends AccountDocumentHandler  {
         }
     }
 
-    protected static Element encodeChildAccount(Element parent, Account child, boolean isVisible) {
+    protected Element encodeChildAccount(Element parent, Account child, boolean isVisible) {
         Element elem = parent.addElement(AccountConstants.E_CHILD_ACCOUNT);
         elem.addAttribute(AccountConstants.A_ID, child.getId());
         elem.addAttribute(AccountConstants.A_NAME, child.getUnicodeName());
@@ -467,7 +462,16 @@ public class GetInfo extends AccountDocumentHandler  {
         return elem;
     }
 
-    private static void doDiscoverRights(Element eRights, Account account, Set<Right> rights) throws ServiceException {
+    private void doDiscoverRights(Element eRights, Account account, Set<Right> rights) throws ServiceException {
         DiscoverRights.discoverRights(account, rights, eRights, false);
+    }
+
+    public static void setZimletAndPropsInfo(Element response, Account acct) {
+
+        Element zimlets = response.addUniqueElement(AccountConstants.E_ZIMLETS);
+        doZimlets(zimlets, acct);
+
+        Element props = response.addUniqueElement(AccountConstants.E_PROPERTIES);
+        doProperties(props, acct);
     }
 }
