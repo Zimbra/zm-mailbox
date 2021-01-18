@@ -321,7 +321,8 @@ public class GetInfo extends AccountDocumentHandler  {
                 value = config.isAttachmentsBlocked() || acct.isAttachmentsBlocked() ?
                         ProvisioningConstants.TRUE : ProvisioningConstants.FALSE;
             } else if (Provisioning.A_zimbraFeatureZulipChatEnabled.equals(key)) {
-                value = Boolean.toString(AccountUtil.isZulipChatEnabled(acct));
+                value = AccountUtil.isZulipChatEnabled(acct) ?
+                        ProvisioningConstants.TRUE : ProvisioningConstants.FALSE;
             } else {
                 value = attrsMap.get(key);
 
