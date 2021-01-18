@@ -27,6 +27,8 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthToken.Usage;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.util.ResetPasswordUtil;
@@ -79,6 +81,15 @@ public class ResetPassword extends AccountDocumentHandler {
         }
 
         setPasswordAndPurgeAuthTokens(prov, acct, newPassword, dryRun);
+
+        if (dryRun) {
+            String secstr = "mbox,attrs,zimlets,props";
+            String rightsStr = null;
+            Account account = getRequestedAccount(zsc);
+            Mailbox mbox = getRequestedMailbox(zsc);
+            OperationContext octxt = getOperationContext(zsc, context);
+            return GetInfo.getInfo(secstr, rightsStr, zsc, account, mbox, octxt, context);
+        }
 
         Element response = zsc.createElement(AccountConstants.E_RESET_PASSWORD_RESPONSE);
         acct.unsetResetPasswordRecoveryCode();

@@ -112,8 +112,14 @@ public class GetInfo extends AccountDocumentHandler  {
             throw ServiceException.PERM_DENIED("can not access account");
         }
 
-        // figure out the subset of data the caller wants (default to all data)
         String secstr = request.getAttribute(AccountConstants.A_SECTIONS, null);
+        String rightsStr = request.getAttribute(AccountConstants.A_RIGHTS, null);
+        return getInfo(secstr, rightsStr, zsc, account, mbox, octxt, context);
+    }
+
+    public static Element getInfo(String secstr, String rightsStr, ZimbraSoapContext zsc, Account account,
+            Mailbox mbox, OperationContext octxt, Map<String, Object> context) throws ServiceException {
+        // figure out the subset of data the caller wants (default to all data)
         Set<Section> sections;
         if (!StringUtil.isNullOrEmpty(secstr)) {
             sections = EnumSet.noneOf(Section.class);
@@ -124,7 +130,6 @@ public class GetInfo extends AccountDocumentHandler  {
             sections = EnumSet.allOf(Section.class);
         }
 
-        String rightsStr = request.getAttribute(AccountConstants.A_RIGHTS, null);
         Set<Right> rights = null;
         if (!StringUtil.isNullOrEmpty(rightsStr)) {
             RightManager rightMgr = RightManager.getInstance();
@@ -413,7 +418,7 @@ public class GetInfo extends AccountDocumentHandler  {
         }
     }
 
-    protected void doChildAccounts(Element response, Account acct, AuthToken authToken) throws ServiceException {
+    protected static void doChildAccounts(Element response, Account acct, AuthToken authToken) throws ServiceException {
         String[] childAccounts = acct.getMultiAttr(Provisioning.A_zimbraChildAccount);
         String[] visibleChildAccounts = acct.getMultiAttr(Provisioning.A_zimbraPrefChildVisibleAccount);
 
@@ -446,7 +451,7 @@ public class GetInfo extends AccountDocumentHandler  {
         }
     }
 
-    protected Element encodeChildAccount(Element parent, Account child, boolean isVisible) {
+    protected static Element encodeChildAccount(Element parent, Account child, boolean isVisible) {
         Element elem = parent.addElement(AccountConstants.E_CHILD_ACCOUNT);
         elem.addAttribute(AccountConstants.A_ID, child.getId());
         elem.addAttribute(AccountConstants.A_NAME, child.getUnicodeName());
@@ -462,7 +467,7 @@ public class GetInfo extends AccountDocumentHandler  {
         return elem;
     }
 
-    private void doDiscoverRights(Element eRights, Account account, Set<Right> rights) throws ServiceException {
+    private static void doDiscoverRights(Element eRights, Account account, Set<Right> rights) throws ServiceException {
         DiscoverRights.discoverRights(account, rights, eRights, false);
     }
 }
