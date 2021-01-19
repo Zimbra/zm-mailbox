@@ -260,10 +260,10 @@ public class GetInfo extends AccountDocumentHandler  {
             extension.handle(zsc, response);
         }
 
-        // we do not have any ldap attrs to define whether powerpaste service is installed and running
-        // so check if powerpaste service is installed and running by checking the installed directory and connectivity
-        // if yes return powerpasteEnabled = true else return powerpasteEnabled = false
-        response.addAttribute("powerpasteEnabled", checkIfPowerpasteInstalled(), Element.Disposition.CONTENT);
+        // we do not have any ldap attrs to define whether pasteitcleaned service is installed and running
+        // so check if pasteitcleaned service is installed and running by checking the installed directory and connectivity
+        // if yes return pasteitcleanedEnabled = true else return pasteitcleanedEnabled = false
+        response.addAttribute("pasteitcleanedEnabled", checkIfPasteitcleanedInstalled(), Element.Disposition.CONTENT);
 
         return response;
     }
@@ -473,9 +473,9 @@ public class GetInfo extends AccountDocumentHandler  {
         DiscoverRights.discoverRights(account, rights, eRights, false);
     }
 
-    private boolean checkIfPowerpasteInstalled() {
+    private boolean checkIfPasteitcleanedInstalled() {
         String libLocation = "/opt/zimbra/common/lib/pasteitcleaned";
-        String extLoc = "/opt/zimbra/lib/ext/powerpaste-ext/zm-powerpaste-extension.jar";
+        String extLoc = "/opt/zimbra/lib/ext/pasteitcleaned/zimbra-pasteitcleaned.jar";
         HttpURLConnection connection = null;
         try {
             File lib = new File(libLocation);
@@ -488,7 +488,7 @@ public class GetInfo extends AccountDocumentHandler  {
                     return true;
                 }
             }
-            ZimbraLog.account.debug("powerpaste service is not installed or running");
+            ZimbraLog.account.debug("pasteitcleaned service is not installed or running");
             return false;
         } catch(InvalidPathException | SecurityException | IOException ex) {
             ZimbraLog.account.info("exception occurred : %s", ex.getMessage());
