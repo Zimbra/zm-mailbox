@@ -30,7 +30,8 @@ public class RenameDomain extends AdminDocumentHandler {
             throw AccountServiceException.NO_SUCH_DOMAIN(req.getDomain().getKey());
         }
         if (domain.isShutdown())
-            throw ServiceException.PERM_DENIED("can not access domain, domain is in " + domain.getDomainStatusAsString() + " status");
+            throw ServiceException
+                    .PERM_DENIED("can not access domain, domain is in " + domain.getDomainStatusAsString() + " status");
         LdapProv lp = LdapProvisioning.getInst();
         lp.renameDomain(domain.getId(), req.getName());
         DomainListener.invokeOnRenameDomain(domain, req.getName());
