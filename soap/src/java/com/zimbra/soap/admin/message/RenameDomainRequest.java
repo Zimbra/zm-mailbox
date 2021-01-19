@@ -13,20 +13,20 @@ import com.zimbra.soap.type.AttributeSelectorImpl;
  * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Rename a domain
  */
-@XmlRootElement(name = AdminConstants.E_RENAME_DOMAIN_REQUEST)
+@XmlRootElement(name=AdminConstants.E_RENAME_DOMAIN_REQUEST)
 public class RenameDomainRequest extends AttributeSelectorImpl {
 
     /**
      * @zm-api-field-tag new-domain-name
      * @zm-api-field-description Name of new domain
      */
-    @XmlAttribute(name = AdminConstants.E_NAME, required = true)
+    @XmlAttribute(name=AdminConstants.E_NAME, required=true)
     private String name;
 
     /**
      * @zm-api-field-description Domain
      */
-    @XmlElement(name = AdminConstants.E_DOMAIN, required = true)
+    @XmlElement(name=AdminConstants.E_DOMAIN, required=true)
     private DomainSelector domain;
 
     public RenameDomainRequest() {
@@ -41,15 +41,13 @@ public class RenameDomainRequest extends AttributeSelectorImpl {
         this.domain = domain;
     }
 
-    public DomainSelector getDomain() {
-        return domain;
-    }
-
+    public DomainSelector getDomain() { return domain; }
+    
     void setName(String name) {
         this.name = name;
     }
-
-    public String getName() {
+    
+    public String  getName() {
         return this.name;
     }
 

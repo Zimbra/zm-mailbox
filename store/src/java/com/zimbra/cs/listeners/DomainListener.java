@@ -16,15 +16,15 @@
  */
 package com.zimbra.cs.listeners;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.listeners.ListenerUtil.Priority;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 
 public abstract class DomainListener {
 
@@ -69,14 +69,14 @@ public abstract class DomainListener {
         }
     }
 
-    public static void invokeOnRenameDomain(final Domain domain, final String newName) {
-        ZimbraLog.account.debug("Domain %s renamed to '%s'", domain.getName(), newName);
+    public static void invokeOnRenameDomain(final Domain domain, final String oldName, final String newName) {
+        ZimbraLog.account.debug("Domain %s renamed from '%s' to '%s'", domain.getName(), oldName, newName);
 
         final Map<String, DomainListenerEntry> sortedListeners = ListenerUtil.sortByPriority(mListeners);
         for (Map.Entry<String, DomainListenerEntry> listener : sortedListeners.entrySet()) {
             final DomainListenerEntry listenerInstance = listener.getValue();
             try {
-                listenerInstance.getDomainListener().onDomainRename(domain, newName);
+                listenerInstance.getDomainListener().onDomainRename(domain, oldName, newName);
             } catch (ServiceException ex) {
                 ZimbraLog.store.warn("Unable to invoke domain rename listener: " + listenerInstance.getListenerName(),
                         ex);
@@ -84,23 +84,8 @@ public abstract class DomainListener {
         }
     }
 
-    public static void invokeOnDeleteDomain(final Domain domain) {
-        ZimbraLog.account.debug("Domain %s is getting deleted ", domain.getName());
-        final Map<String, DomainListenerEntry> sortedListeners = ListenerUtil.sortByPriority(mListeners);
-        for (Map.Entry<String, DomainListenerEntry> listener : sortedListeners.entrySet()) {
-            final DomainListenerEntry listenerInstance = listener.getValue();
-            try {
-                listenerInstance.getDomainListener().onDomainDelete(domain);
-            } catch (ServiceException ex) {
-                ZimbraLog.store.warn("Unable to invoke domain delete listener: " + listenerInstance.getListenerName(),
-                        ex);
-            }
-        }
-    }
-
     public abstract void onDomainCreation(final Domain newDomain) throws ServiceException;
 
-    public abstract void onDomainRename(final Domain domain, final String newName) throws ServiceException;
-
-    public abstract void onDomainDelete(final Domain domain) throws ServiceException;
+    public abstract void onDomainRename(final Domain domain, final String oldName, final String newName)
+            throws ServiceException;
 }
