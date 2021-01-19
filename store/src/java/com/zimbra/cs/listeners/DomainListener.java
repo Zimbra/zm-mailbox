@@ -1,18 +1,17 @@
 /*
- * ***** BEGIN LICENSE BLOCK *****
- * Zimbra Collaboration Suite Server
- * Copyright (C) 2019, 2020 Synacor, Inc.
+ * ***** BEGIN LICENSE BLOCK ***** Zimbra Collaboration Suite Server Copyright
+ * (C) 2019, 2020 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
- * the terms of the GNU General Public License as published by the Free Software Foundation,
- * version 2 of the License.
+ * the terms of the GNU General Public License as published by the Free Software
+ * Foundation, version 2 of the License.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
- * You should have received a copy of the GNU General Public License along with this program.
- * If not, see <https://www.gnu.org/licenses/>.
- * ***** END LICENSE BLOCK *****
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * details. You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>. *****
+ * END LICENSE BLOCK *****
  */
 package com.zimbra.cs.listeners;
 
@@ -69,14 +68,14 @@ public abstract class DomainListener {
         }
     }
 
-    public static void invokeOnRenameDomain(final Domain domain, final String oldName, final String newName) {
-        ZimbraLog.account.debug("Domain %s renamed from '%s' to '%s'", domain.getName(), oldName, newName);
+    public static void invokeOnRenameDomain(final Domain domain, final String newName) {
+        ZimbraLog.account.debug("Domain %s renamed to '%s'", domain.getName(), newName);
 
         final Map<String, DomainListenerEntry> sortedListeners = ListenerUtil.sortByPriority(mListeners);
         for (Map.Entry<String, DomainListenerEntry> listener : sortedListeners.entrySet()) {
             final DomainListenerEntry listenerInstance = listener.getValue();
             try {
-                listenerInstance.getDomainListener().onDomainRename(domain, oldName, newName);
+                listenerInstance.getDomainListener().onDomainRename(domain, newName);
             } catch (ServiceException ex) {
                 ZimbraLog.store.warn("Unable to invoke domain rename listener: " + listenerInstance.getListenerName(),
                         ex);
@@ -86,7 +85,6 @@ public abstract class DomainListener {
 
     public static void invokeOnDeleteDomain(final Domain domain) {
         ZimbraLog.account.debug("Domain %s is getting deleted ", domain.getName());
-        ZimbraLog.extensions.trace("###########  invokeOnDeleteDomain  ###########");
         final Map<String, DomainListenerEntry> sortedListeners = ListenerUtil.sortByPriority(mListeners);
         for (Map.Entry<String, DomainListenerEntry> listener : sortedListeners.entrySet()) {
             final DomainListenerEntry listenerInstance = listener.getValue();
@@ -101,9 +99,7 @@ public abstract class DomainListener {
 
     public abstract void onDomainCreation(final Domain newDomain) throws ServiceException;
 
-    public abstract void onDomainRename(final Domain domain, final String oldName, final String newName)
-            throws ServiceException;
+    public abstract void onDomainRename(final Domain domain, final String newName) throws ServiceException;
 
-    public abstract void onDomainDelete(final Domain domain)
-            throws ServiceException;
+    public abstract void onDomainDelete(final Domain domain) throws ServiceException;
 }
