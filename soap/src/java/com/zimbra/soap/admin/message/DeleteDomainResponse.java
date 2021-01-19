@@ -1,3 +1,4 @@
+
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
@@ -26,7 +27,7 @@ import javax.xml.bind.annotation.XmlType;
 import com.zimbra.common.soap.AdminConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name=AdminConstants.E_DELETE_DOMAIN_RESPONSE)
+@XmlRootElement(name = AdminConstants.E_DELETE_DOMAIN_RESPONSE)
 @XmlType(propOrder = {})
 public class DeleteDomainResponse {
 

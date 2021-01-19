@@ -26,14 +26,14 @@ import com.zimbra.common.soap.AdminConstants;
  * @zm-api-command-admin-auth-required true
  * @zm-api-command-description Delete a domain
  */
-@XmlRootElement(name=AdminConstants.E_DELETE_DOMAIN_REQUEST)
+@XmlRootElement(name = AdminConstants.E_DELETE_DOMAIN_REQUEST)
 public class DeleteDomainRequest {
 
     /**
      * @zm-api-field-tag value-of-zimbra-id
      * @zm-api-field-description Zimbra ID for domain
      */
-    @XmlAttribute(name=AdminConstants.E_ID, required=true)
+    @XmlAttribute(name = AdminConstants.E_ID, required = true)
     private final String id;
 
     /**
@@ -44,7 +44,11 @@ public class DeleteDomainRequest {
         this(null);
     }
 
-    public DeleteDomainRequest(String id) { this.id = id; }
+    public DeleteDomainRequest(String id) {
+        this.id = id;
+    }
 
-    public String getId() { return id; }
+    public String getId() {
+        return id;
+    }
 }
