@@ -244,6 +244,14 @@ public abstract class AccountListener {
         }
     }
 
+    public static void invokeOnAdminPrivilegesUpdate(Account acct) throws ServiceException {
+        Map<String, AccountListenerEntry> sortedListeners = ListenerUtil.sortByPriority(mListeners);
+        for (Map.Entry<String, AccountListenerEntry> listener : sortedListeners.entrySet()) {
+            AccountListenerEntry listenerInstance = listener.getValue();
+            listenerInstance.getAccountListener().onAdminPrivilegesUpdate(acct);
+        }
+    }
+
     public static void invokeOnException(ServiceException exceptionThrown) {
         ZimbraLog.account.debug("Error occurred during account creation: %s",
             exceptionThrown.getMessage());
@@ -317,6 +325,15 @@ public abstract class AccountListener {
      * @param SERVICE_ACCOUNT_NUMBER new SAN to be updated
      */
     public abstract void onSANChange(Account acct, String serviceAcctNumber) throws ServiceException;
+
+    /**
+     * called on change of admin privileges on account update request
+     *
+     * @param USER_ACCOUNT user account whose admin privileges have been modified
+     */
+    public void onAdminPrivilegesUpdate(Account acct) throws ServiceException {
+        // TODO: Empty body for existing implementation, override if needed.
+    };
 
     /**
      * called when CreateAccount throws ServiceException.
