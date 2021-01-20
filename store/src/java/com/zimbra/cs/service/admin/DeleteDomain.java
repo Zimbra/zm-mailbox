@@ -35,6 +35,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.cs.listeners.DomainListener;
 
 /**
  * @author schemers
@@ -51,22 +52,23 @@ public class DeleteDomain extends AdminDocumentHandler {
         Domain domain = prov.get(Key.DomainBy.id, id);
         if (domain == null)
             throw AccountServiceException.NO_SUCH_DOMAIN(id);
-        
+
         if (domain.isShutdown())
             throw ServiceException.PERM_DENIED("can not access domain, domain is in " + domain.getDomainStatusAsString() + " status");
-        
+
         checkRight(zsc, context, domain, Admin.R_deleteDomain);
-        
+
         String name = domain.getName();
-        
+
         prov.deleteDomain(id);
 
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(new String[] {"cmd", "DeleteDomain","name", name, "id", id }));
 
-	    Element response = zsc.createElement(AdminConstants.DELETE_DOMAIN_RESPONSE);
-	    return response;
-	}
-	
+        Element response = zsc.createElement(AdminConstants.DELETE_DOMAIN_RESPONSE);
+        DomainListener.invokeOnDeleteDomain(domain);
+        return response;
+    }
+
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_deleteDomain);
