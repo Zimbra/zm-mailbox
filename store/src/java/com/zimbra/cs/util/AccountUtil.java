@@ -44,6 +44,7 @@ import org.apache.commons.lang.RandomStringUtils;
 
 import com.sun.mail.smtp.SMTPMessage;
 import com.zimbra.common.account.Key;
+import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.account.ZAttrProvisioning.AccountStatus;
@@ -926,6 +927,29 @@ public class AccountUtil {
             }
         }
         return null;
+    }
+
+    public static boolean isZulipChatEnabled(Account account) {
+        boolean isEnabled = false;
+        if (account == null) {
+            return isEnabled;
+        }
+        isEnabled = account.isFeatureZulipChatEnabled();
+
+        if (isEnabled) {
+            Provisioning prov = Provisioning.getInstance();
+            try {
+                Domain domain = prov.getDomainById(account.getDomainId());
+                if (domain != null && !Boolean.valueOf(domain.getAttr(Provisioning.A_zimbraFeatureZulipChatEnabled, ProvisioningConstants.TRUE))) {
+                    ZimbraLog.account.debug("Zulip: chat is disabled on domain, won't be available for user '%s'", account.getName());
+                    isEnabled = false;
+                }
+            } catch (ServiceException e) {
+                ZimbraLog.account.debug(String.format("Zulip: failed to get zulip chat enabled status on domain '%s' for user '%s'. "
+                        + "User account level zulip chat enabled status will be used.", account.getDomainName(), account.getName()), e);
+            }
+        }
+        return isEnabled;
     }
 }
 
