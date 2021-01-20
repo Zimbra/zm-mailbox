@@ -704,7 +704,7 @@ public class SoapEngine {
             if (e instanceof OutOfMemoryError) {
                 Zimbra.halt("handler exception", e);
             }
-            ZimbraLog.soap.warnQuietly("SoapEngine: handler exception", e);
+            ZimbraLog.soap.warn("SoapEngine: handler exception", e);
 
             // XXX: if the session was new, do we want to delete it?
         } finally {
