@@ -422,6 +422,7 @@ public class AccountConstants {
     public static final String E_SUBSCRIPTION = "sub";
     public static final String E_IS_TRACKING_IMAP = "isTrackingIMAP";
     public static final String E_DRYRUN = "dryRun";
+    public static final String E_GET_PASSWORD_RULES = "getPasswordRules";
 
     public static final String A_ACTIVE = "active";
     public static final String A_ATTRS = "attrs";
