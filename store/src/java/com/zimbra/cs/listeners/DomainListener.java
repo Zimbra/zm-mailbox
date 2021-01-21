@@ -69,14 +69,14 @@ public abstract class DomainListener {
         }
     }
 
-    public static void invokeOnRenameDomain(final Domain domain, final String newName) {
+    public static void invokeOnRenameDomain(final Domain domain, final String oldName, final String newName) {
         ZimbraLog.account.debug("Domain %s renamed to '%s'", domain.getName(), newName);
 
         final Map<String, DomainListenerEntry> sortedListeners = ListenerUtil.sortByPriority(mListeners);
         for (Map.Entry<String, DomainListenerEntry> listener : sortedListeners.entrySet()) {
             final DomainListenerEntry listenerInstance = listener.getValue();
             try {
-                listenerInstance.getDomainListener().onDomainRename(domain, newName);
+                listenerInstance.getDomainListener().onDomainRename(domain, oldName, newName);
             } catch (ServiceException ex) {
                 ZimbraLog.store.warn("Unable to invoke domain rename listener: " + listenerInstance.getListenerName(),
                         ex);
@@ -100,8 +100,8 @@ public abstract class DomainListener {
 
     public abstract void onDomainCreation(final Domain newDomain) throws ServiceException;
 
-    public abstract void onDomainRename(final Domain domain, final String newName)
+    public abstract void onDomainRename(final Domain domain, final String oldName, final String newName)
             throws ServiceException;
 
-    public abstract void onDomainDelete(final Domain domain) throws ServiceException;
+    public void onDomainDelete(final Domain domain) throws ServiceException{  };
 }
