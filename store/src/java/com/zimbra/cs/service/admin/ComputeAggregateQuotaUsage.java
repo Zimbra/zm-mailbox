@@ -44,6 +44,9 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.accesscontrol.AccessControlUtil;
+import com.zimbra.cs.db.DbMailbox;
+import com.zimbra.cs.db.DbPool;
+import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -57,76 +60,103 @@ public class ComputeAggregateQuotaUsage extends AdminDocumentHandler {
             throw ServiceException.PERM_DENIED("only global admin is allowed");
         }
 
+        Element response = zsc.createElement(AdminConstants.COMPUTE_AGGR_QUOTA_USAGE_RESPONSE);
         Map<String, Long> domainAggrQuotaUsed = new HashMap<String, Long>();
 
+        // Aggregate total across all domains?
+        boolean singleResult = request.getAttributeBool(AdminConstants.A_SINGLE_RESULT, false);
+
         Provisioning prov = Provisioning.getInstance();
-        List<Server> servers = prov.getAllMailClientServers();
-        // make number of threads in pool configurable?
-        ExecutorService executor = Executors.newFixedThreadPool(LC.compute_aggregate_quota_threads.intValue());
-        List<Future<Map<String, Long>>> futures = new LinkedList<Future<Map<String, Long>>>();
-        for (final Server server : servers) {
-            futures.add(executor.submit(new Callable<Map<String, Long>>() {
-
-                @Override
-                public Map<String, Long> call() throws Exception {
-                    ZimbraLog.misc.debug("Invoking %s on server %s",
-                            AdminConstants.E_GET_AGGR_QUOTA_USAGE_ON_SERVER_REQUEST, server.getName());
-
-                    Element req = new Element.XMLElement(AdminConstants.GET_AGGR_QUOTA_USAGE_ON_SERVER_REQUEST);
-                    String adminUrl = URLUtil.getAdminURL(server, AdminConstants.ADMIN_SERVICE_URI);
-                    SoapHttpTransport mTransport = new SoapHttpTransport(adminUrl);
-                    mTransport.setAuthToken(zsc.getRawAuthToken());
-                    Element resp;
-                    try {
-                        resp = mTransport.invoke(req);
-                    } catch (Exception e) {
-                        throw new Exception("Error in invoking " +
-                                AdminConstants.E_GET_AGGR_QUOTA_USAGE_ON_SERVER_REQUEST + " on server " +
-                                server.getName(), e);
-                    }
-                    List<Element> domainElts = resp.getPathElementList(new String[] { AdminConstants.E_DOMAIN });
-                    Map<String, Long> retMap = new HashMap<String, Long>();
-                    for (Element domainElt : domainElts) {
-                        retMap.put(domainElt.getAttribute(AdminConstants.A_ID),
-                                domainElt.getAttributeLong(AdminConstants.A_QUOTA_USED));
-                    }
-                    return retMap;
-                }
-            }));
-        }
-        shutdownAndAwaitTermination(executor);
-
-        // Aggregate all results
-        for (Future<Map<String, Long>> future : futures) {
-            Map<String, Long> result;
+        final List<Domain> domains = prov.getAllDomains();
+        if (singleResult || domains.size() == 1) {
+            // Short-circuit LDAP lookups, etc. Just calculate sum of size_checkpoint of all mailboxes from DB.
+            DbConnection conn = null;
             try {
-                result = future.get();
-            } catch (Exception e) {
-                throw ServiceException.FAILURE("Error in getting task execution result", e);
+                final Domain domain = domains.get(0);
+                conn = DbPool.getConnection();
+                final Long aggregateQuotaUsage = DbMailbox.getAllMailboxSizes(conn);
+
+                final Element domainElt = response.addNonUniqueElement(AdminConstants.E_DOMAIN);
+                if (singleResult) {
+                    domainElt.addAttribute(AdminConstants.A_NAME, "ALL");
+                } else{
+                    domainElt.addAttribute(AdminConstants.A_NAME, domain.getName());
+                    domainElt.addAttribute(AdminConstants.A_ID, domain.getId());
+                }
+                domainElt.addAttribute(AdminConstants.A_QUOTA_USED, aggregateQuotaUsage);
+            } finally {
+                DbPool.quietClose(conn);
             }
-            for (String domainId : result.keySet()) {
-                Long delta = result.get(domainId);
-                Long aggr = domainAggrQuotaUsed.get(domainId);
-                domainAggrQuotaUsed.put(domainId, aggr == null ? delta : aggr + delta);
+        } else {
+            List<Server> servers = prov.getAllMailClientServers();
+            // make number of threads in pool configurable?
+            ExecutorService executor = Executors.newFixedThreadPool(LC.compute_aggregate_quota_threads.intValue());
+            List<Future<Map<String, Long>>> futures = new LinkedList<Future<Map<String, Long>>>();
+            for (final Server server : servers) {
+                futures.add(executor.submit(new Callable<Map<String, Long>>() {
+
+                    @Override
+                    public Map<String, Long> call() throws Exception {
+                        ZimbraLog.misc.debug("Invoking %s on server %s",
+                                AdminConstants.E_GET_AGGR_QUOTA_USAGE_ON_SERVER_REQUEST, server.getName());
+
+                        Element req = new Element.XMLElement(AdminConstants.GET_AGGR_QUOTA_USAGE_ON_SERVER_REQUEST);
+                        String adminUrl = URLUtil.getAdminURL(server, AdminConstants.ADMIN_SERVICE_URI);
+                        SoapHttpTransport mTransport = new SoapHttpTransport(adminUrl);
+                        mTransport.setAuthToken(zsc.getRawAuthToken());
+                        Element resp;
+                        try {
+                            resp = mTransport.invoke(req);
+                        } catch (Exception e) {
+                            throw new Exception(
+                                    "Error in invoking " + AdminConstants.E_GET_AGGR_QUOTA_USAGE_ON_SERVER_REQUEST
+                                            + " on server " + server.getName(),
+                                    e);
+                        }
+                        List<Element> domainElts = resp.getPathElementList(new String[] { AdminConstants.E_DOMAIN });
+                        Map<String, Long> retMap = new HashMap<String, Long>();
+                        for (Element domainElt : domainElts) {
+                            retMap.put(domainElt.getAttribute(AdminConstants.A_ID),
+                                    domainElt.getAttributeLong(AdminConstants.A_QUOTA_USED));
+                        }
+                        return retMap;
+                    }
+                }));
             }
+            shutdownAndAwaitTermination(executor);
+
+            // Aggregate all results
+            for (Future<Map<String, Long>> future : futures) {
+                Map<String, Long> result;
+                try {
+                    result = future.get();
+                } catch (Exception e) {
+                    throw ServiceException.FAILURE("Error in getting task execution result", e);
+                }
+                for (String domainId : result.keySet()) {
+                    Long delta = result.get(domainId);
+                    Long aggr = domainAggrQuotaUsed.get(domainId);
+                    domainAggrQuotaUsed.put(domainId, aggr == null ? delta : aggr + delta);
+                }
+            }
+
+            ExecutorService sendWarnMsgExecutor = Executors.newSingleThreadExecutor();
+            for (String domainId : domainAggrQuotaUsed.keySet()) {
+                Domain domain = prov.getDomainById(domainId);
+                Long used = domainAggrQuotaUsed.get(domainId);
+                domain.setAggregateQuotaLastUsage(used);
+                Long max = domain.getDomainAggregateQuota();
+                if (max != 0 && used * 100 / max > domain.getDomainAggregateQuotaWarnPercent()) {
+                    sendWarnMsg(domain, sendWarnMsgExecutor);
+                }
+                Element domainElt = response.addNonUniqueElement(AdminConstants.E_DOMAIN);
+                domainElt.addAttribute(AdminConstants.A_NAME, domain.getName());
+                domainElt.addAttribute(AdminConstants.A_ID, domainId);
+                domainElt.addAttribute(AdminConstants.A_QUOTA_USED, used);
+            }
+            sendWarnMsgExecutor.shutdown();
         }
 
-        Element response = zsc.createElement(AdminConstants.COMPUTE_AGGR_QUOTA_USAGE_RESPONSE);
-        ExecutorService sendWarnMsgExecutor = Executors.newSingleThreadExecutor();
-        for (String domainId : domainAggrQuotaUsed.keySet()) {
-            Domain domain = prov.getDomainById(domainId);
-            Long used = domainAggrQuotaUsed.get(domainId);
-            domain.setAggregateQuotaLastUsage(used);
-            Long max = domain.getDomainAggregateQuota();
-            if (max != 0 && used * 100 / max > domain.getDomainAggregateQuotaWarnPercent()) {
-                sendWarnMsg(domain, sendWarnMsgExecutor);
-            }
-            Element domainElt = response.addElement(AdminConstants.E_DOMAIN);
-            domainElt.addAttribute(AdminConstants.A_NAME, domain.getName());
-            domainElt.addAttribute(AdminConstants.A_ID, domainId);
-            domainElt.addAttribute(AdminConstants.A_QUOTA_USED, used);
-        }
-        sendWarnMsgExecutor.shutdown();
         return response;
     }
 
@@ -156,15 +186,14 @@ public class ComputeAggregateQuotaUsage extends AdminDocumentHandler {
                     out.setSubject(L10nUtil.getMessage(L10nUtil.MsgKey.domainAggrQuotaWarnMsgSubject, locale));
 
                     out.setText(L10nUtil.getMessage(L10nUtil.MsgKey.domainAggrQuotaWarnMsgBody, locale,
-                            domain.getName(),
-                            domain.getAggregateQuotaLastUsage() / 1024.0 / 1024.0,
+                            domain.getName(), domain.getAggregateQuotaLastUsage() / 1024.0 / 1024.0,
                             domain.getDomainAggregateQuotaWarnPercent(),
                             domain.getDomainAggregateQuota() / 1024.0 / 1024.0));
 
                     Transport.send(out);
                 } catch (Exception e) {
-                    ZimbraLog.misc.warn(
-                            "Error in sending aggregate quota warning msg for domain %s", domain.getName(), e);
+                    ZimbraLog.misc.warn("Error in sending aggregate quota warning msg for domain %s", domain.getName(),
+                            e);
                 }
             }
         });
@@ -176,8 +205,9 @@ public class ComputeAggregateQuotaUsage extends AdminDocumentHandler {
             // Wait for existing tasks to terminate
             // make wait timeout configurable?
             if (!executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS)) {
-                throw ServiceException.FAILURE("Time out waiting for " +
-                        AdminConstants.E_GET_AGGR_QUOTA_USAGE_ON_SERVER_REQUEST + " result", null);
+                throw ServiceException.FAILURE(
+                        "Time out waiting for " + AdminConstants.E_GET_AGGR_QUOTA_USAGE_ON_SERVER_REQUEST + " result",
+                        null);
             }
         } catch (InterruptedException ie) {
             executor.shutdownNow();

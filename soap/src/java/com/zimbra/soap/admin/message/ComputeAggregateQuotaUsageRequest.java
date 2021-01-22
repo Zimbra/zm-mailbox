@@ -17,9 +17,11 @@
 
 package com.zimbra.soap.admin.message;
 
-import com.zimbra.common.soap.AdminConstants;
-
+import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
+
+import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 /**
  * @zm-api-command-auth-required true
@@ -35,6 +37,14 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement(name=AdminConstants.E_COMPUTE_AGGR_QUOTA_USAGE_REQUEST)
 public class ComputeAggregateQuotaUsageRequest {
 
+    /**
+     * @zm-api-field-description If <b>1 (true)</b> then return single value containing quota usage across all domains.
+     */
+    @XmlAttribute(name=AdminConstants.A_SINGLE_RESULT /* dynamic */, required=false)
+    private ZmBoolean singleResult;
+
+
     public ComputeAggregateQuotaUsageRequest() {
     }
+
 }
