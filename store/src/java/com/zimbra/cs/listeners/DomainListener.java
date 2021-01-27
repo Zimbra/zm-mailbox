@@ -103,5 +103,7 @@ public abstract class DomainListener {
     public abstract void onDomainRename(final Domain domain, final String oldName, final String newName)
             throws ServiceException;
 
-    public void onDomainDelete(final Domain domain) throws ServiceException{  };
+    public void onDomainDelete(final Domain domain) throws ServiceException{
+        // TODO: Override method in extended class in order to implement functionality if needed
+    }
 }
