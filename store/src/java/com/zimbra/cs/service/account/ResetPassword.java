@@ -19,6 +19,9 @@ package com.zimbra.cs.service.account;
 
 import java.util.Map;
 
+import javax.servlet.http.HttpServletResponse;
+
+import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
@@ -31,6 +34,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.util.ResetPasswordUtil;
 import com.zimbra.soap.JaxbUtil;
+import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.account.message.ResetPasswordRequest;
 
@@ -54,7 +58,14 @@ public class ResetPassword extends AccountDocumentHandler {
         }
         Account acct = at.getAccount();
         boolean getPasswordRules = request.getAttributeBool(AccountConstants.E_GET_PASSWORD_RULES, false);
+        boolean cancelResetPassword = request.getAttributeBool(AccountConstants.E_CANCEL_RESET_PASSWORD, false);
         boolean dryRun = request.getAttributeBool(AccountConstants.E_DRYRUN, false);
+        if (cancelResetPassword) {
+            HttpServletResponse httpResp = (HttpServletResponse) context.get(SoapServlet.SERVLET_RESPONSE);
+            ZAuthToken.clearCookies(httpResp);
+            return response;
+        }
+
         if (getPasswordRules) {
             Element attrs = response.addUniqueElement(AccountConstants.E_ATTRS);
             ToXML.encodePasswordRules(attrs, acct);
