@@ -26,14 +26,21 @@ import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.zimbra.client.ZMailbox;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ShareLocator;
+import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.soap.mail.message.GetFolderRequest;
+import com.zimbra.soap.mail.message.GetFolderResponse;
+import com.zimbra.soap.mail.type.Folder;
+import com.zimbra.soap.mail.type.Mountpoint;
 
 public class SharedFileServletContext extends UserServletContext {
 
@@ -84,6 +91,9 @@ public class SharedFileServletContext extends UserServletContext {
             ShareLocator shloc = Provisioning.getInstance().getShareLocatorById(shareUuid);
             if (shloc != null) {
                 accountId = shloc.getShareOwnerAccountId();
+            } else {
+                accountId = findOwnerAccountId(authToken, shareUuid);
+                ZimbraLog.doc.info(" Account Found by Traversing the Folders : %s",accountId);
             }
         } else {
             accountId = epath.getContainerUuid();
@@ -95,6 +105,58 @@ public class SharedFileServletContext extends UserServletContext {
         targetAccount = Provisioning.getInstance().get(AccountBy.id, accountId, authToken);
         fromDumpster = false;  // fetching dumpster'd file not supported
         ZimbraLog.doc.debug("Looking for item :%s, for account:%s", itemUuid, accountId);
+    }
+
+    public static String findOwnerAccountId(AuthToken authToken, String folderUUID) throws ServiceException {
+        AuthToken newAuthToken = AuthToken.getCsrfUnsecuredAuthToken(authToken);
+        Account targetAccount = newAuthToken.getAccount();
+        ZMailbox.Options zoptions = new ZMailbox.Options(newAuthToken.toZAuthToken(), AccountUtil.getSoapUri(targetAccount));
+        zoptions.setTargetAccount(newAuthToken.getAccountId());
+        zoptions.setTargetAccountBy(AccountBy.id);
+        zoptions.setNoSession(true);
+        ZMailbox zmbx = ZMailbox.getMailbox(zoptions);
+
+        GetFolderRequest req = new GetFolderRequest();
+        req.setViewConstraint("null");
+        req.setTraverseMountpoints(true);
+        GetFolderResponse res = (GetFolderResponse) zmbx.invokeJaxb(req);
+        ZimbraLog.doc.info(" GetFolderResponse : %s", res);
+        ZimbraLog.doc.info(" Calling findOwnerAccountId to get accountId : Auth accID : %s , shareUuid : %s",
+                authToken.getAccountId(), folderUUID);
+        return searchAndFindAccIdForFolderUuid(res.getFolder(), authToken.getAccountId(), folderUUID);
+    }
+
+    public static String searchAndFindAccIdForFolderUuid(Folder root, String presentOwnerAccId, String folderUUID)
+            throws ServiceException {
+        if (root != null) {
+            String result = null;
+            String tempOwnerAccId = null;
+            // shared with folders
+            if (root instanceof Mountpoint) {
+                Mountpoint f = (Mountpoint) root;
+                tempOwnerAccId = f.getOwnerAccountId();
+                if (root.getFolderUuid().equals(folderUUID)) {
+                    return tempOwnerAccId;
+                }
+                for (Folder subFolders : root.getSubfolders()) {
+                    result = searchAndFindAccIdForFolderUuid(subFolders, tempOwnerAccId, folderUUID);
+                    if (result != null) {
+                        return result;
+                    }
+                }
+            } else if (root.getFolderUuid().equals(folderUUID)) {
+                return presentOwnerAccId;
+            }
+
+            for (Folder subFolders : root.getSubfolders()) {
+                result = searchAndFindAccIdForFolderUuid(subFolders, presentOwnerAccId, folderUUID);
+                if (result != null) {
+                    return result;
+                }
+
+            }
+        }
+        return null;
     }
 
     public static class EncodedId {
