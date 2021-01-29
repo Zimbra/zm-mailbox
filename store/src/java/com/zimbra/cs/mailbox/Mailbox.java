@@ -1810,6 +1810,7 @@ public class Mailbox implements MailboxStore {
     private void clearFolderCache() throws ServiceException {
         try(FolderTagCacheLock lock = ftCacheReadLock.lock()) {
             mFolderCache = null;
+            folderTagSnapshot.invalidate();
         }
         // Remove from memcached cache
         try {
