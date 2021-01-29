@@ -90,6 +90,7 @@ public final class SyncConstants {
     public static final String A_SHOWITEM = "showItems";
     public static final String A_OFFSET = "offset";
     public static final String A_LIMIT = "limit";
+    public static final String A_USEAND = "useAnd";
 
     // Sync command response statuses
     // Reference - https://msdn.microsoft.com/en-us/library/gg675457(v=exchg.80).aspx
@@ -128,5 +129,4 @@ public final class SyncConstants {
     public static final Integer ITEMOPERATIONS_STATUS_CREDENTIALS_REQUIRED = 18;
     public static final Integer ITEMOPERATIONS_STATUS_ELEMENT_MISSING = 155;
     public static final Integer ITEMOPERATIONS_STATUS_ACTION_NOT_SUPPORTED = 156;
-    
 }

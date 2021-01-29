@@ -20,12 +20,13 @@ package com.zimbra.soap.admin.message;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.SyncAdminConstants;
 import com.zimbra.common.soap.SyncConstants;
 import com.zimbra.soap.admin.type.DeviceId;
 import com.zimbra.soap.type.AccountSelector;
+import com.zimbra.common.soap.Element;
 
 /**
  * @zm-api-command-network-edition
@@ -100,6 +101,13 @@ public class GetDeviceStatusRequest {
     private String deviceSyncVersion;
 
     /**
+     * @zm-api-field-tag useAnd
+     * @zm-api-field-description filter devices in and manner or not
+     */
+    @XmlAttribute(name=SyncConstants.A_USEAND /* useAnd */, required=false)
+    private String useAnd = "true";
+
+    /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
@@ -115,6 +123,11 @@ public class GetDeviceStatusRequest {
         this(0, 0, account, deviceId, status, null, null, null, null);
     }
 
+    public GetDeviceStatusRequest(int offset, int limit, AccountSelector account, DeviceId deviceId, Byte status, String deviceName,
+            String deviceType, String deviceLastUsed, String deviceSyncVersion) {
+        this(offset, limit, account, deviceId, status, deviceName, deviceType, deviceLastUsed, deviceSyncVersion, "true");
+    }
+
     /**
      * @param account
      * @param device
@@ -123,9 +136,10 @@ public class GetDeviceStatusRequest {
      * @param deviceType
      * @param deviceLastUsed
      * @param deviceSyncVersion
+     * @param useAnd
      */
     public GetDeviceStatusRequest(int offset, int limit, AccountSelector account, DeviceId deviceId, Byte status, String deviceName,
-            String deviceType, String deviceLastUsed, String deviceSyncVersion) {
+            String deviceType, String deviceLastUsed, String deviceSyncVersion, String useAnd) {
         this.offset = offset;
         this.limit = limit;
         this.account = account;
@@ -135,6 +149,7 @@ public class GetDeviceStatusRequest {
         this.deviceType = deviceType;
         this.deviceLastUsed = deviceLastUsed;
         this.deviceSyncVersion = deviceSyncVersion;
+        this.useAnd = useAnd;
     }
 
     public int getOffset() {
@@ -203,6 +218,10 @@ public class GetDeviceStatusRequest {
 
     public String getDeviceSyncVersion() {
         return deviceSyncVersion;
+    }
+
+    public Boolean getUseAnd() throws ServiceException{
+        return Element.parseBool(SyncConstants.A_USEAND, useAnd);
     }
 
     public void setDeviceSyncVersion(String deviceSyncVersion) {
