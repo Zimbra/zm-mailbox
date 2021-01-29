@@ -47,7 +47,6 @@ public class GetDocumentShareURL extends MailDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
         OperationContext octxt = getOperationContext(zsc, context);
-        ZimbraLog.doc.info(" ***** Inside GetDocumentShareURL : account id of caller ---> %s",mbox.getAccountId());
         Element itemElem = request.getElement(MailConstants.E_ITEM);
         ItemId iid = new ItemId(itemElem.getAttribute(MailConstants.A_ID), zsc);
         Document doc = mbox.getDocumentById(octxt, iid.getId());
@@ -59,18 +58,14 @@ public class GetDocumentShareURL extends MailDocumentHandler {
     }
 
     private String getPublicShareURL(Document doc) throws ServiceException {
-        ZimbraLog.doc.info(" ***** Inside GetDocumentShareURL getPublicShareURL : Document ---> %s",doc.toString());
         Account account = doc.getAccount();
         Folder share = doc.getShare();
-     // if folder is shared , find the ownerAccountId for the Folder
+        // if folder is shared , find the ownerAccountId for the Folder
         String ownerAccountId = null;
         if (share != null) {
-            ZimbraLog.doc.info(" ***** Doc is shared *** ");
             ownerAccountId = share.getOwnerAccountId();
-            ZimbraLog.doc.info(" ***** Doc is shared : owner id is ---> %s",ownerAccountId);
         }
         String path = "/service" + SharedFileServlet.getSharedFileURLPath(doc.getUuid(), share != null ? ownerAccountId : account.getId(), null);
-//        String path = "/service" + SharedFileServlet.getSharedFileURLPath(doc.getUuid(), account.getId(), share != null ? share.getUuid() : null);
         return URLUtil.getPublicURLForDomain(account.getServer(), Provisioning.getInstance().getDomain(account), path, true);
     }
 }

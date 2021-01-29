@@ -173,6 +173,7 @@ public class SharedFileServletContext extends UserServletContext {
         private String containerUuid;
         private boolean isShare;  // true = container is a share, false = container is an account
         //In the new version v2 , the url will contain the owner accountId in all cases
+        // isShare will always be false
         private String version;
 
         public EncodedId(String itemUuid, String containerUuid, boolean isShare, String version) {
