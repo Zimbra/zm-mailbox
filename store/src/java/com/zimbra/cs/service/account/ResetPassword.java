@@ -62,7 +62,6 @@ public class ResetPassword extends AccountDocumentHandler {
         }
         ResetPasswordUtil.validateFeatureResetPasswordStatus(acct);
         String newPassword = req.getPassword();
-        checkPasswordStrength(prov, acct, newPassword);
 
         // proxy if required
         if (!Provisioning.onLocalServer(acct)) {
@@ -88,14 +87,14 @@ public class ResetPassword extends AccountDocumentHandler {
 
     protected void setPasswordAndPurgeAuthTokens(Provisioning prov, Account acct, 
             String newPassword, boolean dryRun) throws ServiceException {
-        // set new password
         if (dryRun) {
             prov.resetPassword(acct, newPassword, dryRun);
         } else {
+            // set new password
             prov.setPassword(acct, newPassword);
-        }
-        // purge old auth tokens to invalidate existing sessions
-        acct.purgeAuthTokens();
+            // purge old auth tokens to invalidate existing sessions
+            acct.purgeAuthTokens();
+        }  
     }
 
     protected void checkPasswordStrength(Provisioning prov, Account acct, String newPassword) throws ServiceException {

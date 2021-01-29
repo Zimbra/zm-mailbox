@@ -728,9 +728,9 @@ public class SoapProvisioning extends Provisioning {
         invokeJaxb(new ChangePasswordRequest(jaxbAcct, currentPassword, newPassword, dryRun));
     }
 
+    @Override
     public void resetPassword(Account acct, String newPassword, boolean dryRun) throws ServiceException {
-        SetPasswordResponse resp =
-                invokeJaxb(new SetPasswordRequest(acct.getId(), newPassword, dryRun));
+        throw ServiceException.UNSUPPORTED();
     }
 
     @Override

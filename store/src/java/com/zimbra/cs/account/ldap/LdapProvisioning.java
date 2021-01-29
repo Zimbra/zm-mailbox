@@ -6266,6 +6266,11 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             (ch >=123 && ch <= 126);  // { | } ~
     }
 
+    public void resetPassword(Account acct, String newPassword, boolean dryRun) 
+            throws ServiceException {
+        setPassword(acct, newPassword, true, dryRun);
+    }
+
     void setPassword(Account acct, String newPassword, boolean enforcePolicy, boolean dryRun)
     throws ServiceException {
 
@@ -11584,11 +11589,6 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         } finally {
             LdapClient.closeContext(zlc);
         }
-    }
-
-    @Override
-    public void resetPassword(Account acct, String newPassword, boolean dryRun) throws ServiceException {
-        // TODO Auto-generated method stub 
     }
 
 }
