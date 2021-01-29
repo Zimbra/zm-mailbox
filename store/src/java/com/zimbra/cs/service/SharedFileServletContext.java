@@ -228,8 +228,6 @@ public class SharedFileServletContext extends UserServletContext {
                 isShare = dis.readBoolean();
                 //in the old URLS version param won't be there, hence it will throw an excepton
                 try {
-                    //NOTE : there can only be a single UTF string in DataInputStream
-                    //if we do dis.readUTF() again, it will keep waiting
                     version = dis.readUTF();
                 } catch (EOFException e) {
                     //not throwing an exception as it is a valid scenario
