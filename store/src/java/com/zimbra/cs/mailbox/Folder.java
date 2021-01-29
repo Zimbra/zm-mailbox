@@ -44,11 +44,13 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ShareLocator;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbTag;
 import com.zimbra.cs.imap.ImapSession;
-import com.zimbra.cs.mailbox.MailItemState.AccessMode;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
+import com.zimbra.cs.mailbox.MailItemState.AccessMode;
 import com.zimbra.cs.mailbox.cache.SharedState;
 import com.zimbra.cs.mailbox.cache.SharedStateAccessor;
 import com.zimbra.cs.session.PendingModifications.Change;
@@ -1701,6 +1703,37 @@ public class Folder extends MailItem implements FolderStore, SharedState {
      */
     boolean isShare() {
         return getEffectiveACL() != null && !getEffectiveACL().isEmpty();
+    }
+
+    /**
+     * Return the Folder's ownerAccountId when the Folder is Shared
+     * @return
+     * @throws ServiceException
+     */
+     public String getOwnerAccountId() throws ServiceException {
+        Folder f = this;
+        String ownerAccountId = null;
+
+        while (f != null) {
+            ZimbraLog.doc.debug("Searching in LDAP for Folder "+ f.toString());
+            ShareLocator shloc = null;
+            try {
+                shloc = Provisioning.getInstance().getShareLocatorById(f.getUuid());
+            } catch (ServiceException e) {
+                ZimbraLog.doc.error(e);
+            } catch (Exception e) {
+                ZimbraLog.doc.error("Error while fetching ShareLocator. ", e);
+            }
+            if (shloc != null) {
+                ownerAccountId = shloc.getShareOwnerAccountId();
+                ZimbraLog.doc.debug("ownerAccountId :: %s ,found in LDAP for Folder ::: %s",ownerAccountId, f.toString());
+                break;
+            } else if (f.getId() == Mailbox.ID_FOLDER_ROOT) { // must check because the ROOT folder is self-parented
+                break;
+            }
+            f = f.getFolder();
+        }
+        return ownerAccountId;
     }
 
     /**
