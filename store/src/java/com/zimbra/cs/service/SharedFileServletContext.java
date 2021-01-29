@@ -34,6 +34,7 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ShareLocator;
 import com.zimbra.cs.util.AccountUtil;
@@ -87,13 +88,22 @@ public class SharedFileServletContext extends UserServletContext {
 
         String accountId = null;
         if (epath.isShare()) {
+            ZimbraLog.doc.info(" ****** Inside isShare: ");
             shareUuid = epath.getContainerUuid();
             ShareLocator shloc = Provisioning.getInstance().getShareLocatorById(shareUuid);
+            ZimbraLog.doc.info(" ****** Inside isShare: ShareLocator called");
             if (shloc != null) {
                 accountId = shloc.getShareOwnerAccountId();
             } else {
-                accountId = findOwnerAccountId(authToken, shareUuid);
-                ZimbraLog.doc.info(" Account Found by Traversing the Folders : %s",accountId);
+                ZimbraLog.doc.info(" ****** Inside isShare: Calling findOwnerAccountId");
+                AuthToken auth = null;
+                try {
+                    auth = AuthProvider.getAuthToken(req, false);
+                    accountId = findOwnerAccountId(auth, shareUuid);
+                    ZimbraLog.doc.info(" Account Found by Traversing the Folders : %s",accountId);
+                } catch (AuthTokenException e) {
+                    ZimbraLog.doc.warn(" Auth Token not found", e);
+                }
             }
         } else {
             accountId = epath.getContainerUuid();
@@ -108,22 +118,28 @@ public class SharedFileServletContext extends UserServletContext {
     }
 
     public static String findOwnerAccountId(AuthToken authToken, String folderUUID) throws ServiceException {
-        AuthToken newAuthToken = AuthToken.getCsrfUnsecuredAuthToken(authToken);
-        Account targetAccount = newAuthToken.getAccount();
-        ZMailbox.Options zoptions = new ZMailbox.Options(newAuthToken.toZAuthToken(), AccountUtil.getSoapUri(targetAccount));
-        zoptions.setTargetAccount(newAuthToken.getAccountId());
-        zoptions.setTargetAccountBy(AccountBy.id);
-        zoptions.setNoSession(true);
-        ZMailbox zmbx = ZMailbox.getMailbox(zoptions);
+        ZimbraLog.doc.info(" ****** Inside findOwnerAccountId****");
+        try {
+            AuthToken newAuthToken = AuthToken.getCsrfUnsecuredAuthToken(authToken);
+            Account targetAccount = newAuthToken.getAccount();
+            ZMailbox.Options zoptions = new ZMailbox.Options(newAuthToken.toZAuthToken(), AccountUtil.getSoapUri(targetAccount));
+            zoptions.setTargetAccount(newAuthToken.getAccountId());
+            zoptions.setTargetAccountBy(AccountBy.id);
+            zoptions.setNoSession(true);
+            ZMailbox zmbx = ZMailbox.getMailbox(zoptions);
 
-        GetFolderRequest req = new GetFolderRequest();
-        req.setViewConstraint("null");
-        req.setTraverseMountpoints(true);
-        GetFolderResponse res = (GetFolderResponse) zmbx.invokeJaxb(req);
-        ZimbraLog.doc.info(" GetFolderResponse : %s", res);
-        ZimbraLog.doc.info(" Calling findOwnerAccountId to get accountId : Auth accID : %s , shareUuid : %s",
-                authToken.getAccountId(), folderUUID);
-        return searchAndFindAccIdForFolderUuid(res.getFolder(), authToken.getAccountId(), folderUUID);
+            GetFolderRequest req = new GetFolderRequest();
+            req.setViewConstraint("null");
+            req.setTraverseMountpoints(true);
+            GetFolderResponse res = (GetFolderResponse) zmbx.invokeJaxb(req);
+            ZimbraLog.doc.info(" GetFolderResponse : %s", res);
+            ZimbraLog.doc.info(" Calling findOwnerAccountId to get accountId : Auth accID : %s , shareUuid : %s",
+                    authToken.getAccountId(), folderUUID);
+            return searchAndFindAccIdForFolderUuid(res.getFolder(), authToken.getAccountId(), folderUUID);
+        }catch (Exception e) {
+            ZimbraLog.doc.warn(" Error while finding owner account id.", e);
+        }
+        return null;
     }
 
     public static String searchAndFindAccIdForFolderUuid(Folder root, String presentOwnerAccId, String folderUUID)
