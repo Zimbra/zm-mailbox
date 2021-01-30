@@ -200,7 +200,7 @@ public class SharedFileServletContext extends UserServletContext {
                 dos.writeLong(uc.getMostSignificantBits());
                 dos.writeLong(uc.getLeastSignificantBits());
                 dos.writeBoolean(isShare);
-                dos.writeUTF("v2");
+                dos.writeUTF(SharedFileServlet.URL_VERSION);
             } catch (IOException e) {
                 throw ServiceException.FAILURE("can't encode", e);
             } catch (IllegalArgumentException e) {

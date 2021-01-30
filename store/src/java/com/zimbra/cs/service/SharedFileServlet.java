@@ -43,7 +43,7 @@ public class SharedFileServlet extends UserServlet {
 
     private static final String SERVLET_PATH = "/shf";
     private static final String DOC_EXCHANGE_FORWARD_URL_FOR_EDIT= "/extension/doc/";
-    private static final String URL_VERSION = "v2";
+    public static final String URL_VERSION = "v2";
 
     @Override
     public void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
