@@ -174,6 +174,7 @@ public class SharedFileServletContext extends UserServletContext {
         private boolean isShare;  // true = container is a share, false = container is an account
         //In the new version v2 , the url will contain the owner accountId in all cases
         // isShare will always be false
+        //version will be null for old URL
         private String version;
 
         public EncodedId(String itemUuid, String containerUuid, boolean isShare, String version) {
@@ -227,7 +228,7 @@ public class SharedFileServletContext extends UserServletContext {
                 lsb = dis.readLong();
                 container = new UUID(msb, lsb).toString();
                 isShare = dis.readBoolean();
-                //in the old URLS version param won't be there, hence it will throw an excepton
+                //in the old URL version param won't be there, hence it will throw an exception
                 try {
                     version = dis.readUTF();
                 } catch (EOFException e) {

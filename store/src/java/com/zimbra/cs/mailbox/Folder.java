@@ -1719,20 +1719,25 @@ public class Folder extends MailItem implements FolderStore, SharedState {
             ShareLocator shloc = null;
             try {
                 shloc = Provisioning.getInstance().getShareLocatorById(f.getUuid());
+                if (shloc != null) {
+                    ownerAccountId = shloc.getShareOwnerAccountId();
+                    ZimbraLog.doc.debug("ownerAccountId :: %s ,found in LDAP for Folder ::: %s",ownerAccountId, f.toString());
+                    break;
+                } else if (f.getId() == Mailbox.ID_FOLDER_ROOT) { // must check because the ROOT folder is self-parented
+                    break;
+                }
             } catch (ServiceException e) {
-                ZimbraLog.doc.error(e);
+                ZimbraLog.doc.warn(e);
             } catch (Exception e) {
-                ZimbraLog.doc.error("Error while fetching ShareLocator. ", e);
-            }
-            if (shloc != null) {
-                ownerAccountId = shloc.getShareOwnerAccountId();
-                ZimbraLog.doc.debug("ownerAccountId :: %s ,found in LDAP for Folder ::: %s",ownerAccountId, f.toString());
-                break;
-            } else if (f.getId() == Mailbox.ID_FOLDER_ROOT) { // must check because the ROOT folder is self-parented
-                break;
+                ZimbraLog.doc.warn("Error while fetching ShareLocator. ", e);
             }
             f = f.getFolder();
         }
+        if (StringUtil.isNullOrEmpty(ownerAccountId)) {
+            ZimbraLog.doc.debug("Owner Account Id is null." );
+            throw ServiceException.NOT_FOUND("Owner Account Id is missing.");
+        }
+
         return ownerAccountId;
     }
 
