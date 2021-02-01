@@ -87,7 +87,7 @@ public class SharedFileServletContext extends UserServletContext {
         }
 
         String accountId = null;
-        if (epath.isShare()) {
+        if (epath.isShare() && (epath.getVersion() == null || !epath.getVersion().equals(SharedFileServlet.URL_VERSION))) {
             shareUuid = epath.getContainerUuid();
             ShareLocator shloc = Provisioning.getInstance().getShareLocatorById(shareUuid);
             if (shloc != null) {

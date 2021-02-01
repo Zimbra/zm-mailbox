@@ -21,7 +21,6 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.httpclient.URLUtil;
@@ -60,12 +59,7 @@ public class GetDocumentShareURL extends MailDocumentHandler {
     private String getPublicShareURL(Document doc) throws ServiceException {
         Account account = doc.getAccount();
         Folder share = doc.getShare();
-        // if folder is shared , find the ownerAccountId for the Folder
-        String ownerAccountId = null;
-        if (share != null) {
-            ownerAccountId = share.getOwnerAccountId();
-        }
-        String path = "/service" + SharedFileServlet.getSharedFileURLPath(doc.getUuid(), share != null ? ownerAccountId : account.getId(), null);
+        String path = "/service" + SharedFileServlet.getSharedFileURLPath(doc.getUuid(), account.getId(), share != null ?  account.getId() : null);
         return URLUtil.getPublicURLForDomain(account.getServer(), Provisioning.getInstance().getDomain(account), path, true);
     }
 }
