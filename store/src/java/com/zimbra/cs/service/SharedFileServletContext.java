@@ -20,6 +20,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
@@ -86,7 +87,7 @@ public class SharedFileServletContext extends UserServletContext {
         }
 
         String accountId = null;
-        if (epath.isShare()) {
+        if (epath.isShare() && (epath.getVersion() == null || !epath.getVersion().equals(SharedFileServlet.URL_VERSION))) {
             shareUuid = epath.getContainerUuid();
             ShareLocator shloc = Provisioning.getInstance().getShareLocatorById(shareUuid);
             if (shloc != null) {
@@ -171,16 +172,22 @@ public class SharedFileServletContext extends UserServletContext {
         private String itemUuid;
         private String containerUuid;
         private boolean isShare;  // true = container is a share, false = container is an account
+        //In the new version v2 , the url will contain the owner accountId in all cases
+        // isShare will always be false
+        //version will be null for old URL
+        private String version;
 
-        public EncodedId(String itemUuid, String containerUuid, boolean isShare) {
+        public EncodedId(String itemUuid, String containerUuid, boolean isShare, String version) {
             this.itemUuid = itemUuid;
             this.containerUuid = containerUuid;
             this.isShare = isShare;
+            this.version = version;
         }
 
         public String getItemUuid() { return itemUuid; }
         public String getContainerUuid() { return containerUuid; }
         public boolean isShare() { return isShare; }
+        public String getVersion() { return version; }
 
         public String encode() throws ServiceException {
             ByteArrayOutputStream buffer = new ByteArrayOutputStream();
@@ -194,6 +201,7 @@ public class SharedFileServletContext extends UserServletContext {
                 dos.writeLong(uc.getMostSignificantBits());
                 dos.writeLong(uc.getLeastSignificantBits());
                 dos.writeBoolean(isShare);
+                dos.writeUTF(SharedFileServlet.URL_VERSION);
             } catch (IOException e) {
                 throw ServiceException.FAILURE("can't encode", e);
             } catch (IllegalArgumentException e) {
@@ -207,6 +215,7 @@ public class SharedFileServletContext extends UserServletContext {
         public static EncodedId decode(String encoded) throws ServiceException {
             String item, container;
             boolean isShare;
+            String version = null;
             byte[] buffer = ByteUtil.decodeFSSafeBase64(encoded);
             DataInputStream dis = null;
             try {
@@ -219,7 +228,15 @@ public class SharedFileServletContext extends UserServletContext {
                 lsb = dis.readLong();
                 container = new UUID(msb, lsb).toString();
                 isShare = dis.readBoolean();
-                return new EncodedId(item, container, isShare);
+                //in the old URL version param won't be there, hence it will throw an exception
+                try {
+                    version = dis.readUTF();
+                } catch (EOFException e) {
+                    //not throwing an exception as it is a valid scenario
+                    //wherein version is not present for old URLS
+                    ZimbraLog.doc.warn("Version Param missing. This is an old URL. %s",encoded);
+                }
+                return new EncodedId(item, container, isShare, version);
             } catch (IOException e) {
                 throw ServiceException.FAILURE("can't decode " + encoded, e);
             } finally {

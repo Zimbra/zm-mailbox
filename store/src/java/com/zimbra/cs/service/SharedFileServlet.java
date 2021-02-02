@@ -43,6 +43,7 @@ public class SharedFileServlet extends UserServlet {
 
     private static final String SERVLET_PATH = "/shf";
     private static final String DOC_EXCHANGE_FORWARD_URL_FOR_EDIT= "/extension/doc/";
+    public static final String URL_VERSION = "v2";
 
     @Override
     public void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -75,7 +76,7 @@ public class SharedFileServlet extends UserServlet {
             isShare = false;
             container = accountId;
         }
-        String encoded = new SharedFileServletContext.EncodedId(itemUuid, container, isShare).encode();
+        String encoded = new SharedFileServletContext.EncodedId(itemUuid, container, isShare, URL_VERSION).encode();
         return String.format("%s/%s", SERVLET_PATH, encoded);
     }
 
