@@ -107,7 +107,7 @@ public class ResetPassword extends AccountDocumentHandler {
             prov.resetPassword(acct, newPassword, dryRun);
         } else {
             // set new password
-            prov.setPassword(acct, newPassword);
+            prov.setPassword(acct, newPassword, true);
             // purge old auth tokens to invalidate existing sessions
             acct.purgeAuthTokens();
         }  
