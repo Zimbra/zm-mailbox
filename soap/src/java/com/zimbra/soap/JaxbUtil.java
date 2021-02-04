@@ -61,8 +61,8 @@ import com.zimbra.soap.mail.type.CreateItemNotification;
 import com.zimbra.soap.mail.type.DeleteItemNotification;
 import com.zimbra.soap.mail.type.ImapMessageInfo;
 import com.zimbra.soap.mail.type.ModifyNotification;
-import com.zimbra.soap.mail.type.PendingFolderModifications;
 import com.zimbra.soap.mail.type.ModifyNotification.ModifyItemNotification;
+import com.zimbra.soap.mail.type.PendingFolderModifications;
 import com.zimbra.soap.util.JaxbInfo;
 
 public final class JaxbUtil {
@@ -182,6 +182,8 @@ public final class JaxbUtil {
             com.zimbra.soap.account.message.RenewMobileGatewayAppTokenResponse.class,
             com.zimbra.soap.account.message.ResetPasswordRequest.class,
             com.zimbra.soap.account.message.ResetPasswordResponse.class,
+            com.zimbra.soap.admin.message.ResetAccountPasswordRequest.class,
+            com.zimbra.soap.admin.message.ResetAccountPasswordResponse.class,
             com.zimbra.soap.account.message.RevokeAppSpecificPasswordRequest.class,
             com.zimbra.soap.account.message.RevokeAppSpecificPasswordResponse.class,
             com.zimbra.soap.account.message.RevokeOAuthConsumerRequest.class,

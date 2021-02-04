@@ -60,6 +60,8 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(AdminConstants.RENAME_ACCOUNT_REQUEST, new RenameAccount());
         dispatcher.registerHandler(AdminConstants.CHANGE_PRIMARY_EMAIL_REQUEST, new ChangePrimaryEmail());
 
+        dispatcher.registerHandler(AdminConstants.RESET_ACCOUNT_PASSWORD_REQUEST, new ResetAccountPassword());
+
         dispatcher.registerHandler(AdminConstants.SEARCH_DIRECTORY_REQUEST, new SearchDirectory());
         dispatcher.registerHandler(AdminConstants.GET_ACCOUNT_MEMBERSHIP_REQUEST, new GetAccountMembership());
 

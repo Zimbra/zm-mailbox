@@ -33,6 +33,7 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthToken.TokenType;
@@ -854,6 +855,10 @@ public abstract class AuthProvider {
 
     public static Account validateAuthToken(Provisioning prov, AuthToken at,
             boolean addToLoggingContext, Usage usage) throws ServiceException {
+        if (at.getUsage() == Usage.RESET_PASSWORD && usage == Usage.AUTH) {
+            validateAuthTokenInternal(prov, at, addToLoggingContext, Usage.RESET_PASSWORD);
+            throw AccountServiceException.RESET_PASSWORD();
+        }
         try {
             return validateAuthTokenInternal(prov, at, addToLoggingContext, usage);
         } catch (ServiceException e) {
