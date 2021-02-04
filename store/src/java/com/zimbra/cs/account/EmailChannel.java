@@ -182,7 +182,7 @@ public class EmailChannel extends ChannelProvider {
         Locale locale = account.getLocale();
         String accountName = account.getName();
         String userDisplayName = account.getDisplayName() != null ? String.join("", " ", account.getDisplayName()) : "";
-        String subject = L10nUtil.getMessage(MsgKey.sendPasswordResetEmailSubject, locale);
+        String subject = L10nUtil.getMessage(MsgKey.sendPasswordResetEmailSubject, locale, userDisplayName);
         String charset = account.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, MimeConstants.P_CHARSET_UTF8);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE, d MMM yyyy HH:mm:ss z").withZone(ZoneId.of("GMT"));
         try {
