@@ -638,23 +638,13 @@ public class SendShareNotification extends MailDocumentHandler {
             ShareInfoData sid, String notes, Action action,
             Collection<String> internalRecipients, String externalRecipient, MailItem reqItem)
     throws ServiceException, MessagingException  {
-        // get owner mailbox and find the item.
-//        Mailbox ownerMbox = MailboxManager.getInstance().getMailboxByAccount(ownerAccount);
-//        ItemId iid = new ItemId(ownerAccount.getId(), sid.getItemId());
-//        MailItem item = ownerMbox.getItemById(octxt, iid.getId(), MailItem.Type.UNKNOWN);
-        ZimbraLog.account.info("--- INside sendNotificationEmail ----- : sid : %s ",sid);
-        ZimbraLog.account.info("--- INside sendNotificationEmail ----- : sid.getItemId() : %s , sid.getOwnerNotifName() : %s ",sid.getItemId(), sid.getOwnerNotifName());
-        ZimbraLog.account.info("--- INside sendNotificationEmail ----- : octxt.getAuthenticatedUser() : %s ",octxt.getAuthenticatedUser());
-//        ZimbraLog.account.info("--- INside sendNotificationEmail ----- : ownerMbox.getAccount : %s ",ownerMbox.getAccount());
-        ZimbraLog.account.info("--- INside sendNotificationEmail ----- : reqItem  : %s ",reqItem);
+        ZimbraLog.account.debug("Item being Shared : %s ",reqItem);
         MimeMessage mm = null;
         if (reqItem instanceof Document) {
-            ZimbraLog.account.info("Sending share notification to [ %s ] for document %s", sid.getGranteeName(), reqItem.getName());
+            ZimbraLog.account.debug("Sending share notification to [ %s ] for document %s", sid.getGranteeName(), reqItem.getName());
             mm = generateShareNotification(authAccount, ownerAccount, sid, notes, action,
                     internalRecipients, externalRecipient, true);
         } else {
-            ZimbraLog.account.info("--- INside sendNotificationEmail ** calling generateShareNotification ----- : authAccount : %s ",authAccount);
-            ZimbraLog.account.info("--- INside sendNotificationEmail ** calling generateShareNotification ----- : ownerAccount : %s ",ownerAccount);
             mm = generateShareNotification(authAccount, ownerAccount, sid, notes, action,
                     internalRecipients, externalRecipient);
         }
