@@ -202,7 +202,7 @@ public class SendMsg extends MailDocumentHandler {
                    savedMsgId = sendRecord.getSecond();
                } else if (state == SendState.PENDING) {
                    // tired of waiting for another thread to complete the send
-                   throw MailServiceException.SENDMSG_IN_PROGRESS_TRY_AGAIN("message send already in progress: " + sendUid);
+                   throw MailServiceException.SENDMSG_IN_PENDING_STATE_TRY_AGAIN("message send in pending state: " + sendUid);
                } else if (state == SendState.NEW) {
                    MimeMessageData mimeData = new MimeMessageData();
                    try {
@@ -292,7 +292,7 @@ public class SendMsg extends MailDocumentHandler {
             try {
                 mv.accept(mm);
             } catch (MessagingException e) {
-                throw ServiceException.FIXING_SENDMSG_FOR_SENTBY_PARSE_ERROR("Error while fixing up SendMsg for SENT-BY", e);
+                throw ServiceException.FIXING_SENDMSG_FOR_SENTBY_PARSE_ERROR("Error while sending the message during fixup for SENT-BY of ICalendar on behalf of other user.", e);
             }
             isCalendarMessage = mv.isCalendarMessage();
         }
@@ -308,7 +308,7 @@ public class SendMsg extends MailDocumentHandler {
         } else {
             com.zimbra.cs.account.DataSource dataSource = mbox.getAccount().getDataSourceById(dataSourceId);
             if (dataSource == null) {
-                throw ServiceException.WRONG_DATASOURCE_ID("No data source with id " + dataSourceId, null);
+                throw ServiceException.INVALID_DATASOURCE_ID("No data source with id " + dataSourceId, null);
             }
             if (!dataSource.isSmtpEnabled()) {
                 throw ServiceException.DATASOURCE_SMTP_DISABLED("Data source SMTP is not enabled", null);

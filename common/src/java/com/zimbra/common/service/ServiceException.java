@@ -60,9 +60,9 @@ public class ServiceException extends Exception {
     public static final String FORBIDDEN = "service.FORBIDDEN";
     // generic "not found" error for objects other than mail items
     public static final String NOT_FOUND = "service.NOT_FOUND";
-    public static final String WRONG_DATASOURCE_ID = "service.WRONG_DATASOURCE_ID";
+    public static final String INTERNAL_ERROR = "service.INTERNAL_ERROR";
+    public static final String INVALID_DATASOURCE_ID = "service.INVALID_DATASOURCE_ID";
     public static final String DATASOURCE_SMTP_DISABLED = "service.DATASOURCE_SMTP_DISABLED";
-    public static final String SENTBY_PARSE_ERROR = "service.FIXING_SENDMSG_FOR_SENTBY_PARSE_ERROR";
     public static final String ERROR_WHILE_PARSING_UPLOAD = "service.IOEXCEPTION_WHILE_PARSING_UPLOAD";
 
     //smime
@@ -306,8 +306,8 @@ public class ServiceException extends Exception {
     /**
      * The request was invalid as datasource with the specified Id is not present.
      */
-    public static ServiceException WRONG_DATASOURCE_ID(String message, Throwable cause) {
-        return new ServiceException("wrong datasource id: "+message, WRONG_DATASOURCE_ID, SENDERS_FAULT, cause);
+    public static ServiceException INVALID_DATASOURCE_ID(String message, Throwable cause) {
+        return new ServiceException("wrong datasource id: "+message, INVALID_DATASOURCE_ID, SENDERS_FAULT, cause);
     }
 
     /**
@@ -329,7 +329,7 @@ public class ServiceException extends Exception {
     }
 
     public static ServiceException FIXING_SENDMSG_FOR_SENTBY_PARSE_ERROR(String message, Throwable cause) {
-        return new ServiceException("parse error for SENT-BY: "+message, SENTBY_PARSE_ERROR, SENDERS_FAULT, cause);
+        return new ServiceException("parse error for SENT-BY: "+message, INTERNAL_ERROR, SENDERS_FAULT, cause);
     }
 
     public static ServiceException RESOURCE_UNREACHABLE(String message, Throwable cause, Argument... arguments) {
