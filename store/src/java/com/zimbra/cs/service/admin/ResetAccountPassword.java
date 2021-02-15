@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2020 Synacor, Inc.
+ * Copyright (C) 2021 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -64,7 +64,7 @@ public class ResetAccountPassword extends AdminDocumentHandler {
         checkAccountRights(zsc, account);
         account.refreshUserCredentials();
 
-        if(account.getFeatureResetPasswordStatus().equals(FeatureResetPasswordStatus.suspended)) {
+        if (account.getFeatureResetPasswordStatus().equals(FeatureResetPasswordStatus.suspended)) {
             account.setFeatureResetPasswordStatus(FeatureResetPasswordStatus.enabled);
         }
         ResetPasswordUtil.isResetPasswordEnabledAndValidRecoveryAccount(account);
