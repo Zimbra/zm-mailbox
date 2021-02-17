@@ -61,9 +61,9 @@ public class ResetPassword extends AccountDocumentHandler {
         boolean getPasswordRules = request.getAttributeBool(AccountConstants.E_GET_PASSWORD_RULES, false);
         boolean cancelResetPassword = request.getAttributeBool(AccountConstants.E_CANCEL_RESET_PASSWORD, false);
         boolean dryRun = request.getAttributeBool(AccountConstants.E_DRYRUN, false);
+        HttpServletResponse httpResp = (HttpServletResponse) context.get(SoapServlet.SERVLET_RESPONSE);
 
         if (cancelResetPassword) {
-            HttpServletResponse httpResp = (HttpServletResponse) context.get(SoapServlet.SERVLET_RESPONSE);
             ZAuthToken.clearCookies(httpResp);
             return response;
         }
@@ -97,7 +97,11 @@ public class ResetPassword extends AccountDocumentHandler {
         }
 
         setPasswordAndPurgeAuthTokens(prov, acct, newPassword, dryRun);
-        acct.unsetResetPasswordRecoveryCode();
+        if (!dryRun) {
+            acct.unsetResetPasswordRecoveryCode();
+            ZAuthToken.clearCookies(httpResp);
+        }
+
         return response;
     }
 
