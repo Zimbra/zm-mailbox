@@ -9,9 +9,9 @@ FROM ${DOCKER_REPO_NS}/zms-jetty-conf:1.4 as jetty-conf
 FROM ${DOCKER_REPO_NS}/zms-jython:1.1 as jython
 FROM ${DOCKER_REPO_NS}/zms-perl:1.1 as perl
 FROM ${DOCKER_REPO_NS}/zms-db-conf:1.2 as db-conf
-FROM ${DOCKER_REPO_NS}/zms-admin-console:1.0.2 as admin-console
+FROM ${DOCKER_REPO_NS}/zms-admin-console:2.0.0 as admin-console
 FROM ${DOCKER_REPO_NS}/zms-ldap-utilities:1.2 as ldap
-FROM ${DOCKER_REPO_NS}/zms-timezones:1.1 as timezone
+FROM ${DOCKER_REPO_NS}/zms-timezones:2.0.0 as timezone
 FROM ${DOCKER_REPO_NS}/zms-core-network-extension:1.1.2 as ext-core-network
 FROM ${DOCKER_REPO_NS}/zms-core-zimlets:1.0.2 as zimlet-webapp
 FROM ${DOCKER_REPO_NS}/zms-classic-webclient:1.0.0 as zimbra-classic-webclient
@@ -108,8 +108,6 @@ COPY store/conf/web.xml.production /opt/zimbra/jetty_base/etc/service.web.xml.in
 COPY store/build/service.war /opt/zimbra/jetty_base/webapps/service/
 
 RUN cd /opt/zimbra/jetty_base/webapps/service/ && jar -xf service.war && rm -rf service.war
-RUN cd /opt/zimbra/jetty_base/webapps/zimbraAdmin/ && jar -xf zimbraAdmin.war && rm -rf zimbraAdmin.war
-RUN cat /opt/zimbra/jetty_base/webapps/zimbraAdmin/WEB-INF/web.xml | sed -e '/REDIRECTBEGIN/ s/\$/ %%comment VAR:zimbraMailMode,-->,redirect%%/' -e '/REDIRECTEND/ s/^/%%comment VAR:zimbraMailMode,<!--,redirect%% /' > /opt/zimbra/jetty_base/etc/zimbraAdmin.web.xml.in
 RUN cp -f /opt/zimbra/conf/zmlogrotate.mailbox /etc/logrotate.d/zimbra.mailbox \
     && touch /opt/zimbra/.platform && echo "@@BUILD_PLATFORM@@" >> /opt/zimbra/.platform
 
