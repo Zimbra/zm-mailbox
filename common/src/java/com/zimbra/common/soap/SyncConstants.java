@@ -90,7 +90,7 @@ public final class SyncConstants {
     public static final String A_SHOWITEM = "showItems";
     public static final String A_OFFSET = "offset";
     public static final String A_LIMIT = "limit";
-    public static final String A_USEAND = "useAnd";
+    public static final String A_FILTERDEVICESBYAND = "filterDevicesByAnd";
 
     // Sync command response statuses
     // Reference - https://msdn.microsoft.com/en-us/library/gg675457(v=exchg.80).aspx

@@ -101,11 +101,11 @@ public class GetDeviceStatusRequest {
     private String deviceSyncVersion;
 
     /**
-     * @zm-api-field-tag useAnd
+     * @zm-api-field-tag filterDevicesByAnd
      * @zm-api-field-description filter devices in and manner or not
      */
-    @XmlAttribute(name=SyncConstants.A_USEAND /* useAnd */, required=false)
-    private String useAnd = "true";
+    @XmlAttribute(name=SyncConstants.A_FILTERDEVICESBYAND /* filterDevicesByAnd */, required=false)
+    private String filterDevicesByAnd = "true";
 
     /**
      * no-argument constructor wanted by JAXB
@@ -136,10 +136,10 @@ public class GetDeviceStatusRequest {
      * @param deviceType
      * @param deviceLastUsed
      * @param deviceSyncVersion
-     * @param useAnd
+     * @param filterDevicesByAnd
      */
     public GetDeviceStatusRequest(int offset, int limit, AccountSelector account, DeviceId deviceId, Byte status, String deviceName,
-            String deviceType, String deviceLastUsed, String deviceSyncVersion, String useAnd) {
+            String deviceType, String deviceLastUsed, String deviceSyncVersion, String filterDevicesByAnd) {
         this.offset = offset;
         this.limit = limit;
         this.account = account;
@@ -149,7 +149,7 @@ public class GetDeviceStatusRequest {
         this.deviceType = deviceType;
         this.deviceLastUsed = deviceLastUsed;
         this.deviceSyncVersion = deviceSyncVersion;
-        this.useAnd = useAnd;
+        this.filterDevicesByAnd = filterDevicesByAnd;
     }
 
     public int getOffset() {
@@ -220,8 +220,8 @@ public class GetDeviceStatusRequest {
         return deviceSyncVersion;
     }
 
-    public Boolean getUseAnd() throws ServiceException{
-        return Element.parseBool(SyncConstants.A_USEAND, useAnd);
+    public Boolean getFilterDevicesByAnd() throws ServiceException{
+        return Element.parseBool(SyncConstants.A_FILTERDEVICESBYAND, filterDevicesByAnd);
     }
 
     public void setDeviceSyncVersion(String deviceSyncVersion) {
@@ -232,6 +232,6 @@ public class GetDeviceStatusRequest {
     public String toString() {
         return "GetDeviceStatusRequest [account=" + account + ", deviceId=" + deviceId + ", status=" + status
                 + ", deviceName=" + deviceName + ", deviceType=" + deviceType + ", deviceLastUsed=" + deviceLastUsed
-                + ", deviceSyncVersion=" + deviceSyncVersion + "]";
+                + ", deviceSyncVersion=" + deviceSyncVersion + ", filterDevicesByAnd=" + filterDevicesByAnd + "]";
     }
 }
