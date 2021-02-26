@@ -3294,6 +3294,7 @@ Request:
    [<deviceType>android</deviceType>]
    [<deviceLastUsed>yyyy-MM-dd</deviceLastUsed>]
    [<deviceSyncVersion>16.0</deviceSyncVersion>]
+   [<filterDevicesByAnd>true</filterDevicesByAnd>]
  </GetDeviceStatusRequest>
 
 offset: The starting offset (0 is default)
@@ -3311,6 +3312,7 @@ deviceName: Devices to be searched with given device name value.(contains matchi
 deviceType: Devices to be searched with given device type value.(contains matching)
 deviceLastUsed: The last used date in "yyyy-MM-dd" format.(equals matching)
 deviceSyncVersion: Devices to be searched with given activesync version only.(equals matching)
+filterDevicesByAnd: Filter devices in AND manner or not
 
 Response:
  <GetDeviceStatusResponse>

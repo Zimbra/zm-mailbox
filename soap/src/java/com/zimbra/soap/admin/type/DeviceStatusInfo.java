@@ -171,6 +171,13 @@ public class DeviceStatusInfo {
     private String lastUsedDate;
 
     /**
+     * @zm-api-field-tag email-address
+     * @zm-api-field-description email-address of the linked account
+     */
+    @XmlElement(name=SyncConstants.E_EMAIL_ADDRESS /* emailAddress */, required=false)
+    private String emailAddress;
+
+    /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
