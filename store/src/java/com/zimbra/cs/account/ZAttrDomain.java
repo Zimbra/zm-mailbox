@@ -16040,6 +16040,274 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
+     * Allowed mobile device list for ActiveSync/ABQ
+     *
+     * @return zimbraMobileAllowedDevices, or empty array if unset
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3089)
+    public String[] getMobileAllowedDevices() {
+        return getMultiAttr(Provisioning.A_zimbraMobileAllowedDevices, true, true);
+    }
+
+    /**
+     * Allowed mobile device list for ActiveSync/ABQ
+     *
+     * @param zimbraMobileAllowedDevices new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3089)
+    public void setMobileAllowedDevices(String[] zimbraMobileAllowedDevices) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileAllowedDevices, zimbraMobileAllowedDevices);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Allowed mobile device list for ActiveSync/ABQ
+     *
+     * @param zimbraMobileAllowedDevices new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3089)
+    public Map<String,Object> setMobileAllowedDevices(String[] zimbraMobileAllowedDevices, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileAllowedDevices, zimbraMobileAllowedDevices);
+        return attrs;
+    }
+
+    /**
+     * Allowed mobile device list for ActiveSync/ABQ
+     *
+     * @param zimbraMobileAllowedDevices new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3089)
+    public void addMobileAllowedDevices(String zimbraMobileAllowedDevices) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMobileAllowedDevices, zimbraMobileAllowedDevices);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Allowed mobile device list for ActiveSync/ABQ
+     *
+     * @param zimbraMobileAllowedDevices new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3089)
+    public Map<String,Object> addMobileAllowedDevices(String zimbraMobileAllowedDevices, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMobileAllowedDevices, zimbraMobileAllowedDevices);
+        return attrs;
+    }
+
+    /**
+     * Allowed mobile device list for ActiveSync/ABQ
+     *
+     * @param zimbraMobileAllowedDevices existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3089)
+    public void removeMobileAllowedDevices(String zimbraMobileAllowedDevices) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMobileAllowedDevices, zimbraMobileAllowedDevices);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Allowed mobile device list for ActiveSync/ABQ
+     *
+     * @param zimbraMobileAllowedDevices existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3089)
+    public Map<String,Object> removeMobileAllowedDevices(String zimbraMobileAllowedDevices, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMobileAllowedDevices, zimbraMobileAllowedDevices);
+        return attrs;
+    }
+
+    /**
+     * Allowed mobile device list for ActiveSync/ABQ
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3089)
+    public void unsetMobileAllowedDevices() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileAllowedDevices, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Allowed mobile device list for ActiveSync/ABQ
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3089)
+    public Map<String,Object> unsetMobileAllowedDevices(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileAllowedDevices, "");
+        return attrs;
+    }
+
+    /**
+     * Blocked mobile device list for ActiveSync/ABQ
+     *
+     * @return zimbraMobileBlockedDevices, or empty array if unset
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3090)
+    public String[] getMobileBlockedDevices() {
+        return getMultiAttr(Provisioning.A_zimbraMobileBlockedDevices, true, true);
+    }
+
+    /**
+     * Blocked mobile device list for ActiveSync/ABQ
+     *
+     * @param zimbraMobileBlockedDevices new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3090)
+    public void setMobileBlockedDevices(String[] zimbraMobileBlockedDevices) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileBlockedDevices, zimbraMobileBlockedDevices);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Blocked mobile device list for ActiveSync/ABQ
+     *
+     * @param zimbraMobileBlockedDevices new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3090)
+    public Map<String,Object> setMobileBlockedDevices(String[] zimbraMobileBlockedDevices, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileBlockedDevices, zimbraMobileBlockedDevices);
+        return attrs;
+    }
+
+    /**
+     * Blocked mobile device list for ActiveSync/ABQ
+     *
+     * @param zimbraMobileBlockedDevices new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3090)
+    public void addMobileBlockedDevices(String zimbraMobileBlockedDevices) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMobileBlockedDevices, zimbraMobileBlockedDevices);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Blocked mobile device list for ActiveSync/ABQ
+     *
+     * @param zimbraMobileBlockedDevices new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3090)
+    public Map<String,Object> addMobileBlockedDevices(String zimbraMobileBlockedDevices, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMobileBlockedDevices, zimbraMobileBlockedDevices);
+        return attrs;
+    }
+
+    /**
+     * Blocked mobile device list for ActiveSync/ABQ
+     *
+     * @param zimbraMobileBlockedDevices existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3090)
+    public void removeMobileBlockedDevices(String zimbraMobileBlockedDevices) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMobileBlockedDevices, zimbraMobileBlockedDevices);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Blocked mobile device list for ActiveSync/ABQ
+     *
+     * @param zimbraMobileBlockedDevices existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3090)
+    public Map<String,Object> removeMobileBlockedDevices(String zimbraMobileBlockedDevices, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMobileBlockedDevices, zimbraMobileBlockedDevices);
+        return attrs;
+    }
+
+    /**
+     * Blocked mobile device list for ActiveSync/ABQ
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3090)
+    public void unsetMobileBlockedDevices() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileBlockedDevices, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Blocked mobile device list for ActiveSync/ABQ
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3090)
+    public Map<String,Object> unsetMobileBlockedDevices(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileBlockedDevices, "");
+        return attrs;
+    }
+
+    /**
      * Max size of items in a folder that server tracks, categorized by
      * collection type (Email,Calendar,Contacts,Tasks). e.g. Email:3000 makes
      * the max size of items to track for an Email folder to be 3000. If not

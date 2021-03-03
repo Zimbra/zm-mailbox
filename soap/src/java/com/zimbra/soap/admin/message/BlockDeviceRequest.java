@@ -28,6 +28,7 @@ import com.zimbra.common.soap.SyncAdminConstants;
 import com.zimbra.common.soap.SyncConstants;
 import com.zimbra.soap.admin.type.DeviceId;
 import com.zimbra.soap.type.AccountSelector;
+import com.zimbra.soap.admin.type.DomainSelector;
 
 /**
  * @zm-api-command-auth-required true
@@ -47,8 +48,14 @@ public class BlockDeviceRequest {
     /**
      * @zm-api-field-description Device selector
      */
-    @XmlElement(name=SyncConstants.E_DEVICE, required=true)
+    @XmlElement(name=SyncConstants.E_DEVICE, required=false)
     private DeviceId deviceId;
+
+    /**
+     * @zm-api-field-description Domain
+     */
+    @XmlElement(name=AdminConstants.E_DOMAIN /* domain */, required=false)
+    private DomainSelector domain; 
 
     /**
      * no-argument constructor wanted by JAXB
@@ -77,8 +84,14 @@ public class BlockDeviceRequest {
         this.account = account;
     }
 
+    public void setDomain(DomainSelector domain) {
+        this.domain = domain;
+    }
+
+    public DomainSelector getDomain() { return domain; }
+
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this).add("account", this.account).add("device", this.deviceId).toString();
+        return MoreObjects.toStringHelper(this).add("account", this.account).add("device", this.deviceId).add("domain", this.domain).toString();
     }
 }

@@ -9825,7 +9825,12 @@ TODO: delete them permanently from here
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether to use Web Client feature</desc>
 </attr>
-
+<attr id="3089" name="zimbraMobileAllowedDevices" type="cstring" cardinality="multi" flags="domainInherited" optionalIn="globalConfig,domain" since="8.9.0">
+    <desc>Allowed mobile device list for ActiveSync/ABQ</desc>
+</attr>
+<attr id="3090" name="zimbraMobileBlockedDevices" type="cstring" cardinality="multi" flags="domainInherited" optionalIn="globalConfig,domain" since="8.9.0">
+    <desc>Blocked mobile device list for ActiveSync/ABQ</desc>
+</attr>
 <attr id="3091" name="zimbraFileUploadBlockedFileTypes" type="string" cardinality="multi" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="9.1.0">
   <defaultCOSValue>asd</defaultCOSValue>
   <defaultCOSValue>bat</defaultCOSValue>
