@@ -3328,3 +3328,34 @@ Response:
    </device>]*
  </GetDeviceStatusResponse>
 
+------------------------
+API to allow device || enable mobile sync feature for account and update ldap attribute values (zimbraMobileAllowedDevices, zimbraMobileBlockedDevices) at domain
+  <AllowDeviceRequest>
+     [<account by="id|name">...</account>]
+     [<device id="..."/>]
+     [<domain by="id|name|virtualHostname">...</domain>]
+  </AllowDeviceRequest>
+
+Either (account) OR (device & domain) required
+
+account: account is optional element, if account is not provided & device is present it will update ldap attribute values.
+domain: domain is optional element but must required with device, not required if we are passing account.
+device: device is optional element, if device is not provided & account is present it will enable mobile sync feature for account.
+
+if both i.e account and device is present it will just change the device statue to NEEDPROV
+
+------------------------
+API to block device || disabled mobile sync feature for account and update ldap attribute values (zimbraMobileAllowedDevices, zimbraMobileBlockedDevices) at domain
+  <BlockDeviceRequest>
+     [<account by="id|name">...</account>]
+     [<device id="..."/>]
+     [<domain by="id|name|virtualHostname">...</domain>]
+  </BlockDeviceRequest>
+
+Either (account) OR (device & domain) required
+
+account: account is optional element, if account is not provided & device is present it will update ldap attribute values.
+domain: domain is optional element but must required with device, not required if we are passing account.
+device: device is optional element, if device is not provided & account is present it will disable mobile sync feature for account.
+
+if both i.e account and device is present it will just change the device statue to BLOCKED

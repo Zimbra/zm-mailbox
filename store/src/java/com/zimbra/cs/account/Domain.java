@@ -143,6 +143,5 @@ public class Domain extends ZAttrDomain {
         Provisioning.DomainType domainType = getDomainType();
         return Provisioning.DomainType.local == domainType;
     }
-
-    
+        
 }

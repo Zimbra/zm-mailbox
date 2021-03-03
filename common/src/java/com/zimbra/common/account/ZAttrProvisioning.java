@@ -10188,6 +10188,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMimeType = "zimbraMimeType";
 
     /**
+     * Allowed mobile device list for ActiveSync/ABQ
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3089)
+    public static final String A_zimbraMobileAllowedDevices = "zimbraMobileAllowedDevices";
+
+    /**
      * whether mobile sync should zip the skipped item and attach it to the
      * notification mail
      *
@@ -10195,6 +10203,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1423)
     public static final String A_zimbraMobileAttachSkippedItemEnabled = "zimbraMobileAttachSkippedItemEnabled";
+
+    /**
+     * Blocked mobile device list for ActiveSync/ABQ
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3090)
+    public static final String A_zimbraMobileBlockedDevices = "zimbraMobileBlockedDevices";
 
     /**
      * Certificate to sign Mobileconfig file
