@@ -182,8 +182,9 @@ public class EmailChannel extends ChannelProvider {
             throws ServiceException {
         //changes for ZCS-10381
         Mailbox mbox = null;
-        if(LC.sender_email_for_recovery_link.value() != null && LC.sender_email_for_recovery_link.value().length() > 0) {
-            Account senderAccount = Provisioning.getInstance().getAccountByName(LC.sender_email_for_recovery_link.value());
+        String recoverySenderAddress = LC.sender_email_for_recovery_link.value();
+        if(!StringUtil.isNullOrEmpty(recoverySenderAddress)) {
+            Account senderAccount = Provisioning.getInstance().getAccountByName(recoverySenderAddress);
             mbox = MailboxManager.getInstance().getMailboxByAccount(senderAccount);
         }else {
             mbox = MailboxManager.getInstance().getMailboxByAccount(account);
