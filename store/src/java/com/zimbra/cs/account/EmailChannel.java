@@ -183,10 +183,10 @@ public class EmailChannel extends ChannelProvider {
         //changes for ZCS-10381
         Mailbox mbox = null;
         String recoverySenderAddress = LC.sender_email_for_recovery_link.value();
-        if(!StringUtil.isNullOrEmpty(recoverySenderAddress)) {
+        if (!StringUtil.isNullOrEmpty(recoverySenderAddress)) {
             Account senderAccount = Provisioning.getInstance().getAccountByName(recoverySenderAddress);
             mbox = MailboxManager.getInstance().getMailboxByAccount(senderAccount);
-        }else {
+        } else {
             mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         }
         Locale locale = account.getLocale();
