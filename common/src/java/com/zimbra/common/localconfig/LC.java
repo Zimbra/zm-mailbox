@@ -1565,7 +1565,7 @@ public final class LC {
     public static final KnownKey zulip_jwt_secret = KnownKey.newKey("MOVE_ME_TO_A_SECRET");
 
     // email to use for sending recovery link
-    public static final KnownKey sender_email_for_recovery_link = KnownKey.newKey("admin@zmc.com");
+    public static final KnownKey sender_email_for_recovery_link = KnownKey.newKey("");
 
     static {
         // Automatically set the key name with the variable name.
