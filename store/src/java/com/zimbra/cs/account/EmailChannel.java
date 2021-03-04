@@ -63,7 +63,14 @@ public class EmailChannel extends ChannelProvider {
             Map<String, String> recoveryCodeMap) throws ServiceException {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE, d MMM yyyy HH:mm:ss z")
                 .withZone(ZoneId.of("GMT"));
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+        Mailbox mbox = null;
+        String recoverySenderAddress = LC.sender_email_for_recovery_link.value();
+        if (!StringUtil.isNullOrEmpty(recoverySenderAddress)) {
+            Account senderAccount = Provisioning.getInstance().getAccountByName(recoverySenderAddress);
+            mbox = MailboxManager.getInstance().getMailboxByAccount(senderAccount);
+        } else {
+            mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+        }
         Locale locale = account.getLocale();
         String displayName = account.getDisplayName();
         if (displayName == null) {
