@@ -6394,11 +6394,25 @@ public class Mailbox implements MailboxStore {
     throws ServiceException {
         AlterItemTag redoRecorder = new AlterItemTag(mId, itemIds, type, finfo.flagName, addTag, tcon);
 
+        boolean mboxInConsistentState = false;
         try (final MailboxTransaction t = mailboxWriteTransaction("alterTag", octxt, redoRecorder)) {
             setOperationTargetConstraint(tcon);
 
-            alterTag(itemIds, type, finfo.toFlag(this), addTag);
+            try {
+                alterTag(itemIds, type, finfo.toFlag(this), addTag);
+            } catch (ServiceException e) {
+                if (clearCacheIfInConsistentState(e.getMessage())) {
+                    mboxInConsistentState = true;
+                    alterTag(itemIds, type, finfo.toFlag(this), addTag);
+                } else {
+                    throw e;
+                }
+            }
             t.commit();
+        }
+        if (mboxInConsistentState) {
+            ZimbraLog.mailop.info("Mailbox %d recovered from inconsistent state, recalculating mailbox folder/tag counts", this.getId());
+            recalculateFolderAndTagCounts();
         }
     }
 
@@ -6856,6 +6870,7 @@ public class Mailbox implements MailboxStore {
     throws ServiceException {
         MoveItem redoRecorder = new MoveItem(mId, itemIds, type, targetId, tcon);
 
+        boolean mboxInConsistentState = false;
         try (final MailboxTransaction t = mailboxWriteTransaction("move", octxt, redoRecorder)) {
             setOperationTargetConstraint(tcon);
 
@@ -6873,8 +6888,18 @@ public class Mailbox implements MailboxStore {
                 // train the spam filter if necessary...
                 trainSpamFilter(octxt, item, target, "move");
 
-                // ...do the move...
-                boolean moved = item.move(target);
+                boolean moved = false;
+                try {
+                    // ...do the move...
+                    moved = item.move(target);
+                } catch (ServiceException e) {
+                    if (clearCacheIfInConsistentState(e.getMessage())) {
+                        mboxInConsistentState = true;
+                        moved = item.move(target);
+                    }  else {
+                        throw e;
+                    }
+                }
 
                 // ...and determine whether the move needs to cause an UIDNEXT change
                 if (moved && !resetUIDNEXT && isTrackingImap() &&
@@ -6891,6 +6916,22 @@ public class Mailbox implements MailboxStore {
             }
             t.commit();
         }
+        if (mboxInConsistentState) {
+            ZimbraLog.mailop.info("Mailbox %d recovered from  inconsistent state, recalculating mailbox folder/tag counts", this.getId());
+            recalculateFolderAndTagCounts();
+        }
+    }
+
+    private boolean clearCacheIfInConsistentState(String errorMessage) throws ServiceException {
+        if (errorMessage.contains("inconsistent state: unread < 0 for item")) {
+            ZimbraLog.mailop.info("Mailbox %d is in inconsistent state, entering into recovery mode", this.getId());
+            clearFolderCache();
+            clearTagCache();
+            state.setNumContacts(-1);
+            loadFoldersAndTags();
+            return true;
+        }
+        return false;
     }
 
     public void rename(OperationContext octxt, int id, MailItem.Type type, String name, int folderId)
