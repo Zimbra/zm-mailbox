@@ -17,6 +17,7 @@
 
 package com.zimbra.soap.admin.message;
 
+import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -39,10 +40,24 @@ import com.zimbra.common.soap.Element;
 public class GetDeviceStatusRequest {
 
     /**
+     * @zm-api-field-tag offset
+     * @zm-api-field-description Offset for the resultant list of the devices. Offset and Limit both should be sent together in request.
+     */
+    @XmlAttribute(name=SyncConstants.A_OFFSET /* offset */, required=false)
+    private int offset = 0;
+
+    /**
+     * @zm-api-field-tag limit
+     * @zm-api-field-description Number of the devices you want in the resultant list of the devices. Offset and Limit both should be sent together in request.
+     */
+    @XmlAttribute(name=SyncConstants.A_LIMIT /* limit */, required=false)
+    private int limit = 0;
+
+    /**
      * @zm-api-field-description Account
      */
     @XmlElement(name=AdminConstants.E_ACCOUNT, required=true)
-    private final AccountSelector account;
+    private AccountSelector account;
 
     /**
      * @zm-api-field-description Device specification
