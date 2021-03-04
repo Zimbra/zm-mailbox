@@ -33,7 +33,9 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
 import com.zimbra.common.account.ForgetPasswordEnums.CodeConstants;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ZAttrProvisioning.PrefPasswordRecoveryAddressStatus;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.L10nUtil;
@@ -178,7 +180,14 @@ public class EmailChannel extends ChannelProvider {
 
     public static void sendAndStoreResetPasswordURL(ZimbraSoapContext zsc, Account account, Map<String, String> recoveryCodeMap)
             throws ServiceException {
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+        //changes for ZCS-10381
+        Mailbox mbox = null;
+        if(LC.sender_email_for_recovery_link.value() != null || LC.sender_email_for_recovery_link.value().length() > 0) {
+            Account senderAccount = Provisioning.getInstance().getAccountByName(LC.sender_email_for_recovery_link.value());
+            mbox = MailboxManager.getInstance().getMailboxByAccount(senderAccount);
+        }else {
+            mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+        }
         Locale locale = account.getLocale();
         String accountName = account.getName();
         String userDisplayName = account.getDisplayName() != null ? String.join("", " ",account.getDisplayName()) : "";
