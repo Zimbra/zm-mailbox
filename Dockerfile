@@ -12,12 +12,12 @@ FROM ${DOCKER_REPO_NS}/zms-db-conf:1.2 as db-conf
 FROM ${DOCKER_REPO_NS}/zms-admin-console:2.0.3 as admin-console
 FROM ${DOCKER_REPO_NS}/zms-ldap-utilities:1.2 as ldap
 FROM ${DOCKER_REPO_NS}/zms-timezones:2.0.0 as timezone
-FROM ${DOCKER_REPO_NS}/zms-core-network-extension:1.1.5 as ext-core-network
+FROM ${DOCKER_REPO_NS}/zms-core-network-extension:1.1.6 as ext-core-network
 FROM ${DOCKER_REPO_NS}/zms-core-zimlets:1.0.2 as zimlet-webapp
 FROM ${DOCKER_REPO_NS}/zms-classic-webclient:1.0.0 as zimbra-classic-webclient
 
 # Final stage, copy contents from build stage
-FROM ${DOCKER_REPO_NS}/zms-base:1.0.14
+FROM ${DOCKER_REPO_NS}/zms-base:1.0.15
 RUN apk --no-cache add libreoffice
 ENV EXT_REPO_URL http://zimbraqa.s3.amazonaws.com/api-team/extensions
 ENV S3_DOCKER_URL https://s3.amazonaws.com/docker.zimbra.com/assets
