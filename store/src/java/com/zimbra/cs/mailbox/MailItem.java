@@ -2631,9 +2631,8 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         // update our unread count (should we check that we don't have too many unread?)
         markItemModified(Change.UNREAD);
         int newUnread = getUnreadCount() + delta;
-        state.setUnreadCount(newUnread);
         if (newUnread < 0) {
-            throw ServiceException.FAILURE("inconsistent state: unread < 0 for item " + mId, null);
+            mMailbox.isDirtyTransaction = true;
         }
     }
 

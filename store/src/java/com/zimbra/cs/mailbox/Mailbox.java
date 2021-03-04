@@ -676,6 +676,7 @@ public class Mailbox implements MailboxStore {
     private final Set<WeakReference<TransactionListener>> transactionListeners;
     private final TransactionCacheTracker cacheTracker;
     private RedoLogBlobStore redoBlobStore;
+    public Boolean isDirtyTransaction = false;
 
 
     protected Mailbox(MailboxData data) {
@@ -6394,26 +6395,13 @@ public class Mailbox implements MailboxStore {
     throws ServiceException {
         AlterItemTag redoRecorder = new AlterItemTag(mId, itemIds, type, finfo.flagName, addTag, tcon);
 
-        boolean mboxInConsistentState = false;
         try (final MailboxTransaction t = mailboxWriteTransaction("alterTag", octxt, redoRecorder)) {
             setOperationTargetConstraint(tcon);
 
-            try {
-                alterTag(itemIds, type, finfo.toFlag(this), addTag);
-            } catch (ServiceException e) {
-                if (clearCacheIfInConsistentState(e.getMessage())) {
-                    mboxInConsistentState = true;
-                    alterTag(itemIds, type, finfo.toFlag(this), addTag);
-                } else {
-                    throw e;
-                }
-            }
+            alterTag(itemIds, type, finfo.toFlag(this), addTag);
             t.commit();
         }
-        if (mboxInConsistentState) {
-            ZimbraLog.mailop.info("Mailbox %d recovered from inconsistent state, recalculating mailbox folder/tag counts", this.getId());
-            recalculateFolderAndTagCounts();
-        }
+        checkIfDirtyTransaction();
     }
 
     public void alterTag(OperationContext octxt, int itemId, MailItem.Type type, String tagName,
@@ -6455,6 +6443,7 @@ public class Mailbox implements MailboxStore {
             alterTag(itemIds, type, tag, addTag);
             t.commit();
         }
+        checkIfDirtyTransaction();
     }
 
     // common code for the two AlterTag variants (Flag.FlagInfo vs. by tag name)
@@ -6870,7 +6859,6 @@ public class Mailbox implements MailboxStore {
     throws ServiceException {
         MoveItem redoRecorder = new MoveItem(mId, itemIds, type, targetId, tcon);
 
-        boolean mboxInConsistentState = false;
         try (final MailboxTransaction t = mailboxWriteTransaction("move", octxt, redoRecorder)) {
             setOperationTargetConstraint(tcon);
 
@@ -6888,18 +6876,8 @@ public class Mailbox implements MailboxStore {
                 // train the spam filter if necessary...
                 trainSpamFilter(octxt, item, target, "move");
 
-                boolean moved = false;
-                try {
-                    // ...do the move...
-                    moved = item.move(target);
-                } catch (ServiceException e) {
-                    if (clearCacheIfInConsistentState(e.getMessage())) {
-                        mboxInConsistentState = true;
-                        moved = item.move(target);
-                    }  else {
-                        throw e;
-                    }
-                }
+                // ...do the move...
+                boolean moved = item.move(target);
 
                 // ...and determine whether the move needs to cause an UIDNEXT change
                 if (moved && !resetUIDNEXT && isTrackingImap() &&
@@ -6916,22 +6894,15 @@ public class Mailbox implements MailboxStore {
             }
             t.commit();
         }
-        if (mboxInConsistentState) {
-            ZimbraLog.mailop.info("Mailbox %d recovered from  inconsistent state, recalculating mailbox folder/tag counts", this.getId());
-            recalculateFolderAndTagCounts();
-        }
+        checkIfDirtyTransaction();
     }
 
-    private boolean clearCacheIfInConsistentState(String errorMessage) throws ServiceException {
-        if (errorMessage.contains("inconsistent state: unread < 0 for item")) {
-            ZimbraLog.mailop.info("Mailbox %d is in inconsistent state, entering into recovery mode", this.getId());
-            clearFolderCache();
-            clearTagCache();
-            state.setNumContacts(-1);
-            loadFoldersAndTags();
-            return true;
+    private void checkIfDirtyTransaction() throws ServiceException {
+        if (isDirtyTransaction) {
+            ZimbraLog.mailop.info("Mailbox %d recovered from inconsistent state, recalculating mailbox folder/tag counts", this.getId());
+            recalculateFolderAndTagCounts();
+            isDirtyTransaction = false;
         }
-        return false;
     }
 
     public void rename(OperationContext octxt, int id, MailItem.Type type, String name, int folderId)
