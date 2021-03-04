@@ -6096,6 +6096,7 @@ public class Mailbox implements MailboxStore {
                 callback.execute(msg, callbackContext);
             }
         }
+        checkIfDirtyTransaction();
         return msg;
     }
 

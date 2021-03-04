@@ -1385,7 +1385,8 @@ public class Message extends MailItem implements Classifiable {
         int newUnreadCount = getUnreadCount() + delta;
         state.setUnreadCount(newUnreadCount);
         if (newUnreadCount < 0) {
-            throw ServiceException.FAILURE("inconsistent state: unread < 0 for " + getClass().getName() + " " + mId, null);
+            mMailbox.isDirtyTransaction = true;
+            ZimbraLog.mailbox.warn("inconsistent state: unread < 0 for %s %d", getClass().getName(), mId);
         }
 
         // update the folder's unread count

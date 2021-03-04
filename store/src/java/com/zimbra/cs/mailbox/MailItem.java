@@ -2634,6 +2634,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         state.setUnreadCount(newUnread);
         if (newUnread < 0) {
             mMailbox.isDirtyTransaction = true;
+            ZimbraLog.mailbox.warn("inconsistent state: unread < 0 for item %d", mId);
         }
     }
 
