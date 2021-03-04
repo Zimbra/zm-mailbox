@@ -676,8 +676,7 @@ public class Mailbox implements MailboxStore {
     private final Set<WeakReference<TransactionListener>> transactionListeners;
     private final TransactionCacheTracker cacheTracker;
     private RedoLogBlobStore redoBlobStore;
-    public Boolean isDirtyTransaction = false;
-
+    private Boolean isDirtyTransaction = false;
 
     protected Mailbox(MailboxData data) {
         mId = data.id;
@@ -698,6 +697,14 @@ public class Mailbox implements MailboxStore {
         MAX_ITEM_CACHE_SIZE = LC.zimbra_mailbox_active_cache.intValue();
         folderTagSnapshot = ItemCache.getFactory().getFolderTagSnapshotCache(this);
         redoBlobStore = RedoLogProvider.getInstance().getRedoLogManager().getBlobStore();
+    }
+
+    protected Boolean getIsDirtyTransaction() {
+        return isDirtyTransaction;
+    }
+
+    protected void setIsDirtyTransaction(Boolean isDirtyTransaction) {
+        this.isDirtyTransaction = isDirtyTransaction;
     }
 
     public void setGalSyncMailbox(boolean galSyncMailbox) {
