@@ -4829,15 +4829,16 @@ public class Mailbox implements MailboxStore {
         if (folderId == ID_AUTO_INCREMENT) {
             return new HashMap<Integer, Integer>();
         }
-        boolean success = false;
-        try (final MailboxTransaction t = mailboxReadTransaction("listCalendarItemsForRange", octxt)) {
+        lock.lock(false);
+        try {
             // if they specified a folder, make sure it actually exists
             getFolderById(folderId);
 
             // get the list of all visible calendar items in the specified folder
             Map<Integer, Integer> map = DbMailItem.listCalendarItemIdsAndDates(this, type, start, end, folderId, null);
-            success = true;
             return map;
+        } finally {
+            lock.release();
         }
     }
 
@@ -4849,15 +4850,16 @@ public class Mailbox implements MailboxStore {
         if (folderId == ID_AUTO_INCREMENT) {
             return new HashMap<Integer, Integer>();
         }
-        boolean success = false;
-        try (final MailboxTransaction t = mailboxReadTransaction("listCalendarItemsForRange", octxt)) {
+        lock.lock(false);
+        try {
             // if they specified a folder, make sure it actually exists
             getFolderById(folderId);
 
             // get the list of all visible calendar items in the specified folder
             Map<Integer, Integer> map = DbMailItem.listCalendarItemIdsAndDates(this, type, lastSync, folderId, null);
-            success = true;
             return map;
+        } finally {
+            lock.release();
         }
     }
 
