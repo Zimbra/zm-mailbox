@@ -676,7 +676,7 @@ public class Mailbox implements MailboxStore {
     private final Set<WeakReference<TransactionListener>> transactionListeners;
     private final TransactionCacheTracker cacheTracker;
     private RedoLogBlobStore redoBlobStore;
-
+    private Boolean isDirtyTransaction = false;
 
     protected Mailbox(MailboxData data) {
         mId = data.id;
@@ -697,6 +697,14 @@ public class Mailbox implements MailboxStore {
         MAX_ITEM_CACHE_SIZE = LC.zimbra_mailbox_active_cache.intValue();
         folderTagSnapshot = ItemCache.getFactory().getFolderTagSnapshotCache(this);
         redoBlobStore = RedoLogProvider.getInstance().getRedoLogManager().getBlobStore();
+    }
+
+    protected Boolean getIsDirtyTransaction() {
+        return isDirtyTransaction;
+    }
+
+    protected void setIsDirtyTransaction(Boolean isDirtyTransaction) {
+        this.isDirtyTransaction = isDirtyTransaction;
     }
 
     public void setGalSyncMailbox(boolean galSyncMailbox) {
@@ -6095,6 +6103,7 @@ public class Mailbox implements MailboxStore {
                 callback.execute(msg, callbackContext);
             }
         }
+        checkIfDirtyTransaction();
         return msg;
     }
 
@@ -6400,6 +6409,7 @@ public class Mailbox implements MailboxStore {
             alterTag(itemIds, type, finfo.toFlag(this), addTag);
             t.commit();
         }
+        checkIfDirtyTransaction();
     }
 
     public void alterTag(OperationContext octxt, int itemId, MailItem.Type type, String tagName,
@@ -6441,6 +6451,7 @@ public class Mailbox implements MailboxStore {
             alterTag(itemIds, type, tag, addTag);
             t.commit();
         }
+        checkIfDirtyTransaction();
     }
 
     // common code for the two AlterTag variants (Flag.FlagInfo vs. by tag name)
@@ -6890,6 +6901,15 @@ public class Mailbox implements MailboxStore {
                 target.updateUIDNEXT();
             }
             t.commit();
+        }
+        checkIfDirtyTransaction();
+    }
+
+    private void checkIfDirtyTransaction() throws ServiceException {
+        if (getIsDirtyTransaction()) {
+            ZimbraLog.mailop.info("Mailbox %d in inconsistent state, recalculating mailbox folder/tag counts", this.getId());
+            recalculateFolderAndTagCounts();
+            setIsDirtyTransaction(false);
         }
     }
 
