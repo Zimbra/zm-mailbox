@@ -6906,10 +6906,10 @@ public class Mailbox implements MailboxStore {
     }
 
     private void checkIfDirtyTransaction() throws ServiceException {
-        if (isDirtyTransaction) {
+        if (getIsDirtyTransaction()) {
             ZimbraLog.mailop.info("Mailbox %d in inconsistent state, recalculating mailbox folder/tag counts", this.getId());
             recalculateFolderAndTagCounts();
-            isDirtyTransaction = false;
+            setIsDirtyTransaction(false);
         }
     }
 
