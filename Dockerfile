@@ -9,7 +9,7 @@ FROM ${DOCKER_REPO_NS}/zms-jetty-conf:1.4 as jetty-conf
 FROM ${DOCKER_REPO_NS}/zms-jython:1.1 as jython
 FROM ${DOCKER_REPO_NS}/zms-perl:1.2 as perl
 FROM ${DOCKER_REPO_NS}/zms-db-conf:1.2 as db-conf
-FROM ${DOCKER_REPO_NS}/zms-admin-console:2.0.6 as admin-console
+FROM ${DOCKER_REPO_NS}/zms-admin-console:2.0.5 as admin-console
 FROM ${DOCKER_REPO_NS}/zms-ldap-utilities:1.2 as ldap
 FROM ${DOCKER_REPO_NS}/zms-timezones:2.0.0 as timezone
 FROM ${DOCKER_REPO_NS}/zms-core-network-extension:1.1.8 as ext-core-network
