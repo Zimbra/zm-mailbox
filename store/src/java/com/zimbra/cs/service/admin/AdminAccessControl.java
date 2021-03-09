@@ -947,7 +947,7 @@ public abstract class AdminAccessControl {
                 return getAttrRightChecker(target);
             } catch (ServiceException e) {
                 if (ServiceException.PERM_DENIED.equals(e.getCode())) {
-                    HardRule violatedRule = HardRule.ruleVolated(e);
+                    HardRule violatedRule = HardRule.ruleViolated(e);
                     if (ignoreHardRules.contains(violatedRule)) {
                         // return an AttrRightChecker that allows no attr
                         return new AttrRightChecker() {
@@ -1129,7 +1129,7 @@ public abstract class AdminAccessControl {
                     if (mIgnoreHardRules != null) {
                         Set<HardRule> ignoreRules = mIgnoreHardRules.get(rightNeeded);
                         if (ignoreRules != null) {
-                            HardRule violatedRule = HardRule.ruleVolated(e);
+                            HardRule violatedRule = HardRule.ruleViolated(e);
                             if (ignoreRules.contains(violatedRule)) {
                                 violatedIgnoredHardRule = true;
                             }
