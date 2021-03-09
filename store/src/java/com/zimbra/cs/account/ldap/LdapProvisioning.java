@@ -6678,35 +6678,36 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     protected void renameAddressesInAllDistributionLists(Map<String, String> changedPairs) {
 
-        String oldAddrs[] = changedPairs.keySet().toArray(new String[0]);
-        String newAddrs[] = changedPairs.values().toArray(new String[0]);
-
         List<DistributionList> lists = null;
         Map<String, String[]> attrs = null;
 
-        try {
-            lists = getAllDistributionListsForAddresses(oldAddrs, false);
-        } catch (ServiceException se) {
-            ZimbraLog.account.warn("unable to rename addr "+oldAddrs.toString()+" in all DLs ", se);
-            return;
-        }
+        for (String oldAddress: changedPairs.keySet()) {
 
-        for (DistributionList list: lists) {
-            // should we just call removeMember/addMember? This might be quicker, because calling
-            // removeMember/addMember might have to update an entry's zimbraMemberId twice
-            if (attrs == null) {
-                attrs = new HashMap<String, String[]>();
-                attrs.put("-" + Provisioning.A_zimbraMailForwardingAddress, oldAddrs);
-                attrs.put("+" + Provisioning.A_zimbraMailForwardingAddress, newAddrs);
-            }
+            String newAddress = changedPairs.get(oldAddress);
             try {
-                modifyAttrs(list, attrs);
-                //list.removeMember(oldName)
-                //list.addMember(newName);
+                lists = getAllDistributionListsForAddresses( new String[]{ oldAddress }, false);
             } catch (ServiceException se) {
-                // log warning an continue
-                ZimbraLog.account.warn("unable to rename "+oldAddrs.toString()+" to " +
-                        newAddrs.toString()+" in DL "+list.getName(), se);
+                ZimbraLog.account.warn("unable to rename addr "+oldAddress+" in all DLs ", se);
+                continue;
+            }
+
+            for (DistributionList list: lists) {
+                // should we just call removeMember/addMember? This might be quicker, because calling
+                // removeMember/addMember might have to update an entry's zimbraMemberId twice
+                if (attrs == null) {
+                    attrs = new HashMap<String, String[]>();
+                    attrs.put("-" + Provisioning.A_zimbraMailForwardingAddress, new String[]{ oldAddress });
+                    attrs.put("+" + Provisioning.A_zimbraMailForwardingAddress, new String[]{ newAddress });
+                }
+                try {
+                    modifyAttrs(list, attrs);
+                    //list.removeMember(oldName)
+                    //list.addMember(newName);
+                } catch (ServiceException se) {
+                    // log warning an continue
+                    ZimbraLog.account.warn("unable to rename "+oldAddress+" to " +
+                            newAddress +" in DL "+list.getName(), se);
+                }
             }
         }
     }
