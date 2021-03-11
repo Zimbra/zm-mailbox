@@ -72,6 +72,7 @@ public class MailServiceException extends ServiceException {
     public static final String CANNOT_UNLOCK   = "mail.CANNOT_UNLOCK";
     public static final String LOCKED          = "mail.LOCKED";
     public static final String MUST_RESYNC     = "mail.MUST_RESYNC";
+    public static final String SENDMSG_IN_PENDING_STATE_TRY_AGAIN = "mail.SENDING_MESSAGE_IN_PENDING_STATE_TRY_AGAIN";
 
     public static final String SCAN_ERROR      = "mail.SCAN_ERROR";
     public static final String UPLOAD_REJECTED = "mail.UPLOAD_REJECTED";
@@ -571,6 +572,10 @@ public class MailServiceException extends ServiceException {
 
     public static MailServiceException TRY_AGAIN(String msg, Exception e) {
         return new MailServiceException("try again: " + msg, TRY_AGAIN, RECEIVERS_FAULT, e);
+    }
+
+    public static MailServiceException SENDMSG_IN_PENDING_STATE_TRY_AGAIN(String msg) {
+        return new MailServiceException("try again: " + msg, SENDMSG_IN_PENDING_STATE_TRY_AGAIN, RECEIVERS_FAULT);
     }
 
     public static MailServiceException TOO_MANY_QUERY_TERMS_EXPANDED(String msg, String token, int max) {
