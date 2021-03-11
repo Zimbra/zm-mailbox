@@ -64,7 +64,6 @@ public class ServiceException extends Exception {
     public static final String INVALID_DATASOURCE_ID = "service.INVALID_DATASOURCE_ID";
     public static final String DATASOURCE_SMTP_DISABLED = "service.DATASOURCE_SMTP_DISABLED";
     public static final String ERROR_WHILE_PARSING_UPLOAD = "service.IOEXCEPTION_WHILE_PARSING_UPLOAD";
-    public static final String ACCT_BLOCKED_FAILURE = "service.ACCT_BLOCKED_FAILURE";
 
     //smime
     public static final String LOAD_CERTIFICATE_FAILED = "smime.LOAD_CERTIFICATE_FAILED";
@@ -291,10 +290,6 @@ public class ServiceException extends Exception {
      */
     public static ServiceException FAILURE(String message, Throwable cause) {
         return new ServiceException("system failure: "+message, FAILURE, RECEIVERS_FAULT, cause);
-    }
-
-    public static ServiceException ACCT_BLOCKED_FAILURE(String message) {
-        return new ServiceException("system failure: "+message, ACCT_BLOCKED_FAILURE, RECEIVERS_FAULT);
     }
 
     public static ServiceException ERROR_WHILE_PARSING_UPLOAD(String message, Throwable cause) {
