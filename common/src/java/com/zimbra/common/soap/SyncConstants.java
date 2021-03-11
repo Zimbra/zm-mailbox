@@ -25,6 +25,8 @@ public final class SyncConstants {
 
     public static final String E_ALLOW_DEVICE_REQUEST = "AllowDeviceRequest";
     public static final String E_ALLOW_DEVICE_RESPONSE = "AllowDeviceResponse";
+    public static final String E_BLOCK_DEVICE_REQUEST = "BlockDeviceRequest";
+    public static final String E_BLOCK_DEVICE_RESPONSE = "BlockDeviceResponse";
     public static final String E_GET_DEVICE_STATUS_REQUEST = "GetDeviceStatusRequest";
     public static final String E_GET_DEVICE_STATUS_RESPONSE = "GetDeviceStatusResponse";
     public static final String E_REMOVE_DEVICE_REQUEST = "RemoveDeviceRequest";
@@ -46,6 +48,8 @@ public final class SyncConstants {
 
     public static final QName ALLOW_DEVICE_REQUEST = QName.get(E_ALLOW_DEVICE_REQUEST, NAMESPACE);
     public static final QName ALLOW_DEVICE_RESPONSE = QName.get(E_ALLOW_DEVICE_RESPONSE, NAMESPACE);
+    public static final QName BLOCK_DEVICE_REQUEST = QName.get(E_BLOCK_DEVICE_REQUEST, NAMESPACE);
+    public static final QName BLOCK_DEVICE_RESPONSE = QName.get(E_BLOCK_DEVICE_RESPONSE, NAMESPACE);
     public static final QName GET_DEVICE_STATUS_REQUEST = QName.get(E_GET_DEVICE_STATUS_REQUEST, NAMESPACE);
     public static final QName GET_DEVICE_STATUS_RESPONSE = QName.get(E_GET_DEVICE_STATUS_RESPONSE, NAMESPACE);
     public static final QName REMOVE_DEVICE_REQUEST = QName.get(E_REMOVE_DEVICE_REQUEST, NAMESPACE);
@@ -74,6 +78,7 @@ public final class SyncConstants {
     public static final String E_REMOTE_WIPE_ACK_TIME = "remoteWipeAckTime";
     public static final String E_RECOVERY_PASSWORD = "recoveryPassword";
     public static final String E_LAST_USED_DATE = "lastUsedDate";
+    public static final String E_LAST_UPDATED_BY = "lastUpdatedBy";
     public static final String E_FOLDER = "folder";
     public static final String E_SYNCSTATE = "syncState";
     public static final String E_ITEMS = "item";
@@ -99,6 +104,8 @@ public final class SyncConstants {
     public static final String A_OFFSET = "offset";
     public static final String A_LIMIT = "limit";
     public static final String A_FILTERDEVICESBYAND = "filterDevicesByAnd";
+    public static final String A_ADMIN = "Admin";
+    public static final String A_USER = "User";
 
     // Sync command response statuses
     // Reference - https://msdn.microsoft.com/en-us/library/gg675457(v=exchg.80).aspx
