@@ -194,7 +194,7 @@ public class SendMsg extends MailDocumentHandler {
                    savedMsgId = sendRecord.getSecond();
                } else if (state == SendState.PENDING) {
                    // tired of waiting for another thread to complete the send
-                   throw MailServiceException.TRY_AGAIN("message send already in progress: " + sendUid);
+                   throw MailServiceException.SENDMSG_IN_PENDING_STATE_TRY_AGAIN("message send in pending state: " + sendUid);
                } else if (state == SendState.NEW) {
                    MimeMessageData mimeData = new MimeMessageData();
                    try {
@@ -280,7 +280,7 @@ public class SendMsg extends MailDocumentHandler {
             try {
                 mv.accept(mm);
             } catch (MessagingException e) {
-                throw ServiceException.PARSE_ERROR("Error while fixing up SendMsg for SENT-BY", e);
+                throw ServiceException.FIXING_SENDMSG_FOR_SENTBY_PARSE_ERROR("Error while sending the message during fixup for SENT-BY of ICalendar on behalf of other user.", e);
             }
             isCalendarMessage = mv.isCalendarMessage();
         }
@@ -296,10 +296,10 @@ public class SendMsg extends MailDocumentHandler {
         } else {
             com.zimbra.cs.account.DataSource dataSource = mbox.getAccount().getDataSourceById(dataSourceId);
             if (dataSource == null) {
-                throw ServiceException.INVALID_REQUEST("No data source with id " + dataSourceId, null);
+                throw ServiceException.INVALID_DATASOURCE_ID("No data source with id " + dataSourceId, null);
             }
             if (!dataSource.isSmtpEnabled()) {
-                throw ServiceException.INVALID_REQUEST("Data source SMTP is not enabled", null);
+                throw ServiceException.DATASOURCE_SMTP_DISABLED("Data source SMTP is not enabled", null);
             }
             sender = mbox.getDataSourceMailSender(dataSource, isCalendarMessage);
             id = sender.sendDataSourceMimeMessage(oc, mbox, mm, uploads, origMsgId, replyType);
@@ -368,7 +368,7 @@ public class SendMsg extends MailDocumentHandler {
         } catch (MessagingException e) {
             throw MailServiceException.MESSAGE_PARSE_ERROR(e);
         } catch (IOException e) {
-            throw ServiceException.FAILURE("IOException when parsing upload", e);
+            throw ServiceException.ERROR_WHILE_PARSING_UPLOAD("IOException when parsing upload", e);
         }
     }
 
