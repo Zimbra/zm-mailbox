@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2021 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -716,7 +716,7 @@ public class Folder extends MailItem implements FolderStore, SharedState {
         }
 
         FolderState fields = getState();
-        fields.getUnderlyingData().size = totalSize;
+        fields.getUnderlyingData().size = count;
         fields.setTotalSize(totalSize);
         fields.setDeletedCount(deletedCount);
         fields.setDeletedUnreadCount(deletedUnread);
