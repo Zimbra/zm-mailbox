@@ -575,7 +575,8 @@ public class MailServiceException extends ServiceException {
     }
 
     public static MailServiceException SENDMSG_IN_PENDING_STATE_TRY_AGAIN(String msg) {
-        return new MailServiceException("try again: " + msg, SENDMSG_IN_PENDING_STATE_TRY_AGAIN, RECEIVERS_FAULT);
+        return new MailServiceException(
+                String.format("try again: %s", msg), SENDMSG_IN_PENDING_STATE_TRY_AGAIN, RECEIVERS_FAULT);
     }
 
     public static MailServiceException TOO_MANY_QUERY_TERMS_EXPANDED(String msg, String token, int max) {
