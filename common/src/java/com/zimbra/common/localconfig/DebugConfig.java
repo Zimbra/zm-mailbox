@@ -361,7 +361,7 @@ public final class DebugConfig {
     /**
      * max number of tries to be done in Mailbox.addMessage()
      */
-    public static final int addMessageMaxNumberOfTries = value ("debug_add_message_max_number_of_tries", 3);
+    public static final int addMessageMaxNumberOfTries = value ("add_message_max_number_of_tries", 3);
 
     private static boolean value(String key, boolean defaultValue) {
         String value = LC.get(key);

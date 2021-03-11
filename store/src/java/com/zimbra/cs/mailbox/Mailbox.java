@@ -5737,16 +5737,16 @@ public class Mailbox implements MailboxStore {
                 } finally {
                     if (msgAdded || tries >= max_tries) {
                         if (deleteIncoming) {
-                            ZimbraLog.mailbox.trace("deleting incoming blob");
+                            ZimbraLog.mailbox.trace("deleting temporary incoming blob after messageAdded=%s and tries=%s", msgAdded, tries);
                             sm.quietDelete(dctxt.getIncomingBlob());
                         }
                         if (deleteMailboxSpecificBlob) {
-                            ZimbraLog.mailbox.trace("deleting mailbox specific blob");
+                            ZimbraLog.mailbox.trace("deleting mailbox specific blob after messageAdded=%s and tries=%s", msgAdded, tries);
                             sm.quietDelete(dctxt.getMailBoxSpecificBlob(mId));
-                            ZimbraLog.mailbox.trace("deleting mailbox specific blob from delivery context");
+                            ZimbraLog.mailbox.trace("deleting mailbox specific blob from delivery context after messageAdded=%s and tries=%s", msgAdded, tries);
                             dctxt.clearMailBoxSpecificBlob(mId);
                         }
-                        ZimbraLog.mailbox.trace("deleting staged blob");
+                        ZimbraLog.mailbox.trace("deleting temporary staged blob after messageAdded=%s and tries=%s", msgAdded, tries);
                         sm.quietDelete(staged);
                     }
                 }
