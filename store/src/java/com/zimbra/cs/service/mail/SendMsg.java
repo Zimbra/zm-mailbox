@@ -194,7 +194,8 @@ public class SendMsg extends MailDocumentHandler {
                    savedMsgId = sendRecord.getSecond();
                } else if (state == SendState.PENDING) {
                    // tired of waiting for another thread to complete the send
-                   throw MailServiceException.SENDMSG_IN_PENDING_STATE_TRY_AGAIN("message send in pending state: " + sendUid);
+                   throw MailServiceException.SENDMSG_IN_PENDING_STATE_TRY_AGAIN(
+                           String.format("message send in pending state: %s", sendUid));
                } else if (state == SendState.NEW) {
                    MimeMessageData mimeData = new MimeMessageData();
                    try {
@@ -296,7 +297,8 @@ public class SendMsg extends MailDocumentHandler {
         } else {
             com.zimbra.cs.account.DataSource dataSource = mbox.getAccount().getDataSourceById(dataSourceId);
             if (dataSource == null) {
-                throw ServiceException.INVALID_DATASOURCE_ID("No data source with id " + dataSourceId, null);
+                throw ServiceException.INVALID_DATASOURCE_ID(
+                        String.format("No data source with id %s", dataSourceId), null);
             }
             if (!dataSource.isSmtpEnabled()) {
                 throw ServiceException.DATASOURCE_SMTP_DISABLED("Data source SMTP is not enabled", null);
