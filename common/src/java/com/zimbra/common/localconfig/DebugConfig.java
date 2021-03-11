@@ -358,6 +358,11 @@ public final class DebugConfig {
 
     public static final boolean disableSolrBatchDeletesByQuery = value("disable_solr_batch_deletes_by_query", false);
 
+    /**
+     * max number of tries to be done in Mailbox.addMessage()
+     */
+    public static final int addMessageMaxNumberOfTries = value ("debug_add_message_max_number_of_tries", 3);
+
     private static boolean value(String key, boolean defaultValue) {
         String value = LC.get(key);
         return value.isEmpty() ? defaultValue : Boolean.parseBoolean(value);

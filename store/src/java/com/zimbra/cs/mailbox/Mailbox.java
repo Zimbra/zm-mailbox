@@ -5706,7 +5706,7 @@ public class Mailbox implements MailboxStore {
             localMsgMarkedRead = true;
         }
         boolean msgAdded = false;
-        int max_tries = 3;
+        int max_tries = DebugConfig.addMessageMaxNumberOfTries;
         int tries = 1;
         while (!msgAdded && (tries <= max_tries)) {
             try (final MailboxLock l = this.getWriteLockAndLockIt()) {
@@ -5729,18 +5729,24 @@ public class Mailbox implements MailboxStore {
                     if (tries >= max_tries) {
                         ZimbraLog.mailbox.error("AddMessage failed due to Database rollbacks after %s retries - %s",
                                 tries, tre.getMessage());
+                        // set deleteMailboxSpecificBlob to true, so that it will get deleted after max tries
+                        deleteMailboxSpecificBlob = true;
                         throw tre;
                     }
                     ZimbraLog.mailbox.warn("Retry AddMessage %s of %s after Database rollback", tries, max_tries);
                 } finally {
                     if (msgAdded || tries >= max_tries) {
                         if (deleteIncoming) {
+                            ZimbraLog.mailbox.trace("deleting incoming blob");
                             sm.quietDelete(dctxt.getIncomingBlob());
                         }
                         if (deleteMailboxSpecificBlob) {
+                            ZimbraLog.mailbox.trace("deleting mailbox specific blob");
                             sm.quietDelete(dctxt.getMailBoxSpecificBlob(mId));
+                            ZimbraLog.mailbox.trace("deleting mailbox specific blob from delivery context");
                             dctxt.clearMailBoxSpecificBlob(mId);
                         }
+                        ZimbraLog.mailbox.trace("deleting staged blob");
                         sm.quietDelete(staged);
                     }
                 }
@@ -6050,10 +6056,10 @@ public class Mailbox implements MailboxStore {
 
             // step 6: link to existing blob
             MailboxBlob mblob = StoreManager.getInstance().link(staged, this, messageId, getOperationChangeID());
-            markOtherItemDirty(mblob);
             // when we created the Message, we used the staged locator/size/digest;
             //   make sure that data actually matches the final blob in the store
             msg.updateBlobData(mblob);
+            ZimbraLog.mailbox.trace("mailbox blob created and added in message");
 
             if (dctxt.getMailboxBlob() == null) {
                 // Set mailbox blob for in case we want to add the message to the
@@ -10331,6 +10337,7 @@ public class Mailbox implements MailboxStore {
                         // delete any blobs associated with items deleted from db/index
                         StoreManager sm = StoreManager.getInstance();
                         for (MailboxBlob blob : deletes.blobs) {
+                            ZimbraLog.mailbox.trace("MailboxTransaction.close() : deletes : deleting mailbox blob");
                             sm.quietDelete(blob);
                         }
                     }
@@ -10339,8 +10346,10 @@ public class Mailbox implements MailboxStore {
                     StoreManager sm = StoreManager.getInstance();
                     for (Object obj : rollbackDeletes) {
                         if (obj instanceof MailboxBlob) {
+                            ZimbraLog.mailbox.trace("MailboxTransaction.close() : rollbackDeletes : deleting mailbox blob");
                             sm.quietDelete((MailboxBlob) obj);
                         } else if (obj instanceof Blob) {
+                            ZimbraLog.mailbox.trace("MailboxTransaction.close() : rollbackDeletes : deleting blob");
                             sm.quietDelete((Blob) obj);
                         }
                     }
