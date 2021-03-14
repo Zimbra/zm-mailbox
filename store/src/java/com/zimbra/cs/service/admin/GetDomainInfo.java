@@ -87,7 +87,7 @@ public class GetDomainInfo extends AdminDocumentHandler {
              *
              * see if we can still find a domain.  We do this by
              *
-             * 1. if by virtualHostname, see if we can find a domain by the name.  If we can, use that doamin.
+             * 1. if by virtualHostname, see if we can find a domain by the name.  If we can, use that domain.
              *
              * 2. if get(DomainBy.name) returns null using the supplied value, we walk up the sub-domains
              *    and see if we can find a domain by the name.

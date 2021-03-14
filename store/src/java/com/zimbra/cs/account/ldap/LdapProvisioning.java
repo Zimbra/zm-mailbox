@@ -11374,7 +11374,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                 zlc.deleteEntry(createOuDn(habOrgUnitName, domainDn));
             } else {
                 throw ServiceException.FAILURE(String.format("HabOrgUnit: %s"
-                   + " of doamin:%s  is not empty", habOrgUnitName, domainDn) , null);
+                   + " of domain:%s  is not empty", habOrgUnitName, domainDn) , null);
             }
         } catch (ServiceException e) {
             throw ServiceException.FAILURE(String.format("Unable to delete HAB org unit: %s for domain=%s",habOrgUnitName, domain.getName()), e);

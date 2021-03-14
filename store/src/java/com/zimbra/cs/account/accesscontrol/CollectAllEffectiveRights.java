@@ -605,7 +605,7 @@ public class CollectAllEffectiveRights {
                 mGrantee.getId(), mGrantee.getName());
         CollectEffectiveRights.getEffectiveRights(mGrantee, pseudoTarget, mExpandSetAttrs, mExpandGetAttrs, er);
 
-        // add to the domianed scope in AllEffectiveRights
+        // add to the domained scope in AllEffectiveRights
         mResult.addDomainEntry(targetType, domainName, er);
     }
 

@@ -9800,7 +9800,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMobileForceSamsungProtocol25 = "zimbraMobileForceSamsungProtocol25";
 
     /**
-     * id of the doamin under which (hidden) accounts for apps would be
+     * id of the domain under which (hidden) accounts for apps would be
      * created
      *
      * @since ZCS 8.7.0

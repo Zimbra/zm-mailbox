@@ -259,7 +259,7 @@ public abstract class Group extends MailTarget implements AliasedEntry {
         public static void getOwnerEmails(Group group, Collection<String> result)
         throws ServiceException {
             /*
-             * No need to check rights granted on the doamin or globalgrant,
+             * No need to check rights granted on the domain or globalgrant,
              * The ownDistList can only be granted on group target.
              */
             List<ZimbraACE> acl = ACLUtil.getACEs(group, Collections.singleton(GROUP_OWNER_RIGHT));

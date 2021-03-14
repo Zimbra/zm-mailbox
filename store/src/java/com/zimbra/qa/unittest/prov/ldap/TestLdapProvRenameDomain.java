@@ -104,7 +104,7 @@ public class TestLdapProvRenameDomain extends LdapTest {
     private static String NAMEPREFIX_IDENTITY    = "identity-";
     private static String NAMEPREFIX_OTHERDOMAIN = "otherdomain-";
     private static String NAMEPREFIX_SIGNATURE   = "signature-";
-    private static String NAMEPREFIX_SUB_DOMAIN  = "subdomian-";
+    private static String NAMEPREFIX_SUB_DOMAIN  = "subdomain-";
     
     // pseudo domain index for the old domain and new domain, so that we can use the unified interfaces
     private static int OLD_DOMAIN  = 0;
@@ -459,7 +459,7 @@ public class TestLdapProvRenameDomain extends LdapTest {
         
         /*
          * currently only aName will pass the test in verifyEntryAttrs, should probably 
-         * fix renameDoamin to take care uName in these attrs
+         * fix renameDomain to take care uName in these attrs
          */
         String domainName = domainIDNName.uName();
         

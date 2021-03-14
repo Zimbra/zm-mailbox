@@ -31446,7 +31446,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * id of the doamin under which (hidden) accounts for apps would be
+     * id of the domain under which (hidden) accounts for apps would be
      * created
      *
      * @return zimbraMobileGatewayDefaultAppAccountDomainId, or null if unset
@@ -31459,7 +31459,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * id of the doamin under which (hidden) accounts for apps would be
+     * id of the domain under which (hidden) accounts for apps would be
      * created
      *
      * @param zimbraMobileGatewayDefaultAppAccountDomainId new value
@@ -31475,7 +31475,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * id of the doamin under which (hidden) accounts for apps would be
+     * id of the domain under which (hidden) accounts for apps would be
      * created
      *
      * @param zimbraMobileGatewayDefaultAppAccountDomainId new value
@@ -31492,7 +31492,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * id of the doamin under which (hidden) accounts for apps would be
+     * id of the domain under which (hidden) accounts for apps would be
      * created
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -31507,7 +31507,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * id of the doamin under which (hidden) accounts for apps would be
+     * id of the domain under which (hidden) accounts for apps would be
      * created
      *
      * @param attrs existing map to populate, or null to create a new map

@@ -8453,7 +8453,7 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="1759" name="zimbraMobileGatewayDefaultAppAccountDomainId" type="id" cardinality="single" optionalIn="globalConfig" since="8.7.0">
-  <desc>id of the doamin under which (hidden) accounts for apps would be created</desc>
+  <desc>id of the domain under which (hidden) accounts for apps would be created</desc>
 </attr>
 
 <attr id="1760" name="zimbraIsMobileGatewayAppAccount" type="boolean" cardinality="single" optionalIn="account" flags="accountInfo" since="8.7.0">
