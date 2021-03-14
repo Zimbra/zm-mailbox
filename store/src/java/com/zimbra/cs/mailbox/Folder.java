@@ -236,7 +236,7 @@ public class Folder extends MailItem implements FolderStore, SharedState {
             return "/";
         }
         setupParent();
-        String parentPath = parentLocator.getParent().getPath();
+        String parentPath = (parentLocator != null && parentLocator.getParent() != null) ? parentLocator.getParent().getPath() : "/";
         return parentPath + (parentPath.equals("/") ? "" : "/") + getName();
     }
 
