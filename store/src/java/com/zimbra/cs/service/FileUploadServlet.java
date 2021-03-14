@@ -742,7 +742,7 @@ public class FileUploadServlet extends ZimbraServlet {
         })) {
             mLog.debug("handlePlainUpload(): deleting %s", fi);
             fi.delete();
-            mLog.info("File content type is blacklisted : %s" + finalMimeType);
+            mLog.info("File content type is blacklisted : %s", finalMimeType);
             drainRequestStream(req);
             sendResponse(resp, HttpServletResponse.SC_FORBIDDEN, fmt, null, null, null);
             return Collections.emptyList();
