@@ -64,7 +64,7 @@ public class GalNamedFilter {
         return filter;
     }
     
-    public static String getZimbraAcountFilter(GalOp galOp) {
+    public static String getZimbraAccountFilter(GalOp galOp) {
         String filter = null;
         
         if (galOp == GalOp.autocomplete)

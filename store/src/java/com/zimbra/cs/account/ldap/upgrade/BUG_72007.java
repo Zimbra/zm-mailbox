@@ -38,8 +38,8 @@ public class BUG_72007 extends UpgradeOp {
     void doUpgrade() throws ServiceException {
         
         Config config = prov.getConfig();
-        upgrdeAcount(config.getAttr(Provisioning.A_zimbraSpamIsNotSpamAccount));
-        upgrdeAcount(config.getAttr(Provisioning.A_zimbraSpamIsSpamAccount));
+        upgrdeAccount(config.getAttr(Provisioning.A_zimbraSpamIsNotSpamAccount));
+        upgrdeAccount(config.getAttr(Provisioning.A_zimbraSpamIsSpamAccount));
     }
     
     @Override
@@ -56,7 +56,7 @@ public class BUG_72007 extends UpgradeOp {
                         ProvisioningConstants.TRUE));
     }
     
-    private void upgrdeAcount(String name) throws ServiceException {
+    private void upgrdeAccount(String name) throws ServiceException {
         if (name != null) {
             Account acct = prov.get(AccountBy.name, name);
             if (acct != null) {

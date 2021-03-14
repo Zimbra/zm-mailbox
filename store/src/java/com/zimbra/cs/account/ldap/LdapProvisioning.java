@@ -5597,7 +5597,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                         AuthMechanism.namePassedIn(authCtxt), "account lockout");
             }
 
-            // yes, SSO can unlock the acount
+            // yes, SSO can unlock the account
             lockoutPolicy.successfulLogin();
         } catch (AccountServiceException e) {
             lockoutPolicy.failedLogin();
@@ -7386,7 +7386,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     private SearchGalResult searchZimbraGal(Domain d, String n, int maxResults, String token, GalOp galOp, GalContact.Visitor visitor)
     throws ServiceException {
-        return searchZimbraWithNamedFilter(d, galOp, GalNamedFilter.getZimbraAcountFilter(galOp), n, maxResults, token, visitor);
+        return searchZimbraWithNamedFilter(d, galOp, GalNamedFilter.getZimbraAccountFilter(galOp), n, maxResults, token, visitor);
     }
 
     private SearchGalResult searchZimbraWithNamedFilter(

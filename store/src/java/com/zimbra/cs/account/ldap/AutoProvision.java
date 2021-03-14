@@ -282,7 +282,7 @@ public abstract class AutoProvision {
         } else {
             if (loginName == null) {
                 throw ServiceException.FAILURE(
-                        "AutoProvision: unable to map acount name, must configure " +
+                        "AutoProvision: unable to map account name, must configure " +
                         Provisioning.A_zimbraAutoProvAccountNameMap, null);
             }
             EmailAddress emailAddr = new EmailAddress(loginName, false);

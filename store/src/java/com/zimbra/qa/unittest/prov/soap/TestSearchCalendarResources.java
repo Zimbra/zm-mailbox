@@ -169,7 +169,7 @@ public class TestSearchCalendarResources extends SoapTest {
             // offset and limit are honored
             Assert.assertEquals(2, resources.size());
             Assert.assertTrue(!found1);// not within specified offset, at offset 0 
-                                       // (gal sync acount mailbox search is by nameAcs order) 
+                                       // (gal sync account mailbox search is by nameAcs order)
             Assert.assertTrue(found2);
             Assert.assertTrue(found3); 
         }
@@ -246,7 +246,7 @@ public class TestSearchCalendarResources extends SoapTest {
             Assert.assertTrue(!found1); // not matching capacity requirement   
             Assert.assertTrue(!found2);   
             Assert.assertTrue(found3);  // not within specified offset, at offset 0 
-                                        // (gal sync acount mailbox search is by dateDesc order) 
+                                        // (gal sync account mailbox search is by dateDesc order)
         }
     }
     

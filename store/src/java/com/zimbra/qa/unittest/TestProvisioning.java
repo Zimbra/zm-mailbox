@@ -1320,7 +1320,7 @@ public class TestProvisioning extends TestCase {
         // first, we delete the third sig, just to clear the account signature entry
         mProv.deleteSignature(account, thirdEntry.getId());
 
-        // manually set the A_zimbraPrefMailSignature on the aqccount
+        // manually set the A_zimbraPrefMailSignature on the account
         String aSigValueOnAccount = "a signature value on account";
         String accountSigName = account.getName();
         acctAttrs.clear();

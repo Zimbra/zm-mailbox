@@ -248,7 +248,7 @@ public class Contact extends MailItem {
             if (emailFields == null)
                 emailFields = EMAIL_FIELDS;
 
-            // we now have a non empty emailFields, cache it on the acccount
+            // we now have a non empty emailFields, cache it on the account
             acct.setCachedData(EntryCacheDataKey.ACCOUNT_EMAIL_FIELDS, emailFields);
         }
 

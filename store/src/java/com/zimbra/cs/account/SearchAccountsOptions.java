@@ -25,7 +25,7 @@ import com.zimbra.common.service.ServiceException;
  * 
  * Callsites can use SearchAccountsOptions.setIncludeType() instead of 
  * SearchObjectsOptions.setTypes().  Default types for SearchAccountsOptions
- * is acounts and calendar resources,
+ * is accounts and calendar resources,
  */
 public class SearchAccountsOptions extends SearchDirectoryOptions {
     private static final SearchAccountsOptions.IncludeType DEFAULT_INCLUDE_TYPE = 
