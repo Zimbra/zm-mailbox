@@ -173,7 +173,7 @@ public class TestSearchDirectory extends SoapTest {
     }
 
     private static class Bug39514 {
-        private static String BUG_39514_TEST_DOAMIN = "bug39514-test-";
+        private static String BUG_39514_TEST_DOMAIN = "bug39514-test-";
 
         private static final int numAcctsInDomain1 = 5;
         private static final int numAcctsInDomain2 = 10;
@@ -197,9 +197,9 @@ public class TestSearchDirectory extends SoapTest {
 
             String DOMAIN_NAME = ("Bug39514." + TestSearchDirectory.domain.getName()).toLowerCase();
 
-            String domain1Name = BUG_39514_TEST_DOAMIN + "1." + DOMAIN_NAME;
-            String domain2Name = BUG_39514_TEST_DOAMIN + "2." + DOMAIN_NAME;
-            String domain3Name = BUG_39514_TEST_DOAMIN + "3." + DOMAIN_NAME;
+            String domain1Name = BUG_39514_TEST_DOMAIN + "1." + DOMAIN_NAME;
+            String domain2Name = BUG_39514_TEST_DOMAIN + "2." + DOMAIN_NAME;
+            String domain3Name = BUG_39514_TEST_DOMAIN + "3." + DOMAIN_NAME;
 
             String adminAcct11Name = "admin-1-1" + "@" + domain1Name;
             String adminAcct12Name = "admin-1-2" + "@" + domain1Name;
@@ -355,7 +355,7 @@ public class TestSearchDirectory extends SoapTest {
                 // throw away irrelevant domains created outside of this test
                 List<NamedEntry> verifyResults = Lists.newArrayList();
                 for (NamedEntry entry : results) {
-                    if (entry.getName().contains(BUG_39514_TEST_DOAMIN)) {
+                    if (entry.getName().contains(BUG_39514_TEST_DOMAIN)) {
                         verifyResults.add(entry);
                     }
                 }
@@ -378,7 +378,7 @@ public class TestSearchDirectory extends SoapTest {
 
     private static class Bug40499 {
 
-        private static String BUG_40499_TEST_DOAMIN = "bug40499-test-";
+        private static String BUG_40499_TEST_DOMAIN = "bug40499-test-";
 
         private static class TestData {
             String mAdminName;
@@ -396,13 +396,13 @@ public class TestSearchDirectory extends SoapTest {
             String DOMAIN_NAME = ("Bug40499." + TestSearchDirectory.domain.getName()).toLowerCase();
 
             // create 2 domains
-            String denyDomainName = BUG_40499_TEST_DOAMIN + "deny." + DOMAIN_NAME;
-            String allowDomainName = BUG_40499_TEST_DOAMIN + "allow." + DOMAIN_NAME;
+            String denyDomainName = BUG_40499_TEST_DOMAIN + "deny." + DOMAIN_NAME;
+            String allowDomainName = BUG_40499_TEST_DOMAIN + "allow." + DOMAIN_NAME;
 
             Domain denyDomain = prov.createDomain(denyDomainName, new HashMap<String, Object>());
             Domain allowDomain = prov.createDomain(allowDomainName, new HashMap<String, Object>());
 
-            // create two delegated admins, one in each doamin
+            // create two delegated admins, one in each domain
             String denyAdminName = "da" + "@" + denyDomainName;
             String allowAdminName = "da" + "@" + allowDomainName;
 
@@ -479,7 +479,7 @@ public class TestSearchDirectory extends SoapTest {
                 // throw away irrelevant domains created outside of this test
                 List<NamedEntry> verifyResults = Lists.newArrayList();
                 for (NamedEntry entry : results) {
-                    if (entry.getName().contains(BUG_40499_TEST_DOAMIN)) {
+                    if (entry.getName().contains(BUG_40499_TEST_DOMAIN)) {
                         verifyResults.add(entry);
                     }
                 }

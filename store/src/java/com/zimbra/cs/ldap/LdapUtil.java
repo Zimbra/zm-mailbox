@@ -171,7 +171,7 @@ public class LdapUtil {
       * %d = domain as foo.com
       * %D = domain as dc=foo,dc=com
       *
-      * exchange example, where the exchange domian is different than the zimbra one
+      * exchange example, where the exchange domain is different than the zimbra one
       *
       * zimbraAuthMech      ldap
       * zimbraAuthLdapURL   ldap://exch1/

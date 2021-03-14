@@ -102,7 +102,7 @@ public class CrossDomain {
             // return false so ACL granted on this inherited DL target
             // will be ignored
             ZimbraLog.acl.warn("cannot get domain for dl " + grantedOn.getName() +
-                    " for checking cross doamin right");
+                    " for checking cross domain right");
             return false;
         }
 
@@ -112,7 +112,7 @@ public class CrossDomain {
             return true;
 
         // check if this inherited target is in the same domain as the
-        // doamin fo the actual target entry.  If it is, no issue.
+        // domain fo the actual target entry.  If it is, no issue.
         if (targetDomain.getId().equals(grantedOnTargetInDomain.getId()))
             return true;
 

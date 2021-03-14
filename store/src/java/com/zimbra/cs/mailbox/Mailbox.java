@@ -5148,7 +5148,7 @@ public class Mailbox implements MailboxStore {
     }
 
     /**
-     * Return a list of all the {attachments} or {doamins} or {objects} in this Mailbox, optionally with a prefix string
+     * Return a list of all the {attachments} or {domains} or {objects} in this Mailbox, optionally with a prefix string
      * or limited by maximum number.
      *
      * @param max Maximum number of results to return.  0 means "return all results"  If more than max entries exist,

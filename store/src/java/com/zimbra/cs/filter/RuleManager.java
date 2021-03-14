@@ -134,7 +134,7 @@ public final class RuleManager {
         if (entry instanceof Account) {
             ZimbraLog.filter.debug("Setting filter rules for account %s:\n%s", ((Account)entry).getName(), script);
         } else if (entry instanceof Domain) {
-            ZimbraLog.filter.debug("Setting filter rules for domian %s:\n%s", ((Domain)entry).getName(), script);
+            ZimbraLog.filter.debug("Setting filter rules for domain %s:\n%s", ((Domain)entry).getName(), script);
         } else if (entry instanceof Cos) {
             ZimbraLog.filter.debug("Setting filter rules for cos %s:\n%s", ((Cos)entry).getName(), script);
         } else if (entry instanceof Server) {

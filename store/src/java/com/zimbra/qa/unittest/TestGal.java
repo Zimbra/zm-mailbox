@@ -100,7 +100,7 @@ public class TestGal extends TestCase {
     enum PageSizeLdapServerUnlimited implements PageSize {
         PS_UNLIMITED(0),
         PS_MORE_ACCOUNTS(more(NUM_ACCOUNTS)),
-        PS_LESS_ACOUNTS(less(NUM_ACCOUNTS));
+        PS_LESS_ACCOUNTS(less(NUM_ACCOUNTS));
             
         int mPs;
         

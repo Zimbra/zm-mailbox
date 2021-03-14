@@ -205,7 +205,7 @@ public class ProxyPurgeUtil
             Account account = prov.get(Key.AccountBy.name, a);
             if (account == null) {
                 // In this case just purge the entries with the given account name as supplied.
-                System.out.println("error looking up accout: " + a);
+                System.out.println("error looking up account: " + a);
                 routes.add("route:proto=http;user=" + a);
                 routes.add("route:proto=imap;user=" + a);
                 routes.add("route:proto=pop3;user=" + a);

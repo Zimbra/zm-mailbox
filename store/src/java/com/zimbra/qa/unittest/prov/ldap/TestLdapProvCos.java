@@ -322,7 +322,7 @@ public class TestLdapProvCos extends LdapTest {
         
         final String COS1_NAME = genCosName("1");
         final String COS2_NAME = genCosName("2");
-        final String DOMAIN_DEFAULT_COS_NAME = genCosName("domian-default-cos");
+        final String DOMAIN_DEFAULT_COS_NAME = genCosName("domain-default-cos");
         
         final String COS1_VALUE = "10000";
         final String COS2_VALUE = "20000";

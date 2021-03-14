@@ -94,7 +94,7 @@ public class TestProvisioning extends TestCase {
     private String ACCT_EMAIL_SPECIAL_CHARS;
     private String ACCT_ALIAS_USER;
     private String ACCT_ALIAS_EMAIL;
-    private String ACCT_ALIAS_AFTER_ACCOUNT_RENAME_TO_OTHER_DMAIN_EMAIL;
+    private String ACCT_ALIAS_AFTER_ACCOUNT_RENAME_TO_OTHER_DOMAIN_EMAIL;
     private String ACCT_ALIAS_IN_OTHER_DOMAIN_USER;
     private String ACCT_ALIAS_IN_OTHER_DOMAIN_EMAIL;
     private String ACCT_ALIAS_IN_OTHER_DOMAIN_AFTER_ACCOUNT_RENAME_TO_ORIG_DOMAIN_EMAIL;
@@ -174,7 +174,7 @@ public class TestProvisioning extends TestCase {
         ACCT_EMAIL_SPECIAL_CHARS = ACCT_USER_SPECIAL_CHARS + "@" + DOMAIN_NAME_SPECIAL_CHARS;
         ACCT_ALIAS_USER = "alias-of-" + ACCT_USER;
         ACCT_ALIAS_EMAIL = ACCT_ALIAS_USER + "@" + DOMAIN_NAME;
-        ACCT_ALIAS_AFTER_ACCOUNT_RENAME_TO_OTHER_DMAIN_EMAIL = ACCT_ALIAS_USER + "@" + OTHER_DOMAIN_NAME;
+        ACCT_ALIAS_AFTER_ACCOUNT_RENAME_TO_OTHER_DOMAIN_EMAIL = ACCT_ALIAS_USER + "@" + OTHER_DOMAIN_NAME;
         ACCT_ALIAS_IN_OTHER_DOMAIN_USER = ACCT_ALIAS_USER + "-in-other-domain";
         ACCT_ALIAS_IN_OTHER_DOMAIN_EMAIL = ACCT_ALIAS_IN_OTHER_DOMAIN_USER + "@" + OTHER_DOMAIN_NAME;
         ACCT_ALIAS_IN_OTHER_DOMAIN_AFTER_ACCOUNT_RENAME_TO_ORIG_DOMAIN_EMAIL = ACCT_ALIAS_IN_OTHER_DOMAIN_USER + "@" + DOMAIN_NAME;
@@ -755,7 +755,7 @@ public class TestProvisioning extends TestCase {
         // add an alias in the same domain
         mProv.addAlias(entry, ACCT_ALIAS_EMAIL);
 
-        // add an alias in a different doamin
+        // add an alias in a different domain
         boolean correct = false;
         try {
             mProv.addAlias(entry, ACCT_ALIAS_IN_OTHER_DOMAIN_EMAIL);
@@ -915,9 +915,9 @@ public class TestProvisioning extends TestCase {
                 // make sure the alias is now moved to the other domain and there shouldn't be any let in the old domain
                 list = searchAliasesInDomain(domain);
                 assertEquals(0, list.size());
-                // make sure both aliases are now in the other doamin
+                // make sure both aliases are now in the other domain
                 list = searchAliasesInDomain(otherDomain);
-                TestProvisioningUtil.verifyEntriesByName(list, new String[]{ACCT_ALIAS_AFTER_ACCOUNT_RENAME_TO_OTHER_DMAIN_EMAIL,
+                TestProvisioningUtil.verifyEntriesByName(list, new String[]{ACCT_ALIAS_AFTER_ACCOUNT_RENAME_TO_OTHER_DOMAIN_EMAIL,
                                     ACCT_ALIAS_IN_OTHER_DOMAIN_EMAIL}, true);
             }
         }
@@ -1320,7 +1320,7 @@ public class TestProvisioning extends TestCase {
         // first, we delete the third sig, just to clear the account signature entry
         mProv.deleteSignature(account, thirdEntry.getId());
 
-        // manually set the A_zimbraPrefMailSignature on the aqccount
+        // manually set the A_zimbraPrefMailSignature on the account
         String aSigValueOnAccount = "a signature value on account";
         String accountSigName = account.getName();
         acctAttrs.clear();
@@ -1941,7 +1941,7 @@ public class TestProvisioning extends TestCase {
 
         // delete DLs
         for (DistributionList dl : distributionLists) {
-            // so much trouble for DL if the domain is not the default doamin
+            // so much trouble for DL if the domain is not the default domain
             // we temporarily changed the default domain to the special char
             // domain  in diestributionListTest so that it can be created.
             // now we have to do the same hack to it can be removed!!!
