@@ -39,6 +39,10 @@ public final class SyncConstants {
     public static final String E_REMOTE_WIPE_RESPONSE = "RemoteWipeResponse";
     public static final String E_CANCEL_PENDING_REMOTE_WIPE_REQUEST = "CancelPendingRemoteWipeRequest";
     public static final String E_CANCEL_PENDING_REMOTE_WIPE_RESPONSE = "CancelPendingRemoteWipeResponse";
+    public static final String E_ACCOUNT_ONLY_REMOTE_WIPE_REQUEST = "AccountOnlyRemoteWipeRequest";
+    public static final String E_ACCOUNT_ONLY_REMOTE_WIPE_RESPONSE = "AccountOnlyRemoteWipeResponse";
+    public static final String E_CANCEL_PENDING_ACCOUNT_ONLY_REMOTE_WIPE_REQUEST = "CancelPendingAccountOnlyRemoteWipeRequest";
+    public static final String E_CANCEL_PENDING_ACCOUNT_ONLY_REMOTE_WIPE_RESPONSE = "CancelPendingAccountOnlyRemoteWipeResponse";
 
     public static final QName ALLOW_DEVICE_REQUEST = QName.get(E_ALLOW_DEVICE_REQUEST, NAMESPACE);
     public static final QName ALLOW_DEVICE_RESPONSE = QName.get(E_ALLOW_DEVICE_RESPONSE, NAMESPACE);
@@ -56,6 +60,10 @@ public final class SyncConstants {
     public static final QName REMOTE_WIPE_RESPONSE = QName.get(E_REMOTE_WIPE_RESPONSE, NAMESPACE);
     public static final QName CANCEL_PENDING_REMOTE_WIPE_REQUEST = QName.get(E_CANCEL_PENDING_REMOTE_WIPE_REQUEST, NAMESPACE);
     public static final QName CANCEL_PENDING_REMOTE_WIPE_RESPONSE = QName.get(E_CANCEL_PENDING_REMOTE_WIPE_RESPONSE, NAMESPACE);
+    public static final QName ACCOUNT_ONLY_REMOTE_WIPE_REQUEST = QName.get(E_ACCOUNT_ONLY_REMOTE_WIPE_REQUEST, NAMESPACE);
+    public static final QName ACCOUNT_ONLY_REMOTE_WIPE_RESPONSE = QName.get(E_ACCOUNT_ONLY_REMOTE_WIPE_RESPONSE, NAMESPACE);
+    public static final QName CANCEL_PENDING_ACCOUNT_ONLY_REMOTE_WIPE_REQUEST = QName.get(E_CANCEL_PENDING_ACCOUNT_ONLY_REMOTE_WIPE_REQUEST, NAMESPACE);
+    public static final QName CANCEL_PENDING_ACCOUNT_ONLY_REMOTE_WIPE_RESPONSE = QName.get(E_CANCEL_PENDING_ACCOUNT_ONLY_REMOTE_WIPE_RESPONSE, NAMESPACE);
 
     public static final String E_DEVICE = "device";
     public static final String E_PROVISIONABLE = "provisionable";
