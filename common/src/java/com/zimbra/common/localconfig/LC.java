@@ -1374,6 +1374,11 @@ public final class LC {
 
     public static final KnownKey conversation_ignore_maillist_prefix = KnownKey.newKey(true);
 
+ // base host for zulip
+    public static final KnownKey zulip_base_host = KnownKey.newKey("https://%s.zimbracloud.com");
+
+    // zulip jwt secret
+    public static final KnownKey zulip_jwt_secret = KnownKey.newKey("MOVE_ME_TO_A_SECRET");
 
 
     //EWS web service

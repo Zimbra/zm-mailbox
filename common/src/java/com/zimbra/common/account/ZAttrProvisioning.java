@@ -7064,6 +7064,18 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureZimbraAssistantEnabled = "zimbraFeatureZimbraAssistantEnabled";
 
     /**
+     * Whether or not zulip chat is enabled. If false at domain level,
+     * feature not available at domain, cos &amp; account. If true at domain
+     * and false at cos, feature not available at cos &amp; account. If true
+     * at domain &amp; cos and false at account, feature not available at
+     * account.
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=3089)
+    public static final String A_zimbraFeatureZulipChatEnabled = "zimbraFeatureZulipChatEnabled";
+
+    /**
      * Deprecated since: 8.9.0. deprecated with attribute
      * zimbraFeatureModernDesktopEnabled. Orig desc: Whether to allow a user
      * to access Zimbra X desktop
@@ -17640,6 +17652,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1447)
     public static final String A_zimbraZookeeperClientServerList = "zimbraZookeeperClientServerList";
+
+    /**
+     * Zulip chat domain ID
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=3090)
+    public static final String A_zimbraZulipChatDomainId = "zimbraZulipChatDomainId";
 
     ///// END-AUTO-GEN-REPLACE
 }

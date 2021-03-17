@@ -20395,6 +20395,98 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Whether or not zulip chat is enabled. If false at domain level,
+     * feature not available at domain, cos &amp; account. If true at domain
+     * and false at cos, feature not available at cos &amp; account. If true
+     * at domain &amp; cos and false at account, feature not available at
+     * account.
+     *
+     * @return zimbraFeatureZulipChatEnabled, or true if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=3089)
+    public boolean isFeatureZulipChatEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureZulipChatEnabled, true, true);
+    }
+
+    /**
+     * Whether or not zulip chat is enabled. If false at domain level,
+     * feature not available at domain, cos &amp; account. If true at domain
+     * and false at cos, feature not available at cos &amp; account. If true
+     * at domain &amp; cos and false at account, feature not available at
+     * account.
+     *
+     * @param zimbraFeatureZulipChatEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=3089)
+    public void setFeatureZulipChatEnabled(boolean zimbraFeatureZulipChatEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureZulipChatEnabled, zimbraFeatureZulipChatEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not zulip chat is enabled. If false at domain level,
+     * feature not available at domain, cos &amp; account. If true at domain
+     * and false at cos, feature not available at cos &amp; account. If true
+     * at domain &amp; cos and false at account, feature not available at
+     * account.
+     *
+     * @param zimbraFeatureZulipChatEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=3089)
+    public Map<String,Object> setFeatureZulipChatEnabled(boolean zimbraFeatureZulipChatEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureZulipChatEnabled, zimbraFeatureZulipChatEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether or not zulip chat is enabled. If false at domain level,
+     * feature not available at domain, cos &amp; account. If true at domain
+     * and false at cos, feature not available at cos &amp; account. If true
+     * at domain &amp; cos and false at account, feature not available at
+     * account.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=3089)
+    public void unsetFeatureZulipChatEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureZulipChatEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not zulip chat is enabled. If false at domain level,
+     * feature not available at domain, cos &amp; account. If true at domain
+     * and false at cos, feature not available at cos &amp; account. If true
+     * at domain &amp; cos and false at account, feature not available at
+     * account.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=3089)
+    public Map<String,Object> unsetFeatureZulipChatEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureZulipChatEnabled, "");
+        return attrs;
+    }
+
+    /**
      * whether crash reporting is enabled in the Android client
      *
      * @return zimbraFileAndroidCrashReportingEnabled, or true if unset
