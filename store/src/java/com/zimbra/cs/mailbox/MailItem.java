@@ -63,6 +63,7 @@ import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.mailbox.MailItemState.AccessMode;
+import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.MailboxIndex.ItemIndexDeletionInfo;
 import com.zimbra.cs.mailbox.util.TypedIdList;
 import com.zimbra.cs.session.PendingModifications;
@@ -3344,7 +3345,11 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         // when applicable, record the deleted MailItem (rather than just its id)
         if (item != null && !info.incomplete) {
             item.markItemDeleted();
-            parent = item.getParent();
+            try {
+                parent = item.getParent();
+            } catch (NoSuchItemException nsie) {
+                ZimbraLog.mailbox.warn("NoSuchItemException while getting the parent folder of '%s' on mailbox '%d', not found in cache.", item.getName(), mbox.getId());
+            }
         }
 
         if (!fromDumpster) {
