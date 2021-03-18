@@ -65,7 +65,6 @@ public class ServiceException extends Exception {
     public static final String INVALID_DATASOURCE_ID = "service.INVALID_DATASOURCE_ID";
     public static final String DATASOURCE_SMTP_DISABLED = "service.DATASOURCE_SMTP_DISABLED";
     public static final String ERROR_WHILE_PARSING_UPLOAD = "service.IOEXCEPTION_WHILE_PARSING_UPLOAD";
-    public static final String ACCT_BLOCKED_FAILURE = "service.ACCT_BLOCKED_FAILURE";
 
     //smime
     public static final String LOAD_CERTIFICATE_FAILED = "smime.LOAD_CERTIFICATE_FAILED";
@@ -294,12 +293,9 @@ public class ServiceException extends Exception {
         return new ServiceException("system failure: "+message, FAILURE, RECEIVERS_FAULT, cause);
     }
 
-    public static ServiceException ACCT_BLOCKED_FAILURE(String message) {
-        return new ServiceException("system failure: "+message, ACCT_BLOCKED_FAILURE, RECEIVERS_FAULT);
-    }
-
     public static ServiceException ERROR_WHILE_PARSING_UPLOAD(String message, Throwable cause) {
-        return new ServiceException("ioexception during upload: "+message, ERROR_WHILE_PARSING_UPLOAD, RECEIVERS_FAULT, cause);
+        return new ServiceException(
+                String.format("ioexception during upload: %s", message), ERROR_WHILE_PARSING_UPLOAD, RECEIVERS_FAULT, cause);
     }
 
     /**
@@ -313,14 +309,16 @@ public class ServiceException extends Exception {
      * The request was invalid as datasource with the specified Id is not present.
      */
     public static ServiceException INVALID_DATASOURCE_ID(String message, Throwable cause) {
-        return new ServiceException("wrong datasource id: "+message, INVALID_DATASOURCE_ID, SENDERS_FAULT, cause);
+        return new ServiceException(
+                String.format("wrong datasource id: %s", message), INVALID_DATASOURCE_ID, SENDERS_FAULT, cause);
     }
 
     /**
      * The request was invalid as datasource datasource SMTP is not enabled.
      */
     public static ServiceException DATASOURCE_SMTP_DISABLED(String message, Throwable cause) {
-        return new ServiceException("datasource smtp not enabled: "+message, DATASOURCE_SMTP_DISABLED, SENDERS_FAULT, cause);
+        return new ServiceException(
+                String.format("datasource smtp not enabled: %s", message), DATASOURCE_SMTP_DISABLED, SENDERS_FAULT, cause);
     }
 
     /**
@@ -335,7 +333,8 @@ public class ServiceException extends Exception {
     }
 
     public static ServiceException FIXING_SENDMSG_FOR_SENTBY_PARSE_ERROR(String message, Throwable cause) {
-        return new ServiceException("parse error for SENT-BY: "+message, INTERNAL_ERROR, SENDERS_FAULT, cause);
+        return new ServiceException(
+                String.format("parse error for SENT-BY: %s",  message), INTERNAL_ERROR, SENDERS_FAULT, cause);
     }
 
     public static ServiceException RESOURCE_UNREACHABLE(String message, Throwable cause, Argument... arguments) {

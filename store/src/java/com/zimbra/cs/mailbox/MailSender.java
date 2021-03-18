@@ -511,11 +511,6 @@ public class MailSender {
             }
 
             Account acct = mbox.getAccount();
-            if (acct.getAccountStatusAsString().equals(Provisioning.ACCOUNT_STATUS_LOCKED) || 
-                    acct.getAccountStatusAsString().equals(Provisioning.ACCOUNT_STATUS_CLOSED)) {
-                throw ServiceException.ACCT_BLOCKED_FAILURE("Sending not possible as the account is blocked.");
-            }
-            
             Account authuser = octxt == null ? null : octxt.getAuthenticatedUser();
             boolean isAdminRequest = octxt == null ? false : octxt.isUsingAdminPrivileges();
             if (authuser == null) {
