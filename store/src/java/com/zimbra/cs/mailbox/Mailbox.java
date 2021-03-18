@@ -7072,7 +7072,12 @@ public class Mailbox implements MailboxStore {
         List<Integer> folderIds = Lists.newArrayList();
         try (final MailboxTransaction t = mailboxWriteTransaction("delete", octxt, redoRecorder)) {
             setOperationTargetConstraint(tcon);
-
+            // populating list of items for deletion to check
+            // if item's parent is present in the list of deletion
+            List<Integer> deleteItemlist = new ArrayList<Integer>(itemIds.length);
+            for (int i = 0; i < itemIds.length; i++) {
+                deleteItemlist.add(itemIds[i]);
+            }
             for (int id : itemIds) {
                 if (id == ID_AUTO_INCREMENT) {
                     continue;
@@ -7087,7 +7092,13 @@ public class Mailbox implements MailboxStore {
                     // trying to delete nonexistent things is A-OK!
                     continue;
                 }
-
+                if (item != null && deleteItemlist.contains(item.getParentId())) {
+                    ZimbraLog.mailbox.debug("Item %d will be deleted under parent item %d present in deletion list. No need to delete this child item explicitly", id, item.getParentId());
+                    if (nonExistingItems != null) {
+                        nonExistingItems.add(id);
+                    }
+                    continue;
+                }
                 // however, trying to delete messages and passing in a folder ID is not OK
                 if (!MailItem.isAcceptableType(type, item.getType())) {
                     throw MailItem.noSuchItem(id, type);
