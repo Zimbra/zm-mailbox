@@ -50,6 +50,7 @@ import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.ldap.ILdapContext;
 import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
+import com.zimbra.cs.listeners.DomainListener;
 import com.zimbra.soap.admin.type.CacheEntryType;
 
 
@@ -210,6 +211,8 @@ public class RenameDomain {
          * 7. flush account cache on all servers
          */
         flushCacheOnAllServers(CacheEntryType.account);
+
+        DomainListener.invokeOnRenameDomain(mOldDomain, mOldDomain.getName(), newDomain.getName());
     }
 
     public static enum RenamePhase {
