@@ -14,6 +14,8 @@
  * If not, see <https://www.gnu.org/licenses/>.
  * ***** END LICENSE BLOCK *****
  */
+package com.zimbra.cs.listeners;
+
 import com.zimbra.cs.listeners.ListenerUtil.Priority;
 
 public class DomainListenerEntry implements Comparable<DomainListenerEntry> {
