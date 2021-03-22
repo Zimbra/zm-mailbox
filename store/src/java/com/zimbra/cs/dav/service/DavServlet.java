@@ -20,7 +20,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -52,6 +52,7 @@ import com.zimbra.client.ZMailbox;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.httpclient.HttpClientUtil;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.W3cDomUtil;
 import com.zimbra.common.soap.XmlParseException;
@@ -818,8 +819,8 @@ public class DavServlet extends ZimbraServlet {
                             }
                             Element href = ((Element)responseObj).element(DavElements.E_HREF);
                             String v = href.getText();
-                            v = URLDecoder.decode(v);
                             // Bug:106438, because v contains URL encoded value(%40) for '@' the comparison fails
+                            newPrefix = newPrefix.replace("@", URLEncoder.encode("@", MimeConstants.P_CHARSET_UTF8));
                             if (v.startsWith(newPrefix)) {
                                 href.setText(prefix + v.substring(newPrefix.length()+1));
                             }
