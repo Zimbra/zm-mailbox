@@ -84,8 +84,24 @@ public abstract class DomainListener {
         }
     }
 
+    public static void invokeOnDeleteDomain(final Domain domain) {
+        ZimbraLog.account.debug("Domain %s is getting deleted ", domain.getName());
+        final Map<String, DomainListenerEntry> sortedListeners = ListenerUtil.sortByPriority(mListeners);
+        for (Map.Entry<String, DomainListenerEntry> listener : sortedListeners.entrySet()) {
+            final DomainListenerEntry listenerInstance = listener.getValue();
+            try {
+                listenerInstance.getDomainListener().onDomainDelete(domain);
+            } catch (ServiceException ex) {
+                ZimbraLog.store.warn("Unable to invoke domain delete listener: " + listenerInstance.getListenerName(),
+                        ex);
+            }
+        }
+    }
+
     public abstract void onDomainCreation(final Domain newDomain) throws ServiceException;
 
     public abstract void onDomainRename(final Domain domain, final String oldName, final String newName)
             throws ServiceException;
+
+    public abstract void onDomainDelete(final Domain domain) throws ServiceException;
 }

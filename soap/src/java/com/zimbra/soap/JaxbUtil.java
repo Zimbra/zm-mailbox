@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2018 Synacor, Inc.
+ * Copyright (C) 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2018, 2021 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -304,6 +304,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.CreateHABGroupResponse.class,
             com.zimbra.soap.admin.message.CreateDomainRequest.class,
             com.zimbra.soap.admin.message.CreateDomainResponse.class,
+            com.zimbra.soap.admin.message.CreateZulipRealmRequest.class,
+            com.zimbra.soap.admin.message.CreateZulipRealmResponse.class,
             com.zimbra.soap.admin.message.CreateGalSyncAccountRequest.class,
             com.zimbra.soap.admin.message.CreateGalSyncAccountResponse.class,
             com.zimbra.soap.admin.message.CreateLDAPEntryRequest.class,
