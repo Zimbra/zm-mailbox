@@ -11,6 +11,7 @@ import javax.annotation.PreDestroy;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.zimbra.common.account.ZAttrProvisioning;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
@@ -19,6 +20,7 @@ import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.IndexStore;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox.IndexItemEntry;
 import com.zimbra.cs.mailbox.ReIndexStatus;
@@ -33,12 +35,15 @@ import com.zimbra.cs.util.Zimbra;
  */
 public class IndexingService {
     private ThreadPoolExecutor INDEX_EXECUTOR;
+    private ThreadPoolExecutor INDEX_RETRY_EXECUTOR;
     private IndexingQueueAdapter queueAdapter;
     private volatile boolean running = false;
     private Thread queueMonitor;
+    private Thread retryQueueMonitor;
 
     private static IndexingService instance = null;
 
+    private ArrayBlockingQueue<AbstractIndexingTasksLocator> retryQueue = null;
 
     private IndexingService() {}
 
@@ -63,6 +68,7 @@ public class IndexingService {
         if (indexURLPrefix.equalsIgnoreCase("solrcloud")) {
             numThreads = ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexThreads, 10);
         }
+
         INDEX_EXECUTOR = new ThreadPoolExecutor(numThreads, numThreads, Long.MAX_VALUE, TimeUnit.NANOSECONDS,
                 new ArrayBlockingQueue<Runnable>(10000), new ThreadFactoryBuilder().setNameFormat("IndexExecutor-%d")
                         .setDaemon(true).build());
@@ -70,6 +76,16 @@ public class IndexingService {
         INDEX_EXECUTOR.prestartAllCoreThreads();
         queueMonitor = new Thread(new IndexQueueMonitor());
         queueMonitor.start();
+
+        int retryQueueSize = LC.zimbra_index_retry_queue_size.intValue();
+        retryQueue = new ArrayBlockingQueue<AbstractIndexingTasksLocator>(retryQueueSize);
+        INDEX_RETRY_EXECUTOR = new ThreadPoolExecutor(numThreads, numThreads, Long.MAX_VALUE, TimeUnit.NANOSECONDS,
+                new ArrayBlockingQueue<Runnable>(10000), new ThreadFactoryBuilder().setNameFormat("IndexRetryExecutor-%d")
+                        .setDaemon(true).build());
+        INDEX_RETRY_EXECUTOR.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+        INDEX_RETRY_EXECUTOR.prestartAllCoreThreads();
+        retryQueueMonitor = new Thread(new IndexRetryQueueMonitor());
+        retryQueueMonitor.start();
     }
 
     /**
@@ -85,6 +101,14 @@ public class IndexingService {
             INDEX_EXECUTOR.purge();
             INDEX_EXECUTOR.shutdownNow(); // terminate any executing tasks
             INDEX_EXECUTOR = null;
+        }
+        if (retryQueueMonitor != null && retryQueueMonitor.isAlive()) {
+            retryQueueMonitor.interrupt();
+        }
+        if (INDEX_RETRY_EXECUTOR != null) {
+            INDEX_RETRY_EXECUTOR.purge();
+            INDEX_RETRY_EXECUTOR.shutdownNow(); // terminate any executing tasks
+            INDEX_RETRY_EXECUTOR = null;
         }
     }
 
@@ -177,6 +201,58 @@ public class IndexingService {
         }
     }
 
+    class IndexRetryQueueMonitor implements Runnable {
+        @Override
+        public void run() {
+            ZimbraLog.index.info("Started index retry queue monitoring thread %s", Thread.currentThread().getName());
+            while (running) {
+                try {
+                    if (!Zimbra.started()) {
+                        Thread.sleep(100); // avoid a tight loop
+                        continue;
+                    }
+
+                    AbstractIndexingTasksLocator queueItem = retryQueue.take();
+
+                    if(queueItem == null) {
+                        Thread.sleep(ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraIndexingQueuePollingInterval, 500)); // avoid a tight loop
+                        continue;
+                    }
+
+                    if (INDEX_RETRY_EXECUTOR.isTerminating() || INDEX_RETRY_EXECUTOR.isShutdown()) {
+                        // this thread will not process this item, so put it
+                        // back in the queue for other threads to process
+                        retryQueue.put(queueItem);
+                        break;
+                    }
+
+                    ZimbraLog.index.debug("IndexRetryQueueMonitor - %s - Actively task executing threads: %d, Queue size: %d",
+                            Thread.currentThread().getName(), INDEX_RETRY_EXECUTOR.getActiveCount(), INDEX_RETRY_EXECUTOR.getQueue().size());
+
+                    try {
+                        if (queueItem instanceof AddMailItemToIndexTask) {
+                            ZimbraLog.index.debug("%s submitting an indexing task MailItemIndexTask for account %s",
+                                    Thread.currentThread().getName(), queueItem.getAccountID());
+                            INDEX_RETRY_EXECUTOR.submit(new MailItemIndexTask((AddMailItemToIndexTask) queueItem));
+                        } else {
+                            // The flow should never be reaching here as we are retrying only on
+                            // AddMailItemToIndexTask
+                            ZimbraLog.index.error("%s Not supported type for account %s",
+                                    Thread.currentThread().getName(), queueItem.getAccountID());
+                        }
+                    } catch (RejectedExecutionException e) {
+                        ZimbraLog.index.error("Indexing retry task is rejected", e);
+                        retryQueue.put(queueItem);
+                    }
+                } catch (InterruptedException e) {
+                    // must be shutting down, if !running will break
+                    // automatically, otherwise will continue
+                }
+            }
+            ZimbraLog.index.info("Stopping indexing retry thread %s", Thread.currentThread().getName());
+        }
+    }
+
     public boolean isRunning() {
         return running;
     }
@@ -241,6 +317,7 @@ public class IndexingService {
                     IndexStore indexStore = IndexStore.getFactory().getIndexStore(queueItem.getAccountID());
                     conn = DbPool.getConnection(queueItem.getMailboxID(), queueItem.getMailboxSchemaGroupID());
                     for(MailItem mailItem: queueItem.getMailItemsToAdd()) {
+                        // throw MailServiceException.NO_SUCH_BLOB(queueItem.getMailboxID(), mailItem.getId(), mailItem.getSavedSequence());
                         List<IndexDocument> docs = mailItem.generateIndexDataAsync(queueItem
                                 .attachmentIndexingEnabled());
                         if (docs.size() > 0) {
@@ -265,12 +342,23 @@ public class IndexingService {
                         queueAdapter.incrementSucceededMailboxTaskCount(queueItem.getAccountID(), queueItem.getMailItemsToAdd().size());
                     }
                 }
-                ZimbraLog.index.debug("%s processed %d items", Thread.currentThread().getName(), queueItem.getMailItemsToAdd().size());
+                ZimbraLog.index.debug("%s processed %d items", Thread.currentThread().getName(),
+                        queueItem.getMailItemsToAdd().size());
+            } catch (MailServiceException e) {
+                ZimbraLog.index.debug("MailItemIndexTask - exception - ", e);
+                if (e.getCode().endsWith("NO_SUCH_BLOB")) {
+                    ZimbraLog.index.debug("MailItemIndexTask - NO_SUCH_BLOB item received. Adding in retry queue.");
+                    queueItem.addRetry();
+                    retryQueue.add(queueItem);
+                }
+
             } catch (Exception e) {
                 ZimbraLog.index.errorQuietly("MailItemIndexTask - exception - ", e);
                 if (queueItem.isReindex()) {
-                    queueAdapter.incrementFailedMailboxTaskCount(queueItem.getAccountID(), queueItem.getMailItemsToAdd().size());
+                    queueAdapter.incrementFailedMailboxTaskCount(queueItem.getAccountID(),
+                            queueItem.getMailItemsToAdd().size());
                 }
+
             } finally {
                 DbPool.quietClose(conn);
                 ZimbraLog.clearContext();
