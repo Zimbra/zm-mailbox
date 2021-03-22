@@ -302,7 +302,7 @@ public class ImapPath implements Comparable<ImapPath> {
         if (acct == null) {
             throw AccountServiceException.NO_SUCH_ACCOUNT(mCredentials.getUsername());
         }
-        if (acct.getId().equals(target.getId())) {
+        if (acct.getId().equals(target.getId()) && (mCredentials.getMailbox() instanceof ZMailbox)) {
             return (ZMailbox) mCredentials.getMailbox();
         }
         try {
