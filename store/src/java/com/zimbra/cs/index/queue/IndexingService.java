@@ -20,6 +20,7 @@ import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.IndexStore;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailItem.TemporaryIndexingException;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox.IndexItemEntry;
@@ -352,7 +353,12 @@ public class IndexingService {
                     retryQueue.add(queueItem);
                 }
 
-            } catch (Exception e) {
+            } catch (TemporaryIndexingException e) {
+                ZimbraLog.index.debug("MailItemIndexTask - TemporaryIndexingException item received. Adding in retry queue.");
+                queueItem.addRetry();
+                retryQueue.add(queueItem);
+            }
+            catch (Exception e) {
                 ZimbraLog.index.errorQuietly("MailItemIndexTask - exception - ", e);
                 if (queueItem.isReindex()) {
                     queueAdapter.incrementFailedMailboxTaskCount(queueItem.getAccountID(),

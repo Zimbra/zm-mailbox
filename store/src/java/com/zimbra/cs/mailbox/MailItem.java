@@ -1717,10 +1717,10 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
     }
 
     /**
-     * This class intentionally does not inherit from ServiceException, the
-     *  exception is internal-only and should never be exposed outside of this package.
+     * Exception could be propagated outside the package, one example could be
+     * IndexingService using generateIndexDataAsync
      */
-    static class TemporaryIndexingException extends Exception {
+    public static class TemporaryIndexingException extends Exception {
         private static final long serialVersionUID = 730987946876783701L;
     }
 
