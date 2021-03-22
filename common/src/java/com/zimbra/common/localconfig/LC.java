@@ -58,6 +58,9 @@ public final class LC {
     public static final KnownKey zimbra_index_disable_perf_counters = KnownKey.newKey(false);
 
     @Supported
+    public static final KnownKey zimbra_index_retry_queue_size = KnownKey.newKey(10000);
+
+    @Supported
     public static final KnownKey zimbra_store_directory = KnownKey.newKey("${zimbra_home}/store");
 
     @Supported
