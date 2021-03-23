@@ -11300,14 +11300,17 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
         try {
             zlc = LdapClient.getContext(LdapServerType.REPLICA, LdapUsage.GET_ENTRY);
-            String[] returnAttrs = {"userPassword", "zimbraAuthTokens", "zimbraAuthTokenValidityValue"};
+            String[] returnAttrs = { "userPassword", "zimbraAuthTokens", "zimbraAuthTokenValidityValue",
+                    Provisioning.A_zimbraResetPasswordRecoveryCode, Provisioning.A_zimbraPrefPasswordRecoveryAddress,
+                    Provisioning.A_zimbraFeatureResetPasswordStatus,
+                    Provisioning.A_zimbraPrefPasswordRecoveryAddressStatus };
             ZAttributes attrs = helper.getAttributes(zlc, ((LdapEntry) account).getDN(), returnAttrs);
             Map<String, Object> finalAttrs = account.getAttrs(false, false);
             finalAttrs.putAll(attrs.getAttrs());
             account.setAttrs(finalAttrs);
             extendLifeInCacheOrFlush(account);  // Put this back into the cache
         } catch (ServiceException e) {
-            throw ServiceException.FAILURE(String.format("unable to refresh userPassword for '%s'", account.getName()), e);
+            throw ServiceException.FAILURE(String.format("unable to refresh user credentials for '%s'", account.getName()), e);
         } finally {
             LdapClient.closeContext(zlc);
         }

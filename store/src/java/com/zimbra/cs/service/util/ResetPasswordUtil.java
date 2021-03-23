@@ -24,6 +24,8 @@ import org.apache.commons.lang.StringUtils;
 import com.zimbra.common.account.ForgetPasswordEnums.CodeConstants;
 import com.zimbra.common.account.ZAttrProvisioning.FeatureResetPasswordStatus;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.ForgetPasswordException;
 
@@ -55,5 +57,31 @@ public class ResetPasswordUtil {
         default:
             throw ForgetPasswordException.FEATURE_RESET_PASSWORD_DISABLED("Password reset feature is disabled.");
         }
+    }
+
+    public static void checkValidRecoveryAccount(Account account) throws ServiceException {
+        if (account == null) {
+            throw ServiceException.INVALID_REQUEST("account is null.", null);
+        }
+        if (StringUtil.isNullOrEmpty(account.getPrefPasswordRecoveryAddress())) {
+            ZimbraLog.passwordreset.warn("ResetPassword : Recovery Account is not found for %s", account.getName());
+            throw ForgetPasswordException.CONTACT_ADMIN("Recovery Account is not found. Please contact your administrator.");
+        }
+    }
+
+    public static void validateVerifiedPasswordRecoveryAccount(Account account) throws ServiceException {
+        if (account == null) {
+            throw ServiceException.INVALID_REQUEST("account is null.", null);
+        }
+        if (account.getPrefPasswordRecoveryAddressStatus() == null
+                || !account.getPrefPasswordRecoveryAddressStatus().isVerified()) {
+            ZimbraLog.passwordreset.warn("Verified recovery email is not found for %s", account.getName());
+            throw ForgetPasswordException.CONTACT_ADMIN("Recovery Account is not verified. Please contact your administrator.");
+        }
+    }
+
+    public static void isResetPasswordEnabledAndValidRecoveryAccount(Account account) throws ServiceException {
+        validateFeatureResetPasswordStatus(account);
+        checkValidRecoveryAccount(account);
     }
 }
