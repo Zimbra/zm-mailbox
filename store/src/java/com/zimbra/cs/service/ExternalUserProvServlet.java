@@ -37,6 +37,7 @@ import com.google.common.collect.Lists;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMountpoint;
+import com.zimbra.common.account.ForgetPasswordEnums.CodeConstants;
 import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.account.ZAttrProvisioning.FeatureAddressVerificationStatus;
 import com.zimbra.common.localconfig.DebugConfig;
@@ -47,10 +48,12 @@ import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraCookie;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.AuthToken.Usage;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.ExtAuthTokenKey;
@@ -68,6 +71,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.acl.AclPushSerializer;
+import com.zimbra.cs.service.util.JWEUtil;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.WebClientServiceUtil;
@@ -76,6 +80,10 @@ import com.zimbra.soap.mail.type.FolderActionSelector;
 
 public class ExternalUserProvServlet extends ZimbraServlet {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 6496379855218747384L;
     private static final Log logger = LogFactory.getLog(ExternalUserProvServlet.class);
     private static final String EXT_USER_PROV_ON_UI_NODE = "/fromservice/extuserprov";
     private static final String PUBLIC_LOGIN_ON_UI_NODE = "/fromservice/publiclogin";
@@ -103,6 +111,7 @@ public class ExternalUserProvServlet extends ZimbraServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        ZimbraLog.account.info("Servlet " + getServletName() + " doGet()");
         String param = req.getParameter("p");
         if (param == null) {
             throw new ServletException("request missing param");
@@ -113,6 +122,8 @@ public class ExternalUserProvServlet extends ZimbraServlet {
         String folderId = (String) tokenMap.get(AccountConstants.P_FOLDER_ID);
         String extUserEmail = (String) tokenMap.get(AccountConstants.P_EMAIL);
         String addressVerification = (String) tokenMap.get(AccountConstants.P_ADDRESS_VERIFICATION);
+        String accountVerification = (String) tokenMap.get(AccountConstants.P_ACCOUNT_VERIFICATION);
+        String code = (String) tokenMap.get(AccountConstants.P_CODE);
         if ("1".equals(addressVerification)) {
             Boolean expired = false;
             if (tokenMap.get(EXPIRED) != null) {
@@ -120,6 +131,9 @@ public class ExternalUserProvServlet extends ZimbraServlet {
             }
             Map<String, String> attributes = handleAddressVerification(req, resp, ownerId, extUserEmail, expired);
             redirectRequest(req, resp, attributes, EXT_USER_PROV_ON_UI_NODE, PUBLIC_ADDRESS_VERIFICATION_JSP);
+        } else if ("1".equals(accountVerification)) {
+            ZimbraLog.account.info("Account Verification and Password Reset");
+            handleAccountVerification(req, resp, ownerId, code, tokenMap.get(EXPIRED) != null ? true : false);
         } else {
             Provisioning prov = Provisioning.getInstance();
             Account grantee;
@@ -234,6 +248,36 @@ public class ExternalUserProvServlet extends ZimbraServlet {
                 errorAttrs.put(ERROR_MESSAGE, e.getMessage());
                 redirectRequest(req, resp, errorAttrs, EXT_USER_PROV_ON_UI_NODE, PUBLIC_EXTUSERPROV_JSP);
             }
+        }
+    }
+
+    public void handleAccountVerification(HttpServletRequest req, HttpServletResponse resp, String ownerAccountId, String code, boolean expired) throws ServletException, IOException {
+        Account account = null;
+        try {
+            if (expired || StringUtil.isNullOrEmpty(code)) {
+                ZimbraLog.account.warn("Url expired or code invalid.");
+                throw ServiceException.PERM_DENIED("The URL is invalid.");
+            }
+            Provisioning prov = Provisioning.getInstance();
+            account = prov.getAccountById(ownerAccountId);
+            account.refreshUserCredentials();
+            String encoded = account.getResetPasswordRecoveryCode();
+            Map<String, String> recoveryCodeMap = JWEUtil.getDecodedJWE(encoded);
+            if (recoveryCodeMap != null && !recoveryCodeMap.isEmpty()) {
+                if (code.equals(recoveryCodeMap.get(CodeConstants.CODE.toString()))) {
+                    ZimbraLog.account.info("Authentication Successful.");
+                    setResetPasswordCookieAndRedirect(req, resp, account);
+                } else {
+                    ZimbraLog.account.warn("Invaid code.");
+                    throw ServiceException.PERM_DENIED("The URL is invalid.");
+                }
+            } else {
+                ZimbraLog.account.warn("It has already been used once.");
+                throw ServiceException.PERM_DENIED("The URL is invalid.");
+            }
+        } catch (Exception e) {
+            ZimbraLog.account.warn("Invalid URL:", e);
+            redirectOnResetPasswordError(req, resp, account);
         }
     }
 
@@ -475,6 +519,19 @@ public class ExternalUserProvServlet extends ZimbraServlet {
         resp.sendRedirect("/");
     }
 
+    private static void setResetPasswordCookieAndRedirect(HttpServletRequest req, HttpServletResponse resp, Account account)
+            throws ServiceException, IOException {
+        AuthToken authToken = AuthProvider.getAuthToken(account, Usage.RESET_PASSWORD);
+        authToken.encode(resp, false, req.getScheme().equals("https"));
+        resp.sendRedirect("/?username=" + authToken.getAccount().getName());
+    }
+
+    private static void redirectOnResetPasswordError(HttpServletRequest req, HttpServletResponse resp, Account account)
+            throws IOException {
+        ZimbraCookie.clearCookie(resp, ZimbraCookie.COOKIE_ZM_AUTH_TOKEN);
+        resp.sendRedirect("/?errorCode=invalidLink");
+    }
+
     private static int getMptParentFolderId(MailItem.Type viewType, Provisioning prov) throws ServiceException {
         switch (viewType) {
             case DOCUMENT:
@@ -544,7 +601,8 @@ public class ExternalUserProvServlet extends ZimbraServlet {
             // check validity
             if (System.currentTimeMillis() > Long.parseLong((String) expiry)) {
                 String addressVerification = (String) map.get(AccountConstants.P_ADDRESS_VERIFICATION);
-                if ("1".equals(addressVerification)) {
+                String accountVerification = (String) map.get(AccountConstants.P_ACCOUNT_VERIFICATION);
+                if ("1".equals(addressVerification) || "1".equals(accountVerification)) {
                     map.put(EXPIRED, true);
                 } else {
                     throw new ServletException("url no longer valid");
