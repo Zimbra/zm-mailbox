@@ -249,6 +249,17 @@ public abstract class AccountListener {
     public abstract void onAccountCreation(Account acct) throws ServiceException;
 
     /**
+     * called after a successful account rename.
+     *
+     * @param USER_ACCOUNT user account renamed
+     * @param OLD_NAME old name of user account
+     * @param NEW_NAME new name of user account
+     */
+    public void onAccountRename(Account acct, String oldName, String newName) throws ServiceException {
+        // TODO: Empty body for existing implementation, override if needed.
+    }
+
+    /**
      * called after an account status change.
      *
      * @param USER_ACCOUNT user account whose status is changed
