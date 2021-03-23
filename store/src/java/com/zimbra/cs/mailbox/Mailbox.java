@@ -10297,7 +10297,11 @@ public class Mailbox implements MailboxStore {
                         int[] ids = currentChange().indexItems.stream().mapToInt(mi -> mi.getId()).toArray();
                         ZimbraLog.index.debug("Mailbox - close - pushing %d items for async indexing: %s", ids.length, Arrays.toString(ids));
                     }
-                    index.queue(currentChange().indexItems, false);
+                    boolean res = index.queue(currentChange().indexItems, false);
+                    if (!res) {
+                        ZimbraLog.index.warn(
+                                "Mailbox - close - could not queue the items for indexing. Indexing queue might be full.");
+                    }
                 }
 
                 // We are finally done with database and redo commits. Cache update comes last.
