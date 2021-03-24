@@ -12,6 +12,7 @@ import javax.annotation.PreDestroy;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
@@ -308,6 +309,30 @@ public class IndexingService {
             return false;
         }
 
+        /** Function responsible to handle adding to retry queue based on number of retries.
+         *  It increases the sleep duration exponentially based upon the number of times retries is done.
+         */
+        private void handleRetryForMailItems() {
+            try {
+                int maxRetries = Provisioning.getInstance().getLocalServer().getMaxIndexingRetries();
+                if (queueItem.getRetries() < maxRetries) {
+                    ZimbraLog.index.debug(
+                            "MailItemIndexTask - handleRetryForMailItems - received to index %d mail items for account %s after %d attempts. Adding in retry queue.",
+                            queueItem.getMailItemsToAdd().size(), queueItem.getAccountID(), queueItem.getRetries());
+                    // Exponentially increase the sleep duration based on the number of retries
+                    Thread.sleep((long) (1000 * 30 * Math.pow(2, queueItem.getRetries())));
+                    queueItem.addRetry();
+                    retryQueue.add(queueItem);
+                    return;
+                }
+            } catch (ServiceException | InterruptedException e) {
+                ZimbraLog.index.error("MailItemIndexTask - handleRetryForMailItems - ", e);
+            }
+            ZimbraLog.index.error(
+                    "MailItemIndexTask - handleRetryForMailItems - permanently failed to index %d mail items for account %s after %d attempts.",
+                    queueItem.getMailItemsToAdd().size(), queueItem.getAccountID(), queueItem.getRetries());
+        }
+
         @Override
         public void run() {
             ZimbraLog.index.debug("MailItemIndexTask - Started indexing task %s with %d mailItems", Thread.currentThread().getName(), queueItem.getMailItemsToAdd().size());
@@ -346,17 +371,15 @@ public class IndexingService {
                 ZimbraLog.index.debug("%s processed %d items", Thread.currentThread().getName(),
                         queueItem.getMailItemsToAdd().size());
             } catch (MailServiceException e) {
-                ZimbraLog.index.debug("MailItemIndexTask - exception - ", e);
+                ZimbraLog.index.debug("MailItemIndexTask - MailServiceException.", e);
                 if (e.getCode().endsWith("NO_SUCH_BLOB")) {
-                    ZimbraLog.index.debug("MailItemIndexTask - NO_SUCH_BLOB item received. Adding in retry queue.");
-                    queueItem.addRetry();
-                    retryQueue.add(queueItem);
+                    ZimbraLog.index.debug("MailItemIndexTask - MailServiceException - NO_SUCH_BLOB. Going to add in retry queue.");
+                    handleRetryForMailItems();
                 }
 
             } catch (TemporaryIndexingException e) {
-                ZimbraLog.index.debug("MailItemIndexTask - TemporaryIndexingException item received. Adding in retry queue.");
-                queueItem.addRetry();
-                retryQueue.add(queueItem);
+                ZimbraLog.index.debug("MailItemIndexTask - TemporaryIndexingException. Going to add in retry queue., e");
+                handleRetryForMailItems();
             }
             catch (Exception e) {
                 ZimbraLog.index.errorQuietly("MailItemIndexTask - exception - ", e);
