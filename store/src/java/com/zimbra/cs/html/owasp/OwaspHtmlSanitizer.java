@@ -28,7 +28,9 @@ import org.owasp.html.HtmlStreamRenderer;
 import org.owasp.html.PolicyFactory;
 import org.w3c.tidy.Tidy;
 
+import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.html.owasp.policies.StyleTagReceiver;
 
 /*
@@ -90,18 +92,25 @@ public class OwaspHtmlSanitizer implements Callable<String> {
     }
 
     private String cleanMalformedHtml(String str) throws UnsupportedEncodingException {
-        Tidy tidy = new Tidy();
-        tidy.setInputEncoding("UTF-8");
-        tidy.setOutputEncoding("UTF-8");
-        tidy.setPrintBodyOnly(true);
-        tidy.setXHTML(true);
-        ByteArrayInputStream inputStream = new ByteArrayInputStream(str.getBytes("UTF-8"));
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        tidy.parseDOM(inputStream, outputStream);
-        if (outputStream.toString("UTF-8").isEmpty()) {
-            return str;
+        if (DebugConfig.jtidyEnabled) {
+            long startTime = System.currentTimeMillis();
+            ZimbraLog.mailbox.debug("Start - Using JTidy library for cleaning the markup.");
+            Tidy tidy = new Tidy();
+            tidy.setInputEncoding("UTF-8");
+            tidy.setOutputEncoding("UTF-8");
+            tidy.setPrintBodyOnly(true);
+            tidy.setXHTML(true);
+            ByteArrayInputStream inputStream = new ByteArrayInputStream(str.getBytes("UTF-8"));
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            tidy.parseDOM(inputStream, outputStream);
+            if (outputStream.toString("UTF-8").isEmpty()) {
+                return str;
+            }
+            long endTime = System.currentTimeMillis();
+            ZimbraLog.mailbox.debug("End - Using JTidy library for cleaning the markup. Taken %d milliseconds.", (endTime - startTime));
+            return outputStream.toString("UTF-8");
         }
-        return outputStream.toString("UTF-8");
+        return str;
     }
 
     @Override
