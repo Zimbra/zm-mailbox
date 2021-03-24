@@ -208,6 +208,14 @@ public class URLUtil {
     public static String getPublicAdminConsoleURLForDomain(Server server, Domain domain) throws ServiceException {
         String publicAdminUrl = getAdminConsoleProxyUrl(server, domain);
         if (publicAdminUrl == null) {
+            publicAdminUrl = URLUtil.getAdminURL(server, server.getAdminURL());
+        }
+        return publicAdminUrl;
+    }
+
+    public static String getSoapPublicAdminConsoleURLForDomain(Server server, Domain domain) throws ServiceException {
+        String publicAdminUrl = getAdminConsoleProxyUrl(server, domain);
+        if (publicAdminUrl == null) {
             publicAdminUrl = URLUtil.getAdminURL(server, AdminConstants.ADMIN_SERVICE_URI);
         }
         return publicAdminUrl;
