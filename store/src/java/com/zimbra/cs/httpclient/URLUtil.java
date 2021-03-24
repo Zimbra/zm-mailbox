@@ -206,14 +206,22 @@ public class URLUtil {
     }
 
     public static String getPublicAdminConsoleURLForDomain(Server server, Domain domain) throws ServiceException {
-        String publicAdminUrl = getAdminConsoleProxyUrl(server, domain);
+        String publicAdminUrl = getAdminConsoleProxyUrl(server, domain, false);
+        if (publicAdminUrl == null) {
+            publicAdminUrl = URLUtil.getAdminURL(server, server.getAdminURL());
+        }
+        return publicAdminUrl;
+    }
+
+    public static String getPublicAdminSoapURLForDomain(Server server, Domain domain) throws ServiceException {
+        String publicAdminUrl = getAdminConsoleProxyUrl(server, domain, true);
         if (publicAdminUrl == null) {
             publicAdminUrl = URLUtil.getAdminURL(server, AdminConstants.ADMIN_SERVICE_URI);
         }
         return publicAdminUrl;
     }
 
-    private static String getAdminConsoleProxyUrl(Server server, Domain domain) throws ServiceException {
+    private static String getAdminConsoleProxyUrl(Server server, Domain domain, boolean isAdminSoapURL) throws ServiceException {
         if (domain == null) {
             return null;
         }
@@ -244,7 +252,11 @@ public class URLUtil {
         if (printPort) {
             buf.append(":").append(port);
         }
-        buf.append(AdminConstants.ADMIN_SERVICE_URI);
+        if (isAdminSoapURL) {
+            buf.append(AdminConstants.ADMIN_SERVICE_URI);
+        } else {
+            buf.append(server.getAdminURL());
+        }
         return buf.toString();
 
     }
