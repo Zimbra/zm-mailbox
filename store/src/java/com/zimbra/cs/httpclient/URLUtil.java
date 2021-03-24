@@ -213,7 +213,7 @@ public class URLUtil {
         return publicAdminUrl;
     }
 
-    public static String getSoapPublicAdminConsoleURLForDomain(Server server, Domain domain) throws ServiceException {
+    public static String getPublicAdminConsoleSoapURLForDomain(Server server, Domain domain) throws ServiceException {
         String publicAdminUrl = getAdminConsoleProxyUrl(server, domain);
         if (publicAdminUrl == null) {
             publicAdminUrl = URLUtil.getAdminURL(server, AdminConstants.ADMIN_SERVICE_URI);
