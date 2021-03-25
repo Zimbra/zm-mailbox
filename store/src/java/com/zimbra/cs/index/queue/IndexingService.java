@@ -145,19 +145,19 @@ public class IndexingService {
 
                 List<Integer> nonIndexedItemsFromDB = DbMailItem.getNonIndexedItemsForMailbox(mbox, conn);
                 int nonIndexedItemsFromDbCount = nonIndexedItemsFromDB.size();
+                ZimbraLog.index.info("%d non-indexed items found for mailbox id %d from database",
+                        nonIndexedItemsFromDbCount, mbox.getId());
                 if (nonIndexedItemsFromDbCount == 0) {
                     ZimbraLog.index.debug("No non-indexed item found for mailbox id %d from database", mbox.getId());
                     return;
                 }
-                ZimbraLog.index.debug("%d non-indexed items found for mailbox id %d from database",
-                        nonIndexedItemsFromDbCount, mbox.getId());
 
                 List<MailItem> itemsToIndex = new ArrayList<MailItem>();
                 for (Integer itemId : nonIndexedItemsFromDB) {
                     itemsToIndex.add(mbox.getItemById(null, itemId, MailItem.Type.UNKNOWN));
                 }
                 int nonIndexedItemsCount = itemsToIndex.size();
-                ZimbraLog.index.debug("Going to process %d non-indexed mailItems", nonIndexedItemsCount);
+                ZimbraLog.index.info("Going to process %d non-indexed mailItems", nonIndexedItemsCount);
 
                 if (nonIndexedItemsCount != 0) {
                     AbstractIndexingTasksLocator itemLocator = new AddMailItemToIndexTask(itemsToIndex,
