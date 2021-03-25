@@ -61,6 +61,9 @@ public final class LC {
     public static final KnownKey zimbra_index_retry_queue_size = KnownKey.newKey(10000);
 
     @Supported
+    public static final KnownKey zimbra_index_retry_work_queue_size = KnownKey.newKey(5000);
+
+    @Supported
     public static final KnownKey zimbra_store_directory = KnownKey.newKey("${zimbra_home}/store");
 
     @Supported
