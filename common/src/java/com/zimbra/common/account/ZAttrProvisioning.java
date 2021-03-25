@@ -6471,6 +6471,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureDistributionListFolderEnabled = "zimbraFeatureDistributionListFolderEnabled";
 
     /**
+     * Whether or not document editing feature is enabled within briefcase
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=3091)
+    public static final String A_zimbraFeatureDocumentEditingEnabled = "zimbraFeatureDocumentEditingEnabled";
+
+    /**
      * Whether to allow a user to access EWS service
      *
      * @since ZCS 8.5.0

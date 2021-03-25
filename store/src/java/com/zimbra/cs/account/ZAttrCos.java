@@ -9240,6 +9240,78 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * Whether or not document editing feature is enabled within briefcase
+     *
+     * @return zimbraFeatureDocumentEditingEnabled, or true if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=3091)
+    public boolean isFeatureDocumentEditingEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureDocumentEditingEnabled, true, true);
+    }
+
+    /**
+     * Whether or not document editing feature is enabled within briefcase
+     *
+     * @param zimbraFeatureDocumentEditingEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=3091)
+    public void setFeatureDocumentEditingEnabled(boolean zimbraFeatureDocumentEditingEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureDocumentEditingEnabled, zimbraFeatureDocumentEditingEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not document editing feature is enabled within briefcase
+     *
+     * @param zimbraFeatureDocumentEditingEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=3091)
+    public Map<String,Object> setFeatureDocumentEditingEnabled(boolean zimbraFeatureDocumentEditingEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureDocumentEditingEnabled, zimbraFeatureDocumentEditingEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether or not document editing feature is enabled within briefcase
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=3091)
+    public void unsetFeatureDocumentEditingEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureDocumentEditingEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not document editing feature is enabled within briefcase
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=3091)
+    public Map<String,Object> unsetFeatureDocumentEditingEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureDocumentEditingEnabled, "");
+        return attrs;
+    }
+
+    /**
      * Whether to allow a user to access EWS service
      *
      * @return zimbraFeatureEwsEnabled, or false if unset
