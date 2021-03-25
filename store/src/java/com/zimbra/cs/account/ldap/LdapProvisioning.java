@@ -266,6 +266,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     private final INamedEntryCache<LdapZimlet> zimletCache;
 
     private final UnmodifiableBloomFilter<String> commonPasswordFilter;
+    private boolean blockCommonPasswordsEnabled;
 
     private LdapConfig cachedGlobalConfig = null;
     private GlobalGrant cachedGlobalGrant = null;
@@ -320,6 +321,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
         commonPasswordFilter = UnmodifiableBloomFilter
             .createLazyFilterFromFile(LC.common_passwords_txt.value());
+        blockCommonPasswordsEnabled = LC.zimbra_block_common_passwords_enabled.booleanValue();
 
         setDIT();
         setHelper(new ZLdapHelper(this));
@@ -6092,28 +6094,6 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         return cos.getAttr(name);
     }
 
-    private boolean getBoolean(Account acct, Cos cos, ZMutableEntry entry, String name,
-        boolean defaultValue) throws ServiceException {
-        if (acct != null) {
-            return acct.getBooleanAttr(name, defaultValue);
-        }
-
-        try {
-            String v = entry.getAttrString(name);
-            if (v != null) {
-                try {
-                    return Boolean.parseBoolean(v);
-                } catch (NumberFormatException e) {
-                    return defaultValue;
-                }
-            }
-        } catch (ServiceException ne) {
-            throw ServiceException.FAILURE(ne.getMessage(), ne);
-        }
-
-        return cos.getBooleanAttr(name, defaultValue);
-    }
-
     /**
      * called to check password strength. Should pass in either an Account, or Cos/Attributes (during creation).
      *
@@ -6137,11 +6117,8 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                     new Argument(Provisioning.A_zimbraPasswordMaxLength, maxLength, Argument.Type.NUM));
         }
 
-        if (getBoolean(acct, cos, entry, Provisioning.A_zimbraPasswordBlockCommonEnabled, false)
-                && commonPasswordFilter.mightContain(password)) {
-                throw AccountServiceException
-                    .INVALID_PASSWORD(Provisioning.A_zimbraPasswordBlockCommonEnabled
-                        + " password is known to be too common");
+        if (blockCommonPasswordsEnabled && commonPasswordFilter.mightContain(password)) {
+            throw AccountServiceException.INVALID_PASSWORD("password is known to be too common");
         }
 
         int minUpperCase = getInt(acct, cos, entry, Provisioning.A_zimbraPasswordMinUpperCaseChars, 0);
