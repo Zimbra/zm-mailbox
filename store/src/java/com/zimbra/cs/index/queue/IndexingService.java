@@ -1,7 +1,9 @@
 package com.zimbra.cs.index.queue;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -23,8 +25,11 @@ import com.zimbra.cs.index.IndexStore;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailItem.TemporaryIndexingException;
 import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox.IndexItemEntry;
+import com.zimbra.cs.mailbox.MailboxManager.FetchMode;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.ReIndexStatus;
 import com.zimbra.cs.util.ProvisioningUtil;
 import com.zimbra.cs.util.Zimbra;
@@ -46,6 +51,7 @@ public class IndexingService {
     private static IndexingService instance = null;
 
     private ArrayBlockingQueue<AbstractIndexingTasksLocator> retryQueue = null;
+    private Set<Integer> indexVerifiedMailboxes = null;
 
     private IndexingService() {}
 
@@ -81,6 +87,7 @@ public class IndexingService {
 
         int retryQueueSize = LC.zimbra_index_retry_queue_size.intValue();
         retryQueue = new ArrayBlockingQueue<AbstractIndexingTasksLocator>(retryQueueSize);
+        indexVerifiedMailboxes = new HashSet<>();
         INDEX_RETRY_EXECUTOR = new ThreadPoolExecutor(numThreads, numThreads, Long.MAX_VALUE, TimeUnit.NANOSECONDS,
                 new ArrayBlockingQueue<Runnable>(10000), new ThreadFactoryBuilder().setNameFormat("IndexRetryExecutor-%d")
                         .setDaemon(true).build());
@@ -119,6 +126,55 @@ public class IndexingService {
     }
 
     class IndexQueueMonitor implements Runnable {
+
+        /**
+         * Function responsible for processing the non-indexed items from database.
+         * @param queueItem
+         */
+        private void processIndexForMailbox(AbstractIndexingTasksLocator queueItem) {
+            DbConnection conn = null;
+            try {
+                conn = DbPool.getConnection(queueItem.getMailboxID(), queueItem.getMailboxSchemaGroupID());
+                Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(queueItem.accountID,
+                        FetchMode.AUTOCREATE, false);
+
+                if (indexVerifiedMailboxes.contains(mbox.getId())) {
+                    ZimbraLog.index.debug("Mailbox id %d is already checked for index consistency", mbox.getId());
+                    return;
+                }
+
+                List<Integer> nonIndexedItemsFromDB = DbMailItem.getNonIndexedItemsForMailbox(mbox, conn);
+                int nonIndexedItemsFromDbCount = nonIndexedItemsFromDB.size();
+                if (nonIndexedItemsFromDbCount == 0) {
+                    ZimbraLog.index.debug("No non-indexed item found for mailbox id %d from database", mbox.getId());
+                    return;
+                }
+                ZimbraLog.index.debug("%d non-indexed items found for mailbox id %d from database",
+                        nonIndexedItemsFromDbCount, mbox.getId());
+
+                List<MailItem> itemsToIndex = new ArrayList<MailItem>();
+                for (Integer itemId : nonIndexedItemsFromDB) {
+                    itemsToIndex.add(mbox.getItemById(null, itemId, MailItem.Type.UNKNOWN));
+                }
+                int nonIndexedItemsCount = itemsToIndex.size();
+                ZimbraLog.index.debug("Going to process %d non-indexed mailItems", nonIndexedItemsCount);
+
+                if (nonIndexedItemsCount != 0) {
+                    AbstractIndexingTasksLocator itemLocator = new AddMailItemToIndexTask(itemsToIndex,
+                            mbox.getAccountId(), mbox.getId(), mbox.getSchemaGroupId(),
+                            mbox.attachmentsIndexingEnabled(), false);
+                    retryQueue.put(itemLocator);
+                    indexVerifiedMailboxes.add(mbox.getId());
+                }
+            } catch (ServiceException | InterruptedException e) {
+                // Exception is being swallowed because it should not effect the indexing for
+                // the mailitem for which the current check is being performed
+                ZimbraLog.index.error("IndexQueueMonitor - handleIndex - exception", e);
+            } finally {
+                DbPool.quietClose(conn);
+            }
+        }
+
         @Override
         public void run() {
             ZimbraLog.index.info("Started index queue monitoring thread %s", Thread.currentThread().getName());
@@ -135,6 +191,8 @@ public class IndexingService {
                         Thread.sleep(ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraIndexingQueuePollingInterval, 500)); // avoid a tight loop
                         continue;
                     }
+
+                    processIndexForMailbox(queueItem);
 
                     if (INDEX_EXECUTOR.isTerminating() || INDEX_EXECUTOR.isShutdown()) {
                         // this thread will not process this item, so put it
@@ -373,13 +431,16 @@ public class IndexingService {
             } catch (MailServiceException e) {
                 ZimbraLog.index.debug("MailItemIndexTask - MailServiceException.", e);
                 if (e.getCode().endsWith("NO_SUCH_BLOB")) {
-                    ZimbraLog.index.debug("MailItemIndexTask - MailServiceException - NO_SUCH_BLOB. Going to add in retry queue.");
+                    ZimbraLog.index.debug(
+                            "MailItemIndexTask - MailServiceException - NO_SUCH_BLOB. Going to add in retry queue.");
                     handleRetryForMailItems();
                 }
 
             } catch (TemporaryIndexingException e) {
-                ZimbraLog.index.debug("MailItemIndexTask - TemporaryIndexingException. Going to add in retry queue., e");
+                ZimbraLog.index
+                        .debug("MailItemIndexTask - TemporaryIndexingException. Going to add in retry queue., e");
                 handleRetryForMailItems();
+
             }
             catch (Exception e) {
                 ZimbraLog.index.errorQuietly("MailItemIndexTask - exception - ", e);
