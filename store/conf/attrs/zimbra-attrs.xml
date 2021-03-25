@@ -9770,7 +9770,7 @@ TODO: delete them permanently from here
   <deprecateDesc>deprecated with attribute zimbraFeatureModernDesktopEnabled</deprecateDesc>
 </attr>
 
-<attr id="3081" name="zimbraPasswordBlockCommonEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="8.9.0">
+<attr id="3081" name="zimbraPasswordBlockCommonEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="9.0.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>whether or not blocking common passwords is enabled</desc>
 </attr>
