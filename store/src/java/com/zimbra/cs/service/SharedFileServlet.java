@@ -87,7 +87,8 @@ public class SharedFileServlet extends UserServlet {
         if (context.targetAccount != null && !Provisioning.onLocalServer(context.targetAccount)) {
             try {
                 String uri = getProxyPath(context.itemUuid, context.targetAccount.getId());
-                proxyServletRequest(req, resp, null, uri, getProxyAuthToken(context));
+                Provisioning prov = Provisioning.getInstance();
+                proxyServletRequest(req, resp, prov.getServer(context.targetAccount), uri, getProxyAuthToken(context));
             } catch (HttpException e) {
                 throw new IOException("Unknown error", e);
             }
