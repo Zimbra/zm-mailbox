@@ -385,6 +385,9 @@ public class IndexingService {
                 }
             } catch (ServiceException | InterruptedException e) {
                 ZimbraLog.index.error("MailItemIndexTask - handleRetryForMailItems - ", e);
+                // Flow should never reach here in normal circumstances hence not increasing the
+                // retry counter and giving object one more chance to get indexed
+                retryQueue.add(queueItem);
             }
             ZimbraLog.index.error(
                     "MailItemIndexTask - handleRetryForMailItems - permanently failed to index %d mail items for account %s after %d attempts.",
@@ -401,7 +404,6 @@ public class IndexingService {
                     IndexStore indexStore = IndexStore.getFactory().getIndexStore(queueItem.getAccountID());
                     conn = DbPool.getConnection(queueItem.getMailboxID(), queueItem.getMailboxSchemaGroupID());
                     for(MailItem mailItem: queueItem.getMailItemsToAdd()) {
-                        // throw MailServiceException.NO_SUCH_BLOB(queueItem.getMailboxID(), mailItem.getId(), mailItem.getSavedSequence());
                         List<IndexDocument> docs = mailItem.generateIndexDataAsync(queueItem
                                 .attachmentIndexingEnabled());
                         if (docs.size() > 0) {
