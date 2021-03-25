@@ -142,9 +142,9 @@ public final class RecoverAccount extends MailDocumentHandler {
                 recoveryCodeMap.put(CodeConstants.RESEND_COUNT.toString(), String.valueOf(resendCount));
             }
             resp.setRecoveryAttemptsLeft(maxAttempts - resendCount);
-        } catch (Exception e) {
+        } catch (ServiceException e) {
             ZimbraLog.account.warn("Error while setting Password Recovery Resend Count : ", e);
-            throw ServiceException.FAILURE("Error while setting Password Recovery Resend Count.", e);
+            throw e;
         }
     }
 

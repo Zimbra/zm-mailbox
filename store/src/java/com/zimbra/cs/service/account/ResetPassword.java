@@ -51,6 +51,10 @@ public class ResetPassword extends AccountDocumentHandler {
         Element response = zsc.createElement(AccountConstants.E_RESET_PASSWORD_RESPONSE);
 
         AuthToken at = zsc.getAuthToken();
+        if (at == null) {
+            throw ServiceException.AUTH_REQUIRED("Auth Token missing.");
+        }
+
         if(at.getUsage() == Usage.RESET_PASSWORD) {
             AuthProvider.validateAuthToken(prov, at, false, Usage.RESET_PASSWORD);
         } else {
