@@ -27242,7 +27242,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @return zimbraPasswordBlockCommonEnabled, or false if unset
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 9.0.0
      */
     @ZAttr(id=3081)
     public boolean isPasswordBlockCommonEnabled() {
@@ -27255,7 +27255,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * @param zimbraPasswordBlockCommonEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 9.0.0
      */
     @ZAttr(id=3081)
     public void setPasswordBlockCommonEnabled(boolean zimbraPasswordBlockCommonEnabled) throws com.zimbra.common.service.ServiceException {
@@ -27271,7 +27271,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 9.0.0
      */
     @ZAttr(id=3081)
     public Map<String,Object> setPasswordBlockCommonEnabled(boolean zimbraPasswordBlockCommonEnabled, Map<String,Object> attrs) {
@@ -27285,7 +27285,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 9.0.0
      */
     @ZAttr(id=3081)
     public void unsetPasswordBlockCommonEnabled() throws com.zimbra.common.service.ServiceException {
@@ -27300,7 +27300,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.1.0
+     * @since ZCS 9.0.0
      */
     @ZAttr(id=3081)
     public Map<String,Object> unsetPasswordBlockCommonEnabled(Map<String,Object> attrs) {
