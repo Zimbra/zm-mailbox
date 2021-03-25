@@ -116,7 +116,6 @@ public class ToXML {
         ToXML.encodeAttr(parent, Provisioning.A_zimbraPasswordMinAge, Integer.toString(account.getPasswordMinAge()));
         ToXML.encodeAttr(parent, Provisioning.A_zimbraPasswordMaxAge, Integer.toString(account.getPasswordMaxAge()));
         ToXML.encodeAttr(parent, Provisioning.A_zimbraPasswordEnforceHistory, Integer.toString(account.getPasswordEnforceHistory()));
-        ToXML.encodeAttr(parent, Provisioning.A_zimbraPasswordBlockCommonEnabled, Boolean.toString(account.isPasswordBlockCommonEnabled()));
         return parent;
     }
 
