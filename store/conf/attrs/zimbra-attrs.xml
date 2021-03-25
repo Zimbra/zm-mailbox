@@ -9870,4 +9870,8 @@ TODO: delete them permanently from here
 <attr id="3090" name="zimbraZulipChatDomainId" type="string" cardinality="single" optionalIn="domain" flags="domainInfo" since="9.0.0">
   <desc>Zulip chat domain ID</desc>
 </attr>
+<attr id="3091" name="zimbraFeatureDocumentEditingEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="9.0.0">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>Whether or not document editing feature is enabled within briefcase</desc>
+</attr>
 </attrs>
