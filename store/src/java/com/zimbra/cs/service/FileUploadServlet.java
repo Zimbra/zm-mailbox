@@ -47,6 +47,7 @@ import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.disk.DiskFileItem;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpException;
@@ -55,6 +56,13 @@ import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.tika.config.TikaConfig;
+import org.apache.tika.detect.Detector;
+import org.apache.tika.exception.TikaException;
+import org.apache.tika.io.TikaInputStream;
+import org.apache.tika.metadata.Metadata;
+import org.apache.tika.mime.MediaType;
+import org.apache.tika.mime.MimeType;
 
 import com.google.common.base.Strings;
 import com.zimbra.client.ZMailbox;
@@ -180,6 +188,27 @@ public class FileUploadServlet extends ZimbraServlet {
                 if (contentType == null)
                     contentType = MimeConstants.CT_APPLICATION_OCTET_STREAM;
             }
+
+            Account acct = Provisioning.getInstance().getAccount(acctId);
+            String extension = FilenameUtils.getExtension(filename).trim();
+            String [] blockedFileTypes = null;
+
+            if (acct.getCOS().isFeatureFileTypeUploadRestrictionsEnabled()) {
+                blockedFileTypes = acct.getCOS().getMultiAttr(Provisioning.A_zimbraFileUploadBlockedFileTypes);
+                for(String blockedExt : blockedFileTypes){
+                    if(blockedExt.equalsIgnoreCase(extension)) {
+                        throw ServiceException.BLOCKED_FILE_TYPE_UPLOAD(
+                                String.format("Blocked attachment during uploading %s filetype ", blockedExt), null);
+                    }
+                }
+
+                List<String> blockedExtensionList = new ArrayList<>(Arrays.asList(blockedFileTypes));
+                String fileExtension = getExtension(file);
+                if (blockedExtensionList.contains(fileExtension)) {
+                    throw ServiceException.BLOCKED_FILE_TYPE_UPLOAD(
+                            String.format("Blocked attachment during uploading %s filetype ", fileExtension), null);
+                }
+            }
         }
 
         public String getName()         { return name; }
@@ -187,6 +216,25 @@ public class FileUploadServlet extends ZimbraServlet {
         public String getContentType()  { return contentType; }
         public long getSize()           { return file == null ? 0 : file.getSize(); }
         public BlobInputStream getBlobInputStream()        { return blobInputStream; }
+
+        public String getExtension(FileItem filename) {
+            String fileExtension = null;
+            try {
+                TikaConfig tikaConfig = TikaConfig.getDefaultConfig();
+                Detector detector = tikaConfig.getDetector();
+                TikaInputStream stream = TikaInputStream.get(filename.getInputStream());
+                Metadata metadata = new Metadata();
+                metadata.add(Metadata.RESOURCE_NAME_KEY, filename.getName());
+                MediaType mediaType = detector.detect(stream, metadata);
+                MimeType mimeType = tikaConfig.getMimeRepository().forName(mediaType.toString());
+                fileExtension = mimeType.getExtension().split("\\.")[1];
+            } catch (TikaException texp) {
+                mLog.warn("Failed to detect file content type", texp);
+            } catch (IOException exp) {
+                mLog.warn("Cannot get content for upload", exp);
+            }
+            return fileExtension;
+        }
 
         public InputStream getInputStream() throws IOException {
             if (wasDeleted()) {
