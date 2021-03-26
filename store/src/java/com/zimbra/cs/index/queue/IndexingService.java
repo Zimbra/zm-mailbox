@@ -85,11 +85,11 @@ public class IndexingService {
         queueMonitor = new Thread(new IndexQueueMonitor());
         queueMonitor.start();
 
-        int retryQueueSize = LC.zimbra_index_retry_queue_size.intValue();
+        int retryQueueSize = LC.zimbra_index_retry_message_queue_size.intValue();
         retryQueue = new ArrayBlockingQueue<AbstractIndexingTasksLocator>(retryQueueSize);
         indexVerifiedMailboxes = new HashSet<>();
         INDEX_RETRY_EXECUTOR = new ThreadPoolExecutor(numThreads, numThreads, Long.MAX_VALUE, TimeUnit.NANOSECONDS,
-                new ArrayBlockingQueue<Runnable>(LC.zimbra_index_retry_work_queue_size.intValue()), new ThreadFactoryBuilder().setNameFormat("IndexRetryExecutor-%d")
+                new ArrayBlockingQueue<Runnable>(LC.zimbra_index_retry_executor_work_queue_size.intValue()), new ThreadFactoryBuilder().setNameFormat("IndexRetryExecutor-%d")
                         .setDaemon(true).build());
         INDEX_RETRY_EXECUTOR.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
         INDEX_RETRY_EXECUTOR.prestartAllCoreThreads();
