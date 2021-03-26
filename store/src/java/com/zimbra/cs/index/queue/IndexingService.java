@@ -155,6 +155,8 @@ public class IndexingService {
                 List<MailItem> itemsToIndex = new ArrayList<MailItem>();
                 for (Integer itemId : nonIndexedItemsFromDB) {
                     itemsToIndex.add(mbox.getItemById(null, itemId, MailItem.Type.UNKNOWN));
+                    // Too much verbose but is needed for monitoring
+                    ZimbraLog.index.info("Added mailitem %d for index retry", itemId);
                 }
                 int nonIndexedItemsCount = itemsToIndex.size();
                 ZimbraLog.index.info("Going to process %d non-indexed mailItems", nonIndexedItemsCount);
