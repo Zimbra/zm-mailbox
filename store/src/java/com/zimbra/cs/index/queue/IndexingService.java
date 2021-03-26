@@ -390,6 +390,7 @@ public class IndexingService {
                 // Flow should never reach here in normal circumstances hence not increasing the
                 // retry counter and giving object one more chance to get indexed
                 retryQueue.add(queueItem);
+                return;
             }
             ZimbraLog.index.error(
                     "MailItemIndexTask - handleRetryForMailItems - permanently failed to index %d mail items for account %s after %d attempts.",

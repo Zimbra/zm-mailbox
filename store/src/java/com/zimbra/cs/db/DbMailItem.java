@@ -5713,7 +5713,7 @@ public class DbMailItem {
                 nonIndexedItems.add(rs.getInt("id"));
             }
         } catch (SQLException e) {
-            throw ServiceException.FAILURE("error getting num searchable items", e);
+            throw ServiceException.FAILURE("error getting non-indexed items", e);
         } finally {
             DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);
