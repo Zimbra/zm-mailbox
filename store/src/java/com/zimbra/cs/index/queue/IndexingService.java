@@ -440,7 +440,7 @@ public class IndexingService {
 
             } catch (TemporaryIndexingException e) {
                 ZimbraLog.index
-                        .debug("MailItemIndexTask - TemporaryIndexingException. Going to add in retry queue., e");
+                        .warn("MailItemIndexTask - TemporaryIndexingException. Going to add in retry queue., e");
                 handleRetryForMailItems();
 
             }
