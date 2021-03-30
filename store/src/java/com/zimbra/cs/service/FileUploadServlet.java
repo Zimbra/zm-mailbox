@@ -193,8 +193,8 @@ public class FileUploadServlet extends ZimbraServlet {
             String extension = FilenameUtils.getExtension(filename).trim();
             String [] blockedFileTypes = null;
 
-            if (acct.getCOS().isFeatureFileTypeUploadRestrictionsEnabled()) {
-                blockedFileTypes = acct.getCOS().getMultiAttr(Provisioning.A_zimbraFileUploadBlockedFileTypes);
+            if (acct.isFeatureFileTypeUploadRestrictionsEnabled()) {
+                blockedFileTypes = acct.getMultiAttr(Provisioning.A_zimbraFileUploadBlockedFileTypes);
                 for(String blockedExt : blockedFileTypes){
                     if(blockedExt.equalsIgnoreCase(extension)) {
                         throw ServiceException.BLOCKED_FILE_TYPE_UPLOAD(
