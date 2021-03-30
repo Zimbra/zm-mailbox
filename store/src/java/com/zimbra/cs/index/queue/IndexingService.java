@@ -433,17 +433,8 @@ public class IndexingService {
                 }
                 ZimbraLog.index.debug("%s processed %d items", Thread.currentThread().getName(),
                         queueItem.getMailItemsToAdd().size());
-            } catch (MailServiceException e) {
-                ZimbraLog.index.debug("MailItemIndexTask - MailServiceException.", e);
-                if (e.getCode().endsWith("NO_SUCH_BLOB")) {
-                    ZimbraLog.index.debug(
-                            "MailItemIndexTask - MailServiceException - NO_SUCH_BLOB. Going to add in retry queue.");
-                    handleRetryForMailItems();
-                }
-
             } catch (TemporaryIndexingException e) {
-                ZimbraLog.index
-                        .warn("MailItemIndexTask - TemporaryIndexingException. Going to add in retry queue., e");
+                ZimbraLog.index.warn("MailItemIndexTask - TemporaryIndexingException. Going to add in retry queue., e");
                 handleRetryForMailItems();
 
             }
