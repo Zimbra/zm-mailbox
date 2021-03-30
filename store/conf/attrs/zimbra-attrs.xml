@@ -10049,10 +10049,12 @@ TODO: delete them permanently from here
   <desc>URL of error page for unsupported browser.</desc>
   <globalConfigValue>https://zimbra_ssl_webclient/unsupportedbrowser.html</globalConfigValue>
 </attr>
-<attr id="9010" name="zimbraDomainTrialExpirationDate" type="gentime" cardinality="single" optionalIn="domain" flags="accountInfo" since="8.9.0">
+<attr id="9010" name="zimbraDomainTrialExpirationDate" type="gentime" cardinality="single" optionalIn="domain" flags="accountInfo" since="8.9.0" deprecatedSince="9.0.0">
+  <deprecateDesc>use zimbraTrialExpirationDate</deprecateDesc>
   <desc>Can be used by an external service to indicate when a trial will expire.</desc>
 </attr>
-<attr id="9011" name="zimbraDomainTrialConvertAtExpiration" type="boolean" cardinality="single" optionalIn="domain" flags="accountInfo" since="8.9.0">
+<attr id="9011" name="zimbraDomainTrialConvertAtExpiration" type="boolean" cardinality="single" optionalIn="domain" flags="accountInfo" since="8.9.0" deprecatedSince="9.0.0">
+  <deprecateDesc>use zimbraTrialConvertExpirationDate</deprecateDesc>
   <desc>Can be used by an external service to indicate that a trial is set to convert to active at expiration.</desc>
 </attr>
 <attr id="9013" name="zimbraMailboxInitialized" type="boolean" cardinality="single" optionalIn="account" immutable="1" since="8.9.0">
@@ -10098,6 +10100,22 @@ TODO: delete them permanently from here
 </attr>
 <attr id="9024" name="zimbraBrandingFolderName" type="string" max="200" cardinality="single" optionalIn="account,cos,domain" flags="domainInfo,accountInfo,accountCosDomainInherited,domainAdminModifiable" since="8.9.0">
     <desc>Name of the folder in modern webclient from which branding assets to be picked.</desc>
+</attr>
+<attr id="9025" name="zimbraUserType" type="string" max="128" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="9.0.0">
+  <defaultCOSValue>INTERNAL</defaultCOSValue>
+  <desc>Type of zimbra user account.</desc>
+</attr>
+<attr id="9026" name="zimbraSignupAffiliate" type="string" max="128" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited,accountInfo" since="9.0.0">
+  <desc>Signup affiliate identifier.</desc>
+</attr>
+<attr id="9027" name="zimbraSignupRecoveryEmail" type="string" max="256" cardinality="single" optionalIn="account" flags="accountInfo" since="9.0.0">
+  <desc>Zimbra user account initial recovery email address.</desc>
+</attr>
+<attr id="9028" name="zimbraTrialExpirationDate" type="gentime" cardinality="single" optionalIn="account,domain" flags="accountInfo" since="9.0.0">
+  <desc>Can be used by an external service to indicate when a trial will expire.</desc>
+</attr>
+<attr id="9029" name="zimbraTrialConvertAtExpiration" type="boolean" cardinality="single" optionalIn="account,domain" flags="accountInfo" since="9.0.0">
+  <desc>Can be used by an external service to indicate that a trial is set to convert to active at expiration.</desc>
 </attr>
 <attr id="3084" name="zimbraFeaturePowerPasteEnabled" type="boolean" cardinality="single" flags="accountInfo,accountInherited,domainAdminModifiable" optionalIn="account,cos" since="9.0.0">
     <defaultCOSValue>TRUE</defaultCOSValue>

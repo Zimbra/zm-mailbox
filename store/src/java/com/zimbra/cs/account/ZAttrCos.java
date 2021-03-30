@@ -47042,6 +47042,78 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * Signup affiliate identifier.
+     *
+     * @return zimbraSignupAffiliate, or null if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=9026)
+    public String getSignupAffiliate() {
+        return getAttr(Provisioning.A_zimbraSignupAffiliate, null, true);
+    }
+
+    /**
+     * Signup affiliate identifier.
+     *
+     * @param zimbraSignupAffiliate new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=9026)
+    public void setSignupAffiliate(String zimbraSignupAffiliate) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSignupAffiliate, zimbraSignupAffiliate);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Signup affiliate identifier.
+     *
+     * @param zimbraSignupAffiliate new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=9026)
+    public Map<String,Object> setSignupAffiliate(String zimbraSignupAffiliate, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSignupAffiliate, zimbraSignupAffiliate);
+        return attrs;
+    }
+
+    /**
+     * Signup affiliate identifier.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=9026)
+    public void unsetSignupAffiliate() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSignupAffiliate, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Signup affiliate identifier.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=9026)
+    public Map<String,Object> unsetSignupAffiliate(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSignupAffiliate, "");
+        return attrs;
+    }
+
+    /**
      * Whether to enable smtp debug trace
      *
      * @return zimbraSmtpEnableTrace, or false if unset
@@ -48553,6 +48625,78 @@ public abstract class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetUCServiceId(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraUCServiceId, "");
+        return attrs;
+    }
+
+    /**
+     * Type of zimbra user account.
+     *
+     * @return zimbraUserType, or "INTERNAL" if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=9025)
+    public String getUserType() {
+        return getAttr(Provisioning.A_zimbraUserType, "INTERNAL", true);
+    }
+
+    /**
+     * Type of zimbra user account.
+     *
+     * @param zimbraUserType new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=9025)
+    public void setUserType(String zimbraUserType) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUserType, zimbraUserType);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Type of zimbra user account.
+     *
+     * @param zimbraUserType new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=9025)
+    public Map<String,Object> setUserType(String zimbraUserType, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUserType, zimbraUserType);
+        return attrs;
+    }
+
+    /**
+     * Type of zimbra user account.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=9025)
+    public void unsetUserType() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUserType, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Type of zimbra user account.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=9025)
+    public Map<String,Object> unsetUserType(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUserType, "");
         return attrs;
     }
 
