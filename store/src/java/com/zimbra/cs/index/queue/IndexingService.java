@@ -455,12 +455,14 @@ public class IndexingService {
                         }
                     }
 
-                    queueItem.removeMailItems(itemsDone);
                     if (indexItemEntries.size() > 0) {
                         setIndexIds(indexItemEntries);
                     }
 
-                    handleRetryForMailItems();
+                    if (retryQueue != null) {
+                        queueItem.removeMailItems(itemsDone);
+                        handleRetryForMailItems();
+                    }
 
                     // status reporting
                     if (queueItem.isReindex()) {
