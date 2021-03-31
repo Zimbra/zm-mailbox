@@ -877,6 +877,15 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         data.metadata = null;
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (obj != null && obj instanceof MailItem) {
+            MailItem item = (MailItem) obj;
+            return mId == item.mId && StringUtil.equal(mAccount.getId(), item.mAccount.getId());
+        }
+        return false;
+    }
+
     protected void checkItemCreationAllowed() throws ServiceException {
         // not allowed in external account mailbox
         if (getAccount().isIsExternalVirtualAccount()) {

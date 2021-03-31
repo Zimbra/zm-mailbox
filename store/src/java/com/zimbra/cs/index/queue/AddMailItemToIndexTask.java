@@ -24,6 +24,16 @@ public class AddMailItemToIndexTask extends AbstractIndexingTasksLocator {
         return mailItems;
     }
 
+    /**
+     * Function to remove the List of MailItem from the state
+     * @param items is List<MailItem>
+     */
+    public void removeMailItems(List<MailItem> items) {
+        for(MailItem item: items) {
+            mailItems.remove(item);
+        }
+    }
+
     public boolean isReindex() {
         return reindex;
     }
