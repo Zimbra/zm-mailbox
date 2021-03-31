@@ -420,7 +420,6 @@ public class IndexingService {
                     List<Integer> indexedIds = new ArrayList<Integer>();
                     for (IndexItemEntry entry : indexItemEntries) {
                         indexedIds.add(entry.getItem().getId());
-                        //itemsDone.add(e)
                     }
                     if (indexedIds.size() > 0) {
                         DbMailItem.setIndexIds(conn, queueItem.getMailboxSchemaGroupID(), queueItem.getMailboxID(),
@@ -443,15 +442,25 @@ public class IndexingService {
             try {
                 if (!handleAbortForReindexIfSet()) {
                     for (MailItem mailItem : queueItem.getMailItemsToAdd()) {
-                        List<IndexDocument> docs = mailItem
-                                .generateIndexDataAsync(queueItem.attachmentIndexingEnabled());
-                        if (docs.size() > 0) {
-                            indexItemEntries.add(new IndexItemEntry(mailItem, docs));
+                        try {
+                            List<IndexDocument> docs = mailItem
+                                    .generateIndexDataAsync(queueItem.attachmentIndexingEnabled());
+                            if (docs.size() > 0) {
+                                indexItemEntries.add(new IndexItemEntry(mailItem, docs));
+                            }
+                            itemsDone.add(mailItem);
+                        } catch (TemporaryIndexingException e) {
+                            ZimbraLog.index.warn(
+                                    "MailItemIndexTask - TemporaryIndexingException. Going to add in retry queue.", e);
                         }
-                        itemsDone.add(mailItem);
                     }
 
-                    setIndexIds(indexItemEntries);
+                    queueItem.removeMailItems(itemsDone);
+                    if (indexItemEntries.size() > 0) {
+                        setIndexIds(indexItemEntries);
+                    }
+
+                    handleRetryForMailItems();
 
                     // status reporting
                     if (queueItem.isReindex()) {
@@ -461,18 +470,6 @@ public class IndexingService {
                 }
                 ZimbraLog.index.debug("%s processed %d items", Thread.currentThread().getName(),
                         queueItem.getMailItemsToAdd().size());
-            } catch (TemporaryIndexingException e) {
-                ZimbraLog.index.warn("MailItemIndexTask - TemporaryIndexingException. Going to add in retry queue.", e);
-                try {
-                    if(indexItemEntries.size() > 0) {
-                        setIndexIds(indexItemEntries);
-                        queueItem.removeMailItems(itemsDone);
-                    }
-                    handleRetryForMailItems();
-                } catch (Exception ei) {
-                    ZimbraLog.index.errorQuietly("MailItemIndexTask - exception - ", ei);
-                }
-
             } catch (Exception e) {
                 ZimbraLog.index.errorQuietly("MailItemIndexTask - exception - ", e);
                 if (queueItem.isReindex()) {
