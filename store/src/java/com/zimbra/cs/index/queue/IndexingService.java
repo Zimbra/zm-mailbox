@@ -147,7 +147,12 @@ public class IndexingService {
 
                 indexVerifiedMailboxes.add(mbox.getId());
 
-                List<Integer> nonIndexedItemsFromDB = DbMailItem.getNonIndexedItemsForMailbox(mbox, conn, LC.zimbra_index_retry_batch_size.intValue());
+                List<Integer> nonIndexedItemsFromDB = DbMailItem.getNonIndexedItemsForMailbox(mbox, conn,
+                        LC.zimbra_index_retry_batch_size.intValue());
+                if (nonIndexedItemsFromDB.size() == LC.zimbra_index_retry_batch_size.intValue()) {
+                    indexVerifiedMailboxes.remove(mbox.getId());
+                }
+
                 int nonIndexedItemsFromDbCount = nonIndexedItemsFromDB.size();
                 ZimbraLog.index.info("%d non-indexed items found for mailbox id %d from database",
                         nonIndexedItemsFromDbCount, mbox.getId());
