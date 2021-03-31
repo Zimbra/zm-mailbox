@@ -25,7 +25,6 @@ import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.IndexStore;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailItem.TemporaryIndexingException;
-import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox.IndexItemEntry;
@@ -87,15 +86,17 @@ public class IndexingService {
         queueMonitor.start();
 
         int retryQueueSize = LC.zimbra_index_retry_message_queue_size.intValue();
-        retryQueue = new ArrayBlockingQueue<AbstractIndexingTasksLocator>(retryQueueSize);
-        indexVerifiedMailboxes = new HashSet<>();
-        INDEX_RETRY_EXECUTOR = new ThreadPoolExecutor(numThreads, numThreads, Long.MAX_VALUE, TimeUnit.NANOSECONDS,
-                new ArrayBlockingQueue<Runnable>(LC.zimbra_index_retry_executor_work_queue_size.intValue()), new ThreadFactoryBuilder().setNameFormat("IndexRetryExecutor-%d")
-                        .setDaemon(true).build());
-        INDEX_RETRY_EXECUTOR.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
-        INDEX_RETRY_EXECUTOR.prestartAllCoreThreads();
-        retryQueueMonitor = new Thread(new IndexRetryQueueMonitor());
-        retryQueueMonitor.start();
+        if (retryQueueSize > 0) {
+            retryQueue = new ArrayBlockingQueue<AbstractIndexingTasksLocator>(retryQueueSize);
+            indexVerifiedMailboxes = new HashSet<>();
+            INDEX_RETRY_EXECUTOR = new ThreadPoolExecutor(numThreads, numThreads, Long.MAX_VALUE, TimeUnit.NANOSECONDS,
+                    new ArrayBlockingQueue<Runnable>(LC.zimbra_index_retry_executor_work_queue_size.intValue()),
+                    new ThreadFactoryBuilder().setNameFormat("IndexRetryExecutor-%d").setDaemon(true).build());
+            INDEX_RETRY_EXECUTOR.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+            INDEX_RETRY_EXECUTOR.prestartAllCoreThreads();
+            retryQueueMonitor = new Thread(new IndexRetryQueueMonitor());
+            retryQueueMonitor.start();
+        }
     }
 
     /**
@@ -144,7 +145,9 @@ public class IndexingService {
                     return;
                 }
 
-                List<Integer> nonIndexedItemsFromDB = DbMailItem.getNonIndexedItemsForMailbox(mbox, conn);
+                indexVerifiedMailboxes.add(mbox.getId());
+
+                List<Integer> nonIndexedItemsFromDB = DbMailItem.getNonIndexedItemsForMailbox(mbox, conn, LC.zimbra_index_retry_batch_size.intValue());
                 int nonIndexedItemsFromDbCount = nonIndexedItemsFromDB.size();
                 ZimbraLog.index.info("%d non-indexed items found for mailbox id %d from database",
                         nonIndexedItemsFromDbCount, mbox.getId());
@@ -167,7 +170,6 @@ public class IndexingService {
                             mbox.getAccountId(), mbox.getId(), mbox.getSchemaGroupId(),
                             mbox.attachmentsIndexingEnabled(), false);
                     retryQueue.put(itemLocator);
-                    indexVerifiedMailboxes.add(mbox.getId());
                 }
             } catch (ServiceException | InterruptedException e) {
                 // Exception is being swallowed because it should not effect the indexing for
@@ -195,7 +197,9 @@ public class IndexingService {
                         continue;
                     }
 
-                    processIndexForMailbox(queueItem);
+                    if (retryQueue != null) {
+                        processIndexForMailbox(queueItem);
+                    }
 
                     if (INDEX_EXECUTOR.isTerminating() || INDEX_EXECUTOR.isShutdown()) {
                         // this thread will not process this item, so put it

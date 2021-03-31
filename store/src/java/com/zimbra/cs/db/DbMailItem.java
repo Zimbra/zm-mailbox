@@ -5694,7 +5694,8 @@ public class DbMailItem {
      * @return The list of non-indexed MailItems.
      * @throws ServiceException
      */
-    public static List<Integer> getNonIndexedItemsForMailbox(Mailbox mbox, DbConnection conn) throws ServiceException {
+    public static List<Integer> getNonIndexedItemsForMailbox(Mailbox mbox, DbConnection conn, int batchSize)
+            throws ServiceException {
         List<Integer> nonIndexedItems = new ArrayList<Integer>();
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -5705,6 +5706,7 @@ public class DbMailItem {
         buf.append(IN_THIS_MAILBOX_AND);
         buf.append("index_id = 0 AND ");
         buf.append("type NOT IN " + NON_SEARCHABLE_TYPES);
+        buf.append(" limit " + batchSize);
         try {
             stmt = conn.prepareStatement(buf.toString());
             setMailboxId(stmt, mbox, 1);
