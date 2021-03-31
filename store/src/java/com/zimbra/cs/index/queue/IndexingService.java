@@ -407,6 +407,8 @@ public class IndexingService {
         private void setIndexIds(List<IndexItemEntry> indexItemEntries) throws ServiceException, IOException {
             DbConnection conn = null;
             try {
+                ZimbraLog.index.debug("MailItemIndexTask - setIndexIds called with %d IndexItemEntry size.",
+                        indexItemEntries.size());
                 conn = DbPool.getConnection(queueItem.getMailboxID(), queueItem.getMailboxSchemaGroupID());
                 IndexStore indexStore = IndexStore.getFactory().getIndexStore(queueItem.getAccountID());
                 if (indexItemEntries.size() > 0) {
