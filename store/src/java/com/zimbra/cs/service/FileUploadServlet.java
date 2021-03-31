@@ -63,6 +63,7 @@ import org.apache.tika.io.TikaInputStream;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.mime.MediaType;
 import org.apache.tika.mime.MimeType;
+import org.apache.tika.mime.MimeTypes;
 
 import com.google.common.base.Strings;
 import com.zimbra.client.ZMailbox;
@@ -125,6 +126,7 @@ public class FileUploadServlet extends ZimbraServlet {
     public static final class Upload {
         final String   accountId;
         String         contentType;
+        String         extension;
         final String   uuid;
         final String   name;
         final FileItem file;
@@ -146,6 +148,7 @@ public class FileUploadServlet extends ZimbraServlet {
             uuid      = localServer + UPLOAD_PART_DELIMITER + LdapUtil.generateUUID();
             name      = FileUtil.trimFilename(filename);
             file      = attachment;
+            extension = FilenameUtils.getExtension(filename).trim();
             if (file == null) {
                 contentType = MimeConstants.CT_TEXT_PLAIN;
             } else {
@@ -190,9 +193,7 @@ public class FileUploadServlet extends ZimbraServlet {
             }
 
             Account acct = Provisioning.getInstance().getAccount(acctId);
-            String extension = FilenameUtils.getExtension(filename).trim();
             String [] blockedFileTypes = null;
-
             if (acct.isFeatureFileTypeUploadRestrictionsEnabled()) {
                 blockedFileTypes = acct.getMultiAttr(Provisioning.A_zimbraFileUploadBlockedFileTypes);
                 for(String blockedExt : blockedFileTypes){
@@ -203,12 +204,17 @@ public class FileUploadServlet extends ZimbraServlet {
                 }
 
                 List<String> blockedExtensionList = new ArrayList<>(Arrays.asList(blockedFileTypes));
+                mLog.debug("Start - Using Tika library for retrieving the extension.");
                 String fileExtension = getExtension(file);
+                mLog.debug("End - Using Tika library for retrieving the extension.");
                 if (blockedExtensionList.contains(fileExtension)) {
                     throw ServiceException.BLOCKED_FILE_TYPE_UPLOAD(
                             String.format("Blocked attachment during uploading %s filetype ", fileExtension), null);
                 }
             }
+            long endTime = System.currentTimeMillis();
+            mLog.debug(String.format("End - Using Tika library, time taken for [ %s ] - [ %d ] milliseconds.",
+                    filename, (endTime - time)));
         }
 
         public String getName()         { return name; }
