@@ -10111,10 +10111,10 @@ TODO: delete them permanently from here
 <attr id="9027" name="zimbraSignupRecoveryEmail" type="string" max="256" cardinality="single" optionalIn="account" flags="accountInfo" since="9.0.0">
   <desc>Zimbra user account initial recovery email address.</desc>
 </attr>
-<attr id="9028" name="zimbraTrialExpirationDate" type="gentime" cardinality="single" optionalIn="account,domain" flags="accountInfo" since="9.0.0">
+<attr id="9028" name="zimbraTrialExpirationDate" type="gentime" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited,accountInfo" since="9.0.0">
   <desc>Can be used by an external service to indicate when a trial will expire.</desc>
 </attr>
-<attr id="9029" name="zimbraTrialConvertAtExpiration" type="boolean" cardinality="single" optionalIn="account,domain" flags="accountInfo" since="9.0.0">
+<attr id="9029" name="zimbraTrialConvertAtExpiration" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited,accountInfo" since="9.0.0">
   <desc>Can be used by an external service to indicate that a trial is set to convert to active at expiration.</desc>
 </attr>
 <attr id="3084" name="zimbraFeaturePowerPasteEnabled" type="boolean" cardinality="single" flags="accountInfo,accountInherited,domainAdminModifiable" optionalIn="account,cos" since="9.0.0">
