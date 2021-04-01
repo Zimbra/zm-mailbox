@@ -7382,7 +7382,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Deprecated since: 9.0.0. use zimbraTrialConvertExpirationDate. Orig
+     * Deprecated since: 9.0.0. use zimbraTrialConvertAtExpiration. Orig
      * desc: Can be used by an external service to indicate that a trial is
      * set to convert to active at expiration.
      *
@@ -7396,7 +7396,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Deprecated since: 9.0.0. use zimbraTrialConvertExpirationDate. Orig
+     * Deprecated since: 9.0.0. use zimbraTrialConvertAtExpiration. Orig
      * desc: Can be used by an external service to indicate that a trial is
      * set to convert to active at expiration.
      *
@@ -7413,7 +7413,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Deprecated since: 9.0.0. use zimbraTrialConvertExpirationDate. Orig
+     * Deprecated since: 9.0.0. use zimbraTrialConvertAtExpiration. Orig
      * desc: Can be used by an external service to indicate that a trial is
      * set to convert to active at expiration.
      *
@@ -7431,7 +7431,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Deprecated since: 9.0.0. use zimbraTrialConvertExpirationDate. Orig
+     * Deprecated since: 9.0.0. use zimbraTrialConvertAtExpiration. Orig
      * desc: Can be used by an external service to indicate that a trial is
      * set to convert to active at expiration.
      *
@@ -7447,7 +7447,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Deprecated since: 9.0.0. use zimbraTrialConvertExpirationDate. Orig
+     * Deprecated since: 9.0.0. use zimbraTrialConvertAtExpiration. Orig
      * desc: Can be used by an external service to indicate that a trial is
      * set to convert to active at expiration.
      *

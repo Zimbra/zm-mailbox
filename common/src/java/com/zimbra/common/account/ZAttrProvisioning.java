@@ -5997,7 +5997,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDomainStatus = "zimbraDomainStatus";
 
     /**
-     * Deprecated since: 9.0.0. use zimbraTrialConvertExpirationDate. Orig
+     * Deprecated since: 9.0.0. use zimbraTrialConvertAtExpiration. Orig
      * desc: Can be used by an external service to indicate that a trial is
      * set to convert to active at expiration.
      *
