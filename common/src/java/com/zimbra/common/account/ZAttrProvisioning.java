@@ -5997,8 +5997,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDomainStatus = "zimbraDomainStatus";
 
     /**
-     * Can be used by an external service to indicate that a trial is set to
-     * convert to active at expiration.
+     * Deprecated since: 9.0.0. use zimbraTrialConvertAtExpiration. Orig
+     * desc: Can be used by an external service to indicate that a trial is
+     * set to convert to active at expiration.
      *
      * @since ZCS 8.9.0
      */
@@ -6006,8 +6007,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDomainTrialConvertAtExpiration = "zimbraDomainTrialConvertAtExpiration";
 
     /**
-     * Can be used by an external service to indicate when a trial will
-     * expire.
+     * Deprecated since: 9.0.0. use zimbraTrialExpirationDate. Orig desc: Can
+     * be used by an external service to indicate when a trial will expire.
      *
      * @since ZCS 8.9.0
      */
@@ -16538,6 +16539,22 @@ public class ZAttrProvisioning {
     public static final String A_zimbraSignatureName = "zimbraSignatureName";
 
     /**
+     * Signup affiliate identifier.
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=9026)
+    public static final String A_zimbraSignupAffiliate = "zimbraSignupAffiliate";
+
+    /**
+     * Zimbra user account initial recovery email address.
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=9027)
+    public static final String A_zimbraSignupRecoveryEmail = "zimbraSignupRecoveryEmail";
+
+    /**
      * background color for chameleon skin for the domain
      *
      * @since ZCS 5.0.6
@@ -17373,6 +17390,24 @@ public class ZAttrProvisioning {
     public static final String A_zimbraTouchJSErrorTrackingKey = "zimbraTouchJSErrorTrackingKey";
 
     /**
+     * Can be used by an external service to indicate that a trial is set to
+     * convert to active at expiration.
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=9029)
+    public static final String A_zimbraTrialConvertAtExpiration = "zimbraTrialConvertAtExpiration";
+
+    /**
+     * Can be used by an external service to indicate when a trial will
+     * expire.
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=9028)
+    public static final String A_zimbraTrialExpirationDate = "zimbraTrialExpirationDate";
+
+    /**
      * whether two-factor authentication is enabled by the user
      *
      * @since ZCS 8.7.0,9.0.0
@@ -17647,6 +17682,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=146)
     public static final String A_zimbraUserServicesEnabled = "zimbraUserServicesEnabled";
+
+    /**
+     * Type of zimbra user account.
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=9025)
+    public static final String A_zimbraUserType = "zimbraUserType";
 
     /**
      * account version information
