@@ -16,6 +16,9 @@
  */
 package com.zimbra.cs.html.owasp;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.concurrent.Callable;
 
 import org.owasp.html.Handler;
@@ -23,7 +26,11 @@ import org.owasp.html.HtmlSanitizer;
 import org.owasp.html.HtmlSanitizer.Policy;
 import org.owasp.html.HtmlStreamRenderer;
 import org.owasp.html.PolicyFactory;
+import org.w3c.tidy.Tidy;
+
+import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.html.owasp.policies.StyleTagReceiver;
 
 /*
@@ -53,8 +60,9 @@ public class OwaspHtmlSanitizer implements Callable<String> {
      * 
      * @return the sanitized form of the <code>html</code>; <code>null</code> if
      *         <code>html</code> was <code>null</code>
+     * @throws UnsupportedEncodingException
      */
-    public String sanitize() {
+    public String sanitize() throws UnsupportedEncodingException {
         OwaspThreadLocal threadLocalInstance = new OwaspThreadLocal();
         threadLocalInstance.setVHost(vHost);
         OwaspHtmlSanitizer.zThreadLocal.set(threadLocalInstance);
@@ -77,10 +85,33 @@ public class OwaspHtmlSanitizer implements Callable<String> {
         instantiatePolicy();
         final Policy policy = POLICY_DEFINITION.apply(new StyleTagReceiver(renderer));
         // run the html through the sanitizer
-        HtmlSanitizer.sanitize(html, policy);
+        HtmlSanitizer.sanitize(cleanMalformedHtml(html), policy);
         // return the resulting HTML from the builder
         OwaspHtmlSanitizer.zThreadLocal.remove();
         return htmlBuilder.toString();
+    }
+
+    private String cleanMalformedHtml(String str) throws UnsupportedEncodingException {
+        if (DebugConfig.jtidyEnabled) {
+            long startTime = System.currentTimeMillis();
+            ZimbraLog.mailbox.debug("Start - Using JTidy library for cleaning the markup.");
+            Tidy tidy = new Tidy();
+            tidy.setInputEncoding("UTF-8");
+            tidy.setOutputEncoding("UTF-8");
+            tidy.setPrintBodyOnly(true);
+            tidy.setXHTML(true);
+            ByteArrayInputStream inputStream = new ByteArrayInputStream(str.getBytes("UTF-8"));
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            tidy.parseDOM(inputStream, outputStream);
+            String outStream = outputStream.toString("UTF-8");
+            if (outStream.isEmpty() || outStream == null) {
+                return str;
+            }
+            ZimbraLog.mailbox.debug("End - Using JTidy library for cleaning the markup. Taken %d milliseconds.",
+                    (System.currentTimeMillis() - startTime));
+            return outStream;
+        }
+        return str;
     }
 
     @Override
