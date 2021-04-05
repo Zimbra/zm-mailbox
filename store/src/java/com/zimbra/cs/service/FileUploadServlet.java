@@ -32,7 +32,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TimerTask;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.mail.util.SharedByteArrayInputStream;
@@ -64,7 +63,7 @@ import org.apache.tika.io.TikaInputStream;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.mime.MediaType;
 import org.apache.tika.mime.MimeType;
-import org.apache.tika.mime.MimeTypes;
+import org.apache.tika.mime.MimeTypeException;
 
 import com.google.common.base.Strings;
 import com.zimbra.client.ZMailbox;
@@ -134,6 +133,8 @@ public class FileUploadServlet extends ZimbraServlet {
         long time;
         boolean deleted = false;
         BlobInputStream blobInputStream;
+        static TikaConfig tikaConfig = TikaConfig.getDefaultConfig();
+        static Detector detector = tikaConfig.getDetector();
 
         Upload(String acctId, FileItem attachment) throws ServiceException {
             this(acctId, attachment, attachment.getName());
@@ -224,8 +225,6 @@ public class FileUploadServlet extends ZimbraServlet {
         public String getExtension(FileItem filename) {
             String fileExtension = null;
             try {
-                TikaConfig tikaConfig = TikaConfig.getDefaultConfig();
-                Detector detector = tikaConfig.getDetector();
                 TikaInputStream stream = TikaInputStream.get(filename.getInputStream());
                 Metadata metadata = new Metadata();
                 metadata.add(Metadata.RESOURCE_NAME_KEY, filename.getName());
@@ -771,33 +770,19 @@ public class FileUploadServlet extends ZimbraServlet {
         Upload up = new Upload(acct.getId(), fi, filename);
 
         if (filename.endsWith(".har")) {
-            File file = ((DiskFileItem) fi).getStoreLocation();
             try {
-                String mimeType = MimeDetect.getMimeDetect().detect(file);
+                TikaInputStream stream = TikaInputStream.get(fi.getInputStream());
+                Metadata metadata = new Metadata();
+                metadata.add(Metadata.RESOURCE_NAME_KEY, fi.getName());
+                MediaType mediaType = Upload.detector.detect(stream, metadata);
+                MimeType mimeType = Upload.tikaConfig.getMimeRepository().forName(mediaType.toString());
+                up.contentType = mimeType.toString();
                 if (mimeType != null) {
-                    up.contentType = mimeType;
+                    up.contentType = mimeType.toString();
                 }
-            } catch (IOException e) {
+            } catch (MimeTypeException e) {
                 mLog.warn("Failed to detect file content type");
             }
-        }
-        final String finalMimeType = up.contentType;
-        String contentTypeBlacklist = LC.zimbra_file_content_type_blacklist.value();
-        List<String> blacklist = new ArrayList<String>();
-        if (!StringUtil.isNullOrEmpty(contentTypeBlacklist)) {
-            blacklist.addAll(Arrays.asList(contentTypeBlacklist.trim().split(",")));
-        }
-        if (blacklist.stream().anyMatch((blacklistedContentType) -> {
-            Pattern p = Pattern.compile(blacklistedContentType);
-            Matcher m = p.matcher(finalMimeType);
-            return m.find();
-        })) {
-            mLog.debug("handlePlainUpload(): deleting %s", fi);
-            fi.delete();
-            mLog.info("File content type is blacklisted : %s" + finalMimeType);
-            drainRequestStream(req);
-            sendResponse(resp, HttpServletResponse.SC_FORBIDDEN, fmt, null, null, null);
-            return Collections.emptyList();
         }
 
         mLog.info("Received plain: %s", up);
