@@ -129,56 +129,6 @@ public class IndexingService {
 
     class IndexQueueMonitor implements Runnable {
 
-        /**
-         * Function responsible for processing the non-indexed items from database.
-         * 
-         * @param queueItem
-         */
-        private void processIndexForMailbox(AbstractIndexingTasksLocator queueItem) {
-            DbConnection conn = null;
-            try {
-                conn = DbPool.getConnection(queueItem.getMailboxID(), queueItem.getMailboxSchemaGroupID());
-                Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(queueItem.accountID,
-                        FetchMode.AUTOCREATE, false);
-
-                if (indexVerifiedMailboxes.contains(mbox.getId())) {
-                    ZimbraLog.index.debug("Mailbox id %d is already checked for index consistency", mbox.getId());
-                    return;
-                }
-
-                indexVerifiedMailboxes.add(mbox.getId());
-
-                List<Integer> nonIndexedItemsFromDB = DbMailItem.getNonIndexedItemsForMailbox(mbox, conn,
-                        LC.zimbra_index_retry_batch_size.intValue());
-                int nonIndexedItemsFromDbCount = nonIndexedItemsFromDB.size();
-                ZimbraLog.index.info("%d non-indexed items found for mailbox id %d from database",
-                        nonIndexedItemsFromDbCount, mbox.getId());
-                if (nonIndexedItemsFromDbCount == 0) {
-                    ZimbraLog.index.debug("No non-indexed item found for mailbox id %d from database", mbox.getId());
-                    return;
-                }
-
-                if (nonIndexedItemsFromDbCount == LC.zimbra_index_retry_batch_size.intValue()) {
-                    indexVerifiedMailboxes.remove(mbox.getId());
-                }
-
-                AbstractIndexingTasksLocator itemLocator = new AddMailItemIdsToIndexTask(nonIndexedItemsFromDB,
-                        mbox.getId(), mbox.getSchemaGroupId(), mbox.getAccountId(), mbox.attachmentsIndexingEnabled());
-                boolean res = retryQueue.add(itemLocator);
-                if (!res) {
-                    ZimbraLog.index.warn(
-                            "IndexQueueMonitor - processIndexForMailbox - could not queue the items for indexing. Indexing queue might be full.");
-                }
-
-            } catch (ServiceException e) {
-                // Exception is being swallowed because it should not effect the indexing for
-                // the mailitem for which the current check is being performed
-                ZimbraLog.index.error("IndexQueueMonitor - handleIndex - exception", e);
-            } finally {
-                DbPool.quietClose(conn);
-            }
-        }
-
         @Override
         public void run() {
             ZimbraLog.index.info("Started index queue monitoring thread %s", Thread.currentThread().getName());
@@ -222,9 +172,6 @@ public class IndexingService {
                                                     Thread.currentThread().getName(), queueItem.getAccountID());
                                 }
                             } else {
-                                if (retryQueue != null) {
-                                    processIndexForMailbox(queueItem);
-                                }
                                 ZimbraLog.index.debug("%s submitting an indexing task MailItemIndexTask for account %s", Thread
                                         .currentThread().getName(), queueItem.getAccountID());
                                 INDEX_EXECUTOR.submit(new MailItemIndexTask((AddMailItemToIndexTask) queueItem));
@@ -403,6 +350,56 @@ public class IndexingService {
         }
 
         /**
+         * Function responsible for processing the non-indexed items from database.
+         * 
+         * @param queueItem
+         * @return
+         */
+        private void processIndexForMailbox(AbstractIndexingTasksLocator queueItem) {
+            DbConnection conn = null;
+            Mailbox mbox = null;
+            try {
+                mbox = MailboxManager.getInstance().getMailboxByAccountId(queueItem.accountID, FetchMode.AUTOCREATE,
+                        false);
+
+                indexVerifiedMailboxes.add(mbox.getId());
+
+                conn = DbPool.getConnection(queueItem.getMailboxID(), queueItem.getMailboxSchemaGroupID());
+                List<Integer> nonIndexedItemsFromDB = DbMailItem.getNonIndexedItemsForMailbox(mbox, conn,
+                        LC.zimbra_index_retry_batch_size.intValue());
+                int nonIndexedItemsFromDbCount = nonIndexedItemsFromDB.size();
+                ZimbraLog.index.info("%d non-indexed items found for mailbox id %d from database",
+                        nonIndexedItemsFromDbCount, mbox.getId());
+                if (nonIndexedItemsFromDbCount == 0) {
+                    ZimbraLog.index.debug("No non-indexed item found for mailbox id %d from database", mbox.getId());
+                    return;
+                }
+
+                if (nonIndexedItemsFromDbCount == LC.zimbra_index_retry_batch_size.intValue()) {
+                    indexVerifiedMailboxes.remove(mbox.getId());
+                }
+
+                AbstractIndexingTasksLocator itemLocator = new AddMailItemIdsToIndexTask(nonIndexedItemsFromDB,
+                        mbox.getId(), mbox.getSchemaGroupId(), mbox.getAccountId(), mbox.attachmentsIndexingEnabled());
+                boolean res = retryQueue.add(itemLocator);
+                if (!res) {
+                    ZimbraLog.index.warn(
+                            "IndexQueueMonitor - processIndexForMailbox - could not queue the items for indexing. Indexing queue might be full.");
+                }
+
+            } catch (ServiceException e) {
+                // Exception is being swallowed because it should not effect the indexing for
+                // the mailitem for which the current check is being performed
+                ZimbraLog.index.error("IndexQueueMonitor - handleIndex - exception", e);
+                if (mbox != null) {
+                    indexVerifiedMailboxes.remove(mbox.getId());
+                }
+            } finally {
+                DbPool.quietClose(conn);
+            }
+        }
+
+        /**
          * Function responsible to set the DB entries for an IndexItemEntry
          * 
          * @param indexItemEntries
@@ -463,6 +460,15 @@ public class IndexingService {
                     queueItem.removeMailItems(itemsDone);
                     if (queueItem.getMailItemsToAdd().size() > 0) {
                         handleRetryForMailItems();
+                    }
+
+                    if (retryQueue != null) {
+                        if (indexVerifiedMailboxes.contains(queueItem.mailboxID)) {
+                            ZimbraLog.index.debug("Mailbox id %d is already checked for index consistency",
+                                    queueItem.mailboxID);
+                        } else {
+                            processIndexForMailbox(queueItem);
+                        }
                     }
 
                     // status reporting
