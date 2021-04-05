@@ -358,6 +358,7 @@ public class IndexingService {
         private void processIndexForMailbox(AbstractIndexingTasksLocator queueItem) {
             DbConnection conn = null;
             Mailbox mbox = null;
+
             try {
                 mbox = MailboxManager.getInstance().getMailboxByAccountId(queueItem.accountID, FetchMode.AUTOCREATE,
                         false);
@@ -375,12 +376,14 @@ public class IndexingService {
                     return;
                 }
 
+                boolean mailboxVerified = true;
                 if (nonIndexedItemsFromDbCount == LC.zimbra_index_retry_batch_size.intValue()) {
-                    indexVerifiedMailboxes.remove(mbox.getId());
+                    mailboxVerified = false;
                 }
 
                 AbstractIndexingTasksLocator itemLocator = new AddMailItemIdsToIndexTask(nonIndexedItemsFromDB,
-                        mbox.getId(), mbox.getSchemaGroupId(), mbox.getAccountId(), mbox.attachmentsIndexingEnabled());
+                        mailboxVerified, mbox.getId(), mbox.getSchemaGroupId(), mbox.getAccountId(),
+                        mbox.attachmentsIndexingEnabled());
                 boolean res = retryQueue.add(itemLocator);
                 if (!res) {
                     ZimbraLog.index.warn(
@@ -503,7 +506,7 @@ public class IndexingService {
         /** Function responsible to handle adding to retry queue based on number of retries.
          *  It increases the sleep duration exponentially based upon the number of times retries is done.
          */
-        private void handleRetryForMailItems() {
+        private void handleRetryForMailItems(Mailbox mbox) {
             try {
                 int maxRetries = Provisioning.getInstance().getLocalServer().getMaxIndexingRetries();
                 if (queueItem.getRetries() < maxRetries) {
@@ -521,6 +524,13 @@ public class IndexingService {
                 retryQueue.add(queueItem);
                 return;
             }
+
+            //Giving database index sanity one more chance for check
+            if (!queueItem.isMailboxVerified()) {
+                indexVerifiedMailboxes.remove(mbox.getId());
+                ZimbraLog.index.debug("MailItemIdIndexTask - handleRetryForMailItems - Verification reset for mailbox %d", mbox.getId());
+            }
+
             ZimbraLog.index.error(
                     "MailItemIdIndexTask - handleRetryForMailItems - permanently failed to index %d mail items for account %s after %d attempts.",
                     queueItem.getMailItemIdsToAdd().size(), queueItem.getAccountID(), queueItem.getRetries());
@@ -586,8 +596,12 @@ public class IndexingService {
                 }
 
                 queueItem.removeMailItems(itemsDone);
-                if (queueItem.getMailItemIdsToAdd().size() > 0) {
-                    handleRetryForMailItems();
+                Integer itemsLeft = queueItem.getMailItemIdsToAdd().size();
+                if (itemsLeft > 0) {
+                    handleRetryForMailItems(mbox);
+                } else if (itemsLeft == 0 && !queueItem.isMailboxVerified()) {
+                    indexVerifiedMailboxes.remove(mbox.getId());
+                    ZimbraLog.index.debug("MailItemIdIndexTask - Verification reset for mailbox %d", mbox.getId());
                 }
 
                 ZimbraLog.index.debug("%s processed %d items", Thread.currentThread().getName(), itemsDone.size());

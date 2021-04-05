@@ -6,11 +6,13 @@ import com.zimbra.common.util.ZimbraLog;
 
 public class AddMailItemIdsToIndexTask extends AbstractIndexingTasksLocator {
     private final List<Integer> mailItemIds;
+    private final boolean mailboxVerified;
 
-    protected AddMailItemIdsToIndexTask(List<Integer> items, int mailboxID, int mailboxSchemaGroupID, String accountID,
-            boolean indexAttachments) {
+    protected AddMailItemIdsToIndexTask(List<Integer> items, boolean mailboxVerified, int mailboxID,
+            int mailboxSchemaGroupID, String accountID, boolean indexAttachments) {
         super(mailboxID, mailboxSchemaGroupID, accountID, indexAttachments);
         mailItemIds = items;
+        this.mailboxVerified = mailboxVerified;
     }
 
     /**
@@ -34,5 +36,13 @@ public class AddMailItemIdsToIndexTask extends AbstractIndexingTasksLocator {
         for (Integer item : items) {
             mailItemIds.remove(item);
         }
+    }
+
+    /**
+     * Function that returns the state of mailboxVerified
+     * @return false if mailbox verification is incomplete else true
+     */
+    public boolean isMailboxVerified() {
+        return mailboxVerified;
     }
 }
