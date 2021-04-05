@@ -461,7 +461,9 @@ public class IndexingService {
                     }
 
                     queueItem.removeMailItems(itemsDone);
-                    handleRetryForMailItems();
+                    if (queueItem.getMailItemsToAdd().size() > 0) {
+                        handleRetryForMailItems();
+                    }
 
                     // status reporting
                     if (queueItem.isReindex()) {
@@ -579,7 +581,9 @@ public class IndexingService {
                 }
 
                 queueItem.removeMailItems(itemsDone);
-                handleRetryForMailItems();
+                if (queueItem.getMailItemIdsToAdd().size() > 0) {
+                    handleRetryForMailItems();
+                }
 
                 ZimbraLog.index.debug("%s processed %d items", Thread.currentThread().getName(),
                         queueItem.getMailItemIdsToAdd().size());
