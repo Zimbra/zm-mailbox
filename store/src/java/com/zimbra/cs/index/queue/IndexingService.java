@@ -477,8 +477,7 @@ public class IndexingService {
                                 queueItem.getMailItemsToAdd().size());
                     }
                 }
-                ZimbraLog.index.debug("%s processed %d items", Thread.currentThread().getName(),
-                        queueItem.getMailItemsToAdd().size());
+                ZimbraLog.index.debug("%s processed %d items", Thread.currentThread().getName(), itemsDone.size());
             } catch (Exception e) {
                 ZimbraLog.index.errorQuietly("MailItemIndexTask - exception - ", e);
                 if (queueItem.isReindex()) {
@@ -591,8 +590,7 @@ public class IndexingService {
                     handleRetryForMailItems();
                 }
 
-                ZimbraLog.index.debug("%s processed %d items", Thread.currentThread().getName(),
-                        queueItem.getMailItemIdsToAdd().size());
+                ZimbraLog.index.debug("%s processed %d items", Thread.currentThread().getName(), itemsDone.size());
             } catch (Exception e) {
                 ZimbraLog.index.errorQuietly("MailItemIdIndexTask - exception - ", e);
 
