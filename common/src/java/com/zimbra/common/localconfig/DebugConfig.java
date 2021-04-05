@@ -352,6 +352,13 @@ public final class DebugConfig {
      */
     public static final int owasp_html_sanitizer_timeout = value ("owasp_html_sanitizer_timeout", 15);
 
+    /**
+    *
+    * enabling/disabling the jtidy library for cleaning  the
+    * malformed markup.
+    */
+    public static final boolean jtidyEnabled = value("jtidy_enabled", true);
+
     public static final boolean delayedIndexingIgnoresZClient = value("delayed_indexing_ignores_zclient", false);
 
     public static final boolean delayedIndexingIgnoresEmptyUserAgent = value("delayed_indexing_ignores_empty_user_agent", true);
