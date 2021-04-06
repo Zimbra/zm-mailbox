@@ -2,6 +2,7 @@ package com.zimbra.cs.index.queue;
 
 import java.util.List;
 
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem;
 
 public class AddMailItemToIndexTask extends AbstractIndexingTasksLocator {
@@ -22,6 +23,17 @@ public class AddMailItemToIndexTask extends AbstractIndexingTasksLocator {
      */
     public List<MailItem> getMailItemsToAdd() {
         return mailItems;
+    }
+
+    /**
+     * Function to remove the List of MailItem from the state
+     * @param items is List<MailItem>
+     */
+    public void removeMailItems(List<MailItem> items) {
+        ZimbraLog.index.debug("AddMailItemToIndexTask - removeMailItems items called with %d item size.", items.size());
+        for (MailItem item : items) {
+            mailItems.remove(item);
+        }
     }
 
     public boolean isReindex() {

@@ -5686,4 +5686,40 @@ public class DbMailItem {
             DbPool.closeStatement(stmt);
         }
     }
+
+    /**
+     * Function responsible for returning non-indexed items for a given mailbox.
+     * @param mbox The Mailbox.
+     * @param conn The DbConnection.
+     * @return The list of non-indexed MailItems.
+     * @throws ServiceException
+     */
+    public static List<Integer> getNonIndexedItemsForMailbox(Mailbox mbox, DbConnection conn, int batchSize)
+            throws ServiceException {
+        List<Integer> nonIndexedItems = new ArrayList<Integer>();
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        StringBuilder buf = new StringBuilder();
+        buf.append("SELECT id FROM ");
+        buf.append(getMailItemTableName(mbox, false));
+        buf.append(" WHERE ");
+        buf.append(IN_THIS_MAILBOX_AND);
+        buf.append("index_id = 0 AND ");
+        buf.append("type NOT IN " + NON_SEARCHABLE_TYPES);
+        buf.append(" limit " + batchSize);
+        try {
+            stmt = conn.prepareStatement(buf.toString());
+            setMailboxId(stmt, mbox, 1);
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+                nonIndexedItems.add(rs.getInt("id"));
+            }
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("error getting non-indexed items", e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+        return nonIndexedItems;
+    }
 }

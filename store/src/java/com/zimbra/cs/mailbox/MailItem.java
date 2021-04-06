@@ -877,6 +877,15 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         data.metadata = null;
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (obj != null && obj instanceof MailItem) {
+            MailItem item = (MailItem) obj;
+            return mId == item.mId && StringUtil.equal(mAccount.getId(), item.mAccount.getId());
+        }
+        return false;
+    }
+
     protected void checkItemCreationAllowed() throws ServiceException {
         // not allowed in external account mailbox
         if (getAccount().isIsExternalVirtualAccount()) {
@@ -1717,10 +1726,10 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
     }
 
     /**
-     * This class intentionally does not inherit from ServiceException, the
-     *  exception is internal-only and should never be exposed outside of this package.
+     * Exception could be propagated outside the package, one example could be
+     * IndexingService using generateIndexDataAsync
      */
-    static class TemporaryIndexingException extends Exception {
+    public static class TemporaryIndexingException extends Exception {
         private static final long serialVersionUID = 730987946876783701L;
     }
 

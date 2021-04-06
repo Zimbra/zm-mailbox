@@ -1485,6 +1485,13 @@ public class Message extends MailItem implements Classifiable {
                 throw new TemporaryIndexingException();
             }
             return checkNumIndexDocs(pm.getLuceneDocuments());
+        } catch (MailServiceException e) {
+            ZimbraLog.index.debug("generateIndexDataAsync - MailServiceException - ", e);
+            if (e.getCode().endsWith("NO_SUCH_BLOB")) {
+                ZimbraLog.index.debug("generateIndexDataAsync - MailServiceException - NO_SUCH_BLOB");
+                throw new TemporaryIndexingException();
+            }
+            return Collections.emptyList();
         } catch (ServiceException e) {
             ZimbraLog.index.warn("Unable to generate index data for Message %d. Item will not be indexed.", getId(), e);
             return Collections.emptyList();
