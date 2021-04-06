@@ -352,6 +352,13 @@ public final class DebugConfig {
      */
     public static final int owasp_html_sanitizer_timeout = value ("owasp_html_sanitizer_timeout", 15);
 
+    /**
+     *
+     * enabling/disabling the jtidy library for cleaning  the
+     * malformed markup.
+     */
+    public static final boolean jtidyEnabled = value("jtidy_enabled", true);
+
     private static boolean value(String key, boolean defaultValue) {
         String value = LC.get(key);
         return value.isEmpty() ? defaultValue : Boolean.parseBoolean(value);

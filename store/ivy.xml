@@ -125,5 +125,6 @@
   <dependency org="org.apache.xmlgraphics" name="batik-i18n" rev="1.9"/>
   <dependency org="org.apache.xmlgraphics" name="batik-util" rev="1.8"/>
   <dependency org="org.apache.tika" name="tika-core" rev="1.22"/>
+  <dependency org="com.github.jtidy" name="jtidy" rev="1.0.2"/>
  </dependencies>
 </ivy-module>
