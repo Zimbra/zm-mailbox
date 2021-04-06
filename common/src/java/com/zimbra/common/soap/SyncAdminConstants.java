@@ -78,11 +78,8 @@ public final class SyncAdminConstants {
     public static final QName REMOVE_DEVICE_RESPONSE = QName.get(E_REMOVE_DEVICE_RESPONSE, NAMESPACE);
     public static final QName SUSPEND_DEVICE_REQUEST = QName.get(E_SUSPEND_DEVICE_REQUEST, NAMESPACE);
     public static final QName SUSPEND_DEVICE_RESPONSE = QName.get(E_SUSPEND_DEVICE_RESPONSE, NAMESPACE);
-<<<<<<< HEAD
     public static final QName QUARANTINE_DEVICE_REQUEST = QName.get(E_QUARANTINE_DEVICE_REQUEST, NAMESPACE);
     public static final QName QUARANTINE_DEVICE_RESPONSE = QName.get(E_QUARANTINE_DEVICE_RESPONSE, NAMESPACE);
-=======
->>>>>>> 11e6b48971... ZCS-8837 ABQ - introduce new device status as blocked
     public static final QName BLOCK_DEVICE_REQUEST = QName.get(E_BLOCK_DEVICE_REQUEST, NAMESPACE);
     public static final QName BLOCK_DEVICE_RESPONSE = QName.get(E_BLOCK_DEVICE_RESPONSE, NAMESPACE);
     public static final QName RESUME_DEVICE_REQUEST = QName.get(E_RESUME_DEVICE_REQUEST, NAMESPACE);
