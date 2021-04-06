@@ -359,6 +359,6 @@ public class JWTUtil {
 
     public static String getJwtSecretFromPath(String secretPath) throws IOException {
         File file = new File(secretPath);
-        return Files.asCharSource(file, Charsets.UTF_8).read();
+        return Files.asCharSource(file, Charsets.UTF_8).read().trim();
     }
 }
