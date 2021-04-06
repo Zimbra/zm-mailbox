@@ -321,8 +321,7 @@ public class IndexingService {
 
         /**
          * Function responsible to handle adding to retry queue based on number of
-         * retries. It increases the sleep duration exponentially based upon the number
-         * of times retries is done.
+         * retries.
          */
         private void handleRetryForMailItems() {
             try {
@@ -331,8 +330,7 @@ public class IndexingService {
                     ZimbraLog.index.debug(
                             "MailItemIndexTask - handleRetryForMailItems - received to index %d mail items for account %s after %d attempts. Adding in retry queue.",
                             queueItem.getMailItemsToAdd().size(), queueItem.getAccountID(), queueItem.getRetries());
-                    // Exponentially increase the sleep duration based on the number of retries
-                    Thread.sleep((long) (1000 * 30 * Math.pow(2, queueItem.getRetries())));
+                    Thread.sleep(500);
                     queueItem.addRetry();
                     queueAdapter.put(queueItem);
                     return;
@@ -503,8 +501,9 @@ public class IndexingService {
             queueItem = item;
         }
 
-        /** Function responsible to handle adding to retry queue based on number of retries.
-         *  It increases the sleep duration exponentially based upon the number of times retries is done.
+        /**
+         * Function responsible to handle adding to retry queue based on number of
+         * retries.
          */
         private void handleRetryForMailItems(Mailbox mbox) {
             try {
@@ -513,8 +512,7 @@ public class IndexingService {
                     ZimbraLog.index.debug(
                             "MailItemIdIndexTask - handleRetryForMailItems - received to index %d mail items for account %s after %d attempts. Adding in retry queue.",
                             queueItem.getMailItemIdsToAdd().size(), queueItem.getAccountID(), queueItem.getRetries());
-                    // Exponentially increase the sleep duration based on the number of retries
-                    Thread.sleep((long) (1000 * 30 * Math.pow(2, queueItem.getRetries())));
+                    Thread.sleep(500);
                     queueItem.addRetry();
                     retryQueue.add(queueItem);
                     return;
