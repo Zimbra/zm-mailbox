@@ -9479,7 +9479,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @return zimbraFeatureZulipChatEnabled, or false if unset
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3089)
     public boolean isFeatureZulipChatEnabled() {
@@ -9496,7 +9496,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param zimbraFeatureZulipChatEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3089)
     public void setFeatureZulipChatEnabled(boolean zimbraFeatureZulipChatEnabled) throws com.zimbra.common.service.ServiceException {
@@ -9516,7 +9516,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3089)
     public Map<String,Object> setFeatureZulipChatEnabled(boolean zimbraFeatureZulipChatEnabled, Map<String,Object> attrs) {
@@ -9534,7 +9534,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3089)
     public void unsetFeatureZulipChatEnabled() throws com.zimbra.common.service.ServiceException {
@@ -9553,7 +9553,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3089)
     public Map<String,Object> unsetFeatureZulipChatEnabled(Map<String,Object> attrs) {
@@ -24735,7 +24735,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @return zimbraZulipChatDomainId, or null if unset
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3090)
     public String getZulipChatDomainId() {
@@ -24748,7 +24748,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param zimbraZulipChatDomainId new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3090)
     public void setZulipChatDomainId(String zimbraZulipChatDomainId) throws com.zimbra.common.service.ServiceException {
@@ -24764,7 +24764,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3090)
     public Map<String,Object> setZulipChatDomainId(String zimbraZulipChatDomainId, Map<String,Object> attrs) {
@@ -24778,7 +24778,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3090)
     public void unsetZulipChatDomainId() throws com.zimbra.common.service.ServiceException {
@@ -24793,7 +24793,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3090)
     public Map<String,Object> unsetZulipChatDomainId(Map<String,Object> attrs) {
