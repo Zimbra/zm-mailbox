@@ -5689,6 +5689,30 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDNSUseUDP = "zimbraDNSUseUDP";
 
     /**
+     * Zimbra port on which document editing can request document
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3095)
+    public static final String A_zimbraDocumentEditingCallbackPort = "zimbraDocumentEditingCallbackPort";
+
+    /**
+     * Host server where the onlyoffice is hosted
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3094)
+    public static final String A_zimbraDocumentEditingHost = "zimbraDocumentEditingHost";
+
+    /**
+     * Document editing JWT secret
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3096)
+    public static final String A_zimbraDocumentEditingJwtSecret = "zimbraDocumentEditingJwtSecret";
+
+    /**
      * maximum amount of mail quota a domain admin can set on a user
      */
     @ZAttr(id=398)
@@ -6473,9 +6497,9 @@ public class ZAttrProvisioning {
     /**
      * Whether or not document editing feature is enabled within briefcase
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 9.1.0
      */
-    @ZAttr(id=3091)
+    @ZAttr(id=3093)
     public static final String A_zimbraFeatureDocumentEditingEnabled = "zimbraFeatureDocumentEditingEnabled";
 
     /**
@@ -7078,7 +7102,7 @@ public class ZAttrProvisioning {
      * at domain &amp; cos and false at account, feature not available at
      * account.
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3089)
     public static final String A_zimbraFeatureZulipChatEnabled = "zimbraFeatureZulipChatEnabled";
@@ -17662,12 +17686,28 @@ public class ZAttrProvisioning {
     public static final String A_zimbraZookeeperClientServerList = "zimbraZookeeperClientServerList";
 
     /**
+     * Zulip server base host
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3092)
+    public static final String A_zimbraZulipBaseHost = "zimbraZulipBaseHost";
+
+    /**
      * Zulip chat domain ID
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3090)
     public static final String A_zimbraZulipChatDomainId = "zimbraZulipChatDomainId";
+
+    /**
+     * Zulip JWT secret
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3091)
+    public static final String A_zimbraZulipJwtSecret = "zimbraZulipJwtSecret";
 
     ///// END-AUTO-GEN-REPLACE
 }

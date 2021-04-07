@@ -9859,7 +9859,7 @@ TODO: delete them permanently from here
   <desc>Enable/Disable blocked file types set in zimbraFileUploadBlockedFileTypes for uploading</desc>
  </attr>
 
-<attr id="3089" name="zimbraFeatureZulipChatEnabled" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountInfo,accountInherited,domainAdminModifiable" since="9.0.0">
+<attr id="3089" name="zimbraFeatureZulipChatEnabled" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountInfo,accountInherited,domainAdminModifiable" since="9.1.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>Whether or not zulip chat is enabled.
         If false at domain level, feature not available at domain, cos &amp; account.
@@ -9867,11 +9867,31 @@ TODO: delete them permanently from here
         If true at domain &amp; cos and false at account, feature not available at account.
   </desc>
 </attr>
-<attr id="3090" name="zimbraZulipChatDomainId" type="string" cardinality="single" optionalIn="domain" flags="domainInfo" since="9.0.0">
+<attr id="3090" name="zimbraZulipChatDomainId" type="string" cardinality="single" optionalIn="domain" flags="domainInfo" since="9.1.0">
   <desc>Zulip chat domain ID</desc>
 </attr>
-<attr id="3091" name="zimbraFeatureDocumentEditingEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="9.0.0">
+<attr id="3091" name="zimbraZulipJwtSecret" type="string" cardinality="single" optionalIn="globalConfig" since="9.1.0">
+  <globalConfigValue>SECRET</globalConfigValue>
+  <desc>Zulip JWT secret</desc>
+</attr>
+<attr id="3092" name="zimbraZulipBaseHost" type="string" cardinality="single" optionalIn="globalConfig" since="9.1.0">
+  <globalConfigValue>zimbra.com</globalConfigValue>
+  <desc>Zulip server base host</desc>
+</attr>
+<attr id="3093" name="zimbraFeatureDocumentEditingEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="9.1.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>Whether or not document editing feature is enabled within briefcase</desc>
+</attr>
+<attr id="3094" name="zimbraDocumentEditingHost" type="string" cardinality="single" optionalIn="globalConfig" since="9.1.0">
+  <globalConfigValue>zimbra.com</globalConfigValue>
+  <desc>Host server where the onlyoffice is hosted</desc>
+</attr>
+<attr id="3095" name="zimbraDocumentEditingCallbackPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict" since="9.1.0">
+  <globalConfigValue>7074</globalConfigValue>
+  <desc>Zimbra port on which document editing can request document</desc>
+</attr>
+<attr id="3096" name="zimbraDocumentEditingJwtSecret" type="string" cardinality="single" optionalIn="globalConfig" since="9.1.0">
+  <globalConfigValue>SECRET</globalConfigValue>
+  <desc>Document editing JWT secret</desc>
 </attr>
 </attrs>

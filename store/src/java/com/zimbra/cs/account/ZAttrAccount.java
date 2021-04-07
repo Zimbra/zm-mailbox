@@ -14660,9 +14660,9 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @return zimbraFeatureDocumentEditingEnabled, or true if unset
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 9.1.0
      */
-    @ZAttr(id=3091)
+    @ZAttr(id=3093)
     public boolean isFeatureDocumentEditingEnabled() {
         return getBooleanAttr(Provisioning.A_zimbraFeatureDocumentEditingEnabled, true, true);
     }
@@ -14673,9 +14673,9 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param zimbraFeatureDocumentEditingEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 9.1.0
      */
-    @ZAttr(id=3091)
+    @ZAttr(id=3093)
     public void setFeatureDocumentEditingEnabled(boolean zimbraFeatureDocumentEditingEnabled) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureDocumentEditingEnabled, zimbraFeatureDocumentEditingEnabled ? TRUE : FALSE);
@@ -14689,9 +14689,9 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 9.1.0
      */
-    @ZAttr(id=3091)
+    @ZAttr(id=3093)
     public Map<String,Object> setFeatureDocumentEditingEnabled(boolean zimbraFeatureDocumentEditingEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureDocumentEditingEnabled, zimbraFeatureDocumentEditingEnabled ? TRUE : FALSE);
@@ -14703,9 +14703,9 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 9.1.0
      */
-    @ZAttr(id=3091)
+    @ZAttr(id=3093)
     public void unsetFeatureDocumentEditingEnabled() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureDocumentEditingEnabled, "");
@@ -14718,9 +14718,9 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 9.1.0
      */
-    @ZAttr(id=3091)
+    @ZAttr(id=3093)
     public Map<String,Object> unsetFeatureDocumentEditingEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureDocumentEditingEnabled, "");
@@ -20475,7 +20475,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @return zimbraFeatureZulipChatEnabled, or true if unset
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3089)
     public boolean isFeatureZulipChatEnabled() {
@@ -20492,7 +20492,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param zimbraFeatureZulipChatEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3089)
     public void setFeatureZulipChatEnabled(boolean zimbraFeatureZulipChatEnabled) throws com.zimbra.common.service.ServiceException {
@@ -20512,7 +20512,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3089)
     public Map<String,Object> setFeatureZulipChatEnabled(boolean zimbraFeatureZulipChatEnabled, Map<String,Object> attrs) {
@@ -20530,7 +20530,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3089)
     public void unsetFeatureZulipChatEnabled() throws com.zimbra.common.service.ServiceException {
@@ -20549,7 +20549,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3089)
     public Map<String,Object> unsetFeatureZulipChatEnabled(Map<String,Object> attrs) {
