@@ -231,6 +231,7 @@ public class FileUploadServlet extends ZimbraServlet {
                 metadata.add(Metadata.RESOURCE_NAME_KEY, fileItem.getName());
                 MediaType mediaType = detector.detect(stream, metadata);
                 mimeType = tikaConfig.getMimeRepository().forName(mediaType.toString());
+                mLog.debug("Content type detected by tika: %s.", mimeType.toString());
             } catch (MimeTypeException mexp) {
                 mLog.warn("Failed to detect file content type", mexp);
             } catch (IOException exp) {
@@ -243,6 +244,7 @@ public class FileUploadServlet extends ZimbraServlet {
             String fileExtension = null;
             MimeType mimeType = getMimeType(fileItem);
             fileExtension = mimeType == null ? "" : StringUtils.strip(mimeType.getExtension(), ".");
+            mLog.debug("File extension detected by tika: %s.", fileExtension);
             return fileExtension;
         }
 
