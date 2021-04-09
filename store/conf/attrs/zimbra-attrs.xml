@@ -9850,6 +9850,7 @@ TODO: delete them permanently from here
   <defaultCOSValue>wsf</defaultCOSValue>
   <defaultCOSValue>wsh</defaultCOSValue>
   <defaultCOSValue>xl</defaultCOSValue>
+  <defaultCOSValue>application/x-ms*</defaultCOSValue>
   <desc>Commonly blocked file types for uploading</desc>
  </attr>
 <attr id="3092" name="zimbraFeatureFileTypeUploadRestrictionsEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="9.0.0">

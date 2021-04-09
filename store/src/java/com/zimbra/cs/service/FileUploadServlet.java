@@ -206,9 +206,9 @@ public class FileUploadServlet extends ZimbraServlet {
                     }
 
                     MimeType mimeType = getMimeType(file);
-                    if (blockedExtensionList.stream().anyMatch((blacklistedContentType) -> {
-                        if (blacklistedContentType.contains("/")) {
-                            Pattern p = Pattern.compile(blacklistedContentType);
+                    if (blockedExtensionList.stream().anyMatch((blockedContentType) -> {
+                        if (blockedContentType.contains("/")) {
+                            Pattern p = Pattern.compile(blockedContentType);
                             Matcher m = p.matcher(mimeType.toString());
                             return m.find();
                         } else {
