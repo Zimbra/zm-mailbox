@@ -32,6 +32,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TimerTask;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.mail.util.SharedByteArrayInputStream;
@@ -204,12 +205,26 @@ public class FileUploadServlet extends ZimbraServlet {
                                 String.format("Blocked attachment during uploading %s filetype ", extension), null);
                     }
 
-                    mLog.debug("Start - Using Tika library for retrieving the extension.");
-                    String fileExtension = getExtension(file);
-                    mLog.debug("End - Using Tika library for retrieving the extension.");
-                    if (blockedExtensionList.stream().anyMatch(fileExtension::equalsIgnoreCase)) {
+                    MimeType mimeType = getMimeType(file);
+                    if (blockedExtensionList.stream().anyMatch((blacklistedContentType) -> {
+                        if (blacklistedContentType.contains("/")) {
+                            Pattern p = Pattern.compile(blacklistedContentType);
+                            Matcher m = p.matcher(mimeType.toString());
+                            return m.find();
+                        } else {
+                            return false;
+                        }
+                    })) {
                         throw ServiceException.BLOCKED_FILE_TYPE_UPLOAD(
-                                String.format("Blocked attachment during uploading %s filetype ", fileExtension), null);
+                                String.format("Blocked attachment during uploading %s content-type ", mimeType), null);
+                    } else {
+                        mLog.debug("Start - Using Tika library for retrieving the extension.");
+                        String fileExtension = getExtension(mimeType);
+                        mLog.debug("End - Using Tika library for retrieving the extension.");
+                        if (blockedExtensionList.stream().anyMatch(fileExtension::equalsIgnoreCase)) {
+                            throw ServiceException.BLOCKED_FILE_TYPE_UPLOAD(
+                                    String.format("Blocked attachment during uploading %s filetype ", fileExtension), null);
+                        }
                     }
                     mLog.debug(String.format("End - Using Tika library, time taken for [ %s ] - [ %d ] milliseconds.",
                             filename, (System.currentTimeMillis() - time)));
@@ -240,9 +255,8 @@ public class FileUploadServlet extends ZimbraServlet {
             return mimeType;
         }
 
-        public static String getExtension(FileItem fileItem) {
+        public static String getExtension(MimeType mimeType) {
             String fileExtension = null;
-            MimeType mimeType = getMimeType(fileItem);
             fileExtension = mimeType == null ? "" : StringUtils.strip(mimeType.getExtension(), ".");
             mLog.debug("File extension detected by tika: %s.", fileExtension);
             return fileExtension;
