@@ -265,8 +265,8 @@
   <target name="war" depends="jar,set-dev-version">
     <delete dir="${build.tmp.dir}"/>
     <!-- delete anything that may have been left over, e.g.: older versions of same libs -->
-    <ivy:install organisation="org.slf4j" module="slf4j-api" revision="1.6.4" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-    <ivy:install organisation="org.slf4j" module="slf4j-log4j12" revision="1.6.4" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+    <ivy:install organisation="org.slf4j" module="slf4j-api" revision="1.7.30" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+    <ivy:install organisation="org.slf4j" module="slf4j-log4j12" revision="1.7.30" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
     <ivy:install organisation="org.apache.james" module="apache-jsieve-core" revision="0.5" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
     <ivy:install organisation="org.apache.lucene" module="lucene-core" revision="3.5.0" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
     <ivy:install organisation="org.apache.lucene" module="lucene-analyzers" revision="3.5.0" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
