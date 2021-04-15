@@ -5273,7 +5273,7 @@ TODO: delete them permanently from here
   <desc>sieve script generated from user outgoing filter rules</desc>
 </attr>
 
-<attr id="1131" name="zimbraOAuthConsumerCredentials" type="ostring" cardinality="multi" optionalIn="globalConfig,domain" flags="domainInherited" since="7.0.0">
+<attr id="1131" name="zimbraOAuthConsumerCredentials" type="ostring" cardinality="multi" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo" since="7.0.0">
   <desc>OAuth Consumer id, secret, and application name.  It is in the format of {consumer-id}:{secret}:{consumer-app-name}</desc>
 </attr>
 
@@ -9704,11 +9704,11 @@ TODO: delete them permanently from here
   <desc>ZimbraX compatible semantic version expression</desc>
 </attr>
 
-<attr id="3025" name="zimbraOAuthConsumerRedirectUri" type="string" cardinality="multi" optionalIn="globalConfig,domain" flags="domainInherited" since="8.8.9">
+<attr id="3025" name="zimbraOAuthConsumerRedirectUri" type="string" cardinality="multi" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo" since="8.8.9">
   <desc>OAuth redirectURI. It is in the format of redirectURI:consumer-app-name</desc>
 </attr>
 
-<attr id="3026" name="zimbraOAuthConsumerAPIScope" type="string" cardinality="multi" optionalIn="globalConfig,domain" flags="domainInherited" since="8.8.9">
+<attr id="3026" name="zimbraOAuthConsumerAPIScope" type="string" cardinality="multi" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo" since="8.8.9">
   <desc>OAuth consumer API scope. It is in the format of apiscope1{separator character}apiscope2:consumer-app-name. The separator between apiscope1 and apiscope2 is consumer-app specific</desc>
 </attr>
 
