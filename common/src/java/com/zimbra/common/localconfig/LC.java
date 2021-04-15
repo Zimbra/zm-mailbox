@@ -701,6 +701,8 @@ public final class LC {
     @Supported
     public static final KnownKey imapd_keystore = KnownKey.newKey("/opt/zimbra/conf/imapd.keystore");
     @Supported
+    public static final KnownKey custom_mimetypes = KnownKey.newKey("/opt/zimbra/conf/custom-mimetypes.xml");
+    @Supported
     public static final KnownKey imapd_keystore_password = KnownKey.newKey("${mailboxd_keystore_password}");
     @Supported
     public static final KnownKey imapd_java_options = KnownKey.newKey("");

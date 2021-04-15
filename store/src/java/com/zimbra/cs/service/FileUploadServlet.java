@@ -21,6 +21,7 @@ import java.io.FileFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -58,12 +59,15 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.tika.config.TikaConfig;
+import org.apache.tika.detect.CompositeDetector;
 import org.apache.tika.detect.Detector;
 import org.apache.tika.io.TikaInputStream;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.mime.MediaType;
 import org.apache.tika.mime.MimeType;
 import org.apache.tika.mime.MimeTypeException;
+import org.apache.tika.mime.MimeTypes;
+import org.apache.tika.mime.MimeTypesFactory;
 
 import com.google.common.base.Strings;
 import com.zimbra.client.ZMailbox;
@@ -240,11 +244,18 @@ public class FileUploadServlet extends ZimbraServlet {
 
         public static MimeType getMimeType(FileItem fileItem) {
             MimeType mimeType = null;
+            Metadata metadata = new Metadata();
+            metadata.add(Metadata.RESOURCE_NAME_KEY, fileItem.getName());
+            String customMimeTypesPath = LC.custom_mimetypes.value();
+            MediaType mediaType = null;
             try {
                 TikaInputStream stream = TikaInputStream.get(fileItem.getInputStream());
-                Metadata metadata = new Metadata();
-                metadata.add(Metadata.RESOURCE_NAME_KEY, fileItem.getName());
-                MediaType mediaType = detector.detect(stream, metadata);
+                if (new File(customMimeTypesPath).isFile()) {
+                    MimeTypes customMimeTypes = MimeTypesFactory.create(new URL("file://" + customMimeTypesPath));
+                    mediaType = new CompositeDetector(customMimeTypes, detector).detect(stream, metadata);
+                } else {
+                    mediaType = detector.detect(stream, metadata);
+                }
                 mimeType = tikaConfig.getMimeRepository().forName(mediaType.toString());
                 mLog.debug("Content type detected by tika: %s.", mimeType.toString());
             } catch (MimeTypeException mexp) {
