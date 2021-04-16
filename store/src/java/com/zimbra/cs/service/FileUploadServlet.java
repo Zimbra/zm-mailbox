@@ -77,7 +77,6 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeConstants;
-import com.zimbra.common.mime.MimeDetect;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.service.ServiceException.Argument;
 import com.zimbra.common.service.ServiceException.InternalArgument;
@@ -155,47 +154,12 @@ public class FileUploadServlet extends ZimbraServlet {
             name      = FileUtil.trimFilename(filename);
             file      = attachment;
             extension = filename == null ? "" : FilenameUtils.getExtension(filename).trim();
+            MimeType mimeType = null;
             if (file == null) {
                 contentType = MimeConstants.CT_TEXT_PLAIN;
             } else {
-                // use content based detection.  we can't use magic based
-                // detection alone because it defaults to application/xml
-                // when it sees xml magic <?xml.  that's incompatible
-                // with WebDAV handlers as the content type needs to be
-                // text/xml instead.
-
-                //1. detect by magic
-                try {
-                    contentType = MimeDetect.getMimeDetect().detect(file.getInputStream());
-                } catch (Exception e) {
-                    contentType = null;
-                }
-
-                // 2. detect by file extension
-                // .xls and .docx files can contain beginning characters
-                // resembling to x-ole-storage/zip. Hence,
-                // check by file extension
-                if (contentType == null || contentType.equals("application/x-ole-storage")
-                    || contentType.equals("application/zip")) {
-                    contentType = MimeDetect.getMimeDetect().detect(name);
-                }
-
-                // 3. special-case text/xml to avoid detection
-                if (contentType == null && file.getContentType() != null) {
-                    if (file.getContentType().equals("text/xml"))
-                        contentType = file.getContentType();
-                }
-
-                // 4. try the browser-specified content type
-                if (contentType == null || contentType.equals(MimeConstants.CT_APPLICATION_OCTET_STREAM)) {
-                    contentType = file.getContentType();
-                }
-
-                // 5. when all else fails, use application/octet-stream
-                if (contentType == null)
-                    contentType = file.getContentType();
-                if (contentType == null)
-                    contentType = MimeConstants.CT_APPLICATION_OCTET_STREAM;
+                mimeType = getMimeType(file);
+                contentType = mimeType.toString();
             }
 
             Account acct = Provisioning.getInstance().getAccount(acctId);
@@ -209,18 +173,17 @@ public class FileUploadServlet extends ZimbraServlet {
                                 String.format("Blocked attachment during uploading %s filetype ", extension), null);
                     }
 
-                    MimeType mimeType = getMimeType(file);
                     if (blockedExtensionList.stream().anyMatch((blockedContentType) -> {
                         if (blockedContentType.contains("/")) {
                             Pattern p = Pattern.compile(blockedContentType);
-                            Matcher m = p.matcher(mimeType.toString());
+                            Matcher m = p.matcher(contentType);
                             return m.find();
                         } else {
                             return false;
                         }
                     })) {
                         throw ServiceException.BLOCKED_FILE_TYPE_UPLOAD(
-                                String.format("Blocked attachment during uploading %s content-type ", mimeType), null);
+                                String.format("Blocked attachment during uploading %s content-type ", contentType), null);
                     } else {
                         mLog.debug("Start - Using Tika library for retrieving the extension.");
                         String fileExtension = getExtension(mimeType);
@@ -802,13 +765,6 @@ public class FileUploadServlet extends ZimbraServlet {
         List<FileItem> items = new ArrayList<FileItem>(1);
         items.add(fi);
         Upload up = new Upload(acct.getId(), fi, filename);
-
-        if (filename.endsWith(".har")) {
-            MimeType mimeType = Upload.getMimeType(fi);
-            if (mimeType != null) {
-                up.contentType = mimeType.toString();
-            }
-        }
 
         mLog.info("Received plain: %s", up);
         synchronized (mPending) {
