@@ -8887,6 +8887,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMailAllowReceiveButNotSendWhenOverQuota = "zimbraMailAllowReceiveButNotSendWhenOverQuota";
 
     /**
+     * Maximum size in bytes for e-mail attachment.
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=3093)
+    public static final String A_zimbraMailAttachmentMaxSize = "zimbraMailAttachmentMaxSize";
+
+    /**
      * interface address on which HTTP server should listen; if empty, binds
      * to all interfaces
      *

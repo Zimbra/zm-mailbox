@@ -19470,6 +19470,78 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * Maximum size in bytes for e-mail attachment.
+     *
+     * @return zimbraMailAttachmentMaxSize, or 6815744 if unset
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=3093)
+    public long getMailAttachmentMaxSize() {
+        return getLongAttr(Provisioning.A_zimbraMailAttachmentMaxSize, 6815744L, true);
+    }
+
+    /**
+     * Maximum size in bytes for e-mail attachment.
+     *
+     * @param zimbraMailAttachmentMaxSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=3093)
+    public void setMailAttachmentMaxSize(long zimbraMailAttachmentMaxSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailAttachmentMaxSize, Long.toString(zimbraMailAttachmentMaxSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum size in bytes for e-mail attachment.
+     *
+     * @param zimbraMailAttachmentMaxSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=3093)
+    public Map<String,Object> setMailAttachmentMaxSize(long zimbraMailAttachmentMaxSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailAttachmentMaxSize, Long.toString(zimbraMailAttachmentMaxSize));
+        return attrs;
+    }
+
+    /**
+     * Maximum size in bytes for e-mail attachment.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=3093)
+    public void unsetMailAttachmentMaxSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailAttachmentMaxSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum size in bytes for e-mail attachment.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.0.0
+     */
+    @ZAttr(id=3093)
+    public Map<String,Object> unsetMailAttachmentMaxSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailAttachmentMaxSize, "");
+        return attrs;
+    }
+
+    /**
      * Maximum number of entries for per user black list. This restricts the
      * number of values that can be set on the amavisBlacklistSender
      * attribute of an account. If set to 0, the per user white list feature
