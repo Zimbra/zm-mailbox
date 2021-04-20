@@ -6783,9 +6783,9 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
-<attr id="1350" name="zimbraFileUploadMaxSizePerFile" type="long" cardinality="single" optionalIn="account,cos,domain,globalConfig" flags="accountCosDomainInherited,domainInherited" since="8.0.0">
+<attr id="1350" name="zimbraFileUploadMaxSizePerFile" type="long" cardinality="single" optionalIn="account,cos,domain,globalConfig" flags="accountCosDomainInherited,domainInherited,accountInfo" since="8.0.0">
   <globalConfigValue>2147483648</globalConfigValue>
-  <defaultCOSValue>2147483648</defaultCOSValue>
+  <defaultCOSValue>0</defaultCOSValue>
   <desc>Maximum size in bytes for each attachment.</desc>
 </attr>
 
@@ -9854,8 +9854,14 @@ TODO: delete them permanently from here
   <defaultCOSValue>application/x-dosexec</defaultCOSValue>
   <desc>Commonly blocked file types for uploading</desc>
  </attr>
+
 <attr id="3092" name="zimbraFeatureFileTypeUploadRestrictionsEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="9.1.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>Enable/Disable blocked file types set in zimbraFileUploadBlockedFileTypes for uploading</desc>
  </attr>
+
+<attr id="4000" name="zimbraMailAttachmentMaxSize" type="long" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="9.1.0">
+  <defaultCOSValue>0</defaultCOSValue>
+  <desc>Maximum size in bytes for e-mail attachment.</desc>
+</attr>
 </attrs>
