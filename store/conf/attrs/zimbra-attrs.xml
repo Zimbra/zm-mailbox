@@ -1349,7 +1349,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="227" name="zimbraFileUploadMaxSize" type="long" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited,accountInfo">
   <globalConfigValue>10485760</globalConfigValue>
-  <desc>Maximum size in bytes for file uploads</desc>
+  <desc>Maximum size in bytes for file uploads.</desc>
 </attr>
 
 <attr id="229" name="zimbraTimeZoneStandardDtStart" type="string" max="256" cardinality="multi" requiredIn="timeZone" deprecatedSince="5.0">
@@ -6786,7 +6786,10 @@ TODO: delete them permanently from here
 <attr id="1350" name="zimbraFileUploadMaxSizePerFile" type="long" cardinality="single" optionalIn="account,cos,domain,globalConfig" flags="accountCosDomainInherited,domainInherited,accountInfo" since="8.0.0">
   <globalConfigValue>2147483648</globalConfigValue>
   <defaultCOSValue>0</defaultCOSValue>
-  <desc>Maximum size in bytes for each attachment.</desc>
+  <desc>
+    Maximum size in bytes for each attachment for the file uploads.
+    If the default value is not set then upload size is limited by zimbraFileUploadMaxSize.
+  </desc>
 </attr>
 
 <attr id="1351" name="zimbraPublicSharingEnabled" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountInfo,accountCosDomainInherited,domainAdminModifiable" since="8.0.0">
