@@ -21626,19 +21626,23 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Maximum size in bytes for each attachment.
+     * Maximum size in bytes for each attachment for the file uploads. If the
+     * default value is not set then upload size is limited by
+     * zimbraFileUploadMaxSize.
      *
-     * @return zimbraFileUploadMaxSizePerFile, or 2147483648 if unset
+     * @return zimbraFileUploadMaxSizePerFile, or 0 if unset
      *
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1350)
     public long getFileUploadMaxSizePerFile() {
-        return getLongAttr(Provisioning.A_zimbraFileUploadMaxSizePerFile, 2147483648L, true);
+        return getLongAttr(Provisioning.A_zimbraFileUploadMaxSizePerFile, 0L, true);
     }
 
     /**
-     * Maximum size in bytes for each attachment.
+     * Maximum size in bytes for each attachment for the file uploads. If the
+     * default value is not set then upload size is limited by
+     * zimbraFileUploadMaxSize.
      *
      * @param zimbraFileUploadMaxSizePerFile new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -21653,7 +21657,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Maximum size in bytes for each attachment.
+     * Maximum size in bytes for each attachment for the file uploads. If the
+     * default value is not set then upload size is limited by
+     * zimbraFileUploadMaxSize.
      *
      * @param zimbraFileUploadMaxSizePerFile new value
      * @param attrs existing map to populate, or null to create a new map
@@ -21669,7 +21675,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Maximum size in bytes for each attachment.
+     * Maximum size in bytes for each attachment for the file uploads. If the
+     * default value is not set then upload size is limited by
+     * zimbraFileUploadMaxSize.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -21683,7 +21691,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Maximum size in bytes for each attachment.
+     * Maximum size in bytes for each attachment for the file uploads. If the
+     * default value is not set then upload size is limited by
+     * zimbraFileUploadMaxSize.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

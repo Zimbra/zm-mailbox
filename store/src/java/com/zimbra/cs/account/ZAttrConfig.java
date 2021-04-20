@@ -16092,7 +16092,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Maximum size in bytes for file uploads
+     * Maximum size in bytes for file uploads.
      *
      * @return zimbraFileUploadMaxSize, or 10485760 if unset
      */
@@ -16102,7 +16102,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Maximum size in bytes for file uploads
+     * Maximum size in bytes for file uploads.
      *
      * @param zimbraFileUploadMaxSize new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -16115,7 +16115,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Maximum size in bytes for file uploads
+     * Maximum size in bytes for file uploads.
      *
      * @param zimbraFileUploadMaxSize new value
      * @param attrs existing map to populate, or null to create a new map
@@ -16129,7 +16129,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Maximum size in bytes for file uploads
+     * Maximum size in bytes for file uploads.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -16141,7 +16141,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Maximum size in bytes for file uploads
+     * Maximum size in bytes for file uploads.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -16154,7 +16154,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Maximum size in bytes for each attachment.
+     * Maximum size in bytes for each attachment for the file uploads. If the
+     * default value is not set then upload size is limited by
+     * zimbraFileUploadMaxSize.
      *
      * @return zimbraFileUploadMaxSizePerFile, or 2147483648 if unset
      *
@@ -16166,7 +16168,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Maximum size in bytes for each attachment.
+     * Maximum size in bytes for each attachment for the file uploads. If the
+     * default value is not set then upload size is limited by
+     * zimbraFileUploadMaxSize.
      *
      * @param zimbraFileUploadMaxSizePerFile new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -16181,7 +16185,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Maximum size in bytes for each attachment.
+     * Maximum size in bytes for each attachment for the file uploads. If the
+     * default value is not set then upload size is limited by
+     * zimbraFileUploadMaxSize.
      *
      * @param zimbraFileUploadMaxSizePerFile new value
      * @param attrs existing map to populate, or null to create a new map
@@ -16197,7 +16203,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Maximum size in bytes for each attachment.
+     * Maximum size in bytes for each attachment for the file uploads. If the
+     * default value is not set then upload size is limited by
+     * zimbraFileUploadMaxSize.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -16211,7 +16219,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Maximum size in bytes for each attachment.
+     * Maximum size in bytes for each attachment for the file uploads. If the
+     * default value is not set then upload size is limited by
+     * zimbraFileUploadMaxSize.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

@@ -7212,13 +7212,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFileUploadBlockedFileTypes = "zimbraFileUploadBlockedFileTypes";
 
     /**
-     * Maximum size in bytes for file uploads
+     * Maximum size in bytes for file uploads.
      */
     @ZAttr(id=227)
     public static final String A_zimbraFileUploadMaxSize = "zimbraFileUploadMaxSize";
 
     /**
-     * Maximum size in bytes for each attachment.
+     * Maximum size in bytes for each attachment for the file uploads. If the
+     * default value is not set then upload size is limited by
+     * zimbraFileUploadMaxSize.
      *
      * @since ZCS 8.0.0
      */
