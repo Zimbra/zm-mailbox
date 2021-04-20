@@ -19472,13 +19472,13 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * Maximum size in bytes for e-mail attachment.
      *
-     * @return zimbraMailAttachmentMaxSize, or 6815744 if unset
+     * @return zimbraMailAttachmentMaxSize, or 0 if unset
      *
      * @since ZCS 9.0.0
      */
     @ZAttr(id=3093)
     public long getMailAttachmentMaxSize() {
-        return getLongAttr(Provisioning.A_zimbraMailAttachmentMaxSize, 6815744L, true);
+        return getLongAttr(Provisioning.A_zimbraMailAttachmentMaxSize, 0L, true);
     }
 
     /**
