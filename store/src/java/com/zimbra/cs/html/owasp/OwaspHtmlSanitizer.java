@@ -98,12 +98,12 @@ public class OwaspHtmlSanitizer implements Callable<String> {
             Tidy tidy = new Tidy();
             tidy.setInputEncoding("UTF-8");
             tidy.setOutputEncoding("UTF-8");
-            tidy.setPrintBodyOnly(true);
+            tidy.setPrintBodyOnly(false);
             tidy.setXHTML(true);
             ByteArrayInputStream inputStream = new ByteArrayInputStream(str.getBytes("UTF-8"));
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             tidy.parseDOM(inputStream, outputStream);
-            String outStream = outputStream.toString("UTF-8");
+            String outStream = outputStream.toString("UTF-8").trim();
             if (outStream.isEmpty() || outStream == null) {
                 return str;
             }
