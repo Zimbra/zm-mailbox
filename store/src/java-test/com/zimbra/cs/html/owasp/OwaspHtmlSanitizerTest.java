@@ -34,7 +34,6 @@ import org.junit.rules.TestName;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.CharStreams;
-import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
