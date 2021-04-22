@@ -66,11 +66,11 @@ public class OwaspHtmlSanitizer implements Callable<String> {
         return processSanitization(true).toString();
     }
 
-    public String sanitize(boolean cleanData) throws UnsupportedEncodingException {
-        return processSanitization(cleanData).toString();
+    public String sanitize(boolean cleanMalformedHtml) throws UnsupportedEncodingException {
+        return processSanitization(cleanMalformedHtml).toString();
     }
 
-    private StringBuilder processSanitization(boolean cleanData) throws UnsupportedEncodingException {
+    private StringBuilder processSanitization(boolean cleanMalformedHtml) throws UnsupportedEncodingException {
         OwaspThreadLocal threadLocalInstance = new OwaspThreadLocal();
         threadLocalInstance.setVHost(vHost);
         OwaspHtmlSanitizer.zThreadLocal.set(threadLocalInstance);
@@ -93,14 +93,14 @@ public class OwaspHtmlSanitizer implements Callable<String> {
         instantiatePolicy();
         final Policy policy = POLICY_DEFINITION.apply(new StyleTagReceiver(renderer));
         // run the html through the sanitizer
-        runSanitizer(html, policy, cleanData);
+        runSanitizer(html, policy, cleanMalformedHtml);
         // return the resulting HTML from the builder
         OwaspHtmlSanitizer.zThreadLocal.remove();
         return htmlBuilder;
     }
 
-    private void runSanitizer(String str, Policy policy, boolean cleanData) throws UnsupportedEncodingException {
-        if (cleanData) {
+    private void runSanitizer(String str, Policy policy, boolean cleanMalformedHtml) throws UnsupportedEncodingException {
+        if (cleanMalformedHtml) {
             HtmlSanitizer.sanitize(cleanMalformedHtml(str, false), policy);
         } else {
             HtmlSanitizer.sanitize(str, policy);

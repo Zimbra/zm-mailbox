@@ -720,6 +720,6 @@ public class OwaspHtmlSanitizerTest {
                 + "style=\"font-size:11pt;font-family:Arial;font-variant-ligatures:normal;font-variant-east-asian:normal;font-variant-position:normal;vertical-align:baseline\">ave\n"
                 + "a nice day.</span></p>";
         // check that the extra double quotes are removed
-        Assert.assertTrue(output.equals(result.trim()));
+        Assert.assertTrue("Verification failed: Failed to remove extra double quotes.", output.equals(result.trim()));
     }
 }
