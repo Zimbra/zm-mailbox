@@ -103,8 +103,8 @@ public class OwaspHtmlSanitizer implements Callable<String> {
             ByteArrayInputStream inputStream = new ByteArrayInputStream(str.getBytes("UTF-8"));
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             tidy.parseDOM(inputStream, outputStream);
-            String outStream = outputStream.toString("UTF-8").trim();
-            if (outStream.isEmpty() || outStream == null) {
+            String outStream = outputStream.toString("UTF-8");
+            if (outStream == null || outStream.trim().isEmpty()) {
                 return str;
             }
             ZimbraLog.mailbox.debug("End - Using JTidy library for cleaning the markup. Taken %d milliseconds.",
