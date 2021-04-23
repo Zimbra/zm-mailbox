@@ -319,7 +319,6 @@
                     <exclude name="**/cs/redolog/op/CreateMessageTest.java"/>
                     <exclude name="**/cs/service/mail/SearchActionTest.java"/>
                     <exclude name="**/cs/filter/RuleManagerWithCustomActionFilterTest.java"/>
-                    <exclude name="**/html/owasp/OwaspHtmlSanitizerTest.java"/>
                 </fileset>
             </batchtest>
           </junit>
