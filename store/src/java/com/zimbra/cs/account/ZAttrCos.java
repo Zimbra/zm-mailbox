@@ -16084,7 +16084,7 @@ public abstract class ZAttrCos extends NamedEntry {
      */
     @ZAttr(id=3091)
     public String[] getFileUploadBlockedFileTypes() {
-        String[] value = getMultiAttr(Provisioning.A_zimbraFileUploadBlockedFileTypes, true, true); return value.length > 0 ? value : new String[] {"asd","bat","chm","cmd","com","dll","do","exe","hlp","hta","js","jse","lnk","ocx","pif","reg","scr","shb","shm","shs","vbe","vbs","vbx","vxd","wsf","wsh","xl","application/x-ms*"};
+        String[] value = getMultiAttr(Provisioning.A_zimbraFileUploadBlockedFileTypes, true, true); return value.length > 0 ? value : new String[] {"asd","bat","chm","cmd","com","dll","do","exe","hlp","hta","js","jse","lnk","ocx","pif","reg","scr","shb","shm","shs","vbe","vbs","vbx","vxd","wsf","wsh","xl","application/x-ms*","application/x-dosexec"};
     }
 
     /**
