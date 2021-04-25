@@ -17,7 +17,7 @@ FROM ${DOCKER_REPO_NS}/zms-core-zimlets:1.0.2 as zimlet-webapp
 FROM ${DOCKER_REPO_NS}/zms-classic-webclient:1.0.0 as zimbra-classic-webclient
 
 # Final stage, copy contents from build stage
-FROM ${DOCKER_REPO_NS}/zms-base:1.0.18
+FROM ${DOCKER_REPO_NS}/zms-base:1.0.19
 RUN apk --no-cache add libreoffice
 ENV EXT_REPO_URL http://zimbraqa.s3.amazonaws.com/api-team/extensions
 ENV S3_DOCKER_URL https://s3.amazonaws.com/docker.zimbra.com/assets
