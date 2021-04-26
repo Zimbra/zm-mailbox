@@ -5713,6 +5713,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDocumentEditingJwtSecret = "zimbraDocumentEditingJwtSecret";
 
     /**
+     * Whether or not to log document accessed time
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3097)
+    public static final String A_zimbraDocumentRecentlyViewedEnabled = "zimbraDocumentRecentlyViewedEnabled";
+
+    /**
      * maximum amount of mail quota a domain admin can set on a user
      */
     @ZAttr(id=398)

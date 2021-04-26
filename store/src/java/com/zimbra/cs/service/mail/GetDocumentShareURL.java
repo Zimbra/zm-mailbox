@@ -59,7 +59,7 @@ public class GetDocumentShareURL extends MailDocumentHandler {
     private String getPublicShareURL(Document doc) throws ServiceException {
         Account account = doc.getAccount();
         Folder share = doc.getShare();
-        String path = "/service" + SharedFileServlet.getSharedFileURLPath(doc.getUuid(), account.getId(), share != null ?  account.getId() : null);
+        String path = "/service" + SharedFileServlet.getSharedFileURLPath(doc.getUuid(), account.getId(), share != null ? account.getId() : null);
         return URLUtil.getPublicURLForDomain(account.getServer(), Provisioning.getInstance().getDomain(account), path, true);
     }
 }

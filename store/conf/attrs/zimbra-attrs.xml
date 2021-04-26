@@ -9858,4 +9858,8 @@ TODO: delete them permanently from here
   <globalConfigValue>SECRET</globalConfigValue>
   <desc>Document editing JWT secret</desc>
 </attr>
+<attr id="3097" name="zimbraDocumentRecentlyViewedEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="9.1.0">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>Whether or not to log document accessed time</desc>
+</attr>
 </attrs>
