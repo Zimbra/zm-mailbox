@@ -63,6 +63,14 @@ public class OwaspHtmlSanitizer implements Callable<String> {
      * @throws UnsupportedEncodingException
      */
     public String sanitize() throws UnsupportedEncodingException {
+        return processSanitization(true).toString();
+    }
+
+    public String sanitize(boolean cleanMalformedHtml) throws UnsupportedEncodingException {
+        return processSanitization(cleanMalformedHtml).toString();
+    }
+
+    private StringBuilder processSanitization(boolean cleanMalformedHtml) throws UnsupportedEncodingException {
         OwaspThreadLocal threadLocalInstance = new OwaspThreadLocal();
         threadLocalInstance.setVHost(vHost);
         OwaspHtmlSanitizer.zThreadLocal.set(threadLocalInstance);
@@ -73,38 +81,46 @@ public class OwaspHtmlSanitizer implements Callable<String> {
         final StringBuilder htmlBuilder = new StringBuilder(html.length());
         // create the renderer that will write the sanitized HTML to the builder
         final HtmlStreamRenderer renderer = HtmlStreamRenderer.create(htmlBuilder,
-            Handler.PROPAGATE,
-            // log errors resulting from exceptionally bizarre inputs
-            new Handler<String>() {
+                Handler.PROPAGATE,
+                // log errors resulting from exceptionally bizarre inputs
+                new Handler<String>() {
 
-                public void handle(final String x) {
-                    throw new AssertionError(x);
-                }
-            });
+            public void handle(final String x) {
+                throw new AssertionError(x);
+            }
+        });
         // create a thread-specific policy
         instantiatePolicy();
         final Policy policy = POLICY_DEFINITION.apply(new StyleTagReceiver(renderer));
         // run the html through the sanitizer
-        HtmlSanitizer.sanitize(cleanMalformedHtml(html), policy);
+        runSanitizer(html, policy, cleanMalformedHtml);
         // return the resulting HTML from the builder
         OwaspHtmlSanitizer.zThreadLocal.remove();
-        return htmlBuilder.toString();
+        return htmlBuilder;
     }
 
-    private String cleanMalformedHtml(String str) throws UnsupportedEncodingException {
+    private void runSanitizer(String str, Policy policy, boolean cleanMalformedHtml) throws UnsupportedEncodingException {
+        if (cleanMalformedHtml) {
+            HtmlSanitizer.sanitize(cleanMalformedHtml(str, false), policy);
+        } else {
+            HtmlSanitizer.sanitize(str, policy);
+        }
+    }
+
+    public String cleanMalformedHtml(String str, boolean printBodyOnly) throws UnsupportedEncodingException {
         if (DebugConfig.jtidyEnabled) {
             long startTime = System.currentTimeMillis();
             ZimbraLog.mailbox.debug("Start - Using JTidy library for cleaning the markup.");
             Tidy tidy = new Tidy();
             tidy.setInputEncoding("UTF-8");
             tidy.setOutputEncoding("UTF-8");
-            tidy.setPrintBodyOnly(true);
+            tidy.setPrintBodyOnly(printBodyOnly);
             tidy.setXHTML(true);
             ByteArrayInputStream inputStream = new ByteArrayInputStream(str.getBytes("UTF-8"));
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             tidy.parseDOM(inputStream, outputStream);
             String outStream = outputStream.toString("UTF-8");
-            if (outStream.isEmpty() || outStream == null) {
+            if (outStream == null || outStream.trim().isEmpty()) {
                 return str;
             }
             ZimbraLog.mailbox.debug("End - Using JTidy library for cleaning the markup. Taken %d milliseconds.",
