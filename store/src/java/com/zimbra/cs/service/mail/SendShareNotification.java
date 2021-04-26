@@ -40,6 +40,7 @@ import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Group;
@@ -50,6 +51,7 @@ import com.zimbra.cs.account.Provisioning.GroupMemberEmailAddrs;
 import com.zimbra.cs.account.ShareInfo;
 import com.zimbra.cs.account.ShareInfoData;
 import com.zimbra.cs.mailbox.ACL;
+import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -261,16 +263,29 @@ public class SendShareNotification extends MailDocumentHandler {
             MailItem item,
             boolean revoke) throws ServiceException {
 
-        MatchingGrant matchingGrant;
+        MatchingGrant matchingGrant = null;
 
         Mountpoint mpt = item instanceof Mountpoint ? (Mountpoint) item : null;
 
-        // see if the share specified in the request is real
-        if (Provisioning.onLocalServer(ownerAcct)) {
-            matchingGrant = getMatchingGrantLocal(octxt, item, granteeType, granteeId, ownerAcct);
+        if (item instanceof Document) {
+            ZimbraLog.account.debug("Adding sharing information for document %s", item.getName());
+            Document doc = (Document) item;
+            ACL acl = doc.getEffectiveACL();
+            if (acl != null) {
+                for (ACL.Grant grant : acl.getGrants()) {
+                    if (grant.getGranteeType() == granteeType && grant.getGranteeId().equals(granteeId)) {
+                        matchingGrant =  new MatchingGrant(grant);
+                    }
+                }
+            }
         } else {
-            matchingGrant = getMatchingGrantRemote(zsc, context, granteeType, granteeId, ownerAcct,
-                    mpt == null ? item.getId() : mpt.getRemoteId());
+            // see if the share specified in the request is real
+            if (Provisioning.onLocalServer(ownerAcct)) {
+                matchingGrant = getMatchingGrantLocal(octxt, item, granteeType, granteeId, ownerAcct);
+            } else {
+                matchingGrant = getMatchingGrantRemote(zsc, context, granteeType, granteeId, ownerAcct,
+                        mpt == null ? item.getId() : mpt.getRemoteId());
+            }
         }
 
         if (!revoke && matchingGrant == null) {
@@ -541,8 +556,14 @@ public class SendShareNotification extends MailDocumentHandler {
     }
 
     protected MimeMessage generateShareNotification(Account authAccount, Account ownerAccount,
+            ShareInfoData sid, String notes, Action action, Collection<String> internalRecipients,
+            String externalRecipient) throws ServiceException, MessagingException {
+        return generateShareNotification(authAccount, ownerAccount, sid, notes, action, internalRecipients, externalRecipient, false);
+    }
+
+    protected MimeMessage generateShareNotification(Account authAccount, Account ownerAccount,
         ShareInfoData sid, String notes, Action action, Collection<String> internalRecipients,
-        String externalRecipient) throws ServiceException, MessagingException {
+        String externalRecipient, boolean notifyForDocument) throws ServiceException, MessagingException {
         Locale locale = authAccount.getLocale();
         String charset = authAccount.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset,
             MimeConstants.P_CHARSET_UTF8);
@@ -589,17 +610,18 @@ public class SendShareNotification extends MailDocumentHandler {
             extUserLoginUrl = AccountUtil.getExtUserLoginURL(owner);
         }
         String mimePartText = ShareInfo.NotificationSender.getMimePartText(sid, notes, locale,
-            action, extUserShareAcceptUrl, extUserLoginUrl);
+            action, extUserShareAcceptUrl, extUserLoginUrl, notifyForDocument);
         String mimePartHtml = ShareInfo.NotificationSender.getMimePartHtml(sid, notes, locale,
-            action, extUserShareAcceptUrl, extUserLoginUrl);
+            action, extUserShareAcceptUrl, extUserLoginUrl, notifyForDocument);
 
         String mimePartXml = null;
-        if (!goesToExternalAddr) {
+        if (!goesToExternalAddr && !notifyForDocument) {
             mimePartXml = ShareInfo.NotificationSender.genXmlPart(sid, notes, null, action);
         }
 
+        // if notifyForDocument = true, do not attach the xml mimepart.
         MimeMultipart mmp = AccountUtil.generateMimeMultipart(mimePartText, mimePartHtml,
-            mimePartXml);
+                notifyForDocument ? null : mimePartXml);
         MimeMessage mm = AccountUtil.generateMimeMessage(authAccount, ownerAccount, subject,
             charset, internalRecipients, externalRecipient, recipient, mmp);
         return mm;
@@ -613,8 +635,19 @@ public class SendShareNotification extends MailDocumentHandler {
             ShareInfoData sid, String notes, Action action,
             Collection<String> internalRecipients, String externalRecipient)
     throws ServiceException, MessagingException  {
-        MimeMessage mm = generateShareNotification(authAccount, ownerAccount, sid, notes, action,
-                internalRecipients, externalRecipient);
+        // get owner mailbox and find the item.
+        Mailbox ownerMbox = MailboxManager.getInstance().getMailboxByAccount(ownerAccount);
+        ItemId iid = new ItemId(ownerAccount.getId(), sid.getItemId());
+        MailItem item = ownerMbox .getItemById(octxt, iid.getId(), MailItem.Type.UNKNOWN);
+        MimeMessage mm = null;
+        if (item instanceof Document) {
+            ZimbraLog.account.debug("Sending share notification to [ %s ] for document %s", sid.getGranteeName(), item.getName());
+            mm = generateShareNotification(authAccount, ownerAccount, sid, notes, action,
+                    internalRecipients, externalRecipient, true);
+        } else {
+            mm = generateShareNotification(authAccount, ownerAccount, sid, notes, action,
+                    internalRecipients, externalRecipient);
+        }
         mbox.getMailSender().sendMimeMessage(octxt, mbox, true, mm, null, null, null, null, false);
     }
 

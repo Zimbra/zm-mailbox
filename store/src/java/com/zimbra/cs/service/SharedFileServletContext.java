@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2020 Synacor, Inc.
+ * Copyright (C) 2021 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -22,26 +22,19 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
-import java.util.List;
 import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.zimbra.client.ZFolder;
-import com.zimbra.client.ZMailbox;
-import com.zimbra.client.ZMountpoint;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
-import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ShareLocator;
-import com.zimbra.cs.util.AccountUtil;
 
 public class SharedFileServletContext extends UserServletContext {
 
@@ -92,18 +85,6 @@ public class SharedFileServletContext extends UserServletContext {
             ShareLocator shloc = Provisioning.getInstance().getShareLocatorById(shareUuid);
             if (shloc != null) {
                 accountId = shloc.getShareOwnerAccountId();
-            } else {
-                ZimbraLog.doc.debug("Trying to find the owner account id by traversing all folders.");
-                AuthToken auth = null;
-                try {
-                    auth = AuthProvider.getAuthToken(req, false);
-                    //null account id is handled in line 114
-                    accountId = findOwnerAccountId(auth, shareUuid);
-                    ZimbraLog.doc.debug("Account Found by Traversing the Folders : %s", accountId != null ? accountId : "");
-                } catch (AuthTokenException e) {
-                    ZimbraLog.doc.warn("Exception while trying to find owner account id", e);
-                    throw new UserServletException(HttpServletResponse.SC_NOT_FOUND, null);
-                }
             }
         } else {
             accountId = epath.getContainerUuid();
@@ -115,57 +96,6 @@ public class SharedFileServletContext extends UserServletContext {
         targetAccount = Provisioning.getInstance().get(AccountBy.id, accountId, authToken);
         fromDumpster = false;  // fetching dumpster'd file not supported
         ZimbraLog.doc.debug("Looking for item :%s, for account:%s", itemUuid, accountId);
-    }
-
-    /**
-     * Call GetFolderRequest for a user. Process the response to check if sharefolerUUID from URL is present.
-     * If present return the Folder's owner account id
-     * @param authToken
-     * @param folderUUID
-     * @return
-     * @throws ServiceException
-     * @throws UserServletException
-     */
-    public static String findOwnerAccountId(AuthToken authToken, String folderUUID) throws ServiceException {
-        try {
-            AuthToken newAuthToken = AuthToken.getCsrfUnsecuredAuthToken(authToken);
-            Account targetAccount = newAuthToken.getAccount();
-            ZMailbox.Options zoptions = new ZMailbox.Options(newAuthToken.toZAuthToken(), AccountUtil.getSoapUri(targetAccount));
-            zoptions.setTargetAccount(newAuthToken.getAccountId());
-            zoptions.setTargetAccountBy(AccountBy.id);
-            zoptions.setNoSession(true);
-            ZMailbox zmbx = ZMailbox.getMailbox(zoptions);
-            List<ZFolder> zfs = zmbx.getAllFolders();
-            if (zfs != null) {
-                for (ZFolder zf : zfs) {
-                    if (zf instanceof ZMountpoint) {
-                        ZMountpoint mp = (ZMountpoint) zf;
-                        if (zf.getUuid().equals(folderUUID)) {
-                            return mp.getOwnerId();
-                        }
-                        List<ZFolder> zsfs = zmbx.getFolderSharedFromOwner(mp.getOwnerDisplayName());
-                        if (zsfs.size() > 0) {
-                            for (ZFolder sf : zsfs) {
-                                if (sf.getUuid().equals(folderUUID)) {
-                                    ZimbraLog.doc.debug("Folder uuid : %s found for %s", folderUUID, mp.getOwnerId());
-                                    return mp.getOwnerId();
-                                }
-                            }
-                        }
-                    }
-                    if (zf.getUuid().equals(folderUUID)) {
-                        ZimbraLog.doc.debug("Folder uuid : %s found for %s", folderUUID, zf.getMailbox().getAccountId());
-                        return zf.getMailbox().getAccountId();
-                    }
-                }
-            }
-        } catch (Exception e) {
-            // in case there is an exception, log the issue and return null so that the code proceeds.
-            // It is handled at a single place which checks if account id is
-            // null or empty and throws appropriate exception.
-            ZimbraLog.doc.warn(" Error while finding owner account id.", e);
-        }
-        return null;
     }
 
     public static class EncodedId {
