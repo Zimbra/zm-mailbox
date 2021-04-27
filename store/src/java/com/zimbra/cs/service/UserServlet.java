@@ -57,8 +57,11 @@ import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.httpclient.InputStreamRequestHttpRetryHandler;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.L10nUtil;
@@ -94,6 +97,7 @@ import com.zimbra.cs.service.formatter.IfbFormatter;
 import com.zimbra.cs.service.formatter.OctopusPatchFormatter;
 import com.zimbra.cs.service.formatter.TarFormatter;
 import com.zimbra.cs.service.formatter.ZipFormatter;
+import com.zimbra.cs.service.mail.DocumentAction;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.UserServletUtil;
 import com.zimbra.cs.servlet.CsrfFilter;
@@ -101,6 +105,11 @@ import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.servlet.util.AuthUtil;
 import com.zimbra.cs.servlet.util.CsrfUtil;
 import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.soap.JaxbUtil;
+import com.zimbra.soap.SoapEngine;
+import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.mail.message.DocumentActionRequest;
+import com.zimbra.soap.mail.type.DocumentActionSelector;
 
 /**
  *
@@ -385,6 +394,9 @@ public class UserServlet extends ZimbraServlet {
 
             doAuthGet(req, resp, context);
 
+            if (allowDocumentAccessedTimeLogging(context)) {
+                logDocumentAccessedTime(context);
+            }
         } catch (ServiceException se) {
             if (se.getCode() == ServiceException.PERM_DENIED || se instanceof NoSuchItemException)
                 sendError(context, req, resp, L10nUtil.getMessage(MsgKey.errNoSuchItem, req));
@@ -398,6 +410,55 @@ public class UserServlet extends ZimbraServlet {
             resp.sendError(e.getHttpStatusCode(), e.getMessage());
         } finally {
             ZimbraLog.clearContext();
+        }
+    }
+
+    private boolean allowDocumentAccessedTimeLogging(UserServletContext context) {
+        if (context != null) {
+            String accountId = null;
+            String type = null;
+            boolean logDocumentAccessedTime = false;
+            Account account  = context.getAuthAccount();
+            if (account != null) {
+                accountId = account.getId();
+                logDocumentAccessedTime = account.isDocumentRecentlyViewedEnabled();
+            }
+            if (context.target != null) {
+                type = context.target.getType().name();
+            }
+            if (accountId != null
+                    && !accountId.equals(GuestAccount.GUID_PUBLIC)
+                    && !accountId.equals(GuestAccount.GUID_AUTHUSER)
+                    && type != null && type.equalsIgnoreCase(MailItemType.DOCUMENT.toString())
+                    && logDocumentAccessedTime) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void logDocumentAccessedTime(UserServletContext context) {
+        Map<String, Object> soapContext = new HashMap<String, Object>();
+        DocumentActionRequest request = null;
+        String id = String.valueOf(context.target.getId());
+        String zscAccountId = context.getAuthAccount().getId();
+
+        if (!context.targetAccount.getId().equals(context.getAuthAccount().getId())) {
+            id = context.targetAccount.getId() + ":" + id;
+            zscAccountId = context.targetAccount.getId();
+        }
+        try {
+            ZimbraSoapContext zsc = new ZimbraSoapContext(
+                        context.opContext.getAuthToken(), zscAccountId,
+                        SoapProtocol.Soap12, SoapProtocol.Soap12, 0);
+            soapContext.put(SoapEngine.ZIMBRA_CONTEXT, zsc);
+            request = DocumentActionRequest.create(new DocumentActionSelector(id, DocumentAction.OP_VIEW));
+            Element elreq = JaxbUtil.jaxbToElement(request);
+            new DocumentAction().handle(elreq, soapContext);
+        } catch (ServiceException e) {
+            if (log.isDebugEnabled()) {
+                log.debug("UserServlet: Log access time for document '%s' failed due to %s", id, e.getMessage());
+            }
         }
     }
 
