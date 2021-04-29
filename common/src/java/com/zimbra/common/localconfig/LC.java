@@ -1455,6 +1455,9 @@ public final class LC {
     // imap folder pagination enabled
     public static final KnownKey zimbra_imap_folder_pagination_enabled =  KnownKey.newKey(false);
 
+    // For disabling the printing of jtidy warnings in zmmailboxd.out
+    public static final KnownKey hide_jtidy_warnings = KnownKey.newKey(true);
+
     static {
         // Automatically set the key name with the variable name.
         for (Field field : LC.class.getFields()) {
