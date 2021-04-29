@@ -123,6 +123,9 @@ public class OwaspHtmlSanitizer implements Callable<String> {
             if (outStream == null || outStream.trim().isEmpty()) {
                 return str;
             }
+            if (outStream.contains("<\n/")) {
+                outStream = outStream.replaceAll("<\n/","</");
+            }
             ZimbraLog.mailbox.debug("End - Using JTidy library for cleaning the markup. Taken %d milliseconds.",
                     (System.currentTimeMillis() - startTime));
             return outStream;
