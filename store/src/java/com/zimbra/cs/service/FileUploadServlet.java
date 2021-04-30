@@ -883,6 +883,7 @@ public class FileUploadServlet extends ZimbraServlet {
 
     private static long getFileUploadMaxSize(boolean limitByFileUploadMaxSize, Account acct) {
         long maxSize = DEFAULT_MAX_SIZE;
+        String attributeUsed = null;
         if (acct.getMailAttachmentMaxSize() >= 0 || acct.getFileUploadMaxSizePerFile() >= 0) {
             try {
                 if (limitByFileUploadMaxSize) {
@@ -891,8 +892,10 @@ public class FileUploadServlet extends ZimbraServlet {
                             Provisioning.A_zimbraFileUploadMaxSize, DEFAULT_MAX_SIZE);
                     if (fileUploadSizePerFile >= fileUploadSize) {
                         maxSize = fileUploadSize;
+                        attributeUsed = Provisioning.A_zimbraFileUploadMaxSize;
                     } else {
                         maxSize = fileUploadSizePerFile;
+                        attributeUsed = Provisioning.A_zimbraFileUploadMaxSizePerFile;
                     }
                 } else {
                     long mailAttachmentMaxSize = acct.getMailAttachmentMaxSize();
@@ -900,16 +903,17 @@ public class FileUploadServlet extends ZimbraServlet {
                             Provisioning.A_zimbraMtaMaxMessageSize, DEFAULT_MAX_SIZE);
                     if (mailAttachmentMaxSize > mtaMaxMsgSize) {
                         maxSize = mtaMaxMsgSize;
+                        attributeUsed = Provisioning.A_zimbraMtaMaxMessageSize;
                     } else {
                         maxSize = mailAttachmentMaxSize;
+                        attributeUsed = Provisioning.A_zimbraMailAttachmentMaxSize;
                     }
                     if (maxSize == 0) {
                         maxSize = -1;
                     }
                 }
-            } catch (ServiceException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+            } catch (ServiceException exp) {
+                mLog.error(String.format("Unable to read %s attribute.", attributeUsed), exp);
             }
         } else {
             maxSize = getFileUploadMaxSize(limitByFileUploadMaxSize);
