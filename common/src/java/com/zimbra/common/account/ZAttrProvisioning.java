@@ -6498,7 +6498,7 @@ public class ZAttrProvisioning {
      * Enable/Disable blocked file types set in
      * zimbraFileUploadBlockedFileTypes for uploading
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3092)
     public static final String A_zimbraFeatureFileTypeUploadRestrictionsEnabled = "zimbraFeatureFileTypeUploadRestrictionsEnabled";
@@ -7206,7 +7206,7 @@ public class ZAttrProvisioning {
     /**
      * Commonly blocked file types for uploading
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3091)
     public static final String A_zimbraFileUploadBlockedFileTypes = "zimbraFileUploadBlockedFileTypes";

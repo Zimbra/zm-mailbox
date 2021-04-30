@@ -14877,7 +14877,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @return zimbraFeatureFileTypeUploadRestrictionsEnabled, or true if unset
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3092)
     public boolean isFeatureFileTypeUploadRestrictionsEnabled() {
@@ -14891,7 +14891,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param zimbraFeatureFileTypeUploadRestrictionsEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3092)
     public void setFeatureFileTypeUploadRestrictionsEnabled(boolean zimbraFeatureFileTypeUploadRestrictionsEnabled) throws com.zimbra.common.service.ServiceException {
@@ -14908,7 +14908,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3092)
     public Map<String,Object> setFeatureFileTypeUploadRestrictionsEnabled(boolean zimbraFeatureFileTypeUploadRestrictionsEnabled, Map<String,Object> attrs) {
@@ -14923,7 +14923,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3092)
     public void unsetFeatureFileTypeUploadRestrictionsEnabled() throws com.zimbra.common.service.ServiceException {
@@ -14939,7 +14939,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3092)
     public Map<String,Object> unsetFeatureFileTypeUploadRestrictionsEnabled(Map<String,Object> attrs) {
@@ -21496,7 +21496,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @return zimbraFileUploadBlockedFileTypes, or empty array if unset
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3091)
     public String[] getFileUploadBlockedFileTypes() {
@@ -21509,7 +21509,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param zimbraFileUploadBlockedFileTypes new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3091)
     public void setFileUploadBlockedFileTypes(String[] zimbraFileUploadBlockedFileTypes) throws com.zimbra.common.service.ServiceException {
@@ -21525,7 +21525,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3091)
     public Map<String,Object> setFileUploadBlockedFileTypes(String[] zimbraFileUploadBlockedFileTypes, Map<String,Object> attrs) {
@@ -21540,7 +21540,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param zimbraFileUploadBlockedFileTypes new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3091)
     public void addFileUploadBlockedFileTypes(String zimbraFileUploadBlockedFileTypes) throws com.zimbra.common.service.ServiceException {
@@ -21556,7 +21556,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3091)
     public Map<String,Object> addFileUploadBlockedFileTypes(String zimbraFileUploadBlockedFileTypes, Map<String,Object> attrs) {
@@ -21571,7 +21571,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param zimbraFileUploadBlockedFileTypes existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3091)
     public void removeFileUploadBlockedFileTypes(String zimbraFileUploadBlockedFileTypes) throws com.zimbra.common.service.ServiceException {
@@ -21587,7 +21587,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3091)
     public Map<String,Object> removeFileUploadBlockedFileTypes(String zimbraFileUploadBlockedFileTypes, Map<String,Object> attrs) {
@@ -21601,7 +21601,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3091)
     public void unsetFileUploadBlockedFileTypes() throws com.zimbra.common.service.ServiceException {
@@ -21616,7 +21616,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3091)
     public Map<String,Object> unsetFileUploadBlockedFileTypes(Map<String,Object> attrs) {
