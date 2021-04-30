@@ -118,6 +118,7 @@ public class OwaspHtmlSanitizer implements Callable<String> {
             tidy.setDocType("omit");
             tidy.setTidyMark(false);
             tidy.setHideEndTags(true);
+            tidy.setWraplen(0);
             if (LC.hide_jtidy_warnings.booleanValue()) {
                 tidy.setQuiet(true);
                 tidy.setShowWarnings(false);
@@ -130,9 +131,6 @@ public class OwaspHtmlSanitizer implements Callable<String> {
             String outStream = outputStream.toString("UTF-8");
             if (outStream == null || outStream.trim().isEmpty()) {
                 return str;
-            }
-            if (outStream.contains("<\n/")) {
-                outStream = outStream.replaceAll("<\n/","</");
             }
             ZimbraLog.mailbox.debug("End - Using JTidy library for cleaning the markup. Taken %d milliseconds.",
                     (System.currentTimeMillis() - startTime));
