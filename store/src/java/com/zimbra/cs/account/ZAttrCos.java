@@ -19248,7 +19248,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @return zimbraMailAttachmentMaxSize, or 0 if unset
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3093)
     public long getMailAttachmentMaxSize() {
@@ -19261,7 +19261,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * @param zimbraMailAttachmentMaxSize new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3093)
     public void setMailAttachmentMaxSize(long zimbraMailAttachmentMaxSize) throws com.zimbra.common.service.ServiceException {
@@ -19277,7 +19277,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3093)
     public Map<String,Object> setMailAttachmentMaxSize(long zimbraMailAttachmentMaxSize, Map<String,Object> attrs) {
@@ -19291,7 +19291,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3093)
     public void unsetMailAttachmentMaxSize() throws com.zimbra.common.service.ServiceException {
@@ -19306,7 +19306,7 @@ public abstract class ZAttrCos extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3093)
     public Map<String,Object> unsetMailAttachmentMaxSize(Map<String,Object> attrs) {

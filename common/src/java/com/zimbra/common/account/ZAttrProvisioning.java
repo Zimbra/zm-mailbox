@@ -8839,7 +8839,7 @@ public class ZAttrProvisioning {
     /**
      * Maximum size in bytes for e-mail attachment.
      *
-     * @since ZCS 9.0.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3093)
     public static final String A_zimbraMailAttachmentMaxSize = "zimbraMailAttachmentMaxSize";
