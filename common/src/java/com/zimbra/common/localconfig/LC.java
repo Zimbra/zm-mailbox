@@ -1463,6 +1463,9 @@ public final class LC {
 
     public enum PUBLIC_SHARE_VISIBILITY { samePrimaryDomain, all, none };
 
+    // For disabling the printing of jtidy warnings in zmmailboxd.out
+    public static final KnownKey hide_jtidy_warnings = KnownKey.newKey(true);
+
     /**
      * Added for Bug 99825 which relates to the security implications of public shares being visible to users
      * in different domains.  If nothing else, it provided a means for harvesting details of accounts in other
