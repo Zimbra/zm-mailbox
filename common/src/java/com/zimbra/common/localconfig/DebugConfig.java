@@ -359,6 +359,8 @@ public final class DebugConfig {
      */
     public static final boolean jtidyEnabled = value("jtidy_enabled", true);
 
+    public static final boolean hideJtidyWarnings = value("hide_jtidy_warnings", true);
+
     private static boolean value(String key, boolean defaultValue) {
         String value = LC.get(key);
         return value.isEmpty() ? defaultValue : Boolean.parseBoolean(value);
