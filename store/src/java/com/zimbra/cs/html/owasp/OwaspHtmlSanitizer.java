@@ -29,7 +29,6 @@ import org.owasp.html.PolicyFactory;
 import org.w3c.tidy.Tidy;
 
 import com.zimbra.common.localconfig.DebugConfig;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.html.owasp.policies.StyleTagReceiver;
@@ -119,7 +118,7 @@ public class OwaspHtmlSanitizer implements Callable<String> {
             tidy.setTidyMark(false);
             tidy.setHideEndTags(true);
             tidy.setWraplen(0);
-            if (LC.hide_jtidy_warnings.booleanValue()) {
+            if (DebugConfig.hideJtidyWarnings) {
                 tidy.setQuiet(true);
                 tidy.setShowWarnings(false);
             }
