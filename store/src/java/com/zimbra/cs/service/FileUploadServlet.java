@@ -884,39 +884,37 @@ public class FileUploadServlet extends ZimbraServlet {
     private static long getFileUploadMaxSize(boolean limitByFileUploadMaxSize, Account acct) {
         long maxSize = DEFAULT_MAX_SIZE;
         String attributeUsed = null;
-        if (acct.getMailAttachmentMaxSize() >= 0 || acct.getFileUploadMaxSizePerFile() >= 0) {
-            try {
-                if (limitByFileUploadMaxSize) {
-                    long fileUploadSizePerFile = acct.getFileUploadMaxSizePerFile();
-                    long fileUploadSize = Provisioning.getInstance().getLocalServer().getLongAttr(
-                            Provisioning.A_zimbraFileUploadMaxSize, DEFAULT_MAX_SIZE);
-                    if (fileUploadSizePerFile >= fileUploadSize) {
-                        maxSize = fileUploadSize;
-                        attributeUsed = Provisioning.A_zimbraFileUploadMaxSize;
-                    } else {
-                        maxSize = fileUploadSizePerFile;
-                        attributeUsed = Provisioning.A_zimbraFileUploadMaxSizePerFile;
-                    }
+        try {
+            if (limitByFileUploadMaxSize && acct.getFileUploadMaxSizePerFile() > 0) {
+                long fileUploadSizePerFile = acct.getFileUploadMaxSizePerFile();
+                long fileUploadSize = Provisioning.getInstance().getLocalServer().getLongAttr(
+                        Provisioning.A_zimbraFileUploadMaxSize, DEFAULT_MAX_SIZE);
+                if (fileUploadSizePerFile >= fileUploadSize) {
+                    maxSize = fileUploadSize;
+                    attributeUsed = Provisioning.A_zimbraFileUploadMaxSize;
                 } else {
-                    long mailAttachmentMaxSize = acct.getMailAttachmentMaxSize();
-                    long mtaMaxMsgSize = Provisioning.getInstance().getConfig().getLongAttr(
-                            Provisioning.A_zimbraMtaMaxMessageSize, DEFAULT_MAX_SIZE);
-                    if (mailAttachmentMaxSize > mtaMaxMsgSize) {
-                        maxSize = mtaMaxMsgSize;
-                        attributeUsed = Provisioning.A_zimbraMtaMaxMessageSize;
-                    } else {
-                        maxSize = mailAttachmentMaxSize;
-                        attributeUsed = Provisioning.A_zimbraMailAttachmentMaxSize;
-                    }
-                    if (maxSize == 0) {
-                        maxSize = -1;
-                    }
+                    maxSize = fileUploadSizePerFile;
+                    attributeUsed = Provisioning.A_zimbraFileUploadMaxSizePerFile;
                 }
-            } catch (ServiceException exp) {
-                mLog.error(String.format("Unable to read %s attribute.", attributeUsed), exp);
+            } else if (!limitByFileUploadMaxSize && acct.getMailAttachmentMaxSize() > 0) {
+                long mailAttachmentMaxSize = acct.getMailAttachmentMaxSize();
+                long mtaMaxMsgSize = Provisioning.getInstance().getConfig().getLongAttr(
+                        Provisioning.A_zimbraMtaMaxMessageSize, DEFAULT_MAX_SIZE);
+                if (mailAttachmentMaxSize > mtaMaxMsgSize) {
+                    maxSize = mtaMaxMsgSize;
+                    attributeUsed = Provisioning.A_zimbraMtaMaxMessageSize;
+                } else {
+                    maxSize = mailAttachmentMaxSize;
+                    attributeUsed = Provisioning.A_zimbraMailAttachmentMaxSize;
+                }
+                if (maxSize == 0) {
+                    maxSize = -1;
+                }
+            } else {
+                maxSize = getFileUploadMaxSize(limitByFileUploadMaxSize);
             }
-        } else {
-            maxSize = getFileUploadMaxSize(limitByFileUploadMaxSize);
+        } catch (ServiceException exp) {
+            mLog.error(String.format("Unable to read %s attribute.", attributeUsed), exp);
         }
         return maxSize;
     }

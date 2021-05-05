@@ -278,6 +278,24 @@ public final class ParseMimeMessage {
             }
         }
 
+        ParseMessageContext(Account account) {
+            try {
+                long mailAttachmentMaxSize = account.getMailAttachmentMaxSize();
+                Config config = Provisioning.getInstance().getConfig();
+                long mtaMaxMsgSize = config.getLongAttr(Provisioning.A_zimbraMtaMaxMessageSize, -1);
+                if (mailAttachmentMaxSize > mtaMaxMsgSize) {
+                    maxSize = mtaMaxMsgSize;
+                } else {
+                    maxSize = mailAttachmentMaxSize;
+                }
+            } catch (ServiceException e) {
+                ZimbraLog.soap.warn("Unable to determine max message size.  Disabling limit check.", e);
+            }
+            if (maxSize < 0) {
+                maxSize = Long.MAX_VALUE;
+            }
+        }
+
         void incrementSize(String name, long numBytes) throws MailServiceException {
             size += numBytes;
             ZimbraLog.soap.debug("Adding %s, incrementing size by %d to %d.", name, numBytes, size);
@@ -309,7 +327,7 @@ public final class ParseMimeMessage {
         assert(msgElem.getName().equals(MailConstants.E_MSG)); // msgElem == "<m>" E_MSG
 
         Account target = DocumentHandler.getRequestedAccount(zsc);
-        ParseMessageContext ctxt = new ParseMessageContext();
+        ParseMessageContext ctxt = new ParseMessageContext(zsc.getAuthToken().getAccount());
         ctxt.out = out;
         ctxt.zsc = zsc;
         ctxt.octxt = octxt;
