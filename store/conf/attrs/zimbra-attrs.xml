@@ -9822,4 +9822,40 @@ TODO: delete them permanently from here
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether to use Web Client feature</desc>
 </attr>
+<attr id="3091" name="zimbraFileUploadBlockedFileTypes" type="string" cardinality="multi" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="9.1.0">
+  <defaultCOSValue>asd</defaultCOSValue>
+  <defaultCOSValue>bat</defaultCOSValue>
+  <defaultCOSValue>chm</defaultCOSValue>
+  <defaultCOSValue>cmd</defaultCOSValue>
+  <defaultCOSValue>com</defaultCOSValue>
+  <defaultCOSValue>dll</defaultCOSValue>
+  <defaultCOSValue>do</defaultCOSValue>
+  <defaultCOSValue>exe</defaultCOSValue>
+  <defaultCOSValue>hlp</defaultCOSValue>
+  <defaultCOSValue>hta</defaultCOSValue>
+  <defaultCOSValue>js</defaultCOSValue>
+  <defaultCOSValue>jse</defaultCOSValue>
+  <defaultCOSValue>lnk</defaultCOSValue>
+  <defaultCOSValue>ocx</defaultCOSValue>
+  <defaultCOSValue>pif</defaultCOSValue>
+  <defaultCOSValue>reg</defaultCOSValue>
+  <defaultCOSValue>scr</defaultCOSValue>
+  <defaultCOSValue>shb</defaultCOSValue>
+  <defaultCOSValue>shm</defaultCOSValue>
+  <defaultCOSValue>shs</defaultCOSValue>
+  <defaultCOSValue>vbe</defaultCOSValue>
+  <defaultCOSValue>vbs</defaultCOSValue>
+  <defaultCOSValue>vbx</defaultCOSValue>
+  <defaultCOSValue>vxd</defaultCOSValue>
+  <defaultCOSValue>wsf</defaultCOSValue>
+  <defaultCOSValue>wsh</defaultCOSValue>
+  <defaultCOSValue>xl</defaultCOSValue>
+  <defaultCOSValue>application/x-ms*</defaultCOSValue>
+  <defaultCOSValue>application/x-dosexec</defaultCOSValue>
+  <desc>Commonly blocked file types for uploading</desc>
+ </attr>
+<attr id="3092" name="zimbraFeatureFileTypeUploadRestrictionsEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="9.1.0">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>Enable/Disable blocked file types set in zimbraFileUploadBlockedFileTypes for uploading</desc>
+ </attr>
 </attrs>

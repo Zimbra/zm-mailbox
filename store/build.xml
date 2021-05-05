@@ -101,6 +101,7 @@
     <mkdir dir="${build.dir}/zimbra/conf"/>
     <copy file="${zm-mailbox.basedir}/store-conf/conf/antisamy.xml" todir="${build.dir}/zimbra/conf/"/>
     <copy file="${zm-mailbox.basedir}/store-conf/conf/owasp_policy.xml" todir="${build.dir}/zimbra/conf/"/>
+    <copy file="${zm-mailbox.basedir}/store-conf/conf/custom-mimetypes.xml" todir="${build.dir}/zimbra/conf/"/>
     <antcall target="make-dirs">
       <param name="base.dir" value="${dist.dir}"/>
     </antcall>

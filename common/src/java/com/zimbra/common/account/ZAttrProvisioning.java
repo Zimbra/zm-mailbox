@@ -6495,6 +6495,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureExternalFeedbackEnabled = "zimbraFeatureExternalFeedbackEnabled";
 
     /**
+     * Enable/Disable blocked file types set in
+     * zimbraFileUploadBlockedFileTypes for uploading
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3092)
+    public static final String A_zimbraFeatureFileTypeUploadRestrictionsEnabled = "zimbraFeatureFileTypeUploadRestrictionsEnabled";
+
+    /**
      * filter prefs enabled
      */
     @ZAttr(id=143)
@@ -7193,6 +7202,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1362)
     public static final String A_zimbraFileShareLifetime = "zimbraFileShareLifetime";
+
+    /**
+     * Commonly blocked file types for uploading
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3091)
+    public static final String A_zimbraFileUploadBlockedFileTypes = "zimbraFileUploadBlockedFileTypes";
 
     /**
      * Maximum size in bytes for file uploads

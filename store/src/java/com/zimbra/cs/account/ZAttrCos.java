@@ -9456,6 +9456,83 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * Enable/Disable blocked file types set in
+     * zimbraFileUploadBlockedFileTypes for uploading
+     *
+     * @return zimbraFeatureFileTypeUploadRestrictionsEnabled, or true if unset
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3092)
+    public boolean isFeatureFileTypeUploadRestrictionsEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureFileTypeUploadRestrictionsEnabled, true, true);
+    }
+
+    /**
+     * Enable/Disable blocked file types set in
+     * zimbraFileUploadBlockedFileTypes for uploading
+     *
+     * @param zimbraFeatureFileTypeUploadRestrictionsEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3092)
+    public void setFeatureFileTypeUploadRestrictionsEnabled(boolean zimbraFeatureFileTypeUploadRestrictionsEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureFileTypeUploadRestrictionsEnabled, zimbraFeatureFileTypeUploadRestrictionsEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Enable/Disable blocked file types set in
+     * zimbraFileUploadBlockedFileTypes for uploading
+     *
+     * @param zimbraFeatureFileTypeUploadRestrictionsEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3092)
+    public Map<String,Object> setFeatureFileTypeUploadRestrictionsEnabled(boolean zimbraFeatureFileTypeUploadRestrictionsEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureFileTypeUploadRestrictionsEnabled, zimbraFeatureFileTypeUploadRestrictionsEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Enable/Disable blocked file types set in
+     * zimbraFileUploadBlockedFileTypes for uploading
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3092)
+    public void unsetFeatureFileTypeUploadRestrictionsEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureFileTypeUploadRestrictionsEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Enable/Disable blocked file types set in
+     * zimbraFileUploadBlockedFileTypes for uploading
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3092)
+    public Map<String,Object> unsetFeatureFileTypeUploadRestrictionsEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureFileTypeUploadRestrictionsEnabled, "");
+        return attrs;
+    }
+
+    /**
      * filter prefs enabled
      *
      * @return zimbraFeatureFiltersEnabled, or true if unset
@@ -15995,6 +16072,140 @@ public abstract class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetFileShareLifetime(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFileShareLifetime, "");
+        return attrs;
+    }
+
+    /**
+     * Commonly blocked file types for uploading
+     *
+     * @return zimbraFileUploadBlockedFileTypes, or empty array if unset
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3091)
+    public String[] getFileUploadBlockedFileTypes() {
+        String[] value = getMultiAttr(Provisioning.A_zimbraFileUploadBlockedFileTypes, true, true); return value.length > 0 ? value : new String[] {"asd","bat","chm","cmd","com","dll","do","exe","hlp","hta","js","jse","lnk","ocx","pif","reg","scr","shb","shm","shs","vbe","vbs","vbx","vxd","wsf","wsh","xl","application/x-ms*","application/x-dosexec"};
+    }
+
+    /**
+     * Commonly blocked file types for uploading
+     *
+     * @param zimbraFileUploadBlockedFileTypes new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3091)
+    public void setFileUploadBlockedFileTypes(String[] zimbraFileUploadBlockedFileTypes) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileUploadBlockedFileTypes, zimbraFileUploadBlockedFileTypes);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Commonly blocked file types for uploading
+     *
+     * @param zimbraFileUploadBlockedFileTypes new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3091)
+    public Map<String,Object> setFileUploadBlockedFileTypes(String[] zimbraFileUploadBlockedFileTypes, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileUploadBlockedFileTypes, zimbraFileUploadBlockedFileTypes);
+        return attrs;
+    }
+
+    /**
+     * Commonly blocked file types for uploading
+     *
+     * @param zimbraFileUploadBlockedFileTypes new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3091)
+    public void addFileUploadBlockedFileTypes(String zimbraFileUploadBlockedFileTypes) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraFileUploadBlockedFileTypes, zimbraFileUploadBlockedFileTypes);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Commonly blocked file types for uploading
+     *
+     * @param zimbraFileUploadBlockedFileTypes new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3091)
+    public Map<String,Object> addFileUploadBlockedFileTypes(String zimbraFileUploadBlockedFileTypes, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraFileUploadBlockedFileTypes, zimbraFileUploadBlockedFileTypes);
+        return attrs;
+    }
+
+    /**
+     * Commonly blocked file types for uploading
+     *
+     * @param zimbraFileUploadBlockedFileTypes existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3091)
+    public void removeFileUploadBlockedFileTypes(String zimbraFileUploadBlockedFileTypes) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraFileUploadBlockedFileTypes, zimbraFileUploadBlockedFileTypes);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Commonly blocked file types for uploading
+     *
+     * @param zimbraFileUploadBlockedFileTypes existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3091)
+    public Map<String,Object> removeFileUploadBlockedFileTypes(String zimbraFileUploadBlockedFileTypes, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraFileUploadBlockedFileTypes, zimbraFileUploadBlockedFileTypes);
+        return attrs;
+    }
+
+    /**
+     * Commonly blocked file types for uploading
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3091)
+    public void unsetFileUploadBlockedFileTypes() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileUploadBlockedFileTypes, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Commonly blocked file types for uploading
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3091)
+    public Map<String,Object> unsetFileUploadBlockedFileTypes(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileUploadBlockedFileTypes, "");
         return attrs;
     }
 

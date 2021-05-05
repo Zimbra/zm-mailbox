@@ -64,6 +64,7 @@ public class ServiceException extends Exception {
     public static final String INVALID_DATASOURCE_ID = "service.INVALID_DATASOURCE_ID";
     public static final String DATASOURCE_SMTP_DISABLED = "service.DATASOURCE_SMTP_DISABLED";
     public static final String ERROR_WHILE_PARSING_UPLOAD = "service.IOEXCEPTION_WHILE_PARSING_UPLOAD";
+    public static final String BLOCKED_FILE_TYPE_UPLOAD = "service.BLOCKED_FILE_TYPE_UPLOAD";
 
     //smime
     public static final String LOAD_CERTIFICATE_FAILED = "smime.LOAD_CERTIFICATE_FAILED";
@@ -295,6 +296,11 @@ public class ServiceException extends Exception {
     public static ServiceException ERROR_WHILE_PARSING_UPLOAD(String message, Throwable cause) {
         return new ServiceException(
                 String.format("ioexception during upload: %s", message), ERROR_WHILE_PARSING_UPLOAD, RECEIVERS_FAULT, cause);
+    }
+
+    public static ServiceException BLOCKED_FILE_TYPE_UPLOAD(String message, Throwable cause) {
+        return new ServiceException(
+                String.format("blocked file type upload: %s", message), BLOCKED_FILE_TYPE_UPLOAD, RECEIVERS_FAULT, cause);
     }
 
     /**
