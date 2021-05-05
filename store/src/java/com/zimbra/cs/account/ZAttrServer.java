@@ -8379,7 +8379,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3095)
+    @ZAttr(id=3099)
     public int getDocumentEditingCallbackPort() {
         return getIntAttr(Provisioning.A_zimbraDocumentEditingCallbackPort, 7074, true);
     }
@@ -8391,7 +8391,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3095)
+    @ZAttr(id=3099)
     public String getDocumentEditingCallbackPortAsString() {
         return getAttr(Provisioning.A_zimbraDocumentEditingCallbackPort, "7074", true);
     }
@@ -8404,7 +8404,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3095)
+    @ZAttr(id=3099)
     public void setDocumentEditingCallbackPort(int zimbraDocumentEditingCallbackPort) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDocumentEditingCallbackPort, Integer.toString(zimbraDocumentEditingCallbackPort));
@@ -8420,7 +8420,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3095)
+    @ZAttr(id=3099)
     public Map<String,Object> setDocumentEditingCallbackPort(int zimbraDocumentEditingCallbackPort, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDocumentEditingCallbackPort, Integer.toString(zimbraDocumentEditingCallbackPort));
@@ -8435,7 +8435,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3095)
+    @ZAttr(id=3099)
     public void setDocumentEditingCallbackPortAsString(String zimbraDocumentEditingCallbackPort) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDocumentEditingCallbackPort, zimbraDocumentEditingCallbackPort);
@@ -8451,7 +8451,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3095)
+    @ZAttr(id=3099)
     public Map<String,Object> setDocumentEditingCallbackPortAsString(String zimbraDocumentEditingCallbackPort, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDocumentEditingCallbackPort, zimbraDocumentEditingCallbackPort);
@@ -8465,7 +8465,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3095)
+    @ZAttr(id=3099)
     public void unsetDocumentEditingCallbackPort() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDocumentEditingCallbackPort, "");
@@ -8480,7 +8480,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3095)
+    @ZAttr(id=3099)
     public Map<String,Object> unsetDocumentEditingCallbackPort(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDocumentEditingCallbackPort, "");

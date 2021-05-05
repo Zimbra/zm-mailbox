@@ -5693,7 +5693,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3095)
+    @ZAttr(id=3099)
     public static final String A_zimbraDocumentEditingCallbackPort = "zimbraDocumentEditingCallbackPort";
 
     /**
@@ -5701,7 +5701,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3094)
+    @ZAttr(id=3098)
     public static final String A_zimbraDocumentEditingHost = "zimbraDocumentEditingHost";
 
     /**
@@ -5709,7 +5709,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3096)
+    @ZAttr(id=3100)
     public static final String A_zimbraDocumentEditingJwtSecret = "zimbraDocumentEditingJwtSecret";
 
     /**
@@ -5717,7 +5717,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3097)
+    @ZAttr(id=3101)
     public static final String A_zimbraDocumentRecentlyViewedEnabled = "zimbraDocumentRecentlyViewedEnabled";
 
     /**
@@ -6507,7 +6507,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3093)
+    @ZAttr(id=3097)
     public static final String A_zimbraFeatureDocumentEditingEnabled = "zimbraFeatureDocumentEditingEnabled";
 
     /**
@@ -7112,7 +7112,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3089)
+    @ZAttr(id=3093)
     public static final String A_zimbraFeatureZulipChatEnabled = "zimbraFeatureZulipChatEnabled";
 
     /**
@@ -17698,7 +17698,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3092)
+    @ZAttr(id=3096)
     public static final String A_zimbraZulipBaseHost = "zimbraZulipBaseHost";
 
     /**
@@ -17706,7 +17706,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3090)
+    @ZAttr(id=3094)
     public static final String A_zimbraZulipChatDomainId = "zimbraZulipChatDomainId";
 
     /**
@@ -17714,7 +17714,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3091)
+    @ZAttr(id=3095)
     public static final String A_zimbraZulipJwtSecret = "zimbraZulipJwtSecret";
 
     ///// END-AUTO-GEN-REPLACE

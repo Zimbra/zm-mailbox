@@ -9481,7 +9481,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3089)
+    @ZAttr(id=3093)
     public boolean isFeatureZulipChatEnabled() {
         return getBooleanAttr(Provisioning.A_zimbraFeatureZulipChatEnabled, false, true);
     }
@@ -9498,7 +9498,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3089)
+    @ZAttr(id=3093)
     public void setFeatureZulipChatEnabled(boolean zimbraFeatureZulipChatEnabled) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureZulipChatEnabled, zimbraFeatureZulipChatEnabled ? TRUE : FALSE);
@@ -9518,7 +9518,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3089)
+    @ZAttr(id=3093)
     public Map<String,Object> setFeatureZulipChatEnabled(boolean zimbraFeatureZulipChatEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureZulipChatEnabled, zimbraFeatureZulipChatEnabled ? TRUE : FALSE);
@@ -9536,7 +9536,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3089)
+    @ZAttr(id=3093)
     public void unsetFeatureZulipChatEnabled() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureZulipChatEnabled, "");
@@ -9555,7 +9555,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3089)
+    @ZAttr(id=3093)
     public Map<String,Object> unsetFeatureZulipChatEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureZulipChatEnabled, "");
@@ -24737,7 +24737,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3090)
+    @ZAttr(id=3094)
     public String getZulipChatDomainId() {
         return getAttr(Provisioning.A_zimbraZulipChatDomainId, null, true);
     }
@@ -24750,7 +24750,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3090)
+    @ZAttr(id=3094)
     public void setZulipChatDomainId(String zimbraZulipChatDomainId) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraZulipChatDomainId, zimbraZulipChatDomainId);
@@ -24766,7 +24766,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3090)
+    @ZAttr(id=3094)
     public Map<String,Object> setZulipChatDomainId(String zimbraZulipChatDomainId, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraZulipChatDomainId, zimbraZulipChatDomainId);
@@ -24780,7 +24780,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3090)
+    @ZAttr(id=3094)
     public void unsetZulipChatDomainId() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraZulipChatDomainId, "");
@@ -24795,7 +24795,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3090)
+    @ZAttr(id=3094)
     public Map<String,Object> unsetZulipChatDomainId(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraZulipChatDomainId, "");

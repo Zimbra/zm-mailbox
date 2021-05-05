@@ -13702,7 +13702,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3095)
+    @ZAttr(id=3099)
     public int getDocumentEditingCallbackPort() {
         return getIntAttr(Provisioning.A_zimbraDocumentEditingCallbackPort, 7074, true);
     }
@@ -13714,7 +13714,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3095)
+    @ZAttr(id=3099)
     public String getDocumentEditingCallbackPortAsString() {
         return getAttr(Provisioning.A_zimbraDocumentEditingCallbackPort, "7074", true);
     }
@@ -13727,7 +13727,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3095)
+    @ZAttr(id=3099)
     public void setDocumentEditingCallbackPort(int zimbraDocumentEditingCallbackPort) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDocumentEditingCallbackPort, Integer.toString(zimbraDocumentEditingCallbackPort));
@@ -13743,7 +13743,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3095)
+    @ZAttr(id=3099)
     public Map<String,Object> setDocumentEditingCallbackPort(int zimbraDocumentEditingCallbackPort, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDocumentEditingCallbackPort, Integer.toString(zimbraDocumentEditingCallbackPort));
@@ -13758,7 +13758,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3095)
+    @ZAttr(id=3099)
     public void setDocumentEditingCallbackPortAsString(String zimbraDocumentEditingCallbackPort) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDocumentEditingCallbackPort, zimbraDocumentEditingCallbackPort);
@@ -13774,7 +13774,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3095)
+    @ZAttr(id=3099)
     public Map<String,Object> setDocumentEditingCallbackPortAsString(String zimbraDocumentEditingCallbackPort, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDocumentEditingCallbackPort, zimbraDocumentEditingCallbackPort);
@@ -13788,7 +13788,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3095)
+    @ZAttr(id=3099)
     public void unsetDocumentEditingCallbackPort() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDocumentEditingCallbackPort, "");
@@ -13803,7 +13803,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3095)
+    @ZAttr(id=3099)
     public Map<String,Object> unsetDocumentEditingCallbackPort(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDocumentEditingCallbackPort, "");
@@ -13817,7 +13817,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3094)
+    @ZAttr(id=3098)
     public String getDocumentEditingHost() {
         return getAttr(Provisioning.A_zimbraDocumentEditingHost, "zimbra.com", true);
     }
@@ -13830,7 +13830,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3094)
+    @ZAttr(id=3098)
     public void setDocumentEditingHost(String zimbraDocumentEditingHost) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDocumentEditingHost, zimbraDocumentEditingHost);
@@ -13846,7 +13846,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3094)
+    @ZAttr(id=3098)
     public Map<String,Object> setDocumentEditingHost(String zimbraDocumentEditingHost, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDocumentEditingHost, zimbraDocumentEditingHost);
@@ -13860,7 +13860,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3094)
+    @ZAttr(id=3098)
     public void unsetDocumentEditingHost() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDocumentEditingHost, "");
@@ -13875,7 +13875,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3094)
+    @ZAttr(id=3098)
     public Map<String,Object> unsetDocumentEditingHost(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDocumentEditingHost, "");
@@ -13889,7 +13889,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3096)
+    @ZAttr(id=3100)
     public String getDocumentEditingJwtSecret() {
         return getAttr(Provisioning.A_zimbraDocumentEditingJwtSecret, "SECRET", true);
     }
@@ -13902,7 +13902,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3096)
+    @ZAttr(id=3100)
     public void setDocumentEditingJwtSecret(String zimbraDocumentEditingJwtSecret) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDocumentEditingJwtSecret, zimbraDocumentEditingJwtSecret);
@@ -13918,7 +13918,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3096)
+    @ZAttr(id=3100)
     public Map<String,Object> setDocumentEditingJwtSecret(String zimbraDocumentEditingJwtSecret, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDocumentEditingJwtSecret, zimbraDocumentEditingJwtSecret);
@@ -13932,7 +13932,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3096)
+    @ZAttr(id=3100)
     public void unsetDocumentEditingJwtSecret() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDocumentEditingJwtSecret, "");
@@ -13947,7 +13947,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3096)
+    @ZAttr(id=3100)
     public Map<String,Object> unsetDocumentEditingJwtSecret(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDocumentEditingJwtSecret, "");
@@ -76494,7 +76494,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3092)
+    @ZAttr(id=3096)
     public String getZulipBaseHost() {
         return getAttr(Provisioning.A_zimbraZulipBaseHost, "zimbra.com", true);
     }
@@ -76507,7 +76507,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3092)
+    @ZAttr(id=3096)
     public void setZulipBaseHost(String zimbraZulipBaseHost) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraZulipBaseHost, zimbraZulipBaseHost);
@@ -76523,7 +76523,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3092)
+    @ZAttr(id=3096)
     public Map<String,Object> setZulipBaseHost(String zimbraZulipBaseHost, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraZulipBaseHost, zimbraZulipBaseHost);
@@ -76537,7 +76537,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3092)
+    @ZAttr(id=3096)
     public void unsetZulipBaseHost() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraZulipBaseHost, "");
@@ -76552,7 +76552,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3092)
+    @ZAttr(id=3096)
     public Map<String,Object> unsetZulipBaseHost(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraZulipBaseHost, "");
@@ -76566,7 +76566,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3091)
+    @ZAttr(id=3095)
     public String getZulipJwtSecret() {
         return getAttr(Provisioning.A_zimbraZulipJwtSecret, "SECRET", true);
     }
@@ -76579,7 +76579,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3091)
+    @ZAttr(id=3095)
     public void setZulipJwtSecret(String zimbraZulipJwtSecret) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraZulipJwtSecret, zimbraZulipJwtSecret);
@@ -76595,7 +76595,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3091)
+    @ZAttr(id=3095)
     public Map<String,Object> setZulipJwtSecret(String zimbraZulipJwtSecret, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraZulipJwtSecret, zimbraZulipJwtSecret);
@@ -76609,7 +76609,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3091)
+    @ZAttr(id=3095)
     public void unsetZulipJwtSecret() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraZulipJwtSecret, "");
@@ -76624,7 +76624,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3091)
+    @ZAttr(id=3095)
     public Map<String,Object> unsetZulipJwtSecret(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraZulipJwtSecret, "");
