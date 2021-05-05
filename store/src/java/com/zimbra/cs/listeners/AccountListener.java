@@ -211,6 +211,14 @@ public abstract class AccountListener {
         }
     }
 
+    public static void invokeOnAdminPrivilegesUpdate(Account acct) throws ServiceException {
+        Map<String, AccountListenerEntry> sortedListeners = ListenerUtil.sortByPriority(mListeners);
+        for (Map.Entry<String, AccountListenerEntry> listener : sortedListeners.entrySet()) {
+            AccountListenerEntry listenerInstance = listener.getValue();
+            listenerInstance.getAccountListener().onAdminPrivilegesUpdate(acct);
+        }
+    }
+
     public static void invokeOnException(ServiceException exceptionThrown) {
         ZimbraLog.account.debug("Error occurred during account creation: %s",
             exceptionThrown.getMessage());
@@ -247,6 +255,26 @@ public abstract class AccountListener {
      * @param USER_ACCOUNT user account created
      */
     public abstract void onAccountCreation(Account acct) throws ServiceException;
+
+    /**
+     * called on change of admin privileges on account update request
+     *
+     * @param USER_ACCOUNT user account whose admin privileges have been modified
+     */
+    public void onAdminPrivilegesUpdate(Account acct) throws ServiceException {
+        // TODO: Empty body for existing implementation, override if needed.
+    };
+
+    /**
+     * called after a successful account rename.
+     *
+     * @param USER_ACCOUNT user account renamed
+     * @param OLD_NAME old name of user account
+     * @param NEW_NAME new name of user account
+     */
+    public void onAccountRename(Account acct, String oldName, String newName) throws ServiceException {
+        // TODO: Empty body for existing implementation, override if needed.
+    }
 
     /**
      * called after an account status change.

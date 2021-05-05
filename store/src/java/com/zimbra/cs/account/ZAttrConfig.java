@@ -13692,6 +13692,269 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Zimbra port on which document editing can request document
+     *
+     * <p>Use getDocumentEditingCallbackPortAsString to access value as a string.
+     *
+     * @see #getDocumentEditingCallbackPortAsString()
+     *
+     * @return zimbraDocumentEditingCallbackPort, or 7074 if unset
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3099)
+    public int getDocumentEditingCallbackPort() {
+        return getIntAttr(Provisioning.A_zimbraDocumentEditingCallbackPort, 7074, true);
+    }
+
+    /**
+     * Zimbra port on which document editing can request document
+     *
+     * @return zimbraDocumentEditingCallbackPort, or "7074" if unset
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3099)
+    public String getDocumentEditingCallbackPortAsString() {
+        return getAttr(Provisioning.A_zimbraDocumentEditingCallbackPort, "7074", true);
+    }
+
+    /**
+     * Zimbra port on which document editing can request document
+     *
+     * @param zimbraDocumentEditingCallbackPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3099)
+    public void setDocumentEditingCallbackPort(int zimbraDocumentEditingCallbackPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDocumentEditingCallbackPort, Integer.toString(zimbraDocumentEditingCallbackPort));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Zimbra port on which document editing can request document
+     *
+     * @param zimbraDocumentEditingCallbackPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3099)
+    public Map<String,Object> setDocumentEditingCallbackPort(int zimbraDocumentEditingCallbackPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDocumentEditingCallbackPort, Integer.toString(zimbraDocumentEditingCallbackPort));
+        return attrs;
+    }
+
+    /**
+     * Zimbra port on which document editing can request document
+     *
+     * @param zimbraDocumentEditingCallbackPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3099)
+    public void setDocumentEditingCallbackPortAsString(String zimbraDocumentEditingCallbackPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDocumentEditingCallbackPort, zimbraDocumentEditingCallbackPort);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Zimbra port on which document editing can request document
+     *
+     * @param zimbraDocumentEditingCallbackPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3099)
+    public Map<String,Object> setDocumentEditingCallbackPortAsString(String zimbraDocumentEditingCallbackPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDocumentEditingCallbackPort, zimbraDocumentEditingCallbackPort);
+        return attrs;
+    }
+
+    /**
+     * Zimbra port on which document editing can request document
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3099)
+    public void unsetDocumentEditingCallbackPort() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDocumentEditingCallbackPort, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Zimbra port on which document editing can request document
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3099)
+    public Map<String,Object> unsetDocumentEditingCallbackPort(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDocumentEditingCallbackPort, "");
+        return attrs;
+    }
+
+    /**
+     * Host server where the onlyoffice is hosted
+     *
+     * @return zimbraDocumentEditingHost, or "zimbra.com" if unset
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3098)
+    public String getDocumentEditingHost() {
+        return getAttr(Provisioning.A_zimbraDocumentEditingHost, "zimbra.com", true);
+    }
+
+    /**
+     * Host server where the onlyoffice is hosted
+     *
+     * @param zimbraDocumentEditingHost new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3098)
+    public void setDocumentEditingHost(String zimbraDocumentEditingHost) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDocumentEditingHost, zimbraDocumentEditingHost);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Host server where the onlyoffice is hosted
+     *
+     * @param zimbraDocumentEditingHost new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3098)
+    public Map<String,Object> setDocumentEditingHost(String zimbraDocumentEditingHost, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDocumentEditingHost, zimbraDocumentEditingHost);
+        return attrs;
+    }
+
+    /**
+     * Host server where the onlyoffice is hosted
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3098)
+    public void unsetDocumentEditingHost() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDocumentEditingHost, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Host server where the onlyoffice is hosted
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3098)
+    public Map<String,Object> unsetDocumentEditingHost(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDocumentEditingHost, "");
+        return attrs;
+    }
+
+    /**
+     * Document editing JWT secret
+     *
+     * @return zimbraDocumentEditingJwtSecret, or "SECRET" if unset
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3100)
+    public String getDocumentEditingJwtSecret() {
+        return getAttr(Provisioning.A_zimbraDocumentEditingJwtSecret, "SECRET", true);
+    }
+
+    /**
+     * Document editing JWT secret
+     *
+     * @param zimbraDocumentEditingJwtSecret new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3100)
+    public void setDocumentEditingJwtSecret(String zimbraDocumentEditingJwtSecret) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDocumentEditingJwtSecret, zimbraDocumentEditingJwtSecret);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Document editing JWT secret
+     *
+     * @param zimbraDocumentEditingJwtSecret new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3100)
+    public Map<String,Object> setDocumentEditingJwtSecret(String zimbraDocumentEditingJwtSecret, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDocumentEditingJwtSecret, zimbraDocumentEditingJwtSecret);
+        return attrs;
+    }
+
+    /**
+     * Document editing JWT secret
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3100)
+    public void unsetDocumentEditingJwtSecret() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDocumentEditingJwtSecret, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Document editing JWT secret
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3100)
+    public Map<String,Object> unsetDocumentEditingJwtSecret(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDocumentEditingJwtSecret, "");
+        return attrs;
+    }
+
+    /**
      * Deprecated since: 5.0. deprecated in favor of the
      * domainAdminAdminModifiable flag. Orig desc: account attributes that a
      * domain administrator is allowed to modify
@@ -76221,6 +76484,150 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetZookeeperClientServerList(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraZookeeperClientServerList, "");
+        return attrs;
+    }
+
+    /**
+     * Zulip server base host
+     *
+     * @return zimbraZulipBaseHost, or "zimbra.com" if unset
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3096)
+    public String getZulipBaseHost() {
+        return getAttr(Provisioning.A_zimbraZulipBaseHost, "zimbra.com", true);
+    }
+
+    /**
+     * Zulip server base host
+     *
+     * @param zimbraZulipBaseHost new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3096)
+    public void setZulipBaseHost(String zimbraZulipBaseHost) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZulipBaseHost, zimbraZulipBaseHost);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Zulip server base host
+     *
+     * @param zimbraZulipBaseHost new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3096)
+    public Map<String,Object> setZulipBaseHost(String zimbraZulipBaseHost, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZulipBaseHost, zimbraZulipBaseHost);
+        return attrs;
+    }
+
+    /**
+     * Zulip server base host
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3096)
+    public void unsetZulipBaseHost() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZulipBaseHost, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Zulip server base host
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3096)
+    public Map<String,Object> unsetZulipBaseHost(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZulipBaseHost, "");
+        return attrs;
+    }
+
+    /**
+     * Zulip JWT secret
+     *
+     * @return zimbraZulipJwtSecret, or "SECRET" if unset
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3095)
+    public String getZulipJwtSecret() {
+        return getAttr(Provisioning.A_zimbraZulipJwtSecret, "SECRET", true);
+    }
+
+    /**
+     * Zulip JWT secret
+     *
+     * @param zimbraZulipJwtSecret new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3095)
+    public void setZulipJwtSecret(String zimbraZulipJwtSecret) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZulipJwtSecret, zimbraZulipJwtSecret);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Zulip JWT secret
+     *
+     * @param zimbraZulipJwtSecret new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3095)
+    public Map<String,Object> setZulipJwtSecret(String zimbraZulipJwtSecret, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZulipJwtSecret, zimbraZulipJwtSecret);
+        return attrs;
+    }
+
+    /**
+     * Zulip JWT secret
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3095)
+    public void unsetZulipJwtSecret() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZulipJwtSecret, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Zulip JWT secret
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3095)
+    public Map<String,Object> unsetZulipJwtSecret(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZulipJwtSecret, "");
         return attrs;
     }
 

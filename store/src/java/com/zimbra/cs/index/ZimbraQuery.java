@@ -43,6 +43,7 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.util.IOUtil;
@@ -725,6 +726,7 @@ public final class ZimbraQuery {
         union.add(remoteOps);
         ZimbraLog.search.debug("BEFORE_FINAL_OPT=%s", union);
         operation = union.optimize(mailbox);
+        operation.authMailbox = MailboxManager.getInstance().getMailboxByAccountId(octxt.getAuthenticatedUser().getId());
 
         ZimbraLog.search.debug("COMPILED=%s", operation);
     }

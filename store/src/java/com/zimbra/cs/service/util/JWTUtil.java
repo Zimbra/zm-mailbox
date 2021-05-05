@@ -16,6 +16,8 @@
  */
 package com.zimbra.cs.service.util;
 
+import java.io.File;
+import java.io.IOException;
 import java.security.Key;
 import java.util.Date;
 import java.util.Map;
@@ -25,8 +27,10 @@ import javax.crypto.spec.SecretKeySpec;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 
+import com.google.common.base.Charsets;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.io.Files;
 import com.google.common.primitives.Bytes;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.localconfig.LC;
@@ -351,5 +355,10 @@ public class JWTUtil {
         String jti = getJTI(jwt);
         JWTInfo jwtInfo = JWTCache.get(jti);
         return jwtInfo != null ? jwtInfo.getSalt() : null;
+    }
+
+    public static String getJwtSecretFromPath(String secretPath) throws IOException {
+        File file = new File(secretPath);
+        return Files.asCharSource(file, Charsets.UTF_8).read().trim();
     }
 }

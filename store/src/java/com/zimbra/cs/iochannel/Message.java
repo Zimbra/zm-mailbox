@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2012, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2012, 2013, 2014, 2016, 2021 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -83,6 +83,7 @@ public abstract class Message {
     static {
         registerMessage(new CrossServerNotification());
         registerMessage(new MailboxNotification());
+        registerMessage(new WatchMessage());
     }
 
     public static void registerMessage(Message m) {
