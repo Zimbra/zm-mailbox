@@ -908,6 +908,9 @@ public class FileUploadServlet extends ZimbraServlet {
                     attributeUsed = Provisioning.A_zimbraMailAttachmentMaxSize;
                 }
                 if (maxSize == 0) {
+                    /* 0 means "no limit". The return value from this function gets used
+                     * by FileUploadBase "sizeMax" where "-1" means "no limit"
+                     */
                     maxSize = -1;
                 }
             } else {
