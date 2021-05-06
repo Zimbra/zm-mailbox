@@ -1062,21 +1062,16 @@ public final class MailboxIndex {
         return compactIndex != null;
     }
 
-    public List<DbSearch.Result> search(DbSearchConstraints constraints, 
-            DbSearch.FetchMode fetch, SortBy sort, int offset, int size, boolean inDumpster) throws ServiceException {
-            return search(constraints, fetch, sort, offset, size, inDumpster, null);
-    }
-    
     /**
      * Executes a DB search in a mailbox transaction.
      */
     public List<DbSearch.Result> search(DbSearchConstraints constraints,
-            DbSearch.FetchMode fetch, SortBy sort, int offset, int size, boolean inDumpster, Mailbox authMailbox) throws ServiceException {
+            DbSearch.FetchMode fetch, SortBy sort, int offset, int size, boolean inDumpster) throws ServiceException {
         List<DbSearch.Result> result;
         boolean success = false;
         try {
             mailbox.beginReadTransaction("search", null);
-            result = new DbSearch(mailbox, inDumpster, authMailbox).search(mailbox.getOperationConnection(),
+            result = new DbSearch(mailbox, inDumpster).search(mailbox.getOperationConnection(),
                     constraints, sort, offset, size, fetch);
             if (fetch == DbSearch.FetchMode.MAIL_ITEM) {
                 // Convert UnderlyingData to MailItem

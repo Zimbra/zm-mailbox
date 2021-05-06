@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2021 Synacor, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -18,7 +18,6 @@ package com.zimbra.cs.service.mail;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.soap.OctopusXmlConstants;
 import com.zimbra.soap.DocumentDispatcher;
 import com.zimbra.soap.DocumentService;
 
@@ -244,14 +243,5 @@ public final class MailService implements DocumentService {
         // Password reset API
         dispatcher.registerHandler(MailConstants.RECOVER_ACCOUNT_REQUEST, new RecoverAccount());
         dispatcher.registerHandler(MailConstants.SET_RECOVERY_EMAIL_REQUEST, new SetRecoveryAccount());
-
-        dispatcher.registerHandler(OctopusXmlConstants.GET_DOCUMENT_SHARE_URL_REQUEST, new GetDocumentShareURL());
-
-        //Document action API
-        dispatcher.registerHandler(OctopusXmlConstants.DOCUMENT_ACTION_REQUEST, new DocumentAction());
-        dispatcher.registerHandler(OctopusXmlConstants.GET_WATCHING_ITEMS_REQUEST, new GetWatchingItems());
-        dispatcher.registerHandler(OctopusXmlConstants.GET_NOTIFICATIONS_REQUEST, new GetNotifications());
-        dispatcher.registerHandler(OctopusXmlConstants.GET_DOCUMENT_SHARE_URL_REQUEST, new GetDocumentShareURL());
-        dispatcher.registerHandler(OctopusXmlConstants.GET_SHARE_DETAILS_REQUEST, new GetShareDetails());
     }
 }

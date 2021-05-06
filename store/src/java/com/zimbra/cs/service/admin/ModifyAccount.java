@@ -241,11 +241,6 @@ public class ModifyAccount extends AdminDocumentHandler {
                     }
                 }
             }
-
-            if (attrs.containsKey(Provisioning.A_zimbraIsAdminAccount) || attrs.containsKey(Provisioning.A_zimbraIsDelegatedAdminAccount)
-                    || attrs.containsKey(Provisioning.A_zimbraIsDomainAdminAccount)) {
-                AccountListener.invokeOnAdminPrivilegesUpdate(account);
-            }
         } catch (ServiceException se) {
             if (rollbackOnFailure) {
                 ZimbraLog.account.debug("Exception occured while modifying account in zimbra for %s, roll back listener updates.", account.getMail());

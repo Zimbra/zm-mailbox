@@ -35,7 +35,6 @@ import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.PseudoTarget;
 import com.zimbra.cs.account.accesscontrol.TargetType;
-import com.zimbra.cs.listeners.DomainListener;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -90,8 +89,6 @@ public class CreateDomain extends AdminDocumentHandler {
 
 	    Element response = zsc.createElement(AdminConstants.CREATE_DOMAIN_RESPONSE);
 	    GetDomain.encodeDomain(response, domain);
-
-	    DomainListener.invokeOnDomainCreation(domain);
 
 	    return response;
 	}

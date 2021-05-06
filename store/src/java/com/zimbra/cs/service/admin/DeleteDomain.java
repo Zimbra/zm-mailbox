@@ -28,7 +28,6 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
-import com.zimbra.cs.listeners.DomainListener;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.service.ServiceException;
@@ -65,9 +64,6 @@ public class DeleteDomain extends AdminDocumentHandler {
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(new String[] {"cmd", "DeleteDomain","name", name, "id", id }));
 
 	    Element response = zsc.createElement(AdminConstants.DELETE_DOMAIN_RESPONSE);
-
-	    DomainListener.invokeOnDeleteDomain(domain);
-
 	    return response;
 	}
 	

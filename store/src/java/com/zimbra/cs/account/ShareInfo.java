@@ -574,12 +574,12 @@ public class ShareInfo {
             // TEXT part (add me first!)
             String mimePartText;
             if (action == Action.revoke) {
-                mimePartText = genRevokePart(sid, locale, false, false);
+                mimePartText = genRevokePart(sid, locale, false);
             } else if (action == Action.expire) {
-                mimePartText = genExpirePart(sid, locale, false, false);
+                mimePartText = genExpirePart(sid, locale, false);
             } else {
                 mimePartText = genPart(sid, action == Action.edit, notes, extUserShareAcceptUrl, extUserLoginUrl,
-                        locale, null, false, false);
+                        locale, null, false);
             }
             MimeBodyPart textPart = new ZMimeBodyPart();
             textPart.setText(mimePartText, MimeConstants.P_CHARSET_UTF8);
@@ -587,12 +587,12 @@ public class ShareInfo {
 
             // HTML part
             if (action == Action.revoke) {
-                mimePartText = genRevokePart(sid, locale, true, false);
+                mimePartText = genRevokePart(sid, locale, true);
             } else if (action == Action.expire) {
-                mimePartText = genExpirePart(sid, locale, true, false);
+                mimePartText = genExpirePart(sid, locale, true);
             } else {
                 mimePartText = genPart(sid, action == Action.edit, notes, extUserShareAcceptUrl, extUserLoginUrl,
-                        locale, null, true, false);
+                        locale, null, true);
             }
             MimeBodyPart htmlPart = new ZMimeBodyPart();
             htmlPart.setDataHandler(new DataHandler(new HtmlPartDataSource(mimePartText)));
@@ -610,46 +610,39 @@ public class ShareInfo {
         }
 
         public static String getMimePartHtml(ShareInfoData sid, String notes, Locale locale,
-                Action action, String extUserShareAcceptUrl, String extUserLoginUrl) throws MessagingException, ServiceException {
-            return getMimePartHtml(sid, notes, locale, action, extUserShareAcceptUrl, extUserLoginUrl, false);
-        }
-
-        public static String getMimePartHtml(ShareInfoData sid, String notes, Locale locale,
-            Action action, String extUserShareAcceptUrl, String extUserLoginUrl, boolean notifyForDocument) throws MessagingException, ServiceException {
+            Action action, String extUserShareAcceptUrl, String extUserLoginUrl) throws MessagingException, ServiceException {
 
             String mimePartHtml;
             if (action == Action.revoke) {
-                mimePartHtml = genRevokePart(sid, locale, true, notifyForDocument);
+                mimePartHtml = genRevokePart(sid, locale, true);
             } else if (action == Action.expire) {
-                mimePartHtml = genExpirePart(sid, locale, true, notifyForDocument);
+                mimePartHtml = genExpirePart(sid, locale, true);
             } else {
                 mimePartHtml = genPart(sid, action == Action.edit, notes, extUserShareAcceptUrl,
-                    extUserLoginUrl, locale, null, true, notifyForDocument);
+                    extUserLoginUrl, locale, null, true);
             }
+
             return mimePartHtml;
         }
-
+        
+        
+        
         public static String getMimePartText(ShareInfoData sid, String notes, Locale locale,
-                Action action, String extUserShareAcceptUrl, String extUserLoginUrl) throws MessagingException, ServiceException {
-            return getMimePartText(sid, notes, locale, action, extUserShareAcceptUrl, extUserLoginUrl, false);
-        }
-
-        public static String getMimePartText(ShareInfoData sid, String notes, Locale locale,
-            Action action, String extUserShareAcceptUrl, String extUserLoginUrl, boolean notifyForDocument) throws MessagingException, ServiceException {
+            Action action, String extUserShareAcceptUrl, String extUserLoginUrl) throws MessagingException, ServiceException {
             String mimePartText;
             if (action == Action.revoke) {
-                mimePartText = genRevokePart(sid, locale, false, notifyForDocument);
+                mimePartText = genRevokePart(sid, locale, false);
             } else if (action == Action.expire) {
-                mimePartText = genExpirePart(sid, locale, false, notifyForDocument);
+                mimePartText = genExpirePart(sid, locale, false);
             } else {
                 mimePartText = genPart(sid, action == Action.edit, notes, extUserShareAcceptUrl,
-                    extUserLoginUrl, locale, null, false, notifyForDocument);
+                    extUserLoginUrl, locale, null, false);
             }
             return mimePartText;
         }
 
         private static String genPart(ShareInfoData sid, boolean shareModified, String senderNotes,
-                String extUserShareAcceptUrl, String extUserLoginUrl, Locale locale, StringBuilder sb, boolean html, boolean notifyForDocument) {
+                String extUserShareAcceptUrl, String extUserLoginUrl, Locale locale, StringBuilder sb, boolean html) {
             if (sb == null) {
                 sb = new StringBuilder();
             }
@@ -679,7 +672,7 @@ public class ShareInfo {
             return sb.append(L10nUtil.getMessage(
                     msgKey, locale,
                     sid.getName(),
-                    formatFolderDesc(locale, sid, notifyForDocument),
+                    formatFolderDesc(locale, sid),
                     sid.getOwnerNotifName(),
                     sid.getGranteeNotifName(),
                     getRoleFromRights(sid, locale),
@@ -689,17 +682,17 @@ public class ShareInfo {
                     toString();
         }
 
-        private static String genRevokePart(ShareInfoData sid, Locale locale, boolean html, boolean notifyForDocument) {
+        private static String genRevokePart(ShareInfoData sid, Locale locale, boolean html) {
             return L10nUtil.getMessage(html ? MsgKey.shareRevokeBodyHtml : MsgKey.shareRevokeBodyText,
                     sid.getName(),
-                    formatFolderDesc(locale, sid, notifyForDocument),
+                    formatFolderDesc(locale, sid),
                     sid.getOwnerNotifName());
         }
 
-        private static String genExpirePart(ShareInfoData sid, Locale locale, boolean html, boolean notifyForDocument) {
+        private static String genExpirePart(ShareInfoData sid, Locale locale, boolean html) {
             return L10nUtil.getMessage((html ? MsgKey.shareExpireBodyHtml : MsgKey.shareExpireBodyText),
                     sid.getName(),
-                    formatFolderDesc(locale, sid, notifyForDocument),
+                    formatFolderDesc(locale, sid),
                     sid.getOwnerNotifName());
         }
 
@@ -777,7 +770,7 @@ public class ShareInfo {
             }
         }
 
-        private static String formatFolderDesc(Locale locale, ShareInfoData sid, boolean notifyForDocument) {
+        private static String formatFolderDesc(Locale locale, ShareInfoData sid) {
             MailItem.Type view = sid.getFolderDefaultViewCode();
             String folderView;
             switch (view) {
@@ -799,7 +792,7 @@ public class ShareInfo {
                 default:
                     folderView = sid.getFolderDefaultView();
             }
-            MsgKey key = notifyForDocument ? MsgKey.shareNotifyFileBodyDesc : MsgKey.shareNotifBodyFolderDesc;
+            MsgKey key = MsgKey.shareNotifBodyFolderDesc;
             try {
                 if (Provisioning.getInstance().isOctopus()) {
                     key = MsgKey.octopus_share_notification_email_bodyFolderDesc;
@@ -834,10 +827,10 @@ public class ShareInfo {
 
                 if (idx == null) {
                     for (ShareInfoData sid : mShares) {
-                        genPart(sid, false, null, null, null, locale, sb, false, false);
+                        genPart(sid, false, null, null, null, locale, sb, false);
                     }
                 } else
-                    genPart(mShares.get(idx), false, null, null, null, locale, sb, false, false);
+                    genPart(mShares.get(idx), false, null, null, null, locale, sb, false);
 
                 sb.append("\n\n");
                 return sb.toString();
@@ -855,10 +848,10 @@ public class ShareInfo {
 
                 if (idx == null) {
                     for (ShareInfoData sid : mShares) {
-                        genPart(sid, false, null, null, null, locale, sb, true, false);
+                        genPart(sid, false, null, null, null, locale, sb, true);
                     }
                 } else
-                    genPart(mShares.get(idx), false, null, null, null, locale, sb, true, false);
+                    genPart(mShares.get(idx), false, null, null, null, locale, sb, true);
 
                 return sb.toString();
             }

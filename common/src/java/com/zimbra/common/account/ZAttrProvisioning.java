@@ -5689,38 +5689,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDNSUseUDP = "zimbraDNSUseUDP";
 
     /**
-     * Zimbra port on which document editing can request document
-     *
-     * @since ZCS 9.1.0
-     */
-    @ZAttr(id=3099)
-    public static final String A_zimbraDocumentEditingCallbackPort = "zimbraDocumentEditingCallbackPort";
-
-    /**
-     * Host server where the onlyoffice is hosted
-     *
-     * @since ZCS 9.1.0
-     */
-    @ZAttr(id=3098)
-    public static final String A_zimbraDocumentEditingHost = "zimbraDocumentEditingHost";
-
-    /**
-     * Document editing JWT secret
-     *
-     * @since ZCS 9.1.0
-     */
-    @ZAttr(id=3100)
-    public static final String A_zimbraDocumentEditingJwtSecret = "zimbraDocumentEditingJwtSecret";
-
-    /**
-     * Whether or not to log document accessed time
-     *
-     * @since ZCS 9.1.0
-     */
-    @ZAttr(id=3101)
-    public static final String A_zimbraDocumentRecentlyViewedEnabled = "zimbraDocumentRecentlyViewedEnabled";
-
-    /**
      * maximum amount of mail quota a domain admin can set on a user
      */
     @ZAttr(id=398)
@@ -6503,14 +6471,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureDistributionListFolderEnabled = "zimbraFeatureDistributionListFolderEnabled";
 
     /**
-     * Whether or not document editing feature is enabled within briefcase
-     *
-     * @since ZCS 9.1.0
-     */
-    @ZAttr(id=3097)
-    public static final String A_zimbraFeatureDocumentEditingEnabled = "zimbraFeatureDocumentEditingEnabled";
-
-    /**
      * Whether to allow a user to access EWS service
      *
      * @since ZCS 8.5.0
@@ -7102,18 +7062,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=544)
     public static final String A_zimbraFeatureZimbraAssistantEnabled = "zimbraFeatureZimbraAssistantEnabled";
-
-    /**
-     * Whether or not zulip chat is enabled. If false at domain level,
-     * feature not available at domain, cos &amp; account. If true at domain
-     * and false at cos, feature not available at cos &amp; account. If true
-     * at domain &amp; cos and false at account, feature not available at
-     * account.
-     *
-     * @since ZCS 9.1.0
-     */
-    @ZAttr(id=3093)
-    public static final String A_zimbraFeatureZulipChatEnabled = "zimbraFeatureZulipChatEnabled";
 
     /**
      * Deprecated since: 8.9.0. deprecated with attribute
@@ -17692,30 +17640,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1447)
     public static final String A_zimbraZookeeperClientServerList = "zimbraZookeeperClientServerList";
-
-    /**
-     * Zulip server base host
-     *
-     * @since ZCS 9.1.0
-     */
-    @ZAttr(id=3096)
-    public static final String A_zimbraZulipBaseHost = "zimbraZulipBaseHost";
-
-    /**
-     * Zulip chat domain ID
-     *
-     * @since ZCS 9.1.0
-     */
-    @ZAttr(id=3094)
-    public static final String A_zimbraZulipChatDomainId = "zimbraZulipChatDomainId";
-
-    /**
-     * Zulip JWT secret
-     *
-     * @since ZCS 9.1.0
-     */
-    @ZAttr(id=3095)
-    public static final String A_zimbraZulipJwtSecret = "zimbraZulipJwtSecret";
 
     ///// END-AUTO-GEN-REPLACE
 }

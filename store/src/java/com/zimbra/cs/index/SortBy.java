@@ -58,7 +58,6 @@ public enum SortBy {
     ID_DESC("idDesc", Key.ID, Direction.DESC, ZimbraSortBy.idDesc),
     READ_DESC("readDesc", Key.UNREAD, Direction.DESC, ZimbraSortBy.readDesc),
     READ_ASC("readAsc", Key.UNREAD, Direction.ASC, ZimbraSortBy.readAsc),
-    RECENTLY_VIEWED("recentlyViewed", Key.RECENTLYVIEWED, Direction.DESC, ZimbraSortBy.recentlyViewed),
 
     // wiki "natural order" sorts are not exposed via SOAP
     NAME_NATURAL_ORDER_ASC(null, Key.NAME_NATURAL_ORDER, Direction.ASC, null),
@@ -81,7 +80,7 @@ public enum SortBy {
     private final ZimbraSortBy zsb;
 
     public enum Key {
-        DATE, SENDER, RCPT, SUBJECT, ID, NONE, NAME, NAME_NATURAL_ORDER, SIZE, ATTACHMENT, FLAG, PRIORITY, UNREAD, RECENTLYVIEWED
+        DATE, SENDER, RCPT, SUBJECT, ID, NONE, NAME, NAME_NATURAL_ORDER, SIZE, ATTACHMENT, FLAG, PRIORITY, UNREAD
     }
 
     public enum Direction {

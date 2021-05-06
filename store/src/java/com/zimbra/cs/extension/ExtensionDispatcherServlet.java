@@ -155,9 +155,6 @@ public class ExtensionDispatcherServlet extends ZimbraServlet {
         ExtensionHttpHandler handler = getHandler(extPath);
         if (handler == null)
             throw ServiceException.FAILURE("Extension HTTP handler not found at " + extPath, null);
-        if (handler.getAllowedPort() > 0 && handler.getAllowedPort() != req.getServerPort()) {
-            throw ServiceException.FAILURE(String.format("extension '%s' not supported on %d port", handler.mExtension.getName(), req.getServerPort()), null);
-        }
         if (handler.hideFromDefaultPorts()) {
         	Server server = Provisioning.getInstance().getLocalServer();
         	int port = req.getLocalPort();

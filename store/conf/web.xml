@@ -539,16 +539,6 @@
     <load-on-startup>12</load-on-startup>
   </servlet>
 
-  <servlet>
-    <servlet-name>SharedFileServlet</servlet-name>
-    <servlet-class>com.zimbra.cs.service.SharedFileServlet</servlet-class>
-    <init-param>
-      <param-name>allowed.ports</param-name>
-      <param-value>80, 443, 7071, 7070, 7443</param-value>
-    </init-param>
-    <load-on-startup>13</load-on-startup>
-  </servlet>
-
   <servlet-mapping>
     <servlet-name>ExtensionDispatcherServlet</servlet-name>
     <url-pattern>/extension/*</url-pattern>
@@ -695,11 +685,6 @@
   </servlet-mapping>
 
   <servlet-mapping>
-    <servlet-name>SharedFileServlet</servlet-name>
-    <url-pattern>/shf/*</url-pattern>
-  </servlet-mapping>
-
-  <servlet-mapping>
     <servlet-name>AutoDiscoverServlet</servlet-name>
     <url-pattern>/autodiscover/*</url-pattern>
     <url-pattern>/Autodiscover/*</url-pattern>
@@ -736,7 +721,6 @@
     <url-pattern>/error/403.jsp</url-pattern>
     <url-pattern>/error/attachment_blocked.jsp</url-pattern>
     <url-pattern>/error/sfdc_preauth.jsp</url-pattern>
-    <url-pattern>/document/editor.jsp</url-pattern>
   </servlet-mapping>
   <env-entry>
     <description>
