@@ -26166,7 +26166,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3093)
+    @ZAttr(id=4000)
     public long getMailAttachmentMaxSize() {
         return getLongAttr(Provisioning.A_zimbraMailAttachmentMaxSize, 0L, true);
     }
@@ -26179,7 +26179,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3093)
+    @ZAttr(id=4000)
     public void setMailAttachmentMaxSize(long zimbraMailAttachmentMaxSize) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailAttachmentMaxSize, Long.toString(zimbraMailAttachmentMaxSize));
@@ -26195,7 +26195,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3093)
+    @ZAttr(id=4000)
     public Map<String,Object> setMailAttachmentMaxSize(long zimbraMailAttachmentMaxSize, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailAttachmentMaxSize, Long.toString(zimbraMailAttachmentMaxSize));
@@ -26209,7 +26209,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3093)
+    @ZAttr(id=4000)
     public void unsetMailAttachmentMaxSize() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailAttachmentMaxSize, "");
@@ -26224,7 +26224,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3093)
+    @ZAttr(id=4000)
     public Map<String,Object> unsetMailAttachmentMaxSize(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailAttachmentMaxSize, "");
