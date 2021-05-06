@@ -712,12 +712,9 @@ public class OwaspHtmlSanitizerTest {
                 + "<span style=\"font-size:11pt;font-family:Arial;font-variant-ligatures:normal;font-variant-east-asian:normal;font-variant-position:normal;vertical-align:baseline\"\">ave a nice day.</span>"
                 + "</p></BODY></HTML>";
         String result = new OwaspHtmlSanitizer(malformedHtml, true, null).cleanMalformedHtml(malformedHtml, true);
-        String output = "<p dir=\"ltr\"\n"
-                + "style=\"-webkit-text-size-adjust:auto;line-height:1.38;margin-top:0pt;margin-bottom:0pt;\"><span\n"
-                + " style=\"font-family:Arial;font-size:14.666666984558105px-webkit-text-size-adjust:auto;\">Hello\n"
-                + "h</span><span\n"
-                + "style=\"font-size:11pt;font-family:Arial;font-variant-ligatures:normal;font-variant-east-asian:normal;font-variant-position:normal;vertical-align:baseline\">ave\n"
-                + "a nice day.</span></p>";
+        String output = "<p dir=\"ltr\" style=\"-webkit-text-size-adjust:auto;line-height:1.38;margin-top:0pt;margin-bottom:0pt;\">"
+                + "<span style=\"font-family:Arial;font-size:14.666666984558105px-webkit-text-size-adjust:auto;\">Hello h</span>"
+                + "<span style=\"font-size:11pt;font-family:Arial;font-variant-ligatures:normal;font-variant-east-asian:normal;font-variant-position:normal;vertical-align:baseline\">ave a nice day.</span></p>";
         // check that the extra double quotes are removed
         Assert.assertTrue("Verification failed: Failed to remove extra double quotes.", output.equals(result.trim()));
     }

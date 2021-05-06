@@ -114,6 +114,14 @@ public class OwaspHtmlSanitizer implements Callable<String> {
             Tidy tidy = new Tidy();
             tidy.setInputEncoding("UTF-8");
             tidy.setOutputEncoding("UTF-8");
+            tidy.setDocType("omit");
+            tidy.setTidyMark(false);
+            tidy.setHideEndTags(true);
+            tidy.setWraplen(0);
+            if (DebugConfig.hideJtidyWarnings) {
+                tidy.setQuiet(true);
+                tidy.setShowWarnings(false);
+            }
             tidy.setPrintBodyOnly(printBodyOnly);
             tidy.setXHTML(true);
             ByteArrayInputStream inputStream = new ByteArrayInputStream(str.getBytes("UTF-8"));
