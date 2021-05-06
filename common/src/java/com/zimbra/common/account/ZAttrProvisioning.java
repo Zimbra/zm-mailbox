@@ -8841,7 +8841,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=3093)
+    @ZAttr(id=4000)
     public static final String A_zimbraMailAttachmentMaxSize = "zimbraMailAttachmentMaxSize";
 
     /**
