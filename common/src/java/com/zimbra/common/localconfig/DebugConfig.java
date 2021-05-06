@@ -359,6 +359,8 @@ public final class DebugConfig {
     */
     public static final boolean jtidyEnabled = value("jtidy_enabled", true);
 
+    public static final boolean hideJtidyWarnings = value("hide_jtidy_warnings", true);
+
     public static final boolean delayedIndexingIgnoresZClient = value("delayed_indexing_ignores_zclient", false);
 
     public static final boolean delayedIndexingIgnoresEmptyUserAgent = value("delayed_indexing_ignores_empty_user_agent", true);
