@@ -16446,19 +16446,23 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Maximum size in bytes for each attachment.
+     * Maximum size in bytes for each attachment for the file uploads. If the
+     * default value is not set then upload size is limited by
+     * zimbraFileUploadMaxSize.
      *
-     * @return zimbraFileUploadMaxSizePerFile, or 2147483648 if unset
+     * @return zimbraFileUploadMaxSizePerFile, or 0 if unset
      *
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1350)
     public long getFileUploadMaxSizePerFile() {
-        return getLongAttr(Provisioning.A_zimbraFileUploadMaxSizePerFile, 2147483648L, true);
+        return getLongAttr(Provisioning.A_zimbraFileUploadMaxSizePerFile, 0L, true);
     }
 
     /**
-     * Maximum size in bytes for each attachment.
+     * Maximum size in bytes for each attachment for the file uploads. If the
+     * default value is not set then upload size is limited by
+     * zimbraFileUploadMaxSize.
      *
      * @param zimbraFileUploadMaxSizePerFile new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -16473,7 +16477,9 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Maximum size in bytes for each attachment.
+     * Maximum size in bytes for each attachment for the file uploads. If the
+     * default value is not set then upload size is limited by
+     * zimbraFileUploadMaxSize.
      *
      * @param zimbraFileUploadMaxSizePerFile new value
      * @param attrs existing map to populate, or null to create a new map
@@ -16489,7 +16495,9 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Maximum size in bytes for each attachment.
+     * Maximum size in bytes for each attachment for the file uploads. If the
+     * default value is not set then upload size is limited by
+     * zimbraFileUploadMaxSize.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -16503,7 +16511,9 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Maximum size in bytes for each attachment.
+     * Maximum size in bytes for each attachment for the file uploads. If the
+     * default value is not set then upload size is limited by
+     * zimbraFileUploadMaxSize.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -19466,6 +19476,78 @@ public abstract class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetMailAllowReceiveButNotSendWhenOverQuota(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailAllowReceiveButNotSendWhenOverQuota, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum size in bytes for e-mail attachment.
+     *
+     * @return zimbraMailAttachmentMaxSize, or 0 if unset
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4000)
+    public long getMailAttachmentMaxSize() {
+        return getLongAttr(Provisioning.A_zimbraMailAttachmentMaxSize, 0L, true);
+    }
+
+    /**
+     * Maximum size in bytes for e-mail attachment.
+     *
+     * @param zimbraMailAttachmentMaxSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4000)
+    public void setMailAttachmentMaxSize(long zimbraMailAttachmentMaxSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailAttachmentMaxSize, Long.toString(zimbraMailAttachmentMaxSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum size in bytes for e-mail attachment.
+     *
+     * @param zimbraMailAttachmentMaxSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4000)
+    public Map<String,Object> setMailAttachmentMaxSize(long zimbraMailAttachmentMaxSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailAttachmentMaxSize, Long.toString(zimbraMailAttachmentMaxSize));
+        return attrs;
+    }
+
+    /**
+     * Maximum size in bytes for e-mail attachment.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4000)
+    public void unsetMailAttachmentMaxSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailAttachmentMaxSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum size in bytes for e-mail attachment.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4000)
+    public Map<String,Object> unsetMailAttachmentMaxSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailAttachmentMaxSize, "");
         return attrs;
     }
 

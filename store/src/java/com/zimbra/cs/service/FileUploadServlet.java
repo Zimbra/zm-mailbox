@@ -607,7 +607,7 @@ public class FileUploadServlet extends ZimbraServlet {
         List<FileItem> items = null;
         String reqId = null;
 
-        ServletFileUpload upload = getUploader2(limitByFileUploadMaxSize);
+        ServletFileUpload upload = getUploader2(limitByFileUploadMaxSize, acct);
         try {
             items = upload.parseRequest(req);
 
@@ -742,7 +742,7 @@ public class FileUploadServlet extends ZimbraServlet {
         filename = StringEscapeUtils.unescapeHtml(filename);
 
         // store the fetched file as a normal upload
-        ServletFileUpload upload = getUploader2(limitByFileUploadMaxSize);
+        ServletFileUpload upload = getUploader2(limitByFileUploadMaxSize, acct);
         FileItem fi = upload.getFileItemFactory().createItem("upload", contentType, false, filename);
         try {
             // write the upload to disk, but make sure not to exceed the permitted max upload size
@@ -881,8 +881,53 @@ public class FileUploadServlet extends ZimbraServlet {
         return maxSize;
     }
 
+    private static long getFileUploadMaxSize(boolean limitByFileUploadMaxSize, Account acct) {
+        long maxSize = DEFAULT_MAX_SIZE;
+        String attributeUsed = null;
+        try {
+            if (limitByFileUploadMaxSize && acct.getFileUploadMaxSizePerFile() > 0) {
+                long fileUploadSizePerFile = acct.getFileUploadMaxSizePerFile();
+                long fileUploadSize = Provisioning.getInstance().getLocalServer().getLongAttr(
+                        Provisioning.A_zimbraFileUploadMaxSize, DEFAULT_MAX_SIZE);
+                if (fileUploadSizePerFile >= fileUploadSize) {
+                    maxSize = fileUploadSize;
+                    attributeUsed = Provisioning.A_zimbraFileUploadMaxSize;
+                } else {
+                    maxSize = fileUploadSizePerFile;
+                    attributeUsed = Provisioning.A_zimbraFileUploadMaxSizePerFile;
+                }
+            } else if (!limitByFileUploadMaxSize && acct.getMailAttachmentMaxSize() > 0) {
+                long mailAttachmentMaxSize = acct.getMailAttachmentMaxSize();
+                long mtaMaxMsgSize = Provisioning.getInstance().getConfig().getLongAttr(
+                        Provisioning.A_zimbraMtaMaxMessageSize, DEFAULT_MAX_SIZE);
+                if (mailAttachmentMaxSize > mtaMaxMsgSize) {
+                    maxSize = mtaMaxMsgSize;
+                    attributeUsed = Provisioning.A_zimbraMtaMaxMessageSize;
+                } else {
+                    maxSize = mailAttachmentMaxSize;
+                    attributeUsed = Provisioning.A_zimbraMailAttachmentMaxSize;
+                }
+                if (maxSize == 0) {
+                    /* 0 means "no limit". The return value from this function gets used
+                     * by FileUploadBase "sizeMax" where "-1" means "no limit"
+                     */
+                    maxSize = -1;
+                }
+            } else {
+                maxSize = getFileUploadMaxSize(limitByFileUploadMaxSize);
+            }
+        } catch (ServiceException exp) {
+            mLog.error(String.format("Unable to read %s attribute.", attributeUsed), exp);
+        }
+        return maxSize;
+    }
+
     public static ServletFileUpload getUploader2(boolean limitByFileUploadMaxSize) {
         return getUploader(getFileUploadMaxSize(limitByFileUploadMaxSize));
+    }
+
+    public static ServletFileUpload getUploader2(boolean limitByFileUploadMaxSize, Account acct) {
+        return getUploader(getFileUploadMaxSize(limitByFileUploadMaxSize, acct));
     }
 
     public static ServletFileUpload getUploader(long maxSize) {
