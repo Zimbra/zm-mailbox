@@ -95,10 +95,14 @@ public class SendShareNotification extends MailDocumentHandler {
         Element eNotes = request.getOptionalElement(MailConstants.E_NOTES);
         Action action = Action.fromString(request.getAttribute(MailConstants.A_ACTION, null));
         String notes = eNotes==null ? null : eNotes.getText();
-        // get the requested item in the mailbox
         SendShareNotificationRequest req = zsc.elementToJaxb(request);
-        ItemId iid = new ItemId(req.getItem().getId(), zsc);
-        MailItem reqItem = mbox.getItemById(octxt, iid.getId(), MailItem.Type.UNKNOWN);
+        MailItem reqItem = null;
+        // if item element present
+        // get the requested item in the mailbox
+        if (req.getItem() != null) {
+            ItemId iid = new ItemId(req.getItem().getId(), zsc);
+            reqItem = mbox.getItemById(octxt, iid.getId(), MailItem.Type.UNKNOWN);
+        }
         // send the messages
         try {
             Account authAccount = getAuthenticatedAccount(zsc);
