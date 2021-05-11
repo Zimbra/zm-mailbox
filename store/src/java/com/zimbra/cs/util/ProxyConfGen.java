@@ -3251,6 +3251,8 @@ public class ProxyConfGen
             expandTemplate(new File(mTemplateDir, getWebHttpSModeConfTemplate("mixed")), new File(mConfIncludesDir, getWebHttpSModeConf("mixed")));
             expandTemplate(new File(mTemplateDir, getConfTemplateFileName("docs.common")), new File(mConfIncludesDir, getConfFileName("docs.common")));
             expandTemplate(new File(mTemplateDir, getConfTemplateFileName("docs.upstream")), new File(mConfIncludesDir, getConfFileName("docs.upstream")));
+            expandTemplate(new File(mTemplateDir, getConfTemplateFileName("onlyoffice.common")), new File(mConfIncludesDir, getConfFileName("onlyoffice.common")));
+            expandTemplate(new File(mTemplateDir, getConfTemplateFileName("onlyoffice.upstream")), new File(mConfIncludesDir, getConfFileName("onlyoffice.upstream")));
         } catch (ProxyConfException pe) {
             handleException(pe);
             exitCode = 1;
