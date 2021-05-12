@@ -20,6 +20,8 @@ import java.util.List;
 
 import org.owasp.html.ElementPolicy;
 
+import com.zimbra.common.util.ZimbraLog;
+
 public class BackgroundPolicy implements ElementPolicy {
 
     @Override
@@ -28,6 +30,11 @@ public class BackgroundPolicy implements ElementPolicy {
         if (bgIndex == -1) {
             return elementName;
         }
+        if (bgIndex%2 != 0) {
+            ZimbraLog.mailbox.debug("Keyword 'background' found as attribute value instead of attribute name, so ignoring.");
+            return elementName;
+        }
+
         String bgValue = attrs.get(bgIndex + 1);
         attrs.remove(bgIndex);
         attrs.remove(bgIndex);// value
@@ -35,5 +42,4 @@ public class BackgroundPolicy implements ElementPolicy {
         attrs.add(bgValue);
         return elementName;
     }
-
 }
