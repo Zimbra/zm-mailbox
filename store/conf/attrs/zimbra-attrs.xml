@@ -9904,7 +9904,7 @@ TODO: delete them permanently from here
   <desc>Whether or not to log document accessed time</desc>
 </attr>
 
-<attr id="4000" name="zimbraMailAttachmentMaxSize" type="long" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="9.1.0">
+<attr id="4000" name="zimbraMailAttachmentMaxSize" type="long" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="9.1.0">
   <defaultCOSValue>0</defaultCOSValue>
   <desc>Maximum size in bytes for e-mail attachment.</desc>
 </attr>
