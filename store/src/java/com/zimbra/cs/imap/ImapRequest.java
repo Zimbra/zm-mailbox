@@ -796,7 +796,13 @@ public abstract class ImapRequest {
     protected Date readDate(boolean datetime, boolean checkRange) throws ImapParseException {
         String dateStr = (peekChar() == '"' ? readQuoted() : readAtom());
         if (dateStr.length() < (datetime ? 26 : 10)) {
-            throw new ImapParseException(tag, "invalid date format");
+            if (dateStr.length() == 25) {
+                // Outlook on Android will send dates "7-Feb-1994 22:43:04 -0800", where " 7-Feb-1994 22:43:04 -0800" is expected in APPEND.
+                // See: https://datatracker.ietf.org/doc/html/rfc3502
+                dateStr = " " + dateStr;
+            } else {
+                throw new ImapParseException(tag, "invalid date format");
+            }
         }
         Calendar cal = new GregorianCalendar();
         cal.clear();
