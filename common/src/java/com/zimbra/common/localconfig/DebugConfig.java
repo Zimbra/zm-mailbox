@@ -357,7 +357,7 @@ public final class DebugConfig {
     * enabling/disabling the jtidy library for cleaning  the
     * malformed markup.
     */
-    public static final boolean jtidyEnabled = value("jtidy_enabled", true);
+    public static final boolean jtidyEnabled = value("jtidy_enabled", false);
 
     public static final boolean hideJtidyWarnings = value("hide_jtidy_warnings", true);
 
