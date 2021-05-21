@@ -120,7 +120,12 @@ public class ZimbraQoSFilter implements Filter {
             if (pass == null) {
                 pass = passes.get(user);
             }
+            ZimbraLog.misc.debug("Trying to acquire semaphore permit for: %s", user);
             if (pass.tryAcquire(waitMs, TimeUnit.MILLISECONDS)) {
+                if (ZimbraLog.misc.isDebugEnabled()) {
+                    ZimbraLog.misc.debug("Semaphore permit acquired for: %s. available: %d waiting: %d",
+                        user, pass.availablePermits(), pass.getQueueLength());
+                }
                 try {
                     chain.doFilter(request, response);
                 } finally {
