@@ -17,6 +17,7 @@
 
 package com.zimbra.soap.sync.message;
 
+import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.SyncConstants;
@@ -29,4 +30,36 @@ import com.zimbra.common.soap.SyncConstants;
  */
 @XmlRootElement(name=SyncConstants.E_GET_DEVICE_STATUS_REQUEST)
 public class GetDeviceStatusRequest {
+
+    /**
+     * @zm-api-field-tag offset
+     * @zm-api-field-description Offset for the resultant list of the devices. Offset and Limit both should be sent together in request.
+     */
+    @XmlAttribute(name=SyncConstants.A_INCLUDE_REMOVED_DEVICES /* includeRemovedDevices */, required=false)
+    private Boolean includeRemovedDevices = false;
+
+    public GetDeviceStatusRequest() {
+        this(false);
+    }
+
+    /**
+     * @param includeRemovedDevices
+     */
+    public GetDeviceStatusRequest(Boolean includeRemovedDevices) {
+        this.includeRemovedDevices = includeRemovedDevices;
+    }
+
+    /**
+     * @return the includeRemovedDevices
+     */
+    public Boolean getIncludeRemovedDevices() {
+        return includeRemovedDevices;
+    }
+
+    /**
+     * @param includeRemovedDevices the includeRemovedDevices to set
+     */
+    public void setIncludeRemovedDevices(Boolean includeRemovedDevices) {
+        this.includeRemovedDevices = includeRemovedDevices;
+    }
 }
