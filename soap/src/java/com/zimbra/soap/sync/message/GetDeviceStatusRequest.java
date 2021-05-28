@@ -32,8 +32,8 @@ import com.zimbra.common.soap.SyncConstants;
 public class GetDeviceStatusRequest {
 
     /**
-     * @zm-api-field-tag offset
-     * @zm-api-field-description Offset for the resultant list of the devices. Offset and Limit both should be sent together in request.
+     * @zm-api-field-tag includeRemovedDevices
+     * @zm-api-field-description Whether to include devices removed by user or not. Default is FALSE, which will not include removed devices.
      */
     @XmlAttribute(name=SyncConstants.A_INCLUDE_REMOVED_DEVICES /* includeRemovedDevices */, required=false)
     private Boolean includeRemovedDevices = false;
