@@ -707,14 +707,18 @@ public class OwaspHtmlSanitizerTest {
 
     @Test
     public void testBugTSS18004() throws Exception {
-        String malformedHtml = "<HTML><BODY><p dir=\"ltr\" style=\"-webkit-text-size-adjust:auto;line-height:1.38;margin-top:0pt;margin-bottom:0pt;\">"
-                + "<span style=\"font-family:Arial;font-size:14.666666984558105px-webkit-text-size-adjust:auto;\"\">Hello h</span>"
-                + "<span style=\"font-size:11pt;font-family:Arial;font-variant-ligatures:normal;font-variant-east-asian:normal;font-variant-position:normal;vertical-align:baseline\"\">ave a nice day.</span>"
-                + "</p></BODY></HTML>";
-        String result = new OwaspHtmlSanitizer(malformedHtml, true, null).cleanMalformedHtml(malformedHtml, true);
-        String output = "<p dir=\"ltr\" style=\"-webkit-text-size-adjust:auto;line-height:1.38;margin-top:0pt;margin-bottom:0pt;\">"
-                + "<span style=\"font-family:Arial;font-size:14.666666984558105px-webkit-text-size-adjust:auto;\">Hello h</span>"
-                + "<span style=\"font-size:11pt;font-family:Arial;font-variant-ligatures:normal;font-variant-east-asian:normal;font-variant-position:normal;vertical-align:baseline\">ave a nice day.</span></p>";
+        String malformedHtml = "<html><body><h1 style=\"background-color:powderblue\"  \" > This is a heading</h1></body></html>";
+        String result = new OwaspHtmlSanitizer(malformedHtml, true, null).sanitize(false);
+        String output = "<html><body><h1 style=\"background-color:powderblue\"> This is a heading</h1></body></html>";
+        // check that the extra double quotes are removed
+        Assert.assertTrue("Verification failed: Failed to remove extra double quotes.", output.equals(result.trim()));
+    }
+
+    @Test
+    public void testBugTSS18004_1() throws Exception {
+        String malformedHtml = "<html><body><h1 style=\"background-color:powderblue\"\"> This is a heading</h1></body></html>";
+        String result = new OwaspHtmlSanitizer(malformedHtml, true, null).sanitize(false);
+        String output = "<html><body><h1 style=\"background-color:powderblue\"> This is a heading</h1></body></html>";
         // check that the extra double quotes are removed
         Assert.assertTrue("Verification failed: Failed to remove extra double quotes.", output.equals(result.trim()));
     }
