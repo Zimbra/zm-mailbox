@@ -32,8 +32,8 @@
   <dependency org="org.easymock" name="easymock" rev="3.0" />
   <dependency org="cglib" name="cglib" rev="2.2.2" />
   <dependency org="asm" name="asm" rev="3.3.1" />
-  <dependency org="org.eclipse.jetty" name="jetty-rewrite" rev="${jetty.version}" />
-  <dependency org="org.eclipse.jetty" name="jetty-util" rev="${jetty.version}" />
+  <dependency org="org.eclipse.jetty" name="jetty-rewrite" rev="9.4.18.v20190429" />
+  <dependency org="org.eclipse.jetty" name="jetty-util" rev="9.4.18.v20190429" />
   <dependency org="zimbra" name="zm-native" rev="latest.integration" />
   <dependency org="ant-contrib" name="ant-contrib" rev="1.0b3" />
  </dependencies>
