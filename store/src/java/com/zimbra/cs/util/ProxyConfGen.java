@@ -1106,6 +1106,64 @@ class WebLoginSSLUpstreamServersVar extends ServersVar {
     }
 }
 
+class OnlyOfficeDocServiceServersVar extends ServersVar {
+    
+    public OnlyOfficeDocServiceServersVar() {
+        super("web.upstream.onlyoffice.docservice.:servers", null,
+              "List of upstream HTTP servers towards docservice port used by Web Proxy (i.e. servers " +
+                "for which zimbraReverseProxyLookupTarget is true, and whose " +
+                "mail mode is http|https|mixed|both)");
+    }
+
+    @Override
+    public void update() throws ServiceException {
+        ArrayList<String> directives = new ArrayList<String>();
+
+        List<Server> mailclientservers = mProv.getAllMailClientServers();
+        for (Server server : mailclientservers) {
+            String serverName = server.getAttr( Provisioning.A_zimbraServiceHostname, "");
+
+            if (isValidUpstream(server, serverName)) {
+                int timeout = 0;
+                int maxFails = 0;
+                directives.add(String.format("%s:%d fail_timeout=%ds max_fails=%d", serverName, ProxyConfGen.ZIMBRA_UPSTREAM_ONLYOFFICE_DOCSERVICE_PORT,
+                        timeout, maxFails));
+                mLog.debug("Added server to HTTPS docservice upstream: " + serverName);
+            }
+        }
+        mValue = directives;
+    }
+}
+
+class OnlyOfficeSpellCheckerServersVar extends ServersVar {
+
+    public OnlyOfficeSpellCheckerServersVar() {
+        super("web.upstream.onlyoffice.spellchecker.:servers", null,
+              "List of upstream HTTP servers towards spellchecker port used by Web Proxy (i.e. servers " +
+                "for which zimbraReverseProxyLookupTarget is true, and whose " +
+                "mail mode is http|https|mixed|both)");
+    }
+
+    @Override
+    public void update() throws ServiceException {
+        ArrayList<String> directives = new ArrayList<String>();
+
+        List<Server> mailclientservers = mProv.getAllMailClientServers();
+        for (Server server : mailclientservers) {
+            String serverName = server.getAttr( Provisioning.A_zimbraServiceHostname, "");
+
+            if (isValidUpstream(server, serverName)) {
+                int timeout = 0;
+                int maxFails = 0;
+                directives.add(String.format("%s:%d", serverName, ProxyConfGen.ZIMBRA_UPSTREAM_ONLYOFFICE_SPELLCHECKER_PORT,
+                        timeout, maxFails));
+                mLog.debug("Added server to HTTPS spellchecker upstream: " + serverName);
+            }
+        }
+        mValue = directives;
+    }
+}
+
 class AddHeadersVar extends ProxyConfVar {
     private final ArrayList<String> rhdr;
     private final String key;
@@ -2092,6 +2150,8 @@ public class ProxyConfGen
     static final String ZIMBRA_SSL_UPSTREAM_ZX_NAME = "zx_ssl";
     static final int    ZIMBRA_UPSTREAM_ZX_PORT = 8742;
     static final int    ZIMBRA_UPSTREAM_SSL_ZX_PORT = 8743;
+    static final int    ZIMBRA_UPSTREAM_ONLYOFFICE_DOCSERVICE_PORT = 7084;
+    static final int    ZIMBRA_UPSTREAM_ONLYOFFICE_SPELLCHECKER_PORT = 7085;
 
     /** the pattern for custom header cmd, such as "!{explode domain} */
     private static Pattern cmdPattern = Pattern.compile("(.*)\\!\\{([^\\}]+)\\}(.*)", Pattern.DOTALL);
@@ -2966,6 +3026,9 @@ public class ProxyConfGen
         mConfVars.put("web.ssl.upstream.zx.name", new ProxyConfVar("web.ssl.upstream.zx.name", null, ZIMBRA_SSL_UPSTREAM_ZX_NAME, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG,"Symbolic name for HTTPS zx upstream"));
         mConfVars.put("web.upstream.zx.:servers", new WebUpstreamZxServersVar());
         mConfVars.put("web.ssl.upstream.zx.:servers", new WebSslUpstreamZxServersVar());
+        
+        mConfVars.put("web.upstream.onlyoffice.docservice.:servers", new OnlyOfficeDocServiceServersVar());
+        mConfVars.put("web.upstream.onlyoffice.spellchecker.:servers", new OnlyOfficeSpellCheckerServersVar());
 
         //Get the response headers list from globalconfig
         String[] rspHeaders = ProxyConfVar.configSource.getMultiAttr(Provisioning.A_zimbraReverseProxyResponseHeaders);
