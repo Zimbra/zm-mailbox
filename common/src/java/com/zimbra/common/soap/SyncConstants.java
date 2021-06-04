@@ -106,6 +106,7 @@ public final class SyncConstants {
     public static final String A_FILTERDEVICESBYAND = "filterDevicesByAnd";
     public static final String A_ADMIN = "Admin";
     public static final String A_USER = "User";
+    public static final String A_INCLUDE_REMOVED_DEVICES = "includeRemovedDevices";
 
     // Sync command response statuses
     // Reference - https://msdn.microsoft.com/en-us/library/gg675457(v=exchg.80).aspx
