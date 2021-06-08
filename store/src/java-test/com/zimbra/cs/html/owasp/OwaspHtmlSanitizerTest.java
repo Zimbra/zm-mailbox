@@ -708,4 +708,31 @@ public class OwaspHtmlSanitizerTest {
         // check that the id and class attributes are not removed
         Assert.assertTrue(result.equals(html));
     }
+
+    @Test
+    public void testBugTSS18004() throws Exception {
+        String malformedHtml = "<html><body><h1 style=\"background-color:powderblue\"  \" > This is a heading</h1></body></html>";
+        String result = new OwaspHtmlSanitizer(malformedHtml, true, null).sanitize();
+        String output = "<html><body><h1 style=\"background-color:powderblue\"> This is a heading</h1></body></html>";
+        // check that the extra double quotes are removed
+        Assert.assertTrue("Verification failed: Failed to remove extra double quotes.", output.equals(result.trim()));
+    }
+
+    @Test
+    public void testBugTSS18004_1() throws Exception {
+        String malformedHtml = "<html><body><h1 style=\"background-color:powderblue\"\"> This is a heading</h1></body></html>";
+        String result = new OwaspHtmlSanitizer(malformedHtml, true, null).sanitize();
+        String output = "<html><body><h1 style=\"background-color:powderblue\"> This is a heading</h1></body></html>";
+        // check that the extra double quotes are removed
+        Assert.assertTrue("Verification failed: Failed to remove extra double quotes.", output.equals(result.trim()));
+    }
+
+    @Test
+    public void testBugZCS10594() throws Exception {
+        String malformedHtml = "<html><head><style>.uegzbq{font-size:22px;}@media not all and (pointer:coarse){.8bsfb:hover{background-color:#056b27;}}.scem3j{font-size:25px;}</style></head><body><div class=\"uegzbq\">First Line</div><br><div class=\"scem3j\">Second Line</div></body></html>";
+        String result = new OwaspHtmlSanitizer(malformedHtml, true, null).sanitize();
+        String output = "<html><head><style>.uegzbq{font-size:22px;}@media not all and (pointer:coarse){.8bsfb:hover{background-color:#056b27;}}.scem3j{font-size:25px;}</style></head><body><div class=\"uegzbq\">First Line</div><br /><div class=\"scem3j\">Second Line</div></body></html>";
+        Assert.assertTrue("Verification failed: Failed to include media queries.", output.equals(result.trim()));
+    }
+ 
 }
