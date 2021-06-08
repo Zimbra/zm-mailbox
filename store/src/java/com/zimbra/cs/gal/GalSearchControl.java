@@ -346,12 +346,15 @@ public class GalSearchControl {
     private String getSearchQuery(Account galAcct, boolean addInId) throws ServiceException {
         String query = mParams.getQuery();
         String searchByDn = mParams.getSearchEntryByDn();
+        String galSearchQuery = mParams.getGalSearchQuery();
 
         GalSearchType type = mParams.getType();
         StringBuilder searchQuery = new StringBuilder();
 
         if (searchByDn != null) {
             searchQuery.append("#dn:(" + searchByDn + ")");
+        } else if (!Strings.isNullOrEmpty(galSearchQuery)) {
+            searchQuery.append(galSearchQuery.replace("\"", "\\\"")); // escape quotes
         } else if (!Strings.isNullOrEmpty(query)) {
             searchQuery.append("contact:\"");
             searchQuery.append(query.replace("\"", "\\\"")); // escape quotes
