@@ -8488,6 +8488,78 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Host server where the onlyoffice is hosted
+     *
+     * @return zimbraDocumentEditingHost, or "zimbra.com" if unset
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3098)
+    public String getDocumentEditingHost() {
+        return getAttr(Provisioning.A_zimbraDocumentEditingHost, "zimbra.com", true);
+    }
+
+    /**
+     * Host server where the onlyoffice is hosted
+     *
+     * @param zimbraDocumentEditingHost new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3098)
+    public void setDocumentEditingHost(String zimbraDocumentEditingHost) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDocumentEditingHost, zimbraDocumentEditingHost);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Host server where the onlyoffice is hosted
+     *
+     * @param zimbraDocumentEditingHost new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3098)
+    public Map<String,Object> setDocumentEditingHost(String zimbraDocumentEditingHost, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDocumentEditingHost, zimbraDocumentEditingHost);
+        return attrs;
+    }
+
+    /**
+     * Host server where the onlyoffice is hosted
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3098)
+    public void unsetDocumentEditingHost() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDocumentEditingHost, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Host server where the onlyoffice is hosted
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3098)
+    public Map<String,Object> unsetDocumentEditingHost(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDocumentEditingHost, "");
+        return attrs;
+    }
+
+    /**
      * EmptyFolderOpTimeout is the time in seconds for which empty folder
      * operation will wait for the current empty folder operation to complete
      *
