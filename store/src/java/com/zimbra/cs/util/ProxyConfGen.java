@@ -1108,8 +1108,7 @@ class WebLoginSSLUpstreamServersVar extends ServersVar {
 }
 
 class OnlyOfficeDocServiceServersVar extends ProxyConfVar {
-
-    private final String defaultHost = "zimbra.com";
+    private final String DEFAULT_DOC_HOST = "zimbra.com";
 
     public OnlyOfficeDocServiceServersVar() {
 
@@ -1120,24 +1119,28 @@ class OnlyOfficeDocServiceServersVar extends ProxyConfVar {
     @Override
     public void update() throws ServiceException {
         StringBuffer sb = new StringBuffer();
-        // check if zimbraDocumentEditingHost has been set
-        // if it is set, it means onlyoffice is to be deployed on a single
-        // server
-        String onlyofficeServer = mProv.getConfig().getDocumentEditingHost();
-        if (onlyofficeServer != null && onlyofficeServer.trim().length() > 0 && !defaultHost.equals(onlyofficeServer)) {
-            Server server = mProv.get(Key.ServerBy.name, onlyofficeServer);
-            sb.append(generateUpstreamBlock(server.getId(), onlyofficeServer));
-            mLog.debug("Added docservice upstream for single onlyoffice server : " + onlyofficeServer);
-        } else {
-            List<Server> mailclientservers = mProv.getAllMailClientServers();
-            for (Server server : mailclientservers) {
-                String serverName = server.getAttr(Provisioning.A_zimbraServiceHostname, "");
-                String zimbraId = server.getAttr(Provisioning.A_zimbraId, "");
-                if (isValidUpstream(server, serverName)) {
-                    sb.append(generateUpstreamBlock(zimbraId, serverName));
-                    sb.append("\n");
-                    mLog.debug("Added docservice upstream for onlyoffice server " + serverName);
-                }
+        Set<String> upstreamsCreatedForZimbraId = new HashSet<String>();
+        // get the docserver hostname configured
+        // if it is not set use the mailbox server name
+        List<Server> mailclientservers = mProv.getAllMailClientServers();
+        for (Server server : mailclientservers) {
+            String serverName = server.getAttr(Provisioning.A_zimbraServiceHostname, "");
+            String zimbraId = server.getAttr(Provisioning.A_zimbraId, "");
+            String docServerHost = server.getAttr(Provisioning.A_zimbraDocumentEditingHost, "");
+            // if docServerHost is present, get the zimbraId of that host
+            if (docServerHost != null && docServerHost.trim().length() > 0 && !docServerHost.trim().equals(DEFAULT_DOC_HOST)
+                    && !serverName.trim().equals(docServerHost.trim())) {
+                Server docServer = mProv.get(Key.ServerBy.name, docServerHost);
+                zimbraId = docServer.getId();
+                serverName = docServerHost;
+            }
+
+            mLog.info("doc editing server : " + docServerHost);
+            if (isValidUpstream(server, serverName) && !upstreamsCreatedForZimbraId.contains(zimbraId)) {
+                sb.append(generateUpstreamBlock(zimbraId, serverName));
+                sb.append("\n");
+                upstreamsCreatedForZimbraId.add(zimbraId);
+                mLog.debug("Added docservice upstream for onlyoffice server " + serverName);
             }
         }
 
@@ -1160,7 +1163,7 @@ class OnlyOfficeDocServiceServersVar extends ProxyConfVar {
 }
 
 class OnlyOfficeSpellCheckerServersVar extends ProxyConfVar {
-    private final String defaultHost = "zimbra.com";
+    private final String DEFAULT_DOC_HOST = "zimbra.com";
 
     public OnlyOfficeSpellCheckerServersVar() {
 
@@ -1171,24 +1174,28 @@ class OnlyOfficeSpellCheckerServersVar extends ProxyConfVar {
     @Override
     public void update() throws ServiceException {
         StringBuffer sb = new StringBuffer();
-        // check if zimbraDocumentEditingHost has been set
-        // if it is set, it means onlyoffice is to be deployed on a single
-        // server
-        String onlyofficeServer = mProv.getConfig().getDocumentEditingHost();
-        if (onlyofficeServer != null && onlyofficeServer.trim().length() > 0 && !defaultHost.equals(onlyofficeServer)) {
-            Server server = mProv.get(Key.ServerBy.name, onlyofficeServer);
-            sb.append(generateUpstreamBlock(server.getId(), onlyofficeServer));
-            mLog.debug("Added spellchecker upstream for single onlyoffice server : " + onlyofficeServer);
-        } else {
-            List<Server> mailclientservers = mProv.getAllMailClientServers();
-            for (Server server : mailclientservers) {
-                String serverName = server.getAttr(Provisioning.A_zimbraServiceHostname, "");
-                String zimbraId = server.getAttr(Provisioning.A_zimbraId, "");
-                if (isValidUpstream(server, serverName)) {
-                    sb.append(generateUpstreamBlock(zimbraId, serverName));
-                    sb.append("\n");
-                    mLog.debug("Added spellchecker upstream for onlyoffice server " + serverName);
-                }
+        Set<String> upstreamsCreatedForZimbraId = new HashSet<String>();
+        // get the docserver hostname configured
+        // if it is not set use the mailbox server name
+        List<Server> mailClientServers = mProv.getAllMailClientServers();
+        for (Server server : mailClientServers) {
+            String serverName = server.getAttr(Provisioning.A_zimbraServiceHostname, "");
+            String zimbraId = server.getAttr(Provisioning.A_zimbraId, "");
+            String docServerHost = server.getAttr(Provisioning.A_zimbraDocumentEditingHost, "");
+            // if docServerHost is present, get the zimbraId of that host
+            if (docServerHost != null && docServerHost.trim().length() > 0 && !docServerHost.trim().equals(DEFAULT_DOC_HOST)
+                    && !serverName.trim().equals(docServerHost.trim())) {
+                Server docServer = mProv.get(Key.ServerBy.name, docServerHost);
+                zimbraId = docServer.getId();
+                serverName = docServerHost;
+            }
+            mLog.info("spellchecker doc editing server : " + docServerHost);
+            if (isValidUpstream(server, serverName) && !upstreamsCreatedForZimbraId.contains(zimbraId)) {
+                sb.append(generateUpstreamBlock(zimbraId,
+                        docServerHost != null && docServerHost.length() > 0 ? docServerHost : serverName));
+                sb.append("\n");
+                upstreamsCreatedForZimbraId.add(zimbraId);
+                mLog.debug("Added spellchecker upstream for onlyoffice server " + serverName);
             }
         }
 
