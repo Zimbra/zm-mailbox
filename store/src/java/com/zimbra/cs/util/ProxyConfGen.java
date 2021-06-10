@@ -1124,8 +1124,6 @@ class OnlyOfficeDocServiceServersVar extends ProxyConfVar {
         // if it is set, it means onlyoffice is to be deployed on a single
         // server
         String onlyofficeServer = mProv.getConfig().getDocumentEditingHost();
-        mLog.info(String.format(" --- Inside OnlyOfficeDocServiceServersVar update; onlyofficeServer : %s",
-                onlyofficeServer));
         if (onlyofficeServer != null && onlyofficeServer.trim().length() > 0 && !defaultHost.equals(onlyofficeServer)) {
             Server server = mProv.get(Key.ServerBy.name, onlyofficeServer);
             sb.append(generateUpstreamBlock(server.getId(), onlyofficeServer));
@@ -1147,9 +1145,6 @@ class OnlyOfficeDocServiceServersVar extends ProxyConfVar {
     }
 
     public String generateUpstreamBlock(String zimbraId, String serverName) {
-        mLog.info(String.format(" --- Inside generateUpstreamBlock"));
-        mLog.info(String.format(" --- generating upstream block for server name : %s and server id : %s", serverName,
-                zimbraId));
         int timeout = 0;
         int maxFails = 0;
         // form the docservice upstream block
