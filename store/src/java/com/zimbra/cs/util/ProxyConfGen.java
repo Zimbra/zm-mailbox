@@ -1135,7 +1135,7 @@ class OnlyOfficeDocServiceServersVar extends ProxyConfVar {
                 serverName = docServerHost;
             }
 
-            if (isValidUpstream(server, serverName) && !upstreamsCreatedForZimbraId.contains(zimbraId)) {
+            if (!upstreamsCreatedForZimbraId.contains(zimbraId)) {
                 sb.append(generateUpstreamBlock(zimbraId, serverName));
                 sb.append("\n");
                 upstreamsCreatedForZimbraId.add(zimbraId);
@@ -1188,9 +1188,8 @@ class OnlyOfficeSpellCheckerServersVar extends ProxyConfVar {
                 zimbraId = docServer.getId();
                 serverName = docServerHost;
             }
-            if (isValidUpstream(server, serverName) && !upstreamsCreatedForZimbraId.contains(zimbraId)) {
-                sb.append(generateUpstreamBlock(zimbraId,
-                        docServerHost != null && docServerHost.length() > 0 ? docServerHost : serverName));
+            if (!upstreamsCreatedForZimbraId.contains(zimbraId)) {
+                sb.append(generateUpstreamBlock(zimbraId, serverName));
                 sb.append("\n");
                 upstreamsCreatedForZimbraId.add(zimbraId);
                 mLog.debug("Added spellchecker upstream for onlyoffice server " + serverName);
