@@ -185,12 +185,4 @@ public class SharedFileServletContext extends UserServletContext {
     public static String fetchDecoded(String toDecode) {
         return new String(java.util.Base64.getUrlDecoder().decode(toDecode));
     }
-
-    public static Server fetchServerFromZimbraId(String zimbraId) throws ServiceException {
-        return Provisioning.getInstance().get(Key.ServerBy.id, zimbraId);
-    }
-
-    public static Server fetchServerFromName(String serverName) throws ServiceException {
-        return Provisioning.getInstance().get(Key.ServerBy.name, serverName);
-    }
 }
