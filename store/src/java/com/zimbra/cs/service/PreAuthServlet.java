@@ -23,6 +23,8 @@ package com.zimbra.cs.service;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -33,6 +35,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.google.common.net.InetAddresses;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ZAttrProvisioning.AutoProvAuthMech;
@@ -330,12 +333,39 @@ public class PreAuthServlet extends ZimbraServlet {
     private static final String DEFAULT_MAIL_URL = "/zimbra";
     private static final String DEFAULT_ADMIN_URL = "/zimbraAdmin";
 
+    private static boolean isPrivate172SeriesAddress(String domain) {
+        int address = InetAddresses.coerceToInteger(InetAddresses.forString(domain));
+        return (((address >>> 24) & 0xFF) == 10)
+                || ((((address >>> 24) & 0xFF) == 172)
+                  && ((address >>> 16) & 0xFF) >= 16
+                  && ((address >>> 16) & 0xFF) <= 31)
+                || ((((address >>> 24) & 0xFF) == 192)
+                  && (((address >>> 16) & 0xFF) == 168));
+    }
+
     private void setCookieAndRedirect(HttpServletRequest req, HttpServletResponse resp, AuthToken authToken) throws IOException, ServiceException {
         boolean isAdmin = AuthToken.isAnyAdmin(authToken);
         boolean secureCookie = req.getScheme().equals("https");
         authToken.encode(resp, isAdmin, secureCookie);
 
         String redirectURL = getOptionalParam(req, PARAM_REDIRECT_URL, null);
+        URI uri = null;
+        try {
+            uri = new URI(redirectURL);
+        } catch (URISyntaxException exp) {
+            ZimbraLog.account.debug(String.format("URI %s is a malformed URL", redirectURL), exp);
+        }
+        String domain = uri.getHost();
+        domain = domain.startsWith("www.") ? domain.substring(4) : domain;
+
+        if (domain != null) {
+            if (domain.equals("localhost") || domain.equals("127.0.0.1")
+                    || domain.startsWith("192.168") || domain.startsWith("10.")
+                    || isPrivate172SeriesAddress(domain)) {
+                throw ServiceException.PERM_DENIED("Cannot access internal Ip resources.");
+            }
+        }
+
         if (redirectURL != null) {
             resp.sendRedirect(redirectURL);
         } else {
