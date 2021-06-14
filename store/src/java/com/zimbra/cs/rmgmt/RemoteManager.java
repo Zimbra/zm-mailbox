@@ -37,6 +37,7 @@ import org.apache.sshd.client.session.ClientSession;
 import org.apache.sshd.common.util.security.SecurityUtils;
 
 import com.zimbra.common.account.Key;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CliUtil;
@@ -179,7 +180,7 @@ public class RemoteManager {
 				channel.open().await();
 				try {
 					channel.waitFor(EnumSet.of(ClientChannelEvent.CLOSED),
-							TimeUnit.SECONDS.toMillis(defaultTimeoutSeconds));
+							TimeUnit.MINUTES.toMillis(LC.zimbra_remote_cmd_channel_timeout_min.intValue()));
 					session.close(false);
 					RemoteResult result = new RemoteResult();
 					ClientChannel.validateCommandExitStatusCode(mShimCommand, channel.getExitStatus());
@@ -203,6 +204,7 @@ public class RemoteManager {
 			client.stop();
 		}
 	}
+
 	public static KeyPair loadKeypair(String privateKeyPath) throws IOException, GeneralSecurityException {
         try (InputStream privateKeyStream = new FileInputStream(privateKeyPath)) {
             Iterable<KeyPair> keyPairIterable =
