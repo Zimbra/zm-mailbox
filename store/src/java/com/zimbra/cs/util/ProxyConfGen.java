@@ -1130,10 +1130,11 @@ class OnlyOfficeDocServiceServersVar extends ProxyConfVar {
                     " Setting Docservice upstream for servername : %s , zimbraId : %s , docServerHost in config : %s ",
                     serverName, zimbraId, docServerHost));
             // if docServerHost is present, get the zimbraId of that host
+            // zimbraDocumentServerHost is always defined at either server or global level
             if (docServerHost != null && docServerHost.trim().length() > 0
                     && !docServerHost.trim().equals(DEFAULT_DOC_HOST)
                     && !serverName.trim().equals(docServerHost.trim())) {
-                mLog.info(String.format(" Setting Docservice upstream, Document Server set to : %s in config",
+                mLog.debug(String.format(" Setting Docservice upstream, Document Server set to : %s in config",
                         docServerHost));
                 Server docServer = mProv.get(Key.ServerBy.name, docServerHost);
                 zimbraId = docServer.getId();
