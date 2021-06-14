@@ -8490,43 +8490,43 @@ public abstract class ZAttrServer extends NamedEntry {
     /**
      * Host server where the onlyoffice is hosted
      *
-     * @return zimbraDocumentEditingHost, or "zimbra.com" if unset
+     * @return zimbraDocumentServerHost, or "zimbra.com" if unset
      *
      * @since ZCS 9.1.0
      */
     @ZAttr(id=3098)
-    public String getDocumentEditingHost() {
-        return getAttr(Provisioning.A_zimbraDocumentEditingHost, "zimbra.com", true);
+    public String getDocumentServerHost() {
+        return getAttr(Provisioning.A_zimbraDocumentServerHost, "zimbra.com", true);
     }
 
     /**
      * Host server where the onlyoffice is hosted
      *
-     * @param zimbraDocumentEditingHost new value
+     * @param zimbraDocumentServerHost new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 9.1.0
      */
     @ZAttr(id=3098)
-    public void setDocumentEditingHost(String zimbraDocumentEditingHost) throws com.zimbra.common.service.ServiceException {
+    public void setDocumentServerHost(String zimbraDocumentServerHost) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraDocumentEditingHost, zimbraDocumentEditingHost);
+        attrs.put(Provisioning.A_zimbraDocumentServerHost, zimbraDocumentServerHost);
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
      * Host server where the onlyoffice is hosted
      *
-     * @param zimbraDocumentEditingHost new value
+     * @param zimbraDocumentServerHost new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
      * @since ZCS 9.1.0
      */
     @ZAttr(id=3098)
-    public Map<String,Object> setDocumentEditingHost(String zimbraDocumentEditingHost, Map<String,Object> attrs) {
+    public Map<String,Object> setDocumentServerHost(String zimbraDocumentServerHost, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraDocumentEditingHost, zimbraDocumentEditingHost);
+        attrs.put(Provisioning.A_zimbraDocumentServerHost, zimbraDocumentServerHost);
         return attrs;
     }
 
@@ -8538,9 +8538,9 @@ public abstract class ZAttrServer extends NamedEntry {
      * @since ZCS 9.1.0
      */
     @ZAttr(id=3098)
-    public void unsetDocumentEditingHost() throws com.zimbra.common.service.ServiceException {
+    public void unsetDocumentServerHost() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraDocumentEditingHost, "");
+        attrs.put(Provisioning.A_zimbraDocumentServerHost, "");
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -8553,9 +8553,9 @@ public abstract class ZAttrServer extends NamedEntry {
      * @since ZCS 9.1.0
      */
     @ZAttr(id=3098)
-    public Map<String,Object> unsetDocumentEditingHost(Map<String,Object> attrs) {
+    public Map<String,Object> unsetDocumentServerHost(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraDocumentEditingHost, "");
+        attrs.put(Provisioning.A_zimbraDocumentServerHost, "");
         return attrs;
     }
 
