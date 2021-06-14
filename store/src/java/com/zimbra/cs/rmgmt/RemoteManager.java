@@ -159,51 +159,51 @@ public class RemoteManager {
     }
 
     public static RemoteResult executeRemoteCommand(String username, String host, int port, File privateKey,
-			String mShimCommand, String command) throws Exception {
-		long defaultTimeoutSeconds = 100l;
-		String send = "HOST:" + host + " " + command;
-		InputStream inputStream = new ByteArrayInputStream(send.getBytes());
-		SshClient client = SshClient.setUpDefaultClient();
-		client.start();
-		ConnectFuture cf = client.connect(username, host, port);
-		try (ClientSession session = cf.verify().getSession();) {
-			session.addPublicKeyIdentity(loadKeypair(privateKey.getAbsolutePath()));
-			session.auth().verify(defaultTimeoutSeconds, TimeUnit.SECONDS);
-			ZimbraLog.rmgmt.debug("executing shim command '%s'", mShimCommand);
-			try (ByteArrayOutputStream responseStream = new ByteArrayOutputStream();
-					ByteArrayOutputStream errorResponseStream = new ByteArrayOutputStream();
-					ChannelExec channel = session.createExecChannel(mShimCommand);) {
-					ZimbraLog.rmgmt.debug("sending mgmt command '%s'", send);
-				channel.setIn(inputStream);
-				channel.setOut(responseStream);
-				channel.setErr(errorResponseStream);
-				channel.open().await();
-				try {
-					channel.waitFor(EnumSet.of(ClientChannelEvent.CLOSED),
-							TimeUnit.MINUTES.toMillis(LC.zimbra_remote_cmd_channel_timeout_min.intValue()));
-					session.close(false);
-					RemoteResult result = new RemoteResult();
-					ClientChannel.validateCommandExitStatusCode(mShimCommand, channel.getExitStatus());
-					InputStream stdout = new ByteArrayInputStream(responseStream.toByteArray());
-					InputStream stderr = new ByteArrayInputStream(errorResponseStream.toByteArray());
-					result.mStdout = ByteUtil.getContent(stdout, -1);
-					result.mStderr = ByteUtil.getContent(stderr, -1);
-					result.mExitStatus = channel.getExitStatus();
-					if (result.mExitStatus != 0) {
-						throw new IOException("command failed: exit status=" + result.mExitStatus + ", stdout="
-								+ new String(result.mStdout) + ", stderr=" + new String(result.mStderr));
-					}
-					result.mExitSignal = channel.getExitSignal();
-					return result;
-				} finally {
-					channel.close(false);
-					session.close();
-				}
-			}
-		} finally {
-			client.stop();
-		}
-	}
+            String mShimCommand, String command) throws Exception {
+        long defaultTimeoutSeconds = 100l;
+        String send = "HOST:" + host + " " + command;
+        InputStream inputStream = new ByteArrayInputStream(send.getBytes());
+        SshClient client = SshClient.setUpDefaultClient();
+        client.start();
+        ConnectFuture cf = client.connect(username, host, port);
+        try (ClientSession session = cf.verify().getSession();) {
+            session.addPublicKeyIdentity(loadKeypair(privateKey.getAbsolutePath()));
+            session.auth().verify(defaultTimeoutSeconds, TimeUnit.SECONDS);
+            ZimbraLog.rmgmt.debug("executing shim command '%s'", mShimCommand);
+            try (ByteArrayOutputStream responseStream = new ByteArrayOutputStream();
+                    ByteArrayOutputStream errorResponseStream = new ByteArrayOutputStream();
+                    ChannelExec channel = session.createExecChannel(mShimCommand);) {
+                ZimbraLog.rmgmt.debug("sending mgmt command '%s'", send);
+                channel.setIn(inputStream);
+                channel.setOut(responseStream);
+                channel.setErr(errorResponseStream);
+                channel.open().await();
+                try {
+                    channel.waitFor(EnumSet.of(ClientChannelEvent.CLOSED),
+                            TimeUnit.MINUTES.toMillis(LC.zimbra_remote_cmd_channel_timeout_min.intValue()));
+                    session.close(false);
+                    RemoteResult result = new RemoteResult();
+                    ClientChannel.validateCommandExitStatusCode(mShimCommand, channel.getExitStatus());
+                    InputStream stdout = new ByteArrayInputStream(responseStream.toByteArray());
+                    InputStream stderr = new ByteArrayInputStream(errorResponseStream.toByteArray());
+                    result.mStdout = ByteUtil.getContent(stdout, -1);
+                    result.mStderr = ByteUtil.getContent(stderr, -1);
+                    result.mExitStatus = channel.getExitStatus();
+                    if (result.mExitStatus != 0) {
+                        throw new IOException("command failed: exit status=" + result.mExitStatus + ", stdout="
+                                + new String(result.mStdout) + ", stderr=" + new String(result.mStderr));
+                    }
+                    result.mExitSignal = channel.getExitSignal();
+                    return result;
+                } finally {
+                    channel.close(false);
+                    session.close();
+                }
+            }
+        } finally {
+            client.stop();
+        }
+    }
 
 	public static KeyPair loadKeypair(String privateKeyPath) throws IOException, GeneralSecurityException {
         try (InputStream privateKeyStream = new FileInputStream(privateKeyPath)) {
