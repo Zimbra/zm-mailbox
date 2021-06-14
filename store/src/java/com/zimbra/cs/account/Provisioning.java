@@ -85,7 +85,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public static final String SERVICE_MAILBOX   = "mailbox";
     public static final String SERVICE_PROXY = "proxy";
     public static final String SERVICE_MEMCACHED = "memcached";
-
+    public static final String SERVICE_ONLYOFFICE = "onlyoffice";
     /**
      * generate appts that try to be compatible with exchange
      */

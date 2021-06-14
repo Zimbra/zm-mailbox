@@ -1120,29 +1120,34 @@ class OnlyOfficeDocServiceServersVar extends ProxyConfVar {
     public void update() throws ServiceException {
         StringBuffer sb = new StringBuffer();
         Set<String> upstreamsCreatedForZimbraId = new HashSet<String>();
-        // get the docserver hostname configured
-        // if it is not set use the mailbox server name
         List<Server> mailclientservers = mProv.getAllMailClientServers();
         for (Server server : mailclientservers) {
             String serverName = server.getAttr(Provisioning.A_zimbraServiceHostname, "");
             String zimbraId = server.getAttr(Provisioning.A_zimbraId, "");
-            String docServerHost = server.getAttr(Provisioning.A_zimbraDocumentEditingHost, "");
+            boolean hasOnlyOfficeServer = server.hasOnlyOfficeService();
+            String docServerHost = server.getAttr(Provisioning.A_zimbraDocumentServerHost, "");
+            mLog.debug(String.format(
+                    " Setting Docservice upstream for servername : %s , zimbraId : %s , docServerHost in config : %s ",
+                    serverName, zimbraId, docServerHost));
             // if docServerHost is present, get the zimbraId of that host
-            if (docServerHost != null && docServerHost.trim().length() > 0 && !docServerHost.trim().equals(DEFAULT_DOC_HOST)
+            if (docServerHost != null && docServerHost.trim().length() > 0
+                    && !docServerHost.trim().equals(DEFAULT_DOC_HOST)
                     && !serverName.trim().equals(docServerHost.trim())) {
+                mLog.info(String.format(" Setting Docservice upstream, Document Server set to : %s in config",
+                        docServerHost));
                 Server docServer = mProv.get(Key.ServerBy.name, docServerHost);
                 zimbraId = docServer.getId();
                 serverName = docServerHost;
+                hasOnlyOfficeServer = docServer.hasOnlyOfficeService();
             }
 
-            if (!upstreamsCreatedForZimbraId.contains(zimbraId)) {
+            if (!upstreamsCreatedForZimbraId.contains(zimbraId) && hasOnlyOfficeServer) {
                 sb.append(generateUpstreamBlock(zimbraId, serverName));
                 sb.append("\n");
                 upstreamsCreatedForZimbraId.add(zimbraId);
                 mLog.debug("Added docservice upstream for onlyoffice server " + serverName);
             }
         }
-
         mValue = sb.toString();
     }
 
@@ -1180,15 +1185,18 @@ class OnlyOfficeSpellCheckerServersVar extends ProxyConfVar {
         for (Server server : mailClientServers) {
             String serverName = server.getAttr(Provisioning.A_zimbraServiceHostname, "");
             String zimbraId = server.getAttr(Provisioning.A_zimbraId, "");
-            String docServerHost = server.getAttr(Provisioning.A_zimbraDocumentEditingHost, "");
+            boolean hasOnlyOfficeServer = server.hasOnlyOfficeService();
+            String docServerHost = server.getAttr(Provisioning.A_zimbraDocumentServerHost, "");
             // if docServerHost is present, get the zimbraId of that host
-            if (docServerHost != null && docServerHost.trim().length() > 0 && !docServerHost.trim().equals(DEFAULT_DOC_HOST)
+            if (docServerHost != null && docServerHost.trim().length() > 0
+                    && !docServerHost.trim().equals(DEFAULT_DOC_HOST)
                     && !serverName.trim().equals(docServerHost.trim())) {
                 Server docServer = mProv.get(Key.ServerBy.name, docServerHost);
                 zimbraId = docServer.getId();
                 serverName = docServerHost;
+                hasOnlyOfficeServer = docServer.hasOnlyOfficeService();
             }
-            if (!upstreamsCreatedForZimbraId.contains(zimbraId)) {
+            if (!upstreamsCreatedForZimbraId.contains(zimbraId) && hasOnlyOfficeServer) {
                 sb.append(generateUpstreamBlock(zimbraId, serverName));
                 sb.append("\n");
                 upstreamsCreatedForZimbraId.add(zimbraId);
@@ -2672,7 +2680,6 @@ public class ProxyConfGen
      */
     private static void expandTemplateByExplodeServer(
             BufferedReader temp, BufferedWriter conf, String serviceName ) throws IOException {
-
         List<ServerAttrItem> filteredServers = new ArrayList<>();
         for( ServerAttrItem serverAttrItem : mServerAttrs ) {
             if (serverAttrItem.hasService(serviceName)) {

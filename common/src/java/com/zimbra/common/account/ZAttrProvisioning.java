@@ -5697,14 +5697,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDocumentEditingCallbackPort = "zimbraDocumentEditingCallbackPort";
 
     /**
-     * Host server where the onlyoffice is hosted
-     *
-     * @since ZCS 9.1.0
-     */
-    @ZAttr(id=3098)
-    public static final String A_zimbraDocumentEditingHost = "zimbraDocumentEditingHost";
-
-    /**
      * Document editing JWT secret
      *
      * @since ZCS 9.1.0
@@ -5719,6 +5711,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=3101)
     public static final String A_zimbraDocumentRecentlyViewedEnabled = "zimbraDocumentRecentlyViewedEnabled";
+
+    /**
+     * Host server where the onlyoffice is hosted
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=3098)
+    public static final String A_zimbraDocumentServerHost = "zimbraDocumentServerHost";
 
     /**
      * maximum amount of mail quota a domain admin can set on a user
