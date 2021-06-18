@@ -9893,7 +9893,6 @@ TODO: delete them permanently from here
   <desc>Whether or not document editing feature is enabled within briefcase</desc>
 </attr>
 <attr id="3098" name="zimbraDocumentServerHost" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="9.1.0">
-  <globalConfigValue>zimbra.com</globalConfigValue>
   <desc>Host server where the onlyoffice is hosted</desc>
 </attr>
 <attr id="3099" name="zimbraDocumentEditingCallbackPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict" since="9.1.0">
