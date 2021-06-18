@@ -13885,13 +13885,13 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Host server where the onlyoffice is hosted
      *
-     * @return zimbraDocumentServerHost, or "zimbra.com" if unset
+     * @return zimbraDocumentServerHost, or null if unset
      *
      * @since ZCS 9.1.0
      */
     @ZAttr(id=3098)
     public String getDocumentServerHost() {
-        return getAttr(Provisioning.A_zimbraDocumentServerHost, "zimbra.com", true);
+        return getAttr(Provisioning.A_zimbraDocumentServerHost, null, true);
     }
 
     /**

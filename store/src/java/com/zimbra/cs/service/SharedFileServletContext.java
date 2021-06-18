@@ -27,7 +27,6 @@ import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
@@ -35,7 +34,6 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ShareLocator;
 
 public class SharedFileServletContext extends UserServletContext {
@@ -177,12 +175,4 @@ public class SharedFileServletContext extends UserServletContext {
         }
     }
 
-    // get the url safe encoded string
-    public static String fetchEncoded(String toEncode) {
-        return java.util.Base64.getUrlEncoder().encodeToString(toEncode.getBytes());
-    }
-
-    public static String fetchDecoded(String toDecode) {
-        return new String(java.util.Base64.getUrlDecoder().decode(toDecode));
-    }
 }

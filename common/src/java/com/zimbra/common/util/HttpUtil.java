@@ -670,6 +670,15 @@ public final class HttpUtil {
         return URI.create(sb.toString());
     }
 
+    // get the url safe encoded string
+    public static String fetchEncoded(String toEncode) {
+        return java.util.Base64.getUrlEncoder().encodeToString(toEncode.getBytes());
+    }
+
+    public static String fetchDecoded(String toDecode) {
+        return new String(java.util.Base64.getUrlDecoder().decode(toDecode));
+    }
+
     public static void main(String[] args) {
         System.out.println(getURIParams((String) null));
         System.out.println(getURIParams("foo=bar"));
