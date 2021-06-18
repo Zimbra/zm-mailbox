@@ -23,6 +23,8 @@ package com.zimbra.cs.service;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -336,6 +338,35 @@ public class PreAuthServlet extends ZimbraServlet {
         authToken.encode(resp, isAdmin, secureCookie);
 
         String redirectURL = getOptionalParam(req, PARAM_REDIRECT_URL, null);
+        URL url = null;
+        try {
+            url = new URL(redirectURL);
+        } catch (MalformedURLException exp) {
+            ZimbraLog.account.debug(String.format("URL %s is a malformed URL", redirectURL), exp);
+        }
+
+        if (url != null) {
+            String protocol = url.getProtocol();
+            String host = url.getHost();
+            int port = url.getPort();
+            String protocolPattern = "^(http|https|ftp|file)://.*$";
+            if (redirectURL.matches(protocolPattern)) {
+                String replaceProtocol = String.format("%s://", protocol);
+                redirectURL = redirectURL.replace(replaceProtocol, "");
+            }
+            if (host != null) {
+                String strToReplace = null;
+                if (port == -1) {
+                    strToReplace = String.format("%s", host);
+                } else {
+                    strToReplace = String.format("%s:%d", host, port);
+                }
+                if (strToReplace != "") {
+                    redirectURL = redirectURL.replace(strToReplace, "");
+                }
+            }
+        }
+
         if (redirectURL != null) {
             resp.sendRedirect(redirectURL);
         } else {
