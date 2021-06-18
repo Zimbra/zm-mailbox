@@ -54,6 +54,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.DateUtil;
+import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.StringUtil;
@@ -1108,7 +1109,6 @@ class WebLoginSSLUpstreamServersVar extends ServersVar {
 }
 
 class OnlyOfficeDocServiceServersVar extends ProxyConfVar {
-    private final String DEFAULT_DOC_HOST = "zimbra.com";
 
     public OnlyOfficeDocServiceServersVar() {
 
@@ -1122,18 +1122,16 @@ class OnlyOfficeDocServiceServersVar extends ProxyConfVar {
         Set<String> upstreamsCreatedForZimbraId = new HashSet<String>();
         List<Server> mailclientservers = mProv.getAllMailClientServers();
         for (Server server : mailclientservers) {
-            String serverName = server.getAttr(Provisioning.A_zimbraServiceHostname, "");
-            String zimbraId = server.getAttr(Provisioning.A_zimbraId, "");
+            String serverName = server.getServiceHostname();
+            String zimbraId = server.getId();
             boolean hasOnlyOfficeServer = server.hasOnlyOfficeService();
-            String docServerHost = server.getAttr(Provisioning.A_zimbraDocumentServerHost, "");
+            String docServerHost = server.getDocumentServerHost();
             mLog.debug(String.format(
                     " Setting Docservice upstream for servername : %s , zimbraId : %s , docServerHost in config : %s ",
                     serverName, zimbraId, docServerHost));
             // if docServerHost is present, get the zimbraId of that host
             // zimbraDocumentServerHost is always defined at either server or global level
-            if (docServerHost != null && docServerHost.trim().length() > 0
-                    && !docServerHost.trim().equals(DEFAULT_DOC_HOST)
-                    && !serverName.trim().equals(docServerHost.trim())) {
+            if (docServerHost != null && docServerHost.trim().length() > 0) {
                 mLog.debug(String.format(" Setting Docservice upstream, Document Server set to : %s in config",
                         docServerHost));
                 Server docServer = mProv.get(Key.ServerBy.name, docServerHost);
@@ -1156,7 +1154,7 @@ class OnlyOfficeDocServiceServersVar extends ProxyConfVar {
         int timeout = 0;
         int maxFails = 0;
         // form the docservice upstream block
-        String encodedServerZimbraId = SharedFileServletContext.fetchEncoded(zimbraId);
+        String encodedServerZimbraId = HttpUtil.fetchEncoded(zimbraId);
         StringBuffer sb = new StringBuffer();
         sb.append(String.format("upstream docservice_%s {\n", encodedServerZimbraId));
         sb.append(String.format(String.format("\tserver\t %s:%d fail_timeout=%ds max_fails=%d;\n", serverName,
@@ -1168,7 +1166,6 @@ class OnlyOfficeDocServiceServersVar extends ProxyConfVar {
 }
 
 class OnlyOfficeSpellCheckerServersVar extends ProxyConfVar {
-    private final String DEFAULT_DOC_HOST = "zimbra.com";
 
     public OnlyOfficeSpellCheckerServersVar() {
 
@@ -1184,14 +1181,12 @@ class OnlyOfficeSpellCheckerServersVar extends ProxyConfVar {
         // if it is not set use the mailbox server name
         List<Server> mailClientServers = mProv.getAllMailClientServers();
         for (Server server : mailClientServers) {
-            String serverName = server.getAttr(Provisioning.A_zimbraServiceHostname, "");
-            String zimbraId = server.getAttr(Provisioning.A_zimbraId, "");
+            String serverName = server.getServiceHostname();
+            String zimbraId = server.getId();
             boolean hasOnlyOfficeServer = server.hasOnlyOfficeService();
-            String docServerHost = server.getAttr(Provisioning.A_zimbraDocumentServerHost, "");
+            String docServerHost = server.getDocumentServerHost();
             // if docServerHost is present, get the zimbraId of that host
-            if (docServerHost != null && docServerHost.trim().length() > 0
-                    && !docServerHost.trim().equals(DEFAULT_DOC_HOST)
-                    && !serverName.trim().equals(docServerHost.trim())) {
+            if (docServerHost != null && docServerHost.trim().length() > 0) {
                 Server docServer = mProv.get(Key.ServerBy.name, docServerHost);
                 zimbraId = docServer.getId();
                 serverName = docServerHost;
@@ -1210,7 +1205,7 @@ class OnlyOfficeSpellCheckerServersVar extends ProxyConfVar {
 
     public String generateUpstreamBlock(String zimbraId, String serverName) {
         // form the spellchecker upstream block
-        String encodedServerZimbraId = SharedFileServletContext.fetchEncoded(zimbraId);
+        String encodedServerZimbraId = HttpUtil.fetchEncoded(zimbraId);
         StringBuffer sb = new StringBuffer();
         sb.append(String.format("upstream spellchecker_%s {\n", encodedServerZimbraId));
         sb.append(String.format(String.format("\tserver\t %s:%d;\n", serverName,
