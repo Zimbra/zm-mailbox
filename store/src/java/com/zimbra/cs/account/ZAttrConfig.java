@@ -13813,13 +13813,13 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Document editing JWT secret
      *
-     * @return zimbraDocumentEditingJwtSecret, or "SECRET" if unset
+     * @return zimbraDocumentEditingJwtSecret, or null if unset
      *
      * @since ZCS 9.1.0
      */
     @ZAttr(id=3100)
     public String getDocumentEditingJwtSecret() {
-        return getAttr(Provisioning.A_zimbraDocumentEditingJwtSecret, "SECRET", true);
+        return getAttr(Provisioning.A_zimbraDocumentEditingJwtSecret, null, true);
     }
 
     /**
