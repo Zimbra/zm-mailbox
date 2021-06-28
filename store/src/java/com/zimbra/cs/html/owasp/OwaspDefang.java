@@ -44,6 +44,9 @@ public class OwaspDefang extends AbstractDefang {
     @Override
     public void defang(InputStream is, boolean neuterImages, Writer out) throws IOException {
         String html = CharStreams.toString(new InputStreamReader(is, Charsets.UTF_8));
+        if (html == null || html.isEmpty()) {
+            html = "<html><body></body></html>";
+        }
         String sanitizedHtml = runSanitizer(html, neuterImages);
         out.write(sanitizedHtml);
         out.close();
