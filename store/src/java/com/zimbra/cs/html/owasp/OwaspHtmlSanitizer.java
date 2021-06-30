@@ -16,8 +16,6 @@
  */
 package com.zimbra.cs.html.owasp;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.concurrent.Callable;
 
@@ -26,11 +24,8 @@ import org.owasp.html.HtmlSanitizer;
 import org.owasp.html.HtmlSanitizer.Policy;
 import org.owasp.html.HtmlStreamRenderer;
 import org.owasp.html.PolicyFactory;
-import org.w3c.tidy.Tidy;
 
-import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.html.owasp.policies.StyleTagReceiver;
 
 /*
@@ -63,14 +58,6 @@ public class OwaspHtmlSanitizer implements Callable<String> {
      * @throws UnsupportedEncodingException
      */
     public String sanitize() throws UnsupportedEncodingException {
-        return processSanitization(true).toString();
-    }
-
-    public String sanitize(boolean cleanMalformedHtml) throws UnsupportedEncodingException {
-        return processSanitization(cleanMalformedHtml).toString();
-    }
-
-    private StringBuilder processSanitization(boolean cleanMalformedHtml) throws UnsupportedEncodingException {
         OwaspThreadLocal threadLocalInstance = new OwaspThreadLocal();
         threadLocalInstance.setVHost(vHost);
         OwaspHtmlSanitizer.zThreadLocal.set(threadLocalInstance);
@@ -93,49 +80,10 @@ public class OwaspHtmlSanitizer implements Callable<String> {
         instantiatePolicy();
         final Policy policy = POLICY_DEFINITION.apply(new StyleTagReceiver(renderer));
         // run the html through the sanitizer
-        runSanitizer(html, policy, cleanMalformedHtml);
+        HtmlSanitizer.sanitize(html, policy);
         // return the resulting HTML from the builder
         OwaspHtmlSanitizer.zThreadLocal.remove();
-        return htmlBuilder;
-    }
-
-    private void runSanitizer(String str, Policy policy, boolean cleanMalformedHtml) throws UnsupportedEncodingException {
-        if (cleanMalformedHtml) {
-            HtmlSanitizer.sanitize(cleanMalformedHtml(str, false), policy);
-        } else {
-            HtmlSanitizer.sanitize(str, policy);
-        }
-    }
-
-    public String cleanMalformedHtml(String str, boolean printBodyOnly) throws UnsupportedEncodingException {
-        if (DebugConfig.jtidyEnabled) {
-            long startTime = System.currentTimeMillis();
-            ZimbraLog.mailbox.debug("Start - Using JTidy library for cleaning the markup.");
-            Tidy tidy = new Tidy();
-            tidy.setInputEncoding("UTF-8");
-            tidy.setOutputEncoding("UTF-8");
-            tidy.setDocType("omit");
-            tidy.setTidyMark(false);
-            tidy.setHideEndTags(true);
-            tidy.setWraplen(0);
-            if (DebugConfig.hideJtidyWarnings) {
-                tidy.setQuiet(true);
-                tidy.setShowWarnings(false);
-            }
-            tidy.setPrintBodyOnly(printBodyOnly);
-            tidy.setXHTML(true);
-            ByteArrayInputStream inputStream = new ByteArrayInputStream(str.getBytes("UTF-8"));
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            tidy.parseDOM(inputStream, outputStream);
-            String outStream = outputStream.toString("UTF-8");
-            if (outStream == null || outStream.trim().isEmpty()) {
-                return str;
-            }
-            ZimbraLog.mailbox.debug("End - Using JTidy library for cleaning the markup. Taken %d milliseconds.",
-                    (System.currentTimeMillis() - startTime));
-            return outStream;
-        }
-        return str;
+        return htmlBuilder.toString();
     }
 
     @Override
