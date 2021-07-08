@@ -203,6 +203,12 @@ public class SearchGalRequest {
     private CursorInfo cursor;
 
     /**
+     * @zm-api-field-description query string
+     */
+    @XmlElement(name=MailConstants.E_QUERY /* query */, required=false)
+    private String query; 
+
+    /**
      * @zm-api-field-description Search filter specification
      */
     @XmlElement(name=AccountConstants.E_ENTRY_SEARCH_FILTER /* searchFilter */, required=false)
@@ -226,6 +232,7 @@ public class SearchGalRequest {
     public void setLocale(String locale) { this.locale = locale; }
     public void setCursor(CursorInfo cursor) { this.cursor = cursor; }
     public void setSearchFilter(EntrySearchFilterInfo searchFilter) { this.searchFilter = searchFilter; }
+    public void setQuery(String query) { this.query = query; };
     public String getRef() { return ref; }
     public String getName() { return name; }
     public GalSearchType getType() { return type; }
@@ -241,6 +248,7 @@ public class SearchGalRequest {
     public String getLocale() { return locale; }
     public CursorInfo getCursor() { return cursor; }
     public EntrySearchFilterInfo getSearchFilter() { return searchFilter; }
+    public String getQuery() { return query; }
 
     public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         return helper
@@ -258,7 +266,8 @@ public class SearchGalRequest {
             .add("offset", offset)
             .add("locale", locale)
             .add("cursor", cursor)
-            .add("searchFilter", searchFilter);
+            .add("searchFilter", searchFilter)
+            .add("query", query);
     }
 
     @Override
