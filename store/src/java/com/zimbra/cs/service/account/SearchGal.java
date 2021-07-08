@@ -71,14 +71,26 @@ public class SearchGal extends GalDocumentHandler {
     
     private static Element searchGal(ZimbraSoapContext zsc, Account account, Element request) throws ServiceException {
         
-        // if searhc by ref is requested, honor it
+        // if search by ref is requested, honor it
         String ref = request.getAttribute(AccountConstants.A_REF, null);
         
-        // otherwise require a query
+        String galSearchQuery = null;
+        
         String name = null;
-        if (ref == null) {
-            name = request.getAttribute(AccountConstants.E_NAME);
-        }
+        
+	if (ref == null) {
+		galSearchQuery = request.getAttribute(MailConstants.A_QUERY, null);
+		name = request.getAttribute(AccountConstants.E_NAME, null);
+		if (galSearchQuery != null && name != null) {
+			throw ServiceException.INVALID_REQUEST("only one of the following attributes are allowed: "
+				+ MailConstants.A_QUERY + " or " + AccountConstants.E_NAME, null);
+		}
+		if (StringUtil.isNullOrEmpty(galSearchQuery) && name == null) {
+			throw ServiceException.INVALID_REQUEST("missing one of the required attributes: "
+				+ AccountConstants.A_REF + ", " + MailConstants.A_QUERY + " or " + AccountConstants.E_NAME,
+				null);
+		}
+	}
         
         EntrySearchFilter filter = GalExtraSearchFilter.parseSearchFilter(request);
                 
@@ -96,11 +108,15 @@ public class SearchGal extends GalDocumentHandler {
         
         GalSearchParams params = new GalSearchParams(account, zsc);
         
-        if (ref == null) {
-            params.setQuery(name);
-        } else {
+        if (ref != null) {
             // search GAL by ref, which is a dn
             params.setSearchEntryByDn(ref);
+        } else if (!StringUtil.isNullOrEmpty(galSearchQuery)) {
+        	// search GAL by query
+        	params.setGalSearchQuery(galSearchQuery);
+        } else if (name != null) {
+        	// search GAL by name
+        	params.setQuery(name);
         }
         params.setType(type);
         params.setRequest(request);
@@ -109,7 +125,7 @@ public class SearchGal extends GalDocumentHandler {
         params.setNeedIsMember(needIsMember);
         params.setNeedSMIMECerts(needSMIMECerts);
         params.setResponseName(AccountConstants.SEARCH_GAL_RESPONSE);
-        
+
         if (galAcctId != null) {
             params.setGalSyncAccount(Provisioning.getInstance().getAccountById(galAcctId));
         }

@@ -78,6 +78,7 @@ public class GalSearchParams {
     private boolean ldapHasMore = true;
     private boolean getCount = false;
     private boolean expandQuery = true;
+    private String galSearchQuery;
 
     private GalOp mOp;
 
@@ -445,5 +446,13 @@ public class GalSearchParams {
     public void setExpandQuery(boolean expandQuery) {
         this.expandQuery = expandQuery;
     }
+
+	public String getGalSearchQuery() {
+		return galSearchQuery;
+	}
+
+	public void setGalSearchQuery(String galSearchQuery) {
+		this.galSearchQuery = galSearchQuery;
+	}
 
 }
