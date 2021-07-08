@@ -9831,7 +9831,7 @@ TODO: delete them permanently from here
 <attr id="3090" name="zimbraMobileBlockedDevices" type="cstring" cardinality="multi" flags="domainInherited" optionalIn="globalConfig,domain" since="8.9.0">
     <desc>Blocked mobile device list for ActiveSync/ABQ</desc>
 </attr>
-<attr id="3091" name="zimbraFileUploadBlockedFileTypes" type="string" cardinality="multi" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="9.1.0">
+<attr id="3091" name="zimbraFileUploadBlockedFileTypes" type="string" cardinality="multi" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="9.1.0">
   <defaultCOSValue>asd</defaultCOSValue>
   <defaultCOSValue>bat</defaultCOSValue>
   <defaultCOSValue>chm</defaultCOSValue>
@@ -9864,7 +9864,7 @@ TODO: delete them permanently from here
   <desc>Commonly blocked file types for uploading</desc>
  </attr>
 
- <attr id="3092" name="zimbraFeatureFileTypeUploadRestrictionsEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="9.1.0">
+ <attr id="3092" name="zimbraFeatureFileTypeUploadRestrictionsEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="9.1.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>Enable/Disable blocked file types set in zimbraFileUploadBlockedFileTypes for uploading</desc>
  </attr>

@@ -338,6 +338,7 @@
         <attr name="displayName">Demo User One</attr>
         <attr name="zimbraPasswordMinLength">6</attr>
         <attr name="zimbraFeatureComposeInNewWindowEnabled">TRUE</attr>
+        <attr name="zimbraFeatureFileTypeUploadRestrictionsEnabled">TRUE</attr>
       </attrs>
       <zimlets>
         <zimlet>
