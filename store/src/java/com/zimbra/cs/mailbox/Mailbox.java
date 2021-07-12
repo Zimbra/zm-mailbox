@@ -10194,7 +10194,7 @@ public class Mailbox implements MailboxStore {
         if (isCachedType(type)) {
             return;
         }
-        ZimbraLog.cache.debug("Cache hit for %s %d in mailbox %d", type, key, getId());
+        ZimbraLog.cache.debug("Cache hit for %s %s in mailbox %d", type, (key instanceof String) ? key : String.valueOf(key), getId());
     }
 
     public MailItem lock(OperationContext octxt, int itemId, MailItem.Type type, String accountId)
