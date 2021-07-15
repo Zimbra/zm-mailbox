@@ -86,14 +86,28 @@ public class MimeHandlerManager {
         }
         String extension = FileUtil.getExtension(filename);
         HandlerInfo handlerInfo = sHandlers.get(getKey(mimeType, extension));
-
+        
+        if (mimeType.equals("application/pdf") || mimeType.equals("application/vnd.openxmlformats")) {
+            System.out.println("BEFORE NULL handlerInfo: " + handlerInfo);
+        }
         if (handlerInfo == null) {
             handlerInfo = loadHandler(mimeType, extension);
             sHandlers.put(getKey(mimeType, extension), handlerInfo);
+            if (mimeType.equals("application/pdf") || mimeType.equals("application/vnd.openxmlformats")) {
+                System.out.println("INSIDE handlerInfo: " + handlerInfo.getInstance() + " :: " + mimeType + "-" + extension);
+            }
+        } else {
+            if (mimeType.equals("application/pdf") || mimeType.equals("application/vnd.openxmlformats")) {
+                System.out.println("SKIPPING if block handlerInfo is NOT null");
+                System.out.println("FINAL handlerInfo: " + handlerInfo.getInstance() + " :: " + mimeType + "-" + extension);
+            }
         }
-
-
+       
         handler = handlerInfo.getInstance();
+        if (mimeType.equals("application/pdf") || mimeType.equals("application/vnd.openxmlformats")) {
+            System.out.println("handler: " + handler.getClass().getName()  + " :: " + mimeType + "-" + extension);
+            System.out.println("----------------------------------------------------------------------------------");
+        }
         sLog.debug("Returning MIME handler: %s", handler.getClass().getName());
         return handler;
     }

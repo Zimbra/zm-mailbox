@@ -91,7 +91,12 @@ public final class ParsedDocument {
     private synchronized void performExtraction() {
         try {
             long start = System.currentTimeMillis();
+            System.out.println("I AM INSIDE ParsedDocument.performExtraction()");
             MimeHandler handler = MimeHandlerManager.getMimeHandler(contentType, filename);
+            System.out.println("ParsedDocument.performExtraction()::handlerContent     -> " + handler.getContent());
+            System.out.println("ParsedDocument.performExtraction()::handlerFilename    -> " + handler.getFilename());
+            System.out.println("ParsedDocument.performExtraction()::handlerContentType -> " + handler.getContentType());
+            System.out.println("ParsedDocument.performExtraction()::handlerClass       -> " + handler.getClass());
             assert(handler != null);
 
             if (handler.isIndexingEnabled()) {
@@ -104,6 +109,7 @@ public final class ParsedDocument {
             String textContent = "";
             try {
                 textContent = handler.getContent();
+                System.out.println("ParsedDocument.performExtraction()::textContent     -> " + textContent);
             } catch (MimeHandlerException e) {
                 if (ConversionException.isTemporaryCauseOf(e)) {
                     ZimbraLog.doc.warn("Temporary failure extracting from the document.  (is convertd down?)", e);
