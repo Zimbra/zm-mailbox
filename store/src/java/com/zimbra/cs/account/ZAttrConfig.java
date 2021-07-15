@@ -31972,6 +31972,21 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Blocked mobile device list for ActiveSync/ABQ
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.9.0
+     */
+    @ZAttr(id=3090)
+    public Map<String,Object> unsetMobileBlockedDevices(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobileBlockedDevices, "");
+        return attrs;
+    }
+
+    /**
      * id of the doamin under which (hidden) accounts for apps would be
      * created
      *
@@ -76753,13 +76768,13 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Zulip server base host
      *
-     * @return zimbraZulipBaseHost, or "zimbra.com" if unset
+     * @return zimbraZulipBaseHost, or "" if unset
      *
      * @since ZCS 9.1.0
      */
     @ZAttr(id=3096)
     public String getZulipBaseHost() {
-        return getAttr(Provisioning.A_zimbraZulipBaseHost, "zimbra.com", true);
+        return getAttr(Provisioning.A_zimbraZulipBaseHost, "", true);
     }
 
     /**

@@ -9885,7 +9885,7 @@ TODO: delete them permanently from here
   <desc>Zulip JWT secret</desc>
 </attr>
 <attr id="3096" name="zimbraZulipBaseHost" type="string" cardinality="single" optionalIn="globalConfig" since="9.1.0">
-  <globalConfigValue>zimbra.com</globalConfigValue>
+  <globalConfigValue></globalConfigValue>
   <desc>Zulip server base host</desc>
 </attr>
 <attr id="3097" name="zimbraFeatureDocumentEditingEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="9.1.0">
