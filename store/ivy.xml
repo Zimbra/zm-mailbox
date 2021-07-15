@@ -44,7 +44,7 @@
   <dependency org="com.101tec" name="zkclient" rev="0.1.0"/>
   <dependency org="xerces" name="xercesImpl" rev="2.9.1-patch-01"/>
   <dependency org="net.sourceforge.nekohtml" name="nekohtml" rev="1.9.13.1z"/>
-  <dependency org="com.googlecode.owasp-java-html-sanitizer" name="owasp-java-html-sanitizer" rev="20190610.2z"/>
+  <dependency org="com.googlecode.owasp-java-html-sanitizer" name="owasp-java-html-sanitizer" rev="20190610.3z"/>
   <dependency org="org.ehcache" name="ehcache" rev="3.1.2"/>
   <dependency org="ant-1.7.0-ziputil-patched" name="ant-1.7.0-ziputil-patched" rev="1.0"/>
   <dependency org="org.eclipse.jetty" name="jetty-continuation" rev="${jetty.version}"/>
