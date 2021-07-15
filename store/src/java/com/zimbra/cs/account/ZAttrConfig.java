@@ -76768,13 +76768,13 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Zulip server base host
      *
-     * @return zimbraZulipBaseHost, or "zimbra.com" if unset
+     * @return zimbraZulipBaseHost, or "" if unset
      *
      * @since ZCS 9.1.0
      */
     @ZAttr(id=3096)
     public String getZulipBaseHost() {
-        return getAttr(Provisioning.A_zimbraZulipBaseHost, "zimbra.com", true);
+        return getAttr(Provisioning.A_zimbraZulipBaseHost, "", true);
     }
 
     /**
