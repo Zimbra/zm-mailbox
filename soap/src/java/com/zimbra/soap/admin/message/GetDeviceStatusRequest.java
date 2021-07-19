@@ -28,6 +28,8 @@ import com.zimbra.common.soap.SyncConstants;
 import com.zimbra.soap.admin.type.DeviceId;
 import com.zimbra.soap.type.AccountSelector;
 import com.zimbra.common.soap.Element;
+import com.zimbra.soap.admin.type.DomainSelector;
+import com.zimbra.soap.admin.type.CosSelector;
 
 /**
  * @zm-api-command-network-edition
@@ -109,6 +111,20 @@ public class GetDeviceStatusRequest {
     private String filterDevicesByAnd = "true";
 
     /**
+     * @zm-api-field-tag domain
+     * @zm-api-field-description filter devices by domain
+     */
+    @XmlElement(name = SyncConstants.E_DOMAIN /* domain */, required = false)
+    private DomainSelector domain;
+
+    /**
+     * @zm-api-field-tag COS
+     * @zm-api-field-description filter devices by COS
+     */
+    @XmlElement(name = SyncConstants.E_COS /* COS */, required = false)
+    private CosSelector cos;
+
+    /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
@@ -129,6 +145,13 @@ public class GetDeviceStatusRequest {
         this(offset, limit, account, deviceId, status, deviceName, deviceType, deviceLastUsed, deviceSyncVersion, "true");
     }
 
+    public GetDeviceStatusRequest(int offset, int limit, AccountSelector account, DeviceId deviceId, Byte status,
+            String deviceName, String deviceType, String deviceLastUsed, String deviceSyncVersion,
+            String filterDevicesByAnd) {
+        this(offset, limit, account, deviceId, status, deviceName, deviceType, deviceLastUsed, deviceSyncVersion,
+                filterDevicesByAnd, null, null);
+    }
+
     /**
      * @param account
      * @param deviceId
@@ -139,8 +162,9 @@ public class GetDeviceStatusRequest {
      * @param deviceSyncVersion
      * @param filterDevicesByAnd
      */
-    public GetDeviceStatusRequest(int offset, int limit, AccountSelector account, DeviceId deviceId, Byte status, String deviceName,
-            String deviceType, String deviceLastUsed, String deviceSyncVersion, String filterDevicesByAnd) {
+    public GetDeviceStatusRequest(int offset, int limit, AccountSelector account, DeviceId deviceId, Byte status,
+            String deviceName, String deviceType, String deviceLastUsed, String deviceSyncVersion,
+            String filterDevicesByAnd, DomainSelector domain, CosSelector cos) {
         this.offset = offset;
         this.limit = limit;
         this.account = account;
@@ -151,6 +175,8 @@ public class GetDeviceStatusRequest {
         this.deviceLastUsed = deviceLastUsed;
         this.deviceSyncVersion = deviceSyncVersion;
         this.filterDevicesByAnd = filterDevicesByAnd;
+        this.cos = cos;
+        this.domain = domain;
     }
 
     public int getOffset() {
@@ -163,6 +189,22 @@ public class GetDeviceStatusRequest {
 
     public int getLimit() {
         return limit;
+    }
+
+    public void setDomain(DomainSelector domain) {
+        this.domain = domain;
+    }
+
+    public DomainSelector getDomain() {
+        return domain;
+    }
+
+    public void setCos(CosSelector cos) {
+        this.cos = cos;
+    }
+
+    public CosSelector getCos() {
+        return cos;
     }
 
     public void setLimit(int limit) {
@@ -231,8 +273,9 @@ public class GetDeviceStatusRequest {
 
     @Override
     public String toString() {
-        return "GetDeviceStatusRequest [account=" + account + ", deviceId=" + deviceId + ", status=" + status
-                + ", deviceName=" + deviceName + ", deviceType=" + deviceType + ", deviceLastUsed=" + deviceLastUsed
-                + ", deviceSyncVersion=" + deviceSyncVersion + ", filterDevicesByAnd=" + filterDevicesByAnd + "]";
+        return String.format(
+                "GetDeviceStatusRequest [account=%s, deviceId=%s, status=%s, deviceName=%s, deviceType=%s, deviceLastUsed=%s, deviceSyncVersion=%s, filterDevicesByAnd=%s, domain=%s, cos=%s",
+                account, deviceId, status, deviceName, deviceType, deviceLastUsed, deviceSyncVersion,
+                filterDevicesByAnd, domain, cos);
     }
 }

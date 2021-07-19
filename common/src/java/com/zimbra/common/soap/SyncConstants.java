@@ -88,6 +88,8 @@ public final class SyncConstants {
     public static final String E_DEVICE_LAST_USED = "deviceLastUsed";
     public static final String E_DEVICE_SYNC_VERSION = "deviceSyncVersion";
     public static final String E_EMAIL_ADDRESS = "emailAddress";
+    public static final String E_DOMAIN = "domain";
+    public static final String E_COS = "cos";
 
     public static final String A_ID = "id";
     public static final String A_TYPE = "type";
