@@ -76781,19 +76781,21 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Zulip server base host
+     * Zulip server base host. Requires server restart if updating from empty
+     * value.
      *
-     * @return zimbraZulipBaseHost, or "" if unset
+     * @return zimbraZulipBaseHost, or null if unset
      *
      * @since ZCS 9.1.0
      */
     @ZAttr(id=3096)
     public String getZulipBaseHost() {
-        return getAttr(Provisioning.A_zimbraZulipBaseHost, "", true);
+        return getAttr(Provisioning.A_zimbraZulipBaseHost, null, true);
     }
 
     /**
-     * Zulip server base host
+     * Zulip server base host. Requires server restart if updating from empty
+     * value.
      *
      * @param zimbraZulipBaseHost new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -76808,7 +76810,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Zulip server base host
+     * Zulip server base host. Requires server restart if updating from empty
+     * value.
      *
      * @param zimbraZulipBaseHost new value
      * @param attrs existing map to populate, or null to create a new map
@@ -76824,7 +76827,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Zulip server base host
+     * Zulip server base host. Requires server restart if updating from empty
+     * value.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -76838,7 +76842,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Zulip server base host
+     * Zulip server base host. Requires server restart if updating from empty
+     * value.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
