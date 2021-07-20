@@ -136,7 +136,7 @@
   <dependency org="com.zaxxer" name="SparseBitSet" rev="1.2"/>
   <dependency org="org.apache.commons" name="commons-math3" rev="3.6.1"/>
   <dependency org="org.tukaani" name="xz" rev="1.9"/>
-  <dependency org="org.apache.commons" name="commons-csv" rev="1.8"/>
-  <dependency org="com.github.veithen.cosmos.bootstrap" name="org.tukaani.xz" rev="0.3"/>
+  <dependency org="com.drewnoakes" name="metadata-extractor" rev="2.16.0"/>
+  <dependency org="com.adobe.xmp" name="xmpcore" rev="6.1.11"/>
  </dependencies>
 </ivy-module>
