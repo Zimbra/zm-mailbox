@@ -9884,16 +9884,16 @@ TODO: delete them permanently from here
   <globalConfigValue>SECRET</globalConfigValue>
   <desc>Zulip JWT secret</desc>
 </attr>
-<attr id="3096" name="zimbraZulipBaseHost" type="string" cardinality="single" optionalIn="globalConfig" since="9.1.0">
-  <globalConfigValue>zimbra.com</globalConfigValue>
-  <desc>Zulip server base host</desc>
+<attr id="3096" name="zimbraZulipBaseHost" type="string" cardinality="single" optionalIn="globalConfig" since="9.1.0" requiresRestart="mailbox">
+  <desc>Zulip server base host.
+        Requires server restart if updating from empty value.
+  </desc>
 </attr>
 <attr id="3097" name="zimbraFeatureDocumentEditingEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="9.1.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>Whether or not document editing feature is enabled within briefcase</desc>
 </attr>
-<attr id="3098" name="zimbraDocumentEditingHost" type="string" cardinality="single" optionalIn="globalConfig" since="9.1.0">
-  <globalConfigValue>zimbra.com</globalConfigValue>
+<attr id="3098" name="zimbraDocumentServerHost" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="9.1.0">
   <desc>Host server where the onlyoffice is hosted</desc>
 </attr>
 <attr id="3099" name="zimbraDocumentEditingCallbackPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict" since="9.1.0">
@@ -9901,7 +9901,6 @@ TODO: delete them permanently from here
   <desc>Zimbra port on which document editing can request document</desc>
 </attr>
 <attr id="3100" name="zimbraDocumentEditingJwtSecret" type="string" cardinality="single" optionalIn="globalConfig" since="9.1.0">
-  <globalConfigValue>SECRET</globalConfigValue>
   <desc>Document editing JWT secret</desc>
 </attr>
 <attr id="3101" name="zimbraDocumentRecentlyViewedEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="9.1.0">
