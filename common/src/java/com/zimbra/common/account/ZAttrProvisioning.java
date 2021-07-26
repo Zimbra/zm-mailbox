@@ -9856,7 +9856,7 @@ public class ZAttrProvisioning {
     /**
      * Allowed mobile device list for ActiveSync/ABQ
      *
-     * @since ZCS 8.9.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3089)
     public static final String A_zimbraMobileAllowedDevices = "zimbraMobileAllowedDevices";
@@ -9873,7 +9873,7 @@ public class ZAttrProvisioning {
     /**
      * Blocked mobile device list for ActiveSync/ABQ
      *
-     * @since ZCS 8.9.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3090)
     public static final String A_zimbraMobileBlockedDevices = "zimbraMobileBlockedDevices";
@@ -10522,7 +10522,7 @@ public class ZAttrProvisioning {
     /**
      * Whether to permit syncing shared calendar folders
      *
-     * @since ZCS 9.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=4002)
     public static final String A_zimbraMobileShareCalendarEnabled = "zimbraMobileShareCalendarEnabled";
@@ -10538,7 +10538,7 @@ public class ZAttrProvisioning {
     /**
      * Whether to permit syncing shared mail folders
      *
-     * @since ZCS 9.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=4001)
     public static final String A_zimbraMobileShareMailEnabled = "zimbraMobileShareMailEnabled";

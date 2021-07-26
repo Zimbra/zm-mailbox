@@ -34092,7 +34092,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @return zimbraMobileShareCalendarEnabled, or false if unset
      *
-     * @since ZCS 9.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=4002)
     public boolean isMobileShareCalendarEnabled() {
@@ -34105,7 +34105,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param zimbraMobileShareCalendarEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=4002)
     public void setMobileShareCalendarEnabled(boolean zimbraMobileShareCalendarEnabled) throws com.zimbra.common.service.ServiceException {
@@ -34121,7 +34121,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=4002)
     public Map<String,Object> setMobileShareCalendarEnabled(boolean zimbraMobileShareCalendarEnabled, Map<String,Object> attrs) {
@@ -34135,7 +34135,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=4002)
     public void unsetMobileShareCalendarEnabled() throws com.zimbra.common.service.ServiceException {
@@ -34150,7 +34150,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=4002)
     public Map<String,Object> unsetMobileShareCalendarEnabled(Map<String,Object> attrs) {
@@ -34236,7 +34236,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @return zimbraMobileShareMailEnabled, or false if unset
      *
-     * @since ZCS 9.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=4001)
     public boolean isMobileShareMailEnabled() {
@@ -34249,7 +34249,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param zimbraMobileShareMailEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=4001)
     public void setMobileShareMailEnabled(boolean zimbraMobileShareMailEnabled) throws com.zimbra.common.service.ServiceException {
@@ -34265,7 +34265,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=4001)
     public Map<String,Object> setMobileShareMailEnabled(boolean zimbraMobileShareMailEnabled, Map<String,Object> attrs) {
@@ -34279,7 +34279,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 9.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=4001)
     public void unsetMobileShareMailEnabled() throws com.zimbra.common.service.ServiceException {
@@ -34294,7 +34294,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 9.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=4001)
     public Map<String,Object> unsetMobileShareMailEnabled(Map<String,Object> attrs) {

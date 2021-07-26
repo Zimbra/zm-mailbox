@@ -31723,7 +31723,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraMobileAllowedDevices, or empty array if unset
      *
-     * @since ZCS 8.9.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3089)
     public String[] getMobileAllowedDevices() {
@@ -31736,7 +31736,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraMobileAllowedDevices new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.9.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3089)
     public void setMobileAllowedDevices(String[] zimbraMobileAllowedDevices) throws com.zimbra.common.service.ServiceException {
@@ -31752,7 +31752,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.9.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3089)
     public Map<String,Object> setMobileAllowedDevices(String[] zimbraMobileAllowedDevices, Map<String,Object> attrs) {
@@ -31767,7 +31767,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraMobileAllowedDevices new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.9.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3089)
     public void addMobileAllowedDevices(String zimbraMobileAllowedDevices) throws com.zimbra.common.service.ServiceException {
@@ -31783,7 +31783,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.9.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3089)
     public Map<String,Object> addMobileAllowedDevices(String zimbraMobileAllowedDevices, Map<String,Object> attrs) {
@@ -31798,7 +31798,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraMobileAllowedDevices existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.9.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3089)
     public void removeMobileAllowedDevices(String zimbraMobileAllowedDevices) throws com.zimbra.common.service.ServiceException {
@@ -31814,7 +31814,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.9.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3089)
     public Map<String,Object> removeMobileAllowedDevices(String zimbraMobileAllowedDevices, Map<String,Object> attrs) {
@@ -31828,7 +31828,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.9.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3089)
     public void unsetMobileAllowedDevices() throws com.zimbra.common.service.ServiceException {
@@ -31843,7 +31843,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.9.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3089)
     public Map<String,Object> unsetMobileAllowedDevices(Map<String,Object> attrs) {
@@ -31857,7 +31857,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraMobileBlockedDevices, or empty array if unset
      *
-     * @since ZCS 8.9.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3090)
     public String[] getMobileBlockedDevices() {
@@ -31870,7 +31870,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraMobileBlockedDevices new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.9.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3090)
     public void setMobileBlockedDevices(String[] zimbraMobileBlockedDevices) throws com.zimbra.common.service.ServiceException {
@@ -31886,7 +31886,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.9.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3090)
     public Map<String,Object> setMobileBlockedDevices(String[] zimbraMobileBlockedDevices, Map<String,Object> attrs) {
@@ -31901,7 +31901,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraMobileBlockedDevices new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.9.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3090)
     public void addMobileBlockedDevices(String zimbraMobileBlockedDevices) throws com.zimbra.common.service.ServiceException {
@@ -31917,7 +31917,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.9.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3090)
     public Map<String,Object> addMobileBlockedDevices(String zimbraMobileBlockedDevices, Map<String,Object> attrs) {
@@ -31932,7 +31932,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraMobileBlockedDevices existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.9.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3090)
     public void removeMobileBlockedDevices(String zimbraMobileBlockedDevices) throws com.zimbra.common.service.ServiceException {
@@ -31948,7 +31948,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.9.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3090)
     public Map<String,Object> removeMobileBlockedDevices(String zimbraMobileBlockedDevices, Map<String,Object> attrs) {
@@ -31962,7 +31962,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.9.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3090)
     public void unsetMobileBlockedDevices() throws com.zimbra.common.service.ServiceException {
@@ -31977,7 +31977,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.9.0
+     * @since ZCS 9.1.0
      */
     @ZAttr(id=3090)
     public Map<String,Object> unsetMobileBlockedDevices(Map<String,Object> attrs) {
