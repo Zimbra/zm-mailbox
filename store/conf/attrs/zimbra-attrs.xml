@@ -9825,10 +9825,10 @@ TODO: delete them permanently from here
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether to use Web Client feature</desc>
 </attr>
-<attr id="3089" name="zimbraMobileAllowedDevices" type="cstring" cardinality="multi" flags="domainInherited" optionalIn="globalConfig,domain" since="8.9.0">
+<attr id="3089" name="zimbraMobileAllowedDevices" type="cstring" cardinality="multi" flags="domainInherited" optionalIn="globalConfig,domain" since="9.1.0">
     <desc>Allowed mobile device list for ActiveSync/ABQ</desc>
 </attr>
-<attr id="3090" name="zimbraMobileBlockedDevices" type="cstring" cardinality="multi" flags="domainInherited" optionalIn="globalConfig,domain" since="8.9.0">
+<attr id="3090" name="zimbraMobileBlockedDevices" type="cstring" cardinality="multi" flags="domainInherited" optionalIn="globalConfig,domain" since="9.1.0">
     <desc>Blocked mobile device list for ActiveSync/ABQ</desc>
 </attr>
 <attr id="3091" name="zimbraFileUploadBlockedFileTypes" type="string" cardinality="multi" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="9.1.0">
@@ -9911,12 +9911,12 @@ TODO: delete them permanently from here
   <defaultCOSValue>0</defaultCOSValue>
   <desc>Maximum size in bytes for e-mail attachment.</desc>
 </attr>
-<attr id="4001" name="zimbraMobileShareMailEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="9.0">
+<attr id="4001" name="zimbraMobileShareMailEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="9.1.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Whether to permit syncing shared mail folders</desc>
 </attr>
 
-<attr id="4002" name="zimbraMobileShareCalendarEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="9.0">
+<attr id="4002" name="zimbraMobileShareCalendarEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="9.1.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Whether to permit syncing shared calendar folders</desc>
 </attr>
