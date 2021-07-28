@@ -298,8 +298,10 @@ public class Mailbox implements MailboxStore {
     // Old mailboxes may still contain a system folder with id 18
     @Deprecated
     public static final int ID_FOLDER_PROFILE = FolderConstants.ID_FOLDER_PROFILE; // 18;
+
+    public static final int ID_FOLDER_UNSUBSCRIBE = FolderConstants.ID_FOLDER_UNSUBSCRIBE; // 19;
     //This id should be incremented if any new ID_FOLDER_* is added.
-    public static final int HIGHEST_SYSTEM_ID = FolderConstants.HIGHEST_SYSTEM_ID; // 18;
+    public static final int HIGHEST_SYSTEM_ID = FolderConstants.HIGHEST_SYSTEM_ID; // 19;
 
     public static final int EAS_BLOCKED_EMAIL_ID = 255;
     public static final int FIRST_USER_ID = 256;
@@ -2252,6 +2254,11 @@ public class Mailbox implements MailboxStore {
                             MailItem.Type.MESSAGE, 0, MailItem.DEFAULT_COLOR_RGB, null, null, null);
             Folder.create(ID_FOLDER_BRIEFCASE, UUIDUtil.generateUUID(), this, userRoot, "Briefcase", system,
                             MailItem.Type.DOCUMENT, 0, MailItem.DEFAULT_COLOR_RGB, null, null, null);
+
+            if (LC.zimbra_feature_safe_unsubscribe_folder_enabled.booleanValue()) {
+                Folder.create(ID_FOLDER_UNSUBSCRIBE, UUIDUtil.generateUUID(), this, userRoot, "Unsubscribe", system,
+                        MailItem.Type.MESSAGE, 0, MailItem.DEFAULT_COLOR_RGB, null, null, null);
+            }
         } finally {
             lock.release();
         }
@@ -2271,6 +2278,20 @@ public class Mailbox implements MailboxStore {
 
     int getInitialItemId() {
         return FIRST_USER_ID;
+    }
+
+    private Folder createUnsubscribeFolder() throws ServiceException {
+        Folder unsubscribe = null;
+        if (LC.zimbra_feature_safe_unsubscribe_folder_enabled.booleanValue()) {
+            lock.lock();
+            try {
+                unsubscribe = Folder.create(ID_FOLDER_UNSUBSCRIBE, UUIDUtil.generateUUID(), this, mFolderCache.get(ID_FOLDER_ROOT), "Unsubscribe", Folder.FOLDER_IS_IMMUTABLE,
+                        MailItem.Type.MESSAGE, 0, MailItem.DEFAULT_COLOR_RGB, null, null, null);
+            } finally {
+                lock.release();
+            }
+        }
+        return unsubscribe;
     }
 
     private void loadFoldersAndTags() throws ServiceException {
@@ -2342,6 +2363,16 @@ public class Mailbox implements MailboxStore {
                 DbMailItem.FolderTagCounts fcounts = entry.getValue();
                 if (fcounts != null) {
                     folder.setSize(folder.getItemCount(), fcounts.deletedCount, fcounts.totalSize, fcounts.deletedUnreadCount);
+                }
+            }
+            if (LC.zimbra_feature_safe_unsubscribe_folder_enabled.booleanValue() && !mFolderCache.mapById.containsKey(ID_FOLDER_UNSUBSCRIBE)) {
+                try {
+                    Folder unsubscribeFolder = createUnsubscribeFolder();
+                    if (unsubscribeFolder != null) {
+                        mFolderCache.put(unsubscribeFolder);
+                    }
+                } catch (ServiceException e) {
+                    ZimbraLog.mailbox.warn("Unsubscribe folder creation failed", e);
                 }
             }
             // establish the folder hierarchy
