@@ -1444,6 +1444,9 @@ public final class LC {
     // imap folder pagination enabled
     public static final KnownKey zimbra_imap_folder_pagination_enabled =  KnownKey.newKey(false);
 
+    // unsubscribe folder creation enabled
+    public static final KnownKey zimbra_feature_safe_unsubscribe_folder_enabled =  KnownKey.newKey(true);
+
     @Supported
     public static final KnownKey zimbra_remote_cmd_channel_timeout_min = KnownKey.newKey(10);
 
