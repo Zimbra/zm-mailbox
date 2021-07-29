@@ -9375,9 +9375,10 @@ TODO: delete them permanently from here
 <desc>outgoing sieve script defined by admin (not able to edit and view from the end user) applied after the end user filter rule</desc>
 </attr>
 
-<attr id="2117" name="zimbraNetworkModulesNGEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.8.0">
-  <globalConfigValue>TRUE</globalConfigValue>
+<attr id="2117" name="zimbraNetworkModulesNGEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.8.0" deprecatedSince="9.1.0">
+  <globalConfigValue>FALSE</globalConfigValue>
   <desc>Whether to enable zimbra network new generation modules.</desc>
+  <deprecateDesc>Deprecated and defaulted to false</deprecateDesc>
 </attr>
 
 <attr id="2118" name="zimbraNetworkMobileNGEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.8.0" >

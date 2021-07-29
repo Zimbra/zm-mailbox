@@ -35887,18 +35887,20 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Deprecated since: 9.1.0. Deprecated and defaulted to false. Orig desc:
      * Whether to enable zimbra network new generation modules.
      *
-     * @return zimbraNetworkModulesNGEnabled, or true if unset
+     * @return zimbraNetworkModulesNGEnabled, or false if unset
      *
      * @since ZCS 8.8.0
      */
     @ZAttr(id=2117)
     public boolean isNetworkModulesNGEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraNetworkModulesNGEnabled, true, true);
+        return getBooleanAttr(Provisioning.A_zimbraNetworkModulesNGEnabled, false, true);
     }
 
     /**
+     * Deprecated since: 9.1.0. Deprecated and defaulted to false. Orig desc:
      * Whether to enable zimbra network new generation modules.
      *
      * @param zimbraNetworkModulesNGEnabled new value
@@ -35914,6 +35916,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Deprecated since: 9.1.0. Deprecated and defaulted to false. Orig desc:
      * Whether to enable zimbra network new generation modules.
      *
      * @param zimbraNetworkModulesNGEnabled new value
@@ -35930,6 +35933,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Deprecated since: 9.1.0. Deprecated and defaulted to false. Orig desc:
      * Whether to enable zimbra network new generation modules.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -35944,6 +35948,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Deprecated since: 9.1.0. Deprecated and defaulted to false. Orig desc:
      * Whether to enable zimbra network new generation modules.
      *
      * @param attrs existing map to populate, or null to create a new map

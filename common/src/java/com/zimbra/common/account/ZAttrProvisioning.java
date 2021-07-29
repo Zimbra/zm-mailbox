@@ -11917,6 +11917,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraNetworkMobileNGEnabled = "zimbraNetworkMobileNGEnabled";
 
     /**
+     * Deprecated since: 9.1.0. Deprecated and defaulted to false. Orig desc:
      * Whether to enable zimbra network new generation modules.
      *
      * @since ZCS 8.8.0
