@@ -48,4 +48,16 @@
 	    <glob pattern="*.xsd"/>
 	    <sub-class-of type="text/plain" />
     </mime-type>
+
+    <mime-type type="text/calendar">
+        <magic priority="50">
+            <match value="BEGIN:VCALENDAR" type="stringignorecase" offset="0">
+                <match value="(?s).*\\nVERSION\\s*:2\\.0" type="regex" offset="15" />
+            </match>
+        </magic>
+        <glob pattern="*.ics"/>
+        <glob pattern="*.ifb"/>
+        <sub-class-of type="text/plain"/>
+    </mime-type>
+
 </mime-info>
