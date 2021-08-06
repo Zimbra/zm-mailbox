@@ -227,10 +227,10 @@ public class ZCalendar {
                                 prop.setValue(desc);
                         }
                     }
-                    if (descHtml != null && descHtml.length() > 0) {
-                        // Just add the X-ALT-DESC value.  Don't worry about replacing existing value.
-                        comp.addProperty(altDescProp);
-                    }
+                    // if (descHtml != null && descHtml.length() > 0) {
+                    //     // Just add the X-ALT-DESC value.  Don't worry about replacing existing value.
+                    //     comp.addProperty(altDescProp);
+                    // }
                 }
             }
         }
