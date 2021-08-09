@@ -2279,20 +2279,6 @@ public class Mailbox implements MailboxStore {
         return FIRST_USER_ID;
     }
 
-    private Folder createUnsubscribeFolder() throws ServiceException {
-        Folder unsubscribe = null;
-        if (LC.zimbra_feature_safe_unsubscribe_folder_enabled.booleanValue()) {
-            lock.lock();
-            try {
-                unsubscribe = Folder.create(ID_FOLDER_UNSUBSCRIBE, UUIDUtil.generateUUID(), this, mFolderCache.get(ID_FOLDER_ROOT), "Unsubscribe", Folder.FOLDER_IS_IMMUTABLE,
-                        MailItem.Type.MESSAGE, 0, MailItem.DEFAULT_COLOR_RGB, null, null, null);
-            } finally {
-                lock.release();
-            }
-        }
-        return unsubscribe;
-    }
-
     private void loadFoldersAndTags() throws ServiceException {
         // if the persisted mailbox sizes aren't available, we *must* recalculate
         boolean initial = mData.contacts < 0 || mData.size < 0;
@@ -2362,16 +2348,6 @@ public class Mailbox implements MailboxStore {
                 DbMailItem.FolderTagCounts fcounts = entry.getValue();
                 if (fcounts != null) {
                     folder.setSize(folder.getItemCount(), fcounts.deletedCount, fcounts.totalSize, fcounts.deletedUnreadCount);
-                }
-            }
-            if (LC.zimbra_feature_safe_unsubscribe_folder_enabled.booleanValue() && !mFolderCache.mapById.containsKey(ID_FOLDER_UNSUBSCRIBE)) {
-                try {
-                    Folder unsubscribeFolder = createUnsubscribeFolder();
-                    if (unsubscribeFolder != null) {
-                        mFolderCache.put(unsubscribeFolder);
-                    }
-                } catch (ServiceException e) {
-                    ZimbraLog.mailbox.warn("Unsubscribe folder creation failed", e);
                 }
             }
             // establish the folder hierarchy
