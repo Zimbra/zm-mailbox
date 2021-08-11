@@ -1447,6 +1447,9 @@ public final class LC {
     // unsubscribe folder creation enabled
     public static final KnownKey zimbra_feature_safe_unsubscribe_folder_enabled =  KnownKey.newKey(false);
 
+    // wsdl use public service hostname
+    public static final KnownKey wsdl_use_public_service_hostname =  KnownKey.newKey(true);
+
     @Supported
     public static final KnownKey zimbra_remote_cmd_channel_timeout_min = KnownKey.newKey(10);
 
