@@ -9921,4 +9921,8 @@ TODO: delete them permanently from here
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Whether to permit syncing shared calendar folders</desc>
 </attr>
+<attr id="4003" name="zimbraFeatureSafeUnsubscribeFolderEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="9.1.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>Creates unsubscribe system folder</desc>
+ </attr>
 </attrs>

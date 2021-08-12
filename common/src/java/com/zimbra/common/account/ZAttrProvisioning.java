@@ -6899,6 +6899,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureResetPasswordSuspensionTime = "zimbraFeatureResetPasswordSuspensionTime";
 
     /**
+     * Creates unsubscribe system folder
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4003)
+    public static final String A_zimbraFeatureSafeUnsubscribeFolderEnabled = "zimbraFeatureSafeUnsubscribeFolderEnabled";
+
+    /**
      * saved search feature
      */
     @ZAttr(id=139)
