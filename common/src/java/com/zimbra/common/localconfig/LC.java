@@ -1455,7 +1455,7 @@ public final class LC {
     public static final KnownKey zimbra_imap_folder_pagination_enabled =  KnownKey.newKey(false);
 
     // unsubscribe folder creation enabled
-    public static final KnownKey zimbra_feature_safe_unsubscribe_folder_enabled =  KnownKey.newKey(true);
+    public static final KnownKey zimbra_feature_safe_unsubscribe_folder_enabled =  KnownKey.newKey(false);
 
     @Supported
     public static final KnownKey zimbra_remote_cmd_channel_timeout_min = KnownKey.newKey(10);
