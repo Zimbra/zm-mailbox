@@ -23,6 +23,7 @@ import java.io.InputStream;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
@@ -127,7 +128,10 @@ public class WsdlServlet extends ZimbraServlet {
 
     private static String getSoapAdminURL(Domain domain) {
         try {
-            return URLUtil.getPublicAdminSoapURLForDomain(Provisioning.getInstance().getLocalServer(), domain);
+            if (LC.wsdl_use_public_service_hostname.booleanValue()) {
+                return URLUtil.getPublicAdminSoapURLForDomain(Provisioning.getInstance().getLocalServer(), domain);
+            }
+            return URLUtil.getAdminURL(Provisioning.getInstance().getLocalServer());
         } catch (ServiceException e) {
             return WsdlServiceInfo.localhostSoapAdminHttpsURL;
         }
@@ -135,8 +139,10 @@ public class WsdlServlet extends ZimbraServlet {
 
     private static String getSoapURL(Domain domain) {
         try {
-            return URLUtil.getPublicURLForDomain(Provisioning.getInstance().getLocalServer(),
-                    domain, AccountConstants.USER_SERVICE_URI, true);
+            if (LC.wsdl_use_public_service_hostname.booleanValue()) {
+                return URLUtil.getPublicURLForDomain(Provisioning.getInstance().getLocalServer(), domain, AccountConstants.USER_SERVICE_URI, true);
+            }
+            return URLUtil.getServiceURL(Provisioning.getInstance().getLocalServer(), AccountConstants.USER_SERVICE_URI, true);
         } catch (ServiceException e) {
             return WsdlServiceInfo.localhostSoapHttpURL;
         }
