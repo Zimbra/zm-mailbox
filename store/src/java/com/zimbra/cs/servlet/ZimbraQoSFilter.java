@@ -120,6 +120,10 @@ public class ZimbraQoSFilter implements Filter {
             if (pass == null) {
                 pass = passes.get(user);
             }
+
+            ZimbraLog.misc.info("QOS info for user: %s max permit: %d available permits: %d", user, max,
+                    pass.availablePermits());
+
             if (pass.tryAcquire(waitMs, TimeUnit.MILLISECONDS)) {
                 try {
                     chain.doFilter(request, response);
