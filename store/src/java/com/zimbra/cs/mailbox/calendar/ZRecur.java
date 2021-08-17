@@ -689,7 +689,8 @@ public class ZRecur implements Cloneable {
         int numInstancesExpanded = 1;  // initially 1 rather than 0 because DTSTART is always included
 
         // Set hard limit of expansion time range.  (bug 21989)
-        ParsedDateTime earliestDateTime = ParsedDateTime.fromUTCTime(earliestDate.getTime());
+        //changes made it handle TimeZone for ZCS-10805
+        ParsedDateTime earliestDateTime = ParsedDateTime.fromUTCTime(earliestDate.getTime(), dtStart.getTimeZone());
         Date hardEndDate = getEstimatedEndTime(earliestDateTime);
         if (hardEndDate.before(rangeEndDate))
             rangeEndDate = hardEndDate;
