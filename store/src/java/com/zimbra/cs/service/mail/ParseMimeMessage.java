@@ -56,6 +56,7 @@ import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.SmimeConstants;
 import com.zimbra.common.util.CharsetUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
@@ -328,6 +329,15 @@ public final class ParseMimeMessage {
             Element attachElem = msgElem.getOptionalElement(MailConstants.E_ATTACH);
             Element inviteElem = msgElem.getOptionalElement(MailConstants.E_INVITE);
 
+            final boolean isSmimeSigned = msgElem.getParent().getAttributeBool(SmimeConstants.A_SIGN, false);
+            final boolean isEncrypted = msgElem.getParent().getAttributeBool(SmimeConstants.A_ENCRYPT, false);
+
+            // isQPencodeRequired is used to ensure RFC8551 Section 3.1.2/3.1.3.
+            boolean isQPencodeRequired = false;
+            if (isSmimeSigned && !isEncrypted) {
+                isQPencodeRequired = true;
+            }
+
             boolean hasContent  = (partElem != null || inviteElem != null || additionalParts != null);
             boolean isMultipart = (attachElem != null); // || inviteElem != null || additionalParts!=null);
             if (isMultipart) {
@@ -383,7 +393,7 @@ public final class ParseMimeMessage {
 
             // handle the content from the client, if any
             if (hasContent) {
-                setContent(mm, mmp, partElem != null ? partElem : inviteElem, alternatives, ctxt);
+                setContent(mm, mmp, partElem != null ? partElem : inviteElem, alternatives, ctxt, isQPencodeRequired);
             }
             // attachments go into the toplevel "mixed" part
             if (isMultipart && attachElem != null) {
@@ -536,13 +546,19 @@ public final class ParseMimeMessage {
     private static void setContent(MimeMessage mm, MimeMultipart mmp, Element elem, MimeBodyPart[] alternatives,
             ParseMessageContext ctxt)
     throws MessagingException, ServiceException, IOException {
+        setContent(mm, mmp, elem, alternatives, ctxt, false);
+    }
+
+    private static void setContent(MimeMessage mm, MimeMultipart mmp, Element elem, MimeBodyPart[] alternatives,
+            ParseMessageContext ctxt, boolean isQPencodeRequired)
+    throws MessagingException, ServiceException, IOException {
         String type = elem.getAttribute(MailConstants.A_CONTENT_TYPE, MimeConstants.CT_DEFAULT).trim();
         ContentType ctype = new ContentType(type, ctxt.use2231).cleanup();
 
         // is the client passing us a multipart?
         if (ctype.getPrimaryType().equals("multipart")) {
             // handle multipart content separately...
-            setMultipartContent(ctype, mm, mmp, elem, alternatives, ctxt);
+            setMultipartContent(ctype, mm, mmp, elem, alternatives, ctxt, isQPencodeRequired);
             return;
         }
 
@@ -585,26 +601,41 @@ public final class ParseMimeMessage {
             Object content = ctype.getContentType().equals(ContentType.MESSAGE_RFC822) ?
                     new ZMimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(raw)) : text;
             if (mmp != null) {
-                if (!isAscii) {
-                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                    OutputStream encodedOut = MimeUtility.encode(baos, MimeConstants.ET_QUOTED_PRINTABLE);
-                    encodedOut.write(text.getBytes(charset));
-                    text = baos.toString();
-                    content = ctype.getContentType().equals(ContentType.MESSAGE_RFC822) ?
-                        new ZMimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(raw)) : text;
-                    String mbpHeaders = "Content-Type: " + ctype.toString()
-                        + "\r\nContent-Transfer-Encoding: " + MimeConstants.ET_QUOTED_PRINTABLE
-                        + "\r\n";
-                    mmp.addBodyPart(new MimeBodyPart(
-                        new InternetHeaders(new ByteArrayInputStream(mbpHeaders.getBytes())),
-                        content.toString().getBytes()));
+                if (isQPencodeRequired) {
+                    if (!isAscii) {
+                        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                        final OutputStream encodedOut = MimeUtility.encode(baos, MimeConstants.ET_QUOTED_PRINTABLE);
+                        encodedOut.write(text.getBytes(charset));
+                        text = baos.toString();
+                        content = ctype.getContentType().equals(ContentType.MESSAGE_RFC822) ?
+                            new ZMimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(raw)) : text;
+                        String mbpHeaders = "Content-Type: " + ctype.toString()
+                            + "\r\nContent-Transfer-Encoding: " + MimeConstants.ET_QUOTED_PRINTABLE
+                            + "\r\n";
+                        mmp.addBodyPart(new MimeBodyPart(
+                            new InternetHeaders(new ByteArrayInputStream(mbpHeaders.getBytes())),
+                            content.toString().getBytes()));
+                    } else {
+                        final MimeBodyPart mbp = new ZMimeBodyPart();
+                        mbp.setContent(content, ctype.toString());
+                        mmp.addBodyPart(mbp);
+                    }
                 } else {
-                    MimeBodyPart mbp = new ZMimeBodyPart();
+                    final MimeBodyPart mbp = new ZMimeBodyPart();
                     mbp.setContent(content, ctype.toString());
                     mmp.addBodyPart(mbp);
                 }
             } else {
-                mm.setContent(content, ctype.toString());
+                if (isQPencodeRequired) {
+                    if (!isAscii) {
+                        mm.setContent(content, ctype.toString());
+                        mm.setHeader("Content-Transfer-Encoding", "quoted-printable");
+                    } else {
+                        mm.setContent(content, ctype.toString());
+                    }
+                } else {
+                    mm.setContent(content, ctype.toString());
+                }
             }
         }
 
@@ -616,7 +647,7 @@ public final class ParseMimeMessage {
         }
     }
 
-    private static void setMultipartContent(ContentType contentType, MimeMessage mm, MimeMultipart mmp, Element elem, MimeBodyPart[] alternatives, ParseMessageContext ctxt)
+    private static void setMultipartContent(ContentType contentType, MimeMessage mm, MimeMultipart mmp, Element elem, MimeBodyPart[] alternatives, ParseMessageContext ctxt, boolean isQPencodeRequired)
     throws MessagingException, ServiceException, IOException {
         // do we need to add a multipart/alternative for the alternatives?
         if (alternatives == null || contentType.getSubType().equals("alternative")) {
@@ -635,7 +666,7 @@ public final class ParseMimeMessage {
             }
             // add each part in turn (recursively) below
             for (Element subpart : elem.listElements()) {
-                setContent(mm, mmpNew, subpart, null, ctxt);
+                setContent(mm, mmpNew, subpart, null, ctxt, isQPencodeRequired);
             }
 
             // finally, add the alternatives if there are any...
@@ -657,7 +688,7 @@ public final class ParseMimeMessage {
             }
 
             // add the entire client's multipart/whatever here inside our multipart/alternative
-            setContent(mm, mmpNew, elem, null, ctxt);
+            setContent(mm, mmpNew, elem, null, ctxt, isQPencodeRequired);
 
             // add all the alternatives
             for (int i = 0; i < alternatives.length; i++) {
