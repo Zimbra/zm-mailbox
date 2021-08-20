@@ -409,8 +409,12 @@ public class Account extends ZAttrAccount implements GroupedEntry, AliasedEntry 
         Cos cos = getProvisioning().getCOS(this); // will set cos if not set yet
 
         Map<String, Object> defaults = null;
-        if (cos != null)
+        if (cos != null) {
             defaults = cos.getAccountDefaults();
+            if (cos.getId() != null && this.getCOSId() == null) {
+                defaults.put(Provisioning.A_zimbraCOSId, cos.getId());
+            }
+        }
 
         if (!setSecondaryDefaults) {
             // set only primary defaults
