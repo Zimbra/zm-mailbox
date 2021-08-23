@@ -13112,6 +13112,78 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * Creates unsubscribe system folder
+     *
+     * @return zimbraFeatureSafeUnsubscribeFolderEnabled, or false if unset
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4003)
+    public boolean isFeatureSafeUnsubscribeFolderEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureSafeUnsubscribeFolderEnabled, false, true);
+    }
+
+    /**
+     * Creates unsubscribe system folder
+     *
+     * @param zimbraFeatureSafeUnsubscribeFolderEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4003)
+    public void setFeatureSafeUnsubscribeFolderEnabled(boolean zimbraFeatureSafeUnsubscribeFolderEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureSafeUnsubscribeFolderEnabled, zimbraFeatureSafeUnsubscribeFolderEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Creates unsubscribe system folder
+     *
+     * @param zimbraFeatureSafeUnsubscribeFolderEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4003)
+    public Map<String,Object> setFeatureSafeUnsubscribeFolderEnabled(boolean zimbraFeatureSafeUnsubscribeFolderEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureSafeUnsubscribeFolderEnabled, zimbraFeatureSafeUnsubscribeFolderEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Creates unsubscribe system folder
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4003)
+    public void unsetFeatureSafeUnsubscribeFolderEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureSafeUnsubscribeFolderEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Creates unsubscribe system folder
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4003)
+    public Map<String,Object> unsetFeatureSafeUnsubscribeFolderEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureSafeUnsubscribeFolderEnabled, "");
+        return attrs;
+    }
+
+    /**
      * saved search feature
      *
      * @return zimbraFeatureSavedSearchesEnabled, or true if unset

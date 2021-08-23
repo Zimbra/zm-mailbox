@@ -2255,7 +2255,7 @@ public class Mailbox implements MailboxStore {
             Folder.create(ID_FOLDER_BRIEFCASE, UUIDUtil.generateUUID(), this, userRoot, "Briefcase", system,
                             MailItem.Type.DOCUMENT, 0, MailItem.DEFAULT_COLOR_RGB, null, null, null);
 
-            if (LC.zimbra_feature_safe_unsubscribe_folder_enabled.booleanValue()) {
+            if (this.getAccount().isFeatureSafeUnsubscribeFolderEnabled()) {
                 Folder.create(ID_FOLDER_UNSUBSCRIBE, UUIDUtil.generateUUID(), this, userRoot, "Unsubscribe", system,
                         MailItem.Type.MESSAGE, 0, MailItem.DEFAULT_COLOR_RGB, null, null, null);
             }
