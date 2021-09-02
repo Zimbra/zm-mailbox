@@ -1454,9 +1454,6 @@ public final class LC {
     // imap folder pagination enabled
     public static final KnownKey zimbra_imap_folder_pagination_enabled =  KnownKey.newKey(false);
 
-    // unsubscribe folder creation enabled
-    public static final KnownKey zimbra_feature_safe_unsubscribe_folder_enabled =  KnownKey.newKey(false);
-
     // wsdl use public service hostname
     public static final KnownKey wsdl_use_public_service_hostname =  KnownKey.newKey(true);
 
