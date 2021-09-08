@@ -63,6 +63,7 @@ import com.zimbra.common.localconfig.ConfigException;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.ACLGrant;
+import com.zimbra.common.mailbox.FolderConstants;
 import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.mailbox.GrantGranteeType;
 import com.zimbra.common.mailbox.ItemIdentifier;
@@ -2442,6 +2443,10 @@ public abstract class ImapHandler {
         // TODO - This probably needs to be the setting for the server for IMAP session's main mailbox
         boolean isMailFolders =  Provisioning.getInstance().getLocalServer().isImapDisplayMailFoldersOnly();
         for (FolderStore folderStore : visibleFolders) {
+            if (!LC.zimbra_feature_safe_unsubscribe_folder_enabled.booleanValue() && folderStore.getFolderIdAsString().equals(Integer.toString(FolderConstants.ID_FOLDER_UNSUBSCRIBE))) {
+                continue;
+            }
+
             //bug 6418 ..filter out folders which are contacts and chat for LIST command.
             //  chat has item type of message.  hence ignoring the chat folder by name.
             if (isMailFolders && (folderStore.isChatsFolder() || (folderStore.getName().equals ("Chats")))) {
