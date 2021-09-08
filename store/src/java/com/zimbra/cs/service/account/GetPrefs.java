@@ -99,8 +99,17 @@ public class GetPrefs extends AccountDocumentHandler  {
                 prefs.addKeyValuePair(key, (String) value, AccountConstants.E_PREF, AccountConstants.A_NAME);
             }
         }
-        prefs.addKeyValuePair(LC.zimbraPref15MinutesCalenderScaling.key(), String.valueOf(LC.zimbraPref15MinutesCalenderScaling.booleanValue()),
-                AccountConstants.E_PREF, AccountConstants.A_NAME);
+
+        String CalenderScalingMinutes = null;
+        if (LC.zimbraPrefCalenderScaling.booleanValue()) {
+            CalenderScalingMinutes = "15";
+        } else {
+            CalenderScalingMinutes = "30";
+        }
+        if (CalenderScalingMinutes != null) {
+            prefs.addKeyValuePair(LC.zimbraPrefCalenderScaling.key(), CalenderScalingMinutes,
+                    AccountConstants.E_PREF, AccountConstants.A_NAME);
+        }
     }
 
 }
