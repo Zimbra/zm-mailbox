@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.Map;
 
 import com.zimbra.common.calendar.TZIDMapper;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
@@ -98,6 +99,8 @@ public class GetPrefs extends AccountDocumentHandler  {
                 prefs.addKeyValuePair(key, (String) value, AccountConstants.E_PREF, AccountConstants.A_NAME);
             }
         }
-    }   
+        prefs.addKeyValuePair(LC.zimbraPref15MinutesCalenderScaling.key(), String.valueOf(LC.zimbraPref15MinutesCalenderScaling.booleanValue()),
+                AccountConstants.E_PREF, AccountConstants.A_NAME);
+    }
 
 }
