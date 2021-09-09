@@ -23,6 +23,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.zimbra.common.calendar.Attach;
 import com.zimbra.common.calendar.Geo;
@@ -350,5 +352,57 @@ public class Util {
         meta.put(Util.FN_LATITUDE, geo.getLatitude());
         meta.put(Util.FN_LONGITUDE, geo.getLongitude());
         return meta;
+    }
+
+    /**
+     * Converts text to html.
+     *
+     * @param String containing plain text
+     * @return String Html converted string
+     */
+    public static String textToHtml(String s) {
+        StringBuilder builder = new StringBuilder();
+        boolean previousWasASpace = false;
+        for (char c : s.toCharArray()) {
+            if (c == ' ') {
+                if (previousWasASpace) {
+                    builder.append("&nbsp;");
+                    previousWasASpace = false;
+                    continue;
+                }
+                previousWasASpace = true;
+            } else {
+                previousWasASpace = false;
+            }
+            switch (c) {
+                case '<':
+                    builder.append("&lt;");
+                    break;
+                case '>':
+                    builder.append("&gt;");
+                    break;
+                case '&':
+                    builder.append("&amp;");
+                    break;
+                case '"':
+                    builder.append("&quot;");
+                    break;
+                case '\n':
+                    builder.append("<br>");
+                    break;
+                case '\t':
+                    builder.append("&nbsp; &nbsp; &nbsp;");
+                    break;
+                default:
+                    builder.append(c);
+
+            }
+        }
+        String converted = builder.toString();
+        String str = "(?i)\\b((?:https?://|www\\d{0,3}[.]|[a-z0-9.\\-]+[.][a-z]{2,4}/)(?:[^\\s()<>]+|\\(([^\\s()<>]+|(\\([^\\s()<>]+\\)))*\\))+(?:\\(([^\\s()<>]+|(\\([^\\s()<>]+\\)))*\\)|[^\\s`!()\\[\\]{};:\'\".,<>?«»“”‘’]))";
+        Pattern patt = Pattern.compile(str);
+        Matcher matcher = patt.matcher(converted);
+        converted = matcher.replaceAll("<a href=\"$1\">$1</a>");
+        return converted;
     }
 }

@@ -511,6 +511,11 @@ public class Invite {
         String desc = descInMeta ? meta.get(FN_DESC, null) : null;
         String descHtml = descInMeta ? meta.get(FN_DESC_HTML, null) : null;
 
+        // if desc html is missing but desc is present
+        if (desc != null && descHtml == null) {
+            descHtml = Util.textToHtml(desc);
+        }
+
         long completed = meta.getLong(FN_COMPLETED, 0);
 
         ParsedDateTime dtStart = null;
