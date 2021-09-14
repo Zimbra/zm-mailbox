@@ -4449,6 +4449,9 @@ public class Mailbox implements MailboxStore {
         }
         // write the subfolders' data to the response
         for (Folder subfolder : subfolders) {
+            if (!LC.zimbra_feature_safe_unsubscribe_folder_enabled.booleanValue() && subfolder.getId() == FolderConstants.ID_FOLDER_UNSUBSCRIBE) {
+                continue;
+            }
             FolderNode child = handleFolder(subfolder, visible, returnAllVisibleFolders);
             if (child != null) {
                 node.mSubfolders.add(child);
