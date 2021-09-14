@@ -63,6 +63,7 @@ import com.zimbra.common.localconfig.ConfigException;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.ACLGrant;
+import com.zimbra.common.mailbox.FolderConstants;
 import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.mailbox.GrantGranteeType;
 import com.zimbra.common.mailbox.ItemIdentifier;
@@ -2215,7 +2216,7 @@ public abstract class ImapHandler {
                 patterns.add(pattern);
 
                 // get the set of *all* folders; we'll iterate over it below to find matches
-                accumulatePaths(patternPath.getOwnerImapMailboxStore(), owner, null, ownerPaths, mountPaths, false);
+                accumulatePaths(patternPath.getOwnerImapMailboxStore(), owner, null, ownerPaths, mountPaths, false, acct);
 
                 // get the set of owner folders matching the selection criteria (either all folders or subscribed folders)
                 if (selectSubscribed) {
@@ -2436,12 +2437,16 @@ public abstract class ImapHandler {
     }
 
     private void accumulatePaths(ImapMailboxStore imapStore, String owner, ImapPath relativeTo,
-            Map<ImapPath, ItemId> paths, Map<ImapPath, ItemId> mountPaths, boolean isMountPath) throws ServiceException {
+            Map<ImapPath, ItemId> paths, Map<ImapPath, ItemId> mountPaths, boolean isMountPath, Account acct) throws ServiceException {
         Collection<FolderStore> visibleFolders = imapStore.getVisibleFolders(getContext(), credentials,
                 owner, relativeTo);
         // TODO - This probably needs to be the setting for the server for IMAP session's main mailbox
         boolean isMailFolders =  Provisioning.getInstance().getLocalServer().isImapDisplayMailFoldersOnly();
         for (FolderStore folderStore : visibleFolders) {
+            if (!acct.isFeatureSafeUnsubscribeFolderEnabled() && folderStore.getFolderIdAsString().equals(Integer.toString(FolderConstants.ID_FOLDER_UNSUBSCRIBE))) {
+                continue;
+            }
+
             //bug 6418 ..filter out folders which are contacts and chat for LIST command.
             //  chat has item type of message.  hence ignoring the chat folder by name.
             if (isMailFolders && (folderStore.isChatsFolder() || (folderStore.getName().equals ("Chats")))) {
@@ -2466,7 +2471,7 @@ public abstract class ImapHandler {
                 }
                 boolean alreadyTraversed = (!isMountPath) ? paths.put(path, path.asItemId()) != null : mountPaths.put(path, path.asItemId()) != null;
                 if (folderStore instanceof MountpointStore && !alreadyTraversed) {
-                    accumulatePaths(path.getOwnerImapMailboxStore(), owner, path, paths, mountPaths, true);
+                    accumulatePaths(path.getOwnerImapMailboxStore(), owner, path, paths, mountPaths, true, acct);
                 }
             }
         }
