@@ -663,7 +663,7 @@ public final class LC {
     public static final KnownKey calendar_cache_max_stale_items = KnownKey.newKey(10);
     public static final KnownKey calendar_exchange_form_auth_url = KnownKey.newKey("/exchweb/bin/auth/owaauth.dll");
     public static final KnownKey calendar_item_get_max_retries = KnownKey.newKey(100);
-    public static final KnownKey zimbraPrefCalenderScaling = KnownKey.newKey(true);
+    public static final KnownKey zimbraPrefCalenderScaling = KnownKey.newKey(false);
 
     public static final KnownKey spnego_java_options =  KnownKey.newKey(
             "-Djava.security.krb5.conf=${mailboxd_directory}/etc/krb5.ini " +
