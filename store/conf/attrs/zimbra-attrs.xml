@@ -8362,6 +8362,7 @@ TODO: delete them permanently from here
 
 <attr id="1653" name="zimbraReverseProxySSLProtocols" type="string" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" since="8.6.0">
   <globalConfigValue>TLSv1.2</globalConfigValue>
+  <globalConfigValue>TLSv1.3</globalConfigValue>
   <desc>SSL protocols enabled for the proxy</desc>
 </attr>
 
@@ -8380,6 +8381,7 @@ TODO: delete them permanently from here
 
 <attr id="1657" name="zimbraMailboxdSSLProtocols" type="string" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.6.0">
   <globalConfigValue>TLSv1.2</globalConfigValue>
+  <globalConfigValue>TLSv1.3</globalConfigValue>
   <desc>List of SSL/TLS protocols (as documented by SunJSSE Provider Protocols and used in setEnabledProtocols) to be enabled in Jetty for HTTPS, IMAPS, POP3S, and STARTTLS (including LMTP)</desc>
 </attr>
 
