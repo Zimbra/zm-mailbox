@@ -9924,4 +9924,8 @@ TODO: delete them permanently from here
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Creates unsubscribe system folder</desc>
  </attr>
+ <attr id="4004" name="zimbraPrefCalenderScaling" type="enum" value="10,15,30" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="9.1.0">
+  <defaultCOSValue>30</defaultCOSValue>
+  <desc>Default calendar resolution preference</desc>
+</attr>
 </attrs>
