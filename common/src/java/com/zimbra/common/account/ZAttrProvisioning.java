@@ -1667,7 +1667,7 @@ public class ZAttrProvisioning {
     public static enum PrefCalenderScaling {
         _0("10"),
         _5("15"),
-        _0("30");
+        _10("30");
         private String mValue;
         private PrefCalenderScaling(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -1679,7 +1679,7 @@ public class ZAttrProvisioning {
         }
         public boolean is_0() { return this == _0;}
         public boolean is_5() { return this == _5;}
-        public boolean is_0() { return this == _0;}
+        public boolean is_10() { return this == _10;}
     }
 
     public static enum PrefClientType {
