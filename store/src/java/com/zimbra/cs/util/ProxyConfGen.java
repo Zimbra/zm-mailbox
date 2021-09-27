@@ -2024,6 +2024,7 @@ class WebSSLProtocolsVar extends ProxyConfVar {
         sslProtocols.add("TLSv1");
         sslProtocols.add("TLSv1.1");
         sslProtocols.add("TLSv1.2");
+        sslProtocols.add("TLSv1.3");
         return sslProtocols;
     }
 
@@ -2074,6 +2075,7 @@ class MailSSLProtocolsVar extends ProxyConfVar {
         sslProtocols.add("TLSv1");
         sslProtocols.add("TLSv1.1");
         sslProtocols.add("TLSv1.2");
+        sslProtocols.add("TLSv1.3");
         return sslProtocols;
     }
 
