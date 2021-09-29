@@ -570,8 +570,8 @@ public final class LC {
 
     @Supported
     public static final KnownKey mailboxd_java_options = KnownKey.newKey("-server" +
-            " -Dhttps.protocols=TLSv1.2" +
-            " -Djdk.tls.client.protocols=TLSv1.2" +
+            " -Dhttps.protocols=TLSv1.2,TLSv1.3" +
+            " -Djdk.tls.client.protocols=TLSv1.2,TLSv1.3" +
             " -Djava.awt.headless=true" +
             " -Dsun.net.inetaddr.ttl=${networkaddress_cache_ttl}" +
             " -Dorg.apache.jasper.compiler.disablejsr199=true" +
@@ -864,8 +864,8 @@ public final class LC {
     public static final KnownKey zimbra_jwt_cookie_size_limit = KnownKey.newKey(4096);
     public static final KnownKey zimbra_authtoken_cookie_domain = KnownKey.newKey("");
     public static final KnownKey zimbra_zmjava_options = KnownKey.newKey("-Xmx256m" +
-            " -Dhttps.protocols=TLSv1.2" +
-            " -Djdk.tls.client.protocols=TLSv1.2");
+            " -Dhttps.protocols=TLSv1.2,TLSv1.3" +
+            " -Djdk.tls.client.protocols=TLSv1.2,TLSv1.3");
     public static final KnownKey zimbra_zmjava_java_library_path = KnownKey.newKey("");
     public static final KnownKey zimbra_zmjava_java_ext_dirs = KnownKey.newKey("");
     public static final KnownKey debug_xmpp_disable_client_tls = KnownKey.newKey(0);
