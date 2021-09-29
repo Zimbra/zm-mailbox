@@ -1664,6 +1664,24 @@ public class ZAttrProvisioning {
         public boolean isYear() { return this == year;}
     }
 
+    public static enum PrefCalenderScaling {
+        _0("10"),
+        _5("15"),
+        _10("30");
+        private String mValue;
+        private PrefCalenderScaling(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static PrefCalenderScaling fromString(String s) throws ServiceException {
+            for (PrefCalenderScaling value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean is_0() { return this == _0;}
+        public boolean is_5() { return this == _5;}
+        public boolean is_10() { return this == _10;}
+    }
+
     public static enum PrefClientType {
         standard("standard"),
         advanced("advanced"),
@@ -12985,6 +13003,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1103)
     public static final String A_zimbraPrefCalendarWorkingHours = "zimbraPrefCalendarWorkingHours";
+
+    /**
+     * Default calendar resolution preference
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4004)
+    public static final String A_zimbraPrefCalenderScaling = "zimbraPrefCalenderScaling";
 
     /**
      * If FALSE, chat features are disabled in the client and user presence

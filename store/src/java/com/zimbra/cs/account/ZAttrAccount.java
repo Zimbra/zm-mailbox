@@ -42410,6 +42410,137 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Default calendar resolution preference
+     *
+     * <p>Valid values: [10, 15, 30]
+     *
+     * @return zimbraPrefCalenderScaling, or ZAttrProvisioning.PrefCalenderScaling._0 if unset and/or has invalid value
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4004)
+    public ZAttrProvisioning.PrefCalenderScaling getPrefCalenderScaling() {
+        try { String v = getAttr(Provisioning.A_zimbraPrefCalenderScaling, true, true); return v == null ? ZAttrProvisioning.PrefCalenderScaling._0 : ZAttrProvisioning.PrefCalenderScaling.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.PrefCalenderScaling._0; }
+    }
+
+    /**
+     * Default calendar resolution preference
+     *
+     * <p>Valid values: [10, 15, 30]
+     *
+     * @return zimbraPrefCalenderScaling, or "30" if unset
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4004)
+    public String getPrefCalenderScalingAsString() {
+        return getAttr(Provisioning.A_zimbraPrefCalenderScaling, "30", true);
+    }
+
+    /**
+     * Default calendar resolution preference
+     *
+     * <p>Valid values: [10, 15, 30]
+     *
+     * @param zimbraPrefCalenderScaling new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4004)
+    public void setPrefCalenderScaling(ZAttrProvisioning.PrefCalenderScaling zimbraPrefCalenderScaling) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalenderScaling, zimbraPrefCalenderScaling.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Default calendar resolution preference
+     *
+     * <p>Valid values: [10, 15, 30]
+     *
+     * @param zimbraPrefCalenderScaling new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4004)
+    public Map<String,Object> setPrefCalenderScaling(ZAttrProvisioning.PrefCalenderScaling zimbraPrefCalenderScaling, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalenderScaling, zimbraPrefCalenderScaling.toString());
+        return attrs;
+    }
+
+    /**
+     * Default calendar resolution preference
+     *
+     * <p>Valid values: [10, 15, 30]
+     *
+     * @param zimbraPrefCalenderScaling new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4004)
+    public void setPrefCalenderScalingAsString(String zimbraPrefCalenderScaling) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalenderScaling, zimbraPrefCalenderScaling);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Default calendar resolution preference
+     *
+     * <p>Valid values: [10, 15, 30]
+     *
+     * @param zimbraPrefCalenderScaling new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4004)
+    public Map<String,Object> setPrefCalenderScalingAsString(String zimbraPrefCalenderScaling, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalenderScaling, zimbraPrefCalenderScaling);
+        return attrs;
+    }
+
+    /**
+     * Default calendar resolution preference
+     *
+     * <p>Valid values: [10, 15, 30]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4004)
+    public void unsetPrefCalenderScaling() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalenderScaling, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Default calendar resolution preference
+     *
+     * <p>Valid values: [10, 15, 30]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4004)
+    public Map<String,Object> unsetPrefCalenderScaling(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalenderScaling, "");
+        return attrs;
+    }
+
+    /**
      * If FALSE, chat features are disabled in the client and user presence
      * is shown as offline to all other users.
      *
