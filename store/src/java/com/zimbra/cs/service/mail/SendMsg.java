@@ -131,6 +131,7 @@ public class SendMsg extends MailDocumentHandler {
                boolean isCalendarForward = request.getAttributeBool(MailConstants.A_IS_CALENDAR_FORWARD, false);
                boolean noSaveToSent = request.getAttributeBool(MailConstants.A_NO_SAVE_TO_SENT, false);
                boolean fetchSavedMsg = request.getAttributeBool(MailConstants.A_FETCH_SAVED_MSG, false);
+               boolean deliveryReport = request.getAttributeBool(MailConstants.A_DELIVERY_RECEIPT_NOTIFICATION, false);
 
                String origId = msgElem.getAttribute(MailConstants.A_ORIG_ID, null);
                ItemId iidOrigId = origId == null ? null : new ItemId(origId, zsc);
@@ -224,11 +225,21 @@ public class SendMsg extends MailDocumentHandler {
                        }
 
                        if  (delegatedMailbox  != null) {
-                           savedMsgId = doSendMessage(octxt, delegatedMailbox, mm, mimeData.uploads, iidOrigId, replyType, identityId,
-                               dataSourceId, noSaveToSent, needCalendarSentByFixup, isCalendarForward);
+                           if (deliveryReport) {
+                               savedMsgId = doSendMessage(octxt, delegatedMailbox, mm, mimeData.uploads, iidOrigId, replyType, identityId,
+                                       dataSourceId, noSaveToSent, needCalendarSentByFixup, isCalendarForward, deliveryReport);
+                           } else {
+                               savedMsgId = doSendMessage(octxt, delegatedMailbox, mm, mimeData.uploads, iidOrigId, replyType, identityId,
+                                       dataSourceId, noSaveToSent, needCalendarSentByFixup, isCalendarForward);
+                           }
                        } else  {
-                           savedMsgId = doSendMessage(octxt, mbox, mm, mimeData.uploads, iidOrigId, replyType, identityId,
-                               dataSourceId, noSaveToSent, needCalendarSentByFixup, isCalendarForward);
+                           if (deliveryReport) {
+                               savedMsgId = doSendMessage(octxt, mbox, mm, mimeData.uploads, iidOrigId, replyType, identityId,
+                                       dataSourceId, noSaveToSent, needCalendarSentByFixup, isCalendarForward, deliveryReport);
+                           } else {
+                               savedMsgId = doSendMessage(octxt, mbox, mm, mimeData.uploads, iidOrigId, replyType, identityId,
+                                       dataSourceId, noSaveToSent, needCalendarSentByFixup, isCalendarForward);
+                           }
                        }
 
                        // (need to make sure that *something* gets recorded, because caching
@@ -278,33 +289,17 @@ public class SendMsg extends MailDocumentHandler {
            }
     }
 
-    public static ItemId doSendMessage(OperationContext oc, Mailbox mbox, MimeMessage mm, List<Upload> uploads,
-            ItemId origMsgId, String replyType, String identityId, String dataSourceId, boolean noSaveToSent,
-            boolean needCalendarSentByFixup, boolean isCalendarForward)
-    throws ServiceException {
-
-        boolean isCalendarMessage = false;
+    public static ItemId getItemId(String dataSourceId, boolean isCalendarMessage, Mailbox mbox, OperationContext oc,
+            boolean noSaveToSent, MimeMessage mm, List<Upload> uploads, ItemId origMsgId, String replyType, String identityId,
+            boolean deliveryReport) throws ServiceException {
         ItemId id;
-        OutlookICalendarFixupMimeVisitor mv = null;
-        if (needCalendarSentByFixup || isCalendarForward) {
-            mv = new OutlookICalendarFixupMimeVisitor(mbox.getAccount(), mbox)
-                                                                    .needFixup(needCalendarSentByFixup)
-                                                                    .setIsCalendarForward(isCalendarForward);
-            try {
-                mv.accept(mm);
-            } catch (MessagingException e) {
-                throw ServiceException.FIXING_SENDMSG_FOR_SENTBY_PARSE_ERROR("Error while sending the message during fixup for SENT-BY of ICalendar on behalf of other user.", e);
-            }
-            isCalendarMessage = mv.isCalendarMessage();
-        }
-
         MailSender sender;
         if (dataSourceId == null) {
             sender = isCalendarMessage ? CalendarMailSender.getCalendarMailSender(mbox) : mbox.getMailSender();
             if (noSaveToSent) {
-                id = sender.sendMimeMessage(oc, mbox, false, mm, uploads, origMsgId, replyType, null, false, processor);
+                id = sender.sendMimeMessage(oc, mbox, false, mm, uploads, origMsgId, replyType, null, false, processor, deliveryReport);
             } else {
-                id = sender.sendMimeMessage(oc, mbox, mm, uploads, origMsgId, replyType, identityId, false, processor);
+                id = sender.sendMimeMessage(oc, mbox, mm, uploads, origMsgId, replyType, identityId, false, processor, deliveryReport);
             }
         } else {
             com.zimbra.cs.account.DataSource dataSource = mbox.getAccount().getDataSourceById(dataSourceId);
@@ -316,8 +311,37 @@ public class SendMsg extends MailDocumentHandler {
                 throw ServiceException.DATASOURCE_SMTP_DISABLED("Data source SMTP is not enabled", null);
             }
             sender = mbox.getDataSourceMailSender(dataSource, isCalendarMessage);
-            id = sender.sendDataSourceMimeMessage(oc, mbox, mm, uploads, origMsgId, replyType);
+            id = sender.sendDataSourceMimeMessage(oc, mbox, mm, uploads, origMsgId, replyType, deliveryReport);
         }
+        return id;
+    }
+
+    public static OutlookICalendarFixupMimeVisitor OutlookICalendarFixupMV(boolean needCalendarSentByFixup, boolean isCalendarForward,
+            Mailbox mbox, MimeMessage mm) throws ServiceException {
+        OutlookICalendarFixupMimeVisitor mv = null;
+        if (needCalendarSentByFixup || isCalendarForward) {
+            mv = new OutlookICalendarFixupMimeVisitor(mbox.getAccount(), mbox)
+                    .needFixup(needCalendarSentByFixup)
+                    .setIsCalendarForward(isCalendarForward);
+            try {
+                mv.accept(mm);
+            } catch (MessagingException e) {
+                throw ServiceException.FIXING_SENDMSG_FOR_SENTBY_PARSE_ERROR("Error while sending the message during fixup for SENT-BY of ICalendar on behalf of other user.", e);
+            }
+        }
+        return mv;
+    }
+
+    public static boolean isCalendarMessage(OutlookICalendarFixupMimeVisitor mv, boolean needCalendarSentByFixup, boolean isCalendarForward) {
+        boolean isCalendarMessage = false;
+        if (needCalendarSentByFixup || isCalendarForward) {
+            isCalendarMessage = mv.isCalendarMessage();
+        }
+        return isCalendarMessage;
+    }
+
+    public static void sendCalendarFwdIfApplicable(boolean isCalendarMessage, boolean isCalendarForward, OutlookICalendarFixupMimeVisitor mv,
+            OperationContext oc, MimeMessage mm, Mailbox mbox) {
         // Send Calendar Forward Invitation notification if applicable
         try {
             if (isCalendarMessage && isCalendarForward && mv.getOriginalInvite() != null) {
@@ -335,7 +359,29 @@ public class SendMsg extends MailDocumentHandler {
         } catch (Exception e) {
             ZimbraLog.soap.warn("Ignoring error while sending Calendar Invitation Forward Notification", e);
         }
+    }
 
+    public static ItemId doSendMessage(OperationContext oc, Mailbox mbox, MimeMessage mm, List<Upload> uploads,
+            ItemId origMsgId, String replyType, String identityId, String dataSourceId, boolean noSaveToSent,
+            boolean needCalendarSentByFixup, boolean isCalendarForward, boolean deliveryReport)
+                    throws ServiceException {
+        ItemId id;
+        OutlookICalendarFixupMimeVisitor mv = OutlookICalendarFixupMV(needCalendarSentByFixup, isCalendarForward, mbox, mm);
+        boolean isCalendarMessage = isCalendarMessage(mv, needCalendarSentByFixup, isCalendarForward);
+        id = getItemId(dataSourceId, isCalendarMessage, mbox, oc, noSaveToSent, mm, uploads, origMsgId, replyType, identityId, deliveryReport);
+        sendCalendarFwdIfApplicable(isCalendarMessage, isCalendarForward, mv, oc, mm, mbox);
+        return id;
+    }
+
+    public static ItemId doSendMessage(OperationContext oc, Mailbox mbox, MimeMessage mm, List<Upload> uploads,
+            ItemId origMsgId, String replyType, String identityId, String dataSourceId, boolean noSaveToSent,
+            boolean needCalendarSentByFixup, boolean isCalendarForward)
+                    throws ServiceException {
+        ItemId id;
+        OutlookICalendarFixupMimeVisitor mv = OutlookICalendarFixupMV(needCalendarSentByFixup, isCalendarForward, mbox, mm);
+        boolean isCalendarMessage = isCalendarMessage(mv, needCalendarSentByFixup, isCalendarForward);
+        id = getItemId(dataSourceId, isCalendarMessage, mbox, oc, noSaveToSent, mm, uploads, origMsgId, replyType, identityId, false);
+        sendCalendarFwdIfApplicable(isCalendarMessage, isCalendarForward, mv, oc, mm, mbox);
         return id;
     }
 
