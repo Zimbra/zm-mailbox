@@ -110,6 +110,7 @@ public class MailSender {
     private String mEnvelopeFrom;
     private String mDsn;
     private MimeProcessor mimeProcessor = null;
+    private Boolean mDeliveryReport;
 
     public MailSender()  {
         mSession = JMSession.getSession();
@@ -231,6 +232,16 @@ public class MailSender {
     }
 
     /**
+     * @param deliveryReport if <tt>true</tt>, send the delivery report.
+     * The default value is set to <tt>false</tt> for the attribute value
+     * <tt>deliveryReport</tt>.
+     */
+    public MailSender setDeliveryReport(boolean deliveryReport) {
+        mDeliveryReport = deliveryReport;
+        return this;
+    }
+
+    /**
      * If <tt>true</tt>, calls {@link JMSession#markSmtpHostBad(String)} when
      * a connection to an SMTP host fails.  The default is <tt>true</tt>.
      */
@@ -321,6 +332,13 @@ public class MailSender {
      */
     protected Boolean getSaveToSent() {
         return mSaveToSent;
+    }
+
+    /**
+     * Getter delivery report flag
+     */
+    protected Boolean getDeliveryReport() {
+        return mDeliveryReport;
     }
 
     /**
@@ -417,8 +435,7 @@ public class MailSender {
     /**
      * Sets member variables and sends the message.
      */
-    public ItemId sendMimeMessage(OperationContext octxt, Mailbox mbox, MimeMessage mm, List<Upload> uploads,
-            ItemId origMsgId, String replyType, String identityId, boolean replyToSender, MimeProcessor mimeProc) throws ServiceException {
+    public Identity fetchIdentity(OperationContext octxt, String identityId, Mailbox mbox) throws ServiceException {
         Account authuser = octxt == null ? null : octxt.getAuthenticatedUser();
         if (authuser == null) {
             authuser = mbox.getAccount();
@@ -427,12 +444,37 @@ public class MailSender {
         if (identityId != null) {
             identity = Provisioning.getInstance().get(authuser, Key.IdentityBy.id, identityId);
         }
+        return identity;
+    }
+
+    public ItemId sendMimeMessage(OperationContext octxt, Mailbox mbox, MimeMessage mm, List<Upload> uploads,
+            ItemId origMsgId, String replyType, String identityId, boolean replyToSender, MimeProcessor mimeProc) throws ServiceException {
+        Identity identity = fetchIdentity(octxt, identityId, mbox);
         return sendMimeMessage(octxt, mbox, null, mm, uploads, origMsgId, replyType, identity, replyToSender, mimeProc);
+    }
+
+    public ItemId sendMimeMessage(OperationContext octxt, Mailbox mbox, MimeMessage mm, List<Upload> uploads,
+            ItemId origMsgId, String replyType, String identityId, boolean replyToSender, MimeProcessor mimeProc,
+            boolean deliveryReport) throws ServiceException {
+        Identity identity = fetchIdentity(octxt, identityId, mbox);
+        return sendMimeMessage(octxt, mbox, null, mm, uploads, origMsgId, replyType, identity, replyToSender, mimeProc, deliveryReport);
     }
 
     public ItemId sendDataSourceMimeMessage(OperationContext octxt, Mailbox mbox, MimeMessage mm, List<Upload> uploads,
             ItemId origMsgId, String replyType) throws ServiceException {
         return sendDataSourceMimeMessage(octxt, mbox, mm, uploads, origMsgId, replyType, null);
+    }
+
+    public ItemId sendDataSourceMimeMessage(OperationContext octxt, Mailbox mbox, MimeMessage mm, List<Upload> uploads,
+            ItemId origMsgId, String replyType, boolean deliveryReport) throws ServiceException {
+        return sendDataSourceMimeMessage(octxt, mbox, mm, uploads, origMsgId, replyType, null, deliveryReport);
+    }
+
+    public ItemId sendDataSourceMimeMessage(OperationContext octxt, Mailbox mbox, MimeMessage mm, List<Upload> uploads,
+            ItemId origMsgId, String replyType, MimeProcessor mimeProc, boolean deliveryReport) throws ServiceException {
+        mIsDataSourceSender = true;
+        ((Mime.FixedMimeMessage) mm).setSession(mSession);
+        return sendMimeMessage(octxt, mbox, false, mm, uploads, origMsgId, replyType, null, false, mimeProc, deliveryReport);
     }
 
     public ItemId sendDataSourceMimeMessage(OperationContext octxt, Mailbox mbox, MimeMessage mm, List<Upload> uploads,
@@ -494,6 +536,13 @@ public class MailSender {
            return sendMimeMessage(octxt, mbox, saveToSent, mm, uploads, origMsgId, replyType, identity, replyToSender, null);
     }
 
+    public ItemId sendMimeMessage(OperationContext octxt, Mailbox mbox, Boolean saveToSent, MimeMessage mm,
+            Collection<Upload> uploads, ItemId origMsgId, String replyType, Identity identity, boolean replyToSender,
+            MimeProcessor mimeProc, boolean deliveryReport) throws ServiceException {
+        mDeliveryReport = deliveryReport;
+        return sendMimeMessage(octxt, mbox, saveToSent, mm, uploads, origMsgId, replyType, identity, replyToSender, mimeProc);
+    }
+
     /**
      * Sends a message.
      */
@@ -518,6 +567,14 @@ public class MailSender {
             }
             boolean isDelegatedRequest = !acct.getId().equalsIgnoreCase(authuser.getId());
             boolean allowSaveToSent = true; // like mSaveToSent but not over-ridden by authuser peference
+
+            if (getDeliveryReport() != null) {
+                if (getDeliveryReport()) {
+                    setDsnNotifyOptions(DsnNotifyOption.SUCCESS, DsnNotifyOption.FAILURE, DsnNotifyOption.DELAY);
+                } else {
+                    setDsnNotifyOptions(MailSender.DsnNotifyOption.NEVER);
+                }
+            }
 
             if (mSaveToSent == null) {
                 mSaveToSent = authuser.isPrefSaveToSent();
