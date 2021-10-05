@@ -432,10 +432,14 @@ public class MailSender {
         return sendMimeMessage(octxt, mbox, mm, uploads, origMsgId, replyType, identityId, replyToSender, null);
     }
 
-    /**
-     * Sets member variables and sends the message.
-     */
-    public Identity fetchIdentity(OperationContext octxt, String identityId, Mailbox mbox) throws ServiceException {
+    public ItemId sendMimeMessage(OperationContext octxt, Mailbox mbox, MimeMessage mm, List<Upload> uploads,
+            ItemId origMsgId, String replyType, String identityId, boolean replyToSender, MimeProcessor mimeProc) throws ServiceException {
+        return sendMimeMessage(octxt, mbox, mm, uploads, origMsgId, replyType, identityId, replyToSender, mimeProc, false);
+    }
+
+    public ItemId sendMimeMessage(OperationContext octxt, Mailbox mbox, MimeMessage mm, List<Upload> uploads,
+            ItemId origMsgId, String replyType, String identityId, boolean replyToSender, MimeProcessor mimeProc,
+            boolean deliveryReport) throws ServiceException {
         Account authuser = octxt == null ? null : octxt.getAuthenticatedUser();
         if (authuser == null) {
             authuser = mbox.getAccount();
@@ -444,19 +448,6 @@ public class MailSender {
         if (identityId != null) {
             identity = Provisioning.getInstance().get(authuser, Key.IdentityBy.id, identityId);
         }
-        return identity;
-    }
-
-    public ItemId sendMimeMessage(OperationContext octxt, Mailbox mbox, MimeMessage mm, List<Upload> uploads,
-            ItemId origMsgId, String replyType, String identityId, boolean replyToSender, MimeProcessor mimeProc) throws ServiceException {
-        Identity identity = fetchIdentity(octxt, identityId, mbox);
-        return sendMimeMessage(octxt, mbox, null, mm, uploads, origMsgId, replyType, identity, replyToSender, mimeProc);
-    }
-
-    public ItemId sendMimeMessage(OperationContext octxt, Mailbox mbox, MimeMessage mm, List<Upload> uploads,
-            ItemId origMsgId, String replyType, String identityId, boolean replyToSender, MimeProcessor mimeProc,
-            boolean deliveryReport) throws ServiceException {
-        Identity identity = fetchIdentity(octxt, identityId, mbox);
         return sendMimeMessage(octxt, mbox, null, mm, uploads, origMsgId, replyType, identity, replyToSender, mimeProc, deliveryReport);
     }
 
@@ -519,7 +510,19 @@ public class MailSender {
      */
     public ItemId sendMimeMessage(OperationContext octxt, Mailbox mbox, Boolean saveToSent, MimeMessage mm,
             Collection<Upload> uploads, ItemId origMsgId, String replyType, Identity identity, boolean replyToSender, MimeProcessor mimeProc)
-            throws ServiceException {
+                    throws ServiceException {
+        return sendMimeMessage(octxt, mbox, saveToSent, mm, uploads, origMsgId, replyType, identity, replyToSender, mimeProc, false);
+    }
+
+    public ItemId sendMimeMessage(OperationContext octxt, Mailbox mbox, Boolean saveToSent, MimeMessage mm,
+            Collection<Upload> uploads, ItemId origMsgId, String replyType, Identity identity, boolean replyToSender)
+                    throws ServiceException {
+        return sendMimeMessage(octxt, mbox, saveToSent, mm, uploads, origMsgId, replyType, identity, replyToSender, null);
+    }
+
+    public ItemId sendMimeMessage(OperationContext octxt, Mailbox mbox, Boolean saveToSent, MimeMessage mm,
+            Collection<Upload> uploads, ItemId origMsgId, String replyType, Identity identity, boolean replyToSender,
+            MimeProcessor mimeProc, boolean deliveryReport) throws ServiceException {
         mSaveToSent = saveToSent;
         mUploads = uploads;
         mOriginalMessageId = origMsgId;
@@ -527,20 +530,8 @@ public class MailSender {
         mIdentity = identity;
         mReplyToSender = replyToSender;
         mimeProcessor = mimeProc;
-        return sendMimeMessage(octxt, mbox, mm);
-    }
-
-    public ItemId sendMimeMessage(OperationContext octxt, Mailbox mbox, Boolean saveToSent, MimeMessage mm,
-            Collection<Upload> uploads, ItemId origMsgId, String replyType, Identity identity, boolean replyToSender)
-            throws ServiceException {
-           return sendMimeMessage(octxt, mbox, saveToSent, mm, uploads, origMsgId, replyType, identity, replyToSender, null);
-    }
-
-    public ItemId sendMimeMessage(OperationContext octxt, Mailbox mbox, Boolean saveToSent, MimeMessage mm,
-            Collection<Upload> uploads, ItemId origMsgId, String replyType, Identity identity, boolean replyToSender,
-            MimeProcessor mimeProc, boolean deliveryReport) throws ServiceException {
         mDeliveryReport = deliveryReport;
-        return sendMimeMessage(octxt, mbox, saveToSent, mm, uploads, origMsgId, replyType, identity, replyToSender, mimeProc);
+        return sendMimeMessage(octxt, mbox, mm);
     }
 
     /**

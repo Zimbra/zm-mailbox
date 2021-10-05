@@ -366,7 +366,7 @@ public class SendMsg extends MailDocumentHandler {
             ItemId origMsgId, String replyType, String identityId, String dataSourceId, boolean noSaveToSent,
             boolean needCalendarSentByFixup, boolean isCalendarForward)
                     throws ServiceException {
-        return getItemId(dataSourceId, mbox, oc, noSaveToSent, mm, uploads, origMsgId, replyType, identityId,
+        return doSendMessage(oc, mbox, mm, uploads, origMsgId, replyType, identityId, dataSourceId, noSaveToSent,
                 needCalendarSentByFixup, isCalendarForward, false);
     }
 
