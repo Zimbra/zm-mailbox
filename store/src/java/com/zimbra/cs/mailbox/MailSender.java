@@ -568,12 +568,8 @@ public class MailSender {
             boolean isDelegatedRequest = !acct.getId().equalsIgnoreCase(authuser.getId());
             boolean allowSaveToSent = true; // like mSaveToSent but not over-ridden by authuser peference
 
-            if (getDeliveryReport() != null) {
-                if (getDeliveryReport()) {
-                    setDsnNotifyOptions(DsnNotifyOption.SUCCESS, DsnNotifyOption.FAILURE, DsnNotifyOption.DELAY);
-                } else {
-                    setDsnNotifyOptions(MailSender.DsnNotifyOption.NEVER);
-                }
+            if (getDeliveryReport() != null && getDeliveryReport()) {
+                setDsnNotifyOptions(DsnNotifyOption.SUCCESS, DsnNotifyOption.FAILURE, DsnNotifyOption.DELAY);
             }
 
             if (mSaveToSent == null) {
