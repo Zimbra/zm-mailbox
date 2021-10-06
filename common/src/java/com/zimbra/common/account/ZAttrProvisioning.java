@@ -6218,6 +6218,22 @@ public class ZAttrProvisioning {
     public static final String A_zimbraExternalUserMailAddress = "zimbraExternalUserMailAddress";
 
     /**
+     * FCM config JSON for mobile device
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4005)
+    public static final String A_zimbraFCMDeviceJSON = "zimbraFCMDeviceJSON";
+
+    /**
+     * FCM server JSON for zimbra mailbox
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4004)
+    public static final String A_zimbraFCMServerJSON = "zimbraFCMServerJSON";
+
+    /**
      * RFC822 email address under verification for an account
      *
      * @since ZCS 8.8.5
