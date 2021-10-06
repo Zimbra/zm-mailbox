@@ -9923,5 +9923,11 @@ TODO: delete them permanently from here
 <attr id="4003" name="zimbraFeatureSafeUnsubscribeFolderEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="9.1.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Creates unsubscribe system folder</desc>
- </attr>
+</attr>
+<attr id="4004" name="zimbraFCMServerJSON" type="string" cardinality="single" optionalIn="globalConfig" since="9.1.0" requiresRestart="mailbox">
+  <desc>FCM server JSON for zimbra mailbox</desc>
+</attr>
+<attr id="4005" name="zimbraFCMDeviceJSON" type="string" cardinality="single" optionalIn="globalConfig" since="9.1.0" requiresRestart="mailbox">
+  <desc>FCM config JSON for mobile device</desc>
+</attr>
 </attrs>

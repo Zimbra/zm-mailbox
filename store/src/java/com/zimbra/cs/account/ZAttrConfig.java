@@ -16053,6 +16053,150 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * FCM config JSON for mobile device
+     *
+     * @return zimbraFCMDeviceJSON, or null if unset
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4005)
+    public String getFCMDeviceJSON() {
+        return getAttr(Provisioning.A_zimbraFCMDeviceJSON, null, true);
+    }
+
+    /**
+     * FCM config JSON for mobile device
+     *
+     * @param zimbraFCMDeviceJSON new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4005)
+    public void setFCMDeviceJSON(String zimbraFCMDeviceJSON) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFCMDeviceJSON, zimbraFCMDeviceJSON);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * FCM config JSON for mobile device
+     *
+     * @param zimbraFCMDeviceJSON new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4005)
+    public Map<String,Object> setFCMDeviceJSON(String zimbraFCMDeviceJSON, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFCMDeviceJSON, zimbraFCMDeviceJSON);
+        return attrs;
+    }
+
+    /**
+     * FCM config JSON for mobile device
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4005)
+    public void unsetFCMDeviceJSON() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFCMDeviceJSON, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * FCM config JSON for mobile device
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4005)
+    public Map<String,Object> unsetFCMDeviceJSON(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFCMDeviceJSON, "");
+        return attrs;
+    }
+
+    /**
+     * FCM server JSON for zimbra mailbox
+     *
+     * @return zimbraFCMServerJSON, or null if unset
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4004)
+    public String getFCMServerJSON() {
+        return getAttr(Provisioning.A_zimbraFCMServerJSON, null, true);
+    }
+
+    /**
+     * FCM server JSON for zimbra mailbox
+     *
+     * @param zimbraFCMServerJSON new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4004)
+    public void setFCMServerJSON(String zimbraFCMServerJSON) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFCMServerJSON, zimbraFCMServerJSON);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * FCM server JSON for zimbra mailbox
+     *
+     * @param zimbraFCMServerJSON new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4004)
+    public Map<String,Object> setFCMServerJSON(String zimbraFCMServerJSON, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFCMServerJSON, zimbraFCMServerJSON);
+        return attrs;
+    }
+
+    /**
+     * FCM server JSON for zimbra mailbox
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4004)
+    public void unsetFCMServerJSON() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFCMServerJSON, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * FCM server JSON for zimbra mailbox
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4004)
+    public Map<String,Object> unsetFCMServerJSON(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFCMServerJSON, "");
+        return attrs;
+    }
+
+    /**
      * Deprecated since: 8.8.6. No longer used by ContactBackupRequest SOAP
      * handler. Orig desc: Sleep time between subsequent contact backups. 0
      * means that contact backup is disabled. . Must be in valid duration
