@@ -882,6 +882,7 @@ public final class MailConstants {
     public static final String A_NO_SAVE_TO_SENT = "noSave";
     public static final String A_FETCH_SAVED_MSG = "fetchSavedMsg";
     public static final String A_SEND_UID = "suid";
+    public static final String A_DELIVERY_RECEIPT_NOTIFICATION ="deliveryReport";
     public static final String A_FOR_ACCOUNT = "forAcct";
     public static final String A_AUTO_SEND_TIME = "autoSendTime";
 
