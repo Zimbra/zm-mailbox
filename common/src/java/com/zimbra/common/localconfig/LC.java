@@ -1464,6 +1464,10 @@ public final class LC {
     public static final KnownKey fcm_server_config_path = KnownKey.newKey("${zimbra_home}/conf/fcm_server_config.json");
     
     public static final KnownKey fcm_mobile_config_path = KnownKey.newKey("${zimbra_home}/conf/fcm_mobile_config.json");
+    
+    public static final KnownKey fcm_server_thread_count = KnownKey.newKey(20);
+    
+    public static final KnownKey mobile_notification_cache_size_mb = KnownKey.newKey(100);
 
     static {
         // Automatically set the key name with the variable name.
