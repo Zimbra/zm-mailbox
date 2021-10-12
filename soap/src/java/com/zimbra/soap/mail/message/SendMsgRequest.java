@@ -17,15 +17,14 @@
 
 package com.zimbra.soap.mail.message;
 
-import com.google.common.base.MoreObjects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.mail.type.Msg;
 import com.zimbra.soap.mail.type.MsgToSend;
 import com.zimbra.soap.type.ZmBoolean;
 
@@ -106,6 +105,13 @@ public class SendMsgRequest {
     @XmlElement(name=MailConstants.E_MSG /* m */, required=false)
     private MsgToSend msg;
 
+    /**
+     * @zm-api-field-tag delivery-receipt-notification
+     * @zm-api-field-description If set, delivery receipt notification will be sent.
+     */
+    @XmlAttribute(name=MailConstants.A_DELIVERY_RECEIPT_NOTIFICATION /* deliveryReport */, required=false)
+    private ZmBoolean deliveryReport;
+
     public SendMsgRequest() {
     }
 
@@ -125,6 +131,10 @@ public class SendMsgRequest {
         this.fetchSavedMsg = ZmBoolean.fromBool(fetchSavedMsg);
     }
 
+    public void setDeliveryReport(Boolean deliveryReport) {
+        this.deliveryReport = ZmBoolean.fromBool(deliveryReport);
+    }
+
     public void setSendUid(String sendUid) { this.sendUid = sendUid; }
     public void setMsg(MsgToSend msg) { this.msg = msg; }
 
@@ -133,6 +143,7 @@ public class SendMsgRequest {
     public Boolean getNoSaveToSent() { return ZmBoolean.toBool(noSaveToSent); }
     public Boolean getFetchSavedMsg() { return ZmBoolean.toBool(fetchSavedMsg); }
     public String getSendUid() { return sendUid; }
+    public Boolean getDeliveryReport() { return ZmBoolean.toBool(deliveryReport); }
     public MsgToSend getMsg() { return msg; }
 
     public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
@@ -142,6 +153,7 @@ public class SendMsgRequest {
             .add("noSaveToSent", noSaveToSent)
             .add("fetchSavedMsg", fetchSavedMsg)
             .add("sendUid", sendUid)
+            .add("deliveryReport", deliveryReport)
             .add("msg", msg);
     }
 
