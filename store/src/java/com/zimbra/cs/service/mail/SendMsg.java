@@ -131,7 +131,10 @@ public class SendMsg extends MailDocumentHandler {
                boolean isCalendarForward = request.getAttributeBool(MailConstants.A_IS_CALENDAR_FORWARD, false);
                boolean noSaveToSent = request.getAttributeBool(MailConstants.A_NO_SAVE_TO_SENT, false);
                boolean fetchSavedMsg = request.getAttributeBool(MailConstants.A_FETCH_SAVED_MSG, false);
-               boolean deliveryReport = request.getAttributeBool(MailConstants.A_DELIVERY_RECEIPT_NOTIFICATION, false);
+               boolean deliveryReport = false;
+               if (LC.delivery_report_enabled.booleanValue()) {
+                   deliveryReport = request.getAttributeBool(MailConstants.A_DELIVERY_RECEIPT_NOTIFICATION, false);
+               }
 
                String origId = msgElem.getAttribute(MailConstants.A_ORIG_ID, null);
                ItemId iidOrigId = origId == null ? null : new ItemId(origId, zsc);
