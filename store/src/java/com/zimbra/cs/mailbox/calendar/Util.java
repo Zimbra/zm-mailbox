@@ -375,12 +375,6 @@ public class Util {
                 previousWasASpace = false;
             }
             switch (c) {
-                case '<':
-                    builder.append("&lt;");
-                    break;
-                case '>':
-                    builder.append("&gt;");
-                    break;
                 case '&':
                     builder.append("&amp;");
                     break;

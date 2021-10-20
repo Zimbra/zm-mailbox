@@ -511,8 +511,17 @@ public class Invite {
         String desc = descInMeta ? meta.get(FN_DESC, null) : null;
         String descHtml = descInMeta ? meta.get(FN_DESC_HTML, null) : null;
 
-        // if desc html is missing but desc is present
-        if (desc != null && descHtml == null) {
+        boolean hasXMicrosoftHeader = false;
+        for (Map.Entry<String, ?> entry : meta.asMap().entrySet()) {
+            if (entry.getValue().toString().contains("X-MICROSOFT")) {
+                hasXMicrosoftHeader = true;
+                break;
+            }
+        }
+
+        // generate HTML description if invite_ignore_x_alt_description is true
+        // and contains X-MICROSOFT headers
+        if (desc != null && LC.invite_ignore_x_alt_description.booleanValue() && hasXMicrosoftHeader) {
             descHtml = Util.textToHtml(desc);
         }
 

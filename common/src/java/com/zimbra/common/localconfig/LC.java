@@ -1463,6 +1463,9 @@ public final class LC {
     @Supported
     public static final KnownKey delivery_report_enabled = KnownKey.newKey(true);
 
+    // ignore X-ALT-DESC and use invite description to create html description
+    public static final KnownKey invite_ignore_x_alt_description = KnownKey.newKey(false);
+
     static {
         // Automatically set the key name with the variable name.
         for (Field field : LC.class.getFields()) {
