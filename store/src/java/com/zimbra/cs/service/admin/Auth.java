@@ -130,7 +130,7 @@ public class Auth extends AdminDocumentHandler {
             if (name == null && acctEl == null)
                 throw ServiceException.INVALID_REQUEST("missing <name> or <account>", null);
 
-            String password = request.getAttribute(AdminConstants.E_PASSWORD, null);
+            String password = request.getAttribute(AdminConstants.E_PASSWORD);
             Element virtualHostEl = request.getOptionalElement(AccountConstants.E_VIRTUAL_HOST);
             String virtualHost = virtualHostEl == null ? null : virtualHostEl.getText().toLowerCase();
 
@@ -170,6 +170,8 @@ public class Auth extends AdminDocumentHandler {
                 if (acct == null)
                     throw AuthFailedServiceException.AUTH_FAILED(value, valuePassedIn, "account not found");
 
+                checkAdmin(acct);
+
                 AccountUtil.addAccountToLogContext(prov, acct.getId(), ZimbraLog.C_NAME, ZimbraLog.C_ID, null);
 
                 ZimbraLog.security.info(ZimbraLog.encodeAttrs(
@@ -184,7 +186,7 @@ public class Auth extends AdminDocumentHandler {
                 
 				// Only perform 2fa authentication on admin account not on the resource accounts
 				if (acct != null && !acct.isIsSystemResource() && !acct.isIsSystemAccount()) {
-					Element el = check2FA(request, password, authCtxt, acctEl, acct, context, zsc, prov);
+					Element el = check2FA(request, password, authCtxt, acctEl, acct, context, zsc, prov, csrfSupport);
 					if (el != null) {
 						return el;
 					}
@@ -192,7 +194,6 @@ public class Auth extends AdminDocumentHandler {
 					// perform authAccount for the zmprov account directly as it can't have 2fa
 					prov.authAccount(acct, password, AuthContext.Protocol.soap, authCtxt);
 				}
-                checkAdmin(acct);
                 AuthMech authedByMech = (AuthMech) authCtxt.get(AuthContext.AC_AUTHED_BY_MECH);
                 at = AuthProvider.getAuthToken(acct, true, authedByMech);
             } catch (ServiceException se) {
@@ -210,7 +211,7 @@ public class Auth extends AdminDocumentHandler {
     }
 
 	private Element check2FA(Element request, String password, Map<String, Object> authCtxt, Element acctEl,
-			Account acct, Map<String, Object> context, ZimbraSoapContext zsc, Provisioning prov)
+			Account acct, Map<String, Object> context, ZimbraSoapContext zsc, Provisioning prov, boolean csrfSupport)
 			throws ServiceException {
 
 		// Following code is similar to account/auth.java 2FA code
@@ -288,7 +289,7 @@ public class Auth extends AdminDocumentHandler {
 					appPasswords.authenticate(password);
 				} else {
 					prov.authAccount(acct, code, AuthContext.Protocol.soap, authCtxt);
-					return needTwoFactorAuth(acct, twoFactorManager, zsc, tokenType);
+					return needTwoFactorAuth(acct, twoFactorManager, zsc, tokenType, context, csrfSupport);
 				}
 			} else {
 				if (password != null || recoveryCode != null) {
@@ -368,7 +369,7 @@ public class Auth extends AdminDocumentHandler {
         trustedDeviceManager.verifyTrustedDevice(td, attrs);
     }
 
-    private Element needTwoFactorAuth(Account account, TwoFactorAuth auth, ZimbraSoapContext zsc, TokenType tokenType) throws ServiceException {
+    private Element needTwoFactorAuth(Account account, TwoFactorAuth auth, ZimbraSoapContext zsc, TokenType tokenType, Map<String, Object> context, boolean csrfSupport) throws ServiceException {
         /* two cases here:
          * 1) the user needs to provide a two-factor code.
          *    in this case, the server returns a two-factor auth token in the response header that the client
@@ -385,6 +386,12 @@ public class Auth extends AdminDocumentHandler {
             response.addAttribute(AccountConstants.E_LIFETIME, twoFactorToken.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);
             twoFactorToken.encodeAuthResp(response, false);
             response.addUniqueElement(AccountConstants.E_TRUSTED_DEVICES_ENABLED).setText(account.isFeatureTrustedDevicesEnabled() ? "true" : "false");
+
+            HttpServletRequest httpReq = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
+            HttpServletResponse httpResp = (HttpServletResponse) context.get(SoapServlet.SERVLET_RESPONSE);
+
+            setCSRFToken(httpReq, httpResp, twoFactorToken, csrfSupport, response);
+
             return response;
         }
     }
@@ -398,8 +405,7 @@ public class Auth extends AdminDocumentHandler {
             throw ServiceException.PERM_DENIED("not an admin account");
     }
     
-    private Element doResponse(Element request, AuthToken at, ZimbraSoapContext zsc,
-            Map<String, Object> context, Account acct, boolean csrfSupport) throws ServiceException {
+    private Element doResponse(Element request, AuthToken at, ZimbraSoapContext zsc, Map<String, Object> context, Account acct, boolean csrfSupport) throws ServiceException {
         Element response = zsc.createElement(AdminConstants.AUTH_RESPONSE);
         at.encodeAuthResp(response, true);
 
@@ -419,22 +425,26 @@ public class Auth extends AdminDocumentHandler {
             ZimbraSoapContext.encodeSession(response, session.getSessionId(), session.getSessionType());
         }
 
-        boolean csrfCheckEnabled = false;
-        if (httpReq.getAttribute(Provisioning.A_zimbraCsrfTokenCheckEnabled) != null) {
-            csrfCheckEnabled = (Boolean) httpReq.getAttribute(Provisioning.A_zimbraCsrfTokenCheckEnabled);
-        }
-        if (csrfSupport && csrfCheckEnabled) {
-            String accountId = at.getAccountId();
-            long authTokenExpiration = at.getExpires();
-            int tokenSalt = (Integer)httpReq.getAttribute(CsrfFilter.CSRF_SALT);
-            String token = CsrfUtil.generateCsrfToken(accountId,
-                authTokenExpiration, tokenSalt, at);
-            Element csrfResponse = response.addUniqueElement(HeaderConstants.E_CSRFTOKEN);
-            csrfResponse.addText(token);
-            httpResp.setHeader(Constants.CSRF_TOKEN, token);
-        }
+        setCSRFToken(httpReq, httpResp, at, csrfSupport, response);
+
         return response;
     }
+
+    private void setCSRFToken(HttpServletRequest httpReq, HttpServletResponse httpResp, AuthToken authToken, boolean csrfSupport, Element response) throws ServiceException {
+		boolean csrfCheckEnabled = false;
+		if (httpReq.getAttribute(Provisioning.A_zimbraCsrfTokenCheckEnabled) != null) {
+			csrfCheckEnabled = (Boolean) httpReq.getAttribute(Provisioning.A_zimbraCsrfTokenCheckEnabled);
+		}
+		if (csrfSupport && csrfCheckEnabled) {
+			String accountId = authToken.getAccountId();
+			long authTokenExpiration = authToken.getExpires();
+			int tokenSalt = (Integer) httpReq.getAttribute(CsrfFilter.CSRF_SALT);
+			String token = CsrfUtil.generateCsrfToken(accountId, authTokenExpiration, tokenSalt, authToken);
+			Element csrfResponse = response.addUniqueElement(HeaderConstants.E_CSRFTOKEN);
+			csrfResponse.addText(token);
+			httpResp.setHeader(Constants.CSRF_TOKEN, token);
+		}
+	}
 
     @Override
     public boolean needsAuth(Map<String, Object> context) {
