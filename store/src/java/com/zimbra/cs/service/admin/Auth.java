@@ -20,6 +20,7 @@
  */
 package com.zimbra.cs.service.admin;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +37,7 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraCookie;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -56,6 +58,7 @@ import com.zimbra.cs.account.auth.twofactor.TwoFactorAuth;
 import com.zimbra.cs.listeners.AuthListener;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.servlet.CsrfFilter;
+import com.zimbra.cs.servlet.util.AuthUtil;
 import com.zimbra.cs.servlet.util.CsrfUtil;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.util.AccountUtil;
@@ -92,7 +95,7 @@ public class Auth extends AdminDocumentHandler {
                 }
             }
 
-            if(at == null) {
+            if (at == null) {
                 //neither login credentials nor valid auth token could be retrieved
                 throw ServiceException.AUTH_REQUIRED();
             }
@@ -124,7 +127,7 @@ public class Auth extends AdminDocumentHandler {
             if (name == null && acctEl == null)
                 throw ServiceException.INVALID_REQUEST("missing <name> or <account>", null);
 
-            String password = request.getAttribute(AdminConstants.E_PASSWORD);
+            String password = request.getAttribute(AdminConstants.E_PASSWORD, null);
             Element virtualHostEl = request.getOptionalElement(AccountConstants.E_VIRTUAL_HOST);
             String virtualHost = virtualHostEl == null ? null : virtualHostEl.getText().toLowerCase();
 
@@ -217,7 +220,13 @@ public class Auth extends AdminDocumentHandler {
 
 		AuthMode mode = AuthMode.PASSWORD;
 		authCtxt.put(Provisioning.AUTH_MODE_KEY, mode);
-        
+
+		if (authTokenEl == null) {
+		    if (password == null || password.equals("")) {
+		        throw ServiceException.INVALID_REQUEST("missing required attribute: " + AccountConstants.E_PASSWORD, null);
+		    }
+		}
+
 		TwoFactorAuth twoFactorManager = TwoFactorAuth.getFactory().getTwoFactorAuth(acct);
 		boolean usingTwoFactorAuth = twoFactorManager.twoFactorAuthRequired();
 		boolean twoFactorAuthWithToken = usingTwoFactorAuth && authTokenEl != null;
@@ -249,6 +258,22 @@ public class Auth extends AdminDocumentHandler {
 					if (!twoFactorManager.twoFactorAuthEnabled()) {
 						throw AccountServiceException.TWO_FACTOR_SETUP_REQUIRED();
 					}
+					AuthToken twoFactorToken = null;
+					if (password == null) {
+                        try {
+                            twoFactorToken = AuthProvider.getAuthToken(authTokenEl, acct);
+                            Account twoFactorTokenAcct = AuthProvider.validateAuthToken(prov, twoFactorToken, false, Usage.TWO_FACTOR_AUTH);
+                            boolean verifyAccount = authTokenEl.getAttributeBool(AccountConstants.A_VERIFY_ACCOUNT, false);
+                            if (verifyAccount && !twoFactorTokenAcct.getId().equalsIgnoreCase(acct.getId())) {
+                                throw new AuthTokenException("two-factor auth token doesn't match the named account");
+                            }
+                        } catch (AuthTokenException e) {
+                            AuthFailedServiceException exception = AuthFailedServiceException
+                                .AUTH_FAILED("bad auth token");
+                            AuthListener.invokeOnException(exception);
+                            throw exception;
+                        }
+                    }
 					TwoFactorAuth manager = TwoFactorAuth.getFactory().getTwoFactorAuth(acct);
 					if (twoFactorCode != null) {
 						manager.authenticate(twoFactorCode);
