@@ -449,7 +449,7 @@ public final class ToXML {
                     eGrant.addAttribute(MailConstants.A_INVALID, true);
                     eGrant.addAttribute(MailConstants.A_DISPLAY, OperationContextData.GranteeNames.EMPTY_NAME);
                 } else {
-                    eGrant.addAttribute(MailConstants.A_DISPLAY, name);
+                    eGrant.addAttribute(MailConstants.A_DISPLAY, IDNUtil.toUnicode(name));
                 }
             }
 

@@ -753,12 +753,12 @@ public class ShareInfo {
             }
             share.addNonUniqueElement(ShareConstants.E_GRANTEE).
                     addAttribute(ShareConstants.A_ID, sid.getGranteeId()).
-                    addAttribute(ShareConstants.A_EMAIL, sid.getGranteeName()).
-                    addAttribute(ShareConstants.A_NAME, sid.getGranteeNotifName());
+                    addAttribute(ShareConstants.A_EMAIL, IDNUtil.toUnicode(sid.getGranteeName())).
+                    addAttribute(ShareConstants.A_NAME, IDNUtil.toUnicode(sid.getGranteeNotifName()));
             share.addNonUniqueElement(ShareConstants.E_GRANTOR).
                     addAttribute(ShareConstants.A_ID, sid.getOwnerAcctId()).
-                    addAttribute(ShareConstants.A_EMAIL, sid.getOwnerAcctEmail()).
-                    addAttribute(ShareConstants.A_NAME, sid.getOwnerNotifName());
+                    addAttribute(ShareConstants.A_EMAIL, IDNUtil.toUnicode(sid.getOwnerAcctEmail())).
+                    addAttribute(ShareConstants.A_NAME, IDNUtil.toUnicode(sid.getOwnerNotifName()));
             Element link = share.addNonUniqueElement(ShareConstants.E_LINK);
             link.addAttribute(ShareConstants.A_ID, sid.getItemId()).
                     addAttribute(ShareConstants.A_NAME, sid.getName()).

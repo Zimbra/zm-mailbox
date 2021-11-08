@@ -305,7 +305,7 @@ public class ShareInfoData {
     public com.zimbra.soap.type.ShareInfo toJAXB(FolderMountpoint mptId) {
         com.zimbra.soap.type.ShareInfo jaxb = new com.zimbra.soap.type.ShareInfo();
         jaxb.setOwnerId(getOwnerAcctId());
-        jaxb.setOwnerEmail(getOwnerAcctEmail());
+        jaxb.setOwnerEmail(IDNUtil.toUnicode(getOwnerAcctEmail()));
         jaxb.setOwnerDisplayName(getOwnerAcctDisplayName());
         jaxb.setFolderId(getItemId());
         jaxb.setFolderUuid(getItemUuid());
@@ -314,7 +314,7 @@ public class ShareInfoData {
         jaxb.setRights(getRights());
         jaxb.setGranteeType(getGranteeType());
         jaxb.setGranteeId(getGranteeId());
-        jaxb.setGranteeName(getGranteeName());
+        jaxb.setGranteeName(IDNUtil.toUnicode(getGranteeName()));
         jaxb.setGranteeDisplayName(getGranteeDisplayName());
         if (mptId != null) {
             jaxb.setMountpointId(String.valueOf(mptId.getId()));
