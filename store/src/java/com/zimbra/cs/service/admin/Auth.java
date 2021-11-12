@@ -20,7 +20,6 @@
  */
 package com.zimbra.cs.service.admin;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,7 +34,6 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.util.Constants;
-import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraCookie;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
@@ -48,7 +46,6 @@ import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.servlet.CsrfFilter;
-import com.zimbra.cs.servlet.util.AuthUtil;
 import com.zimbra.cs.servlet.util.CsrfUtil;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.util.AccountUtil;
