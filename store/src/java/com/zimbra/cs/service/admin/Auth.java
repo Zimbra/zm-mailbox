@@ -20,11 +20,13 @@
  */
 package com.zimbra.cs.service.admin;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.servlet.ServletRequest;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -36,6 +38,7 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraCookie;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -56,6 +59,7 @@ import com.zimbra.cs.account.auth.twofactor.TwoFactorAuth;
 import com.zimbra.cs.listeners.AuthListener;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.servlet.CsrfFilter;
+import com.zimbra.cs.servlet.util.AuthUtil;
 import com.zimbra.cs.servlet.util.CsrfUtil;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.util.AccountUtil;
@@ -204,6 +208,53 @@ public class Auth extends AdminDocumentHandler {
         return doResponse(request, at, zsc, context, acct, csrfSupport);
     }
 
+    private void doCSRFCheck(Map<String, Object> context) throws ServiceException {
+
+        ZimbraLog.extensions.debug("doCSRFCheck in");
+        HttpServletRequest req = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
+        HttpServletResponse res = (HttpServletResponse) context.get(SoapServlet.SERVLET_RESPONSE);
+        AuthToken authToken = null;
+        try {
+            authToken = AuthUtil.getAuthTokenFromHttpReq(req, res, true, false);
+            ZimbraLog.extensions.debug("doCSRFCheck authToken %s", authToken);
+        } catch (IOException e) {
+            ZimbraLog.security.warn("Problem accessing auth token:", e);
+        }
+
+        String csrfToken = null;
+        Cookie[] cookies = req.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if (authToken == null) {
+                    if (cookie.getName().equals("ZM_ADMIN_AUTH_TOKEN")) {
+                        authToken = AuthUtil.getAdminAuthTokenFromCookie(req);
+                    }
+                }
+                if (cookie.getName().equals(Constants.CSRF_TOKEN)) {
+                    csrfToken = cookie.getValue();
+                }
+            }
+        }
+
+        // Check only if authToken is present in request
+        if (authToken != null) {
+            boolean csrfCheckEnabled = false;
+            if (req.getAttribute(Provisioning.A_zimbraCsrfTokenCheckEnabled) != null) {
+                csrfCheckEnabled = (Boolean) req.getAttribute(Provisioning.A_zimbraCsrfTokenCheckEnabled);
+            }
+            ZimbraLog.extensions.debug("doCSRFCheck isCSRFSet %s", csrfCheckEnabled);
+            if (csrfCheckEnabled) {
+                ZimbraLog.extensions.debug("doCSRFCheck csrfToken %s", csrfToken);
+                if (StringUtil.isNullOrEmpty(csrfToken)) {
+                    throw ServiceException.INVALID_REQUEST("CSRF token is required", null);
+                }
+                if (!CsrfUtil.isValidCsrfToken(csrfToken, authToken)) {
+                    throw ServiceException.INVALID_REQUEST("CSRF token is not valid", null);
+                }
+            }
+        }
+    }
+
 	private Element check2FA(Element request, String password, Map<String, Object> authCtxt, Element acctEl,
 			Account acct, Map<String, Object> context, ZimbraSoapContext zsc, Provisioning prov, boolean csrfSupport)
 			throws ServiceException {
@@ -249,6 +300,7 @@ public class Auth extends AdminDocumentHandler {
 					}
 				}
 				if (usingTwoFactorAuth) {
+				    doCSRFCheck(context);
 				    // check that 2FA has been enabled, in case the client is passing in a twoFactorCode prior to setting up 2FA
 					if (!twoFactorManager.twoFactorAuthEnabled()) {
 						throw AccountServiceException.TWO_FACTOR_SETUP_REQUIRED();
@@ -310,8 +362,7 @@ public class Auth extends AdminDocumentHandler {
 	            ZimbraCookie.addHttpOnlyCookie(httpResp, ZimbraCookie.COOKIE_ZM_ADMIN_AUTH_TOKEN,
 	                    twoFactorToken.getEncoded(), ZimbraCookie.PATH_ROOT, -1, true);
 	        } catch (AuthTokenException e) {
-	            // TODO Auto-generated catch block
-	            e.printStackTrace();
+	            throw ServiceException.AUTH_REQUIRED();
 	        }
 	        ZimbraCookie.addHttpOnlyCookie(httpResp, Constants.CSRF_TOKEN,
 	                httpResp.getHeader(Constants.CSRF_TOKEN), ZimbraCookie.PATH_ROOT, -1, true);
