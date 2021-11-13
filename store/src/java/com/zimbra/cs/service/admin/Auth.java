@@ -167,6 +167,7 @@ public class Auth extends AdminDocumentHandler {
         return response;
     }
 
+    
     @Deprecated
     private void checkAdmin(Account acct) throws ServiceException {
         boolean isDomainAdmin = acct.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false);
