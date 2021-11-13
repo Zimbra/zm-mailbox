@@ -208,10 +208,8 @@ public class Auth extends AdminDocumentHandler {
         return doResponse(request, at, zsc, context, acct, csrfSupport);
     }
 
-    private void doCSRFCheck(Map<String, Object> context) throws ServiceException {
+    private void doCSRFCheck(Map<String, Object> context, HttpServletRequest req,  HttpServletResponse res) throws ServiceException {
         ZimbraLog.extensions.debug("doCSRFCheck in");
-        HttpServletRequest req = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
-        HttpServletResponse res = (HttpServletResponse) context.get(SoapServlet.SERVLET_RESPONSE);
         AuthToken authToken = null;
         try {
             authToken = AuthUtil.getAuthTokenFromHttpReq(req, res, true, false);
@@ -235,19 +233,12 @@ public class Auth extends AdminDocumentHandler {
 
         // Check only if authToken is present in request
         if (authToken != null) {
-            boolean csrfCheckEnabled = false;
-            if (req.getAttribute(Provisioning.A_zimbraCsrfTokenCheckEnabled) != null) {
-                csrfCheckEnabled = (Boolean) req.getAttribute(Provisioning.A_zimbraCsrfTokenCheckEnabled);
+            ZimbraLog.extensions.debug("doCSRFCheck csrfToken %s", csrfToken);
+            if (StringUtil.isNullOrEmpty(csrfToken)) {
+                throw ServiceException.INVALID_REQUEST("CSRF token is required", null);
             }
-            ZimbraLog.extensions.debug("doCSRFCheck isCSRFSet %s", csrfCheckEnabled);
-            if (csrfCheckEnabled) {
-                ZimbraLog.extensions.debug("doCSRFCheck csrfToken %s", csrfToken);
-                if (StringUtil.isNullOrEmpty(csrfToken)) {
-                    throw ServiceException.INVALID_REQUEST("CSRF token is required", null);
-                }
-                if (!CsrfUtil.isValidCsrfToken(csrfToken, authToken)) {
-                    throw ServiceException.INVALID_REQUEST("CSRF token is not valid", null);
-                }
+            if (!CsrfUtil.isValidCsrfToken(csrfToken, authToken)) {
+                throw ServiceException.INVALID_REQUEST("CSRF token is not valid", null);
             }
         }
     }
@@ -296,7 +287,16 @@ public class Auth extends AdminDocumentHandler {
 	                }
 	            }
 	            if (usingTwoFactorAuth) {
-	                doCSRFCheck(context);
+	                HttpServletRequest req = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
+	                HttpServletResponse res = (HttpServletResponse) context.get(SoapServlet.SERVLET_RESPONSE);
+	                boolean csrfCheckEnabled = false;
+	                if (req.getAttribute(Provisioning.A_zimbraCsrfTokenCheckEnabled) != null) {
+	                    csrfCheckEnabled = (Boolean) req.getAttribute(Provisioning.A_zimbraCsrfTokenCheckEnabled);
+	                }
+	                ZimbraLog.extensions.debug("doCSRFCheck isCSRFSet %s", csrfCheckEnabled);
+	                if (csrfCheckEnabled) {
+	                    doCSRFCheck(context, req, res);
+	                }
 	                // check that 2FA has been enabled, in case the client is passing in a twoFactorCode prior to setting up 2FA
 	                if (!twoFactorManager.twoFactorAuthEnabled()) {
 	                    throw AccountServiceException.TWO_FACTOR_SETUP_REQUIRED();
