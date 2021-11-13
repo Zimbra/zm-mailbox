@@ -224,12 +224,10 @@ public class Auth extends AdminDocumentHandler {
         Cookie[] cookies = req.getCookies();
         if (cookies != null) {
             for (Cookie cookie : cookies) {
-                if (authToken == null) {
-                    if (cookie.getName().equals("ZM_ADMIN_AUTH_TOKEN")) {
-                        authToken = AuthUtil.getAdminAuthTokenFromCookie(req);
-                    }
+                if ((authToken == null) && (cookie.getName().equals(ZimbraCookie.COOKIE_ZM_ADMIN_AUTH_TOKEN))) {
+                    authToken = AuthUtil.getAdminAuthTokenFromCookie(req);
                 }
-                if (cookie.getName().equals(Constants.CSRF_TOKEN)) {
+                else if (cookie.getName().equals(Constants.CSRF_TOKEN)) {
                     csrfToken = cookie.getValue();
                 }
             }
@@ -266,7 +264,7 @@ public class Auth extends AdminDocumentHandler {
 
 	    authCtxt.put(Provisioning.AUTH_MODE_KEY, AuthMode.PASSWORD);
 	    if (authTokenEl == null) {
-	        if (password == null || password.equals("")) {
+	        if (password == null || password.isEmpty()) {
 	            throw ServiceException.INVALID_REQUEST("missing required attribute: " + AccountConstants.E_PASSWORD, null);
 	        }
 	    }
@@ -351,8 +349,7 @@ public class Auth extends AdminDocumentHandler {
 	        response.addUniqueElement(AccountConstants.E_TWO_FACTOR_AUTH_REQUIRED).setText("true");
 	        response.addAttribute(AccountConstants.E_LIFETIME, twoFactorToken.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);
 	        twoFactorToken.encodeAuthResp(response, false);
-	        response.addUniqueElement(AccountConstants.E_TRUSTED_DEVICES_ENABLED).setText(account.isFeatureTrustedDevicesEnabled() ? "true" : "false");
-
+	        
 	        HttpServletRequest httpReq = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
 	        HttpServletResponse httpResp = (HttpServletResponse) context.get(SoapServlet.SERVLET_RESPONSE);
 	        setCSRFToken(httpReq, httpResp, twoFactorToken, csrfSupport, response);
