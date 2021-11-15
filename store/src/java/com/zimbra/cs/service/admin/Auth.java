@@ -247,17 +247,14 @@ public class Auth extends AdminDocumentHandler {
 			Account acct, Map<String, Object> context, ZimbraSoapContext zsc, Provisioning prov, boolean csrfSupport)
 			throws ServiceException {
 		// Following code is similar to account/auth.java 2FA code
-	    String acctValuePassedIn = null;
 	    String twoFactorCode = request.getAttribute(AccountConstants.E_TWO_FACTOR_CODE, null);
 	    Element authTokenEl = request.getOptionalElement(AccountConstants.E_AUTH_TOKEN);
 	    String reqTokenType = request.getAttribute(AccountConstants.A_TOKEN_TYPE, "");
 	    TokenType tokenType = TokenType.fromCode(reqTokenType);
 
 	    authCtxt.put(Provisioning.AUTH_MODE_KEY, AuthMode.PASSWORD);
-	    if (authTokenEl == null) {
-	        if (password == null || password.isEmpty()) {
-	            throw ServiceException.INVALID_REQUEST("missing required attribute: " + AccountConstants.E_PASSWORD, null);
-	        }
+	    if (authTokenEl == null && StringUtil.isNullOrEmpty(password)) {
+	        throw ServiceException.INVALID_REQUEST("missing required attribute: " + AccountConstants.E_PASSWORD, null);
 	    }
 
 	    TwoFactorAuth twoFactorManager = TwoFactorAuth.getFactory().getTwoFactorAuth(acct);
@@ -266,17 +263,8 @@ public class Auth extends AdminDocumentHandler {
 	    if (password != null || twoFactorAuthWithToken) {
 	        // authentication logic can be reached with either a password, or a 2FA auth token
 	        if (usingTwoFactorAuth && twoFactorCode == null && (password != null)) {
-	            int mtaAuthPort = acct.getServer().getMtaAuthPort();
-	            boolean supportsAppSpecificPaswords = acct.isFeatureAppSpecificPasswordsEnabled() && zsc.getPort() == mtaAuthPort;
-	            if (supportsAppSpecificPaswords && password != null) {
-	                // If we are here, it means we are authenticating SMTP, so app-specific passwords are accepted.
-	                // Other protocols (pop, imap) doesn't touch this code, so their authentication happens in ZimbraAuth.
-	                AppSpecificPasswords appPasswords = TwoFactorAuth.getFactory().getAppSpecificPasswords(acct, acctValuePassedIn);
-	                appPasswords.authenticate(password);
-	            } else {
-	                prov.authAccount(acct, password, AuthContext.Protocol.soap, authCtxt);
-	                return needTwoFactorAuth(acct, twoFactorManager, zsc, tokenType, context, csrfSupport);
-	            }
+	            prov.authAccount(acct, password, AuthContext.Protocol.soap, authCtxt);
+	            return needTwoFactorAuth(acct, twoFactorManager, zsc, tokenType, context, csrfSupport);
 	        } else {
 	            if (password != null) {
 	                prov.authAccount(acct, password, AuthContext.Protocol.soap, authCtxt);
