@@ -114,7 +114,7 @@ public class ProxyServlet extends ZimbraServlet {
             if (domain.charAt(0) == '*') {
                 domain = domain.substring(1);
             }
-            if (host.endsWith(domain)) {
+            if (host.equals(domain)) {
                 return true;
             }
         }
