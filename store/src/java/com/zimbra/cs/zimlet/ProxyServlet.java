@@ -99,12 +99,12 @@ public class ProxyServlet extends ZimbraServlet {
 
     protected boolean checkPermissionOnTarget(URL target, AuthToken auth) {
         String host = target.getHost().toLowerCase();
-        ZimbraLog.zimlet.debug("checking allowedDomains permission on target host: "+host);
+        ZimbraLog.zimlet.debug("checking allowedDomains permission on target host: " + host);
         Set<String> domains;
         try {
             domains = getAllowedDomains(auth);
         } catch (ServiceException se) {
-            ZimbraLog.zimlet.info("error getting allowedDomains: "+se.getMessage());
+            ZimbraLog.zimlet.info("error getting allowedDomains: " + se.getMessage());
             return false;
         }
         for (String domain : domains) {
