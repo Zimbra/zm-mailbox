@@ -23,12 +23,20 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.google.common.base.MoreObjects;
+import com.zimbra.common.gql.GqlConstants;
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
+import com.zimbra.soap.type.ZmBoolean;
+
+import io.leangen.graphql.annotations.GraphQLNonNull;
+import io.leangen.graphql.annotations.GraphQLQuery;
+import io.leangen.graphql.annotations.types.GraphQLType;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_AUTH_RESPONSE)
+@GraphQLType(name=GqlConstants.CLASS_AUTH_RESPONSE, description="Response to account authentication request.")
 public class AuthResponse {
 
     /**
@@ -51,6 +59,9 @@ public class AuthResponse {
     @ZimbraJsonAttribute
     @XmlElement(name=AdminConstants.E_LIFETIME /* lifetime */, required=true)
     private long lifetime;
+
+    @XmlElement(name=AccountConstants.E_TWO_FACTOR_AUTH_REQUIRED, required=false)
+    private ZmBoolean twoFactorAuthRequired;
 
     public AuthResponse() {
     }
@@ -86,4 +97,7 @@ public class AuthResponse {
         this.csrfToken = csrfToken;
     }
 
+    @GraphQLQuery(name="twoFactorAuthRequired", description="Denotes if two factor authentication is required")
+    public ZmBoolean getTwoFactorAuthRequired() { return twoFactorAuthRequired; }
+    public AuthResponse setTwoFactorAuthRequired(boolean bool) { this.twoFactorAuthRequired = ZmBoolean.fromBool(bool); return this; }
 }
