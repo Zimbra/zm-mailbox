@@ -261,11 +261,9 @@ public class Auth extends AdminDocumentHandler {
         boolean twoFactorAuthWithToken = usingTwoFactorAuth && authTokenEl != null;
         
         if (password != null) {
+            prov.authAccount(acct, password, AuthContext.Protocol.soap, authCtxt);
             if (usingTwoFactorAuth && twoFactorCode == null) {
-                prov.authAccount(acct, password, AuthContext.Protocol.soap, authCtxt);
                 return needTwoFactorAuth(acct, twoFactorManager, zsc, tokenType, context, csrfSupport);
-            } else {
-                prov.authAccount(acct, password, AuthContext.Protocol.soap, authCtxt);
             }
         } else if (!twoFactorAuthWithToken) {
             // It's ok to not have a password if the client is using a 2FA auth token for the 2nd step of 2FA
