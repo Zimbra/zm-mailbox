@@ -956,7 +956,7 @@ public class ZAttrProvisioning {
 
     public static enum MtaNotifyClasses {
         bounce("bounce"),
-        _bounce("2bounce"),
+        _2bounce("2bounce"),
         data("data"),
         delay("delay"),
         policy("policy"),
@@ -973,7 +973,7 @@ public class ZAttrProvisioning {
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isBounce() { return this == bounce;}
-        public boolean is_bounce() { return this == _bounce;}
+        public boolean is_2bounce() { return this == _2bounce;}
         public boolean isData() { return this == data;}
         public boolean isDelay() { return this == delay;}
         public boolean isPolicy() { return this == policy;}
@@ -1665,9 +1665,9 @@ public class ZAttrProvisioning {
     }
 
     public static enum PrefCalenderScaling {
-        _0("10"),
-        _5("15"),
-        _10("30");
+        _10("10"),
+        _15("15"),
+        _30("30");
         private String mValue;
         private PrefCalenderScaling(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -1677,9 +1677,9 @@ public class ZAttrProvisioning {
              }
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
-        public boolean is_0() { return this == _0;}
-        public boolean is_5() { return this == _5;}
         public boolean is_10() { return this == _10;}
+        public boolean is_15() { return this == _15;}
+        public boolean is_30() { return this == _30;}
     }
 
     public static enum PrefClientType {

@@ -42414,13 +42414,13 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * <p>Valid values: [10, 15, 30]
      *
-     * @return zimbraPrefCalenderScaling, or ZAttrProvisioning.PrefCalenderScaling._0 if unset and/or has invalid value
+     * @return zimbraPrefCalenderScaling, or ZAttrProvisioning.PrefCalenderScaling._30 if unset and/or has invalid value
      *
      * @since ZCS 9.1.0
      */
     @ZAttr(id=4004)
     public ZAttrProvisioning.PrefCalenderScaling getPrefCalenderScaling() {
-        try { String v = getAttr(Provisioning.A_zimbraPrefCalenderScaling, true, true); return v == null ? ZAttrProvisioning.PrefCalenderScaling._0 : ZAttrProvisioning.PrefCalenderScaling.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.PrefCalenderScaling._0; }
+        try { String v = getAttr(Provisioning.A_zimbraPrefCalenderScaling, true, true); return v == null ? ZAttrProvisioning.PrefCalenderScaling._30 : ZAttrProvisioning.PrefCalenderScaling.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.PrefCalenderScaling._30; }
     }
 
     /**
