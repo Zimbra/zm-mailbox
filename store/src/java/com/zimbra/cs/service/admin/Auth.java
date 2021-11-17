@@ -259,61 +259,57 @@ public class Auth extends AdminDocumentHandler {
         TwoFactorAuth twoFactorManager = TwoFactorAuth.getFactory().getTwoFactorAuth(acct);
         boolean usingTwoFactorAuth = twoFactorManager.twoFactorAuthRequired();
         boolean twoFactorAuthWithToken = usingTwoFactorAuth && authTokenEl != null;
-        if (password != null || twoFactorAuthWithToken) {
-            // authentication logic can be reached with either a password, or a 2FA auth token
-            if (usingTwoFactorAuth && twoFactorCode == null && (password != null)) {
+        
+        if (password != null) {
+            if (usingTwoFactorAuth && twoFactorCode == null) {
                 prov.authAccount(acct, password, AuthContext.Protocol.soap, authCtxt);
                 return needTwoFactorAuth(acct, twoFactorManager, zsc, tokenType, context, csrfSupport);
             } else {
-                if (password != null) {
-                    prov.authAccount(acct, password, AuthContext.Protocol.soap, authCtxt);
-                } else {
-                    // It's ok to not have a password if the client is using a 2FA auth token for the 2nd step of 2FA
-                    if (!twoFactorAuthWithToken) {
-                        throw ServiceException.AUTH_REQUIRED();
+                prov.authAccount(acct, password, AuthContext.Protocol.soap, authCtxt);
+            }
+        } else if (!twoFactorAuthWithToken) {
+            // It's ok to not have a password if the client is using a 2FA auth token for the 2nd step of 2FA
+            throw ServiceException.AUTH_REQUIRED();
+        }
+
+        if (usingTwoFactorAuth) {
+            HttpServletRequest req = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
+            HttpServletResponse res = (HttpServletResponse) context.get(SoapServlet.SERVLET_RESPONSE);
+            boolean csrfCheckEnabled = false;
+            if (req.getAttribute(Provisioning.A_zimbraCsrfTokenCheckEnabled) != null && (csrfCheckEnabled = (Boolean) req.getAttribute(Provisioning.A_zimbraCsrfTokenCheckEnabled))) {
+                ZimbraLog.extensions.debug("doCSRFCheck isCSRFSet %s", csrfCheckEnabled);
+                doCSRFCheck(context, req, res);
+            }
+            
+            // check that 2FA has been enabled, in case the client is passing in a twoFactorCode prior to setting up 2FA
+            if (!twoFactorManager.twoFactorAuthEnabled()) {
+                throw AccountServiceException.TWO_FACTOR_SETUP_REQUIRED();
+            }
+            AuthToken twoFactorToken = null;
+            if (password == null) {
+                try {
+                    twoFactorToken = AuthProvider.getAuthToken(authTokenEl, acct);
+                    Account twoFactorTokenAcct = AuthProvider.validateAuthToken(prov, twoFactorToken, false, Usage.TWO_FACTOR_AUTH);
+                    boolean verifyAccount = authTokenEl.getAttributeBool(AccountConstants.A_VERIFY_ACCOUNT, false);
+                    if (verifyAccount && !twoFactorTokenAcct.getId().equalsIgnoreCase(acct.getId())) {
+                        throw new AuthTokenException("two-factor auth token doesn't match the named account");
                     }
+                } catch (AuthTokenException e) {
+                    AuthFailedServiceException exception = AuthFailedServiceException
+                            .AUTH_FAILED("bad auth token");
+                    AuthListener.invokeOnException(exception);
+                    throw exception;
                 }
-                if (usingTwoFactorAuth) {
-                    HttpServletRequest req = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
-                    HttpServletResponse res = (HttpServletResponse) context.get(SoapServlet.SERVLET_RESPONSE);
-                    boolean csrfCheckEnabled = false;
-                    if (req.getAttribute(Provisioning.A_zimbraCsrfTokenCheckEnabled) != null) {
-                        csrfCheckEnabled = (Boolean) req.getAttribute(Provisioning.A_zimbraCsrfTokenCheckEnabled);
-                    }
-                    ZimbraLog.extensions.debug("doCSRFCheck isCSRFSet %s", csrfCheckEnabled);
-                    if (csrfCheckEnabled) {
-                        doCSRFCheck(context, req, res);
-                    }
-                    // check that 2FA has been enabled, in case the client is passing in a twoFactorCode prior to setting up 2FA
-                    if (!twoFactorManager.twoFactorAuthEnabled()) {
-                        throw AccountServiceException.TWO_FACTOR_SETUP_REQUIRED();
-                    }
-                    AuthToken twoFactorToken = null;
-                    if (password == null) {
-                        try {
-                            twoFactorToken = AuthProvider.getAuthToken(authTokenEl, acct);
-                            Account twoFactorTokenAcct = AuthProvider.validateAuthToken(prov, twoFactorToken, false, Usage.TWO_FACTOR_AUTH);
-                            boolean verifyAccount = authTokenEl.getAttributeBool(AccountConstants.A_VERIFY_ACCOUNT, false);
-                            if (verifyAccount && !twoFactorTokenAcct.getId().equalsIgnoreCase(acct.getId())) {
-                                throw new AuthTokenException("two-factor auth token doesn't match the named account");
-                            }
-                        } catch (AuthTokenException e) {
-                            AuthFailedServiceException exception = AuthFailedServiceException
-                                    .AUTH_FAILED("bad auth token");
-                            AuthListener.invokeOnException(exception);
-                            throw exception;
-                        }
-                    }
-                    TwoFactorAuth manager = TwoFactorAuth.getFactory().getTwoFactorAuth(acct);
-                    if (twoFactorCode != null) {
-                        manager.authenticate(twoFactorCode);
-                    } else {
-                        AuthFailedServiceException e = AuthFailedServiceException
-                                .AUTH_FAILED("no two-factor code provided");
-                        AuthListener.invokeOnException(e);
-                        throw e;
-                    }
-                }
+            }
+            
+            TwoFactorAuth manager = TwoFactorAuth.getFactory().getTwoFactorAuth(acct);
+            if (twoFactorCode != null) {
+                manager.authenticate(twoFactorCode);
+            } else {
+                AuthFailedServiceException e = AuthFailedServiceException
+                        .AUTH_FAILED("no two-factor code provided");
+                AuthListener.invokeOnException(e);
+                throw e;
             }
         }
         return null;
