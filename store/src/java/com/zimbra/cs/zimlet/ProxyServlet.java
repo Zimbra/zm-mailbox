@@ -108,13 +108,13 @@ public class ProxyServlet extends ZimbraServlet {
             return false;
         }
         for (String domain : domains) {
-            if (domain.equals("*")) {
-                return true;
-            }
             if (domain.charAt(0) == '*') {
                 domain = domain.substring(1);
+                if (host.endsWith(domain)) {
+                    return true;
+                }
             }
-            if (host.equals(domain)) {
+            else if (host.equals(domain)) {
                 return true;
             }
         }
