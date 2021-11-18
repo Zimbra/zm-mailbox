@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2021 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -264,6 +264,7 @@ public class Invite {
     private static final String FN_CONTACT         = "contact";
     private static final String FN_DESC            = "desc";
     private static final String FN_DESC_HTML       = "descH";
+    private static final String FN_X_ZIMBRA_DESC_HTML = "xDescH";
     private static final String FN_DESC_IN_META    = "dinM";  // whether description is stored in metadata
     private static final String FN_FRAGMENT        = "frag";
     private static final String FN_DTSTAMP         = "dts";
@@ -347,6 +348,8 @@ public class Invite {
                 meta.put(FN_DESC, inv.mDescription);
             if (inv.mDescHtml != null)
                 meta.put(FN_DESC_HTML, inv.mDescHtml);
+            if (inv.xZimbraDescHtml != null)
+                meta.put(FN_X_ZIMBRA_DESC_HTML, inv.xZimbraDescHtml);
         }
 
         if (inv.mRecurrence != null) {
@@ -510,6 +513,7 @@ public class Invite {
         boolean descInMeta = meta.getBool(FN_DESC_IN_META, false);  // default to false for backward compat
         String desc = descInMeta ? meta.get(FN_DESC, null) : null;
         String descHtml = descInMeta ? meta.get(FN_DESC_HTML, null) : null;
+        String xDescHtml = descInMeta ? meta.get(FN_X_ZIMBRA_DESC_HTML, null) : null;
 
         // if desc html is missing but desc is present
         if (desc != null && descHtml == null) {
@@ -664,7 +668,7 @@ public class Invite {
                 seqno, lastFullSeqno, mailboxId, mailItemId, componentNum, sentByMe,
                 desc, descHtml, fragment, comments, categories, contacts, geo, url);
         invite.mDescInMeta = descInMeta;  // a little hacky, but necessary
-
+        invite.setXZimbraDescriptionHtml(xDescHtml);
         invite.setClassPropSetByMe(classPropSetByMe);
 
         long numAlarms = meta.getLong(FN_NUM_ALARMS, 0);
@@ -713,6 +717,7 @@ public class Invite {
 
     private String mDescription;
     private String mDescHtml;
+    private String xZimbraDescHtml;
     private boolean mDescInMeta = true;  // assume description is in metadata unless someone sets a large value
 
     /**
@@ -757,6 +762,22 @@ public class Invite {
         if (!mDescInMeta && mDescription == null)
             loadDescFromBlob();
         return mDescription;
+    }
+
+    /**
+     * Returns the invite email text/html part.
+     *
+     * @return null if notes is not found
+     * @throws ServiceException
+     */
+    public synchronized String getXZimbraDescriptionHtml() throws ServiceException {
+        return xZimbraDescHtml;
+    }
+
+    public synchronized void setXZimbraDescriptionHtml(String html) throws ServiceException {
+        if (html != null) {
+            xZimbraDescHtml = html;
+        }
     }
 
     public synchronized String getDescriptionHtml() throws ServiceException {
