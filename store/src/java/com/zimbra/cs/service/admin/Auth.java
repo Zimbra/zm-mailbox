@@ -182,7 +182,7 @@ public class Auth extends AdminDocumentHandler {
                 authCtxt.put(AuthContext.AC_AS_ADMIN, Boolean.TRUE);          
 
                 // Only perform 2fa authentication on admin account not on the resource accounts
-                if (acct != null && !acct.isIsSystemResource() && !acct.isIsSystemAccount()) {
+                if (!acct.isIsSystemResource() && !acct.isIsSystemAccount()) {
                     Element el = check2FA(request, password, authCtxt, acctEl, acct, context, zsc, prov, csrfSupport);
                     if (el != null) {
                         return el;
@@ -260,19 +260,19 @@ public class Auth extends AdminDocumentHandler {
         boolean usingTwoFactorAuth = twoFactorManager.twoFactorAuthRequired();
         boolean twoFactorAuthWithToken = usingTwoFactorAuth && authTokenEl != null;
         if (password != null || twoFactorAuthWithToken) {
+            if(password != null) {
+                prov.authAccount(acct, password, AuthContext.Protocol.soap, authCtxt);
+            }
             // authentication logic can be reached with either a password, or a 2FA auth token
             if (usingTwoFactorAuth && twoFactorCode == null && (password != null)) {
-                prov.authAccount(acct, password, AuthContext.Protocol.soap, authCtxt);
                 return needTwoFactorAuth(acct, twoFactorManager, zsc, tokenType, context, csrfSupport);
             } else {
-                if (password != null) {
-                    prov.authAccount(acct, password, AuthContext.Protocol.soap, authCtxt);
-                } else {
-                    // It's ok to not have a password if the client is using a 2FA auth token for the 2nd step of 2FA
-                    if (!twoFactorAuthWithToken) {
-                        throw ServiceException.AUTH_REQUIRED();
-                    }
+                // It's ok to not have a password if the client is using a 2FA auth token for
+                // the 2nd step of 2FA
+                if (password == null && !twoFactorAuthWithToken) {
+                    throw ServiceException.AUTH_REQUIRED();
                 }
+
                 if (usingTwoFactorAuth) {
                     HttpServletRequest req = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
                     HttpServletResponse res = (HttpServletResponse) context.get(SoapServlet.SERVLET_RESPONSE);
