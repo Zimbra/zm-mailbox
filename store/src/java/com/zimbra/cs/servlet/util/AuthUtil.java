@@ -360,7 +360,11 @@ public class AuthUtil {
         try {
             ZimbraLog.account.debug("Validating two factor Auth token for account %s ", acct.getName());
             AuthToken twoFactorToken = AuthProvider.getAuthToken(authTokenEl, acct);
-            AuthProvider.validateAuthToken(prov, twoFactorToken, false, Usage.TWO_FACTOR_AUTH);
+            Account twoFactorTokenAcct = AuthProvider.validateAuthToken(prov, twoFactorToken, false, Usage.TWO_FACTOR_AUTH);
+            boolean  verifyAccount = authTokenEl.getAttributeBool(AccountConstants.A_VERIFY_ACCOUNT, false);
+            if (verifyAccount && !twoFactorTokenAcct.getId().equalsIgnoreCase(acct.getId())) {
+                throw new AuthTokenException("two-factor auth token doesn't match the named account");
+            }
             ZimbraLog.account.debug("two-factor auth token has been matched for account %s ", acct.getName());
         } catch (AuthTokenException e) {
             AuthFailedServiceException exception = AuthFailedServiceException
