@@ -26,8 +26,10 @@ import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.activation.DataHandler;
@@ -50,6 +52,7 @@ import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.BlobMetaData;
 import com.zimbra.common.util.CharsetUtil;
 import com.zimbra.common.util.EmailUtil;
@@ -61,6 +64,9 @@ import com.zimbra.common.zmime.ZMimeMultipart;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
+import com.zimbra.cs.account.auth.AuthContext;
+import com.zimbra.cs.account.auth.twofactor.TwoFactorAuth;
+import com.zimbra.cs.listeners.AuthListener;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Domain;
@@ -77,6 +83,8 @@ import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.MetadataList;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.soap.SoapEngine;
+import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.type.DataSourceType;
 
 public class AccountUtil {
@@ -895,5 +903,88 @@ public class AccountUtil {
             }
         }
         return null;
+    }
+
+    public static Account getAccount(AccountBy by, String acctName, Element request, Provisioning prov, ZimbraSoapContext zsc) throws ServiceException{
+        Account acct = null;
+        if (by == AccountBy.name && acctName.indexOf("@") == -1) {
+            // first try to get by adminName, which resolves the account under cn=admins,cn=zimbra
+            // and does not need a domain
+            acct = prov.get(AccountBy.adminName, acctName, zsc.getAuthToken());
+
+            // not found, try applying virtual host name
+            if (acct == null) {
+                Element virtualHostEl = request.getOptionalElement(AccountConstants.E_VIRTUAL_HOST);
+                String virtualHost = virtualHostEl == null ? null : virtualHostEl.getText().toLowerCase();
+                if (virtualHost != null) {
+                    Domain d = prov.get(Key.DomainBy.virtualHostname, virtualHost);
+                    if (d != null) {
+                        acctName = acctName + "@" + d.getName();
+                    }
+                }
+            }
+        }
+
+        if (acct == null) {
+            acct = prov.get(by, acctName);
+        }
+        
+        return acct;
+    }
+    
+    public static Map<String, Object> getAdminAuthContext(Map<String, Object> context, String valuePassedIn,
+            ZimbraSoapContext zsc) {
+        Map<String, Object> authCtxt = new HashMap<String, Object>();
+        authCtxt.put(AuthContext.AC_ORIGINATING_CLIENT_IP, context.get(SoapEngine.ORIG_REQUEST_IP));
+        authCtxt.put(AuthContext.AC_REMOTE_IP, context.get(SoapEngine.SOAP_REQUEST_IP));
+        authCtxt.put(AuthContext.AC_ACCOUNT_NAME_PASSEDIN, valuePassedIn);
+        authCtxt.put(AuthContext.AC_USER_AGENT, zsc.getUserAgent());
+        authCtxt.put(AuthContext.AC_AS_ADMIN, Boolean.TRUE);
+        return authCtxt;
+    }
+    
+    /**
+     * This method will check that admin account must not be a system and resource account
+     * as well as it check that two factor is enable for this admin account.
+     * @param acct
+     * @return
+     * @throws ServiceException
+     */
+    public static boolean isTwoFactorAccount(Account acct) throws ServiceException {
+        if (!acct.isIsSystemResource() && !acct.isIsSystemAccount()) {
+            TwoFactorAuth twoFactorManager = TwoFactorAuth.getFactory().getTwoFactorAuth(acct);
+            return twoFactorManager.twoFactorAuthRequired() && twoFactorManager.twoFactorAuthEnabled();
+        }
+        return false;
+    }
+    
+    /**
+     * This method is used to verify the two factor code
+     * This will only called when 2FA is enabled
+     * @param twoFactorCode
+     * @param acct
+     * @throws ServiceException
+     */
+    public static void authenticateTwoFactorCode(String twoFactorCode, Account acct) throws ServiceException{
+        TwoFactorAuth manager = TwoFactorAuth.getFactory().getTwoFactorAuth(acct);
+        if (twoFactorCode != null) {
+            ZimbraLog.account.debug("Verifying the Two Factor Code for account %s ", acct.getName());
+            manager.authenticate(twoFactorCode);
+            ZimbraLog.account.debug("Two Factor Code has been matched successfully for account %s ", acct.getName());
+        } else {
+            AuthFailedServiceException e = AuthFailedServiceException
+                    .AUTH_FAILED("no two-factor code provided");
+            AuthListener.invokeOnException(e);
+            throw e;
+        }
+    }
+    
+    public static void isAdminAccount(Account acct) throws ServiceException {
+        boolean isDomainAdmin = acct.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false);
+        boolean isAdmin= acct.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false);
+        boolean isDelegatedAdmin= acct.getBooleanAttr(Provisioning.A_zimbraIsDelegatedAdminAccount, false);
+        boolean ok = (isDomainAdmin || isAdmin || isDelegatedAdmin);
+        if (!ok)
+            throw ServiceException.PERM_DENIED("not an admin account");
     }
 }
