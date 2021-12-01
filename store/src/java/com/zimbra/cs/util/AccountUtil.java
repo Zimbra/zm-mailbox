@@ -976,4 +976,14 @@ public class AccountUtil {
         if (!ok)
             throw ServiceException.PERM_DENIED("not an admin account");
     }
+    
+    // for auth by auth token
+    public static void addAccountToLogContextByAuthToken(Provisioning prov, AuthToken at) {
+        String id = at.getAccountId();
+        if (id != null)
+            AccountUtil.addAccountToLogContext(prov, id, ZimbraLog.C_NAME, ZimbraLog.C_ID, null);
+        String aid = at.getAdminAccountId();
+        if (aid != null && !aid.equals(id))
+            AccountUtil.addAccountToLogContext(prov, aid, ZimbraLog.C_ANAME, ZimbraLog.C_AID, null);
+    }
 }
