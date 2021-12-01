@@ -46,7 +46,6 @@ import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.servlet.CsrfFilter;
-import com.zimbra.cs.servlet.util.AuthUtil;
 import com.zimbra.cs.servlet.util.CsrfUtil;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.util.AccountUtil;
