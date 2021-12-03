@@ -819,11 +819,42 @@ public abstract class AuthProvider {
         throw AuthProviderException.FAILURE(String.format("cannot get authtoken from account ", account.getName()));
     }
 
+    public static AuthToken getAuthToken(Account account, boolean isAdmin, Usage usage, TokenType tokenType) throws AuthProviderException {
+        List<AuthProvider> providers = getProviders();
+        AuthProviderException authProviderExp = null;
+
+        for (AuthProvider ap : providers) {
+            try {
+                AuthToken at = ap.authToken(account, isAdmin, usage, tokenType);
+                if (at == null) {
+                    authProviderExp = AuthProviderException.FAILURE(String.format("auth provider %s returned null", ap.getName()));
+                } else {
+                    return at;
+                }
+            } catch (AuthProviderException e) {
+                if (e.canIgnore()) {
+                    logger().debug("auth provider failure %s : %s", ap.getName(), e.getMessage());
+                } else {
+                    authProviderExp = e;
+                }
+            }
+        }
+
+        if (null != authProviderExp) {
+            throw authProviderExp;
+        }
+        throw AuthProviderException.FAILURE(String.format("cannot get authtoken from account ", account.getName()));
+    }
+
     protected AuthToken authToken(Account acct, Usage usage) throws AuthProviderException {
         throw AuthProviderException.NOT_SUPPORTED();
     }
 
     protected AuthToken authToken(Account acct, Usage usage, TokenType tokenType) throws AuthProviderException {
+        throw AuthProviderException.NOT_SUPPORTED();
+    }
+    
+    protected AuthToken authToken(Account acct, boolean isAdmin, Usage usage, TokenType tokenType) throws AuthProviderException {
         throw AuthProviderException.NOT_SUPPORTED();
     }
 
