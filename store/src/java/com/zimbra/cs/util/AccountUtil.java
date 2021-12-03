@@ -52,7 +52,6 @@ import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
-import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.BlobMetaData;
 import com.zimbra.common.util.CharsetUtil;
 import com.zimbra.common.util.EmailUtil;
@@ -905,17 +904,15 @@ public class AccountUtil {
         return null;
     }
 
-    public static Account getAccount(AccountBy by, String acctName, Element request, Provisioning prov, ZimbraSoapContext zsc) throws ServiceException{
+    public static Account getAccount(AccountBy by, String acctName, String virtualHost, AuthToken at, Provisioning prov) throws ServiceException{
         Account acct = null;
         if (by == AccountBy.name && acctName.indexOf("@") == -1) {
             // first try to get by adminName, which resolves the account under cn=admins,cn=zimbra
             // and does not need a domain
-            acct = prov.get(AccountBy.adminName, acctName, zsc.getAuthToken());
+            acct = prov.get(AccountBy.adminName, acctName, at);
 
             // not found, try applying virtual host name
             if (acct == null) {
-                Element virtualHostEl = request.getOptionalElement(AccountConstants.E_VIRTUAL_HOST);
-                String virtualHost = virtualHostEl == null ? null : virtualHostEl.getText().toLowerCase();
                 if (virtualHost != null) {
                     Domain d = prov.get(Key.DomainBy.virtualHostname, virtualHost);
                     if (d != null) {
@@ -986,15 +983,5 @@ public class AccountUtil {
         boolean ok = (isDomainAdmin || isAdmin || isDelegatedAdmin);
         if (!ok)
             throw ServiceException.PERM_DENIED("not an admin account");
-    }
-    
-    // for auth by auth token
-    public static void addAccountToLogContextByAuthToken(Provisioning prov, AuthToken at) {
-        String id = at.getAccountId();
-        if (id != null)
-            AccountUtil.addAccountToLogContext(prov, id, ZimbraLog.C_NAME, ZimbraLog.C_ID, null);
-        String aid = at.getAdminAccountId();
-        if (aid != null && !aid.equals(id))
-            AccountUtil.addAccountToLogContext(prov, aid, ZimbraLog.C_ANAME, ZimbraLog.C_AID, null);
     }
 }

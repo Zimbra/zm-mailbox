@@ -545,9 +545,6 @@ public final class CsrfUtil {
             Element csrfResponse = response.addUniqueElement(HeaderConstants.E_CSRFTOKEN);
             csrfResponse.addText(token);
             httpResp.setHeader(Constants.CSRF_TOKEN, token);
-            
-            ZimbraCookie.addHttpOnlyCookie(httpResp, Constants.CSRF_TOKEN,
-                    httpResp.getHeader(Constants.CSRF_TOKEN), ZimbraCookie.PATH_ROOT, -1, true);
         }
     }
     
