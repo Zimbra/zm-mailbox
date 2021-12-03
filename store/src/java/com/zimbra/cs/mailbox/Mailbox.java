@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2021 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -18,6 +18,7 @@ package com.zimbra.cs.mailbox;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Reader;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
@@ -46,7 +47,9 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
 
 import javax.mail.Address;
+import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimePart;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.MoreObjects;
@@ -56,6 +59,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.common.io.Closeables;
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
@@ -86,6 +90,7 @@ import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.common.mailbox.ZimbraQueryHitResults;
 import com.zimbra.common.mailbox.ZimbraSearchParams;
 import com.zimbra.common.mime.InternetAddress;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.Rfc822ValidationInputStream;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
@@ -122,6 +127,8 @@ import com.zimbra.cs.db.DbVolumeBlobs;
 import com.zimbra.cs.fb.FreeBusy;
 import com.zimbra.cs.fb.FreeBusyQuery;
 import com.zimbra.cs.fb.LocalFreeBusyProvider;
+import com.zimbra.cs.html.BrowserDefang;
+import com.zimbra.cs.html.DefangFactory;
 import com.zimbra.cs.imap.ImapMessage;
 import com.zimbra.cs.index.BrowseTerm;
 import com.zimbra.cs.index.DomainBrowseTerm;
@@ -154,6 +161,7 @@ import com.zimbra.cs.mailbox.calendar.cache.CalSummaryCache.CalendarDataResult;
 import com.zimbra.cs.mailbox.calendar.cache.CalendarCacheManager;
 import com.zimbra.cs.mailbox.calendar.tzfixup.TimeZoneFixupRules;
 import com.zimbra.cs.mailbox.util.TypedIdList;
+import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedAddress;
 import com.zimbra.cs.mime.ParsedContact;
@@ -5780,6 +5788,13 @@ public class Mailbox implements MailboxStore {
             }
         }
 
+        if (inv.getXZimbraDescriptionHtml() == null) {
+            String htmlDesc = getMsgHtmlDesc(pm);
+            if (!StringUtil.isNullOrEmpty(htmlDesc)) {
+                inv.setXZimbraDescriptionHtml(htmlDesc);
+            }
+        }
+
         byte[] data = null;
         try {
             if (pm != null) {
@@ -5849,6 +5864,59 @@ public class Mailbox implements MailboxStore {
         } finally {
             endTransaction(success);
         }
+    }
+
+    /**
+     * Returns the html message. Message parts are checked for text/html,
+     * once the part is found its read and returned as the html description.
+     * If not found the null value is returned.
+     *
+     *
+     * @return null if text/html is not found
+     * @throws ServiceException
+     */
+    public String getMsgHtmlDesc(ParsedMessage pm) throws ServiceException {
+        String htmlDesc = null;
+        if (pm == null) {
+            return htmlDesc;
+        }
+
+        Account acct = getAccount();
+        MimeMessage mm = pm.getMimeMessage();
+        List<MPartInfo> parts = null;
+        InputStream stream = null;
+        Reader reader = null;
+        try {
+            parts = Mime.getParts(mm, acct == null ? null : acct.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, null));
+            if (parts != null && !parts.isEmpty()) {
+                String defaultCharset = null;
+                MPartInfo mpi = null;
+                for (MPartInfo part : parts) {
+                    if (part != null && part.getContentType().equals(MimeConstants.CT_TEXT_HTML)) {
+                        mpi = part;
+                        break;
+                    }
+                }
+                if (mpi == null) {
+                    ZimbraLog.mailbox.debug("Mime part for text/html not found of message '%s' for mailbox '%d'", pm.getMessageID(), this.getId());
+                    return htmlDesc;
+                }
+                MimePart mp = mpi.getMimePart();
+                StringWriter sw = new StringWriter();
+                Writer out = sw;
+                stream = mp.getInputStream();
+                reader = Mime.getTextReader(stream, mp.getContentType(), defaultCharset);
+                BrowserDefang defanger = DefangFactory.getDefanger(mp.getContentType());
+                defanger.defang(reader, false, out);
+                htmlDesc = sw.toString();
+            }
+        } catch (IOException | MessagingException e) {
+            ZimbraLog.mailbox.error(String.format("Exception while reading text/html from MIME of message '%s' for mailbox '%d'", pm.getMessageID(), this.getId()), e);
+        } finally {
+            ByteUtil.closeStream(stream);
+            Closeables.closeQuietly(reader);
+        }
+        return htmlDesc;
     }
 
     public CalendarItem getCalendarItemByUid(OperationContext octxt, String uid) throws ServiceException {
