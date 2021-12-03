@@ -30,14 +30,11 @@ import org.apache.commons.codec.binary.Base64;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
-import com.zimbra.common.util.ZimbraCookie;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
@@ -45,18 +42,17 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.AuthToken.TokenType;
 import com.zimbra.cs.account.AuthToken.Usage;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.auth.AuthContext.Protocol;
+import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
 import com.zimbra.cs.dav.service.DavServlet;
 import com.zimbra.cs.httpclient.URLUtil;
-import com.zimbra.cs.listeners.AuthListener;
 import com.zimbra.cs.service.AuthProvider;
+import com.zimbra.cs.service.AuthProviderException;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.servlet.ZimbraServlet;
-import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class AuthUtil {
@@ -347,33 +343,7 @@ public class AuthUtil {
         }
         return redirectUrl;
     }
-    
-    /**
-     * This method is used to validate Auth Token
-     * This method will only called when client provide Auth Token with TOTP
-     * @param authTokenEl
-     * @param prov
-     * @param acct
-     * @throws ServiceException
-     */
-    public static void validateAuthToken(Element authTokenEl, Provisioning prov, Account acct) throws ServiceException{
-        try {
-            ZimbraLog.account.debug("Validating two factor Auth token for account %s ", acct.getName());
-            AuthToken twoFactorToken = AuthProvider.getAuthToken(authTokenEl, acct);
-            Account twoFactorTokenAcct = AuthProvider.validateAuthToken(prov, twoFactorToken, false, Usage.TWO_FACTOR_AUTH);
-            boolean  verifyAccount = authTokenEl.getAttributeBool(AccountConstants.A_VERIFY_ACCOUNT, false);
-            if (verifyAccount && !twoFactorTokenAcct.getId().equalsIgnoreCase(acct.getId())) {
-                throw new AuthTokenException("two-factor auth token doesn't match the named account");
-            }
-            ZimbraLog.account.debug("two-factor auth token has been matched for account %s ", acct.getName());
-        } catch (AuthTokenException e) {
-            AuthFailedServiceException exception = AuthFailedServiceException
-                    .AUTH_FAILED("bad auth token");
-            AuthListener.invokeOnException(exception);
-            throw exception;
-        }
-    }
-    
+
     public static AuthToken getAuthToken(Element request, Provisioning prov, ZimbraSoapContext zsc)
         throws ServiceException {
         //Fetch Auth token from cookies
@@ -404,36 +374,14 @@ public class AuthUtil {
         return at;
     }
     
-    /**
-     * This method will return the Auth token that will used by client to make 
-     * request with two factor code + will return CSRF token if CSRF is enabled
-     * @param account
-     * @param twoFactorManager
-     * @param zsc
-     * @param tokenType
-     * @param context
-     * @param csrfSupport
-     * @return
-     * @throws ServiceException
-     */
-    public static Element getTwoFactorAuthToken(Account account, ZimbraSoapContext zsc,
-            TokenType tokenType, Map<String, Object> context, boolean csrfSupport) throws ServiceException {
-        ZimbraLog.account.debug("Generating auth token used to validate two factor code.");
-        AuthToken twoFactorToken = AuthProvider.getAuthToken(account, Usage.TWO_FACTOR_AUTH, tokenType);
-        
-        Element response = zsc.createElement(AccountConstants.AUTH_RESPONSE);
-        response.addUniqueElement(AccountConstants.E_TWO_FACTOR_AUTH_REQUIRED).setText("true");
-        response.addAttribute(AccountConstants.E_LIFETIME, twoFactorToken.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);
-        twoFactorToken.encodeAuthResp(response, false);
-
-        HttpServletRequest httpReq = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
-        HttpServletResponse httpResp = (HttpServletResponse) context.get(SoapServlet.SERVLET_RESPONSE);
-        CsrfUtil.setCSRFToken(httpReq, httpResp, twoFactorToken, csrfSupport, response);
-        try {
-            ZimbraCookie.addHttpOnlyCookie(httpResp, ZimbraCookie.COOKIE_ZM_ADMIN_AUTH_TOKEN, twoFactorToken.getEncoded(), ZimbraCookie.PATH_ROOT, -1, true);
-        } catch (AuthTokenException e) {
-            throw ServiceException.AUTH_REQUIRED();
+    public static AuthToken getAuthToken(Account acct, boolean isAdmin, Usage usage, TokenType tokenType,
+            AuthMech authedByMech) throws AuthProviderException {
+        AuthToken at = null;
+        if (Usage.TWO_FACTOR_AUTH == usage) {
+            at = AuthProvider.getAuthToken(acct, isAdmin, usage, tokenType);
+        } else {
+            at = AuthProvider.getAuthToken(acct, isAdmin, authedByMech);
         }
-        return response;
+        return at;
     }
 }
