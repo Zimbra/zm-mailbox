@@ -162,6 +162,14 @@ public class ZimbraAuthProvider extends AuthProvider {
         }
     }
 
+    protected AuthToken authToken(Account acct, boolean isAdmin, Usage usage, TokenType tokenType) throws AuthProviderException {
+        if (TokenType.JWT.equals(tokenType)) {
+            return new ZimbraJWToken(acct, usage);
+        } else {
+            return new ZimbraAuthToken(acct, 0, isAdmin, null, null, usage);
+        }
+    }
+    
     @Override
     protected AuthToken jwToken(Element soapCtxt, Map engineCtxt)
     throws AuthProviderException, AuthTokenException {
