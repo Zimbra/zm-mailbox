@@ -362,15 +362,7 @@ public class AuthUtil {
             //neither login credentials nor valid auth token could be retrieved
             throw ServiceException.AUTH_REQUIRED();
         }
-
-        if (at.isExpired()) {
-            throw ServiceException.AUTH_EXPIRED();
-        }
-
-        if (!at.isRegistered()) {
-            throw ServiceException.AUTH_EXPIRED("authtoken is invalid");
-        }
-
+        
         return at;
     }
     
