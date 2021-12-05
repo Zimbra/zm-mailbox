@@ -349,28 +349,43 @@ public class AuthUtil {
         return redirectUrl;
     }
 
+    /**
+     * Will get Auth Token from cookies if it is null then will try to get it from Auth token element
+     * @param request
+     * @param prov
+     * @param zsc
+     * @return AuthToken
+     * @throws AUTH_REQUIRED if Auth token is null else ServiceException
+     */
     public static AuthToken getAuthToken(Element request, Provisioning prov, ZimbraSoapContext zsc)
         throws ServiceException {
-        //Fetch Auth token from cookies
+        // fetch Auth token from cookies
         AuthToken at = zsc.getAuthToken();
-        if(at == null) {
-            Element authTokenEl = request.getOptionalElement(AdminConstants.E_AUTH_TOKEN);
-            if(authTokenEl != null) {
+        if (at == null) {
+            if (request.getOptionalElement(AdminConstants.E_AUTH_TOKEN) != null) {
                 try {
                     at = AuthProvider.getAuthToken(request, new HashMap<String, Object>());
                 } catch (AuthTokenException e) {
                     throw ServiceException.AUTH_REQUIRED();
                 }
+            } else {
+                throw ServiceException.AUTH_REQUIRED();
             }
         }
-        if (at == null) {
-            //neither login credentials nor valid auth token could be retrieved
-            throw ServiceException.AUTH_REQUIRED();
-        }
-        
         return at;
     }
     
+    /**
+     * If usage is 2FA then it will generate 2FA token 
+     * Else will generate Admin Auth token that will be used for subsequent request.
+     * @param acct
+     * @param isAdmin
+     * @param usage
+     * @param tokenType
+     * @param authedByMech
+     * @return AuthToken
+     * @throws AuthProviderException
+     */
     public static AuthToken getAuthToken(Account acct, boolean isAdmin, Usage usage, TokenType tokenType,
             AuthMech authedByMech) throws AuthProviderException {
         AuthToken at = null;
@@ -393,25 +408,26 @@ public class AuthUtil {
      * @param at
      * @throws ServiceException
      */
-	public static void validateAuthTokenWithNamedAccount(Element authTokenEl, Element acctEl, Element request, Account twoFactorTokenAcct, Provisioning prov, AuthToken at) throws ServiceException {
-		try {
-            AccountBy by = AccountBy.fromString(acctEl.getAttribute(AccountConstants.A_BY, AccountBy.name.name()));
-            String virtualHost = request.getOptionalElement(AccountConstants.E_VIRTUAL_HOST) == null ? null : 
-            	request.getOptionalElement(AccountConstants.E_VIRTUAL_HOST).getText().toLowerCase();
-            Account acct = AccountUtil.getAccount(by, acctEl.getText(), virtualHost, at, prov);
-            if (acct == null || !acct.getAccountStatus(prov).equals(Provisioning.ACCOUNT_STATUS_ACTIVE)) {
-                throw ServiceException.PERM_DENIED("Error in Authentication");
+    public static void validateAuthTokenWithNamedAccount(Element authTokenEl, Element acctEl, Element request, Account twoFactorTokenAcct, Provisioning prov, AuthToken at) throws ServiceException {
+        AccountBy by = AccountBy.fromString(acctEl.getAttribute(AccountConstants.A_BY, AccountBy.name.name()));
+        String virtualHost = request.getOptionalElement(AccountConstants.E_VIRTUAL_HOST) == null ? null : 
+            request.getOptionalElement(AccountConstants.E_VIRTUAL_HOST).getText().toLowerCase();
+        Account acct = AccountUtil.getAccount(by, acctEl.getText(), virtualHost, at, prov);
+        if (acct == null || !acct.getAccountStatus(prov).equals(Provisioning.ACCOUNT_STATUS_ACTIVE)) {
+            throw ServiceException.PERM_DENIED("Error in Authentication");
+        }
+        AccountUtil.isAdminAccount(acct);
+        try {
+            if (!twoFactorTokenAcct.getId().equalsIgnoreCase(acct.getId())) {
+                throw new AuthTokenException("two-factor auth token doesn't match the named account");
             }
-            AccountUtil.isAdminAccount(acct);
-    		if (!twoFactorTokenAcct.getId().equalsIgnoreCase(acct.getId())) {
-				throw new AuthTokenException("two-factor auth token doesn't match the named account");
-			}
-    		ZimbraLog.account.debug("two-factor auth token has matched with the named account");
-		} catch (AuthTokenException e) {
-			AuthFailedServiceException exception = AuthFailedServiceException.AUTH_FAILED("bad auth token");
-			AuthListener.invokeOnException(exception);
-			throw exception;
-		}
-		
-	}
+            ZimbraLog.account.debug("two-factor auth token has matched with the named account");
+        } catch (AuthTokenException e) {
+            ZimbraLog.account.error(e.getMessage());
+            AuthFailedServiceException exception = AuthFailedServiceException.AUTH_FAILED("invalid auth token");
+            AuthListener.invokeOnException(exception);
+            throw exception;
+        }
+
+    }
 }
