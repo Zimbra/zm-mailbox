@@ -162,6 +162,12 @@ public class ZimbraAuthProvider extends AuthProvider {
         }
     }
 
+    /**
+     * Create an AuthToken object
+     * If TokenType is JWT then will return z ZimbraJWTToken
+     * If usage is 2FA then token created for 2 factor account
+     * if isAdmin is true then token will be Admin Account
+     */
     protected AuthToken authToken(Account acct, boolean isAdmin, Usage usage, TokenType tokenType) throws AuthProviderException {
         if (TokenType.JWT.equals(tokenType)) {
             return new ZimbraJWToken(acct, usage);

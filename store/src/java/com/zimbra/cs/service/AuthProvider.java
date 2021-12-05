@@ -819,30 +819,27 @@ public abstract class AuthProvider {
         throw AuthProviderException.FAILURE(String.format("cannot get authtoken from account ", account.getName()));
     }
 
+    /**
+     * This method is used to create AuthToken for account
+     * @param account
+     * @param isAdmin is true then token will be for Admin Account
+     * @param usage is type 2FA then token returned will be used for 2FA
+     * @param tokenType
+     * @return AuthToken
+     * @throws AuthProviderException
+     */
     public static AuthToken getAuthToken(Account account, boolean isAdmin, Usage usage, TokenType tokenType) throws AuthProviderException {
-        List<AuthProvider> providers = getProviders();
-        AuthProviderException authProviderExp = null;
-
-        for (AuthProvider ap : providers) {
+        for (AuthProvider ap : getProviders()) {
             try {
                 AuthToken at = ap.authToken(account, isAdmin, usage, tokenType);
-                if (at == null) {
-                    authProviderExp = AuthProviderException.FAILURE(String.format("auth provider %s returned null", ap.getName()));
-                } else {
+                if (at != null) {
                     return at;
                 }
             } catch (AuthProviderException e) {
-                if (e.canIgnore()) {
-                    logger().debug("auth provider failure %s : %s", ap.getName(), e.getMessage());
-                } else {
-                    authProviderExp = e;
-                }
+                logger().debug("auth provider failure %s : %s", ap.getName(), e.getMessage());
             }
         }
 
-        if (null != authProviderExp) {
-            throw authProviderExp;
-        }
         throw AuthProviderException.FAILURE(String.format("cannot get authtoken from account ", account.getName()));
     }
 
@@ -854,6 +851,15 @@ public abstract class AuthProvider {
         throw AuthProviderException.NOT_SUPPORTED();
     }
     
+    /**
+     * If there is no implementation of AuthProvider this method is used.
+     * @param acct
+     * @param isAdmin
+     * @param usage
+     * @param tokenType
+     * @return
+     * @throws AuthProviderException.NOT_SUPPORTED Exception
+     */
     protected AuthToken authToken(Account acct, boolean isAdmin, Usage usage, TokenType tokenType) throws AuthProviderException {
         throw AuthProviderException.NOT_SUPPORTED();
     }

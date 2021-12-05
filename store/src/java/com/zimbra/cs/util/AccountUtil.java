@@ -62,6 +62,7 @@ import com.zimbra.common.zmime.ZMimeBodyPart;
 import com.zimbra.common.zmime.ZMimeMultipart;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.auth.twofactor.TwoFactorAuth;
@@ -893,6 +894,17 @@ public class AccountUtil {
         return null;
     }
 
+    /**
+     * If acctName doesn't have domain name in it then 1st Account object to be fetched using provided acctName
+     * If acctName is null then will try to fetch it from fully qualified email address.
+     * @param by
+     * @param acctName
+     * @param virtualHost
+     * @param at
+     * @param prov
+     * @return
+     * @throws ServiceException
+     */
     public static Account getAccount(AccountBy by, String acctName, String virtualHost, AuthToken at, Provisioning prov) throws ServiceException{
         Account acct = null;
         if (by == AccountBy.name && acctName.indexOf("@") == -1) {
@@ -901,13 +913,9 @@ public class AccountUtil {
             acct = prov.get(AccountBy.adminName, acctName, at);
 
             // not found, try applying virtual host name
-            if (acct == null) {
-                if (virtualHost != null) {
-                    Domain d = prov.get(Key.DomainBy.virtualHostname, virtualHost);
-                    if (d != null) {
-                        acctName = acctName + "@" + d.getName();
-                    }
-                }
+            Domain d = null;
+            if (acct == null && virtualHost != null && (d = prov.get(Key.DomainBy.virtualHostname, virtualHost)) != null) {
+                acctName = acctName + "@" + d.getName();
             }
         }
 
@@ -918,6 +926,13 @@ public class AccountUtil {
         return acct;
     }
     
+    /**
+     * This method is used to create a Admin Auth context from original context object
+     * @param context
+     * @param valuePassedIn
+     * @param zsc
+     * @return authCtxt
+     */
     public static Map<String, Object> getAdminAuthContext(Map<String, Object> context, String valuePassedIn,
             ZimbraSoapContext zsc) {
         Map<String, Object> authCtxt = new HashMap<String, Object>();
@@ -939,6 +954,10 @@ public class AccountUtil {
     public static boolean isTwoFactorAccount(Account acct) throws ServiceException {
         if (!acct.isIsSystemResource() && !acct.isIsSystemAccount()) {
             TwoFactorAuth twoFactorManager = TwoFactorAuth.getFactory().getTwoFactorAuth(acct);
+            if (twoFactorManager.twoFactorAuthRequired() && !twoFactorManager.twoFactorAuthEnabled()) {
+                throw AccountServiceException.TWO_FACTOR_SETUP_REQUIRED();
+            }
+            
             return twoFactorManager.twoFactorAuthRequired() && twoFactorManager.twoFactorAuthEnabled();
         }
         return false;
@@ -965,12 +984,17 @@ public class AccountUtil {
         }
     }
     
+    /**
+     * This method is used to check that an account is admin or not
+     * @param acct
+     * @throws ServiceException
+     */
     public static void isAdminAccount(Account acct) throws ServiceException {
         boolean isDomainAdmin = acct.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false);
         boolean isAdmin= acct.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false);
         boolean isDelegatedAdmin= acct.getBooleanAttr(Provisioning.A_zimbraIsDelegatedAdminAccount, false);
-        boolean ok = (isDomainAdmin || isAdmin || isDelegatedAdmin);
-        if (!ok)
+        boolean isAdminAccount = (isDomainAdmin || isAdmin || isDelegatedAdmin);
+        if (!isAdminAccount)
             throw ServiceException.PERM_DENIED("not an admin account");
     }
 }
