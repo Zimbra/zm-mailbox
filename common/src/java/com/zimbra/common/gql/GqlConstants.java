@@ -317,6 +317,7 @@ public class GqlConstants {
     public static final String RIGHTS = "rights";
     public static final String ATTACHMENT_SIZE_LIMIT = "attachmentSizeLimit";
     public static final String DOCUMENT_SIZE_LIMIT = "documentSizeLimit";
+    public static final String IS_SPELL_CHECK_AVAILABLE = "isSpellCheckAvailable";
     public static final String VERSION = "version";
     public static final String ACCOUNT_ID = "accountId";
     public static final String PROFILE_IMAGE_ID = "profileImageId";

@@ -16468,7 +16468,8 @@ public class ZAttrProvisioning {
      * URL of the server running the spell checking service. Multi-valued
      * attribute that allows multiple spell check servers to be specified. If
      * the request to the first server fails, a request to the second server
-     * is sent and so on.
+     * is sent and so on. Spell check service is available only when this
+     * value is non-empty
      */
     @ZAttr(id=267)
     public static final String A_zimbraSpellCheckURL = "zimbraSpellCheckURL";

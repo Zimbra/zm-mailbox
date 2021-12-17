@@ -1510,7 +1510,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="267" name="zimbraSpellCheckURL" type="astring" max="256" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited">
-  <desc>URL of the server running the spell checking service.  Multi-valued attribute that allows multiple spell check servers to be specified.  If the request to the first server fails, a request to the second server is sent and so on.</desc>
+  <desc>URL of the server running the spell checking service.  Multi-valued attribute that allows multiple spell check servers to be specified.  If the request to the first server fails, a request to the second server is sent and so on. Spell check service is available only when this value is non-empty </desc>
 </attr>
 
 <attr id="268" name="zimbraImapBindOnStartup" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox">

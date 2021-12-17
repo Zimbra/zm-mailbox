@@ -37,6 +37,7 @@ import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -175,6 +176,8 @@ public class GetInfo extends AccountDocumentHandler  {
             Server server = prov.getLocalServer();
             if (server != null) {
                 response.addAttribute(AccountConstants.A_DOCUMENT_SIZE_LIMIT, server.getFileUploadMaxSize());
+                //For ZBUG-1280: checks if atleast one URL is present from zimbraSpellCheckURL.
+                response.addAttribute(AccountConstants.A_IS_SPELL_CHECK_AVAILABLE, isSpellCheckServiceAvailable(server));
             }
             Config config = prov.getConfig();
             if (config != null) {
@@ -471,6 +474,16 @@ public class GetInfo extends AccountDocumentHandler  {
 
     private void doDiscoverRights(Element eRights, Account account, Set<Right> rights) throws ServiceException {
         DiscoverRights.discoverRights(account, rights, eRights, false);
+    }
+
+    /**
+     * This check is done for zbug-1280.
+     * checks and returns true when zimbraSpellCheckURL is non-empty on a server
+     * The spellcheck button is shown only when zimbraSpellCheckURL returns non-empty value.
+     */
+    public boolean isSpellCheckServiceAvailable(Server server) {
+        String[] urls = server.getMultiAttr(Provisioning.A_zimbraSpellCheckURL);
+        return !ArrayUtil.isEmpty(urls);
     }
 
     private boolean checkIfPasteitcleanedInstalled() {
