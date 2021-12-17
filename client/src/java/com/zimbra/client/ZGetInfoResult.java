@@ -154,6 +154,10 @@ public class ZGetInfoResult implements ToZJSONObject {
         return data.getDocumentSizeLimit();
     }
 
+    public Boolean getIsSpellCheckAvailable() {
+        return data.getSpellCheckAvailable();
+    }
+
     public String getRecent() {
         return SystemUtil.coalesce(data.getRecentMessageCount(), 0).toString();
     }

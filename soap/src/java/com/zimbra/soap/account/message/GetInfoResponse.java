@@ -77,8 +77,8 @@ import io.leangen.graphql.annotations.types.GraphQLType;
 @XmlType(propOrder = {"version", "accountId", "profileImageId", "accountName", "crumb", "lifetime", "adminDelegated", "restUrl",
         "quotaUsed", "isTrackingIMAP", "previousSessionTime", "lastWriteAccessTime", "recentMessageCount", "cos", "prefs", "attrs",
         "zimlets", "props", "identities", "signatures", "dataSources", "childAccounts", "discoveredRights",
-        "soapURL", "publicURL", "changePasswordURL", "license", "adminURL", "boshURL"})
-@JsonPropertyOrder({"version", "id", "profileImageId", "name", "crumb", "lifetime", "adminDelegated", "docSizeLimit", "attSizeLimit",
+        "soapURL", "publicURL", "changePasswordURL", "license", "adminURL", "boshURL", "spellCheckAvailable"})
+@JsonPropertyOrder({"version", "id", "profileImageId", "name", "crumb", "lifetime", "adminDelegated", "docSizeLimit", "spellCheckAvailable", "attSizeLimit",
         "rest", "used", "isTrackingIMAP", "prevSession", "accessed", "recent", "cos", "prefs", "attrs", "zimlets", "props", "identities",
         "signatures", "dataSources", "childAccounts", "discoveredRights", "soapURL", "publicURL", "license", "adminURL", "boshURL"})
 public final class GetInfoResponse {
@@ -96,6 +96,14 @@ public final class GetInfoResponse {
      */
     @XmlAttribute(name=AccountConstants.A_DOCUMENT_SIZE_LIMIT /* docSizeLimit */, required=false)
     private Long documentSizeLimit;
+
+    /**
+     * @zm-api-field-tag spell-check-available
+     * @zm-api-field-description returns true if the spell check is available on the server
+     */
+    @XmlElement(name=AccountConstants.A_IS_SPELL_CHECK_AVAILABLE /* isSpellCheckAvailable */, required=false)
+    @ZimbraJsonAttribute
+    private ZmBoolean spellCheckAvailable;
 
     /**
      * @zm-api-field-description Server version:
@@ -580,6 +588,14 @@ public final class GetInfoResponse {
         this.isTrackingIMAP = ZmBoolean.fromBool(trackingEnabled);
     }
 
+    @GraphQLQuery(name=GqlConstants.IS_SPELL_CHECK_AVAILABLE, description="Boolean value denoting if spell check is available on a server")
+    public Boolean getSpellCheckAvailable() {
+        return ZmBoolean.toBool(spellCheckAvailable, Boolean.FALSE);
+    }
+    public void setSpellCheckAvailable(Boolean spellCheckAvailable) {
+        this.spellCheckAvailable = ZmBoolean.fromBool(spellCheckAvailable);
+    }
+
     public MoreObjects.ToStringHelper addToStringInfo(
                 MoreObjects.ToStringHelper helper) {
         return helper
@@ -610,6 +626,7 @@ public final class GetInfoResponse {
             .add("boshURL", boshURL)
             .add("changePasswordURL", changePasswordURL)
             .add("license", license)
+            .add("isSpellCheckAvailable", spellCheckAvailable)
             .add("isTrackingIMAP", ZmBoolean.toBool(isTrackingIMAP) ? "1": "0");
 
     }
