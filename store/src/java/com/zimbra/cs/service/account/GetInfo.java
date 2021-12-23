@@ -178,7 +178,7 @@ public class GetInfo extends AccountDocumentHandler  {
             if (server != null) {
                 response.addAttribute(AccountConstants.A_DOCUMENT_SIZE_LIMIT, server.getFileUploadMaxSize());
                 //For ZBUG-1280: checks if atleast one URL is present from zimbraSpellCheckURL.
-                response.addAttribute(AccountConstants.A_IS_SPELL_CHECK_ENABLED, isSpellCheckServiceAvailable(server));
+                response.addAttribute(AccountConstants.A_IS_SPELL_CHECK_AVAILABLE, isSpellCheckServiceAvailable(server));
             }
             Config config = prov.getConfig();
             if (config != null) {
