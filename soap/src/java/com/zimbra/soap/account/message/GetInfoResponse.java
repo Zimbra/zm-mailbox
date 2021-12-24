@@ -98,8 +98,8 @@ public final class GetInfoResponse {
     private Long documentSizeLimit;
 
     /**
-     * @zm-api-field-tag spell-check-enabled
-     * @zm-api-field-description returns true if the spell check is enabled on the server
+     * @zm-api-field-tag spell-check-available
+     * @zm-api-field-description returns true if the spell check is available on the server
      */
     @XmlElement(name=AccountConstants.A_IS_SPELL_CHECK_AVAILABLE /* isSpellCheckAvailable */, required=false)
     @ZimbraJsonAttribute

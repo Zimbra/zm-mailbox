@@ -482,7 +482,7 @@ public class GetInfo extends AccountDocumentHandler  {
 
     /**
      * This check is done for zbug-1280.
-     * checks and returns true when zimbraSpellCheckURL is empty on a server
+     * checks and returns true when zimbraSpellCheckURL is non-empty on a server
      * The spellcheck button is shown only when zimbraSpellCheckURL returns non-empty value.
      */
     public boolean isSpellCheckServiceAvailable(Server server) {

@@ -52,7 +52,7 @@ public class GetInfoTest {
     }
 
     /**
-     * spellcheck should return false when zimbraSpellCheckURL on the current server returns an empty list of urls.
+     * spellcheck should return false when zimbraSpellCheckURL on the current server returns null.
      */
     @Test
     public void falseWhenZimbraSpellCheckURLReturnsNull() {
@@ -66,7 +66,7 @@ public class GetInfoTest {
 
     /**
      * spellcheck should return true when zimbraSpellCheckURL on the current server returns non-empty list of urls.
-     * zimbraServiceInstalled and zimbraServiceEnabled shouldn't impact the return value of this method even "spell" service is not available on current server.
+     * zimbraServiceInstalled and zimbraServiceEnabled shouldn't impact the return value of this method when "spell" service is not available on current server.
      */
     @Test
     public void trueWhenZimbraSpellCheckURLReturnsNonEmptyListWhenEnabled() {
@@ -85,7 +85,7 @@ public class GetInfoTest {
 
     /**
      * spellcheck should return false when zimbraSpellCheckURL on the current server returns with empty list of urls.
-     * zimbraServiceInstalled and zimbraServiceEnabled shouldn't impact the return value of this method even "spell" service is available on current server.
+     * zimbraServiceInstalled and zimbraServiceEnabled shouldn't impact the return value of this method when "spell" service is available on current server.
      */
     @Test
     public void falseWhenZimbraSpellCheckURLReturnsEmptyListWhenEnabled() {
