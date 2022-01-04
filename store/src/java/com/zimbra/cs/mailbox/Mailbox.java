@@ -4849,7 +4849,7 @@ public class Mailbox implements MailboxStore {
 
             // get the list of all visible calendar items in the specified folder
             Map<Integer, Integer> map = DbMailItem.listCalendarItemIdsAndDates(this, type, start, end, folderId, null);
-            
+            success = true;
             return map;
         } finally {
             endTransaction(success);
@@ -4874,6 +4874,7 @@ public class Mailbox implements MailboxStore {
 
             // get the list of all visible calendar items in the specified folder
             Map<Integer, Integer> map = DbMailItem.listCalendarItemIdsAndDates(this, type, lastSync, folderId, null);
+            success = true;
             return map;
         } finally {
             endTransaction(success);
