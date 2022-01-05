@@ -69,7 +69,7 @@ public class GetInfoTest {
      * zimbraServiceInstalled and zimbraServiceEnabled shouldn't impact the return value of this method when "spell" service is not available on current server.
      */
     @Test
-    public void trueWhenZimbraSpellCheckURLReturnsNonEmptyListWhenEnabled() {
+    public void trueWhenZimbraSpellCheckURLReturnsNonEmptyListWhenDisabled() {
         String[] spellCheckUrls = {"http://zcs.example.one:7780/aspell.php", " http://zcs.example.two:7780/aspell.php", "http://zcs.example.three:7780/aspell.php"};
         String[] servicesEnabled = { "amavis", "antivirus", "opendkim", "stats", "mailbox", "proxy"};
         String[] servicesInstalled = {"amavis", "antivirus", "opendkim", "stats", "mailbox", "proxy"};
