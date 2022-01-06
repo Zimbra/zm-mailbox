@@ -553,6 +553,9 @@ public class AccountConstants {
     public static final String A_ATTACHMENT_SIZE_LIMIT = "attSizeLimit";
     public static final String A_DOCUMENT_SIZE_LIMIT = "docSizeLimit";
 
+    //zimbra spellcheck
+    public static final String A_IS_SPELL_CHECK_AVAILABLE = "isSpellCheckAvailable";
+
     //end session
     public static final String A_LOG_OFF = "logoff";
     public static final String A_CLEAR_ALL_SOAP_SESSIONS = "all";

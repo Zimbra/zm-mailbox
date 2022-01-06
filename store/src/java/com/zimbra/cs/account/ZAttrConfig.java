@@ -70966,7 +70966,8 @@ public abstract class ZAttrConfig extends Entry {
      * URL of the server running the spell checking service. Multi-valued
      * attribute that allows multiple spell check servers to be specified. If
      * the request to the first server fails, a request to the second server
-     * is sent and so on.
+     * is sent and so on. Spell check service is available only when this
+     * value is non-empty
      *
      * @return zimbraSpellCheckURL, or empty array if unset
      */
@@ -70979,7 +70980,8 @@ public abstract class ZAttrConfig extends Entry {
      * URL of the server running the spell checking service. Multi-valued
      * attribute that allows multiple spell check servers to be specified. If
      * the request to the first server fails, a request to the second server
-     * is sent and so on.
+     * is sent and so on. Spell check service is available only when this
+     * value is non-empty
      *
      * @param zimbraSpellCheckURL new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -70995,7 +70997,8 @@ public abstract class ZAttrConfig extends Entry {
      * URL of the server running the spell checking service. Multi-valued
      * attribute that allows multiple spell check servers to be specified. If
      * the request to the first server fails, a request to the second server
-     * is sent and so on.
+     * is sent and so on. Spell check service is available only when this
+     * value is non-empty
      *
      * @param zimbraSpellCheckURL new value
      * @param attrs existing map to populate, or null to create a new map
@@ -71012,7 +71015,8 @@ public abstract class ZAttrConfig extends Entry {
      * URL of the server running the spell checking service. Multi-valued
      * attribute that allows multiple spell check servers to be specified. If
      * the request to the first server fails, a request to the second server
-     * is sent and so on.
+     * is sent and so on. Spell check service is available only when this
+     * value is non-empty
      *
      * @param zimbraSpellCheckURL new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -71028,7 +71032,8 @@ public abstract class ZAttrConfig extends Entry {
      * URL of the server running the spell checking service. Multi-valued
      * attribute that allows multiple spell check servers to be specified. If
      * the request to the first server fails, a request to the second server
-     * is sent and so on.
+     * is sent and so on. Spell check service is available only when this
+     * value is non-empty
      *
      * @param zimbraSpellCheckURL new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -71045,7 +71050,8 @@ public abstract class ZAttrConfig extends Entry {
      * URL of the server running the spell checking service. Multi-valued
      * attribute that allows multiple spell check servers to be specified. If
      * the request to the first server fails, a request to the second server
-     * is sent and so on.
+     * is sent and so on. Spell check service is available only when this
+     * value is non-empty
      *
      * @param zimbraSpellCheckURL existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -71061,7 +71067,8 @@ public abstract class ZAttrConfig extends Entry {
      * URL of the server running the spell checking service. Multi-valued
      * attribute that allows multiple spell check servers to be specified. If
      * the request to the first server fails, a request to the second server
-     * is sent and so on.
+     * is sent and so on. Spell check service is available only when this
+     * value is non-empty
      *
      * @param zimbraSpellCheckURL existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -71078,7 +71085,8 @@ public abstract class ZAttrConfig extends Entry {
      * URL of the server running the spell checking service. Multi-valued
      * attribute that allows multiple spell check servers to be specified. If
      * the request to the first server fails, a request to the second server
-     * is sent and so on.
+     * is sent and so on. Spell check service is available only when this
+     * value is non-empty
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -71093,7 +71101,8 @@ public abstract class ZAttrConfig extends Entry {
      * URL of the server running the spell checking service. Multi-valued
      * attribute that allows multiple spell check servers to be specified. If
      * the request to the first server fails, a request to the second server
-     * is sent and so on.
+     * is sent and so on. Spell check service is available only when this
+     * value is non-empty
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
