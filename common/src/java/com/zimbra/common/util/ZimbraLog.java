@@ -28,7 +28,11 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
 
-import org.apache.log4j.PropertyConfigurator;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LoggerContext;
+
+import com.zimbra.common.localconfig.LC;
+
 
 /**
  * Log categories.
@@ -865,7 +869,10 @@ public final class ZimbraLog {
         } else {
             p.put("log4j.appender.A1.layout.ConversionPattern", "[%x] %p: %m%n");
         }
-        PropertyConfigurator.configure(p);
+        LoggerContext context = (org.apache.logging.log4j.core.LoggerContext) LogManager.getContext(false);
+        File file = new File(p.getClass().toString());
+        // this will force a reconfiguration
+        context.setConfigLocation(file.toURI());
     }
 
     public static void toolSetupLog4jConsole(String defaultLevel, boolean stderr, boolean showThreads) {
@@ -886,7 +893,10 @@ public final class ZimbraLog {
         } else {
             p.put("log4j.appender.A1.layout.ConversionPattern", "[%x] %p: %m%n");
         }
-        PropertyConfigurator.configure(p);
+        LoggerContext context = (org.apache.logging.log4j.core.LoggerContext) LogManager.getContext(false);
+        File file = new File(p.getClass().toString());
+        // this will force a reconfiguration
+        context.setConfigLocation(file.toURI());
     }
 
     /**
@@ -899,7 +909,10 @@ public final class ZimbraLog {
      */
     public static void toolSetupLog4j(String defaultLevel, String propsFile) {
         if (propsFile != null && new File(propsFile).exists()) {
-            PropertyConfigurator.configure(propsFile);
+            LoggerContext context = (org.apache.logging.log4j.core.LoggerContext) LogManager.getContext(false);
+            File file = new File(LC.zimbra_log4j_properties.value());
+            // this will force a reconfiguration
+            context.setConfigLocation(file.toURI());
         } else {
             toolSetupLog4j(defaultLevel, null, false);
         }
