@@ -16,11 +16,7 @@
  */
 package com.zimbra.common.util;
 
-import org.apache.log4j.Category;
-import org.apache.log4j.ConsoleAppender;
-import org.apache.log4j.Layout;
-import org.apache.log4j.PatternLayout;
-import org.apache.log4j.helpers.PatternParser;
+import org.apache.logging.log4j.core.Layout;
 
 /**
  * Subclasses Log4J's <tt>PatternLayout</tt> class to add additional support for
@@ -28,7 +24,7 @@ import org.apache.log4j.helpers.PatternParser;
  *   
  * @author bburtin
  */
-public class ZimbraPatternLayout extends PatternLayout {
+public class ZimbraPatternLayout extends PatternLayout   {
 
     public ZimbraPatternLayout() {
         this(DEFAULT_CONVERSION_PATTERN);
@@ -45,15 +41,14 @@ public class ZimbraPatternLayout extends PatternLayout {
         return new ZimbraPatternParser(pattern, this);
     }
     
-    public static void main(String[] args) {
-        Layout layout = new ZimbraPatternLayout("[%z] - %m%n");
-        Category cat = Category.getInstance("some.cat");
-        cat.addAppender(new ConsoleAppender(layout, ConsoleAppender.SYSTEM_OUT));
-        ZimbraLog.addAccountNameToContext("my@account.com");
-        ZimbraLog.addMboxToContext(99);
-        cat.debug("Hello, log");
-        cat.info("Hello again...");
-        ZimbraLog.clearContext();
-        cat.info("No more context");
-    }
+    /*
+     * public static void main(String[] args) { Layout layout = new
+     * ZimbraPatternLayout("[%z] - %m%n"); Category cat =
+     * Category.getInstance("some.cat"); cat.addAppender(new ConsoleAppender(layout,
+     * ConsoleAppender.SYSTEM_OUT));
+     * ZimbraLog.addAccountNameToContext("my@account.com");
+     * ZimbraLog.addMboxToContext(99); cat.debug("Hello, log");
+     * cat.info("Hello again..."); ZimbraLog.clearContext();
+     * cat.info("No more context"); }
+     */
 }

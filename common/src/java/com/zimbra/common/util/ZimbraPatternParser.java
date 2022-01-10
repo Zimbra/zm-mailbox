@@ -18,8 +18,8 @@ package com.zimbra.common.util;
 
 import org.apache.log4j.helpers.FormattingInfo;
 import org.apache.log4j.helpers.PatternConverter;
-import org.apache.log4j.helpers.PatternParser;
 import org.apache.log4j.spi.LoggingEvent;
+import org.apache.logging.log4j.core.pattern.PatternParser;
 
 /**
  * Formats the <tt>%z</tt> pattern as all the keys and values passed
@@ -27,13 +27,13 @@ import org.apache.log4j.spi.LoggingEvent;
  *  
  * @author bburtin
  */
-public class ZimbraPatternParser
-extends PatternParser {
+public class ZimbraPatternParser {
 
     ZimbraPatternLayout mLayout;
+    PatternParser patterParser;
     
     ZimbraPatternParser(String pattern, ZimbraPatternLayout layout) {
-        super(pattern);
+        patterParser = new PatternParser(pattern);
         mLayout = layout;
     }
       
