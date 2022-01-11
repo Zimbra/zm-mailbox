@@ -81,6 +81,13 @@ class SoapDistributionList extends DistributionList implements SoapEntry {
                 SoapProvisioning.getAttrs(e), prov);
         addDlm(e, getRawAttrs());
     }
+    
+    //ZBUG-651: This bug is about to get correct member details for gadl command;
+  	//ZBUG-651: Below constructor is added, which does not call addDlm() as this method is not allowing to get member details
+  	//ZBUG-651: Added one more boolean parameter in here, to differentiate from other constructor
+  	SoapDistributionList(DistributionListInfo dlInfo, Provisioning prov, boolean hideMembers) throws ServiceException {
+  		super(dlInfo.getName(), dlInfo.getId(), Attr.collectionToMap(dlInfo.getAttrList()), prov);
+  	}
 
     private void addDlm(List <String> members, Map<String, Object> attrs) {
         attrs.put(Provisioning.A_zimbraMailForwardingAddress,
