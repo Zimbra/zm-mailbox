@@ -47,6 +47,12 @@ public class ZimbraCookie {
             cookie.setDomain(LC.zimbra_authtoken_cookie_domain.value());
         }
 
+        String cookieVal = LC.zimbra_same_site_cookie.value();
+        if (!StringUtil.isNullOrEmpty(cookieVal)) {
+            // setting cookie value like "SameSite=Strict;", value can be Strict, Lax, None
+            path = new StringBuilder(path).append(";SameSite=").append(cookieVal).append(";").toString();
+        }
+
         cookie.setPath(path);
     }
 
