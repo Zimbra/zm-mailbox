@@ -82,7 +82,7 @@ public class Search extends MailDocumentHandler  {
         SearchRequest req = zsc.elementToJaxb(request);
         
         // ZBUG-1765 ... task selection time date validation is not required
-        if( req.getSearchTypes().equalsIgnoreCase("task") && req.getCursor() != null) {
+        if ( req.getSearchTypes().equalsIgnoreCase("task") && req.getCursor() != null) {
         	req.setCursor(null);
         }
         
