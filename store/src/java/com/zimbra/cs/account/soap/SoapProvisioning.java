@@ -926,7 +926,7 @@ public class SoapProvisioning extends Provisioning {
         if (dlInfo.isDynamic()) {
             return new SoapDynamicGroup(dlInfo, this);
         } else {
-            return new SoapDistributionList(dlInfo, this);
+            return new SoapDistributionList(dlInfo, this, false);
         }
     }
 
