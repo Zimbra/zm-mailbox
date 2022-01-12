@@ -18,7 +18,6 @@
 package com.zimbra.cs.account.soap;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,9 +26,9 @@ import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.soap.admin.type.Attr;
 import com.zimbra.soap.admin.type.DLInfo;
 import com.zimbra.soap.admin.type.DistributionListInfo;
@@ -91,7 +90,7 @@ class SoapDistributionList extends DistributionList implements SoapEntry {
                 members.toArray(new String[members.size()]));
     }
     
-  //ZBUG-651: Added one more method in here against the change in addDlm(), so if some method need blank list of members below method can provide.
+  //ZBUG-651: Added one more method in here against the change in addDlm(), so if some method need blank list of members below method can provide; changed concerned method calling also
     private void resetDlm(Map<String, Object> attrs) {
     	attrs.put(Provisioning.A_zimbraMailForwardingAddress,
     			new ArrayList<String>().toArray(new String[0]));
