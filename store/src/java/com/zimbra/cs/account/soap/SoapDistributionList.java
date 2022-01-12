@@ -18,6 +18,7 @@
 package com.zimbra.cs.account.soap;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,7 +53,7 @@ class SoapDistributionList extends DistributionList implements SoapEntry {
         super(dlInfo.getName(), dlInfo.getId(),
                 new HashMap<String,Object>(), prov);
         // DistributionListMembershipInfo does not supply membership info
-        addDlm(new ArrayList<String>(), getRawAttrs());
+        resetDlm(getRawAttrs());
     }
 
     SoapDistributionList(DistributionListInfo dlInfo, Provisioning prov)
@@ -72,7 +73,7 @@ class SoapDistributionList extends DistributionList implements SoapEntry {
         attrs.put(Provisioning.A_zimbraId, dlInfo.getId());
         
         // DLInfo does not supply membership info
-        addDlm(new ArrayList<String>(), getRawAttrs());
+        resetDlm(getRawAttrs());
     }
 
     SoapDistributionList(Element e, Provisioning prov) throws ServiceException {
@@ -83,15 +84,17 @@ class SoapDistributionList extends DistributionList implements SoapEntry {
     }
     
     //ZBUG-651: This bug is about to get correct member details for gadl command;
-  	//ZBUG-651: Below constructor is added, which does not call addDlm() as this method is not allowing to get member details
-  	//ZBUG-651: Added one more boolean parameter in here, to differentiate from other constructor
-  	SoapDistributionList(DistributionListInfo dlInfo, Provisioning prov, boolean hideMembers) throws ServiceException {
-  		super(dlInfo.getName(), dlInfo.getId(), Attr.collectionToMap(dlInfo.getAttrList()), prov);
-  	}
-
+    //ZBUG-651: Below method is modified as it is overridding the existing member/s value with zero against zimbraMailForwardingAddress attribute. Now checking if members has some data then only it will allow to override else not
     private void addDlm(List <String> members, Map<String, Object> attrs) {
-        attrs.put(Provisioning.A_zimbraMailForwardingAddress,
+    	if(members.size() > 0)
+    		attrs.put(Provisioning.A_zimbraMailForwardingAddress,
                 members.toArray(new String[members.size()]));
+    }
+    
+  //ZBUG-651: Added one more method in here against the change in addDlm(), so if some method need blank list of members below method can provide.
+    private void resetDlm(Map<String, Object> attrs) {
+    	attrs.put(Provisioning.A_zimbraMailForwardingAddress,
+    			new ArrayList<String>().toArray(new String[0]));
     }
 
     private void addDlm(Element e, Map<String, Object> attrs) {
