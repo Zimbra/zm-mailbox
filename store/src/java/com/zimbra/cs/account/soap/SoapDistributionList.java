@@ -82,25 +82,24 @@ class SoapDistributionList extends DistributionList implements SoapEntry {
         addDlm(e, getRawAttrs());
     }
     
-    
     /**
-     * This method is modified as it is overriding the existing member/s value with zero against zimbraMailForwardingAddress attribute.
-     * So now checking if members list is zero than it should not override. (ZBUG-651)
+     * ZBUG-651: This method is modified as it is overriding the existing member/s value with zero against zimbraMailForwardingAddress attribute.
+     * So now checking if members list is zero than it should not override.
      * @param members This is list of members
      * @param attrs This is list of attribute
      * @return nothing
      */
     private void addDlm(List <String> members, Map<String, Object> attrs) {
-    	if (members.size() > 0)
+    	if (members.size() > 0) {
     		attrs.put(Provisioning.A_zimbraMailForwardingAddress,
                 members.toArray(new String[members.size()]));
+    	}
     }
     
     /**
-     * This method is added against the change in addDlm(), which provides blank list of members.
+     * ZBUG-651: This method is added against the change in addDlm(), which provides blank list of members.
      * @param attrs to put/override attribute with blank member list.
      * @return nothing
-     * ZBUG-651
      */
     private void resetDlm(Map<String, Object> attrs) {
     	attrs.put(Provisioning.A_zimbraMailForwardingAddress,
