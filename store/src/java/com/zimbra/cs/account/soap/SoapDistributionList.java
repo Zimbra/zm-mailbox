@@ -83,7 +83,8 @@ class SoapDistributionList extends DistributionList implements SoapEntry {
     }
     
     /**
-     * ZBUG-651: This method is modified as it is overriding the existing member/s value with zero against zimbraMailForwardingAddress attribute.
+     * ZBUG-651: This method is modified as it is overriding the existing member/s value with zero 
+     * against zimbraMailForwardingAddress attribute.
      * So now checking if members list is zero than it should not override.
      * @param members This is list of members
      * @param attrs This is list of attribute
