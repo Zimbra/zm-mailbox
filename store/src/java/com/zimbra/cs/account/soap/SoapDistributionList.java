@@ -104,7 +104,7 @@ class SoapDistributionList extends DistributionList implements SoapEntry {
      */
     private void resetDlm(Map<String, Object> attrs) {
     	attrs.put(Provisioning.A_zimbraMailForwardingAddress,
-    			new ArrayList<String>().toArray(new String[0]));
+    			new String[0]);
     }
 
     private void addDlm(Element e, Map<String, Object> attrs) {
