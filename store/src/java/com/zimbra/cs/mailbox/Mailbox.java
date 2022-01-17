@@ -4845,18 +4845,22 @@ public class Mailbox implements MailboxStore {
      */
     public Map<Integer, Integer> listCalendarItemIdsAndDateForRange(OperationContext octxt, MailItem.Type type, long start, long end,
                     int folderId) throws ServiceException {
+        boolean success = false;
         if (folderId == ID_AUTO_INCREMENT) {
             return new HashMap<Integer, Integer>();
         }
         lock.lock(false);
         try {
+            beginReadTransaction("listCalendarItemIdsAndDateForRange", octxt);
             // if they specified a folder, make sure it actually exists
             getFolderById(folderId);
 
             // get the list of all visible calendar items in the specified folder
             Map<Integer, Integer> map = DbMailItem.listCalendarItemIdsAndDates(this, type, start, end, folderId, null);
+            success = true;
             return map;
         } finally {
+            endTransaction(success);
             lock.release();
         }
     }
@@ -4866,18 +4870,22 @@ public class Mailbox implements MailboxStore {
      */
     public Map<Integer, Integer> listCalendarItemIdsAndDateForRange(OperationContext octxt, MailItem.Type type, int lastSync,
                     int folderId) throws ServiceException {
+        boolean success = false;
         if (folderId == ID_AUTO_INCREMENT) {
             return new HashMap<Integer, Integer>();
         }
         lock.lock(false);
         try {
+            beginReadTransaction("listCalendarItemIdsAndDateForRange", octxt);
             // if they specified a folder, make sure it actually exists
             getFolderById(folderId);
 
             // get the list of all visible calendar items in the specified folder
             Map<Integer, Integer> map = DbMailItem.listCalendarItemIdsAndDates(this, type, lastSync, folderId, null);
+            success = true;
             return map;
         } finally {
+            endTransaction(success);
             lock.release();
         }
     }
