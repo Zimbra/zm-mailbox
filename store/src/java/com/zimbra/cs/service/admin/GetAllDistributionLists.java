@@ -108,7 +108,7 @@ public class GetAllDistributionLists extends AdminDocumentHandler {
             }
             
             if (hasRightToList) {
-                GetDistributionList.encodeDistributionList(e, dl, true, false, null, aac.getAttrRightChecker(dl));
+                GetDistributionList.encodeDistributionList(e, dl, false, false, null, aac.getAttrRightChecker(dl));
             }
         }        
     }
