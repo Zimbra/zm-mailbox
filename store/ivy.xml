@@ -21,8 +21,8 @@
   <dependency org="javax.mail" name="mail" rev="1.4.5" />
   <dependency org="jaxen" name="jaxen" rev="1.1-beta-10"/>
   <dependency org="org.dom4j" name="dom4j" rev="${dom4j.version}" />
-  <dependency org="org.apache.logging.log4j" name="log4j-core" rev="2.17.1" />
-  <dependency org="org.apache.logging.log4j" name="log4j-api" rev="2.17.1" />
+  <dependency org="org.apache.logging.log4j" name="log4j-core" rev="${log4j.core.version}" />
+  <dependency org="org.apache.logging.log4j" name="log4j-api" rev="${log4j.api.version}" />
   <dependency org="com.google.guava" name="guava" rev="${com.google.guava.version}" />
   <dependency org="com.google.guava" name="failureaccess" rev="1.0.1"/>
   <dependency org="org.json" name="json" rev="20090211" />

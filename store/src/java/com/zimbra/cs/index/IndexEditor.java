@@ -33,11 +33,13 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.log4j.Layout;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.apache.log4j.PatternLayout;
-import org.apache.log4j.WriterAppender;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.Appender;
+import org.apache.logging.log4j.core.Logger;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.appender.OutputStreamAppender;
+import org.apache.logging.log4j.core.config.Configuration;
+import org.apache.logging.log4j.core.layout.PatternLayout;
 import org.apache.lucene.document.DateTools;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
@@ -433,26 +435,33 @@ public final class IndexEditor {
             return true;
         }
 
-        private WriterAppender mAppender;
+        private org.apache.logging.log4j.core.appender.WriterAppender mAppender;
 
         public boolean enableLogging() {
             if (mAppender == null) {
-                Layout layout = new PatternLayout(logLayoutPattern );
-                mAppender = new WriterAppender(layout, mOutputStream);
-                Logger root = Logger.getRootLogger();
-
-                root.addAppender(mAppender);
+                /*
+                 * Layout layout = new PatternLayout(logLayoutPattern ); 
+                 * mAppender = new org.apache.logging.log4j.core.appender.WriterAppender(layout, mOutputStream);
+                 * Logger root = Logger.getRootLogger(); 
+                 * root.addAppender(mAppender);
+                 */
+                final LoggerContext context = LoggerContext.getContext(false);
+                final Configuration config = context.getConfiguration();
+                final PatternLayout layout = PatternLayout.newBuilder().withPattern(logLayoutPattern).build();
+                final Appender appender = OutputStreamAppender.createAppender(layout, null, mOutputStream, mAppender.getName(), false, true);
+                appender.start();
+                config.addAppender(appender);
                 return true;
             } else {
-                return false;
+                return false;   
             }
         }
 
         public boolean disableLogging() {
             if (mAppender != null) {
-                Logger root = Logger.getRootLogger();
-                root.removeAppender(mAppender);
-                mAppender = null;
+                final LoggerContext context = LoggerContext.getContext(false);
+                final Configuration config = context.getConfiguration();
+                config.getRootLogger().removeAppender(mAppender.getName());
                 return true;
             }
             return false;
@@ -678,7 +687,7 @@ public final class IndexEditor {
             outputStream.print("Caught exception: "+e.toString());
         }
 
-        Logger root = Logger.getRootLogger();
+        Logger root = LoggerContext.getContext().getRootLogger();
 
         if (logLevel != null && !logLevel.equals("")) {
 

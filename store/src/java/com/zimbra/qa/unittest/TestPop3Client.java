@@ -19,9 +19,10 @@ package com.zimbra.qa.unittest;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.apache.logging.log4j.core.config.Configurator;
+
 import junit.framework.TestCase;
 
-import org.apache.log4j.BasicConfigurator;
 
 import com.zimbra.common.util.Log;
 import com.zimbra.cs.mailclient.pop3.Pop3Capabilities;
@@ -41,7 +42,7 @@ public class TestPop3Client extends TestCase {
     private static final String PASS = "test123";
 
     static {
-        BasicConfigurator.configure();
+        Configurator.reconfigure();
     }
 
     public void testDown() throws Exception {

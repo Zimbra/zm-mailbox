@@ -23,7 +23,8 @@ import java.io.IOException;
 import java.util.Properties;
 
 import com.zimbra.cs.extension.ExtensionUtil;
-import org.apache.log4j.PropertyConfigurator;
+import org.apache.logging.log4j.core.config.ConfigurationSource;
+import org.apache.logging.log4j.core.config.Configurator;
 
 import com.zimbra.common.calendar.WellKnownTimeZones;
 import com.zimbra.common.localconfig.LC;
@@ -98,7 +99,12 @@ public class ImapDaemon {
             try (FileInputStream fisLog4j = new FileInputStream(IMAPD_LOG4J_CONFIG)) {
                 props.load(fisLog4j);
             }
-            PropertyConfigurator.configure(props);
+            try {
+                ConfigurationSource logConfigSource = new ConfigurationSource(new FileInputStream(LC.zimbra_log4j_properties.value()));
+                Configurator.initialize(null, logConfigSource);
+             } catch (IOException e) {
+                 ZimbraLog.misc.info("Error initializing the  loggers.", e);
+             }
             String imapdClassStore=LC.imapd_class_store.value();
             try {
                 StoreManager.getInstance(imapdClassStore).startup();
@@ -106,7 +112,7 @@ public class ImapDaemon {
                 throw ServiceException.FAILURE(String.format("Unable to initialize StoreManager: %s", imapdClassStore), e);
             }
 
-            if(isZimbraImapEnabled()) {
+            if(isZimbraImapEnabled()) { 
                 ZimbraPerf.prepare(ZimbraPerf.ServerID.IMAP_DAEMON);
                 MemoryStats.startup();
                 ZimbraPerf.initialize(ZimbraPerf.ServerID.IMAP_DAEMON);

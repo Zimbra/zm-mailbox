@@ -16,15 +16,17 @@
  */
 package com.zimbra.common.util;
 
-import java.io.File;
+import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.io.IOException;
 
 import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.config.ConfigurationSource;
+import org.apache.logging.log4j.core.config.Configurator;
 
 import com.zimbra.common.localconfig.LC;
 
@@ -41,10 +43,12 @@ public final class LogFactory {
     }
 
     public synchronized static void init() {
-        LoggerContext context = (org.apache.logging.log4j.core.LoggerContext) LogManager.getContext(false);
-        File file = new File(LC.zimbra_log4j_properties.value());
-        // this will force a reconfiguration
-        context.setConfigLocation(file.toURI());
+        try {
+            ConfigurationSource logConfigSource = new ConfigurationSource(new FileInputStream(LC.zimbra_log4j_properties.value()));
+            Configurator.initialize(null, logConfigSource);
+         } catch (IOException e) {
+             ZimbraLog.misc.info("Error initializing the  loggers.", e);
+         }
     }
 
     public synchronized static void reset() {
@@ -54,8 +58,14 @@ public final class LogFactory {
         for (Log log : getAllLoggers()) {
             log.removeAccountLoggers();
         }
-        LoggerContext context = (org.apache.logging.log4j.core.LoggerContext) LogManager.getContext(false);
-        context.reconfigure();
+        LogManager.shutdown();
+        ConfigurationSource logConfigSource;
+        try {
+            logConfigSource = new ConfigurationSource(new FileInputStream(LC.zimbra_log4j_properties.value()));
+            Configurator.initialize(null, logConfigSource);
+        } catch (IOException e) {
+            ZimbraLog.misc.info("Error resetting the  loggers.", e);
+        }
     }
 
     public static Log getLog(Class<?> clazz) {

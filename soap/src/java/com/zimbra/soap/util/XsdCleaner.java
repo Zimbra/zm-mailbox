@@ -37,9 +37,9 @@ import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
-import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
@@ -52,13 +52,14 @@ import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
 
 
+
 /**
  * This class adjusts the .xsd files automatically generated from JAXB classes to work better for WSDL.
  * For instance, the adjustments include a workaround for a wsdl.exe code generation issue<br />
  * See http://connect.microsoft.com/VisualStudio/feedback/details/471297
  */
 public class XsdCleaner {
-    private static final Logger LOG = Logger.getLogger(XsdCleaner.class);
+    private static final org.apache.logging.log4j.Logger LOG = LogManager.getLogger(XsdCleaner.class);
 
     private static final String ARG_DIR = "--dir";
     private static final String KEEP_BACKUPS = "--keep.backups";
@@ -67,9 +68,8 @@ public class XsdCleaner {
     private static boolean keepBackups = false;
 
     static {
-        BasicConfigurator.configure();
-        Logger.getRootLogger().setLevel(Level.INFO);
-        LOG.setLevel(Level.INFO);
+        Configurator.setLevel(LogManager.getRootLogger().getName(), Level.INFO);
+        Configurator.setLevel(LogManager.getLogger(XsdCleaner.class).getName(), Level.INFO);
     }
     /**
      * Main
