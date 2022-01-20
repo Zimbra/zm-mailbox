@@ -38,7 +38,7 @@ public class Log {
     private final Map<String, org.apache.logging.log4j.Logger> mAccountLoggers = new ConcurrentHashMap<String, org.apache.logging.log4j.Logger>();
 
     private static final Map<Level, org.apache.logging.log4j.Level> ZIMBRA_TO_LOG4J =
-        new EnumMap<Level, org.apache.logging.log4j.Level>(Level.class);
+            new EnumMap<Level, org.apache.logging.log4j.Level>(Level.class);
     static {
         ZIMBRA_TO_LOG4J.put(Level.error, org.apache.logging.log4j.Level.ERROR);
         ZIMBRA_TO_LOG4J.put(Level.warn, org.apache.logging.log4j.Level.WARN);
@@ -61,7 +61,7 @@ public class Log {
         error, warn, info, debug, trace;
     };
 
-    private final Logger mLogger;
+    private final org.apache.logging.log4j.Logger mLogger;
 
     Log(org.apache.logging.log4j.Logger logger) {
         if (logger == null) {
@@ -89,7 +89,7 @@ public class Log {
             accountLogger = LogManager.getLogger(accountCategory);
             mAccountLoggers.put(accountName, accountLogger);
         }
-        Configurator.setLevel(accountName, org.apache.logging.log4j.Level.DEBUG);
+        Configurator.setLevel(accountLogger.getName(), ZIMBRA_TO_LOG4J.get(level));
     }
 
     /**
@@ -546,7 +546,7 @@ public class Log {
 
 
     public void setLevel(Level level) {
-        mLogger.setLevel(ZIMBRA_TO_LOG4J.get(level));
+        Configurator.setLevel(mLogger.getName(), ZIMBRA_TO_LOG4J.get(level));
     }
 
     public Level getLevel() {
