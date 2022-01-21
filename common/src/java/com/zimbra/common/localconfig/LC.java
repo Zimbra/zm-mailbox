@@ -1454,6 +1454,8 @@ public final class LC {
     @Supported
     public static final KnownKey zimbra_remote_cmd_channel_timeout_min = KnownKey.newKey(10);
 
+    public static final KnownKey invite_ignore_x_alt_description = KnownKey.newKey(true);
+
     static {
         // Automatically set the key name with the variable name.
         for (Field field : LC.class.getFields()) {

@@ -515,6 +515,20 @@ public class Invite {
         String descHtml = descInMeta ? meta.get(FN_DESC_HTML, null) : null;
         String xDescHtml = descInMeta ? meta.get(FN_X_ZIMBRA_DESC_HTML, null) : null;
 
+        boolean hasXMicrosoftHeader = false;
+        for (Map.Entry<String, ?> entry : meta.asMap().entrySet()) {
+            if (entry.getValue().toString().contains("X-MICROSOFT-SKYPETEAMSMEETINGURL")) {
+                hasXMicrosoftHeader = true;
+                break;
+            }
+        }
+
+        // update HTML description if invite_ignore_x_alt_description is true
+        // and contains X-MICROSOFT headers
+        if (hasXMicrosoftHeader && !StringUtil.isNullOrEmpty(xDescHtml) && LC.invite_ignore_x_alt_description.booleanValue()) {
+            descHtml = xDescHtml;
+        }
+
         long completed = meta.getLong(FN_COMPLETED, 0);
 
         ParsedDateTime dtStart = null;
