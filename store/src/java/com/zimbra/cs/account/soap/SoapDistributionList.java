@@ -52,7 +52,7 @@ class SoapDistributionList extends DistributionList implements SoapEntry {
         super(dlInfo.getName(), dlInfo.getId(),
                 new HashMap<String,Object>(), prov);
         // DistributionListMembershipInfo does not supply membership info
-        resetDlm(getRawAttrs());
+        addDlm(new ArrayList<String>(), getRawAttrs());
     }
 
     SoapDistributionList(DistributionListInfo dlInfo, Provisioning prov)
@@ -72,7 +72,7 @@ class SoapDistributionList extends DistributionList implements SoapEntry {
         attrs.put(Provisioning.A_zimbraId, dlInfo.getId());
         
         // DLInfo does not supply membership info
-        resetDlm(getRawAttrs());
+        addDlm(new ArrayList<String>(), getRawAttrs());
     }
 
     SoapDistributionList(Element e, Provisioning prov) throws ServiceException {
@@ -81,30 +81,10 @@ class SoapDistributionList extends DistributionList implements SoapEntry {
                 SoapProvisioning.getAttrs(e), prov);
         addDlm(e, getRawAttrs());
     }
-    
-    /**
-     * ZBUG-651: This method is modified as it is overriding the existing member/s value with zero 
-     * against zimbraMailForwardingAddress attribute.
-     * So now checking if members list is zero than it should not override.
-     * @param members This is list of members
-     * @param attrs This is list of attribute
-     * @return nothing
-     */
+
     private void addDlm(List <String> members, Map<String, Object> attrs) {
-    	if (members.size() > 0) {
-    		attrs.put(Provisioning.A_zimbraMailForwardingAddress,
+        attrs.put(Provisioning.A_zimbraMailForwardingAddress,
                 members.toArray(new String[members.size()]));
-    	}
-    }
-    
-    /**
-     * ZBUG-651: This method is added against the change in addDlm(), which provides blank list of members.
-     * @param attrs to put/override attribute with blank member list.
-     * @return nothing
-     */
-    private void resetDlm(Map<String, Object> attrs) {
-    	attrs.put(Provisioning.A_zimbraMailForwardingAddress,
-    			new String[0]);
     }
 
     private void addDlm(Element e, Map<String, Object> attrs) {
