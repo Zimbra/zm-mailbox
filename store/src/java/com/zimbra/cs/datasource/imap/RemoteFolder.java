@@ -37,11 +37,17 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
+
 final class RemoteFolder {
     private final ImapConnection connection;
     private String path;
     private int deleted;
-
+    
+    /**
+     * @see ZMailbox#PATH_SEPARATOR
+     **/
+    public final static String PATH_SEPARATOR = "/";
     private static final Log LOG = ZimbraLog.datasource;
 
     RemoteFolder(ImapConnection connection, String path) {
@@ -71,8 +77,47 @@ final class RemoteFolder {
 
     public RemoteFolder renameTo(String newName) throws IOException {
         info("renaming folder to '%s'", newName);
-        connection.rename(path, newName);
+
+        /*
+         * ZBUG-2192 execute only when last folder name is different don't change any
+         * parent folder names using "path" as base name, we are forming new folder name
+         * in such a way only last folder get's renamed at a time
+         */
+        if (notSameFolderName(newName)) {
+            connection.rename(path, createBaseNewPath(newName));
+        }
         return new RemoteFolder(connection, newName);
+    }
+
+    /**
+     * ZBUG-2192: The helper method to make comparison between old and new folder
+     * name and returns boolean value
+     *
+     * @param newPathName the new Folder name
+     * @return Boolean True if same last folder name else False
+     */
+    private boolean notSameFolderName(String newPathName) {
+        String oldPathName = path.substring(path.lastIndexOf(PATH_SEPARATOR) + 1);
+        newPathName = newPathName.substring(newPathName.lastIndexOf(PATH_SEPARATOR) + 1);
+        return !oldPathName.equals(newPathName);
+    }
+    
+    /**
+     * ZBUG-2192: Helper method to form and return baseNewPath
+     *
+     * @param newName the new Folder name
+     * @return String newName or baseNewPath based on the Folder name
+     */
+    private String createBaseNewPath(String newName) {
+        String baseNewPath = path;
+        if (StringUtils.substringAfterLast(baseNewPath, PATH_SEPARATOR).isEmpty()
+                && StringUtils.substringAfterLast(newName, PATH_SEPARATOR).isEmpty()) {
+            return newName;
+        } else {
+            return (StringUtils.substringBeforeLast(baseNewPath, PATH_SEPARATOR).concat(PATH_SEPARATOR)
+                    .concat(StringUtils.substringAfterLast(newName, PATH_SEPARATOR))).replaceAll("^/+", "")
+                    .replaceAll("/+$", "");
+        }
     }
 
     public CopyResult copyMessage(long uid, String mbox) throws IOException {
