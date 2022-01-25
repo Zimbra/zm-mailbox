@@ -1323,6 +1323,9 @@ public final class LC {
     @Supported
     public static final KnownKey redis_cache_synchronize_waitset = KnownKey.newKey(false);
 
+    // to switch to Tika com.zimbra.cs.convert.TikaExtractionClient
+    public static final KnownKey attachment_extraction_client_class = KnownKey.newKey("com.zimbra.cs.convert.LegacyConverterClient");
+
     @Supported
     public static final KnownKey lock_based_cache_invalidation_enabled = KnownKey.newKey(true);
 
