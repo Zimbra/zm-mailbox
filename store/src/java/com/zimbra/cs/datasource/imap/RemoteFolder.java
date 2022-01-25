@@ -37,18 +37,24 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
+
 final class RemoteFolder {
     private final ImapConnection connection;
     private String path;
     private int deleted;
-
+    
+    /**
+     * @see ZMailbox#PATH_SEPARATOR
+     **/
+    public final static String PATH_SEPARATOR = "/";
     private static final Log LOG = ZimbraLog.datasource;
 
     RemoteFolder(ImapConnection connection, String path) {
         this.connection = connection;
         this.path = path;
     }
-
+   
     public void create() throws IOException {
         info("creating folder");
         try {
@@ -71,10 +77,42 @@ final class RemoteFolder {
 
     public RemoteFolder renameTo(String newName) throws IOException {
         info("renaming folder to '%s'", newName);
-        connection.rename(path, newName);
+
+        // ZBUG-2192
+        // execute only when last folder name's are different
+        // don't change any parent folder names
+        // using "path" as base name we are forming new folder name in such a way only last folder get's renamed at a time
+        
+        if (!isSameFolderName(newName)) {
+            String baseNewPath = path;
+            if (StringUtils.substringAfterLast(baseNewPath, PATH_SEPARATOR).isEmpty()
+                    && StringUtils.substringAfterLast(newName, PATH_SEPARATOR).isEmpty()) {
+                baseNewPath = newName;
+            } else {
+                baseNewPath = StringUtils.substringBeforeLast(baseNewPath, PATH_SEPARATOR) + PATH_SEPARATOR
+                        + StringUtils.substringAfterLast(newName, PATH_SEPARATOR);
+                if (StringUtils.endsWith(baseNewPath, PATH_SEPARATOR) || StringUtils.startsWith(baseNewPath, PATH_SEPARATOR)) {
+                    baseNewPath = StringUtils.removeEnd(baseNewPath, PATH_SEPARATOR);
+                    baseNewPath = StringUtils.removeStart(baseNewPath, PATH_SEPARATOR);
+                }
+            }
+            connection.rename(path, baseNewPath);
+        }
         return new RemoteFolder(connection, newName);
     }
 
+    // ZBUG-2192
+    // The helper method to make comparison of old and new folder name and
+    // returns boolean value
+    private boolean isSameFolderName(String newPathName) {
+
+        String oldPathName = path.substring(path.lastIndexOf(PATH_SEPARATOR) + 1);
+        newPathName = newPathName.substring(newPathName.lastIndexOf(PATH_SEPARATOR) + 1);
+
+        return oldPathName.equals(newPathName);
+	
+    }
+    
     public CopyResult copyMessage(long uid, String mbox) throws IOException {
         assert isSelected();
         String seq = String.valueOf(uid);
@@ -233,14 +271,18 @@ final class RemoteFolder {
     public String getPath() {
         return path;
     }
-
+    
+    
     public void debug(String fmt, Object... args) {
         if (LOG.isDebugEnabled()) {
             LOG.debug(errmsg(String.format(fmt, args)));
         }
     }
 
-    public void info(String fmt, Object... args) {
+   
+
+    
+	public void info(String fmt, Object... args) {
         LOG.info(errmsg(String.format(fmt, args)));
     }
 
