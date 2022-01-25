@@ -54,7 +54,7 @@ final class RemoteFolder {
         this.connection = connection;
         this.path = path;
     }
-   
+
     public void create() throws IOException {
         info("creating folder");
         try {
@@ -81,8 +81,8 @@ final class RemoteFolder {
         // ZBUG-2192
         // execute only when last folder name's are different
         // don't change any parent folder names
-        // using "path" as base name we are forming new folder name in such a way only last folder get's renamed at a time
-        
+        // using "path" as base name we are forming new folder name 
+        //in such a way only last folder get's renamed at a time
         if (!isSameFolderName(newName)) {
             String baseNewPath = path;
             if (StringUtils.substringAfterLast(baseNewPath, PATH_SEPARATOR).isEmpty()
@@ -105,14 +105,12 @@ final class RemoteFolder {
     // The helper method to make comparison of old and new folder name and
     // returns boolean value
     private boolean isSameFolderName(String newPathName) {
-
         String oldPathName = path.substring(path.lastIndexOf(PATH_SEPARATOR) + 1);
         newPathName = newPathName.substring(newPathName.lastIndexOf(PATH_SEPARATOR) + 1);
 
         return oldPathName.equals(newPathName);
-	
     }
-    
+
     public CopyResult copyMessage(long uid, String mbox) throws IOException {
         assert isSelected();
         String seq = String.valueOf(uid);
@@ -271,17 +269,13 @@ final class RemoteFolder {
     public String getPath() {
         return path;
     }
-    
-    
+
     public void debug(String fmt, Object... args) {
         if (LOG.isDebugEnabled()) {
             LOG.debug(errmsg(String.format(fmt, args)));
         }
     }
 
-   
-
-    
 	public void info(String fmt, Object... args) {
         LOG.info(errmsg(String.format(fmt, args)));
     }
