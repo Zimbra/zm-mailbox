@@ -21,7 +21,6 @@ import java.io.FileFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -55,7 +54,6 @@ import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.tika.Tika;
 
 import com.google.common.base.Strings;
 import com.zimbra.client.ZMailbox;
@@ -722,8 +720,7 @@ public class FileUploadServlet extends ZimbraServlet {
         if (filename.endsWith(".har")) {
             File file = ((DiskFileItem) fi).getStoreLocation();
             try {
-                Tika tika = new Tika();
-                String mimeType = tika.detect(file);
+                String mimeType = MimeDetect.getMimeDetect().detect(file);
                 if (mimeType != null) {
                     up.contentType = mimeType;
                 }
