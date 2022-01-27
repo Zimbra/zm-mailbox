@@ -22,21 +22,22 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
+import com.zimbra.client.ZMailbox;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.ContactGroup;
-import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.util.TagUtil;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.service.FileUploadServlet;
@@ -45,9 +46,7 @@ import com.zimbra.cs.service.formatter.ContactCSV;
 import com.zimbra.cs.service.formatter.ContactCSV.ParseException;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
-import com.zimbra.client.ZMailbox;
 import com.zimbra.soap.ZimbraSoapContext;
-import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.mail.message.ImportContactsRequest;
 import com.zimbra.soap.mail.message.ImportContactsResponse;
 import com.zimbra.soap.mail.type.Content;
@@ -151,14 +150,28 @@ public class ImportContacts extends MailDocumentHandler  {
 
     public static List<ItemId> ImportCsvContacts(OperationContext oc, Mailbox mbox,  ItemId iidFolder, List<Map<String, String>> csvContacts)
     throws ServiceException {
-        List<ItemId> createdIds = new LinkedList<ItemId>();
-        for (Map<String,String> contact : csvContacts) {
-            String[] tags = TagUtil.decodeTags(ContactCSV.getTags(contact));
-            Contact c = mbox.createContact(oc, new ParsedContact(contact), iidFolder.getId(), tags);
-            createdIds.add(new ItemId(c));
-            ContactGroup.MigrateContactGroup mcg = new ContactGroup.MigrateContactGroup(mbox);
-            mcg.migrate(c);
+        List<Contact> createdContacts = new LinkedList<>();
+        Map<String, Contact> createdContactsByEmail = new HashMap<>();
+
+        for (Map<String, String> csvContact : csvContacts) {
+            String[] tags = TagUtil.decodeTags(ContactCSV.getTags(csvContact));
+            Contact contact = mbox.createContact(oc, new ParsedContact(csvContact), iidFolder.getId(), tags);
+            createdContacts.add(contact);
+
+            for (String addr : contact.getEmailAddresses()) {
+                createdContactsByEmail.put(addr.toLowerCase(), contact);
+            }
         }
-        return createdIds;
+
+        for (Contact contact : createdContacts) {
+            if (!contact.isGroup()) {
+                continue;
+            }
+
+            ContactGroup.MigrateContactGroup mcg = new ContactGroup.MigrateContactGroup(mbox);
+            mcg.migrate(contact, createdContactsByEmail);
+        }
+
+        return createdContacts.stream().map(c -> new ItemId(c)).collect(Collectors.toList());
     }
 }
