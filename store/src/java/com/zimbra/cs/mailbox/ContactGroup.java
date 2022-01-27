@@ -945,13 +945,8 @@ public class ContactGroup {
         }
 
         /**
-         * Add each dlist member to the given contact group, as either an inlined member
-         * or a contact reference if found in parsedByAddr.
-         *
-         * @param contactGroup
-         * @param dlist
-         * @param parsedByAddr
-         * @throws ServiceException
+         * Add each comma-delimited dlist member to the given contact group, as either
+         * an inlined member or a contact reference if found in parsedByAddr.
          */
         static void migrate(ContactGroup contactGroup, String dlist, Map<String, Contact> parsedByAddr)
                 throws ServiceException {
@@ -970,10 +965,11 @@ public class ContactGroup {
                             if (found == null) {
                                 contactGroup.addMember(Member.Type.INLINE, addr);
                             } else {
-                                contactGroup.addMember(Member.Type.CONTACT_REF, found.getAccountId());
+                                ItemId iid = new ItemId(found);
+                                contactGroup.addMember(Member.Type.CONTACT_REF, iid.toString());
                             }
                         } catch (ServiceException e) {
-                            ZimbraLog.contact.info("skipped contact group member %s", addr);
+                            ZimbraLog.contact.info("skipped contact group member %s: %s", addr, e.getMessage());
                         }
                     }
                 }
