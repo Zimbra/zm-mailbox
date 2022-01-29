@@ -72,8 +72,10 @@ public class ZimbraCookie {
 
         String cookieVal = LC.zimbra_same_site_cookie.value();
         if (!StringUtil.isNullOrEmpty(cookieVal)) {
+            String pathStr = cookie.getPath();
             // setting cookie value like "SameSite=Strict;", value can be Strict, Lax, None
-            path = new StringBuilder(path).append(";SameSite=").append(cookieVal).append(";").toString();
+            pathStr = new StringBuilder(pathStr).append(";SameSite=").append(cookieVal).append(";").toString();
+            cookie.setPath(pathStr);
             cookie.setSecure(true);
         } else {
             cookie.setSecure(secure);
