@@ -70,7 +70,14 @@ public class ZimbraCookie {
         }
         ZimbraCookie.setAuthTokenCookieDomainPath(cookie, ZimbraCookie.PATH_ROOT);
 
-        cookie.setSecure(secure);
+        String cookieVal = LC.zimbra_same_site_cookie.value();
+        if (!StringUtil.isNullOrEmpty(cookieVal)) {
+            // setting cookie value like "SameSite=Strict;", value can be Strict, Lax, None
+            path = new StringBuilder(path).append(";SameSite=").append(cookieVal).append(";").toString();
+            cookie.setSecure(true);
+        } else {
+            cookie.setSecure(secure);
+        }
 
         if (httpOnly) {
             cookie.setHttpOnly(httpOnly);
