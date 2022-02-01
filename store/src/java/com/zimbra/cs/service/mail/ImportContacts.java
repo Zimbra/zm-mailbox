@@ -158,8 +158,15 @@ public class ImportContacts extends MailDocumentHandler  {
             Contact contact = mbox.createContact(oc, new ParsedContact(csvContact), iidFolder.getId(), tags);
             createdContacts.add(contact);
 
-            for (String addr : contact.getEmailAddresses()) {
-                createdContactsByEmail.put(addr.toLowerCase(), contact);
+            if (!contact.isGroup()) {
+                // We don't want to match (in our second loop) an
+                // address to some group in which it is a member,
+                // clobbering any useful "real" Contact already
+                // found for a single contact address record.
+
+                for (String addr : contact.getEmailAddresses()) {
+                    createdContactsByEmail.put(addr.toLowerCase(), contact);
+                }
             }
         }
 
