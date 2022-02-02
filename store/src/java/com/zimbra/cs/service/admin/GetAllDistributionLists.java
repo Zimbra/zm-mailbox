@@ -17,20 +17,18 @@
 
 package com.zimbra.cs.service.admin;
 
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.cs.account.AccessManager.AttrRightChecker;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
-import com.zimbra.cs.account.DynamicGroup;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
@@ -50,7 +48,7 @@ public class GetAllDistributionLists extends AdminDocumentHandler {
     }
     
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-
+	    
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
@@ -71,7 +69,7 @@ public class GetAllDistributionLists extends AdminDocumentHandler {
                 throw ServiceException.INVALID_REQUEST("unknown value for by: "+key, null);
             }
             if (domain == null)
-                throw AccountServiceException.NO_SUCH_DOMAIN(value);
+                throw AccountServiceException.NO_SUCH_DOMAIN(value);            
         }
         
         if (isDomainAdminOnly(zsc)) {
@@ -81,68 +79,40 @@ public class GetAllDistributionLists extends AdminDocumentHandler {
             domain = getAuthTokenAccountDomain(zsc);
         }
 
+        AdminAccessControl aac = AdminAccessControl.getAdminAccessControl(zsc);
+        
         if (domain != null) {
             response = zsc.createElement(AdminConstants.GET_ALL_DISTRIBUTION_LISTS_RESPONSE);
-            doDomain(zsc, response, domain);
+            doDomain(zsc, response, domain, aac);
         } else {
             response = zsc.createElement(AdminConstants.GET_ALL_DISTRIBUTION_LISTS_RESPONSE);
             List domains = prov.getAllDomains();
             for (Iterator dit=domains.iterator(); dit.hasNext(); ) {
                 Domain dm = (Domain) dit.next();
-                doDomain(zsc, response, dm);
+                doDomain(zsc, response, dm, aac);                
             }
         }
-        return response;
+        return response;        
     }
-
-    private void doDomain(ZimbraSoapContext zsc, Element e, Domain d) throws ServiceException {
+    
+    private void doDomain(ZimbraSoapContext zsc, Element e, Domain d, AdminAccessControl aac) throws ServiceException {
         List dls = Provisioning.getInstance().getAllGroups(d);
-        Element eDL = null;
-        AdminAccessControl aac = null;
-        AttrRightChecker arc = null;
         for (Iterator it = dls.iterator(); it.hasNext(); ) {
             Group dl = (Group) it.next();
             boolean hasRightToList = true;
-            boolean allowMembers = true;
-
             if (dl.isDynamic()) {
-                aac = checkDynamicGroupRight(zsc, (DynamicGroup) dl, AdminRight.PR_ALWAYS_ALLOW);
-                arc = aac.getAttrRightChecker(dl);
+                // TODO: fix me
                 hasRightToList = true;
-                allowMembers = arc == null ? true : arc.allowAttr(Provisioning.A_member);
             } else {
-                aac = checkDistributionListRight(zsc,
-                        (DistributionList) dl, AdminRight.PR_ALWAYS_ALLOW);
-                arc = aac.getAttrRightChecker(dl);
-                allowMembers = arc == null ? true : arc.allowAttr(Provisioning.A_zimbraMailForwardingAddress);
                 hasRightToList = aac.hasRightsToList(dl, Admin.R_listDistributionList, null);
             }
+            
             if (hasRightToList) {
-                eDL = GetDistributionList.encodeDistributionList(e, dl, true, false, null, arc);
+                GetDistributionList.encodeDistributionList(e, dl, false, false, null, aac.getAttrRightChecker(dl));
             }
-            if (allowMembers) {
-                encodeMembers(e, eDL, dl);
-            }
-        }
+        }        
     }
-
-    private void encodeMembers(Element response, Element dlElement, Group group)
-            throws ServiceException {
-       String[] members;
-       if (group instanceof DynamicGroup) {
-           members = ((DynamicGroup)group).getAllMembers(true);
-       } else {
-           members = group.getAllMembers();
-       }
-
-       Arrays.sort(members);
-       for (int i = 0; i < members.length; i++) {
-           dlElement.addElement(AdminConstants.E_DLM).setText(members[i]);
-       }
-
-       response.addAttribute(AdminConstants.A_TOTAL, members.length);
-   }
-
+    
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_listDistributionList);
