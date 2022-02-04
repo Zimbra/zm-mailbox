@@ -159,10 +159,9 @@ public class ImportContacts extends MailDocumentHandler  {
             createdContacts.add(contact);
 
             if (!contact.isGroup()) {
-                // We don't want to match (in our second loop) an
-                // address to some group in which it is a member,
-                // clobbering any useful "real" Contact already
-                // found for a single contact address record.
+                // The detail we get for an address from a contact group
+                // is less valuable than any individual record we've yet
+                // encountered in this import.
 
                 for (String addr : contact.getEmailAddresses()) {
                     createdContactsByEmail.put(addr.toLowerCase(), contact);
@@ -179,6 +178,6 @@ public class ImportContacts extends MailDocumentHandler  {
             mcg.migrate(contact, createdContactsByEmail);
         }
 
-        return createdContacts.stream().map(c -> new ItemId(c)).collect(Collectors.toList());
+        return createdContacts.stream().map(ItemId::new).collect(Collectors.toList());
     }
 }

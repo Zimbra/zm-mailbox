@@ -1553,7 +1553,7 @@ public abstract class ArchiveFormatter extends Formatter {
     private Contact findContact(OperationContext octxt, Mailbox mbox, Contact ct, Folder fldr) {
         int folderId = fldr.getId();
         List<Contact> contactList = contacts.get(folderId);
-        if (contactList == null) {
+        if (contactList == null || contactList.isEmpty()) {
             try {
                 contactList = mbox.getContactList(octxt, folderId);
                 contacts.put(folderId, contactList);
@@ -1564,9 +1564,9 @@ public abstract class ArchiveFormatter extends Formatter {
         }
 
         for (Contact contact : contactList) {
-            HashSet<String> emailAdresses = new HashSet<String>(contact.getEmailAddresses());
+            HashSet<String> emailAddresses = new HashSet<String>(contact.getEmailAddresses());
             for (String emailId : ct.getEmailAddresses()) {
-                if (emailAdresses.contains(emailId)) {
+                if (emailAddresses.contains(emailId)) {
                     return contact;
                 }
             }
