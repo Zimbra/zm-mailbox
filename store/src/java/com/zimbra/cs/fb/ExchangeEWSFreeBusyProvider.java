@@ -325,10 +325,9 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
         tzdt.setId("Greenwich Standard Time");
         TimeZoneContextType tzct = new TimeZoneContextType();
         tzct.setTimeZoneDefinition(tzdt);
-        ManagementRoleType role = null;
         service.getFolder(getFolderRequest,
                 mct, serverVersion,
-                tzct, role, gfresponseHolder,
+                tzct, gfresponseHolder,
                 gfversionInfo);
         FolderInfoResponseMessageType firmtResp =
             (FolderInfoResponseMessageType)gfresponseHolder.value.getResponseMessages()
