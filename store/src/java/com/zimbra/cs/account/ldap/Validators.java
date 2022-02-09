@@ -421,7 +421,7 @@ final public class Validators {
             void search() throws ServiceException {
                 LdapProv ldapProv = (LdapProv) prov;
                 String searchBaseDN = ldapProv.getDIT().domainToAccountSearchDN(domain);
-                ZLdapFilter query = ZLdapFilterFactory.getInstance().allNonSystemAccounts();
+                ZLdapFilter query = ZLdapFilterFactory.getInstance().allNonSystemInternalAccounts();
 
                 ldapProv.searchLdapOnReplica(searchBaseDN, query, null, this);
                 ZimbraLog.account.debug("COS/Feature counts: %s + %s", cosCount, featureCount);
