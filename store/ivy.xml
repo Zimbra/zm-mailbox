@@ -35,7 +35,7 @@
   <dependency org="commons-io" name="commons-io" rev="2.6"/>
   <dependency org="com.ibm.icu" name="icu4j" rev="4.8.1.1"/>
   <dependency org="oauth" name="oauth" rev="1.4"/>
-  <dependency org="zimbra" name="zm-ews-stub" rev="2.0"/>
+  <dependency org="zimbra" name="zm-ews-stub" rev="3.0"/>
   <dependency org="org.apache.lucene" name="lucene-core" rev="3.5.0"/>
   <dependency org="org.apache.lucene" name="lucene-analyzers" rev="3.5.0" />
   <dependency org="org.apache.zookeeper" name="zookeeper" rev="3.4.5"/>
