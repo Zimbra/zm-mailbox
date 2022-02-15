@@ -39,6 +39,7 @@ import javax.xml.transform.stream.StreamResult;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -59,7 +60,7 @@ import com.zimbra.common.util.ZimbraLog;
  * See http://connect.microsoft.com/VisualStudio/feedback/details/471297
  */
 public class XsdCleaner {
-    private static final org.apache.logging.log4j.Logger LOG = LogManager.getLogger(XsdCleaner.class);
+    private static final Logger LOG = LogManager.getLogger(XsdCleaner.class);
 
     private static final String ARG_DIR = "--dir";
     private static final String KEEP_BACKUPS = "--keep.backups";

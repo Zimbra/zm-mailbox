@@ -44,9 +44,8 @@ public final class LogFactory {
 
     public synchronized static void init() {
         try {
-            ConfigurationSource logConfigSource = new ConfigurationSource(new FileInputStream(LC.zimbra_log4j_properties.value()));
-            Configurator.initialize(null, logConfigSource);
-         } catch (IOException e) {
+            Configurator.initialize(null, LC.zimbra_log4j_properties.value());
+         } catch (Exception e) {
              ZimbraLog.misc.info("Error initializing the  loggers.", e);
          }
     }
@@ -59,11 +58,9 @@ public final class LogFactory {
             log.removeAccountLoggers();
         }
         LogManager.shutdown();
-        ConfigurationSource logConfigSource;
         try {
-            logConfigSource = new ConfigurationSource(new FileInputStream(LC.zimbra_log4j_properties.value()));
-            Configurator.initialize(null, logConfigSource);
-        } catch (IOException e) {
+            Configurator.initialize(null, LC.zimbra_log4j_properties.value());
+        } catch (Exception e) {
             ZimbraLog.misc.info("Error resetting the  loggers.", e);
         }
     }
@@ -92,7 +89,6 @@ public final class LogFactory {
      */
     public static boolean logExists(String name) {
         return (LogManager.exists(name));
-        
     }
 
     /**

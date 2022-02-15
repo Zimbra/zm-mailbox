@@ -22,9 +22,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.logging.log4j.core.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.google.common.collect.ImmutableMap;
 
 /**
@@ -35,7 +36,7 @@ import com.google.common.collect.ImmutableMap;
  */
 public class Log {
 
-    private final Map<String, org.apache.logging.log4j.Logger> mAccountLoggers = new ConcurrentHashMap<String, org.apache.logging.log4j.Logger>();
+    private final Map<String, Logger> mAccountLoggers = new ConcurrentHashMap<String, Logger>();
 
     private static final Map<Level, org.apache.logging.log4j.Level> ZIMBRA_TO_LOG4J =
             new EnumMap<Level, org.apache.logging.log4j.Level>(Level.class);
@@ -61,9 +62,9 @@ public class Log {
         error, warn, info, debug, trace;
     };
 
-    private final org.apache.logging.log4j.Logger mLogger;
+    private final Logger mLogger;
 
-    Log(org.apache.logging.log4j.Logger logger) {
+    Log(Logger logger) {
         if (logger == null) {
             throw new IllegalStateException("logger cannot be null");
         }
@@ -83,7 +84,7 @@ public class Log {
         }
 
         // Create the account logger if it doesn't already exist.
-        org.apache.logging.log4j.Logger accountLogger = mAccountLoggers.get(accountName);
+        Logger accountLogger = mAccountLoggers.get(accountName);
         if (accountLogger == null) {
             String accountCategory = getAccountCategory(getCategory(), accountName);
             accountLogger = LogManager.getLogger(accountCategory);
@@ -107,7 +108,7 @@ public class Log {
      * @return <tt>true</tt> if the logger was removed
      */
     public boolean removeAccountLogger(String accountName) {
-        org.apache.logging.log4j.Logger logger = mAccountLoggers.remove(accountName);
+        Logger logger = mAccountLoggers.remove(accountName);
         return (logger != null);
     }
 
@@ -564,7 +565,7 @@ public class Log {
         }
         List<AccountLogger> accountLoggers = new ArrayList<AccountLogger>();
         for (String accountName : mAccountLoggers.keySet()) {
-            org.apache.logging.log4j.Logger log4jLogger = mAccountLoggers.get(accountName);
+            Logger log4jLogger = mAccountLoggers.get(accountName);
             AccountLogger al = new AccountLogger(mLogger.getName(), accountName,
                 LOG4J_TO_ZIMBRA.get(log4jLogger.getLevel()));
             accountLoggers.add(al);
@@ -579,12 +580,12 @@ public class Log {
      *
      * @see #addAccountLogger
      */
-    private org.apache.logging.log4j.Logger getLogger() {
+    private Logger getLogger() {
         if (mAccountLoggers.size() == 0) {
             return mLogger;
         }
         for (String accountName : ZimbraLog.getAccountNamesFromContext()) {
-            org.apache.logging.log4j.Logger logger = mAccountLoggers.get(accountName);
+            Logger logger = mAccountLoggers.get(accountName);
             if (logger != null) {
                 return logger;
             }
