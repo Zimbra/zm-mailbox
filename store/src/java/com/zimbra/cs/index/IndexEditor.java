@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -34,11 +35,14 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.core.Appender;
-import org.apache.logging.log4j.core.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.Layout;
 import org.apache.logging.log4j.core.LoggerContext;
-import org.apache.logging.log4j.core.appender.OutputStreamAppender;
+import org.apache.logging.log4j.core.appender.WriterAppender;
 import org.apache.logging.log4j.core.config.Configuration;
+import org.apache.logging.log4j.core.config.Configurator;
+import org.apache.logging.log4j.core.config.LoggerConfig;
 import org.apache.logging.log4j.core.layout.PatternLayout;
 import org.apache.lucene.document.DateTools;
 import org.apache.lucene.document.Document;
@@ -435,22 +439,20 @@ public final class IndexEditor {
             return true;
         }
 
-        private org.apache.logging.log4j.core.appender.WriterAppender mAppender;
+        private WriterAppender mAppender;
 
         public boolean enableLogging() {
             if (mAppender == null) {
-                /*
-                 * Layout layout = new PatternLayout(logLayoutPattern ); 
-                 * mAppender = new org.apache.logging.log4j.core.appender.WriterAppender(layout, mOutputStream);
-                 * Logger root = Logger.getRootLogger(); 
-                 * root.addAppender(mAppender);
-                 */
-                final LoggerContext context = LoggerContext.getContext(false);
-                final Configuration config = context.getConfiguration();
-                final PatternLayout layout = PatternLayout.newBuilder().withPattern(logLayoutPattern).build();
-                final Appender appender = OutputStreamAppender.createAppender(layout, null, mOutputStream, mAppender.getName(), false, true);
-                appender.start();
-                config.addAppender(appender);
+                Layout layout = PatternLayout.newBuilder().withPattern(logLayoutPattern).build();
+                mAppender = WriterAppender.newBuilder().setTarget(new OutputStreamWriter(mOutputStream))
+                    .setLayout(layout).build();
+
+                Logger root = LogManager.getRootLogger();
+                LoggerContext context = LoggerContext.getContext(false);
+                Configuration configuration = context.getConfiguration();
+                LoggerConfig loggerConfig = configuration.getLoggerConfig(root.getName());
+
+                loggerConfig.addAppender(mAppender, Level.INFO, null);
                 return true;
             } else {
                 return false;   
@@ -714,7 +716,7 @@ public final class IndexEditor {
                 return;
             }
 
-            root.setLevel(newLevel);
+            Configurator.setLevel(root.getName(), newLevel);
         }
         Level cur = root.getLevel();
         outputStream.println("Current level is: "+cur);

@@ -95,12 +95,8 @@ public class ImapDaemon {
 
     public static void main(String[] args) {
         try {
-            Properties props = new Properties();
-            try (FileInputStream fisLog4j = new FileInputStream(IMAPD_LOG4J_CONFIG)) {
-                props.load(fisLog4j);
-            }
             try {
-                ConfigurationSource logConfigSource = new ConfigurationSource(new FileInputStream(LC.zimbra_log4j_properties.value()));
+                ConfigurationSource logConfigSource = new ConfigurationSource(new FileInputStream(IMAPD_LOG4J_CONFIG));
                 Configurator.initialize(null, logConfigSource);
              } catch (IOException e) {
                  ZimbraLog.misc.info("Error initializing the  loggers.", e);
