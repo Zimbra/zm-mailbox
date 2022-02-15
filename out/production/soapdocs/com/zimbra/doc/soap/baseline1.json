@@ -1,0 +1,132 @@
+{
+  "buildVersion" : "6.11.22",
+  "buildDate" : "19990131-2359",
+  "commands" : [ {
+    "name" : "a",
+    "namespace" : "urn:zimbraAdmin",
+    "description" : "",
+    "networkEditionOnly" : false,
+    "request" : {
+      "@class" : "com.zimbra.doc.soap.apidesc.SoapApiElement",
+      "name" : "aRequest",
+      "namespace" : "urn:zimbraAdmin",
+      "required" : true,
+      "list" : false,
+      "jaxb" : "com.zimbra.doc.soap.ChangelogTest$aRequest"
+    },
+    "response" : {
+      "@class" : "com.zimbra.doc.soap.apidesc.SoapApiElement",
+      "name" : "aResponse",
+      "namespace" : "urn:zimbraAdmin",
+      "required" : true,
+      "list" : false,
+      "jaxb" : "com.zimbra.doc.soap.ChangelogTest$aResponse"
+    }
+  }, {
+    "name" : "d",
+    "namespace" : "urn:zimbraAdmin",
+    "description" : "",
+    "networkEditionOnly" : false,
+    "request" : {
+      "@class" : "com.zimbra.doc.soap.apidesc.SoapApiElement",
+      "name" : "dRequest",
+      "namespace" : "urn:zimbraAdmin",
+      "required" : true,
+      "list" : false,
+      "jaxb" : "com.zimbra.doc.soap.ChangelogTest$dRequest"
+    },
+    "response" : {
+      "@class" : "com.zimbra.doc.soap.apidesc.SoapApiElement",
+      "name" : "dResponse",
+      "namespace" : "urn:zimbraAdmin",
+      "required" : true,
+      "list" : false,
+      "jaxb" : "com.zimbra.doc.soap.ChangelogTest$dResponse"
+    }
+  }, {
+    "name" : "c",
+    "namespace" : "urn:zimbraAdmin",
+    "description" : "",
+    "networkEditionOnly" : false,
+    "request" : {
+      "@class" : "com.zimbra.doc.soap.apidesc.SoapApiElement",
+      "name" : "cRequest",
+      "namespace" : "urn:zimbraAdmin",
+      "required" : true,
+      "list" : false,
+      "jaxb" : "com.zimbra.doc.soap.ChangelogTest$cRequest"
+    },
+    "response" : {
+      "@class" : "com.zimbra.doc.soap.apidesc.SoapApiElement",
+      "name" : "cResponse",
+      "namespace" : "urn:zimbraAdmin",
+      "required" : true,
+      "list" : false,
+      "jaxb" : "com.zimbra.doc.soap.ChangelogTest$cResponse"
+    }
+  } ],
+  "types" : [ {
+    "className" : "com.zimbra.doc.soap.ChangelogTest$aElem",
+    "attributes" : [ {
+      "name" : "long-attribute-old-name",
+      "required" : false,
+      "valueType" : {
+        "representation" : "Long",
+        "className" : "java.lang.Long"
+      }
+    }, {
+      "name" : "int-attribute",
+      "required" : true,
+      "valueType" : {
+        "representation" : "int",
+        "className" : "int"
+      }
+    } ],
+    "valueType" : {
+      "valueName" : "value",
+      "representation" : "{value} (long)",
+      "className" : "long"
+    },
+    "valueFieldDescription" : ""
+  }, {
+    "className" : "com.zimbra.doc.soap.ChangelogTest$aRequest",
+    "subElements" : [ {
+      "@class" : "com.zimbra.doc.soap.apidesc.SoapApiElement",
+      "name" : "element-to-delete",
+      "required" : true,
+      "list" : false,
+      "jaxb" : "com.zimbra.doc.soap.ChangelogTest$aElem"
+      }, {
+      "@class" : "com.zimbra.doc.soap.apidesc.SoapApiElement",
+      "name" : "element",
+      "required" : true,
+      "list" : false,
+      "jaxb" : "com.zimbra.doc.soap.ChangelogTest$aElem"
+    } ],
+    "attributes" : [ {
+      "name" : "attribute1",
+      "required" : false,
+      "valueType" : {
+        "representation" : "String",
+        "className" : "java.lang.String"
+      }
+    }, {
+      "name" : "attribute2",
+      "required" : false,
+      "valueType" : {
+        "representation" : "Integer",
+        "className" : "java.lang.Integer"
+      }
+    } ]
+  }, {
+    "className" : "com.zimbra.doc.soap.ChangelogTest$aResponse"
+  }, {
+    "className" : "com.zimbra.doc.soap.ChangelogTest$dRequest"
+  }, {
+    "className" : "com.zimbra.doc.soap.ChangelogTest$dResponse"
+  }, {
+    "className" : "com.zimbra.doc.soap.ChangelogTest$cRequest"
+  }, {
+    "className" : "com.zimbra.doc.soap.ChangelogTest$cResponse"
+  } ]
+}

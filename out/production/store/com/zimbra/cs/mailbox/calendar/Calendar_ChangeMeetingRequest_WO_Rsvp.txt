@@ -1,0 +1,73 @@
+Date: Wed, 13 Dec 2017 04:59:25 +0900 (JST)
+From: org@testdomain.com
+To: attendee1 <attendee1@testdomain.com>
+Message-ID: <285397199.93.1513108765004.JavaMail.zimbra@testdomain.com>
+Subject: test111yes - changed
+MIME-Version: 1.0
+Content-Type: multipart/alternative; 
+	boundary="=_e5569d0f-a9cd-40fa-b3e7-0be93b5679d5"
+X-Originating-IP: [192.168.59.1]
+X-Mailer: Zimbra 8.8.6_GA.0000 (ZimbraWebClient - GC62 (Mac)/8.8.2_GA_1822)
+Thread-Index: NTQJKClRfgEbwMY55pLVbcjVU+uVhg==
+Thread-Topic: test111yes - changed
+
+--=_e5569d0f-a9cd-40fa-b3e7-0be93b5679d5
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+
+The following meeting has been modified:
+
+Subject: test111yes - changed [MODIFIED]
+Organizer: org@testdomain.com 
+
+Time: Thursday, December 14, 2017, 2:16:00 PM - 2:45:00 PM GMT +09:00 Japan [MODIFIED]
+ 
+Invitees: attendee1@testdomain.com 
+
+
+*~*~*~*~*~*~*~*~*~*
+
+
+--=_e5569d0f-a9cd-40fa-b3e7-0be93b5679d5
+Content-Type: text/calendar; charset=utf-8; method=REQUEST; name=meeting.ics
+Content-Transfer-Encoding: 7bit
+
+BEGIN:VCALENDAR
+PRODID:Zimbra-Calendar-Provider
+VERSION:2.0
+METHOD:REQUEST
+BEGIN:VTIMEZONE
+TZID:Asia/Tokyo
+BEGIN:STANDARD
+DTSTART:16010101T000000
+TZOFFSETTO:+0900
+TZOFFSETFROM:+0900
+END:STANDARD
+END:VTIMEZONE
+BEGIN:VEVENT
+UID:ad22c92b-680c-436b-98b0-def254c953d5
+SUMMARY:test111yes - changed
+ATTENDEE;CN=attendee1;ROLE=REQ-PARTICIPANT;PARTSTAT=TENTATIVE:mailto:attendee1@synacor
+ japan.com
+ORGANIZER:mailto:org@testdomain.com
+DTSTART;TZID="Asia/Tokyo":20171214T141600
+DTEND;TZID="Asia/Tokyo":20171214T144500
+STATUS:CONFIRMED
+CLASS:PUBLIC
+X-MICROSOFT-CDO-INTENDEDSTATUS:BUSY
+TRANSP:OPAQUE
+LAST-MODIFIED:20171212T195925Z
+DTSTAMP:20171212T195925Z
+SEQUENCE:1
+DESCRIPTION:The following meeting has been modified:\n\nSubject: test111yes 
+ - changed [MODIFIED]\nOrganizer: org@testdomain.com \n\nTime: Thursday\, D
+ ecember 14\, 2017\, 2:16:00 PM - 2:45:00 PM GMT +09:00 Japan [MODIFIED]\n \n
+ Invitees: attendee1@testdomain.com \n\n\n*~*~*~*~*~*~*~*~*~*\n\n
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER;RELATED=START:-PT5M
+DESCRIPTION:Reminder
+END:VALARM
+END:VEVENT
+END:VCALENDAR
+--=_e5569d0f-a9cd-40fa-b3e7-0be93b5679d5--

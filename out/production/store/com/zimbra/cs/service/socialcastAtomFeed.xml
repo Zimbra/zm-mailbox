@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ * ***** BEGIN LICENSE BLOCK *****
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2013, 2014, 2016 Synacor, Inc.
+ *
+ * The contents of this file are subject to the Common Public Attribution License Version 1.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at: https://www.zimbra.com/license
+ * The License is based on the Mozilla Public License Version 1.1 but Sections 14 and 15
+ * have been added to cover use of software over a computer network and provide for limited attribution
+ * for the Original Developer. In addition, Exhibit A has been modified to be consistent with Exhibit B.
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * See the License for the specific language governing rights and limitations under the License.
+ * The Original Code is Zimbra Open Source Web Client.
+ * The Initial Developer of the Original Code is Zimbra, Inc.  All rights to the Original Code were
+ * transferred by Zimbra, Inc. to Synacor, Inc. on September 14, 2015.
+ *
+ * All portions of the code are Copyright (C) 2013, 2014, 2016 Synacor, Inc. All Rights Reserved.
+ * ***** END LICENSE BLOCK *****
+-->
+<feed xml:lang="en-US" xmlns="http://www.w3.org/2005/Atom" xmlns:app="http://www.w3.org/2007/app">
+  <id>tag:vmware-com.socialcast.com,2005:/home</id>
+  <link rel="alternate" type="text/html" href="https://pink.socialcast.com"/>
+  <link rel="self" type="application/atom+xml" href="https://pink.socialcast.com/home.atom?auth_token=074099399999"/>
+  <title>VMware | Activity Stream</title>
+  <updated>2013-03-25T11:29:51+00:00</updated>
+  <entry>
+    <id>tag:pink.socialcast.com,2005:SocialObject/15629747</id>
+    <published>2013-03-25T09:56:51+00:00</published>
+    <updated>2013-03-25T11:22:17+00:00</updated>
+    <link rel="alternate" type="text/html" href="https://pink.socialcast.com/messages/15629747-active-learner-thanks-to-cccc"/>
+    <title type="html">Aaaa Bbbbb gave thanks: Active Learner Thanks to @Cccc</title>
+    <content type="xhtml">
+      <div xmlns="http://www.w3.org/1999/xhtml">
+        <div xmlns="http://www.w3.org/1999/xhtml">
+<p class="">Congratulations for passing!</p>
+        </div>
+      </div>
+    </content>
+    <app:edited>2013-03-25T11:22:17+00:00</app:edited>
+    <author>
+      <name>Aaaa Bbbbb</name>
+    </author>
+  </entry>
+</feed>

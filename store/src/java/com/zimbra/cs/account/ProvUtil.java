@@ -43,7 +43,12 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import com.unboundid.ldap.sdk.LDAPConnectionPool;
+import com.unboundid.ldap.sdk.LDAPConnectionPoolStatistics;
+import com.zimbra.cs.ldap.unboundid.LdapConnectionPool;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.Options;
@@ -138,6 +143,7 @@ import com.zimbra.soap.type.GalSearchType;
 import com.zimbra.soap.type.TargetBy;
 
 import net.spy.memcached.DefaultHashAlgorithm;
+
 
 /**
  * @author schemers
@@ -682,6 +688,8 @@ public class ProvUtil implements HttpDebugListener {
                Category.DOMAIN, 0, 1),
         GET_DOMAIN_SMIME_CONFIG("getDomainSMIMEConfig", "gdsc", "name|id [configName]",
                Category.DOMAIN, 1, 2),
+        GET_LDAP_POOL_STATUS(
+                "getLDAPPoolStatus", "glps", "Shows the status of the LDAP Pool from this mailbox server.", Category.MISC, 0, 0),
         GET_EFFECTIVE_RIGHTS("getEffectiveRights", "ger",
                "{target-type} [{target-id|target-name}] {grantee-id|grantee-name} [expandSetAttrs] [expandGetAttrs]",
                Category.RIGHT, 1, 5, null, new RightCommandHelp(false, false, false)),
@@ -1245,6 +1253,9 @@ public class ProvUtil implements HttpDebugListener {
         case GET_DOMAIN_INFO:
             doGetDomainInfo(args);
             break;
+        case GET_LDAP_POOL_STATUS:
+            doGetLDAPPoolStatus();
+        break;
         case GET_CONFIG_SMIME_CONFIG:
             doGetConfigSMIMEConfig(args);
             break;
@@ -5232,6 +5243,41 @@ public class ProvUtil implements HttpDebugListener {
         dumpEffectiveRight(effRights, expandSetAttrs, expandGetAttrs);
     }
 
+    private void doGetLDAPPoolStatus(){
+        LDAPConnectionPool MasterPool = LdapConnectionPool.getConnPoolByName(LdapConnectionPool.CP_ZIMBRA_MASTER);
+        LDAPConnectionPoolStatistics Stats = MasterPool.getConnectionPoolStatistics();
+        System.out.println(Stats.toString());
+        dumpLDAPObject("Master LDAP Pool", MasterPool);
+        LDAPConnectionPool ReplicaPool = LdapConnectionPool.getConnPoolByName(LdapConnectionPool.CP_ZIMBRA_REPLICA);
+        dumpLDAPObject("Replica LDAP Pool", ReplicaPool);
+    }
+    private void dumpLDAPObject(String desc, Object obj) {
+
+        System.out.println("\n--- " + desc);
+
+        Pattern sPattern = Pattern.compile("([^(]*)\\((.*)");
+        String asString = obj.toString();
+
+        System.out.println(asString);
+
+        Matcher matcher = sPattern.matcher(asString);
+        if (matcher.matches()) {
+            String className = matcher.group(1);
+            String fields = matcher.group(2);
+
+            if (fields.charAt(fields.length()-1) == ')') {
+                fields = fields.substring(0, fields.length() -1);
+            }
+
+            String[] fieldArray = fields.split(",");
+
+            System.out.println(className);
+            for (String var : fieldArray) {
+                System.out.println("  " + var.trim());
+            }
+        }
+    }
+
     private void dumpEffectiveRight(RightCommand.EffectiveRights effRights, boolean expandSetAttrs,
             boolean expandGetAttrs) {
 
@@ -5676,7 +5722,6 @@ public class ProvUtil implements HttpDebugListener {
      *            [cmd-args] which are parsed by PosixParser
      * @param options
      *            set of valid [args]
-     * @param args
      * @throws ServiceException
      */
     static private String[] recombineDecapitatedAttrs(String[] parsedArgs, Options options, String[] orgArgs)

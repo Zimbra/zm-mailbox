@@ -1,0 +1,118 @@
+Date: Tue, 24 Apr 2012 15:37:40 -0700 (PDT)
+From: test@zimbra.com
+To: rcpt <rcpt@zimbra.com>
+Message-ID: <377944271.1517.1335307060250.JavaMail.root@zqa-062.eng.vmware.com>
+Subject: from ajax 1
+MIME-Version: 1.0
+Content-Type: multipart/alternative; 
+	boundary="----=_Part_1516_525297984.1335307060249"
+X-Originating-IP: [10.16.67.144]
+X-Mailer: Zimbra 8.0.0_BETA4_5065 (ZimbraWebClient - FF12 (Win)/8.0.0_BETA4_5065)
+Thread-Topic: from ajax 1
+Thread-Index: in+TIF75rhVT6or69K3kF64djkARLg==
+
+------=_Part_1516_525297984.1335307060249
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+
+The following is a new meeting request:
+
+Subject: from ajax 1 
+Organizer: test@zimbra.com 
+
+Location: location 
+Time: Tuesday, April 24, 2012, 4:00:00 PM - 5:00:00 PM GMT -08:00 US/Canada Pacific
+ 
+Invitees: rcpt@zimbra.com 
+
+
+*~*~*~*~*~*~*~*~*~*
+
+Bold 
+Italics 
+------=_Part_1516_525297984.1335307060249
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: 7bit
+
+<html><body id='htmlmode'><h3>The following is a new meeting request:</h3>
+
+<p>
+<table border='0'>
+<tr><th align=left>Subject:</th><td>from ajax 1 </td></tr>
+<tr><th align=left>Organizer:</th><td>test@zimbra.com </td></tr>
+</table>
+<p>
+<table border='0'>
+<tr><th align=left>Location:</th><td>location </td></tr>
+<tr><th align=left>Time:</th><td>Tuesday, April 24, 2012, 4:00:00 PM - 5:00:00 PM GMT -08:00 US/Canada Pacific
+ </td></tr></table>
+<p>
+<table border='0'>
+<tr><th align=left>Invitees:</th><td>rcpt@zimbra.com </td></tr>
+</table>
+<div>*~*~*~*~*~*~*~*~*~*</div><br><div style='font-family:times new roman, new york, times, serif; font-size: 12pt; color: #000000;' ><div><strong>Bold</strong><br><em>Italics</em></div></div></body></html>
+------=_Part_1516_525297984.1335307060249
+Content-Type: text/calendar; charset=utf-8; method=REQUEST; name=meeting.ics
+Content-Transfer-Encoding: 7bit
+
+BEGIN:VCALENDAR
+PRODID:Zimbra-Calendar-Provider
+VERSION:2.0
+METHOD:REQUEST
+BEGIN:VTIMEZONE
+TZID:America/Los_Angeles
+BEGIN:STANDARD
+DTSTART:16010101T020000
+TZOFFSETTO:-0800
+TZOFFSETFROM:-0700
+RRULE:FREQ=YEARLY;WKST=MO;INTERVAL=1;BYMONTH=11;BYDAY=1SU
+TZNAME:PST
+END:STANDARD
+BEGIN:DAYLIGHT
+DTSTART:16010101T020000
+TZOFFSETTO:-0700
+TZOFFSETFROM:-0800
+RRULE:FREQ=YEARLY;WKST=MO;INTERVAL=1;BYMONTH=3;BYDAY=2SU
+TZNAME:PDT
+END:DAYLIGHT
+END:VTIMEZONE
+BEGIN:VEVENT
+UID:5baee2a1-9064-4356-9b3c-f56b02050088
+SUMMARY:from ajax 1
+LOCATION:location
+ATTENDEE;CN=rcpt;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:mail
+ to:rcpt@zimbra.com
+ORGANIZER:mailto:test@zimbra.com
+DTSTART;TZID="America/Los_Angeles":20120424T160000
+DTEND;TZID="America/Los_Angeles":20120424T170000
+STATUS:CONFIRMED
+CLASS:PUBLIC
+X-MICROSOFT-CDO-INTENDEDSTATUS:BUSY
+TRANSP:OPAQUE
+LAST-MODIFIED:20120424T223740Z
+DTSTAMP:20120424T223740Z
+SEQUENCE:0
+DESCRIPTION:The following is a new meeting request:\n\nSubject: from ajax 1 
+ \nOrganizer: test@zimbra.com \n\nLocation: location \nTime: Tu
+ esday\, April 24\, 2012\, 4:00:00 PM - 5:00:00 PM GMT -08:00 US/Canada Pacif
+ ic\n \nInvitees: rcpt@zimbra.com \n\n\n*~*~*~*~*~*~*~*~*~*\n\n
+ Bold \nItalics 
+X-ALT-DESC;FMTTYPE=text/html:<html><body id='htmlmode'><h3>The following is 
+ a new meeting request:</h3>\n\n<p>\n<table border='0'>\n<tr><th align=left>S
+ ubject:</th><td>from ajax 1 </td></tr>\n<tr><th align=left>Organizer:</th><t
+ d>test@zimbra.com </td></tr>\n</table>\n<p>\n<table border='0'
+ >\n<tr><th align=left>Location:</th><td>location </td></tr>\n<tr><th align=l
+ eft>Time:</th><td>Tuesday\, April 24\, 2012\, 4:00:00 PM - 5:00:00 PM GMT -0
+ 8:00 US/Canada Pacific\n </td></tr></table>\n<p>\n<table border='0'>\n<tr><t
+ h align=left>Invitees:</th><td>rcpt@zimbra.com </td></tr>\n</t
+ able>\n<div>*~*~*~*~*~*~*~*~*~*</div><br><div style='font-family:times new r
+ oman\, new york\, times\, serif\; font-size: 12pt\; color: #000000\;' ><div>
+ <strong>Bold</strong><br><em>Italics</em></div></div></body></html>
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER;RELATED=START:-PT5M
+DESCRIPTION:Reminder
+END:VALARM
+END:VEVENT
+END:VCALENDAR
+------=_Part_1516_525297984.1335307060249--

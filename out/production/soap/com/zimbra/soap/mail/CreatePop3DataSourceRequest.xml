@@ -1,0 +1,3 @@
+<CreateDataSourceRequest xmlns="urn:zimbraMail">
+      <pop3 leaveOnServer="1" name="pop3DSForTest" l="1" isEnabled="0" host="pop.email.provider.domain" pollingInterval="24h" />
+    </CreateDataSourceRequest>

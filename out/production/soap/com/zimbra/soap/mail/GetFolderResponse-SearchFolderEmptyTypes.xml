@@ -1,0 +1,42 @@
+<GetFolderResponse xmlns="urn:zimbraMail">
+<!--
+ * ***** BEGIN LICENSE BLOCK *****
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2011, 2013, 2014 Zimbra, Inc.
+ * 
+ * The contents of this file are subject to the Common Public Attribution License Version 1.0 (the "License");
+ * you may not use this file except in compliance with the License. 
+ * You may obtain a copy of the License at: http://www.zimbra.com/license
+ * The License is based on the Mozilla Public License Version 1.1 but Sections 14 and 15 
+ * have been added to cover use of software over a computer network and provide for limited attribution 
+ * for the Original Developer. In addition, Exhibit A has been modified to be consistent with Exhibit B. 
+ * 
+ * Software distributed under the License is distributed on an "AS IS" basis, 
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. 
+ * See the License for the specific language governing rights and limitations under the License. 
+ * The Original Code is Zimbra Open Source Web Client. 
+ * The Initial Developer of the Original Code is Zimbra, Inc. 
+ * All portions of the code are Copyright (C) 2011, 2013, 2014 Zimbra, Inc. All Rights Reserved. 
+ * ***** END LICENSE BLOCK *****
+-->
+  <folder id="1" rev="1" s="0" i4next="2" i4ms="1" name="USER_ROOT" ms="1" n="0" l="11">
+    <folder id="16" rev="1" s="0" i4next="17" i4ms="1" name="Briefcase" ms="1" n="0" l="1" view="document"/>
+    <folder id="10" f="#" rev="1" s="0" i4next="546" i4ms="244" name="Calendar" ms="1" n="15" l="1" view="appointment"/>
+    <folder id="14" rev="1" s="0" i4next="15" i4ms="1" name="Chats" ms="1" n="0" l="1" view="message"/>
+    <folder id="7" rev="1" s="0" i4next="283" i4ms="27" name="Contacts" ms="1" n="26" l="1" view="contact"/>
+    <folder id="6" rev="1" s="0" i4next="7" i4ms="1" name="Drafts" ms="1" n="0" l="1" view="message"/>
+    <folder id="13" rev="1" s="0" i4next="14" i4ms="1" name="Emailed Contacts" ms="1" n="0" l="1" view="contact"/>
+    <search id="284" rev="29" sortBy="dateDesc" query="is:flagged" name="Flagged" ms="29" l="1" types="conversation"/>
+    <search id="285" rev="30" sortBy="dateDesc" query="has:attachment" name="Has Attachment" ms="30" l="1" types="conversation"/>
+    <folder id="2" f="u" u="222" rev="1" s="7579522" i4next="557" i4ms="254" name="Inbox" ms="1" n="222" l="1" view="message"/>
+    <folder id="4" f="u" u="1" rev="1" s="6441" i4next="558" i4ms="255" name="Junk" ms="1" n="1" l="1" view="message"/>
+    <search id="286" rev="31" sortBy="dateDesc" query="larger:100kb" name="Large" ms="31" l="1" types="conversation"/>
+    <search id="287" rev="32" sortBy="dateDesc" query="after:-7d" name="Recent" ms="32" l="1" types="conversation"/>
+    <search id="560" rev="300" sortBy="" query="in:inbox" name="searchfolder-with-empty-types" ms="300" l="1" types=""/>
+    <search id="561" rev="301" sortBy="" query="in:inbox" name="searchfolder-with-types" ms="300" l="1" types="conversation,document"/>
+    <folder id="5" rev="1" s="0" i4next="6" i4ms="1" name="Sent" ms="1" n="0" l="1" view="message"/>
+    <folder id="15" f="#" rev="1" s="0" i4next="16" i4ms="1" name="Tasks" ms="1" n="0" l="1" view="task"/>
+    <folder id="3" rev="1" s="0" i4next="4" i4ms="1" name="Trash" ms="1" n="0" l="1"/>
+    <search id="283" rev="28" sortBy="dateDesc" query="is:unread" name="Unread Messages" ms="28" l="1" types="conversation"/>
+  </folder>
+</GetFolderResponse>

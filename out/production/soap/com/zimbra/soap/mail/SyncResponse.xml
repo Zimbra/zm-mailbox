@@ -1,0 +1,42 @@
+<SyncResponse token="1244" xmlns="urn:zimbraMail">
+<!--
+ * ***** BEGIN LICENSE BLOCK *****
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2013, 2014 Zimbra, Inc.
+ * 
+ * The contents of this file are subject to the Common Public Attribution License Version 1.0 (the "License");
+ * you may not use this file except in compliance with the License. 
+ * You may obtain a copy of the License at: http://www.zimbra.com/license
+ * The License is based on the Mozilla Public License Version 1.1 but Sections 14 and 15 
+ * have been added to cover use of software over a computer network and provide for limited attribution 
+ * for the Original Developer. In addition, Exhibit A has been modified to be consistent with Exhibit B. 
+ * 
+ * Software distributed under the License is distributed on an "AS IS" basis, 
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. 
+ * See the License for the specific language governing rights and limitations under the License. 
+ * The Original Code is Zimbra Open Source Web Client. 
+ * The Initial Developer of the Original Code is Zimbra, Inc. 
+ * All portions of the code are Copyright (C) 2013, 2014 Zimbra, Inc. All Rights Reserved. 
+ * ***** END LICENSE BLOCK *****
+-->
+  <m id="1463" rev="1241" md="1384205350" ms="1241" l="5"/>
+  <m id="1460" f="r" tn="" rev="1236" d="1384204735000" t="" md="1384205350" ms="1242" l="2" cid="1461"/>
+  <c id="1461" md="1384205350" ms="1244"/>
+  <m id="1464" rev="1244" md="1384205350" ms="1244" l="2"/>
+  <folder f="*" rev="1" i4next="1463" i4ms="1237" mdver="2" webOfflineSyncDays="0" ms="1168" n="11" activesyncdisabled="0" l="1" url="" id="5" u="0" s="17197" color="0" md="1383783171" name="Sent" absFolderPath="/Sent" view="message" uuid="ae8c03b6-a058-43b2-ac14-65d531c4835a" luuid="8bd8f8c0-bd08-4a20-bd48-5b899dda2f84">
+    <meta/>
+    <acl/>
+    <retentionPolicy/>
+    <m ids="1462,1459,1458,1456,1446,1438,1435,1432,576,564,560"/>
+  </folder>
+  <folder f="" rev="1" i4next="10" i4ms="1" mdver="1" webOfflineSyncDays="0" ms="1" n="0" activesyncdisabled="0" l="11" url="" id="9" u="0" s="0" color="0" md="1383604563" name="Conversations" absFolderPath="/Conversations" view="conversation" uuid="ef6236bd-05fb-4306-8def-61e30ab8a885" luuid="014caac8-af7b-439a-9da6-746320c24afa">
+    <meta/>
+    <acl/>
+    <retentionPolicy/>
+    <c ids="1461,1457"/>
+  </folder>
+  <deleted ids="1455,578,1448,1443,1451,1441,1454">
+    <c ids="1455,999"/>
+    <m ids="578,1448,1443,1451,1441,1454"/>
+  </deleted>
+</SyncResponse>
