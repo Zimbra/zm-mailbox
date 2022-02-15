@@ -99,6 +99,9 @@ jobs:
           command: cp merged-test-results.xml /tmp/junit/
       - store_test_results:
           path: /tmp/junit/
+      - run:
+         name: Deploy
+         command: "echo deploy"
 ############################################################################
 
 workflows:
@@ -110,5 +113,9 @@ workflows:
       - test:
           requires:
             - build
+      - deploy:     
+          type: approval 
+          requires: 
+            - test
           <<: *filter_branches
 ############################################################################
