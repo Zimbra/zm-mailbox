@@ -337,6 +337,9 @@ public class GetInfo extends AccountDocumentHandler  {
             } else if (Provisioning.A_zimbraFeatureZulipChatEnabled.equals(key)) {
                 value = AccountUtil.isZulipChatEnabled(acct) ?
                         ProvisioningConstants.TRUE : ProvisioningConstants.FALSE;
+            } else if (Provisioning.A_zimbraMailQuota.equals(key)) {
+                // setting effective quota value refer ZBUG-1869 
+                value = String.valueOf(AccountUtil.getEffectiveQuota(acct));
             } else {
                 value = attrsMap.get(key);
 

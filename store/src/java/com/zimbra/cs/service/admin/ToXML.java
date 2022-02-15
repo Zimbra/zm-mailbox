@@ -34,6 +34,7 @@ import com.zimbra.cs.account.AttributeManager.IDNType;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.util.AccountUtil;
 
 public class ToXML {
     public static Element encodeAccount(Element parent, Account account) {
@@ -66,6 +67,15 @@ public class ToXML {
             }
         }
         Map attrs = account.getUnicodeAttrs(applyCos);
+        if (null != reqAttrs && reqAttrs.contains(Provisioning.A_zimbraMailQuota)) {
+            try {
+                // setting effective quota value refer ZBUG-1869
+                long effectiveQuota = AccountUtil.getEffectiveQuota(account);
+                attrs.put(Provisioning.A_zimbraMailQuota, Long.toString(effectiveQuota));
+            } catch (ServiceException e) {
+                ZimbraLog.account.error("error in getting effective zimbra mail quota", e);
+            }
+        }
         encodeAttrs(acctElem, attrs, AdminConstants.A_N, reqAttrs, attrRightChecker);
         return acctElem;
     }
