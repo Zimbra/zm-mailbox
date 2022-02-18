@@ -54,6 +54,13 @@ public class ToXML {
     public static Element encodeAccount(Element parent, Account account,
             boolean applyCos, boolean needsExternalIndicator,
             Set<String> reqAttrs, AttrRightChecker attrRightChecker) {
+        return encodeAccount(parent, account,
+                applyCos, needsExternalIndicator, reqAttrs,  attrRightChecker, false);
+    }
+    
+    public static Element encodeAccount(Element parent, Account account,
+            boolean applyCos, boolean needsExternalIndicator,
+            Set<String> reqAttrs, AttrRightChecker attrRightChecker, boolean isEffectiveQuota) {
         Element acctElem = parent.addNonUniqueElement(AccountConstants.E_ACCOUNT);
         acctElem.addAttribute(AccountConstants.A_NAME, account.getUnicodeName());
         acctElem.addAttribute(AccountConstants.A_ID, account.getId());
@@ -67,11 +74,11 @@ public class ToXML {
             }
         }
         Map attrs = account.getUnicodeAttrs(applyCos);
-        if (null != reqAttrs && reqAttrs.contains(Provisioning.A_zimbraMailQuota)) {
+        if (isEffectiveQuota) {
             try {
                 // setting effective quota value refer ZBUG-1869
                 long effectiveQuota = AccountUtil.getEffectiveQuota(account);
-                attrs.put(Provisioning.A_zimbraMailQuota, Long.toString(effectiveQuota));
+                attrs.put(Provisioning.A_zimbraMailQuota, String.valueOf(effectiveQuota));
             } catch (ServiceException e) {
                 ZimbraLog.account.error("error in getting effective zimbra mail quota", e);
             }
