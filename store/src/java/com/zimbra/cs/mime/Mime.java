@@ -667,9 +667,14 @@ public class Mime {
     }
 
     public static void recursiveRepairTransferEncoding(MimeMessage mm) throws MessagingException, IOException {
+        String[] xMailerheaderArray = mm.getHeader("X-Mailer");
         for (MPartInfo mpi : listParts(mm, null)) {
             String cte = mpi.mPart.getHeader("Content-Transfer-Encoding", null);
             String ct = getContentType(mpi.mPart);
+            if (xMailerheaderArray != null && xMailerheaderArray[0].contains("Apple Mail")
+                    && mpi.mPart.getDisposition() != null && mpi.mPart.getDisposition().equals(Part.INLINE)) {
+                mpi.mPart.setDisposition(Part.ATTACHMENT);
+            }
             if (StringUtil.isNullOrEmpty(cte) &&
                 !ct.equals(MimeConstants.CT_MESSAGE_RFC822) &&
                 !ct.startsWith(MimeConstants.CT_MULTIPART_PREFIX)) {
