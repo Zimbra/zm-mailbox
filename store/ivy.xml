@@ -45,7 +45,7 @@
   <dependency org="net.sourceforge.nekohtml" name="nekohtml" rev="1.9.13.1z"/>
   <!--Build uses the custom version 20190610.1z of owasp lib.
   Not updating custom version here as the version 20190610.1 is only used for compilation.-->
-  <dependency org="com.googlecode.owasp-java-html-sanitizer" name="owasp-java-html-sanitizer" rev="20190610.3z"/>
+  <dependency org="com.googlecode.owasp-java-html-sanitizer" name="owasp-java-html-sanitizer" rev="20190610.4z"/>
   <dependency org="org.ehcache" name="ehcache" rev="3.1.2"/>
   <dependency org="ant-1.7.0-ziputil-patched" name="ant-1.7.0-ziputil-patched" rev="1.0"/>
   <dependency org="org.eclipse.jetty" name="jetty-continuation" rev="9.4.18.v20190429"/>
@@ -122,8 +122,8 @@
   <dependency org="org.owasp.antisamy" name="antisamy" rev="1.5.8"/>
   <dependency org="org.apache.xmlgraphics" name="batik-css" rev="1.7"/>
   <dependency org="org.w3c.css" name="sac" rev="1.3"/>
-  <dependency org="org.apache.xmlgraphics" name="batik-i18n" rev="1.9"/>
-  <dependency org="org.apache.xmlgraphics" name="batik-util" rev="1.8"/>
+  <dependency org="org.apache.xmlgraphics" name="batik-i18n" rev="1.14"/>
+  <dependency org="org.apache.xmlgraphics" name="batik-util" rev="1.14"/>
   <dependency org="org.apache.tika" name="tika-app" rev="1.24.1"/>
  </dependencies>
 </ivy-module>

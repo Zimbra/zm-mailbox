@@ -42,6 +42,7 @@ import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.servlet.ZThreadLocal;
 import com.zimbra.cs.util.ZTestWatchman;
+import org.owasp.html.Encoding;
 
 public class OwaspHtmlSanitizerTest {
 
@@ -734,5 +735,31 @@ public class OwaspHtmlSanitizerTest {
         String output = "<html><head><style>.uegzbq{font-size:22px;}@media not all and (pointer:coarse){.8bsfb:hover{background-color:#056b27;}}.scem3j{font-size:25px;}</style></head><body><div class=\"uegzbq\">First Line</div><br /><div class=\"scem3j\">Second Line</div></body></html>";
         Assert.assertTrue("Verification failed: Failed to include media queries.", output.equals(result.trim()));
     }
- 
+
+    @Test
+    public void testBug1932ShouldReturnSameUrlAfterSanitizing_1() throws Exception {
+        String url = "https://google.com/?page=red.blue&num_ar=abcd123456&orgAcronyme=abc12";
+        String html = "<a href='"+url+"'>"+url+"</a>";
+        String result = new OwaspHtmlSanitizer(html, true, null).sanitize();
+        //&num should not be converted to #
+        Assert.assertTrue(Encoding.decodeHtml(result).contains(url));
+    }
+
+    @Test
+    public void testBug1932ShouldReturnSameUrlAfterSanitizing_2() throws Exception {
+        String url = "https://google.com/?page=red.blue&numero_num=10&Integral_int=20";
+        String html = "<a href='"+url+"'>"+url+"</a>";
+        String result = new OwaspHtmlSanitizer(html, true, null).sanitize();
+        //&numero and &Integral should not be converted to № and ∫
+        Assert.assertTrue(Encoding.decodeHtml(result).contains(url));
+    }
+
+    @Test
+    public void testBug1932ShouldReturnSameUrlAfterSanitizing_3() throws Exception {
+        String url = "https://google.com/?account=2&order_id=125";
+        String html = "<a href='"+url+"'>"+url+"</a>";
+        String result = new OwaspHtmlSanitizer(html, true, null).sanitize();
+        //&order should not be converted to ℴ
+        Assert.assertTrue(Encoding.decodeHtml(result).contains(url));
+    }
 }
