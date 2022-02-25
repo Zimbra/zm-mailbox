@@ -288,8 +288,8 @@
     <ivy:install organisation="oauth" module="oauth" revision="1.4" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
     <ivy:install organisation="org.apache.xmlgraphics" module="batik-css" revision="1.7" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
     <ivy:install organisation="org.w3c.css" module="sac" revision="1.3" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-    <ivy:install organisation="org.apache.xmlgraphics" module="batik-i18n" revision="1.9" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-    <ivy:install organisation="org.apache.xmlgraphics" module="batik-util" revision="1.8" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+    <ivy:install organisation="org.apache.xmlgraphics" module="batik-i18n" revision="1.14" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+    <ivy:install organisation="org.apache.xmlgraphics" module="batik-util" revision="1.14" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
   	<ivy:install organisation="org.springframework" module="spring-aop" revision="5.1.10.RELEASE" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
     <ivy:install organisation="org.springframework" module="spring-beans" revision="5.1.10.RELEASE" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
     <ivy:install organisation="org.springframework" module="spring-context" revision="5.1.10.RELEASE" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
