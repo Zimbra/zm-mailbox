@@ -44,7 +44,7 @@
   <dependency org="com.101tec" name="zkclient" rev="0.1.0"/>
   <dependency org="xerces" name="xercesImpl" rev="2.9.1-patch-01"/>
   <dependency org="net.sourceforge.nekohtml" name="nekohtml" rev="1.9.13.1z"/>
-  <dependency org="com.googlecode.owasp-java-html-sanitizer" name="owasp-java-html-sanitizer" rev="20190610.3z"/>
+  <dependency org="com.googlecode.owasp-java-html-sanitizer" name="owasp-java-html-sanitizer" rev="20190610.4z"/>
   <dependency org="org.ehcache" name="ehcache" rev="3.1.2"/>
   <dependency org="ant-1.7.0-ziputil-patched" name="ant-1.7.0-ziputil-patched" rev="1.0"/>
   <dependency org="org.eclipse.jetty" name="jetty-continuation" rev="${jetty.version}"/>
@@ -138,5 +138,7 @@
   <dependency org="org.tukaani" name="xz" rev="1.9"/>
   <dependency org="com.drewnoakes" name="metadata-extractor" rev="2.16.0"/>
   <dependency org="com.adobe.xmp" name="xmpcore" rev="6.1.11"/>
+  <dependency org="org.apache.xmlgraphics" name="batik-i18n" rev="1.14"/>
+  <dependency org="org.apache.xmlgraphics" name="batik-util" rev="1.14"/>
  </dependencies>
 </ivy-module>
