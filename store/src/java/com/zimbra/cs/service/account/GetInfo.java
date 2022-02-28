@@ -64,6 +64,7 @@ import com.zimbra.cs.service.admin.AdminAccessControl;
 import com.zimbra.cs.service.mail.ModifyProfileImage;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SoapSession;
+import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.zimlet.ZimletPresence;
 import com.zimbra.cs.zimlet.ZimletUserProperties;
