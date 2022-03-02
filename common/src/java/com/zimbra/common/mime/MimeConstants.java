@@ -81,6 +81,7 @@ public class MimeConstants {
     public static final String CT_APPLICATION_ZIP = "application/zip";
     public static final String CT_SMIME_TYPE_ENVELOPED_DATA = "enveloped-data";
     public static final String CT_SMIME_TYPE_SIGNED_DATA = "signed-data";
+    public static final String CT_IMAGE = "image/";
 
     // encodings
     public static final String ET_7BIT = "7bit";
