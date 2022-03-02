@@ -4261,6 +4261,7 @@ public class DbMailItem {
     }
 
     /**
+     * The query returns remote calendar folder all visible and deleted items
      * @param lastSync  last synced time of appointment - int - date in seconds from epoch
      */
     private static PreparedStatement calendarItemStatement(DbConnection conn, String fields,
@@ -4281,8 +4282,9 @@ public class DbMailItem {
                 " FROM " + getCalendarItemTableName(mbox, "ci") + ", " + getMailItemTableName(mbox, "mi") +
                 " WHERE mi.id = ci.item_id" + lastSyncConstraint + " AND mi." + typeConstraint +
                 (DebugConfig.disableMailboxGroups? "" : " AND ci.mailbox_id = ? AND mi.mailbox_id = ci.mailbox_id") +
-                (folderSpecified ? " AND folder_id = ?" : "") + excludeFolderPart + orderByConstraint);
-
+                (folderSpecified ? " AND ( folder_id = ? OR (folder_id = '"+ Mailbox.ID_FOLDER_TRASH + "' AND prev_folders LIKE ? ))" : "") +
+                excludeFolderPart + orderByConstraint);
+        
         int pos = 1;
         if (lastSync < 0) {
             lastSync = 0;
@@ -4291,6 +4293,7 @@ public class DbMailItem {
         pos = setMailboxId(stmt, mbox, pos);
         if (folderSpecified) {
             stmt.setInt(pos++, folderId);
+            stmt.setString(pos++, "%:"+folderId);
         }
         if (excludeFolderIds != null) {
             for (int id : excludeFolderIds) {
