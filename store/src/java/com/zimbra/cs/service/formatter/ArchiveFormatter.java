@@ -1048,6 +1048,11 @@ public abstract class ArchiveFormatter extends Formatter {
             for (Member member : oldMembers) {
                 Member.Type memberType = member.getType();
                 String memberValue = member.getValue();
+
+                if (memberValue.contains(":")) {
+                    memberValue = memberValue.split(":")[1];
+                }
+
                 try {
                     if (Member.Type.CONTACT_REF.equals(memberType)) {
                         Contact rawContact = contactsById.get(Integer.valueOf(memberValue));
