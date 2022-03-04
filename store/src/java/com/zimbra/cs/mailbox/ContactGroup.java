@@ -390,7 +390,7 @@ public class ContactGroup {
             }
         }
         
-        private static Member init(Member.Type type, String value) throws ServiceException {
+        public static Member init(Member.Type type, String value) throws ServiceException {
             Member member = null;
             switch (type) {
                 case CONTACT_REF:

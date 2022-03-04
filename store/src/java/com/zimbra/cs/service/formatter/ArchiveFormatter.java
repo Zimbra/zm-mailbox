@@ -80,6 +80,8 @@ import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.CalendarItem.Instance;
 import com.zimbra.cs.mailbox.Chat;
 import com.zimbra.cs.mailbox.Contact;
+import com.zimbra.cs.mailbox.ContactGroup;
+import com.zimbra.cs.mailbox.ContactGroup.Member;
 import com.zimbra.cs.mailbox.Conversation;
 import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.Document;
@@ -844,12 +846,13 @@ public abstract class ArchiveFormatter extends Formatter {
         disableJettyTimeout(context);
 
         Exception ex = null;
-        ItemData id = null;
+        ItemData itemData = null;
         FolderDigestInfo digestInfo = new FolderDigestInfo(context.opContext);
         List<ServiceException> errs = new LinkedList<ServiceException>();
         List<Folder> flist;
         Map<Object, Folder> fmap = new HashMap<Object, Folder>();
         Map<Integer, Integer> idMap = new HashMap<Integer, Integer>();
+        Set<Contact> rawContacts = new HashSet<>();
         long last = System.currentTimeMillis();
         String types = context.getTypesString();
         String resolve = context.params.get(PARAM_RESOLVE);
@@ -956,11 +959,12 @@ public abstract class ArchiveFormatter extends Formatter {
                         continue;
                     } else if (aie.getName().endsWith(".meta")) {
                         meta = true;
-                        if (id != null) {
-                            addItem(context, fldr, fmap, digestInfo, idMap, ids, searchTypes, r, id, ais, null, errs);
+                        if (itemData != null) {
+                            addItem(context, fldr, fmap, digestInfo, idMap, ids, searchTypes, r, itemData, ais, null,
+                                    errs, rawContacts);
                         }
                         try {
-                            id = new ItemData(readArchiveEntry(ais, aie));
+                            itemData = new ItemData(readArchiveEntry(ais, aie));
                         } catch (IOException e) {
                             throw ServiceException.FAILURE("Error reading file", e);
                         } catch (Exception e) {
@@ -969,30 +973,32 @@ public abstract class ArchiveFormatter extends Formatter {
                         continue;
                     } else if (aie.getName().endsWith(".err")) {
                         addError(errs, FormatterServiceException.MISMATCHED_SIZE(aie.getName()));
-                    } else if (id == null) {
+                    } else if (itemData == null) {
                         if (meta) {
                             addError(errs, FormatterServiceException.MISSING_META(aie.getName()));
                         } else {
                             addData(context, fldr, fmap, searchTypes, r, timestamp == null || !timestamp.equals("0"),
                                     ais, aie, errs);
                         }
-                    } else if ((aie.getType() != 0 && id.ud.type != aie.getType()) || (id.ud.getBlobDigest() != null && aie.getSize() != -1 && id.ud.size != aie.getSize())) {
+                    } else if ((aie.getType() != 0 && itemData.ud.type != aie.getType()) || (itemData.ud.getBlobDigest() != null && aie.getSize() != -1 && itemData.ud.size != aie.getSize())) {
                         addError(errs, FormatterServiceException.MISMATCHED_META(aie.getName()));
                     } else {
-                        addItem(context, fldr, fmap, digestInfo, idMap, ids, searchTypes, r, id, ais, aie, errs);
+                        addItem(context, fldr, fmap, digestInfo, idMap, ids, searchTypes, r, itemData, ais, aie, errs,
+                                rawContacts);
                     }
-                    id = null;
+                    itemData = null;
                 }
-                if (id != null) {
-                    addItem(context, fldr, fmap, digestInfo, idMap, ids, searchTypes, r, id, ais, null, errs);
+                if (itemData != null) {
+                    addItem(context, fldr, fmap, digestInfo, idMap, ids, searchTypes, r, itemData, ais, null, errs,
+                            rawContacts);
                 }
             } catch (Exception e) {
-                if (id == null) {
+                if (itemData == null) {
                     addError(errs, FormatterServiceException.UNKNOWN_ERROR(e));
                 } else {
-                    addError(errs, FormatterServiceException.UNKNOWN_ERROR(id.path, e));
+                    addError(errs, FormatterServiceException.UNKNOWN_ERROR(itemData.path, e));
                 }
-                id = null;
+                itemData = null;
             } finally {
                 if (ais != null) {
                     ais.close();
@@ -1002,12 +1008,85 @@ public abstract class ArchiveFormatter extends Formatter {
         } catch (Exception e) {
             ex = e;
         }
+
+        postProcessContacts(rawContacts, context, context.targetMailbox, fldr);
+
         try {
             updateClient(context, ex, errs);
         } catch (ServiceException e) {
             throw e;
         } catch (Exception e) {
             throw ServiceException.FAILURE("Archive formatter failure", e);
+        }
+    }
+
+    private void postProcessContacts(Set<Contact> rawContacts, UserServletContext context, Mailbox mbox,
+            Folder folder) {
+
+        Map<Integer, Contact> contactsById = new HashMap<>();
+        Map<Integer, ContactGroup> contactGroups = new HashMap<>();
+
+        for (Contact contact : rawContacts) {
+            if (contact.isContactGroup()) {
+                try {
+                    contactGroups.put(Integer.valueOf(contact.getId()), ContactGroup.init(contact, true));
+                } catch (ServiceException ex) {
+                    warn(ex);
+                    return;
+                }
+            } else {
+                contactsById.put(contact.getId(), contact);
+            }
+        }
+
+        for (Map.Entry<Integer, ContactGroup> entry : contactGroups.entrySet()) {
+            Integer contactGroupId = entry.getKey();
+            ContactGroup contactGroup = entry.getValue();
+            List<Member> oldMembers = contactGroup.getMembers();
+            List<Member> newMembers = new ArrayList<>(oldMembers.size());
+
+            for (Member member : oldMembers) {
+                Member.Type memberType = member.getType();
+                String memberValue = member.getValue();
+                try {
+                    if (Member.Type.CONTACT_REF.equals(memberType)) {
+                        Contact rawContact = contactsById.get(Integer.valueOf(memberValue));
+                        Contact foundContact = findContact(context.opContext, mbox, rawContact, folder);
+
+                        if (foundContact == null) {
+                            ZimbraLog.misc.warn("Failed to find newly added contact %s", rawContact);
+                            return;
+                        }
+                        else {
+                            newMembers.add(Member.init(memberType, String.valueOf(foundContact.getId())));
+                        }
+                    }
+                    else {
+                        newMembers.add(Member.init(memberType, memberValue));
+                    }
+                } catch (ServiceException ex) {
+                    warn(ex);
+                    return;
+                }
+            }
+
+            contactGroup.removeAllMembers();
+
+            for (Member member : newMembers) {
+                try {
+                    contactGroup.addMember(member.getType(), member.getValue());
+                } catch (ServiceException ex) {
+                    warn(ex);
+                    return;
+                }
+            }
+
+            try {
+                Contact rawContact = contactsById.get(contactGroupId);
+                mbox.modifyContact(context.opContext, contactGroupId, new ParsedContact(rawContact));
+            } catch (ServiceException ex) {
+                warn(ex);
+            }
         }
     }
 
@@ -1098,34 +1177,41 @@ public abstract class ArchiveFormatter extends Formatter {
 
     private void addItem(UserServletContext context, Folder fldr, Map<Object, Folder> fmap,
             FolderDigestInfo digestInfo,
-            Map<Integer, Integer> idMap, int[] ids, Set<MailItem.Type> types, Resolve r, ItemData id,
+            Map<Integer, Integer> idMap, int[] ids, Set<MailItem.Type> types, Resolve r, ItemData itemData,
             ArchiveInputStream ais, ArchiveInputEntry aie, List<ServiceException> errs)
     throws ServiceException {
+        addItem(context, fldr, fmap, digestInfo, idMap, ids, types, r, itemData, ais, aie, errs, null);
+    }
+
+    private void addItem(UserServletContext context, Folder fldr, Map<Object, Folder> fmap, FolderDigestInfo digestInfo,
+            Map<Integer, Integer> idMap, int[] ids, Set<MailItem.Type> types, Resolve r, ItemData itemData,
+            ArchiveInputStream ais, ArchiveInputEntry aie, List<ServiceException> errs, Set<Contact> rawContacts)
+            throws ServiceException {
         try {
             Mailbox mbox = fldr.getMailbox();
-            MailItem mi = MailItem.constructItem(mbox, id.ud);
+            MailItem mi = MailItem.constructItem(mbox, itemData.ud);
             MailItem newItem = null, oldItem = null;
             OperationContext octxt = context.opContext;
             String path;
             ParsedMessage pm;
-            boolean root = fldr.getId() == Mailbox.ID_FOLDER_ROOT || fldr.getId() == Mailbox.ID_FOLDER_USER_ROOT || id.path.startsWith(fldr.getPath() + '/');
+            boolean root = fldr.getId() == Mailbox.ID_FOLDER_ROOT || fldr.getId() == Mailbox.ID_FOLDER_USER_ROOT || itemData.path.startsWith(fldr.getPath() + '/');
 
-            if ((ids != null && Arrays.binarySearch(ids, id.ud.id) < 0) || (types != null && !types.contains(MailItem.Type.of(id.ud.type))))
+            if ((ids != null && Arrays.binarySearch(ids, itemData.ud.id) < 0) || (types != null && !types.contains(MailItem.Type.of(itemData.ud.type))))
                 return;
 
-            if (id.ud.getBlobDigest() != null && aie == null) {
-                addError(errs, FormatterServiceException.MISSING_BLOB(id.path));
+            if (itemData.ud.getBlobDigest() != null && aie == null) {
+                addError(errs, FormatterServiceException.MISSING_BLOB(itemData.path));
                 return;
             }
             if (root) {
-                path = id.path;
+                path = itemData.path;
             } else {
-                path = fldr.getPath() + id.path;
+                path = fldr.getPath() + itemData.path;
             }
             if (path.endsWith("/") && !path.equals("/")) {
                 path = path.substring(0, path.length() - 1);
             }
-            if (mbox.isImmutableSystemFolder(id.ud.folderId))
+            if (mbox.isImmutableSystemFolder(itemData.ud.folderId))
                 return;
 
             switch (mi.getType()) {
@@ -1256,6 +1342,9 @@ public abstract class ArchiveFormatter extends Formatter {
                     if (oldItem == null) {
                         newItem = mbox.createContact(octxt, new ParsedContact(ct.getFields(), readArchiveEntry(ais, aie)),
                                 fldr.getId(), ct.getTags());
+                    }
+                    if (rawContacts != null) {
+                        rawContacts.add(ct);
                     }
                     break;
 
@@ -1401,7 +1490,7 @@ public abstract class ArchiveFormatter extends Formatter {
                         setFlags(msg.getFlagBitmask()).
                         setTags(msg.getTags());
                         newItem = mbox.addMessage(octxt, ais.getInputStream(), (int) aie.getSize(),
-                                msg.getDate(), opt, null, id);
+                                msg.getDate(), opt, null, itemData);
                     }
                     break;
 
@@ -1512,17 +1601,17 @@ public abstract class ArchiveFormatter extends Formatter {
                 if (mi.getColor() != newItem.getColor()) {
                     mbox.setColor(octxt, newItem.getId(), newItem.getType(), mi.getColor());
                 }
-                if (!id.flags.equals(newItem.getFlagString()) || !id.tagsEqual(newItem)) {
-                    mbox.setTags(octxt, newItem.getId(), newItem.getType(), Flag.toBitmask(id.flags),
-                            getTagNames(id), null);
+                if (!itemData.flags.equals(newItem.getFlagString()) || !itemData.tagsEqual(newItem)) {
+                    mbox.setTags(octxt, newItem.getId(), newItem.getType(), Flag.toBitmask(itemData.flags),
+                            getTagNames(itemData), null);
                 }
             } else if (oldItem != null && r == Resolve.Modify) {
                 if (mi.getColor() != oldItem.getColor()) {
                     mbox.setColor(octxt, oldItem.getId(), oldItem.getType(), mi.getColor());
                 }
-                if (!id.flags.equals(oldItem.getFlagString()) || !id.tagsEqual(oldItem)) {
-                    mbox.setTags(octxt, oldItem.getId(), oldItem.getType(), Flag.toBitmask(id.flags),
-                            getTagNames(id), null);
+                if (!itemData.flags.equals(oldItem.getFlagString()) || !itemData.tagsEqual(oldItem)) {
+                    mbox.setTags(octxt, oldItem.getId(), oldItem.getType(), Flag.toBitmask(itemData.flags),
+                            getTagNames(itemData), null);
                 }
             }
         } catch (MailServiceException e) {
@@ -1533,7 +1622,7 @@ public abstract class ArchiveFormatter extends Formatter {
                 addError(errs, e);
             }
         } catch (Exception e) {
-            String path = id.path;
+            String path = itemData.path;
             // When importing items into, e.g. the Inbox, often path is just "/Inbox" which isn't that useful
             if ((aie != null) && !Strings.isNullOrEmpty(aie.getName())) {
                 path = aie.getName();
@@ -1553,7 +1642,7 @@ public abstract class ArchiveFormatter extends Formatter {
     private Contact findContact(OperationContext octxt, Mailbox mbox, Contact ct, Folder fldr) {
         int folderId = fldr.getId();
         List<Contact> contactList = contacts.get(folderId);
-        if (contactList == null || contactList.isEmpty()) {
+        if (contactList == null) {
             try {
                 contactList = mbox.getContactList(octxt, folderId);
                 contacts.put(folderId, contactList);

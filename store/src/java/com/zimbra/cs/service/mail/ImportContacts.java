@@ -159,13 +159,12 @@ public class ImportContacts extends MailDocumentHandler  {
             createdContacts.add(contact);
 
             if (!contact.isGroup()) {
-                // The detail we get for an address from a contact group
-                // is less valuable than any individual record we've yet
-                // encountered in this import.
-
                 for (String addr : contact.getEmailAddresses()) {
                     createdContactsByEmail.put(addr.toLowerCase(), contact);
                 }
+                // createdContactsById.put(contact.getId(), contact) to match the tail end of
+                // the ID in contact group metadata from a TGZ meta file. Except this is
+                // explicitly for importing a CSV source, and CSV doesn't contain any ID.
             }
         }
 

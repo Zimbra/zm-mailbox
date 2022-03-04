@@ -405,7 +405,7 @@ public class TestContactGroup {
         assertEquals(Member.Type.INLINE, member.getType());
         assertEquals("user1@test.com", member.getValue());
     }
-    
+// HMMM
     @Test 
     public void returnMembersAsDlist() throws Exception {
         Account account = Provisioning.getInstance().get(AccountBy.name, TestUtil.getAddress("user1"));
