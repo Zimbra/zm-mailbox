@@ -54,6 +54,17 @@ public class GetAccountRequest extends AttributeSelectorImpl {
     private ZmBoolean applyCos = ZmBoolean.ONE /* true */;
 
     /**
+     * @zm-api-field-tag effectiveQuota
+     * @zm-api-field-description Flag whether or not to get effective value (minimum of zimbraMailQuota and zimbraMailDomainQuota)
+     * <table>
+     * <tr> <td> <b>1 (true)</b> </td> <td> zimbraMailQuota attribute will contain effective value
+     * <tr> <td> <b>0 (false)[default]</b> </td> <td> zimbraMailQuota attribute will contain actual ldap value set </td> </tr>
+     * </table>
+     */
+    @XmlAttribute(name=AdminConstants.A_EFFECTIVE_QUOTA, required=false)
+    private ZmBoolean effectiveQuota;
+    
+    /**
      * @zm-api-field-description Account
      */
     @XmlElement(name=AdminConstants.E_ACCOUNT)
@@ -72,9 +83,15 @@ public class GetAccountRequest extends AttributeSelectorImpl {
 
     public GetAccountRequest(AccountSelector account, Boolean applyCos,
             Iterable<String> attrs) {
+        this(account, applyCos, false, attrs);
+    }
+
+    public GetAccountRequest(AccountSelector account, Boolean applyCos,
+            Boolean effectiveQuota, Iterable<String> attrs) {
         super(attrs);
         this.account = account;
         this.applyCos = ZmBoolean.fromBool(applyCos);
+        this.effectiveQuota = ZmBoolean.fromBool(effectiveQuota);
     }
 
     public void setAccount(AccountSelector account) {
@@ -85,6 +102,11 @@ public class GetAccountRequest extends AttributeSelectorImpl {
         this.applyCos = ZmBoolean.fromBool(applyCos);
     }
 
+    public void setEffectiveQuota(Boolean effectiveQuota) {
+        this.effectiveQuota = ZmBoolean.fromBool(effectiveQuota);
+    }
+
     public AccountSelector getAccount() { return account; }
     public Boolean isApplyCos() { return ZmBoolean.toBool(applyCos); }
+    public Boolean isEffectiveQuota() { return ZmBoolean.toBool(effectiveQuota); }
 }

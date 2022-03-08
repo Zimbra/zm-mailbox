@@ -85,7 +85,8 @@ public class GetAccount extends AdminDocumentHandler {
 
         boolean applyCos = !Boolean.FALSE.equals(req.isApplyCos());
         Set<String> reqAttrs = getReqAttrs(req.getAttrs(), AttributeClass.account);
-        ToXML.encodeAccount(response, account, applyCos, reqAttrs, aac.getAttrRightChecker(account));
+        boolean isEffectiveQuota = Boolean.TRUE.equals(req.isEffectiveQuota());
+        ToXML.encodeAccount(response, account, applyCos, false, reqAttrs, aac.getAttrRightChecker(account), isEffectiveQuota);
 
         return response;
     }

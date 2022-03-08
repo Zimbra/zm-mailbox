@@ -1336,7 +1336,8 @@ public final class AdminConstants {
 
     public static final String A_QUOTA_USED = "used";
     public static final String A_QUOTA_LIMIT = "limit";
-
+    public static final String A_EFFECTIVE_QUOTA = "effectiveQuota";
+    
     public static final String E_TEMPLATE = "template";
     public static final String E_TEST = "test";
     public static final String A_DEST = "dest";
