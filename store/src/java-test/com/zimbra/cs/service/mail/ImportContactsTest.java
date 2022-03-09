@@ -73,23 +73,23 @@ public class ImportContactsTest {
         Account account = prov.getAccountByName(USERNAME);
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 
-		String csvText = getCsvFile();
-		BufferedReader reader = new BufferedReader(new StringReader(csvText));
+        String csvText = getCsvFile();
+        BufferedReader reader = new BufferedReader(new StringReader(csvText));
         List<Map<String, String>> contactsMap = ContactCSV.getContacts(reader, null);
 
         List<ItemId> ids = ImportContacts.ImportCsvContacts(null, mbox,
-				new ItemId(mbox, Mailbox.ID_FOLDER_CONTACTS), contactsMap);
+                new ItemId(mbox, Mailbox.ID_FOLDER_CONTACTS), contactsMap);
 
         Assert.assertFalse(ids.isEmpty());
         Assert.assertEquals(4, ids.size());
 
-		Set<String> expectedContactEmails = getExpectedContactEmails();
+        Set<String> expectedContactEmails = getExpectedContactEmails();
         Set<Contact> foundContactGroups = new HashSet<>();
-        
+
         for (ItemId id : ids) {
             Contact contact = mbox.getContactById(null, id.getId());
             Assert.assertNotNull(contact);
-            
+
             for (String addr : contact.getEmailAddresses()) {
                 expectedContactEmails.remove(addr);
             }
@@ -104,13 +104,13 @@ public class ImportContactsTest {
         }
 
         Assert.assertEquals("Found exactly one contact group after import",
-				1, foundContactGroups.size());
+                1, foundContactGroups.size());
 
-		ContactGroup group = ContactGroup.init(foundContactGroups.iterator().next(), true);
+        ContactGroup group = ContactGroup.init(foundContactGroups.iterator().next(), true);
 
         for (Member member : group.getMembers()) {
             Member.Type memberType = member.getType();
-            
+
             if (memberType == Member.Type.INLINE) {
                 Assert.assertEquals("Found correct inline group member", "delta.user@example.org",
                         member.getValue());
@@ -121,25 +121,25 @@ public class ImportContactsTest {
         }
     }
 
-	private String getCsvFile() {
-		return ""
-			+ "email,fullName,type,dlist\r\n"
-			+ "alpha.user@example.org,Alpha User,inline,\"\"\r\n"
-			+ "bravo.user@example.org,Bravo User,inline,\"\"\r\n"
-			+ "testgroup@example.org,Test Group,group,\"alpha.user@example.org,bravo.user@example.org,charlie.user@example.org,delta.user@example.org\"\r\n"
-			+ "charlie.user@example.org,Charlie User,inline,\"\"\r\n";
-	}
+    private String getCsvFile() {
+        return ""
+            + "email,fullName,type,dlist\r\n"
+            + "alpha.user@example.org,Alpha User,inline,\"\"\r\n"
+            + "bravo.user@example.org,Bravo User,inline,\"\"\r\n"
+            + "testgroup@example.org,Test Group,group,\"alpha.user@example.org,bravo.user@example.org,charlie.user@example.org,delta.user@example.org\"\r\n"
+            + "charlie.user@example.org,Charlie User,inline,\"\"\r\n";
+    }
 
     private Set<String> getExpectedContactEmails() {
-		Set<String> expectedContactEmails = new HashSet<>();
-		expectedContactEmails.add("alpha.user@example.org");
+        Set<String> expectedContactEmails = new HashSet<>();
+        expectedContactEmails.add("alpha.user@example.org");
         expectedContactEmails.add("bravo.user@example.org");
         expectedContactEmails.add("charlie.user@example.org");
         expectedContactEmails.add("delta.user@example.org");
         expectedContactEmails.add("testgroup@example.org");
 
-		return expectedContactEmails;
-	}
+        return expectedContactEmails;
+    }
 
     @Test
     public void testFoo() throws Exception {

@@ -1049,13 +1049,14 @@ public abstract class ArchiveFormatter extends Formatter {
                 Member.Type memberType = member.getType();
                 String memberValue = member.getValue();
 
-                if (memberValue.contains(":")) {
-                    memberValue = memberValue.split(":")[1];
-                }
+//                if (memberValue.contains(":")) {
+//                    memberValue = memberValue.split(":")[1];
+//                }
 
                 try {
                     if (Member.Type.CONTACT_REF.equals(memberType)) {
-                        Contact rawContact = contactsById.get(Integer.valueOf(memberValue));
+//                      Contact rawContact = contactsById.get(Integer.valueOf(memberValue));
+                        Contact rawContact = contactsById.get(memberValue);
                         Contact foundContact = findContact(context.opContext, mbox, rawContact, folder);
 
                         if (foundContact == null) {
