@@ -1088,7 +1088,11 @@ public abstract class ArchiveFormatter extends Formatter {
 
             try {
                 Contact rawContact = contactsById.get(contactGroupId);
-                mbox.modifyContact(context.opContext, contactGroupId, new ParsedContact(rawContact));
+                ParsedContact pc = new ParsedContact(rawContact);
+
+                pc.modifyField(ContactConstants.A_groupMember, contactGroup.encode());
+
+                mbox.modifyContact(context.opContext, contactGroupId, pc);
             } catch (ServiceException ex) {
                 warn(ex);
             }
