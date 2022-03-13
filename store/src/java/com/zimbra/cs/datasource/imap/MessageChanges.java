@@ -20,9 +20,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.DataSource;
+import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -39,6 +41,11 @@ class MessageChanges {
     public static MessageChanges getChanges(DataSource ds, Folder folder, int changeId)
         throws ServiceException {
         return new MessageChanges(ds, folder).findChanges(changeId);
+    }
+
+    public static MessageChanges getChangesForDrafts(DataSource ds, Folder folder, int changeId, int folderId)
+            throws ServiceException {
+        return new MessageChanges(ds, folder).findChangesForDraft(changeId, folderId);
     }
 
     private MessageChanges(DataSource ds, Folder folder) {
@@ -90,6 +97,28 @@ class MessageChanges {
         return this;
     }
 
+    private MessageChanges findChangesForDraft(int changeId, int draftFolderId) throws ServiceException {
+        // find modified items since specified change id for draft folder
+        List<Integer> modifiedItems;
+        mbox.lock.lock(false);
+        try {
+            Set<Integer> folderIds = new HashSet<>();
+            folderIds.add(draftFolderId);
+            modifiedItems = mbox.getModifiedItems(null, changeId, MailItem.Type.MESSAGE, folderIds).getFirst();
+        } finally {
+            mbox.lock.release();
+        }
+        changes = new ArrayList<MessageChange>();
+        // Find modified messages for this folder
+        for (int id : modifiedItems) {
+            MessageChange change = getChange(id);
+            if (change != null) {
+                changes.add(change);
+            }
+        }
+        return this;
+    }
+
     private MessageChange getChange(int msgId) throws ServiceException {
         Message msg = getMessage(msgId);
         if (msg != null) {
@@ -103,6 +132,12 @@ class MessageChanges {
                     if (tracker.getFlags() != msg.getFlagBitmask()) {
                         // Message flags updated
                         return MessageChange.updated(msg, tracker);
+                    }
+                    final int flagMessageBitMask = msg.getFlagBitmask();
+                    if ((flagMessageBitMask & Flag.BITMASK_DRAFT) == flagMessageBitMask) {
+                        // Message is a draft and none of the above changes are relevant, assume it has
+                        // been modified
+                        return MessageChange.modifiedDraft(msg, tracker);
                     }
                 } else if (tracker.getFolderId() == folder.getId()) {
                     // Message moved from this folder to another
@@ -162,18 +197,18 @@ class MessageChanges {
 
     @Override
     public String toString() {
-        int added = 0, updated = 0, moved = 0, deleted = 0;
+        int added = 0, updated = 0, moved = 0, deleted = 0, modified=0;
         for (MessageChange change : getChanges()) {
             switch (change.getType()) {
             case ADDED:   added++; break;
             case UPDATED: updated++; break;
             case MOVED:   moved++; break;
             case DELETED: deleted++; break;
+            case MODIFIED: modified++; break;
             }
         }
         return String.format(
-            "{changeId=%d,added=%d,updated=%d,moved=%d,deleted=%d}",
-            lastChangeId, added, updated, moved, deleted);
+            "{changeId=%d,added=%d,updated=%d,moved=%d,deleted=%d,modified=%d}",
+            lastChangeId, added, updated, moved, deleted, modified);
     }
-
 }
