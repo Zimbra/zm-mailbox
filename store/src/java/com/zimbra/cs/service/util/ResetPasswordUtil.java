@@ -45,7 +45,7 @@ public class ResetPasswordUtil {
                     account.setFeatureResetPasswordStatus(FeatureResetPasswordStatus.enabled);
                     account.unsetResetPasswordRecoveryCode();
                 } else {
-                    throw ForgetPasswordException.FEATURE_RESET_PASSWORD_SUSPENDED("Password reset feature is suspended.");
+                    throw ForgetPasswordException.CONTACT_ADMIN("Something went wrong. Please contact your administrator.");
                 }
             } else {
                 account.setFeatureResetPasswordStatus(FeatureResetPasswordStatus.enabled);
@@ -53,7 +53,7 @@ public class ResetPasswordUtil {
             break;
         case disabled:
         default:
-            throw ForgetPasswordException.FEATURE_RESET_PASSWORD_DISABLED("Password reset feature is disabled.");
+            throw ForgetPasswordException.CONTACT_ADMIN("Something went wrong. Please contact your administrator.");
         }
     }
 }
