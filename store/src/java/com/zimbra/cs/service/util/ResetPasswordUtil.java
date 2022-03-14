@@ -47,7 +47,7 @@ public class ResetPasswordUtil {
                     account.setFeatureResetPasswordStatus(FeatureResetPasswordStatus.enabled);
                     account.unsetResetPasswordRecoveryCode();
                 } else {
-                    throw ForgetPasswordException.FEATURE_RESET_PASSWORD_SUSPENDED("Password reset feature is suspended.");
+                    throw ForgetPasswordException.CONTACT_ADMIN("Something went wrong. Please contact your administrator.");
                 }
             } else {
                 account.setFeatureResetPasswordStatus(FeatureResetPasswordStatus.enabled);
@@ -55,7 +55,7 @@ public class ResetPasswordUtil {
             break;
         case disabled:
         default:
-            throw ForgetPasswordException.FEATURE_RESET_PASSWORD_DISABLED("Password reset feature is disabled.");
+            throw ForgetPasswordException.CONTACT_ADMIN("Something went wrong. Please contact your administrator.");
         }
     }
 
@@ -65,7 +65,7 @@ public class ResetPasswordUtil {
         }
         if (StringUtil.isNullOrEmpty(account.getPrefPasswordRecoveryAddress())) {
             ZimbraLog.passwordreset.warn("ResetPassword : Recovery Account is not found for %s", account.getName());
-            throw ForgetPasswordException.CONTACT_ADMIN("Recovery Account is not found. Please contact your administrator.");
+            throw ForgetPasswordException.CONTACT_ADMIN("Something went wrong. Please contact your administrator.");
         }
     }
 
@@ -76,7 +76,7 @@ public class ResetPasswordUtil {
         if (account.getPrefPasswordRecoveryAddressStatus() == null
                 || !account.getPrefPasswordRecoveryAddressStatus().isVerified()) {
             ZimbraLog.passwordreset.warn("Verified recovery email is not found for %s", account.getName());
-            throw ForgetPasswordException.CONTACT_ADMIN("Recovery Account is not verified. Please contact your administrator.");
+            throw ForgetPasswordException.CONTACT_ADMIN("Something went wrong. Please contact your administrator.");
         }
     }
 
