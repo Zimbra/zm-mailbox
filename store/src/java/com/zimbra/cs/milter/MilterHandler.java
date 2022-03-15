@@ -38,6 +38,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
@@ -353,6 +354,23 @@ public final class MilterHandler implements NioHandler {
         if (sender == null || rcpt == null) {
             connection.send(new MilterPacket(SMFIR_TEMPFAIL));
             return;
+        }
+        // ZBUG-2165: prevent forwarding to non-permitted distribution list
+        final Account account = prov.getAccountByName(rcpt);
+        if (account != null && account.getPrefMailForwardingAddress() != null) {
+            ZimbraLog.milter.trace("account: %s", account.getName());
+            for (final String a : account.getPrefMailForwardingAddress().split(",")) {
+                final String address = a.trim();
+                ZimbraLog.milter.trace("address: %s", address);
+                if (!address.isEmpty() && prov.isDistributionList(address)) {
+                    final Group group = prov.getGroupBasic(Key.DistributionListBy.name, address);
+                    if (group != null && !accessMgr.canDo(account, group, User.R_sendToDistList, false)) {
+                        ZimbraLog.milter.debug("Recipient %s is not allowed to forward to this distribution list: %s", account.getName(), group.getName());
+                        SMFIR_ReplyCode("571", "571 Recipient " + account.getName() + " is not allowed to forward to this distribution list: " + group.getName());
+                        return;
+                    }
+                }
+            }
         }
         if (prov.isDistributionList(rcpt)) {
             Group group = prov.getGroupBasic(Key.DistributionListBy.name, rcpt);
