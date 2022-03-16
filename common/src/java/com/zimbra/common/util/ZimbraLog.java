@@ -24,12 +24,20 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
 
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.appender.ConsoleAppender;
+import org.apache.logging.log4j.core.config.Configurator;
+import org.apache.logging.log4j.core.config.builder.api.AppenderComponentBuilder;
+import org.apache.logging.log4j.core.config.builder.api.ComponentBuilder;
+import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilder;
+import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilderFactory;
+import org.apache.logging.log4j.core.config.builder.api.LayoutComponentBuilder;
+import org.apache.logging.log4j.core.config.builder.impl.BuiltConfiguration;
 
 import com.zimbra.common.localconfig.LC;
 
@@ -489,6 +497,25 @@ public final class ZimbraLog {
      */
     public static final Map<String, String> CATEGORY_DESCRIPTIONS;
 
+    public static final String LOG_CONFIG_NAME = "RollingBuilder";
+    public static final String DEFAULT_APPENDER_NAME = "Stdout";
+    public static final String DEFAULT_APPENDER_TYPE = "CONSOLE";
+    public static final String DEFAULT_APPENDER_TARGET = "target";
+    public static final String APPENDER_NAME = "rolling";
+    public static final String APPENDER_TYPE = "RollingFile";
+    public static final String LAYOUT_TYPE = "PatternLayout";
+    public static final String LAYOUT_PATTERN = "pattern";
+    public static final String LAYOUT_PATTERN_VALUE_WITH_THREADS = "%d [%t] %-5level: %msg%n%throwable";
+    public static final String LAYOUT_PATTERN_VALUE = "%d [%t] %-5level: %msg%n";
+    public static final String POLICY_TYPE = "Policies";
+    public static final String POLICY_TIME_TYPE = "TimeBasedTriggeringPolicy";
+    public static final String POLICY_TIME_TYPE_INTERVAL = "interval";
+    public static final String POLICY_TIME_TYPE_INTERVAL_VALUE = "1";
+    public static final String APPENDER_FILE_NAME = "fileName";
+    public static final String APPENDER_FILE_PATTERN = "filePattern";
+    public static final String LOGGER_NAME = "TestLogger";
+    public static final String LOGGER_ADDITIVITY = "additivity";
+
     private ZimbraLog() {
     }
 
@@ -854,25 +881,38 @@ public final class ZimbraLog {
         if (level == null) {
             level = defaultLevel;
         }
-        Properties p = new Properties();
-        p.put("log4j.rootLogger", level + ",A1");
-        if (logFile != null) {
-            p.put("log4j.appender.A1", "org.apache.log4j.FileAppender");
-            p.put("log4j.appender.A1.File", logFile);
-            p.put("log4j.appender.A1.Append", "false");
-        } else {
-            p.put("log4j.appender.A1", "org.apache.log4j.ConsoleAppender");
-        }
-        p.put("log4j.appender.A1.layout", "org.apache.log4j.PatternLayout");
+        ConfigurationBuilder< BuiltConfiguration > builder = ConfigurationBuilderFactory.newConfigurationBuilder();
+        builder.setStatusLevel(Level.INFO);
+        builder.setConfigurationName(LOG_CONFIG_NAME);
+        // create a console appender
+        AppenderComponentBuilder appenderBuilder = builder.newAppender(DEFAULT_APPENDER_NAME, DEFAULT_APPENDER_TYPE)
+                .addAttribute(DEFAULT_APPENDER_TARGET, ConsoleAppender.Target.SYSTEM_OUT);
+        LayoutComponentBuilder layoutBuilder = builder.newLayout(LAYOUT_TYPE);
         if (showThreads) {
-            p.put("log4j.appender.A1.layout.ConversionPattern", "[%t] [%x] %p: %m%n");
+            layoutBuilder.addAttribute(LAYOUT_PATTERN, LAYOUT_PATTERN_VALUE_WITH_THREADS);
         } else {
-            p.put("log4j.appender.A1.layout.ConversionPattern", "[%x] %p: %m%n");
+            layoutBuilder.addAttribute(LAYOUT_PATTERN, LAYOUT_PATTERN_VALUE);
         }
-        LoggerContext context = (org.apache.logging.log4j.core.LoggerContext) LogManager.getContext(false);
-        File file = new File(p.getClass().toString());
-        // this will force a reconfiguration
-        context.setConfigLocation(file.toURI());
+        builder.add(appenderBuilder.add(layoutBuilder));
+
+        // create a rolling file appender
+        ComponentBuilder policy = builder.newComponent(POLICY_TYPE)
+                .addComponent(builder.newComponent(POLICY_TIME_TYPE).addAttribute(POLICY_TIME_TYPE_INTERVAL, POLICY_TIME_TYPE_INTERVAL_VALUE));
+        appenderBuilder = builder.newAppender(APPENDER_NAME, APPENDER_TYPE)
+                .addAttribute(APPENDER_FILE_NAME, logFile)
+                .addAttribute(APPENDER_FILE_PATTERN, logFile.substring(0, logFile.lastIndexOf(".log")) + "-%d{yyyy-MM-dd}")
+                .add(layoutBuilder)
+                .addComponent(policy);
+        builder.add(appenderBuilder);
+
+        // create the new logger
+        builder.add(builder.newLogger(LOGGER_NAME, level)
+                .add(builder.newAppenderRef(APPENDER_NAME))
+                .addAttribute(LOGGER_ADDITIVITY, false));
+
+        builder.add(builder.newRootLogger(level)
+               .add(builder.newAppenderRef(APPENDER_NAME)));
+        Configurator.initialize(builder.build());
     }
 
     public static void toolSetupLog4jConsole(String defaultLevel, boolean stderr, boolean showThreads) {
@@ -880,24 +920,32 @@ public final class ZimbraLog {
         if (level == null) {
             level = defaultLevel;
         }
-        Properties p = new Properties();
-        p.put("log4j.rootLogger", level + ",A1");
+        ConfigurationBuilder< BuiltConfiguration > builder = ConfigurationBuilderFactory.newConfigurationBuilder();
+        builder.setStatusLevel(Level.INFO);
+        builder.setConfigurationName(LOG_CONFIG_NAME);
 
-        p.put("log4j.appender.A1", "org.apache.log4j.ConsoleAppender");
-        if (stderr)
-            p.put("log4j.appender.A1.target", "System.err");
-
-        p.put("log4j.appender.A1.layout", "org.apache.log4j.PatternLayout");
-        if (showThreads) {
-            p.put("log4j.appender.A1.layout.ConversionPattern", "[%t] [%x] %p: %m%n");
+        // create a console appender
+        AppenderComponentBuilder appenderBuilder = builder.newAppender(DEFAULT_APPENDER_NAME, DEFAULT_APPENDER_TYPE);
+        if (stderr) {
+            appenderBuilder.addAttribute(DEFAULT_APPENDER_TARGET, ConsoleAppender.Target.SYSTEM_ERR);
         } else {
-            p.put("log4j.appender.A1.layout.ConversionPattern", "[%x] %p: %m%n");
+            appenderBuilder.addAttribute(DEFAULT_APPENDER_TARGET, ConsoleAppender.Target.SYSTEM_OUT);
         }
-        LoggerContext context = (org.apache.logging.log4j.core.LoggerContext) LogManager.getContext(false);
-        File file = new File(p.getClass().toString());
-        // this will force a reconfiguration
-        context.setConfigLocation(file.toURI());
-    }
+        LayoutComponentBuilder layoutBuilder = builder.newLayout(LAYOUT_TYPE);
+        if (showThreads) {
+            layoutBuilder.addAttribute(LAYOUT_PATTERN, LAYOUT_PATTERN_VALUE_WITH_THREADS);
+        } else {
+            layoutBuilder.addAttribute(LAYOUT_PATTERN, LAYOUT_PATTERN_VALUE);
+        }
+        builder.add(appenderBuilder.add(layoutBuilder));
+        // create the new logger
+        builder.add(builder.newLogger(LOGGER_NAME, level)
+                .add(builder.newAppenderRef(DEFAULT_APPENDER_NAME))
+                .addAttribute(LOGGER_ADDITIVITY, false));
+
+        builder.add(builder.newRootLogger(level)
+                .add(builder.newAppenderRef(DEFAULT_APPENDER_NAME)));
+        Configurator.reconfigure(builder.build());    }
 
     /**
      * Setup log4j for command line tool using specified log4j.properties file. If file doesn't exist

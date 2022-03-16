@@ -16,16 +16,13 @@
  */
 package com.zimbra.common.util;
 
-import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.io.IOException;
 
 import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.core.config.ConfigurationSource;
 import org.apache.logging.log4j.core.config.Configurator;
 
 import com.zimbra.common.localconfig.LC;
@@ -57,7 +54,7 @@ public final class LogFactory {
         for (Log log : getAllLoggers()) {
             log.removeAccountLoggers();
         }
-        LogManager.shutdown();
+        LogManager.shutdown(true);
         try {
             Configurator.initialize(null, LC.zimbra_log4j_properties.value());
         } catch (Exception e) {
