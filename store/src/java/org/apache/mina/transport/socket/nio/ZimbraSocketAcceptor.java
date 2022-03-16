@@ -23,6 +23,7 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.nio.channels.spi.SelectorProvider;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.concurrent.Executor;
@@ -236,6 +237,11 @@ public final class ZimbraSocketAcceptor extends AbstractPollingIoAcceptor<NioSes
         public void remove() {
             iterator.remove();
         }
+    }
+
+    @Override
+    protected void init(SelectorProvider arg0) throws Exception {
+        selector = Selector.open();
     }
 
 }
