@@ -136,6 +136,7 @@ import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SortBy;
+import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQuery;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.ldap.LdapConstants;
@@ -8188,6 +8189,45 @@ public class Mailbox implements MailboxStore {
             }
         }
         return newAddrs;
+    }
+
+    public Collection<Address> findContactsInEmailedContacts(OperationContext octxt, Collection<Address> addrs) {
+        if (addrs.isEmpty()) {
+            return Collections.emptySet();
+        }
+        if (lock.isWriteLockedByCurrentThread()) { //TODO can't search while holding the mailbox lock
+            ZimbraLog.mailbox.warn("Unable to auto-add contact while holding Mailbox lock");
+            return Collections.emptySet();
+        }
+        Set<Address> modifyAddrs = new HashSet<Address>();
+        // just for poc. Necessary object should be defined.
+        Set<ZimbraHit> hits = new HashSet<ZimbraHit>();
+        for (Address addr : addrs) {
+            if (addr instanceof javax.mail.internet.InternetAddress) {
+                javax.mail.internet.InternetAddress iaddr = (javax.mail.internet.InternetAddress) addr;
+                try {
+                    if (!Strings.isNullOrEmpty(iaddr.getAddress())) {
+                        // Just for poc. Set a right search query.
+                        // specify an email address, for example.
+                        // Note that the email address must be found in exact match.
+                        ZimbraQueryResults results = index.search(octxt, "in:\"Emailed Contacts\"",
+                                EnumSet.of(MailItem.Type.CONTACT), SortBy.NONE, 1);
+                        while (results.hasNext()) {
+                            ZimbraHit hit = results.getNext();
+                            // just for poc. get and add a necessary data like contact id.
+                            hits.add(hit);
+                        }
+                        // it is unnecessary. Contacts data or any other necessary data should be returend.
+                        modifyAddrs.add(addr);
+                    }
+                } catch (ServiceException e) {
+                    //bug 86938: a corrupt index should not interrupt message delivery
+                    ZimbraLog.search.error("error searching index for contacts");
+                }
+
+            }
+        }
+        return modifyAddrs;
     }
 
     @Deprecated

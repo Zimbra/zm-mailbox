@@ -622,10 +622,12 @@ public class MailSender {
             // To avoid this problem; let's determine a list of new address which we might need to add to emailed
             // contact later before we add the message to sent folder.
             Collection<Address> newAddrs = Collections.emptySet();
+            Collection<Address> modifyAddrs = Collections.emptySet();
             Address[] rcptAddresses = getRecipients(mm);
-            if (rcptAddresses != null && rcptAddresses.length > 0)
+            if (rcptAddresses != null && rcptAddresses.length > 0) {
                 newAddrs = mbox.newContactAddrs(Arrays.asList(rcptAddresses));
-
+                modifyAddrs = mbox.findContactsInEmailedContacts(octxt, Arrays.asList(rcptAddresses));
+            }
             if (mimeProcessor != null) {
                 try {
                     mimeProcessor.process(mm, mbox);
