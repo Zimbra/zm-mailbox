@@ -20,7 +20,7 @@ import com.zimbra.cs.mailbox.Message;
 
 final class MessageChange {
     public enum Type {
-        ADDED, UPDATED, MOVED, DELETED
+        ADDED, UPDATED, MOVED, DELETED, MODIFIED
     }
 
     private final Type type;
@@ -43,7 +43,11 @@ final class MessageChange {
     public static MessageChange deleted(int itemId, ImapMessage tracker) {
         return new MessageChange(Type.DELETED, itemId, null, tracker);
     }
-    
+
+    public static MessageChange modifiedDraft(Message msg, ImapMessage tracker) {
+        return new MessageChange(Type.MODIFIED, msg.getId(), msg, tracker);
+    }
+
     MessageChange(Type type, int itemId, Message msg, ImapMessage tracker) {
         this.type = type;
         this.itemId = itemId;
@@ -82,4 +86,9 @@ final class MessageChange {
     public boolean isDeleted() {
         return type == Type.DELETED;
     }
+
+    public boolean isModified() {
+        return type == Type.MODIFIED;
+    }
+
 }

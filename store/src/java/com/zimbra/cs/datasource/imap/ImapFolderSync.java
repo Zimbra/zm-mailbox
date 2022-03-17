@@ -100,6 +100,8 @@ class ImapFolderSync {
     // Max number of total per-item failures before we abort sync
     private static final int MAX_TOTAL_ERRORS = 10;
 
+    private static final String DRAFTS = "Drafts"; 
+
     private static class Statistics {
         int flagsUpdatedLocally;
         int flagsUpdatedRemotely;
@@ -277,6 +279,10 @@ class ImapFolderSync {
 
         // Restore previously cached sync state or create new state
         syncState = imapSync.removeSyncState(localFolder.getId());
+        int lastChangeId = 0;
+        if (syncState != null && DRAFTS.equals(remoteFolder.getPath())) {
+            lastChangeId = syncState.getLastChangeId();
+        }
         if (syncState == null || fullSync) {
             syncState = newSyncState();
             fullSync = true;
@@ -348,6 +354,14 @@ class ImapFolderSync {
                 pushChanges(changes);
                 syncState.setLastChangeId(changes.getLastChangeId());
             }
+        }
+
+        // Push local draft changes into remote
+        if (DRAFTS.equals(remoteFolder.getPath())) {
+            changes = MessageChanges.getChangesForDrafts(ds, localFolder.getFolder(), lastChangeId,
+                    localFolder.getId());
+            pushChangesForDraft(changes, remoteFolder.getPath());
+            syncState.setLastChangeId(changes.getLastChangeId());
         }
 
         // Fetch new messages
@@ -431,10 +445,34 @@ class ImapFolderSync {
      * let it be handled when the originating folder is processed.
      */
     private void pushChanges(MessageChanges changes) throws ServiceException, IOException {
+        pushChangesForDraft(changes, null);
+    }
+
+    /**
+     * Message has been modified in either of below ways
+     * 
+     * 1. Message flags changed (UPDATED)
+     * 2. New message added to this folder (ADDED)
+     * 3. Message moved from this folder to another (MOVED)
+     * 4. Message moved to this folder from another
+     * 5. Local Draft message modified or it's Attachment changed
+     * 
+     * @param changes
+     * @param folderName
+     * @throws ServiceException
+     * @throws IOException
+     */
+    private void pushChangesForDraft(MessageChanges changes, String folderName) throws ServiceException, IOException {
         localFolder.debug("Pushing changes: %s", changes);
         for (MessageChange change : changes.getChanges()) {
             clearError(change.getItemId());
-            if (change.isAdded()) {
+            if ((change.isModified() || change.isUpdated()) && DRAFTS.equalsIgnoreCase(folderName)
+                    && deleteMessage(change.getTracker().getUid())) {
+                List<Integer> pushId = new ArrayList<>();
+                pushId.add(change.getItemId());
+                appendMsgs(pushId);
+            }
+            else if (change.isAdded()) {
                 newMsgIds.add(change.getItemId());
             } else if (change.isDeleted()) {
                 deleteMessage(change.getTracker().getUid());
