@@ -895,23 +895,24 @@ public final class ZimbraLog {
         }
         builder.add(appenderBuilder.add(layoutBuilder));
 
-        // create a rolling file appender
-        ComponentBuilder policy = builder.newComponent(POLICY_TYPE)
-                .addComponent(builder.newComponent(POLICY_TIME_TYPE).addAttribute(POLICY_TIME_TYPE_INTERVAL, POLICY_TIME_TYPE_INTERVAL_VALUE));
-        appenderBuilder = builder.newAppender(APPENDER_NAME, APPENDER_TYPE)
-                .addAttribute(APPENDER_FILE_NAME, logFile)
-                .addAttribute(APPENDER_FILE_PATTERN, logFile.substring(0, logFile.lastIndexOf(".log")) + "-%d{yyyy-MM-dd}")
-                .add(layoutBuilder)
-                .addComponent(policy);
-        builder.add(appenderBuilder);
+        if (null != logFile) {
+            // create a rolling file appender
+            ComponentBuilder policy = builder.newComponent(POLICY_TYPE)
+                    .addComponent(builder.newComponent(POLICY_TIME_TYPE).addAttribute(POLICY_TIME_TYPE_INTERVAL, POLICY_TIME_TYPE_INTERVAL_VALUE));
+            appenderBuilder = builder.newAppender(APPENDER_NAME, APPENDER_TYPE)
+                    .addAttribute(APPENDER_FILE_NAME, logFile)
+                    .addAttribute(APPENDER_FILE_PATTERN, logFile.substring(0, logFile.lastIndexOf(".log")) + "-%d{yyyy-MM-dd}")
+                    .add(layoutBuilder)
+                    .addComponent(policy);
+            builder.add(appenderBuilder);
 
-        // create the new logger
-        builder.add(builder.newLogger(LOGGER_NAME, level)
-                .add(builder.newAppenderRef(APPENDER_NAME))
-                .addAttribute(LOGGER_ADDITIVITY, false));
-
+            // create the new logger
+            builder.add(builder.newLogger(LOGGER_NAME, level)
+                    .add(builder.newAppenderRef(APPENDER_NAME))
+                    .addAttribute(LOGGER_ADDITIVITY, false));
+        }
         builder.add(builder.newRootLogger(level)
-               .add(builder.newAppenderRef(APPENDER_NAME)));
+               .add(builder.newAppenderRef(DEFAULT_APPENDER_NAME)));
         Configurator.initialize(builder.build());
     }
 
