@@ -40,11 +40,7 @@ public final class LogFactory {
     }
 
     public synchronized static void init() {
-        try {
-            Configurator.initialize(null, LC.zimbra_log4j_properties.value());
-         } catch (Exception e) {
-             ZimbraLog.misc.info("Error initializing the  loggers.", e);
-         }
+        Configurator.initialize(null, LC.zimbra_log4j_properties.value());
     }
 
     public synchronized static void reset() {
@@ -55,11 +51,7 @@ public final class LogFactory {
             log.removeAccountLoggers();
         }
         LogManager.shutdown(true);
-        try {
-            Configurator.initialize(null, LC.zimbra_log4j_properties.value());
-        } catch (Exception e) {
-            ZimbraLog.misc.info("Error resetting the  loggers.", e);
-        }
+        Configurator.initialize(null, LC.zimbra_log4j_properties.value());
     }
 
     public static Log getLog(Class<?> clazz) {
