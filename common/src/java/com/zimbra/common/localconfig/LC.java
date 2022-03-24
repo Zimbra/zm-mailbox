@@ -1466,6 +1466,8 @@ public final class LC {
 
     public static final KnownKey invite_ignore_x_alt_description = KnownKey.newKey(true);
 
+    public static final KnownKey allow_username_within_password = KnownKey.newKey(false);
+
     static {
         // Automatically set the key name with the variable name.
         for (Field field : LC.class.getFields()) {
