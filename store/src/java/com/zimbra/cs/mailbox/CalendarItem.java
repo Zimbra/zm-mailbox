@@ -2154,6 +2154,7 @@ public abstract class CalendarItem extends MailItem {
         for (Invite cur : mInvites) {
             String method = cur.getMethod();
             if (method.equals(ICalTok.REQUEST.toString()) ||
+                method.equals(ICalTok.REPLY.toString()) ||
                 method.equals(ICalTok.PUBLISH.toString())) {
                 hasSurvivingRequests = true;
                 if (cur.hasAttachment())
