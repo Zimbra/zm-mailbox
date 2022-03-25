@@ -7496,6 +7496,11 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             String memberName = members[i].toLowerCase();
             memberName = IDNUtil.toAsciiEmail(memberName);
 
+            Account account = getAccountByName(memberName);
+            if (account == null) {
+                throw AccountServiceException.NO_SUCH_ACCOUNT(memberName);
+            }
+
             if (addrsOfDL.isIn(memberName))
                 throw ServiceException.INVALID_REQUEST("Cannot add self as a member: " + memberName, null);
 
@@ -10569,6 +10574,11 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         for (String member : members) {
             String memberName = member.toLowerCase();
             memberName = IDNUtil.toAsciiEmail(memberName);
+
+            Account account = getAccountByName(memberName);
+            if (account == null) {
+                throw AccountServiceException.NO_SUCH_ACCOUNT(memberName);
+            }
 
             Account acct = get(AccountBy.name, memberName);
             if (acct == null) {
