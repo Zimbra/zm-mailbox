@@ -34,6 +34,7 @@ import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ProvisioningConstants;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
@@ -358,6 +359,9 @@ public class GetInfo extends AccountDocumentHandler  {
 
             ToXML.encodeAttr(response, key, value);
         }
+        // ZCS-10678: Include Local config change for zimbraPasswordAllowUsername in getinfo response
+        ToXML.encodeAttr(response, "zimbraPasswordAllowUsername",
+                Boolean.toString(LC.allow_username_within_password.booleanValue()).toUpperCase());
     }
 
     private static void doZimlets(Element response, Account acct) {
