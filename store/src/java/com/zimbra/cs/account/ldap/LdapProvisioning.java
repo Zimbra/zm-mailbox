@@ -6114,6 +6114,18 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                     new Argument(Provisioning.A_zimbraPasswordMaxLength, maxLength, Argument.Type.NUM));
         }
 
+        if (LC.allow_username_within_password.booleanValue()
+                && StringUtils.containsIgnoreCase(password, acct.getUCUsername())) {
+            throw AccountServiceException.INVALID_PASSWORD("password contains username",
+                    new Argument("zimbraPasswordAllowUsername", "", Argument.Type.STR));
+        }
+
+        if (getBoolean(acct, cos, entry, Provisioning.A_zimbraPasswordBlockCommonEnabled, false)
+                && commonPasswordFilter.mightContain(password)) {
+            throw AccountServiceException.INVALID_PASSWORD("too common",
+                    new Argument(Provisioning.A_zimbraPasswordBlockCommonEnabled, "", Argument.Type.STR));
+        }
+
         int minUpperCase = getInt(acct, cos, entry, Provisioning.A_zimbraPasswordMinUpperCaseChars, 0);
         int minLowerCase = getInt(acct, cos, entry, Provisioning.A_zimbraPasswordMinLowerCaseChars, 0);
         int minNumeric = getInt(acct, cos, entry, Provisioning.A_zimbraPasswordMinNumericChars, 0);
