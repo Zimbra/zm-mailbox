@@ -912,6 +912,8 @@ public final class ParseMimeMessage {
         if (!iid.isLocal()) {
             Map<String, String> params = new HashMap<String, String>(3);
             params.put(UserServlet.QP_PART, part);
+            // Content-Disposition here is always one of two values, `attachment' or `inline'.
+            params.put(UserServlet.QP_DISP, Part.ATTACHMENT.equals(contentDisposition) ? "a" : "i");
             attachRemoteItem(mmp, iid, contentID, ctxt, params, null);
             return;
         }
