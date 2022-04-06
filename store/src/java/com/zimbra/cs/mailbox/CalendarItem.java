@@ -736,7 +736,8 @@ public abstract class CalendarItem extends MailItem {
                             ((Recurrence.RecurrenceRule) mRecurrence).addException(cancelRule);
                         }
                     } else if (method.equals(ICalTok.REQUEST.toString()) ||
-                        method.equals(ICalTok.PUBLISH.toString())) {
+                        method.equals(ICalTok.PUBLISH.toString()) ||
+                        method.equals(ICalTok.REPLY.toString())) {
                         assert (cur.hasRecurId());
                         if (cur.hasRecurId() && cur.getStartTime() != null) {
                             checkRecurIdIsSensible(cur.getRecurId());
