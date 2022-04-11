@@ -736,11 +736,10 @@ public class ContactAutoComplete {
                     }
                     addEntry(entry, result);
                     ZimbraLog.gal.debug("adding %s", entry.getEmail());
-                    if (folderId == FOLDER_ID_GAL) {
-                        // we've matched the first email address for this
-                        // GAL contact.  move onto the next contact.
-                        return;
-                    }
+                    /*
+                		Previously stopped at first matching email address for GAL contact. 
+                		See ZBUG-1838.
+                    */
                 }
             }
         } else { // IS a contact group
