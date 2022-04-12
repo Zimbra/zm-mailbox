@@ -6611,7 +6611,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureMailForwardingEnabled = "zimbraFeatureMailForwardingEnabled";
 
     /**
-     * enable end-user mail forwarding defined in mail filters features
+     * enable end-user mail redirecting defined in mail filters features
      *
      * @since ZCS 5.0.10
      */

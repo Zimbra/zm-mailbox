@@ -3718,7 +3718,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="704" name="zimbraFeatureMailForwardingInFiltersEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="5.0.10">
   <defaultCOSValue>TRUE</defaultCOSValue>
-  <desc>enable end-user mail forwarding defined in mail filters features</desc>
+  <desc>enable end-user mail redirecting defined in mail filters features</desc>
 </attr>
 
 <attr id="705" name="zimbraPrefIMBuddyListSort" type="string" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.10" deprecatedSince="8.7.0">
