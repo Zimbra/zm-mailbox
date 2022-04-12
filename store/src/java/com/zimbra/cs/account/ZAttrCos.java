@@ -10739,7 +10739,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * enable end-user mail forwarding defined in mail filters features
+     * enable end-user mail redirecting defined in mail filters features
      *
      * @return zimbraFeatureMailForwardingInFiltersEnabled, or true if unset
      *
@@ -10751,7 +10751,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * enable end-user mail forwarding defined in mail filters features
+     * enable end-user mail redirecting defined in mail filters features
      *
      * @param zimbraFeatureMailForwardingInFiltersEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -10766,7 +10766,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * enable end-user mail forwarding defined in mail filters features
+     * enable end-user mail redirecting defined in mail filters features
      *
      * @param zimbraFeatureMailForwardingInFiltersEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -10782,7 +10782,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * enable end-user mail forwarding defined in mail filters features
+     * enable end-user mail redirecting defined in mail filters features
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -10796,7 +10796,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * enable end-user mail forwarding defined in mail filters features
+     * enable end-user mail redirecting defined in mail filters features
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
