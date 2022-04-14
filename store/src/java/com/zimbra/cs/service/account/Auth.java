@@ -472,6 +472,7 @@ public class Auth extends AccountDocumentHandler {
                 HttpServletRequest httpReq = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
                 HttpServletResponse httpResp = (HttpServletResponse) context.get(SoapServlet.SERVLET_RESPONSE);
                 boolean rememberMe = requestElement.getAttributeBool(AccountConstants.A_PERSIST_AUTH_TOKEN_COOKIE, false);
+                authToken.setIgnoreSameSite(requestElement.getAttributeBool(AccountConstants.A_IGNORE_SAME_SITE_COOKIE, false));
                 authToken.encode(httpReq, httpResp, false, ZimbraCookie.secureCookie(httpReq), rememberMe);
             }
             response.addUniqueElement(AccountConstants.E_TRUSTED_DEVICES_ENABLED).setText(account.isFeatureTrustedDevicesEnabled() ? "true" : "false");
@@ -492,6 +493,7 @@ public class Auth extends AccountDocumentHandler {
         HttpServletRequest httpReq = (HttpServletRequest)context.get(SoapServlet.SERVLET_REQUEST);
         HttpServletResponse httpResp = (HttpServletResponse)context.get(SoapServlet.SERVLET_RESPONSE);
         boolean rememberMe = request.getAttributeBool(AccountConstants.A_PERSIST_AUTH_TOKEN_COOKIE, false);
+        at.setIgnoreSameSite(request.getAttributeBool(AccountConstants.A_IGNORE_SAME_SITE_COOKIE, false));
         at.encode(httpReq, httpResp, false, ZimbraCookie.secureCookie(httpReq), rememberMe);
 
         response.addAttribute(AccountConstants.E_LIFETIME, at.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);

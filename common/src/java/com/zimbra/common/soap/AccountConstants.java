@@ -481,6 +481,7 @@ public class AccountConstants {
     public static final String A_TOKEN_TYPE = "tokenType";
     public static final String E_JWT_TOKEN = "jwtToken";
     public static final String A_OFFSET = "offset";
+    public static final String A_IGNORE_SAME_SITE_COOKIE = "ignoreSameSite";
 
     // account ACLs
     public static final String A_ACCESSKEY = "key";
