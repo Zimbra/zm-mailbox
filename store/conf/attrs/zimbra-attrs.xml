@@ -4297,14 +4297,14 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Maximum percent of conflicting instances allowed before declining schedule request for a recurring appointment; default 0 (means decline on any conflict)</desc>
 </attr>
 
-<attr id="810" name="zimbraDistributionListSendShareMessageToNewMembers" type="boolean" cardinality="single" optionalIn="distributionList" since="6.0.0_BETA1">
+<attr id="810" name="zimbraDistributionListSendShareMessageToNewMembers" type="boolean" cardinality="single" optionalIn="distributionList,group" since="6.0.0_BETA1">
   <desc>
     Whether to send an email with all the shares of the group when a new member is added to the group.
     If not set, default is to send the email.
   </desc>
 </attr>
 
-<attr id="811" name="zimbraDistributionListSendShareMessageFromAddress" type="string" max="256" cardinality="single" optionalIn="distributionList" since="6.0.0_BETA1">
+<attr id="811" name="zimbraDistributionListSendShareMessageFromAddress" type="string" max="256" cardinality="single" optionalIn="distributionList,group" since="6.0.0_BETA1">
   <desc>
     Email address to put in from header for the share info email.
     If not set, email address of the authenticated admin account will be used. 
@@ -9342,7 +9342,7 @@ TODO: delete them permanently from here
   <desc>XMPP legacy SSL port</desc>
 </attr>
 
-<attr id="2109" name="zimbraChatAllowDlMemberAddAsFriend" type="boolean" cardinality="single" optionalIn="distributionList" since="8.7.6">
+<attr id="2109" name="zimbraChatAllowDlMemberAddAsFriend" type="boolean" cardinality="single" optionalIn="distributionList,group" since="8.7.6">
   <desc>make distribution list members friends</desc>
 </attr>
 

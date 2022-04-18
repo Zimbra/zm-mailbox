@@ -612,6 +612,78 @@ public abstract class ZAttrDynamicGroup extends Group {
     }
 
     /**
+     * make distribution list members friends
+     *
+     * @return zimbraChatAllowDlMemberAddAsFriend, or false if unset
+     *
+     * @since ZCS 8.7.6
+     */
+    @ZAttr(id=2109)
+    public boolean isChatAllowDlMemberAddAsFriend() {
+        return getBooleanAttr(Provisioning.A_zimbraChatAllowDlMemberAddAsFriend, false, true);
+    }
+
+    /**
+     * make distribution list members friends
+     *
+     * @param zimbraChatAllowDlMemberAddAsFriend new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.6
+     */
+    @ZAttr(id=2109)
+    public void setChatAllowDlMemberAddAsFriend(boolean zimbraChatAllowDlMemberAddAsFriend) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChatAllowDlMemberAddAsFriend, zimbraChatAllowDlMemberAddAsFriend ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * make distribution list members friends
+     *
+     * @param zimbraChatAllowDlMemberAddAsFriend new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.6
+     */
+    @ZAttr(id=2109)
+    public Map<String,Object> setChatAllowDlMemberAddAsFriend(boolean zimbraChatAllowDlMemberAddAsFriend, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChatAllowDlMemberAddAsFriend, zimbraChatAllowDlMemberAddAsFriend ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * make distribution list members friends
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.6
+     */
+    @ZAttr(id=2109)
+    public void unsetChatAllowDlMemberAddAsFriend() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChatAllowDlMemberAddAsFriend, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * make distribution list members friends
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.6
+     */
+    @ZAttr(id=2109)
+    public Map<String,Object> unsetChatAllowDlMemberAddAsFriend(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraChatAllowDlMemberAddAsFriend, "");
+        return attrs;
+    }
+
+    /**
      * time object was created
      *
      * <p>Use getCreateTimestampAsString to access value as a string.
@@ -727,6 +799,165 @@ public abstract class ZAttrDynamicGroup extends Group {
     public Map<String,Object> unsetCreateTimestamp(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraCreateTimestamp, "");
+        return attrs;
+    }
+
+    /**
+     * Email address to put in from header for the share info email. If not
+     * set, email address of the authenticated admin account will be used.
+     *
+     * @return zimbraDistributionListSendShareMessageFromAddress, or null if unset
+     *
+     * @since ZCS 6.0.0_BETA1
+     */
+    @ZAttr(id=811)
+    public String getDistributionListSendShareMessageFromAddress() {
+        return getAttr(Provisioning.A_zimbraDistributionListSendShareMessageFromAddress, null, true);
+    }
+
+    /**
+     * Email address to put in from header for the share info email. If not
+     * set, email address of the authenticated admin account will be used.
+     *
+     * @param zimbraDistributionListSendShareMessageFromAddress new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA1
+     */
+    @ZAttr(id=811)
+    public void setDistributionListSendShareMessageFromAddress(String zimbraDistributionListSendShareMessageFromAddress) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDistributionListSendShareMessageFromAddress, zimbraDistributionListSendShareMessageFromAddress);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Email address to put in from header for the share info email. If not
+     * set, email address of the authenticated admin account will be used.
+     *
+     * @param zimbraDistributionListSendShareMessageFromAddress new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA1
+     */
+    @ZAttr(id=811)
+    public Map<String,Object> setDistributionListSendShareMessageFromAddress(String zimbraDistributionListSendShareMessageFromAddress, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDistributionListSendShareMessageFromAddress, zimbraDistributionListSendShareMessageFromAddress);
+        return attrs;
+    }
+
+    /**
+     * Email address to put in from header for the share info email. If not
+     * set, email address of the authenticated admin account will be used.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA1
+     */
+    @ZAttr(id=811)
+    public void unsetDistributionListSendShareMessageFromAddress() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDistributionListSendShareMessageFromAddress, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Email address to put in from header for the share info email. If not
+     * set, email address of the authenticated admin account will be used.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA1
+     */
+    @ZAttr(id=811)
+    public Map<String,Object> unsetDistributionListSendShareMessageFromAddress(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDistributionListSendShareMessageFromAddress, "");
+        return attrs;
+    }
+
+    /**
+     * Whether to send an email with all the shares of the group when a new
+     * member is added to the group. If not set, default is to send the
+     * email.
+     *
+     * @return zimbraDistributionListSendShareMessageToNewMembers, or false if unset
+     *
+     * @since ZCS 6.0.0_BETA1
+     */
+    @ZAttr(id=810)
+    public boolean isDistributionListSendShareMessageToNewMembers() {
+        return getBooleanAttr(Provisioning.A_zimbraDistributionListSendShareMessageToNewMembers, false, true);
+    }
+
+    /**
+     * Whether to send an email with all the shares of the group when a new
+     * member is added to the group. If not set, default is to send the
+     * email.
+     *
+     * @param zimbraDistributionListSendShareMessageToNewMembers new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA1
+     */
+    @ZAttr(id=810)
+    public void setDistributionListSendShareMessageToNewMembers(boolean zimbraDistributionListSendShareMessageToNewMembers) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDistributionListSendShareMessageToNewMembers, zimbraDistributionListSendShareMessageToNewMembers ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to send an email with all the shares of the group when a new
+     * member is added to the group. If not set, default is to send the
+     * email.
+     *
+     * @param zimbraDistributionListSendShareMessageToNewMembers new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA1
+     */
+    @ZAttr(id=810)
+    public Map<String,Object> setDistributionListSendShareMessageToNewMembers(boolean zimbraDistributionListSendShareMessageToNewMembers, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDistributionListSendShareMessageToNewMembers, zimbraDistributionListSendShareMessageToNewMembers ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to send an email with all the shares of the group when a new
+     * member is added to the group. If not set, default is to send the
+     * email.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA1
+     */
+    @ZAttr(id=810)
+    public void unsetDistributionListSendShareMessageToNewMembers() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDistributionListSendShareMessageToNewMembers, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to send an email with all the shares of the group when a new
+     * member is added to the group. If not set, default is to send the
+     * email.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA1
+     */
+    @ZAttr(id=810)
+    public Map<String,Object> unsetDistributionListSendShareMessageToNewMembers(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDistributionListSendShareMessageToNewMembers, "");
         return attrs;
     }
 
