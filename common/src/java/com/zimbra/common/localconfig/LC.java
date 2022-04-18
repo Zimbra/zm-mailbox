@@ -66,6 +66,23 @@ public final class LC {
     @Supported
     public static final KnownKey zimbra_tmp_directory = KnownKey.newKey("${zimbra_home}/data/tmp");
 
+    /**
+     * Sets whether the External Email Warning (EEW) feature is enabled.
+     */
+    @Supported
+    public static final KnownKey zimbra_external_email_warning_enabled = KnownKey.newKey(false);
+
+    /**
+     * Sets the base message or warning for External Email Warning (EEW).
+     * 
+     * This string will be used and adapted for both text/plain and text/html parts
+     * in an email. Please do not attempt to use HTML mark up here, it will be
+     * escaped anyways.
+     */
+    @Supported
+    public static final KnownKey zimbra_external_email_warning_message = KnownKey
+            .newKey("This message originated outside of your organization.");
+
     @Supported
     public static final KnownKey zimbra_extension_directory = KnownKey.newKey("${zimbra_home}/lib/ext");
 
