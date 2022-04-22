@@ -108,6 +108,7 @@ public class ChangePassword extends AccountDocumentHandler {
         Element response = zsc.createElement(AccountConstants.CHANGE_PASSWORD_RESPONSE);
         if (!dryRun) {
            AuthToken at = AuthProvider.getAuthToken(acct);
+           at.setIgnoreSameSite(request.getAttributeBool(AccountConstants.A_IGNORE_SAME_SITE_COOKIE, false));
            at.encodeAuthResp(response, false);
            response.addAttribute(AccountConstants.E_LIFETIME, at.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);
         }

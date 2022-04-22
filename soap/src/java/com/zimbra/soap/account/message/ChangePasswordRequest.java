@@ -17,12 +17,14 @@
 
 package com.zimbra.soap.account.message;
 
+import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.type.AccountSelector;
+import com.zimbra.soap.type.ZmBoolean;
 
 /**
  <ChangePasswordRequest>
@@ -66,6 +68,14 @@ public class ChangePasswordRequest {
 
     @XmlElement(name=AccountConstants.E_DRYRUN, required=false)
     private boolean dryRun;
+
+    /**
+     *@zm-api-field-description if true SameSite=Strict cookie will not be added in AuthToken
+     *
+     */
+    @XmlAttribute(name=AccountConstants.A_IGNORE_SAME_SITE_COOKIE /* ignoreSameSite cookie */, required=false)
+    private ZmBoolean ignoreSameSite;
+
 
     public ChangePasswordRequest() {
     }
@@ -118,5 +128,12 @@ public class ChangePasswordRequest {
         this.dryRun = dryRun;
     }
 
+    public ZmBoolean getIgnoreSameSite() {
+        return ignoreSameSite;
+    }
+
+    public void setIgnoreSameSite(Boolean ignoreSameSite) {
+        this.ignoreSameSite = ZmBoolean.fromBool(ignoreSameSite);
+    }
 
 }
