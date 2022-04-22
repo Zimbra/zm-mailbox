@@ -484,7 +484,7 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
 
         ZimbraCookie.addHttpOnlyCookie(resp,
                 ZimbraCookie.authTokenCookieName(isAdminReq), origAuthData,
-                ZimbraCookie.PATH_ROOT, maxAge, secureCookie);
+                ZimbraCookie.PATH_ROOT, maxAge, secureCookie, this.isIgnoreSameSite());
     }
 
     @Override

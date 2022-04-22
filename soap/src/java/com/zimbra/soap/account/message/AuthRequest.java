@@ -197,6 +197,13 @@ public class AuthRequest {
     @XmlAttribute(name = AccountConstants.A_TOKEN_TYPE /* token type to be returned */, required = false)
     private String tokenType;
 
+    /**
+     *@zm-api-field-description if true SameSite=Strict cookie will not be added in AuthToken
+     *
+     */
+    @XmlAttribute(name=AccountConstants.A_IGNORE_SAME_SITE_COOKIE /* ignoreSameSite cookie */, required=false)
+    private ZmBoolean ignoreSameSite;
+
     public AuthRequest() {
     }
 
@@ -345,5 +352,13 @@ public class AuthRequest {
 
     public ZmBoolean getGenerateDeviceId() {
         return generateDeviceId;
+    }
+
+    public ZmBoolean getIgnoreSameSite() {
+        return ignoreSameSite;
+    }
+
+    public void setIgnoreSameSite(Boolean ignoreSameSite) {
+        this.ignoreSameSite = ZmBoolean.fromBool(ignoreSameSite);
     }
 }
