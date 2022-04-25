@@ -21,6 +21,9 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -38,6 +41,7 @@ import java.util.zip.CRC32;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.BEncoding;
 import com.zimbra.common.util.BEncoding.BEncodingException;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 
 import net.spy.memcached.BinaryConnectionFactory;
@@ -76,6 +80,8 @@ public class ZimbraMemcachedClient {
 
     public static final int DEFAULT_EXPIRY = -1;
     public static final long DEFAULT_TIMEOUT = -1;
+    public static final String SHA256_HASHING = "SHA-256";
+    public static final int BASE_16 = 16;
 
     private MemcachedClient mMCDClient;
     private int mDefaultExpiry;  // in seconds
@@ -271,6 +277,10 @@ public class ZimbraMemcachedClient {
     public Object get(String key, long timeout) {
         Object value = null;
         MemcachedClient client;
+        key = hashMemcacheKey(key);
+        if (StringUtil.isNullOrEmpty(key)) {
+            return null;
+        }
         synchronized (this) {
             client = mMCDClient;
             if (timeout == DEFAULT_TIMEOUT)
@@ -316,6 +326,13 @@ public class ZimbraMemcachedClient {
     public Map<String, Object> getMulti(Collection<String> keys, long timeout) {
         Map<String, Object> value = null;
         MemcachedClient client;
+
+        int index = 0;
+        for (String key : keys) {
+            ((ArrayList<String>) keys).set(index, hashMemcacheKey(key));
+            index++;
+        }
+
         synchronized (this) {
             client = mMCDClient;
             if (timeout == DEFAULT_TIMEOUT)
@@ -370,6 +387,10 @@ public class ZimbraMemcachedClient {
      */
     public boolean put(String key, Object value, int expirySec, long timeout, boolean waitForAck) {
         MemcachedClient client;
+        key = hashMemcacheKey(key);
+        if (StringUtil.isNullOrEmpty(key)) {
+            return false;
+        };
         synchronized (this) {
             client = mMCDClient;
             if (expirySec == DEFAULT_EXPIRY)
@@ -420,6 +441,10 @@ public class ZimbraMemcachedClient {
     public boolean remove(String key, long timeout, boolean waitForAck) {
         Boolean success = null;
         MemcachedClient client;
+        key = hashMemcacheKey(key);
+        if (StringUtil.isNullOrEmpty(key)) {
+            return false;
+        }
         synchronized (this) {
             client = mMCDClient;
             if (timeout == DEFAULT_TIMEOUT)
@@ -712,6 +737,10 @@ public class ZimbraMemcachedClient {
      * @return
      */
     public boolean putBigByteArray(String key, byte[] value, int expirySec, long timeout, boolean waitForAck) {
+        key = hashMemcacheKey(key);
+        if (StringUtil.isNullOrEmpty(key)) {
+            return false;
+        }
         MemcachedClient client;
         synchronized (this) {
             client = mMCDClient;
@@ -819,6 +848,10 @@ public class ZimbraMemcachedClient {
      * @return null if no value is found for the key
      */
     public byte[] getBigByteArray(String key, long timeout) {
+        key = hashMemcacheKey(key);
+        if (StringUtil.isNullOrEmpty(key)) {
+            return null;
+        }
         MemcachedClient client;
         synchronized (this) {
             client = mMCDClient;
@@ -1079,5 +1112,29 @@ public class ZimbraMemcachedClient {
             printReport(testName, elapsed, dataLen, success);
             return success;
         }
+    }
+
+    public String hashMemcacheKey(String key) {
+        String sha256Key = "";
+        if (StringUtil.isNullOrEmpty(key)) {
+            return key;
+        }
+
+        try {
+            MessageDigest digest = MessageDigest.getInstance(SHA256_HASHING);
+            digest.update(key.getBytes(StandardCharsets.UTF_8), 0, key.length());
+            StringBuilder tempString = new StringBuilder();
+            for (byte byteElement : digest.digest()) {
+                tempString.append(String.format("%02x", byteElement));
+            }
+            sha256Key = tempString.toString();
+        } catch (NoSuchAlgorithmException e) {
+            ZimbraLog.misc.error("Failed to hash the key", e);
+        }
+
+        ZimbraLog.misc.debug("Key: ["+  key + "]");
+        ZimbraLog.misc.debug("HashedKey: ["+ sha256Key + "]");
+
+        return sha256Key;
     }
 }
