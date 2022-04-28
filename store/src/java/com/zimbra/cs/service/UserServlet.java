@@ -341,6 +341,11 @@ public class UserServlet extends ZimbraServlet {
 
             checkTargetAccountStatus(context);
 
+            if (!checkTwoFactorAuthentication(context)) {
+                resp.addHeader(AuthUtil.WWW_AUTHENTICATE_HEADER, getRealmHeader(req, null));
+                resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, L10nUtil.getMessage(MsgKey.errMustAuthenticate, req));
+            }
+
             if (proxyIfRemoteTargetAccount(req, resp, context)) {
                 return;
             }
@@ -387,6 +392,7 @@ public class UserServlet extends ZimbraServlet {
         if (context.getAuthAccount() == null) {
             context.setAnonymousRequest();
         }
+
         return true;
     }
 
@@ -405,6 +411,18 @@ public class UserServlet extends ZimbraServlet {
                 throw AccountServiceException.ACCOUNT_INACTIVE(context.targetAccount.getName());
             }
         }
+    }
+
+    // ZBUG-2390: if two-factor authentication is enabled or required for account
+    // while authentication was basic and not through cookie, reject access
+    private boolean checkTwoFactorAuthentication(UserServletContext context)
+            throws ServiceException {
+        if (context != null && context.getAuthAccount() != null
+                && (context.getAuthAccount().isTwoFactorAuthEnabled()
+                        || context.getAuthAccount().isFeatureTwoFactorAuthRequired())
+                && context.basicAuthHappened && !context.cookieAuthHappened)
+            return false;
+        return true;
     }
 
     protected static AuthToken getProxyAuthToken(UserServletContext context) throws ServiceException {
