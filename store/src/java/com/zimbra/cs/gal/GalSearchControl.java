@@ -73,6 +73,7 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.soap.type.GalSearchType;
+import com.zimbra.common.localconfig.LC;
 
 public class GalSearchControl {
     private GalSearchParams mParams;
@@ -130,10 +131,15 @@ public class GalSearchControl {
             }
         }
         // fallback to ldap search
-        String query = Strings.nullToEmpty(mParams.getQuery());
-        mParams.setQuery(query.replaceFirst("[*]*$", "*"));
-        mParams.getResultCallback().reset(mParams);
-        ldapSearch();
+        // ZCS-11349: Toggle off/on fallback to ldap search
+        if (LC.zimbra_gal_fallback_ldap_search_enabled.booleanValue()) {
+            String query = Strings.nullToEmpty(mParams.getQuery());
+            mParams.setQuery(query.replaceFirst("[*]*$", "*"));
+            mParams.getResultCallback().reset(mParams);
+            ldapSearch();
+        } else {
+            ZimbraLog.gal.debug("toggle off fallback to ldap search");
+        }
     }
 
     public void search() throws ServiceException {
@@ -156,19 +162,24 @@ public class GalSearchControl {
                 galAcct = getGalSyncAccount();
             accountSearch(galAcct, true);
         } catch (GalAccountNotConfiguredException e) {
-            query = Strings.nullToEmpty(query);
-            // fallback to ldap search
-            if (wildCardSearch) {
-                if (!query.endsWith("*")) {
-                    query = query + "*";
+            // ZCS-11349: Toggle off/on fallback to ldap search
+            if (LC.zimbra_gal_fallback_ldap_search_enabled.booleanValue()) {
+                query = Strings.nullToEmpty(query);
+                // fallback to ldap search
+                if (wildCardSearch) {
+                    if (!query.endsWith("*")) {
+                        query = query + "*";
+                    }
+                    if (!query.startsWith("*")) {
+                        query = "*" + query;
+                    }
                 }
-                if (!query.startsWith("*")) {
-                    query = "*" + query;
-                }
+                mParams.setQuery(query);
+                mParams.getResultCallback().reset(mParams);
+                ldapSearch();
+            } else {
+                ZimbraLog.gal.debug("toggle off fallback to ldap search");
             }
-            mParams.setQuery(query);
-            mParams.getResultCallback().reset(mParams);
-            ldapSearch();
         }
     }
 
