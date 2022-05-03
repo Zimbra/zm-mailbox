@@ -1457,6 +1457,12 @@ public final class LC {
 
     public static final KnownKey invite_ignore_x_alt_description = KnownKey.newKey(true);
 
+    public static final KnownKey allow_username_within_password = KnownKey.newKey(false);
+
+    // TODO: ZCS-11319 move the following from LC to LDAP property.
+    // space-separated list of logout urls that are known to handle token de-registration.
+    public static final KnownKey zimbra_web_client_logoff_urls = KnownKey.newKey("");
+
     static {
         // Automatically set the key name with the variable name.
         for (Field field : LC.class.getFields()) {

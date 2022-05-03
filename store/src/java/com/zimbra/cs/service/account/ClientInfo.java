@@ -16,8 +16,11 @@
  */
 package com.zimbra.cs.service.account;
 
+import java.util.Arrays;
 import java.util.Map;
+import org.apache.commons.lang.StringUtils;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
@@ -42,6 +45,7 @@ public class ClientInfo extends AccountDocumentHandler {
 
         Element parent =  zsc.createElement(AccountConstants.CLIENT_INFO_RESPONSE);
         if (domain != null) {
+            String webClientLogoutURL = domain.getWebClientLogoutURL();
             ToXML.encodeAttr(parent, Provisioning.A_zimbraFeatureResetPasswordStatus, domain.getFeatureResetPasswordStatusAsString());
             ToXML.encodeAttr(parent, Provisioning.A_zimbraSkinBackgroundColor, domain.getSkinBackgroundColor());
             ToXML.encodeAttr(parent, Provisioning.A_zimbraSkinFavicon, domain.getSkinFavicon());
@@ -52,10 +56,34 @@ public class ClientInfo extends AccountDocumentHandler {
             ToXML.encodeAttr(parent, Provisioning.A_zimbraSkinSecondaryColor, domain.getSkinSecondaryColor());
             ToXML.encodeAttr(parent, Provisioning.A_zimbraSkinSelectionColor, domain.getSkinSelectionColor());
             ToXML.encodeAttr(parent, Provisioning.A_zimbraWebClientLoginURL, domain.getWebClientLoginURL());
-            ToXML.encodeAttr(parent, Provisioning.A_zimbraWebClientLogoutURL, domain.getWebClientLogoutURL());
+            ToXML.encodeAttr(parent, Provisioning.A_zimbraWebClientLogoutURL, webClientLogoutURL);
             ToXML.encodeAttr(parent, Provisioning.A_zimbraWebClientStaySignedInDisabled, String.valueOf(domain.isWebClientStaySignedInDisabled()));
+            // TODO: ZCS-11319 update this line to read from LDAP property once this is moved out of LC.
+            // e.g. change the `split(LC.web_client_logoff_..)` -> `domain.getWebClientLogoffURLs()`
+            encodeAttrSkipLogoff(parent, webClientLogoutURL, StringUtils.split(LC.zimbra_web_client_logoff_urls.value()));
         }
         return parent;
+    }
+
+    /**
+     * Add zimbraWebClientSkipLogoff to instruct the webclient to skip full logoff
+     * when sending EndSession request, if the configured zimbraWebClientLogoutURL is
+     * known to handle token de-registration.
+     *
+     * @param parent The element to add the attr to
+     * @param webClientLogoutURL The configured webclient logout url
+     * @param logoffURLs URLs to skip logoff for - we expect them to handle it when we send the user there
+     */
+    protected void encodeAttrSkipLogoff(Element parent, String webClientLogoutURL, String[] logoffURLs) {
+        // always include the attr if webclient logout url is non-empty
+        if (StringUtils.isNotEmpty(webClientLogoutURL)) {
+            boolean skipLogoff = false;
+            if (logoffURLs != null) {
+                skipLogoff = Arrays.stream(logoffURLs).anyMatch(u -> webClientLogoutURL.equals(u));
+            }
+            // TODO: ZCS-11319 update this Provisioning.A_zimbraWebClientSkipLogoff
+            ToXML.encodeAttr(parent, "zimbraWebClientSkipLogoff", String.valueOf(skipLogoff));
+        }
     }
 
     @Override
