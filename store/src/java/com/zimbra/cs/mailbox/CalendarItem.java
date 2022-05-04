@@ -3523,7 +3523,7 @@ public abstract class CalendarItem extends MailItem {
                             /* ZWC expects a different mail item id for each exception */
                             localException.setMailItemId(itemIdGetter.get());
                         } else {
-                            localException.setMailItemId(reply.getMailItemId());
+                            localException.setMailItemId(reply.getMailItemId()); // ZCS-10995
                         }
                         sLog.debug("Exception invite for instanceId: %s with mailItemId: %s created", localException.getRecurId(),
                                 localException.getMailItemId());
