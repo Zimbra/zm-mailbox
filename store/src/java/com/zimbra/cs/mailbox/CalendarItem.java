@@ -3525,6 +3525,8 @@ public abstract class CalendarItem extends MailItem {
                         } else {
                             localException.setMailItemId(reply.getMailItemId());
                         }
+                        sLog.debug("Exception invite for instanceId: %s with mailItemId: %s created", localException.getRecurId(),
+                                localException.getMailItemId());
                         mInvites.add(localException);
                         // create a fake ExceptionRule wrapper around the single-instance
                         recurrenceRule.addException(
