@@ -48,12 +48,12 @@ public class AuthMech extends AttributeCallback {
                     AuthMechanism.AuthMech mech = AuthMechanism.AuthMech.fromString(authMech);
                     valid = true;
                 } catch (ServiceException e) {
-                    ZimbraLog.account.error("invalud auth mech", e);
+                    ZimbraLog.account.error("invalid auth mech", e);
                 }
             }
 
             if (!valid) {
-                throw ServiceException.INVALID_REQUEST("invalud value: " + authMech, null);
+                throw ServiceException.INVALID_REQUEST("invalid value: " + authMech, null);
             }
         }
 
