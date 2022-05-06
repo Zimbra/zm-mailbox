@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2013, 2014, 2015, 2016, 2022 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -16,13 +16,17 @@
  */
 package com.zimbra.cs.service.admin;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang.StringUtils;
+
 import com.google.common.collect.ImmutableSet;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.ZAttrProvisioning;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -139,10 +143,12 @@ public class GetDomainInfo extends AdminDocumentHandler {
             }
             return;
         }
+        String webClientLogoutURL = null;
         if (entry instanceof Domain) {
             Domain d = (Domain)entry;
             domain.addAttribute(AdminConstants.A_NAME, d.getUnicodeName());
             domain.addAttribute(AdminConstants.A_ID, d.getId());
+            webClientLogoutURL = d.getWebClientLogoutURL();
         } else {
             // weird, need to populate name and id because client expects them to construct a Domain object (but don't really use it)
             domain.addAttribute(AdminConstants.A_NAME, "globalconfig");
@@ -161,6 +167,7 @@ public class GetDomainInfo extends AdminDocumentHandler {
             } else if (value instanceof String)
                 domain.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, name).setText((String) value);
         }
+        addAttrSkipLogoff(domain, webClientLogoutURL, StringUtils.split(LC.zimbra_web_client_logoff_urls.value()));
     }
 
     private static Domain findDomain(Provisioning prov, String value) throws ServiceException {
@@ -184,6 +191,27 @@ public class GetDomainInfo extends AdminDocumentHandler {
         }
 
         return domain;
+    }
+
+    /**
+     * Add zimbraWebClientSkipLogoff to instruct the webclient to skip full logoff
+     * when sending EndSession request, if the configured zimbraWebClientLogoutURL is
+     * known to handle token de-registration.
+     *
+     * @param parent The element to add the attr to
+     * @param webClientLogoutURL The configured webclient logout url
+     * @param logoffURLs URLs to skip logoff for - we expect them to handle it when we send the user there
+     */
+    protected void addAttrSkipLogoff(Element parent, String webClientLogoutURL, String[] logoffURLs) {
+        // always include the attr if webclient logout url is non-empty
+        if (StringUtils.isNotEmpty(webClientLogoutURL)) {
+            boolean skipLogoff = false;
+            if (logoffURLs != null) {
+                skipLogoff = Arrays.stream(logoffURLs).anyMatch(u -> webClientLogoutURL.equals(u));
+            }
+            // TODO: ZCS-11319 update this Provisioning.A_zimbraWebClientSkipLogoff
+            parent.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, "zimbraWebClientSkipLogoff").setText(String.valueOf(skipLogoff));
+        }
     }
 
     @Override
