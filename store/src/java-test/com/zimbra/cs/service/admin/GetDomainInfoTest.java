@@ -14,42 +14,42 @@
  * If not, see <https://www.gnu.org/licenses/>.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.service.account;
+package com.zimbra.cs.service.admin;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
 
-import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.KeyValuePair;
 import com.zimbra.common.soap.Element.XMLElement;
 
-public class ClientInfoTest {
+public class GetDomainInfoTest {
 
     protected static final String KEY_SKIP_LOGOFF = "zimbraWebClientSkipLogoff";
 
-    protected ClientInfo toTest = new ClientInfo();
+    protected GetDomainInfo toTest = new GetDomainInfo();
 
     protected Element parent;
 
     @Before
     public void setup() throws Exception {
-        parent =  new XMLElement(AccountConstants.CLIENT_INFO_RESPONSE);
+        parent = new XMLElement(AdminConstants.E_DOMAIN);
     }
 
     @Test
-    public void testEncodeAttrSkipLogoffSingleLogoffURL() throws Exception {
+    public void testAddAttrSkipLogoffSingleLogoffURL() throws Exception {
         String logoutURL = "https://localhost/service/extension/samllogout";
-
+        
         // test single known logoff url
-        toTest.encodeAttrSkipLogoff(parent, logoutURL, new String[] { logoutURL });
-
+        toTest.addAttrSkipLogoff(parent, logoutURL, new String[] { logoutURL });
         // verify skip logoff is true since the webclient logout url is a known logoff handler
-        List<KeyValuePair> pairs = parent.listKeyValuePairs(AccountConstants.E_ATTR, AccountConstants.E_NAME);
+        List<KeyValuePair> pairs = parent.listKeyValuePairs(AdminConstants.E_A, AdminConstants.A_N);
         KeyValuePair pair = pairs.stream()
             .filter(p -> KEY_SKIP_LOGOFF.equals(p.getKey()))
             .findFirst().get();
@@ -57,17 +57,17 @@ public class ClientInfoTest {
     }
 
     @Test
-    public void testEncodeAttrSkipLogoffMultipleLogoffURLs() throws Exception {
+    public void testAddAttrSkipLogoffMultipleLogoffURLs() throws Exception {
         String url = "https://localhost/service/extension/samllogout";
 
         // test multiple known logoff urls
-        toTest.encodeAttrSkipLogoff(parent, url, new String[] {
+        toTest.addAttrSkipLogoff(parent, url, new String[] {
             "https://localhost/service/extension/saml2slo",
             url
         });
 
         // verify skip logoff is true since the webclient logout url is a known logoff handler
-        List<KeyValuePair> pairs = parent.listKeyValuePairs(AccountConstants.E_ATTR, AccountConstants.E_NAME);
+        List<KeyValuePair> pairs = parent.listKeyValuePairs(AdminConstants.E_A, AdminConstants.A_N);
         KeyValuePair pair = pairs.stream()
             .filter(p -> KEY_SKIP_LOGOFF.equals(p.getKey()))
             .findFirst().get();
@@ -75,18 +75,18 @@ public class ClientInfoTest {
     }
 
     @Test
-    public void testEncodeAttrSkipLogoffMultipleLogoffURLsNotInUse() throws Exception {
+    public void testAddAttrSkipLogoffMultipleLogoffURLsNotInUse() throws Exception {
         String url = "https://localhost/service/extension/samllogout";
 
         // test multiple known logoff urls
-        toTest.encodeAttrSkipLogoff(parent, url, new String[] {
+        toTest.addAttrSkipLogoff(parent, url, new String[] {
             "https://localhost/service/extension/saml2slo",
             "https://localhost/service/extension/extra",
             "https://localhost/service/extension/example"
         });
 
         // verify skip logoff is false when logout url is not a known logoff handler
-        List<KeyValuePair> pairs = parent.listKeyValuePairs(AccountConstants.E_ATTR, AccountConstants.E_NAME);
+        List<KeyValuePair> pairs = parent.listKeyValuePairs(AdminConstants.E_A, AdminConstants.A_N);
         KeyValuePair pair = pairs.stream()
             .filter(p -> KEY_SKIP_LOGOFF.equals(p.getKey()))
             .findFirst().get();
@@ -94,14 +94,14 @@ public class ClientInfoTest {
     }
 
     @Test
-    public void testEncodeAttrSkipLogoffNoLogoffURLsNone() throws Exception {
+    public void testAddAttrSkipLogoffNoLogoffURLsNone() throws Exception {
         String url = "https://localhost/service/extension/samllogout";
 
         // test null known logoff urls
-        toTest.encodeAttrSkipLogoff(parent, url, new String[] {});
+        toTest.addAttrSkipLogoff(parent, url, new String[] {});
 
         // verify skip logoff is false when logout url is not a known logoff handler
-        List<KeyValuePair> pairs = parent.listKeyValuePairs(AccountConstants.E_ATTR, AccountConstants.E_NAME);
+        List<KeyValuePair> pairs = parent.listKeyValuePairs(AdminConstants.E_A, AdminConstants.A_N);
         KeyValuePair pair = pairs.stream()
             .filter(p -> KEY_SKIP_LOGOFF.equals(p.getKey()))
             .findFirst().get();
@@ -109,14 +109,14 @@ public class ClientInfoTest {
     }
 
     @Test
-    public void testEncodeAttrSkipLogoffNoLogoffURLsNull() throws Exception {
+    public void testAddAttrSkipLogoffNoLogoffURLsNull() throws Exception {
         String url = "https://localhost/service/extension/samllogout";
 
         // test null known logoff urls
-        toTest.encodeAttrSkipLogoff(parent, url, null);
+        toTest.addAttrSkipLogoff(parent, url, null);
 
         // verify skip logoff is false when logout url is not a known logoff handler
-        List<KeyValuePair> pairs = parent.listKeyValuePairs(AccountConstants.E_ATTR, AccountConstants.E_NAME);
+        List<KeyValuePair> pairs = parent.listKeyValuePairs(AdminConstants.E_A, AdminConstants.A_N);
         KeyValuePair pair = pairs.stream()
             .filter(p -> KEY_SKIP_LOGOFF.equals(p.getKey()))
             .findFirst().get();
@@ -124,14 +124,14 @@ public class ClientInfoTest {
     }
 
     @Test
-    public void testEncodeAttrSkipLogoffNoLogoffURLsEmpty() throws Exception {
+    public void testAddAttrSkipLogoffNoLogoffURLsEmpty() throws Exception {
         String url = "https://localhost/service/extension/samllogout";
 
         // test empty known logoff urls
-        toTest.encodeAttrSkipLogoff(parent, url, new String[]{ "" });
+        toTest.addAttrSkipLogoff(parent, url, new String[]{ "" });
 
         // verify skip logoff is false when logout url is not a known logoff handler
-        List<KeyValuePair> pairs = parent.listKeyValuePairs(AccountConstants.E_ATTR, AccountConstants.E_NAME);
+        List<KeyValuePair> pairs = parent.listKeyValuePairs(AdminConstants.E_A, AdminConstants.A_N);
         KeyValuePair pair = pairs.stream()
             .filter(p -> KEY_SKIP_LOGOFF.equals(p.getKey()))
             .findFirst().get();
