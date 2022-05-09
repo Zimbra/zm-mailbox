@@ -140,6 +140,10 @@ public class GetDomainInfo extends AdminDocumentHandler {
                 for (String attr : bootstrapInfoAttrs) {
                     addAttrElementIfNotNull(entry, domain, attr);
                 }
+                if (entry instanceof Domain) {
+                    Domain d = (Domain)entry;
+                    addAttrSkipLogoff(domain, d.getWebClientLogoutURL(), StringUtils.split(LC.zimbra_web_client_logoff_urls.value()));
+                }
             }
             return;
         }
