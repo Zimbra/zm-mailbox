@@ -908,8 +908,8 @@ public final class ZimbraLog {
 
             // create the new logger
             builder.add(builder.newLogger(LOGGER_NAME, level)
-                    .add(builder.newAppenderRef(APPENDER_NAME))
-                    .addAttribute(LOGGER_ADDITIVITY, false));
+                   .add(builder.newAppenderRef(APPENDER_NAME))
+                   .addAttribute(LOGGER_ADDITIVITY, false));
         }
         builder.add(builder.newRootLogger(level)
                .add(builder.newAppenderRef(DEFAULT_APPENDER_NAME)));
