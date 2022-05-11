@@ -39,7 +39,7 @@ public class Log {
     private final Map<String, Logger> mAccountLoggers = new ConcurrentHashMap<String, Logger>();
 
     private static final Map<Level, org.apache.logging.log4j.Level> ZIMBRA_TO_LOG4J =
-            new EnumMap<Level, org.apache.logging.log4j.Level>(Level.class);
+        new EnumMap<Level, org.apache.logging.log4j.Level>(Level.class);
     static {
         ZIMBRA_TO_LOG4J.put(Level.error, org.apache.logging.log4j.Level.ERROR);
         ZIMBRA_TO_LOG4J.put(Level.warn, org.apache.logging.log4j.Level.WARN);
