@@ -941,11 +941,11 @@ public final class ZimbraLog {
         builder.add(appenderBuilder.add(layoutBuilder));
         // create the new logger
         builder.add(builder.newLogger(LOGGER_NAME, level)
-                .add(builder.newAppenderRef(DEFAULT_APPENDER_NAME))
-                .addAttribute(LOGGER_ADDITIVITY, false));
+               .add(builder.newAppenderRef(DEFAULT_APPENDER_NAME))
+               .addAttribute(LOGGER_ADDITIVITY, false));
 
         builder.add(builder.newRootLogger(level)
-                .add(builder.newAppenderRef(DEFAULT_APPENDER_NAME)));
+               .add(builder.newAppenderRef(DEFAULT_APPENDER_NAME)));
         Configurator.reconfigure(builder.build());    }
 
     /**
