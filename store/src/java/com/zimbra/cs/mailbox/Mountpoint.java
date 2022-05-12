@@ -276,4 +276,54 @@ public class Mountpoint extends Folder implements MountpointStore {
         // check nothing
         // external account mailbox can have mountpoints
     }
+    
+    /**
+     * Creates an interim new Mountpoint pointing at a remote item sub-folder.
+     * It does not persists in the database.
+     * This is a temporary holder for sub-folder of remote shared item for active-sync
+     * @param id
+     * @param uuid
+     * @param parent
+     * @param name
+     * @param ownerId
+     * @param remoteId
+     * @param remoteUuid
+     * @param view
+     * @param flags
+     * @param color
+     * @param reminderEnabled
+     * @param custom
+     * @throws ServiceException
+     */
+    public static Mountpoint createInterimMountPointForActiveSync(int id, String uuid, Folder parent, String name, String ownerId, int remoteId, String remoteUuid,
+            Type view, int flags, Color color, boolean reminderEnabled, CustomMetadata custom) throws ServiceException {
+        if (parent == null || ownerId == null || remoteId <= 0) {
+            throw ServiceException.INVALID_REQUEST("invalid parameters when creating mountpoint", null);
+        }
+        if (!parent.canAccess(ACL.RIGHT_INSERT)) {
+            throw ServiceException.PERM_DENIED("you do not have sufficient permissions on the parent folder");
+        }
+        name = validateItemName(name);
+        if (parent.findSubfolder(name) != null) {
+            throw MailServiceException.ALREADY_EXISTS(name);
+        }
+        Mailbox mbox = parent.getMailbox();
+        UnderlyingData data = new UnderlyingData();
+        data.uuid = uuid;
+        data.id = id;
+        data.type = Type.MOUNTPOINT.toByte();
+        data.folderId = parent.getId();
+        data.parentId = data.folderId;
+        data.date = mbox.getOperationTimestamp();
+        data.setFlags(flags & Flag.FLAGS_FOLDER);
+        data.name = name;
+        data.setSubject(name);
+        data.metadata = encodeMetadata(color, 1, 1, custom, view, ownerId, remoteId, remoteUuid, reminderEnabled);
+        data.contentChanged(mbox);
+        ZimbraLog.mailop.info("Adding Mountpoint %s: id=%d, parentId=%d, parentName=%s.",
+                name, data.id, parent.getId(), parent.getName());
+        Mountpoint mpt = new Mountpoint(mbox, data);
+        return mpt;
+    }
+
 }
