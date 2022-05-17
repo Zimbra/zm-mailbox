@@ -1465,7 +1465,7 @@ public final class LC {
 
     //TODO: ZCS-11319 move the following from LC to LDAP property.
     // space-separated list of logout urls that are known to handle token de-registration.
-    public static final KnownKey zimbra_web_client_logoff_urls = KnownKey.newKey("")
+    public static final KnownKey zimbra_web_client_logoff_urls = KnownKey.newKey("");
     
     // ZCS-11349: Toggle off/on fallback to ldap search
     public static final KnownKey zimbra_gal_fallback_ldap_search_enabled = KnownKey.newKey(true);
