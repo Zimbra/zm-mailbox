@@ -6130,6 +6130,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
         if (blockCommonPasswordsEnabled && commonPasswordFilter.mightContain(password)) {
             throw AccountServiceException.INVALID_PASSWORD("password is known to be too common");
+        }
 
         if (LC.allow_username_within_password.booleanValue()
                 && StringUtils.containsIgnoreCase(password, acct.getUCUsername())) {
