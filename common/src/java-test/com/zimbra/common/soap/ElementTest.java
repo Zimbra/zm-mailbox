@@ -27,9 +27,10 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.core.config.Configurator;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.Level;
 import org.dom4j.DocumentException;
 import org.dom4j.QName;
 import org.dom4j.io.SAXReader;
@@ -54,7 +55,7 @@ public class ElementTest {
     @Rule
     public TestName testName = new TestName();
 
-    private static final Logger LOG = Logger.getLogger(ElementTest.class);
+    private static final Logger LOG = LogManager.getLogger(ElementTest.class);
     private static final int maxiter = 50000;
     private static final ByteArrayInputStream getInfoRespBais =
             toBais(ElementTest.class.getResourceAsStream("GetInfoResponseSOAP.xml"));
@@ -62,9 +63,9 @@ public class ElementTest {
             toBais(ElementTest.class.getResourceAsStream("GetInfoRequestSOAP.xml"));
 
     static {
-        BasicConfigurator.configure();
-        Logger.getRootLogger().setLevel(Level.INFO);
-        LOG.setLevel(Level.INFO);
+        Configurator.reconfigure();
+        Configurator.setRootLevel(Level.INFO);
+        Configurator.setLevel(LOG.getName(), Level.INFO);
     }
 
     private void logInfo(String format, Object ... objects) {

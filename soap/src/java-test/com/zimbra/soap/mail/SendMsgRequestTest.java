@@ -18,9 +18,10 @@ package com.zimbra.soap.mail;
 
 import java.util.List;
 
-import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.Logger;
-import org.apache.log4j.Level;
+import org.apache.logging.log4j.core.config.Configurator;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.Level;
 
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -44,12 +45,12 @@ import com.zimbra.soap.mail.type.MsgToSend;
 public final class SendMsgRequestTest {
     @Rule public TestName testName = new TestName();
 
-    private static final Logger LOG = Logger.getLogger(SendMsgRequestTest.class);
+    private static final Logger LOG = LogManager.getLogger(SendMsgRequestTest.class);
 
     static {
-        BasicConfigurator.configure();
-        Logger.getRootLogger().setLevel(Level.INFO);
-        LOG.setLevel(Level.INFO);
+        Configurator.reconfigure();
+        Configurator.setRootLevel(Level.INFO);
+        Configurator.setLevel(LOG.getName(), Level.INFO);
     }
 
     private void logInfo(String format, Object ... objects) {
