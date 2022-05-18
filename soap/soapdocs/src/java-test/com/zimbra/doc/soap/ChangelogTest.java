@@ -21,9 +21,10 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.Logger;
-import org.apache.log4j.Level;
+import org.apache.logging.log4j.core.config.Configurator;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.Level;
 
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -48,12 +49,12 @@ import com.zimbra.soap.type.ZmBoolean;
 
 public class ChangelogTest {
 
-    private static final Logger LOG = Logger.getLogger(ChangelogTest.class);
+    private static final Logger LOG = LogManager.getLogger(ChangelogTest.class);
 
     static {
-        BasicConfigurator.configure();
-        Logger.getRootLogger().setLevel(Level.INFO);
-        LOG.setLevel(Level.INFO);
+        Configurator.reconfigure();
+        Configurator.setRootLevel(Level.INFO);
+        Configurator.setLevel(LOG.getName(), Level.INFO);
     }
 
     @BeforeClass
