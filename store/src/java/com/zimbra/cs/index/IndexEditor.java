@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -33,11 +34,16 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.log4j.Layout;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.apache.log4j.PatternLayout;
-import org.apache.log4j.WriterAppender;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.Layout;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.appender.WriterAppender;
+import org.apache.logging.log4j.core.config.Configuration;
+import org.apache.logging.log4j.core.config.Configurator;
+import org.apache.logging.log4j.core.config.LoggerConfig;
+import org.apache.logging.log4j.core.layout.PatternLayout;
 import org.apache.lucene.document.DateTools;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
@@ -437,22 +443,27 @@ public final class IndexEditor {
 
         public boolean enableLogging() {
             if (mAppender == null) {
-                Layout layout = new PatternLayout(logLayoutPattern );
-                mAppender = new WriterAppender(layout, mOutputStream);
-                Logger root = Logger.getRootLogger();
+                Layout layout = PatternLayout.newBuilder().withPattern(logLayoutPattern).build();
+                mAppender = WriterAppender.newBuilder().setTarget(new OutputStreamWriter(mOutputStream))
+                    .setLayout(layout).build();
 
-                root.addAppender(mAppender);
+                Logger root = LogManager.getRootLogger();
+                LoggerContext context = LoggerContext.getContext(false);
+                Configuration configuration = context.getConfiguration();
+                LoggerConfig loggerConfig = configuration.getLoggerConfig(root.getName());
+
+                loggerConfig.addAppender(mAppender, Level.INFO, null);
                 return true;
             } else {
-                return false;
+                return false;   
             }
         }
 
         public boolean disableLogging() {
             if (mAppender != null) {
-                Logger root = Logger.getRootLogger();
-                root.removeAppender(mAppender);
-                mAppender = null;
+                final LoggerContext context = LoggerContext.getContext(false);
+                final Configuration config = context.getConfiguration();
+                config.getRootLogger().removeAppender(mAppender.getName());
                 return true;
             }
             return false;
@@ -678,7 +689,7 @@ public final class IndexEditor {
             outputStream.print("Caught exception: "+e.toString());
         }
 
-        Logger root = Logger.getRootLogger();
+        Logger root = LoggerContext.getContext().getRootLogger();
 
         if (logLevel != null && !logLevel.equals("")) {
 
@@ -705,7 +716,7 @@ public final class IndexEditor {
                 return;
             }
 
-            root.setLevel(newLevel);
+            Configurator.setLevel(root.getName(), newLevel);
         }
         Level cur = root.getLevel();
         outputStream.println("Current level is: "+cur);

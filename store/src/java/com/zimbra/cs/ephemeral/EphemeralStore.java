@@ -370,7 +370,7 @@ public abstract class EphemeralStore {
     public static class EphemeralStoreMatcher implements ExtensionUtil.ExtensionMatcher {
         private final String storeId;
         public EphemeralStoreMatcher(String storeId) {
-            this.storeId = storeId;
+            this.storeId = storeId; 
         }
         @Override
         public boolean matches(ZimbraExtension ext) {
