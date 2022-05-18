@@ -443,7 +443,7 @@ public class Log {
     }
 
     /**
-     * Returns Log4j equivalent of {@code level} or org.apache.log4j.Level.TRACE
+     * Returns Log4j equivalent of {@code level} or org.apache.logging.log4j.Level.TRACE
      */
     private static final org.apache.logging.log4j.Level log4jLevel(Level level) {
         org.apache.logging.log4j.Level log4jlevel = ZIMBRA_TO_LOG4J.get(level);
