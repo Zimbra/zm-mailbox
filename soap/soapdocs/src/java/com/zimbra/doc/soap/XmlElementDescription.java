@@ -31,10 +31,10 @@ import com.zimbra.soap.util.JaxbPseudoNodeChoiceInfo;
 import com.zimbra.soap.util.JaxbValueInfo;
 import com.zimbra.soap.util.WrappedElementInfo;
 
-import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.Logger;
-import org.apache.log4j.Level;
-
+import org.apache.logging.log4j.core.config.Configurator;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.Level;
 /**
  * Represents a description of an XML element and all the attributes and elements it contains
  */
@@ -67,11 +67,11 @@ implements DescriptionNode, XmlUnit {
     // this will point at that (otherwise, remains null)
     private XmlElementDescription masterDescriptionForThisJaxbClass = null;
 
-    private static final Logger LOG = Logger.getLogger(DescriptionNode.class);
+    private static final Logger LOG = LogManager.getLogger(DescriptionNode.class);
     static {
-        BasicConfigurator.configure();
-        Logger.getRootLogger().setLevel(Level.INFO);
-        LOG.setLevel(Level.INFO);
+        Configurator.reconfigure();
+        Configurator.setRootLevel(Level.INFO);
+        Configurator.setLevel(LOG.getName(), Level.INFO);
     }
 
     private XmlElementDescription(boolean isSingleton, boolean isWrapper, boolean isOptional) {
