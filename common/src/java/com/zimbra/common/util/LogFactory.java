@@ -22,9 +22,8 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
-import org.apache.log4j.PropertyConfigurator;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.config.Configurator;
 
 import com.zimbra.common.localconfig.LC;
 
@@ -41,7 +40,7 @@ public final class LogFactory {
     }
 
     public synchronized static void init() {
-        PropertyConfigurator.configure(LC.zimbra_log4j_properties.value());
+        Configurator.initialize(null, LC.zimbra_log4j_properties.value());
     }
 
     public synchronized static void reset() {
@@ -51,8 +50,8 @@ public final class LogFactory {
         for (Log log : getAllLoggers()) {
             log.removeAccountLoggers();
         }
-        LogManager.resetConfiguration();
-        PropertyConfigurator.configure(LC.zimbra_log4j_properties.value());
+        LogManager.shutdown(true);
+        Configurator.initialize(null, LC.zimbra_log4j_properties.value());
     }
 
     public static Log getLog(Class<?> clazz) {
@@ -65,7 +64,7 @@ public final class LogFactory {
     public static Log getLog(String name) {
         Log log = NAME2LOG.get(name);
         if (log == null) {
-            log = new Log(Logger.getLogger(name));
+            log = new Log(LogManager.getLogger(name));
             Log prev = NAME2LOG.putIfAbsent(name, log);
             if (prev != null) {
                 log = prev;
@@ -78,7 +77,7 @@ public final class LogFactory {
      * Returns <tt>true</tt> if a logger with the given name exists.
      */
     public static boolean logExists(String name) {
-        return (LogManager.exists(name) != null);
+        return (LogManager.exists(name));
     }
 
     /**
