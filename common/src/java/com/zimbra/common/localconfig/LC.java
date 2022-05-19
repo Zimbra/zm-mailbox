@@ -1483,7 +1483,7 @@ public final class LC {
 
     public static final KnownKey invite_ignore_x_alt_description = KnownKey.newKey(true);
 
-    public static final KnownKey allow_username_within_password = KnownKey.newKey(false);
+    public static final KnownKey allow_username_within_password = KnownKey.newKey(true);
 
     // TODO: ZCS-11319 move the following from LC to LDAP property.
     // space-separated list of logout urls that are known to handle token de-registration.

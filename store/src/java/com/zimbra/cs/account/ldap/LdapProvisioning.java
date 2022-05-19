@@ -1474,7 +1474,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                 password = null;
             } else if (password != null) {
                 //user entered
-                checkPasswordStrength(password, null, cos, entry);
+                checkPasswordStrength(password, null, cos, entry, localPart);
             }
             entry.setAttr(Provisioning.A_zimbraPasswordModifiedTime, LdapDateUtil.toGeneralizedTime(new Date()));
 
@@ -6134,6 +6134,11 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
      * @throws ServiceException
      */
     private void checkPasswordStrength(String password, Account acct, Cos cos, ZMutableEntry entry)
+            throws ServiceException {
+        checkPasswordStrength(password, acct, cos, entry, null);
+    }
+
+    private void checkPasswordStrength(String password, Account acct, Cos cos, ZMutableEntry entry, String userName)
     throws ServiceException {
         int minLength = getInt(acct, cos, entry, Provisioning.A_zimbraPasswordMinLength, 0);
         if (minLength > 0 && password.length() < minLength) {
@@ -6147,10 +6152,12 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                     new Argument(Provisioning.A_zimbraPasswordMaxLength, maxLength, Argument.Type.NUM));
         }
 
-        if (LC.allow_username_within_password.booleanValue()
-                && StringUtils.containsIgnoreCase(password, acct.getUCUsername())) {
-            throw AccountServiceException.INVALID_PASSWORD("password contains username",
-                    new Argument("zimbraPasswordAllowUsername", "", Argument.Type.STR));
+        // userName is passed from createAccount() and else condition is invoked 
+        // when called from other Api's Changepassword and Resetpassword Api
+        if (userName != null) {
+            checkPasswordHasUsername(password, userName);
+        } else {
+            checkPasswordHasUsername(password, acct.getUCUsername());
         }
 
         if (getBoolean(acct, cos, entry, Provisioning.A_zimbraPasswordBlockCommonEnabled, false)
@@ -6255,6 +6262,13 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         if (numeric + punctuation < minNumOrPunc) {
             throw AccountServiceException.INVALID_PASSWORD("not enough numeric or punctuation characters",
                     new Argument(Provisioning.A_zimbraPasswordMinDigitsOrPuncs, minNumOrPunc, Argument.Type.NUM));
+        }
+    }
+
+    private void checkPasswordHasUsername(String password, String userName) throws ServiceException {
+        if (!LC.allow_username_within_password.booleanValue() && StringUtils.containsIgnoreCase(password, userName)) {
+            throw AccountServiceException.INVALID_PASSWORD("password contains username",
+                    new Argument("zimbraPasswordAllowUsername", "", Argument.Type.STR));
         }
     }
 
