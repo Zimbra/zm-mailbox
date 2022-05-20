@@ -27,6 +27,7 @@ import java.util.Stack;
 
 import com.google.common.base.Strings;
 import com.zimbra.common.calendar.TZIDMapper;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
@@ -105,6 +106,7 @@ public class ToXML {
 
     public static Element encodePasswordRules(Element parent, Account account) {
 
+        ToXML.encodeAttr(parent, "zimbraPasswordAllowUsername", Boolean.toString(LC.allow_username_within_password.booleanValue()));
         ToXML.encodeAttr(parent, Provisioning.A_zimbraPasswordLocked, Boolean.toString(account.isPasswordLocked()));
         ToXML.encodeAttr(parent, Provisioning.A_zimbraPasswordMinLength, Integer.toString(account.getPasswordMinLength()));
         ToXML.encodeAttr(parent, Provisioning.A_zimbraPasswordMaxLength, Integer.toString(account.getPasswordMaxLength()));

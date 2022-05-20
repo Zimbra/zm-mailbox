@@ -23,6 +23,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LoggerContext;
+
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -83,7 +86,7 @@ public class AddAccountLogger extends AdminDocumentHandler {
             throw ServiceException.INVALID_REQUEST(error, null);
         }
 
-        if (!category.equalsIgnoreCase(CATEGORY_ALL) && !LogFactory.logExists(category)) {
+        if (!category.equalsIgnoreCase(CATEGORY_ALL) && !((LoggerContext) LogManager.getContext(false)).hasLogger(category)) {
             throw ServiceException.INVALID_REQUEST("Log category " + category + " does not exist.", null);
         }
 

@@ -37,9 +37,13 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.log4j.Appender;
-import org.apache.log4j.ConsoleAppender;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.Appender;
+import org.apache.logging.log4j.core.Logger;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.appender.ConsoleAppender;
+import org.apache.logging.log4j.core.config.Configuration;
+import org.apache.logging.log4j.core.config.LoggerConfig;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -378,17 +382,21 @@ public class PlaybackUtil {
         // set up log4j
         ZimbraLog.toolSetupLog4j("INFO", LC.zimbra_log4j_properties.value());
         // remove the console appender if any
-        Logger rootLogger = Logger.getRootLogger();
+        org.apache.logging.log4j.Logger rootLogger = LogManager.getRootLogger();
         Appender consoleAppender = null;
-        Enumeration appenders = rootLogger.getAllAppenders();
-        while (appenders.hasMoreElements()) {
-            Appender appender = (Appender) appenders.nextElement();
+        LoggerContext context = LoggerContext.getContext(false);
+        Configuration configuration = context.getConfiguration();
+        LoggerConfig loggerConfig = configuration.getLoggerConfig(rootLogger.getName());
+        Map<String, Appender> appenders = loggerConfig.getAppenders();
+
+        while (appenders.values().iterator().hasNext()) {
+            Appender appender = appenders.values().iterator().next();
             if (appender instanceof ConsoleAppender) {
                 consoleAppender = appender;
             }
         }
         if (consoleAppender != null)
-            rootLogger.removeAppender(consoleAppender);
+            loggerConfig.removeAppender(consoleAppender.getName());
 
         DbPool.startup();
         Zimbra.startupCLI();
