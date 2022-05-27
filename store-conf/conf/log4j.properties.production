@@ -129,6 +129,8 @@ appender.EWS.strategy.type = DefaultRolloverStrategy
 appender.SYSLOG.type = Syslog
 appender.SYSLOG.name = syslogAppender
 appender.SYSLOG.host = localhost
+appender.SYSLOG.port = 514
+appender.SYSLOG.protocol = UDP
 appender.SYSLOG.facility = LOCAL0
 appender.SYSLOG.layout.type = PatternLayout
 appender.SYSLOG.layout.pattern = mailboxd: %-5p [%t] [%z] %c{1} - %m
@@ -138,6 +140,8 @@ appender.SYSLOG.layout.pattern = mailboxd: %-5p [%t] [%z] %c{1} - %m
 %%comment VAR:!zimbraLogHostname%%appender.SLOGGER.name = sloggerAppender
 %%comment VAR:!zimbraLogHostname%%appender.SLOGGER.host = %%zimbraLogHostname%%
 %%comment VAR:!zimbraLogHostname%%appender.SLOGGER.facility = LOCAL1
+%%comment VAR:!zimbraLogHostname%%appender.SLOGGER.port = 514
+%%comment VAR:!zimbraLogHostname%%appender.SLOGGER.protocol = UDP
 %%comment VAR:!zimbraLogHostname%%appender.SLOGGER.layout.type = PatternLayout
 %%comment VAR:!zimbraLogHostname%%appender.SLOGGER.layout.pattern = mailboxd: %-5p [%t] [%z] %c{1} - %m
 
