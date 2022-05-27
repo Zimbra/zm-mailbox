@@ -17,6 +17,7 @@
   <dependency org="org.javassist" name="javassist" rev="3.18.2-GA" />
   <dependency org="org.slf4j" name="slf4j-api" rev="1.7.36"/>
   <dependency org="org.slf4j" name="slf4j-simple" rev="1.7.36"/>
+  <dependency org="org.apache.logging.log4j" name="log4j-slf4j-impl" rev="2.17.1" />
   <dependency org="junit" name="junit" rev="4.8.2" />
   <dependency org="javax.mail" name="mail" rev="1.4.5" />
   <dependency org="jaxen" name="jaxen" rev="1.1-beta-10"/>
