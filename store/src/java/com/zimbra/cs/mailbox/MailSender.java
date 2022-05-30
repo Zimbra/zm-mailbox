@@ -54,7 +54,6 @@ import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.mime.shim.JavaMailInternetHeaders;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ListUtil;
@@ -75,7 +74,6 @@ import com.zimbra.cs.mailbox.Threader.ThreadIndex;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.MimeProcessor;
 import com.zimbra.cs.mime.MimeVisitor;
-import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.FileUploadServlet;
@@ -624,12 +622,9 @@ public class MailSender {
             // To avoid this problem; let's determine a list of new address which we might need to add to emailed
             // contact later before we add the message to sent folder.
             Collection<Address> newAddrs = Collections.emptySet();
-            List<Map<com.zimbra.common.mime.InternetAddress, Pair<Integer, String>>> modifyAddrs = Collections.emptyList();
             Address[] rcptAddresses = getRecipients(mm);
-            if (rcptAddresses != null && rcptAddresses.length > 0) {
+            if (rcptAddresses != null && rcptAddresses.length > 0)
                 newAddrs = mbox.newContactAddrs(Arrays.asList(rcptAddresses));
-                modifyAddrs = mbox.findContactsInEmailedContacts(octxt, Arrays.asList(rcptAddresses));
-            }
 
             if (mimeProcessor != null) {
                 try {
@@ -788,12 +783,7 @@ public class MailSender {
                         }
                     }
                     try {
-                        if (!newAddrs.isEmpty()) {
-                            mbox.createAutoContact(octxt, iaddrs);
-                        }
-                        if (!modifyAddrs.isEmpty()) {
-                            mbox.modifyAutoContact(octxt, modifyAddrs);
-                        }
+                        mbox.createAutoContact(octxt, iaddrs);
                     } catch (IOException e) {
                         ZimbraLog.smtp.warn("Failed to auto-add contact addrs=%s", iaddrs, e);
                     }
@@ -801,6 +791,7 @@ public class MailSender {
             }
 
             return returnItemId;
+
         } catch (SafeSendFailedException sfe) {
             Address[] invalidAddrs = sfe.getInvalidAddresses();
             Address[] validUnsentAddrs = sfe.getValidUnsentAddresses();
