@@ -79,7 +79,6 @@ import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.BaseItemInfo;
 import com.zimbra.common.mailbox.Color;
-import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.mailbox.ExistingParentFolderStoreAndUnmatchedPart;
 import com.zimbra.common.mailbox.FolderConstants;
 import com.zimbra.common.mailbox.FolderStore;
@@ -94,7 +93,6 @@ import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.Rfc822ValidationInputStream;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.common.util.BufferStream;
@@ -133,13 +131,11 @@ import com.zimbra.cs.html.BrowserDefang;
 import com.zimbra.cs.html.DefangFactory;
 import com.zimbra.cs.imap.ImapMessage;
 import com.zimbra.cs.index.BrowseTerm;
-import com.zimbra.cs.index.ContactHit;
 import com.zimbra.cs.index.DomainBrowseTerm;
 import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SortBy;
-import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQuery;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.ldap.LdapConstants;
@@ -319,8 +315,6 @@ public class Mailbox implements MailboxStore {
 
 
     public static final String CONF_PREVIOUS_MAILBOX_IDS = "prev_mbox_ids";
-    
-    public static final String JAPANESE_LOCALE_CODE = "ja";
 
     public static final class MailboxData implements Cloneable {
         public int id;
@@ -8085,7 +8079,7 @@ public class Mailbox implements MailboxStore {
         List<Contact> result = new ArrayList<Contact>(addrs.size());
         String locale = octxt != null && octxt.getAuthenticatedUser() != null ? octxt.getAuthenticatedUser().getPrefLocale() : null;
         boolean nameFormatLastFirst = false;
-        if (locale != null && locale.equals(JAPANESE_LOCALE_CODE)) {
+        if (locale != null && locale.equals("ja")) {
             nameFormatLastFirst = true;
         }
         for (InternetAddress addr : addrs) {
@@ -8103,34 +8097,6 @@ public class Mailbox implements MailboxStore {
             }
         }
         return result;
-    }
-
-    /**
-     * It modifies contact's first and full name with display name
-     * @param octxt
-     * @param listOfContactsToBeModified This list consist list of Map, InternetAddress as key and Pair of ContactId and
-     * DisplayName as Value
-     */
-    public void modifyAutoContact(OperationContext octxt, List<Map<InternetAddress, Pair<Integer, String>>> listOfContactsToBeModified)
-            throws IOException {
-        String email = null;
-        String locale = octxt != null && octxt.getAuthenticatedUser() != null ? octxt.getAuthenticatedUser().getPrefLocale() : null;
-        boolean nameFormatLastFirst = false;
-        if (locale != null && locale.equals(JAPANESE_LOCALE_CODE)) {
-            nameFormatLastFirst = true;
-        }
-        for (Map<InternetAddress, Pair<Integer, String>> map : listOfContactsToBeModified) {
-            try {
-                for (InternetAddress address : map.keySet()) {
-                    email = address.getAddress();
-                    ZimbraLog.mailbox.debug("Modifying contact addr=%s", email);
-                    ParsedContact pc = new ParsedContact(new ParsedAddress(address, nameFormatLastFirst).getAttributes());
-                    modifyContact(octxt, map.get(address).getFirst(), pc);
-                }
-            } catch (Exception e) {
-                ZimbraLog.mailbox.warn("Failed to modify contact addr=%s", email, e);
-            }
-        }
     }
 
     /**
@@ -8165,54 +8131,6 @@ public class Mailbox implements MailboxStore {
             }
         }
         return newAddrs;
-    }
-    
-    /**
-     * Returns a list of contacts exist in emailed contacts folders.
-     * @param octxt OperationContext object
-     * @param addrs Recipient Email address list
-     * @return listOfContactsToBeModified This list consist list of Map, InternetAddress as key and Pair of ContactId and
-     * DisplayName as Value
-     * @throws ServiceException
-     */
-    public List<Map<InternetAddress, Pair<Integer, String>>> findContactsInEmailedContacts
-    (OperationContext octxt, Collection<Address> addrs) throws ServiceException {
-        if (addrs.isEmpty()) {
-            return Collections.emptyList();
-        }
-        List<Map<InternetAddress, Pair<Integer, String>>> list = new ArrayList<>();
-        Map<InternetAddress, Pair<Integer, String>> map = new HashMap<>();
-
-        for (Address addr : addrs) {
-            if (addr instanceof javax.mail.internet.InternetAddress) {
-                javax.mail.internet.InternetAddress iaddr = (javax.mail.internet.InternetAddress) addr;
-                try {
-                    if (!Strings.isNullOrEmpty(iaddr.getAddress())) {
-                        ZimbraQueryResults results = index.search(octxt, "inid:" + FolderConstants.ID_FOLDER_AUTO_CONTACTS + " field[email]:" + iaddr.getAddress(),
-                                EnumSet.of(MailItem.Type.CONTACT), SortBy.NONE, 1);
-                        while (results.hasNext()) {
-                            ZimbraHit hit = results.getNext();
-                            if (hit instanceof ContactHit) {
-                                ContactHit contactHit = (ContactHit) hit;
-                                Contact contact = contactHit.getContact();
-                                Map<String, String> m = contact.getFields();
-                                String fullName = m.get(ContactConstants.A_fullName);
-                                String emailSentName = iaddr.getPersonal();
-                                if (!Strings.isNullOrEmpty(fullName) && !Strings.isNullOrEmpty(emailSentName)
-                                        && !emailSentName.equals(fullName)) {
-                                    map.put(new InternetAddress(iaddr.getPersonal(), iaddr.getAddress()),
-                                            new Pair<Integer, String>(contactHit.getItemId(), iaddr.getPersonal()));
-                                    list.add(map);
-                                }
-                            }
-                        }
-                    }
-                } catch (ServiceException e) {
-                    ZimbraLog.search.error("error searching index for contacts." + e);
-                }
-            }
-        }
-        return list;
     }
 
     @Deprecated
