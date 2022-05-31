@@ -3522,7 +3522,11 @@ public abstract class CalendarItem extends MailItem {
                         if (itemIdGetter != null) {
                             /* ZWC expects a different mail item id for each exception */
                             localException.setMailItemId(itemIdGetter.get());
+                        } else {
+                            localException.setMailItemId(reply.getMailItemId()); // ZCS-10995
                         }
+                        sLog.debug("Exception invite for instanceId: %s with mailItemId: %s created", localException.getRecurId(),
+                                localException.getMailItemId());
                         mInvites.add(localException);
                         // create a fake ExceptionRule wrapper around the single-instance
                         recurrenceRule.addException(
