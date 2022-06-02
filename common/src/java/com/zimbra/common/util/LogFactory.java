@@ -52,6 +52,7 @@ public final class LogFactory {
         }
         LogManager.shutdown(true);
         Configurator.initialize(null, LC.zimbra_log4j_properties.value());
+        ((org.apache.logging.log4j.core.LoggerContext) LogManager.getContext(false)).reconfigure();
     }
 
     public static Log getLog(Class<?> clazz) {
