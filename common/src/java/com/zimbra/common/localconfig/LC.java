@@ -599,7 +599,9 @@ public final class LC {
             " -XX:G1MaxNewSizePercent=45" +
             " -XX:-OmitStackTraceInFastThrow" +
             " -verbose:gc" +
-            " -Xlog:gc*=info,safepoint=info:file=/opt/zimbra/log/gc.log:time:filecount=20,filesize=10m");
+            " -Xlog:gc*=info,safepoint=info:file=/opt/zimbra/log/gc.log:time:filecount=20,filesize=10m" +
+            " -Djava.security.egd=file:/dev/./urandom" +
+            " --add-opens java.base/java.lang=ALL-UNNAMED");
     @Supported
     public static final KnownKey mailboxd_pidfile = KnownKey.newKey("${zimbra_log_directory}/mailboxd.pid");
 
