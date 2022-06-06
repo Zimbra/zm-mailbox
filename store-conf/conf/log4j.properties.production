@@ -152,42 +152,42 @@ logger.zimbra.appenderRef.LOGFILE.ref = mailboxFile
 
 # Save zimbra.security to AUDIT appender 
 logger.security.name = zimbra.security
-logger.security.level = debug, AUDIT
+logger.security.level = info
 logger.security.additivity = false
 logger.security.appenderRef.AUDIT.ref = auditFile
 
 logger.sync.name = zimbra.sync
-logger.sync.level = info,SYNC
+logger.sync.level = info
 logger.sync.additivity = false
 logger.sync.appenderRef.SYNC.ref = syncFile
 
 logger.synctrace.name = zimbra.synctrace
-logger.synctrace.level = info,SYNCTRACE
+logger.synctrace.level = info
 logger.synctrace.additivity = false
 logger.synctrace.appenderRef.SYNCTRACE.ref = syncTraceFile
 
 logger.syncstate.name = zimbra.syncstate
-logger.syncstate.level = info,SYNCSTATE
+logger.syncstate.level = info
 logger.syncstate.additivity = false
 logger.syncstate.appenderRef.SYNCSTATE.ref = syncStateFile
 
 logger.wbxml.name = zimbra.wbxml
-logger.wbxml.level = info,WBXML
+logger.wbxml.level = info
 logger.wbxml.additivity = false
 logger.wbxml.appenderRef.WBXML.ref = wbXmlFile
 
 logger.activity.name = zimbra.activity
-logger.activity.level = info,ACTIVITY
+logger.activity.level = info
 logger.activity.additivity = false
 logger.activity.appenderRef.ACTIVITY.ref = activityFile
 
 logger.searchstat.name = zimbra.searchstat
-logger.searchstat.level = info,SEARCHSTAT
+logger.searchstat.level = info
 logger.searchstat.additivity = false
 logger.searchstat.appenderRef.SEARCHSTAT.ref = searchStatFile
 
 logger.ews.name = zimbra.ews
-logger.ews.level = info,EWS
+logger.ews.level = info
 logger.ews.additivity = false
 logger.ews.appenderRef.EWS.ref = ewsFile
 
