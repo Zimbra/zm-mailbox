@@ -165,6 +165,78 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Global level external store config
+     *
+     * @return globalExternalStoreConfig, or null if unset
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=5000)
+    public String getGlobalExternalStoreConfig() {
+        return getAttr(Provisioning.A_globalExternalStoreConfig, null, true);
+    }
+
+    /**
+     * Global level external store config
+     *
+     * @param globalExternalStoreConfig new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=5000)
+    public void setGlobalExternalStoreConfig(String globalExternalStoreConfig) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_globalExternalStoreConfig, globalExternalStoreConfig);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Global level external store config
+     *
+     * @param globalExternalStoreConfig new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=5000)
+    public Map<String,Object> setGlobalExternalStoreConfig(String globalExternalStoreConfig, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_globalExternalStoreConfig, globalExternalStoreConfig);
+        return attrs;
+    }
+
+    /**
+     * Global level external store config
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=5000)
+    public void unsetGlobalExternalStoreConfig() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_globalExternalStoreConfig, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Global level external store config
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=5000)
+    public Map<String,Object> unsetGlobalExternalStoreConfig(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_globalExternalStoreConfig, "");
+        return attrs;
+    }
+
+    /**
      * Zimbra access control list
      *
      * @return zimbraACE, or empty array if unset

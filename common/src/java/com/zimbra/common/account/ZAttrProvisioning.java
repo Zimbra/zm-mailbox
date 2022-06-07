@@ -2708,6 +2708,14 @@ public class ZAttrProvisioning {
     public static final String A_givenName = "givenName";
 
     /**
+     * Global level external store config
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=5000)
+    public static final String A_globalExternalStoreConfig = "globalExternalStoreConfig";
+
+    /**
      * RFC2256: first name(s) for which the entity is known by
      */
     @ZAttr(id=-1)
@@ -2814,6 +2822,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=-1)
     public static final String A_registeredAddress = "registeredAddress";
+
+    /**
+     * Server level external store config
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=5001)
+    public static final String A_serverExternalStoreConfig = "serverExternalStoreConfig";
 
     /**
      * RFC2256: last (family) name(s) for which the entity is known by
