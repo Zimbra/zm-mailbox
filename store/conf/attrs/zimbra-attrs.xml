@@ -10017,4 +10017,13 @@ TODO: delete them permanently from here
         If true on cos level , unset on domain level but zimbraDomainDefaultCOSId is set to cos then accounts for that domain will be backed up.
   </desc>
 </attr>
+
+<attr id="4019" name="zimbraGlobalExternalStoreConfig" type="string" cardinality="single" optionalIn="globalConfig" since="10.0.0">
+  <desc>Global level external store config</desc>
+</attr>
+
+<attr id="4020" name="zimbraServerExternalStoreConfig" type="string" cardinality="single" optionalIn="server" since="10.0.0">
+  <desc>Server level external store config</desc>
+</attr>
+
 </attrs>

@@ -8041,6 +8041,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraGlobalConfigExtraObjectClass = "zimbraGlobalConfigExtraObjectClass";
 
     /**
+     * Global level external store config
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4005)
+    public static final String A_zimbraGlobalExternalStoreConfig = "zimbraGlobalExternalStoreConfig";
+
+    /**
      * zimbraId of the main dynamic group for the dynamic group unit
      */
     @ZAttr(id=325)
@@ -15947,6 +15955,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=2071)
     public static final String A_zimbraScheduledTaskRetryPolicy = "zimbraScheduledTaskRetryPolicy";
+
+    /**
+     * Server level external store config
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4006)
+    public static final String A_zimbraServerExternalStoreConfig = "zimbraServerExternalStoreConfig";
 
     /**
      * Object classes to add when creating a zimbra server object.
