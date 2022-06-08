@@ -7902,7 +7902,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=5000)
+    @ZAttr(id=4005)
     public static final String A_zimbraGlobalExternalStoreConfig = "zimbraGlobalExternalStoreConfig";
 
     /**
@@ -15809,7 +15809,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=5001)
+    @ZAttr(id=4006)
     public static final String A_zimbraServerExternalStoreConfig = "zimbraServerExternalStoreConfig";
 
     /**
