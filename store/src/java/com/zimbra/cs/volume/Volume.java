@@ -31,7 +31,7 @@ import com.zimbra.soap.admin.type.VolumeInfo;
 /**
  * Based on default settings, there are 256 directories. We write blobs for id's 0-4095 to directory 0, 4096-8191 to
  * directory 1, etc. After filling directory 255, we wrap around and write 1048576-1052671 to directory 0 and so on.
- *
+ * <p>
  * Number of dirs: 2 ^ groupBits (2 ^ 8 = 256 by default)
  * Number of files per dir before wraparound: 2 ^ bits (2 ^ 12 = 4096 by default)
  */
@@ -41,7 +41,7 @@ public final class Volume {
     public static final short ID_NONE = -2;
     public static final short ID_MAX = 255;
 
-    public static final short TYPE_MESSAGE =  1;
+    public static final short TYPE_MESSAGE = 1;
     public static final short TYPE_MESSAGE_SECONDARY = 2;
     public static final short TYPE_INDEX = 10;
 
@@ -68,11 +68,12 @@ public final class Volume {
 
     private StoreType storeType;
 
-    public static enum StoreType{
+    public static enum StoreType {
         FILE_STORE(1),
         EXTERNAL(2);
 
         private final int storeType;
+
         StoreType(final int storeType) {
             this.storeType = storeType;
         }
@@ -80,10 +81,13 @@ public final class Volume {
         public int getStoreType() {
             return storeType;
         }
-        public static StoreType getStoreTypeBy(int value){
+
+        public static StoreType getStoreTypeBy(int value) {
             switch (value) {
-                case 1: return FILE_STORE;
-                case 2: return EXTERNAL;
+                case 1:
+                    return FILE_STORE;
+                case 2:
+                    return EXTERNAL;
             }
             return null;
         }
@@ -240,7 +244,7 @@ public final class Volume {
             return this;
         }
 
-        public Builder setStoreType(StoreType storeType){
+        public Builder setStoreType(StoreType storeType) {
             volume.storeType = storeType;
             return this;
         }
@@ -357,24 +361,17 @@ public final class Volume {
         return LC.zimbra_relative_volume_path.booleanValue() ? LC.zimbra_home.value() + File.separator + path : path;
     }
 
-    public static String getConfiguredServerID() throws ServiceException
-    {
+    public static String getConfiguredServerID() throws ServiceException {
         StringBuilder finalPath = new StringBuilder();
-        if (Zimbra.isAlwaysOn())
-        {
+        if (Zimbra.isAlwaysOn()) {
             String alwaysOnServerClusterId = Zimbra.getAlwaysOnClusterId();
             String localServerId = Provisioning.getInstance().getLocalServer().getId();
-            if (alwaysOnServerClusterId != null)
-            {
+            if (alwaysOnServerClusterId != null) {
                 finalPath.append(alwaysOnServerClusterId);
-            }
-            else
-            {
+            } else {
                 finalPath.append(localServerId);
             }
-        }
-        else
-        {
+        } else {
             String localServerId = Provisioning.getInstance().getLocalServer().getId();
             finalPath.append(localServerId);
         }
@@ -414,9 +411,9 @@ public final class Volume {
     /**
      * Make sure the path is an absolute path, and remove all "." and ".." from it. This is similar to
      * {@link File#getCanonicalPath()} except symbolic links are not resolved.
-     *
+     * <p>
      * If there are too many ".." in the path, navigating to parent directory stops at root.
-     *
+     * <p>
      * Supports UNIX absolute path, Windows absolute path with or without drive letter, and windows UNC share.
      *
      * @throws VolumeServiceException if path is not absolute
@@ -496,7 +493,7 @@ public final class Volume {
                 .add("id", id).add("type", type).add("name", name).add("path", rootPath)
                 .add("mboxGroupBits", mboxGroupBits).add("mboxBits", mboxBits)
                 .add("fileGroupBits", fileGroupBits).add("fileBits", fileBits)
-                .add("compressBlobs", compressBlobs).add("compressionThreshold",compressionThreshold)
+                .add("compressBlobs", compressBlobs).add("compressionThreshold", compressionThreshold)
                 .add("storeType", storeType)
                 .toString();
     }
