@@ -316,9 +316,12 @@ public class UserServlet extends ZimbraServlet {
             resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, L10nUtil.getMessage(MsgKey.errMustAuthenticate, req));
         } else if (ctxt != null && ctxt.getAuthAccount() instanceof GuestAccount && ctxt.basicAuthAllowed() ) {
             resp.addHeader(AuthUtil.WWW_AUTHENTICATE_HEADER, getRealmHeader(req, null));
-                resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, L10nUtil.getMessage(MsgKey.errMustAuthenticate, req));
+            resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, L10nUtil.getMessage(MsgKey.errMustAuthenticate, req));
+        } else if (!checkTwoFactorAuthentication(ctxt)) {
+            resp.addHeader(AuthUtil.WWW_AUTHENTICATE_HEADER, getRealmHeader(req, null));
+            resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, L10nUtil.getMessage(MsgKey.errMustAuthenticate, req));
          } else {
-                resp.sendError(HttpServletResponse.SC_NOT_FOUND, message);
+            resp.sendError(HttpServletResponse.SC_NOT_FOUND, message);
          }
     }
 
@@ -342,8 +345,7 @@ public class UserServlet extends ZimbraServlet {
             checkTargetAccountStatus(context);
 
             if (!checkTwoFactorAuthentication(context)) {
-                resp.addHeader(AuthUtil.WWW_AUTHENTICATE_HEADER, getRealmHeader(req, null));
-                resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, L10nUtil.getMessage(MsgKey.errMustAuthenticate, req));
+                throw ServiceException.AUTH_REQUIRED("two factor auth is required");
             }
 
             if (proxyIfRemoteTargetAccount(req, resp, context)) {
@@ -360,13 +362,16 @@ public class UserServlet extends ZimbraServlet {
 
         } catch (ServiceException se) {
             if (se.getCode() == ServiceException.PERM_DENIED ||
-                se instanceof NoSuchItemException)
+                se instanceof NoSuchItemException) {
                 sendError(context, req, resp, L10nUtil.getMessage(MsgKey.errNoSuchItem, req));
-            else if (se.getCode() == AccountServiceException.MAINTENANCE_MODE ||
-                     se.getCode() == AccountServiceException.ACCOUNT_INACTIVE)
+            } else if (se.getCode() == ServiceException.AUTH_REQUIRED) {
+                sendError(context, req, resp, L10nUtil.getMessage(MsgKey.errMustAuthenticate, req));
+            } else if (se.getCode() == AccountServiceException.MAINTENANCE_MODE ||
+                       se.getCode() == AccountServiceException.ACCOUNT_INACTIVE) {
                 sendError(context, req, resp, se.getMessage());
-            else
+            } else {
                 throw new ServletException(se);
+            }
         } catch (UserServletException e) {
             // add check for ServiceException root cause?
             resp.sendError(e.getHttpStatusCode(), e.getMessage());
@@ -415,8 +420,7 @@ public class UserServlet extends ZimbraServlet {
 
     // ZBUG-2390: if two-factor authentication is enabled or required for account
     // while authentication was basic and not through cookie, reject access
-    private boolean checkTwoFactorAuthentication(UserServletContext context)
-            throws ServiceException {
+    private boolean checkTwoFactorAuthentication(UserServletContext context) {
         if (context != null && context.getAuthAccount() != null
                 && (context.getAuthAccount().isTwoFactorAuthEnabled()
                         || context.getAuthAccount().isFeatureTwoFactorAuthRequired())
