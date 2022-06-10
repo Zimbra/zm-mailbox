@@ -382,8 +382,7 @@ public class UserServlet extends ZimbraServlet {
             checkTargetAccountStatus(context);
 
             if (!checkTwoFactorAuthentication(context)) {
-                resp.addHeader(AuthUtil.WWW_AUTHENTICATE_HEADER, getRealmHeader(req, null));
-                resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, L10nUtil.getMessage(MsgKey.errMustAuthenticate, req));
+                throw ServiceException.AUTH_REQUIRED(String.format("two factor auth is required"));
             }
 
             if (proxyIfRemoteTargetAccount(req, resp, context)) {
@@ -405,6 +404,8 @@ public class UserServlet extends ZimbraServlet {
         } catch (ServiceException se) {
             if (se.getCode() == ServiceException.PERM_DENIED || se instanceof NoSuchItemException)
                 sendError(context, req, resp, L10nUtil.getMessage(MsgKey.errNoSuchItem, req));
+            else if (se.getCode() == ServiceException.AUTH_REQUIRED)
+                sendError(context, req, resp, L10nUtil.getMessage(MsgKey.errMustAuthenticate, req));
             else if (se.getCode() == AccountServiceException.MAINTENANCE_MODE
                     || se.getCode() == AccountServiceException.ACCOUNT_INACTIVE)
                 sendError(context, req, resp, se.getMessage());
