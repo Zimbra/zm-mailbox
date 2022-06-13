@@ -71,7 +71,7 @@
   <dependency org="org.apache.httpcomponents" name="httpcore" rev="${httpclient.httpcore.version}"/> 
   <dependency org="org.apache.httpcomponents" name="httpcore-nio" rev="${httpclient.httpcore.version}"/>
   <dependency org="org.apache.httpcomponents" name="httpmime" rev="${httpclient.version}"/>
-  <dependency org="org.apache.commons" name="commons-compress" rev="1.20" />
+  <dependency org="org.apache.commons" name="commons-compress" rev="1.21" />
   <dependency org="org.apache.mina" name="mina-core" rev="2.1.6"/>
   <dependency org="org.apache.curator" name="curator-recipes" rev="2.0.1-incubating" />
   <dependency org="org.apache.curator" name="curator-client" rev="2.0.1-incubating" />
