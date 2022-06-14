@@ -40,7 +40,9 @@ public class OwaspHtmlSanitizer implements Callable<String> {
 
     public OwaspHtmlSanitizer(String html, boolean neuterImages, String vHost) {
         // fix to check open tags & remove
-        this.html = checkUnbalancedTags(html);
+        String formattedHtml = checkUnbalancedTags(html);
+        // fix to remove child comparator inside <style> tag
+        this.html = removeChildComaparator(formattedHtml);
         this.neuterImages = neuterImages;
         this.vHost = vHost;
     }
@@ -78,6 +80,52 @@ public class OwaspHtmlSanitizer implements Callable<String> {
             html = html.split(">div>div")[0] + "div>div" + html.split(">div>div")[1];
         }
         return html;
+    }
+    
+    /** 
+     * A method to check & remove any any child parent comparator inside <style> tag 
+     * 
+     * @return the Formatted Html after removing child comparators(>)
+     */
+    private String removeChildComaparator(String html) {
+        if (StringUtil.isNullOrEmpty(html)) {
+            return html;
+        }
+        ArrayList<String> cssTagsList = new ArrayList<String>();
+        // in cssTagsList array we can add multiple tags 
+        cssTagsList.add("tbody");
+        cssTagsList.add("tr");
+        cssTagsList.add("div");
+        String formattedHtml = "";
+        String startStyle = html.contains("<style") ? "<style": "<STYLE" ;
+        String endStyle = html.contains("</style>") ? "</style>": "</STYLE>" ;
+        String splitFromStyleStart[] = html.split(startStyle);
+        for (String checkEndStyle : splitFromStyleStart) {
+             if (checkEndStyle.contains(endStyle)) {
+                 String betweenCodeStyleTagArr[] = checkEndStyle.split(endStyle);
+                 String betweenCodeStyleTag = betweenCodeStyleTagArr[0];
+                 for (String cssTag : cssTagsList) {
+                      String formattedHtmlCSSTag = "";
+                      String childCssTag = ">"+cssTag+">";
+                      if (betweenCodeStyleTag.contains(childCssTag)) {
+                          String splitChildCssTag[] = betweenCodeStyleTag.split(childCssTag);
+                          for(int i=0;i<splitChildCssTag.length;i++) {
+                              if (i==0) {
+                                  formattedHtmlCSSTag = formattedHtmlCSSTag + splitChildCssTag[i];
+                              } else {
+                                  formattedHtmlCSSTag = formattedHtmlCSSTag + cssTag + ">" + splitChildCssTag[i];
+                              }
+                          }
+                          betweenCodeStyleTag = formattedHtmlCSSTag ;
+                          formattedHtmlCSSTag = "";
+                      }
+                 }
+                 formattedHtml = formattedHtml + startStyle + betweenCodeStyleTag + endStyle + betweenCodeStyleTagArr[1];
+             } else {
+                 formattedHtml = formattedHtml + checkEndStyle;
+             }
+        }
+        return formattedHtml;
     }
 
     private PolicyFactory POLICY_DEFINITION;
