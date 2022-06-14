@@ -384,8 +384,9 @@ public final class Volume {
 
         result.append(rootPath).append(File.separator);
 
-        if (Provisioning.getInstance().getLocalServer().isConfiguredServerIDForBlobDirEnabled())
+        if (Provisioning.getInstance().getLocalServer().isConfiguredServerIDForBlobDirEnabled()) {
             result.append(getConfiguredServerID()).append(File.separator);
+        }
 
         result.append(dir).append(File.separator).append(mboxId);
 
