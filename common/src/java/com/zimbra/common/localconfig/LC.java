@@ -1494,6 +1494,9 @@ public final class LC {
     // ZCS-11349: Toggle off/on fallback to ldap search
     public static final KnownKey zimbra_gal_fallback_ldap_search_enabled = KnownKey.newKey(true);
 
+    // Content type not supported by convertd
+    public static final KnownKey convertd_unsupported_mime_type = KnownKey.newKey("application/pdf");
+
     static {
         // Automatically set the key name with the variable name.
         for (Field field : LC.class.getFields()) {
