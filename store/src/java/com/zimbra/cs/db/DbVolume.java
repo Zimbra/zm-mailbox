@@ -335,16 +335,17 @@ public final class DbVolume {
     }
 
     private static boolean isVolumeReferenced(DbConnection conn, short volumeId, int groupId) throws ServiceException {
-        return tableRefsVolume(conn, volumeId, groupId, "revision") || tableRefsVolume(conn, volumeId, groupId, "revision_dumpster") ||
-                tableRefsVolume(conn, volumeId, groupId, "mail_item_dumpster") || tableRefsVolume(conn, volumeId, groupId, "mail_item");
+        return tableRefsVolume(conn, volumeId, groupId, "revision") ||
+                tableRefsVolume(conn, volumeId, groupId, "revision_dumpster") ||
+                tableRefsVolume(conn, volumeId, groupId, "mail_item_dumpster") ||
+                tableRefsVolume(conn, volumeId, groupId, "mail_item");
     }
 
     private static boolean tableRefsVolume(DbConnection conn, short volumeId, int groupId, String table) throws ServiceException {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            stmt = conn.prepareStatement("SELECT count(*) from "+DbMailbox.qualifyTableName(groupId, table) +
-                    " where locator=?");
+            stmt = conn.prepareStatement("SELECT count(*) from "+DbMailbox.qualifyTableName(groupId, table) + " where locator=?");
             stmt.setInt(1, volumeId);
             rs = stmt.executeQuery();
             return (rs.next() && rs.getInt(1) > 0);
