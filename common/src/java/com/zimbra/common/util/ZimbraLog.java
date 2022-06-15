@@ -495,7 +495,7 @@ public final class ZimbraLog {
     /**
      * Log for zimbra Store managers
      */
-    public static final Log SM_LOG = LogFactory.getLog("zimbra.storemanagers");
+    public static final Log smLog = LogFactory.getLog("zimbra.storemanagers");
 
     /**
      * Maps the log category name to its description.
@@ -608,7 +608,7 @@ public final class ZimbraLog {
         descriptions.put(passwordreset.getCategory(), "Password Reset operations");
         descriptions.put(addresslist.getCategory(), "Addresslist operations");
         descriptions.put(gql.getCategory(), "GraphQL operations");
-        descriptions.put(SM_LOG.getCategory(), "Generic Store managers");
+        descriptions.put(smLog.getCategory(), "Generic Store managers");
         CATEGORY_DESCRIPTIONS = Collections.unmodifiableMap(descriptions);
     }
 
