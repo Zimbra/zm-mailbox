@@ -56,20 +56,33 @@ public final class ModifyVolume extends AdminDocumentHandler {
         if (storeManager.supports(StoreManager.StoreFeature.CUSTOM_STORE_API, String.valueOf(vol.getId()))) {
             throw ServiceException.INVALID_REQUEST("Operation unsupported, use zxsuite to edit this volume", null);
         }
-        if (vol.getType() > 0) {
-            builder.setType(vol.getType());
+
+        // store type == 1, allow modification of all parameters
+        if(1 == vol.getStoreType()) {
+            if (vol.getType() > 0) {
+                builder.setType(vol.getType());
+            }
+            if (vol.getName() != null) {
+                builder.setName(vol.getName());
+            }
+            if (vol.getRootPath() != null) {
+                builder.setPath(vol.getRootPath(), true);
+            }
+            if (vol.getCompressBlobs() != null) {
+                builder.setCompressBlobs(vol.getCompressBlobs());
+            }
+            if (vol.getCompressionThreshold() > 0) {
+                builder.setCompressionThreshold(vol.getCompressionThreshold());
+            }
         }
-        if (vol.getName() != null) {
-            builder.setName(vol.getName());
+        // store type == 2, allow modification of only volume name
+        else if (2 == vol.getStoreType()) {
+            if (vol.getName() != null) {
+                builder.setName(vol.getName());
+            }
         }
-        if (vol.getRootPath() != null) {
-            builder.setPath(vol.getRootPath(), true);
-        }
-        if (vol.getCompressBlobs() != null) {
-            builder.setCompressBlobs(vol.getCompressBlobs());
-        }
-        if (vol.getCompressionThreshold() > 0) {
-            builder.setCompressionThreshold(vol.getCompressionThreshold());
+        else {
+            // Do nothing
         }
         mgr.update(builder.build());
         return new ModifyVolumeResponse();
