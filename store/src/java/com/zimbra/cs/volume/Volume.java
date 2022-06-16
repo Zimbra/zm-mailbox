@@ -27,6 +27,7 @@ import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.store.IncomingDirectory;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.admin.type.VolumeInfo;
+import com.zimbra.soap.admin.type.VolumeExternalInfo;
 
 /**
  * Based on default settings, there are 256 directories. We write blobs for id's 0-4095 to directory 0, 4096-8191 to
@@ -181,7 +182,6 @@ public final class Volume {
             volume.compressionThreshold = copy.compressionThreshold;
             volume.metadata = copy.metadata;
             volume.storeType = copy.storeType;
-
         }
 
         public Builder setId(short id) {
@@ -514,4 +514,5 @@ public final class Volume {
         jaxb.setCurrent(VolumeManager.getInstance().isCurrent(this));
         return jaxb;
     }
+
 }

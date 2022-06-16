@@ -107,24 +107,10 @@ public final class VolumeInfo {
     private ZmBoolean current;
 
     /**
-     * @zm-api-field-description Set to 1 for Internal and 2 for External.
-    @XmlAttribute(name=AdminConstants.A_VOLUME_STORE_TYPE /* storeType, required=true)
-    private short storeType;
-
-    /**
-     * @zm-api-field-description Prefix for bucket location e.g. server1_primary
-    @XmlAttribute(name=AdminConstants.A_VOLUME_VOLUME_PREFIX /* volumePrefix , required=false)
-    private String volumePrefix;
-
-     * @zm-api-field-description Specifies store provider
-    @XmlAttribute(name=AdminConstants.A_VOLUME_STORE_PROVIDER /* storeProvider , required=false)
-    private String storeProvider;
-
-     * @zm-api-field-description Specifies global bucket configuration Id
-     *
-    @XmlAttribute(name=AdminConstants.A_VOLUME_GLB_BUCKET_CONFIG_ID /* glbBucketConfigId *, required=false)
-    private String glbBucketConfigId;
-    **/
+     * @zm-api-field-description Volume external information
+     */
+    @XmlElement(name=AdminConstants.E_VOLUME_EXT, required=false)
+    private VolumeExternalInfo volumeExternal;
 
     public void setId(short value) {
         id = value;
@@ -218,38 +204,11 @@ public final class VolumeInfo {
         return ZmBoolean.toBool(current);
     }
 
-    /**
-    public void setStoreType(short value) {
-        storeType = value;
+    public void setVolumeExternalInfo(VolumeExternalInfo value) {
+        volumeExternal = value;
     }
 
-    public short getStoreType() {
-        return storeType;
+    public VolumeExternalInfo getVolumeExternalInfo() {
+        return volumeExternal;
     }
-
-    public void setVolumePrefix(String value) {
-        volumePrefix = value;
-    }
-
-    public String getVolumePrefix() {
-        return volumePrefix;
-    }
-
-    public void setStoreProvider(String value) {
-        storeProvider = value;
-    }
-
-    public String getStoreProvider() {
-        return storeProvider;
-    }
-
-    public void setGlobalBucketConfigurationId(String value) {
-        glbBucketConfigId = value;
-    }
-
-    public String getGlobalBucketConfigurationId() {
-        return glbBucketConfigId;
-    }
-    **/
-
 }
