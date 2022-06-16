@@ -192,7 +192,7 @@ logger.ews.additivity = false
 logger.ews.appenderRef.EWS.ref = ewsFile
 
 logger.syslog.name = com.zimbra
-logger.syslog.level = debug
+logger.syslog.level = info
 logger.syslog.additivity = false
 logger.syslog.appenderRef.SYSLOG.ref = syslogAppender
 
