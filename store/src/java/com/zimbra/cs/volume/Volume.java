@@ -27,6 +27,7 @@ import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.store.IncomingDirectory;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.admin.type.VolumeInfo;
+import com.zimbra.soap.admin.type.VolumeExternalInfo;
 
 /**
  * Based on default settings, there are 256 directories. We write blobs for id's 0-4095 to directory 0, 4096-8191 to
@@ -65,7 +66,7 @@ public final class Volume {
     private boolean compressBlobs;
     private long compressionThreshold;
     private Metadata metadata;
-    
+
     public static class VolumeMetadata {
         private int lastSyncDate;
         private int currentSyncDate;
@@ -88,37 +89,37 @@ public final class Volume {
             this.currentSyncDate = meta.getInt(FN_DATE_CURRENTSYNC, 0);
             this.groupId = meta.getInt(FN_LAST_GROUP_ID, 0);
         }
-        
+
         public VolumeMetadata(int lastSyncDate, int currentSyncDate, int groupId) {
             this.lastSyncDate = lastSyncDate;
             this.currentSyncDate = currentSyncDate;
             this.groupId = groupId;
         }
-        
+
         public int getLastSyncDate() {
             return lastSyncDate;
         }
-        
+
         public int getCurrentSyncDate() {
             return currentSyncDate;
         }
-        
+
         public int getGroupId() {
             return groupId;
         }
-        
+
         public void setLastSyncDate(int date) {
             this.lastSyncDate = date;
         }
-        
+
         public void setCurrentSyncDate(int date) {
             this.currentSyncDate = date;
         }
-        
+
         public void setGroupId(int id) {
             this.groupId = id;
         }
-        
+
         public String toString() {
             return serialize().toString();
         }
@@ -153,7 +154,7 @@ public final class Volume {
             volume.compressBlobs = copy.compressBlobs;
             volume.compressionThreshold = copy.compressionThreshold;
             volume.metadata = copy.metadata;
-            
+
         }
 
         public Builder setId(short id) {
@@ -210,7 +211,7 @@ public final class Volume {
             volume.compressionThreshold = value;
             return this;
         }
-        
+
         public Builder setMetadata(VolumeMetadata metadata) {
             volume.metadata = metadata.serialize();
             return this;
@@ -314,7 +315,7 @@ public final class Volume {
     public long getCompressionThreshold() {
         return compressionThreshold;
     }
-    
+
     public VolumeMetadata getMetadata() throws ServiceException {
         return new VolumeMetadata(metadata);
     }
@@ -323,7 +324,7 @@ public final class Volume {
         //return LC.zimbra_relative_volume_path.booleanValue() ? LC.zimbra_home.value() + File.separator + getConfiguredRootPath(path) : path;
     	return LC.zimbra_relative_volume_path.booleanValue() ? LC.zimbra_home.value() + File.separator + path : path;
     }
-    
+
     public static String getConfiguredServerID() throws ServiceException
     {
         StringBuilder finalPath = new StringBuilder();
@@ -351,14 +352,14 @@ public final class Volume {
     private StringBuilder getMailboxDir(int mboxId, String subdir) throws ServiceException {
         StringBuilder result = new StringBuilder();
         int dir = (mboxId >> mboxBits) & mboxGroupBitmask;
-        
+
         result.append(rootPath).append(File.separator);
 
         if (Provisioning.getInstance().getLocalServer().isConfiguredServerIDForBlobDirEnabled())
         	result.append(getConfiguredServerID()).append(File.separator);
 
         result.append(dir).append(File.separator).append(mboxId);
-        
+
         if (subdir != null) {
             result.append(File.separator).append(subdir);
         }
@@ -482,4 +483,5 @@ public final class Volume {
         jaxb.setCurrent(VolumeManager.getInstance().isCurrent(this));
         return jaxb;
     }
+
 }

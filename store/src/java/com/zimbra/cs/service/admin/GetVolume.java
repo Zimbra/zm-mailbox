@@ -31,6 +31,8 @@ import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.GetVolumeRequest;
 import com.zimbra.soap.admin.message.GetVolumeResponse;
+import com.zimbra.soap.admin.type.VolumeInfo;
+import com.zimbra.soap.admin.type.VolumeExternalInfo;
 
 public final class GetVolume extends AdminDocumentHandler {
 
@@ -45,7 +47,13 @@ public final class GetVolume extends AdminDocumentHandler {
         checkRight(zsc, ctx, Provisioning.getInstance().getLocalServer(), Admin.R_manageVolume);
 
         Volume vol = VolumeManager.getInstance().getVolume(req.getId());
-        volumeExternal volExt = VolumeManager.getInstance().getVolumeExternal(req.getId());
+        VolumeInfo volInfo = vol.toJAXB();
+
+        if(1 == 1) {
+            VolumeExternalInfo volExtInfo = volInfo.getVolumeExternalInfo();
+            volInfo.setVolumeExternalInfo(volExtInfo);
+        }
+
         GetVolumeResponse resp = new GetVolumeResponse(vol.toJAXB());
         return resp;
     }
