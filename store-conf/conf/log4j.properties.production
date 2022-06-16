@@ -207,7 +207,7 @@ logger.memcached.name = net.spy.memcached
 logger.memcached.level = WARN
 
 %%comment VAR:!zimbraLogHostname%%logger.slogger.name = zimbra.slogger
-%%comment VAR:!zimbraLogHostname%%logger.slogger.level=INFO,SLOGGER
+%%comment VAR:!zimbraLogHostname%%logger.slogger.level=INFO
 %%uncomment VAR:!zimbraLogHostname%%logger.slogger.level=ERROR
 %%comment VAR:!zimbraLogHostname%%logger.slogger.additivity = false
 %%comment VAR:!zimbraLogHostname%%logger.slogger.appenderRef.SLOGGER.ref = sloggerAppender
