@@ -24,6 +24,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.VolumeInfo;
+import com.zimbra.soap.admin.type.VolumeExternalInfo;
 
 /**
  * @zm-api-command-auth-required true
@@ -39,6 +40,12 @@ public class CreateVolumeRequest {
      */
     @XmlElement(name=AdminConstants.E_VOLUME, required=true)
     private VolumeInfo volume;
+
+    /**
+     * @zm-api-field-description Volume external information
+     */
+    @XmlElement(name=AdminConstants.E_VOLUME_EXT, required=false)
+    private VolumeExternalInfo volExtInfo;
 
     /**
      * no-argument constructor wanted by JAXB
