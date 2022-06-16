@@ -107,12 +107,6 @@ public final class VolumeInfo {
     private ZmBoolean current;
 
     /**
-     * @zm-api-field-description Set if the volume is current.
-     */
-    @XmlElement(name=AdminConstants.A_VOLUME_VOL_EXT_INFO /* volExtInfo */, required=false)
-    private VolumeExternalInfo volExtInfo;
-
-    /**
      * @zm-api-field-description Set to 1 for Internal and 2 for External.
     @XmlAttribute(name=AdminConstants.A_VOLUME_STORE_TYPE /* storeType, required=true)
     private short storeType;

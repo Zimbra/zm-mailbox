@@ -1168,6 +1168,7 @@ public final class AdminConstants {
     public static final String E_NI = "ni";
     public static final String E_NUM_OF_PAGES = "numpages";
     public static final String E_VOLUME = "volume";
+    public static final String E_VOLUME_EXT = "volumeExternal";
     public static final String E_PROGRESS = "progress";
     public static final String E_SOAP_URL = "soapURL";
     public static final String E_ADMIN_SOAP_URL = "adminSoapURL";
@@ -1298,7 +1299,6 @@ public final class AdminConstants {
     public static final String A_VOLUME_VOLUME_PREFIX = "volumePrefix";
     public static final String A_VOLUME_STORE_PROVIDER = "storeProvider";
     public static final String A_VOLUME_GLB_BUCKET_CONFIG_ID = "glbBucketConfigId";
-    public static final String A_VOLUME_VOL_EXT_INFO = "volExtInfo";
 
     // Blob consistency check
     public static final String E_MISSING_BLOBS = "missingBlobs";
