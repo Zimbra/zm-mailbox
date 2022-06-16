@@ -20,6 +20,7 @@ package com.zimbra.soap.admin.type;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
 
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.type.ZmBoolean;
@@ -106,28 +107,30 @@ public final class VolumeInfo {
     private ZmBoolean current;
 
     /**
-     * @zm-api-field-description Set to 1 for Internal and 2 for External.
+     * @zm-api-field-description Set if the volume is current.
      */
-    @XmlAttribute(name=AdminConstants.A_VOLUME_STORE_TYPE /* storeType */, required=true)
+    @XmlElement(name=AdminConstants.A_VOLUME_VOL_EXT_INFO /* volExtInfo */, required=false)
+    private VolumeExternalInfo volExtInfo;
+
+    /**
+     * @zm-api-field-description Set to 1 for Internal and 2 for External.
+    @XmlAttribute(name=AdminConstants.A_VOLUME_STORE_TYPE /* storeType, required=true)
     private short storeType;
 
     /**
      * @zm-api-field-description Prefix for bucket location e.g. server1_primary
-     */
-    @XmlAttribute(name=AdminConstants.A_VOLUME_VOLUME_PREFIX /* volumePrefix */, required=false)
+    @XmlAttribute(name=AdminConstants.A_VOLUME_VOLUME_PREFIX /* volumePrefix , required=false)
     private String volumePrefix;
 
-    /**
      * @zm-api-field-description Specifies store provider
-     */
-    @XmlAttribute(name=AdminConstants.A_VOLUME_STORE_PROVIDER /* storeProvider */, required=false)
+    @XmlAttribute(name=AdminConstants.A_VOLUME_STORE_PROVIDER /* storeProvider , required=false)
     private String storeProvider;
 
-    /**
      * @zm-api-field-description Specifies global bucket configuration Id
-     */
-    @XmlAttribute(name=AdminConstants.A_VOLUME_GLB_BUCKET_CONFIG_ID /* glbBucketConfigId */, required=false)
+     *
+    @XmlAttribute(name=AdminConstants.A_VOLUME_GLB_BUCKET_CONFIG_ID /* glbBucketConfigId *, required=false)
     private String glbBucketConfigId;
+    **/
 
     public void setId(short value) {
         id = value;
@@ -221,6 +224,7 @@ public final class VolumeInfo {
         return ZmBoolean.toBool(current);
     }
 
+    /**
     public void setStoreType(short value) {
         storeType = value;
     }
@@ -252,5 +256,6 @@ public final class VolumeInfo {
     public String getGlobalBucketConfigurationId() {
         return glbBucketConfigId;
     }
+    **/
 
 }

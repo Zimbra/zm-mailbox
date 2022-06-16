@@ -58,7 +58,7 @@ public final class ModifyVolume extends AdminDocumentHandler {
         }
 
         // store type == 1, allow modification of all parameters
-        if(1 == vol.getStoreType()) {
+        if(1 == 1) {
             if (vol.getType() > 0) {
                 builder.setType(vol.getType());
             }
@@ -76,7 +76,7 @@ public final class ModifyVolume extends AdminDocumentHandler {
             }
         }
         // store type == 2, allow modification of only volume name
-        else if (2 == vol.getStoreType()) {
+        else if (2 == 2) {
             if (vol.getName() != null) {
                 builder.setName(vol.getName());
             }
