@@ -45,6 +45,7 @@ public final class GetVolume extends AdminDocumentHandler {
         checkRight(zsc, ctx, Provisioning.getInstance().getLocalServer(), Admin.R_manageVolume);
 
         Volume vol = VolumeManager.getInstance().getVolume(req.getId());
+        volumeExternal volExt = VolumeManager.getInstance().getVolumeExternal(req.getId());
         GetVolumeResponse resp = new GetVolumeResponse(vol.toJAXB());
         return resp;
     }
