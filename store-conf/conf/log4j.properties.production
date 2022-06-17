@@ -126,14 +126,14 @@ appender.EWS.policies.time.modulate = true
 appender.EWS.strategy.type = DefaultRolloverStrategy
 
 # Syslog appender
-appender.SYSLOG.type = Syslog
-appender.SYSLOG.name = syslogAppender
-appender.SYSLOG.host = localhost
-appender.SYSLOG.port = 514
-appender.SYSLOG.protocol = UDP
-appender.SYSLOG.facility = LOCAL0
-appender.SYSLOG.layout.type = PatternLayout
-appender.SYSLOG.layout.pattern = mailboxd: %-5p [%t] [%z] %c{1} - %m
+%%uncomment VAR:zimbraLogToSyslog%%appender.SYSLOG.type = Syslog
+%%uncomment VAR:zimbraLogToSyslog%%appender.SYSLOG.name = syslogAppender
+%%uncomment VAR:zimbraLogToSyslog%%appender.SYSLOG.host = localhost
+%%uncomment VAR:zimbraLogToSyslog%%appender.SYSLOG.port = 514
+%%uncomment VAR:zimbraLogToSyslog%%appender.SYSLOG.protocol = UDP
+%%uncomment VAR:zimbraLogToSyslog%%appender.SYSLOG.facility = LOCAL0
+%%uncomment VAR:zimbraLogToSyslog%%appender.SYSLOG.layout.type = PatternLayout
+%%uncomment VAR:zimbraLogToSyslog%%appender.SYSLOG.layout.pattern = mailboxd: %-5p [%t] [%z] %c{1} - %m
 
 # Logger service appender
 %%comment VAR:!zimbraLogHostname%%appender.SLOGGER.type = Syslog
@@ -191,10 +191,10 @@ logger.ews.level = info
 logger.ews.additivity = false
 logger.ews.appenderRef.EWS.ref = ewsFile
 
-logger.syslog.name = com.zimbra
-logger.syslog.level = info
-logger.syslog.additivity = false
-logger.syslog.appenderRef.SYSLOG.ref = syslogAppender
+%%uncomment VAR:zimbraLogToSyslog%%logger.syslog.name = com.zimbra
+%%uncomment VAR:zimbraLogToSyslog%%logger.syslog.level = info
+%%uncomment VAR:zimbraLogToSyslog%%logger.syslog.additivity = false
+%%uncomment VAR:zimbraLogToSyslog%%logger.syslog.appenderRef.SYSLOG.ref = syslogAppender
 
 # HttpMethodBase spews out too many WARN on the badly formatted cookies.
 #logger.org.apache.commons.httpclient.HttpMethodBase=ERROR
