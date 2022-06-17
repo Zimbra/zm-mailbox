@@ -71,13 +71,10 @@ public class OwaspHtmlSanitizer implements Callable<String> {
                      formattedHtml = formattedHtml + start + strAfterSplit;
                  } else {
                      formattedHtml = formattedHtml + strAfterSplit;
-                 }
+                 } 
             }
             html = formattedHtml;
             formattedHtml = "";
-        }
-        if (html.contains("portal-page-1>div>div{padding-top:5px;}") && !html.split(">div>div")[1].equals("")) {
-            html = html.split(">div>div")[0] + "div>div" + html.split(">div>div")[1];
         }
         return html;
     }
@@ -96,9 +93,15 @@ public class OwaspHtmlSanitizer implements Callable<String> {
         cssTagsList.add("tbody");
         cssTagsList.add("tr");
         cssTagsList.add("div");
+        cssTagsList.add("TBODY");
+        cssTagsList.add("TR");
+        cssTagsList.add("DIV");
+        cssTagsList.add("Tbody");
+        cssTagsList.add("Tr");
+        cssTagsList.add("Div");
         String formattedHtml = "";
-        String startStyle = html.contains("<style") ? "<style": "<STYLE" ;
-        String endStyle = html.contains("</style>") ? "</style>": "</STYLE>" ;
+        String startStyle = html.contains("<style") ? "<style": html.contains("<Style") ? "<Style" : "<STYLE" ;
+        String endStyle = html.contains("</style>") ? "</style>": html.contains("</Style>") ? "</Style>" : "</STYLE>" ;
         String splitFromStyleStart[] = html.split(startStyle);
         for (String checkEndStyle : splitFromStyleStart) {
              if (checkEndStyle.contains(endStyle)) {
