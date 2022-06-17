@@ -19,6 +19,7 @@ package com.zimbra.cs.html.owasp;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.concurrent.Callable;
+import java.util.regex.Pattern;
 
 import org.owasp.html.Handler;
 import org.owasp.html.HtmlSanitizer;
@@ -93,25 +94,19 @@ public class OwaspHtmlSanitizer implements Callable<String> {
         cssTagsList.add("tbody");
         cssTagsList.add("tr");
         cssTagsList.add("div");
-        cssTagsList.add("TBODY");
-        cssTagsList.add("TR");
-        cssTagsList.add("DIV");
-        cssTagsList.add("Tbody");
-        cssTagsList.add("Tr");
-        cssTagsList.add("Div");
         String formattedHtml = "";
-        String startStyle = html.contains("<style") ? "<style": html.contains("<Style") ? "<Style" : "<STYLE" ;
-        String endStyle = html.contains("</style>") ? "</style>": html.contains("</Style>") ? "</Style>" : "</STYLE>" ;
-        String splitFromStyleStart[] = html.split(startStyle);
+        String startStyle = "<style" ;
+        String endStyle = "</style>" ;
+        String[] splitFromStyleStart = Pattern.compile(startStyle, Pattern.CASE_INSENSITIVE).split(html);
         for (String checkEndStyle : splitFromStyleStart) {
-             if (checkEndStyle.contains(endStyle)) {
-                 String betweenCodeStyleTagArr[] = checkEndStyle.split(endStyle);
+             if (checkEndStyle.toLowerCase().contains(endStyle.toLowerCase())) {
+                 String[] betweenCodeStyleTagArr = Pattern.compile(endStyle, Pattern.CASE_INSENSITIVE).split(checkEndStyle);
                  String betweenCodeStyleTag = betweenCodeStyleTagArr[0];
                  for (String cssTag : cssTagsList) {
                       String formattedHtmlCSSTag = "";
                       String childCssTag = ">"+cssTag+">";
-                      if (betweenCodeStyleTag.contains(childCssTag)) {
-                          String splitChildCssTag[] = betweenCodeStyleTag.split(childCssTag);
+                      if (betweenCodeStyleTag.toLowerCase().contains(childCssTag.toLowerCase())) {
+                          String[] splitChildCssTag = Pattern.compile(childCssTag, Pattern.CASE_INSENSITIVE).split(betweenCodeStyleTag);
                           for(int i=0;i<splitChildCssTag.length;i++) {
                               if (i==0) {
                                   formattedHtmlCSSTag = formattedHtmlCSSTag + splitChildCssTag[i];
