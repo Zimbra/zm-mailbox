@@ -38,6 +38,8 @@ public class OwaspHtmlSanitizer implements Callable<String> {
     private boolean neuterImages;
     public static final ThreadLocal<OwaspThreadLocal> zThreadLocal = new ThreadLocal<OwaspThreadLocal>();
     private String vHost;
+    private static final Pattern START_STYLE = Pattern.compile("<style", Pattern.CASE_INSENSITIVE);
+    private static final Pattern END_STYLE = Pattern.compile("</style>", Pattern.CASE_INSENSITIVE);
 
     public OwaspHtmlSanitizer(String html, boolean neuterImages, String vHost) {
         // fix to check open tags & remove
@@ -72,7 +74,7 @@ public class OwaspHtmlSanitizer implements Callable<String> {
                      formattedHtml = formattedHtml + start + strAfterSplit;
                  } else {
                      formattedHtml = formattedHtml + strAfterSplit;
-                 } 
+                 }
             }
             html = formattedHtml;
             formattedHtml = "";
@@ -98,26 +100,26 @@ public class OwaspHtmlSanitizer implements Callable<String> {
         cssTagsList.add("tr");
         cssTagsList.add("div");
         String formattedHtml = "";
-        String startStyle = "<style" ;
-        String endStyle = "</style>" ;
-        String[] splitFromStyleStart = Pattern.compile(startStyle, Pattern.CASE_INSENSITIVE).split(html);
+        String startStyle = "<style";
+        String endStyle = "</style>";
+        String[] splitFromStyleStart = START_STYLE.split(html);
         for (String checkEndStyle : splitFromStyleStart) {
              if (checkEndStyle.toLowerCase().contains(endStyle.toLowerCase())) {
-                 String[] betweenCodeStyleTagArr = Pattern.compile(endStyle, Pattern.CASE_INSENSITIVE).split(checkEndStyle);
+                 String[] betweenCodeStyleTagArr = END_STYLE.split(checkEndStyle);
                  String betweenCodeStyleTag = betweenCodeStyleTagArr[0];
                  for (String cssTag : cssTagsList) {
                       String formattedHtmlCSSTag = "";
-                      String childCssTag = ">"+cssTag+">";
+                      String childCssTag = ">" +cssTag+ ">";
                       if (betweenCodeStyleTag.toLowerCase().contains(childCssTag.toLowerCase())) {
                           String[] splitChildCssTag = Pattern.compile(childCssTag, Pattern.CASE_INSENSITIVE).split(betweenCodeStyleTag);
-                          for(int i=0;i<splitChildCssTag.length;i++) {
-                              if (i==0) {
+                          for(int i = 0; i < splitChildCssTag.length; i++) {
+                              if (i == 0) {
                                   formattedHtmlCSSTag = formattedHtmlCSSTag + splitChildCssTag[i];
                               } else {
                                   formattedHtmlCSSTag = formattedHtmlCSSTag + cssTag + ">" + splitChildCssTag[i];
                               }
                           }
-                          betweenCodeStyleTag = formattedHtmlCSSTag ;
+                          betweenCodeStyleTag = formattedHtmlCSSTag;
                           formattedHtmlCSSTag = "";
                       }
                  }
