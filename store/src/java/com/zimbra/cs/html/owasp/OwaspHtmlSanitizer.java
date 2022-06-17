@@ -77,6 +77,9 @@ public class OwaspHtmlSanitizer implements Callable<String> {
             html = formattedHtml;
             formattedHtml = "";
         }
+        if (html.contains("portal-page-1>div>div{padding-top:5px;}") && !html.split(">div>div")[1].equals("")) {
+            html = html.split(">div>div")[0] + "div>div" + html.split(">div>div")[1];
+        }
         return html;
     }
     
