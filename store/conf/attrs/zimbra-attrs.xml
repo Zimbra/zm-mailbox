@@ -9929,10 +9929,4 @@ TODO: delete them permanently from here
   <defaultCOSValue>30</defaultCOSValue>
   <desc>Default calendar resolution preference</desc>
 </attr>
-<attr id="5000" name="globalExternalStoreConfig" type="string" cardinality="single" optionalIn="globalConfig" since="9.1.0">
-  <desc>Global level external store config</desc>
-</attr>
-<attr id="5001" name="serverExternalStoreConfig" type="string" cardinality="single" optionalIn="server" since="9.1.0">
-  <desc>Server level external store config</desc>
-</attr>
 </attrs>
