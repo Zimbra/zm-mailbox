@@ -71,6 +71,31 @@ public class ExternalVolumeReader {
         return properties;
     }
 
+    protected Properties deleteServerProperties(int volumeId, Server server) throws JSONException {
+        Properties properties = new Properties();
+        try {
+            String serverExternalStoreConfigJson = server.getServerExternalStoreConfig();
+            JSONObject jsonObject = new JSONObject(serverExternalStoreConfigJson);
+            JSONArray volumePropsArray = jsonObject.getJSONArray("server/stores");
+            JSONArray updatedVolumePropsArray = new JSONArray();
+
+            for (int i = 0; i < volumePropsArray.length(); i++) {
+                JSONObject volumeJsonObj = volumePropsArray.getJSONObject(i);
+                if (volumeId != volumeJsonObj.getInt("volumeId")) {
+                    updatedVolumePropsArray.put(volumeJsonObj);
+                }
+            }
+
+            volumePropsArray = updatedVolumePropsArray;
+            jsonObject.put("server/stores", volumePropsArray);
+
+        } catch (JSONException e) {
+            // LOG.error("Error while processing ldap attribute ServerExternalStoreConfig", e);
+            throw e;
+        }
+        return properties;
+    }
+
     /**
      * Utility method for flat json to properties key-value
      * @param properties
