@@ -19,6 +19,10 @@ package com.zimbra.cs.service.admin;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -33,6 +37,7 @@ import com.zimbra.soap.admin.message.GetVolumeRequest;
 import com.zimbra.soap.admin.message.GetVolumeResponse;
 import com.zimbra.soap.admin.type.VolumeInfo;
 import com.zimbra.soap.admin.type.VolumeExternalInfo;
+import com.zimbra.util.ExternalVolumeReader;
 
 public final class GetVolume extends AdminDocumentHandler {
 
@@ -51,7 +56,24 @@ public final class GetVolume extends AdminDocumentHandler {
 
         if(1 == 1) {
             VolumeExternalInfo volExtInfo = volInfo.getVolumeExternalInfo();
-            volInfo.setVolumeExternalInfo(volExtInfo);
+            ExternalVolumeReader extVolReader = new ExternalVolumeReader(Provisioning.getInstance());
+            try {
+                Properties properties = extVolReader.getProperties(volInfo.getId());
+                String storeProvider = properties.getProperty("storeProvider");
+                String volumePrefix = properties.getProperty("volumePrefix");
+                String globalBucketConfigId = properties.getProperty("globalBucketConfigId");
+
+                volExtInfo.setStoreProvider(storeProvider);
+                volExtInfo.setVolumePrefix(volumePrefix);
+                volExtInfo.setGlobalBucketConfigurationId(globalBucketConfigId);
+
+                volInfo.setVolumeExternalInfo(volExtInfo);
+            }
+            catch (JSONException e) {
+                // LOG.error("Error while processing ldap attribute ServerExternalStoreConfig", e);
+                // throw e;
+            }
+
         }
 
         GetVolumeResponse resp = new GetVolumeResponse(vol.toJAXB());
