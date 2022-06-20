@@ -36,37 +36,37 @@ public class VolumeExternalInfo {
     /**
      * @zm-api-field-description Prefix for bucket location e.g. server1_primary
      */
-    @XmlAttribute(name=AdminConstants.A_VOLUME_VOLUME_PREFIX /* volumePrefix */, required=false)
+    @XmlAttribute(name=AdminConstants.A_VOLUME_VOLUME_PREFIX /* volumePrefix */, required=true)
     private String volumePrefix;
 
     /**
      * @zm-api-field-description Specifies store provider
      */
-    @XmlAttribute(name=AdminConstants.A_VOLUME_STORE_PROVIDER /* storeProvider */, required=false)
+    @XmlAttribute(name=AdminConstants.A_VOLUME_STORE_PROVIDER /* storeProvider */, required=true)
     private String storeProvider;
 
     /**
      * @zm-api-field-description Specifies global bucket configuration Id
      */
-    @XmlAttribute(name=AdminConstants.A_VOLUME_GLB_BUCKET_CONFIG_ID /* glbBucketConfigId */, required=false)
+    @XmlAttribute(name=AdminConstants.A_VOLUME_GLB_BUCKET_CONFIG_ID /* glbBucketConfigId */, required=true)
     private String glbBucketConfigId;
 
     /**
      * @zm-api-field-description Specifies frequent access enabled or not
      */
-    @XmlAttribute(name=AdminConstants.A_VOLUME_USE_IN_FREQ_ACCESS /* useInFrequentAccess */, required=false)
+    @XmlAttribute(name=AdminConstants.A_VOLUME_USE_IN_FREQ_ACCESS /* useInFrequentAccess */, required=true)
     private Boolean useInFrequentAccess;
 
     /**
      * @zm-api-field-description Specifies threshold value of useInFrequentAccess
      */
-    @XmlAttribute(name=AdminConstants.A_VOLUME_USE_IN_FREQ_ACCESS_THRESHOLD /* useInFrequentAccessThreshold */, required=false)
+    @XmlAttribute(name=AdminConstants.A_VOLUME_USE_IN_FREQ_ACCESS_THRESHOLD /* useInFrequentAccessThreshold */, required=true)
     private int useInFrequentAccessThreshold;
 
     /**
      * @zm-api-field-description Specifies intelligent tiering enabled or not
      */
-    @XmlAttribute(name=AdminConstants.A_VOLUME_USE_INTELLIGENT_TIERING /* useIntelligentTiering */, required=false)
+    @XmlAttribute(name=AdminConstants.A_VOLUME_USE_INTELLIGENT_TIERING /* useIntelligentTiering */, required=true)
     private Boolean useIntelligentTiering;
 
     public void setStoreType(short value) {
