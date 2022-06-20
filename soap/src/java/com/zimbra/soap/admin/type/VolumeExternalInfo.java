@@ -21,8 +21,8 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
+import com.zimbra.soap.type.ZmBoolean;
 import com.zimbra.common.soap.AdminConstants;
-// import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class VolumeExternalInfo {
@@ -55,7 +55,7 @@ public class VolumeExternalInfo {
      * @zm-api-field-description Specifies frequent access enabled or not
      */
     @XmlAttribute(name=AdminConstants.A_VOLUME_USE_IN_FREQ_ACCESS /* useInFrequentAccess */, required=true)
-    private Boolean useInFrequentAccess;
+    private ZmBoolean useInFrequentAccess;
 
     /**
      * @zm-api-field-description Specifies threshold value of useInFrequentAccess
@@ -67,7 +67,7 @@ public class VolumeExternalInfo {
      * @zm-api-field-description Specifies intelligent tiering enabled or not
      */
     @XmlAttribute(name=AdminConstants.A_VOLUME_USE_INTELLIGENT_TIERING /* useIntelligentTiering */, required=true)
-    private Boolean useIntelligentTiering;
+    private ZmBoolean useIntelligentTiering;
 
     public void setStoreType(short value) {
         storeType = value;
@@ -101,19 +101,19 @@ public class VolumeExternalInfo {
         return glbBucketConfigId;
     }
 
-    public void setUseInFrequentAccess(Boolean value) {
+    public void setUseInFrequentAccess(ZmBoolean value) {
         useInFrequentAccess = value;
     }
 
-    public Boolean getUseInFrequentAccess() {
+    public ZmBoolean getUseInFrequentAccess() {
         return useInFrequentAccess;
     }
 
-    public void setUseIntelligentTiering(Boolean value) {
+    public void setUseIntelligentTiering(ZmBoolean value) {
         useIntelligentTiering = value;
     }
 
-    public Boolean getUseIntelligentTiering() {
+    public ZmBoolean getUseIntelligentTiering() {
         return useIntelligentTiering;
     }
 }
