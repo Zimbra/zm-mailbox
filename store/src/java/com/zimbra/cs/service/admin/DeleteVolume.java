@@ -20,17 +20,21 @@ package com.zimbra.cs.service.admin;
 import java.util.List;
 import java.util.Map;
 
+import org.json.JSONException;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.volume.Volume;
 import com.zimbra.cs.volume.VolumeManager;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.DeleteVolumeRequest;
 import com.zimbra.soap.admin.message.DeleteVolumeResponse;
+import com.zimbra.util.ExternalVolumeReader;
 
 public final class DeleteVolume extends AdminDocumentHandler {
 
@@ -45,12 +49,22 @@ public final class DeleteVolume extends AdminDocumentHandler {
         checkRight(zsc, ctx, Provisioning.getInstance().getLocalServer(), Admin.R_manageVolume);
 
         VolumeManager mgr = VolumeManager.getInstance();
-        mgr.getVolume(req.getId()); // make sure the volume exists before doing anything heavyweight...
+        Volume vol = mgr.getVolume(req.getId()); // make sure the volume exists before doing anything heavyweight...
         StoreManager storeManager = StoreManager.getInstance();
         if (storeManager.supports(StoreManager.StoreFeature.CUSTOM_STORE_API, String.valueOf(req.getId()))) {
           throw ServiceException.INVALID_REQUEST("Operation unsupported, use zxsuite to delete this volume", null);
         }
         mgr.delete(req.getId());
+        try {
+          if (vol.getStoreType().equals(Volume.StoreType.EXTERNAL)) {
+            ExternalVolumeReader extVolReader = new ExternalVolumeReader(Provisioning.getInstance());
+            extVolReader.deleteServerProperties(req.getId());
+          }
+        }
+        catch (JSONException e) {
+          // LOG.error("Error while processing ldap attribute ServerExternalStoreConfig", e);
+          // throw e;
+        }
         return new DeleteVolumeResponse();
     }
 

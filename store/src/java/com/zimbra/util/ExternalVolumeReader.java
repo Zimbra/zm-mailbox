@@ -71,10 +71,9 @@ public class ExternalVolumeReader {
         return properties;
     }
 
-    protected Properties deleteServerProperties(int volumeId, Server server) throws JSONException {
-        Properties properties = new Properties();
+    public void deleteServerProperties(int volumeId) throws ServiceException, JSONException {
         try {
-            String serverExternalStoreConfigJson = server.getServerExternalStoreConfig();
+            String serverExternalStoreConfigJson = provisioning.getLocalServer().getServerExternalStoreConfig();
             JSONObject jsonObject = new JSONObject(serverExternalStoreConfigJson);
             JSONArray volumePropsArray = jsonObject.getJSONArray("server/stores");
             JSONArray updatedVolumePropsArray = new JSONArray();
@@ -93,7 +92,6 @@ public class ExternalVolumeReader {
             // LOG.error("Error while processing ldap attribute ServerExternalStoreConfig", e);
             throw e;
         }
-        return properties;
     }
 
     /**
@@ -111,5 +109,4 @@ public class ExternalVolumeReader {
             }
         }
     }
-
 }
