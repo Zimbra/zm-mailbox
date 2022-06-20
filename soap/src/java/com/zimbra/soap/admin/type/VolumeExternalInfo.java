@@ -51,6 +51,24 @@ public class VolumeExternalInfo {
     @XmlAttribute(name=AdminConstants.A_VOLUME_GLB_BUCKET_CONFIG_ID /* glbBucketConfigId */, required=false)
     private String glbBucketConfigId;
 
+    /**
+     * @zm-api-field-description Specifies frequent access enabled or not
+     */
+    @XmlAttribute(name=AdminConstants.A_VOLUME_USE_IN_FREQ_ACCESS /* useInFrequentAccess */, required=false)
+    private Boolean useInFrequentAccess;
+
+    /**
+     * @zm-api-field-description Specifies threshold value of useInFrequentAccess
+     */
+    @XmlAttribute(name=AdminConstants.A_VOLUME_USE_IN_FREQ_ACCESS_THRESHOLD /* useInFrequentAccessThreshold */, required=false)
+    private int useInFrequentAccessThreshold;
+
+    /**
+     * @zm-api-field-description Specifies intelligent tiering enabled or not
+     */
+    @XmlAttribute(name=AdminConstants.A_VOLUME_USE_INTELLIGENT_TIERING /* useIntelligentTiering */, required=false)
+    private Boolean useIntelligentTiering;
+
     public void setStoreType(short value) {
         storeType = value;
     }
@@ -81,5 +99,21 @@ public class VolumeExternalInfo {
 
     public String getGlobalBucketConfigurationId() {
         return glbBucketConfigId;
+    }
+
+    public void setUseInFrequentAccess(Boolean value) {
+        useInFrequentAccess = value;
+    }
+
+    public Boolean getUseInFrequentAccess() {
+        return useInFrequentAccess;
+    }
+
+    public void setUseIntelligentTiering(Boolean value) {
+        useIntelligentTiering = value;
+    }
+
+    public Boolean getUseIntelligentTiering() {
+        return useIntelligentTiering;
     }
 }

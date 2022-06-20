@@ -54,7 +54,7 @@ public final class GetVolume extends AdminDocumentHandler {
         Volume vol = VolumeManager.getInstance().getVolume(req.getId());
         VolumeInfo volInfo = vol.toJAXB();
 
-        if(1 == 1) {
+        if(vol.getStoreType().equals(Volume.StoreType.EXTERNAL)) {
             VolumeExternalInfo volExtInfo = volInfo.getVolumeExternalInfo();
             ExternalVolumeReader extVolReader = new ExternalVolumeReader(Provisioning.getInstance());
             try {

@@ -1299,6 +1299,9 @@ public final class AdminConstants {
     public static final String A_VOLUME_VOLUME_PREFIX = "volumePrefix";
     public static final String A_VOLUME_STORE_PROVIDER = "storeProvider";
     public static final String A_VOLUME_GLB_BUCKET_CONFIG_ID = "glbBucketConfigId";
+    public static final String A_VOLUME_USE_IN_FREQ_ACCESS = "useInFrequentAccess";
+    public static final String A_VOLUME_USE_IN_FREQ_ACCESS_THRESHOLD = "useInFrequentAccessThreshold";
+    public static final String A_VOLUME_USE_INTELLIGENT_TIERING = "useIntelligentTiering";
 
     // Blob consistency check
     public static final String E_MISSING_BLOBS = "missingBlobs";
