@@ -48,39 +48,40 @@ public final class ModifyVolume extends AdminDocumentHandler {
         checkRight(zsc, ctx, Provisioning.getInstance().getLocalServer(), Admin.R_manageVolume);
 
         VolumeManager mgr = VolumeManager.getInstance();
-        Volume.Builder builder = Volume.builder(mgr.getVolume(req.getId()));
-        VolumeInfo vol = req.getVolume();
+        Volume vol = mgr.getVolume(req.getId());
+        Volume.Builder builder = Volume.builder(vol);
+        VolumeInfo volInfo = req.getVolume();
         VolumeExternalInfo volExt = req.getVolumeExternal();
-        if (vol == null) {
+        if (volInfo == null) {
             throw ServiceException.INVALID_REQUEST("must specify a volume Element", null);
         }
         StoreManager storeManager = StoreManager.getInstance();
-        if (storeManager.supports(StoreManager.StoreFeature.CUSTOM_STORE_API, String.valueOf(vol.getId()))) {
+        if (storeManager.supports(StoreManager.StoreFeature.CUSTOM_STORE_API, String.valueOf(volInfo.getId()))) {
             throw ServiceException.INVALID_REQUEST("Operation unsupported, use zxsuite to edit this volume", null);
         }
 
         // store type == 1, allow modification of all parameters
-        if(1 == volExt.getStoreType()) {
-            if (vol.getType() > 0) {
-                builder.setType(vol.getType());
+        if(vol.getStoreType().equals(Volume.StoreType.FILE_STORE)) {
+            if (volInfo.getType() > 0) {
+                builder.setType(volInfo.getType());
             }
-            if (vol.getName() != null) {
-                builder.setName(vol.getName());
+            if (volInfo.getName() != null) {
+                builder.setName(volInfo.getName());
             }
-            if (vol.getRootPath() != null) {
-                builder.setPath(vol.getRootPath(), true);
+            if (volInfo.getRootPath() != null) {
+                builder.setPath(volInfo.getRootPath(), true);
             }
-            if (vol.getCompressBlobs() != null) {
-                builder.setCompressBlobs(vol.getCompressBlobs());
+            if (volInfo.getCompressBlobs() != null) {
+                builder.setCompressBlobs(volInfo.getCompressBlobs());
             }
-            if (vol.getCompressionThreshold() > 0) {
-                builder.setCompressionThreshold(vol.getCompressionThreshold());
+            if (volInfo.getCompressionThreshold() > 0) {
+                builder.setCompressionThreshold(volInfo.getCompressionThreshold());
             }
         }
         // store type == 2, allow modification of only volume name
-        else if (2 == volExt.getStoreType()) {
-            if (vol.getName() != null) {
-                builder.setName(vol.getName());
+        else if (vol.getStoreType().equals(Volume.StoreType.EXTERNAL)) {
+            if (volInfo.getName() != null) {
+                builder.setName(volInfo.getName());
             }
         }
         else {
