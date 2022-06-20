@@ -18,6 +18,11 @@ package com.zimbra.cs.service.admin;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
@@ -30,6 +35,10 @@ import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.GetAllVolumesRequest;
 import com.zimbra.soap.admin.message.GetAllVolumesResponse;
+import com.zimbra.soap.admin.type.VolumeInfo;
+import com.zimbra.soap.admin.type.VolumeExternalInfo;
+import com.zimbra.util.ExternalVolumeReader;
+
 
 public final class GetAllVolumes extends AdminDocumentHandler {
 
@@ -46,7 +55,31 @@ public final class GetAllVolumes extends AdminDocumentHandler {
 
         GetAllVolumesResponse resp = new GetAllVolumesResponse();
         for (Volume vol : VolumeManager.getInstance().getAllVolumes()) {
-            resp.addVolume(vol.toJAXB());
+            VolumeInfo volInfo = vol.toJAXB();
+
+            if(vol.getStoreType().equals(Volume.StoreType.EXTERNAL)) {
+                VolumeExternalInfo volExtInfo = volInfo.getVolumeExternalInfo();
+                ExternalVolumeReader extVolReader = new ExternalVolumeReader(Provisioning.getInstance());
+
+                try {
+                    Properties properties = extVolReader.getProperties(volInfo.getId());
+                    String storeProvider = properties.getProperty("storeProvider");
+                    String volumePrefix = properties.getProperty("volumePrefix");
+                    String globalBucketConfigId = properties.getProperty("globalBucketConfigId");
+
+                    volExtInfo.setStoreProvider(storeProvider);
+                    volExtInfo.setVolumePrefix(volumePrefix);
+                    volExtInfo.setGlobalBucketConfigurationId(globalBucketConfigId);
+
+                    volInfo.setVolumeExternalInfo(volExtInfo);
+                }
+                catch (JSONException e) {
+                    // LOG.error("Error while processing ldap attribute ServerExternalStoreConfig", e);
+                    // throw e;
+                }
+            }
+
+            resp.addVolume(volInfo);
         }
         return resp;
     }
