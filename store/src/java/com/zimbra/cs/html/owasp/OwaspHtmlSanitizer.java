@@ -79,9 +79,6 @@ public class OwaspHtmlSanitizer implements Callable<String> {
             html = formattedHtml;
             formattedHtml = "";
         }
-        if (html.contains("portal-page-1>div>div{padding-top:5px;}") && !html.split(">div>div")[1].equals("")) {
-            html = html.split(">div>div")[0] + "div>div" + html.split(">div>div")[1];
-        }
         return html;
     }
     
@@ -112,11 +109,11 @@ public class OwaspHtmlSanitizer implements Callable<String> {
                       String childCssTag = ">" +cssTag+ ">";
                       if (betweenCodeStyleTag.toLowerCase().contains(childCssTag.toLowerCase())) {
                           String[] splitChildCssTag = Pattern.compile(childCssTag, Pattern.CASE_INSENSITIVE).split(betweenCodeStyleTag);
-                          for(int i = 0; i < splitChildCssTag.length; i++) {
+                          for (int i = 0; i < splitChildCssTag.length; i++) {
                               if (i == 0) {
                                   formattedHtmlCSSTag = formattedHtmlCSSTag + splitChildCssTag[i];
                               } else {
-                                  formattedHtmlCSSTag = formattedHtmlCSSTag + cssTag + ">" + splitChildCssTag[i];
+                                  formattedHtmlCSSTag = formattedHtmlCSSTag +" "+cssTag + ">" + splitChildCssTag[i];
                               }
                           }
                           betweenCodeStyleTag = formattedHtmlCSSTag;
