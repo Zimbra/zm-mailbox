@@ -2969,6 +2969,118 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Whether or not zimbra backup config is enabled. If true at server
+     * level, all accounts on server will be backed up If false at server
+     * level, true at cos level, all accounts for cos will be backed up If
+     * false at server level, false at cos level, accounts for which
+     * attribute is true will be backed up If false at server level, false at
+     * cos level, true at domain level, all accounts for that domain will be
+     * backed up If false at server level, true at cos level and true at
+     * domain level, all accounts for domain and accounts for cos will be
+     * backed up
+     *
+     * @return zimbraBackupConfigEnable, or false if unset
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4007)
+    public boolean isBackupConfigEnable() {
+        return getBooleanAttr(Provisioning.A_zimbraBackupConfigEnable, false, true);
+    }
+
+    /**
+     * Whether or not zimbra backup config is enabled. If true at server
+     * level, all accounts on server will be backed up If false at server
+     * level, true at cos level, all accounts for cos will be backed up If
+     * false at server level, false at cos level, accounts for which
+     * attribute is true will be backed up If false at server level, false at
+     * cos level, true at domain level, all accounts for that domain will be
+     * backed up If false at server level, true at cos level and true at
+     * domain level, all accounts for domain and accounts for cos will be
+     * backed up
+     *
+     * @param zimbraBackupConfigEnable new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4007)
+    public void setBackupConfigEnable(boolean zimbraBackupConfigEnable) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupConfigEnable, zimbraBackupConfigEnable ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not zimbra backup config is enabled. If true at server
+     * level, all accounts on server will be backed up If false at server
+     * level, true at cos level, all accounts for cos will be backed up If
+     * false at server level, false at cos level, accounts for which
+     * attribute is true will be backed up If false at server level, false at
+     * cos level, true at domain level, all accounts for that domain will be
+     * backed up If false at server level, true at cos level and true at
+     * domain level, all accounts for domain and accounts for cos will be
+     * backed up
+     *
+     * @param zimbraBackupConfigEnable new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4007)
+    public Map<String,Object> setBackupConfigEnable(boolean zimbraBackupConfigEnable, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupConfigEnable, zimbraBackupConfigEnable ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether or not zimbra backup config is enabled. If true at server
+     * level, all accounts on server will be backed up If false at server
+     * level, true at cos level, all accounts for cos will be backed up If
+     * false at server level, false at cos level, accounts for which
+     * attribute is true will be backed up If false at server level, false at
+     * cos level, true at domain level, all accounts for that domain will be
+     * backed up If false at server level, true at cos level and true at
+     * domain level, all accounts for domain and accounts for cos will be
+     * backed up
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4007)
+    public void unsetBackupConfigEnable() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupConfigEnable, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not zimbra backup config is enabled. If true at server
+     * level, all accounts on server will be backed up If false at server
+     * level, true at cos level, all accounts for cos will be backed up If
+     * false at server level, false at cos level, accounts for which
+     * attribute is true will be backed up If false at server level, false at
+     * cos level, true at domain level, all accounts for that domain will be
+     * backed up If false at server level, true at cos level and true at
+     * domain level, all accounts for domain and accounts for cos will be
+     * backed up
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4007)
+    public Map<String,Object> unsetBackupConfigEnable(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupConfigEnable, "");
+        return attrs;
+    }
+
+    /**
      * Minimum percentage or TB/GB/MB/KB/bytes of free space on backup target
      * to allow a full or auto-grouped backup to start; 0 = no minimum is
      * enforced. Examples: 25%, 10GB

@@ -3973,6 +3973,22 @@ public class ZAttrProvisioning {
     public static final String A_zimbraBackupAutoGroupedThrottled = "zimbraBackupAutoGroupedThrottled";
 
     /**
+     * Whether or not zimbra backup config is enabled. If true at server
+     * level, all accounts on server will be backed up If false at server
+     * level, true at cos level, all accounts for cos will be backed up If
+     * false at server level, false at cos level, accounts for which
+     * attribute is true will be backed up If false at server level, false at
+     * cos level, true at domain level, all accounts for that domain will be
+     * backed up If false at server level, true at cos level and true at
+     * domain level, all accounts for domain and accounts for cos will be
+     * backed up
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4007)
+    public static final String A_zimbraBackupConfigEnable = "zimbraBackupConfigEnable";
+
+    /**
      * Minimum percentage or TB/GB/MB/KB/bytes of free space on backup target
      * to allow a full or auto-grouped backup to start; 0 = no minimum is
      * enforced. Examples: 25%, 10GB
