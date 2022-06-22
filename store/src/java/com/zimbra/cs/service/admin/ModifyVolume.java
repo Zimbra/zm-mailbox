@@ -48,10 +48,11 @@ public final class ModifyVolume extends AdminDocumentHandler {
         checkRight(zsc, ctx, Provisioning.getInstance().getLocalServer(), Admin.R_manageVolume);
 
         VolumeManager mgr = VolumeManager.getInstance();
-        Volume vol = mgr.getVolume(req.getId());
+        VolumeInfo volInfo = req.getVolumeInfo();
+        VolumeExternalInfo volExt = volInfo.getVolumeExternalInfo();
+        Volume vol = mgr.getVolume(volInfo.getId());
         Volume.Builder builder = Volume.builder(vol);
-        VolumeInfo volInfo = req.getVolume();
-        VolumeExternalInfo volExt = req.getVolumeExternal();
+
         if (volInfo == null) {
             throw ServiceException.INVALID_REQUEST("must specify a volume Element", null);
         }

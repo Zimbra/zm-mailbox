@@ -1167,8 +1167,8 @@ public final class AdminConstants {
     public static final String E_MAILBOX = "mbox";
     public static final String E_NI = "ni";
     public static final String E_NUM_OF_PAGES = "numpages";
-    public static final String E_VOLUME = "volume";
-    public static final String E_VOLUME_EXT = "volumeExternal";
+    public static final String E_VOLUME = "volumeInfo";
+    public static final String E_VOLUME_EXT = "volumeExternalInfo";
     public static final String E_PROGRESS = "progress";
     public static final String E_SOAP_URL = "soapURL";
     public static final String E_ADMIN_SOAP_URL = "adminSoapURL";
@@ -1296,6 +1296,7 @@ public final class AdminConstants {
     public static final String A_VOLUME_COMPRESSION_THRESHOLD = "compressionThreshold";
     public static final String A_VOLUME_IS_CURRENT = "isCurrent";
     public static final String A_VOLUME_STORE_TYPE = "storeType";
+    public static final String A_VOLUME_STORAGE_TYPE = "storageType";
     public static final String A_VOLUME_VOLUME_PREFIX = "volumePrefix";
     public static final String A_VOLUME_STORE_PROVIDER = "storeProvider";
     public static final String A_VOLUME_GLB_BUCKET_CONFIG_ID = "glbBucketConfigId";

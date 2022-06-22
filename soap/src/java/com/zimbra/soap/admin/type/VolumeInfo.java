@@ -107,10 +107,16 @@ public final class VolumeInfo {
     private ZmBoolean current;
 
     /**
+     * @zm-api-field-description Set to 1 for internal volumes and 2 for external volumes
+     */
+    @XmlAttribute(name=AdminConstants.A_VOLUME_STORE_TYPE /* storeType */, required=true)
+    private short storeType;
+
+    /**
      * @zm-api-field-description Volume external information
      */
-    @XmlElement(name=AdminConstants.E_VOLUME_EXT, required=false)
-    private VolumeExternalInfo volumeExternal;
+    @XmlElement(name=AdminConstants.E_VOLUME_EXT /* volumeExternalInfo */, required=false)
+    private VolumeExternalInfo volumeExternalInfo;
 
     public void setId(short value) {
         id = value;
@@ -205,10 +211,18 @@ public final class VolumeInfo {
     }
 
     public void setVolumeExternalInfo(VolumeExternalInfo value) {
-        volumeExternal = value;
+        volumeExternalInfo = value;
     }
 
     public VolumeExternalInfo getVolumeExternalInfo() {
-        return volumeExternal;
+        return volumeExternalInfo;
+    }
+
+    public void setStoreType(short value) {
+        storeType = value;
+    }
+
+    public short getStoreType() {
+        return storeType;
     }
 }

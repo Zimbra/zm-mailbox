@@ -30,8 +30,8 @@ public class VolumeExternalInfo {
     /**
      * @zm-api-field-description Set to 1 for Internal and 2 for External.
      */
-    @XmlAttribute(name=AdminConstants.A_VOLUME_STORE_TYPE /* storeType */, required=true)
-    private short storeType;
+    @XmlAttribute(name=AdminConstants.A_VOLUME_STORAGE_TYPE /* storageType */, required=true)
+    private String storageType;
 
     /**
      * @zm-api-field-description Prefix for bucket location e.g. server1_primary
@@ -69,12 +69,12 @@ public class VolumeExternalInfo {
     @XmlAttribute(name=AdminConstants.A_VOLUME_USE_INTELLIGENT_TIERING /* useIntelligentTiering */, required=true)
     private ZmBoolean useIntelligentTiering;
 
-    public void setStoreType(short value) {
-        storeType = value;
+    public void setStorageType(String value) {
+        storageType = value;
     }
 
-    public short getStoreType() {
-        return storeType;
+    public String getStorageType() {
+        return storageType;
     }
 
     public void setVolumePrefix(String value) {

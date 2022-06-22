@@ -41,13 +41,6 @@ public final class DeleteVolumeRequest {
     private final short id;
 
     /**
-     * @zm-api-field-tag storeType
-     * @zm-api-field-description Set to 1 for Internal and 2 for External.
-     */
-    @XmlAttribute(name=AdminConstants.A_VOLUME_STORE_TYPE, required=true)
-    private short storeType;
-
-    /**
      * no-argument constructor wanted by JAXB
      */
      @SuppressWarnings("unused")
@@ -62,13 +55,4 @@ public final class DeleteVolumeRequest {
     public short getId() {
         return id;
     }
-
-    public void setStoreType(short value) {
-        storeType = value;
-    }
-
-    public short getStoreType() {
-        return storeType;
-    }
-
 }

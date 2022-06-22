@@ -39,13 +39,7 @@ public class CreateVolumeRequest {
      * @zm-api-field-description Volume information
      */
     @XmlElement(name=AdminConstants.E_VOLUME, required=true)
-    private VolumeInfo volume;
-
-    /**
-     * @zm-api-field-description Volume external information
-     */
-    @XmlElement(name=AdminConstants.E_VOLUME_EXT, required=false)
-    private VolumeExternalInfo volExtInfo;
+    private VolumeInfo volumeInfo;
 
     /**
      * no-argument constructor wanted by JAXB
@@ -55,9 +49,9 @@ public class CreateVolumeRequest {
         this((VolumeInfo)null);
     }
 
-    public CreateVolumeRequest(VolumeInfo volume) {
-        this.volume = volume;
+    public CreateVolumeRequest(VolumeInfo volumeInfo) {
+        this.volumeInfo = volumeInfo;
     }
 
-    public VolumeInfo getVolume() { return volume; }
+    public VolumeInfo getVolume() { return volumeInfo; }
 }

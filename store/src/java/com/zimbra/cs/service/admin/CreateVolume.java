@@ -20,6 +20,10 @@ package com.zimbra.cs.service.admin;
 import java.util.List;
 import java.util.Map;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Provisioning;
@@ -33,6 +37,7 @@ import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.CreateVolumeRequest;
 import com.zimbra.soap.admin.message.CreateVolumeResponse;
 import com.zimbra.soap.admin.type.VolumeInfo;
+import com.zimbra.util.ExternalVolumeReader;
 
 public final class CreateVolume extends AdminDocumentHandler {
 
@@ -47,6 +52,21 @@ public final class CreateVolume extends AdminDocumentHandler {
         checkRight(zsc, ctx, Provisioning.getInstance().getLocalServer(), Admin.R_manageVolume);
 
         Volume vol = VolumeManager.getInstance().create(toVolume(req.getVolume()));
+        VolumeInfo volInfo = req.getVolume();
+
+        // If newly created volume is external update json
+        if (vol.getStoreType().equals(Volume.StoreType.EXTERNAL)) {
+            Provisioning prov = Provisioning.getInstance();
+            try {
+                ExternalVolumeReader extVolReader = new ExternalVolumeReader(prov);
+                extVolReader.addToServerProperties(volInfo.getVolumeExternalInfo());
+            }
+            catch (JSONException e) {
+                // LOG.error("Error while processing ldap attribute ServerExternalStoreConfig", e);
+                // throw e;
+            }
+        }
+
         return new CreateVolumeResponse(vol.toJAXB());
     }
 

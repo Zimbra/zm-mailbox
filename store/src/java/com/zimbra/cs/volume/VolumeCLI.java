@@ -228,7 +228,7 @@ public final class VolumeCLI extends SoapCLI {
         if (!Strings.isNullOrEmpty(compressThreshold)) {
             vol.setCompressionThreshold(Long.parseLong(compressThreshold));
         }
-        ModifyVolumeRequest req = new ModifyVolumeRequest(Short.parseShort(id), vol, volExt);
+        ModifyVolumeRequest req = new ModifyVolumeRequest(vol);
         auth(auth);
         getTransport().invokeWithoutSession(JaxbUtil.jaxbToElement(req));
         System.out.println("Edited volume " + id);

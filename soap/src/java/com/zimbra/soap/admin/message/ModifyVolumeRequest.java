@@ -23,7 +23,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.VolumeInfo;
-import com.zimbra.soap.admin.type.VolumeExternalInfo;
 
 /**
  * @zm-api-command-auth-required true
@@ -34,40 +33,22 @@ import com.zimbra.soap.admin.type.VolumeExternalInfo;
 public class ModifyVolumeRequest {
 
     /**
-     * @zm-api-field-tag volume-id
-     * @zm-api-field-description Volume ID
-     */
-    @XmlAttribute(name=AdminConstants.A_ID, required=true)
-    private short id;
-
-    /**
      * @zm-api-field-description Volume information
      */
     @XmlElement(name=AdminConstants.E_VOLUME, required=true)
-    private VolumeInfo volume;
-
-    /**
-     * @zm-api-field-description Volume external information
-     */
-    @XmlElement(name=AdminConstants.E_VOLUME_EXT, required=true)
-    private VolumeExternalInfo volumeExternal;
+    private VolumeInfo volumeInfo;
 
     /**
      * no-argument constructor wanted by JAXB
      */
      @SuppressWarnings("unused")
     private ModifyVolumeRequest() {
-        this((short)-1, (VolumeInfo)null, (VolumeExternalInfo)null);
+        this((VolumeInfo)null);
     }
 
-    public ModifyVolumeRequest(short id, VolumeInfo volume, VolumeExternalInfo volumeExternal) {
-        this.id = id;
-        this.volume = volume;
-        this.volumeExternal = volumeExternal;
+    public ModifyVolumeRequest(VolumeInfo volumeInfo) {
+        this.volumeInfo = volumeInfo;
     }
 
-    public short getId() { return id; }
-    public VolumeInfo getVolume() { return volume; }
-    public VolumeExternalInfo getVolumeExternal() { return volumeExternal; }
-
+    public VolumeInfo getVolumeInfo() { return volumeInfo; }
 }

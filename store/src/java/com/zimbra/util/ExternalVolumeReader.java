@@ -9,6 +9,9 @@ package com.zimbra.util;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.soap.admin.type.VolumeExternalInfo;
+import com.zimbra.common.soap.AdminConstants;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -89,6 +92,26 @@ public class ExternalVolumeReader {
             jsonObject.put("server/stores", volumePropsArray);
 
         } catch (JSONException e) {
+            // LOG.error("Error while processing ldap attribute ServerExternalStoreConfig", e);
+            throw e;
+        }
+    }
+
+    public void addToServerProperties(VolumeExternalInfo volExtInfo) throws ServiceException, JSONException {
+        try {
+            JSONObject volExtInfoObj = new JSONObject();
+            volExtInfoObj.put("storageType", volExtInfo.getStorageType());
+            // volPropArray.put(A_VOLUME_VOLUME_PREFIX, volExtInfo.getVolumePrefix());
+            // volPropArray.put(A_VOLUME_STORE_PROVIDER, volExtInfo.getStoreProvider());
+            // volPropArray.put(A_VOLUME_GLB_BUCKET_CONFIG_ID, volExtInfo.getGlobalBucketConfigurationId());
+            // volPropArray.put(A_VOLUME_USE_IN_FREQ_ACCESS, volExtInfo.getUseInFrequentAccess());
+            // volPropArray.put(A_VOLUME_USE_INTELLIGENT_TIERING, volExtInfo.getUseIntelligentTiering());
+
+            String serverExternalStoreConfigJson = provisioning.getLocalServer().getServerExternalStoreConfig();
+            JSONObject jsonObject = new JSONObject(serverExternalStoreConfigJson);
+            jsonObject.put("server/stores", volExtInfoObj);
+        }
+        catch (JSONException e) {
             // LOG.error("Error while processing ldap attribute ServerExternalStoreConfig", e);
             throw e;
         }

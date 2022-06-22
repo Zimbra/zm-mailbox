@@ -38,6 +38,7 @@ public final class CreateVolume extends RedoableOp {
     private short mboxBits;
     private short fileGroupBits;
     private short fileBits;
+    private short storeType;
 
     private boolean compressBlobs;
     private long compressionThreshold;
@@ -57,6 +58,7 @@ public final class CreateVolume extends RedoableOp {
         fileBits = volume.getFileBits();
         compressBlobs = volume.isCompressBlobs();
         compressionThreshold = volume.getCompressionThreshold();
+        storeType = 2;//(short)(volume.getStoreType()).ordinal();
     }
 
     public void setId(short id) {
