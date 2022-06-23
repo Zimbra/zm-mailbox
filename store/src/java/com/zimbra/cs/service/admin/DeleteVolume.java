@@ -56,14 +56,14 @@ public final class DeleteVolume extends AdminDocumentHandler {
         }
         mgr.delete(req.getId());
         try {
-          if (vol.getStoreType().equals(Volume.StoreType.EXTERNAL)) {
-            ExternalVolumeReader extVolReader = new ExternalVolumeReader(Provisioning.getInstance());
-            extVolReader.deleteServerProperties(req.getId());
-          }
+            if (vol.getStoreType().equals(Volume.StoreType.EXTERNAL)) {
+                ExternalVolumeReader extVolReader = new ExternalVolumeReader(Provisioning.getInstance());
+                extVolReader.deleteServerProperties(req.getId());
+            }
         }
         catch (JSONException e) {
-          // LOG.error("Error while processing ldap attribute ServerExternalStoreConfig", e);
-          // throw e;
+            // LOG.error("Error while processing ldap attribute ServerExternalStoreConfig", e);
+            // throw e;
         }
         return new DeleteVolumeResponse();
     }

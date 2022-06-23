@@ -31,6 +31,7 @@ import com.zimbra.cs.volume.Volume;
 import com.zimbra.cs.volume.VolumeManager;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.GetAllVolumesRequest;
@@ -62,15 +63,24 @@ public final class GetAllVolumes extends AdminDocumentHandler {
                 ExternalVolumeReader extVolReader = new ExternalVolumeReader(Provisioning.getInstance());
 
                 try {
-                    Properties properties = extVolReader.getProperties(volInfo.getId());
+                    Properties properties = extVolReader.readServerProperties(volInfo.getId());
                     String storeProvider = properties.getProperty("storeProvider");
                     String volumePrefix = properties.getProperty("volumePrefix");
-                    String globalBucketConfigId = properties.getProperty("globalBucketConfigId");
+                    String globalBucketConfigId = properties.getProperty("glbBucketConfigId");
+                    String storageType = properties.getProperty("storageType");
+                    Boolean useInFrequentAccess = Boolean.valueOf(properties.getProperty("useInFrequentAccess"));
+                    Boolean useIntelligentTiering = Boolean.valueOf(properties.getProperty("useIntelligentTiering"));
+                    int useInFrequentAccessThreshold = Integer.parseInt(properties.getProperty("useInFrequentAccessThreshold"));
+                    short volId = (short)Integer.parseInt(properties.getProperty("volumeId"));
+                    String volName = properties.getProperty("name");
 
                     volExtInfo.setStoreProvider(storeProvider);
                     volExtInfo.setVolumePrefix(volumePrefix);
                     volExtInfo.setGlobalBucketConfigurationId(globalBucketConfigId);
-
+                    volExtInfo.setStorageType(storageType);
+                    volExtInfo.setUseInFrequentAccess(useInFrequentAccess);
+                    volExtInfo.setUseIntelligentTiering(useIntelligentTiering);
+                    volExtInfo.setUseInFrequentAccessThreshold(useInFrequentAccessThreshold);
                     volInfo.setVolumeExternalInfo(volExtInfo);
                 }
                 catch (JSONException e) {

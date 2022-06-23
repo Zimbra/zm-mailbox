@@ -64,8 +64,8 @@ public final class DbVolume {
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement("INSERT INTO volume (id, type, name, path, mailbox_group_bits, " +
-                    "mailbox_bits, file_group_bits, file_bits, compress_blobs, compression_threshold, metadata) " +
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                    "mailbox_bits, file_group_bits, file_bits, compress_blobs, compression_threshold, metadata, store_type) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             int pos = 1;
             stmt.setShort(pos++, nextId);
             stmt.setShort(pos++, volume.getType());
@@ -78,6 +78,7 @@ public final class DbVolume {
             stmt.setBoolean(pos++, volume.isCompressBlobs());
             stmt.setLong(pos++, volume.getCompressionThreshold());
             stmt.setString(pos++, volume.getMetadata().toString());
+            stmt.setShort(pos++, (short)(volume.getStoreType().getStoreType()));
             stmt.executeUpdate();
         } catch (SQLException e) {
             if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW)) {

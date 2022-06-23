@@ -51,15 +51,25 @@ public final class CreateVolume extends AdminDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(ctx);
         checkRight(zsc, ctx, Provisioning.getInstance().getLocalServer(), Admin.R_manageVolume);
 
-        Volume vol = VolumeManager.getInstance().create(toVolume(req.getVolume()));
-        VolumeInfo volInfo = req.getVolume();
+        VolumeInfo volInfoRequest = req.getVolume();
+        Volume volRequest = VolumeManager.getInstance().create(toVolume(volInfoRequest));
+        VolumeInfo volInfoResponse = volRequest.toJAXB();
+
 
         // If newly created volume is external update json
-        if (vol.getStoreType().equals(Volume.StoreType.EXTERNAL)) {
+        if (volRequest.getStoreType().equals(Volume.StoreType.EXTERNAL)) {
             Provisioning prov = Provisioning.getInstance();
             try {
+                // As id is created once volume is created, update id
+                volInfoRequest.setId(volRequest.getId());
+
+                // Update JSON state server properties
                 ExternalVolumeReader extVolReader = new ExternalVolumeReader(prov);
-                extVolReader.addToServerProperties(volInfo.getVolumeExternalInfo());
+                extVolReader.addServerProperties(volInfoRequest);
+
+                // Add External volume info to response
+                volInfoResponse.setVolumeExternalInfo(volInfoRequest.getVolumeExternalInfo());
+
             }
             catch (JSONException e) {
                 // LOG.error("Error while processing ldap attribute ServerExternalStoreConfig", e);
@@ -67,13 +77,14 @@ public final class CreateVolume extends AdminDocumentHandler {
             }
         }
 
-        return new CreateVolumeResponse(vol.toJAXB());
+        return new CreateVolumeResponse(volInfoResponse);
     }
 
     private Volume toVolume(VolumeInfo vol) throws ServiceException {
+        Volume.StoreType enumStoreType = (1 == vol.getStoreType()) ? Volume.StoreType.FILE_STORE : Volume.StoreType.EXTERNAL;
         return Volume.builder().setType(vol.getType()).setName(vol.getName()).setPath(vol.getRootPath(), true)
                 .setCompressBlobs(vol.isCompressBlobs()).setCompressionThreshold(vol.getCompressionThreshold())
-                .build();
+                .setStoreType(enumStoreType).build();
     }
 
     @Override

@@ -20,6 +20,10 @@ package com.zimbra.cs.service.admin;
 import java.util.List;
 import java.util.Map;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Provisioning;
@@ -34,6 +38,7 @@ import com.zimbra.soap.admin.message.ModifyVolumeRequest;
 import com.zimbra.soap.admin.message.ModifyVolumeResponse;
 import com.zimbra.soap.admin.type.VolumeInfo;
 import com.zimbra.soap.admin.type.VolumeExternalInfo;
+import com.zimbra.util.ExternalVolumeReader;
 
 public final class ModifyVolume extends AdminDocumentHandler {
 
@@ -49,7 +54,6 @@ public final class ModifyVolume extends AdminDocumentHandler {
 
         VolumeManager mgr = VolumeManager.getInstance();
         VolumeInfo volInfo = req.getVolumeInfo();
-        VolumeExternalInfo volExt = volInfo.getVolumeExternalInfo();
         Volume vol = mgr.getVolume(volInfo.getId());
         Volume.Builder builder = Volume.builder(vol);
 
@@ -83,6 +87,17 @@ public final class ModifyVolume extends AdminDocumentHandler {
         else if (vol.getStoreType().equals(Volume.StoreType.EXTERNAL)) {
             if (volInfo.getName() != null) {
                 builder.setName(volInfo.getName());
+            }
+
+            // Update ldap attribute after modification
+            Provisioning prov = Provisioning.getInstance();
+            try {
+                ExternalVolumeReader extVolReader = new ExternalVolumeReader(prov);
+                extVolReader.ModifyServerProperties(volInfo);
+            }
+            catch (JSONException e) {
+                // LOG.error("Error while processing ldap attribute ServerExternalStoreConfig", e);
+                // throw e;
             }
         }
         else {

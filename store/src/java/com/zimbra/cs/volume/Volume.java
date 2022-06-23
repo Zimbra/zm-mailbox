@@ -501,6 +501,7 @@ public final class Volume {
 
     public VolumeInfo toJAXB() {
         VolumeInfo jaxb = new VolumeInfo();
+        VolumeExternalInfo volExtInfo = new VolumeExternalInfo();
         jaxb.setId(id);
         jaxb.setType(type);
         jaxb.setName(name);
@@ -512,8 +513,11 @@ public final class Volume {
         jaxb.setCompressBlobs(compressBlobs);
         jaxb.setCompressionThreshold(compressionThreshold);
         jaxb.setCurrent(VolumeManager.getInstance().isCurrent(this));
-        short value = 2; //(short)(StoreType.getStoreType());
-        jaxb.setStoreType(value);
+
+        // short value = (short)(this.getStoreType().getStoreType());
+        // jaxb.setStoreType(value);
+        // jaxb.setVolumeExternalInfo(volExtInfo);
+
         return jaxb;
     }
 

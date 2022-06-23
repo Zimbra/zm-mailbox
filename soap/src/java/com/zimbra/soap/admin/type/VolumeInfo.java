@@ -109,7 +109,7 @@ public final class VolumeInfo {
     /**
      * @zm-api-field-description Set to 1 for internal volumes and 2 for external volumes
      */
-    @XmlAttribute(name=AdminConstants.A_VOLUME_STORE_TYPE /* storeType */, required=true)
+    @XmlAttribute(name=AdminConstants.A_VOLUME_STORE_TYPE /* storeType */, required=false)
     private short storeType;
 
     /**

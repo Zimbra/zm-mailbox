@@ -58,7 +58,7 @@ public final class CreateVolume extends RedoableOp {
         fileBits = volume.getFileBits();
         compressBlobs = volume.isCompressBlobs();
         compressionThreshold = volume.getCompressionThreshold();
-        storeType = 2;//(short)(volume.getStoreType()).ordinal();
+        storeType = (short)(volume.getStoreType().getStoreType());
     }
 
     public void setId(short id) {
@@ -116,10 +116,14 @@ public final class CreateVolume extends RedoableOp {
             }
         }
         try {
+            Volume.StoreType enumStoreType =
+                (1 == storeType) ? Volume.StoreType.FILE_STORE : Volume.StoreType.EXTERNAL;
+
             Volume volume = Volume.builder().setId(id).setType(type).setName(name).setPath(rootPath, false)
                     .setMboxGroupBits(mboxGroupBits).setMboxBit(mboxBits)
                     .setFileGroupBits(fileGroupBits).setFileBits(fileBits)
-                    .setCompressBlobs(compressBlobs).setCompressionThreshold(compressionThreshold).build();
+                    .setCompressBlobs(compressBlobs).setCompressionThreshold(compressionThreshold)
+                    .setStoreType(enumStoreType).build();
             mgr.create(volume, getUnloggedReplay());
         } catch (VolumeServiceException e) {
             if (e.getCode() == VolumeServiceException.ALREADY_EXISTS) {
