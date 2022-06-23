@@ -37,6 +37,12 @@ public final class HsmConstants {
 
     public static final String E_GET_APPLIANCE_HSM_FS_REQUEST = "GetApplianceHSMFSRequest";
     public static final String E_GET_APPLIANCE_HSM_FS_RESPONSE = "GetApplianceHSMFSResponse";
+    
+    public static final String E_GET_SCHEDULE_SM_POLICY_REQUEST = "GetScheduleSMPolicyRequest";
+    public static final String E_GET_SCHEDULE_SM_POLICY_RESPONSE = "GetScheduleSMPolicyResponse";
+    
+    public static final String E_SCHEDULE_SMPOLICY_REQUEST = "ScheduleSMPolicyRequest";
+    public static final String E_SCHEDULE_SMPOLICY_RESPONSE = "ScheduleSMPolicyResponse";
 
     public static final QName HSM_REQUEST = QName.get(E_HSM_REQUEST, NAMESPACE);
     public static final QName HSM_RESPONSE = QName.get(E_HSM_RESPONSE, NAMESPACE);
@@ -52,6 +58,12 @@ public final class HsmConstants {
 
     public static final QName GET_APPLIANCE_HSM_FS_REQUEST = QName.get(E_GET_APPLIANCE_HSM_FS_REQUEST, NAMESPACE);
     public static final QName GET_APPLIANCE_HSM_FS_RESPONSE = QName.get(E_GET_APPLIANCE_HSM_FS_RESPONSE, NAMESPACE);
+    
+    public static final QName GET_SCHEDULE_SM_POLICY_REQUEST = QName.get(E_GET_SCHEDULE_SM_POLICY_REQUEST, NAMESPACE);
+    public static final QName GET_SCHEDULE_SM_POLICY_RESPONSE = QName.get(E_GET_SCHEDULE_SM_POLICY_RESPONSE, NAMESPACE);
+    
+    public static final QName SCHEDULE_SMPOLICY_REQUEST = QName.get(E_SCHEDULE_SMPOLICY_REQUEST, NAMESPACE);
+    public static final QName SCHEDULE_SMPOLICY_RESPONSE = QName.get(E_SCHEDULE_SMPOLICY_RESPONSE, NAMESPACE);
 
     public static final String A_START_DATE = "startDate";
     public static final String A_END_DATE = "endDate";
@@ -73,4 +85,19 @@ public final class HsmConstants {
     // GetApplianceHSMFS
     public static final String E_FS = "fs";
     public static final String A_SIZE = "size";
+    
+    public static final String ZM_SCHEDULE_SM_POLICY = "zmschedulesmpolicy";
+    public static final String A_SM_SCHEDULE_POLICY_ENABLED = "smSchedulePolicyEnabled";
+    public static final String A_SM_SCHEDULE_POLICY_START_TIME = "smSchedulePolicyStartTime";
+    public static final String A_SM_START = "SM_START:";
+    public static final String A_SM_END = ":SM_END";
+    public static final String A_SM_SCHEDULE_POLICY_ENABLED_MISSING = "No smSchedulePolicyEnabled defined.";
+    public static final String A_SM_TIME_MISSING = "No time defined.";
+    public static final String A_SM_INVALID_TIME_FORMAT = "Invalid time format.";
+    public static final String A_SM_INVALID_HOURS_FORMAT = "Invalid hour defined.";
+    public static final String A_SM_INVALID_MINUTES = "Minutes are not allowed.";
+    public static final int A_EXIT_STATUS = 0;
+    public static final String A_SM_SCHEDULE_POLICY_ENABLED_INVALID = "Only boolean value allowed in smSchedulePolicyEnabled";
+    public static final String A_TRUE = "true";
+    public static final String A_FALSE = "false";
 }
