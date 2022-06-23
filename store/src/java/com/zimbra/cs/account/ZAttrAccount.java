@@ -10419,13 +10419,13 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * enable/disable dumpster
      *
-     * @return zimbraDumpsterEnabled, or false if unset
+     * @return zimbraDumpsterEnabled, or true if unset
      *
      * @since ZCS 7.0.0
      */
     @ZAttr(id=1128)
     public boolean isDumpsterEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraDumpsterEnabled, false, true);
+        return getBooleanAttr(Provisioning.A_zimbraDumpsterEnabled, true, true);
     }
 
     /**
