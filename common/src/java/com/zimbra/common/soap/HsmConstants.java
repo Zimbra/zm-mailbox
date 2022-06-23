@@ -96,4 +96,5 @@ public final class HsmConstants {
     public static final String A_SM_INVALID_TIME_FORMAT = "Invalid time format.";
     public static final String A_SM_INVALID_HOURS_FORMAT = "Invalid hour defined.";
     public static final String A_SM_INVALID_MINUTES = "Minutes are not allowed.";
+    public static final int A_EXIT_STATUS = 0;
 }
