@@ -310,11 +310,16 @@ public class AdminService implements DocumentService {
 
         // ContactBackup API
         dispatcher.registerHandler(AdminConstants.CONTACT_BACKUP_REQUEST, new ContactBackup());
+        
+        // Global External Store Config
+        dispatcher.registerHandler(AdminConstants.GET_S3_BUCKET_CONFIG_REQUEST, new GetS3BucketConfig());
+        dispatcher.registerHandler(AdminConstants.CREATE_S3_BUCKET_CONFIG_REQUEST, new CreateS3BucketConfig());
+        dispatcher.registerHandler(AdminConstants.DELETE_S3_BUCKET_CONFIG_REQUEST, new DeleteS3BucketConfig());
 
     }
 
     /**
-     * @param request
+     * @param request	
      * @return
      * @throws ServiceException
      */

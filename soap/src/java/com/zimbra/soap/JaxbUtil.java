@@ -1149,7 +1149,13 @@ public final class JaxbUtil {
             com.zimbra.soap.account.message.GetAddressListMembersRequest.class,
             com.zimbra.soap.account.message.GetAddressListMemberResponse.class,
             com.zimbra.soap.admin.message.GetAddressListInfoRequest.class,
-            com.zimbra.soap.admin.message.GetAddressListInfoResponse.class
+            com.zimbra.soap.admin.message.GetAddressListInfoResponse.class,
+            com.zimbra.soap.admin.message.GetS3BucketConfigRequest.class,
+            com.zimbra.soap.admin.message.GetS3BucketConfigResponse.class,
+            com.zimbra.soap.admin.message.CreateS3BucketConfigRequest.class,
+            com.zimbra.soap.admin.message.CreateS3BucketConfigResponse.class,
+            com.zimbra.soap.admin.message.DeleteS3BucketConfigRequest.class,
+            com.zimbra.soap.admin.message.DeleteS3BucketConfigResponse.class
         };
 
         try {
