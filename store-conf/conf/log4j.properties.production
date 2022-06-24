@@ -136,14 +136,14 @@ appender.EWS.strategy.type = DefaultRolloverStrategy
 %%uncomment VAR:zimbraLogToSyslog%%appender.SYSLOG.layout.pattern = mailboxd: %-5p [%t] [%z] %c{1} - %m
 
 # Logger service appender
-%%comment VAR:!zimbraLogHostname%%appender.SLOGGER.type = Syslog
-%%comment VAR:!zimbraLogHostname%%appender.SLOGGER.name = sloggerAppender
-%%comment VAR:!zimbraLogHostname%%appender.SLOGGER.host = %%zimbraLogHostname%%
-%%comment VAR:!zimbraLogHostname%%appender.SLOGGER.facility = LOCAL1
-%%comment VAR:!zimbraLogHostname%%appender.SLOGGER.port = 514
-%%comment VAR:!zimbraLogHostname%%appender.SLOGGER.protocol = UDP
-%%comment VAR:!zimbraLogHostname%%appender.SLOGGER.layout.type = PatternLayout
-%%comment VAR:!zimbraLogHostname%%appender.SLOGGER.layout.pattern = mailboxd: %-5p [%t] [%z] %c{1} - %m
+appender.SLOGGER.type = Syslog
+appender.SLOGGER.name = sloggerAppender
+appender.SLOGGER.host = %%zimbraLogHostname%%
+appender.SLOGGER.facility = LOCAL1
+appender.SLOGGER.port = 514
+appender.SLOGGER.protocol = UDP
+appender.SLOGGER.layout.type = PatternLayout
+appender.SLOGGER.layout.pattern = mailboxd: %-5p [%t] [%z] %c{1} - %m
 
 logger.zimbra.name = zimbra.mailbox
 logger.zimbra.level = info
@@ -208,6 +208,7 @@ logger.memcached.level = WARN
 
 %%comment VAR:!zimbraLogHostname%%logger.slogger.name = zimbra.slogger
 %%comment VAR:!zimbraLogHostname%%logger.slogger.level = info
+%%uncomment VAR:!zimbraLogHostname%%logger.slogger.level = error
 %%comment VAR:!zimbraLogHostname%%logger.slogger.additivity = false
 %%comment VAR:!zimbraLogHostname%%logger.slogger.appenderRef.SLOGGER.ref = sloggerAppender
 
