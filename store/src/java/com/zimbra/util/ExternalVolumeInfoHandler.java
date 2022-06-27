@@ -206,11 +206,13 @@ public class ExternalVolumeInfoHandler {
      * @throws JSONException
      */
     protected void convertFlatJsonObjectToProperties(Properties properties, JSONObject flatJsonObject) throws JSONException {
-        for (Iterator it = flatJsonObject.keys(); it.hasNext();) {
-            Object fieldObject = it.next();
-            if (fieldObject instanceof String) {
-                String field = String.valueOf(fieldObject);
-                properties.put(field, flatJsonObject.get(field));
+        if (flatJsonObject != null) {
+            for (Iterator it = flatJsonObject.keys(); it.hasNext();) {
+                Object fieldObject = it.next();
+                if (fieldObject instanceof String) {
+                    String field = String.valueOf(fieldObject);
+                    properties.put(field, flatJsonObject.get(field));
+                }
             }
         }
     }
