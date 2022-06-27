@@ -31,19 +31,19 @@ public class VolumeExternalInfo {
      * @zm-api-field-description Set to 1 for Internal and 2 for External.
      */
     @XmlAttribute(name=AdminConstants.A_VOLUME_STORAGE_TYPE /* storageType */, required=false)
-    private String storageType = "S3 | ObjectStore";
+    private String storageType = "S3";
 
     /**
      * @zm-api-field-description Prefix for bucket location e.g. server1_primary
      */
     @XmlAttribute(name=AdminConstants.A_VOLUME_VOLUME_PREFIX /* volumePrefix */, required=false)
-    private String volumePrefix;
+    private String volumePrefix = "";
 
     /**
      * @zm-api-field-description Specifies global bucket configuration Id
      */
     @XmlAttribute(name=AdminConstants.A_VOLUME_GLB_BUCKET_CONFIG_ID /* glbBucketConfigId */, required=true)
-    private String glbBucketConfigId;
+    private String glbBucketConfigId = "";
 
     /**
      * @zm-api-field-description Specifies frequent access enabled or not

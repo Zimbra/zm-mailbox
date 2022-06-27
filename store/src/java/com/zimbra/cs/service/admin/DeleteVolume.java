@@ -57,8 +57,8 @@ public final class DeleteVolume extends AdminDocumentHandler {
         mgr.delete(req.getId());
         try {
             if (vol.getStoreType().equals(Volume.StoreType.EXTERNAL)) {
-                ExternalVolumeInfoHandler extVolReader = new ExternalVolumeInfoHandler(Provisioning.getInstance());
-                extVolReader.deleteServerProperties(req.getId());
+                ExternalVolumeInfoHandler extVolInfoHandler = new ExternalVolumeInfoHandler(Provisioning.getInstance());
+                extVolInfoHandler.deleteServerProperties(req.getId());
             }
         } catch (ServiceException e) {
             throw e;

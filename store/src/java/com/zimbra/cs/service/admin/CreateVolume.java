@@ -64,8 +64,8 @@ public final class CreateVolume extends AdminDocumentHandler {
                 volInfoRequest.setId(volRequest.getId());
 
                 // Update JSON state server properties
-                ExternalVolumeInfoHandler extVolReader = new ExternalVolumeInfoHandler(prov);
-                extVolReader.addServerProperties(volInfoRequest);
+                ExternalVolumeInfoHandler extVolInfoHandler = new ExternalVolumeInfoHandler(prov);
+                extVolInfoHandler.addServerProperties(volInfoRequest);
 
                 // Add External volume info to response
                 volInfoResponse.setVolumeExternalInfo(volInfoRequest.getVolumeExternalInfo());

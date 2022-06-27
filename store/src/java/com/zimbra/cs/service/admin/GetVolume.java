@@ -55,16 +55,15 @@ public final class GetVolume extends AdminDocumentHandler {
 
         if (vol.getStoreType().equals(Volume.StoreType.EXTERNAL)) {
             VolumeExternalInfo volExtInfo = volInfo.getVolumeExternalInfo();
-            ExternalVolumeInfoHandler extVolReader = new ExternalVolumeInfoHandler(Provisioning.getInstance());
+            ExternalVolumeInfoHandler extVolInfoHandler = new ExternalVolumeInfoHandler(Provisioning.getInstance());
             try {
-                Properties properties = extVolReader.readServerProperties(volInfo.getId());
+                Properties properties = extVolInfoHandler.readServerProperties(volInfo.getId());
                 String volumePrefix = properties.getProperty("volumePrefix");
                 String globalBucketConfigId = properties.getProperty("glbBucketConfigId");
                 String storageType = properties.getProperty("storageType");
                 Boolean useInFrequentAccess = Boolean.valueOf(properties.getProperty("useInFrequentAccess"));
                 Boolean useIntelligentTiering = Boolean.valueOf(properties.getProperty("useIntelligentTiering"));
                 int useInFrequentAccessThreshold = Integer.parseInt(properties.getProperty("useInFrequentAccessThreshold"));
-                String volName = properties.getProperty("name");
 
                 volExtInfo.setVolumePrefix(volumePrefix);
                 volExtInfo.setGlobalBucketConfigurationId(globalBucketConfigId);
@@ -73,7 +72,6 @@ public final class GetVolume extends AdminDocumentHandler {
                 volExtInfo.setUseIntelligentTiering(useIntelligentTiering);
                 volExtInfo.setUseInFrequentAccessThreshold(useInFrequentAccessThreshold);
                 volInfo.setVolumeExternalInfo(volExtInfo);
-
             }
             catch (ServiceException e) {
                 throw e;
@@ -82,7 +80,7 @@ public final class GetVolume extends AdminDocumentHandler {
             }
         }
 
-        GetVolumeResponse resp = new GetVolumeResponse(vol.toJAXB());
+        GetVolumeResponse resp = new GetVolumeResponse(volInfo);
         return resp;
     }
 
