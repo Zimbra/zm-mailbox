@@ -26,6 +26,7 @@ import org.json.JSONObject;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
@@ -71,6 +72,7 @@ public final class CreateVolume extends AdminDocumentHandler {
                 volInfoResponse.setVolumeExternalInfo(volInfoRequest.getVolumeExternalInfo());
 
             } catch (ServiceException e) {
+                ZimbraLog.store.error("Error while processing CreateVolumeRequest", e);
                 throw e;
             } catch  (JSONException e) {
                 throw ServiceException.FAILURE("Error while adding server properties", null);

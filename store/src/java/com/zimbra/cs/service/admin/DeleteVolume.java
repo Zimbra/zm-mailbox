@@ -24,6 +24,7 @@ import org.json.JSONException;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
@@ -61,6 +62,7 @@ public final class DeleteVolume extends AdminDocumentHandler {
                 extVolInfoHandler.deleteServerProperties(req.getId());
             }
         } catch (ServiceException e) {
+            ZimbraLog.store.error("Error while processing DeleteVolumeRequest", e);
             throw e;
         } catch (JSONException e) {
             throw ServiceException.FAILURE("Error while deleting server properties", null);

@@ -501,7 +501,6 @@ public final class Volume {
 
     public VolumeInfo toJAXB() {
         VolumeInfo jaxb = new VolumeInfo();
-        VolumeExternalInfo volExtInfo = new VolumeExternalInfo();
         jaxb.setId(id);
         jaxb.setType(type);
         jaxb.setName(name);

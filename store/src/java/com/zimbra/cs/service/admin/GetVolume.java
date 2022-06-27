@@ -25,6 +25,7 @@ import org.json.JSONException;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
@@ -54,7 +55,7 @@ public final class GetVolume extends AdminDocumentHandler {
         VolumeInfo volInfo = vol.toJAXB();
 
         if (vol.getStoreType().equals(Volume.StoreType.EXTERNAL)) {
-            VolumeExternalInfo volExtInfo = volInfo.getVolumeExternalInfo();
+            VolumeExternalInfo volExtInfo = new VolumeExternalInfo();
             ExternalVolumeInfoHandler extVolInfoHandler = new ExternalVolumeInfoHandler(Provisioning.getInstance());
             try {
                 Properties properties = extVolInfoHandler.readServerProperties(volInfo.getId());
@@ -65,6 +66,7 @@ public final class GetVolume extends AdminDocumentHandler {
                 Boolean useIntelligentTiering = Boolean.valueOf(properties.getProperty("useIntelligentTiering"));
                 int useInFrequentAccessThreshold = Integer.parseInt(properties.getProperty("useInFrequentAccessThreshold"));
 
+
                 volExtInfo.setVolumePrefix(volumePrefix);
                 volExtInfo.setGlobalBucketConfigurationId(globalBucketConfigId);
                 volExtInfo.setStorageType(storageType);
@@ -74,6 +76,7 @@ public final class GetVolume extends AdminDocumentHandler {
                 volInfo.setVolumeExternalInfo(volExtInfo);
             }
             catch (ServiceException e) {
+                ZimbraLog.store.error("Error while processing GetVolumesRequest", e);
                 throw e;
             } catch (JSONException e) {
                 throw ServiceException.FAILURE("Error while reading server properties", null);

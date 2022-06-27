@@ -25,6 +25,7 @@ import org.json.JSONException;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
@@ -56,7 +57,7 @@ public final class GetAllVolumes extends AdminDocumentHandler {
             VolumeInfo volInfo = vol.toJAXB();
 
             if (vol.getStoreType().equals(Volume.StoreType.EXTERNAL)) {
-                VolumeExternalInfo volExtInfo = volInfo.getVolumeExternalInfo();
+                VolumeExternalInfo volExtInfo = new VolumeExternalInfo();
                 ExternalVolumeInfoHandler extVolInfoHandler = new ExternalVolumeInfoHandler(Provisioning.getInstance());
 
                 try {
@@ -66,16 +67,17 @@ public final class GetAllVolumes extends AdminDocumentHandler {
                     String storageType = properties.getProperty("storageType");
                     Boolean useInFrequentAccess = Boolean.valueOf(properties.getProperty("useInFrequentAccess"));
                     Boolean useIntelligentTiering = Boolean.valueOf(properties.getProperty("useIntelligentTiering"));
-                    int useInFrequentAccessThreshold = Integer.parseInt(properties.getProperty("useInFrequentAccessThreshold"));
+                    // int useInFrequentAccessThreshold = Integer.parseInt(properties.getProperty("useInFrequentAccessThreshold"));
 
                     volExtInfo.setVolumePrefix(volumePrefix);
                     volExtInfo.setGlobalBucketConfigurationId(globalBucketConfigId);
                     volExtInfo.setStorageType(storageType);
                     volExtInfo.setUseInFrequentAccess(useInFrequentAccess);
                     volExtInfo.setUseIntelligentTiering(useIntelligentTiering);
-                    volExtInfo.setUseInFrequentAccessThreshold(useInFrequentAccessThreshold);
+                    // volExtInfo.setUseInFrequentAccessThres hold(useInFrequentAccessThreshold);
                     volInfo.setVolumeExternalInfo(volExtInfo);
                 } catch (ServiceException e) {
+                    ZimbraLog.store.error("Error while processing GetAllVolumesRequest", e);
                     throw e;
                 } catch (JSONException e) {
                     throw ServiceException.FAILURE("Error while reading server properties", null);
