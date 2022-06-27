@@ -20,9 +20,7 @@ package com.zimbra.cs.service.admin;
 import java.util.List;
 import java.util.Map;
 
-import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -38,7 +36,9 @@ import com.zimbra.soap.admin.message.ModifyVolumeRequest;
 import com.zimbra.soap.admin.message.ModifyVolumeResponse;
 import com.zimbra.soap.admin.type.VolumeInfo;
 import com.zimbra.soap.admin.type.VolumeExternalInfo;
-import com.zimbra.util.ExternalVolumeReader;
+import com.zimbra.util.ExternalVolumeInfoHandler;
+
+import org.apache.commons.lang.StringUtils;
 
 public final class ModifyVolume extends AdminDocumentHandler {
 
@@ -66,14 +66,14 @@ public final class ModifyVolume extends AdminDocumentHandler {
         }
 
         // store type == 1, allow modification of all parameters
-        if(vol.getStoreType().equals(Volume.StoreType.FILE_STORE)) {
+        if (vol.getStoreType().equals(Volume.StoreType.FILE_STORE)) {
             if (volInfo.getType() > 0) {
                 builder.setType(volInfo.getType());
             }
-            if (volInfo.getName() != null) {
+            if (!StringUtils.isEmpty(volInfo.getName())) {
                 builder.setName(volInfo.getName());
             }
-            if (volInfo.getRootPath() != null) {
+            if (!StringUtils.isEmpty(volInfo.getRootPath())) {
                 builder.setPath(volInfo.getRootPath(), true);
             }
             if (volInfo.getCompressBlobs() != null) {
@@ -88,29 +88,13 @@ public final class ModifyVolume extends AdminDocumentHandler {
             if (volInfo.getName() != null) {
                 builder.setName(volInfo.getName());
             }
-
-            // Update ldap attribute after modification
-            Provisioning prov = Provisioning.getInstance();
-            try {
-                ExternalVolumeReader extVolReader = new ExternalVolumeReader(prov);
-                extVolReader.ModifyServerProperties(volInfo);
-            }
-            catch (JSONException e) {
-                // LOG.error("Error while processing ldap attribute ServerExternalStoreConfig", e);
-                // throw e;
-            }
-        }
-        else {
-            // Do nothing
         }
         mgr.update(builder.build());
         return new ModifyVolumeResponse();
-
     }
 
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_manageVolume);
     }
-
 }

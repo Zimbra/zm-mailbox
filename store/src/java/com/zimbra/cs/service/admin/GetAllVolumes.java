@@ -20,26 +20,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.volume.Volume;
 import com.zimbra.cs.volume.VolumeManager;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.GetAllVolumesRequest;
 import com.zimbra.soap.admin.message.GetAllVolumesResponse;
 import com.zimbra.soap.admin.type.VolumeInfo;
 import com.zimbra.soap.admin.type.VolumeExternalInfo;
-import com.zimbra.util.ExternalVolumeReader;
-
+import com.zimbra.util.ExternalVolumeInfoHandler;
 
 public final class GetAllVolumes extends AdminDocumentHandler {
 
@@ -58,23 +55,20 @@ public final class GetAllVolumes extends AdminDocumentHandler {
         for (Volume vol : VolumeManager.getInstance().getAllVolumes()) {
             VolumeInfo volInfo = vol.toJAXB();
 
-            if(vol.getStoreType().equals(Volume.StoreType.EXTERNAL)) {
+            if (vol.getStoreType().equals(Volume.StoreType.EXTERNAL)) {
                 VolumeExternalInfo volExtInfo = volInfo.getVolumeExternalInfo();
-                ExternalVolumeReader extVolReader = new ExternalVolumeReader(Provisioning.getInstance());
+                ExternalVolumeInfoHandler extVolReader = new ExternalVolumeInfoHandler(Provisioning.getInstance());
 
                 try {
                     Properties properties = extVolReader.readServerProperties(volInfo.getId());
-                    String storeProvider = properties.getProperty("storeProvider");
                     String volumePrefix = properties.getProperty("volumePrefix");
                     String globalBucketConfigId = properties.getProperty("glbBucketConfigId");
                     String storageType = properties.getProperty("storageType");
                     Boolean useInFrequentAccess = Boolean.valueOf(properties.getProperty("useInFrequentAccess"));
                     Boolean useIntelligentTiering = Boolean.valueOf(properties.getProperty("useIntelligentTiering"));
                     int useInFrequentAccessThreshold = Integer.parseInt(properties.getProperty("useInFrequentAccessThreshold"));
-                    short volId = (short)Integer.parseInt(properties.getProperty("volumeId"));
                     String volName = properties.getProperty("name");
 
-                    volExtInfo.setStoreProvider(storeProvider);
                     volExtInfo.setVolumePrefix(volumePrefix);
                     volExtInfo.setGlobalBucketConfigurationId(globalBucketConfigId);
                     volExtInfo.setStorageType(storageType);
@@ -82,10 +76,10 @@ public final class GetAllVolumes extends AdminDocumentHandler {
                     volExtInfo.setUseIntelligentTiering(useIntelligentTiering);
                     volExtInfo.setUseInFrequentAccessThreshold(useInFrequentAccessThreshold);
                     volInfo.setVolumeExternalInfo(volExtInfo);
-                }
-                catch (JSONException e) {
-                    // LOG.error("Error while processing ldap attribute ServerExternalStoreConfig", e);
-                    // throw e;
+                } catch (ServiceException e) {
+                    throw e;
+                } catch (JSONException e) {
+                    throw ServiceException.FAILURE("Error while reading server properties", null);
                 }
             }
 

@@ -21,9 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -38,7 +36,7 @@ import com.zimbra.soap.admin.message.GetVolumeRequest;
 import com.zimbra.soap.admin.message.GetVolumeResponse;
 import com.zimbra.soap.admin.type.VolumeInfo;
 import com.zimbra.soap.admin.type.VolumeExternalInfo;
-import com.zimbra.util.ExternalVolumeReader;
+import com.zimbra.util.ExternalVolumeInfoHandler;
 
 public final class GetVolume extends AdminDocumentHandler {
 
@@ -55,22 +53,19 @@ public final class GetVolume extends AdminDocumentHandler {
         Volume vol = VolumeManager.getInstance().getVolume(req.getId());
         VolumeInfo volInfo = vol.toJAXB();
 
-        if(vol.getStoreType().equals(Volume.StoreType.EXTERNAL)) {
+        if (vol.getStoreType().equals(Volume.StoreType.EXTERNAL)) {
             VolumeExternalInfo volExtInfo = volInfo.getVolumeExternalInfo();
-            ExternalVolumeReader extVolReader = new ExternalVolumeReader(Provisioning.getInstance());
+            ExternalVolumeInfoHandler extVolReader = new ExternalVolumeInfoHandler(Provisioning.getInstance());
             try {
                 Properties properties = extVolReader.readServerProperties(volInfo.getId());
-                String storeProvider = properties.getProperty("storeProvider");
                 String volumePrefix = properties.getProperty("volumePrefix");
                 String globalBucketConfigId = properties.getProperty("glbBucketConfigId");
                 String storageType = properties.getProperty("storageType");
                 Boolean useInFrequentAccess = Boolean.valueOf(properties.getProperty("useInFrequentAccess"));
                 Boolean useIntelligentTiering = Boolean.valueOf(properties.getProperty("useIntelligentTiering"));
                 int useInFrequentAccessThreshold = Integer.parseInt(properties.getProperty("useInFrequentAccessThreshold"));
-                short volId = (short)Integer.parseInt(properties.getProperty("volumeId"));
                 String volName = properties.getProperty("name");
 
-                volExtInfo.setStoreProvider(storeProvider);
                 volExtInfo.setVolumePrefix(volumePrefix);
                 volExtInfo.setGlobalBucketConfigurationId(globalBucketConfigId);
                 volExtInfo.setStorageType(storageType);
@@ -80,11 +75,11 @@ public final class GetVolume extends AdminDocumentHandler {
                 volInfo.setVolumeExternalInfo(volExtInfo);
 
             }
-            catch (JSONException e) {
-                // LOG.error("Error while processing ldap attribute ServerExternalStoreConfig", e);
-                // throw e;
+            catch (ServiceException e) {
+                throw e;
+            } catch (JSONException e) {
+                throw ServiceException.FAILURE("Error while reading server properties", null);
             }
-
         }
 
         GetVolumeResponse resp = new GetVolumeResponse(vol.toJAXB());
@@ -95,5 +90,4 @@ public final class GetVolume extends AdminDocumentHandler {
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_manageVolume);
     }
-
 }

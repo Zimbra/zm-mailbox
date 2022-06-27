@@ -37,7 +37,7 @@ import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.CreateVolumeRequest;
 import com.zimbra.soap.admin.message.CreateVolumeResponse;
 import com.zimbra.soap.admin.type.VolumeInfo;
-import com.zimbra.util.ExternalVolumeReader;
+import com.zimbra.util.ExternalVolumeInfoHandler;
 
 public final class CreateVolume extends AdminDocumentHandler {
 
@@ -64,17 +64,18 @@ public final class CreateVolume extends AdminDocumentHandler {
                 volInfoRequest.setId(volRequest.getId());
 
                 // Update JSON state server properties
-                ExternalVolumeReader extVolReader = new ExternalVolumeReader(prov);
+                ExternalVolumeInfoHandler extVolReader = new ExternalVolumeInfoHandler(prov);
                 extVolReader.addServerProperties(volInfoRequest);
 
                 // Add External volume info to response
                 volInfoResponse.setVolumeExternalInfo(volInfoRequest.getVolumeExternalInfo());
 
+            } catch (ServiceException e) {
+                throw e;
+            } catch  (JSONException e) {
+                throw ServiceException.FAILURE("Error while adding server properties", null);
             }
-            catch (JSONException e) {
-                // LOG.error("Error while processing ldap attribute ServerExternalStoreConfig", e);
-                // throw e;
-            }
+
         }
 
         return new CreateVolumeResponse(volInfoResponse);

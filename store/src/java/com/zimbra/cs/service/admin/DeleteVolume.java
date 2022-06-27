@@ -34,7 +34,7 @@ import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.DeleteVolumeRequest;
 import com.zimbra.soap.admin.message.DeleteVolumeResponse;
-import com.zimbra.util.ExternalVolumeReader;
+import com.zimbra.util.ExternalVolumeInfoHandler;
 
 public final class DeleteVolume extends AdminDocumentHandler {
 
@@ -57,13 +57,13 @@ public final class DeleteVolume extends AdminDocumentHandler {
         mgr.delete(req.getId());
         try {
             if (vol.getStoreType().equals(Volume.StoreType.EXTERNAL)) {
-                ExternalVolumeReader extVolReader = new ExternalVolumeReader(Provisioning.getInstance());
+                ExternalVolumeInfoHandler extVolReader = new ExternalVolumeInfoHandler(Provisioning.getInstance());
                 extVolReader.deleteServerProperties(req.getId());
             }
-        }
-        catch (JSONException e) {
-            // LOG.error("Error while processing ldap attribute ServerExternalStoreConfig", e);
-            // throw e;
+        } catch (ServiceException e) {
+            throw e;
+        } catch (JSONException e) {
+            throw ServiceException.FAILURE("Error while deleting server properties", null);
         }
         return new DeleteVolumeResponse();
     }
@@ -72,5 +72,4 @@ public final class DeleteVolume extends AdminDocumentHandler {
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_manageVolume);
     }
-
 }

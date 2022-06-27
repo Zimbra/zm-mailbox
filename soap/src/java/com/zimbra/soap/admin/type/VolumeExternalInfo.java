@@ -30,20 +30,14 @@ public class VolumeExternalInfo {
     /**
      * @zm-api-field-description Set to 1 for Internal and 2 for External.
      */
-    @XmlAttribute(name=AdminConstants.A_VOLUME_STORAGE_TYPE /* storageType */, required=true)
-    private String storageType;
+    @XmlAttribute(name=AdminConstants.A_VOLUME_STORAGE_TYPE /* storageType */, required=false)
+    private String storageType = "S3 | ObjectStore";
 
     /**
      * @zm-api-field-description Prefix for bucket location e.g. server1_primary
      */
-    @XmlAttribute(name=AdminConstants.A_VOLUME_VOLUME_PREFIX /* volumePrefix */, required=true)
+    @XmlAttribute(name=AdminConstants.A_VOLUME_VOLUME_PREFIX /* volumePrefix */, required=false)
     private String volumePrefix;
-
-    /**
-     * @zm-api-field-description Specifies store provider
-     */
-    @XmlAttribute(name=AdminConstants.A_VOLUME_STORE_PROVIDER /* storeProvider */, required=true)
-    private String storeProvider;
 
     /**
      * @zm-api-field-description Specifies global bucket configuration Id
@@ -54,20 +48,20 @@ public class VolumeExternalInfo {
     /**
      * @zm-api-field-description Specifies frequent access enabled or not
      */
-    @XmlAttribute(name=AdminConstants.A_VOLUME_USE_IN_FREQ_ACCESS /* useInFrequentAccess */, required=true)
-    private Boolean useInFrequentAccess;
+    @XmlAttribute(name=AdminConstants.A_VOLUME_USE_IN_FREQ_ACCESS /* useInFrequentAccess */, required=false)
+    private Boolean useInFrequentAccess = false;
 
     /**
      * @zm-api-field-description Specifies threshold value of useInFrequentAccess
      */
-    @XmlAttribute(name=AdminConstants.A_VOLUME_USE_IN_FREQ_ACCESS_THRESHOLD /* useInFrequentAccessThreshold */, required=true)
-    private int useInFrequentAccessThreshold;
+    @XmlAttribute(name=AdminConstants.A_VOLUME_USE_IN_FREQ_ACCESS_THRESHOLD /* useInFrequentAccessThreshold */, required=false)
+    private int useInFrequentAccessThreshold = 65536;
 
     /**
      * @zm-api-field-description Specifies intelligent tiering enabled or not
      */
-    @XmlAttribute(name=AdminConstants.A_VOLUME_USE_INTELLIGENT_TIERING /* useIntelligentTiering */, required=true)
-    private Boolean useIntelligentTiering;
+    @XmlAttribute(name=AdminConstants.A_VOLUME_USE_INTELLIGENT_TIERING /* useIntelligentTiering */, required=false)
+    private Boolean useIntelligentTiering = false;
 
     public void setStorageType(String value) {
         storageType = value;
@@ -83,14 +77,6 @@ public class VolumeExternalInfo {
 
     public String getVolumePrefix() {
         return volumePrefix;
-    }
-
-    public void setStoreProvider(String value) {
-        storeProvider = value;
-    }
-
-    public String getStoreProvider() {
-        return storeProvider;
     }
 
     public void setGlobalBucketConfigurationId(String value) {
