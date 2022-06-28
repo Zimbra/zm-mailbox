@@ -20,9 +20,7 @@ package com.zimbra.cs.service.admin;
 import java.util.List;
 import java.util.Map;
 
-import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -56,7 +54,6 @@ public final class CreateVolume extends AdminDocumentHandler {
         Volume volRequest = VolumeManager.getInstance().create(toVolume(volInfoRequest));
         VolumeInfo volInfoResponse = volRequest.toJAXB();
 
-
         // If newly created volume is external update json
         if (volRequest.getStoreType().equals(Volume.StoreType.EXTERNAL)) {
             Provisioning prov = Provisioning.getInstance();
@@ -77,7 +74,6 @@ public final class CreateVolume extends AdminDocumentHandler {
             } catch  (JSONException e) {
                 throw ServiceException.FAILURE("Error while adding server properties", null);
             }
-
         }
 
         return new CreateVolumeResponse(volInfoResponse);

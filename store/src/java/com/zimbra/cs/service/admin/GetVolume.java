@@ -66,7 +66,6 @@ public final class GetVolume extends AdminDocumentHandler {
                 Boolean useIntelligentTiering = Boolean.valueOf(properties.getProperty("useIntelligentTiering"));
                 int useInFrequentAccessThreshold = Integer.parseInt(properties.getProperty("useInFrequentAccessThreshold"));
 
-
                 volExtInfo.setVolumePrefix(volumePrefix);
                 volExtInfo.setGlobalBucketConfigurationId(globalBucketConfigId);
                 volExtInfo.setStorageType(storageType);
@@ -74,8 +73,7 @@ public final class GetVolume extends AdminDocumentHandler {
                 volExtInfo.setUseIntelligentTiering(useIntelligentTiering);
                 volExtInfo.setUseInFrequentAccessThreshold(useInFrequentAccessThreshold);
                 volInfo.setVolumeExternalInfo(volExtInfo);
-            }
-            catch (ServiceException e) {
+            } catch (ServiceException e) {
                 ZimbraLog.store.error("Error while processing GetVolumesRequest", e);
                 throw e;
             } catch (JSONException e) {

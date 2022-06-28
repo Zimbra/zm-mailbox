@@ -110,5 +110,4 @@ public class VolumeExternalInfo {
     public int getUseInFrequentAccessThreshold() {
         return useInFrequentAccessThreshold;
     }
-
 }

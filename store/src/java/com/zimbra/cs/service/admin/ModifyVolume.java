@@ -35,8 +35,6 @@ import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.ModifyVolumeRequest;
 import com.zimbra.soap.admin.message.ModifyVolumeResponse;
 import com.zimbra.soap.admin.type.VolumeInfo;
-import com.zimbra.soap.admin.type.VolumeExternalInfo;
-import com.zimbra.util.ExternalVolumeInfoHandler;
 
 import org.apache.commons.lang.StringUtils;
 

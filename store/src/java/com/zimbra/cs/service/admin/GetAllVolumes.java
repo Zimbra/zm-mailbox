@@ -67,14 +67,14 @@ public final class GetAllVolumes extends AdminDocumentHandler {
                     String storageType = properties.getProperty("storageType");
                     Boolean useInFrequentAccess = Boolean.valueOf(properties.getProperty("useInFrequentAccess"));
                     Boolean useIntelligentTiering = Boolean.valueOf(properties.getProperty("useIntelligentTiering"));
-                    // int useInFrequentAccessThreshold = Integer.parseInt(properties.getProperty("useInFrequentAccessThreshold"));
+                    int useInFrequentAccessThreshold = Integer.parseInt(properties.getProperty("useInFrequentAccessThreshold"));
 
                     volExtInfo.setVolumePrefix(volumePrefix);
                     volExtInfo.setGlobalBucketConfigurationId(globalBucketConfigId);
                     volExtInfo.setStorageType(storageType);
                     volExtInfo.setUseInFrequentAccess(useInFrequentAccess);
                     volExtInfo.setUseIntelligentTiering(useIntelligentTiering);
-                    // volExtInfo.setUseInFrequentAccessThres hold(useInFrequentAccessThreshold);
+                    volExtInfo.setUseInFrequentAccessThreshold(useInFrequentAccessThreshold);
                     volInfo.setVolumeExternalInfo(volExtInfo);
                 } catch (ServiceException e) {
                     ZimbraLog.store.error("Error while processing GetAllVolumesRequest", e);
@@ -83,7 +83,6 @@ public final class GetAllVolumes extends AdminDocumentHandler {
                     throw ServiceException.FAILURE("Error while reading server properties", null);
                 }
             }
-
             resp.addVolume(volInfo);
         }
         return resp;

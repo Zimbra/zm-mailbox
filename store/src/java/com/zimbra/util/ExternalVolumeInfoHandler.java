@@ -119,16 +119,15 @@ public class ExternalVolumeInfoHandler {
     public void addServerProperties(VolumeInfo volInfo) throws ServiceException, JSONException {
         VolumeExternalInfo volExtInfo = volInfo.getVolumeExternalInfo();
         try {
-
             // step 1: Create and update json object and array for new volume entry
             JSONObject volExtInfoObj = new JSONObject();
-            volExtInfoObj.put("storageType", volExtInfo.getStorageType());
-            volExtInfoObj.put("volumePrefix", volExtInfo.getVolumePrefix());
-            volExtInfoObj.put("glbBucketConfigId", volExtInfo.getGlobalBucketConfigurationId());
-            volExtInfoObj.put("useInFrequentAccess", volExtInfo.getUseInFrequentAccess());
-            volExtInfoObj.put("useIntelligentTiering", volExtInfo.getUseIntelligentTiering());
-            volExtInfoObj.put("useInFrequentAccessThreshold", volExtInfo.getUseInFrequentAccessThreshold());
-            volExtInfoObj.put("volumeId", volInfo.getId());
+            volExtInfoObj.put("volumeId", String.valueOf(volInfo.getId()));
+            volExtInfoObj.put("storageType", String.valueOf(volExtInfo.getStorageType()));
+            volExtInfoObj.put("volumePrefix", String.valueOf(volExtInfo.getVolumePrefix()));
+            volExtInfoObj.put("useInFrequentAccess", String.valueOf(volExtInfo.getUseInFrequentAccess()));
+            volExtInfoObj.put("useIntelligentTiering", String.valueOf(volExtInfo.getUseIntelligentTiering()));
+            volExtInfoObj.put("glbBucketConfigId", String.valueOf(volExtInfo.getGlobalBucketConfigurationId()));
+            volExtInfoObj.put("useInFrequentAccessThreshold", String.valueOf(volExtInfo.getUseInFrequentAccessThreshold()));
 
             // step 2: Fetch current JSON state
             String serverExternalStoreConfigJson = provisioning.getLocalServer().getServerExternalStoreConfig();
