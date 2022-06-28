@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2016, 2022 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -25,6 +25,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mailbox.FolderConstants;
 import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -167,6 +169,10 @@ public class FolderAction extends ItemAction {
             String zid = action.getAttribute(MailConstants.A_ZIMBRA_ID);
             mbox.revokeAccess(octxt, iid.getId(), zid);
         } else if (operation.equals(OP_GRANT)) {
+            if (!LC.zimbra_root_folder_sharing_enabled.booleanValue() && iid != null
+                    && (iid.getId() == FolderConstants.ID_FOLDER_USER_ROOT || iid.getId() == FolderConstants.ID_FOLDER_ROOT)) {
+                throw ServiceException.INVALID_REQUEST("root folder sharing disabled", null);
+            }
             Element grant = action.getElement(MailConstants.E_GRANT);
             short rights = ACL.stringToRights(grant.getAttribute(MailConstants.A_RIGHTS));
             byte gtype   = ACL.stringToType(grant.getAttribute(MailConstants.A_GRANT_TYPE));
