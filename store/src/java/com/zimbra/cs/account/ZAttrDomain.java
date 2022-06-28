@@ -4386,13 +4386,13 @@ public abstract class ZAttrDomain extends NamedEntry {
      * domain level, all accounts for domain and accounts for cos will be
      * backed up
      *
-     * @return zimbraBackupConfigEnable, or false if unset
+     * @return zimbraBackupConfigEnabled, or false if unset
      *
      * @since ZCS 9.1.0
      */
     @ZAttr(id=4007)
-    public boolean isBackupConfigEnable() {
-        return getBooleanAttr(Provisioning.A_zimbraBackupConfigEnable, false, true);
+    public boolean isBackupConfigEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraBackupConfigEnabled, false, true);
     }
 
     /**
@@ -4406,15 +4406,15 @@ public abstract class ZAttrDomain extends NamedEntry {
      * domain level, all accounts for domain and accounts for cos will be
      * backed up
      *
-     * @param zimbraBackupConfigEnable new value
+     * @param zimbraBackupConfigEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 9.1.0
      */
     @ZAttr(id=4007)
-    public void setBackupConfigEnable(boolean zimbraBackupConfigEnable) throws com.zimbra.common.service.ServiceException {
+    public void setBackupConfigEnabled(boolean zimbraBackupConfigEnabled) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraBackupConfigEnable, zimbraBackupConfigEnable ? TRUE : FALSE);
+        attrs.put(Provisioning.A_zimbraBackupConfigEnabled, zimbraBackupConfigEnabled ? TRUE : FALSE);
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -4429,16 +4429,16 @@ public abstract class ZAttrDomain extends NamedEntry {
      * domain level, all accounts for domain and accounts for cos will be
      * backed up
      *
-     * @param zimbraBackupConfigEnable new value
+     * @param zimbraBackupConfigEnabled new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
      * @since ZCS 9.1.0
      */
     @ZAttr(id=4007)
-    public Map<String,Object> setBackupConfigEnable(boolean zimbraBackupConfigEnable, Map<String,Object> attrs) {
+    public Map<String,Object> setBackupConfigEnabled(boolean zimbraBackupConfigEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraBackupConfigEnable, zimbraBackupConfigEnable ? TRUE : FALSE);
+        attrs.put(Provisioning.A_zimbraBackupConfigEnabled, zimbraBackupConfigEnabled ? TRUE : FALSE);
         return attrs;
     }
 
@@ -4458,9 +4458,9 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @since ZCS 9.1.0
      */
     @ZAttr(id=4007)
-    public void unsetBackupConfigEnable() throws com.zimbra.common.service.ServiceException {
+    public void unsetBackupConfigEnabled() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraBackupConfigEnable, "");
+        attrs.put(Provisioning.A_zimbraBackupConfigEnabled, "");
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -4481,9 +4481,9 @@ public abstract class ZAttrDomain extends NamedEntry {
      * @since ZCS 9.1.0
      */
     @ZAttr(id=4007)
-    public Map<String,Object> unsetBackupConfigEnable(Map<String,Object> attrs) {
+    public Map<String,Object> unsetBackupConfigEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraBackupConfigEnable, "");
+        attrs.put(Provisioning.A_zimbraBackupConfigEnabled, "");
         return attrs;
     }
 

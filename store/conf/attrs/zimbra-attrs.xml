@@ -9935,7 +9935,7 @@ TODO: delete them permanently from here
 <attr id="4006" name="zimbraServerExternalStoreConfig" type="string" cardinality="single" optionalIn="server" since="9.1.0">
   <desc>Server level external store config</desc>
 </attr>
-<attr id="4007" name="zimbraBackupConfigEnable" type="boolean" cardinality="single" optionalIn="server,domain,cos,account" since="9.1.0">
+<attr id="4007" name="zimbraBackupConfigEnabled" type="boolean" cardinality="single" optionalIn="server,domain,cos,account" since="9.1.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Whether or not zimbra backup config is enabled.
         If true at server level, all accounts on server will be backed up

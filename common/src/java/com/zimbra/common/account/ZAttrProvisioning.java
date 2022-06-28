@@ -3986,7 +3986,7 @@ public class ZAttrProvisioning {
      * @since ZCS 9.1.0
      */
     @ZAttr(id=4007)
-    public static final String A_zimbraBackupConfigEnable = "zimbraBackupConfigEnable";
+    public static final String A_zimbraBackupConfigEnabled = "zimbraBackupConfigEnabled";
 
     /**
      * Minimum percentage or TB/GB/MB/KB/bytes of free space on backup target
