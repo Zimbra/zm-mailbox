@@ -67,7 +67,6 @@ public final class CreateVolume extends AdminDocumentHandler {
 
                 // Add External volume info to response
                 volInfoResponse.setVolumeExternalInfo(volInfoRequest.getVolumeExternalInfo());
-
             } catch (ServiceException e) {
                 ZimbraLog.store.error("Error while processing CreateVolumeRequest", e);
                 throw e;

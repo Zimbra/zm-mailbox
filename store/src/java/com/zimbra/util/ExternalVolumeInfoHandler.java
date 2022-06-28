@@ -122,11 +122,11 @@ public class ExternalVolumeInfoHandler {
             // step 1: Create and update json object and array for new volume entry
             JSONObject volExtInfoObj = new JSONObject();
             volExtInfoObj.put("volumeId", String.valueOf(volInfo.getId()));
-            volExtInfoObj.put("storageType", String.valueOf(volExtInfo.getStorageType()));
-            volExtInfoObj.put("volumePrefix", String.valueOf(volExtInfo.getVolumePrefix()));
+            volExtInfoObj.put("storageType", volExtInfo.getStorageType());
+            volExtInfoObj.put("volumePrefix", volExtInfo.getVolumePrefix());
             volExtInfoObj.put("useInFrequentAccess", String.valueOf(volExtInfo.getUseInFrequentAccess()));
             volExtInfoObj.put("useIntelligentTiering", String.valueOf(volExtInfo.getUseIntelligentTiering()));
-            volExtInfoObj.put("glbBucketConfigId", String.valueOf(volExtInfo.getGlobalBucketConfigurationId()));
+            volExtInfoObj.put("glbBucketConfigId", volExtInfo.getGlobalBucketConfigurationId());
             volExtInfoObj.put("useInFrequentAccessThreshold", String.valueOf(volExtInfo.getUseInFrequentAccessThreshold()));
 
             // step 2: Fetch current JSON state
