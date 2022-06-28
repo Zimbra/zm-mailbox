@@ -3973,6 +3973,40 @@ public class ZAttrProvisioning {
     public static final String A_zimbraBackupAutoGroupedThrottled = "zimbraBackupAutoGroupedThrottled";
 
     /**
+     * Blobs inside backups are compressed in zip format by default unless
+     * specified
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4012)
+    public static final String A_zimbraBackupBlobsCompress = "zimbraBackupBlobsCompress";
+
+    /**
+     * Backup up blobs in zip files without compression.
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4013)
+    public static final String A_zimbraBackupBlobsCompressZipStore = "zimbraBackupBlobsCompressZipStore";
+
+    /**
+     * Whether or not account is eligible for backup
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4007)
+    public static final String A_zimbraBackupConfigEnabled = "zimbraBackupConfigEnabled";
+
+    /**
+     * If true, enables the UI and if there is pre-configured data the
+     * crontab should get that schedule
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4008)
+    public static final String A_zimbraBackupEnabled = "zimbraBackupEnabled";
+
+    /**
      * Minimum percentage or TB/GB/MB/KB/bytes of free space on backup target
      * to allow a full or auto-grouped backup to start; 0 = no minimum is
      * enforced. Examples: 25%, 10GB
@@ -4007,6 +4041,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraBackupReportEmailSubjectPrefix = "zimbraBackupReportEmailSubjectPrefix";
 
     /**
+     * The number of days backups will be kept. Backup Scheduler deletes
+     * backups older than the set value
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4011)
+    public static final String A_zimbraBackupRetentionDays = "zimbraBackupRetentionDays";
+
+    /**
      * if true, do not backup blobs (HSM or not) during a full backup
      *
      * @since ZCS 6.0.0_BETA2
@@ -4030,6 +4073,51 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1003)
     public static final String A_zimbraBackupSkipSearchIndex = "zimbraBackupSkipSearchIndex";
+
+    /**
+     * Indicates a scheduled backup call is for full-backup
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4016)
+    public static final String A_zimbraBackupStandardFullBackup = "zimbraBackupStandardFullBackup";
+
+    /**
+     * Indicates a scheduled backup call is for incremental-backup
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4017)
+    public static final String A_ZimbraBackupStandardIncBackup = "ZimbraBackupStandardIncBackup";
+
+    /**
+     * Starts backup each day at this time. This attribute is used for
+     * cronjob to set hour. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4010)
+    public static final String A_zimbraBackupStartTime = "zimbraBackupStartTime";
+
+    /**
+     * Runs full backup synchronously
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4014)
+    public static final String A_zimbraBackupSyncMode = "zimbraBackupSyncMode";
+
+    /**
+     * if true, will ensure the same users are enabled within backup and
+     * Dumpster
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4009)
+    public static final String A_zimbraBackupSyncUsers = "zimbraBackupSyncUsers";
 
     /**
      * Default backup target path
@@ -9377,6 +9465,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=613)
     public static final String A_zimbraMailReferMode = "zimbraMailReferMode";
+
+    /**
+     * If true, send an email report to the admin user.
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4015)
+    public static final String A_zimbraMailReportEnabled = "zimbraMailReportEnabled";
 
     /**
      * Deprecated since: 8.7.8. deprecated in favor of

@@ -9929,4 +9929,47 @@ TODO: delete them permanently from here
   <defaultCOSValue>30</defaultCOSValue>
   <desc>Default calendar resolution preference</desc>
 </attr>
+ <attr id="4007" name="zimbraBackupConfigEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,domain,cos,account" flags="accountCosDomainInherited,domainInherited" since="9.1.0">
+    <desc>Whether or not account is eligible for backup</desc>
+  </attr>
+ <attr id="4008" name="zimbraBackupEnabled" type="boolean" cardinality="single" optionalIn="globalConfig" since="9.1.0">
+    <globalConfigValue>TRUE</globalConfigValue>
+    <desc>If true, enables the UI and if there is pre-configured data the crontab should get that schedule</desc>
+  </attr>
+ <attr id="4009" name="zimbraBackupSyncUsers" type="boolean" cardinality="single" optionalIn="globalConfig" since="9.1.0">
+    <globalConfigValue>FALSE</globalConfigValue>
+    <desc>if true,  will ensure the same users are enabled within backup and Dumpster</desc>
+  </attr>
+ <attr id="4010" name="zimbraBackupStartTime" type="duration" cardinality="single" optionalIn="globalConfig,server"  flags="serverInherited" since="9.1.0">
+    <globalConfigValue>2</globalConfigValue>
+    <desc>Starts backup each day at this time. This attribute is used for cronjob to set hour</desc>
+  </attr>
+ <attr id="4011" name="zimbraBackupRetentionDays" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="9.1.0">
+    <globalConfigValue>8</globalConfigValue>
+    <desc>The number of days backups will be kept. Backup Scheduler deletes backups older than the set value</desc>
+  </attr>
+ <attr id="4012" name="zimbraBackupBlobsCompress" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="9.1.0">
+    <globalConfigValue>TRUE</globalConfigValue>
+    <desc>Blobs inside backups are compressed in zip format by default unless specified</desc>
+  </attr>
+ <attr id="4013" name="zimbraBackupBlobsCompressZipStore" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="9.1.0">
+    <globalConfigValue>FALSE</globalConfigValue>
+    <desc>Backup up blobs in zip files without compression.</desc>
+  </attr>
+ <attr id="4014" name="zimbraBackupSyncMode" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="9.1.0">
+    <globalConfigValue>FALSE</globalConfigValue>
+    <desc>Runs full backup synchronously</desc>
+  </attr>
+ <attr id="4015" name="zimbraMailReportEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="9.1.0">
+    <globalConfigValue>TRUE</globalConfigValue>
+    <desc>If true, send an email report to the admin user.</desc>
+  </attr>
+ <attr id="4016" name="zimbraBackupStandardFullBackup" type="astring" max="256" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="9.1.0">
+    <globalConfigValue>full</globalConfigValue>
+    <desc>Indicates a scheduled backup call is for full-backup</desc>
+  </attr>
+ <attr id="4017" name="ZimbraBackupStandardIncBackup" type="astring" max="256" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="9.1.0">
+    <globalConfigValue>incr</globalConfigValue>
+    <desc>Indicates a scheduled backup call is for incremental-backup</desc>
+  </attr>
 </attrs>
