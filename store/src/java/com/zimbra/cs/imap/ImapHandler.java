@@ -2457,6 +2457,11 @@ public abstract class ImapHandler {
             if (!(folderStore instanceof MountpointStore) && isInMountpointHierarchy(folderStore)) {
                 continue;
             }
+            //ZBUG-1435: Exclude search folder based on config value
+            if (!acct.getBooleanAttr(Provisioning.A_zimbraPrefImapSearchFoldersEnabled, true)
+                    && folderStore.isSearchFolder()) {
+                continue;
+            }
             ImapPath path = relativeTo == null ? new ImapPath(owner, folderStore, credentials) :
                 new ImapPath(owner, folderStore, relativeTo);
             if (path.isVisible()) {
