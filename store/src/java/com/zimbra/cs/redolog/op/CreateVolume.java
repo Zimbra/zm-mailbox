@@ -117,7 +117,7 @@ public final class CreateVolume extends RedoableOp {
         }
         try {
             Volume.StoreType enumStoreType =
-                (1 == storeType) ? Volume.StoreType.FILE_STORE : Volume.StoreType.EXTERNAL;
+                (1 == storeType) ? Volume.StoreType.INTERNAL : Volume.StoreType.EXTERNAL;
 
             Volume volume = Volume.builder().setId(id).setType(type).setName(name).setPath(rootPath, false)
                     .setMboxGroupBits(mboxGroupBits).setMboxBit(mboxBits)

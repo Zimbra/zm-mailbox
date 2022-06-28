@@ -64,7 +64,7 @@ public final class ModifyVolume extends AdminDocumentHandler {
         }
 
         // store type == 1, allow modification of all parameters
-        if (vol.getStoreType().equals(Volume.StoreType.FILE_STORE)) {
+        if (vol.getStoreType().equals(Volume.StoreType.INTERNAL)) {
             if (volInfo.getType() > 0) {
                 builder.setType(volInfo.getType());
             }

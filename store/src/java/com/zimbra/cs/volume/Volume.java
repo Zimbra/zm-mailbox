@@ -69,7 +69,7 @@ public final class Volume {
     private StoreType storeType;
 
     public static enum StoreType {
-        FILE_STORE(1),
+        INTERNAL(1),
         EXTERNAL(2);
 
         private final int storeType;
@@ -85,7 +85,7 @@ public final class Volume {
         public static StoreType getStoreTypeBy(int value) {
             switch (value) {
                 case 1:
-                    return FILE_STORE;
+                    return INTERNAL;
                 case 2:
                     return EXTERNAL;
             }
