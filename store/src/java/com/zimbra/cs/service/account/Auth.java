@@ -222,6 +222,7 @@ public class Auth extends AccountDocumentHandler {
         authCtxt.put(AuthContext.AC_REMOTE_IP, context.get(SoapEngine.SOAP_REQUEST_IP));
         authCtxt.put(AuthContext.AC_ACCOUNT_NAME_PASSEDIN, acctValuePassedIn);
         authCtxt.put(AuthContext.AC_USER_AGENT, zsc.getUserAgent());
+        authCtxt.put(AuthContext.AC_SOAP_PORT, zsc.getPort());
 
         AuthMode mode = AuthMode.PASSWORD;
         String code = password;
