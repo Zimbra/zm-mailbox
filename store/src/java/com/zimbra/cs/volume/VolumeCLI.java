@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013, 2014, 2016, 2022 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -33,6 +33,7 @@ import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.SoapCLI;
+import com.zimbra.cs.volume.Volume.StoreType;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.admin.message.CreateVolumeRequest;
 import com.zimbra.soap.admin.message.CreateVolumeResponse;
@@ -44,6 +45,7 @@ import com.zimbra.soap.admin.message.GetVolumeResponse;
 import com.zimbra.soap.admin.message.ModifyVolumeRequest;
 import com.zimbra.soap.admin.message.SetCurrentVolumeRequest;
 import com.zimbra.soap.admin.type.VolumeInfo;
+import com.zimbra.soap.admin.type.VolumeExternalInfo;
 
 public final class VolumeCLI extends SoapCLI {
 
@@ -60,6 +62,36 @@ public final class VolumeCLI extends SoapCLI {
     private static final String O_P = "p";
     private static final String O_C = "c";
     private static final String O_CT = "ct";
+    
+    /** attributes for external storetype **/
+    private static final String O_ST = "st";
+    private static final String O_VP = "vp";
+    private static final String O_STP = "stp";
+    private static final String O_BID = "bid";
+
+    private static final String NOT_ALLOWED_INTERNAL = " is not allowed for internal storetype";
+    private static final String NOT_ALLOWED_EXTERNAL = " is not allowed for external storetype";
+    private static final String NOT_ALLOWED = " is not allowed for edit";
+    private static final String INVALID_STORE_TYPE = "invalid storetype";
+    private static final String HELP_EXTERNAL_NAME = "  only name can be edited for external store volumes ";
+    private static final String MISSING_ATTRS = " is missing";
+    private static final String NOT_ALLOWED_ID = "id cannot be specified when adding a volume";
+
+    private static final String H_STORE_TYPE = "Store type: internal or external";
+    private static final String H_STORAGE_TYPE = "Name of the store provider (S3, ObjectStore)";
+    private static final String H_BUCKET_ID = "S3 Bucket ID";
+    private static final String H_VOLUME_PREFIX = "Volume Preifx";
+
+    private static final String A_ID = "id";
+    private static final String A_TYPE = "type";
+    private static final String A_PATH = "path";
+    private static final String A_NAME = "name";
+    private static final String A_COMPRESS = "compress";
+    private static final String A_COMPRESS_THRESHOLD = "compressThreshold";
+    private static final String A_STORE_TYPE = "storeType";
+    private static final String A_STORAGE_TYPE = "storageType";
+    private static final String A_BUCKET_ID = "bucketId";
+    private static final String A_VOLUME_PREFIX = "volumePrefix";
 
     private VolumeCLI() throws ServiceException {
         super();
@@ -73,6 +105,10 @@ public final class VolumeCLI extends SoapCLI {
     private String path;
     private String compress;
     private String compressThreshold;
+    private String storeType;
+    private String volumePrefix;
+    private String storageType;
+    private String bucketId;
 
     private void setArgs(CommandLine cl) throws ServiceException, ParseException, IOException {
         auth = getZAuthToken(cl);
@@ -82,6 +118,11 @@ public final class VolumeCLI extends SoapCLI {
         path = cl.getOptionValue(O_P);
         compress = cl.getOptionValue(O_C);
         compressThreshold = cl.getOptionValue(O_CT);
+        storeType = cl.getOptionValue(O_ST);
+        storeType = storeType == null ? null : storeType.toUpperCase();
+        volumePrefix = cl.getOptionValue(O_VP);
+        storageType = cl.getOptionValue(O_STP);
+        bucketId = cl.getOptionValue(O_BID);
     }
 
     public static void main(String[] args) {
@@ -129,7 +170,7 @@ public final class VolumeCLI extends SoapCLI {
 
     private void setCurrentVolume() throws ParseException, SoapFaultException, IOException, ServiceException, NumberFormatException, HttpException {
         if (id == null) {
-            throw new ParseException("id is missing");
+            throw new ParseException(A_ID + MISSING_ATTRS);
         }
 
         auth(auth);
@@ -196,7 +237,7 @@ public final class VolumeCLI extends SoapCLI {
 
     private void deleteVolume() throws ParseException, SoapFaultException, IOException, ServiceException, HttpException {
         if (id == null) {
-            throw new ParseException("id is missing");
+            throw new ParseException(A_ID + MISSING_ATTRS);
         }
 
         DeleteVolumeRequest req = new DeleteVolumeRequest(Short.parseShort(id));
@@ -207,25 +248,18 @@ public final class VolumeCLI extends SoapCLI {
 
     private void editVolume() throws ParseException, SoapFaultException, IOException, ServiceException, HttpException {
         if (Strings.isNullOrEmpty(id)) {
-            throw new ParseException("id is missing");
+            throw new ParseException(A_ID + MISSING_ATTRS);
         }
 
+        GetVolumeRequest getVolumeRequest = new GetVolumeRequest(Short.parseShort(id));
+        auth();
+        GetVolumeResponse getVolumeResponse = JaxbUtil
+                .elementToJaxb(getTransport().invokeWithoutSession(JaxbUtil.jaxbToElement(getVolumeRequest)));
+        Volume.StoreType enumStoreType = (1 == getVolumeResponse.getVolume().getStoreType()) ? Volume.StoreType.INTERNAL
+                : Volume.StoreType.EXTERNAL;
+
         VolumeInfo vol = new VolumeInfo();
-        if (!Strings.isNullOrEmpty(type)) {
-            vol.setType(toType(type));
-        }
-        if (!Strings.isNullOrEmpty(name)) {
-            vol.setName(name);
-        }
-        if (!Strings.isNullOrEmpty(path)) {
-            vol.setRootPath(path);
-        }
-        if (!Strings.isNullOrEmpty(compress)) {
-            vol.setCompressBlobs(Boolean.parseBoolean(compress));
-        }
-        if (!Strings.isNullOrEmpty(compressThreshold)) {
-            vol.setCompressionThreshold(Long.parseLong(compressThreshold));
-        }
+        validateEditCommand(vol, enumStoreType);
         ModifyVolumeRequest req = new ModifyVolumeRequest(Short.parseShort(id), vol);
         auth(auth);
         getTransport().invokeWithoutSession(JaxbUtil.jaxbToElement(req));
@@ -234,16 +268,16 @@ public final class VolumeCLI extends SoapCLI {
 
     private void addVolume() throws ParseException, SoapFaultException, IOException, ServiceException, HttpException {
         if (id != null) {
-            throw new ParseException("id cannot be specified when adding a volume");
+            throw new ParseException(NOT_ALLOWED_ID);
         }
         if (Strings.isNullOrEmpty(type)) {
-            throw new ParseException("type is missing");
+            throw new ParseException(A_TYPE + MISSING_ATTRS);
         }
         if (Strings.isNullOrEmpty(name)) {
-            throw new ParseException("name is missing");
+            throw new ParseException(A_NAME + MISSING_ATTRS);
         }
         if (Strings.isNullOrEmpty(path)) {
-            throw new ParseException("path is missing");
+            throw new ParseException(A_PATH + MISSING_ATTRS);
         }
 
         VolumeInfo vol = new VolumeInfo();
@@ -252,11 +286,102 @@ public final class VolumeCLI extends SoapCLI {
         vol.setRootPath(path);
         vol.setCompressBlobs(compress != null ? Boolean.parseBoolean(compress) : false);
         vol.setCompressionThreshold(compressThreshold != null ? Long.parseLong(compressThreshold) : 4096L);
+        validateAddCommand(vol);
         CreateVolumeRequest req = new CreateVolumeRequest(vol);
         auth();
         CreateVolumeResponse resp = JaxbUtil.elementToJaxb(getTransport().invokeWithoutSession(
                 JaxbUtil.jaxbToElement(req)));
         System.out.println("Volume " + resp.getVolume().getId() + " is created");
+    }
+    
+    /**
+     * This method validate the attributes in edit command.
+     * 
+     * @param volumeInfo, volStoreType
+     * @throws ParseException
+     */
+
+    private void validateEditCommand(VolumeInfo volumeInfo, Volume.StoreType volStoreType) throws ParseException {
+        if (volStoreType.equals(Volume.StoreType.INTERNAL)) {
+            if (!Strings.isNullOrEmpty(type)) {
+                volumeInfo.setType(toType(type));
+            }
+            if (!Strings.isNullOrEmpty(path)) {
+                volumeInfo.setRootPath(path);
+            }
+            if (!Strings.isNullOrEmpty(compress)) {
+                volumeInfo.setCompressBlobs(Boolean.parseBoolean(compress));
+            }
+            if (!Strings.isNullOrEmpty(compressThreshold)) {
+                volumeInfo.setCompressionThreshold(Long.parseLong(compressThreshold));
+            }
+        } else if (volStoreType.equals(Volume.StoreType.EXTERNAL)) {
+            if (!Strings.isNullOrEmpty(type)) {
+                throw new ParseException(A_TYPE + NOT_ALLOWED_EXTERNAL);
+            }
+            if (!Strings.isNullOrEmpty(path)) {
+                throw new ParseException(A_PATH + NOT_ALLOWED_EXTERNAL);
+            }
+            if (!Strings.isNullOrEmpty(compress)) {
+                throw new ParseException(A_COMPRESS + NOT_ALLOWED_EXTERNAL);
+            }
+            if (!Strings.isNullOrEmpty(compressThreshold)) {
+                throw new ParseException(A_COMPRESS_THRESHOLD + NOT_ALLOWED_EXTERNAL);
+            }
+        } else {
+            throw new ParseException(INVALID_STORE_TYPE);
+        }
+        if (!Strings.isNullOrEmpty(name)) {
+            volumeInfo.setName(name);
+        }
+        if (!Strings.isNullOrEmpty(storeType)) {
+            throw new ParseException(A_STORE_TYPE + NOT_ALLOWED);
+        }
+        if (!Strings.isNullOrEmpty(storageType)) {
+            throw new ParseException(A_STORAGE_TYPE + NOT_ALLOWED);
+        }
+        if (!Strings.isNullOrEmpty(bucketId)) {
+            throw new ParseException(A_BUCKET_ID + NOT_ALLOWED);
+        }
+        if (!Strings.isNullOrEmpty(volumePrefix)) {
+            throw new ParseException(A_VOLUME_PREFIX + NOT_ALLOWED);
+        }
+    }
+
+    /**
+     * This method validate the attributes in add command.
+     * 
+     * @param volumeInfo
+     * @throws ParseException
+     */
+
+    private void validateAddCommand(VolumeInfo volumeInfo) throws ParseException {
+        if (Strings.isNullOrEmpty(storeType) || Volume.StoreType.INTERNAL.name().equals(storeType)) {
+            if (!Strings.isNullOrEmpty(storageType)) {
+                throw new ParseException(A_STORAGE_TYPE + NOT_ALLOWED_INTERNAL);
+            }
+            if (!Strings.isNullOrEmpty(bucketId)) {
+                throw new ParseException(A_BUCKET_ID + NOT_ALLOWED_INTERNAL);
+            }
+            if (!Strings.isNullOrEmpty(volumePrefix)) {
+                throw new ParseException(A_VOLUME_PREFIX + NOT_ALLOWED_INTERNAL);
+            }
+        } else if (Volume.StoreType.EXTERNAL.name().equals(storeType)) {
+            VolumeExternalInfo volumeExternalInfo = new VolumeExternalInfo();
+            if (!Strings.isNullOrEmpty(storageType)) {
+                volumeExternalInfo.setStorageType(storageType);
+            }
+            if (!Strings.isNullOrEmpty(bucketId)) {
+                volumeExternalInfo.setGlobalBucketConfigurationId(bucketId);
+            }
+            if (!Strings.isNullOrEmpty(volumePrefix)) {
+                volumeExternalInfo.setVolumePrefix(volumePrefix);
+            }
+            volumeInfo.setStoreType((short) Volume.StoreType.EXTERNAL.getStoreType());
+            volumeInfo.setVolumeExternalInfo(volumeExternalInfo);
+        } else {
+            throw new ParseException(INVALID_STORE_TYPE);
+        }
     }
 
     @Override
@@ -286,6 +411,10 @@ public final class VolumeCLI extends SoapCLI {
         options.addOption(O_CT, "compressionThreshold", true, "Compression threshold; default 4KB");
         options.addOption(SoapCLI.OPT_AUTHTOKEN);
         options.addOption(SoapCLI.OPT_AUTHTOKENFILE);
+        options.addOption(new Option(O_ST, A_STORE_TYPE, true, H_STORE_TYPE));
+        options.addOption(new Option(O_VP, A_VOLUME_PREFIX, true, H_VOLUME_PREFIX));
+        options.addOption(new Option(O_STP, A_STORAGE_TYPE, true, H_STORAGE_TYPE));
+        options.addOption(new Option(O_BID, A_BUCKET_ID, true, H_BUCKET_ID));
     }
 
     @Override
@@ -297,6 +426,7 @@ public final class VolumeCLI extends SoapCLI {
         System.err.println(getCommandUsage());
         printOpt(O_A, 0);
         printOpt(O_N, 2);
+        System.err.println(HELP_EXTERNAL_NAME);
         printOpt(O_T, 2);
         printOpt(O_P, 2);
         printOpt(O_C, 2);
@@ -316,6 +446,10 @@ public final class VolumeCLI extends SoapCLI {
         printOpt(O_TS, 0);
         printOpt(SoapCLI.O_AUTHTOKEN, 0);
         printOpt(SoapCLI.O_AUTHTOKENFILE, 0);
+        printOpt(O_ST, 0);
+        printOpt(O_VP, 0);
+        printOpt(O_STP, 0);
+        printOpt(O_BID, 0);
     }
 
     private void printOpt(String optStr, int leftPad) {
