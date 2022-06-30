@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2009, 2010, 2011, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2009, 2010, 2011, 2013, 2014, 2016, 2022 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -54,7 +54,7 @@ public final class CreateVolume extends AdminDocumentHandler {
         Volume volRequest = VolumeManager.getInstance().create(toVolume(volInfoRequest));
         VolumeInfo volInfoResponse = volRequest.toJAXB();
 
-        // If newly created volume is external update json
+        // if newly created volume is external update json
         if (volRequest.getStoreType().equals(Volume.StoreType.EXTERNAL)) {
             Provisioning prov = Provisioning.getInstance();
             try {

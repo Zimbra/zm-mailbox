@@ -44,7 +44,6 @@ public class ExternalVolumeInfoHandler {
     public JSONObject readServerProperties(int volumeId) throws ServiceException, JSONException {
         JSONObject retJsonObj = new JSONObject();
         try {
-
             // step 1: Fetch current JSON state object and current JSON state array
             String serverExternalStoreConfigJson = provisioning.getLocalServer().getServerExternalStoreConfig();
             JSONObject currentJsonObject = new JSONObject(serverExternalStoreConfigJson);
@@ -56,7 +55,6 @@ public class ExternalVolumeInfoHandler {
 
                 // step 3: Read required JSON object
                 if (volumeId == tempJsonObj.getInt("volumeId")) {
-
                     // step 4: Copy temp JSON object to return JSON object and break
                     retJsonObj = tempJsonObj;
                     break;
@@ -78,7 +76,6 @@ public class ExternalVolumeInfoHandler {
      */
     public void deleteServerProperties(int volumeId) throws ServiceException, JSONException {
         try {
-
             // step 1: Fetch current JSON state object and current JSON state array
             String serverExternalStoreConfigJson = provisioning.getLocalServer().getServerExternalStoreConfig();
             JSONObject currentJsonObject = new JSONObject(serverExternalStoreConfigJson);
@@ -164,7 +161,6 @@ public class ExternalVolumeInfoHandler {
      */
     public void modifyServerProperties(VolumeInfo volInfo) throws ServiceException, JSONException {
         try {
-
             // step 1: Fetch current JSON state object and current JSON state array
             String serverExternalStoreConfigJson = provisioning.getLocalServer().getServerExternalStoreConfig();
             JSONObject currentJsonObject = new JSONObject(serverExternalStoreConfigJson);
