@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -61,13 +62,13 @@ public final class GetAllVolumes extends AdminDocumentHandler {
                 ExternalVolumeInfoHandler extVolInfoHandler = new ExternalVolumeInfoHandler(Provisioning.getInstance());
 
                 try {
-                    Properties properties = extVolInfoHandler.readServerProperties(volInfo.getId());
-                    String volumePrefix = properties.getProperty("volumePrefix");
-                    String globalBucketConfigId = properties.getProperty("glbBucketConfigId");
-                    String storageType = properties.getProperty("storageType");
-                    Boolean useInFrequentAccess = Boolean.valueOf(properties.getProperty("useInFrequentAccess"));
-                    Boolean useIntelligentTiering = Boolean.valueOf(properties.getProperty("useIntelligentTiering"));
-                    int useInFrequentAccessThreshold = Integer.parseInt(properties.getProperty("useInFrequentAccessThreshold"));
+                    JSONObject properties = extVolInfoHandler.readServerProperties(volInfo.getId());
+                    String volumePrefix = properties.getString("volumePrefix");
+                    String globalBucketConfigId = properties.getString("glbBucketConfigId");
+                    String storageType = properties.getString("storageType");
+                    Boolean useInFrequentAccess = Boolean.valueOf(properties.getString("useInFrequentAccess"));
+                    Boolean useIntelligentTiering = Boolean.valueOf(properties.getString("useIntelligentTiering"));
+                    int useInFrequentAccessThreshold = Integer.parseInt(properties.getString("useInFrequentAccessThreshold"));
 
                     volExtInfo.setVolumePrefix(volumePrefix);
                     volExtInfo.setGlobalBucketConfigurationId(globalBucketConfigId);

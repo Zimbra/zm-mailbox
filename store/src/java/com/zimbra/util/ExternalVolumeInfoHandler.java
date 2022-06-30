@@ -19,7 +19,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Iterator;
-import java.util.Properties;
 
 /**
  * LDAP based properties handler
@@ -39,11 +38,11 @@ public class ExternalVolumeInfoHandler {
      * Read server level external volume properties
      * @param volumeId
      * @param server
-     * @return Properties as a server level volume properties
+     * @return JSONObject as a server level volume properties
      * @throws JSONException, ServiceException
      */
-    public Properties readServerProperties(int volumeId) throws ServiceException, JSONException {
-        Properties properties = new Properties();
+    public JSONObject readServerProperties(int volumeId) throws ServiceException, JSONException {
+        JSONObject retJsonObj = new JSONObject();
         try {
 
             // step 1: Fetch current JSON state object and current JSON state array
@@ -58,8 +57,8 @@ public class ExternalVolumeInfoHandler {
                 // step 3: Read required JSON object
                 if (volumeId == tempJsonObj.getInt("volumeId")) {
 
-                    // step 4: Convert JSON object to Properties
-                    convertFlatJsonObjectToProperties(properties, tempJsonObj);
+                    // step 4: Copy temp JSON object to return JSON object and break
+                    retJsonObj = tempJsonObj;
                     break;
                 }
             }
@@ -67,8 +66,8 @@ public class ExternalVolumeInfoHandler {
             throw e;
         }
 
-        // step 5: Return Properties
-        return properties;
+        // step 5: Return JSON object
+        return retJsonObj;
     }
 
     /**
@@ -195,24 +194,6 @@ public class ExternalVolumeInfoHandler {
             provisioning.getLocalServer().setServerExternalStoreConfig(currentJsonObject.toString());
         }  catch (JSONException e) {
             throw e;
-        }
-    }
-
-    /**
-     * Utility method for flat json to properties key-value
-     * @param properties
-     * @param flatJsonObject
-     * @throws JSONException
-     */
-    protected void convertFlatJsonObjectToProperties(Properties properties, JSONObject flatJsonObject) throws JSONException {
-        if (flatJsonObject != null) {
-            for (Iterator it = flatJsonObject.keys(); it.hasNext();) {
-                Object fieldObject = it.next();
-                if (fieldObject instanceof String) {
-                    String field = String.valueOf(fieldObject);
-                    properties.put(field, flatJsonObject.get(field));
-                }
-            }
         }
     }
 }

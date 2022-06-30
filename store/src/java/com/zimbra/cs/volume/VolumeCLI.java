@@ -44,7 +44,6 @@ import com.zimbra.soap.admin.message.GetVolumeResponse;
 import com.zimbra.soap.admin.message.ModifyVolumeRequest;
 import com.zimbra.soap.admin.message.SetCurrentVolumeRequest;
 import com.zimbra.soap.admin.type.VolumeInfo;
-import com.zimbra.soap.admin.type.VolumeExternalInfo;
 
 public final class VolumeCLI extends SoapCLI {
 
@@ -212,7 +211,6 @@ public final class VolumeCLI extends SoapCLI {
         }
 
         VolumeInfo vol = new VolumeInfo();
-        VolumeExternalInfo volExt = new VolumeExternalInfo();
         if (!Strings.isNullOrEmpty(type)) {
             vol.setType(toType(type));
         }
@@ -228,7 +226,7 @@ public final class VolumeCLI extends SoapCLI {
         if (!Strings.isNullOrEmpty(compressThreshold)) {
             vol.setCompressionThreshold(Long.parseLong(compressThreshold));
         }
-        ModifyVolumeRequest req = new ModifyVolumeRequest(vol);
+        ModifyVolumeRequest req = new ModifyVolumeRequest(Short.parseShort(id), vol);
         auth(auth);
         getTransport().invokeWithoutSession(JaxbUtil.jaxbToElement(req));
         System.out.println("Edited volume " + id);

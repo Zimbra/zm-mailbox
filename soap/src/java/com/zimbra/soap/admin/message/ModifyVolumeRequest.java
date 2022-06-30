@@ -33,6 +33,13 @@ import com.zimbra.soap.admin.type.VolumeInfo;
 public class ModifyVolumeRequest {
 
     /**
+     * @zm-api-field-tag volume-id
+     * @zm-api-field-description Volume ID
+     */
+    @XmlAttribute(name=AdminConstants.A_ID, required=true)
+    private short id;
+
+    /**
      * @zm-api-field-description Volume information
      */
     @XmlElement(name=AdminConstants.E_VOLUME, required=true)
@@ -43,12 +50,14 @@ public class ModifyVolumeRequest {
      */
      @SuppressWarnings("unused")
     private ModifyVolumeRequest() {
-        this((VolumeInfo)null);
+        this((short)-1, (VolumeInfo)null);
     }
 
-    public ModifyVolumeRequest(VolumeInfo volumeInfo) {
+    public ModifyVolumeRequest(short id, VolumeInfo volumeInfo) {
+        this.id = id;
         this.volumeInfo = volumeInfo;
     }
 
+    public short getId() { return id; }
     public VolumeInfo getVolumeInfo() { return volumeInfo; }
 }
