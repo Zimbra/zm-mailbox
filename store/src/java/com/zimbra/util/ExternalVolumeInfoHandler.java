@@ -90,7 +90,7 @@ public class ExternalVolumeInfoHandler {
             // step 3: Copy currentJsonArray to updatedJsonArray except the element to be deleted
             for (int i = 0; i < currentJsonArray.length(); i++) {
                 JSONObject tempJsonObj = currentJsonArray.getJSONObject(i);
-                if (volumeId != tempJsonObj.getInt("volumeId")) {
+                if (volumeId != tempJsonObj.getInt(AdminConstants.A_VOLUME_ID)) {
                     updatedJsonArray.put(tempJsonObj);
                 }
             }
@@ -120,13 +120,13 @@ public class ExternalVolumeInfoHandler {
         try {
             // step 1: Create and update json object and array for new volume entry
             JSONObject volExtInfoObj = new JSONObject();
-            volExtInfoObj.put("volumeId", String.valueOf(volInfo.getId()));
-            volExtInfoObj.put("storageType", volExtInfo.getStorageType());
-            volExtInfoObj.put("volumePrefix", volExtInfo.getVolumePrefix());
-            volExtInfoObj.put("useInFrequentAccess", String.valueOf(volExtInfo.getUseInFrequentAccess()));
-            volExtInfoObj.put("useIntelligentTiering", String.valueOf(volExtInfo.getUseIntelligentTiering()));
-            volExtInfoObj.put("glbBucketConfigId", volExtInfo.getGlobalBucketConfigurationId());
-            volExtInfoObj.put("useInFrequentAccessThreshold", String.valueOf(volExtInfo.getUseInFrequentAccessThreshold()));
+            volExtInfoObj.put(AdminConstants.A_VOLUME_ID, String.valueOf(volInfo.getId()));
+            volExtInfoObj.put(AdminConstants.A_VOLUME_STORAGE_TYPE, volExtInfo.getStorageType());
+            volExtInfoObj.put(AdminConstants.A_VOLUME_VOLUME_PREFIX, volExtInfo.getVolumePrefix());
+            volExtInfoObj.put(AdminConstants.A_VOLUME_USE_IN_FREQ_ACCESS, String.valueOf(volExtInfo.getUseInFrequentAccess()));
+            volExtInfoObj.put(AdminConstants.A_VOLUME_USE_INTELLIGENT_TIERING, String.valueOf(volExtInfo.getUseIntelligentTiering()));
+            volExtInfoObj.put(AdminConstants.A_VOLUME_GLB_BUCKET_CONFIG_ID, volExtInfo.getGlobalBucketConfigurationId());
+            volExtInfoObj.put(AdminConstants.A_VOLUME_USE_IN_FREQ_ACCESS_THRESHOLD, String.valueOf(volExtInfo.getUseInFrequentAccessThreshold()));
 
             // step 2: Fetch current JSON state
             String serverExternalStoreConfigJson = provisioning.getLocalServer().getServerExternalStoreConfig();
@@ -176,10 +176,10 @@ public class ExternalVolumeInfoHandler {
             // step 3: Do Modification and Copy currentJsonArray to updatedJsonArray
             for (int i = 0; i < currentJsonArray.length(); i++) {
                 JSONObject tempJsonObj = currentJsonArray.getJSONObject(i);
-                if (volInfo.getId() != tempJsonObj.getInt("volumeId")) {
+                if (volInfo.getId() != tempJsonObj.getInt(AdminConstants.A_VOLUME_ID)) {
                     updatedJsonArray.put(tempJsonObj);
                 } else {
-                    tempJsonObj.put("name", volInfo.getName());
+                    tempJsonObj.put(AdminConstants.A_VOLUME_NAME, volInfo.getName());
                     updatedJsonArray.put(tempJsonObj);
                 }
             }

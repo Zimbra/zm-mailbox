@@ -25,6 +25,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
@@ -60,12 +61,12 @@ public final class GetVolume extends AdminDocumentHandler {
             ExternalVolumeInfoHandler extVolInfoHandler = new ExternalVolumeInfoHandler(Provisioning.getInstance());
             try {
                 JSONObject properties = extVolInfoHandler.readServerProperties(volInfo.getId());
-                String volumePrefix = properties.getString("volumePrefix");
-                String globalBucketConfigId = properties.getString("glbBucketConfigId");
-                String storageType = properties.getString("storageType");
-                Boolean useInFrequentAccess = Boolean.valueOf(properties.getString("useInFrequentAccess"));
-                Boolean useIntelligentTiering = Boolean.valueOf(properties.getString("useIntelligentTiering"));
-                int useInFrequentAccessThreshold = Integer.parseInt(properties.getString("useInFrequentAccessThreshold"));
+                String volumePrefix = properties.getString(AdminConstants.A_VOLUME_VOLUME_PREFIX);
+                String globalBucketConfigId = properties.getString(AdminConstants.A_VOLUME_GLB_BUCKET_CONFIG_ID);
+                String storageType = properties.getString(AdminConstants.A_VOLUME_STORAGE_TYPE);
+                Boolean useInFrequentAccess = Boolean.valueOf(properties.getString(AdminConstants.A_VOLUME_USE_IN_FREQ_ACCESS));
+                Boolean useIntelligentTiering = Boolean.valueOf(properties.getString(AdminConstants.A_VOLUME_USE_INTELLIGENT_TIERING));
+                int useInFrequentAccessThreshold = Integer.parseInt(properties.getString(AdminConstants.A_VOLUME_USE_IN_FREQ_ACCESS_THRESHOLD));
 
                 volExtInfo.setVolumePrefix(volumePrefix);
                 volExtInfo.setGlobalBucketConfigurationId(globalBucketConfigId);
