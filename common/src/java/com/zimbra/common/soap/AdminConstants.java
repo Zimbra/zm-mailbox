@@ -1075,7 +1075,7 @@ public final class AdminConstants {
     public static final QName MODIFY_OUTGOING_FILTER_RULES_RESPONSE = QName.get(E_MODIFY_OUTGOING_FILTER_RULES_RESPONSE, NAMESPACE);
     public static final QName CONTACT_BACKUP_REQUEST = QName.get(E_CONTACT_BACKUP_REQUEST, NAMESPACE);
     public static final QName CONTACT_BACKUP_RESPONSE = QName.get(E_CONTACT_BACKUP_RESPONSE, NAMESPACE);
-    
+
     //HAB
     public static final String E_HAB_ORG_UNIT_REQUEST = "HABOrgUnitRequest";
     public static final String E_HAB_ORG_UNIT_RESPONSE = "HABOrgUnitResponse";
@@ -1176,6 +1176,7 @@ public final class AdminConstants {
     public static final String E_NI = "ni";
     public static final String E_NUM_OF_PAGES = "numpages";
     public static final String E_VOLUME = "volume";
+    public static final String E_VOLUME_EXT = "volumeExternalInfo";
     public static final String E_PROGRESS = "progress";
     public static final String E_SOAP_URL = "soapURL";
     public static final String E_ADMIN_SOAP_URL = "adminSoapURL";
@@ -1301,7 +1302,15 @@ public final class AdminConstants {
     public static final String A_VOLUME_FBITS = "fbits";
     public static final String A_VOLUME_COMPRESS_BLOBS = "compressBlobs";
     public static final String A_VOLUME_COMPRESSION_THRESHOLD = "compressionThreshold";
-    public static final String A_VOLUME_IS_CURRENT = "isCurrent";
+    public static final String A_VOLUME_CURRENT = "current";
+    public static final String A_VOLUME_STORE_TYPE = "storeType";
+    public static final String A_VOLUME_STORAGE_TYPE = "storageType";
+    public static final String A_VOLUME_VOLUME_PREFIX = "volumePrefix";
+    public static final String A_VOLUME_STORE_PROVIDER = "storeProvider";
+    public static final String A_VOLUME_GLB_BUCKET_CONFIG_ID = "globalBucketConfigId";
+    public static final String A_VOLUME_USE_IN_FREQ_ACCESS = "useInFrequentAccess";
+    public static final String A_VOLUME_USE_IN_FREQ_ACCESS_THRESHOLD = "useInFrequentAccessThreshold";
+    public static final String A_VOLUME_USE_INTELLIGENT_TIERING = "useIntelligentTiering";
 
     // Blob consistency check
     public static final String E_MISSING_BLOBS = "missingBlobs";
@@ -1351,7 +1360,7 @@ public final class AdminConstants {
     public static final String A_QUOTA_USED = "used";
     public static final String A_QUOTA_LIMIT = "limit";
     public static final String A_EFFECTIVE_QUOTA = "effectiveQuota";
-    
+
     public static final String E_TEMPLATE = "template";
     public static final String E_TEST = "test";
     public static final String A_DEST = "dest";
@@ -1560,7 +1569,7 @@ public final class AdminConstants {
     public static final String A_FORCE_DELETE = "forceDelete";
     public static final String E_MEMBERS = "members";
     public static final String A_CASCADE_DELETE = "cascadeDelete";
-    
+
     // address list
     public static final String E_CREATE_ADDRESS_LIST_REQUEST = "CreateAddressListRequest";
     public static final String E_CREATE_ADDRESS_LIST_RESPONSE = "CreateAddressListResponse";
