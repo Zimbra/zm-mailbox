@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2009, 2010, 2011, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2009, 2010, 2011, 2013, 2014, 2016, 2022 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -20,8 +20,11 @@ package com.zimbra.cs.service.admin;
 import java.util.List;
 import java.util.Map;
 
+import org.json.JSONException;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
@@ -33,6 +36,7 @@ import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.CreateVolumeRequest;
 import com.zimbra.soap.admin.message.CreateVolumeResponse;
 import com.zimbra.soap.admin.type.VolumeInfo;
+import com.zimbra.util.ExternalVolumeInfoHandler;
 
 public final class CreateVolume extends AdminDocumentHandler {
 
@@ -46,14 +50,39 @@ public final class CreateVolume extends AdminDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(ctx);
         checkRight(zsc, ctx, Provisioning.getInstance().getLocalServer(), Admin.R_manageVolume);
 
-        Volume vol = VolumeManager.getInstance().create(toVolume(req.getVolume()));
-        return new CreateVolumeResponse(vol.toJAXB());
+        VolumeInfo volInfoRequest = req.getVolume();
+        Volume volRequest = VolumeManager.getInstance().create(toVolume(volInfoRequest));
+        VolumeInfo volInfoResponse = volRequest.toJAXB();
+
+        // if newly created volume is external update json
+        if (volRequest.getStoreType().equals(Volume.StoreType.EXTERNAL)) {
+            Provisioning prov = Provisioning.getInstance();
+            try {
+                // As id is created once volume is created, update id
+                volInfoRequest.setId(volRequest.getId());
+
+                // Update JSON state server properties
+                ExternalVolumeInfoHandler extVolInfoHandler = new ExternalVolumeInfoHandler(prov);
+                extVolInfoHandler.addServerProperties(volInfoRequest);
+
+                // Add External volume info to response
+                volInfoResponse.setVolumeExternalInfo(volInfoRequest.getVolumeExternalInfo());
+            } catch (ServiceException e) {
+                ZimbraLog.store.error("Error while processing CreateVolumeRequest", e);
+                throw e;
+            } catch  (JSONException e) {
+                throw ServiceException.FAILURE("Error while adding server properties", null);
+            }
+        }
+
+        return new CreateVolumeResponse(volInfoResponse);
     }
 
     private Volume toVolume(VolumeInfo vol) throws ServiceException {
+        Volume.StoreType enumStoreType = (1 == vol.getStoreType()) ? Volume.StoreType.INTERNAL : Volume.StoreType.EXTERNAL;
         return Volume.builder().setType(vol.getType()).setName(vol.getName()).setPath(vol.getRootPath(), true)
                 .setCompressBlobs(vol.isCompressBlobs()).setCompressionThreshold(vol.getCompressionThreshold())
-                .build();
+                .setStoreType(enumStoreType).build();
     }
 
     @Override

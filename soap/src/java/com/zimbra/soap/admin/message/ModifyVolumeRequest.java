@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011, 2012, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2011, 2012, 2013, 2014, 2016, 2022 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -43,7 +43,7 @@ public class ModifyVolumeRequest {
      * @zm-api-field-description Volume information
      */
     @XmlElement(name=AdminConstants.E_VOLUME, required=true)
-    private VolumeInfo volume;
+    private VolumeInfo volumeInfo;
 
     /**
      * no-argument constructor wanted by JAXB
@@ -53,11 +53,11 @@ public class ModifyVolumeRequest {
         this((short)-1, (VolumeInfo)null);
     }
 
-    public ModifyVolumeRequest(short id, VolumeInfo volume) {
+    public ModifyVolumeRequest(short id, VolumeInfo volumeInfo) {
         this.id = id;
-        this.volume = volume;
+        this.volumeInfo = volumeInfo;
     }
 
     public short getId() { return id; }
-    public VolumeInfo getVolume() { return volume; }
+    public VolumeInfo getVolumeInfo() { return volumeInfo; }
 }
