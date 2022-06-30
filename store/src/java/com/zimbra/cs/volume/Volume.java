@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2016, 2022 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -69,7 +69,7 @@ public final class Volume {
     private StoreType storeType;
 
     public static enum StoreType {
-        FILE_STORE(1),
+        INTERNAL(1),
         EXTERNAL(2);
 
         private final int storeType;
@@ -85,7 +85,7 @@ public final class Volume {
         public static StoreType getStoreTypeBy(int value) {
             switch (value) {
                 case 1:
-                    return FILE_STORE;
+                    return INTERNAL;
                 case 2:
                     return EXTERNAL;
             }
@@ -181,7 +181,6 @@ public final class Volume {
             volume.compressionThreshold = copy.compressionThreshold;
             volume.metadata = copy.metadata;
             volume.storeType = copy.storeType;
-
         }
 
         public Builder setId(short id) {
@@ -512,6 +511,8 @@ public final class Volume {
         jaxb.setCompressBlobs(compressBlobs);
         jaxb.setCompressionThreshold(compressionThreshold);
         jaxb.setCurrent(VolumeManager.getInstance().isCurrent(this));
+        short value = (short)(this.getStoreType().getStoreType());
+        jaxb.setStoreType(value);
         return jaxb;
     }
 }

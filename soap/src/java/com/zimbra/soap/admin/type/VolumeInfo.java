@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011, 2012, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2011, 2012, 2013, 2014, 2016, 2022 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -20,6 +20,7 @@ package com.zimbra.soap.admin.type;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
 
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.type.ZmBoolean;
@@ -38,14 +39,14 @@ public final class VolumeInfo {
      * @zm-api-field-tag volume-name
      * @zm-api-field-description Name or description of volume
      */
-    @XmlAttribute(name=AdminConstants.A_VOLUME_NAME /* name */, required=false)
+    @XmlAttribute(name=AdminConstants.A_VOLUME_NAME /* name */, required=true)
     private String name;
 
     /**
      * @zm-api-field-tag volume-root-path
      * @zm-api-field-description Absolute path to root of volume, e.g. /opt/zimbra/store
      */
-    @XmlAttribute(name=AdminConstants.A_VOLUME_ROOTPATH /* rootpath */, required=false)
+    @XmlAttribute(name=AdminConstants.A_VOLUME_ROOTPATH /* rootpath */, required=true)
     private String rootPath;
 
     /**
@@ -57,7 +58,7 @@ public final class VolumeInfo {
      * <tr> <td> <b>10</b> </td> <td> index volume </td> </tr>
      * </table>
      */
-    @XmlAttribute(name=AdminConstants.A_VOLUME_TYPE /* type */, required=false)
+    @XmlAttribute(name=AdminConstants.A_VOLUME_TYPE /* type */, required=true)
     private short type = -1;
 
     /**
@@ -65,7 +66,7 @@ public final class VolumeInfo {
      * @zm-api-field-description Specifies whether blobs in this volume are compressed
      */
     @XmlAttribute(name=AdminConstants.A_VOLUME_COMPRESS_BLOBS /* compressBlobs */, required=false)
-    private ZmBoolean compressBlobs;
+    private ZmBoolean compressBlobs = ZmBoolean.fromBool(false);
 
     /**
      * @zm-api-field-tag compression-threshold
@@ -73,7 +74,7 @@ public final class VolumeInfo {
      * that will not be compressed (in other words blobs larger than this threshold are compressed)
      */
     @XmlAttribute(name=AdminConstants.A_VOLUME_COMPRESSION_THRESHOLD /* compressionThreshold */, required=false)
-    private long compressionThreshold = -1;
+    private long compressionThreshold = 4096;
 
     /**
      * @zm-api-field-description mgbits
@@ -104,6 +105,18 @@ public final class VolumeInfo {
      */
     @XmlAttribute(name=AdminConstants.A_VOLUME_IS_CURRENT /* isCurrent */, required=false)
     private ZmBoolean current;
+
+    /**
+     * @zm-api-field-description Set to 1 for internal volumes and 2 for external volumes
+     */
+    @XmlAttribute(name=AdminConstants.A_VOLUME_STORE_TYPE /* storeType */, required=false)
+    private short storeType = 1;
+
+    /**
+     * @zm-api-field-description Volume external information
+     */
+    @XmlElement(name=AdminConstants.E_VOLUME_EXT /* volumeExternalInfo */, required=false)
+    private VolumeExternalInfo volumeExternalInfo;
 
     public void setId(short value) {
         id = value;
@@ -195,5 +208,21 @@ public final class VolumeInfo {
 
     public Boolean isCurrent() {
         return ZmBoolean.toBool(current);
+    }
+
+    public void setVolumeExternalInfo(VolumeExternalInfo value) {
+        volumeExternalInfo = value;
+    }
+
+    public VolumeExternalInfo getVolumeExternalInfo() {
+        return volumeExternalInfo;
+    }
+
+    public void setStoreType(short value) {
+        storeType = value;
+    }
+
+    public short getStoreType() {
+        return storeType;
     }
 }
