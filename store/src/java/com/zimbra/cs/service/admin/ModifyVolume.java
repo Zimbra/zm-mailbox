@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2009, 2010, 2011, 2012, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2009, 2010, 2011, 2012, 2013, 2014, 2016, 2022 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -20,6 +20,8 @@ package com.zimbra.cs.service.admin;
 import java.util.List;
 import java.util.Map;
 
+import org.json.JSONException;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Provisioning;
@@ -34,6 +36,8 @@ import com.zimbra.soap.admin.message.ModifyVolumeRequest;
 import com.zimbra.soap.admin.message.ModifyVolumeResponse;
 import com.zimbra.soap.admin.type.VolumeInfo;
 
+import org.apache.commons.lang.StringUtils;
+
 public final class ModifyVolume extends AdminDocumentHandler {
 
     @Override
@@ -47,38 +51,48 @@ public final class ModifyVolume extends AdminDocumentHandler {
         checkRight(zsc, ctx, Provisioning.getInstance().getLocalServer(), Admin.R_manageVolume);
 
         VolumeManager mgr = VolumeManager.getInstance();
-        Volume.Builder builder = Volume.builder(mgr.getVolume(req.getId()));
-        VolumeInfo vol = req.getVolume();
-        if (vol == null) {
+        VolumeInfo volInfo = req.getVolumeInfo();
+        Volume vol = mgr.getVolume(volInfo.getId());
+        Volume.Builder builder = Volume.builder(vol);
+
+        if (volInfo == null) {
             throw ServiceException.INVALID_REQUEST("must specify a volume Element", null);
         }
         StoreManager storeManager = StoreManager.getInstance();
-        if (storeManager.supports(StoreManager.StoreFeature.CUSTOM_STORE_API, String.valueOf(vol.getId()))) {
+        if (storeManager.supports(StoreManager.StoreFeature.CUSTOM_STORE_API, String.valueOf(volInfo.getId()))) {
             throw ServiceException.INVALID_REQUEST("Operation unsupported, use zxsuite to edit this volume", null);
         }
-        if (vol.getType() > 0) {
-            builder.setType(vol.getType());
+
+        // store type == 1, allow modification of all parameters
+        if (vol.getStoreType().equals(Volume.StoreType.INTERNAL)) {
+            if (volInfo.getType() > 0) {
+                builder.setType(volInfo.getType());
+            }
+            if (!StringUtils.isEmpty(volInfo.getName())) {
+                builder.setName(volInfo.getName());
+            }
+            if (!StringUtils.isEmpty(volInfo.getRootPath())) {
+                builder.setPath(volInfo.getRootPath(), true);
+            }
+            if (volInfo.getCompressBlobs() != null) {
+                builder.setCompressBlobs(volInfo.getCompressBlobs());
+            }
+            if (volInfo.getCompressionThreshold() > 0) {
+                builder.setCompressionThreshold(volInfo.getCompressionThreshold());
+            }
         }
-        if (vol.getName() != null) {
-            builder.setName(vol.getName());
-        }
-        if (vol.getRootPath() != null) {
-            builder.setPath(vol.getRootPath(), true);
-        }
-        if (vol.getCompressBlobs() != null) {
-            builder.setCompressBlobs(vol.getCompressBlobs());
-        }
-        if (vol.getCompressionThreshold() > 0) {
-            builder.setCompressionThreshold(vol.getCompressionThreshold());
+        // store type == 2, allow modification of only volume name
+        else if (vol.getStoreType().equals(Volume.StoreType.EXTERNAL)) {
+            if (volInfo.getName() != null) {
+                builder.setName(volInfo.getName());
+            }
         }
         mgr.update(builder.build());
         return new ModifyVolumeResponse();
-
     }
 
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_manageVolume);
     }
-
 }
