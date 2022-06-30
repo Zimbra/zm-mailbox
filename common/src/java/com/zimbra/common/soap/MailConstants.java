@@ -1410,4 +1410,11 @@ public final class MailConstants {
     public static final QName RECOVER_ACCOUNT_RESPONSE = QName.get(E_RECOVER_ACCOUNT_RESPONSE, NAMESPACE);
     public static final String A_RECOVERY_ACCOUNT = "recoveryAccount";
     public static final String A_CHANNEL = "channel";
+    
+    // HTML Constant
+    public static final String SPACE = " ";
+    public static final String DEVICE_LIST_SEPARATOR = "---DEVICELIST---";
+    public static final String SUCCESS = "Success";
+    public static final String FAILURE = "Failure";
+    
 }

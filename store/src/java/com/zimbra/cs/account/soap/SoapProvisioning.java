@@ -68,6 +68,7 @@ import com.zimbra.common.util.AccountLogger;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Log.Level;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
@@ -207,6 +208,8 @@ import com.zimbra.soap.admin.message.GetConfigRequest;
 import com.zimbra.soap.admin.message.GetConfigResponse;
 import com.zimbra.soap.admin.message.GetCosRequest;
 import com.zimbra.soap.admin.message.GetCosResponse;
+import com.zimbra.soap.admin.message.GetDeviceStatusRequest;
+import com.zimbra.soap.admin.message.GetDeviceStatusResponse;
 import com.zimbra.soap.admin.message.GetDistributionListMembershipRequest;
 import com.zimbra.soap.admin.message.GetDistributionListMembershipResponse;
 import com.zimbra.soap.admin.message.GetDistributionListRequest;
@@ -256,6 +259,8 @@ import com.zimbra.soap.admin.message.RenameUCServiceRequest;
 import com.zimbra.soap.admin.message.ResetAllLoggersRequest;
 import com.zimbra.soap.admin.message.SearchDirectoryRequest;
 import com.zimbra.soap.admin.message.SearchDirectoryResponse;
+import com.zimbra.soap.admin.message.SendEmailRequest;
+import com.zimbra.soap.admin.message.SendEmailResponse;
 import com.zimbra.soap.admin.message.SetLocalServerOnlineRequest;
 import com.zimbra.soap.admin.message.SetPasswordRequest;
 import com.zimbra.soap.admin.message.SetPasswordResponse;
@@ -310,6 +315,10 @@ import com.zimbra.soap.type.AccountSelector;
 import com.zimbra.soap.type.GalSearchType;
 import com.zimbra.soap.type.GranteeType;
 import com.zimbra.soap.type.TargetBy;
+import java.nio.charset.Charset;
+import com.zimbra.soap.admin.type.DeviceStatusInfo;
+import com.zimbra.cs.rmgmt.RemoteManager;
+import com.zimbra.cs.rmgmt.RemoteResult;
 
 public class SoapProvisioning extends Provisioning {
 
@@ -3223,6 +3232,28 @@ public class SoapProvisioning extends Provisioning {
     @Override
     public void resetPassword(Account acct, String newPassword, boolean dryRun) throws ServiceException {
         throw ServiceException.UNSUPPORTED();
+    }
+    
+    @Override
+    public String sendAbqEmail(String status, String to) throws ServiceException {
+        String devicesInfo = MailConstants.BREAK_LINE;
+        GetDeviceStatusResponse resp = invokeJaxb(new GetDeviceStatusRequest(null));
+        List<DeviceStatusInfo> statusOfDevices = resp.getDevices();
+        
+        for (int i=1; i <= statusOfDevices.size(); i++) {
+            devicesInfo += i +". "+ statusOfDevices.get(i).getId() + MailConstants.SPACE;
+        }
+        String emailBody = LC.zimbra_mobile_abq_notification_email_body.value() + MailConstants.DEVICE_LIST_SEPARATOR
+                + devicesInfo;
+        String subject = LC.zimbra_mobile_abq_notification_email_subject.value();
+        SendEmailResponse sendEmailResponse = invokeJaxb(new SendEmailRequest(to, subject, emailBody));
+        return MailConstants.SUCCESS;
+    }
+
+    @Override
+    public String sendEmail(String to, String subject, String message) throws ServiceException {
+        SendEmailResponse sendEmailResponse = invokeJaxb(new SendEmailRequest(to, subject, message));
+        return MailConstants.SUCCESS;
     }
 
 }

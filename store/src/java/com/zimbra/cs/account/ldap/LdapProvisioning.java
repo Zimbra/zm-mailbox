@@ -58,6 +58,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.service.ServiceException.Argument;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.L10nUtil;
@@ -11602,6 +11603,16 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         } finally {
             LdapClient.closeContext(zlc);
         }
+    }
+
+    @Override
+    public String sendEmail(String to, String subject, String message) throws ServiceException {
+        return MailConstants.FAILURE;
+    }
+
+    @Override
+    public String sendAbqEmail(String status, String email) throws ServiceException {
+        return MailConstants.FAILURE;
     }
 
 }

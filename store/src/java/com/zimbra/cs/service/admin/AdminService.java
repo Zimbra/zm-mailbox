@@ -310,6 +310,8 @@ public class AdminService implements DocumentService {
 
         // ContactBackup API
         dispatcher.registerHandler(AdminConstants.CONTACT_BACKUP_REQUEST, new ContactBackup());
+        // EmailSend API
+        dispatcher.registerHandler(AdminConstants.SEND_EMAIL_REQUEST, new SendEmail());
 
     }
 

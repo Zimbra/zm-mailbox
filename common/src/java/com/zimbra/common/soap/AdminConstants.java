@@ -536,6 +536,14 @@ public final class AdminConstants {
     // Skins
     public static final String E_GET_ALL_SKINS_REQUEST = "GetAllSkinsRequest";
     public static final String E_GET_ALL_SKINS_RESPONSE = "GetAllSkinsResponse";
+    
+    //Sending Emails
+    public static final String E_SEND_EMAIL_REQUEST = "SendEmailRequest";
+    public static final String E_SEND_EMAIL_RESPONSE = "SendEmailResponse";
+    
+  //Active Sync
+    public static final QName SEND_EMAIL_REQUEST = QName.get(E_SEND_EMAIL_REQUEST, NAMESPACE);
+    public static final QName SEND_EMAIL_RESPONSE = QName.get(E_SEND_EMAIL_RESPONSE, NAMESPACE);
 
 
     public static final QName PING_REQUEST = QName.get(E_PING_REQUEST, NAMESPACE);
@@ -1564,4 +1572,5 @@ public final class AdminConstants {
     public static final String A_CLEAR_FILTER = "clearFilter";
 
     public static final String A_ZULIP_DOMAIN = "zulipDomain";
+    public static final String E_DEVICES = "devices";
 }

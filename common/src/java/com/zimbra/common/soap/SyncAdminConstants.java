@@ -88,10 +88,16 @@ public final class SyncAdminConstants {
     public static final QName GET_SYNC_STATE_RESPONSE = QName.get(E_GET_SYNC_STATE_RESPONSE, NAMESPACE);
     public static final QName REMOVE_STALE_DEVICE_METADATA_REQUEST = QName.get(E_REMOVE_STALE_DEVICE_METADATA_REQUEST, NAMESPACE);
     public static final QName REMOVE_STALE_DEVICE_METADATA_RESPONSE = QName.get(E_REMOVE_STALE_DEVICE_METADATA_RESPONSE, NAMESPACE);
-
+    
     public static final String E_LAST_USED_DATE = "lastUsedDate";
 
     public static final String A_COUNT = "count";
     public static final String A_DATE = "date";
     public static final String A_LAST_USED_DATE_OLDER_THAN = "lastUsedDateOlderThan";
+    public static final String A_DEVICE = "emailReponse";
+    public static final String E_STATUS = "status";
+    public static final String E_TO = "to";
+    public static final String E_SUBJECT = "subject";
+    public static final String E_MESSAGE = "message";
+    public static final Integer REMOTE_SERVER_SUCCESS = 0;
 }

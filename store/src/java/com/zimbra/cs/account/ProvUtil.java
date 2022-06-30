@@ -294,6 +294,7 @@ public class ProvUtil implements HttpDebugListener {
         console.println("  -d/--debug                            debug mode (dumps SOAP messages)");
         console.println("  -m/--master                           use LDAP master (only valid with -l)");
         console.println("  -r/--replace                          allow replacement of safe-guarded multi-valued attributes configured in localconfig key \"zmprov_safeguarded_attrs\"");
+        console.println("  -M/--mobile                           mobile commands use -M");
         console.println("");
         doHelp(null);
         System.exit(1);
@@ -308,7 +309,7 @@ public class ProvUtil implements HttpDebugListener {
                 "help on reverse proxy related commands"), RIGHT("help on right-related commands"), SEARCH(
                 "help on search-related commands"), SERVER("help on server-related commands"), ALWAYSONCLUSTER(
                 "help on alwaysOnCluster-related commands"), UCSERVICE("help on ucservice-related commands"), SHARE(
-                "help on share related commands"), HAB("help on HAB commands");
+                "help on share related commands"), HAB("help on HAB commands"),MOBILE("help on mobile commands");
 
         private final String description;
 
@@ -875,7 +876,11 @@ public class ProvUtil implements HttpDebugListener {
         MODIFY_HAB_GROUP_SENIORITY("modifyHABGroupSeniority", "mhgs",
         "{habGrpId} {seniorityIndex} ", Category.HAB, 2, 2),
         GET_HAB_GROUP_MEMBERS("getHABGroupMembers", "ghgm", "{name@domain|id}",
-                Category.HAB, 1, 1);
+                Category.HAB, 1, 1),
+        SEND_EMAIL("sendEmail", "sem", "{to} {subject} {emailBody}",
+                Category.MOBILE, 3, 3),
+        SEND_ABQ_EMAIL("sendAbqEmail", "sabqm", "{type | quarantined | blocked} {admin email}",
+                Category.MOBILE, 2, 2);
 
         private String mName;
         private String mAlias;
@@ -1646,6 +1651,12 @@ public class ProvUtil implements HttpDebugListener {
             break;
         case GET_HAB_GROUP_MEMBERS:
             doGetHABGroupMembers(args);
+            break;
+        case SEND_ABQ_EMAIL:
+            console.println(prov.sendAbqEmail(args[1], args[2]));
+            break;
+        case SEND_EMAIL:
+            console.println(prov.sendEmail(args[1], args[2], args[3]));
             break;
         default:
             return false;

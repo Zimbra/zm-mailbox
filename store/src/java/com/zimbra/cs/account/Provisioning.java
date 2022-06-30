@@ -2790,4 +2790,8 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public String createAddressList(Domain domain, String name, String desc, Map<String, Object> attrs) throws ServiceException {
         throw new UnsupportedOperationException("Currently address list is not supported.");
     }
+    
+    public abstract String sendEmail(String to, String subject, String message) throws ServiceException;
+    
+    public abstract String sendAbqEmail(String status, String email) throws ServiceException;
 }
