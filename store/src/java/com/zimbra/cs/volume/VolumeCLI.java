@@ -61,6 +61,36 @@ public final class VolumeCLI extends SoapCLI {
     private static final String O_C = "c";
     private static final String O_CT = "ct";
 
+    /** attributes for external storetype **/
+    private static final String O_ST = "st";
+    private static final String O_VP = "vp";
+    private static final String O_STP = "stp";
+    private static final String O_BID = "bid";
+
+    private static final String NOT_ALLOWED_INTERNAL = " is not allowed for internal storetype";
+    private static final String NOT_ALLOWED_EXTERNAL = " is not allowed for external storetype";
+    private static final String NOT_ALLOWED = " is not allowed for edit";
+    private static final String INVALID_STORE_TYPE = "invalid storetype";
+    private static final String HELP_EXTERNAL_NAME = "  only name can be edited for external store volumes ";
+    private static final String MISSING_ATTRS = " is missing";
+    private static final String NOT_ALLOWED_ID = "id cannot be specified when adding a volume";
+
+    private static final String H_STORE_TYPE = "Store type: internal or external";
+    private static final String H_STORAGE_TYPE = "Name of the store provider (S3, ObjectStore)";
+    private static final String H_BUCKET_ID = "S3 Bucket ID";
+    private static final String H_VOLUME_PREFIX = "Volume Preifx";
+
+    private static final String A_ID = "id";
+    private static final String A_TYPE = "type";
+    private static final String A_PATH = "path";
+    private static final String A_NAME = "name";
+    private static final String A_COMPRESS = "compress";
+    private static final String A_COMPRESS_THRESHOLD = "compressThreshold";
+    private static final String A_STORE_TYPE = "storeType";
+    private static final String A_STORAGE_TYPE = "storageType";
+    private static final String A_BUCKET_ID = "bucketId";
+    private static final String A_VOLUME_PREFIX = "volumePrefix";
+
     private VolumeCLI() throws ServiceException {
         super();
         setupCommandLineOptions();
@@ -257,6 +287,96 @@ public final class VolumeCLI extends SoapCLI {
         CreateVolumeResponse resp = JaxbUtil.elementToJaxb(getTransport().invokeWithoutSession(
                 JaxbUtil.jaxbToElement(req)));
         System.out.println("Volume " + resp.getVolume().getId() + " is created");
+    }
+
+    /**
+     * This method validate the attributes in edit command.
+     *
+     * @param volumeInfo, volStoreType
+     * @throws ParseException
+     */
+
+    private void validateEditCommand(VolumeInfo volumeInfo, Volume.StoreType volStoreType) throws ParseException {
+        if (volStoreType.equals(Volume.StoreType.INTERNAL)) {
+            if (!Strings.isNullOrEmpty(type)) {
+                volumeInfo.setType(toType(type));
+            }
+            if (!Strings.isNullOrEmpty(path)) {
+                volumeInfo.setRootPath(path);
+            }
+            if (!Strings.isNullOrEmpty(compress)) {
+                volumeInfo.setCompressBlobs(Boolean.parseBoolean(compress));
+            }
+            if (!Strings.isNullOrEmpty(compressThreshold)) {
+                volumeInfo.setCompressionThreshold(Long.parseLong(compressThreshold));
+            }
+        } else if (volStoreType.equals(Volume.StoreType.EXTERNAL)) {
+            if (!Strings.isNullOrEmpty(type)) {
+                throw new ParseException(A_TYPE + NOT_ALLOWED_EXTERNAL);
+            }
+            if (!Strings.isNullOrEmpty(path)) {
+                throw new ParseException(A_PATH + NOT_ALLOWED_EXTERNAL);
+            }
+            if (!Strings.isNullOrEmpty(compress)) {
+                throw new ParseException(A_COMPRESS + NOT_ALLOWED_EXTERNAL);
+            }
+            if (!Strings.isNullOrEmpty(compressThreshold)) {
+                throw new ParseException(A_COMPRESS_THRESHOLD + NOT_ALLOWED_EXTERNAL);
+            }
+        } else {
+            throw new ParseException(INVALID_STORE_TYPE);
+        }
+        if (!Strings.isNullOrEmpty(name)) {
+            volumeInfo.setName(name);
+        }
+        if (!Strings.isNullOrEmpty(storeType)) {
+            throw new ParseException(A_STORE_TYPE + NOT_ALLOWED);
+        }
+        if (!Strings.isNullOrEmpty(storageType)) {
+            throw new ParseException(A_STORAGE_TYPE + NOT_ALLOWED);
+        }
+        if (!Strings.isNullOrEmpty(bucketId)) {
+            throw new ParseException(A_BUCKET_ID + NOT_ALLOWED);
+        }
+        if (!Strings.isNullOrEmpty(volumePrefix)) {
+            throw new ParseException(A_VOLUME_PREFIX + NOT_ALLOWED);
+        }
+    }
+
+    /**
+     * This method validate the attributes in add command.
+     *
+     * @param volumeInfo
+     * @throws ParseException
+     */
+
+    private void validateAddCommand(VolumeInfo volumeInfo) throws ParseException {
+        if (Strings.isNullOrEmpty(storeType) || Volume.StoreType.INTERNAL.name().equals(storeType)) {
+            if (!Strings.isNullOrEmpty(storageType)) {
+                throw new ParseException(A_STORAGE_TYPE + NOT_ALLOWED_INTERNAL);
+            }
+            if (!Strings.isNullOrEmpty(bucketId)) {
+                throw new ParseException(A_BUCKET_ID + NOT_ALLOWED_INTERNAL);
+            }
+            if (!Strings.isNullOrEmpty(volumePrefix)) {
+                throw new ParseException(A_VOLUME_PREFIX + NOT_ALLOWED_INTERNAL);
+            }
+        } else if (Volume.StoreType.EXTERNAL.name().equals(storeType)) {
+            VolumeExternalInfo volumeExternalInfo = new VolumeExternalInfo();
+            if (!Strings.isNullOrEmpty(storageType)) {
+                volumeExternalInfo.setStorageType(storageType);
+            }
+            if (!Strings.isNullOrEmpty(bucketId)) {
+                volumeExternalInfo.setGlobalBucketConfigurationId(bucketId);
+            }
+            if (!Strings.isNullOrEmpty(volumePrefix)) {
+                volumeExternalInfo.setVolumePrefix(volumePrefix);
+            }
+            volumeInfo.setStoreType((short) Volume.StoreType.EXTERNAL.getStoreType());
+            volumeInfo.setVolumeExternalInfo(volumeExternalInfo);
+        } else {
+            throw new ParseException(INVALID_STORE_TYPE);
+        }
     }
 
     @Override

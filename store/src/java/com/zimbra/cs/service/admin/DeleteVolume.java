@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2009, 2010, 2011, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2009, 2010, 2011, 2013, 2014, 2016, 2022 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -25,8 +25,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
-import com.zimbra.cs.store.StoreManager;
-import com.zimbra.cs.volume.VolumeManager;
+import com.zimbra.cs.service.util.VolumeConfigUtil;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.DeleteVolumeRequest;
@@ -44,13 +43,7 @@ public final class DeleteVolume extends AdminDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(ctx);
         checkRight(zsc, ctx, Provisioning.getInstance().getLocalServer(), Admin.R_manageVolume);
 
-        VolumeManager mgr = VolumeManager.getInstance();
-        mgr.getVolume(req.getId()); // make sure the volume exists before doing anything heavyweight...
-        StoreManager storeManager = StoreManager.getInstance();
-        if (storeManager.supports(StoreManager.StoreFeature.CUSTOM_STORE_API, String.valueOf(req.getId()))) {
-          throw ServiceException.INVALID_REQUEST("Operation unsupported, use zxsuite to delete this volume", null);
-        }
-        mgr.delete(req.getId());
+        VolumeConfigUtil.parseDeleteVolumeRequest(req);
         return new DeleteVolumeResponse();
     }
 
@@ -58,5 +51,4 @@ public final class DeleteVolume extends AdminDocumentHandler {
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_manageVolume);
     }
-
 }

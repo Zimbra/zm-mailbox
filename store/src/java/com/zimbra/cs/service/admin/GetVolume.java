@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2009, 2010, 2011, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2009, 2010, 2011, 2013, 2014, 2016, 2022 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -19,18 +19,21 @@ package com.zimbra.cs.service.admin;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.service.util.VolumeConfigUtil;
 import com.zimbra.cs.volume.Volume;
 import com.zimbra.cs.volume.VolumeManager;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.GetVolumeRequest;
 import com.zimbra.soap.admin.message.GetVolumeResponse;
+import com.zimbra.soap.admin.type.VolumeInfo;
 
 public final class GetVolume extends AdminDocumentHandler {
 
@@ -43,9 +46,10 @@ public final class GetVolume extends AdminDocumentHandler {
     private GetVolumeResponse handle(GetVolumeRequest req, Map<String, Object> ctx) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(ctx);
         checkRight(zsc, ctx, Provisioning.getInstance().getLocalServer(), Admin.R_manageVolume);
-
         Volume vol = VolumeManager.getInstance().getVolume(req.getId());
-        GetVolumeResponse resp = new GetVolumeResponse(vol.toJAXB());
+        VolumeInfo volInfo = vol.toJAXB();
+        GetVolumeResponse resp = new GetVolumeResponse(volInfo);
+        VolumeConfigUtil.parseGetVolumeRequest(req, resp, vol, volInfo);
         return resp;
     }
 
@@ -53,5 +57,4 @@ public final class GetVolume extends AdminDocumentHandler {
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_manageVolume);
     }
-
 }
