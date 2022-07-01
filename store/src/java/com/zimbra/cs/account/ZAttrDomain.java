@@ -4376,6 +4376,78 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
+     * Whether or not account is eligible for backup
+     *
+     * @return zimbraBackupConfigEnabled, or false if unset
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4007)
+    public boolean isBackupConfigEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraBackupConfigEnabled, false, true);
+    }
+
+    /**
+     * Whether or not account is eligible for backup
+     *
+     * @param zimbraBackupConfigEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4007)
+    public void setBackupConfigEnabled(boolean zimbraBackupConfigEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupConfigEnabled, zimbraBackupConfigEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not account is eligible for backup
+     *
+     * @param zimbraBackupConfigEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4007)
+    public Map<String,Object> setBackupConfigEnabled(boolean zimbraBackupConfigEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupConfigEnabled, zimbraBackupConfigEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether or not account is eligible for backup
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4007)
+    public void unsetBackupConfigEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupConfigEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not account is eligible for backup
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4007)
+    public Map<String,Object> unsetBackupConfigEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupConfigEnabled, "");
+        return attrs;
+    }
+
+    /**
      * Realm for the basic auth challenge (WWW-Authenticate) header
      *
      * @return zimbraBasicAuthRealm, or "Zimbra" if unset
