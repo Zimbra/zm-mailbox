@@ -50,7 +50,6 @@ public abstract class StoreManager {
                 if (sInstance != null) {
                     return sInstance;
                 }
-
                 try {
                     if (className != null && !className.equals("")) {
                         try {
@@ -69,12 +68,16 @@ public abstract class StoreManager {
         return sInstance;
     }
 
+
+
     /**
      * Used for unit testing.
      */
     public static void setInstance(StoreManager instance) {
-        ZimbraLog.store.info("Setting StoreManager to " + instance.getClass().getName());
-        sInstance = instance;
+        synchronized (StoreManager.class) {
+            ZimbraLog.store.info("Setting StoreManager to " + instance.getClass().getName());
+            sInstance = instance;
+        }
     }
 
     public static int getDiskStreamingThreshold() throws ServiceException {
