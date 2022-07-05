@@ -2990,6 +2990,22 @@ public class ZAttrProvisioning {
     public static final String A_zimbraActiveSyncEhcacheMaxDiskSize = "zimbraActiveSyncEhcacheMaxDiskSize";
 
     /**
+     * Sets the active sync version at the user level to override
+     * zimbra_activesync_versions on local config. Add multi-value attribute
+     * as android:14.1/iphone:16.1/ipod:16.0. If set as android:14.1, the
+     * android device will be connected over the 14.1 version. If set as
+     * iphone:16.1, iPhone device will be connected over the 16.1 version. If
+     * set as 14.1, all device types android/ios connecting to this account
+     * will use 14.1 version. If the added values don&#039;t match the user
+     * agent/device Id/device type default zimbra_activesync_versions on the
+     * local config will be used.
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4005)
+    public static final String A_zimbraActiveSyncVersion = "zimbraActiveSyncVersion";
+
+    /**
      * filter to decide members of the address list using gal
      *
      * @since ZCS 8.8.10

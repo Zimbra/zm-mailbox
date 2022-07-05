@@ -298,6 +298,212 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
+     * Sets the active sync version at the user level to override
+     * zimbra_activesync_versions on local config. Add multi-value attribute
+     * as android:14.1/iphone:16.1/ipod:16.0. If set as android:14.1, the
+     * android device will be connected over the 14.1 version. If set as
+     * iphone:16.1, iPhone device will be connected over the 16.1 version. If
+     * set as 14.1, all device types android/ios connecting to this account
+     * will use 14.1 version. If the added values don&#039;t match the user
+     * agent/device Id/device type default zimbra_activesync_versions on the
+     * local config will be used.
+     *
+     * @return zimbraActiveSyncVersion, or empty array if unset
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4005)
+    public String[] getActiveSyncVersion() {
+        return getMultiAttr(Provisioning.A_zimbraActiveSyncVersion, true, true);
+    }
+
+    /**
+     * Sets the active sync version at the user level to override
+     * zimbra_activesync_versions on local config. Add multi-value attribute
+     * as android:14.1/iphone:16.1/ipod:16.0. If set as android:14.1, the
+     * android device will be connected over the 14.1 version. If set as
+     * iphone:16.1, iPhone device will be connected over the 16.1 version. If
+     * set as 14.1, all device types android/ios connecting to this account
+     * will use 14.1 version. If the added values don&#039;t match the user
+     * agent/device Id/device type default zimbra_activesync_versions on the
+     * local config will be used.
+     *
+     * @param zimbraActiveSyncVersion new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4005)
+    public void setActiveSyncVersion(String[] zimbraActiveSyncVersion) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraActiveSyncVersion, zimbraActiveSyncVersion);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Sets the active sync version at the user level to override
+     * zimbra_activesync_versions on local config. Add multi-value attribute
+     * as android:14.1/iphone:16.1/ipod:16.0. If set as android:14.1, the
+     * android device will be connected over the 14.1 version. If set as
+     * iphone:16.1, iPhone device will be connected over the 16.1 version. If
+     * set as 14.1, all device types android/ios connecting to this account
+     * will use 14.1 version. If the added values don&#039;t match the user
+     * agent/device Id/device type default zimbra_activesync_versions on the
+     * local config will be used.
+     *
+     * @param zimbraActiveSyncVersion new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4005)
+    public Map<String,Object> setActiveSyncVersion(String[] zimbraActiveSyncVersion, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraActiveSyncVersion, zimbraActiveSyncVersion);
+        return attrs;
+    }
+
+    /**
+     * Sets the active sync version at the user level to override
+     * zimbra_activesync_versions on local config. Add multi-value attribute
+     * as android:14.1/iphone:16.1/ipod:16.0. If set as android:14.1, the
+     * android device will be connected over the 14.1 version. If set as
+     * iphone:16.1, iPhone device will be connected over the 16.1 version. If
+     * set as 14.1, all device types android/ios connecting to this account
+     * will use 14.1 version. If the added values don&#039;t match the user
+     * agent/device Id/device type default zimbra_activesync_versions on the
+     * local config will be used.
+     *
+     * @param zimbraActiveSyncVersion new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4005)
+    public void addActiveSyncVersion(String zimbraActiveSyncVersion) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraActiveSyncVersion, zimbraActiveSyncVersion);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Sets the active sync version at the user level to override
+     * zimbra_activesync_versions on local config. Add multi-value attribute
+     * as android:14.1/iphone:16.1/ipod:16.0. If set as android:14.1, the
+     * android device will be connected over the 14.1 version. If set as
+     * iphone:16.1, iPhone device will be connected over the 16.1 version. If
+     * set as 14.1, all device types android/ios connecting to this account
+     * will use 14.1 version. If the added values don&#039;t match the user
+     * agent/device Id/device type default zimbra_activesync_versions on the
+     * local config will be used.
+     *
+     * @param zimbraActiveSyncVersion new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4005)
+    public Map<String,Object> addActiveSyncVersion(String zimbraActiveSyncVersion, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraActiveSyncVersion, zimbraActiveSyncVersion);
+        return attrs;
+    }
+
+    /**
+     * Sets the active sync version at the user level to override
+     * zimbra_activesync_versions on local config. Add multi-value attribute
+     * as android:14.1/iphone:16.1/ipod:16.0. If set as android:14.1, the
+     * android device will be connected over the 14.1 version. If set as
+     * iphone:16.1, iPhone device will be connected over the 16.1 version. If
+     * set as 14.1, all device types android/ios connecting to this account
+     * will use 14.1 version. If the added values don&#039;t match the user
+     * agent/device Id/device type default zimbra_activesync_versions on the
+     * local config will be used.
+     *
+     * @param zimbraActiveSyncVersion existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4005)
+    public void removeActiveSyncVersion(String zimbraActiveSyncVersion) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraActiveSyncVersion, zimbraActiveSyncVersion);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Sets the active sync version at the user level to override
+     * zimbra_activesync_versions on local config. Add multi-value attribute
+     * as android:14.1/iphone:16.1/ipod:16.0. If set as android:14.1, the
+     * android device will be connected over the 14.1 version. If set as
+     * iphone:16.1, iPhone device will be connected over the 16.1 version. If
+     * set as 14.1, all device types android/ios connecting to this account
+     * will use 14.1 version. If the added values don&#039;t match the user
+     * agent/device Id/device type default zimbra_activesync_versions on the
+     * local config will be used.
+     *
+     * @param zimbraActiveSyncVersion existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4005)
+    public Map<String,Object> removeActiveSyncVersion(String zimbraActiveSyncVersion, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraActiveSyncVersion, zimbraActiveSyncVersion);
+        return attrs;
+    }
+
+    /**
+     * Sets the active sync version at the user level to override
+     * zimbra_activesync_versions on local config. Add multi-value attribute
+     * as android:14.1/iphone:16.1/ipod:16.0. If set as android:14.1, the
+     * android device will be connected over the 14.1 version. If set as
+     * iphone:16.1, iPhone device will be connected over the 16.1 version. If
+     * set as 14.1, all device types android/ios connecting to this account
+     * will use 14.1 version. If the added values don&#039;t match the user
+     * agent/device Id/device type default zimbra_activesync_versions on the
+     * local config will be used.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4005)
+    public void unsetActiveSyncVersion() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraActiveSyncVersion, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Sets the active sync version at the user level to override
+     * zimbra_activesync_versions on local config. Add multi-value attribute
+     * as android:14.1/iphone:16.1/ipod:16.0. If set as android:14.1, the
+     * android device will be connected over the 14.1 version. If set as
+     * iphone:16.1, iPhone device will be connected over the 16.1 version. If
+     * set as 14.1, all device types android/ios connecting to this account
+     * will use 14.1 version. If the added values don&#039;t match the user
+     * agent/device Id/device type default zimbra_activesync_versions on the
+     * local config will be used.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4005)
+    public Map<String,Object> unsetActiveSyncVersion(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraActiveSyncVersion, "");
+        return attrs;
+    }
+
+    /**
      * whether to show catchall addresses in admin console
      *
      * @return zimbraAdminConsoleCatchAllAddressEnabled, or false if unset
