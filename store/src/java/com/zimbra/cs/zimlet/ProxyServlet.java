@@ -133,7 +133,8 @@ public class ProxyServlet extends ZimbraServlet {
             //header.equals("user-agent") ||
             header.equals("cache-control") ||
             header.equals("cookie") ||
-            header.equals("transfer-encoding")) {
+            header.equals("transfer-encoding") ||
+            Arrays.asList(LC.proxy_servlet_drop_headers.value().toString().split(",")).contains(header)) {
             return false;
         }
         return true;
