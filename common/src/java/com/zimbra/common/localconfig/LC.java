@@ -1485,6 +1485,9 @@ public final class LC {
     // ZCS-11349: Toggle off/on fallback to ldap search
     public static final KnownKey zimbra_gal_fallback_ldap_search_enabled = KnownKey.newKey(true);
 
+    // ZBUG-2800 list of proxy headers not allowed
+    public static final KnownKey proxy_servlet_drop_headers = KnownKey.newKey("x-forwarded-host,x-host,x-forwarded-server,x-http-host-override,x-http-host-override");
+
     static {
         // Automatically set the key name with the variable name.
         for (Field field : LC.class.getFields()) {
