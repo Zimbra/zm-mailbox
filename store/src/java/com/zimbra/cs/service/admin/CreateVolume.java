@@ -51,16 +51,12 @@ public final class CreateVolume extends AdminDocumentHandler {
         checkRight(zsc, ctx, Provisioning.getInstance().getLocalServer(), Admin.R_manageVolume);
 
         VolumeInfo volInfoRequest = req.getVolume();
-        Volume volRequest = VolumeManager.getInstance().create(toVolume(volInfoRequest));
-        VolumeInfo volInfoResponse = volRequest.toJAXB();
+        Volume.StoreType enumStoreType = (1 == volInfoRequest.getStoreType()) ? Volume.StoreType.INTERNAL : Volume.StoreType.EXTERNAL;
 
-        // if newly created volume is external update json
-        if (volRequest.getStoreType().equals(Volume.StoreType.EXTERNAL)) {
+        // if volume to be created is external, update json
+        if (enumStoreType.equals(Volume.StoreType.EXTERNAL)) {
             Provisioning prov = Provisioning.getInstance();
             try {
-                // as id is created once volume is created, update id
-                volInfoRequest.setId(volRequest.getId());
-
                 // create external volume info handler
                 ExternalVolumeInfoHandler extVolInfoHandler = new ExternalVolumeInfoHandler(prov);
 
@@ -73,9 +69,6 @@ public final class CreateVolume extends AdminDocumentHandler {
 
                 // update JSON state server properties after validating it
                 extVolInfoHandler.addServerProperties(volInfoRequest);
-
-                // add External volume info to response
-                volInfoResponse.setVolumeExternalInfo(volInfoRequest.getVolumeExternalInfo());
             } catch (ServiceException e) {
                 ZimbraLog.store.error("Error while processing CreateVolumeRequest", e);
                 throw e;
@@ -84,11 +77,20 @@ public final class CreateVolume extends AdminDocumentHandler {
             }
         }
 
+        // create volume response
+        Volume volRequest = VolumeManager.getInstance().create(toVolume(volInfoRequest, enumStoreType));
+        VolumeInfo volInfoResponse = volRequest.toJAXB();
+
+        // as id is created once volume is created, update id
+        volInfoRequest.setId(volRequest.getId());
+
+        // add External volume info to response
+        volInfoResponse.setVolumeExternalInfo(volInfoRequest.getVolumeExternalInfo());
+
         return new CreateVolumeResponse(volInfoResponse);
     }
 
-    private Volume toVolume(VolumeInfo vol) throws ServiceException {
-        Volume.StoreType enumStoreType = (1 == vol.getStoreType()) ? Volume.StoreType.INTERNAL : Volume.StoreType.EXTERNAL;
+    private Volume toVolume(VolumeInfo vol, Volume.StoreType enumStoreType) throws ServiceException {
         return Volume.builder().setType(vol.getType()).setName(vol.getName()).setPath(vol.getRootPath(), true)
                 .setCompressBlobs(vol.isCompressBlobs()).setCompressionThreshold(vol.getCompressionThreshold())
                 .setStoreType(enumStoreType).build();
