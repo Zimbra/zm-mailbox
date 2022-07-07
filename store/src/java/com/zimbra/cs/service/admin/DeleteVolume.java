@@ -65,7 +65,7 @@ public final class DeleteVolume extends AdminDocumentHandler {
             ZimbraLog.store.error("Error while processing DeleteVolumeRequest", e);
             throw e;
         } catch (JSONException e) {
-            throw ServiceException.FAILURE("Error while deleting server properties", null);
+            throw ServiceException.FAILURE("Error while processing DeleteVolumeRequest", e);
         }
         return new DeleteVolumeResponse();
     }
