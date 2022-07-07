@@ -199,27 +199,22 @@ public class ExternalVolumeInfoHandler {
      * @returns true if "global bucket ID" is valid
      * @throws ServiceException, JSONException
      */
-    public Boolean validateGlbBucketID(String globalS3BucketId) throws ServiceException, JSONException {
+    public Boolean validateGlobalBucketID(String globalS3BucketId) throws ServiceException, JSONException {
         Boolean isValid = false;
-        try {
-            // step 1: Fetch current JSON state object and current JSON state array
-            String globalExternalStoreConfigJson = provisioning.getConfig().getGlobalExternalStoreConfig();
-            JSONObject currentJsonObject = new JSONObject(globalExternalStoreConfigJson);
-            JSONArray currentJsonArray = currentJsonObject.getJSONArray("global/s3BucketConfigurations");
 
-            // step 2: Find "globalBucketUUID" in current JSON array
-            for (int i = 0; i < currentJsonArray.length(); i++) {
+        // step 1: Fetch current JSON state object and current JSON state array
+        String globalExternalStoreConfigJson = provisioning.getConfig().getGlobalExternalStoreConfig();
+        JSONObject currentJsonObject = new JSONObject(globalExternalStoreConfigJson);
+        JSONArray currentJsonArray = currentJsonObject.getJSONArray("global/s3BucketConfigurations");
 
-                // step 3: Mark validation as true if "globalBucketUUID" found
-                if (globalS3BucketId.equalsIgnoreCase(currentJsonArray.getJSONObject(i).getString("globalBucketUUID"))) {
-                    isValid = true;
-                    break;
-                }
+        // step 2: Find "globalBucketUUID" in current JSON array
+        for (int i = 0; i < currentJsonArray.length(); i++) {
+            // step 3: Mark validation as true if "globalBucketUUID" found
+            if (globalS3BucketId.equalsIgnoreCase(currentJsonArray.getJSONObject(i).getString("globalBucketUUID"))) {
+                isValid = true;
+                break;
             }
-        } catch (JSONException e) {
-            throw e;
         }
-
         // step 4: Return validation
         return isValid;
       }
