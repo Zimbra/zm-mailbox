@@ -8791,6 +8791,12 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=250)
     public static final String A_zimbraLogHostname = "zimbraLogHostname";
+    
+    /**
+     * flag for Stats logger to be enabled 
+     */
+    @ZAttr(id=4005)
+    public static final String A_zimbraStatsloggerEnabled = "zimbraStatsloggerEnabled";
 
     /**
      * Flag to control how authtokens are invalidated in multi-server

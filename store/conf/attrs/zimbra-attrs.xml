@@ -1,3 +1,4 @@
+
 <?xml version="1.0" encoding="UTF-8"?>
 
 <attrs group="ZimbraAttrType" groupid="1">
@@ -9928,5 +9929,8 @@ TODO: delete them permanently from here
  <attr id="4004" name="zimbraPrefCalenderScaling" type="enum" value="10,15,30" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="9.1.0">
   <defaultCOSValue>30</defaultCOSValue>
   <desc>Default calendar resolution preference</desc>
+</attr>
+ <attr id="4005" name="zimbraStatsloggerEnabled" type="boolean" cardinality="single" optionalIn="globalConfig">
+  <desc>destination for syslog messages</desc>
 </attr>
 </attrs>
