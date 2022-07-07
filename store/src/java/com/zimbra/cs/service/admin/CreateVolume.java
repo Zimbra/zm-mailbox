@@ -58,20 +58,29 @@ public final class CreateVolume extends AdminDocumentHandler {
         if (volRequest.getStoreType().equals(Volume.StoreType.EXTERNAL)) {
             Provisioning prov = Provisioning.getInstance();
             try {
-                // As id is created once volume is created, update id
+                // as id is created once volume is created, update id
                 volInfoRequest.setId(volRequest.getId());
 
-                // Update JSON state server properties
+                // create external volume info handler
                 ExternalVolumeInfoHandler extVolInfoHandler = new ExternalVolumeInfoHandler(prov);
+
+                // validation
+                String globalS3BucketId = volInfoRequest.getVolumeExternalInfo().getGlobalBucketConfigurationId();
+                if(false == extVolInfoHandler.validateGlbBucketID(globalS3BucketId)) {
+                    ZimbraLog.store.error("Invalid global bucket ID provided %s", globalS3BucketId);
+                    throw ServiceException.FAILURE("Invalid global bucket ID provided", null);
+                }
+
+                // update JSON state server properties after validating it
                 extVolInfoHandler.addServerProperties(volInfoRequest);
 
-                // Add External volume info to response
+                // add External volume info to response
                 volInfoResponse.setVolumeExternalInfo(volInfoRequest.getVolumeExternalInfo());
             } catch (ServiceException e) {
                 ZimbraLog.store.error("Error while processing CreateVolumeRequest", e);
                 throw e;
             } catch  (JSONException e) {
-                throw ServiceException.FAILURE("Error while adding server properties", null);
+                throw ServiceException.FAILURE("Error while processing CreateVolumeRequest", e);
             }
         }
 

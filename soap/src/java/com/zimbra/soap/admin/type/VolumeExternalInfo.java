@@ -42,8 +42,8 @@ public class VolumeExternalInfo {
     /**
      * @zm-api-field-description Specifies global bucket configuration Id
      */
-    @XmlAttribute(name=AdminConstants.A_VOLUME_GLB_BUCKET_CONFIG_ID /* glbBucketConfigId */, required=true)
-    private String glbBucketConfigId = "";
+    @XmlAttribute(name=AdminConstants.A_VOLUME_GLB_BUCKET_CONFIG_ID /* globalBucketConfigId */, required=true)
+    private String globalBucketConfigId = "";
 
     /**
      * @zm-api-field-description Specifies frequent access enabled or not
@@ -80,11 +80,11 @@ public class VolumeExternalInfo {
     }
 
     public void setGlobalBucketConfigurationId(String value) {
-        glbBucketConfigId = value;
+        globalBucketConfigId = value;
     }
 
     public String getGlobalBucketConfigurationId() {
-        return glbBucketConfigId;
+        return globalBucketConfigId;
     }
 
     public void setUseInFrequentAccess(Boolean value) {
