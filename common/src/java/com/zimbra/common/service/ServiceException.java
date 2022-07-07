@@ -456,6 +456,15 @@ public class ServiceException extends Exception {
         return new ServiceException("unsupported", UNSUPPORTED, RECEIVERS_FAULT);
     }
 
+    /**
+     * ServiceException in case wrong config provided by Sender
+     * @param msg
+     * @return
+     */
+    public static ServiceException UNSUPPORTED_CONFIG(String msg) {
+        return new ServiceException("unsupported: " + msg, UNSUPPORTED, SENDERS_FAULT);
+    }
+
     public static ServiceException FORBIDDEN(String str) {
         return new ServiceException("forbidden: " + str, FORBIDDEN, SENDERS_FAULT);
     }
