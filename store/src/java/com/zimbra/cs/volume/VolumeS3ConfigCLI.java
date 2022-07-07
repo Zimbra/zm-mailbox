@@ -53,10 +53,8 @@ public final class VolumeS3ConfigCLI extends SoapCLI {
     private static final String   O_PP = "pp";
     private static final String O_URL = "url";
 
-
     private ZAuthToken auth;
     private String bucketId;
-
     private String bucketName;
     private String accessKey;
     private String secret;
