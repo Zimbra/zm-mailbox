@@ -79,7 +79,7 @@ public final class GetVolume extends AdminDocumentHandler {
                 ZimbraLog.store.error("Error while processing GetVolumesRequest", e);
                 throw e;
             } catch (JSONException e) {
-                throw ServiceException.FAILURE("Error while reading server properties", null);
+                throw ServiceException.FAILURE("Error while processing GetVolumesRequest", e);
             }
         }
 
