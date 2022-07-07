@@ -200,9 +200,7 @@ public class ExternalVolumeInfoHandler {
      * @throws ServiceException, JSONException
      */
     public Boolean validateGlobalBucketID(String globalS3BucketId) throws ServiceException, JSONException {
-        Boolean isValid = false;
-
-        // step 1: Fetch current JSON state object and current JSON state array
+        // step 1: Fetch globalS3Config JSON state object and globalS3Config JSON state array
         String globalExternalStoreConfigJSON = provisioning.getConfig().getGlobalExternalStoreConfig();
         JSONObject globalS3ConfigJSONObject = new JSONObject(globalExternalStoreConfigJSON);
         JSONArray globalS3ConfigJSONArray = globalS3ConfigJSONObject.getJSONArray("global/s3BucketConfigurations");
@@ -211,11 +209,9 @@ public class ExternalVolumeInfoHandler {
         for (int i = 0; i < globalS3ConfigJSONArray.length(); i++) {
             // step 3: Mark validation as true if "globalBucketUUID" found
             if (globalS3BucketId.equalsIgnoreCase(globalS3ConfigJSONArray.getJSONObject(i).getString("globalBucketUUID"))) {
-                isValid = true;
-                break;
+                return true;
             }
         }
-        // step 4: Return validation
-        return isValid;
+        return false;
       }
 }
