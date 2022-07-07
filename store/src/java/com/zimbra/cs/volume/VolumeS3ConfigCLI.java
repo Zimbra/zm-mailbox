@@ -53,10 +53,8 @@ public final class VolumeS3ConfigCLI extends SoapCLI {
     private static final String   O_PP = "pp";
     private static final String O_URL = "url";
 
-
     private ZAuthToken auth;
     private String bucketId;
-
     private String bucketName;
     private String accessKey;
     private String secret;
@@ -134,6 +132,50 @@ public final class VolumeS3ConfigCLI extends SoapCLI {
         }
     }
 
+    /**
+     * This method validate the attributes in del command.
+     *
+     * @param
+     * @throws ParseException
+     */
+    private void validateAddCommand() throws ParseException {
+        validateS3Params();
+        validateOpenIOParams();
+        validateCephParams();
+        validateStoregridParams();
+    }
+
+    private void validateS3Params() throws ParseException {
+        if (Strings.isNullOrEmpty(bucketId)) {
+            throw new ParseException("Bucket ID must be specified while deleting S3BucketConfig");
+        }
+
+        if (Strings.isNullOrEmpty(bucketName)) {
+            throw new ParseException("Bucket Name must be specified while creating S3BucketConfig");
+        }
+
+        if (Strings.isNullOrEmpty(accessKey)) {
+            throw new ParseException("Access Key must be specified while creating S3BucketConfig");
+        }
+
+        if (Strings.isNullOrEmpty(destPath)) {
+            throw new ParseException("Destination Path must be specified while creating S3BucketConfig");
+        }
+
+        if (Strings.isNullOrEmpty(region)) {
+            throw new ParseException("Region must be specified while creating S3BucketConfig");
+        }
+    }
+
+    private void validateOpenIOParams() throws ParseException {
+    }
+
+    private void validateCephParams() throws ParseException {
+    }
+
+    private void validateStoregridParams() throws ParseException {
+    }
+
     public static void main(String[] args) {
         CliUtil.toolSetup();
         SoapTransport.setDefaultUserAgent("zms3config", BuildInfo.VERSION);
@@ -171,7 +213,11 @@ public final class VolumeS3ConfigCLI extends SoapCLI {
     }
 
     private void addS3BucketConfig() {
-
+        CreateS3BucketConfigRequest req = new CreateS3BucketConfigRequest();
+        auth(auth);
+        getTransport().invokeWithoutSession(JaxbUtil.jaxbToElement(req));
+        Element ele = getTransport().invokeWithoutSession(JaxbUtil.jaxbToElement(req));
+        CreateS3BucketConfigResponse resp = JaxbUtil.elementToJaxb(ele);
     }
 
     private void delS3BucketConfig() throws IOException, ServiceException {
