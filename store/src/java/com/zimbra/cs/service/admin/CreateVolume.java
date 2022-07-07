@@ -62,7 +62,7 @@ public final class CreateVolume extends AdminDocumentHandler {
 
                 // validation
                 String globalS3BucketId = volInfoRequest.getVolumeExternalInfo().getGlobalBucketConfigurationId();
-                if(false == extVolInfoHandler.validateGlbBucketID(globalS3BucketId)) {
+                if(false == extVolInfoHandler.validateGlobalBucketID(globalS3BucketId)) {
                     ZimbraLog.store.error("Invalid global bucket ID provided %s", globalS3BucketId);
                     throw ServiceException.FAILURE("Invalid global bucket ID provided", null);
                 }
