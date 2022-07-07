@@ -52,27 +52,19 @@ public final class CreateVolume extends AdminDocumentHandler {
 
         VolumeInfo volInfoRequest = req.getVolume();
         Volume.StoreType enumStoreType = (1 == volInfoRequest.getStoreType()) ? Volume.StoreType.INTERNAL : Volume.StoreType.EXTERNAL;
+        ExternalVolumeInfoHandler extVolInfoHandler = new ExternalVolumeInfoHandler(Provisioning.getInstance());
 
-        // if volume to be created is external, update json
         if (enumStoreType.equals(Volume.StoreType.EXTERNAL)) {
-            Provisioning prov = Provisioning.getInstance();
             try {
-                // create external volume info handler
-                ExternalVolumeInfoHandler extVolInfoHandler = new ExternalVolumeInfoHandler(prov);
-
-                // validation
                 String globalS3BucketId = volInfoRequest.getVolumeExternalInfo().getGlobalBucketConfigurationId();
                 if (false == extVolInfoHandler.validateGlobalBucketID(globalS3BucketId)) {
                     ZimbraLog.store.error("Invalid global bucket ID provided %s", globalS3BucketId);
                     throw ServiceException.FAILURE("Invalid global bucket ID provided", null);
                 }
-
-                // update JSON state server properties after validating it
-                extVolInfoHandler.addServerProperties(volInfoRequest);
             } catch (ServiceException e) {
                 ZimbraLog.store.error("Error while processing CreateVolumeRequest", e);
                 throw e;
-            } catch  (JSONException e) {
+            } catch (JSONException e) {
                 throw ServiceException.FAILURE("Error while processing CreateVolumeRequest", e);
             }
         }
@@ -81,11 +73,18 @@ public final class CreateVolume extends AdminDocumentHandler {
         Volume volRequest = VolumeManager.getInstance().create(toVolume(volInfoRequest, enumStoreType));
         VolumeInfo volInfoResponse = volRequest.toJAXB();
 
-        // update ID with newly created volume ID
-        volInfoRequest.setId(volRequest.getId());
-
-        // add External volume info to response
-        volInfoResponse.setVolumeExternalInfo(volInfoRequest.getVolumeExternalInfo());
+        if (enumStoreType.equals(Volume.StoreType.EXTERNAL)) {
+            try {
+                volInfoRequest.setId(volRequest.getId());
+                volInfoResponse.setVolumeExternalInfo(volInfoRequest.getVolumeExternalInfo());
+                extVolInfoHandler.addServerProperties(volInfoRequest);
+            } catch (ServiceException e) {
+                ZimbraLog.store.error("Error while processing CreateVolumeRequest", e);
+                throw e;
+            } catch  (JSONException e) {
+                throw ServiceException.FAILURE("Error while processing CreateVolumeRequest", e);
+            }
+        }
 
         return new CreateVolumeResponse(volInfoResponse);
     }
