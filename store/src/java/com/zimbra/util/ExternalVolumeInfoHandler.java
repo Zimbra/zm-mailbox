@@ -203,14 +203,14 @@ public class ExternalVolumeInfoHandler {
         Boolean isValid = false;
 
         // step 1: Fetch current JSON state object and current JSON state array
-        String globalExternalStoreConfigJson = provisioning.getConfig().getGlobalExternalStoreConfig();
-        JSONObject currentJsonObject = new JSONObject(globalExternalStoreConfigJson);
-        JSONArray currentJsonArray = currentJsonObject.getJSONArray("global/s3BucketConfigurations");
+        String globalExternalStoreConfigJSON = provisioning.getConfig().getGlobalExternalStoreConfig();
+        JSONObject globalS3ConfigJSONObject = new JSONObject(globalExternalStoreConfigJSON);
+        JSONArray globalS3ConfigJSONArray = globalS3ConfigJSONObject.getJSONArray("global/s3BucketConfigurations");
 
         // step 2: Find "globalBucketUUID" in current JSON array
-        for (int i = 0; i < currentJsonArray.length(); i++) {
+        for (int i = 0; i < globalS3ConfigJSONArray.length(); i++) {
             // step 3: Mark validation as true if "globalBucketUUID" found
-            if (globalS3BucketId.equalsIgnoreCase(currentJsonArray.getJSONObject(i).getString("globalBucketUUID"))) {
+            if (globalS3BucketId.equalsIgnoreCase(globalS3ConfigJSONArray.getJSONObject(i).getString("globalBucketUUID"))) {
                 isValid = true;
                 break;
             }
