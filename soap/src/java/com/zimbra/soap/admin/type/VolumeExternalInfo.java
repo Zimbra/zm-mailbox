@@ -49,7 +49,7 @@ public class VolumeExternalInfo {
      * @zm-api-field-description Specifies frequent access enabled or not
      */
     @XmlAttribute(name=AdminConstants.A_VOLUME_USE_IN_FREQ_ACCESS /* useInFrequentAccess */, required=false)
-    private Boolean useInFrequentAccess = false;
+    private boolean useInFrequentAccess = false;
 
     /**
      * @zm-api-field-description Specifies threshold value of useInFrequentAccess
@@ -61,7 +61,7 @@ public class VolumeExternalInfo {
      * @zm-api-field-description Specifies intelligent tiering enabled or not
      */
     @XmlAttribute(name=AdminConstants.A_VOLUME_USE_INTELLIGENT_TIERING /* useIntelligentTiering */, required=false)
-    private Boolean useIntelligentTiering = false;
+    private boolean useIntelligentTiering = false;
 
     public void setStorageType(String value) {
         storageType = value;
@@ -87,19 +87,19 @@ public class VolumeExternalInfo {
         return globalBucketConfigId;
     }
 
-    public void setUseInFrequentAccess(Boolean value) {
+    public void setUseInFrequentAccess(boolean value) {
         useInFrequentAccess = value;
     }
 
-    public Boolean getUseInFrequentAccess() {
+    public boolean getUseInFrequentAccess() {
         return useInFrequentAccess;
     }
 
-    public void setUseIntelligentTiering(Boolean value) {
+    public void setUseIntelligentTiering(boolean value) {
         useIntelligentTiering = value;
     }
 
-    public Boolean getUseIntelligentTiering() {
+    public boolean getUseIntelligentTiering() {
         return useIntelligentTiering;
     }
 

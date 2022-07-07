@@ -74,7 +74,7 @@ public final class ModifyVolume extends AdminDocumentHandler {
             if (!StringUtils.isEmpty(volInfo.getRootPath())) {
                 builder.setPath(volInfo.getRootPath(), true);
             }
-            if (volInfo.getCompressBlobs() != null) {
+            if (null != volInfo.getCompressBlobs()) {
                 builder.setCompressBlobs(volInfo.getCompressBlobs());
             }
             if (volInfo.getCompressionThreshold() > 0) {

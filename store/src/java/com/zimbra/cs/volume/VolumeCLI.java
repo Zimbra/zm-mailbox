@@ -62,7 +62,7 @@ public final class VolumeCLI extends SoapCLI {
     private static final String O_P = "p";
     private static final String O_C = "c";
     private static final String O_CT = "ct";
-    
+
     /** attributes for external storetype **/
     private static final String O_ST = "st";
     private static final String O_VP = "vp";
@@ -196,7 +196,7 @@ public final class VolumeCLI extends SoapCLI {
         GetAllVolumesResponse all = JaxbUtil.elementToJaxb(getTransport().invokeWithoutSession(
                 JaxbUtil.jaxbToElement(req)));
         for (VolumeInfo vol : all.getVolumes()) {
-            if (vol.isCurrent()) {
+            if (vol.getIsCurrent()) {
                 print(vol);
             }
         }
@@ -225,13 +225,13 @@ public final class VolumeCLI extends SoapCLI {
         System.out.println("        name: " + vol.getName());
         System.out.println("        type: " + toTypeName(vol.getType()));
         System.out.println("        path: " + vol.getRootPath());
-        System.out.print("  compressed: " + vol.isCompressBlobs());
-        if (vol.isCompressBlobs()) {
+        System.out.print("  compressed: " + vol.getCompressBlobs());
+        if (vol.getCompressBlobs()) {
             System.out.println("\t         threshold: " + vol.getCompressionThreshold() + " bytes");
         } else {
             System.out.println();
         }
-        System.out.println("     current: " + vol.isCurrent());
+        System.out.println("     current: " + vol.getIsCurrent());
         System.out.println();
     }
 
@@ -293,10 +293,10 @@ public final class VolumeCLI extends SoapCLI {
                 JaxbUtil.jaxbToElement(req)));
         System.out.println("Volume " + resp.getVolume().getId() + " is created");
     }
-    
+
     /**
      * This method validate the attributes in edit command.
-     * 
+     *
      * @param volumeInfo, volStoreType
      * @throws ParseException
      */
@@ -350,7 +350,7 @@ public final class VolumeCLI extends SoapCLI {
 
     /**
      * This method validate the attributes in add command.
-     * 
+     *
      * @param volumeInfo
      * @throws ParseException
      */

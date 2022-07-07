@@ -59,7 +59,12 @@ public final class DeleteVolume extends AdminDocumentHandler {
         try {
             if (vol.getStoreType().equals(Volume.StoreType.EXTERNAL)) {
                 ExternalVolumeInfoHandler extVolInfoHandler = new ExternalVolumeInfoHandler(Provisioning.getInstance());
-                extVolInfoHandler.deleteServerProperties(req.getId());
+                if (extVolInfoHandler.isVolumePresentInJson(req.getId())) {
+                    extVolInfoHandler.deleteServerProperties(req.getId());
+                } else {
+                    String errMsg = "External volume entry in JSON not found, Volume ID " + req.getId();
+                    throw ServiceException.FAILURE(errMsg, null);
+                }
             }
         } catch (ServiceException e) {
             ZimbraLog.store.error("Error while processing DeleteVolumeRequest", e);

@@ -23,7 +23,6 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public final class VolumeInfo {
@@ -66,7 +65,7 @@ public final class VolumeInfo {
      * @zm-api-field-description Specifies whether blobs in this volume are compressed
      */
     @XmlAttribute(name=AdminConstants.A_VOLUME_COMPRESS_BLOBS /* compressBlobs */, required=false)
-    private ZmBoolean compressBlobs = ZmBoolean.fromBool(false);
+    private boolean compressBlobs = false;
 
     /**
      * @zm-api-field-tag compression-threshold
@@ -104,7 +103,7 @@ public final class VolumeInfo {
      * @zm-api-field-description Set if the volume is current.
      */
     @XmlAttribute(name=AdminConstants.A_VOLUME_IS_CURRENT /* isCurrent */, required=false)
-    private ZmBoolean current;
+    private boolean isCurrent = false;
 
     /**
      * @zm-api-field-description Set to 1 for internal volumes and 2 for external volumes
@@ -151,15 +150,11 @@ public final class VolumeInfo {
     }
 
     public void setCompressBlobs(Boolean value) {
-        compressBlobs = ZmBoolean.fromBool(value);
-    }
-
-    public boolean isCompressBlobs() {
-        return ZmBoolean.toBool(compressBlobs, false);
+        compressBlobs = value;
     }
 
     public Boolean getCompressBlobs() {
-        return ZmBoolean.toBool(compressBlobs);
+        return compressBlobs;
     }
 
     public void setCompressionThreshold(long value) {
@@ -202,12 +197,12 @@ public final class VolumeInfo {
         return fbits;
     }
 
-    public void setCurrent(boolean value) {
-        current = ZmBoolean.fromBool(value);
+    public void setIsCurrent(boolean value) {
+        isCurrent = value;
     }
 
-    public Boolean isCurrent() {
-        return ZmBoolean.toBool(current);
+    public boolean getIsCurrent() {
+        return isCurrent;
     }
 
     public void setVolumeExternalInfo(VolumeExternalInfo value) {
