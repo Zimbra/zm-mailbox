@@ -60,8 +60,8 @@ public final class CreateVolume extends AdminDocumentHandler {
     }
 
     private Volume toVolume(VolumeInfo vol, Volume.StoreType enumStoreType) throws ServiceException {
-        return Volume.builder().setType(vol.getType()).setName(vol.getName()).setPath(vol.getRootPath(), true)
-                .setCompressBlobs(vol.getCompressBlobs()).setCompressionThreshold(vol.getCompressionThreshold())
+        return Volume.builder().setType(vol.getType()).setName(vol.getName()).setPath(vol.getRootPath(), enumStoreType.equals(Volume.StoreType.INTERNAL))
+                .setCompressBlobs(vol.isCompressBlobs()).setCompressionThreshold(vol.getCompressionThreshold())
                 .setStoreType(enumStoreType).build();
     }
 

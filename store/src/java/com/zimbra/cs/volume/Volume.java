@@ -510,7 +510,7 @@ public final class Volume {
         jaxb.setFbits(fileBits);
         jaxb.setCompressBlobs(compressBlobs);
         jaxb.setCompressionThreshold(compressionThreshold);
-        jaxb.setIsCurrent(VolumeManager.getInstance().isCurrent(this));
+        jaxb.setCurrent(VolumeManager.getInstance().isCurrent(this));
         short value = (short)(this.getStoreType().getStoreType());
         jaxb.setStoreType(value);
         return jaxb;

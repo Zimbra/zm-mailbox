@@ -196,7 +196,7 @@ public final class VolumeCLI extends SoapCLI {
         GetAllVolumesResponse all = JaxbUtil.elementToJaxb(getTransport().invokeWithoutSession(
                 JaxbUtil.jaxbToElement(req)));
         for (VolumeInfo vol : all.getVolumes()) {
-            if (vol.getIsCurrent()) {
+            if (vol.isCurrent()) {
                 print(vol);
             }
         }
@@ -225,13 +225,13 @@ public final class VolumeCLI extends SoapCLI {
         System.out.println("        name: " + vol.getName());
         System.out.println("        type: " + toTypeName(vol.getType()));
         System.out.println("        path: " + vol.getRootPath());
-        System.out.print("  compressed: " + vol.getCompressBlobs());
-        if (vol.getCompressBlobs()) {
+        System.out.print("  compressed: " + vol.isCompressBlobs());
+        if (vol.isCompressBlobs()) {
             System.out.println("\t         threshold: " + vol.getCompressionThreshold() + " bytes");
         } else {
             System.out.println();
         }
-        System.out.println("     current: " + vol.getIsCurrent());
+        System.out.println("     current: " + vol.isCurrent());
         System.out.println();
     }
 

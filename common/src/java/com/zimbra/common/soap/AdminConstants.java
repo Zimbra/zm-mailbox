@@ -1294,7 +1294,7 @@ public final class AdminConstants {
     public static final String A_VOLUME_FBITS = "fbits";
     public static final String A_VOLUME_COMPRESS_BLOBS = "compressBlobs";
     public static final String A_VOLUME_COMPRESSION_THRESHOLD = "compressionThreshold";
-    public static final String A_VOLUME_IS_CURRENT = "isCurrent";
+    public static final String A_VOLUME_CURRENT = "current";
     public static final String A_VOLUME_STORE_TYPE = "storeType";
     public static final String A_VOLUME_STORAGE_TYPE = "storageType";
     public static final String A_VOLUME_VOLUME_PREFIX = "volumePrefix";

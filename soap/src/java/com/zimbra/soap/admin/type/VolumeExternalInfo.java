@@ -21,7 +21,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
-import com.zimbra.soap.type.ZmBoolean;
 import com.zimbra.common.soap.AdminConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
@@ -91,7 +90,7 @@ public class VolumeExternalInfo {
         useInFrequentAccess = value;
     }
 
-    public boolean getUseInFrequentAccess() {
+    public boolean isUseInFrequentAccess() {
         return useInFrequentAccess;
     }
 
@@ -99,7 +98,7 @@ public class VolumeExternalInfo {
         useIntelligentTiering = value;
     }
 
-    public boolean getUseIntelligentTiering() {
+    public boolean isUseIntelligentTiering() {
         return useIntelligentTiering;
     }
 

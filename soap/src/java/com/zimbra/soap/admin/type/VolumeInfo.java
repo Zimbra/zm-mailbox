@@ -102,8 +102,8 @@ public final class VolumeInfo {
     /**
      * @zm-api-field-description Set if the volume is current.
      */
-    @XmlAttribute(name=AdminConstants.A_VOLUME_IS_CURRENT /* isCurrent */, required=false)
-    private boolean isCurrent = false;
+    @XmlAttribute(name=AdminConstants.A_VOLUME_CURRENT /* current */, required=false)
+    private boolean current = false;
 
     /**
      * @zm-api-field-description Set to 1 for internal volumes and 2 for external volumes
@@ -153,7 +153,7 @@ public final class VolumeInfo {
         compressBlobs = value;
     }
 
-    public Boolean getCompressBlobs() {
+    public boolean isCompressBlobs() {
         return compressBlobs;
     }
 
@@ -197,12 +197,12 @@ public final class VolumeInfo {
         return fbits;
     }
 
-    public void setIsCurrent(boolean value) {
-        isCurrent = value;
+    public void setCurrent(boolean value) {
+        current = value;
     }
 
-    public boolean getIsCurrent() {
-        return isCurrent;
+    public boolean isCurrent() {
+        return current;
     }
 
     public void setVolumeExternalInfo(VolumeExternalInfo value) {

@@ -54,8 +54,14 @@ public class VolumeConfigUtil {
 
         // validate store type
         Short storeType = volInfoRequest.getStoreType();
-        if (1 != storeType.intValue() && 2 != storeType.intValue()) {
+        if (Volume.StoreType.INTERNAL.getStoreType() != storeType.intValue() && Volume.StoreType.EXTERNAL.getStoreType() != storeType.intValue()) {
             throw VolumeServiceException.INVALID_REQUEST("Volume Store Type shall be either 1 for internal volume or 2 for external volume", VolumeServiceException.BAD_VOLUME_STORE_TYPE);
+        }
+
+        // validate/set root path if store type is external
+        if (Volume.StoreType.EXTERNAL.getStoreType() == storeType.intValue()) {
+            String extRootPath = "/" + volInfoRequest.getVolumeExternalInfo().getStorageType() + "-" + volInfoRequest.getName() + "-" + volInfoRequest.getVolumeExternalInfo().getGlobalBucketConfigurationId();
+            volInfoRequest.setRootPath(extRootPath);
         }
 
         // validate root path
@@ -75,9 +81,8 @@ public class VolumeConfigUtil {
         }
 
         // validate compress blobs
-        if (false != volInfoRequest.getCompressBlobs() &&
-            true != volInfoRequest.getCompressBlobs() &&
-            null != volInfoRequest.getCompressBlobs()) {
+        if (false != volInfoRequest.isCompressBlobs() &&
+            true != volInfoRequest.isCompressBlobs()) {
             throw VolumeServiceException.INVALID_REQUEST("Volume Compress Blobs can be TRUE, FALSE or OPTIONAL(don't provide)", VolumeServiceException.BAD_VOLUME_COMPRESS_BLOBS);
         }
 
@@ -87,21 +92,21 @@ public class VolumeConfigUtil {
         }
 
         // validate current
-        if (false != volInfoRequest.getIsCurrent() &&
-            true != volInfoRequest.getIsCurrent()) {
+        if (false != volInfoRequest.isCurrent() &&
+            true != volInfoRequest.isCurrent()) {
             throw VolumeServiceException.INVALID_REQUEST("Volume Current can be TRUE, FALSE or OPTIONAL(don't provide)", VolumeServiceException.BAD_VOLUME_CURRENT);
         }
 
         if (enumStoreType.equals(Volume.StoreType.EXTERNAL)) {
             // validate use in frequent access
-            if (false != volInfoRequest.getVolumeExternalInfo().getUseInFrequentAccess() &&
-                true != volInfoRequest.getVolumeExternalInfo().getUseInFrequentAccess()) {
+            if (false != volInfoRequest.getVolumeExternalInfo().isUseInFrequentAccess() &&
+                true != volInfoRequest.getVolumeExternalInfo().isUseInFrequentAccess()) {
                 throw VolumeServiceException.INVALID_REQUEST("Volume UseInFrequentAccess can be TRUE, FALSE or OPTIONAL(don't provide)", VolumeServiceException.BAD_VOLUME_USE_IN_FREQUENT_ACCESS);
             }
 
             // validate use intelligent tiering
-            if (false != volInfoRequest.getVolumeExternalInfo().getUseIntelligentTiering() &&
-                true != volInfoRequest.getVolumeExternalInfo().getUseIntelligentTiering()) {
+            if (false != volInfoRequest.getVolumeExternalInfo().isUseIntelligentTiering() &&
+                true != volInfoRequest.getVolumeExternalInfo().isUseIntelligentTiering()) {
                 throw VolumeServiceException.INVALID_REQUEST("Volume UseIntelligentTiering can be TRUE, FALSE or OPTIONAL(don't provide)", VolumeServiceException.BAD_VOLUME_USE_INTELLIGENT_TIERING);
             }
 
@@ -286,12 +291,10 @@ public class VolumeConfigUtil {
             if (!StringUtil.isNullOrEmpty(volInfo.getRootPath())) {
                 builder.setPath(volInfo.getRootPath(), true);
             }
-            if (null != volInfo.getCompressBlobs()) {
-                builder.setCompressBlobs(volInfo.getCompressBlobs());
-            }
             if (volInfo.getCompressionThreshold() > 0) {
                 builder.setCompressionThreshold(volInfo.getCompressionThreshold());
             }
+            builder.setCompressBlobs(volInfo.isCompressBlobs());
         }
         // store type == 2, allow modification of only volume name
         else if (vol.getStoreType().equals(Volume.StoreType.EXTERNAL)) {
