@@ -20,23 +20,17 @@ package com.zimbra.cs.service.admin;
 import java.util.List;
 import java.util.Map;
 
-import org.json.JSONException;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.service.util.VolumeConfigUtil;
 import com.zimbra.cs.store.StoreManager;
-import com.zimbra.cs.volume.Volume;
-import com.zimbra.cs.volume.VolumeManager;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.ModifyVolumeRequest;
 import com.zimbra.soap.admin.message.ModifyVolumeResponse;
-import com.zimbra.soap.admin.type.VolumeInfo;
-
-import org.apache.commons.lang.StringUtils;
 
 public final class ModifyVolume extends AdminDocumentHandler {
 
@@ -50,44 +44,7 @@ public final class ModifyVolume extends AdminDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(ctx);
         checkRight(zsc, ctx, Provisioning.getInstance().getLocalServer(), Admin.R_manageVolume);
 
-        VolumeManager mgr = VolumeManager.getInstance();
-        VolumeInfo volInfo = req.getVolumeInfo();
-        Volume vol = mgr.getVolume(volInfo.getId());
-        Volume.Builder builder = Volume.builder(vol);
-
-        if (volInfo == null) {
-            throw ServiceException.INVALID_REQUEST("must specify a volume Element", null);
-        }
-        StoreManager storeManager = StoreManager.getInstance();
-        if (storeManager.supports(StoreManager.StoreFeature.CUSTOM_STORE_API, String.valueOf(volInfo.getId()))) {
-            throw ServiceException.INVALID_REQUEST("Operation unsupported, use zxsuite to edit this volume", null);
-        }
-
-        // store type == 1, allow modification of all parameters
-        if (vol.getStoreType().equals(Volume.StoreType.INTERNAL)) {
-            if (volInfo.getType() > 0) {
-                builder.setType(volInfo.getType());
-            }
-            if (!StringUtils.isEmpty(volInfo.getName())) {
-                builder.setName(volInfo.getName());
-            }
-            if (!StringUtils.isEmpty(volInfo.getRootPath())) {
-                builder.setPath(volInfo.getRootPath(), true);
-            }
-            if (null != volInfo.getCompressBlobs()) {
-                builder.setCompressBlobs(volInfo.getCompressBlobs());
-            }
-            if (volInfo.getCompressionThreshold() > 0) {
-                builder.setCompressionThreshold(volInfo.getCompressionThreshold());
-            }
-        }
-        // store type == 2, allow modification of only volume name
-        else if (vol.getStoreType().equals(Volume.StoreType.EXTERNAL)) {
-            if (volInfo.getName() != null) {
-                builder.setName(volInfo.getName());
-            }
-        }
-        mgr.update(builder.build());
+        VolumeConfigUtil.parseModifyVolumeRequest(req);
         return new ModifyVolumeResponse();
     }
 

@@ -18,14 +18,24 @@
 package com.zimbra.cs.service.util;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.volume.Volume;
+import com.zimbra.cs.volume.VolumeManager;
 import com.zimbra.cs.volume.VolumeServiceException;
 import com.zimbra.soap.admin.message.CreateVolumeRequest;
+import com.zimbra.soap.admin.message.DeleteVolumeRequest;
+import com.zimbra.soap.admin.message.ModifyVolumeRequest;
+import com.zimbra.soap.admin.message.GetAllVolumesRequest;
+import com.zimbra.soap.admin.message.GetAllVolumesResponse;
+import com.zimbra.soap.admin.message.GetVolumeRequest;
+import com.zimbra.soap.admin.message.GetVolumeResponse;
+import com.zimbra.soap.admin.type.VolumeExternalInfo;
 import com.zimbra.soap.admin.type.VolumeInfo;
 import com.zimbra.util.ExternalVolumeInfoHandler;
 
@@ -138,5 +148,157 @@ public class VolumeConfigUtil {
                 throw ServiceException.FAILURE("Error while processing postCreateVolumeActions", e);
             }
         }
+    }
+
+    /**
+     * Perform required actions for processing GetAllVolumesRequest
+     *
+     * @param GetAllVolumesRequest, GetAllVolumesResponse
+     * @return
+     * @throws ServiceException
+     */
+    public static void parseGetAllVolumesRequest(GetAllVolumesRequest req, GetAllVolumesResponse resp) throws ServiceException {
+        for (Volume vol : VolumeManager.getInstance().getAllVolumes()) {
+            VolumeInfo volInfo = vol.toJAXB();
+
+            if (vol.getStoreType().equals(Volume.StoreType.EXTERNAL)) {
+                VolumeExternalInfo volExtInfo = new VolumeExternalInfo();
+                ExternalVolumeInfoHandler extVolInfoHandler = new ExternalVolumeInfoHandler(Provisioning.getInstance());
+
+                try {
+                    JSONObject properties = extVolInfoHandler.readServerProperties(volInfo.getId());
+                    String volumePrefix = properties.getString(AdminConstants.A_VOLUME_VOLUME_PREFIX);
+                    String globalBucketConfigId = properties.getString(AdminConstants.A_VOLUME_GLB_BUCKET_CONFIG_ID);
+                    String storageType = properties.getString(AdminConstants.A_VOLUME_STORAGE_TYPE);
+                    Boolean useInFrequentAccess = Boolean.valueOf(properties.getString(AdminConstants.A_VOLUME_USE_IN_FREQ_ACCESS));
+                    Boolean useIntelligentTiering = Boolean.valueOf(properties.getString(AdminConstants.A_VOLUME_USE_INTELLIGENT_TIERING));
+                    int useInFrequentAccessThreshold = Integer.parseInt(properties.getString(AdminConstants.A_VOLUME_USE_IN_FREQ_ACCESS_THRESHOLD));
+
+                    volExtInfo.setVolumePrefix(volumePrefix);
+                    volExtInfo.setGlobalBucketConfigurationId(globalBucketConfigId);
+                    volExtInfo.setStorageType(storageType);
+                    volExtInfo.setUseInFrequentAccess(useInFrequentAccess);
+                    volExtInfo.setUseIntelligentTiering(useIntelligentTiering);
+                    volExtInfo.setUseInFrequentAccessThreshold(useInFrequentAccessThreshold);
+                    volInfo.setVolumeExternalInfo(volExtInfo);
+                } catch (JSONException e) {
+                    throw ServiceException.FAILURE("Error while processing GetAllVolumesRequest", e);
+                }
+            }
+            resp.addVolume(volInfo);
+        }
+    }
+
+    /**
+     * Perform required actions for processing parseGetVolumeRequest
+     *
+     * @param GetVolumeResponse, GetVolumeResponse, Volume, VolumeInfo
+     * @return
+     * @throws ServiceException
+     */
+    public static void parseGetVolumeRequest(GetVolumeRequest req, GetVolumeResponse resp,
+                                             Volume vol, VolumeInfo volInfo) throws ServiceException {
+        if (vol.getStoreType().equals(Volume.StoreType.EXTERNAL)) {
+            VolumeExternalInfo volExtInfo = new VolumeExternalInfo();
+            ExternalVolumeInfoHandler extVolInfoHandler = new ExternalVolumeInfoHandler(Provisioning.getInstance());
+            try {
+                JSONObject properties = extVolInfoHandler.readServerProperties(volInfo.getId());
+                String volumePrefix = properties.getString(AdminConstants.A_VOLUME_VOLUME_PREFIX);
+                String globalBucketConfigId = properties.getString(AdminConstants.A_VOLUME_GLB_BUCKET_CONFIG_ID);
+                String storageType = properties.getString(AdminConstants.A_VOLUME_STORAGE_TYPE);
+                Boolean useInFrequentAccess = Boolean.valueOf(properties.getString(AdminConstants.A_VOLUME_USE_IN_FREQ_ACCESS));
+                Boolean useIntelligentTiering = Boolean.valueOf(properties.getString(AdminConstants.A_VOLUME_USE_INTELLIGENT_TIERING));
+                int useInFrequentAccessThreshold = Integer.parseInt(properties.getString(AdminConstants.A_VOLUME_USE_IN_FREQ_ACCESS_THRESHOLD));
+
+                volExtInfo.setVolumePrefix(volumePrefix);
+                volExtInfo.setGlobalBucketConfigurationId(globalBucketConfigId);
+                volExtInfo.setStorageType(storageType);
+                volExtInfo.setUseInFrequentAccess(useInFrequentAccess);
+                volExtInfo.setUseIntelligentTiering(useIntelligentTiering);
+                volExtInfo.setUseInFrequentAccessThreshold(useInFrequentAccessThreshold);
+                volInfo.setVolumeExternalInfo(volExtInfo);
+            } catch (JSONException e) {
+                throw ServiceException.FAILURE("Error while processing GetVolumesRequest", e);
+            }
+        }
+    }
+
+    /**
+     * Perform required actions for processing parseDeleteVolumeRequest
+     *
+     * @param DeleteVolumeRequest
+     * @return
+     * @throws ServiceException
+     */
+    public static void parseDeleteVolumeRequest(DeleteVolumeRequest req) throws ServiceException {
+        VolumeManager mgr = VolumeManager.getInstance();
+        Volume vol = mgr.getVolume(req.getId()); // make sure the volume exists before doing anything heavyweight...
+        StoreManager storeManager = StoreManager.getInstance();
+        if (storeManager.supports(StoreManager.StoreFeature.CUSTOM_STORE_API, String.valueOf(req.getId()))) {
+            throw VolumeServiceException.INVALID_REQUEST("Operation unsupported, use zxsuite to edit this volume", VolumeServiceException.INVALID_REQUEST);
+        }
+        mgr.delete(req.getId());
+        try {
+            if (vol.getStoreType().equals(Volume.StoreType.EXTERNAL)) {
+                ExternalVolumeInfoHandler extVolInfoHandler = new ExternalVolumeInfoHandler(Provisioning.getInstance());
+                if (extVolInfoHandler.isVolumePresentInJson(req.getId())) {
+                    extVolInfoHandler.deleteServerProperties(req.getId());
+                } else {
+                    String errMsg = "External volume entry in JSON not found, Volume ID " + req.getId();
+                    throw ServiceException.FAILURE(errMsg, null);
+                }
+            }
+        } catch (JSONException e) {
+            throw ServiceException.FAILURE("Error while processing DeleteVolumeRequest", e);
+        }
+    }
+
+    /**
+     * Perform required actions for processing parseModifyVolumeRequest
+     *
+     * @param ModifyVolumeRequest
+     * @return
+     * @throws ServiceException
+     */
+    public static void parseModifyVolumeRequest(ModifyVolumeRequest req) throws ServiceException {
+        VolumeManager mgr = VolumeManager.getInstance();
+        VolumeInfo volInfo = req.getVolumeInfo();
+        Volume vol = mgr.getVolume(volInfo.getId());
+        Volume.Builder builder = Volume.builder(vol);
+
+        if (volInfo == null) {
+            throw VolumeServiceException.INVALID_REQUEST("Must specify a volume Element", VolumeServiceException.NO_SUCH_VOLUME);
+        }
+
+        StoreManager storeManager = StoreManager.getInstance();
+        if (storeManager.supports(StoreManager.StoreFeature.CUSTOM_STORE_API, String.valueOf(volInfo.getId()))) {
+            throw VolumeServiceException.INVALID_REQUEST("Operation unsupported, use zxsuite to edit this volume", VolumeServiceException.INVALID_REQUEST);
+        }
+
+        // store type == 1, allow modification of all parameters
+        if (vol.getStoreType().equals(Volume.StoreType.INTERNAL)) {
+            if (volInfo.getType() > 0) {
+                builder.setType(volInfo.getType());
+            }
+            if (!StringUtil.isNullOrEmpty(volInfo.getName())) {
+                builder.setName(volInfo.getName());
+            }
+            if (!StringUtil.isNullOrEmpty(volInfo.getRootPath())) {
+                builder.setPath(volInfo.getRootPath(), true);
+            }
+            if (null != volInfo.getCompressBlobs()) {
+                builder.setCompressBlobs(volInfo.getCompressBlobs());
+            }
+            if (volInfo.getCompressionThreshold() > 0) {
+                builder.setCompressionThreshold(volInfo.getCompressionThreshold());
+            }
+        }
+        // store type == 2, allow modification of only volume name
+        else if (vol.getStoreType().equals(Volume.StoreType.EXTERNAL)) {
+            if (volInfo.getName() != null) {
+                builder.setName(volInfo.getName());
+            }
+        }
+        mgr.update(builder.build());
     }
 }
