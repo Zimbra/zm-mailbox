@@ -97,4 +97,7 @@ public final class HsmConstants {
     public static final String A_SM_INVALID_HOURS_FORMAT = "Invalid hour defined.";
     public static final String A_SM_INVALID_MINUTES = "Minutes are not allowed.";
     public static final int A_EXIT_STATUS = 0;
+    public static final String A_SM_SCHEDULE_POLICY_ENABLED_INVALID = "Only boolean value allowed in smSchedulePolicyEnabled";
+    public static final String A_TRUE = "true";
+    public static final String A_FALSE = "false";
 }
