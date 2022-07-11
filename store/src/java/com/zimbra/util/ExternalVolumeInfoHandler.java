@@ -226,14 +226,14 @@ public class ExternalVolumeInfoHandler {
      * @throws ServiceException, JSONException
      */
     public Boolean isVolumePresentInJson(int volumeId) throws ServiceException, JSONException {
-      String serverS3ConfigJSON = provisioning.getLocalServer().getServerExternalStoreConfig();
-      JSONObject serverS3ConfigJSONObject = new JSONObject(serverS3ConfigJSON);
-      JSONArray serverS3ConfigJSONArray = serverS3ConfigJSONObject.getJSONArray("server/stores");
-      for (int i = 0; i < serverS3ConfigJSONArray.length(); i++) {
-          if (volumeId == serverS3ConfigJSONArray.getJSONObject(i).getInt(AdminConstants.A_VOLUME_ID)) {
-              return true;
-          }
-      }
-      return false;
+        String globalExternalStoreConfig = provisioning.getLocalServer().getServerExternalStoreConfig();
+        JSONObject globalS3Configs = new JSONObject(globalExternalStoreConfig);
+        JSONArray globalS3ConfigList = globalS3Configs.getJSONArray("server/stores");
+        for (int i = 0; i < globalS3ConfigList.length(); i++) {
+            if (volumeId == globalS3ConfigList.getJSONObject(i).getInt(AdminConstants.A_VOLUME_ID)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
