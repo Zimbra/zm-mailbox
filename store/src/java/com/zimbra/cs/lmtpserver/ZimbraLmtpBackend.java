@@ -345,24 +345,26 @@ public class ZimbraLmtpBackend implements LmtpBackend {
         // initializing input stream and blob for External Email Warning (EEW)
         InputStream inEEW = null;
         Blob blobEEW = null;
-        // duplicating input stream for EEW
-        try {
-            for (int i = 0; i < CHARSET_NAMES.length; i++) {
-                final String charsetName = CHARSET_NAMES[i];
-                // copy input stream and evaluate content encoding
-                final byte[] ba = IOUtils.toByteArray(in);
-                IOUtils.closeQuietly(in);
-                in = new ByteArrayInputStream(ba);
-                final String content = new String(ba, charsetName);
-                // if current encoding is suitable, use it; otherwise, continue or use default
-                if (!content.contains(GARBLED_CHARACTER) || i == CHARSET_NAMES.length - 1) {
-                    final String contentEEW = ExternalEmailWarning.getInstance().getUpdatedContent(content);
-                    inEEW = IOUtils.toInputStream(contentEEW, charsetName);
-                    break;
+        if (ExternalEmailWarning.getInstance().isEnabled()) {
+            // duplicating input stream for EEW
+            try {
+                for (int i = 0; i < CHARSET_NAMES.length; i++) {
+                    final String charsetName = CHARSET_NAMES[i];
+                    // copy input stream and evaluate content encoding
+                    final byte[] ba = IOUtils.toByteArray(in);
+                    IOUtils.closeQuietly(in);
+                    in = new ByteArrayInputStream(ba);
+                    final String content = new String(ba, charsetName);
+                    // if current encoding is suitable, use it; otherwise, continue or use default
+                    if (!content.contains(GARBLED_CHARACTER) || i == CHARSET_NAMES.length - 1) {
+                        final String contentEEW = ExternalEmailWarning.getInstance().getUpdatedContent(content);
+                        inEEW = IOUtils.toInputStream(contentEEW, charsetName);
+                        break;
+                    }
                 }
+            } catch (Exception e) {
+                ZimbraLog.lmtp.warn("failed to duplicate input stream for EEW", e);
             }
-        } catch (Exception e) {
-            ZimbraLog.lmtp.warn("failed to duplicate input stream for EEW", e);
         }
         try {
             int bufLen = Provisioning.getInstance().getLocalServer().getMailDiskStreamingThreshold();
