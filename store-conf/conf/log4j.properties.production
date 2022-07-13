@@ -207,7 +207,7 @@ logger.memcached.name = net.spy.memcached
 logger.memcached.level = WARN
 
 logger.slogger.name = zimbra.slogger
-logger.slogger.level = off
+logger.slogger.level = error
 logger.slogger.additivity = false
 logger.slogger.appenderRef.SLOGGER.ref = sloggerAppender
 
