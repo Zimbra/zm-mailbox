@@ -1167,7 +1167,7 @@ public final class AdminConstants {
     public static final String E_MAILBOX = "mbox";
     public static final String E_NI = "ni";
     public static final String E_NUM_OF_PAGES = "numpages";
-    public static final String E_VOLUME = "volumeInfo";
+    public static final String E_VOLUME = "volume";
     public static final String E_VOLUME_EXT = "volumeExternalInfo";
     public static final String E_PROGRESS = "progress";
     public static final String E_SOAP_URL = "soapURL";
