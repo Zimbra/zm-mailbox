@@ -53,5 +53,5 @@ public class CreateVolumeRequest {
         this.volumeInfo = volumeInfo;
     }
 
-    public VolumeInfo getVolume() { return volumeInfo; }
+    public VolumeInfo getVolumeInfo() { return volumeInfo; }
 }
