@@ -28,15 +28,14 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.service.util.VolumeConfigUtil;
 import com.zimbra.cs.volume.Volume;
 import com.zimbra.cs.volume.VolumeManager;
-import com.zimbra.cs.volume.VolumeServiceException;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.admin.type.VolumeInfo;
 import com.zimbra.soap.admin.message.CreateVolumeRequest;
 import com.zimbra.soap.admin.message.CreateVolumeResponse;
-import com.zimbra.soap.admin.type.VolumeInfo;
-import com.zimbra.util.ExternalVolumeInfoHandler;
 
 public final class CreateVolume extends AdminDocumentHandler {
 
@@ -46,41 +45,22 @@ public final class CreateVolume extends AdminDocumentHandler {
         return zsc.jaxbToElement(handle((CreateVolumeRequest) zsc.elementToJaxb(req), ctx));
     }
 
-    private CreateVolumeResponse handle(CreateVolumeRequest req, Map<String, Object> ctx) throws ServiceException {
+    private CreateVolumeResponse handle(CreateVolumeRequest request, Map<String, Object> ctx) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(ctx);
         checkRight(zsc, ctx, Provisioning.getInstance().getLocalServer(), Admin.R_manageVolume);
 
-        VolumeInfo volInfoRequest = req.getVolume();
-        Volume volRequest = VolumeManager.getInstance().create(toVolume(volInfoRequest));
+        VolumeInfo volInfoRequest = request.getVolumeInfo();
+        Volume.StoreType enumStoreType = (1 == volInfoRequest.getStoreType()) ? Volume.StoreType.INTERNAL : Volume.StoreType.EXTERNAL;
+        VolumeConfigUtil.validateCreateVolumeRequest(request, volInfoRequest, enumStoreType);
+
+        Volume volRequest = VolumeManager.getInstance().create(toVolume(volInfoRequest, enumStoreType));
         VolumeInfo volInfoResponse = volRequest.toJAXB();
-
-        // if newly created volume is external update json
-        if (volRequest.getStoreType().equals(Volume.StoreType.EXTERNAL)) {
-            Provisioning prov = Provisioning.getInstance();
-            try {
-                // As id is created once volume is created, update id
-                volInfoRequest.setId(volRequest.getId());
-
-                // Update JSON state server properties
-                ExternalVolumeInfoHandler extVolInfoHandler = new ExternalVolumeInfoHandler(prov);
-                extVolInfoHandler.addServerProperties(volInfoRequest);
-
-                // Add External volume info to response
-                volInfoResponse.setVolumeExternalInfo(volInfoRequest.getVolumeExternalInfo());
-            } catch (ServiceException e) {
-                ZimbraLog.store.error("Error while processing CreateVolumeRequest", e);
-                throw e;
-            } catch  (JSONException e) {
-                throw ServiceException.FAILURE("Error while adding server properties", null);
-            }
-        }
-
+        VolumeConfigUtil.postCreateVolumeActions(request, volRequest, volInfoRequest, volInfoResponse, enumStoreType);
         return new CreateVolumeResponse(volInfoResponse);
     }
 
-    private Volume toVolume(VolumeInfo vol) throws ServiceException {
-        Volume.StoreType enumStoreType = (1 == vol.getStoreType()) ? Volume.StoreType.INTERNAL : Volume.StoreType.EXTERNAL;
-        return Volume.builder().setType(vol.getType()).setName(vol.getName()).setPath(vol.getRootPath(), true)
+    private Volume toVolume(VolumeInfo vol, Volume.StoreType enumStoreType) throws ServiceException {
+        return Volume.builder().setType(vol.getType()).setName(vol.getName()).setPath(vol.getRootPath(), enumStoreType.equals(Volume.StoreType.INTERNAL))
                 .setCompressBlobs(vol.isCompressBlobs()).setCompressionThreshold(vol.getCompressionThreshold())
                 .setStoreType(enumStoreType).build();
     }

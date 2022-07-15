@@ -20,22 +20,16 @@ package com.zimbra.cs.service.admin;
 import java.util.List;
 import java.util.Map;
 
-import org.json.JSONException;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
-import com.zimbra.cs.store.StoreManager;
-import com.zimbra.cs.volume.Volume;
-import com.zimbra.cs.volume.VolumeManager;
+import com.zimbra.cs.service.util.VolumeConfigUtil;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.DeleteVolumeRequest;
 import com.zimbra.soap.admin.message.DeleteVolumeResponse;
-import com.zimbra.util.ExternalVolumeInfoHandler;
 
 public final class DeleteVolume extends AdminDocumentHandler {
 
@@ -49,24 +43,7 @@ public final class DeleteVolume extends AdminDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(ctx);
         checkRight(zsc, ctx, Provisioning.getInstance().getLocalServer(), Admin.R_manageVolume);
 
-        VolumeManager mgr = VolumeManager.getInstance();
-        Volume vol = mgr.getVolume(req.getId()); // make sure the volume exists before doing anything heavyweight...
-        StoreManager storeManager = StoreManager.getInstance();
-        if (storeManager.supports(StoreManager.StoreFeature.CUSTOM_STORE_API, String.valueOf(req.getId()))) {
-          throw ServiceException.INVALID_REQUEST("Operation unsupported, use zxsuite to delete this volume", null);
-        }
-        mgr.delete(req.getId());
-        try {
-            if (vol.getStoreType().equals(Volume.StoreType.EXTERNAL)) {
-                ExternalVolumeInfoHandler extVolInfoHandler = new ExternalVolumeInfoHandler(Provisioning.getInstance());
-                extVolInfoHandler.deleteServerProperties(req.getId());
-            }
-        } catch (ServiceException e) {
-            ZimbraLog.store.error("Error while processing DeleteVolumeRequest", e);
-            throw e;
-        } catch (JSONException e) {
-            throw ServiceException.FAILURE("Error while deleting server properties", null);
-        }
+        VolumeConfigUtil.parseDeleteVolumeRequest(req);
         return new DeleteVolumeResponse();
     }
 

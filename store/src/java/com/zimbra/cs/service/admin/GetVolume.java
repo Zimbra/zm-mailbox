@@ -21,16 +21,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.service.util.VolumeConfigUtil;
 import com.zimbra.cs.volume.Volume;
 import com.zimbra.cs.volume.VolumeManager;
 import com.zimbra.soap.JaxbUtil;
@@ -38,8 +34,6 @@ import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.GetVolumeRequest;
 import com.zimbra.soap.admin.message.GetVolumeResponse;
 import com.zimbra.soap.admin.type.VolumeInfo;
-import com.zimbra.soap.admin.type.VolumeExternalInfo;
-import com.zimbra.util.ExternalVolumeInfoHandler;
 
 public final class GetVolume extends AdminDocumentHandler {
 
@@ -52,38 +46,10 @@ public final class GetVolume extends AdminDocumentHandler {
     private GetVolumeResponse handle(GetVolumeRequest req, Map<String, Object> ctx) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(ctx);
         checkRight(zsc, ctx, Provisioning.getInstance().getLocalServer(), Admin.R_manageVolume);
-
         Volume vol = VolumeManager.getInstance().getVolume(req.getId());
         VolumeInfo volInfo = vol.toJAXB();
-
-        if (vol.getStoreType().equals(Volume.StoreType.EXTERNAL)) {
-            VolumeExternalInfo volExtInfo = new VolumeExternalInfo();
-            ExternalVolumeInfoHandler extVolInfoHandler = new ExternalVolumeInfoHandler(Provisioning.getInstance());
-            try {
-                JSONObject properties = extVolInfoHandler.readServerProperties(volInfo.getId());
-                String volumePrefix = properties.getString(AdminConstants.A_VOLUME_VOLUME_PREFIX);
-                String globalBucketConfigId = properties.getString(AdminConstants.A_VOLUME_GLB_BUCKET_CONFIG_ID);
-                String storageType = properties.getString(AdminConstants.A_VOLUME_STORAGE_TYPE);
-                Boolean useInFrequentAccess = Boolean.valueOf(properties.getString(AdminConstants.A_VOLUME_USE_IN_FREQ_ACCESS));
-                Boolean useIntelligentTiering = Boolean.valueOf(properties.getString(AdminConstants.A_VOLUME_USE_INTELLIGENT_TIERING));
-                int useInFrequentAccessThreshold = Integer.parseInt(properties.getString(AdminConstants.A_VOLUME_USE_IN_FREQ_ACCESS_THRESHOLD));
-
-                volExtInfo.setVolumePrefix(volumePrefix);
-                volExtInfo.setGlobalBucketConfigurationId(globalBucketConfigId);
-                volExtInfo.setStorageType(storageType);
-                volExtInfo.setUseInFrequentAccess(useInFrequentAccess);
-                volExtInfo.setUseIntelligentTiering(useIntelligentTiering);
-                volExtInfo.setUseInFrequentAccessThreshold(useInFrequentAccessThreshold);
-                volInfo.setVolumeExternalInfo(volExtInfo);
-            } catch (ServiceException e) {
-                ZimbraLog.store.error("Error while processing GetVolumesRequest", e);
-                throw e;
-            } catch (JSONException e) {
-                throw ServiceException.FAILURE("Error while reading server properties", null);
-            }
-        }
-
         GetVolumeResponse resp = new GetVolumeResponse(volInfo);
+        VolumeConfigUtil.parseGetVolumeRequest(req, resp, vol, volInfo);
         return resp;
     }
 

@@ -120,8 +120,8 @@ public class ExternalVolumeInfoHandler {
             volExtInfoObj.put(AdminConstants.A_VOLUME_ID, String.valueOf(volInfo.getId()));
             volExtInfoObj.put(AdminConstants.A_VOLUME_STORAGE_TYPE, volExtInfo.getStorageType());
             volExtInfoObj.put(AdminConstants.A_VOLUME_VOLUME_PREFIX, volExtInfo.getVolumePrefix());
-            volExtInfoObj.put(AdminConstants.A_VOLUME_USE_IN_FREQ_ACCESS, String.valueOf(volExtInfo.getUseInFrequentAccess()));
-            volExtInfoObj.put(AdminConstants.A_VOLUME_USE_INTELLIGENT_TIERING, String.valueOf(volExtInfo.getUseIntelligentTiering()));
+            volExtInfoObj.put(AdminConstants.A_VOLUME_USE_IN_FREQ_ACCESS, String.valueOf(volExtInfo.isUseInFrequentAccess()));
+            volExtInfoObj.put(AdminConstants.A_VOLUME_USE_INTELLIGENT_TIERING, String.valueOf(volExtInfo.isUseIntelligentTiering()));
             volExtInfoObj.put(AdminConstants.A_VOLUME_GLB_BUCKET_CONFIG_ID, volExtInfo.getGlobalBucketConfigurationId());
             volExtInfoObj.put(AdminConstants.A_VOLUME_USE_IN_FREQ_ACCESS_THRESHOLD, String.valueOf(volExtInfo.getUseInFrequentAccessThreshold()));
 
@@ -191,5 +191,49 @@ public class ExternalVolumeInfoHandler {
         }  catch (JSONException e) {
             throw e;
         }
+    }
+
+    /**
+     * Validate global bucket ID by reading LDAP atrribute
+     * @param globalS3BucketId
+     * @returns true if "global bucket ID" is valid
+     * @throws ServiceException, JSONException
+     */
+    public Boolean validateGlobalBucketID(String globalS3BucketId) throws ServiceException {
+        try {
+            // step 1: Fetch globalS3Configs and globalS3ConfigList
+            String globalExternalStoreConfig = provisioning.getConfig().getGlobalExternalStoreConfig();
+            JSONObject globalS3Configs = new JSONObject(globalExternalStoreConfig);
+            JSONArray globalS3ConfigList = globalS3Configs.getJSONArray("global/s3BucketConfigurations");
+
+            // step 2: Find "globalBucketUUID" in current JSON array
+            for (int i = 0; i < globalS3ConfigList.length(); i++) {
+                // step 3: Mark validation as true if "globalBucketUUID" found
+                if (globalS3BucketId.equalsIgnoreCase(globalS3ConfigList.getJSONObject(i).getString("globalBucketUUID"))) {
+                    return true;
+                }
+            }
+        } catch (JSONException e) {
+            throw ServiceException.FAILURE("Error while validating GlobalBucketID", null);
+        }
+        return false;
+    }
+
+    /**
+     * Validate if external volume entry is present in JSON or not
+     * @param volumeId
+     * @returns true if external volume entry is present
+     * @throws ServiceException, JSONException
+     */
+    public Boolean isVolumePresentInJson(int volumeId) throws ServiceException, JSONException {
+        String globalExternalStoreConfig = provisioning.getLocalServer().getServerExternalStoreConfig();
+        JSONObject globalS3Configs = new JSONObject(globalExternalStoreConfig);
+        JSONArray globalS3ConfigList = globalS3Configs.getJSONArray("server/stores");
+        for (int i = 0; i < globalS3ConfigList.length(); i++) {
+            if (volumeId == globalS3ConfigList.getJSONObject(i).getInt(AdminConstants.A_VOLUME_ID)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
