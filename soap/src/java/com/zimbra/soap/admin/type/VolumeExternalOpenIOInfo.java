@@ -34,19 +34,19 @@ public class VolumeExternalOpenIOInfo extends BaseExternalVolume {
      * @zm-api-field-description Specifies the standard HTTP URL for OpenIO
      */
     @XmlAttribute(name=AdminConstants.A_VOLUME_URL /* url */, required=false)
-    private String url = "";
+    private String url;
 
     /**
      * @zm-api-field-description Specifies OpenIO account name
      */
     @XmlAttribute(name=AdminConstants.A_VOLUME_ACCOUNT/* account */, required=false)
-    private String account = "";
+    private String account;
 
     /**
      * @zm-api-field-description Specifies OpenIO namespace
      */
     @XmlAttribute(name=AdminConstants.A_VOLUME_NAMESPACE /* namespace */, required=false)
-    private String namespace = "";
+    private String namespace;
 
     /**
      * @zm-api-field-description Specifies OpenIO proxy port
@@ -115,7 +115,7 @@ public class VolumeExternalOpenIOInfo extends BaseExternalVolume {
         return volExtInfoObj;
     }
 
-    public VolumeExternalOpenIOInfo toExternalOpenIo(JSONObject properties) throws JSONException {
+    public VolumeExternalOpenIOInfo toExternalOpenIoInfo(JSONObject properties) throws JSONException {
         VolumeExternalOpenIOInfo volExtOpenIOInfo = new VolumeExternalOpenIOInfo();
         volExtOpenIOInfo.setUrl(properties.getString(AdminConstants.A_VOLUME_URL));
         volExtOpenIOInfo.setAccount(properties.getString(AdminConstants.A_VOLUME_ACCOUNT));

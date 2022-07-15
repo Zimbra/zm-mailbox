@@ -27,12 +27,12 @@ import javax.xml.bind.annotation.XmlAttribute;
 import com.zimbra.common.soap.AdminConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
-abstract class BaseExternalVolume{
+abstract class BaseExternalVolume {
     /**
      * @zm-api-field-description Set to 1 for Internal and 2 for External.
      */
     @XmlAttribute(name=AdminConstants.A_VOLUME_STORAGE_TYPE /* storageType */, required=false)
-    private String storageType = "";
+    private String storageType;
 
     public void setStorageType(String value) {
         storageType = value;

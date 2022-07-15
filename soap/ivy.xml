@@ -27,6 +27,6 @@
   <dependency org="org.apache.james" name="apache-jsieve-core" rev="0.5"/>
   <dependency org="zimbra" name="zm-common" rev="latest.integration" />
   <dependency org="ant-contrib" name="ant-contrib" rev="1.0b3" />
-  <dependency org="org.json" name="json" rev="20090211" />
+  <dependency org="org.json" name="json" rev="20220320"/>
  </dependencies>
 </ivy-module>
