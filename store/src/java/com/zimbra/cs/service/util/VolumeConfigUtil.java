@@ -299,51 +299,22 @@ public class VolumeConfigUtil {
         // store type == 2, allow modification of only volume name
         else if (vol.getStoreType().equals(Volume.StoreType.EXTERNAL)) {
             if (volInfo.getName() != null) {
+                String storageType = "";
+                String globalBucketConfigId = "";
+                ExternalVolumeInfoHandler extVolInfoHandler = new ExternalVolumeInfoHandler(Provisioning.getInstance());
+                try {
+                    JSONObject properties = extVolInfoHandler.readServerProperties(req.getId());
+                    storageType = properties.getString(AdminConstants.A_VOLUME_STORAGE_TYPE);
+                    globalBucketConfigId = properties.getString(AdminConstants.A_VOLUME_GLB_BUCKET_CONFIG_ID);
+                } catch (JSONException e) {
+                    String errMsg = "Error while reading json data for external volume: " + req.getId();
+                    throw ServiceException.FAILURE(errMsg, e);
+                }
                 builder.setName(volInfo.getName());
-                String extRootPath = "/" + readStorageType(req.getId()) + "-" + volInfo.getName() + "-" + readGlobalBucketConfigId(req.getId());
+                String extRootPath = "/" + storageType + "-" + volInfo.getName() + "-" + globalBucketConfigId;
                 builder.setPath(extRootPath, false);
             }
         }
         mgr.update(builder.build());
-    }
-
-    /**
-     * Read storage type from external volume json
-     *
-     * @param id
-     * @return
-     * @throws ServiceException
-     */
-    private static String readStorageType(short id) throws ServiceException {
-        String storageType = "";
-        ExternalVolumeInfoHandler extVolInfoHandler = new ExternalVolumeInfoHandler(Provisioning.getInstance());
-        try {
-            JSONObject properties = extVolInfoHandler.readServerProperties(id);
-            storageType = properties.getString(AdminConstants.A_VOLUME_STORAGE_TYPE);
-        } catch (JSONException e) {
-            String errMsg = "Error while reading StorageType for external volume: " + id;
-            throw ServiceException.FAILURE(errMsg, e);
-        }
-        return storageType;
-    }
-
-    /**
-     * Read globalBucketConfigId from external volume json
-     *
-     * @param id
-     * @return
-     * @throws ServiceException
-     */
-    private static String readGlobalBucketConfigId(short id) throws ServiceException {
-        String globalBucketConfigId = "";
-        ExternalVolumeInfoHandler extVolInfoHandler = new ExternalVolumeInfoHandler(Provisioning.getInstance());
-        try {
-            JSONObject properties = extVolInfoHandler.readServerProperties(id);
-            globalBucketConfigId = properties.getString(AdminConstants.A_VOLUME_GLB_BUCKET_CONFIG_ID);
-        } catch (JSONException e) {
-            String errMsg = "Error while reading GlobalBucketConfigId for external volume: " + id;
-            throw ServiceException.FAILURE(errMsg, e);
-        }
-        return globalBucketConfigId;
     }
 }
