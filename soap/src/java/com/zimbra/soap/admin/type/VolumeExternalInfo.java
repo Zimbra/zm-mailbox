@@ -21,7 +21,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
-import com.zimbra.soap.type.ZmBoolean;
 import com.zimbra.common.soap.AdminConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
@@ -42,14 +41,14 @@ public class VolumeExternalInfo {
     /**
      * @zm-api-field-description Specifies global bucket configuration Id
      */
-    @XmlAttribute(name=AdminConstants.A_VOLUME_GLB_BUCKET_CONFIG_ID /* glbBucketConfigId */, required=true)
-    private String glbBucketConfigId = "";
+    @XmlAttribute(name=AdminConstants.A_VOLUME_GLB_BUCKET_CONFIG_ID /* globalBucketConfigId */, required=true)
+    private String globalBucketConfigId = "";
 
     /**
      * @zm-api-field-description Specifies frequent access enabled or not
      */
     @XmlAttribute(name=AdminConstants.A_VOLUME_USE_IN_FREQ_ACCESS /* useInFrequentAccess */, required=false)
-    private Boolean useInFrequentAccess = false;
+    private boolean useInFrequentAccess = false;
 
     /**
      * @zm-api-field-description Specifies threshold value of useInFrequentAccess
@@ -61,7 +60,7 @@ public class VolumeExternalInfo {
      * @zm-api-field-description Specifies intelligent tiering enabled or not
      */
     @XmlAttribute(name=AdminConstants.A_VOLUME_USE_INTELLIGENT_TIERING /* useIntelligentTiering */, required=false)
-    private Boolean useIntelligentTiering = false;
+    private boolean useIntelligentTiering = false;
 
     public void setStorageType(String value) {
         storageType = value;
@@ -80,26 +79,26 @@ public class VolumeExternalInfo {
     }
 
     public void setGlobalBucketConfigurationId(String value) {
-        glbBucketConfigId = value;
+        globalBucketConfigId = value;
     }
 
     public String getGlobalBucketConfigurationId() {
-        return glbBucketConfigId;
+        return globalBucketConfigId;
     }
 
-    public void setUseInFrequentAccess(Boolean value) {
+    public void setUseInFrequentAccess(boolean value) {
         useInFrequentAccess = value;
     }
 
-    public Boolean getUseInFrequentAccess() {
+    public boolean isUseInFrequentAccess() {
         return useInFrequentAccess;
     }
 
-    public void setUseIntelligentTiering(Boolean value) {
+    public void setUseIntelligentTiering(boolean value) {
         useIntelligentTiering = value;
     }
 
-    public Boolean getUseIntelligentTiering() {
+    public boolean isUseIntelligentTiering() {
         return useIntelligentTiering;
     }
 

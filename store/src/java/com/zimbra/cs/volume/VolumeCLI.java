@@ -62,7 +62,7 @@ public final class VolumeCLI extends SoapCLI {
     private static final String O_P = "p";
     private static final String O_C = "c";
     private static final String O_CT = "ct";
-    
+
     /** attributes for external storetype **/
     private static final String O_ST = "st";
     private static final String O_VP = "vp";
@@ -293,10 +293,10 @@ public final class VolumeCLI extends SoapCLI {
                 JaxbUtil.jaxbToElement(req)));
         System.out.println("Volume " + resp.getVolume().getId() + " is created");
     }
-    
+
     /**
      * This method validate the attributes in edit command.
-     * 
+     *
      * @param volumeInfo, volStoreType
      * @throws ParseException
      */
@@ -350,7 +350,7 @@ public final class VolumeCLI extends SoapCLI {
 
     /**
      * This method validate the attributes in add command.
-     * 
+     *
      * @param volumeInfo
      * @throws ParseException
      */
