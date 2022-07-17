@@ -302,6 +302,8 @@ public final class MailConstants {
     public static final String E_GET_IMAP_RECENT_CUTOFF_RESPONSE = "GetIMAPRecentCutoffResponse";
     public static final String E_IMAP_COPY_REQUEST = "IMAPCopyRequest";
     public static final String E_IMAP_COPY_RESPONSE = "IMAPCopyResponse";
+    public static final String E_FILE_SHARED_WITH_ME_REQUEST = "FileSharedWithMeRequest";
+    public static final String E_FILE_SHARED_WITH_ME_RESPONSE = "FileSharedWithMeResponse";
 
     // noop
     public static final QName NO_OP_REQUEST = QName.get(E_NO_OP_REQUEST, NAMESPACE);
@@ -604,6 +606,10 @@ public final class MailConstants {
     public static final QName RECORD_IMAP_SESSION_RESPONSE = QName.get(E_RECORD_IMAP_SESSION_RESPONSE, NAMESPACE);
     public static final QName IMAP_COPY_REQUEST = QName.get(E_IMAP_COPY_REQUEST, NAMESPACE);
     public static final QName IMAP_COPY_RESPONSE = QName.get(E_IMAP_COPY_RESPONSE, NAMESPACE);
+
+    //File Shared With Me
+    public static final QName FILE_SHARED_WITH_ME_REQUEST = QName.get(E_FILE_SHARED_WITH_ME_REQUEST, NAMESPACE);
+    public static final QName FILE_SHARED_WITH_ME_RESPONSE = QName.get(E_FILE_SHARED_WITH_ME_RESPONSE, NAMESPACE);
 
     public static final String E_MAILBOX = "mbx";
     public static final String E_ITEM = "item";
