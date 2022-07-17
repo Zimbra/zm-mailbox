@@ -17,6 +17,7 @@
 
 package com.zimbra.cs.service.util;
 
+import com.zimbra.client.ZMailbox;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -40,6 +41,8 @@ import com.zimbra.soap.admin.type.VolumeInfo;
 import com.zimbra.util.ExternalVolumeInfoHandler;
 
 public class VolumeConfigUtil {
+
+    private static final String  ROOT_PATH_ELE_SEPARATOR = "-";
 
     /**
      * Validate the create volume request parameters
@@ -93,7 +96,7 @@ public class VolumeConfigUtil {
 
         // validate current
         if (false != volInfoRequest.isCurrent() &&
-            true != volInfoRequest.isCurrent()) {
+                !volInfoRequest.isCurrent()) {
             throw VolumeServiceException.INVALID_REQUEST("Volume Current can be TRUE, FALSE or OPTIONAL(don't provide)", VolumeServiceException.BAD_VOLUME_CURRENT);
         }
 
@@ -268,7 +271,7 @@ public class VolumeConfigUtil {
     public static void parseModifyVolumeRequest(ModifyVolumeRequest req) throws ServiceException {
         VolumeManager mgr = VolumeManager.getInstance();
         VolumeInfo volInfo = req.getVolumeInfo();
-        Volume vol = mgr.getVolume(volInfo.getId());
+        Volume vol = mgr.getVolume(req.getId());
         Volume.Builder builder = Volume.builder(vol);
 
         if (volInfo == null) {
@@ -299,7 +302,27 @@ public class VolumeConfigUtil {
         // store type == 2, allow modification of only volume name
         else if (vol.getStoreType().equals(Volume.StoreType.EXTERNAL)) {
             if (volInfo.getName() != null) {
+                String storageType = "";
+                String globalBucketConfigId = "";
+                ExternalVolumeInfoHandler extVolInfoHandler = new ExternalVolumeInfoHandler(Provisioning.getInstance());
+                try {
+                    JSONObject properties = extVolInfoHandler.readServerProperties(req.getId());
+                    storageType = properties.getString(AdminConstants.A_VOLUME_STORAGE_TYPE);
+                    globalBucketConfigId = properties.getString(AdminConstants.A_VOLUME_GLB_BUCKET_CONFIG_ID);
+                } catch (JSONException e) {
+                    throw ServiceException.FAILURE("Error while reading json data for external volume: " + req.getId(), e);
+                }
+                // storageType should not be null
+                if (StringUtil.isNullOrEmpty(storageType)) {
+                    throw VolumeServiceException.INVALID_REQUEST("StorageType Empty for external volume " +req.getId(), VolumeServiceException.INVALID_REQUEST);
+                }
                 builder.setName(volInfo.getName());
+                String extRootPath = ZMailbox.PATH_SEPARATOR + storageType + ROOT_PATH_ELE_SEPARATOR + volInfo.getName();
+                // append global bucket id as well in case it is available
+                if (!StringUtil.isNullOrEmpty(globalBucketConfigId)) {
+                    extRootPath = extRootPath + ROOT_PATH_ELE_SEPARATOR + globalBucketConfigId;
+                }
+                builder.setPath(extRootPath, false);
             }
         }
         mgr.update(builder.build());
