@@ -17,6 +17,7 @@
 
 package com.zimbra.cs.service.util;
 
+import com.zimbra.client.ZMailbox;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -40,6 +41,8 @@ import com.zimbra.soap.admin.type.VolumeInfo;
 import com.zimbra.util.ExternalVolumeInfoHandler;
 
 public class VolumeConfigUtil {
+
+    private static final String  ROOT_PATH_ELE_SEPARATOR = "-";
 
     /**
      * Validate the create volume request parameters
@@ -307,11 +310,18 @@ public class VolumeConfigUtil {
                     storageType = properties.getString(AdminConstants.A_VOLUME_STORAGE_TYPE);
                     globalBucketConfigId = properties.getString(AdminConstants.A_VOLUME_GLB_BUCKET_CONFIG_ID);
                 } catch (JSONException e) {
-                    String errMsg = "Error while reading json data for external volume: " + req.getId();
-                    throw ServiceException.FAILURE(errMsg, e);
+                    throw ServiceException.FAILURE("Error while reading json data for external volume: " + req.getId(), e);
+                }
+                // storageType should not be null
+                if (StringUtil.isNullOrEmpty(storageType)) {
+                    throw VolumeServiceException.INVALID_REQUEST("StorageType Empty for external volume " + req.getId(), VolumeServiceException.INVALID_REQUEST);
                 }
                 builder.setName(volInfo.getName());
-                String extRootPath = "/" + storageType + "-" + volInfo.getName() + "-" + globalBucketConfigId;
+                String extRootPath = ZMailbox.PATH_SEPARATOR + storageType + ROOT_PATH_ELE_SEPARATOR + volInfo.getName();
+                // append global bucket id as well in case it is available
+                if (!StringUtil.isNullOrEmpty(globalBucketConfigId)) {
+                    extRootPath = extRootPath + ROOT_PATH_ELE_SEPARATOR + globalBucketConfigId;
+                }
                 builder.setPath(extRootPath, false);
             }
         }
