@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2022 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -1412,9 +1412,9 @@ public final class MailConstants {
     public static final String A_CHANNEL = "channel";
     
     // HTML Constant
-    public static final String SPACE = " ";
-    public static final String DEVICE_LIST_SEPARATOR = "---DEVICELIST---";
+    public static final String BREAK_LINE = "<br>";
     public static final String SUCCESS = "Success";
     public static final String FAILURE = "Failure";
+    public static final String NO_QUARANTINED_LIST = "There are currently no qurantined devices";
     
 }

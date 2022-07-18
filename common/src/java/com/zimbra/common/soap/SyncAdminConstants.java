@@ -94,7 +94,6 @@ public final class SyncAdminConstants {
     public static final String A_COUNT = "count";
     public static final String A_DATE = "date";
     public static final String A_LAST_USED_DATE_OLDER_THAN = "lastUsedDateOlderThan";
-    public static final String A_DEVICE = "emailReponse";
     public static final String E_STATUS = "status";
     public static final String E_TO = "to";
     public static final String E_SUBJECT = "subject";

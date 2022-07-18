@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011, 2012, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2022 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -35,23 +35,29 @@ import com.zimbra.common.soap.SyncConstants;
 import com.zimbra.soap.admin.type.DeviceStatusInfo;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name=AdminConstants.E_SEND_EMAIL_RESPONSE)
+@XmlRootElement(name = AdminConstants.E_SEND_EMAIL_RESPONSE)
+@XmlType(propOrder = {})
 public class SendEmailResponse {
 
     /**
-     * @zm-api-field-description Information about devices
+     * @zm-api-field-description status of email sent
      */
-    @XmlElement(name=SyncAdminConstants.E_STATUS, required = true)
+    @XmlElement(name = SyncAdminConstants.E_STATUS, required = true)
     private String status;
 
     public SendEmailResponse() {
-        status = null;
     }
-    
+
     public SendEmailResponse(String status) {
         this.status = status;
     }
 
-    
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
+        return helper.add("status", status);
+    }
 
+    @Override
+    public String toString() {
+        return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
+    }
 }

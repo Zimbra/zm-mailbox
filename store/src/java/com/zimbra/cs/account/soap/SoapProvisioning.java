@@ -3234,22 +3234,44 @@ public class SoapProvisioning extends Provisioning {
         throw ServiceException.UNSUPPORTED();
     }
     
+    /**
+    *
+    * @param status reserved for future use if mail to send for different status to be added
+    * @param to accepts admins email address to which email has to be send
+    * @throws ServiceException if an error occurs while sending email for ABQ notification mail
+    */
     @Override
     public String sendAbqEmail(String status, String to) throws ServiceException {
-        String devicesInfo = MailConstants.BREAK_LINE;
+        String devicesInfo = "";
+        String emailBody = "";
+        String subject = LC.zimbra_mobile_abq_notification_email_subject.value();
         GetDeviceStatusResponse resp = invokeJaxb(new GetDeviceStatusRequest(null));
         List<DeviceStatusInfo> statusOfDevices = resp.getDevices();
-        
-        for (int i=1; i <= statusOfDevices.size(); i++) {
-            devicesInfo += i +". "+ statusOfDevices.get(i).getId() + MailConstants.SPACE;
+        int j = 0;
+        for (int i = 0; i < statusOfDevices.size(); i++) {
+            if (statusOfDevices.get(i).getStatus() == 2) {
+                devicesInfo +=  MailConstants.BREAK_LINE + (j + 1) + "." + statusOfDevices.get(i).getId();
+                j++;
+            }
         }
-        String emailBody = LC.zimbra_mobile_abq_notification_email_body.value() + MailConstants.DEVICE_LIST_SEPARATOR
-                + devicesInfo;
-        String subject = LC.zimbra_mobile_abq_notification_email_subject.value();
+        if (j == 0) {
+            emailBody = MailConstants.NO_QUARANTINED_LIST;
+            subject = MailConstants.NO_QUARANTINED_LIST;
+        } else {
+            emailBody = LC.zimbra_mobile_abq_notification_email_body.value() + MailConstants.BREAK_LINE
+                    + devicesInfo;
+        }
         SendEmailResponse sendEmailResponse = invokeJaxb(new SendEmailRequest(to, subject, emailBody));
         return MailConstants.SUCCESS;
     }
 
+    /**
+    *
+    * @param to email address to which email has to be send
+    * @param subject that defines the email body
+    * @param message that contains the actual email body
+    * @throws ServiceException if an error occurs while sending email
+    */
     @Override
     public String sendEmail(String to, String subject, String message) throws ServiceException {
         SendEmailResponse sendEmailResponse = invokeJaxb(new SendEmailRequest(to, subject, message));

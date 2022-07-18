@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2022 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -1496,8 +1496,8 @@ public final class LC {
 
     // ZBUG-2800 list of proxy headers not allowed
     public static final KnownKey proxy_servlet_drop_headers = KnownKey.newKey("x-forwarded-host,x-host,x-forwarded-server,x-http-host-override,x-http-host-override");
-
-    //ZCS-11602
+    
+    // ZCS-11602: Notification support for quarantined devices
     public static final KnownKey zimbra_mobile_abq_notification_email_body = KnownKey.newKey("Following is the list of quarantined devices ");
     public static final KnownKey zimbra_mobile_abq_notification_email_subject = KnownKey.newKey("List of quarantined devices");
     static {
