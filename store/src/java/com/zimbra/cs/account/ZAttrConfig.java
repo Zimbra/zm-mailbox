@@ -26092,6 +26092,78 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Active sync modes
+     *
+     * @return zimbraMDMMode, or "Permissive" if unset
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4006)
+    public String getMDMMode() {
+        return getAttr(Provisioning.A_zimbraMDMMode, "Permissive", true);
+    }
+
+    /**
+     * Active sync modes
+     *
+     * @param zimbraMDMMode new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4006)
+    public void setMDMMode(String zimbraMDMMode) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMDMMode, zimbraMDMMode);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Active sync modes
+     *
+     * @param zimbraMDMMode new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4006)
+    public Map<String,Object> setMDMMode(String zimbraMDMMode, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMDMMode, zimbraMDMMode);
+        return attrs;
+    }
+
+    /**
+     * Active sync modes
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4006)
+    public void unsetMDMMode() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMDMMode, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Active sync modes
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4006)
+    public Map<String,Object> unsetMDMMode(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMDMMode, "");
+        return attrs;
+    }
+
+    /**
      * optional regex used by web client to validate email address
      *
      * @return zimbraMailAddressValidationRegex, or empty array if unset
