@@ -9692,6 +9692,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMaxVoiceItemsPerPage = "zimbraMaxVoiceItemsPerPage";
 
     /**
+     * Active sync modes
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4006)
+    public static final String A_zimbraMDMMode = "zimbraMDMMode";
+
+    /**
      * dynamic group membership
      */
     @ZAttr(id=11)
