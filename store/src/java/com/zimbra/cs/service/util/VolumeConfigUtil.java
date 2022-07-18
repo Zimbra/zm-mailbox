@@ -314,7 +314,7 @@ public class VolumeConfigUtil {
                 }
                 // storageType should not be null
                 if (StringUtil.isNullOrEmpty(storageType)) {
-                    throw VolumeServiceException.INVALID_REQUEST("StorageType Empty for external volume " +req.getId(), VolumeServiceException.INVALID_REQUEST);
+                    throw VolumeServiceException.INVALID_REQUEST("StorageType Empty for external volume " + req.getId(), VolumeServiceException.INVALID_REQUEST);
                 }
                 builder.setName(volInfo.getName());
                 String extRootPath = ZMailbox.PATH_SEPARATOR + storageType + ROOT_PATH_ELE_SEPARATOR + volInfo.getName();
