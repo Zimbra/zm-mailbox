@@ -19,6 +19,8 @@ package com.zimbra.cs.volume;
 import com.google.common.base.Strings;
 import java.io.IOException;
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.ParseException;
@@ -26,6 +28,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 
+import com.zimbra.cs.service.admin.AdminService;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.SoapCLI;
 import com.zimbra.common.auth.ZAuthToken;
@@ -182,11 +185,9 @@ public final class VolumeS3ConfigCLI extends SoapCLI {
         System.out.println("            region: " + item.getRegion());
         System.out.println("   destinationPath: " + item.getDestinationPath());
         System.out.println("               url: " + item.getUrl());
-        System.out.println("         namespace: " + item.getNamespace());
-        System.out.println("         proxyPort: " + item.getProxyPort());
-        System.out.println("           account: " + item.getAccount());
-        System.out.println("       AccountPort: " + item.getAccountPort());
         System.out.println("      bucketStatus: " + item.getBucketStatus());
+        System.out.println("-------------------------------------------------");
+        System.out.println();
     }
 
     /**
@@ -330,54 +331,6 @@ public final class VolumeS3ConfigCLI extends SoapCLI {
     private void validateURL() throws ParseException {
         if (Strings.isNullOrEmpty(region)) {
             throw new ParseException("URL must be specified while creating S3BucketConfig");
-        }
-    }
-
-    /**
-     * This method validate the attribute Account
-     *
-     * @param
-     * @throws ParseException
-     */
-    private void validateAccount() throws ParseException {
-        if (Strings.isNullOrEmpty(account)) {
-            throw new ParseException("Account must be specified while creating S3BucketConfig");
-        }
-    }
-
-    /**
-     * This method validate the attribute Namespace
-     *
-     * @param
-     * @throws ParseException
-     */
-    private void validateNamespace() throws ParseException {
-        if (Strings.isNullOrEmpty(namespace)) {
-            throw new ParseException("Namespace must be specified while creating S3BucketConfig");
-        }
-    }
-
-    /**
-     * This method validate the attribute Proxy Port
-     *
-     * @param
-     * @throws ParseException
-     */
-    private void validateProxyPort() throws ParseException {
-        if (Strings.isNullOrEmpty(proxyPort)) {
-            throw new ParseException("Proxy Port must be specified while creating S3BucketConfig");
-        }
-    }
-
-    /**
-     * This method validate the attribute Account Port
-     *
-     * @param
-     * @throws ParseException
-     */
-    private void validateAccountPort() throws ParseException {
-        if (Strings.isNullOrEmpty(accountPort)) {
-            throw new ParseException("Account Port must be specified while creating S3BucketConfig");
         }
     }
 
@@ -526,7 +479,11 @@ public final class VolumeS3ConfigCLI extends SoapCLI {
      */
     private DeleteS3BucketConfigResponse resp_DeleteS3BucketConfigRequest(String b_Id) throws IOException, ServiceException {
         DeleteS3BucketConfigRequest s3BucketConfigRequest = new DeleteS3BucketConfigRequest();
-        s3BucketConfigRequest.addAttr(GlobalExternalStoreConfigConstants.A_S3_GLOBAL_BUCKET_UUID, b_Id);
+        // System.out.println("***LOG*** Bucket ID: " + b_Id);
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(GlobalExternalStoreConfigConstants.A_S3_GLOBAL_BUCKET_UUID, b_Id);
+        s3BucketConfigRequest.setAttrs(attrs);
+        // s3BucketConfigRequest.addAttr(GlobalExternalStoreConfigConstants.A_S3_GLOBAL_BUCKET_UUID, b_Id);
         auth(auth);
         getTransport().invokeWithoutSession(JaxbUtil.jaxbToElement(s3BucketConfigRequest));
         Element s3BucketConfigElement = getTransport().invokeWithoutSession(JaxbUtil.jaxbToElement(s3BucketConfigRequest));
@@ -541,18 +498,18 @@ public final class VolumeS3ConfigCLI extends SoapCLI {
      */
     private CreateS3BucketConfigResponse resp_CreateS3BucketConfigRequest() throws IOException, ServiceException {
         CreateS3BucketConfigRequest s3BucketConfigRequest = new CreateS3BucketConfigRequest();
-        s3BucketConfigRequest.addAttr(GlobalExternalStoreConfigConstants.A_S3_STORE_PROVIDER, storeProvider);
-        s3BucketConfigRequest.addAttr(GlobalExternalStoreConfigConstants.A_S3_BUCKET_NAME, bucketName);
-        s3BucketConfigRequest.addAttr(GlobalExternalStoreConfigConstants.A_S3_ACCESS_KEY, accessKey);
-        s3BucketConfigRequest.addAttr(GlobalExternalStoreConfigConstants.A_S3_SECRET_KEY, secretKey);
-        s3BucketConfigRequest.addAttr(GlobalExternalStoreConfigConstants.A_S3_DESTINATION_PATH, destPath);
-
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(GlobalExternalStoreConfigConstants.A_S3_STORE_PROVIDER, storeProvider);
+        attrs.put(GlobalExternalStoreConfigConstants.A_S3_BUCKET_NAME, bucketName);
+        attrs.put(GlobalExternalStoreConfigConstants.A_S3_ACCESS_KEY, accessKey);
+        attrs.put(GlobalExternalStoreConfigConstants.A_S3_SECRET_KEY, secretKey);
+        attrs.put(GlobalExternalStoreConfigConstants.A_S3_DESTINATION_PATH, destPath);
         if (storeProvider.equalsIgnoreCase("S3")) {
-            s3BucketConfigRequest.addAttr(GlobalExternalStoreConfigConstants.A_S3_REGION, region);
+            attrs.put(GlobalExternalStoreConfigConstants.A_S3_REGION, region);
         } else {
-            s3BucketConfigRequest.addAttr(GlobalExternalStoreConfigConstants.A_S3_URL, url);
+            attrs.put(GlobalExternalStoreConfigConstants.A_S3_URL, url);
         }
-
+        s3BucketConfigRequest.setAttrs(attrs);
         auth(auth);
         getTransport().invokeWithoutSession(JaxbUtil.jaxbToElement(s3BucketConfigRequest));
         Element s3BucketConfigElement = getTransport().invokeWithoutSession(JaxbUtil.jaxbToElement(s3BucketConfigRequest));
