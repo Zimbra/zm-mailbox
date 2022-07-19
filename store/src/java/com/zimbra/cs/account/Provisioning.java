@@ -2791,7 +2791,5 @@ public abstract class Provisioning extends ZAttrProvisioning {
         throw new UnsupportedOperationException("Currently address list is not supported.");
     }
     
-    public abstract String sendEmail(String to, String subject, String message) throws ServiceException;
-    
-    public abstract String sendAbqEmail(String status, String email) throws ServiceException;
+    public abstract String sendMdmEmail(String status, String email) throws ServiceException;
 }

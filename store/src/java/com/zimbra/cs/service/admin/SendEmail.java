@@ -64,6 +64,5 @@ public class SendEmail extends AdminDocumentHandler {
             throw ServiceException.FAILURE(errorMsg, null);
         }
         return response;
-
     }
 }

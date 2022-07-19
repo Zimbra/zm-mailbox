@@ -64,6 +64,7 @@ import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.soap.SoapHttpTransport.HttpDebugListener;
 import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.soap.SoapTransport.DebugListener;
+import com.zimbra.common.soap.SyncAdminConstants;
 import com.zimbra.common.util.AccountLogger;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Log.Level;
@@ -3238,18 +3239,18 @@ public class SoapProvisioning extends Provisioning {
     *
     * @param status reserved for future use if mail to send for different status to be added
     * @param to accepts admins email address to which email has to be send
-    * @throws ServiceException if an error occurs while sending email for ABQ notification mail
+    * @throws ServiceException if an error occurs while sending email for MDM notification mail
     */
     @Override
-    public String sendAbqEmail(String status, String to) throws ServiceException {
+    public String sendMdmEmail(String status, String to) throws ServiceException {
         String devicesInfo = "";
         String emailBody = "";
-        String subject = LC.zimbra_mobile_abq_notification_email_subject.value();
+        String subject = LC.zimbra_mobile_mdm_notification_email_subject.value();
         GetDeviceStatusResponse resp = invokeJaxb(new GetDeviceStatusRequest(null));
         List<DeviceStatusInfo> statusOfDevices = resp.getDevices();
         int j = 0;
         for (int i = 0; i < statusOfDevices.size(); i++) {
-            if (statusOfDevices.get(i).getStatus() == 2) {
+            if (statusOfDevices.get(i).getStatus() == SyncAdminConstants.MDM_STATUS_SUSPENDED) {
                 devicesInfo +=  MailConstants.BREAK_LINE + (j + 1) + "." + statusOfDevices.get(i).getId();
                 j++;
             }
@@ -3258,23 +3259,10 @@ public class SoapProvisioning extends Provisioning {
             emailBody = MailConstants.NO_QUARANTINED_LIST;
             subject = MailConstants.NO_QUARANTINED_LIST;
         } else {
-            emailBody = LC.zimbra_mobile_abq_notification_email_body.value() + MailConstants.BREAK_LINE
+            emailBody = LC.zimbra_mobile_mdm_notification_email_body.value() + MailConstants.BREAK_LINE
                     + devicesInfo;
         }
         SendEmailResponse sendEmailResponse = invokeJaxb(new SendEmailRequest(to, subject, emailBody));
-        return MailConstants.SUCCESS;
-    }
-
-    /**
-    *
-    * @param to email address to which email has to be send
-    * @param subject that defines the email body
-    * @param message that contains the actual email body
-    * @throws ServiceException if an error occurs while sending email
-    */
-    @Override
-    public String sendEmail(String to, String subject, String message) throws ServiceException {
-        SendEmailResponse sendEmailResponse = invokeJaxb(new SendEmailRequest(to, subject, message));
         return MailConstants.SUCCESS;
     }
 

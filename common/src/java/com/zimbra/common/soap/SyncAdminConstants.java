@@ -99,4 +99,5 @@ public final class SyncAdminConstants {
     public static final String E_SUBJECT = "subject";
     public static final String E_MESSAGE = "message";
     public static final Integer REMOTE_SERVER_SUCCESS = 0;
+    public static final Byte MDM_STATUS_SUSPENDED = 2;
 }

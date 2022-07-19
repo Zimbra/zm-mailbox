@@ -309,7 +309,7 @@ public class ProvUtil implements HttpDebugListener {
                 "help on reverse proxy related commands"), RIGHT("help on right-related commands"), SEARCH(
                 "help on search-related commands"), SERVER("help on server-related commands"), ALWAYSONCLUSTER(
                 "help on alwaysOnCluster-related commands"), UCSERVICE("help on ucservice-related commands"), SHARE(
-                "help on share related commands"), HAB("help on HAB commands"),MOBILE("help on mobile commands");
+                "help on share related commands"), HAB("help on HAB commands"), MOBILE("help on mobile commands");
 
         private final String description;
 
@@ -877,9 +877,7 @@ public class ProvUtil implements HttpDebugListener {
         "{habGrpId} {seniorityIndex} ", Category.HAB, 2, 2),
         GET_HAB_GROUP_MEMBERS("getHABGroupMembers", "ghgm", "{name@domain|id}",
                 Category.HAB, 1, 1),
-        SEND_EMAIL("sendEmail", "sem", "{to} {subject} {emailBody}",
-                Category.MOBILE, 3, 3),
-        SEND_ABQ_EMAIL("sendAbqEmail", "sabqm", "{type | quarantined | blocked} {admin email}",
+        SEND_MDM_EMAIL("sendMdmEmail", "smdme", "{type | quarantined | blocked} {admin email}",
                 Category.MOBILE, 2, 2);
 
         private String mName;
@@ -1652,11 +1650,8 @@ public class ProvUtil implements HttpDebugListener {
         case GET_HAB_GROUP_MEMBERS:
             doGetHABGroupMembers(args);
             break;
-        case SEND_ABQ_EMAIL:
-            console.println(prov.sendAbqEmail(args[1], args[2]));
-            break;
-        case SEND_EMAIL:
-            console.println(prov.sendEmail(args[1], args[2], args[3]));
+        case SEND_MDM_EMAIL:
+            console.println(prov.sendMdmEmail(args[1], args[2]));
             break;
         default:
             return false;
