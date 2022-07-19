@@ -48,6 +48,7 @@ import com.zimbra.common.lmtp.LmtpClient;
 import com.zimbra.common.lmtp.LmtpProtocolException;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.Rfc822ValidationInputStream;
 import com.zimbra.common.service.DeliveryServiceException;
 import com.zimbra.common.service.ServiceException;
@@ -330,6 +331,13 @@ public class ZimbraLmtpBackend implements LmtpBackend {
         }
     }
 
+    // ZCS-1149/ZCS-11096
+    private static final String[] CHARSET_NAMES = { MimeConstants.P_CHARSET_ASCII, MimeConstants.P_CHARSET_UTF8,
+            MimeConstants.P_CHARSET_LATIN1, MimeConstants.P_CHARSET_WINDOWS_1252, MimeConstants.P_CHARSET_EUC_CN,
+            MimeConstants.P_CHARSET_GB2312, MimeConstants.P_CHARSET_GBK, MimeConstants.P_CHARSET_WINDOWS_31J,
+            MimeConstants.P_CHARSET_SHIFT_JIS, MimeConstants.P_CHARSET_DEFAULT };
+    private static final String GARBLED_CHARACTER = String.valueOf((char) 0xfffD);
+
     @Override
     public void deliver(LmtpEnvelope env, InputStream in, int sizeHint) throws UnrecoverableLmtpException {
         CopyInputStream cis = null;
@@ -339,11 +347,20 @@ public class ZimbraLmtpBackend implements LmtpBackend {
         Blob blobEEW = null;
         // duplicating input stream for EEW
         try {
-            final String content = IOUtils.toString(in); // pop content from original input stream
-            IOUtils.closeQuietly(in);
-            in = IOUtils.toInputStream(content); // push content back to input stream
-            final String contentEEW = ExternalEmailWarning.getInstance().getUpdatedContent(content);
-            inEEW = IOUtils.toInputStream(contentEEW);
+            for (int i = 0; i < CHARSET_NAMES.length; i++) {
+                final String charsetName = CHARSET_NAMES[i];
+                // copy input stream and evaluate content encoding
+                final byte[] ba = IOUtils.toByteArray(in);
+                IOUtils.closeQuietly(in);
+                in = new ByteArrayInputStream(ba);
+                final String content = new String(ba, charsetName);
+                // if current encoding is suitable, use it; otherwise, continue or use default
+                if (!content.contains(GARBLED_CHARACTER) || i == CHARSET_NAMES.length - 1) {
+                    final String contentEEW = ExternalEmailWarning.getInstance().getUpdatedContent(content);
+                    inEEW = IOUtils.toInputStream(contentEEW, charsetName);
+                    break;
+                }
+            }
         } catch (Exception e) {
             ZimbraLog.lmtp.warn("failed to duplicate input stream for EEW", e);
         }

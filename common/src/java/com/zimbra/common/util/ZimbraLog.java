@@ -919,7 +919,7 @@ public final class ZimbraLog {
         }
         builder.add(builder.newRootLogger(level)
                .add(builder.newAppenderRef(DEFAULT_APPENDER_NAME)));
-        Configurator.initialize(builder.build());
+        Configurator.reconfigure(builder.build());
     }
 
     public static void toolSetupLog4jConsole(String defaultLevel, boolean stderr, boolean showThreads) {

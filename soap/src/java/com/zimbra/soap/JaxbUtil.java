@@ -1153,7 +1153,13 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.ScheduleSMPolicyRequest.class,
             com.zimbra.soap.admin.message.ScheduleSMPolicyResponse.class,
             com.zimbra.soap.admin.message.GetScheduleSMPolicyRequest.class,
-            com.zimbra.soap.admin.message.GetScheduleSMPolicyResponse.class
+            com.zimbra.soap.admin.message.GetScheduleSMPolicyResponse.class,
+            com.zimbra.soap.admin.message.GetS3BucketConfigRequest.class,
+            com.zimbra.soap.admin.message.GetS3BucketConfigResponse.class,
+            com.zimbra.soap.admin.message.CreateS3BucketConfigRequest.class,
+            com.zimbra.soap.admin.message.CreateS3BucketConfigResponse.class,
+            com.zimbra.soap.admin.message.DeleteS3BucketConfigRequest.class,
+            com.zimbra.soap.admin.message.DeleteS3BucketConfigResponse.class
         };
 
         try {
@@ -1663,7 +1669,7 @@ public final class JaxbUtil {
         ImapMessageInfo messageInfo = new ImapMessageInfo(mod.getIdInMailbox(), mod.getImapUid(), mod.getMailItemType().toString(), mod.getFlagBitmask(), tags);
         return new ModifyNotification.ModifyItemNotification(messageInfo, reason);
     }
-    
+
     public static DeleteItemNotification getDeletedItemSOAP(int itemId, String type) throws ServiceException {
         return new DeleteItemNotification(itemId, type);
     }

@@ -39,6 +39,7 @@ import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ZAttrProvisioning.AutoProvAuthMech;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
@@ -156,6 +157,8 @@ public class PreAuthServlet extends ZimbraServlet {
                         authToken = newZimbraAuthToken;
                         ZimbraLog.account.debug("Deregistered the one time preauth token and issuing new one to the user.");
                     }
+
+                    authToken.setCsrfTokenEnabled(true); // ZBUG-2662
                     // no need to redirect to the correct server, just send them off to do business
                     setCookieAndRedirect(req, resp, authToken);
                 } else {
@@ -248,6 +251,7 @@ public class PreAuthServlet extends ZimbraServlet {
                     else
                         at = (expires ==  0) ? AuthProvider.getAuthToken(acct) : AuthProvider.getAuthToken(acct, expires);
 
+                    at.setCsrfTokenEnabled(true); // ZBUG-2662
                     setCookieAndRedirect(req, resp, at);
 
                 } else {

@@ -1456,12 +1456,16 @@ public class Mailbox implements MailboxStore {
     }
 
     void updateSize(long delta, boolean checkQuota) throws ServiceException {
+        updateSize(delta, checkQuota, false);
+    }
+
+    void updateSize(long delta, boolean checkQuota, boolean isTrashFolder) throws ServiceException {
         if (delta == 0) {
             return;
         }
 
         long size = getEffectiveSize(delta);
-        if (delta > 0 && checkQuota) {
+        if (delta > 0 && checkQuota && !isTrashFolder) {
             checkSizeChange(size);
         }
 
@@ -7315,7 +7319,8 @@ public class Mailbox implements MailboxStore {
             }
 
             // check if mailbox has enough quota available to copy all the item.
-            if (requiredQuota > 0) {
+            // ZBUG-1375 : exclude check for Trash Folder , so that messages can be deleted even when quota is full
+            if (requiredQuota > 0 && folderId != FolderConstants.ID_FOLDER_TRASH) {
                 ZimbraLog.mailbox.info("total space required to copy items = %d", requiredQuota);
                 checkSizeChange(getEffectiveSize(requiredQuota));
             }
