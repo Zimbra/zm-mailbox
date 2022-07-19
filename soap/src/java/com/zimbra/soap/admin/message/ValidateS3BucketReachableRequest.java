@@ -57,74 +57,74 @@ public class ValidateS3BucketReachableRequest {
     
 
     @Override
-	public String toString() {
-		return "ValidateS3BucketReachableRequest [url=" + url + ", bucketName=" + bucketName + ", region=" + region
-				+ ", accessKey=" + accessKey + ", secrateKey=" + secrateKey + "]";
-	}
+    public String toString() {
+        return "ValidateS3BucketReachableRequest [url=" + url + ", bucketName=" + bucketName + ", region=" + region
+                + ", accessKey=" + accessKey + ", secrateKey=" + secrateKey + "]";
+    }
 
 
 
-	public String getUrl() {
-		return url;
-	}
+    public String getUrl() {
+        return url;
+    }
 
 
 
-	public void setUrl(String url) {
-		this.url = url;
-	}
+    public void setUrl(String url) {
+       this.url = url;
+    }
 
 
 
-	public String getBucketName() {
-		return bucketName;
-	}
+    public String getBucketName() {
+       return bucketName;
+    }
 
 
 
-	public void setBucketName(String bucketName) {
-		this.bucketName = bucketName;
-	}
+    public void setBucketName(String bucketName) {
+       this.bucketName = bucketName;
+    }
 
 
 
-	public String getRegion() {
-		return region;
-	}
+    public String getRegion() {
+       return region;
+    }
 
 
 
-	public void setRegion(String region) {
-		this.region = region;
-	}
+    public void setRegion(String region) {
+       this.region = region;
+    }
 
 
 
-	public String getAccessKey() {
-		return accessKey;
-	}
+    public String getAccessKey() {
+       return accessKey;
+    }
 
 
 
-	public void setAccessKey(String accessKey) {
-		this.accessKey = accessKey;
-	}
+    public void setAccessKey(String accessKey) {
+       this.accessKey = accessKey;
+    }
 
 
 
-	public String getSecrateKey() {
-		return secrateKey;
-	}
+    public String getSecrateKey() {
+      return secrateKey;
+    }
 
 
 
-	public void setSecrateKey(String secrateKey) {
-		this.secrateKey = secrateKey;
-	}
+    public void setSecrateKey(String secrateKey) {
+       this.secrateKey = secrateKey;
+    }
 
 
 
-	public ValidateS3BucketReachableRequest() {
+    public ValidateS3BucketReachableRequest() {
     }
 
 }
