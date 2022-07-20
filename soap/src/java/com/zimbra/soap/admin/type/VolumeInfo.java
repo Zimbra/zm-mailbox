@@ -116,10 +116,16 @@ public final class VolumeInfo {
     private String storeManagerClass = LC.zimbra_class_store.value();
 
     /**
-     * @zm-api-field-description Volume external information
+     * @zm-api-field-description Volume external information for S3
      */
     @XmlElement(name=AdminConstants.E_VOLUME_EXT /* volumeExternalInfo */, required=false)
     private VolumeExternalInfo volumeExternalInfo;
+
+    /**
+     * @zm-api-field-description Volume external information for OpenIO
+     */
+    @XmlElement(name=AdminConstants.E_VOLUME_OPENIO_EXT /* volumeExternalOpenIOInfo */, required=false)
+    private VolumeExternalOpenIOInfo volumeExternalOpenIOInfo;
 
     public void setId(short value) {
         id = value;
@@ -232,4 +238,12 @@ public final class VolumeInfo {
     public void setStoreManagerClass(String storeManagerClass) {
         this.storeManagerClass = storeManagerClass;
     }
+    public VolumeExternalOpenIOInfo getVolumeExternalOpenIOInfo() {
+        return volumeExternalOpenIOInfo;
+    }
+
+    public void setVolumeExternalOpenIOInfo(VolumeExternalOpenIOInfo volumeExternalOpenIOInfo) {
+        this.volumeExternalOpenIOInfo = volumeExternalOpenIOInfo;
+    }
+
 }
