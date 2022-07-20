@@ -17,7 +17,7 @@ appender.LOGFILE.layout.type = PatternLayout
 appender.LOGFILE.layout.pattern = %d %-5p [%t] [%z] %c{1} - %m%n
 appender.LOGFILE.policies.type = Policies
 appender.LOGFILE.policies.time.type = TimeBasedTriggeringPolicy
-appender.LOGFILE.policies.time.interval = 2
+appender.LOGFILE.policies.time.interval = 1
 appender.LOGFILE.policies.time.modulate = true
 appender.LOGFILE.strategy.type = DefaultRolloverStrategy
  
@@ -30,7 +30,7 @@ appender.AUDIT.layout.type = PatternLayout
 appender.AUDIT.layout.pattern = %d %-5p [%t] [%z] %c{1} - %m%n
 appender.AUDIT.policies.type = Policies
 appender.AUDIT.policies.time.type = TimeBasedTriggeringPolicy
-appender.AUDIT.policies.time.interval = 2
+appender.AUDIT.policies.time.interval = 1
 appender.AUDIT.policies.time.modulate = true
 appender.AUDIT.strategy.type = DefaultRolloverStrategy
 
@@ -43,7 +43,7 @@ appender.SYNC.layout.type = PatternLayout
 appender.SYNC.layout.pattern = %d %-5p [%t] [%z] %c{1} - %m%n
 appender.SYNC.policies.type = Policies
 appender.SYNC.policies.time.type = TimeBasedTriggeringPolicy
-appender.SYNC.policies.time.interval = 2
+appender.SYNC.policies.time.interval = 1
 appender.SYNC.policies.time.modulate = true
 appender.SYNC.strategy.type = DefaultRolloverStrategy
 
@@ -56,7 +56,7 @@ appender.SYNCTRACE.layout.type = PatternLayout
 appender.SYNCTRACE.layout.pattern = %d %-5p [%t] [%z] %c{1} - %m%n
 appender.SYNCTRACE.policies.type = Policies
 appender.SYNCTRACE.policies.time.type = TimeBasedTriggeringPolicy
-appender.SYNCTRACE.policies.time.interval = 2
+appender.SYNCTRACE.policies.time.interval = 1
 appender.SYNCTRACE.policies.time.modulate = true
 appender.SYNCTRACE.strategy.type = DefaultRolloverStrategy
 
@@ -69,7 +69,7 @@ appender.SYNCSTATE.layout.type = PatternLayout
 appender.SYNCSTATE.layout.pattern = %d %-5p [%t] [%z] %c{1} - %m%n
 appender.SYNCSTATE.policies.type = Policies
 appender.SYNCSTATE.policies.time.type = TimeBasedTriggeringPolicy
-appender.SYNCSTATE.policies.time.interval = 2
+appender.SYNCSTATE.policies.time.interval = 1
 appender.SYNCSTATE.policies.time.modulate = true
 appender.SYNCSTATE.strategy.type = DefaultRolloverStrategy
 
@@ -82,7 +82,7 @@ appender.WBXML.layout.type = PatternLayout
 appender.WBXML.layout.pattern = %d %-5p [%t] [%z] %c{1} - %m%n
 appender.WBXML.policies.type = Policies
 appender.WBXML.policies.time.type = TimeBasedTriggeringPolicy
-appender.WBXML.policies.time.interval = 2
+appender.WBXML.policies.time.interval = 1
 appender.WBXML.policies.time.modulate = true
 appender.WBXML.strategy.type = DefaultRolloverStrategy
 
@@ -95,7 +95,7 @@ appender.ACTIVITY.layout.type = PatternLayout
 appender.ACTIVITY.layout.pattern = %d %-5p [%t] [%z] %c{1} - %m%n
 appender.ACTIVITY.policies.type = Policies
 appender.ACTIVITY.policies.time.type = TimeBasedTriggeringPolicy
-appender.ACTIVITY.policies.time.interval = 2
+appender.ACTIVITY.policies.time.interval = 1
 appender.ACTIVITY.policies.time.modulate = true
 appender.ACTIVITY.strategy.type = DefaultRolloverStrategy
 
@@ -108,7 +108,7 @@ appender.SEARCHSTAT.layout.type = PatternLayout
 appender.SEARCHSTAT.layout.pattern = %d %-5p [%t] [%z] %c{1} - %m%n
 appender.SEARCHSTAT.policies.type = Policies
 appender.SEARCHSTAT.policies.time.type = TimeBasedTriggeringPolicy
-appender.SEARCHSTAT.policies.time.interval = 2
+appender.SEARCHSTAT.policies.time.interval = 1
 appender.SEARCHSTAT.policies.time.modulate = true
 appender.SEARCHSTAT.strategy.type = DefaultRolloverStrategy
 
@@ -121,29 +121,29 @@ appender.EWS.layout.type = PatternLayout
 appender.EWS.layout.pattern = %d %-5p [%t] [%z] %c{1} - %m%n
 appender.EWS.policies.type = Policies
 appender.EWS.policies.time.type = TimeBasedTriggeringPolicy
-appender.EWS.policies.time.interval = 2
+appender.EWS.policies.time.interval = 1
 appender.EWS.policies.time.modulate = true
 appender.EWS.strategy.type = DefaultRolloverStrategy
 
 # Syslog appender
-appender.SYSLOG.type = Syslog
-appender.SYSLOG.name = syslogAppender
-appender.SYSLOG.host = localhost
-appender.SYSLOG.port = 514
-appender.SYSLOG.protocol = UDP
-appender.SYSLOG.facility = LOCAL0
-appender.SYSLOG.layout.type = PatternLayout
-appender.SYSLOG.layout.pattern = mailboxd: %-5p [%t] [%z] %c{1} - %m
+%%uncomment VAR:zimbraLogToSyslog%%appender.SYSLOG.type = Syslog
+%%uncomment VAR:zimbraLogToSyslog%%appender.SYSLOG.name = syslogAppender
+%%uncomment VAR:zimbraLogToSyslog%%appender.SYSLOG.host = localhost
+%%uncomment VAR:zimbraLogToSyslog%%appender.SYSLOG.port = 514
+%%uncomment VAR:zimbraLogToSyslog%%appender.SYSLOG.protocol = UDP
+%%uncomment VAR:zimbraLogToSyslog%%appender.SYSLOG.facility = LOCAL0
+%%uncomment VAR:zimbraLogToSyslog%%appender.SYSLOG.layout.type = PatternLayout
+%%uncomment VAR:zimbraLogToSyslog%%appender.SYSLOG.layout.pattern = mailboxd: %-5p [%t] [%z] %c{1} - %m
 
 # Logger service appender
-%%comment VAR:!zimbraLogHostname%%appender.SLOGGER.type = Syslog
-%%comment VAR:!zimbraLogHostname%%appender.SLOGGER.name = sloggerAppender
-%%comment VAR:!zimbraLogHostname%%appender.SLOGGER.host = %%zimbraLogHostname%%
-%%comment VAR:!zimbraLogHostname%%appender.SLOGGER.facility = LOCAL1
-%%comment VAR:!zimbraLogHostname%%appender.SLOGGER.port = 514
-%%comment VAR:!zimbraLogHostname%%appender.SLOGGER.protocol = UDP
-%%comment VAR:!zimbraLogHostname%%appender.SLOGGER.layout.type = PatternLayout
-%%comment VAR:!zimbraLogHostname%%appender.SLOGGER.layout.pattern = mailboxd: %-5p [%t] [%z] %c{1} - %m
+appender.SLOGGER.type = Syslog
+appender.SLOGGER.name = sloggerAppender
+appender.SLOGGER.host = %%zimbraLogHostname%%
+appender.SLOGGER.facility = LOCAL1
+appender.SLOGGER.port = 514
+appender.SLOGGER.protocol = UDP
+appender.SLOGGER.layout.type = PatternLayout
+appender.SLOGGER.layout.pattern = mailboxd: %-5p [%t] [%z] %c{1} - %m
 
 logger.zimbra.name = zimbra.mailbox
 logger.zimbra.level = info
@@ -152,49 +152,49 @@ logger.zimbra.appenderRef.LOGFILE.ref = mailboxFile
 
 # Save zimbra.security to AUDIT appender 
 logger.security.name = zimbra.security
-logger.security.level = debug, AUDIT
+logger.security.level = info
 logger.security.additivity = false
 logger.security.appenderRef.AUDIT.ref = auditFile
 
 logger.sync.name = zimbra.sync
-logger.sync.level = info,SYNC
+logger.sync.level = info
 logger.sync.additivity = false
 logger.sync.appenderRef.SYNC.ref = syncFile
 
 logger.synctrace.name = zimbra.synctrace
-logger.synctrace.level = info,SYNCTRACE
+logger.synctrace.level = info
 logger.synctrace.additivity = false
 logger.synctrace.appenderRef.SYNCTRACE.ref = syncTraceFile
 
 logger.syncstate.name = zimbra.syncstate
-logger.syncstate.level = info,SYNCSTATE
+logger.syncstate.level = info
 logger.syncstate.additivity = false
 logger.syncstate.appenderRef.SYNCSTATE.ref = syncStateFile
 
 logger.wbxml.name = zimbra.wbxml
-logger.wbxml.level = info,WBXML
+logger.wbxml.level = info
 logger.wbxml.additivity = false
 logger.wbxml.appenderRef.WBXML.ref = wbXmlFile
 
 logger.activity.name = zimbra.activity
-logger.activity.level = info,ACTIVITY
+logger.activity.level = info
 logger.activity.additivity = false
 logger.activity.appenderRef.ACTIVITY.ref = activityFile
 
 logger.searchstat.name = zimbra.searchstat
-logger.searchstat.level = info,SEARCHSTAT
+logger.searchstat.level = info
 logger.searchstat.additivity = false
 logger.searchstat.appenderRef.SEARCHSTAT.ref = searchStatFile
 
 logger.ews.name = zimbra.ews
-logger.ews.level = info,EWS
+logger.ews.level = info
 logger.ews.additivity = false
 logger.ews.appenderRef.EWS.ref = ewsFile
 
-logger.syslog.name = com.zimbra
-logger.syslog.level = debug
-logger.syslog.additivity = false
-logger.syslog.appenderRef.SYSLOG.ref = syslogAppender
+%%uncomment VAR:zimbraLogToSyslog%%logger.syslog.name = com.zimbra
+%%uncomment VAR:zimbraLogToSyslog%%logger.syslog.level = info
+%%uncomment VAR:zimbraLogToSyslog%%logger.syslog.additivity = false
+%%uncomment VAR:zimbraLogToSyslog%%logger.syslog.appenderRef.SYSLOG.ref = syslogAppender
 
 # HttpMethodBase spews out too many WARN on the badly formatted cookies.
 #logger.org.apache.commons.httpclient.HttpMethodBase=ERROR
@@ -206,11 +206,10 @@ logger.httpmethodbase.level = ERROR
 logger.memcached.name = net.spy.memcached
 logger.memcached.level = WARN
 
-%%comment VAR:!zimbraLogHostname%%logger.slogger.name = zimbra.slogger
-%%comment VAR:!zimbraLogHostname%%logger.slogger.level=INFO,SLOGGER
-%%uncomment VAR:!zimbraLogHostname%%logger.slogger.level=ERROR
-%%comment VAR:!zimbraLogHostname%%logger.slogger.additivity = false
-%%comment VAR:!zimbraLogHostname%%logger.slogger.appenderRef.SLOGGER.ref = sloggerAppender
+logger.slogger.name = zimbra.slogger
+logger.slogger.level = error
+logger.slogger.additivity = false
+logger.slogger.appenderRef.SLOGGER.ref = sloggerAppender
 
 rootLogger.level=INFO
 

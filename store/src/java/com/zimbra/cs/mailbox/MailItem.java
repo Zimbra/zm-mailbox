@@ -43,6 +43,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.mailbox.ContactConstants;
+import com.zimbra.common.mailbox.FolderConstants;
 import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.common.service.ServiceException;
@@ -1897,6 +1898,10 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
      * @param parent  The created item's parent.  The parent's addChild()
      *                method will be called during the function. */
     protected void finishCreation(MailItem parent) throws ServiceException {
+        finishCreation(parent, false);
+    }
+
+    protected void finishCreation(MailItem parent, boolean isTrashFolder) throws ServiceException {
         markItemCreated();
 
         // let the parent know it's got a new child
@@ -1913,8 +1918,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         // update mailbox and folder sizes
         if (isLeafNode()) {
             boolean isDeleted = isTagged(Flag.FlagInfo.DELETED);
-
-            mMailbox.updateSize(mData.size, isQuotaCheckRequired());
+            mMailbox.updateSize(mData.size, isQuotaCheckRequired(), isTrashFolder);
             folder.updateSize(1, isDeleted ? 1 : 0, mData.size);
             updateTagSizes(1, isDeleted ? 1 : 0, mData.size);
 
@@ -2753,7 +2757,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         DbMailItem.icopy(this, data, shareIndex);
 
         MailItem copy = constructItem(mMailbox, data);
-        copy.finishCreation(null);
+        copy.finishCreation(null, target.getId() == FolderConstants.ID_FOLDER_TRASH);
 
         if (shareIndex && !isTagged(Flag.FlagInfo.COPIED)) {
             Flag copiedFlag = mMailbox.getFlagById(Flag.ID_COPIED);
