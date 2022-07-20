@@ -23,6 +23,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 
 import org.dom4j.QName;
+import org.json.JSONException;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.zimbra.common.account.Key;
@@ -106,7 +107,7 @@ public abstract class DocumentHandler {
 
     public void postProxy(Element request, Element response, Map<String, Object> context) throws ServiceException {}
 
-    public abstract Element handle(Element request, Map<String, Object> context) throws ServiceException;
+    public abstract Element handle(Element request, Map<String, Object> context) throws ServiceException, JSONException;
 
 
     /** Returns the {@link ZimbraSoapContext} object encapsulating the
