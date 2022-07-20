@@ -21,16 +21,14 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import com.zimbra.common.soap.AdminConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class VolumeExternalInfo {
 
-    /**
-     * @zm-api-field-description Set to 1 for Internal and 2 for External.
-     */
-    @XmlAttribute(name=AdminConstants.A_VOLUME_STORAGE_TYPE /* storageType */, required=false)
-    private String storageType = "S3";
+public class VolumeExternalInfo extends BaseExternalVolume{
 
     /**
      * @zm-api-field-description Prefix for bucket location e.g. server1_primary
@@ -61,14 +59,6 @@ public class VolumeExternalInfo {
      */
     @XmlAttribute(name=AdminConstants.A_VOLUME_USE_INTELLIGENT_TIERING /* useIntelligentTiering */, required=false)
     private boolean useIntelligentTiering = false;
-
-    public void setStorageType(String value) {
-        storageType = value;
-    }
-
-    public String getStorageType() {
-        return storageType;
-    }
 
     public void setVolumePrefix(String value) {
         volumePrefix = value;
@@ -108,5 +98,30 @@ public class VolumeExternalInfo {
 
     public int getUseInFrequentAccessThreshold() {
         return useInFrequentAccessThreshold;
+    }
+
+	@Override
+    public JSONObject toJSON(VolumeInfo volInfo) throws JSONException {
+        VolumeExternalInfo volExtInfo = volInfo.getVolumeExternalInfo();
+        JSONObject volExtInfoObj = new JSONObject();
+        volExtInfoObj.put(AdminConstants.A_VOLUME_ID, String.valueOf(volInfo.getId()));
+        volExtInfoObj.put(AdminConstants.A_VOLUME_STORAGE_TYPE, volExtInfo.getStorageType());
+        volExtInfoObj.put(AdminConstants.A_VOLUME_VOLUME_PREFIX, volExtInfo.getVolumePrefix());
+        volExtInfoObj.put(AdminConstants.A_VOLUME_USE_IN_FREQ_ACCESS, String.valueOf(volExtInfo.isUseInFrequentAccess()));
+        volExtInfoObj.put(AdminConstants.A_VOLUME_USE_INTELLIGENT_TIERING, String.valueOf(volExtInfo.isUseIntelligentTiering()));
+        volExtInfoObj.put(AdminConstants.A_VOLUME_GLB_BUCKET_CONFIG_ID, volExtInfo.getGlobalBucketConfigurationId());
+        volExtInfoObj.put(AdminConstants.A_VOLUME_USE_IN_FREQ_ACCESS_THRESHOLD, String.valueOf(volExtInfo.getUseInFrequentAccessThreshold()));
+        return volExtInfoObj;
+    }
+
+    public VolumeExternalInfo toExternalInfo(JSONObject properties) throws JSONException {
+        VolumeExternalInfo volExtInfo = new VolumeExternalInfo();
+        volExtInfo.setVolumePrefix(properties.getString(AdminConstants.A_VOLUME_VOLUME_PREFIX));
+        volExtInfo.setGlobalBucketConfigurationId(properties.getString(AdminConstants.A_VOLUME_GLB_BUCKET_CONFIG_ID));
+        volExtInfo.setUseInFrequentAccess(Boolean.valueOf(properties.getString(AdminConstants.A_VOLUME_USE_IN_FREQ_ACCESS)));
+        volExtInfo.setUseIntelligentTiering(Boolean.valueOf(properties.getString(AdminConstants.A_VOLUME_USE_INTELLIGENT_TIERING)));
+        volExtInfo.setUseInFrequentAccessThreshold(Integer.parseInt(properties.getString(AdminConstants.A_VOLUME_USE_IN_FREQ_ACCESS_THRESHOLD)));
+        volExtInfo.setStorageType(properties.getString(AdminConstants.A_VOLUME_STORAGE_TYPE));
+        return volExtInfo;
     }
 }
