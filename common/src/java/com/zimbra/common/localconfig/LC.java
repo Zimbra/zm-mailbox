@@ -599,7 +599,9 @@ public final class LC {
             " -XX:G1MaxNewSizePercent=45" +
             " -XX:-OmitStackTraceInFastThrow" +
             " -verbose:gc" +
-            " -Xlog:gc*=info,safepoint=info:file=/opt/zimbra/log/gc.log:time:filecount=20,filesize=10m");
+            " -Xlog:gc*=info,safepoint=info:file=/opt/zimbra/log/gc.log:time:filecount=20,filesize=10m" +
+            " -Djava.security.egd=file:/dev/./urandom" +
+            " --add-opens java.base/java.lang=ALL-UNNAMED");
     @Supported
     public static final KnownKey mailboxd_pidfile = KnownKey.newKey("${zimbra_log_directory}/mailboxd.pid");
 
@@ -1491,6 +1493,9 @@ public final class LC {
     
     // ZCS-11349: Toggle off/on fallback to ldap search
     public static final KnownKey zimbra_gal_fallback_ldap_search_enabled = KnownKey.newKey(true);
+
+    // ZBUG-2800 list of proxy headers not allowed
+    public static final KnownKey proxy_servlet_drop_headers = KnownKey.newKey("x-forwarded-host,x-host,x-forwarded-server,x-http-host-override,x-http-host-override");
 
     static {
         // Automatically set the key name with the variable name.

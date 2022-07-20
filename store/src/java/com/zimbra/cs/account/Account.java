@@ -25,6 +25,7 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning.GroupMembership;
@@ -534,5 +535,13 @@ public class Account extends ZAttrAccount implements GroupedEntry, AliasedEntry 
      */
     public void refreshUserCredentials() throws ServiceException {
         getProvisioning().refreshUserCredentials(this);
+    }
+
+    /**
+     * Returns whether username is allowed within password.
+     * @return true if username is allowed within password; otherwise, false.
+     */
+    public boolean getAllowUsernameWithinPassword() {
+        return LC.allow_username_within_password.booleanValue();
     }
 }
