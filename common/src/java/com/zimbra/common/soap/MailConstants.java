@@ -1416,5 +1416,10 @@ public final class MailConstants {
     public static final String SUCCESS = "Success";
     public static final String FAILURE = "Failure";
     public static final String NO_QUARANTINED_LIST = "There are currently no qurantined devices";
-    
+    public static final String HTML_TABLE_ROW = "<tr>";
+    public static final String HTML_TABLE_ROW_CLOSE = "</tr>";
+    public static final String HTML_TABLE_DATA = "<td>";
+    public static final String HTML_TABLE_DATA_CLOSE = "</td>";
+    public static final String HTML_TABLE_CLOSE = "</table>";
+    public static final String HTML_DEVICE_TABLE_INFO_HEADER = "<table border=1 cellpadding =3 cellspacing =0><tr><th>Index</th><th>Device</th><th>Device ID</th><th>User Agent</th><th>Time</th></tr>";
 }

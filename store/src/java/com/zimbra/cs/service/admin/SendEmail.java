@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013, 2014, 2015, 2016, 2022 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -31,6 +31,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.rmgmt.RemoteManager;
 import com.zimbra.cs.rmgmt.RemoteResult;
 import com.zimbra.common.soap.SyncAdminConstants;
+import com.zimbra.common.soap.MailConstants;
 
 public class SendEmail extends AdminDocumentHandler {
 
@@ -51,7 +52,7 @@ public class SendEmail extends AdminDocumentHandler {
         String stdErr = (remoteResult.getMStderr() != null) ? new String(remoteResult.getMStderr(), csUtf8) : null;
         if (remoteResult.getMExitStatus() == SyncAdminConstants.REMOTE_SERVER_SUCCESS) {
             if (stdErr != null) {
-                response.addElement(SyncAdminConstants.E_STATUS).setText("Success");
+                response.addElement(SyncAdminConstants.E_STATUS).setText(MailConstants.SUCCESS);
                 ZimbraLog.sync.debug(
                         "Command \"%s\" completed successfully with stderr output; exit code=%d; stderr=\n%s", command,
                         remoteResult.getMExitStatus(), stdErr);

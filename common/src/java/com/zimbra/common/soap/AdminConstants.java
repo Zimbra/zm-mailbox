@@ -537,7 +537,7 @@ public final class AdminConstants {
     public static final String E_GET_ALL_SKINS_REQUEST = "GetAllSkinsRequest";
     public static final String E_GET_ALL_SKINS_RESPONSE = "GetAllSkinsResponse";
     
-    //S ending Emails
+    // Sending Emails
     public static final String E_SEND_EMAIL_REQUEST = "SendEmailRequest";
     public static final String E_SEND_EMAIL_RESPONSE = "SendEmailResponse";
     

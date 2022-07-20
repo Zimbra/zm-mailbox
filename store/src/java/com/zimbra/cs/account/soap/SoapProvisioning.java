@@ -31,6 +31,8 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import org.apache.http.HttpException;
 import org.apache.http.HttpResponse;
@@ -67,6 +69,7 @@ import com.zimbra.common.soap.SoapTransport.DebugListener;
 import com.zimbra.common.soap.SyncAdminConstants;
 import com.zimbra.common.util.AccountLogger;
 import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.DateTimeUtil;
 import com.zimbra.common.util.Log.Level;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.SystemUtil;
@@ -317,6 +320,8 @@ import com.zimbra.soap.type.GalSearchType;
 import com.zimbra.soap.type.GranteeType;
 import com.zimbra.soap.type.TargetBy;
 import java.nio.charset.Charset;
+import java.sql.Timestamp;
+
 import com.zimbra.soap.admin.type.DeviceStatusInfo;
 import com.zimbra.cs.rmgmt.RemoteManager;
 import com.zimbra.cs.rmgmt.RemoteResult;
@@ -3242,16 +3247,23 @@ public class SoapProvisioning extends Provisioning {
     * @throws ServiceException if an error occurs while sending email for MDM notification mail
     */
     @Override
-    public String sendMdmEmail(String status, String to) throws ServiceException {
-        String devicesInfo = "";
+    public String sendMdmEmail(String status, String to, String timeInterval) throws ServiceException {
+        String devicesInfo = MailConstants.HTML_DEVICE_TABLE_INFO_HEADER;
         String emailBody = "";
         String subject = LC.zimbra_mobile_mdm_notification_email_subject.value();
         GetDeviceStatusResponse resp = invokeJaxb(new GetDeviceStatusRequest(null));
-        List<DeviceStatusInfo> statusOfDevices = resp.getDevices();
+        List<DeviceStatusInfo> statusOfDevices = resp.getDevices().stream().filter(devices -> DateTimeUtil.checkWithinTime(Timestamp.valueOf(devices.getTimestamp()), Integer.parseInt(timeInterval), TimeUnit.MINUTES))
+                .collect(Collectors.toList());
         int j = 0;
         for (int i = 0; i < statusOfDevices.size(); i++) {
-            if (statusOfDevices.get(i).getStatus() == SyncAdminConstants.MDM_STATUS_SUSPENDED) {
-                devicesInfo +=  MailConstants.BREAK_LINE + (j + 1) + "." + statusOfDevices.get(i).getId();
+            if ((statusOfDevices.get(i).getStatus() == SyncAdminConstants.MDM_STATUS_SUSPENDED)) {
+                devicesInfo +=  MailConstants.HTML_TABLE_ROW +
+                        MailConstants.HTML_TABLE_DATA + (j + 1) + MailConstants.HTML_TABLE_DATA_CLOSE + 
+                        MailConstants.HTML_TABLE_DATA + statusOfDevices.get(i).getFriendlyName()+ MailConstants.HTML_TABLE_DATA_CLOSE +
+                        MailConstants.HTML_TABLE_DATA + statusOfDevices.get(i).getId() + MailConstants.HTML_TABLE_DATA_CLOSE +
+                        MailConstants.HTML_TABLE_DATA + statusOfDevices.get(i).getUserAgent() + MailConstants.HTML_TABLE_DATA_CLOSE +
+                        MailConstants.HTML_TABLE_DATA + statusOfDevices.get(i).getTimestamp() + MailConstants.HTML_TABLE_DATA_CLOSE +
+                        MailConstants.HTML_TABLE_ROW_CLOSE;
                 j++;
             }
         }
@@ -3259,8 +3271,8 @@ public class SoapProvisioning extends Provisioning {
             emailBody = MailConstants.NO_QUARANTINED_LIST;
             subject = MailConstants.NO_QUARANTINED_LIST;
         } else {
-            emailBody = LC.zimbra_mobile_mdm_notification_email_body.value() + MailConstants.BREAK_LINE
-                    + devicesInfo;
+            emailBody = LC.zimbra_mobile_mdm_notification_email_body.value() + MailConstants.BREAK_LINE + MailConstants.BREAK_LINE
+                    + devicesInfo + MailConstants.HTML_TABLE_CLOSE;
         }
         SendEmailResponse sendEmailResponse = invokeJaxb(new SendEmailRequest(to, subject, emailBody));
         return MailConstants.SUCCESS;

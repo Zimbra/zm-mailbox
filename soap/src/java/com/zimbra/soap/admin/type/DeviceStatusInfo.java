@@ -177,6 +177,8 @@ public class DeviceStatusInfo {
     @XmlElement(name=SyncConstants.E_EMAIL_ADDRESS /* emailAddress */, required=false)
     private String emailAddress;
 
+    @XmlElement(name=SyncConstants.E_TIMESTAMP /* timeStamp */, required=false)
+    private String timestamp;
     /**
      * no-argument constructor wanted by JAXB
      */
@@ -245,6 +247,7 @@ public class DeviceStatusInfo {
     public Integer getRemoteWipeAckTime() { return remoteWipeAckTime; }
     public String getRecoveryPassword() { return recoveryPassword; }
     public String getLastUsedDate() { return lastUsedDate; }
+    public String getTimestamp() { return timestamp; }
 
     public MoreObjects.ToStringHelper addToStringInfo(
                 MoreObjects.ToStringHelper helper) {
@@ -266,7 +269,8 @@ public class DeviceStatusInfo {
             .add("remoteWipeReqTime", remoteWipeReqTime)
             .add("remoteWipeAckTime", remoteWipeAckTime)
             .add("recoveryPassword", recoveryPassword)
-            .add("lastUsedDate", lastUsedDate);
+            .add("lastUsedDate", lastUsedDate)
+            .add("timestamp", timestamp);
     }
 
     @Override

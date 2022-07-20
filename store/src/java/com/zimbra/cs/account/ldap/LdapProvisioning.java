@@ -11606,7 +11606,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     }
 
     @Override
-    public String sendMdmEmail(String status, String email) throws ServiceException {
+    public String sendMdmEmail(String status, String email, String timeInterval) throws ServiceException {
         return MailConstants.FAILURE;
     }
 
