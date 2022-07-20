@@ -1169,6 +1169,7 @@ public final class AdminConstants {
     public static final String E_NUM_OF_PAGES = "numpages";
     public static final String E_VOLUME = "volume";
     public static final String E_VOLUME_EXT = "volumeExternalInfo";
+    public static final String E_VOLUME_OPENIO_EXT = "volumeExternalOpenIoInfo";
     public static final String E_PROGRESS = "progress";
     public static final String E_SOAP_URL = "soapURL";
     public static final String E_ADMIN_SOAP_URL = "adminSoapURL";
@@ -1303,6 +1304,13 @@ public final class AdminConstants {
     public static final String A_VOLUME_USE_IN_FREQ_ACCESS = "useInFrequentAccess";
     public static final String A_VOLUME_USE_IN_FREQ_ACCESS_THRESHOLD = "useInFrequentAccessThreshold";
     public static final String A_VOLUME_USE_INTELLIGENT_TIERING = "useIntelligentTiering";
+    public static final String A_VOLUME_URL = "url";
+    public static final String A_VOLUME_ACCOUNT = "account";
+    public static final String A_VOLUME_NAMESPACE = "nameSpace";
+    public static final String A_VOLUME_PROXY_PORT= "proxyPort";
+    public static final String A_VOLUME_ACCOUNT_PORT = "accountPort";
+    public static final String A_VOLUME_S3 = "S3";
+    public static final String A_VOLUME_OPEN_IO = "OPENIO";
 
     // Blob consistency check
     public static final String E_MISSING_BLOBS = "missingBlobs";
