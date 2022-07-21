@@ -345,20 +345,24 @@ public class ZimbraLmtpBackend implements LmtpBackend {
         // initializing input stream and blob for External Email Warning (EEW)
         InputStream inEEW = null;
         Blob blobEEW = null;
+        ZimbraLog.lmtp.debug("ExternalEmailWarning isEnabled: %s", ExternalEmailWarning.getInstance().isEnabled());
         if (ExternalEmailWarning.getInstance().isEnabled()) {
             // duplicating input stream for EEW
             try {
                 for (int i = 0; i < CHARSET_NAMES.length; i++) {
                     final String charsetName = CHARSET_NAMES[i];
+                    ZimbraLog.lmtp.debug("ExternalEmailWarning charsetName: %s", charsetName);
                     // copy input stream and evaluate content encoding
                     final byte[] ba = IOUtils.toByteArray(in);
                     IOUtils.closeQuietly(in);
                     in = new ByteArrayInputStream(ba);
                     final String content = new String(ba, charsetName);
+                    ZimbraLog.lmtp.debug("ExternalEmailWarning content: %s", content);
                     // if current encoding is suitable, use it; otherwise, continue or use default
                     if (!content.contains(GARBLED_CHARACTER) || i == CHARSET_NAMES.length - 1) {
                         final String contentEEW = ExternalEmailWarning.getInstance().getUpdatedContent(content);
                         inEEW = IOUtils.toInputStream(contentEEW, charsetName);
+                        ZimbraLog.lmtp.debug("ExternalEmailWarning contentEEW: %s", contentEEW);
                         break;
                     }
                 }
