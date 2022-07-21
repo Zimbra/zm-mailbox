@@ -644,5 +644,4 @@ public class AccountConstants {
     public static final String E_SKIN_SELECTION_COLOR = "zimbraSkinSelectionColor";
     public static final String E_SKIN_FAVICON = "zimbraSkinFavicon";
     public static final String E_HOSTNAME = "hostname";
-    
 }
