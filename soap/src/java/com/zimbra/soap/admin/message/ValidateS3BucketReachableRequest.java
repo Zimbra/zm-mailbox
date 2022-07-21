@@ -33,38 +33,29 @@ import com.zimbra.soap.admin.type.AdminAttrsImpl;
  */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name = AdminConstants.E_VALIDATE_S3_BUCKET_REACHABLE_REQUEST)
-public class ValidateS3BucketReachableRequest {
-	
-	 
+public class ValidateS3BucketReachableRequest extends AdminAttrsImpl {
+
     @XmlAttribute(name=GlobalExternalStoreConfigConstants.A_S3_URL /* name */, required=true)
     private String url;
-    
-   
+
     @XmlAttribute(name=GlobalExternalStoreConfigConstants.A_S3_BUCKET_NAME /* name */, required=true)
     private String bucketName;
-    
-   
+
     @XmlAttribute(name=GlobalExternalStoreConfigConstants.A_S3_REGION /* name */, required=false)
     private String region;
-    
-   
+
     @XmlAttribute(name=GlobalExternalStoreConfigConstants.A_S3_ACCESS_KEY /* name */, required=true)
     private String accessKey;
-    
-    
+
     @XmlAttribute(name=GlobalExternalStoreConfigConstants.A_S3_SECRET_KEY /* name */, required=true)
     private String secrateKey;
-    
-    
-
 
 
     @Override
     public String toString() {
         return "ValidateS3BucketReachableRequest [url=" + url + ", bucketName=" + bucketName + ", region=" + region
-                    + ", accessKey=" + accessKey + ", secrateKey=" + secrateKey + "]";
-	}
-
+                + ", accessKey=" + accessKey + ", secrateKey=" + secrateKey + "]";
+    }
 
 
     public String getUrl() {
@@ -83,28 +74,28 @@ public class ValidateS3BucketReachableRequest {
         this.bucketName = bucketName;
     }
 
-    public String getRegion() {
-        return region;
+	public String getRegion() {
+       return region;
     }
 
     public void setRegion(String region) {
-        this.region = region;
+       this.region = region;
     }
 
     public String getAccessKey() {
-        return accessKey;
+       return accessKey;
     }
 
     public void setAccessKey(String accessKey) {
-        this.accessKey = accessKey;
+       this.accessKey = accessKey;
     }
 
     public String getSecrateKey() {
-        return secrateKey;
+      return secrateKey;
     }
 
     public void setSecrateKey(String secrateKey) {
-        this.secrateKey = secrateKey;
+       this.secrateKey = secrateKey;
     }
 
     public ValidateS3BucketReachableRequest() {
