@@ -43,7 +43,7 @@ public class ValidateS3BucketReachableRequest {
     private String bucketName;
     
    
-    @XmlAttribute(name=AccountConstants.REGION /* name */, required=true)
+    @XmlAttribute(name=AccountConstants.REGION /* name */, required=false)
     private String region;
     
    
