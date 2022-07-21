@@ -57,11 +57,13 @@ public class ValidateS3BucketReachableRequest {
     
     
 
+
+
     @Override
     public String toString() {
         return "ValidateS3BucketReachableRequest [url=" + url + ", bucketName=" + bucketName + ", region=" + region
-                + ", accessKey=" + accessKey + ", secrateKey=" + secrateKey + "]";
-    }
+                    + ", accessKey=" + accessKey + ", secrateKey=" + secrateKey + "]";
+	}
 
 
 
@@ -69,61 +71,41 @@ public class ValidateS3BucketReachableRequest {
         return url;
     }
 
-
-
     public void setUrl(String url) {
-       this.url = url;
+        this.url = url;
     }
-
-
 
     public String getBucketName() {
-       return bucketName;
+        return bucketName;
     }
-
-
 
     public void setBucketName(String bucketName) {
-       this.bucketName = bucketName;
+        this.bucketName = bucketName;
     }
-
-
 
     public String getRegion() {
-       return region;
+        return region;
     }
-
-
 
     public void setRegion(String region) {
-       this.region = region;
+        this.region = region;
     }
-
-
 
     public String getAccessKey() {
-       return accessKey;
+        return accessKey;
     }
-
-
 
     public void setAccessKey(String accessKey) {
-       this.accessKey = accessKey;
+        this.accessKey = accessKey;
     }
-
-
 
     public String getSecrateKey() {
-      return secrateKey;
+        return secrateKey;
     }
-
-
 
     public void setSecrateKey(String secrateKey) {
-       this.secrateKey = secrateKey;
+        this.secrateKey = secrateKey;
     }
-
-
 
     public ValidateS3BucketReachableRequest() {
     }
