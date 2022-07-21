@@ -150,6 +150,7 @@ public final class BackupConstants {
     public static final String A_RESTORE_TO_TIME = "restoreToTime";
     public static final String A_RESTORE_TO_REDO_SEQ = "restoreToRedoSeq";
     public static final String A_RESTORE_TO_INCR_LABEL = "restoreToIncrLabel";
+    public static final String A_RESTORE_IN_DR_MODE = "restoreInDRMode";
     public static final String A_IGNORE_REDO_ERRORS = "ignoreRedoErrors";
     public static final String A_SKIP_DELETE_OPS = "skipDeleteOps";
     public static final String A_COUNTER_UNIT = "unit";
