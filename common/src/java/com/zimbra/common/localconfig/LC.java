@@ -1500,6 +1500,7 @@ public final class LC {
     // ZCS-11602: Notification support for quarantined devices
     public static final KnownKey zimbra_mobile_mdm_notification_email_body = KnownKey.newKey("Following is the list of quarantined devices ");
     public static final KnownKey zimbra_mobile_mdm_notification_email_subject = KnownKey.newKey("List of quarantined devices");
+    public static final KnownKey zimbra_mobile_mdm_notification_email_to = KnownKey.newKey("");
     static {
         // Automatically set the key name with the variable name.
         for (Field field : LC.class.getFields()) {

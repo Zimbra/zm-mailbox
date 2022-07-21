@@ -35,9 +35,9 @@ import com.zimbra.common.soap.SyncConstants;
 import com.zimbra.soap.admin.type.DeviceStatusInfo;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name = AdminConstants.E_SEND_EMAIL_RESPONSE)
+@XmlRootElement(name = AdminConstants.E_SEND_MDM_NOTIFICATION_EMAIL_RESPONSE)
 @XmlType(propOrder = {})
-public class SendEmailResponse {
+public class SendMdmNotificationEmailResponse {
 
     /**
      * @zm-api-field-description status of email sent
@@ -45,10 +45,10 @@ public class SendEmailResponse {
     @XmlElement(name = SyncAdminConstants.E_STATUS, required = true)
     private String status;
 
-    public SendEmailResponse() {
+    public SendMdmNotificationEmailResponse() {
     }
 
-    public SendEmailResponse(String status) {
+    public SendMdmNotificationEmailResponse(String status) {
         this.status = status;
     }
 

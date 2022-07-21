@@ -877,8 +877,8 @@ public class ProvUtil implements HttpDebugListener {
         "{habGrpId} {seniorityIndex} ", Category.HAB, 2, 2),
         GET_HAB_GROUP_MEMBERS("getHABGroupMembers", "ghgm", "{name@domain|id}",
                 Category.HAB, 1, 1),
-        SEND_MDM_EMAIL("sendMdmEmail", "smdme", "{type | quarantined | blocked} {admin email} {time interval in minutes}",
-                Category.MOBILE, 3, 3);
+        SEND_MDM_EMAIL("sendMdmEmail", "smdme", "{type | quarantined | blocked} {time interval in minutes}",
+                Category.MOBILE, 2, 2);
 
         private String mName;
         private String mAlias;
@@ -1651,7 +1651,7 @@ public class ProvUtil implements HttpDebugListener {
             doGetHABGroupMembers(args);
             break;
         case SEND_MDM_EMAIL:
-            prov.sendMdmEmail(args[1], args[2], args[3]);
+            prov.sendMdmEmail(args[1], args[2]);
             break;
         default:
             return false;

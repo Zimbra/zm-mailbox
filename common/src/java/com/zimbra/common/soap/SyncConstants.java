@@ -72,7 +72,7 @@ public final class SyncConstants {
     public static final String E_DEVICE = "device";
     public static final String E_PROVISIONABLE = "provisionable";
     public static final String E_STATUS = "status";
-    public static final String E_FRIENDLY_NAME = "firendlyName";
+    public static final String E_FRIENDLY_NAME = "friendlyName";
     public static final String E_FIRST_REQ_RECEIVED = "firstReqReceived";
     public static final String E_LAST_POLICY_UPDATE = "lastPolicyUpdate";
     public static final String E_USER_AGENT = "userAgent";

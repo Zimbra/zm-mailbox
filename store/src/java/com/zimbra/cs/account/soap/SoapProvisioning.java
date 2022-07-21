@@ -263,8 +263,8 @@ import com.zimbra.soap.admin.message.RenameUCServiceRequest;
 import com.zimbra.soap.admin.message.ResetAllLoggersRequest;
 import com.zimbra.soap.admin.message.SearchDirectoryRequest;
 import com.zimbra.soap.admin.message.SearchDirectoryResponse;
-import com.zimbra.soap.admin.message.SendEmailRequest;
-import com.zimbra.soap.admin.message.SendEmailResponse;
+import com.zimbra.soap.admin.message.SendMdmNotificationEmailRequest;
+import com.zimbra.soap.admin.message.SendMdmNotificationEmailResponse;
 import com.zimbra.soap.admin.message.SetLocalServerOnlineRequest;
 import com.zimbra.soap.admin.message.SetPasswordRequest;
 import com.zimbra.soap.admin.message.SetPasswordResponse;
@@ -3241,41 +3241,44 @@ public class SoapProvisioning extends Provisioning {
     }
     
     /**
-    *
-    * @param status reserved for future use if mail to send for different status to be added
-    * @param to accepts admins email address to which email has to be send
-    * @throws ServiceException if an error occurs while sending email for MDM notification mail
-    */
+     *
+     * @param status reserved for future use if mail to send for different status to
+     *               be added
+     * @param to     accepts admins email address to which email has to be send
+     * @throws ServiceException if an error occurs while sending email for MDM
+     *                          notification mail
+     */
     @Override
-    public String sendMdmEmail(String status, String to, String timeInterval) throws ServiceException {
+    public String sendMdmEmail(String status, String timeInterval) throws ServiceException {
         String devicesInfo = MailConstants.HTML_DEVICE_TABLE_INFO_HEADER;
         String emailBody = "";
-        String subject = LC.zimbra_mobile_mdm_notification_email_subject.value();
         GetDeviceStatusResponse resp = invokeJaxb(new GetDeviceStatusRequest(null));
-        List<DeviceStatusInfo> statusOfDevices = resp.getDevices().stream().filter(devices -> DateTimeUtil.checkWithinTime(Timestamp.valueOf(devices.getTimestamp()), Integer.parseInt(timeInterval), TimeUnit.MINUTES))
+        List<DeviceStatusInfo> statusOfDevices = resp.getDevices().stream()
+                .filter(devices -> DateTimeUtil.checkWithinTime(Timestamp.valueOf(devices.getTimestamp()),
+                        Integer.parseInt(timeInterval), TimeUnit.MINUTES))
                 .collect(Collectors.toList());
         int j = 0;
         for (int i = 0; i < statusOfDevices.size(); i++) {
             if ((statusOfDevices.get(i).getStatus() == SyncAdminConstants.MDM_STATUS_SUSPENDED)) {
-                devicesInfo +=  MailConstants.HTML_TABLE_ROW +
-                        MailConstants.HTML_TABLE_DATA + (j + 1) + MailConstants.HTML_TABLE_DATA_CLOSE + 
-                        MailConstants.HTML_TABLE_DATA + statusOfDevices.get(i).getFriendlyName()+ MailConstants.HTML_TABLE_DATA_CLOSE +
-                        MailConstants.HTML_TABLE_DATA + statusOfDevices.get(i).getId() + MailConstants.HTML_TABLE_DATA_CLOSE +
-                        MailConstants.HTML_TABLE_DATA + statusOfDevices.get(i).getUserAgent() + MailConstants.HTML_TABLE_DATA_CLOSE +
-                        MailConstants.HTML_TABLE_DATA + statusOfDevices.get(i).getTimestamp() + MailConstants.HTML_TABLE_DATA_CLOSE +
-                        MailConstants.HTML_TABLE_ROW_CLOSE;
+                devicesInfo += MailConstants.HTML_TABLE_ROW + MailConstants.HTML_TABLE_DATA + (j + 1)
+                        + MailConstants.HTML_TABLE_DATA_CLOSE + MailConstants.HTML_TABLE_DATA
+                        + statusOfDevices.get(i).getFriendlyName() + MailConstants.HTML_TABLE_DATA_CLOSE
+                        + MailConstants.HTML_TABLE_DATA + statusOfDevices.get(i).getId()
+                        + MailConstants.HTML_TABLE_DATA_CLOSE + MailConstants.HTML_TABLE_DATA
+                        + statusOfDevices.get(i).getUserAgent() + MailConstants.HTML_TABLE_DATA_CLOSE
+                        + MailConstants.HTML_TABLE_DATA + statusOfDevices.get(i).getTimestamp()
+                        + MailConstants.HTML_TABLE_DATA_CLOSE + MailConstants.HTML_TABLE_ROW_CLOSE;
                 j++;
             }
         }
         if (j == 0) {
             emailBody = MailConstants.NO_QUARANTINED_LIST;
-            subject = MailConstants.NO_QUARANTINED_LIST;
         } else {
-            emailBody = LC.zimbra_mobile_mdm_notification_email_body.value() + MailConstants.BREAK_LINE + MailConstants.BREAK_LINE
-                    + devicesInfo + MailConstants.HTML_TABLE_CLOSE;
+            emailBody = MailConstants.BREAK_LINE + MailConstants.BREAK_LINE + devicesInfo
+                    + MailConstants.HTML_TABLE_CLOSE;
         }
-        SendEmailResponse sendEmailResponse = invokeJaxb(new SendEmailRequest(to, subject, emailBody));
+        SendMdmNotificationEmailResponse sendMdmNotificationEmailResponse = invokeJaxb(
+                new SendMdmNotificationEmailRequest(emailBody, status));
         return MailConstants.SUCCESS;
     }
-
 }

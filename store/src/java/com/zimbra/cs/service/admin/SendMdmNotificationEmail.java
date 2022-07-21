@@ -19,33 +19,37 @@ package com.zimbra.cs.service.admin;
 
 import java.nio.charset.Charset;
 import java.util.Map;
+import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.soap.admin.message.SendEmailRequest;
-import com.zimbra.soap.admin.message.SendEmailResponse;
-import com.zimbra.soap.ZimbraSoapContext;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.rmgmt.RemoteManager;
-import com.zimbra.cs.rmgmt.RemoteResult;
 import com.zimbra.common.soap.SyncAdminConstants;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.rmgmt.RemoteManager;
+import com.zimbra.cs.rmgmt.RemoteResult;
+import com.zimbra.cs.service.admin.AdminDocumentHandler;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.account.Server;
 
-public class SendEmail extends AdminDocumentHandler {
+
+public class SendMdmNotificationEmail extends AdminDocumentHandler {
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
-        SendEmailRequest req = zsc.elementToJaxb(request);
-        String to = request.getElement(SyncAdminConstants.E_TO).getText();
-        String subject = request.getElement(SyncAdminConstants.E_SUBJECT).getText();
+        Server localServer = prov.getLocalServer();
+        checkRight(zsc, context, localServer, Admin.R_SendMdmNotificationEmail);
         String message = request.getElement(SyncAdminConstants.E_MESSAGE).getText();
+        String status = request.getElement(SyncAdminConstants.E_STATUS).getText();
         RemoteManager remoteManager = RemoteManager.getRemoteManager(prov.getLocalServer());
-        String command = "zmemail \"" + to + "\" \"" + subject + "\" \"" + message + "\"";
-        Element response = zsc.createElement(AdminConstants.E_SEND_EMAIL_RESPONSE);
+        String command = "zmmdmnotificationmail \"" + message + "\" \"" + status + "\"";
+        Element response = zsc.createElement(AdminConstants.E_SEND_MDM_NOTIFICATION_EMAIL_RESPONSE);
         RemoteResult remoteResult = remoteManager.execute(command);
         Charset csUtf8 = Charset.forName("UTF-8");
         String stdOut = (remoteResult.getMStdout() != null) ? new String(remoteResult.getMStdout(), csUtf8) : null;
@@ -65,5 +69,11 @@ public class SendEmail extends AdminDocumentHandler {
             throw ServiceException.FAILURE(errorMsg, null);
         }
         return response;
+    }
+
+
+    @Override
+    public void docRights(List<AdminRight> relatedRights, List<String> notes) {
+        relatedRights.add(Admin.R_SendMdmNotificationEmail);
     }
 }

@@ -22,78 +22,57 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAccessType;
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.SyncAdminConstants;
 import com.zimbra.common.soap.SyncConstants;
-import com.zimbra.soap.admin.type.DeviceId;
-import com.zimbra.soap.type.AccountSelector;
 import com.zimbra.common.soap.Element;
-import com.zimbra.soap.admin.type.DomainSelector;
-import com.zimbra.soap.admin.type.CosSelector;
 
 /**
  * @zm-api-command-network-edition
  * @zm-api-command-auth-required true
  * @zm-api-command-admin-auth-required true
- * @zm-api-command-description Get the requested device's status
  */
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name = AdminConstants.E_SEND_EMAIL_REQUEST)
-public class SendEmailRequest {
-
-    /**
-     * @zm-api-field-tag to
-     * @zm-api-field-description the email address of the user to which the email is to be send.
-     */
-    @XmlElement(name = SyncAdminConstants.E_TO /* to */, required = true)
-    private String to;
-
-    /**
-     * @zm-api-field-tag subject
-     * @zm-api-field-description subject of the email that will be sent to above user.
-     */
-    @XmlElement(name = SyncAdminConstants.E_SUBJECT /* subject */, required = true)
-    private String subject;
-
+@XmlRootElement(name = AdminConstants.E_SEND_MDM_NOTIFICATION_EMAIL_REQUEST)
+public class SendMdmNotificationEmailRequest {
     /**
      * @zm-api-field-tag message
-     * @zm-api-field-description email content of the mail that will be sent to user.
+     * @zm-api-field-description email content of the mail that will be sent to
+     *                           user.
      */
     @XmlElement(name = SyncAdminConstants.E_MESSAGE /* message */, required = true)
     private String message;
 
+    /**
+     * @zm-api-field-tag status
+     * @zm-api-field-description for which status email has to be sent like
+     *                           quarantined/blocked.
+     */
+    @XmlElement(name = SyncAdminConstants.E_STATUS /* status */, required = true)
+    private String status;
+
     @SuppressWarnings("unused")
-    public SendEmailRequest() {
+    public SendMdmNotificationEmailRequest() {
     }
 
-    public SendEmailRequest(String to, String subject, String message) {
-        this.to = to;
-        this.subject = subject;
+    public SendMdmNotificationEmailRequest(String message, String status) {
         this.message = message;
+        this.status = status;
     }
 
-    public SendEmailRequest getTo() {
-        return this;
-    }
-
-    public void setTo(String to) {
-        this.to = to;
-    }
-
-    public SendEmailRequest getSubject() {
-        return this;
-    }
-
-    public void setSubject(String subject) {
-        this.subject = subject;
-    }
-
-    public SendEmailRequest getMessage() {
-        return this;
+    public String getMessage() {
+        return message;
     }
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

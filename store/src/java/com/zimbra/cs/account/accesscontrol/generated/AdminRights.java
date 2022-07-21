@@ -310,6 +310,7 @@ public class AdminRights {
     public static AdminRight R_renameUCService;
     public static AdminRight R_restoreAccount;
     public static AdminRight R_rolloverRedoLog;
+    public static AdminRight R_SendMdmNotificationEmail;
     public static AdminRight R_setAccountPassword;
     public static AdminRight R_setAdminConsoleAccountsACLTab;
     public static AdminRight R_setAdminConsoleAccountsAliasesTab;
@@ -750,6 +751,7 @@ public class AdminRights {
         R_renameUCService                      = rm.getAdminRight(Right.RT_renameUCService);
         R_restoreAccount                       = rm.getAdminRight(Right.RT_restoreAccount);
         R_rolloverRedoLog                      = rm.getAdminRight(Right.RT_rolloverRedoLog);
+        R_SendMdmNotificationEmail             = rm.getAdminRight(Right.RT_SendMdmNotificationEmail);
         R_setAccountPassword                   = rm.getAdminRight(Right.RT_setAccountPassword);
         R_setAdminConsoleAccountsACLTab        = rm.getAdminRight(Right.RT_setAdminConsoleAccountsACLTab);
         R_setAdminConsoleAccountsAliasesTab    = rm.getAdminRight(Right.RT_setAdminConsoleAccountsAliasesTab);
