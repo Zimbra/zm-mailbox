@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.soap.GlobalExternalStoreConfigConstants;
 import com.zimbra.soap.admin.type.AdminAttrsImpl;
 
 /**
@@ -35,23 +36,23 @@ import com.zimbra.soap.admin.type.AdminAttrsImpl;
 public class ValidateS3BucketReachableRequest {
 	
 	 
-    @XmlAttribute(name=AccountConstants.URL /* name */, required=true)
+    @XmlAttribute(name=GlobalExternalStoreConfigConstants.A_S3_URL /* name */, required=true)
     private String url;
     
    
-    @XmlAttribute(name=AccountConstants.BUCKET_NAME /* name */, required=true)
+    @XmlAttribute(name=GlobalExternalStoreConfigConstants.A_S3_BUCKET_NAME /* name */, required=true)
     private String bucketName;
     
    
-    @XmlAttribute(name=AccountConstants.REGION /* name */, required=false)
+    @XmlAttribute(name=GlobalExternalStoreConfigConstants.A_S3_REGION /* name */, required=false)
     private String region;
     
    
-    @XmlAttribute(name=AccountConstants.ACCESS_KEY /* name */, required=true)
+    @XmlAttribute(name=GlobalExternalStoreConfigConstants.A_S3_ACCESS_KEY /* name */, required=true)
     private String accessKey;
     
     
-    @XmlAttribute(name=AccountConstants.SECRATE_KEY /* name */, required=true)
+    @XmlAttribute(name=GlobalExternalStoreConfigConstants.A_S3_SECRET_KEY /* name */, required=true)
     private String secrateKey;
     
     

@@ -645,9 +645,4 @@ public class AccountConstants {
     public static final String E_SKIN_FAVICON = "zimbraSkinFavicon";
     public static final String E_HOSTNAME = "hostname";
     
-    public static final String URL = "url";
-    public static final String BUCKET_NAME = "bucketName";
-    public static final String REGION = "region";
-    public static final String ACCESS_KEY = "accessKey";
-    public static final String SECRATE_KEY = "secrateKey";
 }
