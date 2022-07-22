@@ -20,6 +20,7 @@ package com.zimbra.cs.account.soap;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -34,6 +35,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import com.zimbra.common.util.*;
 import org.apache.http.HttpException;
 import org.apache.http.HttpResponse;
 import org.apache.http.concurrent.FutureCallback;
@@ -67,12 +69,7 @@ import com.zimbra.common.soap.SoapHttpTransport.HttpDebugListener;
 import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.soap.SoapTransport.DebugListener;
 import com.zimbra.common.soap.SyncAdminConstants;
-import com.zimbra.common.util.AccountLogger;
-import com.zimbra.common.util.Constants;
-import com.zimbra.common.util.DateTimeUtil;
 import com.zimbra.common.util.Log.Level;
-import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
@@ -3244,41 +3241,45 @@ public class SoapProvisioning extends Provisioning {
      *
      * @param status reserved for future use if mail to send for different status to
      *               be added
-     * @param to     accepts admins email address to which email has to be send
+     * @param timeInterval     accepts the time interval in which the mail has to be send
      * @throws ServiceException if an error occurs while sending email for MDM
      *                          notification mail
      */
     @Override
     public String sendMdmEmail(String status, String timeInterval) throws ServiceException {
-        String devicesInfo = MailConstants.HTML_DEVICE_TABLE_INFO_HEADER;
-        String emailBody = "";
-        GetDeviceStatusResponse resp = invokeJaxb(new GetDeviceStatusRequest(null));
+        StringBuilder devicesInfo = new StringBuilder()
+                .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailBreakLine))
+                .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailBreakLine))
+                .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlTableOpen))
+                .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlDeviceTableHeader));
+
+        GetDeviceStatusResponse resp = invokeJaxb(new GetDeviceStatusRequest(null, null, SyncAdminConstants.MDM_STATUS_SUSPENDED));
         List<DeviceStatusInfo> statusOfDevices = resp.getDevices().stream()
-                .filter(devices -> DateTimeUtil.checkWithinTime(Timestamp.valueOf(devices.getTimestamp()),
-                        Integer.parseInt(timeInterval), TimeUnit.MINUTES))
+                .filter(devices -> DateTimeUtil.checkWithinTime(Timestamp.valueOf(devices.getUpdateTime()),
+                        Long.parseLong(timeInterval), TimeUnit.MINUTES))
                 .collect(Collectors.toList());
         int j = 0;
         for (int i = 0; i < statusOfDevices.size(); i++) {
-            if ((statusOfDevices.get(i).getStatus() == SyncAdminConstants.MDM_STATUS_SUSPENDED)) {
-                devicesInfo += MailConstants.HTML_TABLE_ROW + MailConstants.HTML_TABLE_DATA + (j + 1)
-                        + MailConstants.HTML_TABLE_DATA_CLOSE + MailConstants.HTML_TABLE_DATA
-                        + statusOfDevices.get(i).getFriendlyName() + MailConstants.HTML_TABLE_DATA_CLOSE
-                        + MailConstants.HTML_TABLE_DATA + statusOfDevices.get(i).getId()
-                        + MailConstants.HTML_TABLE_DATA_CLOSE + MailConstants.HTML_TABLE_DATA
-                        + statusOfDevices.get(i).getUserAgent() + MailConstants.HTML_TABLE_DATA_CLOSE
-                        + MailConstants.HTML_TABLE_DATA + statusOfDevices.get(i).getTimestamp()
-                        + MailConstants.HTML_TABLE_DATA_CLOSE + MailConstants.HTML_TABLE_ROW_CLOSE;
+                devicesInfo.append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlTableDataOpen)).append(j + 1)
+                        .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlTableDataClose))
+                        .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlTableDataOpen)).append(statusOfDevices.get(i).getFriendlyName())
+                        .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlTableDataClose))
+                        .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlTableDataOpen)).append(statusOfDevices.get(i).getId())
+                        .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlTableDataClose))
+                        .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlTableDataOpen)).append(statusOfDevices.get(i).getUserAgent())
+                        .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlTableDataClose))
+                        .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlTableDataOpen)).append(statusOfDevices.get(i).getId())
+                        .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlTableDataClose));
                 j++;
-            }
         }
-        if (j == 0) {
-            emailBody = MailConstants.NO_QUARANTINED_LIST;
+        if (j == 0){
+            devicesInfo = new StringBuilder(
+                    L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailNoDevicesFoundMsg));
         } else {
-            emailBody = MailConstants.BREAK_LINE + MailConstants.BREAK_LINE + devicesInfo
-                    + MailConstants.HTML_TABLE_CLOSE;
+            devicesInfo.append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlTableClose));
         }
         SendMdmNotificationEmailResponse sendMdmNotificationEmailResponse = invokeJaxb(
-                new SendMdmNotificationEmailRequest(emailBody, status));
-        return MailConstants.SUCCESS;
+                new SendMdmNotificationEmailRequest(String.valueOf(devicesInfo), status));
+        return L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailSuccess);
     }
 }

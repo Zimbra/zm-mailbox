@@ -1490,11 +1490,6 @@ public class RightConsts {
     public static final String RT_rolloverRedoLog = "rolloverRedoLog";
 
     /**
-     * send notification email to configured email id
-     */
-    public static final String RT_SendMdmNotificationEmail = "sendMdmNotificationEmail";
-
-    /**
      * set account password, not restricted by password strength policies
      */
     public static final String RT_setAccountPassword = "setAccountPassword";

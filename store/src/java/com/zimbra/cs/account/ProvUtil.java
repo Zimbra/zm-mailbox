@@ -294,7 +294,6 @@ public class ProvUtil implements HttpDebugListener {
         console.println("  -d/--debug                            debug mode (dumps SOAP messages)");
         console.println("  -m/--master                           use LDAP master (only valid with -l)");
         console.println("  -r/--replace                          allow replacement of safe-guarded multi-valued attributes configured in localconfig key \"zmprov_safeguarded_attrs\"");
-        console.println("  -M/--mobile                           mobile commands use -M");
         console.println("");
         doHelp(null);
         System.exit(1);
@@ -309,7 +308,7 @@ public class ProvUtil implements HttpDebugListener {
                 "help on reverse proxy related commands"), RIGHT("help on right-related commands"), SEARCH(
                 "help on search-related commands"), SERVER("help on server-related commands"), ALWAYSONCLUSTER(
                 "help on alwaysOnCluster-related commands"), UCSERVICE("help on ucservice-related commands"), SHARE(
-                "help on share related commands"), HAB("help on HAB commands"), MOBILE("help on mobile commands");
+                "help on share related commands"), HAB("help on HAB commands"), MOBILE("help on mobile devices management commands");
 
         private final String description;
 

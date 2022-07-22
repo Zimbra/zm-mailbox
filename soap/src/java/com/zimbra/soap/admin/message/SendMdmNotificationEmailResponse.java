@@ -52,6 +52,14 @@ public class SendMdmNotificationEmailResponse {
         this.status = status;
     }
 
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
     public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         return helper.add("status", status);
     }

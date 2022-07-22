@@ -44,43 +44,7 @@ public class DateTimeUtil {
             cal1.get(Calendar.DAY_OF_MONTH) == cal2.get(Calendar.DAY_OF_MONTH);
     }
 
-    public static boolean checkWithinTime(Timestamp timestamp, int timegap, TimeUnit timeunit) {
-        if (TimeUnit.NANOSECONDS == timeunit) {
-            if (TimeUnit.MILLISECONDS.toNanos(new Timestamp(System.currentTimeMillis()).getTime() - timestamp.getTime()) < timegap) {
-                return true;
-            }
-        }
-        if (TimeUnit.MICROSECONDS == timeunit) {
-            if (TimeUnit.MILLISECONDS.toMicros(new Timestamp(System.currentTimeMillis()).getTime() - timestamp.getTime()) < timegap) {
-                return true;
-            }
-        }
-        if (TimeUnit.MILLISECONDS == timeunit) {
-            if (TimeUnit.MILLISECONDS.toMillis(new Timestamp(System.currentTimeMillis()).getTime() - timestamp.getTime()) < timegap) {
-                return true;
-            }
-        }
-        if (TimeUnit.SECONDS == timeunit) {
-            if (TimeUnit.MILLISECONDS.toSeconds(new Timestamp(System.currentTimeMillis()).getTime() - timestamp.getTime()) > timegap) {
-                return true;
-            }
-        }
-        if (TimeUnit.MINUTES == timeunit) {
-            if (TimeUnit.MILLISECONDS
-                    .toMinutes(new Timestamp(System.currentTimeMillis()).getTime() - timestamp.getTime()) < timegap) {
-                return true;
-            }
-        }
-        if (TimeUnit.HOURS == timeunit) {
-            if (TimeUnit.MILLISECONDS.toHours(new Timestamp(System.currentTimeMillis()).getTime() - timestamp.getTime()) < timegap) {
-                return true;
-            }
-        }
-        if (TimeUnit.DAYS == timeunit) {
-            if (TimeUnit.MILLISECONDS.toDays(new Timestamp(System.currentTimeMillis()).getTime() - timestamp.getTime()) < timegap) {
-                return true;
-            }
-        }
-        return false;
+    public static boolean checkWithinTime(Timestamp timestamp, long timegap, TimeUnit timeunit) {
+        return (System.currentTimeMillis() - timestamp.getTime()) <= timeunit.toMillis(timegap);
     }
 }

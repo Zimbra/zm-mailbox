@@ -177,7 +177,11 @@ public class DeviceStatusInfo {
     @XmlElement(name=SyncConstants.E_EMAIL_ADDRESS /* emailAddress */, required=false)
     private String emailAddress;
 
-    @XmlElement(name=SyncConstants.E_TIMESTAMP /* timeStamp */, required=false)
+    /**
+     * @zm-api-field-tag updateTime
+     * @zm-api-field-description status update timestamp of mobile devicet
+     */
+    @XmlElement(name=SyncConstants.E_UPDATE_TIME /* updateTime */, required=false)
     private String timestamp;
     /**
      * no-argument constructor wanted by JAXB
@@ -247,7 +251,7 @@ public class DeviceStatusInfo {
     public Integer getRemoteWipeAckTime() { return remoteWipeAckTime; }
     public String getRecoveryPassword() { return recoveryPassword; }
     public String getLastUsedDate() { return lastUsedDate; }
-    public String getTimestamp() { return timestamp; }
+    public String getUpdateTime() { return timestamp; }
 
     public MoreObjects.ToStringHelper addToStringInfo(
                 MoreObjects.ToStringHelper helper) {

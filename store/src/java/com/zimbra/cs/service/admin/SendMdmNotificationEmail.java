@@ -17,24 +17,21 @@
 
 package com.zimbra.cs.service.admin;
 
-import java.nio.charset.Charset;
-import java.util.Map;
-import java.util.List;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SyncAdminConstants;
-import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.rmgmt.RemoteManager;
 import com.zimbra.cs.rmgmt.RemoteResult;
-import com.zimbra.cs.service.admin.AdminDocumentHandler;
-import com.zimbra.cs.account.accesscontrol.AdminRight;
-import com.zimbra.cs.account.accesscontrol.Rights.Admin;
-import com.zimbra.cs.account.Server;
+import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.soap.ZimbraSoapContext;
+
+import java.nio.charset.Charset;
+import java.util.Map;
 
 
 public class SendMdmNotificationEmail extends AdminDocumentHandler {
@@ -44,7 +41,7 @@ public class SendMdmNotificationEmail extends AdminDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
         Server localServer = prov.getLocalServer();
-        checkRight(zsc, context, localServer, Admin.R_SendMdmNotificationEmail);
+        AccountUtil.isAdminAccount(getAuthenticatedAccount(zsc));
         String message = request.getElement(SyncAdminConstants.E_MESSAGE).getText();
         String status = request.getElement(SyncAdminConstants.E_STATUS).getText();
         RemoteManager remoteManager = RemoteManager.getRemoteManager(prov.getLocalServer());
@@ -56,24 +53,18 @@ public class SendMdmNotificationEmail extends AdminDocumentHandler {
         String stdErr = (remoteResult.getMStderr() != null) ? new String(remoteResult.getMStderr(), csUtf8) : null;
         if (remoteResult.getMExitStatus() == SyncAdminConstants.REMOTE_SERVER_SUCCESS) {
             if (stdErr != null) {
-                response.addElement(SyncAdminConstants.E_STATUS).setText(MailConstants.SUCCESS);
+                response.addUniqueElement(SyncAdminConstants.E_STATUS).setText(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailSuccess));
                 ZimbraLog.sync.debug(
                         "Command \"%s\" completed successfully with stderr output; exit code=%d; stderr=\n%s", command,
                         remoteResult.getMExitStatus(), stdErr);
             }
         } else {
-            response.addElement(SyncAdminConstants.E_STATUS).setText("Failure");
+            response.addUniqueElement(SyncAdminConstants.E_STATUS).setText(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailFailure));
             String errorMsg = String.format("Command \"%s\" failed; exit code=%d; stderr=\n%s", command,
                     remoteResult.getMExitStatus(), stdErr);
             ZimbraLog.sync.debug("errorMsg: %s ", errorMsg);
             throw ServiceException.FAILURE(errorMsg, null);
         }
         return response;
-    }
-
-
-    @Override
-    public void docRights(List<AdminRight> relatedRights, List<String> notes) {
-        relatedRights.add(Admin.R_SendMdmNotificationEmail);
     }
 }

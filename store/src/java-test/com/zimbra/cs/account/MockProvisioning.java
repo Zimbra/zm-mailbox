@@ -956,4 +956,8 @@ public final class MockProvisioning extends Provisioning {
         throw ServiceException.UNSUPPORTED();
     }
 
+    @Override
+    public String sendMdmEmail(String status, String timeInterval) throws ServiceException {
+        return null;
+    }
 }

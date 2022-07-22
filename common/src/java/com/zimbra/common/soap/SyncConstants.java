@@ -83,7 +83,7 @@ public final class SyncConstants {
     public static final String E_LAST_UPDATED_BY = "lastUpdatedBy";
     public static final String E_FOLDER = "folder";
     public static final String E_SYNCSTATE = "syncState";
-    public static final String E_TIMESTAMP = "timeStamp";
+    public static final String E_UPDATE_TIME = "updateTime";
     public static final String E_ITEMS = "item";
     public static final String E_MAILBOX = "mailbox";
     public static final String E_DEVICE_NAME = "deviceName";
