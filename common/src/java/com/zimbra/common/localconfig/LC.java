@@ -83,6 +83,12 @@ public final class LC {
     public static final KnownKey zimbra_external_email_warning_message = KnownKey
             .newKey("This message originated outside of your organization.");
 
+    /**
+     * Sets whether the HybridBlobmover feature is enabled.
+     */
+    @Supported
+    public static final KnownKey zimbra_hybrid_blob_mover_enabled = KnownKey.newKey(true);
+
     @Supported
     public static final KnownKey zimbra_extension_directory = KnownKey.newKey("${zimbra_home}/lib/ext");
 
