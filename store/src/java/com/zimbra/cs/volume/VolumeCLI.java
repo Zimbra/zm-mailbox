@@ -62,7 +62,7 @@ public final class VolumeCLI extends SoapCLI {
     private static final String O_P = "p";
     private static final String O_C = "c";
     private static final String O_CT = "ct";
-
+    
     /** attributes for external storetype **/
     private static final String O_ST = "st";
     private static final String O_VP = "vp";
@@ -276,14 +276,10 @@ public final class VolumeCLI extends SoapCLI {
         if (Strings.isNullOrEmpty(name)) {
             throw new ParseException(A_NAME + MISSING_ATTRS);
         }
-        if (Strings.isNullOrEmpty(path)) {
-            throw new ParseException(A_PATH + MISSING_ATTRS);
-        }
 
         VolumeInfo vol = new VolumeInfo();
         vol.setType(toType(type));
         vol.setName(name);
-        vol.setRootPath(path);
         vol.setCompressBlobs(compress != null ? Boolean.parseBoolean(compress) : false);
         vol.setCompressionThreshold(compressThreshold != null ? Long.parseLong(compressThreshold) : 4096L);
         validateAddCommand(vol);
@@ -293,10 +289,10 @@ public final class VolumeCLI extends SoapCLI {
                 JaxbUtil.jaxbToElement(req)));
         System.out.println("Volume " + resp.getVolume().getId() + " is created");
     }
-
+    
     /**
      * This method validate the attributes in edit command.
-     *
+     * 
      * @param volumeInfo, volStoreType
      * @throws ParseException
      */
@@ -350,7 +346,7 @@ public final class VolumeCLI extends SoapCLI {
 
     /**
      * This method validate the attributes in add command.
-     *
+     * 
      * @param volumeInfo
      * @throws ParseException
      */
@@ -366,6 +362,10 @@ public final class VolumeCLI extends SoapCLI {
             if (!Strings.isNullOrEmpty(volumePrefix)) {
                 throw new ParseException(A_VOLUME_PREFIX + NOT_ALLOWED_INTERNAL);
             }
+            if (Strings.isNullOrEmpty(path)) {
+                throw new ParseException(A_PATH + MISSING_ATTRS);
+            }
+            volumeInfo.setRootPath(path);
         } else if (Volume.StoreType.EXTERNAL.name().equals(storeType)) {
             VolumeExternalInfo volumeExternalInfo = new VolumeExternalInfo();
             if (!Strings.isNullOrEmpty(storageType)) {

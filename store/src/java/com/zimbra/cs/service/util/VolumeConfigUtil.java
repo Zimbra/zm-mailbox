@@ -96,7 +96,7 @@ public class VolumeConfigUtil {
 
         // validate current
         if (false != volInfoRequest.isCurrent() &&
-            true != volInfoRequest.isCurrent()) {
+                !volInfoRequest.isCurrent()) {
             throw VolumeServiceException.INVALID_REQUEST("Volume Current can be TRUE, FALSE or OPTIONAL(don't provide)", VolumeServiceException.BAD_VOLUME_CURRENT);
         }
 
