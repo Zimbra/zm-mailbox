@@ -24,6 +24,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MailDateFormat;
@@ -38,6 +39,7 @@ import com.zimbra.common.zmime.ZMimeMessage;
 import com.zimbra.common.zmime.ZSharedFileInputStream;
 import com.zimbra.cs.datasource.SyncUtil;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.util.MailItemHelper;
 import com.zimbra.cs.mailclient.imap.AppendResult;
 import com.zimbra.cs.mailclient.imap.CAtom;
 import com.zimbra.cs.mailclient.imap.Envelope;
@@ -262,7 +264,7 @@ public class ImapAppender {
             data = new Data() {
                 @Override
                 public InputStream getInputStream() throws IOException {
-                    return StoreManager.getInstance().getContent(mblob);
+                    return StoreManager.getReaderSMInstance(mblob.getLocator()).getContent(mblob);
                 }
 
                 @Override

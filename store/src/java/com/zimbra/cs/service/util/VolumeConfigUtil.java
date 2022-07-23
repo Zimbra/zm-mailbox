@@ -17,6 +17,8 @@
 
 package com.zimbra.cs.service.util;
 
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.cs.store.helper.ClassHelper;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -89,6 +91,18 @@ public class VolumeConfigUtil {
         // validate compression threshold
         if (0 > volInfoRequest.getCompressionThreshold()) {
             throw VolumeServiceException.INVALID_REQUEST("Volume Compression Threshold can't be negative number", VolumeServiceException.BAD_VOLUME_COMPRESSION_THRESHOLD);
+        }
+
+
+        if (Volume.TYPE_MESSAGE == volInfoRequest.getType() || Volume.TYPE_MESSAGE_SECONDARY == volInfoRequest.getType()) {
+            if (!StringUtil.isNullOrEmpty(volInfoRequest.getStoreManagerClass())){
+                if (!ClassHelper.isClassExist(volInfoRequest.getStoreManagerClass())) {
+                    throw VolumeServiceException.INVALID_REQUEST("Invalid class store manager class, can not loaded", VolumeServiceException.BAD_VOLUME_STORE_MANAGER_CLASS);
+                }
+            } else {
+                // set to default store manager if not passed.
+                volInfoRequest.setStoreManagerClass(LC.zimbra_class_store.value());
+            }
         }
 
         // validate current

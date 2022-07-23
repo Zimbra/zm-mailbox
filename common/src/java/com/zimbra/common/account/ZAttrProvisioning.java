@@ -11904,6 +11904,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaVirtualMailboxMaps = "zimbraMtaVirtualMailboxMaps";
 
     /**
+     * Zimbra multiple reader StoreManagers enabled
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4007)
+    public static final String A_zimbraMultiReaderSMEnabled = "zimbraMultiReaderSMEnabled";
+
+    /**
      * certificate to be used for validating the SAML assertions received
      * from myonelogin (tricipher)
      *
@@ -16437,6 +16445,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=2099)
     public static final String A_zimbraSmimeUserCertificateExtensions = "zimbraSmimeUserCertificateExtensions";
+
+    /**
+     * Zimbra StoreManager runtime switching enabled
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4008)
+    public static final String A_zimbraSMRuntimeSwitchEnabled = "zimbraSMRuntimeSwitchEnabled";
 
     /**
      * Whether to enable smtp debug trace

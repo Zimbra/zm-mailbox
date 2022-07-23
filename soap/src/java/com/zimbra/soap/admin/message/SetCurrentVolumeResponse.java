@@ -17,9 +17,23 @@
 
 package com.zimbra.soap.admin.message;
 
-import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.admin.type.StoreManagerRuntimeSwitchResult;
+
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement(name=AdminConstants.E_SET_CURRENT_VOLUME_RESPONSE)
 public class SetCurrentVolumeResponse {
+
+    @XmlElement(name=AdminConstants.E_STORE_MANAGER_RUNTIME_SWITCH_RESULT, required=false)
+    private StoreManagerRuntimeSwitchResult runtimeSwitchResult;
+
+    public StoreManagerRuntimeSwitchResult getRuntimeSwitchResult() {
+        return runtimeSwitchResult;
+    }
+
+    public void setRuntimeSwitchResult(StoreManagerRuntimeSwitchResult runtimeSwitchResult) {
+        this.runtimeSwitchResult = runtimeSwitchResult;
+    }
 }

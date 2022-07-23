@@ -43,7 +43,7 @@ public class MailboxBlobDataSource implements DataSource {
     }
 
     public InputStream getInputStream() throws IOException {
-        return StoreManager.getInstance().getContent(mBlob);
+        return StoreManager.getReaderSMInstance(mBlob.getLocator()).getContent(mBlob);
     }
 
     public String getName() {

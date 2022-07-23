@@ -17,25 +17,23 @@
 
 package com.zimbra.cs.service.admin;
 
-import java.util.List;
-import java.util.Map;
-
-import org.json.JSONException;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.service.util.VolumeConfigUtil;
+import com.zimbra.cs.store.helper.StoreManagerResetHelper;
 import com.zimbra.cs.volume.Volume;
 import com.zimbra.cs.volume.VolumeManager;
-import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
-import com.zimbra.soap.admin.type.VolumeInfo;
 import com.zimbra.soap.admin.message.CreateVolumeRequest;
 import com.zimbra.soap.admin.message.CreateVolumeResponse;
+import com.zimbra.soap.admin.type.StoreManagerRuntimeSwitchResult;
+import com.zimbra.soap.admin.type.VolumeInfo;
+
+import java.util.List;
+import java.util.Map;
 
 public final class CreateVolume extends AdminDocumentHandler {
 
@@ -50,13 +48,22 @@ public final class CreateVolume extends AdminDocumentHandler {
         checkRight(zsc, ctx, Provisioning.getInstance().getLocalServer(), Admin.R_manageVolume);
 
         VolumeInfo volInfoRequest = request.getVolumeInfo();
+
         Volume.StoreType enumStoreType = (1 == volInfoRequest.getStoreType()) ? Volume.StoreType.INTERNAL : Volume.StoreType.EXTERNAL;
+
         VolumeConfigUtil.validateCreateVolumeRequest(request, volInfoRequest, enumStoreType);
 
         Volume volRequest = VolumeManager.getInstance().create(toVolume(volInfoRequest, enumStoreType));
         VolumeInfo volInfoResponse = volRequest.toJAXB();
         VolumeConfigUtil.postCreateVolumeActions(request, volRequest, volInfoRequest, volInfoResponse, enumStoreType);
-        return new CreateVolumeResponse(volInfoResponse);
+
+        CreateVolumeResponse createVolumeResponse = new CreateVolumeResponse(volInfoResponse);
+        // if its primary volume then
+        if (volInfoRequest.isCurrent() && volInfoRequest.getType() == Volume.TYPE_MESSAGE) {
+            StoreManagerRuntimeSwitchResult runtimeSwitchResult = StoreManagerResetHelper.setNewStoreManager(volInfoRequest.getStoreManagerClass());
+            createVolumeResponse.setRuntimeSwitchResult(runtimeSwitchResult);
+        }
+        return createVolumeResponse;
     }
 
     private Volume toVolume(VolumeInfo vol, Volume.StoreType enumStoreType) throws ServiceException {

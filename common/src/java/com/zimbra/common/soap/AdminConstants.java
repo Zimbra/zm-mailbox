@@ -1168,6 +1168,7 @@ public final class AdminConstants {
     public static final String E_NI = "ni";
     public static final String E_NUM_OF_PAGES = "numpages";
     public static final String E_VOLUME = "volumeInfo";
+    public static final String E_STORE_MANAGER_RUNTIME_SWITCH_RESULT = "storeManagerRuntimeSwitchResult";
     public static final String E_VOLUME_EXT = "volumeExternalInfo";
     public static final String E_PROGRESS = "progress";
     public static final String E_SOAP_URL = "soapURL";
@@ -1296,6 +1297,8 @@ public final class AdminConstants {
     public static final String A_VOLUME_COMPRESSION_THRESHOLD = "compressionThreshold";
     public static final String A_VOLUME_CURRENT = "current";
     public static final String A_VOLUME_STORE_TYPE = "storeType";
+
+    public static final String A_VOLUME_STORE_MANAGER_CLASS = "storeManagerClass";
     public static final String A_VOLUME_STORAGE_TYPE = "storageType";
     public static final String A_VOLUME_VOLUME_PREFIX = "volumePrefix";
     public static final String A_VOLUME_STORE_PROVIDER = "storeProvider";
@@ -1573,8 +1576,11 @@ public final class AdminConstants {
     public static final String A_CLEAR_FILTER = "clearFilter";
 
     public static final String A_ZULIP_DOMAIN = "zulipDomain";
-    
- // Global External Store Config
+
+    public static final String A_SM_RUNTIME_SWITCH_STATUS = "status";
+    public static final String A_SM_RUNTIME_SWITCH_MESSAGE = "message";
+
+    // Global External Store Config
     public static final String E_GET_S3_BUCKET_CONFIG_REQUEST = "GetS3BucketConfigRequest";
     public static final String E_GET_S3_BUCKET_CONFIG_RESPONSE = "GetS3BucketConfigResponse";
     public static final String E_CREATE_S3_BUCKET_CONFIG_REQUEST = "CreateS3BucketConfigRequest";
