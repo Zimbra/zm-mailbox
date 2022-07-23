@@ -18,9 +18,13 @@ package com.zimbra.cs.store;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
@@ -28,17 +32,34 @@ import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.imap.ImapDaemon;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.util.MailItemHelper;
 import com.zimbra.cs.store.file.FileBlobStore;
 import com.zimbra.cs.util.Zimbra;
+import com.zimbra.cs.volume.Volume;
+import com.zimbra.cs.volume.VolumeManager;
 
 public abstract class StoreManager {
 
+    //new readers cacher
+    private static Map<Short, StoreManager> volumeStoreManagerCache = new ConcurrentHashMap<>();
     private static StoreManager sInstance;
+
+    private static String currentZimbraClassStore = LC.zimbra_class_store.value();
     private static Integer diskStreamingThreshold;
 
     public static StoreManager getInstance () {
         if(ImapDaemon.isRunningImapInsideMailboxd()) {
-            return getInstance(LC.zimbra_class_store.value());
+            ZimbraLog.store.error("Actual store Manager currentZimbraClassStore:%s, zimbra_class_store:%s", currentZimbraClassStore, LC.zimbra_class_store.value());
+            // if its different than current set in localConfig
+            synchronized (StoreManager.class) {
+                if (!LC.zimbra_class_store.value().equals(currentZimbraClassStore)) {
+                    ZimbraLog.store.error("currentZimbraClassStore:%s, is different than zimbra_class_store:%s", currentZimbraClassStore, LC.zimbra_class_store.value());
+                    sInstance = null;
+                }
+            }
+            StoreManager instance = getInstance(LC.zimbra_class_store.value());
+            ZimbraLog.store.error("Store manager actualInstance:%s", instance.getClass().getName());
+            return instance;
         } else {
             return getInstance(LC.imapd_class_store.value());
         }
@@ -54,11 +75,18 @@ public abstract class StoreManager {
                     if (className != null && !className.equals("")) {
                         try {
                             sInstance = (StoreManager) Class.forName(className).newInstance();
+                            currentZimbraClassStore = className;
                         } catch (ClassNotFoundException e) {
                             sInstance = (StoreManager) ExtensionUtil.findClass(className).newInstance();
                         }
+                        ZimbraLog.store.error("currentZimbraClassStore set to: %s", className);
                     } else {
                         sInstance = new FileBlobStore();
+                    }
+                    if(ImapDaemon.isRunningImapInsideMailboxd()) {
+                        ZimbraLog.store.error("zimbra_class_store.value(): %s", LC.zimbra_class_store.value());
+                        ZimbraLog.store.error(" setting currentZimbraClassStore:%s, to new value:%s", currentZimbraClassStore, sInstance.getClass().getName());
+                        currentZimbraClassStore = sInstance.getClass().getName();
                     }
                 } catch (Throwable t) {
                     Zimbra.halt("unable to initialize blob store", t);
@@ -69,16 +97,87 @@ public abstract class StoreManager {
     }
 
 
+    public static void resetStoreManager() throws ServiceException, IOException {
+        synchronized (StoreManager.class) {
+            ZimbraLog.store.error("resetting StoreManager");
+            if (sInstance != null) {
+                ZimbraLog.store.error("currentStoreManager:%s", sInstance.getClass().getName());
+            }
+            sInstance = null;
+            StoreManager storeManager = getInstance();
+            ZimbraLog.store.error("resetting StoreManager");
+            storeManager.startup();
+        }
+    }
 
     /**
      * Used for unit testing.
      */
     public static void setInstance(StoreManager instance) {
         synchronized (StoreManager.class) {
-            ZimbraLog.store.info("Setting StoreManager to " + instance.getClass().getName());
+            if (instance != null) {
+                ZimbraLog.store.info("Setting StoreManager to " + instance.getClass().getName());
+                sInstance.shutdown();
+            }
+            ZimbraLog.store.info("Setting StoreManager to " + instance);
             sInstance = instance;
         }
     }
+
+    public static StoreManager getReaderSMInstance(String locator) {
+        // flag here which will enable multiple reader logic
+        boolean tempFlagMultipleReaderEnabled = true;
+        if (tempFlagMultipleReaderEnabled && !StringUtil.isNullOrEmpty(locator)) {
+            try {
+                Optional<Short> volumeId = MailItemHelper.findMyVolumeId(locator);
+                if (volumeId.isPresent()) {
+                    ZimbraLog.store.error("Volume for locator: %s volumeId: %s", locator, volumeId.get());
+                    StoreManager storeManager = StoreManager.getVolumeStoreManager(volumeId.get());
+                    ZimbraLog.store.error("Store Manager for %s Volume: %s ", storeManager.getClass().getSimpleName(), volumeId.get());
+                    return storeManager;
+                }
+            } catch (ServiceException e) {
+                ZimbraLog.store.error("Error while loading Store Manager for locator %s", locator);
+            }
+        }
+        // fall back to false;
+        return getInstance();
+    }
+
+    public static StoreManager getVolumeStoreManager(Short volumeId) throws ServiceException {
+        if (volumeStoreManagerCache.containsKey(volumeId)) {
+            ZimbraLog.store.error("Store Manager cached for %s", volumeId);
+            return volumeStoreManagerCache.get(volumeId);
+        }
+        try {
+            Volume volume = VolumeManager.getInstance().getVolume(volumeId);
+            String className = volume.getStoreManagerClass();
+            ZimbraLog.store.error("loading Store Manager: %s  for %s", className, volumeId);
+            try {
+                StoreManager storeManager;
+                try {
+                    storeManager = (StoreManager) Class.forName(className).newInstance();
+                } catch (Exception e) {
+                    storeManager = (StoreManager) ExtensionUtil.findClass(className).newInstance();
+                }
+                // store manager should be ready to use.
+                storeManager.startup();
+                volumeStoreManagerCache.putIfAbsent(volumeId, storeManager);
+            } catch (Throwable e) {
+                ZimbraLog.store.error("error loading Store Manager for %s", volumeId, e);
+                // TODO: exception handling here
+            }
+        } catch (ServiceException serviceException) {
+            ZimbraLog.store.error("error loading Store Manager for %s", volumeId, serviceException);
+            // TODO: exception handling here
+        }
+        // god fallback
+        ZimbraLog.store.error("executing fallback store manager for volume: %s", volumeId);
+        return getInstance();
+    }
+
+
+
 
     public static int getDiskStreamingThreshold() throws ServiceException {
         if (diskStreamingThreshold == null)

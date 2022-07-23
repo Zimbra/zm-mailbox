@@ -13,3 +13,5 @@ store/.ruleset
 eclipse-ivysettings.xml
 store/tmp/
 common-passwords.txt
+*.iml
+.java-version

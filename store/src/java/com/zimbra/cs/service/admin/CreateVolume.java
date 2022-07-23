@@ -20,6 +20,7 @@ package com.zimbra.cs.service.admin;
 import java.util.List;
 import java.util.Map;
 
+import com.zimbra.common.util.StringUtil;
 import org.json.JSONException;
 
 import com.zimbra.common.service.ServiceException;
@@ -50,6 +51,7 @@ public final class CreateVolume extends AdminDocumentHandler {
         checkRight(zsc, ctx, Provisioning.getInstance().getLocalServer(), Admin.R_manageVolume);
 
         VolumeInfo volInfoRequest = request.getVolumeInfo();
+
         Volume.StoreType enumStoreType = (1 == volInfoRequest.getStoreType()) ? Volume.StoreType.INTERNAL : Volume.StoreType.EXTERNAL;
         VolumeConfigUtil.validateCreateVolumeRequest(request, volInfoRequest, enumStoreType);
 
