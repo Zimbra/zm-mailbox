@@ -2,6 +2,8 @@
 .project
 .settings/
 .idea/
+*.iml
+.java-version
 build/
 bin/
 .DS_Store
