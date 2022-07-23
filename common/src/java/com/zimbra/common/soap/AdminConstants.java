@@ -1573,4 +1573,24 @@ public final class AdminConstants {
     public static final String A_CLEAR_FILTER = "clearFilter";
 
     public static final String A_ZULIP_DOMAIN = "zulipDomain";
+
+    // Global External Store Config
+    public static final String E_GET_S3_BUCKET_CONFIG_REQUEST = "GetS3BucketConfigRequest";
+    public static final String E_GET_S3_BUCKET_CONFIG_RESPONSE = "GetS3BucketConfigResponse";
+    public static final String E_CREATE_S3_BUCKET_CONFIG_REQUEST = "CreateS3BucketConfigRequest";
+    public static final String E_CREATE_S3_BUCKET_CONFIG_RESPONSE = "CreateS3BucketConfigResponse";
+    public static final String E_DELETE_S3_BUCKET_CONFIG_REQUEST = "DeleteS3BucketConfigRequest";
+    public static final String E_DELETE_S3_BUCKET_CONFIG_RESPONSE = "DeleteS3BucketConfigResponse";
+    public static final QName GET_S3_BUCKET_CONFIG_REQUEST = QName.get(E_GET_S3_BUCKET_CONFIG_REQUEST, NAMESPACE);
+    public static final QName GET_S3_BUCKET_CONFIG_RESPONSE = QName.get(E_GET_S3_BUCKET_CONFIG_RESPONSE, NAMESPACE);
+    public static final QName CREATE_S3_BUCKET_CONFIG_REQUEST = QName.get(E_CREATE_S3_BUCKET_CONFIG_REQUEST, NAMESPACE);
+    public static final QName CREATE_S3_BUCKET_CONFIG_RESPONSE = QName.get(E_CREATE_S3_BUCKET_CONFIG_RESPONSE, NAMESPACE);
+    public static final QName DELETE_S3_BUCKET_CONFIG_REQUEST = QName.get(E_DELETE_S3_BUCKET_CONFIG_REQUEST, NAMESPACE);
+    public static final QName DELETE_S3_BUCKET_CONFIG_RESPONSE = QName.get(E_DELETE_S3_BUCKET_CONFIG_RESPONSE, NAMESPACE);
+
+    // Validate External Config
+    public static final String E_VALIDATE_S3_BUCKET_REACHABLE_REQUEST = "ValidateS3BucketReachableRequest";
+    public static final String E_VALIDATE_S3_BUCKET_REACHABLE_RESPONSE = "ValidateS3BucketReachableResponse";
+    public static final QName VALIDATE_S3_BUCKET_REACHABLE_REQUEST = QName.get(E_VALIDATE_S3_BUCKET_REACHABLE_REQUEST, NAMESPACE);
+    public static final QName VALIDATE_S3_BUCKET_REACHABLE_RESPONSE = QName.get(E_VALIDATE_S3_BUCKET_REACHABLE_RESPONSE, NAMESPACE);
 }
