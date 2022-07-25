@@ -5260,7 +5260,8 @@ TODO: delete them permanently from here
   <desc>enable/disable MAPI (Microsoft Outlook) Connector</desc>
 </attr>
 
-<attr id="1128" name="zimbraDumpsterEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="7.0.0">
+<attr id="1128" name="zimbraDumpsterEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,account,cos,domain" flags="accountInfo,accountInherited,domainAdminModifiable,domainInherited" since="7.0.0">
+  <globalConfigValue>FALSE</globalConfigValue>
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>enable/disable dumpster</desc>
 </attr>
@@ -5284,7 +5285,8 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
-<attr id="1133" name="zimbraMailDumpsterLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable,accountInfo" since="7.0.0">
+<attr id="1133" name="zimbraMailDumpsterLifetime" type="duration" cardinality="single" optionalIn="globalConfig,domain,account,cos" flags="accountInherited,domainInherited,domainAdminModifiable,accountInfo" since="7.0.0">
+  <globalConfigValue>30d</globalConfigValue>
   <defaultCOSValue>30d</defaultCOSValue>
   <desc>
     Retention period of messages in the dumpster.  0 means that all messages will be retained.
@@ -6601,12 +6603,14 @@ TODO: delete them permanently from here
   <desc>template for constructing the body of a file deletion warning message</desc>
 </attr>
 
-<attr id="1314" name="zimbraDumpsterUserVisibleAge" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="8.0.0">
+<attr id="1314" name="zimbraDumpsterUserVisibleAge" type="duration" cardinality="single" optionalIn="globalConfig,domain,account,cos" flags="accountInherited,domainInherited,domainAdminModifiable" since="8.0.0">
+  <globalConfigValue>30d</globalConfigValue>
   <defaultCOSValue>30d</defaultCOSValue>
   <desc>limits how much of a dumpster data is viewable by the end user, based on the age since being put in dumpster</desc>
 </attr>
 
-<attr id="1315" name="zimbraDumpsterPurgeEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="8.0.0">
+<attr id="1315" name="zimbraDumpsterPurgeEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,domain,account,cos" flags="accountInherited,domainInherited,domainAdminModifiable" since="8.0.0">
+  <globalConfigValue>TRUE</globalConfigValue>
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>disables purging from dumpster when set to FALSE</desc>
 </attr>
@@ -9925,8 +9929,83 @@ TODO: delete them permanently from here
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Creates unsubscribe system folder</desc>
  </attr>
- <attr id="4004" name="zimbraPrefCalenderScaling" type="enum" value="10,15,30" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="9.1.0">
+<attr id="4004" name="zimbraPrefCalenderScaling" type="enum" value="10,15,30" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="9.1.0">
   <defaultCOSValue>30</defaultCOSValue>
   <desc>Default calendar resolution preference</desc>
+</attr>
+
+<attr id="4007" name="zimbraGlobalBackupEnabled" type="boolean" cardinality="single" optionalIn="globalConfig" since="9.1.0">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>If true, enables backup globally and if there is pre-configured backup schedule the crontab will get that schedule.</desc>
+</attr>
+
+<attr id="4008" name="zimbraBackupSyncUsersEnabled" type="boolean" cardinality="single" optionalIn="globalConfig" since="9.1.0">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>If true, will synchronize dumpster enabled accounts with backup eligible accounts from zimbraBackupEnabled list.</desc>
+</attr>
+
+<attr id="4009" name="zimbraBackupStartTime" type="string" max="64" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="9.1.0">
+  <globalConfigValue>01:00</globalConfigValue>
+  <desc>Starts backup each day at this time. This attribute is used to set hours and minutes on the crontab.</desc>
+</attr>
+
+<attr id="4010" name="zimbraBackupRetentionDays" type="integer" min="1" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="9.1.0">
+  <globalConfigValue>8</globalConfigValue>
+  <desc>The number of days backups will be kept. Backup Scheduler deletes backups older than the set value.</desc>
+</attr>
+
+<attr id="4011" name="zimbraBackupBlobsCompressType" type="enum" value="zip,zipStore,noZip" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="9.1.0">
+  <globalConfigValue>zip</globalConfigValue>
+  <desc>Blobs inside a backup are compressed by default in zip format.
+        zip - blobs are backed up into zip files with compression (default).
+        zipStore - blobs are backed up into zip files without compression.
+        noZip - blobs are backed up as individual files rather in zip files.
+  </desc>
+</attr>
+
+<attr id="4012" name="zimbraBackupSyncEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="9.1.0">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>If true, the full backup runs synchronously.
+        If false, full backup runs in a separate thread and the soap call returns with the backup label.
+  </desc>
+</attr>
+
+<attr id="4013" name="zimbraMailReportEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="9.1.0">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>If true, sends an email report to the admin user. Admins can disable the email notification by setting it to FALSE.</desc>
+</attr>
+
+<attr id="4014" name="zimbraBackupStartDay" type="string" max="32" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="9.1.0">
+  <globalConfigValue>6</globalConfigValue>
+  <desc>The day of the week on which the full backup starts.
+        When a day is select their relative value is set on the crontab. Default starts from Saturday
+        0-7 or names allowed (Sun, Wed), with both 0 and 7 representing Sunday. Monday to Saturday (1-6)
+  </desc>
+</attr>
+
+<attr id="4015" name="zimbraBackupObjectLevelEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="9.1.0">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>If true, --accounts option will be set to useBackupConfig on zmschedulebackup command. Enables global,cos,domain,account level backup.
+        If false, --accounts option will be set to all accounts on zmschedulebackup command. Backups all accounts.
+  </desc>
+</attr>
+
+<attr id="4016" name="zimbraBackupCrontabConfig" type="string"  cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" since="9.1.0">
+  <globalConfigValue>f '0 1 * * 6'</globalConfigValue>
+  <desc>Configures crontab schedule. Full, incremental and delete cron schedules can be set using this attribute.
+        The entire backup can be scheduled as f '0 1 * * 6' i '0 1 * * 0-5'  d 7d '0 0 * * *'.
+        f '0 1 * * 6' can be passed if we are setting only the full-backup schedule. (f - full-backup)
+        i '0 1 * * 0-5' can be passed if we are setting only the incremental-backup schedule. (i - incremental)
+        d 7d '0 0 * * *' can be passed if we are setting only the delete-backup schedule. (d - delete).
+  </desc>
+</attr>
+
+<attr id="9014" name="zimbraBackupEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,domain,cos,account" flags="accountCosDomainInherited,domainInherited" since="9.1.0">
+  <desc>Whether or not account is eligible for backup
+        If true on cos level then backup accounts for cos. zimbraDomainDefaultCOSId is considered.
+        If unset on cos level but true on domain level then backup domains account.
+        If unset on cos level, unset on domain level but true on account level then specific account will be backed up.
+        If true on cos level , unset on domain level but zimbraDomainDefaultCOSId is set to cos then accounts for that domain will be backed up.
+  </desc>
 </attr>
 </attrs>

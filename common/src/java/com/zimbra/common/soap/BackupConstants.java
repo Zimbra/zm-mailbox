@@ -196,4 +196,6 @@ public final class BackupConstants {
     public static final String V_EXCLUDE = "exclude";
     public static final String V_CONFIG = "config";
     public static final String A_FORCE_DELETE_BLOBS = "forceDeleteBlobs";
+    public static final String A_SCHEDULE_BACKUP_RESULT = "scheduleBackupResult";
+
 }
