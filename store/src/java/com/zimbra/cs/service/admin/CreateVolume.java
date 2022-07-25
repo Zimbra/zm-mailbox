@@ -58,7 +58,7 @@ public final class CreateVolume extends AdminDocumentHandler {
         VolumeConfigUtil.postCreateVolumeActions(request, volRequest, volInfoRequest, volInfoResponse, enumStoreType);
 
         CreateVolumeResponse createVolumeResponse = new CreateVolumeResponse(volInfoResponse);
-        // if its primary volume then
+        // if its primary volume then set respective store manager if it's different
         if (volInfoRequest.isCurrent() && volInfoRequest.getType() == Volume.TYPE_MESSAGE) {
             StoreManagerRuntimeSwitchResult runtimeSwitchResult = StoreManagerResetHelper.setNewStoreManager(volInfoRequest.getStoreManagerClass());
             createVolumeResponse.setRuntimeSwitchResult(runtimeSwitchResult);

@@ -1365,7 +1365,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
     public synchronized MailboxBlob getBlob() throws ServiceException {
         if (mBlob == null && getDigest() != null) {
             StoreManager storeManager = StoreManager.getReaderSMInstance(getLocator());
-            ZimbraLog.store.error("Store Manager for %s MailboxBlob: %s ",storeManager.getClass().getSimpleName(), getId());
+            ZimbraLog.store.info("Store Manager for %s MailboxBlob: %s ", storeManager.getClass().getSimpleName(), getId());
             mBlob = storeManager.getMailboxBlob(this);
             if (mBlob == null) {
                 throw MailServiceException.NO_SUCH_BLOB(mMailbox.getId(), mId, mData.modContent);

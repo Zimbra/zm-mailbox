@@ -9935,7 +9935,7 @@ TODO: delete them permanently from here
 <attr id="4006" name="zimbraServerExternalStoreConfig" type="string" cardinality="single" optionalIn="server" since="9.1.0">
   <desc>Server level external store config</desc>
 </attr>
-<attr id="4007" name="zimbraMultiReaderSMEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited"  since="9.1.0">
+<attr id="4007" name="zimbraSMMultiReaderEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited"  since="9.1.0">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>Zimbra multiple reader StoreManagers enabled </desc>
 </attr>

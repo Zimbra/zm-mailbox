@@ -1,3 +1,19 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Synacor, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software Foundation,
+ * version 2 of the License.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ * ***** END LICENSE BLOCK *****
+ */
 package com.zimbra.cs.store;
 
 import com.zimbra.common.localconfig.ConfigException;
@@ -7,8 +23,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.store.helper.ClassHelper;
-import com.zimbra.cs.volume.Volume;
-import com.zimbra.cs.volume.VolumeManager;
 import org.apache.commons.io.FileUtils;
 import org.apache.mina.util.ConcurrentHashSet;
 import org.dom4j.DocumentException;
@@ -18,7 +32,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
-import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
@@ -28,7 +41,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -36,7 +48,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.zimbra.common.localconfig.LC.zimbra_class_store;
-import static org.powermock.api.mockito.PowerMockito.*;
+import static org.powermock.api.mockito.PowerMockito.mockStatic;
+import static org.powermock.api.mockito.PowerMockito.verifyStatic;
+import static org.powermock.api.mockito.PowerMockito.when;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockIgnore("javax.management.*")
@@ -52,14 +66,13 @@ public class StoreManagerMultiThreadedTest {
         MailboxTestUtil.initServer();
         Provisioning prov = Provisioning.getInstance();
         prov.getLocalServer().setSMRuntimeSwitchEnabled(true);
-        prov.getLocalServer().setMultiReaderSMEnabled(true);
+        prov.getLocalServer().setSMMultiReaderEnabled(true);
     }
 
     @After
     public void tearDownTest() throws IOException, DocumentException, ConfigException {
         FileUtils.copyFile(new File(TEST_CONFIG_FILE_COPY_PATH), new File(TEST_CONFIG_FILE_PATH), true);
         LC.reload();
-        StoreManager.flushVolumeStoreManagerCache();
     }
 
     @Test
@@ -94,7 +107,7 @@ public class StoreManagerMultiThreadedTest {
                 newList.add(StoreManager.getInstance());
                 if (threadCounter.incrementAndGet() % 19 == 0) {
                     try {
-                        //calling reset store manager
+                        // calling reset store manager
                         resetCallCounter.incrementAndGet();
                         StoreManager.resetStoreManager();
                     } catch (ServiceException | IOException e) {
@@ -125,13 +138,13 @@ public class StoreManagerMultiThreadedTest {
         for (int i = 0; i < numberOfThreads; i++) {
             service.execute(() -> {
                 int count = threadCounter.incrementAndGet();
-                if ( threadCounter.get() % 19 == 0) {
+                if (threadCounter.get() % 19 == 0) {
                     try {
                         LocalConfig localConfig = new LocalConfig(null);
                         localConfig.set(zimbra_class_store.key(), StoreManagerAfterReset.class.getName());
                         localConfig.save();
                         LC.reload();
-                        //calling reset store manager
+                        // calling reset store manager
                         resetCallCounter.incrementAndGet();
                         StoreManager.resetStoreManager();
                     } catch (ServiceException | IOException | DocumentException | ConfigException e) {
@@ -151,87 +164,5 @@ public class StoreManagerMultiThreadedTest {
         Assert.assertEquals(numberOfThreads, smSynchronizedList.size());
         // only two store managers
         Assert.assertEquals(2, uniqueSM.size());
-    }
-
-    @Test
-    @PrepareForTest({ClassHelper.class})
-    public void testGetStoreManagerForVolumeCacheEnabled() throws Throwable {
-        Volume volume3 = Volume.builder().setId((short) 200)
-                .setName("TEST300")
-                .setPath("/test/300", false)
-                .setType((short) 1)
-                .setStoreType(Volume.StoreType.INTERNAL)
-                .setStoreManagerClass(MockStoreManager.class.getName()).build();
-        Volume volume4 = Volume.builder().setId((short) 201)
-                .setName("TEST400")
-                .setPath("/test/400", false)
-                .setType((short) 1)
-                .setStoreType(Volume.StoreType.EXTERNAL)
-                .setStoreManagerClass(MockStoreManager.class.getName()).build();
-
-        VolumeManager.getInstance().create(volume3);
-        VolumeManager.getInstance().create(volume4);
-
-        mockStatic(ClassHelper.class);
-        when(ClassHelper.getZimbraClassInstanceBy(Mockito.anyString())).thenReturn(new MockStoreManager());
-
-        StoreManager.getStoreManagerForVolume(volume3.getId(), true);
-        StoreManager.getStoreManagerForVolume(volume3.getId(), true);
-        StoreManager.getStoreManagerForVolume(volume3.getId(), true);
-        StoreManager.getStoreManagerForVolume(volume3.getId(), true);
-        StoreManager.getStoreManagerForVolume(volume3.getId(), true);
-        StoreManager.getStoreManagerForVolume(volume4.getId(), true);
-        StoreManager.getStoreManagerForVolume(volume4.getId(), true);
-        StoreManager.getStoreManagerForVolume(volume4.getId(), true);
-        StoreManager.getStoreManagerForVolume(volume4.getId(), true);
-        StoreManager.getStoreManagerForVolume(volume4.getId(), true);
-        StoreManager.getStoreManagerForVolume(volume4.getId(), true);
-
-        // delete volumes
-        VolumeManager.getInstance().delete(volume3.getId());
-        VolumeManager.getInstance().delete(volume4.getId());
-        // make sure only twice it was called
-        verifyStatic(Mockito.times(2));
-    }
-
-    @Test
-    @PrepareForTest({ClassHelper.class})
-    public void testGetStoreManagerForVolumeCacheDisabled() throws Throwable {
-        Volume volume3 = Volume.builder().setId((short) 200)
-                .setName("TEST300")
-                .setPath("/test/300", false)
-                .setType((short) 1)
-                .setStoreType(Volume.StoreType.INTERNAL)
-                .setStoreManagerClass(MockStoreManager.class.getName()).build();
-        Volume volume4 = Volume.builder().setId((short) 201)
-                .setName("TEST400")
-                .setPath("/test/400", false)
-                .setType((short) 1)
-                .setStoreType(Volume.StoreType.EXTERNAL)
-                .setStoreManagerClass(MockStoreManager.class.getName()).build();
-
-        VolumeManager.getInstance().create(volume3);
-        VolumeManager.getInstance().create(volume4);
-
-        mockStatic(ClassHelper.class);
-        when(ClassHelper.getZimbraClassInstanceBy(Mockito.anyString())).thenReturn(new MockStoreManager());
-
-        StoreManager.getStoreManagerForVolume(volume3.getId(), true);
-        StoreManager.getStoreManagerForVolume(volume3.getId(), true);
-        StoreManager.getStoreManagerForVolume(volume3.getId(), true);
-        StoreManager.getStoreManagerForVolume(volume3.getId(), true);
-        StoreManager.getStoreManagerForVolume(volume3.getId(), true);
-        StoreManager.getStoreManagerForVolume(volume4.getId(), true);
-        StoreManager.getStoreManagerForVolume(volume4.getId(), true);
-        StoreManager.getStoreManagerForVolume(volume4.getId(), true);
-        StoreManager.getStoreManagerForVolume(volume4.getId(), true);
-        StoreManager.getStoreManagerForVolume(volume4.getId(), true);
-        StoreManager.getStoreManagerForVolume(volume4.getId(), true);
-
-        // delete volumes
-        VolumeManager.getInstance().delete(volume3.getId());
-        VolumeManager.getInstance().delete(volume4.getId());
-        // make sure only twice it was called
-        verifyStatic(Mockito.times(11));
     }
 }

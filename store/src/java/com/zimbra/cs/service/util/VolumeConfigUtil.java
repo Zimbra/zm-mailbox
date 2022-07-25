@@ -95,9 +95,9 @@ public class VolumeConfigUtil {
 
 
         if (Volume.TYPE_MESSAGE == volInfoRequest.getType() || Volume.TYPE_MESSAGE_SECONDARY == volInfoRequest.getType()) {
-            if (!StringUtil.isNullOrEmpty(volInfoRequest.getStoreManagerClass())){
+            if (!StringUtil.isNullOrEmpty(volInfoRequest.getStoreManagerClass())) {
                 if (!ClassHelper.isClassExist(volInfoRequest.getStoreManagerClass())) {
-                    throw VolumeServiceException.INVALID_REQUEST("Invalid class store manager class, can not loaded", VolumeServiceException.BAD_VOLUME_STORE_MANAGER_CLASS);
+                    throw VolumeServiceException.INVALID_REQUEST("Invalid StoreManager class, can not loaded", VolumeServiceException.BAD_VOLUME_STORE_MANAGER_CLASS);
                 }
             } else {
                 // set to default store manager if not passed.

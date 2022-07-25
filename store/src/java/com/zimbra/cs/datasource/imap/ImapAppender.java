@@ -16,21 +16,6 @@
  */
 package com.zimbra.cs.datasource.imap;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
-import javax.mail.MessagingException;
-import javax.mail.internet.MailDateFormat;
-import javax.mail.internet.MimeMessage;
-import javax.mail.util.SharedByteArrayInputStream;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.zimbra.common.service.ServiceException;
@@ -39,7 +24,6 @@ import com.zimbra.common.zmime.ZMimeMessage;
 import com.zimbra.common.zmime.ZSharedFileInputStream;
 import com.zimbra.cs.datasource.SyncUtil;
 import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.mailbox.util.MailItemHelper;
 import com.zimbra.cs.mailclient.imap.AppendResult;
 import com.zimbra.cs.mailclient.imap.CAtom;
 import com.zimbra.cs.mailclient.imap.Envelope;
@@ -53,6 +37,19 @@ import com.zimbra.cs.mailclient.imap.MessageData;
 import com.zimbra.cs.mailclient.imap.ResponseText;
 import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.StoreManager;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.MailDateFormat;
+import javax.mail.internet.MimeMessage;
+import javax.mail.util.SharedByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 public class ImapAppender {
     private final ImapConnection connection;

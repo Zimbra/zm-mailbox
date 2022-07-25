@@ -16,19 +16,12 @@
  */
 package com.zimbra.cs.store;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
-
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.imap.ImapDaemon;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -36,23 +29,22 @@ import com.zimbra.cs.mailbox.util.MailItemHelper;
 import com.zimbra.cs.store.file.FileBlobStore;
 import com.zimbra.cs.store.helper.ClassHelper;
 import com.zimbra.cs.util.Zimbra;
-import com.zimbra.cs.volume.Volume;
-import com.zimbra.cs.volume.VolumeManager;
-import com.zimbra.soap.admin.type.StoreManagerRuntimeSwitchResult;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Optional;
 
 public abstract class StoreManager {
 
-    // StoreManager readers cache
-    private static Map<Short, StoreManager> volumeStoreManagerCache = new ConcurrentHashMap<>();
     private static StoreManager sInstance;
 
     private static String currentZimbraClassStore = LC.zimbra_class_store.value();
     private static Integer diskStreamingThreshold;
 
-    public static StoreManager getInstance () {
-        if(ImapDaemon.isRunningImapInsideMailboxd()) {
-            ZimbraLog.store.error("Actual store Manager currentZimbraClassStore:%s, zimbra_class_store:%s", currentZimbraClassStore, LC.zimbra_class_store.value());
-            // if its different than current set in localConfig
+    public static StoreManager getInstance() {
+        if (ImapDaemon.isRunningImapInsideMailboxd()) {
+            ZimbraLog.store.debug("Actual StoreManager currentZimbraClassStore:%s, zimbra_class_store:%s", currentZimbraClassStore, LC.zimbra_class_store.value());
+            // if it's different from current set in localConfig
             synchronized (StoreManager.class) {
                 if (!LC.zimbra_class_store.value().equals(currentZimbraClassStore)) {
                     ZimbraLog.store.error("currentZimbraClassStore:%s, is different than zimbra_class_store:%s", currentZimbraClassStore, LC.zimbra_class_store.value());
@@ -60,27 +52,38 @@ public abstract class StoreManager {
                 }
             }
             StoreManager instance = getInstance(LC.zimbra_class_store.value());
-            ZimbraLog.store.error("Store manager actualInstance:%s,  Thread: %s", instance.getClass().getName(), Thread.currentThread().getName());
+            ZimbraLog.store.debug("StorageManager actualInstance:%s,  Thread: %s", instance.getClass().getName(), Thread.currentThread().getName());
             return instance;
         } else {
             return getInstance(LC.imapd_class_store.value());
         }
     }
 
+    /**
+     * Used for unit testing.
+     */
+    public static void setInstance(StoreManager instance) {
+        synchronized (StoreManager.class) {
+            if (instance != null) {
+                ZimbraLog.store.info("Setting StoreManager to: %s", instance.getClass().getName());
+                sInstance.shutdown();
+            }
+            ZimbraLog.store.info("Setting StoreManager to: %s", instance);
+            sInstance = instance;
+        }
+    }
+
     public static StoreManager getInstance(String className) {
-        ZimbraLog.store.error("In getInstance(): Thread: %s", Thread.currentThread().getName());
         if (sInstance == null) {
             synchronized (StoreManager.class) {
-                ZimbraLog.store.error("In getInstance(), Taken Lock Step1: Thread: %s", Thread.currentThread().getName());
                 if (sInstance != null) {
                     return sInstance;
                 }
                 try {
-                    ZimbraLog.store.error("In getInstance(), Taken Lock Step2: Thread: %s, SM: %s", Thread.currentThread().getName(), className);
                     if (!StringUtil.isNullOrEmpty(className)) {
-                        sInstance = (StoreManager)ClassHelper.getZimbraClassInstanceBy(className);
+                        sInstance = (StoreManager) ClassHelper.getZimbraClassInstanceBy(className);
                         currentZimbraClassStore = className;
-                        ZimbraLog.store.error("currentZimbraClassStore set to: %s", className);
+                        ZimbraLog.store.info("currentZimbraClassStore set to: %s", className);
                     } else {
                         sInstance = new FileBlobStore();
                     }
@@ -93,98 +96,67 @@ public abstract class StoreManager {
     }
 
     /**
-     *  Reset StoreManager for current volume
-     *  TODO: Add documentation here
+     * Current StoreManger class name is available in localconfig attribute zimbra_class_store
+     * StoreManger.getInstance() method returns its singleton instance.
+     * Following method can be useful in case, need to reset singleton instance
+     * (maybe after updating {@LC.zimbra_class_store} attribute) to new StoreManager class
+     * It will nullify the existing instance and create new with LC.zimbra_class_store value
+     *
      * @throws ServiceException
      * @throws IOException
      */
     public static void resetStoreManager() throws ServiceException, IOException {
-        if (Provisioning.getInstance().getLocalServer().isSMRuntimeSwitchEnabled()) {
-            ZimbraLog.store.error("isSMRunTimeSwitchEnabled is not enabled");
+        if (!Provisioning.getInstance().getLocalServer().isSMRuntimeSwitchEnabled()) {
+            ZimbraLog.store.error("SMRunTimeSwitchEnabled is not enabled");
+            return;
         }
-        if(ImapDaemon.isRunningImapInsideMailboxd()) {
+        if (ImapDaemon.isRunningImapInsideMailboxd()) {
             synchronized (StoreManager.class) {
-                ZimbraLog.store.error("resetting StoreManager: Thread: %s", Thread.currentThread().getName());
                 if (sInstance != null) {
-                    ZimbraLog.store.debug("currentStoreManager:%s", sInstance.getClass().getName());
+                    ZimbraLog.store.debug("current StoreManager: %s", sInstance.getClass().getName());
                 }
                 sInstance = null;
                 StoreManager storeManager = getInstance(LC.zimbra_class_store.value());
-                ZimbraLog.store.error("resetting StoreManager: Thread: %s, SM: %s", Thread.currentThread().getName(), LC.zimbra_class_store.value());
                 storeManager.startup();
                 return;
             }
         }
-        throw ServiceException.OPERATION_DENIED("Not support when Running Imap Inside Mailboxd");
+        throw ServiceException.OPERATION_DENIED("Not supported when running IMAP inside mailbioxd");
     }
 
     /**
-     * Used for unit testing.
-     */
-    public static void setInstance(StoreManager instance) {
-        synchronized (StoreManager.class) {
-            if (instance != null) {
-                ZimbraLog.store.info("Setting StoreManager to " + instance.getClass().getName());
-                sInstance.shutdown();
-            }
-            ZimbraLog.store.info("Setting StoreManager to " + instance);
-            sInstance = instance;
-        }
-    }
-
-    /**
-     * Get reader StoreManager for the locator
-     * TODO: add documentation here
+     * In order to support multiple stores of different types, sometimes it required to write multiple store managers as well.
+     * Imagine a case where blobs were written to respective volume using storeManager1(aware of R/W operations)
+     * And months later, primary volume changed and storeManager2 introduced to work with new volume(storeManager2 awareR/W with new volume)
+     * Here, system should support older blobs which are in inbox where storeManager1 know how to read and
+     * storeManager2 aware of how to write/read new blobs in new volume.
+     * Now in this heterogeneous situation, there can be multiple reader(for reading older blobs from multiple old primary volumes
+     * and secondary volumes) and single writer(for writing and reading current primary volume)
+     * Following method returns respective reader StoreManager instance based on locator.
      * @param locator
      * @return
      */
     public static StoreManager getReaderSMInstance(String locator) {
         try {
-            // TODO: check if calling Provision is feasible for realtime calls, otherwise LC should be used here
-            boolean multiReaderSMEnabled = Provisioning.getInstance().getLocalServer().isMultiReaderSMEnabled();
+            boolean multiReaderSMEnabled = Provisioning.getInstance().getLocalServer().isSMMultiReaderEnabled();
             if (multiReaderSMEnabled && !StringUtil.isNullOrEmpty(locator)) {
                 Optional<Short> volumeId = MailItemHelper.findMyVolumeId(locator);
+                // can check this against current primary vol.if its same then return singleton instance, but need to consider db hit
                 if (volumeId.isPresent()) {
-                    ZimbraLog.store.error("Volume for locator: %s volumeId: %s", locator, volumeId.get());
-                    StoreManager storeManager = StoreManager.getStoreManagerForVolume(volumeId.get(), true);
-                    if (null != storeManager) {
-                        ZimbraLog.store.error("Store Manager for %s Volume: %s ", storeManager.getClass().getSimpleName(), volumeId.get());
+                    ZimbraLog.store.debug("Volume for locator: %s volumeId: %s", locator, volumeId.get());
+                    StoreManager storeManager = CacheEnabledStoreManagerProvider.getStoreManagerForVolume(volumeId.get(), true);
+                    if (storeManager != null) {
+                        ZimbraLog.store.debug("StoreManager for %s Volume: %s ", storeManager.getClass().getSimpleName(), volumeId.get());
                         return storeManager;
                     }
                     ZimbraLog.store.debug("not able to load reader store manager for volumeId: %s", volumeId);
                 }
             }
-        } catch (ServiceException e) {
+        } catch (Exception e) {
             ZimbraLog.store.error("Error while loading StoreManager for locator %s", locator, e);
         }
         ZimbraLog.store.info("Fallback: master StoreManager will be used for reading");
         return getInstance();
-    }
-
-    public static StoreManager getStoreManagerForVolume(Short volumeId, boolean useCached) {
-        if (useCached && volumeStoreManagerCache.containsKey(volumeId)) {
-            ZimbraLog.store.error("Store Manager cached for %s", volumeId);
-            return volumeStoreManagerCache.get(volumeId);
-        }
-        StoreManager storeManager = null;
-        try {
-            Volume volume = VolumeManager.getInstance().getVolume(volumeId);
-            String className = volume.getStoreManagerClass();
-            ZimbraLog.store.error("loading Store Manager: %s  for %s", className, volumeId);
-            storeManager = (StoreManager) ClassHelper.getZimbraClassInstanceBy(className);
-            if (null != storeManager) {
-                ZimbraLog.store.debug("StoreManager loaded, starting up");
-                storeManager.startup();
-                volumeStoreManagerCache.putIfAbsent(volumeId, storeManager);
-            }
-        } catch (Throwable e) {
-            ZimbraLog.store.error("error loading Store Manager for %s", volumeId, e);
-        }
-        return storeManager;
-    }
-
-    protected static void flushVolumeStoreManagerCache() {
-        volumeStoreManagerCache.clear();
     }
 
     public static int getDiskStreamingThreshold() throws ServiceException {
@@ -208,37 +180,11 @@ public abstract class StoreManager {
      */
     public abstract void shutdown();
 
-    public enum StoreFeature {
-        /** The store has the ability to delete all {@code MailboxBlob}s
-         *  associated with a given {@code Mailbox}, <u>without</u> having
-         *  a list of those blobs provided to it. */
-        BULK_DELETE,
-        /** The store is reachable from any {@code mailboxd} host.  When
-         *  moving mailboxes between hosts, the store should be left untouched,
-         *  as there is no need to move the blobs along with the metadata. */
-        CENTRALIZED,
-        /**
-         * The store supports resumable upload
-         */
-        RESUMABLE_UPLOAD,
-        /**
-         * The store supports deduping based on blob content; aka SIS create.
-         * If two users upload the same file, only one copy is stored.
-         * The remote store must track reference count internally
-         * and delete the actual file only when ref-count reaches 0
-         */
-        SINGLE_INSTANCE_SERVER_CREATE,
-        /**
-         * The store is a custom store that does not support standard Zimbra actions.
-         * It requires to be handled using zxsuite command
-         */
-        CUSTOM_STORE_API,
-    };
-
     /**
      * Returns whether the store supports a given {@link StoreFeature}.
      */
     public abstract boolean supports(StoreFeature feature);
+
     public abstract boolean supports(StoreFeature feature, String locator);
 
     /**
@@ -248,7 +194,7 @@ public abstract class StoreManager {
      * threshold.
      *
      * @return the BlobBuilder to use to construct the Blob
-     * @throws IOException if an I/O error occurred
+     * @throws IOException      if an I/O error occurred
      * @throws ServiceException if a service exception occurred
      */
     public abstract BlobBuilder getBlobBuilder() throws IOException, ServiceException;
@@ -256,6 +202,7 @@ public abstract class StoreManager {
     /**
      * Store a blob in incoming directory.  Blob will be compressed if volume supports compression
      * and blob size is over the compression threshold.
+     *
      * @param data
      * @param sizeHint used for determining whether data should be compressed
      * @param digest
@@ -264,12 +211,13 @@ public abstract class StoreManager {
      * @throws ServiceException
      */
     public Blob storeIncoming(InputStream data)
-    throws IOException, ServiceException {
+            throws IOException, ServiceException {
         return storeIncoming(data, false);
     }
 
     /**
      * Store a blob in incoming directory.
+     *
      * @param data
      * @param callback
      * @param storeAsIs if true, store the blob as is even if volume supports compression
@@ -278,32 +226,32 @@ public abstract class StoreManager {
      * @throws ServiceException
      */
     public abstract Blob storeIncoming(InputStream data, boolean storeAsIs)
-    throws IOException, ServiceException;
+            throws IOException, ServiceException;
 
     /**
      * Stage an incoming <code>InputStream</code> to an
      * appropriate place for subsequent storage in a <code>Mailbox</code> via
      * {@link #link(StagedBlob, Mailbox, int, int)} or {@link #renameTo}.
      *
-     * @param data the data stream
+     * @param data       the data stream
      * @param actualSize the content size, or {@code -1} if the content size is not available
-     * @param callback callback, or {@code null}
-     * @param mbox the mailbox
+     * @param callback   callback, or {@code null}
+     * @param mbox       the mailbox
      */
     public abstract StagedBlob stage(InputStream data, long actualSize, Mailbox mbox)
-    throws IOException, ServiceException;
+            throws IOException, ServiceException;
 
     /**
      * Stage an incoming <code>InputStream</code> to an
      * appropriate place for subsequent storage in a <code>Mailbox</code> via
      * {@link #link(StagedBlob, Mailbox, int, int)} or {@link #renameTo}.
      *
-     * @param data the data stream
+     * @param data     the data stream
      * @param callback callback, or {@code null}
-     * @param mbox the mailbox
+     * @param mbox     the mailbox
      */
     public StagedBlob stage(InputStream data, Mailbox mbox)
-    throws IOException, ServiceException {
+            throws IOException, ServiceException {
         return stage(data, -1, mbox);
     }
 
@@ -311,6 +259,7 @@ public abstract class StoreManager {
      * Stage an incoming <code>Blob</code> (see {@link #storeIncoming}) to an
      * appropriate place for subsequent storage in a <code>Mailbox</code> via
      * {@link #link(StagedBlob, Mailbox, int, int)} or {@link #renameTo}.
+     *
      * @param blob
      * @param mbox
      * @return
@@ -323,50 +272,54 @@ public abstract class StoreManager {
      * Create a copy in destMbox mailbox with message ID of destMsgId that
      * points to srcBlob.
      * Implementations may choose to use linking where appropriate (i.e. files on same filesystem)
+     *
      * @param src
      * @param destMbox
-     * @param destMsgId mail_item.id value for message in destMbox
+     * @param destMsgId    mail_item.id value for message in destMbox
      * @param destRevision mail_item.mod_content value for message in destMbox
      * @return MailboxBlob object representing the copied blob
      * @throws IOException
      * @throws ServiceException
      */
     public abstract MailboxBlob copy(MailboxBlob src, Mailbox destMbox, int destMsgId, int destRevision)
-    throws IOException, ServiceException;
+            throws IOException, ServiceException;
 
     /**
      * Create a link in destMbox mailbox with message ID of destMsgId that
      * points to srcBlob.
      * If staging creates permanent blobs, this just needs to return mailbox blob with pointer to location of staged blob
      * If staging is done to temporary area such as our incoming directory this operation finishes it
+     *
      * @param src
      * @param destMbox
-     * @param destMsgId mail_item.id value for message in destMbox
+     * @param destMsgId    mail_item.id value for message in destMbox
      * @param destRevision mail_item.mod_content value for message in destMbox
      * @return MailboxBlob object representing the linked blob
      * @throws IOException
      * @throws ServiceException
      */
     public abstract MailboxBlob link(StagedBlob src, Mailbox destMbox, int destMsgId, int destRevision)
-    throws IOException, ServiceException;
+            throws IOException, ServiceException;
 
     /**
      * Rename a blob to a blob in mailbox directory.
      * This effectively makes the StagedBlob permanent, implementations may not need to do anything if the stage operation creates permanent items
+     *
      * @param src
      * @param destMbox
-     * @param destMsgId mail_item.id value for message in destMbox
+     * @param destMsgId    mail_item.id value for message in destMbox
      * @param destRevision mail_item.mod_content value for message in destMbox
      * @return MailboxBlob object representing the renamed blob
      * @throws IOException
      * @throws ServiceException
      */
     public abstract MailboxBlob renameTo(StagedBlob src, Mailbox destMbox, int destMsgId, int destRevision)
-    throws IOException, ServiceException;
+            throws IOException, ServiceException;
 
     /**
      * Deletes a blob from incoming directory.  If blob doesn't exist, no exception is
      * thrown and false is returned.
+     *
      * @param blobFile
      * @return true if blob was actually deleted
      * @throws IOException
@@ -376,6 +329,7 @@ public abstract class StoreManager {
     /**
      * Deletes a blob from incoming directory.  If blob doesn't exist, no exception is
      * thrown and false is returned.
+     *
      * @param blobFile
      * @return true if blob was actually deleted
      */
@@ -395,6 +349,7 @@ public abstract class StoreManager {
     /**
      * Deletes a blob staged to the target mailbox.  If blob doesn't exist, no exception is
      * thrown and false is returned.
+     *
      * @param staged
      * @return true if blob was actually deleted
      * @throws IOException
@@ -404,6 +359,7 @@ public abstract class StoreManager {
     /**
      * Deletes a blob staged to the target mailbox.  If blob doesn't exist, no exception is
      * thrown and false is returned.
+     *
      * @param staged
      * @return true if blob was actually deleted
      */
@@ -423,6 +379,7 @@ public abstract class StoreManager {
     /**
      * Deletes a blob from store.  If blob doesn't exist, no exception is
      * thrown and false is returned.
+     *
      * @param mblob
      * @return true if blob was actually deleted
      * @throws IOException
@@ -432,6 +389,7 @@ public abstract class StoreManager {
     /**
      * Deletes a blob from store.  If blob doesn't exist, no exception is
      * thrown and false is returned.
+     *
      * @param mblob
      * @return true if blob was actually deleted
      */
@@ -450,38 +408,38 @@ public abstract class StoreManager {
 
     /**
      * Find the MailboxBlob in mailbox mbox with matching item ID.
+     *
      * @param mbox
-     * @param itemId mail_item.id value for item
+     * @param itemId   mail_item.id value for item
      * @param revision mail_item.mod_content value for item
      * @return the <code>MailboxBlob</code>, or <code>null</code> if the file
      * does not exist
-     *
      * @throws ServiceException
      */
     public MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, int revision, String locator)
-    throws ServiceException {
+            throws ServiceException {
         return getMailboxBlob(mbox, itemId, revision, locator, true);
     }
 
     /**
      * Find the MailboxBlob in int mailboxId, String accountId with matching item ID.
+     *
      * @param mbox
-     * @param itemId mail_item.id value for item
+     * @param itemId   mail_item.id value for item
      * @param revision mail_item.mod_content value for item
      * @return the <code>MailboxBlob</code>, or <code>null</code> if the file
      * does not exist
-     *
      * @throws ServiceException
      */
     public abstract MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, int revision, String locator, boolean validate)
-    throws ServiceException;
+            throws ServiceException;
 
     /**
      * Find the stored MailboxBlob for the given Mailitem.
+     *
      * @param item An item already deposited in its Mailbox.
      * @return the <code>MailboxBlob</code>, or <code>null</code> if the file
      * does not exist
-     *
      * @throws ServiceException
      */
     public MailboxBlob getMailboxBlob(MailItem item) throws ServiceException {
@@ -495,6 +453,7 @@ public abstract class StoreManager {
     /**
      * Return an InputStream of blob content.  Caller should close the
      * stream when done.
+     *
      * @param mboxBlob
      * @return
      * @throws IOException
@@ -504,6 +463,7 @@ public abstract class StoreManager {
     /**
      * Return an InputStream of blob content.  Caller should close the
      * stream when done.
+     *
      * @param blob
      * @return
      * @throws IOException
@@ -512,6 +472,7 @@ public abstract class StoreManager {
 
     /**
      * Deletes a user's entire store.  SHOULD BE CALLED CAREFULLY.  No going back.
+     *
      * @param mbox
      * @param blobs If the store returned {@code true} to {@link #supports(StoreFeature)}
      *              when passed {@link StoreFeature#BULK_DELETE}, {@code blobs} will be
@@ -522,10 +483,11 @@ public abstract class StoreManager {
      * @throws ServiceException
      */
     public abstract boolean deleteStore(Mailbox mbox, Iterable<MailboxBlob.MailboxBlobInfo> blobs)
-    throws IOException, ServiceException;
+            throws IOException, ServiceException;
 
     /**
      * Create an IncomingBlob instance
+     *
      * @param id
      * @return
      * @throws ServiceException
@@ -533,5 +495,36 @@ public abstract class StoreManager {
      */
     public IncomingBlob newIncomingBlob(String id, Object ctxt) throws IOException, ServiceException {
         return new BufferingIncomingBlob(id, getBlobBuilder(), ctxt);
+    }
+
+    public enum StoreFeature {
+        /**
+         * The store has the ability to delete all {@code MailboxBlob}s
+         * associated with a given {@code Mailbox}, <u>without</u> having
+         * a list of those blobs provided to it.
+         */
+        BULK_DELETE,
+        /**
+         * The store is reachable from any {@code mailboxd} host.  When
+         * moving mailboxes between hosts, the store should be left untouched,
+         * as there is no need to move the blobs along with the metadata.
+         */
+        CENTRALIZED,
+        /**
+         * The store supports resumable upload
+         */
+        RESUMABLE_UPLOAD,
+        /**
+         * The store supports deduping based on blob content; aka SIS create.
+         * If two users upload the same file, only one copy is stored.
+         * The remote store must track reference count internally
+         * and delete the actual file only when ref-count reaches 0
+         */
+        SINGLE_INSTANCE_SERVER_CREATE,
+        /**
+         * The store is a custom store that does not support standard Zimbra actions.
+         * It requires to be handled using zxsuite command
+         */
+        CUSTOM_STORE_API,
     }
 }

@@ -17,37 +17,21 @@
 
 package com.zimbra.cs.service.admin;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-
-import com.zimbra.common.localconfig.ConfigException;
-import com.zimbra.common.localconfig.KnownKey;
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.localconfig.LocalConfig;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
-import com.zimbra.cs.store.StoreManager;
-import com.zimbra.cs.store.events.volume.PrimaryVolChangeEventPublisher;
-import com.zimbra.cs.store.events.volume.PrimaryVolChangedEvent;
-import com.zimbra.cs.store.helper.ClassHelper;
 import com.zimbra.cs.store.helper.StoreManagerResetHelper;
 import com.zimbra.cs.volume.Volume;
-import com.zimbra.cs.volume.Volume.StoreType;
 import com.zimbra.cs.volume.VolumeManager;
-import com.zimbra.common.soap.Element;
-import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.SetCurrentVolumeRequest;
 import com.zimbra.soap.admin.message.SetCurrentVolumeResponse;
 import com.zimbra.soap.admin.type.StoreManagerRuntimeSwitchResult;
-import org.dom4j.DocumentException;
 
-import static com.zimbra.common.localconfig.LC.zimbra_class_store;
+import java.util.List;
+import java.util.Map;
 
 public final class SetCurrentVolume extends AdminDocumentHandler {
 

@@ -6284,9 +6284,7 @@ public class Mailbox implements MailboxStore {
         }
 
         boolean deleteMailboxSpecificBlob = false;
-
         StoreManager sm = StoreManager.getInstance();
-        ZimbraLog.store.error("Store Manager in Mailbox.addMessage(...) :%s", sm.getClass().getSimpleName());
         Blob blob = dctxt.getMailBoxSpecificBlob(mId);
         if (blob == null) {
             blob = dctxt.getIncomingBlob();
@@ -6310,7 +6308,6 @@ public class Mailbox implements MailboxStore {
         }
 
         StagedBlob staged = sm.stage(blob, this);
-        ZimbraLog.store.error("Store Manager in Mailbox.addMessage(...)2 :%s", sm.getClass().getSimpleName());
         Account account = this.getAccount();
         boolean localMsgMarkedRead = false;
         if (account.getPrefMailForwardingAddress() != null && account.isFeatureMailForwardingEnabled()
@@ -6743,7 +6740,6 @@ public class Mailbox implements MailboxStore {
         if ((replyType != null && origId != null) || identityId != null || accountId != null || autoSendTime != 0) {
             dinfo = new Message.DraftInfo(replyType, origId, identityId, accountId, autoSendTime);
         }
-        ZimbraLog.store.error("Saving Draft for accountId :%s", accountId);
         if (id == ID_AUTO_INCREMENT) {
             // special-case saving a new draft
             return addMessage(octxt, pm, ID_FOLDER_DRAFTS, true, Flag.BITMASK_DRAFT | Flag.BITMASK_FROM_ME,
@@ -6755,9 +6751,9 @@ public class Mailbox implements MailboxStore {
         StagedBlob staged;
         InputStream is = pm.getRawInputStream();
         try {
-            ZimbraLog.store.error("Storage Manager USed for saving Draft is: %s", sm.getClass().getSimpleName());
+            ZimbraLog.store.debug("StorageManager used for saving Draft is: %s", sm.getClass().getSimpleName());
             staged = sm.stage(is, this);
-            ZimbraLog.store.error("Draft locator: %s", staged.getLocator());
+            ZimbraLog.store.debug("Draft locator: %s", staged.getLocator());
         } finally {
             ByteUtil.closeStream(is);
         }

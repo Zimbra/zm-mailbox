@@ -18,6 +18,7 @@
 package com.zimbra.soap.admin.type;
 
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.admin.enums.Status;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -27,7 +28,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 public class StoreManagerRuntimeSwitchResult {
 
     @XmlAttribute(name= AdminConstants.A_SM_RUNTIME_SWITCH_STATUS /* status */, required=true)
-    private String status;
+    private Status status;
 
     /**
      * @zm-api-field-tag volume-root-path
@@ -39,16 +40,16 @@ public class StoreManagerRuntimeSwitchResult {
     public StoreManagerRuntimeSwitchResult() {
     }
 
-    public StoreManagerRuntimeSwitchResult(String status, String message) {
+    public StoreManagerRuntimeSwitchResult(Status status, String message) {
         this.status = status;
         this.message = message;
     }
 
-    public String getStatus() {
+    public Status getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(Status status) {
         this.status = status;
     }
 

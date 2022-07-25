@@ -35661,78 +35661,6 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Zimbra multiple reader StoreManagers enabled
-     *
-     * @return zimbraMultiReaderSMEnabled, or false if unset
-     *
-     * @since ZCS 9.1.0
-     */
-    @ZAttr(id=4007)
-    public boolean isMultiReaderSMEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraMultiReaderSMEnabled, false, true);
-    }
-
-    /**
-     * Zimbra multiple reader StoreManagers enabled
-     *
-     * @param zimbraMultiReaderSMEnabled new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 9.1.0
-     */
-    @ZAttr(id=4007)
-    public void setMultiReaderSMEnabled(boolean zimbraMultiReaderSMEnabled) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMultiReaderSMEnabled, zimbraMultiReaderSMEnabled ? TRUE : FALSE);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Zimbra multiple reader StoreManagers enabled
-     *
-     * @param zimbraMultiReaderSMEnabled new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 9.1.0
-     */
-    @ZAttr(id=4007)
-    public Map<String,Object> setMultiReaderSMEnabled(boolean zimbraMultiReaderSMEnabled, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMultiReaderSMEnabled, zimbraMultiReaderSMEnabled ? TRUE : FALSE);
-        return attrs;
-    }
-
-    /**
-     * Zimbra multiple reader StoreManagers enabled
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 9.1.0
-     */
-    @ZAttr(id=4007)
-    public void unsetMultiReaderSMEnabled() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMultiReaderSMEnabled, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Zimbra multiple reader StoreManagers enabled
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 9.1.0
-     */
-    @ZAttr(id=4007)
-    public Map<String,Object> unsetMultiReaderSMEnabled(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMultiReaderSMEnabled, "");
-        return attrs;
-    }
-
-    /**
      * Deprecated since: 8.8.5. This attribute has been renamed to
      * zimbraNetworkAdminNGEnabled. Orig desc: Whether to enable old zimbra
      * network admin module.
@@ -46200,6 +46128,78 @@ public abstract class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetReverseProxyZmlookupCachingEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyZmlookupCachingEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Zimbra multiple reader StoreManagers enabled
+     *
+     * @return zimbraSMMultiReaderEnabled, or false if unset
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4007)
+    public boolean isSMMultiReaderEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraSMMultiReaderEnabled, false, true);
+    }
+
+    /**
+     * Zimbra multiple reader StoreManagers enabled
+     *
+     * @param zimbraSMMultiReaderEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4007)
+    public void setSMMultiReaderEnabled(boolean zimbraSMMultiReaderEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMMultiReaderEnabled, zimbraSMMultiReaderEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Zimbra multiple reader StoreManagers enabled
+     *
+     * @param zimbraSMMultiReaderEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4007)
+    public Map<String,Object> setSMMultiReaderEnabled(boolean zimbraSMMultiReaderEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMMultiReaderEnabled, zimbraSMMultiReaderEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Zimbra multiple reader StoreManagers enabled
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4007)
+    public void unsetSMMultiReaderEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMMultiReaderEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Zimbra multiple reader StoreManagers enabled
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4007)
+    public Map<String,Object> unsetSMMultiReaderEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMMultiReaderEnabled, "");
         return attrs;
     }
 
