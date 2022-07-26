@@ -84,21 +84,9 @@ public class VolumeConfigUtil {
             throw VolumeServiceException.INVALID_REQUEST("Volume Type can be 1 for PRIMARY volume, 2 for SECONDARY volume or 10 for INDEX volume", VolumeServiceException.BAD_VOLUME_TYPE);
         }
 
-        // validate compress blobs
-        if (false != volInfoRequest.isCompressBlobs() &&
-            true != volInfoRequest.isCompressBlobs()) {
-            throw VolumeServiceException.INVALID_REQUEST("Volume Compress Blobs can be TRUE, FALSE or OPTIONAL(don't provide)", VolumeServiceException.BAD_VOLUME_COMPRESS_BLOBS);
-        }
-
         // validate compression threshold
         if (0 > volInfoRequest.getCompressionThreshold()) {
             throw VolumeServiceException.INVALID_REQUEST("Volume Compression Threshold can't be negative number", VolumeServiceException.BAD_VOLUME_COMPRESSION_THRESHOLD);
-        }
-
-        // validate current
-        if (false != volInfoRequest.isCurrent() &&
-            true != volInfoRequest.isCurrent()) {
-            throw VolumeServiceException.INVALID_REQUEST("Volume Current can be TRUE, FALSE or OPTIONAL(don't provide)", VolumeServiceException.BAD_VOLUME_CURRENT);
         }
 
         if (Volume.StoreType.EXTERNAL.equals(enumStoreType)) {
@@ -110,18 +98,7 @@ public class VolumeConfigUtil {
                 throw VolumeServiceException.INVALID_REQUEST("Volume Storage Type can be only S3 or OpenIO", VolumeServiceException.BAD_VOLUME_STORAGE_TYPE);
             }
 
-            if(AdminConstants.A_VOLUME_S3.equalsIgnoreCase(storageTypeS3)) {
-                // validate use in frequent access
-                if (false != volInfoRequest.getVolumeExternalInfo().isUseInFrequentAccess() &&
-                    true != volInfoRequest.getVolumeExternalInfo().isUseInFrequentAccess()) {
-                    throw VolumeServiceException.INVALID_REQUEST("Volume UseInFrequentAccess can be TRUE, FALSE or OPTIONAL(don't provide)", VolumeServiceException.BAD_VOLUME_USE_IN_FREQUENT_ACCESS);
-                }
-
-                // validate use intelligent tiering
-                if (false != volInfoRequest.getVolumeExternalInfo().isUseIntelligentTiering() &&
-                    true != volInfoRequest.getVolumeExternalInfo().isUseIntelligentTiering()) {
-                    throw VolumeServiceException.INVALID_REQUEST("Volume UseIntelligentTiering can be TRUE, FALSE or OPTIONAL(don't provide)", VolumeServiceException.BAD_VOLUME_USE_INTELLIGENT_TIERING);
-                }
+            if (AdminConstants.A_VOLUME_S3.equalsIgnoreCase(storageTypeS3)) {
 
                 // validate use in frequent access threshold
                 int useInFrequentAccessThreshold = volInfoRequest.getVolumeExternalInfo().getUseInFrequentAccessThreshold();
@@ -135,15 +112,15 @@ public class VolumeConfigUtil {
                     throw VolumeServiceException.INVALID_REQUEST("Volume GlobalBucketID provided is incorrect, missing or empty", VolumeServiceException.BAD_VOLUME_GLOBAL_BUCKET_ID);
                 }
                 // no validation for volume prefix as of now
-            } else if(AdminConstants.A_VOLUME_OPEN_IO.equalsIgnoreCase(storageTypeOpenIO)) {
+            } else if (AdminConstants.A_VOLUME_OPEN_IO.equalsIgnoreCase(storageTypeOpenIO)) {
                 // validate proxy port as positive
                 if (volInfoRequest.getVolumeExternalOpenIOInfo().getProxyPort() <= 0) {
-                    throw VolumeServiceException.INVALID_REQUEST("Proxy Port can't be negative number or null", VolumeServiceException.BAD_VOLUME_USE_IN_FREQUENT_ACCESS_THRESHOLD);
+                    throw VolumeServiceException.INVALID_REQUEST("Proxy port can't be negative number or null", VolumeServiceException.BAD_VOLUME_USE_IN_FREQUENT_ACCESS_THRESHOLD);
                 }
 
                 // validate account port as positive
                 if (volInfoRequest.getVolumeExternalOpenIOInfo().getAccountPort() <= 0) {
-                    throw VolumeServiceException.INVALID_REQUEST("Account Port can't be negative number or null", VolumeServiceException.BAD_VOLUME_USE_IN_FREQUENT_ACCESS_THRESHOLD);
+                    throw VolumeServiceException.INVALID_REQUEST("Account port can't be negative number or null", VolumeServiceException.BAD_VOLUME_USE_IN_FREQUENT_ACCESS_THRESHOLD);
                 }
 
                 // validate url is empty or not
@@ -178,7 +155,7 @@ public class VolumeConfigUtil {
         if (Volume.StoreType.EXTERNAL.equals(enumStoreType)) {
             try {
                 volInfoRequest.setId(volRequest.getId());
-                if(AdminConstants.A_VOLUME_S3.equalsIgnoreCase(volInfoRequest.getVolumeExternalInfo().getStorageType())) {
+                if (AdminConstants.A_VOLUME_S3.equalsIgnoreCase(volInfoRequest.getVolumeExternalInfo().getStorageType())) {
                     volInfoResponse.setVolumeExternalInfo(volInfoRequest.getVolumeExternalInfo());
                 } else {
                     volInfoResponse.setVolumeExternalOpenIOInfo(volInfoRequest.getVolumeExternalOpenIOInfo());
@@ -321,6 +298,9 @@ public class VolumeConfigUtil {
                 String globalBucketConfigId = "";
                 ExternalVolumeInfoHandler extVolInfoHandler = new ExternalVolumeInfoHandler(Provisioning.getInstance());
                 JSONObject properties = extVolInfoHandler.readServerProperties(req.getId());
+                if (JSONObject.NULL.equals(properties)) {
+                    throw VolumeServiceException.INVALID_REQUEST("Unable to read server properties", VolumeServiceException.INVALID_REQUEST);
+                }
                 storageType = properties.getString(AdminConstants.A_VOLUME_STORAGE_TYPE);
                 if (storageType.equalsIgnoreCase(AdminConstants.A_VOLUME_S3)) {
                     try {
@@ -342,7 +322,6 @@ public class VolumeConfigUtil {
                 } else {
                     builder.setName(volInfo.getName());
                 }
-
             }
         }
         mgr.update(builder.build());
