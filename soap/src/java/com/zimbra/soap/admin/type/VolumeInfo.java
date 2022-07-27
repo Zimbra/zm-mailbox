@@ -112,10 +112,16 @@ public final class VolumeInfo {
     private short storeType = 1;
 
     /**
-     * @zm-api-field-description Volume external information
+     * @zm-api-field-description Volume external information for S3
      */
     @XmlElement(name=AdminConstants.E_VOLUME_EXT /* volumeExternalInfo */, required=false)
     private VolumeExternalInfo volumeExternalInfo;
+
+    /**
+     * @zm-api-field-description Volume external information for OpenIO
+     */
+    @XmlElement(name=AdminConstants.E_VOLUME_OPENIO_EXT /* volumeExternalOpenIOInfo */, required=false)
+    private VolumeExternalOpenIOInfo volumeExternalOpenIOInfo;
 
     public void setId(short value) {
         id = value;
@@ -220,4 +226,13 @@ public final class VolumeInfo {
     public short getStoreType() {
         return storeType;
     }
+
+    public VolumeExternalOpenIOInfo getVolumeExternalOpenIOInfo() {
+        return volumeExternalOpenIOInfo;
+    }
+
+    public void setVolumeExternalOpenIOInfo(VolumeExternalOpenIOInfo volumeExternalOpenIOInfo) {
+        this.volumeExternalOpenIOInfo = volumeExternalOpenIOInfo;
+    }
+
 }

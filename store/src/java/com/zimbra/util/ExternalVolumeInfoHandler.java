@@ -10,15 +10,13 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.soap.admin.type.VolumeInfo;
 import com.zimbra.soap.admin.type.VolumeExternalInfo;
+import com.zimbra.soap.admin.type.VolumeExternalOpenIOInfo;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.util.Iterator;
 
 /**
  * LDAP based properties handler
@@ -114,16 +112,16 @@ public class ExternalVolumeInfoHandler {
      */
     public void addServerProperties(VolumeInfo volInfo) throws ServiceException, JSONException {
         VolumeExternalInfo volExtInfo = volInfo.getVolumeExternalInfo();
+        VolumeExternalOpenIOInfo volExtOpenIoInfo = volInfo.getVolumeExternalOpenIOInfo();
+
         try {
-            // step 1: Create and update json object and array for new volume entry
+            // step 1: Create and update json object and array for new volume entry of S3
             JSONObject volExtInfoObj = new JSONObject();
-            volExtInfoObj.put(AdminConstants.A_VOLUME_ID, String.valueOf(volInfo.getId()));
-            volExtInfoObj.put(AdminConstants.A_VOLUME_STORAGE_TYPE, volExtInfo.getStorageType());
-            volExtInfoObj.put(AdminConstants.A_VOLUME_VOLUME_PREFIX, volExtInfo.getVolumePrefix());
-            volExtInfoObj.put(AdminConstants.A_VOLUME_USE_IN_FREQ_ACCESS, String.valueOf(volExtInfo.isUseInFrequentAccess()));
-            volExtInfoObj.put(AdminConstants.A_VOLUME_USE_INTELLIGENT_TIERING, String.valueOf(volExtInfo.isUseIntelligentTiering()));
-            volExtInfoObj.put(AdminConstants.A_VOLUME_GLB_BUCKET_CONFIG_ID, volExtInfo.getGlobalBucketConfigurationId());
-            volExtInfoObj.put(AdminConstants.A_VOLUME_USE_IN_FREQ_ACCESS_THRESHOLD, String.valueOf(volExtInfo.getUseInFrequentAccessThreshold()));
+            if (AdminConstants.A_VOLUME_S3.equalsIgnoreCase(volInfo.getVolumeExternalInfo().getStorageType())) {
+                volExtInfoObj = volExtInfo.toJSON(volInfo);
+            } else if (AdminConstants.A_VOLUME_OPEN_IO.equalsIgnoreCase(volInfo.getVolumeExternalOpenIOInfo().getStorageType())) {
+                volExtInfoObj = volExtOpenIoInfo.toJSON(volInfo);
+            }
 
             // step 2: Fetch current JSON state
             String serverExternalStoreConfigJson = provisioning.getLocalServer().getServerExternalStoreConfig();
