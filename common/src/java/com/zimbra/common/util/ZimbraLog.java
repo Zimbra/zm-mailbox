@@ -901,7 +901,7 @@ public final class ZimbraLog {
                     .addComponent(builder.newComponent(POLICY_TIME_TYPE).addAttribute(POLICY_TIME_TYPE_INTERVAL, POLICY_TIME_TYPE_INTERVAL_VALUE));
             appenderBuilder = builder.newAppender(APPENDER_NAME, APPENDER_TYPE)
                     .addAttribute(APPENDER_FILE_NAME, logFile)
-                    .addAttribute(APPENDER_FILE_PATTERN, logFile.substring(0, logFile.lastIndexOf(".log")) + "-%d{yyyy-MM-dd}")
+                    .addAttribute(APPENDER_FILE_PATTERN, logFile + "-%d{yyyy-MM-dd}")
                     .add(layoutBuilder)
                     .addComponent(policy);
             builder.add(appenderBuilder);
