@@ -381,22 +381,6 @@ public class PlaybackUtil {
     private static void setup() throws ServiceException {
         // set up log4j
         ZimbraLog.toolSetupLog4j("INFO", LC.zimbra_log4j_properties.value());
-        // remove the console appender if any
-        org.apache.logging.log4j.Logger rootLogger = LogManager.getRootLogger();
-        Appender consoleAppender = null;
-        LoggerContext context = LoggerContext.getContext(false);
-        Configuration configuration = context.getConfiguration();
-        LoggerConfig loggerConfig = configuration.getLoggerConfig(rootLogger.getName());
-        Map<String, Appender> appenders = loggerConfig.getAppenders();
-
-        while (appenders.values().iterator().hasNext()) {
-            Appender appender = appenders.values().iterator().next();
-            if (appender instanceof ConsoleAppender) {
-                consoleAppender = appender;
-            }
-        }
-        if (consoleAppender != null)
-            loggerConfig.removeAppender(consoleAppender.getName());
 
         DbPool.startup();
         Zimbra.startupCLI();
