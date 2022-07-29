@@ -1650,12 +1650,21 @@ public class ProvUtil implements HttpDebugListener {
             doGetHABGroupMembers(args);
             break;
         case SEND_MDM_EMAIL:
-            prov.sendMdmEmail(args[1], args[2]);
+            doSendMdmEmail(args);
             break;
         default:
             return false;
         }
         return true;
+    }
+
+    private void doSendMdmEmail(String[] args)  throws ServiceException {
+            if (args.length == 2 && StringUtil.isNullOrEmpty(args[1]) && StringUtil.isNullOrEmpty(args[1])) {
+                prov.sendMdmEmail(args[1], args[2]);
+            } else {
+                throw ServiceException.FAILURE(String.format("Number of arguments passed i.e. %s. Status of device : %s. Time interval of email %s. ",
+                        args.length , args[0], args[1]), null);
+            }
     }
 
     private void doAddMember(String[] args) throws ServiceException {
