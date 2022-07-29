@@ -9937,10 +9937,11 @@ TODO: delete them permanently from here
       If set as 14.1, all device types android/ios connecting to this account will use 14.1 version.
       If the added values don't match the user agent/device Id/device type default zimbra_activesync_versions on the local config will be used.
   </desc>
-<attr id="4005" name="zimbraGlobalExternalStoreConfig" type="string" cardinality="single" optionalIn="globalConfig" since="9.1.0">
+</attr>
+<attr id="4006" name="zimbraGlobalExternalStoreConfig" type="string" cardinality="single" optionalIn="globalConfig" since="9.1.0">
   <desc>Global level external store config</desc>
 </attr>
-<attr id="4006" name="zimbraServerExternalStoreConfig" type="string" cardinality="single" optionalIn="server" since="9.1.0">
+<attr id="4007" name="zimbraServerExternalStoreConfig" type="string" cardinality="single" optionalIn="server" since="9.1.0">
   <desc>Server level external store config</desc>
 </attr>
 </attrs>
