@@ -9,6 +9,7 @@ package com.zimbra.util;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.soap.admin.type.VolumeInfo;
@@ -18,12 +19,26 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Iterator;
+import java.io.Writer;
 
 /**
  * LDAP based properties handler
  */
 public class ExternalVolumeInfoHandler {
+
+    public static final String PREV_FILE_NAME = "zsesc_prev.json";
+    public static final String PREV_DIR_PATH = File.separator + "opt" + File.separator + "zimbra" + File.separator + "smconfig";
+    public static final String PREV_FILE_PATH = PREV_DIR_PATH + File.separator + PREV_FILE_NAME;
+
+    public static final String CURR_FILE_NAME = "zsesc_curr.json";
+    public static final String CURR_DIR_PATH = File.separator + "opt" + File.separator + "zimbra" + File.separator + "smconfig";
+    public static final String CURR_FILE_PATH = CURR_DIR_PATH + File.separator + CURR_FILE_NAME;
 
     /**
      * LDAP Provision instance
@@ -46,6 +61,41 @@ public class ExternalVolumeInfoHandler {
         try {
             // step 1: Fetch current JSON state object and current JSON state array
             String serverExternalStoreConfigJson = provisioning.getLocalServer().getServerExternalStoreConfig();
+            JSONObject currentJsonObject = new JSONObject(serverExternalStoreConfigJson);
+            JSONArray currentJsonArray = currentJsonObject.getJSONArray("server/stores");
+
+            // step 2: Iterate JSON state array
+            for (int i = 0; i < currentJsonArray.length(); i++) {
+                JSONObject tempJsonObj = currentJsonArray.getJSONObject(i);
+
+                // step 3: Read required JSON object
+                if (volumeId == tempJsonObj.getInt("volumeId")) {
+                    // step 4: Copy temp JSON object to return JSON object and break
+                    retJsonObj = tempJsonObj;
+                    break;
+                }
+            }
+        } catch (JSONException e) {
+            throw e;
+        }
+
+        // step 5: Return JSON object
+        return retJsonObj;
+    }
+
+    /**
+     * Read backup server level external volume properties
+     * @param volumeId
+     * @param filePath
+     *
+     * @return JSONObject as a backup server level volume properties
+     * @throws JSONException, ServiceException
+     */
+    public JSONObject readBackupServerProperties(int volumeId, String filePath) throws ServiceException, JSONException {
+        JSONObject retJsonObj = new JSONObject();
+        try {
+            // step 1: Fetch current JSON state object and current JSON state array
+            String serverExternalStoreConfigJson = readServerJSONFile(filePath);
             JSONObject currentJsonObject = new JSONObject(serverExternalStoreConfigJson);
             JSONArray currentJsonArray = currentJsonObject.getJSONArray("server/stores");
 
@@ -99,8 +149,9 @@ public class ExternalVolumeInfoHandler {
             currentJsonObject.put("server/stores", currentJsonArray);
 
             // step 6: Set ldap attribute
+            writeServerJSONFile(provisioning.getLocalServer().getServerExternalStoreConfig(), PREV_DIR_PATH, PREV_FILE_PATH);
             provisioning.getLocalServer().setServerExternalStoreConfig(currentJsonObject.toString());
-
+            writeServerJSONFile(provisioning.getLocalServer().getServerExternalStoreConfig(), CURR_DIR_PATH, CURR_FILE_PATH);
         } catch (JSONException e) {
             throw e;
         }
@@ -147,7 +198,9 @@ public class ExternalVolumeInfoHandler {
             currentJsonObject.put("server/stores", currentJsonArray);
 
             // step 6: Set ldap attribute
+            writeServerJSONFile(provisioning.getLocalServer().getServerExternalStoreConfig(), PREV_DIR_PATH, PREV_FILE_PATH);
             provisioning.getLocalServer().setServerExternalStoreConfig(currentJsonObject.toString());
+            writeServerJSONFile(provisioning.getLocalServer().getServerExternalStoreConfig(), CURR_DIR_PATH, CURR_FILE_PATH);
         } catch (JSONException e) {
             throw e;
         }
@@ -187,7 +240,9 @@ public class ExternalVolumeInfoHandler {
             currentJsonObject.put("server/stores", currentJsonArray);
 
             // step 6: Set ldap attribute
+            writeServerJSONFile(provisioning.getLocalServer().getServerExternalStoreConfig(), PREV_DIR_PATH, PREV_FILE_PATH);
             provisioning.getLocalServer().setServerExternalStoreConfig(currentJsonObject.toString());
+            writeServerJSONFile(provisioning.getLocalServer().getServerExternalStoreConfig(), CURR_DIR_PATH, CURR_FILE_PATH);
         }  catch (JSONException e) {
             throw e;
         }
@@ -235,5 +290,46 @@ public class ExternalVolumeInfoHandler {
             }
         }
         return false;
+    }
+
+    private void writeServerJSONFile(String data, String dirPath, String filePath) {
+        try {
+            File serverJSONBackupDir = new File(dirPath);
+            File serverJSONBackupFile = new File(filePath);
+            // check if dir exists
+            if (!serverJSONBackupDir.exists()) {
+                serverJSONBackupDir.mkdirs();
+            }
+            // check if file exists
+            if (!serverJSONBackupFile.exists()) {
+                serverJSONBackupFile.createNewFile();
+            }
+            Writer fileWriter = new FileWriter(serverJSONBackupFile, false); //overwrites file
+            fileWriter.write(data);
+            fileWriter.close();
+        } catch (IOException e) {
+            ZimbraLog.misc.error("Failure while writing Server JSON Backup File : ", e);
+            System.out.println("Failure while reading Server JSON Backup File : " + e.getMessage());
+        }
+    }
+
+    private String readServerJSONFile(String filePath) {
+        String result = null;
+        try {
+            File serverJSONBackupFile = new File(filePath);
+            // check if file exists
+            if (serverJSONBackupFile.exists()) {
+                BufferedReader reader = new BufferedReader(new FileReader(filePath));
+                StringBuilder builder = new StringBuilder();
+                while ((result = reader.readLine()) != null) {
+                    builder.append(result + "\n");
+                }
+                reader.close();
+            }
+        } catch (IOException e) {
+            ZimbraLog.misc.error("Failure while reading Server JSON Backup File : ", e);
+            System.out.println("Failure while reading Server JSON Backup File : " + e.getMessage());
+        }
+        return result;
     }
 }
