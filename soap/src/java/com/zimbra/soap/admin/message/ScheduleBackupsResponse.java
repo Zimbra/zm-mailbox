@@ -17,10 +17,15 @@
 
 package com.zimbra.soap.admin.message;
 
+import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.BackupConstants;
 
 @XmlRootElement(name=BackupConstants.E_SCHEDULE_BACKUPS_RESPONSE)
 public class ScheduleBackupsResponse {
+
+    @XmlAttribute(name=BackupConstants.A_SCHEDULE_BACKUP_RESULT)
+    private String scheduleBackupResult;
+
 }
