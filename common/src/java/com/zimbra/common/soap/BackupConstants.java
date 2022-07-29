@@ -94,7 +94,9 @@ public final class BackupConstants {
     public static final QName QUERY_MAILBOX_MOVE_RESPONSE = QName.get(E_QUERY_MAILBOX_MOVE_RESPONSE, NAMESPACE);
 
     public static final String ZM_SCHEDULE_BACKUP = "zmschedulebackup";
-
+    // this constant used as license attribute
+    public static final String LA_BACKUP_ENABLED = "BackupEnabled";
+    
     public static final String E_ACCOUNT = "account";
     public static final String E_ACCOUNTS = "accounts";
     public static final String E_CURRENT_ACCOUNTS = "currentAccounts";
