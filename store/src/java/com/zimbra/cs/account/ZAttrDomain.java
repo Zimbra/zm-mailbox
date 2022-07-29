@@ -4582,6 +4582,108 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
+     * Whether or not account is eligible for backup If true on cos level
+     * then backup accounts for cos. zimbraDomainDefaultCOSId is considered.
+     * If unset on cos level but true on domain level then backup domains
+     * account. If unset on cos level, unset on domain level but true on
+     * account level then specific account will be backed up. If true on cos
+     * level , unset on domain level but zimbraDomainDefaultCOSId is set to
+     * cos then accounts for that domain will be backed up.
+     *
+     * @return zimbraBackupEnabled, or false if unset
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=9014)
+    public boolean isBackupEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraBackupEnabled, false, true);
+    }
+
+    /**
+     * Whether or not account is eligible for backup If true on cos level
+     * then backup accounts for cos. zimbraDomainDefaultCOSId is considered.
+     * If unset on cos level but true on domain level then backup domains
+     * account. If unset on cos level, unset on domain level but true on
+     * account level then specific account will be backed up. If true on cos
+     * level , unset on domain level but zimbraDomainDefaultCOSId is set to
+     * cos then accounts for that domain will be backed up.
+     *
+     * @param zimbraBackupEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=9014)
+    public void setBackupEnabled(boolean zimbraBackupEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupEnabled, zimbraBackupEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not account is eligible for backup If true on cos level
+     * then backup accounts for cos. zimbraDomainDefaultCOSId is considered.
+     * If unset on cos level but true on domain level then backup domains
+     * account. If unset on cos level, unset on domain level but true on
+     * account level then specific account will be backed up. If true on cos
+     * level , unset on domain level but zimbraDomainDefaultCOSId is set to
+     * cos then accounts for that domain will be backed up.
+     *
+     * @param zimbraBackupEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=9014)
+    public Map<String,Object> setBackupEnabled(boolean zimbraBackupEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupEnabled, zimbraBackupEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether or not account is eligible for backup If true on cos level
+     * then backup accounts for cos. zimbraDomainDefaultCOSId is considered.
+     * If unset on cos level but true on domain level then backup domains
+     * account. If unset on cos level, unset on domain level but true on
+     * account level then specific account will be backed up. If true on cos
+     * level , unset on domain level but zimbraDomainDefaultCOSId is set to
+     * cos then accounts for that domain will be backed up.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=9014)
+    public void unsetBackupEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether or not account is eligible for backup If true on cos level
+     * then backup accounts for cos. zimbraDomainDefaultCOSId is considered.
+     * If unset on cos level but true on domain level then backup domains
+     * account. If unset on cos level, unset on domain level but true on
+     * account level then specific account will be backed up. If true on cos
+     * level , unset on domain level but zimbraDomainDefaultCOSId is set to
+     * cos then accounts for that domain will be backed up.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=9014)
+    public Map<String,Object> unsetBackupEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupEnabled, "");
+        return attrs;
+    }
+
+    /**
      * Realm for the basic auth challenge (WWW-Authenticate) header
      *
      * @return zimbraBasicAuthRealm, or "Zimbra" if unset
@@ -7570,6 +7672,262 @@ public abstract class ZAttrDomain extends NamedEntry {
     public Map<String,Object> unsetDriveOwnCloudURL(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDriveOwnCloudURL, "");
+        return attrs;
+    }
+
+    /**
+     * enable/disable dumpster
+     *
+     * @return zimbraDumpsterEnabled, or false if unset
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1128)
+    public boolean isDumpsterEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraDumpsterEnabled, false, true);
+    }
+
+    /**
+     * enable/disable dumpster
+     *
+     * @param zimbraDumpsterEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1128)
+    public void setDumpsterEnabled(boolean zimbraDumpsterEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDumpsterEnabled, zimbraDumpsterEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * enable/disable dumpster
+     *
+     * @param zimbraDumpsterEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1128)
+    public Map<String,Object> setDumpsterEnabled(boolean zimbraDumpsterEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDumpsterEnabled, zimbraDumpsterEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * enable/disable dumpster
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1128)
+    public void unsetDumpsterEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDumpsterEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * enable/disable dumpster
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1128)
+    public Map<String,Object> unsetDumpsterEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDumpsterEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * disables purging from dumpster when set to FALSE
+     *
+     * @return zimbraDumpsterPurgeEnabled, or true if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1315)
+    public boolean isDumpsterPurgeEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraDumpsterPurgeEnabled, true, true);
+    }
+
+    /**
+     * disables purging from dumpster when set to FALSE
+     *
+     * @param zimbraDumpsterPurgeEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1315)
+    public void setDumpsterPurgeEnabled(boolean zimbraDumpsterPurgeEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDumpsterPurgeEnabled, zimbraDumpsterPurgeEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * disables purging from dumpster when set to FALSE
+     *
+     * @param zimbraDumpsterPurgeEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1315)
+    public Map<String,Object> setDumpsterPurgeEnabled(boolean zimbraDumpsterPurgeEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDumpsterPurgeEnabled, zimbraDumpsterPurgeEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * disables purging from dumpster when set to FALSE
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1315)
+    public void unsetDumpsterPurgeEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDumpsterPurgeEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * disables purging from dumpster when set to FALSE
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1315)
+    public Map<String,Object> unsetDumpsterPurgeEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDumpsterPurgeEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * limits how much of a dumpster data is viewable by the end user, based
+     * on the age since being put in dumpster. Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * <p>Use getDumpsterUserVisibleAgeAsString to access value as a string.
+     *
+     * @see #getDumpsterUserVisibleAgeAsString()
+     *
+     * @return zimbraDumpsterUserVisibleAge in millseconds, or 2592000000 (30d)  if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1314)
+    public long getDumpsterUserVisibleAge() {
+        return getTimeInterval(Provisioning.A_zimbraDumpsterUserVisibleAge, 2592000000L, true);
+    }
+
+    /**
+     * limits how much of a dumpster data is viewable by the end user, based
+     * on the age since being put in dumpster. Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @return zimbraDumpsterUserVisibleAge, or "30d" if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1314)
+    public String getDumpsterUserVisibleAgeAsString() {
+        return getAttr(Provisioning.A_zimbraDumpsterUserVisibleAge, "30d", true);
+    }
+
+    /**
+     * limits how much of a dumpster data is viewable by the end user, based
+     * on the age since being put in dumpster. Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @param zimbraDumpsterUserVisibleAge new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1314)
+    public void setDumpsterUserVisibleAge(String zimbraDumpsterUserVisibleAge) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDumpsterUserVisibleAge, zimbraDumpsterUserVisibleAge);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * limits how much of a dumpster data is viewable by the end user, based
+     * on the age since being put in dumpster. Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @param zimbraDumpsterUserVisibleAge new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1314)
+    public Map<String,Object> setDumpsterUserVisibleAge(String zimbraDumpsterUserVisibleAge, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDumpsterUserVisibleAge, zimbraDumpsterUserVisibleAge);
+        return attrs;
+    }
+
+    /**
+     * limits how much of a dumpster data is viewable by the end user, based
+     * on the age since being put in dumpster. Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1314)
+    public void unsetDumpsterUserVisibleAge() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDumpsterUserVisibleAge, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * limits how much of a dumpster data is viewable by the end user, based
+     * on the age since being put in dumpster. Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1314)
+    public Map<String,Object> unsetDumpsterUserVisibleAge(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDumpsterUserVisibleAge, "");
         return attrs;
     }
 
@@ -15958,6 +16316,118 @@ public abstract class ZAttrDomain extends NamedEntry {
     public Map<String,Object> unsetMailDomainQuota(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailDomainQuota, "");
+        return attrs;
+    }
+
+    /**
+     * Retention period of messages in the dumpster. 0 means that all
+     * messages will be retained. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * <p>Use getMailDumpsterLifetimeAsString to access value as a string.
+     *
+     * @see #getMailDumpsterLifetimeAsString()
+     *
+     * @return zimbraMailDumpsterLifetime in millseconds, or 2592000000 (30d)  if unset
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1133)
+    public long getMailDumpsterLifetime() {
+        return getTimeInterval(Provisioning.A_zimbraMailDumpsterLifetime, 2592000000L, true);
+    }
+
+    /**
+     * Retention period of messages in the dumpster. 0 means that all
+     * messages will be retained. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @return zimbraMailDumpsterLifetime, or "30d" if unset
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1133)
+    public String getMailDumpsterLifetimeAsString() {
+        return getAttr(Provisioning.A_zimbraMailDumpsterLifetime, "30d", true);
+    }
+
+    /**
+     * Retention period of messages in the dumpster. 0 means that all
+     * messages will be retained. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param zimbraMailDumpsterLifetime new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1133)
+    public void setMailDumpsterLifetime(String zimbraMailDumpsterLifetime) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailDumpsterLifetime, zimbraMailDumpsterLifetime);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Retention period of messages in the dumpster. 0 means that all
+     * messages will be retained. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param zimbraMailDumpsterLifetime new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1133)
+    public Map<String,Object> setMailDumpsterLifetime(String zimbraMailDumpsterLifetime, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailDumpsterLifetime, zimbraMailDumpsterLifetime);
+        return attrs;
+    }
+
+    /**
+     * Retention period of messages in the dumpster. 0 means that all
+     * messages will be retained. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1133)
+    public void unsetMailDumpsterLifetime() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailDumpsterLifetime, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Retention period of messages in the dumpster. 0 means that all
+     * messages will be retained. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1133)
+    public Map<String,Object> unsetMailDumpsterLifetime(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailDumpsterLifetime, "");
         return attrs;
     }
 
