@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="US-ASCII"?>
+
+<localconfig>
+  <key name="zimbra_mailbox_groups">
+    <value>1</value>
+  </key>
+  <key name="debug_disable_share_expiration_listener">
+    <value>true</value>
+  </key>
+  <key name="zimbra_home">
+    <value>build/zimbra</value>
+  </key>
+</localconfig>

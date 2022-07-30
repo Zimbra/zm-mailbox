@@ -45,6 +45,7 @@ public final class VolumeServiceException extends ServiceException {
     public static final String BAD_VOLUME_USE_IN_FREQUENT_ACCESS            = "volume.BAD_USE_IN_FREQUENT_ACCESS";
     public static final String BAD_VOLUME_USE_INTELLIGENT_TIERING           = "volume.BAD_USE_INTELLIGENT_TIERING";
     public static final String BAD_VOLUME_STORAGE_TYPE                      = "volume.BAD_STORAGE_TYPE";
+    public static final String BAD_VOLUME_STORE_MANAGER_CLASS               = "volume.STORE_MANAGER_CLASS";
     public static final String BAD_VOLUME_USE_IN_FREQUENT_ACCESS_THRESHOLD  = "volume.BAD_USE_IN_FREQUENT_ACCESS_THRESHOLD";
     public static final String BAD_VOLUME_GLOBAL_BUCKET_ID                  = "volume.BAD_GLOBAL_BUCKET_ID";
 
