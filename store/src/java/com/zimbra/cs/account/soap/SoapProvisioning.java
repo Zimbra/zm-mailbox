@@ -3269,19 +3269,15 @@ public class SoapProvisioning extends Provisioning {
                         .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlTableDataClose))
                         .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlTableDataOpen)).append(statusOfDevices.get(i).getUserAgent())
                         .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlTableDataClose))
-                        .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlTableDataOpen)).append(statusOfDevices.get(i).getId())
+                        .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlTableDataOpen)).append(statusOfDevices.get(i).getUpdateTime())
                         .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlTableDataClose))
                         .append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlTableRowClose));
                 j++;
         }
-        if (j == 0){
-            devicesInfo = new StringBuilder(
-                    L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailNoDevicesFoundMsg));
-        } else {
+        if (j > 0) {
             devicesInfo.append(L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailHtmlTableClose));
+            SendMdmNotificationEmailResponse sendMdmNotificationEmailResponse = invokeJaxb(new SendMdmNotificationEmailRequest(String.valueOf(devicesInfo), status));
         }
-        SendMdmNotificationEmailResponse sendMdmNotificationEmailResponse = invokeJaxb(
-                new SendMdmNotificationEmailRequest(String.valueOf(devicesInfo), status));
         return L10nUtil.getMessage(L10nUtil.MsgKey.sendMDMNotificationEmailSuccess);
     }
 }

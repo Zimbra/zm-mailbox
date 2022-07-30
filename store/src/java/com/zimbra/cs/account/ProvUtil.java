@@ -1659,11 +1659,11 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     private void doSendMdmEmail(String[] args)  throws ServiceException {
-            if (args.length == 2 && StringUtil.isNullOrEmpty(args[1]) && StringUtil.isNullOrEmpty(args[1])) {
+            if (args.length >= 3 && !StringUtil.isNullOrEmpty(args[1]) && !StringUtil.isNullOrEmpty(args[2])) {
                 prov.sendMdmEmail(args[1], args[2]);
             } else {
                 throw ServiceException.FAILURE(String.format("Number of arguments passed i.e. %s. Status of device : %s. Time interval of email %s. ",
-                        args.length , args[0], args[1]), null);
+                        ifPresent(args ,0), args.length , ifPresent(args ,1), ifPresent(args ,2)), null);
             }
     }
 
@@ -3763,6 +3763,13 @@ public class ProvUtil implements HttpDebugListener {
             return GranteeBy.id;
         }
         return GranteeBy.name;
+    }
+
+    private static String ifPresent(String[] array, int index){
+        if ((index >= 0) && (index < array.length)){
+            return array[index];
+        }
+        return "";
     }
 
     private void checkDeprecatedAttrs(Map<String, ? extends Object> attrs) throws ServiceException {
