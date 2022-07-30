@@ -17,25 +17,23 @@
 
 package com.zimbra.cs.service.admin;
 
-import java.util.List;
-import java.util.Map;
-
-import org.json.JSONException;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.service.util.VolumeConfigUtil;
+import com.zimbra.cs.store.helper.StoreManagerResetHelper;
 import com.zimbra.cs.volume.Volume;
 import com.zimbra.cs.volume.VolumeManager;
-import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
-import com.zimbra.soap.admin.type.VolumeInfo;
 import com.zimbra.soap.admin.message.CreateVolumeRequest;
 import com.zimbra.soap.admin.message.CreateVolumeResponse;
+import com.zimbra.soap.admin.type.StoreManagerRuntimeSwitchResult;
+import com.zimbra.soap.admin.type.VolumeInfo;
+
+import java.util.List;
+import java.util.Map;
 
 public final class CreateVolume extends AdminDocumentHandler {
 
@@ -56,13 +54,23 @@ public final class CreateVolume extends AdminDocumentHandler {
         Volume volRequest = VolumeManager.getInstance().create(toVolume(volInfoRequest, enumStoreType));
         VolumeInfo volInfoResponse = volRequest.toJAXB();
         VolumeConfigUtil.postCreateVolumeActions(request, volRequest, volInfoRequest, volInfoResponse, enumStoreType);
+
+        CreateVolumeResponse createVolumeResponse = new CreateVolumeResponse(volInfoResponse);
+        // if its primary volume then set respective store manager if it's different
+        if (volInfoRequest.isCurrent() && volInfoRequest.getType() == Volume.TYPE_MESSAGE) {
+            StoreManagerRuntimeSwitchResult runtimeSwitchResult = StoreManagerResetHelper.setNewStoreManager(volInfoRequest.getStoreManagerClass());
+            createVolumeResponse.setRuntimeSwitchResult(runtimeSwitchResult);
+        }
+
         return new CreateVolumeResponse(volInfoResponse);
     }
 
     private Volume toVolume(VolumeInfo vol, Volume.StoreType enumStoreType) throws ServiceException {
         return Volume.builder().setType(vol.getType()).setName(vol.getName()).setPath(vol.getRootPath(), enumStoreType.equals(Volume.StoreType.INTERNAL))
                 .setCompressBlobs(vol.isCompressBlobs()).setCompressionThreshold(vol.getCompressionThreshold())
-                .setStoreType(enumStoreType).build();
+                .setStoreType(enumStoreType)
+                .setStoreManagerClass(vol.getStoreManagerClass())
+                .build();
     }
 
     @Override

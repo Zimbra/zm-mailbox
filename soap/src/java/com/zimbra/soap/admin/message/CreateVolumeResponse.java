@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.admin.type.StoreManagerRuntimeSwitchResult;
 import com.zimbra.soap.admin.type.VolumeInfo;
 
 @XmlAccessorType(XmlAccessType.NONE)
@@ -34,6 +35,9 @@ public class CreateVolumeResponse {
      */
     @XmlElement(name=AdminConstants.E_VOLUME, required=true)
     private VolumeInfo volume;
+
+    @XmlElement(name=AdminConstants.E_STORE_MANAGER_RUNTIME_SWITCH_RESULT, required=false)
+    private StoreManagerRuntimeSwitchResult runtimeSwitchResult;
 
     /**
      * no-argument constructor wanted by JAXB
@@ -48,4 +52,12 @@ public class CreateVolumeResponse {
     }
 
     public VolumeInfo getVolume() { return volume; }
+
+    public StoreManagerRuntimeSwitchResult getRuntimeSwitchResult() {
+        return runtimeSwitchResult;
+    }
+
+    public void setRuntimeSwitchResult(StoreManagerRuntimeSwitchResult runtimeSwitchResult) {
+        this.runtimeSwitchResult = runtimeSwitchResult;
+    }
 }

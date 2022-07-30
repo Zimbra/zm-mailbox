@@ -40,6 +40,8 @@ public final class CreateVolume extends RedoableOp {
     private short fileBits;
     private short storeType;
 
+    private String storeManagerClass;
+
     private boolean compressBlobs;
     private long compressionThreshold;
 
@@ -59,6 +61,7 @@ public final class CreateVolume extends RedoableOp {
         compressBlobs = volume.isCompressBlobs();
         compressionThreshold = volume.getCompressionThreshold();
         storeType = (short)(volume.getStoreType().getStoreType());
+        storeManagerClass = volume.getStoreManagerClass();
     }
 
     public void setId(short id) {
@@ -72,6 +75,7 @@ public final class CreateVolume extends RedoableOp {
                 .add("mboxGroupBits", mboxGroupBits).add("mboxBit", mboxBits)
                 .add("fileGroupBits", fileGroupBits).add("fileBits", fileBits)
                 .add("compressBlobs", compressBlobs).add("compressionThreshold", compressionThreshold)
+                .add("storeType", storeType).add("storeManagerClass", storeManagerClass)
                 .toString();
     }
 
@@ -86,6 +90,8 @@ public final class CreateVolume extends RedoableOp {
         out.writeShort(fileGroupBits);
         out.writeShort(fileBits);
         out.writeBoolean(compressBlobs);
+        out.writeShort(storeType);
+        out.writeUTF(storeManagerClass);
     }
 
     @Override
@@ -99,6 +105,8 @@ public final class CreateVolume extends RedoableOp {
         fileGroupBits = in.readShort();
         fileBits = in.readShort();
         compressBlobs = in.readBoolean();
+        storeType = in.readShort();
+        storeManagerClass = in.readUTF();
     }
 
     @Override
@@ -123,7 +131,9 @@ public final class CreateVolume extends RedoableOp {
                     .setMboxGroupBits(mboxGroupBits).setMboxBit(mboxBits)
                     .setFileGroupBits(fileGroupBits).setFileBits(fileBits)
                     .setCompressBlobs(compressBlobs).setCompressionThreshold(compressionThreshold)
-                    .setStoreType(enumStoreType).build();
+                    .setStoreType(enumStoreType)
+                    .setStoreManagerClass(storeManagerClass)
+                    .build();
             mgr.create(volume, getUnloggedReplay());
         } catch (VolumeServiceException e) {
             if (e.getCode() == VolumeServiceException.ALREADY_EXISTS) {
