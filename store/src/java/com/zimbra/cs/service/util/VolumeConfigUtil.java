@@ -18,6 +18,8 @@
 package com.zimbra.cs.service.util;
 
 import com.zimbra.client.ZMailbox;
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.cs.store.helper.ClassHelper;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -44,6 +46,15 @@ import com.zimbra.util.ExternalVolumeInfoHandler;
 public class VolumeConfigUtil {
 
     private static final String  ROOT_PATH_ELE_SEPARATOR = "-";
+
+    /**
+     * This is default store manager
+     */
+    private static final String DEFAULT_STORE_MANAGER = "com.zimbra.cs.store.file.FileBlobStore";
+    /**
+     * This is default external store manager, not part of FOSS edition
+     */
+    private static final String DEFAULT_EXTERNAL_STORE_MANAGER = "com.zimbra.storemanagers.store.GenericStoreManager";
 
     /**
      * Validate the create volume request parameters
@@ -96,6 +107,17 @@ public class VolumeConfigUtil {
             throw VolumeServiceException.INVALID_REQUEST("Volume Compression Threshold can't be negative number", VolumeServiceException.BAD_VOLUME_COMPRESSION_THRESHOLD);
         }
 
+        if (Volume.TYPE_MESSAGE == volInfoRequest.getType() || Volume.TYPE_MESSAGE_SECONDARY == volInfoRequest.getType()) {
+            if (!StringUtil.isNullOrEmpty(volInfoRequest.getStoreManagerClass())) {
+                if (!ClassHelper.isClassExist(volInfoRequest.getStoreManagerClass())) {
+                    throw VolumeServiceException.INVALID_REQUEST("Invalid StoreManager class, can not loaded", VolumeServiceException.BAD_VOLUME_STORE_MANAGER_CLASS);
+                }
+            } else {
+                // set to default store manager if not passed.
+                setDefaultStoreManager(volInfoRequest, storeType);
+            }
+        }
+
         if (Volume.StoreType.EXTERNAL.equals(enumStoreType)) {
             // validate storage type
             String storageTypeS3 = null;
@@ -105,8 +127,8 @@ public class VolumeConfigUtil {
             String storageTypeOpenIO = null;
             if (volInfoRequest != null && volInfoRequest.getVolumeExternalOpenIOInfo() != null) {
                 storageTypeOpenIO = volInfoRequest.getVolumeExternalOpenIOInfo().getStorageType();
-            }
 
+            }
             if (storageTypeS3 != null && storageTypeOpenIO != null
                     && !storageTypeS3.equalsIgnoreCase(AdminConstants.A_VOLUME_S3)
                     && !storageTypeOpenIO.equalsIgnoreCase(AdminConstants.A_VOLUME_OPEN_IO)) {
@@ -156,6 +178,19 @@ public class VolumeConfigUtil {
                 throw VolumeServiceException.INVALID_REQUEST("Volume Storage Type can be only S3 or OpenIO",
                         VolumeServiceException.BAD_VOLUME_STORAGE_TYPE);
             }
+        }
+    }
+
+    /**
+     * Set default StoreManager for volume
+     * @param volInfoRequest
+     * @param storeType
+     */
+    private static void setDefaultStoreManager(VolumeInfo volInfoRequest, Short storeType) {
+        if (Volume.StoreType.EXTERNAL.getStoreType() == storeType.intValue()) {
+            volInfoRequest.setStoreManagerClass(DEFAULT_EXTERNAL_STORE_MANAGER);
+        } else {
+            volInfoRequest.setStoreManagerClass(DEFAULT_STORE_MANAGER);
         }
     }
 

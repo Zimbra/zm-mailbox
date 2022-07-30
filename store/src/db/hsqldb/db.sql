@@ -32,7 +32,9 @@ CREATE TABLE volume (
    mailbox_group_bits     SMALLINT NOT NULL,
    compress_blobs         BOOLEAN NOT NULL,
    compression_threshold  BIGINT NOT NULL,
-   metadata               VARCHAR(255),
+   metadata               VARCHAR(255) NULL,
+   store_type             TINYINT DEFAULT 1 NOT NULL,
+   store_manager_class    VARCHAR(255),
 
    CONSTRAINT i_name UNIQUE (name),
    CONSTRAINT i_path UNIQUE (path)
