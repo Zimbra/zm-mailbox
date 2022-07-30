@@ -60,4 +60,14 @@
         <sub-class-of type="text/plain"/>
     </mime-type>
 
+    <mime-type type="application/rtf">
+        <_comment>Rich Text Format File</_comment>
+        <alias type="text/rtf"/>
+        <magic priority="50">
+            <match value="{\\rtf" type="string" offset="0"/>
+        </magic>
+        <glob pattern="*.rtf"/>
+        <sub-class-of type="text/plain"/>
+    </mime-type>
+
 </mime-info>
