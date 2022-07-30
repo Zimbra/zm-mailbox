@@ -16455,6 +16455,22 @@ public class ZAttrProvisioning {
     public static final String A_zimbraSmimeUserCertificateExtensions = "zimbraSmimeUserCertificateExtensions";
 
     /**
+     * Zimbra multiple reader StoreManagers enabled
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4008)
+    public static final String A_zimbraSMMultiReaderEnabled = "zimbraSMMultiReaderEnabled";
+
+    /**
+     * Zimbra StoreManager runtime switching enabled
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4009)
+    public static final String A_zimbraSMRuntimeSwitchEnabled = "zimbraSMRuntimeSwitchEnabled";
+
+    /**
      * Whether to enable smtp debug trace
      *
      * @since ZCS 6.0.0_BETA1

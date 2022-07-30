@@ -17,20 +17,21 @@
 
 package com.zimbra.cs.service.admin;
 
-import java.util.List;
-import java.util.Map;
-
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.store.helper.StoreManagerResetHelper;
 import com.zimbra.cs.volume.Volume;
 import com.zimbra.cs.volume.VolumeManager;
-import com.zimbra.common.soap.Element;
-import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.SetCurrentVolumeRequest;
 import com.zimbra.soap.admin.message.SetCurrentVolumeResponse;
+import com.zimbra.soap.admin.type.StoreManagerRuntimeSwitchResult;
+
+import java.util.List;
+import java.util.Map;
 
 public final class SetCurrentVolume extends AdminDocumentHandler {
 
@@ -47,7 +48,15 @@ public final class SetCurrentVolume extends AdminDocumentHandler {
 
         short volId = req.getId() > 0 ? req.getId() : Volume.ID_NONE;
         VolumeManager.getInstance().setCurrentVolume(req.getType(), volId);
-        return new SetCurrentVolumeResponse();
+        SetCurrentVolumeResponse response = new SetCurrentVolumeResponse();
+        Volume volume = VolumeManager.getInstance().getVolume(volId);
+        // if its primary volume then
+        if (Volume.TYPE_MESSAGE == volume.getType()) {
+            // set current store manager
+            StoreManagerRuntimeSwitchResult runtimeSwitchResult = StoreManagerResetHelper.setNewStoreManager(volume.getStoreManagerClass());
+            response.setRuntimeSwitchResult(runtimeSwitchResult);
+        }
+        return response;
     }
 
     @Override

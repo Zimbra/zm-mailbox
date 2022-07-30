@@ -68,6 +68,8 @@ public final class Volume {
 
     private StoreType storeType;
 
+    private String storeManagerClass;
+
     public static enum StoreType {
         INTERNAL(1),
         EXTERNAL(2);
@@ -181,6 +183,7 @@ public final class Volume {
             volume.compressionThreshold = copy.compressionThreshold;
             volume.metadata = copy.metadata;
             volume.storeType = copy.storeType;
+            volume.storeManagerClass = copy.storeManagerClass;
         }
 
         public Builder setId(short id) {
@@ -245,6 +248,11 @@ public final class Volume {
 
         public Builder setStoreType(StoreType storeType) {
             volume.storeType = storeType;
+            return this;
+        }
+
+        public Builder setStoreManagerClass(String storageManagerClass) {
+            volume.storeManagerClass = storageManagerClass;
             return this;
         }
 
@@ -353,6 +361,10 @@ public final class Volume {
 
     public StoreType getStoreType() {
         return storeType;
+    }
+
+    public String getStoreManagerClass() {
+        return storeManagerClass;
     }
 
     public static String getAbsolutePath(String path) throws ServiceException {
@@ -495,6 +507,7 @@ public final class Volume {
                 .add("fileGroupBits", fileGroupBits).add("fileBits", fileBits)
                 .add("compressBlobs", compressBlobs).add("compressionThreshold", compressionThreshold)
                 .add("storeType", storeType)
+                .add("storeManagerClass", storeManagerClass)
                 .toString();
     }
 
@@ -513,6 +526,7 @@ public final class Volume {
         jaxb.setCurrent(VolumeManager.getInstance().isCurrent(this));
         short value = (short)(this.getStoreType().getStoreType());
         jaxb.setStoreType(value);
+        jaxb.setStoreManagerClass(storeManagerClass);
         return jaxb;
     }
 }
