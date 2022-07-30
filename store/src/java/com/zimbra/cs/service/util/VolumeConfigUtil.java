@@ -63,8 +63,15 @@ public class VolumeConfigUtil {
         }
 
         // validate/set root path if store type is external
-        if (Volume.StoreType.EXTERNAL.getStoreType() == storeType.intValue()) {
+        if (volInfoRequest != null && volInfoRequest.getVolumeExternalInfo() != null
+                && Volume.StoreType.EXTERNAL.getStoreType() == storeType.intValue()) {
             String extRootPath = "/" + volInfoRequest.getVolumeExternalInfo().getStorageType() + "-" + volInfoRequest.getName() + "-" + volInfoRequest.getVolumeExternalInfo().getGlobalBucketConfigurationId();
+            volInfoRequest.setRootPath(extRootPath);
+        }
+
+        if (volInfoRequest != null && volInfoRequest.getVolumeExternalOpenIOInfo() != null
+                && Volume.StoreType.EXTERNAL.getStoreType() == storeType.intValue()) {
+            String extRootPath = "/" + volInfoRequest.getVolumeExternalOpenIOInfo().getStorageType() + "-" + volInfoRequest.getName();
             volInfoRequest.setRootPath(extRootPath);
         }
 
@@ -91,15 +98,23 @@ public class VolumeConfigUtil {
 
         if (Volume.StoreType.EXTERNAL.equals(enumStoreType)) {
             // validate storage type
-            String storageTypeS3 = volInfoRequest.getVolumeExternalInfo().getStorageType();
-            String storageTypeOpenIO = volInfoRequest.getVolumeExternalOpenIOInfo().getStorageType();
+            String storageTypeS3 = null;
+            if (volInfoRequest != null && volInfoRequest.getVolumeExternalInfo() != null) {
+                storageTypeS3 = volInfoRequest.getVolumeExternalInfo().getStorageType();
+            }
+            String storageTypeOpenIO = null;
+            if (volInfoRequest != null && volInfoRequest.getVolumeExternalOpenIOInfo() != null) {
+                storageTypeOpenIO = volInfoRequest.getVolumeExternalOpenIOInfo().getStorageType();
+            }
 
-            if (!storageTypeS3.equalsIgnoreCase(AdminConstants.A_VOLUME_S3) && !storageTypeOpenIO.equalsIgnoreCase(AdminConstants.A_VOLUME_OPEN_IO)) {
-                throw VolumeServiceException.INVALID_REQUEST("Volume Storage Type can be only S3 or OpenIO", VolumeServiceException.BAD_VOLUME_STORAGE_TYPE);
+            if (storageTypeS3 != null && storageTypeOpenIO != null
+                    && !storageTypeS3.equalsIgnoreCase(AdminConstants.A_VOLUME_S3)
+                    && !storageTypeOpenIO.equalsIgnoreCase(AdminConstants.A_VOLUME_OPEN_IO)) {
+                throw VolumeServiceException.INVALID_REQUEST("Volume Storage Type can be only S3 or OpenIO",
+                        VolumeServiceException.BAD_VOLUME_STORAGE_TYPE);
             }
 
             if (AdminConstants.A_VOLUME_S3.equalsIgnoreCase(storageTypeS3)) {
-
                 // validate use in frequent access threshold
                 int useInFrequentAccessThreshold = volInfoRequest.getVolumeExternalInfo().getUseInFrequentAccessThreshold();
                 if (useInFrequentAccessThreshold < 0) {
@@ -137,6 +152,9 @@ public class VolumeConfigUtil {
                 if (StringUtil.isNullOrEmpty(volInfoRequest.getVolumeExternalOpenIOInfo().getNamespace())) {
                     throw VolumeServiceException.INVALID_REQUEST("Name Space can't be null", VolumeServiceException.BAD_VOLUME_USE_IN_FREQUENT_ACCESS_THRESHOLD);
                 }
+            } else {
+                throw VolumeServiceException.INVALID_REQUEST("Volume Storage Type can be only S3 or OpenIO",
+                        VolumeServiceException.BAD_VOLUME_STORAGE_TYPE);
             }
         }
     }
@@ -155,7 +173,8 @@ public class VolumeConfigUtil {
         if (Volume.StoreType.EXTERNAL.equals(enumStoreType)) {
             try {
                 volInfoRequest.setId(volRequest.getId());
-                if (AdminConstants.A_VOLUME_S3.equalsIgnoreCase(volInfoRequest.getVolumeExternalInfo().getStorageType())) {
+                if (volInfoRequest.getVolumeExternalInfo() != null && AdminConstants.A_VOLUME_S3
+                        .equalsIgnoreCase(volInfoRequest.getVolumeExternalInfo().getStorageType())) {
                     volInfoResponse.setVolumeExternalInfo(volInfoRequest.getVolumeExternalInfo());
                 } else {
                     volInfoResponse.setVolumeExternalOpenIOInfo(volInfoRequest.getVolumeExternalOpenIOInfo());

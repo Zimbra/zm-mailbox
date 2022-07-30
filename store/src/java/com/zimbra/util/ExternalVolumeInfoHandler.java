@@ -117,9 +117,9 @@ public class ExternalVolumeInfoHandler {
         try {
             // step 1: Create and update json object and array for new volume entry of S3
             JSONObject volExtInfoObj = new JSONObject();
-            if (AdminConstants.A_VOLUME_S3.equalsIgnoreCase(volInfo.getVolumeExternalInfo().getStorageType())) {
+            if (volInfo.getVolumeExternalInfo() != null && AdminConstants.A_VOLUME_S3.equalsIgnoreCase(volInfo.getVolumeExternalInfo().getStorageType())) {
                 volExtInfoObj = volExtInfo.toJSON(volInfo);
-            } else if (AdminConstants.A_VOLUME_OPEN_IO.equalsIgnoreCase(volInfo.getVolumeExternalOpenIOInfo().getStorageType())) {
+            } else if (volInfo.getVolumeExternalOpenIOInfo() != null && AdminConstants.A_VOLUME_OPEN_IO.equalsIgnoreCase(volInfo.getVolumeExternalOpenIOInfo().getStorageType())) {
                 volExtInfoObj = volExtOpenIoInfo.toJSON(volInfo);
             }
 
