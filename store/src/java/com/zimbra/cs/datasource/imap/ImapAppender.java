@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2009, 2010, 2011, 2012, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2009, 2010, 2011, 2012, 2013, 2014, 2016, 2022 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -262,7 +262,7 @@ public class ImapAppender {
             data = new Data() {
                 @Override
                 public InputStream getInputStream() throws IOException {
-                    return StoreManager.getInstance().getContent(mblob);
+                    return StoreManager.getReaderSMInstance(mblob.getLocator()).getContent(mblob);
                 }
 
                 @Override

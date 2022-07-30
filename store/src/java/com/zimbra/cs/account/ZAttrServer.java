@@ -46980,6 +46980,150 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Zimbra multiple reader StoreManagers enabled
+     *
+     * @return zimbraSMMultiReaderEnabled, or false if unset
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4008)
+    public boolean isSMMultiReaderEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraSMMultiReaderEnabled, false, true);
+    }
+
+    /**
+     * Zimbra multiple reader StoreManagers enabled
+     *
+     * @param zimbraSMMultiReaderEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4008)
+    public void setSMMultiReaderEnabled(boolean zimbraSMMultiReaderEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMMultiReaderEnabled, zimbraSMMultiReaderEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Zimbra multiple reader StoreManagers enabled
+     *
+     * @param zimbraSMMultiReaderEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4008)
+    public Map<String,Object> setSMMultiReaderEnabled(boolean zimbraSMMultiReaderEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMMultiReaderEnabled, zimbraSMMultiReaderEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Zimbra multiple reader StoreManagers enabled
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4008)
+    public void unsetSMMultiReaderEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMMultiReaderEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Zimbra multiple reader StoreManagers enabled
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4008)
+    public Map<String,Object> unsetSMMultiReaderEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMMultiReaderEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Zimbra StoreManager runtime switching enabled
+     *
+     * @return zimbraSMRuntimeSwitchEnabled, or false if unset
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4009)
+    public boolean isSMRuntimeSwitchEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraSMRuntimeSwitchEnabled, false, true);
+    }
+
+    /**
+     * Zimbra StoreManager runtime switching enabled
+     *
+     * @param zimbraSMRuntimeSwitchEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4009)
+    public void setSMRuntimeSwitchEnabled(boolean zimbraSMRuntimeSwitchEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMRuntimeSwitchEnabled, zimbraSMRuntimeSwitchEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Zimbra StoreManager runtime switching enabled
+     *
+     * @param zimbraSMRuntimeSwitchEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4009)
+    public Map<String,Object> setSMRuntimeSwitchEnabled(boolean zimbraSMRuntimeSwitchEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMRuntimeSwitchEnabled, zimbraSMRuntimeSwitchEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Zimbra StoreManager runtime switching enabled
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4009)
+    public void unsetSMRuntimeSwitchEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMRuntimeSwitchEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Zimbra StoreManager runtime switching enabled
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 9.1.0
+     */
+    @ZAttr(id=4009)
+    public Map<String,Object> unsetSMRuntimeSwitchEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSMRuntimeSwitchEnabled, "");
+        return attrs;
+    }
+
+    /**
      * SSL certificate
      *
      * @return zimbraSSLCertificate, or null if unset

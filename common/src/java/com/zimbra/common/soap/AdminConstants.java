@@ -1178,6 +1178,7 @@ public final class AdminConstants {
     public static final String E_VOLUME = "volume";
     public static final String E_VOLUME_EXT = "volumeExternalInfo";
     public static final String E_VOLUME_OPENIO_EXT = "volumeExternalOpenIoInfo";
+    public static final String E_STORE_MANAGER_RUNTIME_SWITCH_RESULT = "storeManagerRuntimeSwitchResult";
     public static final String E_PROGRESS = "progress";
     public static final String E_SOAP_URL = "soapURL";
     public static final String E_ADMIN_SOAP_URL = "adminSoapURL";
@@ -1319,6 +1320,7 @@ public final class AdminConstants {
     public static final String A_VOLUME_ACCOUNT_PORT = "accountPort";
     public static final String A_VOLUME_S3 = "S3";
     public static final String A_VOLUME_OPEN_IO = "OPENIO";
+    public static final String A_VOLUME_STORE_MANAGER_CLASS = "storeManagerClass";
 
     // Blob consistency check
     public static final String E_MISSING_BLOBS = "missingBlobs";
@@ -1590,6 +1592,9 @@ public final class AdminConstants {
 
     public static final String A_ZULIP_DOMAIN = "zulipDomain";
     public static final String E_DEVICES = "devices";
+
+    public static final String A_SM_RUNTIME_SWITCH_STATUS = "status";
+    public static final String A_SM_RUNTIME_SWITCH_MESSAGE = "message";
 
     // Global External Store Config
     public static final String E_GET_S3_BUCKET_CONFIG_REQUEST = "GetS3BucketConfigRequest";

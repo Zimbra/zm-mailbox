@@ -6760,7 +6760,9 @@ public class Mailbox implements MailboxStore {
         StagedBlob staged;
         InputStream is = pm.getRawInputStream();
         try {
+            ZimbraLog.store.trace("StorageManager used for saving Draft is: %s", sm.getClass().getSimpleName());
             staged = sm.stage(is, this);
+            ZimbraLog.store.trace("Draft locator: %s", staged.getLocator());
         } finally {
             ByteUtil.closeStream(is);
         }
