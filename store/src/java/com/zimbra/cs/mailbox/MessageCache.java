@@ -340,9 +340,9 @@ public class MessageCache {
             throw ServiceException.FAILURE("missing blob for id: " + item.getId() + ", change: " + item.getModifiedSequence(), null);
 
         if (item.getSize() < MESSAGE_CACHE_DISK_STREAMING_THRESHOLD) {
-            return StoreManager.getInstance().getContent(mblob);
+            return StoreManager.getReaderSMInstance(mblob.getLocator()).getContent(mblob);
         } else {
-            return StoreManager.getInstance().getContent(mblob.getLocalBlob());
+            return StoreManager.getReaderSMInstance(mblob.getLocator()).getContent(mblob.getLocalBlob());
         }
     }
 

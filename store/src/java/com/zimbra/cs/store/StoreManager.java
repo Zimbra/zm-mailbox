@@ -16,29 +16,44 @@
  */
 package com.zimbra.cs.store;
 
-import java.io.IOException;
-import java.io.InputStream;
-
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.imap.ImapDaemon;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.util.MailItemHelper;
 import com.zimbra.cs.store.file.FileBlobStore;
+import com.zimbra.cs.store.helper.ClassHelper;
 import com.zimbra.cs.util.Zimbra;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Optional;
 
 public abstract class StoreManager {
 
     private static StoreManager sInstance;
+
+    private static String currentZimbraClassStore = LC.zimbra_class_store.value();
     private static Integer diskStreamingThreshold;
 
     public static StoreManager getInstance () {
         if(ImapDaemon.isRunningImapInsideMailboxd()) {
-            return getInstance(LC.zimbra_class_store.value());
+            ZimbraLog.store.debug("Actual StoreManager currentZimbraClassStore:%s, zimbra_class_store:%s", currentZimbraClassStore, LC.zimbra_class_store.value());
+            // if it's different from current set in localConfig
+            synchronized (StoreManager.class) {
+                if (!LC.zimbra_class_store.value().equals(currentZimbraClassStore)) {
+                    ZimbraLog.store.warn("currentZimbraClassStore:%s, is different than zimbra_class_store:%s", currentZimbraClassStore, LC.zimbra_class_store.value());
+                    sInstance = null;
+                }
+            }
+            StoreManager instance = getInstance(LC.zimbra_class_store.value());
+            ZimbraLog.store.trace("StorageManager actualInstance:%s,  Thread: %s", instance.getClass().getName(), Thread.currentThread().getName());
+            return instance;
         } else {
             return getInstance(LC.imapd_class_store.value());
         }
@@ -51,12 +66,10 @@ public abstract class StoreManager {
                     return sInstance;
                 }
                 try {
-                    if (className != null && !className.equals("")) {
-                        try {
-                            sInstance = (StoreManager) Class.forName(className).newInstance();
-                        } catch (ClassNotFoundException e) {
-                            sInstance = (StoreManager) ExtensionUtil.findClass(className).newInstance();
-                        }
+                    if (!StringUtil.isNullOrEmpty(className)) {
+                        sInstance = (StoreManager) ClassHelper.getZimbraClassInstanceBy(className);
+                        currentZimbraClassStore = className;
+                        ZimbraLog.store.debug("currentZimbraClassStore set to: %s", className);
                     } else {
                         sInstance = new FileBlobStore();
                     }
@@ -69,16 +82,84 @@ public abstract class StoreManager {
     }
 
 
-
     /**
      * Used for unit testing.
      */
     public static void setInstance(StoreManager instance) {
         synchronized (StoreManager.class) {
-            ZimbraLog.store.info("Setting StoreManager to " + instance.getClass().getName());
+            if (instance != null) {
+                ZimbraLog.store.warn("Setting StoreManager to: %s", instance.getClass().getName());
+                sInstance.shutdown();
+            }
+            ZimbraLog.store.info("Setting StoreManager to: %s", instance);
             sInstance = instance;
         }
     }
+
+    /**
+     * Current StoreManger class name is available in localconfig attribute zimbra_class_store
+     * StoreManger.getInstance() method returns its singleton instance.
+     * Following method can be useful in case, need to reset singleton instance
+     * (maybe after updating {@LC.zimbra_class_store} attribute) to new StoreManager class
+     * It will nullify the existing instance and create new with LC.zimbra_class_store value
+     *
+     * @throws ServiceException
+     * @throws IOException
+     */
+    public static void resetStoreManager() throws ServiceException, IOException {
+        if (!Provisioning.getInstance().getLocalServer().isSMRuntimeSwitchEnabled()) {
+            ZimbraLog.store.error("SMRunTimeSwitchEnabled is not enabled");
+            return;
+        }
+        if (ImapDaemon.isRunningImapInsideMailboxd()) {
+            synchronized (StoreManager.class) {
+                if (sInstance != null) {
+                    ZimbraLog.store.debug("current StoreManager: %s", sInstance.getClass().getName());
+                }
+                sInstance = null;
+                StoreManager storeManager = getInstance(LC.zimbra_class_store.value());
+                storeManager.startup();
+                return;
+            }
+        }
+        throw ServiceException.OPERATION_DENIED("Not supported when running IMAP inside mailbioxd");
+    }
+
+    /**
+     * In order to support multiple stores of different types, sometimes it required to write multiple store managers as well.
+     * Imagine a case where blobs were written to respective volume using storeManager1(aware of R/W operations)
+     * And months later, primary volume changed and storeManager2 introduced to work with new volume(storeManager2 awareR/W with new volume)
+     * Here, system should support older blobs which are in inbox where storeManager1 know how to read and
+     * storeManager2 aware of how to write/read new blobs in new volume.
+     * Now in this heterogeneous situation, there can be multiple reader(for reading older blobs from multiple old primary volumes
+     * and secondary volumes) and single writer(for writing and reading current primary volume)
+     * Following method returns respective reader StoreManager instance based on locator.
+     * @param locator
+     * @return
+     */
+    public static StoreManager getReaderSMInstance(String locator) {
+        try {
+            boolean multiReaderSMEnabled = Provisioning.getInstance().getLocalServer().isSMMultiReaderEnabled();
+            if (multiReaderSMEnabled && !StringUtil.isNullOrEmpty(locator)) {
+                Optional<Short> volumeId = MailItemHelper.findMyVolumeId(locator);
+                // can check this against current primary vol.if its same then return singleton instance, but need to consider db hit
+                if (volumeId.isPresent()) {
+                    ZimbraLog.store.debug("Volume for locator: %s volumeId: %s", locator, volumeId.get());
+                    StoreManager storeManager = CacheEnabledStoreManagerProvider.getStoreManagerForVolume(volumeId.get(), true);
+                    if (storeManager != null) {
+                        ZimbraLog.store.debug("StoreManager for %s Volume: %s ", storeManager.getClass().getSimpleName(), volumeId.get());
+                        return storeManager;
+                    }
+                    ZimbraLog.store.debug("not able to load reader store manager for volumeId: %s", volumeId);
+                }
+            }
+        } catch (Exception e) {
+            ZimbraLog.store.error("Error while loading StoreManager for locator %s", locator, e);
+        }
+        ZimbraLog.store.info("Fallback: master StoreManager will be used for reading");
+        return getInstance();
+    }
+
 
     public static int getDiskStreamingThreshold() throws ServiceException {
         if (diskStreamingThreshold == null)

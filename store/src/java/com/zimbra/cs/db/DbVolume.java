@@ -49,6 +49,7 @@ public final class DbVolume {
     private static final String CN_MAILBOX_GROUP_BITS = "mailbox_group_bits";
 
     private static final String CN_STORE_TYPE = "store_type";
+    private static final String CN_STORE_MANAGER_CLASS = "store_manager_class";
     private static final String CN_COMPRESS_BLOBS = "compress_blobs";
     private static final String CN_COMPRESSION_THRESHOLD = "compression_threshold";
     private static final String CN_METADATA = "metadata";
@@ -64,8 +65,8 @@ public final class DbVolume {
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement("INSERT INTO volume (id, type, name, path, mailbox_group_bits, " +
-                    "mailbox_bits, file_group_bits, file_bits, compress_blobs, compression_threshold, metadata, store_type) " +
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                    "mailbox_bits, file_group_bits, file_bits, compress_blobs, compression_threshold, metadata, store_type, store_manager_class) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             int pos = 1;
             stmt.setShort(pos++, nextId);
             stmt.setShort(pos++, volume.getType());
@@ -79,6 +80,7 @@ public final class DbVolume {
             stmt.setLong(pos++, volume.getCompressionThreshold());
             stmt.setString(pos++, volume.getMetadata().toString());
             stmt.setShort(pos++, (short)(volume.getStoreType().getStoreType()));
+            stmt.setString(pos++, volume.getStoreManagerClass());
             stmt.executeUpdate();
         } catch (SQLException e) {
             if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW)) {
@@ -311,7 +313,9 @@ public final class DbVolume {
                 .setCompressBlobs(rs.getBoolean(CN_COMPRESS_BLOBS))
                 .setCompressionThreshold(rs.getLong(CN_COMPRESSION_THRESHOLD))
                 .setStoreType(storeType)
-                .setMetadata(metadata).build();
+                .setMetadata(metadata)
+                .setStoreManagerClass(rs.getString(CN_STORE_MANAGER_CLASS))
+                .build();
     }
 
     public static boolean isVolumeReferenced(DbConnection conn, short volumeId) throws ServiceException {

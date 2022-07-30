@@ -22,6 +22,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.soap.AdminConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
@@ -110,6 +111,9 @@ public final class VolumeInfo {
      */
     @XmlAttribute(name=AdminConstants.A_VOLUME_STORE_TYPE /* storeType */, required=false)
     private short storeType = 1;
+
+    @XmlAttribute(name=AdminConstants.A_VOLUME_STORE_MANAGER_CLASS /* storeManagerClass*/, required=false)
+    private String storeManagerClass = LC.zimbra_class_store.value();
 
     /**
      * @zm-api-field-description Volume external information
@@ -219,5 +223,13 @@ public final class VolumeInfo {
 
     public short getStoreType() {
         return storeType;
+    }
+
+    public String getStoreManagerClass() {
+        return storeManagerClass;
+    }
+
+    public void setStoreManagerClass(String storeManagerClass) {
+        this.storeManagerClass = storeManagerClass;
     }
 }

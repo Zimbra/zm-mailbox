@@ -62,6 +62,8 @@ public final class VolumeCLI extends SoapCLI {
     private static final String O_P = "p";
     private static final String O_C = "c";
     private static final String O_CT = "ct";
+
+    private static final String O_SMC = "smc";
     
     /** attributes for external storetype **/
     private static final String O_ST = "st";
@@ -89,6 +91,8 @@ public final class VolumeCLI extends SoapCLI {
     private static final String A_COMPRESS = "compress";
     private static final String A_COMPRESS_THRESHOLD = "compressThreshold";
     private static final String A_STORE_TYPE = "storeType";
+
+    private static final String A_STORE_MANAGER_CLASS = "storeManagerClass";
     private static final String A_STORAGE_TYPE = "storageType";
     private static final String A_BUCKET_ID = "bucketId";
     private static final String A_VOLUME_PREFIX = "volumePrefix";
