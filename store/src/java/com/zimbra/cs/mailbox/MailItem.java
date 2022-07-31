@@ -1392,7 +1392,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             if (mblob == null) {
                 throw ServiceException.FAILURE("missing blob for id: " + getId() + ", change: " + getModifiedSequence(), null);
             }
-            return StoreManager.getInstance().getContent(mblob);
+            return StoreManager.getReaderSMInstance(getLocator()).getContent(mblob);
         } catch (IOException e) {
             String msg = String.format("Unable to get content for %s %d", getClass().getSimpleName(), getId());
             throw ServiceException.FAILURE(msg, e);

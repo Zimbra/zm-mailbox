@@ -51,8 +51,8 @@ public class CacheEnabledStoreManagerProvider {
      * @throws Exception
      */
     public static StoreManager getStoreManagerForVolume(Short volumeId, boolean skipCache) throws Exception {
-        if (skipCache) {
-            ZimbraLog.store.error("Store Manager cached for %s", volumeId);
+        if (!skipCache) {
+            ZimbraLog.store.trace("Store Manager cached for %s", volumeId);
             return volumeStoreManagerCacheLoader.get(volumeId);
         }
         return getStoreManagerForVolume(volumeId);
