@@ -3002,7 +3002,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=4005)
+    @ZAttr(id=4008)
     public static final String A_zimbraActiveSyncVersion = "zimbraActiveSyncVersion";
 
     /**
@@ -6937,7 +6937,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=4003)
+    @ZAttr(id=4006)
     public static final String A_zimbraFeatureSafeUnsubscribeFolderEnabled = "zimbraFeatureSafeUnsubscribeFolderEnabled";
 
     /**
@@ -13025,7 +13025,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=4004)
+    @ZAttr(id=4007)
     public static final String A_zimbraPrefCalenderScaling = "zimbraPrefCalenderScaling";
 
     /**

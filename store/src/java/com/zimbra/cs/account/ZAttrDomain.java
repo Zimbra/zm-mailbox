@@ -312,7 +312,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=4005)
+    @ZAttr(id=4008)
     public String[] getActiveSyncVersion() {
         return getMultiAttr(Provisioning.A_zimbraActiveSyncVersion, true, true);
     }
@@ -333,7 +333,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=4005)
+    @ZAttr(id=4008)
     public void setActiveSyncVersion(String[] zimbraActiveSyncVersion) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraActiveSyncVersion, zimbraActiveSyncVersion);
@@ -357,7 +357,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=4005)
+    @ZAttr(id=4008)
     public Map<String,Object> setActiveSyncVersion(String[] zimbraActiveSyncVersion, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraActiveSyncVersion, zimbraActiveSyncVersion);
@@ -380,7 +380,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=4005)
+    @ZAttr(id=4008)
     public void addActiveSyncVersion(String zimbraActiveSyncVersion) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraActiveSyncVersion, zimbraActiveSyncVersion);
@@ -404,7 +404,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=4005)
+    @ZAttr(id=4008)
     public Map<String,Object> addActiveSyncVersion(String zimbraActiveSyncVersion, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraActiveSyncVersion, zimbraActiveSyncVersion);
@@ -427,7 +427,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=4005)
+    @ZAttr(id=4008)
     public void removeActiveSyncVersion(String zimbraActiveSyncVersion) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraActiveSyncVersion, zimbraActiveSyncVersion);
@@ -451,7 +451,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=4005)
+    @ZAttr(id=4008)
     public Map<String,Object> removeActiveSyncVersion(String zimbraActiveSyncVersion, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraActiveSyncVersion, zimbraActiveSyncVersion);
@@ -473,7 +473,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=4005)
+    @ZAttr(id=4008)
     public void unsetActiveSyncVersion() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraActiveSyncVersion, "");
@@ -496,7 +496,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=4005)
+    @ZAttr(id=4008)
     public Map<String,Object> unsetActiveSyncVersion(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraActiveSyncVersion, "");
