@@ -92,6 +92,7 @@ public final class VolumeCLI extends SoapCLI {
     private static final String A_STORAGE_TYPE = "storageType";
     private static final String A_BUCKET_ID = "bucketId";
     private static final String A_VOLUME_PREFIX = "volumePrefix";
+    private static final String A_VOLUME_S3 = "S3";
 
     private VolumeCLI() throws ServiceException {
         super();
@@ -221,20 +222,32 @@ public final class VolumeCLI extends SoapCLI {
     }
 
     private void print(VolumeInfo vol) {
-        System.out.println("   Volume id: " + vol.getId());
-        System.out.println("        name: " + vol.getName());
-        System.out.println("        type: " + toTypeName(vol.getType()));
-        System.out.println("        path: " + vol.getRootPath());
-        System.out.print("  compressed: " + vol.isCompressBlobs());
+        System.out.println("                   Volume id: " + vol.getId());
+        System.out.println("                        name: " + vol.getName());
+        System.out.println("                        type: " + toTypeName(vol.getType()));
+        System.out.println("                        path: " + vol.getRootPath());
+        System.out.print("                  compressed: " + vol.isCompressBlobs());
+        
         if (vol.isCompressBlobs()) {
-            System.out.println("\t         threshold: " + vol.getCompressionThreshold() + " bytes");
+            System.out.println("\t                 threshold: " + vol.getCompressionThreshold() + " bytes");
         } else {
             System.out.println();
         }
-        System.out.println("     current: " + vol.isCurrent());
+        System.out.println("                     current: " + vol.isCurrent());
+        if(vol.getStoreType() == 2) {
+            VolumeExternalInfo volumeExternalInfo = vol.getVolumeExternalInfo();
+            if (A_VOLUME_S3.equals(volumeExternalInfo.getStorageType())) {
+                System.out.println("                      prefix: " + volumeExternalInfo.getVolumePrefix());
+                System.out.println(" globalBucketConfigurationId: " + volumeExternalInfo.getGlobalBucketConfigurationId());
+                System.out.println("                 storageType: " + volumeExternalInfo.getStorageType());
+                System.out.println("       useIntelligentTiering: " + volumeExternalInfo.isUseIntelligentTiering());
+                System.out.println("         useInFrequentAccess: " + volumeExternalInfo.isUseInFrequentAccess());
+                System.out.println("useInFrequentAccessThreshold: " + volumeExternalInfo.getUseInFrequentAccessThreshold());
+            }
+        }
         System.out.println();
     }
-
+    
     private void deleteVolume() throws ParseException, SoapFaultException, IOException, ServiceException, HttpException {
         if (id == null) {
             throw new ParseException(A_ID + MISSING_ATTRS);
