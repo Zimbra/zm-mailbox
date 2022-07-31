@@ -24,8 +24,8 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.store.StoreManager;
-import com.zimbra.soap.admin.enums.Status;
 import com.zimbra.soap.admin.type.StoreManagerRuntimeSwitchResult;
+import com.zimbra.soap.admin.type.StoreManagerRuntimeSwitchResult.RuntimeSwitchStatus;
 import org.dom4j.DocumentException;
 
 import java.io.IOException;
@@ -52,18 +52,18 @@ public class StoreManagerResetHelper {
      * @throws ServiceException
      */
     public static StoreManagerRuntimeSwitchResult setNewStoreManager(String storeManagerClass) throws ServiceException{
-        if (Provisioning.getInstance().getLocalServer().isSMRuntimeSwitchEnabled()) {
-            return new StoreManagerRuntimeSwitchResult(Status.NO_OPERATION, "StoreManager runtime switch not enabled, enabled SMRunTimeSwitchEnabled ldap attribute");
+        if (!Provisioning.getInstance().getLocalServer().isSMRuntimeSwitchEnabled()) {
+            return new StoreManagerRuntimeSwitchResult(RuntimeSwitchStatus.NO_OPERATION, "StoreManager runtime switch not enabled, enabled SMRunTimeSwitchEnabled ldap attribute");
         }
         if (StringUtil.isNullOrEmpty(storeManagerClass)) {
             String message = "storeManagerClass is empty: ";
             ZimbraLog.store.error(message);
-            return new StoreManagerRuntimeSwitchResult(Status.FAIL, message);
+            return new StoreManagerRuntimeSwitchResult(RuntimeSwitchStatus.FAIL, message);
         }
         if (LC.zimbra_class_store.value().equals(storeManagerClass)) {
             String message = "store_manager class is same as set zimbra_class_store: "+ LC.zimbra_class_store.value();
-            ZimbraLog.store.debug(message);
-            return new StoreManagerRuntimeSwitchResult(Status.FAIL, message);
+            ZimbraLog.store.warn(message);
+            return new StoreManagerRuntimeSwitchResult(RuntimeSwitchStatus.NO_OPERATION, message);
         }
         // if class not exist then throw exception
         if (!ClassHelper.isClassExist(storeManagerClass)) {
@@ -78,7 +78,7 @@ public class StoreManagerResetHelper {
             LC.reload();
         } catch (DocumentException | ConfigException | IOException e) {
             ZimbraLog.store.error("Error while updating LC.zimbra_class_store to StoreManager: %s", storeManagerClass, e);
-            return new StoreManagerRuntimeSwitchResult(Status.FAIL, "not able to update LC.zimbra_class_store with new StoreManager:" + storeManagerClass);
+            return new StoreManagerRuntimeSwitchResult(RuntimeSwitchStatus.FAIL, "not able to update LC.zimbra_class_store with new StoreManager:" + storeManagerClass);
         }
 
         try {
@@ -89,8 +89,8 @@ public class StoreManagerResetHelper {
             StoreManager.resetStoreManager();
         } catch (ServiceException | IOException e) {
             ZimbraLog.store.error("not able to reset StoreManager: %s", storeManagerClass, e);
-            return new StoreManagerRuntimeSwitchResult(Status.FAIL, "not able to reset StoreManager:" + storeManagerClass);
+            return new StoreManagerRuntimeSwitchResult(RuntimeSwitchStatus.FAIL, "not able to reset StoreManager:" + storeManagerClass);
         }
-        return new StoreManagerRuntimeSwitchResult(Status.SUCCESS, "StoreManager LC updated with " + storeManagerClass + " and StoreManager.reset called");
+        return new StoreManagerRuntimeSwitchResult(RuntimeSwitchStatus.SUCCESS, "StoreManager LC updated with " + storeManagerClass + " and StoreManager.reset called");
     }
 }

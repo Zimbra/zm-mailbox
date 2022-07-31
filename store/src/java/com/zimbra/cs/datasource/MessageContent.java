@@ -26,6 +26,7 @@ import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.store.external.ExternalBlob;
 
 public class MessageContent {
     private Blob blob;
@@ -85,7 +86,12 @@ public class MessageContent {
     
     public void cleanup() throws IOException {
         if (blob != null) {
-            StoreManager.getInstance().delete(blob);
+            if (blob instanceof ExternalBlob) {
+                String locator = ((ExternalBlob)blob).getLocator();
+                StoreManager.getReaderSMInstance(locator).delete(blob);
+            } else {
+                StoreManager.getInstance().delete(blob);
+            }
             blob = null;
         }
     }
