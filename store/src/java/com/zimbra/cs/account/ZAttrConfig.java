@@ -66523,13 +66523,13 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Zimbra multiple reader StoreManagers enabled
      *
-     * @return zimbraSMMultiReaderEnabled, or false if unset
+     * @return zimbraSMMultiReaderEnabled, or true if unset
      *
      * @since ZCS 9.1.0
      */
     @ZAttr(id=4008)
     public boolean isSMMultiReaderEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraSMMultiReaderEnabled, false, true);
+        return getBooleanAttr(Provisioning.A_zimbraSMMultiReaderEnabled, true, true);
     }
 
     /**
@@ -66595,13 +66595,13 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Zimbra StoreManager runtime switching enabled
      *
-     * @return zimbraSMRuntimeSwitchEnabled, or false if unset
+     * @return zimbraSMRuntimeSwitchEnabled, or true if unset
      *
      * @since ZCS 9.1.0
      */
     @ZAttr(id=4009)
     public boolean isSMRuntimeSwitchEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraSMRuntimeSwitchEnabled, false, true);
+        return getBooleanAttr(Provisioning.A_zimbraSMRuntimeSwitchEnabled, true, true);
     }
 
     /**

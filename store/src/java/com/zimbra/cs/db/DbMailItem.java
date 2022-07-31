@@ -3241,10 +3241,13 @@ public class DbMailItem {
     static List<Integer> accumulateLeafNodes(PendingDelete info, Mailbox mbox, ResultSet rs) throws SQLException, ServiceException {
         boolean dumpsterEnabled = mbox.dumpsterEnabled();
         boolean useDumpsterForSpam = mbox.useDumpsterForSpam();
-        StoreManager sm = StoreManager.getInstance();
+
         List<Integer> versioned = new ArrayList<Integer>();
 
         while (rs.next()) {
+            // Specific store manager
+            String locator = rs.getString(LEAF_CI_LOCATOR);
+            StoreManager sm = StoreManager.getReaderSMInstance(locator);
             // first check to make sure we don't have a modify conflict
             int revision = rs.getInt(LEAF_CI_MOD_CONTENT);
             int modMetadata = rs.getInt(LEAF_CI_MOD_METADATA);
@@ -3318,7 +3321,7 @@ public class DbMailItem {
                 String blobDigest = rs.getString(LEAF_CI_BLOB_DIGEST);
                 if (blobDigest != null) {
                     info.blobDigests.add(blobDigest);
-                    String locator = rs.getString(LEAF_CI_LOCATOR);
+                    locator = rs.getString(LEAF_CI_LOCATOR);
                     try {
                         MailboxBlob mblob = sm.getMailboxBlob(mbox, id, revision, locator, false);
                         if (mblob == null) {
@@ -3357,7 +3360,6 @@ public class DbMailItem {
         boolean dumpsterEnabled = mbox.dumpsterEnabled();
         boolean useDumpsterForSpam = mbox.useDumpsterForSpam();
         DbConnection conn = mbox.getOperationConnection();
-        StoreManager sm = StoreManager.getInstance();
 
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -3381,6 +3383,9 @@ public class DbMailItem {
                 } else {
                     count.increment(0, 0, rs.getLong(3));
                 }
+
+                String locator = rs.getString(5);
+                StoreManager sm = StoreManager.getReaderSMInstance(locator);
 
                 int fid = folderId != null ? folderId.intValue() : -1;
                 if (!dumpsterEnabled || fid == Mailbox.ID_FOLDER_DRAFTS || (fid == Mailbox.ID_FOLDER_SPAM && !useDumpsterForSpam)) {
