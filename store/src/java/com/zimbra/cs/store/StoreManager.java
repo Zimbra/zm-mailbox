@@ -144,8 +144,8 @@ public abstract class StoreManager {
                 Optional<Short> volumeId = MailItemHelper.findMyVolumeId(locator);
                 // can check this against current primary vol.if its same then return singleton instance, but need to consider db hit
                 if (volumeId.isPresent()) {
-                    ZimbraLog.store.debug("Volume for locator: %s volumeId: %s", locator, volumeId.get());
-                    StoreManager storeManager = CacheEnabledStoreManagerProvider.getStoreManagerForVolume(volumeId.get(), true);
+                    ZimbraLog.store.trace("Volume for locator: %s volumeId: %s", locator, volumeId.get());
+                    StoreManager storeManager = CacheEnabledStoreManagerProvider.getStoreManagerForVolume(volumeId.get(), false);
                     if (storeManager != null) {
                         ZimbraLog.store.debug("StoreManager for %s Volume: %s ", storeManager.getClass().getSimpleName(), volumeId.get());
                         return storeManager;
