@@ -52,7 +52,7 @@ public class StoreManagerResetHelper {
      * @throws ServiceException
      */
     public static StoreManagerRuntimeSwitchResult setNewStoreManager(String storeManagerClass) throws ServiceException{
-        if (Provisioning.getInstance().getLocalServer().isSMRuntimeSwitchEnabled()) {
+        if (!Provisioning.getInstance().getLocalServer().isSMRuntimeSwitchEnabled()) {
             return new StoreManagerRuntimeSwitchResult(Status.NO_OPERATION, "StoreManager runtime switch not enabled, enabled SMRunTimeSwitchEnabled ldap attribute");
         }
         if (StringUtil.isNullOrEmpty(storeManagerClass)) {
@@ -62,8 +62,8 @@ public class StoreManagerResetHelper {
         }
         if (LC.zimbra_class_store.value().equals(storeManagerClass)) {
             String message = "store_manager class is same as set zimbra_class_store: "+ LC.zimbra_class_store.value();
-            ZimbraLog.store.debug(message);
-            return new StoreManagerRuntimeSwitchResult(Status.FAIL, message);
+            ZimbraLog.store.warn(message);
+            return new StoreManagerRuntimeSwitchResult(Status.NO_OPERATION, message);
         }
         // if class not exist then throw exception
         if (!ClassHelper.isClassExist(storeManagerClass)) {
