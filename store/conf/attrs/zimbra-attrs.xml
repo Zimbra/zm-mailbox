@@ -9921,15 +9921,15 @@ TODO: delete them permanently from here
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Whether to permit syncing shared calendar folders</desc>
 </attr>
-<attr id="4003" name="zimbraFeatureSafeUnsubscribeFolderEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="9.1.0">
+<attr id="4006" name="zimbraFeatureSafeUnsubscribeFolderEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="9.1.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Creates unsubscribe system folder</desc>
  </attr>
- <attr id="4004" name="zimbraPrefCalenderScaling" type="enum" value="10,15,30" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="9.1.0">
+ <attr id="4007" name="zimbraPrefCalenderScaling" type="enum" value="10,15,30" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="9.1.0">
   <defaultCOSValue>30</defaultCOSValue>
   <desc>Default calendar resolution preference</desc>
 </attr>
-<attr id="4005" name="zimbraActiveSyncVersion" type="string" cardinality="multi" optionalIn="account,cos,domain" flags="accountInfo,accountCosDomainInherited,domainAdminModifiable" since="9.1.0">
+<attr id="4008" name="zimbraActiveSyncVersion" type="string" cardinality="multi" optionalIn="account,cos,domain" flags="accountInfo,accountCosDomainInherited,domainAdminModifiable" since="9.1.0">
   <desc>Sets the active sync version at the user level to override zimbra_activesync_versions on local config.
       Add multi-value attribute as android:14.1/iphone:16.1/ipod:16.0.
       If set as android:14.1, the android device will be connected over the 14.1 version.

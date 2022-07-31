@@ -3080,7 +3080,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=4005)
+    @ZAttr(id=4008)
     public String[] getActiveSyncVersion() {
         return getMultiAttr(Provisioning.A_zimbraActiveSyncVersion, true, true);
     }
@@ -3101,7 +3101,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=4005)
+    @ZAttr(id=4008)
     public void setActiveSyncVersion(String[] zimbraActiveSyncVersion) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraActiveSyncVersion, zimbraActiveSyncVersion);
@@ -3125,7 +3125,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=4005)
+    @ZAttr(id=4008)
     public Map<String,Object> setActiveSyncVersion(String[] zimbraActiveSyncVersion, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraActiveSyncVersion, zimbraActiveSyncVersion);
@@ -3148,7 +3148,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=4005)
+    @ZAttr(id=4008)
     public void addActiveSyncVersion(String zimbraActiveSyncVersion) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraActiveSyncVersion, zimbraActiveSyncVersion);
@@ -3172,7 +3172,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=4005)
+    @ZAttr(id=4008)
     public Map<String,Object> addActiveSyncVersion(String zimbraActiveSyncVersion, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraActiveSyncVersion, zimbraActiveSyncVersion);
@@ -3195,7 +3195,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=4005)
+    @ZAttr(id=4008)
     public void removeActiveSyncVersion(String zimbraActiveSyncVersion) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraActiveSyncVersion, zimbraActiveSyncVersion);
@@ -3219,7 +3219,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=4005)
+    @ZAttr(id=4008)
     public Map<String,Object> removeActiveSyncVersion(String zimbraActiveSyncVersion, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraActiveSyncVersion, zimbraActiveSyncVersion);
@@ -3241,7 +3241,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=4005)
+    @ZAttr(id=4008)
     public void unsetActiveSyncVersion() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraActiveSyncVersion, "");
@@ -3264,7 +3264,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=4005)
+    @ZAttr(id=4008)
     public Map<String,Object> unsetActiveSyncVersion(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraActiveSyncVersion, "");
@@ -18740,7 +18740,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=4003)
+    @ZAttr(id=4006)
     public boolean isFeatureSafeUnsubscribeFolderEnabled() {
         return getBooleanAttr(Provisioning.A_zimbraFeatureSafeUnsubscribeFolderEnabled, false, true);
     }
@@ -18753,7 +18753,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=4003)
+    @ZAttr(id=4006)
     public void setFeatureSafeUnsubscribeFolderEnabled(boolean zimbraFeatureSafeUnsubscribeFolderEnabled) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureSafeUnsubscribeFolderEnabled, zimbraFeatureSafeUnsubscribeFolderEnabled ? TRUE : FALSE);
@@ -18769,7 +18769,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=4003)
+    @ZAttr(id=4006)
     public Map<String,Object> setFeatureSafeUnsubscribeFolderEnabled(boolean zimbraFeatureSafeUnsubscribeFolderEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureSafeUnsubscribeFolderEnabled, zimbraFeatureSafeUnsubscribeFolderEnabled ? TRUE : FALSE);
@@ -18783,7 +18783,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=4003)
+    @ZAttr(id=4006)
     public void unsetFeatureSafeUnsubscribeFolderEnabled() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureSafeUnsubscribeFolderEnabled, "");
@@ -18798,7 +18798,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=4003)
+    @ZAttr(id=4006)
     public Map<String,Object> unsetFeatureSafeUnsubscribeFolderEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureSafeUnsubscribeFolderEnabled, "");
@@ -42624,7 +42624,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=4004)
+    @ZAttr(id=4007)
     public ZAttrProvisioning.PrefCalenderScaling getPrefCalenderScaling() {
         try { String v = getAttr(Provisioning.A_zimbraPrefCalenderScaling, true, true); return v == null ? ZAttrProvisioning.PrefCalenderScaling._30 : ZAttrProvisioning.PrefCalenderScaling.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.PrefCalenderScaling._30; }
     }
@@ -42638,7 +42638,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=4004)
+    @ZAttr(id=4007)
     public String getPrefCalenderScalingAsString() {
         return getAttr(Provisioning.A_zimbraPrefCalenderScaling, "30", true);
     }
@@ -42653,7 +42653,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=4004)
+    @ZAttr(id=4007)
     public void setPrefCalenderScaling(ZAttrProvisioning.PrefCalenderScaling zimbraPrefCalenderScaling) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefCalenderScaling, zimbraPrefCalenderScaling.toString());
@@ -42671,7 +42671,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=4004)
+    @ZAttr(id=4007)
     public Map<String,Object> setPrefCalenderScaling(ZAttrProvisioning.PrefCalenderScaling zimbraPrefCalenderScaling, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefCalenderScaling, zimbraPrefCalenderScaling.toString());
@@ -42688,7 +42688,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=4004)
+    @ZAttr(id=4007)
     public void setPrefCalenderScalingAsString(String zimbraPrefCalenderScaling) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefCalenderScaling, zimbraPrefCalenderScaling);
@@ -42706,7 +42706,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=4004)
+    @ZAttr(id=4007)
     public Map<String,Object> setPrefCalenderScalingAsString(String zimbraPrefCalenderScaling, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefCalenderScaling, zimbraPrefCalenderScaling);
@@ -42722,7 +42722,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=4004)
+    @ZAttr(id=4007)
     public void unsetPrefCalenderScaling() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefCalenderScaling, "");
@@ -42739,7 +42739,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 9.1.0
      */
-    @ZAttr(id=4004)
+    @ZAttr(id=4007)
     public Map<String,Object> unsetPrefCalenderScaling(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefCalenderScaling, "");
