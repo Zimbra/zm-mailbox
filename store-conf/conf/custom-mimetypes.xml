@@ -70,4 +70,61 @@
         <sub-class-of type="text/plain"/>
     </mime-type>
 
+    <mime-type type="message/rfc822">
+        <magic priority="50">
+          <match value="Delivered-To:" type="string" offset="0"/>
+          <match value="Status:" type="string" offset="0"/>
+          <match value="Relay-Version:" type="stringignorecase" offset="0"/>
+          <match value="#!\ rnews" type="string" offset="0"/>
+          <match value="N#!\ rnews" type="string" offset="0"/>
+          <match value="Forward\ to" type="string" offset="0"/>
+          <match value="Pipe\ to" type="string" offset="0"/>
+          <match value="Return-Path:" type="stringignorecase" offset="0"/>
+          <match value="From:" type="stringignorecase" offset="0"/>
+          <match value="Received:" type="stringignorecase" offset="0"/>
+          <match value="Message-ID:" type="stringignorecase" offset="0"/>
+          <match value="\nReturn-Path:" type="stringignorecase" offset="0:1000"/>
+          <match value="\nX-Originating-IP:" type="stringignorecase" offset="0:1000"/>
+          <match value="\nReceived:" type="stringignorecase" offset="0:1000"/>
+          <match value="Date:" type="string" offset="0"/>
+          <match value="User-Agent:" type="string" offset="0"/>
+          <match value="MIME-Version:" type="stringignorecase" offset="0"/>
+          <match value="X-Mailer:" type="string" offset="0"/>
+          <match value="X-Notes-Item:" type="string" offset="0">
+            <match value="Message-ID:" type="string" offset="0:8192"/>
+          </match>
+          <match value="X-" type="stringignorecase" offset="0">
+            <match value="\nMessage-ID:" type="string" offset="0:8192"/>
+            <match value="\nFrom:" type="stringignorecase" offset="0:8192"/>
+            <match value="\nTo:" type="stringignorecase" offset="0:8192"/>
+            <match value="\nSubject:" type="string" offset="0:8192"/>
+            <match value="\nReceived:" type="string" offset="0:8192"/>
+            <match value="\nMIME-Version:" type="stringignorecase" offset="0:8192"/>
+          </match>
+          <match value="DKIM-" type="string" offset="0">
+            <match value="\nMessage-ID:" type="string" offset="0:8192"/>
+            <match value="\nFrom:" type="stringignorecase" offset="0:8192"/>
+            <match value="\nTo:" type="stringignorecase" offset="0:8192"/>
+            <match value="\nSubject:" type="string" offset="0:8192"/>
+            <match value="\nReceived:" type="string" offset="0:8192"/>
+            <match value="\nMIME-Version:" type="stringignorecase" offset="0:8192"/>
+          </match>
+          <match value="ARC-" type="string" offset="0">
+            <match value="\nMessage-ID:" type="string" offset="0:8192"/>
+            <match value="\nFrom:" type="stringignorecase" offset="0:8192"/>
+            <match value="\nTo:" type="stringignorecase" offset="0:8192"/>
+            <match value="\nSubject:" type="string" offset="0:8192"/>
+            <match value="\nReceived:" type="string" offset="0:8192"/>
+            <match value="\nMIME-Version:" type="stringignorecase" offset="0:8192"/>
+          </match>
+        </magic>
+        <magic priority="40">
+          <!-- lower priority than message/news -->
+          <match value="\nMessage-ID:" type="stringignorecase" offset="0:1000"/>
+        </magic>
+        <glob pattern="*.eml"/>
+        <glob pattern="*.mime"/>
+        <sub-class-of type="text/x-tika-text-based-message"/>
+    </mime-type>
+
 </mime-info>
