@@ -6,17 +6,18 @@
  */
 package com.zimbra.util;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import com.google.common.base.Strings;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.soap.admin.type.VolumeInfo;
 import com.zimbra.soap.admin.type.VolumeExternalInfo;
 import com.zimbra.soap.admin.type.VolumeExternalOpenIOInfo;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.zimbra.soap.admin.type.VolumeInfo;
 
 /**
  * LDAP based properties handler
@@ -201,14 +202,17 @@ public class ExternalVolumeInfoHandler {
         try {
             // step 1: Fetch globalS3Configs and globalS3ConfigList
             String globalExternalStoreConfig = provisioning.getConfig().getGlobalExternalStoreConfig();
-            JSONObject globalS3Configs = new JSONObject(globalExternalStoreConfig);
-            JSONArray globalS3ConfigList = globalS3Configs.getJSONArray("global/s3BucketConfigurations");
 
-            // step 2: Find "globalBucketUUID" in current JSON array
-            for (int i = 0; i < globalS3ConfigList.length(); i++) {
-                // step 3: Mark validation as true if "globalBucketUUID" found
-                if (globalS3BucketId.equalsIgnoreCase(globalS3ConfigList.getJSONObject(i).getString("globalBucketUUID"))) {
-                    return true;
+            if(!Strings.isNullOrEmpty(globalExternalStoreConfig)) {
+                JSONObject globalS3Configs = new JSONObject(globalExternalStoreConfig);
+                JSONArray globalS3ConfigList = globalS3Configs.getJSONArray("global/s3BucketConfigurations");
+
+                // step 2: Find "globalBucketUUID" in current JSON array
+                for (int i = 0; i < globalS3ConfigList.length(); i++) {
+                    // step 3: Mark validation as true if "globalBucketUUID" found
+                    if (globalS3BucketId.equalsIgnoreCase(globalS3ConfigList.getJSONObject(i).getString("globalBucketUUID"))) {
+                        return true;
+                    }
                 }
             }
         } catch (JSONException e) {
