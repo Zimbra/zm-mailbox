@@ -5260,7 +5260,7 @@ TODO: delete them permanently from here
   <desc>enable/disable MAPI (Microsoft Outlook) Connector</desc>
 </attr>
 
-<attr id="1128" name="zimbraDumpsterEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,account,cos,domain" flags="accountInfo,accountInherited,domainAdminModifiable,domainInherited" since="7.0.0">
+<attr id="1128" name="zimbraDumpsterEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,account,cos,domain" flags="accountInfo,accountCosDomainInherited,domainAdminModifiable,domainInherited" since="7.0.0">
   <globalConfigValue>FALSE</globalConfigValue>
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>enable/disable dumpster</desc>
@@ -5285,7 +5285,7 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
-<attr id="1133" name="zimbraMailDumpsterLifetime" type="duration" cardinality="single" optionalIn="globalConfig,domain,account,cos" flags="accountInherited,domainInherited,domainAdminModifiable,accountInfo" since="7.0.0">
+<attr id="1133" name="zimbraMailDumpsterLifetime" type="duration" cardinality="single" optionalIn="globalConfig,domain,account,cos" flags="accountCosDomainInherited,domainInherited,domainAdminModifiable,accountInfo" since="7.0.0">
   <globalConfigValue>30d</globalConfigValue>
   <defaultCOSValue>30d</defaultCOSValue>
   <desc>
@@ -6603,13 +6603,13 @@ TODO: delete them permanently from here
   <desc>template for constructing the body of a file deletion warning message</desc>
 </attr>
 
-<attr id="1314" name="zimbraDumpsterUserVisibleAge" type="duration" cardinality="single" optionalIn="globalConfig,domain,account,cos" flags="accountInherited,domainInherited,domainAdminModifiable" since="8.0.0">
+<attr id="1314" name="zimbraDumpsterUserVisibleAge" type="duration" cardinality="single" optionalIn="globalConfig,domain,account,cos" flags="accountCosDomainInherited,domainInherited,domainAdminModifiable" since="8.0.0">
   <globalConfigValue>30d</globalConfigValue>
   <defaultCOSValue>30d</defaultCOSValue>
   <desc>limits how much of a dumpster data is viewable by the end user, based on the age since being put in dumpster</desc>
 </attr>
 
-<attr id="1315" name="zimbraDumpsterPurgeEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,domain,account,cos" flags="accountInherited,domainInherited,domainAdminModifiable" since="8.0.0">
+<attr id="1315" name="zimbraDumpsterPurgeEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,domain,account,cos" flags="accountCosDomainInherited,domainInherited,domainAdminModifiable" since="8.0.0">
   <globalConfigValue>TRUE</globalConfigValue>
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>disables purging from dumpster when set to FALSE</desc>
