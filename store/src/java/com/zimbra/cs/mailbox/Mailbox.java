@@ -263,6 +263,7 @@ import com.zimbra.cs.store.MailboxBlobDataSource;
 import com.zimbra.cs.store.StagedBlob;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.store.StoreManager.StoreFeature;
+import com.zimbra.cs.store.external.ExternalBlob;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.AccountUtil.AccountAddressMatcher;
 import com.zimbra.cs.util.SpoolingCache;
@@ -9900,19 +9901,23 @@ public class Mailbox implements MailboxStore {
                 }
                 if (deletes.blobs != null) {
                     // delete any blobs associated with items deleted from db/index
-                    StoreManager sm = StoreManager.getInstance();
                     for (MailboxBlob blob : deletes.blobs) {
+                        StoreManager sm = StoreManager.getReaderSMInstance(blob.getLocator());
                         sm.quietDelete(blob);
                     }
                 }
             }
             if (rollbackDeletes != null) {
-                StoreManager sm = StoreManager.getInstance();
                 for (Object obj : rollbackDeletes) {
                     if (obj instanceof MailboxBlob) {
+                        StoreManager sm = StoreManager.getReaderSMInstance(((MailboxBlob)obj).getLocator());
                         sm.quietDelete((MailboxBlob) obj);
                     } else if (obj instanceof Blob) {
-                        sm.quietDelete((Blob) obj);
+                        if (obj instanceof ExternalBlob) {
+                            StoreManager.getReaderSMInstance(((ExternalBlob) obj).getLocator()).quietDelete((ExternalBlob) obj);
+                        } else {
+                            StoreManager.getInstance().quietDelete((Blob) obj);
+                        }
                     }
                 }
             }
