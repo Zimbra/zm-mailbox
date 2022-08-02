@@ -17,14 +17,12 @@
 package com.zimbra.cs.volume;
 
 import java.io.IOException;
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.http.HttpException;
-
 import com.google.common.base.Strings;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
@@ -70,7 +68,7 @@ public final class VolumeCLI extends SoapCLI {
     private static final String O_VP = "vp";
     private static final String O_STP = "stp";
     private static final String O_BID = "bid";
-    
+
     /** attributes for store type OpenIO **/
     private static final String O_AP = "ap";
     private static final String O_PP = "pp";
@@ -91,7 +89,6 @@ public final class VolumeCLI extends SoapCLI {
     private static final String H_STORAGE_TYPE = "Name of the store provider (S3, ObjectStore, OpenIO)";
     private static final String H_BUCKET_ID = "S3 Bucket ID";
     private static final String H_VOLUME_PREFIX = "Volume Preifx";
-    
     private static final String H_URL = "URL of OpenIO";
     private static final String H_PROXY_PORT = "Proxy port";
     private static final String H_ACCOUNT_PORT = "Account port";
@@ -142,7 +139,6 @@ public final class VolumeCLI extends SoapCLI {
     private String nameSpace;
     private String account;
 
-
     private void setArgs(CommandLine cl) throws ServiceException, ParseException, IOException {
         auth = getZAuthToken(cl);
         id = cl.getOptionValue(O_ID);
@@ -156,11 +152,13 @@ public final class VolumeCLI extends SoapCLI {
         volumePrefix = cl.getOptionValue(O_VP);
         storageType = cl.getOptionValue(O_STP);
         bucketId = cl.getOptionValue(O_BID);
-        url = cl.getOptionValue(O_URL);
-        proxyPort = cl.getOptionValue(O_PP);
-        accountPort = cl.getOptionValue(O_AP);
-        nameSpace = cl.getOptionValue(O_NS);
-        account = cl.getOptionValue(O_ACCOUNT);
+        if(!Strings.isNullOrEmpty(storageType) && storageType.equals(openIO)) {
+            url = cl.getOptionValue(O_URL);
+            proxyPort = cl.getOptionValue(O_PP);
+            accountPort = cl.getOptionValue(O_AP);
+            nameSpace = cl.getOptionValue(O_NS);
+            account = cl.getOptionValue(O_ACCOUNT);
+        }
     }
 
     public static void main(String[] args) {
@@ -440,7 +438,7 @@ public final class VolumeCLI extends SoapCLI {
                     throw new ParseException(A_URL + MISSING_ATTRS);
                 }
                 if (!Strings.isNullOrEmpty(nameSpace)) {
-                    volumeExternalOpenIOInfo.setNamespace(nameSpace);
+                    volumeExternalOpenIOInfo.setNameSpace(nameSpace);
                 } else {
                     throw new ParseException(A_NAME_SPACE + MISSING_ATTRS);
                 }
